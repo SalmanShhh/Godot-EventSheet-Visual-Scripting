@@ -93,7 +93,7 @@ Parameter edits update row dictionaries immediately and mark preview as dirty.
 
 `GDScriptPanel` is read-only and source-oriented. It displays latest compiler output text from `SheetCompiler.compile(...)`.
 
-For in-memory sheets, compile output writes to a preview path (for example `res://eventforge_preview_generated.gd`) so preview works without a saved `.tres`.
+For in-memory sheets, compile output writes to a preview path in user storage (for example `user://eventforge_preview_generated.gd`) so preview works without dirtying the project root.
 
 ## 10) Dual View / Split View modes
 
@@ -197,6 +197,7 @@ Reviewer can:
 
 - Trigger/condition/action instances are materialized from descriptor params.
 - Built-in defaults are set for Phase 1 ACEs to keep generated code valid (for example `PrintLog.message`, `SetVar`, `AddVar`, `CompareVar`, `EmitSignal`, `HasGroupMember`, `OnSignal`).
+- When inserting `SetVar` or `AddVar`, the editor auto-creates `variables["my_var"] = { "type": "int", "default": 0 }` if it is missing.
 - Picker-created conditions/actions are normalized to include descriptor defaults when added.
 
 ### Save and load operations
