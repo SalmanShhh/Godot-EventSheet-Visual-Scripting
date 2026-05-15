@@ -1,25 +1,50 @@
-# EventForge Editor UI Spec (Phase 2 MVP)
+# EventForge Editor UI Spec
 
 ## 1) Purpose
 
-Define a practical, implementation-facing editor UI architecture for EventForge that supports visual event authoring and generated code preview, while keeping GDScript read-only in Phase 2.
+Define a practical, implementation-facing editor UI architecture for EventForge: a Godot editor plugin for visual event-sheet authoring that compiles to readable, deterministic GDScript.
+
+The editor should support:
+
+- visual event authoring
+- generated GDScript preview
+- Event Sheet / GDScript / Split view modes
+- sheet-owned variables
+- reusable sheet-local functions/subsheets
+- custom/scripted ACE providers
+- later scripted structural blocks
+
+Generated GDScript remains read-only until the importer/round-trip system is mature.
+
+---
 
 ## 2) Main screen architecture
 
-The editor shell is hosted by the EventForge plugin and mounted as an editor panel (Phase 2 fallback: bottom panel). The shell owns:
+The editor shell is hosted by the EventForge plugin and mounted as an editor panel. Phase 2 uses a bottom panel fallback; the long-term target is a dedicated main screen.
 
-- Active `EventSheetResource`
-- Row selection state
-- Generated preview text
-- Active view mode
+The editor controller owns:
+
+- active `EventSheetResource`
+- selected row state
+- generated preview text
+- active view mode
+- dirty/compile status
+- sheet variable editing state
+- sheet function/subsheet editing state
+- registered ACE/block provider data
 
 Core components:
 
 - `SheetToolbar`
 - `ACEPalette`
 - Event row canvas/list
+- Variable panel
+- Inspector/config panel
+- Sheet function/subsheet panel
 - `GDScriptPanel`
 - Status bar
+
+---
 
 ## 3) Layout
 
@@ -29,52 +54,105 @@ Top-to-bottom structure:
 2. Main content region
 3. Status bar
 
-Content region can display event UI, code UI, or both depending on mode.
+Main content can show event UI, code UI, or both depending on view mode.
+
+Recommended long-term layout:
+
+```text
+┌ Toolbar ───────────────────────────────────────────────────────────────────────┐
+├ Left Palette/Vars ┬ Event Sheet Canvas ┬ Inspector ┬ GDScript Preview ────────┤
+└ Status Bar ────────────────────────────────────────────────────────────────────┘
+```
+
+For the current bottom-panel MVP, some regions may collapse or stack to preserve space.
+
+---
 
 ## 4) Core interactions
 
-- New Sheet: creates in-memory sheet (`host_class = "Node"`)
-- Add Event: appends blank `EventRow`
-- Row selection: click row card to select/highlight
-- Add Condition / Add Action: use filtered popups and append ACE instance to selected row
-- Compile / Refresh Preview: run `SheetCompiler.compile(...)` and update code panel
+- New Sheet: creates in-memory sheet (`host_class = "Node"`).
+- Open Sheet: loads an existing `.tres` / `.res` sheet resource.
+- Save Sheet: saves to existing `resource_path`.
+- Save Sheet As: prompts for a destination path and calls `take_over_path(...)` after successful save.
+- Add Event: appends blank `EventRow`.
+- Row selection: click row card to select/highlight.
+- ACE palette selection:
+  - Trigger: assign to selected row, or create a row first if none selected.
+  - Condition: append to selected row.
+  - Action: append to selected row.
+  - Expression: reserved for future expression insertion.
+- Compile / Refresh Preview: run `SheetCompiler.compile(...)` and update code panel.
+
+---
 
 ## 5) Row rendering model
 
 Each row card displays:
 
-- Enabled checkbox
-- Trigger label (`<no trigger>` fallback)
-- Condition count
-- Action count
-- Add condition button
-- Add action button
+- enabled checkbox
+- trigger display name or `<no trigger>` fallback
+- compact condition summary
+- compact action summary
+- Add Condition button
+- Add Action button
 - Delete button
 
 Selection is visualized by a highlighted card background.
+
+Future row types:
+
+- Comment rows
+- Loop rows
+- Else/Elif rows
+- Group rows
+- Sheet function body rows
+- Scripted structural block rows
+
+---
 
 ## 6) Toolbar behavior
 
 Toolbar controls:
 
 - New Sheet
+- Open Sheet
+- Save Sheet
+- Save Sheet As
 - Add Event
 - Compile
 - Refresh Preview
 - View mode switcher
 
-Toolbar emits intent signals only; editor controller performs mutations.
+Toolbar emits intent signals only. `EventSheetEditor` performs mutations.
+
+Future toolbar improvements:
+
+- shorter labels for compact mode
+- menu button for file actions
+- validation summary button
+- generated script open button
+
+---
 
 ## 7) ACE palette behavior
 
-ACE palette lists built-in descriptors from `ACERegistry.get_builtin_descriptors()` grouped by type:
+The ACE palette lists descriptors from `ACERegistry`, grouped by type:
 
 - Triggers
 - Conditions
 - Actions
 - Expressions
 
-Search filters by descriptor display name / ID.
+Search filters by descriptor display name, ACE ID, provider ID, and category.
+
+The palette should eventually show:
+
+- built-in ACEs
+- runtime registered ACEs
+- scripted ACE provider descriptors
+- project-specific custom blocks
+
+---
 
 ## 8) Inspector / config editing
 
@@ -89,11 +167,34 @@ Phase 2.1 adds a basic right-side inspector for the selected event row:
 
 Parameter edits update row dictionaries immediately and mark preview as dirty.
 
+Later inspector upgrades:
+
+- type-aware parameter widgets
+- variable pickers
+- expression editors
+- node/resource pickers
+- enum dropdowns
+- validation messages next to fields
+- function/subsheet call parameter editors
+- scripted provider UI hints
+
+---
+
 ## 9) Generated code panel
 
 `GDScriptPanel` is read-only and source-oriented. It displays latest compiler output text from `SheetCompiler.compile(...)`.
 
-For in-memory sheets, compile output writes to a preview path (for example `res://eventforge_preview_generated.gd`) so preview works without a saved `.tres`.
+For unsaved in-memory sheets, preview output must not dirty the project root. Use:
+
+```gdscript
+user://eventforge_preview_generated.gd
+```
+
+until the compiler supports pure in-memory generation.
+
+Generated GDScript remains read-only in Event Sheet / Split / GDScript modes. Editable round-trip GDScript synchronization is deferred until importer support matures.
+
+---
 
 ## 10) Dual View / Split View modes
 
@@ -101,77 +202,401 @@ Required mode enum:
 
 ```gdscript
 enum ViewMode {
-EVENT_SHEET,
-GDSCRIPT,
-SPLIT
+	EVENT_SHEET,
+	GDSCRIPT,
+	SPLIT
 }
 ```
 
 ### Event Sheet mode
 
-Shows only visual authoring area (palette + sheet canvas + status).
+Shows visual authoring UI: palette, sheet canvas, inspector, variables/functions panels as space allows.
 
 ### GDScript mode
 
-Shows only generated code preview panel.
+Shows generated code preview panel only.
 
 ### Split mode
 
 Shows event sheet UI and generated code side-by-side.
-
-### Read-only scope for Phase 2
-
-Generated GDScript remains read-only in this phase. Editable round-trip code synchronization is deferred until importer support matures.
 
 ### Wireframes
 
 Event Sheet mode:
 
 ```text
-┌ Toolbar: [New] [Add Event] [Compile] [Refresh] [Sheet|Split|Code] ─────────────┐
-├ ACE Palette ┬ Event Sheet Canvas / Row List ────────────────────────────────────┤
-└ Status Bar ───────────────────────────────────────────────────────────────────────┘
+┌ Toolbar: [New] [Open] [Save] [Add Event] [Compile] [Sheet|Split|Code] ───────┐
+├ ACE Palette / Vars ┬ Event Sheet Canvas ┬ Inspector ─────────────────────────┤
+└ Status Bar ───────────────────────────────────────────────────────────────────┘
 ```
 
 GDScript mode:
 
 ```text
-┌ Toolbar: [New] [Add Event] [Compile] [Refresh] [Sheet|Split|Code] ─────────────┐
-├ Generated GDScript Preview (read-only) ──────────────────────────────────────────┤
-└ Status Bar ───────────────────────────────────────────────────────────────────────┘
+┌ Toolbar: [New] [Open] [Save] [Add Event] [Compile] [Sheet|Split|Code] ───────┐
+├ Generated GDScript Preview (read-only) ───────────────────────────────────────┤
+└ Status Bar ───────────────────────────────────────────────────────────────────┘
 ```
 
 Split mode:
 
 ```text
-┌ Toolbar: [New] [Add Event] [Compile] [Refresh] [Sheet|Split|Code] ─────────────┐
-├ ACE Palette ┬ Event Sheet Canvas ┬ GDScript Preview (read-only) ────────────────┤
-└ Status Bar ───────────────────────────────────────────────────────────────────────┘
+┌ Toolbar: [New] [Open] [Save] [Add Event] [Compile] [Sheet|Split|Code] ───────┐
+├ ACE Palette / Vars ┬ Event Sheet Canvas ┬ GDScript Preview (read-only) ──────┤
+└ Status Bar ───────────────────────────────────────────────────────────────────┘
 ```
 
+---
+
 ## 11) Validation UX
+
+Status examples:
 
 - Success: `Compile succeeded.`
 - Success + warnings: `Compile succeeded with warnings: ...`
 - Failure: `Compile failed: ...`
 - Dirty state after edits: `Preview may be out of date — click Refresh Preview.`
+- Missing row selection: `Select an event row first.`
 
-## 12) Phase breakdown
+Validation should eventually exist at three levels:
+
+1. Field-level validation in the inspector.
+2. Row-level warning/error badges.
+3. Compile-level summary in the status panel.
+
+---
+
+## 12) Sheet variables
+
+Sheet variables are sheet-owned, editor-managed values that compile to GDScript member variables.
+
+Current data shape:
+
+```gdscript
+variables = {
+	"health": {
+		"type": "int",
+		"default": 100,
+		"exported": true
+	}
+}
+```
+
+MVP variable UI should support:
+
+- Add Variable
+- Delete Variable
+- Rename Variable
+- Type dropdown
+- Default value editor
+- Export checkbox
+- Validation for duplicate/invalid names
+
+Initial types:
+
+- `int`
+- `float`
+- `String`
+- `bool`
+- `NodePath`
+- `Variant`
+
+Compiler output example:
+
+```gdscript
+@export var health: int = 100
+@export var speed: float = 200.0
+@export var can_move: bool = true
+```
+
+Variable-aware ACE behavior:
+
+- `SetVar` and `AddVar` should prefer a variable picker instead of raw text.
+- If `SetVar` / `AddVar` defaults to `my_var`, the editor may auto-create:
+
+```gdscript
+current_sheet.variables["my_var"] = {
+	"type": "int",
+	"default": 0
+}
+```
+
+only when the variable does not already exist.
+
+Rename behavior:
+
+- MVP may warn that existing references must be updated manually.
+- Later versions should offer safe rename with reference updates across conditions/actions/functions.
+
+---
+
+## 13) Sheet functions / local subsheets
+
+Sheet functions, also called local subsheets, are reusable visual logic blocks owned by a single `EventSheetResource`.
+
+They solve repeated action sequences such as:
+
+- move player
+- apply damage
+- recalculate stats
+- transition sequence
+- dialogue sequence
+
+Data model foundation:
+
+```gdscript
+@export var functions: Array[Resource] = []
+```
+
+on `EventSheetResource`, using `EventFunction` resources.
+
+Recommended UI:
+
+```text
+Sheet Functions
+[+] Add Function
+- apply_damage
+- recalculate_stats
+- run_transition
+```
+
+MVP scope:
+
+- create/delete/rename sheet function
+- no parameters initially
+- action/event-row body
+- `Call Sheet Function` action
+- compile each sheet function to a private generated GDScript function
+
+Generated output example:
+
+```gdscript
+func _ef_func_recalculate_stats() -> void:
+	max_health = base_health + level * 10
+	attack = base_attack + level * 2
+```
+
+Call action output:
+
+```gdscript
+_ef_func_recalculate_stats()
+```
+
+Deferred features:
+
+- function parameters
+- return values
+- async flags
+- recursion/call graph validation
+- find usages
+- safe rename
+
+---
+
+## 14) Scripted ACE providers
+
+Scripted ACE providers let project code define custom visual scripting blocks using GDScript.
+
+A provider can define:
+
+- provider ID
+- display name
+- trigger descriptors
+- condition descriptors
+- action descriptors
+- expression descriptors
+- params / UI hints
+- codegen templates
+
+MVP provider base class concept:
+
+```gdscript
+@tool
+extends Resource
+class_name EventForgeProvider
+
+func get_provider_id() -> String:
+	return ""
+
+func get_display_name() -> String:
+	return ""
+
+func get_descriptors() -> Array[ACEDescriptor]:
+	return []
+```
+
+Example custom action provider:
+
+```gdscript
+@tool
+extends EventForgeProvider
+class_name CombatACEProvider
+
+func get_provider_id() -> String:
+	return "MyGame.Combat"
+
+func get_display_name() -> String:
+	return "Combat"
+
+func get_descriptors() -> Array[ACEDescriptor]:
+	var descriptor: ACEDescriptor = ACEDescriptor.new()
+	descriptor.provider_id = get_provider_id()
+	descriptor.ace_id = "ApplyDamage"
+	descriptor.display_name = "Apply Damage"
+	descriptor.ace_type = ACEDescriptor.ACEType.ACTION
+	descriptor.codegen_template = "{target}.apply_damage({amount})"
+
+	var target: ACEParam = ACEParam.new()
+	target.id = "target"
+	target.display_name = "Target"
+	target.type_name = "Node"
+	target.default_value = "self"
+
+	var amount: ACEParam = ACEParam.new()
+	amount.id = "amount"
+	amount.display_name = "Amount"
+	amount.type_name = "int"
+	amount.default_value = "10"
+
+	descriptor.params = [target, amount]
+	return [descriptor]
+```
+
+Visual UI example:
+
+```text
+Apply Damage
+Target: [ self ]
+Amount: [ 10 ]
+```
+
+Generated code:
+
+```gdscript
+self.apply_damage(10)
+```
+
+Discovery/registration options:
+
+- explicit project setting list of provider scripts
+- provider folder scan, e.g. `res://eventforge_providers/`
+- runtime registration through `EventForgeBridge.register_provider(...)`
+
+Security note:
+
+> Scripted providers are trusted project/editor code. Because they are `@tool` scripts, they can run in the Godot editor. Users should only install providers from trusted sources.
+
+---
+
+## 15) Scripted structural blocks
+
+Scripted structural blocks are advanced provider-defined visual blocks with custom codegen and body slots.
+
+Examples:
+
+- If block
+- For loop
+- While loop
+- Sequence block
+- Await block
+- Quest branch block
+- Dialogue choice block
+
+This is distinct from simple ACE descriptors because structural blocks may contain nested visual bodies.
+
+Conceptual base class:
+
+```gdscript
+@tool
+extends Resource
+class_name EventForgeBlockDefinition
+
+func get_descriptor() -> Dictionary:
+	return {}
+
+func validate(_context: EventForgeValidationContext) -> Array[String]:
+	return []
+
+func generate_code(_context: EventForgeCodegenContext) -> PackedStringArray:
+	return PackedStringArray()
+```
+
+Example If block definition:
+
+```gdscript
+@tool
+extends EventForgeBlockDefinition
+class_name IfBlockDefinition
+
+func get_descriptor() -> Dictionary:
+	return {
+		"id": "Core.IfBlock",
+		"display_name": "If",
+		"category": "Flow",
+		"kind": "block",
+		"inputs": [
+			{
+				"id": "condition",
+				"display_name": "Condition",
+				"type": "expression",
+				"ui": "expression_editor",
+				"default": "true",
+				"required": true
+			}
+		],
+		"body_slots": [
+			{"id": "then", "display_name": "Then"},
+			{"id": "else", "display_name": "Else", "optional": true}
+		]
+	}
+
+func generate_code(context: EventForgeCodegenContext) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	var condition: String = context.get_input("condition", "true")
+	lines.append("if %s:" % condition)
+	lines.append_array(context.generate_body("then", "\t"))
+	if context.has_body("else"):
+		lines.append("else:")
+		lines.append_array(context.generate_body("else", "\t"))
+	return lines
+```
+
+Deferred dependencies:
+
+- stable nested row/body model
+- type-aware inspector widgets
+- compiler context object
+- validation context object
+- source mapping from rows to generated line ranges
+
+---
+
+## 16) Phase breakdown
 
 - Phase 1: data model, registry, compiler path, runtime bridge
 - Phase 1.1: cleanup and project structure alignment
 - Phase 2 MVP: functional editor shell + dual/split view + read-only preview
 - Phase 2.1: trigger/condition/action insertion from palette, param inspector, save/load sheet operations
-- Later phases: inspector depth, drag/drop authoring, importer-backed round-trip editing
+- Phase 2.2: sheet variable editor and variable-aware ACE params
+- Phase 2.3: sheet functions/local subsheets without parameters
+- Phase 3: scripted ACE providers with template-based codegen
+- Phase 4: scripted structural blocks with ports/body slots/custom codegen
+- Phase 5: importer and editable GDScript round-trip
 
-## 13) Implementation notes
+---
 
-- UI built programmatically (no `.tscn` dependency required)
-- Keep plugin startup behavior and autoload bridge compatibility
-- Keep bridge class name as `EventForgeBridgeRuntime` while autoload singleton remains `EventForgeBridge`
-- Bottom panel integration is acceptable Phase 2 fallback for reduced complexity
+## 17) Implementation notes
 
-## 14) MVP success criteria
+- UI is currently built programmatically; `.tscn` editor scenes are optional later.
+- Keep plugin startup behavior and autoload bridge compatibility.
+- Keep bridge class name as `EventForgeBridgeRuntime` while autoload singleton remains `EventForgeBridge`.
+- Bottom panel integration is acceptable Phase 2 fallback for reduced complexity.
+- Prefer typed GDScript and tabs for indentation.
+- Avoid writing generated preview files into `res://` for unsaved sheets.
+
+---
+
+## 18) MVP success criteria
 
 Reviewer can:
 
@@ -180,37 +605,15 @@ Reviewer can:
 3. Open EventForge UI panel.
 4. Create new sheet and add event row(s).
 5. Switch between Event Sheet, GDScript, and Split modes.
-6. Refresh/Compile and see read-only generated code preview update.
-7. Observe status feedback (success/error/dirty preview).
+6. Select triggers/conditions/actions from the palette.
+7. Edit params in the inspector.
+8. Refresh/Compile and see read-only generated code preview update.
+9. Save and load `.tres` sheets.
+10. Observe status feedback (success/error/dirty preview).
 
-## 15) Phase 2.1 behavior details
+Future success criteria include:
 
-### Palette-driven editing
-
-- `ACEPalette.ace_selected` is connected in the editor controller.
-- Trigger selection assigns the selected row trigger.
-- If no row is selected and a trigger is chosen, a new row is created and selected first.
-- Condition/action selection requires a selected row; otherwise status shows `Select an event row first.`
-- Expressions are currently not inserted directly and report: `Expressions are not inserted directly yet.`
-
-### Default parameter materialization
-
-- Trigger/condition/action instances are materialized from descriptor params.
-- Built-in defaults are set for Phase 1 ACEs to keep generated code valid (for example `PrintLog.message`, `SetVar`, `AddVar`, `CompareVar`, `EmitSignal`, `HasGroupMember`, `OnSignal`).
-- Picker-created conditions/actions are normalized to include descriptor defaults when added.
-
-### Save and load operations
-
-- Toolbar includes: **Open Sheet**, **Save Sheet**, **Save Sheet As**.
-- Open uses `EditorFileDialog` and loads `.tres`/Resource files.
-- Save writes to existing `resource_path` when present.
-- Save As prompts for a destination path.
-- Persistence is done via `ResourceSaver.save(sheet, path)` and `load(path)` + `set_sheet(...)`.
-- Fallback paths remain available for constrained contexts:
-  - Open: `res://demo/sheets/player.tres`
-  - Save: `res://demo/sheets/editor_saved_sheet.tres`
-
-### GDScript preview scope
-
-- GDScript preview remains read-only in Event Sheet / Split / GDScript modes.
-- Round-trip GDScript editing is still deferred to later importer-focused phases.
+- edit sheet variables visually
+- call sheet functions/subsheets
+- register a custom scripted ACE provider
+- define a scripted structural block with body slots
