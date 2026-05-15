@@ -2,7 +2,7 @@
 # Runtime-safe provider registry for ACE descriptors.
 @tool
 extends Node
-class_name EventForgeBridge
+class_name EventForgeBridgeRuntime
 
 signal providers_changed
 

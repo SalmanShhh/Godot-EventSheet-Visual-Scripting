@@ -16,9 +16,9 @@ static func get_provider_descriptors(provider_id: String) -> Array[ACEDescriptor
 		if descriptor.provider_id == provider_id:
 			output.append(descriptor)
 
-	var bridge: EventForgeBridge = _get_bridge()
-	if bridge != null:
-		for descriptor: Variant in bridge.get_all_descriptors():
+	var bridge: Node = _get_bridge()
+	if bridge != null and bridge.has_method("get_all_descriptors"):
+		for descriptor: Variant in bridge.call("get_all_descriptors"):
 			if descriptor is ACEDescriptor and descriptor.provider_id == provider_id:
 				output.append(descriptor)
 
@@ -32,11 +32,11 @@ static func find_descriptor(provider_id: String, ace_id: String) -> ACEDescripto
 	return null
 
 ## Fetches the EventForgeBridge autoload if available.
-static func _get_bridge() -> EventForgeBridge:
+static func _get_bridge() -> Node:
 	var loop: MainLoop = Engine.get_main_loop()
 	if loop is SceneTree:
 		var tree: SceneTree = loop
 		var root: Node = tree.root
 		if root != null and root.has_node("EventForgeBridge"):
-			return root.get_node("EventForgeBridge") as EventForgeBridge
+			return root.get_node("EventForgeBridge")
 	return null
