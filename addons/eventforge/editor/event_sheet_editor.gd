@@ -23,6 +23,7 @@ var _pending_row_for_action: EventRow = null
 
 var _row_clipboard: Resource = null
 var _row_clipboard_kind: String = ""
+var _identifier_regex: RegEx = null
 
 var _toolbar: SheetToolbar
 var _main_split: HSplitContainer
@@ -973,9 +974,10 @@ func _parse_default_value(text: String, type_name: String) -> Variant:
 func _is_valid_identifier_name(value: String) -> bool:
     if value.is_empty():
         return false
-    var regex: RegEx = RegEx.new()
-    regex.compile("^[A-Za-z_][A-Za-z0-9_]*$")
-    return regex.search(value) != null
+    if _identifier_regex == null:
+        _identifier_regex = RegEx.new()
+        _identifier_regex.compile("^[A-Za-z_][A-Za-z0-9_]*$")
+    return _identifier_regex.search(value) != null
 
 # ---------------------------------------------------------------------------
 # Variable-aware param picker
@@ -1000,7 +1002,8 @@ func _add_var_name_picker(name: String, current_value: String, callback: Callabl
         row.add_child(editor)
         _inspector_container.add_child(row)
         var hint: Label = Label.new()
-        hint.text = "   (no sheet variables — create one in Sheet Vars)"
+        hint.text = "(no sheet variables — create one in Sheet Vars)"
+        hint.add_theme_constant_override("margin_left", 24)
         _inspector_container.add_child(hint)
         return
 
@@ -1018,6 +1021,7 @@ func _add_var_name_picker(name: String, current_value: String, callback: Callabl
     if current_index == -1 and not current_value.is_empty():
         picker.add_item(current_value, idx)
         current_index = idx
+        idx += 1
 
     if current_index >= 0:
         picker.selected = current_index
