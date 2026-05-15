@@ -194,8 +194,6 @@ until the compiler supports pure in-memory generation.
 
 Generated GDScript remains read-only in Event Sheet / Split / GDScript modes. Editable round-trip GDScript synchronization is deferred until importer support matures.
 
----
-
 ## 10) Dual View / Split View modes
 
 Required mode enum:
@@ -611,7 +609,40 @@ Reviewer can:
 9. Save and load `.tres` sheets.
 10. Observe status feedback (success/error/dirty preview).
 
-Future success criteria include:
+Phase 2.1 behavior details:
+
+### Palette-driven editing
+
+- `ACEPalette.ace_selected` is connected in the editor controller.
+- Trigger selection assigns the selected row trigger.
+- If no row is selected and a trigger is chosen, a new row is created and selected first.
+- Condition/action selection requires a selected row; otherwise status shows `Select an event row first.`
+- Expressions are currently not inserted directly and report: `Expressions are not inserted directly yet.`
+
+### Default parameter materialization
+
+- Trigger/condition/action instances are materialized from descriptor params.
+- Built-in defaults are set for Phase 1 ACEs to keep generated code valid (for example `PrintLog.message`, `SetVar`, `AddVar`, `CompareVar`, `EmitSignal`, `HasGroupMember`, `OnSignal`).
+- When inserting `SetVar` or `AddVar`, the editor auto-creates `variables["my_var"] = { "type": "int", "default": 0 }` if it is missing.
+- Picker-created conditions/actions are normalized to include descriptor defaults when added.
+
+### Save and load operations
+
+- Toolbar includes: **Open Sheet**, **Save Sheet**, **Save Sheet As**.
+- Open uses `EditorFileDialog` and loads `.tres`/Resource files.
+- Save writes to existing `resource_path` when present.
+- Save As prompts for a destination path.
+- Persistence is done via `ResourceSaver.save(sheet, path)` and `load(path)` + `set_sheet(...)`.
+- Fallback paths remain available for constrained contexts:
+  - Open: `res://demo/sheets/player.tres`
+  - Save: `res://demo/sheets/editor_saved_sheet.tres`
+
+### GDScript preview scope
+
+- GDScript preview remains read-only in Event Sheet / Split / GDScript modes.
+- Round-trip GDScript editing is still deferred to later importer-focused phases.
+
+Future expansion criteria include:
 
 - edit sheet variables visually
 - call sheet functions/subsheets

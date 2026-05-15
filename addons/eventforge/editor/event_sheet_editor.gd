@@ -93,7 +93,7 @@ func refresh_preview() -> void:
 
     var output_path: String = ""
     if current_sheet.resource_path.is_empty():
-        output_path = "res://eventforge_preview_generated.gd"
+        output_path = "user://eventforge_preview_generated.gd"
 
     var result: Dictionary = SheetCompiler.compile(current_sheet, output_path)
     generated_code_preview = str(result.get("output", ""))
@@ -272,6 +272,7 @@ func _on_action_selected(action: ACEAction) -> void:
     if _pending_row_for_action == null or action == null:
         return
     _materialize_action_params(action)
+    _ensure_default_my_var_for_action_ace_id(action.ace_id)
     _pending_row_for_action.actions.append(action)
     _selected_row = _pending_row_for_action
     _pending_row_for_action = null
@@ -323,6 +324,7 @@ func _on_ace_selected(descriptor: ACEDescriptor) -> void:
             if _selected_row == null:
                 _set_status("Select an event row first.")
                 return
+            _ensure_default_my_var_for_action_ace_id(descriptor.ace_id)
             _selected_row.actions.append(_make_action(descriptor))
             refresh_rows()
             _rebuild_inspector()
@@ -445,6 +447,18 @@ func _materialize_action_params(action: ACEAction) -> void:
         if descriptor != null:
             action.params = _params_from_descriptor(descriptor)
     action.parameters = action.params.duplicate(true)
+
+func _ensure_default_my_var_for_action_ace_id(ace_id: String) -> void:
+    if current_sheet == null:
+        return
+    if ace_id != "SetVar" and ace_id != "AddVar":
+        return
+    if current_sheet.variables.has("my_var"):
+        return
+    current_sheet.variables["my_var"] = {
+        "type": "int",
+        "default": 0
+    }
 
 func _rebuild_inspector() -> void:
     if _inspector_container == null:
@@ -717,9 +731,10 @@ func _save_sheet_to_path(path: String) -> void:
     if err != OK:
         _set_status("Failed to save sheet: %s" % final_path)
         return
-    _preview_dirty = false
+    current_sheet.take_over_path(final_path)
     _set_status("Saved sheet: %s" % final_path)
 
 func _clear_children(container: Node) -> void:
     for child: Node in container.get_children():
+        container.remove_child(child)
         child.queue_free()
