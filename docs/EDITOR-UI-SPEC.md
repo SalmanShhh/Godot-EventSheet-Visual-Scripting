@@ -609,7 +609,7 @@ Reviewer can:
 9. Save and load `.tres` sheets.
 10. Observe status feedback (success/error/dirty preview).
 
-Future success criteria include:
+Phase 2.1 behavior details:
 
 ### Palette-driven editing
 
@@ -641,6 +641,8 @@ Future success criteria include:
 
 - GDScript preview remains read-only in Event Sheet / Split / GDScript modes.
 - Round-trip GDScript editing is still deferred to later importer-focused phases.
+
+Future expansion criteria include:
 
 - edit sheet variables visually
 - call sheet functions/subsheets
