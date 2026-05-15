@@ -35,6 +35,10 @@ func _init() -> void:
 func get_row_kind() -> String:
 	return "event"
 
+## Regenerates the event UID with a new random value.
+func regenerate_uid() -> void:
+	event_uid = EventRow._generate_short_uid()
+
 ## Generates a short UID with a deterministic fallback counter.
 static func _generate_short_uid() -> String:
 	var crypto: Crypto = Crypto.new()

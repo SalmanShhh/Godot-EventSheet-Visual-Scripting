@@ -1,5 +1,19 @@
 # EventForge Editor UI Spec
 
+## Phase implementation status
+
+| Phase | Feature | Status |
+|---|---|---|
+| 2 MVP | Editor shell, dual/split view | ✅ |
+| 2.1 | Editable rows, param inspector, save/load | ✅ |
+| 2.2 | Sheet variable editor, variable-aware ACE params, copy/paste/duplicate/delete rows | ✅ |
+| 2.3 | Sheet functions / local subsheets | ⏳ Deferred |
+| 3 | Scripted ACE providers | ⏳ Deferred |
+| 4 | Scripted structural blocks | ⏳ Deferred |
+| 5 | Importer / editable GDScript round-trip | ⏳ Deferred |
+
+---
+
 ## 1) Purpose
 
 Define a practical, implementation-facing editor UI architecture for EventForge: a Godot editor plugin for visual event-sheet authoring that compiles to readable, deterministic GDScript.

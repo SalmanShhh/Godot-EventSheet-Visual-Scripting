@@ -22,7 +22,7 @@ EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 
 4. Verify output matches `demo/sheets/player_generated.gd`.
 5. In the EventForge editor UI, generated GDScript is currently a read-only preview.
 
-## Editor usage flow (Phase 2.1)
+## Editor usage flow (Phase 2.2)
 
 1. Open the repository root project.
 2. Enable the EventForge plugin.
@@ -31,8 +31,23 @@ EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 
 5. Add an event row.
 6. Select trigger/conditions/actions from the ACE palette (or row pickers).
 7. Edit trigger/condition/action parameters in the inspector.
-8. Refresh/compile preview in read-only GDScript mode.
-9. Save the sheet.
+   - For `SetVar`, `AddVar`, and `CompareVar`, the `var_name` param shows a
+     variable dropdown populated from Sheet Variables.
+8. Use the **Sheet Variables** panel (below the ACE palette) to:
+   - Add variables with **+ Add Var**.
+   - Edit name, type, default value, and export flag.
+   - Delete variables with **X**.
+   - Create a variable before using `SetVar`, `AddVar`, or `CompareVar`.
+9. Copy, Paste, Duplicate, and Delete selected event rows via the toolbar buttons
+   or keyboard shortcuts: Ctrl+C / Ctrl+V / Ctrl+D / Delete.
+   - Pasted rows receive a new unique `event_uid`.
+10. Refresh/compile preview in read-only GDScript mode.
+11. Save the sheet.
+
+> **Tip:** Create sheet variables before using `SetVar`, `AddVar`, or
+> `CompareVar`. These ACEs can select sheet variables from the inspector
+> dropdown. If no variables exist, a fallback text field is shown with a
+> suggestion to create one.
 
 ## Phase 2 MVP status
 
@@ -44,6 +59,9 @@ EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 
 | Built-in ACE registry | ✅ |
 | End-to-end compile (`.tres` -> `.gd`) | ✅ (Phase 1 subset) |
 | Editor shell with dual/split view | ✅ (Phase 2 MVP) |
+| Sheet variables panel (Phase 2.2) | ✅ |
+| Variable-aware ACE param editing (Phase 2.2) | ✅ |
+| Copy/paste/duplicate/delete rows (Phase 2.2) | ✅ |
 | Import/binding pipelines | ⏳ Deferred |
 | Editable GDScript round-trip | ⏳ Deferred |
 
