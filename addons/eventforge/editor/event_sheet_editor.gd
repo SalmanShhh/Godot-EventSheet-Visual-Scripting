@@ -202,7 +202,7 @@ func _on_row_delete_requested(row: EventRow) -> void:
     if current_sheet == null:
         return
 
-    var events: Array[Resource] = current_sheet.events
+    var events: Array = current_sheet.events
     for index: int in range(events.size()):
         if events[index] == row:
             events.remove_at(index)
@@ -239,7 +239,13 @@ func _on_action_selected(action: ACEAction) -> void:
     _mark_preview_dirty()
 
 func _on_toolbar_view_mode_changed(mode: int) -> void:
-    set_view_mode(mode as ViewMode)
+    match mode:
+        ViewMode.EVENT_SHEET:
+            set_view_mode(ViewMode.EVENT_SHEET)
+        ViewMode.GDSCRIPT:
+            set_view_mode(ViewMode.GDSCRIPT)
+        ViewMode.SPLIT:
+            set_view_mode(ViewMode.SPLIT)
 
 func _mark_preview_dirty() -> void:
     _set_status("Preview may be out of date — click Refresh Preview.")

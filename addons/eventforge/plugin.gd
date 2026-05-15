@@ -21,7 +21,6 @@ func _enter_tree() -> void:
     # Phase 2 MVP fallback: use a bottom panel shell until full main-screen integration lands.
     _sheet_editor = EventSheetEditor.new()
     _bottom_panel_button = add_control_to_bottom_panel(_sheet_editor, "EventForge")
-    _sheet_editor.create_new_sheet()
 
     print("[EventForge] v0.1.0 loaded")
 
