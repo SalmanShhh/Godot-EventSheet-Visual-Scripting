@@ -1,0 +1,102 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://../addons/eventforge/resources/event_sheet.gd" id="1_event_sheet"]
+[ext_resource type="Script" path="res://../addons/eventforge/resources/event_row.gd" id="2_event_row"]
+[ext_resource type="Script" path="res://../addons/eventforge/resources/ace_action.gd" id="3_ace_action"]
+[ext_resource type="Script" path="res://../addons/eventforge/resources/ace_condition.gd" id="4_ace_condition"]
+
+[sub_resource type="Resource" id="ACEAction_ready_log"]
+script = ExtResource("3_ace_action")
+ace_id = "PrintLog"
+parameters = {
+"message": "\"Player ready\""
+}
+provider_id = "Core"
+
+[sub_resource type="Resource" id="ACEAction_ready_set"]
+script = ExtResource("3_ace_action")
+ace_id = "SetVar"
+parameters = {
+"value": "100",
+"var_name": "health"
+}
+provider_id = "Core"
+
+[sub_resource type="Resource" id="EventRow_ready"]
+script = ExtResource("2_event_row")
+actions = [SubResource("ACEAction_ready_log"), SubResource("ACEAction_ready_set")]
+trigger_id = "OnReady"
+trigger_provider_id = "Core"
+
+[sub_resource type="Resource" id="ACECondition_low_health"]
+script = ExtResource("4_ace_condition")
+ace_id = "CompareVar"
+parameters = {
+"op": "<",
+"value": "50",
+"var_name": "health"
+}
+provider_id = "Core"
+
+[sub_resource type="Resource" id="ACEAction_low_health_log"]
+script = ExtResource("3_ace_action")
+ace_id = "PrintLog"
+parameters = {
+"message": "\"Low health!\""
+}
+provider_id = "Core"
+
+[sub_resource type="Resource" id="EventRow_process_low_health"]
+script = ExtResource("2_event_row")
+actions = [SubResource("ACEAction_low_health_log")]
+conditions = [SubResource("ACECondition_low_health")]
+trigger_id = "OnProcess"
+trigger_provider_id = "Core"
+
+[sub_resource type="Resource" id="ACECondition_enemy_group"]
+script = ExtResource("4_ace_condition")
+ace_id = "HasGroupMember"
+parameters = {
+"group": "\"enemy\""
+}
+provider_id = "Core"
+
+[sub_resource type="Resource" id="ACEAction_damage_add"]
+script = ExtResource("3_ace_action")
+ace_id = "AddVar"
+parameters = {
+"amount": "-10",
+"var_name": "health"
+}
+provider_id = "Core"
+
+[sub_resource type="Resource" id="ACEAction_damage_emit"]
+script = ExtResource("3_ace_action")
+ace_id = "EmitSignal"
+parameters = {
+"args": "10",
+"signal_name": "\"damage_taken\""
+}
+provider_id = "Core"
+
+[sub_resource type="Resource" id="EventRow_body_entered"]
+script = ExtResource("2_event_row")
+actions = [SubResource("ACEAction_damage_add"), SubResource("ACEAction_damage_emit")]
+conditions = [SubResource("ACECondition_enemy_group")]
+trigger_id = "OnBodyEntered"
+trigger_provider_id = "Core"
+
+[resource]
+script = ExtResource("1_event_sheet")
+events = [SubResource("EventRow_ready"), SubResource("EventRow_process_low_health"), SubResource("EventRow_body_entered")]
+host_class = "CharacterBody2D"
+variables = {
+"health": {
+"default": 100,
+"type": "int"
+},
+"speed": {
+"default": 200.0,
+"type": "float"
+}
+}

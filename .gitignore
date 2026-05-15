@@ -1,16 +1,25 @@
-# Godot 4 generated/cache files
+# Godot project cache/import artifacts
 .godot/
 .import/
+*.import
 *.translation
 
-# Export
+# Godot export presets
 export.cfg
 export_presets.cfg
 
-# OS
+# Mono/.NET (if enabled later)
+.mono/
+
+# Crash dumps/logs
+*.log
+demo/sheets/player_generated_test_output.gd
+
+# OS / editors
 .DS_Store
 Thumbs.db
-
-# IDE
 .vscode/
 .idea/
+
+# Python cache (tooling)
+__pycache__/
