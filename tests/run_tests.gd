@@ -5,8 +5,7 @@ class_name EventForgeTestRunner
 
 ## Executes all EventForge tests and exits with status code.
 func _init() -> void:
-var passed: bool = true
-passed = CompileDemoTest.run() and passed
+	var passed: bool = CompileDemoTest.run()
 if passed:
 print("All tests passed.")
 quit(0)
