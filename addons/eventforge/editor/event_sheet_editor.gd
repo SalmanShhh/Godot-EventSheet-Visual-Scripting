@@ -174,21 +174,21 @@ func _build_ui() -> void:
     _sheet_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _main_split.add_child(_sheet_area)
 
-    var _left_panel: VBoxContainer = VBoxContainer.new()
-    _left_panel.custom_minimum_size = Vector2(260, 0)
-    _left_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _sheet_area.add_child(_left_panel)
+    var left_panel: VBoxContainer = VBoxContainer.new()
+    left_panel.custom_minimum_size = Vector2(260, 0)
+    left_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _sheet_area.add_child(left_panel)
 
     _ace_palette = ACEPalette.new()
     _ace_palette.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _ace_palette.refresh()
     _ace_palette.ace_selected.connect(_on_ace_selected)
-    _left_panel.add_child(_ace_palette)
+    left_panel.add_child(_ace_palette)
 
     # Sheet Variables sub-panel
     var vars_outer: VBoxContainer = VBoxContainer.new()
     vars_outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _left_panel.add_child(vars_outer)
+    left_panel.add_child(vars_outer)
 
     var vars_header: HBoxContainer = HBoxContainer.new()
     vars_outer.add_child(vars_header)
@@ -796,6 +796,8 @@ func _clear_children(container: Node) -> void:
 # Sheet Variables panel
 # ---------------------------------------------------------------------------
 
+## Rebuilds the Sheet Variables panel from current_sheet.variables.
+## Uses the current dictionary-backed variable model until a dedicated SheetVariable resource exists.
 func _rebuild_vars_panel() -> void:
     if _vars_list == null:
         return
@@ -809,6 +811,8 @@ func _rebuild_vars_panel() -> void:
             descriptor = {"type": "int", "default": 0, "exported": true}
         _add_var_row_ui(var_name, descriptor)
 
+## Builds the UI row for a single sheet variable entry (name, type, export, default, delete).
+## Closures capture var_name by value so each row correctly targets its own variable.
 func _add_var_row_ui(var_name: String, descriptor: Dictionary) -> void:
     var var_types: Array[String] = ["int", "float", "String", "bool", "NodePath", "Variant"]
     var container: VBoxContainer = VBoxContainer.new()
@@ -889,6 +893,8 @@ func _on_add_variable_pressed() -> void:
     _rebuild_inspector()
     _mark_preview_dirty()
 
+## Renames a sheet variable key without updating ACE param references.
+## Validates the new name as a GDScript identifier and rejects duplicates.
 func _rename_variable(old_name: String, new_name: String) -> void:
     if current_sheet == null:
         return
@@ -907,7 +913,7 @@ func _rename_variable(old_name: String, new_name: String) -> void:
     _rebuild_vars_panel()
     _rebuild_inspector()
     _mark_preview_dirty()
-    _set_status("Variable renamed to '%s'." % trimmed)
+    _set_status("Variable renamed to '%s'. Existing references are not updated automatically yet." % trimmed)
 
 func _delete_variable(var_name: String) -> void:
     if current_sheet == null:
@@ -954,6 +960,8 @@ func _default_for_type(type_name: String) -> Variant:
         "NodePath": return ""
         _: return null
 
+## Parses a raw string entered by the user into a typed Variant for storage.
+## Falls back to the string itself for unknown or freeform types like NodePath and Variant.
 func _parse_default_value(text: String, type_name: String) -> Variant:
     match type_name:
         "int":
@@ -983,6 +991,8 @@ func _is_valid_identifier_name(value: String) -> bool:
 # Variable-aware param picker
 # ---------------------------------------------------------------------------
 
+## Renders a variable picker for ACE params that reference sheet variables.
+## Unknown existing values are preserved as extra options so older sheets do not lose data.
 func _add_var_name_picker(name: String, current_value: String, callback: Callable) -> void:
     var row: HBoxContainer = HBoxContainer.new()
 
@@ -1039,6 +1049,20 @@ func _add_var_name_picker(name: String, current_value: String, callback: Callabl
 # Copy / Paste / Duplicate / Delete
 # ---------------------------------------------------------------------------
 
+## Regenerates identities for a pasted row tree.
+## This prevents copied rows/sub-events from sharing source-mapping IDs with originals.
+func _regenerate_row_tree_identity(resource: Resource) -> void:
+    if resource == null:
+        return
+    if resource.has_method("regenerate_uid"):
+        resource.call("regenerate_uid")
+    if resource is EventRow:
+        var row: EventRow = resource
+        for child: Resource in row.sub_events:
+            _regenerate_row_tree_identity(child)
+
+## Copies the selected event row into the editor-local clipboard.
+## The clipboard stores a deep duplicate so later edits to the original don't corrupt the copy.
 func _on_copy_requested() -> void:
     if _selected_row == null:
         _set_status("Select an event row to copy.")
@@ -1047,6 +1071,8 @@ func _on_copy_requested() -> void:
     _row_clipboard_kind = _selected_row.get_row_kind()
     _set_status("Copied event row.")
 
+## Pastes the clipboard row after the selected row, or at the end if nothing is selected.
+## Regenerates identities for the entire pasted row tree to avoid UID collisions with originals.
 func _on_paste_requested() -> void:
     if _row_clipboard == null:
         _set_status("Nothing to paste.")
@@ -1057,7 +1083,7 @@ func _on_paste_requested() -> void:
     if pasted == null:
         _set_status("Clipboard does not contain a valid event row.")
         return
-    pasted.regenerate_uid()
+    _regenerate_row_tree_identity(pasted)
     var insert_index: int = current_sheet.events.size()
     if _selected_row != null:
         var sel_index: int = current_sheet.events.find(_selected_row)
@@ -1070,6 +1096,8 @@ func _on_paste_requested() -> void:
     _mark_preview_dirty()
     _set_status("Pasted event row.")
 
+## Duplicates the selected row by copying it to the clipboard and immediately pasting.
+## Status is overwritten after paste to show "Duplicated" rather than "Pasted".
 func _on_duplicate_requested() -> void:
     if _selected_row == null:
         _set_status("Select an event row to duplicate.")
@@ -1089,6 +1117,8 @@ func _on_delete_requested() -> void:
 # Keyboard shortcuts
 # ---------------------------------------------------------------------------
 
+## Handles Ctrl+C/V/D and Delete/Backspace shortcuts for row operations.
+## Skips handling when a text input widget has focus to avoid intercepting normal editing.
 func _unhandled_key_input(event: InputEvent) -> void:
     if not (event is InputEventKey) or not event.pressed:
         return
