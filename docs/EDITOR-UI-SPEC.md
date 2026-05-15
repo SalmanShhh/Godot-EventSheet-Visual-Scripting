@@ -11,6 +11,7 @@ The editor should support:
 - Event Sheet / GDScript / Split view modes
 - sheet-owned variables
 - reusable sheet-local functions/subsheets
+- copy/paste of event blocks and rows
 - custom/scripted ACE providers
 - later scripted structural blocks
 
@@ -31,6 +32,7 @@ The editor controller owns:
 - dirty/compile status
 - sheet variable editing state
 - sheet function/subsheet editing state
+- event-row clipboard state
 - registered ACE/block provider data
 
 Core components:
@@ -54,7 +56,7 @@ Top-to-bottom structure:
 2. Main content region
 3. Status bar
 
-Main content can show event UI, code UI, or both depending on view mode.
+Main content can show event UI, code UI, or both depending on mode.
 
 Recommended long-term layout:
 
@@ -76,6 +78,9 @@ For the current bottom-panel MVP, some regions may collapse or stack to preserve
 - Save Sheet As: prompts for a destination path and calls `take_over_path(...)` after successful save.
 - Add Event: appends blank `EventRow`.
 - Row selection: click row card to select/highlight.
+- Copy row/block: copies selected event row or selected structural block into an EventForge clipboard payload.
+- Paste row/block: inserts a cloned row/block after the selected row or at the end of the current sheet/function body.
+- Duplicate row/block: copy + paste in one command.
 - ACE palette selection:
   - Trigger: assign to selected row, or create a row first if none selected.
   - Condition: append to selected row.
@@ -95,6 +100,7 @@ Each row card displays:
 - compact action summary
 - Add Condition button
 - Add Action button
+- Copy/Duplicate controls or context menu entries
 - Delete button
 
 Selection is visualized by a highlighted card background.
@@ -119,6 +125,9 @@ Toolbar controls:
 - Save Sheet
 - Save Sheet As
 - Add Event
+- Copy
+- Paste
+- Duplicate
 - Compile
 - Refresh Preview
 - View mode switcher
@@ -129,6 +138,7 @@ Future toolbar improvements:
 
 - shorter labels for compact mode
 - menu button for file actions
+- edit menu for copy/paste/delete/duplicate
 - validation summary button
 - generated script open button
 
@@ -194,6 +204,8 @@ until the compiler supports pure in-memory generation.
 
 Generated GDScript remains read-only in Event Sheet / Split / GDScript modes. Editable round-trip GDScript synchronization is deferred until importer support matures.
 
+---
+
 ## 10) Dual View / Split View modes
 
 Required mode enum:
@@ -223,25 +235,25 @@ Shows event sheet UI and generated code side-by-side.
 Event Sheet mode:
 
 ```text
-┌ Toolbar: [New] [Open] [Save] [Add Event] [Compile] [Sheet|Split|Code] ───────┐
-├ ACE Palette / Vars ┬ Event Sheet Canvas ┬ Inspector ─────────────────────────┤
-└ Status Bar ───────────────────────────────────────────────────────────────────┘
+┌ Toolbar: [New] [Open] [Save] [Add Event] [Copy] [Paste] [Compile] [Sheet|Split|Code] ┐
+├ ACE Palette / Vars ┬ Event Sheet Canvas ┬ Inspector ─────────────────────────────────┤
+└ Status Bar ───────────────────────────────────────────────────────────────────────────┘
 ```
 
 GDScript mode:
 
 ```text
-┌ Toolbar: [New] [Open] [Save] [Add Event] [Compile] [Sheet|Split|Code] ───────┐
-├ Generated GDScript Preview (read-only) ───────────────────────────────────────┤
-└ Status Bar ───────────────────────────────────────────────────────────────────┘
+┌ Toolbar: [New] [Open] [Save] [Add Event] [Copy] [Paste] [Compile] [Sheet|Split|Code] ┐
+├ Generated GDScript Preview (read-only) ───────────────────────────────────────────────┤
+└ Status Bar ───────────────────────────────────────────────────────────────────────────┘
 ```
 
 Split mode:
 
 ```text
-┌ Toolbar: [New] [Open] [Save] [Add Event] [Compile] [Sheet|Split|Code] ───────┐
-├ ACE Palette / Vars ┬ Event Sheet Canvas ┬ GDScript Preview (read-only) ──────┤
-└ Status Bar ───────────────────────────────────────────────────────────────────┘
+┌ Toolbar: [New] [Open] [Save] [Add Event] [Copy] [Paste] [Compile] [Sheet|Split|Code] ┐
+├ ACE Palette / Vars ┬ Event Sheet Canvas ┬ GDScript Preview (read-only) ──────────────┤
+└ Status Bar ───────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -255,6 +267,8 @@ Status examples:
 - Failure: `Compile failed: ...`
 - Dirty state after edits: `Preview may be out of date — click Refresh Preview.`
 - Missing row selection: `Select an event row first.`
+- Copy without selection: `Select an event row to copy.`
+- Paste with empty clipboard: `Nothing to paste.`
 
 Validation should eventually exist at three levels:
 
@@ -264,7 +278,127 @@ Validation should eventually exist at three levels:
 
 ---
 
-## 12) Sheet variables
+## 12) Copy/paste event blocks
+
+EventForge should support copying, pasting, duplicating, and eventually cutting event rows and structural event blocks.
+
+### MVP scope
+
+Phase 2.2 should support copying and pasting `EventRow` resources within the same `EventSheetResource`.
+
+MVP commands:
+
+- Copy selected row
+- Paste after selected row
+- Paste at end if no row is selected
+- Duplicate selected row
+- Delete selected row
+
+Recommended shortcuts:
+
+- `Ctrl/Cmd+C`: copy selected row/block
+- `Ctrl/Cmd+V`: paste after selection
+- `Ctrl/Cmd+D`: duplicate selected row/block
+- `Delete` or `Backspace`: delete selected row/block, with safe focus handling
+
+### Clipboard model
+
+Use an editor-local EventForge clipboard first, not the system clipboard.
+
+Recommended state:
+
+```gdscript
+var _row_clipboard: Resource = null
+var _row_clipboard_kind: String = ""
+```
+
+When copying, duplicate the selected resource deeply:
+
+```gdscript
+_row_clipboard = selected_row.duplicate(true)
+_row_clipboard_kind = selected_row.get_row_kind()
+```
+
+When pasting, duplicate the clipboard again before insertion:
+
+```gdscript
+var pasted: Resource = _row_clipboard.duplicate(true)
+```
+
+### UID handling
+
+Pasted rows must receive new stable IDs so generated code/source mapping does not confuse originals and clones.
+
+For `EventRow`, regenerate:
+
+```gdscript
+event_uid
+```
+
+For group/function/block resources, regenerate their equivalent stable IDs when those types become copyable.
+
+If resources do not yet expose a public UID regeneration method, add one such as:
+
+```gdscript
+func regenerate_uid() -> void
+```
+
+or implement an editor helper:
+
+```gdscript
+func _regenerate_row_identity(resource: Resource) -> void
+```
+
+### Insertion behavior
+
+- If a row is selected, paste immediately after it.
+- If no row is selected, paste at the end of the active body.
+- After paste, select the newly pasted row.
+- Mark preview dirty.
+- Refresh rows and inspector.
+
+### Cross-sheet behavior
+
+Near-term behavior may be limited to the current sheet/editor session.
+
+Later behavior should support:
+
+- copy/paste between sheets
+- copy/paste between sheet functions/subsheets
+- optional plain-text JSON clipboard format
+- paste validation when referenced variables/functions/providers are missing
+
+### Reference behavior
+
+When pasted rows reference variables, functions, or custom provider ACEs:
+
+- keep references unchanged
+- validate missing references after paste
+- show warnings rather than silently rewriting references
+
+Examples:
+
+- If pasted row references `health` but target sheet lacks `health`, show warning.
+- If pasted row calls sheet function `apply_damage` but target sheet lacks it, show warning.
+- If pasted row uses provider `MyGame.Combat` but provider is unavailable, show warning.
+
+### Structural blocks
+
+When scripted structural blocks land, copy/paste must support deep-copying full nested bodies:
+
+```text
+If health < 50
+  Then:
+    Print "low"
+  Else:
+    Print "ok"
+```
+
+Pasting this block should preserve child rows and body-slot structure while regenerating identities for every copied row/block.
+
+---
+
+## 13) Sheet variables
 
 Sheet variables are sheet-owned, editor-managed values that compile to GDScript member variables.
 
@@ -309,7 +443,7 @@ Compiler output example:
 
 Variable-aware ACE behavior:
 
-- `SetVar` and `AddVar` should prefer a variable picker instead of raw text.
+- `SetVar`, `AddVar`, and `CompareVar` should prefer a variable picker instead of raw text.
 - If `SetVar` / `AddVar` defaults to `my_var`, the editor may auto-create:
 
 ```gdscript
@@ -328,7 +462,7 @@ Rename behavior:
 
 ---
 
-## 13) Sheet functions / local subsheets
+## 14) Sheet functions / local subsheets
 
 Sheet functions, also called local subsheets, are reusable visual logic blocks owned by a single `EventSheetResource`.
 
@@ -391,7 +525,7 @@ Deferred features:
 
 ---
 
-## 14) Scripted ACE providers
+## 15) Scripted ACE providers
 
 Scripted ACE providers let project code define custom visual scripting blocks using GDScript.
 
@@ -486,7 +620,7 @@ Security note:
 
 ---
 
-## 15) Scripted structural blocks
+## 16) Scripted structural blocks
 
 Scripted structural blocks are advanced provider-defined visual blocks with custom codegen and body slots.
 
@@ -569,13 +703,13 @@ Deferred dependencies:
 
 ---
 
-## 16) Phase breakdown
+## 17) Phase breakdown
 
 - Phase 1: data model, registry, compiler path, runtime bridge
 - Phase 1.1: cleanup and project structure alignment
 - Phase 2 MVP: functional editor shell + dual/split view + read-only preview
 - Phase 2.1: trigger/condition/action insertion from palette, param inspector, save/load sheet operations
-- Phase 2.2: sheet variable editor and variable-aware ACE params
+- Phase 2.2: sheet variable editor, variable-aware ACE params, and row copy/paste/duplicate
 - Phase 2.3: sheet functions/local subsheets without parameters
 - Phase 3: scripted ACE providers with template-based codegen
 - Phase 4: scripted structural blocks with ports/body slots/custom codegen
@@ -583,7 +717,7 @@ Deferred dependencies:
 
 ---
 
-## 17) Implementation notes
+## 18) Implementation notes
 
 - UI is currently built programmatically; `.tscn` editor scenes are optional later.
 - Keep plugin startup behavior and autoload bridge compatibility.
@@ -591,10 +725,12 @@ Deferred dependencies:
 - Bottom panel integration is acceptable Phase 2 fallback for reduced complexity.
 - Prefer typed GDScript and tabs for indentation.
 - Avoid writing generated preview files into `res://` for unsaved sheets.
+- Copy/paste should deep-copy resources and regenerate row/block identities.
+- Copy/paste should validate references but should not silently rewrite variables/functions/providers.
 
 ---
 
-## 18) MVP success criteria
+## 19) MVP success criteria
 
 Reviewer can:
 
@@ -605,9 +741,10 @@ Reviewer can:
 5. Switch between Event Sheet, GDScript, and Split modes.
 6. Select triggers/conditions/actions from the palette.
 7. Edit params in the inspector.
-8. Refresh/Compile and see read-only generated code preview update.
-9. Save and load `.tres` sheets.
-10. Observe status feedback (success/error/dirty preview).
+8. Copy, paste, and duplicate event rows.
+9. Refresh/Compile and see read-only generated code preview update.
+10. Save and load `.tres` sheets.
+11. Observe status feedback (success/error/dirty preview).
 
 Phase 2.1 behavior details:
 
