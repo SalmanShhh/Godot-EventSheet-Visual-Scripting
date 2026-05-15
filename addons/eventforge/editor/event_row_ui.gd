@@ -1,0 +1,8 @@
+# EventForge — Event row UI (stub)
+@tool
+extends HBoxContainer
+class_name EventRowUI
+
+## TODO Phase 2: implement.
+func setup() -> void:
+	pass

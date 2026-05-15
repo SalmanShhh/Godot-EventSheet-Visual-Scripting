@@ -1,22 +1,36 @@
-# GodotEventSheet — EventForge
+# EventForge (GodotEventSheet)
 
-Construct 3–style event sheet visual scripting for Godot 4.x. Compiles to clean, readable GDScript at save time. No runtime interpreter.
+EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 4.x. Event sheets compile to deterministic, readable GDScript.
 
-> 🚧 **Status:** Phase 1 scaffold in progress. See the open PR.
+## Install
 
-## What This Is
+1. Copy `addons/eventforge/` into your Godot project.
+2. In **Project > Project Settings > Plugins**, enable **EventForge**.
+3. Confirm the `EventForgeBridge` autoload is available.
 
-EventForge is a Godot editor plugin that adds a first-class **Event Sheet** editor to the Godot editor UI. Designers and developers author game logic visually using the familiar **Event → Condition → Action** paradigm, while staying fully interoperable with GDScript through code generation and signal bridging.
+## Quickstart with demo
 
-- ✅ Compiles to GDScript — zero runtime overhead
-- ✅ One sheet, one host node
-- ✅ Bidirectional with GDScript: import any `.gd`, bind to any function, toggle views
-- ✅ Full C3 parity: events, conditions, actions, sub-events, else/elif, loops, picking, edge triggers, functions, groups, comments
+1. Open the `demo/` project in Godot 4.3+.
+2. Inspect `demo/sheets/player.tres`.
+3. Run the compiler script path used in tests (`tests/compile_demo_test.gd`) or call `SheetCompiler.compile(...)` manually.
+4. Verify output matches `demo/sheets/player_generated.gd`.
+
+## Phase 1 status
+
+| Area | Status |
+|---|---|
+| Plugin scaffold | ✅ |
+| Resources/data model | ✅ |
+| Runtime bridge | ✅ |
+| Built-in ACE registry | ✅ |
+| End-to-end compile (`.tres` -> `.gd`) | ✅ (Phase 1 subset) |
+| UI editor implementation | ⏳ Deferred |
+| Import/binding pipelines | ⏳ Deferred |
 
 ## Roadmap
 
-See `docs/SPEC.md` (added in Phase 1) for the full specification and phase-by-phase roadmap.
+See `docs/SPEC.md` for consolidated specification and phased roadmap.
 
 ## License
 
-MIT
+MIT. See `LICENSE`.
