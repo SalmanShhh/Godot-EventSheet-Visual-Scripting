@@ -5,4 +5,4 @@ class_name ExpressionEditor
 
 ## TODO Phase 2: implement.
 func setup() -> void:
-pass
+	pass

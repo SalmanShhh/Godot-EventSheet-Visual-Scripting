@@ -5,4 +5,4 @@ class_name ActionPicker
 
 ## TODO Phase 2: implement.
 func open_picker() -> void:
-pass
+	pass

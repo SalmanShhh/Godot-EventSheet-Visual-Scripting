@@ -8,14 +8,14 @@ extends CharacterBody2D
 @export var speed: float = 200.0
 
 func _ready() -> void:
-print("Player ready")
-health = 100
+	print("Player ready")
+	health = 100
 
 func _process(delta: float) -> void:
-if health < 50:
-print("Low health!")
+	if health < 50:
+		print("Low health!")
 
 func _on_body_entered(body: Node) -> void:
-if is_in_group("enemy"):
-health += -10
-emit_signal("damage_taken", 10)
+	if is_in_group("enemy"):
+		health += -10
+		emit_signal("damage_taken", 10)

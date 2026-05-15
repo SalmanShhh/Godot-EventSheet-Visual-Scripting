@@ -5,4 +5,4 @@ class_name DualViewSwitcher
 
 ## TODO Phase 2: implement.
 func setup() -> void:
-pass
+	pass

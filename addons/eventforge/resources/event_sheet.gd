@@ -1,4 +1,5 @@
 # EventForge — EventSheet resource
+# Top-level event sheet resource attached to one host node.
 @tool
 extends Resource
 class_name EventSheetResource

@@ -5,4 +5,4 @@ class_name EventSheetEditor
 
 ## TODO Phase 2: implement.
 func setup() -> void:
-pass
+	pass

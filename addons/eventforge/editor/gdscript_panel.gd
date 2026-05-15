@@ -3,6 +3,6 @@
 extends CodeEdit
 class_name GDScriptPanel
 
-## TODO Phase 2: implement.
+## Sets the displayed source text.
 func set_source(code: String) -> void:
-text = code
+	text = code

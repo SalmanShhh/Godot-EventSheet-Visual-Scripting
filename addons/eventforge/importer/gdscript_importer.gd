@@ -5,4 +5,4 @@ class_name GDScriptImporter
 
 ## TODO Phase 4: implement.
 func import_script(_script_path: String) -> EventSheetResource:
-return null
+	return null

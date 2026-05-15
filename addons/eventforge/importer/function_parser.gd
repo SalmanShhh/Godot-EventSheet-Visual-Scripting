@@ -5,4 +5,4 @@ class_name FunctionParser
 
 ## TODO Phase 4: implement.
 func parse(_source: String) -> Array:
-return []
+	return []
