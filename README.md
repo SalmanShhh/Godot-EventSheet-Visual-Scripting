@@ -22,6 +22,18 @@ EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 
 4. Verify output matches `demo/sheets/player_generated.gd`.
 5. In the EventForge editor UI, generated GDScript is currently a read-only preview.
 
+## Editor usage flow (Phase 2.1)
+
+1. Open the repository root project.
+2. Enable the EventForge plugin.
+3. Open the EventForge panel.
+4. Create a new sheet or open an existing `.tres` sheet.
+5. Add an event row.
+6. Select trigger/conditions/actions from the ACE palette (or row pickers).
+7. Edit trigger/condition/action parameters in the inspector.
+8. Refresh/compile preview in read-only GDScript mode.
+9. Save the sheet.
+
 ## Phase 2 MVP status
 
 | Area | Status |

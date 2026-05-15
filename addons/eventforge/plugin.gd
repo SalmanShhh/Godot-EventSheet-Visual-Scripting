@@ -9,6 +9,7 @@ const BRIDGE_PATH: String = "res://addons/eventforge/runtime/eventforge_bridge.g
 
 var _sheet_editor: EventSheetEditor = null
 var _bottom_panel_button: Button = null
+var _autoload_added_by_plugin: bool = false
 
 ## Returns the display name of the plugin.
 func _get_plugin_name() -> String:
@@ -16,7 +17,9 @@ func _get_plugin_name() -> String:
 
 ## Registers plugin services when the plugin is enabled.
 func _enter_tree() -> void:
-    add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)
+    if not ProjectSettings.has_setting("autoload/%s" % BRIDGE_NAME):
+        add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)
+        _autoload_added_by_plugin = true
 
     # Phase 2 MVP fallback: use a bottom panel shell until full main-screen integration lands.
     _sheet_editor = EventSheetEditor.new()
@@ -32,5 +35,7 @@ func _exit_tree() -> void:
         _sheet_editor = null
     _bottom_panel_button = null
 
-    remove_autoload_singleton(BRIDGE_NAME)
+    if _autoload_added_by_plugin:
+        remove_autoload_singleton(BRIDGE_NAME)
+        _autoload_added_by_plugin = false
     print("[EventForge] unloaded")

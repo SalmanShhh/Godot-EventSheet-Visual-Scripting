@@ -78,7 +78,16 @@ Search filters by descriptor display name / ID.
 
 ## 8) Inspector / config editing
 
-Phase 2 MVP does not provide full property inspector/parameter editing. Picker-created conditions/actions use empty default params.
+Phase 2.1 adds a basic right-side inspector for the selected event row:
+
+- row UID display
+- enabled toggle
+- editable trigger provider/ID
+- editable trigger params
+- condition/action parameter editors (`Label + LineEdit`)
+- remove condition/action buttons
+
+Parameter edits update row dictionaries immediately and mark preview as dirty.
 
 ## 9) Generated code panel
 
@@ -152,6 +161,7 @@ Split mode:
 - Phase 1: data model, registry, compiler path, runtime bridge
 - Phase 1.1: cleanup and project structure alignment
 - Phase 2 MVP: functional editor shell + dual/split view + read-only preview
+- Phase 2.1: trigger/condition/action insertion from palette, param inspector, save/load sheet operations
 - Later phases: inspector depth, drag/drop authoring, importer-backed round-trip editing
 
 ## 13) Implementation notes
@@ -172,3 +182,35 @@ Reviewer can:
 5. Switch between Event Sheet, GDScript, and Split modes.
 6. Refresh/Compile and see read-only generated code preview update.
 7. Observe status feedback (success/error/dirty preview).
+
+## 15) Phase 2.1 behavior details
+
+### Palette-driven editing
+
+- `ACEPalette.ace_selected` is connected in the editor controller.
+- Trigger selection assigns the selected row trigger.
+- If no row is selected and a trigger is chosen, a new row is created and selected first.
+- Condition/action selection requires a selected row; otherwise status shows `Select an event row first.`
+- Expressions are currently not inserted directly and report: `Expressions are not inserted directly yet.`
+
+### Default parameter materialization
+
+- Trigger/condition/action instances are materialized from descriptor params.
+- Built-in defaults are set for Phase 1 ACEs to keep generated code valid (for example `PrintLog.message`, `SetVar`, `AddVar`, `CompareVar`, `EmitSignal`, `HasGroupMember`, `OnSignal`).
+- Picker-created conditions/actions are normalized to include descriptor defaults when added.
+
+### Save and load operations
+
+- Toolbar includes: **Open Sheet**, **Save Sheet**, **Save Sheet As**.
+- Open uses `EditorFileDialog` and loads `.tres`/Resource files.
+- Save writes to existing `resource_path` when present.
+- Save As prompts for a destination path.
+- Persistence is done via `ResourceSaver.save(sheet, path)` and `load(path)` + `set_sheet(...)`.
+- Fallback paths remain available for constrained contexts:
+  - Open: `res://demo/sheets/player.tres`
+  - Save: `res://demo/sheets/editor_saved_sheet.tres`
+
+### GDScript preview scope
+
+- GDScript preview remains read-only in Event Sheet / Split / GDScript modes.
+- Round-trip GDScript editing is still deferred to later importer-focused phases.

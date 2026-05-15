@@ -64,13 +64,19 @@ func set_row(value: EventRow) -> void:
         return
 
     _enabled_checkbox.button_pressed = row.enabled
-    var trigger_text: String = row.trigger_id
-    if trigger_text.is_empty() and row.trigger != null:
-        trigger_text = row.trigger.ace_id
-    if trigger_text.is_empty():
-        trigger_text = "<no trigger>"
-    _trigger_label.text = trigger_text
-    _counts_label.text = "C:%d  A:%d" % [row.conditions.size(), row.actions.size()]
+    var trigger_id: String = row.trigger_id
+    if trigger_id.is_empty() and row.trigger != null:
+        trigger_id = row.trigger.ace_id
+    if trigger_id.is_empty():
+        _trigger_label.text = "<no trigger>"
+        _trigger_label.add_theme_color_override("font_color", Color(0.95, 0.55, 0.55))
+    else:
+        _trigger_label.text = _descriptor_summary(row.trigger_provider_id, trigger_id)
+        _trigger_label.remove_theme_color_override("font_color")
+
+    var condition_summary: String = _condition_summary()
+    var action_summary: String = _action_summary()
+    _counts_label.text = "C:%d %s | A:%d %s" % [row.conditions.size(), condition_summary, row.actions.size(), action_summary]
 
 ## Updates selected highlight.
 func set_selected(is_selected: bool) -> void:
@@ -106,3 +112,40 @@ func _on_add_condition_pressed() -> void:
 func _on_add_action_pressed() -> void:
     if row != null:
         emit_signal("add_action_requested", row)
+
+func _descriptor_summary(provider_id: String, ace_id: String) -> String:
+    if ace_id.is_empty():
+        return "-"
+    var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
+    if descriptor == null:
+        return ace_id
+    if descriptor.display_name.is_empty():
+        return descriptor.ace_id
+    return "%s (%s)" % [descriptor.display_name, descriptor.ace_id]
+
+func _condition_summary() -> String:
+    if row == null or row.conditions.is_empty():
+        return "-"
+    var items: Array[String] = []
+    var count: int = min(row.conditions.size(), 2)
+    for index: int in range(count):
+        var condition: ACECondition = row.conditions[index]
+        items.append(_descriptor_summary(condition.provider_id, condition.ace_id))
+    return "[%s]" % ", ".join(items)
+
+func _action_summary() -> String:
+    if row == null or row.actions.is_empty():
+        return "-"
+    var items: Array[String] = []
+    var added: int = 0
+    for action_item: Variant in row.actions:
+        if not (action_item is ACEAction):
+            continue
+        var action: ACEAction = action_item
+        items.append(_descriptor_summary(action.provider_id, action.ace_id))
+        added += 1
+        if added >= 2:
+            break
+    if items.is_empty():
+        return "-"
+    return "[%s]" % ", ".join(items)
