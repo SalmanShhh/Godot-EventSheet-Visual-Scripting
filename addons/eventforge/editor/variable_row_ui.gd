@@ -4,6 +4,8 @@
 extends PanelContainer
 class_name VariableRowUI
 
+const EDIT_VARIABLE_TOOLTIP_PREFIX: String = "Edit variable"
+
 ## Emitted when this variable row is clicked for focused editing.
 signal variable_selected(row: VariableRowUI)
 
@@ -65,7 +67,7 @@ func refresh() -> void:
 	tooltip_text = tooltip
 	_label.tooltip_text = tooltip
 	if _edit_btn != null:
-		_edit_btn.tooltip_text = "Edit variable\n\n" + tooltip
+		_edit_btn.tooltip_text = EDIT_VARIABLE_TOOLTIP_PREFIX + "\n\n" + tooltip
 
 ## Returns a formatted summary string for a global variable.
 ## var_info may contain: type (String), default (Variant), value (Variant)
