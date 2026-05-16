@@ -7,6 +7,11 @@ class_name EventSheetEditorTest
 static func run() -> bool:
 	var all_passed: bool = true
 	var editor: EventSheetEditor = EventSheetEditor.new()
+	var lane_row: EventRowUI = EventRowUI.new()
+	lane_row.event_row = EventRow.new()
+	lane_row.refresh()
+	all_passed = _check("event row no IF label", _contains_label_text(lane_row, "IF"), false) and all_passed
+	all_passed = _check("event row no THEN label", _contains_label_text(lane_row, "THEN"), false) and all_passed
 
 	all_passed = _check("parse int", editor._parse_variable_initial_value("42", "int"), 42) and all_passed
 	all_passed = _check("parse float", editor._parse_variable_initial_value("3.5", "float"), 3.5) and all_passed
@@ -238,3 +243,15 @@ static func _count_event_row_nodes(node: Node) -> int:
 	for child: Node in node.get_children():
 		total += _count_event_row_nodes(child)
 	return total
+
+static func _contains_label_text(node: Node, expected: String) -> bool:
+	if node == null:
+		return false
+	if node is Label:
+		var lbl: Label = node as Label
+		if lbl.text == expected:
+			return true
+	for child: Node in node.get_children():
+		if _contains_label_text(child, expected):
+			return true
+	return false

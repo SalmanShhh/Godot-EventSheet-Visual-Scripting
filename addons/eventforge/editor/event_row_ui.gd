@@ -82,8 +82,8 @@ func _reset_ui() -> void:
 func _build_ui() -> void:
 	# Outer row styling
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.12, 0.14, 0.20, 1.0)
-	style.border_color = Color(0.30, 0.37, 0.55, 1.0)
+	style.bg_color = Color(0.11, 0.13, 0.19, 1.0)
+	style.border_color = Color(0.29, 0.35, 0.52, 1.0)
 	style.set_border_width_all(0)
 	style.set_border_width(SIDE_LEFT, 4)
 	style.set_border_width(SIDE_TOP, 1)
@@ -119,14 +119,14 @@ func _build_ui() -> void:
 	# Side-by-side lanes
 	var lanes_hbox: HBoxContainer = HBoxContainer.new()
 	lanes_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lanes_hbox.add_theme_constant_override("separation", 1)
+	lanes_hbox.add_theme_constant_override("separation", 2)
 	_vbox.add_child(lanes_hbox)
 
 	# Conditions lane
 	var conditions_lane: PanelContainer = PanelContainer.new()
 	conditions_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var conditions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
-	conditions_lane_style.bg_color = Color(0.09, 0.15, 0.11, 0.95)
+	conditions_lane_style.bg_color = Color(0.09, 0.15, 0.11, 0.97)
 	conditions_lane_style.border_color = Color(0.30, 0.62, 0.42, 0.65)
 	conditions_lane_style.set_border_width_all(0)
 	conditions_lane_style.set_border_width(SIDE_TOP, 1)
@@ -134,8 +134,8 @@ func _build_ui() -> void:
 	conditions_lane_style.set_border_width(SIDE_BOTTOM, 1)
 	conditions_lane_style.corner_radius_top_left = 4
 	conditions_lane_style.corner_radius_bottom_left = 4
-	conditions_lane_style.set_content_margin(SIDE_LEFT, 6)
-	conditions_lane_style.set_content_margin(SIDE_RIGHT, 5)
+	conditions_lane_style.set_content_margin(SIDE_LEFT, 7)
+	conditions_lane_style.set_content_margin(SIDE_RIGHT, 6)
 	conditions_lane_style.set_content_margin(SIDE_TOP, 4)
 	conditions_lane_style.set_content_margin(SIDE_BOTTOM, 5)
 	conditions_lane.add_theme_stylebox_override("panel", conditions_lane_style)
@@ -159,11 +159,12 @@ func _build_ui() -> void:
 	cond_row.add_theme_constant_override("separation", 3)
 	conditions_lane_vbox.add_child(cond_row)
 
-	var cond_heading: Label = Label.new()
-	cond_heading.text = "IF"
-	cond_heading.add_theme_color_override("font_color", Color(0.65, 0.85, 0.65))
-	cond_heading.add_theme_font_size_override("font_size", 10)
-	cond_row.add_child(cond_heading)
+	var cond_marker: Label = Label.new()
+	cond_marker.text = "●"
+	cond_marker.add_theme_color_override("font_color", Color(0.45, 0.82, 0.56))
+	cond_marker.add_theme_font_size_override("font_size", 10)
+	cond_marker.tooltip_text = "Conditions lane"
+	cond_row.add_child(cond_marker)
 
 	var cond_spacer: Control = Control.new()
 	cond_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -189,9 +190,9 @@ func _build_ui() -> void:
 	cond_row.add_child(delete_event_btn)
 
 	var add_condition_btn: Button = Button.new()
-	add_condition_btn.text = "+ Add"
+	add_condition_btn.text = "+ Condition"
 	add_condition_btn.flat = true
-	add_condition_btn.tooltip_text = "Add a condition to this event"
+	add_condition_btn.tooltip_text = "Add condition to this event"
 	add_condition_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	add_condition_btn.add_theme_color_override("font_color", Color(0.55, 0.90, 0.65))
 	add_condition_btn.add_theme_font_size_override("font_size", 10)
@@ -209,7 +210,7 @@ func _build_ui() -> void:
 	# Actions summaries are usually longer than conditions; give the right lane ~40% more width.
 	actions_lane.size_flags_stretch_ratio = ACTIONS_LANE_STRETCH_RATIO
 	var actions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
-	actions_lane_style.bg_color = Color(0.10, 0.12, 0.18, 0.95)
+	actions_lane_style.bg_color = Color(0.10, 0.12, 0.18, 0.97)
 	actions_lane_style.border_color = Color(0.33, 0.44, 0.75, 0.65)
 	actions_lane_style.set_border_width_all(0)
 	actions_lane_style.set_border_width(SIDE_TOP, 1)
@@ -217,8 +218,8 @@ func _build_ui() -> void:
 	actions_lane_style.set_border_width(SIDE_BOTTOM, 1)
 	actions_lane_style.corner_radius_top_right = 4
 	actions_lane_style.corner_radius_bottom_right = 4
-	actions_lane_style.set_content_margin(SIDE_LEFT, 6)
-	actions_lane_style.set_content_margin(SIDE_RIGHT, 5)
+	actions_lane_style.set_content_margin(SIDE_LEFT, 7)
+	actions_lane_style.set_content_margin(SIDE_RIGHT, 6)
 	actions_lane_style.set_content_margin(SIDE_TOP, 4)
 	actions_lane_style.set_content_margin(SIDE_BOTTOM, 5)
 	actions_lane.add_theme_stylebox_override("panel", actions_lane_style)
@@ -232,20 +233,21 @@ func _build_ui() -> void:
 	actions_row.add_theme_constant_override("separation", 3)
 	actions_lane_vbox.add_child(actions_row)
 
-	var action_heading: Label = Label.new()
-	action_heading.text = "THEN"
-	action_heading.add_theme_color_override("font_color", Color(0.50, 0.65, 0.95))
-	action_heading.add_theme_font_size_override("font_size", 10)
-	actions_row.add_child(action_heading)
+	var action_marker: Label = Label.new()
+	action_marker.text = "●"
+	action_marker.add_theme_color_override("font_color", Color(0.45, 0.67, 0.98))
+	action_marker.add_theme_font_size_override("font_size", 10)
+	action_marker.tooltip_text = "Actions lane"
+	actions_row.add_child(action_marker)
 
 	var action_spacer: Control = Control.new()
 	action_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions_row.add_child(action_spacer)
 
 	var add_action_btn: Button = Button.new()
-	add_action_btn.text = "+ Add Action"
+	add_action_btn.text = "+ Action"
 	add_action_btn.flat = true
-	add_action_btn.tooltip_text = "Add an action to this event"
+	add_action_btn.tooltip_text = "Add action to this event"
 	add_action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	add_action_btn.add_theme_color_override("font_color", Color(0.55, 0.75, 1.0))
 	add_action_btn.add_theme_font_size_override("font_size", 10)
