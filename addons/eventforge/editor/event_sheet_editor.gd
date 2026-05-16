@@ -1470,6 +1470,8 @@ func _is_valid_identifier_name(value: String) -> bool:
         _identifier_regex.compile("^[A-Za-z_][A-Za-z0-9_]*$")
     return _identifier_regex.search(value) != null
 
+## Resets focused inspector selection back to default event mode.
+## Keeps _selected_row unchanged so event-level operations can continue.
 func _clear_focused_entry_state() -> void:
     _selected_entry_kind = "event"
     _selected_entry_index = -1
