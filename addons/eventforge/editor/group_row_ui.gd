@@ -14,21 +14,15 @@ var event_group: EventGroup = null
 
 var _name_label: Label = null
 var _disclosure_btn: Button = null
+var _is_selected: bool = false
+var _is_hovered: bool = false
+var _nesting_depth: int = 0
 
 func _init() -> void:
 	_build_ui()
 
 func _build_ui() -> void:
-	# Group row uses the same C3-style blue-gray base with a subtle violet accent.
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.103, 0.115, 0.150, 1.0)
-	style.border_color = Color(0.129, 0.145, 0.184, 1.0)
-	style.set_border_width_all(0)
-	style.border_width_left = 3
-	style.set_corner_radius_all(5)
-	style.set_content_margin_all(6)
-	style.content_margin_left = 10
-	add_theme_stylebox_override("panel", style)
+	_apply_row_style()
 
 	var hbox: HBoxContainer = HBoxContainer.new()
 	add_child(hbox)
@@ -67,6 +61,16 @@ func _build_ui() -> void:
 
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	connect("gui_input", _on_gui_input)
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
+
+func set_selected(selected: bool) -> void:
+	_is_selected = selected
+	_apply_row_style()
+
+func set_nesting_depth(depth: int) -> void:
+	_nesting_depth = maxi(0, depth)
+	_apply_row_style()
 
 ## Refreshes the display from the assigned event_group resource.
 func refresh() -> void:
@@ -100,3 +104,27 @@ func _on_gui_input(event: InputEvent) -> void:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
 			group_selected.emit(self)
+
+func _on_mouse_entered() -> void:
+	_is_hovered = true
+	_apply_row_style()
+
+func _on_mouse_exited() -> void:
+	_is_hovered = false
+	_apply_row_style()
+
+func _apply_row_style() -> void:
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	if _is_selected:
+		style.bg_color = Color(0.136, 0.122, 0.194, 1.0)
+	elif _is_hovered:
+		style.bg_color = Color(0.115, 0.120, 0.165, 1.0)
+	else:
+		style.bg_color = Color(0.103, 0.115, 0.150, 1.0)
+	style.border_color = Color(0.64, 0.56, 0.94, 1.0) if _is_selected else Color(0.129, 0.145, 0.184, 1.0)
+	style.set_border_width_all(1)
+	style.border_width_left = 3 + mini(_nesting_depth, 2)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(6)
+	style.content_margin_left = 10
+	add_theme_stylebox_override("panel", style)

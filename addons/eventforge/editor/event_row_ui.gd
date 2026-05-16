@@ -41,6 +41,9 @@ var _condition_context_menu: PopupMenu = null
 var _context_condition_index: int = -1
 var _action_context_menu: PopupMenu = null
 var _context_action_index: int = -1
+var _is_selected: bool = false
+var _is_hovered: bool = false
+var _nesting_depth: int = 0
 
 const CONDITION_MENU_EDIT: int = 1
 const CONDITION_MENU_ADD_ANOTHER: int = 2
@@ -50,9 +53,12 @@ const CONDITION_MENU_DELETE: int = 5
 const ACTION_MENU_EDIT: int = 1
 const ACTION_MENU_DELETE: int = 2
 const ACTIONS_LANE_STRETCH_RATIO: float = 1.4
-const SHEET_BG: Color = Color(0.094, 0.105, 0.138, 1.0)
+const SHEET_BG: Color = Color(0.090, 0.100, 0.132, 1.0)
+const SHEET_BG_HOVER: Color = Color(0.108, 0.121, 0.158, 1.0)
+const SHEET_BG_SELECTED: Color = Color(0.124, 0.143, 0.191, 1.0)
 const SHEET_DIVIDER: Color = Color(0.130, 0.145, 0.183, 1.0)
-const CONDITIONS_BG: Color = Color(0.117, 0.130, 0.166, 1.0)
+const SHEET_META_BG: Color = Color(0.080, 0.090, 0.121, 1.0)
+const CONDITIONS_BG: Color = Color(0.104, 0.118, 0.154, 1.0)
 const CONDITION_ENTRY_BG: Color = Color(0.170, 0.188, 0.234, 1.0)
 const CONDITION_ENTRY_BG_HOVER: Color = Color(0.228, 0.250, 0.308, 1.0)
 const CONDITION_ENTRY_BG_PRESSED: Color = Color(0.202, 0.223, 0.279, 1.0)
@@ -83,14 +89,10 @@ func _reset_ui() -> void:
 		child.queue_free()
 
 func _build_ui() -> void:
-	# Outer row styling
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = SHEET_BG
-	style.border_color = SHEET_DIVIDER
-	style.set_border_width_all(0)
-	style.set_corner_radius_all(5)
-	style.set_content_margin_all(0)
-	add_theme_stylebox_override("panel", style)
+	_apply_row_style()
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_entered.connect(_on_row_mouse_entered)
+	mouse_exited.connect(_on_row_mouse_exited)
 
 	_vbox = VBoxContainer.new()
 	_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -115,6 +117,57 @@ func _build_ui() -> void:
 	_action_context_menu.connect("id_pressed", _on_action_context_menu_id_pressed)
 	add_child(_action_context_menu)
 
+	var meta_panel: PanelContainer = PanelContainer.new()
+	var meta_style: StyleBoxFlat = StyleBoxFlat.new()
+	meta_style.bg_color = SHEET_META_BG
+	meta_style.set_corner_radius_all(0)
+	meta_style.corner_radius_top_left = 6
+	meta_style.corner_radius_top_right = 6
+	meta_style.set_content_margin_all(4)
+	meta_style.set_content_margin(SIDE_LEFT, 8)
+	meta_style.set_content_margin(SIDE_RIGHT, 8)
+	meta_panel.add_theme_stylebox_override("panel", meta_style)
+	_vbox.add_child(meta_panel)
+
+	var meta_hbox: HBoxContainer = HBoxContainer.new()
+	meta_hbox.add_theme_constant_override("separation", 6)
+	meta_panel.add_child(meta_hbox)
+
+	var event_badge: Label = Label.new()
+	event_badge.text = "EVENT"
+	event_badge.add_theme_color_override("font_color", Color(0.60, 0.79, 1.0))
+	event_badge.add_theme_font_size_override("font_size", 9)
+	meta_hbox.add_child(event_badge)
+
+	_runs_label = Label.new()
+	_runs_label.add_theme_color_override("font_color", Color(0.70, 0.77, 0.92))
+	_runs_label.add_theme_font_size_override("font_size", 10)
+	_runs_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_runs_label.clip_text = true
+	meta_hbox.add_child(_runs_label)
+
+	var header_btn: Button = Button.new()
+	header_btn.text = "✎"
+	header_btn.flat = true
+	header_btn.tooltip_text = "Select event"
+	header_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	header_btn.add_theme_color_override("font_color", Color(0.74, 0.79, 0.92))
+	header_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.94, 1.0))
+	header_btn.add_theme_font_size_override("font_size", 11)
+	header_btn.connect("pressed", _on_event_header_pressed)
+	meta_hbox.add_child(header_btn)
+
+	var delete_event_btn: Button = Button.new()
+	delete_event_btn.text = "✕"
+	delete_event_btn.flat = true
+	delete_event_btn.tooltip_text = "Delete this event"
+	delete_event_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	delete_event_btn.add_theme_color_override("font_color", Color(0.86, 0.46, 0.51))
+	delete_event_btn.add_theme_color_override("font_hover_color", Color(0.98, 0.62, 0.67))
+	delete_event_btn.add_theme_font_size_override("font_size", 11)
+	delete_event_btn.connect("pressed", _on_delete_event_pressed)
+	meta_hbox.add_child(delete_event_btn)
+
 	# Side-by-side lanes
 	var lanes_hbox: HBoxContainer = HBoxContainer.new()
 	lanes_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -129,7 +182,7 @@ func _build_ui() -> void:
 	conditions_lane_style.border_color = SHEET_DIVIDER
 	conditions_lane_style.set_border_width_all(0)
 	conditions_lane_style.set_border_width(SIDE_RIGHT, 1)
-	conditions_lane_style.corner_radius_top_left = 5
+	conditions_lane_style.corner_radius_top_left = 0
 	conditions_lane_style.corner_radius_bottom_left = 5
 	conditions_lane_style.set_content_margin(SIDE_LEFT, 6)
 	conditions_lane_style.set_content_margin(SIDE_RIGHT, 8)
@@ -139,48 +192,26 @@ func _build_ui() -> void:
 	lanes_hbox.add_child(conditions_lane)
 
 	var conditions_lane_vbox: VBoxContainer = VBoxContainer.new()
-	conditions_lane_vbox.add_theme_constant_override("separation", 2)
+	conditions_lane_vbox.add_theme_constant_override("separation", 4)
 	conditions_lane.add_child(conditions_lane_vbox)
 
-	# Run-context label on its own line so the control row below stays clean.
-	var runs_row: HBoxContainer = HBoxContainer.new()
-	conditions_lane_vbox.add_child(runs_row)
-	_runs_label = Label.new()
-	_runs_label.add_theme_color_override("font_color", Color(0.58, 0.64, 0.81))
-	_runs_label.add_theme_font_size_override("font_size", 9)
-	_runs_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_runs_label.clip_text = true
-	runs_row.add_child(_runs_label)
+	var conditions_header: HBoxContainer = HBoxContainer.new()
+	conditions_header.add_theme_constant_override("separation", 6)
+	conditions_lane_vbox.add_child(conditions_header)
+
+	var conditions_badge: Label = Label.new()
+	conditions_badge.text = "Conditions"
+	conditions_badge.add_theme_color_override("font_color", Color(0.66, 0.73, 0.92))
+	conditions_badge.add_theme_font_size_override("font_size", 10)
+	conditions_header.add_child(conditions_badge)
+
+	var cond_header_spacer: Control = Control.new()
+	cond_header_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	conditions_header.add_child(cond_header_spacer)
 
 	var cond_row: HBoxContainer = HBoxContainer.new()
 	cond_row.add_theme_constant_override("separation", 4)
 	conditions_lane_vbox.add_child(cond_row)
-
-	var header_btn: Button = Button.new()
-	header_btn.text = "✎"
-	header_btn.flat = true
-	header_btn.tooltip_text = "Select event"
-	header_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	header_btn.add_theme_color_override("font_color", Color(0.74, 0.79, 0.92))
-	header_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.94, 1.0))
-	header_btn.add_theme_font_size_override("font_size", 11)
-	header_btn.connect("pressed", _on_event_header_pressed)
-	cond_row.add_child(header_btn)
-
-	var delete_event_btn: Button = Button.new()
-	delete_event_btn.text = "✕"
-	delete_event_btn.flat = true
-	delete_event_btn.tooltip_text = "Delete this event"
-	delete_event_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	delete_event_btn.add_theme_color_override("font_color", Color(0.86, 0.46, 0.51))
-	delete_event_btn.add_theme_color_override("font_hover_color", Color(0.98, 0.62, 0.67))
-	delete_event_btn.add_theme_font_size_override("font_size", 11)
-	delete_event_btn.connect("pressed", _on_delete_event_pressed)
-	cond_row.add_child(delete_event_btn)
-
-	var cond_spacer: Control = Control.new()
-	cond_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cond_row.add_child(cond_spacer)
 
 	var add_condition_btn: Button = Button.new()
 	add_condition_btn.text = "+ Add Condition"
@@ -215,8 +246,22 @@ func _build_ui() -> void:
 	lanes_hbox.add_child(actions_lane)
 
 	var actions_lane_vbox: VBoxContainer = VBoxContainer.new()
-	actions_lane_vbox.add_theme_constant_override("separation", 2)
+	actions_lane_vbox.add_theme_constant_override("separation", 4)
 	actions_lane.add_child(actions_lane_vbox)
+
+	var actions_header: HBoxContainer = HBoxContainer.new()
+	actions_header.add_theme_constant_override("separation", 6)
+	actions_lane_vbox.add_child(actions_header)
+
+	var actions_badge: Label = Label.new()
+	actions_badge.text = "Actions"
+	actions_badge.add_theme_color_override("font_color", Color(0.65, 0.70, 0.89))
+	actions_badge.add_theme_font_size_override("font_size", 10)
+	actions_header.add_child(actions_badge)
+
+	var actions_header_spacer: Control = Control.new()
+	actions_header_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions_header.add_child(actions_header_spacer)
 
 	var actions_row: HBoxContainer = HBoxContainer.new()
 	actions_row.add_theme_constant_override("separation", 4)
@@ -241,6 +286,14 @@ func _build_ui() -> void:
 	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_actions_container.add_theme_constant_override("separation", 1)
 	actions_lane_vbox.add_child(_actions_container)
+
+func set_selected(selected: bool) -> void:
+	_is_selected = selected
+	_apply_row_style()
+
+func set_nesting_depth(depth: int) -> void:
+	_nesting_depth = maxi(0, depth)
+	_apply_row_style()
 
 ## Refreshes the display from the assigned event_row resource.
 func refresh() -> void:
@@ -430,6 +483,7 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	normal_style.bg_color = base_bg
 	normal_style.border_color = accent
 	normal_style.set_border_width_all(0)
+	normal_style.set_border_width(SIDE_LEFT, 3)
 	normal_style.set_corner_radius_all(5)
 	normal_style.set_content_margin(SIDE_LEFT, 8)
 	normal_style.set_content_margin(SIDE_RIGHT, 6)
@@ -519,3 +573,26 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 			action_selected.emit(self, _context_action_index)
 		ACTION_MENU_DELETE:
 			action_delete_requested.emit(self, _context_action_index)
+
+func _apply_row_style() -> void:
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	if _is_selected:
+		style.bg_color = SHEET_BG_SELECTED
+	elif _is_hovered:
+		style.bg_color = SHEET_BG_HOVER
+	else:
+		style.bg_color = SHEET_BG
+	style.border_color = Color(0.22, 0.31, 0.48, 1.0) if _is_selected else SHEET_DIVIDER
+	style.set_border_width_all(1)
+	style.border_width_left = 3 + mini(_nesting_depth, 2)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(0)
+	add_theme_stylebox_override("panel", style)
+
+func _on_row_mouse_entered() -> void:
+	_is_hovered = true
+	_apply_row_style()
+
+func _on_row_mouse_exited() -> void:
+	_is_hovered = false
+	_apply_row_style()

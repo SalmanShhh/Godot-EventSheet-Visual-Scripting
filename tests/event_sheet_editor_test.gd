@@ -13,6 +13,24 @@ static func run() -> bool:
 	all_passed = _check("event row no IF label", _contains_label_text(lane_row, "IF"), false) and all_passed
 	all_passed = _check("event row no THEN label", _contains_label_text(lane_row, "THEN"), false) and all_passed
 	all_passed = _check("event row no lane marker dots", _contains_label_text(lane_row, "●"), false) and all_passed
+	var lane_parent_border: int = _panel_border_left(lane_row)
+	lane_row.set_nesting_depth(2)
+	all_passed = _check("event row nesting depth increases left accent", _panel_border_left(lane_row) > lane_parent_border, true) and all_passed
+	lane_row.set_selected(true)
+	all_passed = _check("event row selected flag applies style", _panel_border_left(lane_row) >= 5, true) and all_passed
+
+	var variable_row_ui: VariableRowUI = VariableRowUI.new()
+	variable_row_ui.var_name = "health"
+	variable_row_ui.var_info = {"type": "int", "default": 100}
+	variable_row_ui.refresh()
+	variable_row_ui.set_nesting_depth(1)
+	all_passed = _check("variable row nesting accent width", _panel_border_left(variable_row_ui) >= 4, true) and all_passed
+
+	var group_row_ui: GroupRowUI = GroupRowUI.new()
+	group_row_ui.event_group = EventGroup.new()
+	group_row_ui.refresh()
+	group_row_ui.set_selected(true)
+	all_passed = _check("group row selected accent present", _panel_border_left(group_row_ui) >= 3, true) and all_passed
 
 	all_passed = _check("parse int", editor._parse_variable_initial_value("42", "int"), 42) and all_passed
 	all_passed = _check("parse float", editor._parse_variable_initial_value("3.5", "float"), 3.5) and all_passed
@@ -137,6 +155,10 @@ static func run() -> bool:
 	editor.current_sheet = sub_event_sheet
 	editor.refresh_canvas()
 	all_passed = _check("sub events render nested rows", _count_event_row_nodes(editor), 2) and all_passed
+	var parent_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, parent_row.event_uid)
+	var child_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, child_row.event_uid)
+	if parent_row_ui != null and child_row_ui != null:
+		all_passed = _check("sub event row has stronger nesting accent", _panel_border_left(child_row_ui) > _panel_border_left(parent_row_ui), true) and all_passed
 
 	# Cycle safety: child referencing parent should still render each row once.
 	child_row.sub_events.append(parent_row)
@@ -256,3 +278,12 @@ static func _contains_label_text(node: Node, expected: String) -> bool:
 		if _contains_label_text(child, expected):
 			return true
 	return false
+
+static func _panel_border_left(node: Control) -> int:
+	if node == null:
+		return -1
+	var style: StyleBox = node.get_theme_stylebox("panel")
+	if style is StyleBoxFlat:
+		var flat: StyleBoxFlat = style as StyleBoxFlat
+		return flat.border_width_left
+	return -1

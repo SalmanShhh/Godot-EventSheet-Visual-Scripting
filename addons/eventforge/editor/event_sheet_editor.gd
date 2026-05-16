@@ -26,6 +26,8 @@ const NO_VARIABLES_AVAILABLE_TEXT: String = "No variables available"
 const NO_VARIABLES_AVAILABLE_HINT_TEXT: String = "No variables are available. Add a variable before applying this ACE."
 const ACE_PARAMS_LABEL_WIDTH: float = 110.0
 const ACE_PARAMS_LABEL_MIN_HEIGHT: float = 20.0
+const NESTED_ROW_INDENT_WIDTH: int = 18
+const NESTED_GUTTER_BASE_WIDTH: int = 14
 
 ## Currently selected entry kind.
 ## One of: "none", "event", "condition", "action", "variable", "group"
@@ -116,7 +118,7 @@ func _build_layout() -> void:
 
 	_canvas_vbox = VBoxContainer.new()
 	_canvas_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_canvas_vbox.add_theme_constant_override("separation", 8)
+	_canvas_vbox.add_theme_constant_override("separation", 6)
 	_canvas_vbox.set("custom_minimum_size", Vector2(0, 0))
 	_scroll.add_child(_canvas_vbox)
 
@@ -161,6 +163,7 @@ func refresh_canvas() -> void:
 
 	_add_variables_section()
 	_add_events_section()
+	_refresh_row_selection_states()
 
 func _add_no_sheet_onboarding() -> void:
 	var margin: MarginContainer = MarginContainer.new()
@@ -1175,29 +1178,59 @@ func _find_group_row_ui_by_uid(node: Node, group_uid: String) -> GroupRowUI:
 func _add_document_header() -> void:
 	var header_panel: PanelContainer = PanelContainer.new()
 	var hstyle: StyleBoxFlat = StyleBoxFlat.new()
-	hstyle.bg_color = Color(0.15, 0.17, 0.22, 1.0)
-	hstyle.border_color = Color(0.35, 0.50, 0.80, 1.0)
-	hstyle.set_border_width_all(0)
-	hstyle.border_width_bottom = 2
+	hstyle.bg_color = Color(0.12, 0.14, 0.19, 1.0)
+	hstyle.border_color = Color(0.24, 0.35, 0.56, 1.0)
+	hstyle.set_border_width_all(1)
+	hstyle.border_width_left = 4
+	hstyle.set_corner_radius_all(6)
 	hstyle.set_content_margin_all(10)
+	hstyle.content_margin_left = 12
 	header_panel.add_theme_stylebox_override("panel", hstyle)
 
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	header_panel.add_child(row)
+
+	var title_badge: Label = Label.new()
+	title_badge.text = "EVENT SHEET"
+	title_badge.add_theme_color_override("font_color", Color(0.53, 0.72, 1.0))
+	title_badge.add_theme_font_size_override("font_size", 10)
+	row.add_child(title_badge)
+
 	var title: Label = Label.new()
-	title.text = "Event Sheet Document"
+	title.text = "Document"
 	title.add_theme_color_override("font_color", Color(0.70, 0.85, 1.0))
 	title.add_theme_font_size_override("font_size", 14)
-	header_panel.add_child(title)
+	row.add_child(title)
+
+	var spacer: Control = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(spacer)
+
+	var hint: Label = Label.new()
+	hint.text = "Conditions ➜ Actions"
+	hint.add_theme_color_override("font_color", Color(0.53, 0.60, 0.74))
+	hint.add_theme_font_size_override("font_size", 10)
+	row.add_child(hint)
 	_canvas_vbox.add_child(header_panel)
 
 func _add_section_heading(text: String) -> void:
-	var label: Label = Label.new()
-	label.text = text
-	label.add_theme_color_override("font_color", Color(0.65, 0.65, 0.70))
-	label.add_theme_font_size_override("font_size", 11)
-	_canvas_vbox.add_child(label)
+	var heading_panel: PanelContainer = PanelContainer.new()
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.082, 0.091, 0.118, 1.0)
+	style.border_color = Color(0.130, 0.145, 0.183, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(5)
+	style.set_content_margin_all(6)
+	style.content_margin_left = 10
+	heading_panel.add_theme_stylebox_override("panel", style)
 
-	var sep: HSeparator = HSeparator.new()
-	_canvas_vbox.add_child(sep)
+	var label: Label = Label.new()
+	label.text = text.to_upper()
+	label.add_theme_color_override("font_color", Color(0.62, 0.68, 0.81))
+	label.add_theme_font_size_override("font_size", 10)
+	heading_panel.add_child(label)
+	_canvas_vbox.add_child(heading_panel)
 
 func _add_variables_section() -> void:
 	_add_section_heading("Global Variables")
@@ -1306,16 +1339,56 @@ func _make_render_guard_key(prefix: String, stable_uid: String, fallback_instanc
 func _add_canvas_row(row: Control, indent_level: int) -> void:
 	if row == null:
 		return
-	if indent_level <= 0:
-		_canvas_vbox.add_child(row)
+	if row.has_method("set_nesting_depth"):
+		row.call("set_nesting_depth", indent_level)
+
+	var shell: HBoxContainer = HBoxContainer.new()
+	shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	shell.add_theme_constant_override("separation", 6)
+
+	var gutter_width: int = NESTED_GUTTER_BASE_WIDTH + (indent_level * NESTED_ROW_INDENT_WIDTH)
+	var gutter: HBoxContainer = HBoxContainer.new()
+	gutter.custom_minimum_size = Vector2(gutter_width, 0)
+	gutter.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	gutter.alignment = BoxContainer.ALIGNMENT_END
+	gutter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	for i: int in range(indent_level):
+		if i > 0:
+			var spacer: Control = Control.new()
+			spacer.custom_minimum_size = Vector2(8, 0)
+			gutter.add_child(spacer)
+		var guide: ColorRect = ColorRect.new()
+		guide.color = Color(0.175 + (0.01 * float(i)), 0.220, 0.312, 0.85)
+		guide.custom_minimum_size = Vector2(2, 0)
+		guide.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		gutter.add_child(guide)
+
+	shell.add_child(gutter)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	shell.add_child(row)
+	_canvas_vbox.add_child(shell)
+
+func _refresh_row_selection_states() -> void:
+	if _canvas_vbox == null:
 		return
-	var margin: MarginContainer = MarginContainer.new()
-	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.add_theme_constant_override("margin_left", 24 * indent_level)
-	margin.add_theme_constant_override("margin_top", 1)
-	margin.add_theme_constant_override("margin_bottom", 1)
-	margin.add_child(row)
-	_canvas_vbox.add_child(margin)
+	_apply_selection_state_recursive(_canvas_vbox)
+
+func _apply_selection_state_recursive(node: Node) -> void:
+	if node == null:
+		return
+	if node is EventRowUI:
+		var event_ui: EventRowUI = node as EventRowUI
+		var selected: bool = (_selected_row == event_ui) and (_selected_entry_kind == "event" or _selected_entry_kind == "condition" or _selected_entry_kind == "action")
+		event_ui.set_selected(selected)
+	elif node is VariableRowUI:
+		var variable_ui: VariableRowUI = node as VariableRowUI
+		variable_ui.set_selected((_selected_row == variable_ui) and _selected_entry_kind == "variable")
+	elif node is GroupRowUI:
+		var group_ui: GroupRowUI = node as GroupRowUI
+		group_ui.set_selected((_selected_row == group_ui) and _selected_entry_kind == "group")
+	for child: Node in node.get_children():
+		_apply_selection_state_recursive(child)
 
 # ── Selection handlers ────────────────────────────────────────────────────────
 
@@ -1323,12 +1396,14 @@ func _on_event_selected(row: EventRowUI) -> void:
 	_selected_entry_kind = "event"
 	_selected_row = row
 	_selected_index = -1
+	_refresh_row_selection_states()
 	_rebuild_inspector_event(row)
 
 func _on_condition_selected(row: EventRowUI, index: int) -> void:
 	_selected_entry_kind = "condition"
 	_selected_row = row
 	_selected_index = index
+	_refresh_row_selection_states()
 	_open_condition_params_dialog(row, index)
 
 func _on_condition_edit_requested(row: EventRowUI, index: int) -> void:
@@ -1340,6 +1415,7 @@ func _on_condition_add_another_requested(row: EventRowUI, _index: int) -> void:
 	_selected_entry_kind = "event"
 	_selected_row = row
 	_selected_index = -1
+	_refresh_row_selection_states()
 	_open_add_condition_picker(row)
 
 func _on_condition_replace_requested(row: EventRowUI, index: int) -> void:
@@ -1350,6 +1426,7 @@ func _on_condition_replace_requested(row: EventRowUI, index: int) -> void:
 	_selected_entry_kind = "condition"
 	_selected_row = row
 	_selected_index = index
+	_refresh_row_selection_states()
 	_open_replace_condition_picker(row, index)
 
 ## Toggles the negated flag on the condition at the given index.
@@ -1369,6 +1446,7 @@ func _on_action_selected(row: EventRowUI, index: int) -> void:
 	_selected_entry_kind = "action"
 	_selected_row = row
 	_selected_index = index
+	_refresh_row_selection_states()
 	_open_action_params_dialog(row, index)
 
 func _on_row_add_condition_requested(row: EventRowUI) -> void:
@@ -1377,6 +1455,7 @@ func _on_row_add_condition_requested(row: EventRowUI) -> void:
 	_selected_entry_kind = "event"
 	_selected_row = row
 	_selected_index = -1
+	_refresh_row_selection_states()
 	_open_add_condition_picker(row)
 
 func _on_row_add_action_requested(row: EventRowUI) -> void:
@@ -1385,6 +1464,7 @@ func _on_row_add_action_requested(row: EventRowUI) -> void:
 	_selected_entry_kind = "event"
 	_selected_row = row
 	_selected_index = -1
+	_refresh_row_selection_states()
 	_open_add_action_picker(row)
 
 func _on_event_delete_requested(row: EventRowUI) -> void:
@@ -1403,6 +1483,7 @@ func _on_condition_delete_requested(row: EventRowUI, index: int) -> void:
 	if _selected_row == row and _selected_entry_kind == "condition" and _selected_index == index:
 		_selected_entry_kind = "event"
 		_selected_index = -1
+	_refresh_row_selection_states()
 	_rebuild_inspector_event(row)
 
 func _on_action_delete_requested(row: EventRowUI, index: int) -> void:
@@ -1415,6 +1496,7 @@ func _on_action_delete_requested(row: EventRowUI, index: int) -> void:
 	if _selected_row == row and _selected_entry_kind == "action" and _selected_index == index:
 		_selected_entry_kind = "event"
 		_selected_index = -1
+	_refresh_row_selection_states()
 	_rebuild_inspector_event(row)
 
 func _delete_event_by_uid(uid: String) -> void:
@@ -1455,6 +1537,7 @@ func _on_variable_selected(row: VariableRowUI) -> void:
 	_selected_entry_kind = "variable"
 	_selected_row = row
 	_selected_variable_name = row.var_name
+	_refresh_row_selection_states()
 	_rebuild_inspector_variable(row)
 	if _suppress_variable_popup_on_select:
 		return
@@ -1466,6 +1549,7 @@ func _on_group_selected(row: GroupRowUI) -> void:
 	_selected_entry_kind = "group"
 	_selected_row = row
 	_selected_group = row
+	_refresh_row_selection_states()
 	_rebuild_inspector_group(row)
 
 func _on_group_collapsed_toggled(row: GroupRowUI, _collapsed: bool) -> void:
@@ -1492,6 +1576,7 @@ func _reset_selection_state() -> void:
 	_selected_index = -1
 	_selected_variable_name = ""
 	_selected_group = null
+	_refresh_row_selection_states()
 
 func _show_empty_inspector() -> void:
 	_clear_inspector()

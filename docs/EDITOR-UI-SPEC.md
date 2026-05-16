@@ -32,17 +32,20 @@ It intentionally avoids describing unbuilt behavior as complete.
 
 ### 2.3 Event sheet row UX
 
-- Event rows render as a unified strip with side-by-side lanes:
-  - left lane: run context + conditions
-  - right lane: actions
-- Rows use a Construct/GDevelop-inspired treatment without explicit IF/THEN text labels: C3-like blue-gray strip chrome, subtle lane tint contrast, compact inline condition/action chips, and embedded add affordances.
+- Event rows render as coherent event-sheet strips with a shared header and side-by-side authoring lanes:
+  - top strip: event badge + run context + row controls
+  - body left lane: conditions
+  - body right lane: actions
+- Rows use a Construct/GDevelop-inspired treatment without explicit IF/THEN text labels: C3-like blue-gray document chrome, compact token-style condition/action entries, embedded add affordances, and stronger row hover/selection states.
 - Condition and action summaries are clickable for focused editing.
 - Delete affordances are implemented:
   - event delete via header `✕` action
   - condition delete via condition context menu (`Delete Condition`)
   - action delete via action context menu (`Delete Action`)
 - When deleting a focused condition/action, inspector selection falls back to the owning event view.
-- Variable rows remain compact in-canvas, with rich hover tooltips that include type/default and optional variable descriptions.
+- Nested rows use a stronger gutter/indent guide language to improve scanability of sub-events.
+- Variable and group rows share the same row system and include matching hover/selection treatment.
+- Variable rows retain rich hover tooltips that include type/default and optional variable descriptions.
 
 ### 2.4 Sub-event support status
 
