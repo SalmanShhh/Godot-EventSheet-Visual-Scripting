@@ -2662,7 +2662,9 @@ func _on_comment_text_changed(row: CommentRowUI, text: String) -> void:
 	if row.comment_row.text == text:
 		return
 	row.comment_row.text = text
-	if _selected_entry_kind == "comment" and _selected_row == row and _comment_text_edit != null and not _comment_text_edit.has_focus() and _comment_text_edit.text != text:
+	var is_selected_comment_row: bool = (_selected_entry_kind == "comment" and _selected_row == row)
+	var has_sync_target: bool = (_comment_text_edit != null and not _comment_text_edit.has_focus())
+	if is_selected_comment_row and has_sync_target and _comment_text_edit.text != text:
 		_comment_text_edit.text = text
 	_mark_dirty()
 
@@ -3041,7 +3043,6 @@ func _rebuild_inspector_group(row: GroupRowUI) -> void:
 
 func _rebuild_inspector_comment(row: CommentRowUI) -> void:
 	_clear_inspector()
-	_comment_text_edit = null
 	if row == null or row.comment_row == null:
 		_show_empty_inspector()
 		return

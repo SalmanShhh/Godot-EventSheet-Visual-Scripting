@@ -24,7 +24,6 @@ var _insert_above_btn: Button = null
 var _insert_below_btn: Button = null
 var _edit_btn: Button = null
 var _delete_btn: Button = null
-var _is_syncing_comment_text: bool = false
 
 func _init() -> void:
 	_build_ui()
@@ -211,9 +210,8 @@ func refresh() -> void:
 	if comment_row == null or _comment_text_edit == null:
 		return
 	var text: String = comment_row.text
-	_is_syncing_comment_text = true
-	_comment_text_edit.text = text
-	_is_syncing_comment_text = false
+	if _comment_text_edit.text != text and not _comment_text_edit.has_focus():
+		_comment_text_edit.text = text
 
 func _on_pressed() -> void:
 	comment_selected.emit(self)
@@ -240,8 +238,6 @@ func _on_comment_text_focus_entered() -> void:
 	comment_selected.emit(self)
 
 func _on_comment_text_changed(text: String) -> void:
-	if _is_syncing_comment_text:
-		return
 	comment_text_changed.emit(self, text)
 
 func _on_comment_text_submitted(text: String) -> void:
