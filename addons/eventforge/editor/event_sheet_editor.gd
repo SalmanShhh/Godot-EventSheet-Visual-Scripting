@@ -483,15 +483,26 @@ func _open_ace_params_dialog_for_picker_selection(descriptor: ACEDescriptor) -> 
 			params_dialog_mode = "append_action"
 	if params_dialog_mode.is_empty():
 		return
-	# If there are no editable parameters, apply immediately and reopen the picker
-	# so the flow feels consistent with the two-step picker → params → Back model.
+	# If there are no editable parameters, apply immediately using a snapshot of
+	# picker context and clear stale picker/params state to avoid re-entry.
 	if descriptor.params.is_empty():
-		_ace_params_mode = params_dialog_mode
+		var apply_mode: String = params_dialog_mode
+		var apply_target_row: EventRowUI = _ace_picker_target_row
+		var apply_target_index: int = _ace_picker_target_condition_index
+		_ace_picker_mode = ""
+		_ace_picker_target_row = null
+		_ace_picker_target_condition_index = -1
+		if _ace_picker_popup != null:
+			_ace_picker_popup.hide()
+		_ace_params_mode = apply_mode
 		_ace_params_descriptor = descriptor
-		_ace_params_target_row = _ace_picker_target_row
-		_ace_params_target_index = _ace_picker_target_condition_index
+		_ace_params_target_row = apply_target_row
+		_ace_params_target_index = apply_target_index
 		_apply_ace_params({})
-		_reshow_ace_picker_for_current_mode()
+		_ace_params_descriptor = null
+		_ace_params_mode = ""
+		_ace_params_target_row = null
+		_ace_params_target_index = -1
 		return
 	_open_ace_params_dialog(descriptor, params_dialog_mode, _ace_picker_target_row, _ace_picker_target_condition_index, descriptor.build_default_params(), true)
 
@@ -1258,6 +1269,9 @@ func _add_event_row(event_row: EventRow, indent_level: int = 0, render_guard: Di
 	row_ui.action_selected.connect(_on_action_selected)
 	row_ui.add_condition_requested.connect(_on_row_add_condition_requested)
 	row_ui.add_action_requested.connect(_on_row_add_action_requested)
+	row_ui.event_delete_requested.connect(_on_event_delete_requested)
+	row_ui.condition_delete_requested.connect(_on_condition_delete_requested)
+	row_ui.action_delete_requested.connect(_on_action_delete_requested)
 	_add_canvas_row(row_ui, indent_level)
 
 	for sub_resource: Variant in event_row.sub_events:
@@ -1368,6 +1382,70 @@ func _on_row_add_action_requested(row: EventRowUI) -> void:
 	_selected_row = row
 	_selected_index = -1
 	_open_add_action_picker(row)
+
+func _on_event_delete_requested(row: EventRowUI) -> void:
+	if row == null or row.event_row == null:
+		return
+	var uid: String = row.event_row.event_uid
+	_delete_event_by_uid(uid)
+
+func _on_condition_delete_requested(row: EventRowUI, index: int) -> void:
+	if row == null or row.event_row == null:
+		return
+	if index < 0 or index >= row.event_row.conditions.size():
+		return
+	row.event_row.conditions.remove_at(index)
+	row.refresh()
+	if _selected_row == row and _selected_entry_kind == "condition" and _selected_index == index:
+		_selected_entry_kind = "event"
+		_selected_index = -1
+	_rebuild_inspector_event(row)
+
+func _on_action_delete_requested(row: EventRowUI, index: int) -> void:
+	if row == null or row.event_row == null:
+		return
+	if index < 0 or index >= row.event_row.actions.size():
+		return
+	row.event_row.actions.remove_at(index)
+	row.refresh()
+	if _selected_row == row and _selected_entry_kind == "action" and _selected_index == index:
+		_selected_entry_kind = "event"
+		_selected_index = -1
+	_rebuild_inspector_event(row)
+
+func _delete_event_by_uid(uid: String) -> void:
+	if current_sheet == null or uid.is_empty():
+		return
+	for i: int in range(current_sheet.events.size() - 1, -1, -1):
+		var resource: Variant = current_sheet.events[i]
+		if resource is EventRow and (resource as EventRow).event_uid == uid:
+			current_sheet.events.remove_at(i)
+			_reset_selection_state()
+			refresh_canvas()
+			_show_empty_inspector()
+			if _sheet_toolbar != null:
+				_sheet_toolbar.set_status("Event deleted")
+			return
+	for event_resource: Variant in current_sheet.events:
+		if event_resource is EventRow:
+			if _remove_sub_event_by_uid(event_resource as EventRow, uid):
+				_reset_selection_state()
+				refresh_canvas()
+				_show_empty_inspector()
+				if _sheet_toolbar != null:
+					_sheet_toolbar.set_status("Event deleted")
+				return
+
+func _remove_sub_event_by_uid(parent: EventRow, uid: String) -> bool:
+	for i: int in range(parent.sub_events.size()):
+		var resource: Variant = parent.sub_events[i]
+		if resource is EventRow and (resource as EventRow).event_uid == uid:
+			parent.sub_events.remove_at(i)
+			return true
+		if resource is EventRow:
+			if _remove_sub_event_by_uid(resource as EventRow, uid):
+				return true
+	return false
 
 func _on_variable_selected(row: VariableRowUI) -> void:
 	_selected_entry_kind = "variable"

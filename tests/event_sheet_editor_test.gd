@@ -152,6 +152,61 @@ static func run() -> bool:
 	if editor._ace_picker_popup != null:
 		all_passed = _check("ace picker popup is window", editor._ace_picker_popup is Window, true) and all_passed
 
+	# Zero-param ACE applies once and clears picker/params state after apply.
+	var zero_param_sheet: EventSheetResource = EventSheetResource.new()
+	editor.current_sheet = zero_param_sheet
+	editor.refresh_canvas()
+	editor._ace_picker_mode = "append_condition"
+	var zero_param_row: EventRow = EventRow.new()
+	zero_param_sheet.events.append(zero_param_row)
+	var zero_param_row_ui: EventRowUI = EventRowUI.new()
+	zero_param_row_ui.event_row = zero_param_row
+	editor._ace_picker_target_row = zero_param_row_ui
+	editor._ace_picker_target_condition_index = -1
+	var always_descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "Always")
+	if always_descriptor != null:
+		all_passed = _check("always descriptor has no params", always_descriptor.params.is_empty(), true) and all_passed
+		editor._open_ace_params_dialog_for_picker_selection(always_descriptor)
+		all_passed = _check("zero-param apply clears picker mode", editor._ace_picker_mode, "") and all_passed
+		all_passed = _check("zero-param apply clears picker target row", editor._ace_picker_target_row == null, true) and all_passed
+		all_passed = _check("zero-param apply clears params descriptor", editor._ace_params_descriptor == null, true) and all_passed
+		all_passed = _check("zero-param condition added once", zero_param_row.conditions.size(), 1) and all_passed
+
+	# Delete event removes it from the sheet and refreshes.
+	var delete_sheet: EventSheetResource = EventSheetResource.new()
+	editor.current_sheet = delete_sheet
+	var del_event: EventRow = EventRow.new()
+	delete_sheet.events.append(del_event)
+	var del_uid: String = del_event.event_uid
+	editor._delete_event_by_uid(del_uid)
+	all_passed = _check("delete event removes from sheet", delete_sheet.events.size(), 0) and all_passed
+
+	# Delete condition removes it from the event row.
+	var del_cond_sheet: EventSheetResource = EventSheetResource.new()
+	var del_cond_event: EventRow = EventRow.new()
+	var del_cond: ACECondition = ACECondition.new()
+	del_cond.ace_id = "Always"
+	del_cond_event.conditions.append(del_cond)
+	del_cond_sheet.events.append(del_cond_event)
+	editor.current_sheet = del_cond_sheet
+	editor.refresh_canvas()
+	var del_cond_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, del_cond_event.event_uid)
+	if del_cond_row_ui != null:
+		editor._on_condition_delete_requested(del_cond_row_ui, 0)
+		all_passed = _check("delete condition removes from event", del_cond_event.conditions.size(), 0) and all_passed
+
+	# Delete action removes it from the event row.
+	var del_act_event: EventRow = EventRow.new()
+	var del_action: ACEAction = ACEAction.new()
+	del_action.ace_id = "QueueFree"
+	del_act_event.actions.append(del_action)
+	del_cond_sheet.events.append(del_act_event)
+	editor.refresh_canvas()
+	var del_act_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, del_act_event.event_uid)
+	if del_act_row_ui != null:
+		editor._on_action_delete_requested(del_act_row_ui, 0)
+		all_passed = _check("delete action removes from event", del_act_event.actions.size(), 0) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
