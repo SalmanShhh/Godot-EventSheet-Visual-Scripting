@@ -300,7 +300,7 @@ func _build_ui() -> void:
 	connect("mouse_entered", _on_mouse_entered)
 	connect("mouse_exited", _on_mouse_exited)
 	connect("gui_input", _on_row_gui_input)
-	_apply_structure_affordance_state()
+	_apply_affordance_state()
 
 func set_depth(depth: int) -> void:
 	_depth = max(0, depth)
@@ -309,7 +309,7 @@ func set_depth(depth: int) -> void:
 func set_selected(selected: bool) -> void:
 	_selected = selected
 	_apply_row_style()
-	_apply_structure_affordance_state()
+	_apply_affordance_state()
 
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
@@ -565,14 +565,14 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 func _on_mouse_entered() -> void:
 	_hovered = true
 	_apply_row_style()
-	_apply_structure_affordance_state()
+	_apply_affordance_state()
 
 func _on_mouse_exited() -> void:
 	_hovered = false
 	_apply_row_style()
-	_apply_structure_affordance_state()
+	_apply_affordance_state()
 
-func _apply_structure_affordance_state() -> void:
+func _apply_affordance_state() -> void:
 	var controls_alpha: float = 1.0 if (_hovered or _selected) else INSERT_CONTROL_DIM_ALPHA
 	if _insert_above_btn != null:
 		_insert_above_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
