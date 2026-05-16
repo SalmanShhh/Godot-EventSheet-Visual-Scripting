@@ -7,6 +7,12 @@ class_name EventRowUI
 
 ## Emitted when a condition summary is clicked.
 signal condition_selected(row: EventRowUI, index: int)
+## Emitted when a condition right-click menu requests edit.
+signal condition_edit_requested(row: EventRowUI, index: int)
+## Emitted when a condition right-click menu requests adding another condition.
+signal condition_add_another_requested(row: EventRowUI, index: int)
+## Emitted when a condition right-click menu requests replacement.
+signal condition_replace_requested(row: EventRowUI, index: int)
 ## Emitted when an action summary is clicked.
 signal action_selected(row: EventRowUI, index: int)
 ## Emitted when the event header/row itself is clicked for full event inspection.
@@ -21,6 +27,12 @@ var _header_label: Label = null
 var _runs_label: Label = null
 var _conditions_container: VBoxContainer = null
 var _actions_container: VBoxContainer = null
+var _condition_context_menu: PopupMenu = null
+var _context_condition_index: int = -1
+
+const CONDITION_MENU_EDIT: int = 1
+const CONDITION_MENU_ADD_ANOTHER: int = 2
+const CONDITION_MENU_REPLACE: int = 3
 
 func _init() -> void:
 	_build_ui()
@@ -28,16 +40,27 @@ func _init() -> void:
 func _build_ui() -> void:
 	# Outer card styling
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.18, 0.20, 0.25, 1.0)
+	style.bg_color = Color(0.13, 0.15, 0.20, 1.0)
 	style.border_color = Color(0.35, 0.45, 0.65, 1.0)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
+	style.set_border_width_all(0)
+	style.border_width_left = 4
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.set_corner_radius_all(5)
 	style.set_content_margin_all(8)
 	add_theme_stylebox_override("panel", style)
 
 	_vbox = VBoxContainer.new()
 	_vbox.add_theme_constant_override("separation", 4)
 	add_child(_vbox)
+
+	_condition_context_menu = PopupMenu.new()
+	_condition_context_menu.add_item("Edit", CONDITION_MENU_EDIT)
+	_condition_context_menu.add_item("Add Another Condition", CONDITION_MENU_ADD_ANOTHER)
+	_condition_context_menu.add_item("Replace Condition", CONDITION_MENU_REPLACE)
+	_condition_context_menu.connect("id_pressed", _on_condition_context_menu_id_pressed)
+	add_child(_condition_context_menu)
 
 	# Header row
 	var header_row: HBoxContainer = HBoxContainer.new()
@@ -71,20 +94,48 @@ func _build_ui() -> void:
 	_runs_label.add_theme_font_size_override("font_size", 11)
 	_vbox.add_child(_runs_label)
 
-	# Conditions section
+	# Conditions lane
+	var conditions_lane: PanelContainer = PanelContainer.new()
+	var conditions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
+	conditions_lane_style.bg_color = Color(0.09, 0.15, 0.11, 0.95)
+	conditions_lane_style.border_color = Color(0.30, 0.62, 0.42, 1.0)
+	conditions_lane_style.set_border_width_all(1)
+	conditions_lane_style.set_corner_radius_all(3)
+	conditions_lane_style.set_content_margin_all(5)
+	conditions_lane.add_theme_stylebox_override("panel", conditions_lane_style)
+	_vbox.add_child(conditions_lane)
+
+	var conditions_lane_vbox: VBoxContainer = VBoxContainer.new()
+	conditions_lane_vbox.add_theme_constant_override("separation", 2)
+	conditions_lane.add_child(conditions_lane_vbox)
+
 	var cond_heading: Label = Label.new()
 	cond_heading.text = "Conditions"
 	cond_heading.add_theme_color_override("font_color", Color(0.65, 0.85, 0.65))
 	cond_heading.add_theme_font_size_override("font_size", 11)
-	_vbox.add_child(cond_heading)
+	conditions_lane_vbox.add_child(cond_heading)
 
 	_conditions_container = VBoxContainer.new()
 	_conditions_container.add_theme_constant_override("separation", 2)
-	_vbox.add_child(_conditions_container)
+	conditions_lane_vbox.add_child(_conditions_container)
 
-	# Actions section
+	# Actions lane
+	var actions_lane: PanelContainer = PanelContainer.new()
+	var actions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
+	actions_lane_style.bg_color = Color(0.10, 0.12, 0.18, 0.95)
+	actions_lane_style.border_color = Color(0.35, 0.48, 0.75, 1.0)
+	actions_lane_style.set_border_width_all(1)
+	actions_lane_style.set_corner_radius_all(3)
+	actions_lane_style.set_content_margin_all(5)
+	actions_lane.add_theme_stylebox_override("panel", actions_lane_style)
+	_vbox.add_child(actions_lane)
+
+	var actions_lane_vbox: VBoxContainer = VBoxContainer.new()
+	actions_lane_vbox.add_theme_constant_override("separation", 2)
+	actions_lane.add_child(actions_lane_vbox)
+
 	var actions_row: HBoxContainer = HBoxContainer.new()
-	_vbox.add_child(actions_row)
+	actions_lane_vbox.add_child(actions_row)
 
 	var action_heading: Label = Label.new()
 	action_heading.text = "Actions"
@@ -105,7 +156,7 @@ func _build_ui() -> void:
 
 	_actions_container = VBoxContainer.new()
 	_actions_container.add_theme_constant_override("separation", 2)
-	_vbox.add_child(_actions_container)
+	actions_lane_vbox.add_child(_actions_container)
 
 ## Refreshes the display from the assigned event_row resource.
 func refresh() -> void:
@@ -273,9 +324,35 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	btn.add_theme_font_size_override("font_size", 11)
 	if is_condition:
 		btn.connect("pressed", func() -> void: condition_selected.emit(self, index))
+		btn.connect("gui_input", func(event: InputEvent) -> void: _on_condition_entry_gui_input(event, index))
 	else:
 		btn.connect("pressed", func() -> void: action_selected.emit(self, index))
 	return btn
 
 func _on_event_header_pressed() -> void:
 	event_selected.emit(self)
+
+func _on_condition_entry_gui_input(event: InputEvent, index: int) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	var mb: InputEventMouseButton = event as InputEventMouseButton
+	if mb.button_index != MOUSE_BUTTON_RIGHT or not mb.pressed:
+		return
+	_context_condition_index = index
+	if _condition_context_menu == null:
+		return
+	_condition_context_menu.position = DisplayServer.mouse_get_position()
+	_condition_context_menu.reset_size()
+	_condition_context_menu.popup()
+	get_viewport().set_input_as_handled()
+
+func _on_condition_context_menu_id_pressed(id: int) -> void:
+	if _context_condition_index < 0:
+		return
+	match id:
+		CONDITION_MENU_EDIT:
+			condition_edit_requested.emit(self, _context_condition_index)
+		CONDITION_MENU_ADD_ANOTHER:
+			condition_add_another_requested.emit(self, _context_condition_index)
+		CONDITION_MENU_REPLACE:
+			condition_replace_requested.emit(self, _context_condition_index)

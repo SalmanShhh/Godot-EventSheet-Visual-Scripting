@@ -59,10 +59,10 @@ Events
   └───────────────────────────────────────┘
 ```
 
-Groups appear as purple-tinted headers and are groundwork only in Phase 2.3:
+Groups appear as purple-tinted headers with disclosure controls:
 
 ```
-  ▶ Group: Player
+  ▼ Group: Player
 ```
 
 ---
@@ -109,20 +109,26 @@ Variable rows are:
 
 ### 4.5 Event blocks
 
-Event blocks read like document sections:
+Event blocks read like document sections with distinct condition/action lanes:
 
 ```
 ┌─ Event ────────────────────────────────┐
 │ Runs: Every Frame                       │
-│ Conditions                              │
-│   Always                                │
-│ Actions                                 │
-│   Print "Hello"                         │
+│ ┌ Conditions ─────────────────────────┐ │
+│ │   Always                            │ │
+│ └─────────────────────────────────────┘ │
+│ ┌ Actions ────────────────────────────┐ │
+│ │   Print "Hello"                     │ │
+│ └─────────────────────────────────────┘ │
 └─────────────────────────────────────────┘
 ```
 
 Each condition and action entry is a clickable summary. Clicking opens a focused inspector
 for that entry. The focused inspector has a `← Back to Event` button.
+Right-clicking a condition summary opens:
+- `Edit`
+- `Add Another Condition`
+- `Replace Condition`
 
 ### 4.6 Run context language
 
@@ -152,7 +158,7 @@ The inspector panel on the right side shows context-sensitive editing UI.
 | Event row              | Full event inspector: run context, conditions list, actions list |
 | Condition entry        | Focused condition editor + `← Back to Event`      |
 | Action entry           | Focused action editor + `← Back to Event`         |
-| Variable row           | Variable editor: name, type, default value        |
+| Variable row           | Variable popup editor: name, type, initial value, description |
 | Group row              | Group editor: name, description, enabled/collapsed |
 
 ### 5.1 Focused entry removal
@@ -161,9 +167,20 @@ Removing a focused condition or action from the focused inspector must:
 1. Remove the entry from the event row.
 2. Return the inspector to the full event view for the **same** event row.
 
-### 5.2 Group inspector note
+### 5.2 Variable popup dialog
+
+Create/edit variable uses a compact popup dialog with fields:
+- Name
+- Type
+- Initial value
+- Description (optional)
+
+Confirm applies changes to `current_sheet.variables`; cancel does not mutate data.
+
+### 5.3 Group inspector note
 
 The group inspector shows name, description, and enabled/collapsed fields.
+Collapsed groups hide child rows; expanded groups render child rows.
 It must display a note:
 
 ```

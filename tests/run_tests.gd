@@ -10,6 +10,7 @@ func _init() -> void:
 	passed = CompileDemoTest.run() and passed
 	passed = VariableRowFormatTest.run() and passed
 	passed = ACEMetadataTest.run() and passed
+	passed = EventSheetEditorTest.run() and passed
 	if passed:
 		print("All tests passed.")
 		quit(0)

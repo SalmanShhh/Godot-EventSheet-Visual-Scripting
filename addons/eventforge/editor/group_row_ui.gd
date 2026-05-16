@@ -7,10 +7,13 @@ class_name GroupRowUI
 
 ## Emitted when this group row is clicked for inspection.
 signal group_selected(row: GroupRowUI)
+## Emitted when this group's collapsed state is toggled.
+signal group_collapsed_toggled(row: GroupRowUI, collapsed: bool)
 
 var event_group: EventGroup = null
 
 var _name_label: Label = null
+var _disclosure_btn: Button = null
 
 func _init() -> void:
 	_build_ui()
@@ -30,9 +33,15 @@ func _build_ui() -> void:
 	var hbox: HBoxContainer = HBoxContainer.new()
 	add_child(hbox)
 
+	_disclosure_btn = Button.new()
+	_disclosure_btn.flat = true
+	_disclosure_btn.tooltip_text = "Expand/collapse group"
+	_disclosure_btn.connect("pressed", _on_toggle_pressed)
+	hbox.add_child(_disclosure_btn)
+
 	# Group badge
 	var badge: Label = Label.new()
-	badge.text = "▶ Group"
+	badge.text = "Group"
 	badge.add_theme_color_override("font_color", Color(0.80, 0.50, 1.0))
 	badge.add_theme_font_size_override("font_size", 10)
 	hbox.add_child(badge)
@@ -59,6 +68,9 @@ func _build_ui() -> void:
 func refresh() -> void:
 	if event_group == null or _name_label == null:
 		return
+	var collapsed: bool = _is_group_collapsed(event_group)
+	if _disclosure_btn != null:
+		_disclosure_btn.text = "▶" if collapsed else "▼"
 	var display_name: String = event_group.name
 	if display_name.is_empty():
 		display_name = event_group.group_name
@@ -70,6 +82,24 @@ func refresh() -> void:
 
 func _on_pressed() -> void:
 	group_selected.emit(self)
+
+func _on_toggle_pressed() -> void:
+	if event_group == null:
+		return
+	var collapsed: bool = _is_group_collapsed(event_group)
+	event_group.collapsed = not collapsed
+	event_group.expanded = not event_group.collapsed
+	refresh()
+	group_collapsed_toggled.emit(self, event_group.collapsed)
+
+func _is_group_collapsed(group: EventGroup) -> bool:
+	if group == null:
+		return false
+	if group.collapsed:
+		return true
+	if not group.expanded:
+		return true
+	return false
 
 func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
