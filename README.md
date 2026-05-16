@@ -1,6 +1,6 @@
 # EventForge (GodotEventSheet)
 
-EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 4.x. Event sheets compile to deterministic, readable GDScript.
+EventForge is a Construct-style event sheet plugin for Godot 4.x. Event sheets compile to deterministic, readable GDScript.
 
 ## Install
 
@@ -8,14 +8,14 @@ EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 
 2. In **Project > Project Settings > Plugins**, enable **EventForge**.
 3. Confirm the `EventForgeBridge` autoload is available.
 
-## Quickstart with demo
+## Quickstart with the demo assets
 
-1. Open the `demo/` project in Godot 4.3+.
+1. Open the repository root project (`project.godot`) in Godot 4.3+.
 2. Inspect `demo/sheets/player.tres`.
 3. Run the compiler script path used in tests (`tests/compile_demo_test.gd`) or call `SheetCompiler.compile(...)` manually.
 4. Verify output matches `demo/sheets/player_generated.gd`.
 
-## Phase 1 status
+## Current status
 
 | Area | Status |
 |---|---|
@@ -23,13 +23,13 @@ EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 
 | Resources/data model | ✅ |
 | Runtime bridge | ✅ |
 | Built-in ACE registry | ✅ |
-| End-to-end compile (`.tres` -> `.gd`) | ✅ (Phase 1 subset) |
-| UI editor implementation | ⏳ Deferred |
-| Import/binding pipelines | ⏳ Deferred |
+| End-to-end compile (`.tres` -> `.gd`) | ✅ (current subset) |
+| Editor UI foundation (canvas, picker, params, delete flows) | ✅ Implemented; under active refinement |
+| Import/binding pipelines | ⏳ Planned |
 
 ## Roadmap
 
-See `docs/SPEC.md` for consolidated specification and phased roadmap.
+See `docs/EDITOR-UI-SPEC.md` for current editor UX details and `docs/SPEC.md` for architecture and next-phase compiler planning.
 
 ## License
 
