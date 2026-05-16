@@ -2450,15 +2450,16 @@ func _make_default_insert_event_row() -> EventRow:
 func _insert_event_relative_in_array(arr: Array, target_uid: String, target_kind: String, insert_after: bool, new_event: EventRow) -> bool:
 	for i: int in range(arr.size()):
 		var resource: Variant = arr[i]
+		var insert_index: int = i + (1 if insert_after else 0)
 		if target_kind == "event" and resource is EventRow:
 			var event_row: EventRow = resource as EventRow
 			if event_row.event_uid == target_uid:
-				arr.insert(i + (1 if insert_after else 0), new_event)
+				arr.insert(insert_index, new_event)
 				return true
 		elif target_kind == "group" and resource is EventGroup:
 			var event_group: EventGroup = resource as EventGroup
 			if event_group.group_uid == target_uid:
-				arr.insert(i + (1 if insert_after else 0), new_event)
+				arr.insert(insert_index, new_event)
 				return true
 
 		if resource is EventRow:

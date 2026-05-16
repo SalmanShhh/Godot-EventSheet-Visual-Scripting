@@ -992,7 +992,10 @@ static func _find_button_with_tooltip(node: Node, tooltip: String) -> Button:
 	var buttons: Array = _find_buttons_with_tooltip(node, tooltip)
 	if buttons.is_empty():
 		return null
-	return buttons[0] as Button
+	var first: Variant = buttons[0]
+	if not (first is Button):
+		return null
+	return first as Button
 
 static func _collect_buttons_with_tooltip(node: Node, tooltip: String, out: Array) -> void:
 	if node == null:
