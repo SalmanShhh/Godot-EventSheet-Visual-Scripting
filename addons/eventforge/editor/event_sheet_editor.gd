@@ -2429,7 +2429,11 @@ func _delete_event_by_uid(uid: String) -> void:
 				return
 
 func _insert_new_event_relative(target_uid: String, target_kind: String, insert_after: bool) -> void:
-	if current_sheet == null or target_uid.is_empty():
+	if current_sheet == null:
+		_set_status("No sheet loaded for insertion", true)
+		return
+	if target_uid.is_empty():
+		_set_status("Cannot insert relative to an empty target row id", true)
 		return
 	var new_event: EventRow = _make_default_insert_event_row()
 	if not _insert_event_relative_in_array(current_sheet.events, target_uid, target_kind, insert_after, new_event):
@@ -2471,6 +2475,7 @@ func _insert_event_relative_in_array(arr: Array, target_uid: String, target_kind
 			var nested_group: EventGroup = resource as EventGroup
 			if _insert_event_relative_in_array(nested_group.events, target_uid, target_kind, insert_after, new_event):
 				return true
+			# `rows` is a legacy alias path for group children that may still exist in older sheets.
 			if _insert_event_relative_in_array(nested_group.rows, target_uid, target_kind, insert_after, new_event):
 				return true
 	return false
