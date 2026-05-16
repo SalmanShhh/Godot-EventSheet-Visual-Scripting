@@ -1311,7 +1311,9 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 		return
 	var margin: MarginContainer = MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.add_theme_constant_override("margin_left", 20 * indent_level)
+	margin.add_theme_constant_override("margin_left", 24 * indent_level)
+	margin.add_theme_constant_override("margin_top", 1)
+	margin.add_theme_constant_override("margin_bottom", 1)
 	margin.add_child(row)
 	_canvas_vbox.add_child(margin)
 

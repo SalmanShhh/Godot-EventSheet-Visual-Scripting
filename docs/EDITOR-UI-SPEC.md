@@ -32,10 +32,10 @@ It intentionally avoids describing unbuilt behavior as complete.
 
 ### 2.3 Event sheet row UX
 
-- Event rows render with side-by-side lanes:
+- Event rows render as a unified strip with side-by-side lanes:
   - left lane: run context + conditions
   - right lane: actions
-- Rows use a Construct/GDevelop-inspired block treatment without explicit IF/THEN text labels: stronger lane framing, tinted condition/action cards, and per-entry accent rails for scanability.
+- Rows use a Construct/GDevelop-inspired treatment without explicit IF/THEN text labels: subtle lane tint contrast, compact inline condition/action chips, and embedded add affordances.
 - Condition and action summaries are clickable for focused editing.
 - Delete affordances are implemented:
   - event delete via header `✕` action
