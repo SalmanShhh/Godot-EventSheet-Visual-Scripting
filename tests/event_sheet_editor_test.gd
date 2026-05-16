@@ -128,10 +128,22 @@ static func run() -> bool:
 		all_passed = _check("operator dropdown item count", op_dropdown.item_count, 6) and all_passed
 		all_passed = _check("operator dropdown selected value", op_dropdown.get_item_text(op_dropdown.selected), ">=") and all_passed
 
+	var expr_param: ACEParam = ACEParam.new()
+	expr_param.type_name = "String"
+	expr_param.hint = "expression"
+	var expr_input: Control = editor._create_ace_param_input(expr_param, "value")
+	all_passed = _check("expression param uses line edit input", expr_input is LineEdit, true) and all_passed
+	all_passed = _check("expression hint enables picker button", editor._param_supports_expression_picker(expr_param, expr_input), true) and all_passed
+	var get_var_expression_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "GetVar")
+	all_passed = _check("get var expression descriptor exists", get_var_expression_desc != null, true) and all_passed
+	if get_var_expression_desc != null:
+		all_passed = _check("expression snippet applies defaults", editor._build_expression_snippet(get_var_expression_desc, {"var_name": "health"}), "health") and all_passed
+
 	var compare_var: ACEDescriptor = ACERegistry.find_descriptor("Core", "CompareVar")
 	all_passed = _check("compare var descriptor exists", compare_var != null, true) and all_passed
-	if compare_var != null and compare_var.params.size() > 1:
+	if compare_var != null and compare_var.params.size() > 2:
 		all_passed = _check("compare var op options count", compare_var.params[1].options.size(), 6) and all_passed
+		all_passed = _check("compare var value marked expression", compare_var.params[2].hint, "expression") and all_passed
 
 	var group_default: EventGroup = EventGroup.new()
 	all_passed = _check("group default expanded", editor._is_group_collapsed(group_default), false) and all_passed
@@ -585,6 +597,13 @@ static func run() -> bool:
 	runtime_ace.node_type = ""
 	all_passed = _check("picker group runtime provider uses provider_id", editor._get_picker_group(runtime_ace), "MyPlugin") and all_passed
 
+	var expression_ace: ACEDescriptor = ACEDescriptor.new()
+	expression_ace.provider_id = "Core"
+	expression_ace.ace_type = ACEDescriptor.ACEType.EXPRESSION
+	expression_ace.category = ""
+	expression_ace.node_type = ""
+	all_passed = _check("picker group expression default category", editor._get_picker_group(expression_ace), "General Expressions") and all_passed
+
 	# _get_picker_group_color: node-type groups get amber; known categories get distinct colours.
 	var amber: Color = EventSheetEditor.ACE_PICKER_NODE_TYPE_GROUP_COLOR
 	all_passed = _check("picker color CharacterBody2D is amber", EventSheetEditor._get_picker_group_color("CharacterBody2D"), amber) and all_passed
@@ -685,6 +704,28 @@ static func run() -> bool:
 			empty_group_count += 1
 			g = g.get_next()
 	all_passed = _check("empty filter shows multiple groups", empty_group_count > 3, true) and all_passed
+
+	# Expression picker: list only expressions and preserve grouped discovery.
+	var expression_tree: Tree = Tree.new()
+	expression_tree.hide_root = true
+	editor._expression_picker_tree = expression_tree
+	editor._expression_picker_description = Label.new()
+	editor._populate_expression_picker("velocity")
+	var expression_root: TreeItem = expression_tree.get_root()
+	var found_velocity_expression: bool = false
+	if expression_root != null:
+		var group: TreeItem = expression_root.get_first_child()
+		while group != null:
+			var expression_item: TreeItem = group.get_first_child()
+			while expression_item != null:
+				var value: Variant = expression_item.get_metadata(0)
+				if value is ACEDescriptor:
+					var descriptor: ACEDescriptor = value as ACEDescriptor
+					if descriptor.ace_type == ACEDescriptor.ACEType.EXPRESSION and "velocity" in descriptor.get_list_name().to_lower():
+						found_velocity_expression = true
+				expression_item = expression_item.get_next()
+			group = group.get_next()
+	all_passed = _check("expression picker search finds velocity expression", found_velocity_expression, true) and all_passed
 
 	return all_passed
 
