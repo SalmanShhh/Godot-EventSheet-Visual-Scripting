@@ -8,18 +8,22 @@ signal comment_selected(row: CommentRowUI)
 signal comment_delete_requested(row: CommentRowUI)
 signal insert_comment_above_requested(row: CommentRowUI)
 signal insert_comment_below_requested(row: CommentRowUI)
+signal comment_text_changed(row: CommentRowUI, text: String)
+signal comment_text_submitted(row: CommentRowUI, text: String)
 
 const LANE_DIVIDER_WIDTH: int = 2
 const INSERT_CONTROL_DIM_ALPHA: float = 0.46
 
 var comment_row: CommentRow = null
 
-var _comment_text_label: Label = null
+var _comment_text_edit: LineEdit = null
 var _depth: int = 0
 var _selected: bool = false
 var _hovered: bool = false
 var _insert_above_btn: Button = null
 var _insert_below_btn: Button = null
+var _edit_btn: Button = null
+var _delete_btn: Button = null
 
 func _init() -> void:
 	_build_ui()
@@ -99,11 +103,23 @@ func _build_ui() -> void:
 	comment_hbox.add_theme_constant_override("separation", 4)
 	comment_lane.add_child(comment_hbox)
 
-	_comment_text_label = Label.new()
-	_comment_text_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_comment_text_label.add_theme_color_override("font_color", Color(0.90, 0.84, 0.74))
-	_comment_text_label.add_theme_font_size_override("font_size", 10)
-	comment_hbox.add_child(_comment_text_label)
+	var comment_prefix: Label = Label.new()
+	comment_prefix.text = "#"
+	comment_prefix.add_theme_color_override("font_color", Color(0.88, 0.80, 0.66))
+	comment_prefix.add_theme_font_size_override("font_size", 10)
+	comment_hbox.add_child(comment_prefix)
+
+	_comment_text_edit = LineEdit.new()
+	_comment_text_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_comment_text_edit.placeholder_text = "Write comment…"
+	_comment_text_edit.tooltip_text = "Edit inline comment text"
+	_comment_text_edit.add_theme_color_override("font_color", Color(0.90, 0.84, 0.74))
+	_comment_text_edit.add_theme_color_override("font_placeholder_color", Color(0.66, 0.58, 0.47))
+	_comment_text_edit.add_theme_font_size_override("font_size", 10)
+	_comment_text_edit.connect("text_changed", _on_comment_text_changed)
+	_comment_text_edit.connect("text_submitted", _on_comment_text_submitted)
+	_comment_text_edit.connect("focus_entered", _on_comment_text_focus_entered)
+	comment_hbox.add_child(_comment_text_edit)
 
 	_insert_above_btn = Button.new()
 	_insert_above_btn.text = "+↑"
@@ -125,26 +141,26 @@ func _build_ui() -> void:
 	_insert_below_btn.connect("pressed", _on_insert_below_pressed)
 	comment_hbox.add_child(_insert_below_btn)
 
-	var edit_btn: Button = Button.new()
-	edit_btn.text = "✎"
-	edit_btn.flat = true
-	edit_btn.tooltip_text = "Select comment"
-	edit_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	edit_btn.add_theme_color_override("font_color", Color(0.88, 0.82, 0.72))
-	edit_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.93, 0.82))
-	edit_btn.connect("pressed", _on_pressed)
-	comment_hbox.add_child(edit_btn)
+	_edit_btn = Button.new()
+	_edit_btn.text = "✎"
+	_edit_btn.flat = true
+	_edit_btn.tooltip_text = "Focus comment text"
+	_edit_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_edit_btn.add_theme_color_override("font_color", Color(0.88, 0.82, 0.72))
+	_edit_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.93, 0.82))
+	_edit_btn.connect("pressed", _on_pressed)
+	comment_hbox.add_child(_edit_btn)
 
-	var delete_btn: Button = Button.new()
-	delete_btn.text = "×"
-	delete_btn.flat = true
-	delete_btn.tooltip_text = "Delete comment"
-	delete_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	delete_btn.add_theme_color_override("font_color", Color(0.80, 0.42, 0.42))
-	delete_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.55, 0.55))
-	delete_btn.add_theme_font_size_override("font_size", 12)
-	delete_btn.connect("pressed", _on_delete_pressed)
-	comment_hbox.add_child(delete_btn)
+	_delete_btn = Button.new()
+	_delete_btn.text = "×"
+	_delete_btn.flat = true
+	_delete_btn.tooltip_text = "Delete comment"
+	_delete_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_delete_btn.add_theme_color_override("font_color", Color(0.80, 0.42, 0.42))
+	_delete_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.55, 0.55))
+	_delete_btn.add_theme_font_size_override("font_size", 12)
+	_delete_btn.connect("pressed", _on_delete_pressed)
+	comment_hbox.add_child(_delete_btn)
 
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	connect("gui_input", _on_gui_input)
@@ -185,15 +201,23 @@ func _apply_affordance_state() -> void:
 		_insert_above_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
 	if _insert_below_btn != null:
 		_insert_below_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
+	if _edit_btn != null:
+		_edit_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
+	if _delete_btn != null:
+		_delete_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
 
 func refresh() -> void:
-	if comment_row == null or _comment_text_label == null:
+	if comment_row == null or _comment_text_edit == null:
 		return
-	var text: String = comment_row.text.strip_edges()
-	_comment_text_label.text = ("# %s" % text) if not text.is_empty() else "# (comment)"
+	var text: String = comment_row.text
+	if _comment_text_edit.text != text and not _comment_text_edit.has_focus():
+		_comment_text_edit.text = text
 
 func _on_pressed() -> void:
 	comment_selected.emit(self)
+	if _comment_text_edit != null:
+		_comment_text_edit.grab_focus()
+		_comment_text_edit.caret_column = _comment_text_edit.text.length()
 
 func _on_delete_pressed() -> void:
 	comment_delete_requested.emit(self)
@@ -209,6 +233,15 @@ func _on_gui_input(event: InputEvent) -> void:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
 			comment_selected.emit(self)
+
+func _on_comment_text_focus_entered() -> void:
+	comment_selected.emit(self)
+
+func _on_comment_text_changed(text: String) -> void:
+	comment_text_changed.emit(self, text)
+
+func _on_comment_text_submitted(text: String) -> void:
+	comment_text_submitted.emit(self, text)
 
 func _on_mouse_entered() -> void:
 	_hovered = true
