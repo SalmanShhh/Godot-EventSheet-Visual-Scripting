@@ -138,6 +138,9 @@ static func run() -> bool:
 	all_passed = _check("get var expression descriptor exists", get_var_expression_desc != null, true) and all_passed
 	if get_var_expression_desc != null:
 		all_passed = _check("expression snippet applies defaults", editor._build_expression_snippet(get_var_expression_desc, {"var_name": "health"}), "health") and all_passed
+		all_passed = _check("expression snippet keeps unresolved token when value missing", editor._build_expression_snippet(get_var_expression_desc, {}), "{var_name}") and all_passed
+	all_passed = _check("expression separator omitted after open paren", editor._should_insert_expression_separator("(", "delta"), false) and all_passed
+	all_passed = _check("expression separator used for bare identifiers", editor._should_insert_expression_separator("health", "delta"), true) and all_passed
 
 	var compare_var: ACEDescriptor = ACERegistry.find_descriptor("Core", "CompareVar")
 	all_passed = _check("compare var descriptor exists", compare_var != null, true) and all_passed

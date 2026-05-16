@@ -1081,9 +1081,15 @@ func _build_expression_snippet(descriptor: ACEDescriptor, values: Dictionary) ->
 	if descriptor == null:
 		return ""
 	var template: String = descriptor.codegen_template if not descriptor.codegen_template.is_empty() else descriptor.get_display_text()
+	var keys: Array[String] = []
 	for key: Variant in values.keys():
-		var token: String = "{%s}" % str(key)
-		template = template.replace(token, str(values[key]))
+		keys.append(str(key))
+	keys.sort_custom(func(a: String, b: String) -> bool:
+		return a.length() > b.length()
+	)
+	for key: String in keys:
+		var token: String = "{%s}" % key
+		template = template.replace(token, str(values.get(key, "")))
 	return template
 
 func _insert_expression_snippet(snippet: String) -> void:
@@ -1096,11 +1102,23 @@ func _insert_expression_snippet(snippet: String) -> void:
 	if existing_text.strip_edges().is_empty():
 		_expression_picker_target_input.text = insert_text
 	else:
-		_expression_picker_target_input.text = "%s %s" % [existing_text, insert_text]
+		var separator: String = " " if _should_insert_expression_separator(existing_text, insert_text) else ""
+		_expression_picker_target_input.text = "%s%s%s" % [existing_text, separator, insert_text]
 	_expression_picker_target_input.grab_focus()
 	if _expression_picker_popup != null:
 		_expression_picker_popup.hide()
 	_expression_picker_target_input = null
+
+func _should_insert_expression_separator(existing_text: String, insert_text: String) -> bool:
+	if existing_text.is_empty() or insert_text.is_empty():
+		return false
+	var last_char: String = existing_text.substr(existing_text.length() - 1, 1)
+	if last_char in [" ", "\t", "\n", "(", "[", "{", ".", "!", "~"]:
+		return false
+	var first_char: String = insert_text.substr(0, 1)
+	if first_char in [")", "]", "}", ".", ",", ";"]:
+		return false
+	return true
 
 func _build_ace_params_dialog_popup() -> void:
 	_ace_params_dialog = ConfirmationDialog.new()
