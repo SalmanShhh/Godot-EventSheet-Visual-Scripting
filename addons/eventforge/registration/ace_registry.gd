@@ -82,7 +82,7 @@ static func _normalize_descriptor(entry: Variant) -> ACEDescriptor:
 	descriptor_from_dict.codegen_template = str(data.get("codegen_template", data.get("codegenTemplate", "")))
 	var raw_params: Variant = data.get("params", [])
 	if descriptor_from_dict.provider_id != "Core" and not _custom_params_have_initial_values(raw_params):
-		push_warning("[EventForge] Custom ACE '%s/%s' must define initial/default values for every param." % [descriptor_from_dict.provider_id, descriptor_from_dict.ace_id])
+		push_error("[EventForge] Custom ACE '%s/%s' must define initial/default values for every param." % [descriptor_from_dict.provider_id, descriptor_from_dict.ace_id])
 		return null
 	descriptor_from_dict.params = _normalize_params(raw_params)
 	_apply_descriptor_aliases(descriptor_from_dict)

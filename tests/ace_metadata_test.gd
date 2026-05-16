@@ -57,6 +57,7 @@ static func run() -> bool:
 		"HasGroupMember",
 		"IsOnFloor",
 		"SetVar",
+		"AddVar",
 		"PrintLog",
 		"QueueFree",
 		"EmitSignal"
