@@ -1404,7 +1404,7 @@ func _on_action_delete_requested(row: EventRowUI, index: int) -> void:
 func _delete_event_by_uid(uid: String) -> void:
 	if current_sheet == null or uid.is_empty():
 		return
-	for i: int in range(current_sheet.events.size()):
+	for i: int in range(current_sheet.events.size() - 1, -1, -1):
 		var resource: Variant = current_sheet.events[i]
 		if resource is EventRow and (resource as EventRow).event_uid == uid:
 			current_sheet.events.remove_at(i)

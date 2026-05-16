@@ -153,6 +153,7 @@ func _build_ui() -> void:
 	delete_event_btn.text = "✕"
 	delete_event_btn.flat = true
 	delete_event_btn.tooltip_text = "Delete this event"
+	delete_event_btn.accessible_name = "Delete this event"
 	delete_event_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	delete_event_btn.add_theme_color_override("font_color", Color(0.85, 0.35, 0.35))
 	delete_event_btn.add_theme_font_size_override("font_size", 10)
