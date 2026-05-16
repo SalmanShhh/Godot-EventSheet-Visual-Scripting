@@ -1884,8 +1884,8 @@ func _rebuild_inspector_group(row: GroupRowUI) -> void:
 	collapsed_lbl.text = "Collapsed: %s" % str(_is_group_collapsed(event_group))
 	card_vbox.add_child(collapsed_lbl)
 
-	var planned_sep: HSeparator = HSeparator.new()
-	card_vbox.add_child(planned_sep)
+	var note_sep: HSeparator = HSeparator.new()
+	card_vbox.add_child(note_sep)
 
 	var planned_note: Label = Label.new()
 	planned_note.text = "Nested local variables and group event bodies are planned."
