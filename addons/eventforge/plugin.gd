@@ -23,10 +23,12 @@ func _enter_tree() -> void:
 		push_warning("[EventForge] Failed to load EventSheetEditor script at %s. Verify the file exists and contains valid GDScript." % EVENT_SHEET_EDITOR_PATH)
 	else:
 		var editor_instance: Variant = editor_script.new()
-		if editor_instance is Control:
+		if editor_instance == null:
+			push_warning("[EventForge] EventSheetEditor script could not be instantiated: %s" % EVENT_SHEET_EDITOR_PATH)
+		elif editor_instance is Control:
 			_event_sheet_editor = editor_instance
 			_bottom_panel_button = add_control_to_bottom_panel(_event_sheet_editor, "EventForge")
-			# setup() is treated as an optional integration entrypoint.
+			# Contract: EventSheetEditor can expose setup(sheet := null) for safe initial state.
 			if _event_sheet_editor.has_method("setup"):
 				_event_sheet_editor.call("setup")
 			make_bottom_panel_item_visible(_event_sheet_editor)
