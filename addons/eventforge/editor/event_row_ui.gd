@@ -258,7 +258,7 @@ func _build_ui() -> void:
 	add_action_btn.connect("pressed", _on_add_action_pressed)
 	action_hbox.add_child(add_action_btn)
 
-	# ── Row-level insertion + delete (far right, outside lanes) ────────────────
+	# ── Row-level controls (far right, outside lanes) ───────────────────────────
 	var insert_controls: VBoxContainer = VBoxContainer.new()
 	insert_controls.add_theme_constant_override("separation", 0)
 	line.add_child(insert_controls)
