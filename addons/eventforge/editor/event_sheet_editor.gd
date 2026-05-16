@@ -1602,9 +1602,6 @@ func _on_condition_delete_requested(row: EventRowUI, index: int) -> void:
 			_selected_index = -1
 		elif _selected_index > index:
 			_selected_index -= 1
-		elif _selected_index >= row.event_row.conditions.size():
-			_selected_entry_kind = "event"
-			_selected_index = -1
 	_refresh_row_selection_states()
 	_refresh_workspace_context()
 	_rebuild_inspector_event(row)
@@ -1622,9 +1619,6 @@ func _on_action_delete_requested(row: EventRowUI, index: int) -> void:
 			_selected_index = -1
 		elif _selected_index > index:
 			_selected_index -= 1
-		elif _selected_index >= row.event_row.actions.size():
-			_selected_entry_kind = "event"
-			_selected_index = -1
 	_refresh_row_selection_states()
 	_refresh_workspace_context()
 	_rebuild_inspector_event(row)
