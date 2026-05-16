@@ -450,8 +450,128 @@ static func run() -> bool:
 			if pasted_child != null:
 				all_passed = _check("pasted child preserves nested sub-events", pasted_child.sub_events.size(), 1) and all_passed
 
+	# Workflow: Ctrl+D duplicates the selected event and inserts it after the source.
+	var dup_sheet: EventSheetResource = EventSheetResource.new()
+	var dup_event_a: EventRow = EventRow.new()
+	var dup_action: ACEAction = ACEAction.new()
+	dup_action.ace_id = "QueueFree"
+	dup_event_a.actions.append(dup_action)
+	var dup_event_b: EventRow = EventRow.new()
+	dup_sheet.events.append(dup_event_a)
+	dup_sheet.events.append(dup_event_b)
+	editor.current_sheet = dup_sheet
+	editor.refresh_canvas()
+	var dup_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, dup_event_a.event_uid)
+	if dup_row_ui != null:
+		editor._on_event_selected(dup_row_ui)
+		var dup_key: InputEventKey = InputEventKey.new()
+		dup_key.pressed = true
+		dup_key.ctrl_pressed = true
+		dup_key.keycode = KEY_D
+		editor._unhandled_key_input(dup_key)
+		all_passed = _check("Ctrl+D inserts duplicate after source event", dup_sheet.events.size(), 3) and all_passed
+		var dup_clone: EventRow = dup_sheet.events[1] as EventRow
+		all_passed = _check("duplicate is inserted at index 1", dup_clone != null, true) and all_passed
+		if dup_clone != null:
+			all_passed = _check("duplicate gets new uid", dup_clone.event_uid != dup_event_a.event_uid, true) and all_passed
+			all_passed = _check("duplicate preserves actions", dup_clone.actions.size(), 1) and all_passed
 
-	# Workflow: shortcut delete dispatch removes selected action.
+	# Workflow: G shortcut adds a new EventGroup to the sheet.
+	var g_sheet: EventSheetResource = EventSheetResource.new()
+	var g_event: EventRow = EventRow.new()
+	g_sheet.events.append(g_event)
+	editor.current_sheet = g_sheet
+	editor.refresh_canvas()
+	var g_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, g_event.event_uid)
+	if g_row_ui != null:
+		editor._on_event_selected(g_row_ui)
+	var g_key: InputEventKey = InputEventKey.new()
+	g_key.pressed = true
+	g_key.keycode = KEY_G
+	editor._unhandled_key_input(g_key)
+	all_passed = _check("keyboard G adds EventGroup to sheet", g_sheet.events[1] is EventGroup, true) and all_passed
+
+	# Workflow: Escape shortcut clears selection and shows empty inspector.
+	var esc_sheet: EventSheetResource = EventSheetResource.new()
+	var esc_event: EventRow = EventRow.new()
+	esc_sheet.events.append(esc_event)
+	editor.current_sheet = esc_sheet
+	editor.refresh_canvas()
+	var esc_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, esc_event.event_uid)
+	if esc_row_ui != null:
+		editor._on_event_selected(esc_row_ui)
+		all_passed = _check("before Escape selection kind is event", editor._selected_entry_kind, "event") and all_passed
+		var esc_key: InputEventKey = InputEventKey.new()
+		esc_key.pressed = true
+		esc_key.keycode = KEY_ESCAPE
+		editor._unhandled_key_input(esc_key)
+		all_passed = _check("Escape resets selection kind to none", editor._selected_entry_kind, "none") and all_passed
+
+	# Workflow: Up/Down arrow keys navigate between rows.
+	var nav_sheet: EventSheetResource = EventSheetResource.new()
+	var nav_event_a: EventRow = EventRow.new()
+	var nav_event_b: EventRow = EventRow.new()
+	nav_sheet.events.append(nav_event_a)
+	nav_sheet.events.append(nav_event_b)
+	editor.current_sheet = nav_sheet
+	editor.refresh_canvas()
+	var nav_row_a: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, nav_event_a.event_uid)
+	var nav_row_b: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, nav_event_b.event_uid)
+	if nav_row_a != null and nav_row_b != null:
+		editor._on_event_selected(nav_row_a)
+		all_passed = _check("nav: starts on first event row", editor._selected_row == nav_row_a, true) and all_passed
+		all_passed = _check("navigate_down returns true", editor._handle_workflow_shortcut("navigate_down"), true) and all_passed
+		all_passed = _check("navigate_down selects second row", editor._selected_row == nav_row_b, true) and all_passed
+		all_passed = _check("navigate_up returns true", editor._handle_workflow_shortcut("navigate_up"), true) and all_passed
+		all_passed = _check("navigate_up returns to first row", editor._selected_row == nav_row_a, true) and all_passed
+		all_passed = _check("navigate_up at top returns false", editor._handle_workflow_shortcut("navigate_up"), false) and all_passed
+
+	# Workflow: _collect_selectable_rows_in_order returns rows in visual order.
+	var coll_sheet: EventSheetResource = EventSheetResource.new()
+	var coll_event: EventRow = EventRow.new()
+	var coll_comment: CommentRow = CommentRow.new()
+	coll_comment.text = "Section"
+	coll_sheet.events.append(coll_event)
+	coll_sheet.events.append(coll_comment)
+	editor.current_sheet = coll_sheet
+	editor.refresh_canvas()
+	var coll_rows: Array = []
+	editor._collect_selectable_rows_in_order(editor._canvas_vbox, coll_rows)
+	all_passed = _check("collect selectable rows finds event and comment", coll_rows.size() >= 2, true) and all_passed
+	all_passed = _check("first collected row is EventRowUI", coll_rows[0] is EventRowUI, true) and all_passed
+	all_passed = _check("second collected row is CommentRowUI", coll_rows[1] is CommentRowUI, true) and all_passed
+
+	# Workflow: CommentRowUI.grab_text_focus() method exists and can be called.
+	var grab_comment: CommentRow = CommentRow.new()
+	grab_comment.text = "Grab test"
+	var grab_comment_ui: CommentRowUI = CommentRowUI.new()
+	grab_comment_ui.comment_row = grab_comment
+	grab_comment_ui.refresh()
+	# Should not crash even without a tree/viewport context.
+	grab_comment_ui.grab_text_focus()
+	all_passed = _check("CommentRowUI.grab_text_focus does not crash", true, true) and all_passed
+
+	# Workflow: EventRowUI drop highlight rect exists after build.
+	var drop_row: EventRowUI = EventRowUI.new()
+	drop_row.event_row = EventRow.new()
+	drop_row.refresh()
+	all_passed = _check("EventRowUI has drop highlight rect", drop_row._drop_highlight_rect != null, true) and all_passed
+	all_passed = _check("EventRowUI drop highlight starts transparent", drop_row._drop_highlight_rect != null and is_equal_approx(drop_row._drop_highlight_rect.color.a, 0.0), true) and all_passed
+	drop_row._set_drop_hovered(true)
+	all_passed = _check("EventRowUI drop highlight visible on hover", drop_row._drop_highlight_rect != null and drop_row._drop_highlight_rect.color.a > 0.0, true) and all_passed
+	drop_row._set_drop_hovered(false)
+	all_passed = _check("EventRowUI drop highlight cleared after hover", drop_row._drop_highlight_rect != null and is_equal_approx(drop_row._drop_highlight_rect.color.a, 0.0), true) and all_passed
+
+	# Workflow: CommentRowUI drop indicator rect exists and responds to _set_drop_indicator.
+	var drop_cmt: CommentRowUI = CommentRowUI.new()
+	drop_cmt.comment_row = CommentRow.new()
+	drop_cmt.refresh()
+	all_passed = _check("CommentRowUI has drop highlight rect", drop_cmt._drop_highlight_rect != null, true) and all_passed
+	all_passed = _check("CommentRowUI drop highlight starts transparent", drop_cmt._drop_highlight_rect != null and is_equal_approx(drop_cmt._drop_highlight_rect.color.a, 0.0), true) and all_passed
+	drop_cmt._set_drop_indicator(0.2)
+	all_passed = _check("CommentRowUI drop indicator makes tint visible", drop_cmt._drop_highlight_rect != null and drop_cmt._drop_highlight_rect.color.a > 0.0, true) and all_passed
+	drop_cmt._clear_drop_indicator()
+	all_passed = _check("CommentRowUI drop indicator cleared", drop_cmt._drop_highlight_rect != null and is_equal_approx(drop_cmt._drop_highlight_rect.color.a, 0.0), true) and all_passed
 	var shortcut_del_sheet: EventSheetResource = EventSheetResource.new()
 	var shortcut_del_event: EventRow = EventRow.new()
 	var shortcut_del_action: ACEAction = ACEAction.new()

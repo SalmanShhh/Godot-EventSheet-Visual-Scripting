@@ -55,6 +55,10 @@ var _selected: bool = false
 var _hovered: bool = false
 var _insert_above_btn: Button = null
 var _insert_below_btn: Button = null
+## Drop-hover highlight overlay — semi-transparent tint added as top-most child so
+## it composites over the lane panels without blocking any pointer events.
+var _drop_highlight_rect: ColorRect = null
+var _drop_hovered: bool = false
 
 const CONDITION_MENU_EDIT: int = 1
 const CONDITION_MENU_ADD_ANOTHER: int = 2
@@ -80,6 +84,12 @@ const COND_LANE_RATIO: float = 1.0
 const ACTION_LANE_RATIO: float = 1.85
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
 const INSERT_CONTROL_DIM_ALPHA: float = 0.46
+## Drop / drag-preview colours
+const DROP_HIGHLIGHT_COLOR: Color = Color(0.38, 0.60, 1.00, 0.15)
+const CONDITION_PREVIEW_BG_COLOR: Color = Color(0.14, 0.18, 0.28, 0.96)
+const CONDITION_PREVIEW_BORDER_COLOR: Color = Color(0.44, 0.66, 1.00, 0.82)
+const ACTION_PREVIEW_BG_COLOR: Color = Color(0.10, 0.17, 0.15, 0.96)
+const ACTION_PREVIEW_BORDER_COLOR: Color = Color(0.36, 0.74, 0.56, 0.82)
 
 class EntryTokenButton extends Button:
 	var owner_row: EventRowUI = null
@@ -96,8 +106,21 @@ class EntryTokenButton extends Button:
 			"source_event_uid": owner_row.event_row.event_uid,
 			"source_index": entry_index
 		}
-		var preview: Label = Label.new()
-		preview.text = text
+		# Styled drag preview — matches the entry's lane colour for clear type identity.
+		var preview: PanelContainer = PanelContainer.new()
+		var preview_style: StyleBoxFlat = StyleBoxFlat.new()
+		preview_style.bg_color = CONDITION_PREVIEW_BG_COLOR if is_condition else ACTION_PREVIEW_BG_COLOR
+		preview_style.set_border_width_all(1)
+		preview_style.border_color = CONDITION_PREVIEW_BORDER_COLOR if is_condition else ACTION_PREVIEW_BORDER_COLOR
+		preview_style.set_corner_radius_all(3)
+		preview_style.set_content_margin_all(5)
+		preview.add_theme_stylebox_override("panel", preview_style)
+		var preview_label: Label = Label.new()
+		preview_label.text = text
+		preview_label.add_theme_color_override("font_color",
+			Color(0.76, 0.88, 1.00) if is_condition else Color(0.68, 0.92, 0.78))
+		preview_label.add_theme_font_size_override("font_size", 11)
+		preview.add_child(preview_label)
 		set_drag_preview(preview)
 		return payload
 
@@ -123,6 +146,9 @@ func _ensure_ui_built() -> void:
 		child.queue_free()
 	_condition_context_menu = null
 	_action_context_menu = null
+	_drop_highlight_rect = null
+	_drop_hovered = false
+	set_process(false)
 	_build_ui()
 
 func _build_ui() -> void:
@@ -329,6 +355,15 @@ func _build_ui() -> void:
 	connect("mouse_exited", _on_mouse_exited)
 	connect("gui_input", _on_row_gui_input)
 	_apply_affordance_state()
+
+	# Drop-hover highlight overlay — added last so it composites above the lane
+	# panels.  Mouse-ignored so pointer events still reach the children below.
+	_drop_highlight_rect = ColorRect.new()
+	_drop_highlight_rect.color = Color(0.0, 0.0, 0.0, 0.0)
+	_drop_highlight_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_drop_highlight_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_drop_highlight_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(_drop_highlight_rect)
 
 func set_depth(depth: int) -> void:
 	_depth = max(0, depth)
@@ -626,18 +661,21 @@ func _on_row_gui_input(event: InputEvent) -> void:
 	event_selected.emit(self)
 
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+	var can_drop: bool = false
 	if data is Dictionary:
 		var payload: Dictionary = data as Dictionary
 		var payload_type: String = str(payload.get("type", ""))
 		if payload_type == "event_comment_row":
-			return payload.get("source_comment", null) is CommentRow
-		if _can_accept_entry_drop_data(payload, true):
-			return true
-		if _can_accept_entry_drop_data(payload, false):
-			return true
-	return false
+			can_drop = payload.get("source_comment", null) is CommentRow
+		elif _can_accept_entry_drop_data(payload, true):
+			can_drop = true
+		elif _can_accept_entry_drop_data(payload, false):
+			can_drop = true
+	_set_drop_hovered(can_drop)
+	return can_drop
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
+	_set_drop_hovered(false)
 	if not (data is Dictionary):
 		return
 	var payload: Dictionary = data as Dictionary
@@ -652,6 +690,19 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		_handle_entry_drop_data(payload, true, -1)
 	elif _can_accept_entry_drop_data(payload, false):
 		_handle_entry_drop_data(payload, false, -1)
+
+## Updates the drop-hover state and the highlight overlay colour.
+func _set_drop_hovered(hovered: bool) -> void:
+	if hovered == _drop_hovered:
+		return
+	_drop_hovered = hovered
+	if _drop_highlight_rect != null:
+		_drop_highlight_rect.color = DROP_HIGHLIGHT_COLOR if hovered else Color(0.0, 0.0, 0.0, 0.0)
+	set_process(hovered)
+
+func _process(_delta: float) -> void:
+	if _drop_hovered and not get_viewport().gui_is_dragging():
+		_set_drop_hovered(false)
 
 func _on_event_header_pressed() -> void:
 	event_selected.emit(self)

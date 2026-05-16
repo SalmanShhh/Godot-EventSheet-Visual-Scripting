@@ -134,9 +134,14 @@ It intentionally avoids describing unbuilt behavior as complete.
   - `Ctrl+Shift+C` → add condition on selected event row
   - `Ctrl+Shift+A` → add action on selected event row
   - `Q` → add comment row using current structural selection context
+  - `G` → add group (inserts EventGroup relative to selection or appends at bottom)
   - `Ctrl+C` → copy selected event row (including nested sub-events)
   - `Ctrl+V` → paste copied event row below current selection context
+  - `Ctrl+D` → duplicate selected event row (deep clone + insert immediately after source)
   - `Delete` → remove selected event/condition/action/variable/group
+  - `Escape` → clear current selection (show empty inspector)
+  - `Enter` / `KP Enter` → edit current selection (open params dialog for condition/action, add-condition picker for event, or focus inline text edit for comment)
+  - `↑` / `↓` → navigate selection up or down through the visual row order (works for EventRowUI, GroupRowUI, and CommentRowUI; blocked when a LineEdit/TextEdit/SpinBox has focus)
 - **Dirty state tracking**: `EventSheetEditor._is_dirty` is set on every mutation (add/edit/delete events, conditions, actions, variables, groups, condition inversion) and cleared on sheet load or successful save.
 - Document header (`SheetDocumentHeader`) inside the canvas shows:
   - The sheet file name (or "Untitled Sheet" / "No Sheet Loaded") as the document title
@@ -313,6 +318,61 @@ Construct 3-style event sheet surface, guided by `c3-eventsheet-spec.md` and
   - nested event resources are rendered with indentation
   - recursive sub-event deletion by UID is supported in editor-side removal logic
 - Full sub-event authoring UX is **not** implemented yet (no complete add/move/reparent/drag-drop authoring flow).
+
+### 2.13 Workflow fluency and interaction polish (Phase 9)
+
+This phase improves authoring speed, keyboard navigation, and drag/drop visual feedback
+inside the Construct 3-style sheet established by Phase 8.
+
+#### Keyboard navigation
+- **`↑` / `↓` arrow keys** navigate the selection through all visual row types
+  (EventRowUI, GroupRowUI, CommentRowUI) in top-to-bottom order.  Blocked when a
+  LineEdit, TextEdit, or SpinBox has keyboard focus so typing is never interrupted.
+- `_collect_selectable_rows_in_order(node, result)` helper traverses the canvas tree
+  depth-first to produce the ordered list used by the arrow-key handler.
+
+#### New keyboard shortcuts
+- **`G`** (no modifiers) → add group; inserts an `EventGroup` relative to the current
+  selection (same structural context as `Q` for comments), or appends at the bottom.
+- **`Ctrl+D`** → duplicate event; deep-clones the selected `EventRow` (preserving
+  conditions, actions, and sub-event hierarchy) and inserts the clone immediately after
+  the source row.  The clone receives a fresh `event_uid`.
+- **`Escape`** (no modifiers) → deselect; calls `_show_empty_inspector()` to clear the
+  selection state and reset the inspector, giving a fast "step back" action.
+- **`Enter` / `KP Enter`** (no modifiers) → edit selection:
+  - condition selected → opens params dialog for that condition
+  - action selected → opens params dialog for that action
+  - event selected → opens the add-condition picker for that event
+  - comment selected → grabs text focus in the comment row's inline `LineEdit`
+
+#### Comment auto-focus
+- After inserting a comment row (via `Q`, anchor row "Add Comment", or relative
+  insertion), the inline `LineEdit` in the new row receives keyboard focus automatically
+  — the cursor appears ready to type the comment text without a second click.
+- `CommentRowUI.grab_text_focus()` is the public method for this; it moves focus to
+  `_comment_text_edit` and places the cursor at the end of any existing text.
+- `EventSheetEditor._focus_comment_row_text(comment_row: CommentRow)` calls this from
+  the editor side by locating the row widget and calling `grab_text_focus()`.
+
+#### Drag/drop visual feedback
+- **EventRowUI**: a semi-transparent blue tint overlay (`_drop_highlight_rect`) appears
+  over the entire row when a valid condition, action, or comment is dragged over it.
+  The overlay is a `ColorRect` added as the last child of the `PanelContainer`, so it
+  composites above the lane panels; `mouse_filter = MOUSE_FILTER_IGNORE` means it never
+  blocks pointer events to children.  `_set_drop_hovered(bool)` toggles the overlay and
+  enables/disables `_process`; `_process` clears the state when the drag ends without
+  dropping (i.e. `gui_is_dragging()` returns false).
+- **CommentRowUI**: the same overlay mechanism (`_drop_highlight_rect`) shows a warm
+  amber tint when another comment row is dragged over it.  `_set_drop_indicator(frac)` /
+  `_clear_drop_indicator()` / `_update_drop_highlight()` manage the state.
+- **Styled drag previews**: both `EntryTokenButton` (condition/action entries) and
+  `CommentRowUI` now produce a styled `PanelContainer` drag preview instead of a plain
+  `Label`.  Condition previews use the blue lane palette; action previews use the teal
+  lane palette; comment previews use the amber banner palette.
+
+#### Toolbar shortcut hints
+- The shortcuts hint strip in the toolbar now also shows:
+  `G Group` · `Ctrl+D Duplicate` · `Esc Deselect`
 
 ## 3. Still planned (not implemented yet)
 
