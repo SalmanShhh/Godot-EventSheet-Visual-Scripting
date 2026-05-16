@@ -433,6 +433,8 @@ static func run() -> bool:
 	var events_section: Node = _find_node_named(editor, "SheetSectionEvents")
 	all_passed = _check("events empty state is card", events_section != null and _count_panel_containers(events_section) >= 1, true) and all_passed
 	all_passed = _check("events section is unframed host", events_section is PanelContainer, false) and all_passed
+	all_passed = _check("events section has anchored add event button", _find_button_with_text(events_section, "Add Event") != null, true) and all_passed
+	all_passed = _check("events section no old + Event header action", _find_button_with_text(events_section, "+ Event") == null, true) and all_passed
 
 	# Phase 5: section headers use ColorRect accent rail, not a "●" bullet label.
 	all_passed = _check("globals section no bullet label", not _contains_label_text(globals_section, "●"), true) and all_passed
@@ -796,6 +798,17 @@ static func run() -> bool:
 			all_passed = _check("action token has lane-accent left border", action_style.border_width_left, 2) and all_passed
 			all_passed = _check("action token top padding tightened", action_style.content_margin_top, 2) and all_passed
 
+	all_passed = _check("action lane add button uses +Add label", _find_button_with_text(lane_row_3, "+Add") != null, true) and all_passed
+	all_passed = _check("action context menu label: edit", _popup_menu_has_item_text(lane_row_3, "Edit Action"), true) and all_passed
+	all_passed = _check("action context menu label: add", _popup_menu_has_item_text(lane_row_3, "Add Action"), true) and all_passed
+	all_passed = _check("action context menu label: replace", _popup_menu_has_item_text(lane_row_3, "Replace Action"), true) and all_passed
+	all_passed = _check("action context menu label: delete", _popup_menu_has_item_text(lane_row_3, "Delete Action"), true) and all_passed
+	all_passed = _check("condition context menu label: edit", _popup_menu_has_item_text(lane_row_3, "Edit Condition"), true) and all_passed
+	all_passed = _check("condition context menu label: add", _popup_menu_has_item_text(lane_row_3, "Add Condition"), true) and all_passed
+	all_passed = _check("condition context menu label: replace", _popup_menu_has_item_text(lane_row_3, "Replace Condition"), true) and all_passed
+	all_passed = _check("condition context menu label: invert", _popup_menu_has_item_text(lane_row_3, "Invert"), true) and all_passed
+	all_passed = _check("condition context menu label: delete", _popup_menu_has_item_text(lane_row_3, "Delete Condition"), true) and all_passed
+
 	var depth_row_0: EventRowUI = EventRowUI.new()
 	depth_row_0.event_row = EventRow.new()
 	depth_row_0.set_depth(0)
@@ -952,6 +965,24 @@ static func _collect_buttons_with_tooltip(node: Node, tooltip: String, out: Arra
 			out.append(btn)
 	for child: Node in node.get_children():
 		_collect_buttons_with_tooltip(child, tooltip, out)
+
+static func _popup_menu_has_item_text(node: Node, expected_text: String) -> bool:
+	var popup: PopupMenu = _find_popup_with_item_text(node, expected_text)
+	return popup != null
+
+static func _find_popup_with_item_text(node: Node, expected_text: String) -> PopupMenu:
+	if node == null:
+		return null
+	if node is PopupMenu:
+		var popup: PopupMenu = node as PopupMenu
+		for i: int in range(popup.item_count):
+			if popup.get_item_text(i) == expected_text:
+				return popup
+	for child: Node in node.get_children():
+		var found: PopupMenu = _find_popup_with_item_text(child, expected_text)
+		if found != null:
+			return found
+	return null
 
 static func _find_node_named(node: Node, expected_name: String) -> Node:
 	if node == null:

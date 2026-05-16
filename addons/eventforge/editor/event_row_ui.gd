@@ -48,30 +48,32 @@ const CONDITION_MENU_REPLACE: int = 3
 const CONDITION_MENU_INVERT: int = 4
 const CONDITION_MENU_DELETE: int = 5
 const ACTION_MENU_EDIT: int = 1
-const ACTION_MENU_DELETE: int = 2
+const ACTION_MENU_ADD_ANOTHER: int = 2
+const ACTION_MENU_REPLACE: int = 3
+const ACTION_MENU_DELETE: int = 4
 
-const ROW_BG: Color = Color(0.074, 0.085, 0.114, 1.0)
-const ROW_BG_HOVER: Color = Color(0.091, 0.105, 0.139, 1.0)
-const ROW_BG_SELECTED: Color = Color(0.108, 0.136, 0.186, 1.0)
-const ROW_BORDER: Color = Color(0.142, 0.168, 0.224, 1.0)
-const ROW_BORDER_HOVER: Color = Color(0.243, 0.312, 0.438, 1.0)
-const ROW_BORDER_SELECTED: Color = Color(0.356, 0.522, 0.812, 1.0)
-const CONDITION_TOKEN_BG: Color = Color(0.155, 0.206, 0.310, 1.0)
-const CONDITION_TOKEN_BG_HOVER: Color = Color(0.205, 0.260, 0.385, 1.0)
-const ACTION_TOKEN_BG: Color = Color(0.110, 0.170, 0.155, 1.0)
-const ACTION_TOKEN_BG_HOVER: Color = Color(0.148, 0.218, 0.198, 1.0)
-const CONDITION_TOKEN_BORDER: Color = Color(0.225, 0.315, 0.462, 1.0)
-const ACTION_TOKEN_BORDER: Color = Color(0.178, 0.268, 0.248, 1.0)
+const ROW_BG: Color = Color(0.105, 0.126, 0.169, 1.0)
+const ROW_BG_HOVER: Color = Color(0.130, 0.157, 0.211, 1.0)
+const ROW_BG_SELECTED: Color = Color(0.165, 0.201, 0.272, 1.0)
+const ROW_BORDER: Color = Color(0.256, 0.308, 0.414, 1.0)
+const ROW_BORDER_HOVER: Color = Color(0.338, 0.415, 0.552, 1.0)
+const ROW_BORDER_SELECTED: Color = Color(0.458, 0.618, 0.900, 1.0)
+const CONDITION_TOKEN_BG: Color = Color(0.210, 0.270, 0.402, 1.0)
+const CONDITION_TOKEN_BG_HOVER: Color = Color(0.238, 0.306, 0.452, 1.0)
+const ACTION_TOKEN_BG: Color = Color(0.161, 0.242, 0.223, 1.0)
+const ACTION_TOKEN_BG_HOVER: Color = Color(0.184, 0.278, 0.255, 1.0)
+const CONDITION_TOKEN_BORDER: Color = Color(0.332, 0.448, 0.664, 1.0)
+const ACTION_TOKEN_BORDER: Color = Color(0.286, 0.430, 0.397, 1.0)
 const RUN_CONTEXT_SYMBOL: String = "◆"
 const CLAUSE_CONDITION_PREFIX: String = "when"
 const CLAUSE_ACTION_PREFIX: String = "do"
 const LANE_DIVIDER_COLOR: Color = Color(0.22, 0.28, 0.42, 0.92)
-const COND_LANE_BG: Color = Color(0.082, 0.098, 0.135, 1.0)
-const ACTION_LANE_BG: Color = Color(0.074, 0.087, 0.118, 1.0)
-const CONDITION_PLACEHOLDER_BG: Color = Color(0.104, 0.137, 0.205, 1.0)
-const CONDITION_PLACEHOLDER_BORDER: Color = Color(0.190, 0.262, 0.385, 1.0)
-const ACTION_PLACEHOLDER_BG: Color = Color(0.088, 0.142, 0.132, 1.0)
-const ACTION_PLACEHOLDER_BORDER: Color = Color(0.155, 0.236, 0.218, 1.0)
+const COND_LANE_BG: Color = Color(0.111, 0.134, 0.182, 1.0)
+const ACTION_LANE_BG: Color = Color(0.103, 0.125, 0.168, 1.0)
+const CONDITION_PLACEHOLDER_BG: Color = Color(0.168, 0.216, 0.318, 1.0)
+const CONDITION_PLACEHOLDER_BORDER: Color = Color(0.284, 0.376, 0.548, 1.0)
+const ACTION_PLACEHOLDER_BG: Color = Color(0.142, 0.208, 0.191, 1.0)
+const ACTION_PLACEHOLDER_BORDER: Color = Color(0.240, 0.354, 0.329, 1.0)
 const TOKEN_LEFT_BORDER_WIDTH: int = 2
 const COND_LANE_RATIO: float = 1.0
 const ACTION_LANE_RATIO: float = 1.85
@@ -95,18 +97,20 @@ func _build_ui() -> void:
 	_apply_row_style()
 
 	_condition_context_menu = PopupMenu.new()
-	_condition_context_menu.add_item("Edit", CONDITION_MENU_EDIT)
-	_condition_context_menu.add_item("Add Another Condition", CONDITION_MENU_ADD_ANOTHER)
+	_condition_context_menu.add_item("Edit Condition", CONDITION_MENU_EDIT)
+	_condition_context_menu.add_item("Add Condition", CONDITION_MENU_ADD_ANOTHER)
 	_condition_context_menu.add_item("Replace Condition", CONDITION_MENU_REPLACE)
 	_condition_context_menu.add_separator()
-	_condition_context_menu.add_item("Invert Condition", CONDITION_MENU_INVERT)
+	_condition_context_menu.add_item("Invert", CONDITION_MENU_INVERT)
 	_condition_context_menu.add_separator()
 	_condition_context_menu.add_item("Delete Condition", CONDITION_MENU_DELETE)
 	_condition_context_menu.connect("id_pressed", _on_condition_context_menu_id_pressed)
 	add_child(_condition_context_menu)
 
 	_action_context_menu = PopupMenu.new()
-	_action_context_menu.add_item("Edit", ACTION_MENU_EDIT)
+	_action_context_menu.add_item("Edit Action", ACTION_MENU_EDIT)
+	_action_context_menu.add_item("Add Action", ACTION_MENU_ADD_ANOTHER)
+	_action_context_menu.add_item("Replace Action", ACTION_MENU_REPLACE)
 	_action_context_menu.add_separator()
 	_action_context_menu.add_item("Delete Action", ACTION_MENU_DELETE)
 	_action_context_menu.connect("id_pressed", _on_action_context_menu_id_pressed)
@@ -238,7 +242,7 @@ func _build_ui() -> void:
 	action_hbox.add_child(_actions_container)
 
 	var add_action_btn: Button = Button.new()
-	add_action_btn.text = "+ action"
+	add_action_btn.text = "+Add"
 	add_action_btn.flat = true
 	add_action_btn.tooltip_text = "Add action"
 	add_action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -599,6 +603,10 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 		return
 	match id:
 		ACTION_MENU_EDIT:
+			action_selected.emit(self, _context_action_index)
+		ACTION_MENU_ADD_ANOTHER:
+			add_action_requested.emit(self)
+		ACTION_MENU_REPLACE:
 			action_selected.emit(self, _context_action_index)
 		ACTION_MENU_DELETE:
 			action_delete_requested.emit(self, _context_action_index)

@@ -2041,8 +2041,9 @@ func _add_variables_section() -> void:
 		section_body.add_child(row)
 
 func _add_events_section() -> void:
-	var section_body: VBoxContainer = _add_section_shell("SheetSectionEvents", "Events", "Continuous row surface", Color(0.78, 0.87, 1.0), "+ Event", Callable(self, "_on_add_event_requested"), false)
+	var section_body: VBoxContainer = _add_section_shell("SheetSectionEvents", "Events", "Continuous row surface", Color(0.78, 0.87, 1.0), "", Callable(), false)
 	_current_rows_host = section_body
+	_add_canvas_row(_make_add_event_anchor_row(), 0)
 
 	if current_sheet.events.is_empty():
 		section_body.add_child(_make_section_empty_card("No events yet — start by adding an event line."))
@@ -2051,6 +2052,41 @@ func _add_events_section() -> void:
 		for resource: Variant in current_sheet.events:
 			_add_event_resource(resource, 0, render_guard)
 	_current_rows_host = null
+
+func _make_add_event_anchor_row() -> Control:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 0)
+
+	var add_btn: Button = Button.new()
+	add_btn.text = "Add Event"
+	add_btn.flat = true
+	add_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	add_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	add_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	add_btn.tooltip_text = "Add event line"
+	add_btn.add_theme_color_override("font_color", Color(0.72, 0.84, 1.0))
+	add_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.96, 1.0))
+	add_btn.add_theme_font_size_override("font_size", 11)
+	var btn_style: StyleBoxFlat = StyleBoxFlat.new()
+	btn_style.bg_color = Color(0.114, 0.140, 0.196, 1.0)
+	btn_style.border_color = Color(0.262, 0.342, 0.498, 1.0)
+	btn_style.set_border_width_all(1)
+	btn_style.border_width_left = 3
+	btn_style.set_corner_radius_all(0)
+	btn_style.set_content_margin(SIDE_LEFT, 7)
+	btn_style.set_content_margin(SIDE_RIGHT, 7)
+	btn_style.set_content_margin(SIDE_TOP, 3)
+	btn_style.set_content_margin(SIDE_BOTTOM, 3)
+	add_btn.add_theme_stylebox_override("normal", btn_style)
+	var btn_hover: StyleBoxFlat = btn_style.duplicate()
+	btn_hover.bg_color = Color(0.136, 0.167, 0.232, 1.0)
+	add_btn.add_theme_stylebox_override("hover", btn_hover)
+	add_btn.add_theme_stylebox_override("pressed", btn_hover)
+	add_btn.add_theme_stylebox_override("focus", btn_hover)
+	add_btn.connect("pressed", Callable(self, "_on_add_event_requested"))
+	row.add_child(add_btn)
+	return row
 
 func _add_event_resource(resource: Variant, indent_level: int, render_guard: Dictionary = {}) -> void:
 	if resource is EventRow:

@@ -10,52 +10,52 @@ static func run() -> bool:
 
 	all_passed = _check("int default",
 		VariableRowUI.format_summary("health", {"type": "int", "default": 100}),
-		"int  health = 100"
+		"health (int) = 100"
 	) and all_passed
 
 	all_passed = _check("String default",
 		VariableRowUI.format_summary("player_name", {"type": "String", "default": "Player"}),
-		'String  player_name = "Player"'
+		'player_name (String) = "Player"'
 	) and all_passed
 
 	all_passed = _check("pre-quoted String default",
 		VariableRowUI.format_summary("msg", {"type": "String", "default": '"Hello"'}),
-		'String  msg = "Hello"'
+		'msg (String) = "Hello"'
 	) and all_passed
 
 	all_passed = _check("embedded quote String default",
 		VariableRowUI.format_summary("msg", {"type": "String", "default": 'say "hi"'}),
-		'String  msg = "say \\"hi\\""'
+		'msg (String) = "say \\"hi\\""'
 	) and all_passed
 
 	all_passed = _check("float default",
 		VariableRowUI.format_summary("speed", {"type": "float", "default": 200.0}),
-		"float  speed = 200.0"
+		"speed (float) = 200.0"
 	) and all_passed
 
 	all_passed = _check("bool default",
 		VariableRowUI.format_summary("active", {"type": "bool", "default": true}),
-		"bool  active = true"
+		"active (bool) = true"
 	) and all_passed
 
 	all_passed = _check("null default",
 		VariableRowUI.format_summary("thing", {"type": "Variant", "default": null}),
-		"Variant  thing = null"
+		"thing (Variant) = null"
 	) and all_passed
 
 	all_passed = _check("missing default key",
 		VariableRowUI.format_summary("count", {"type": "int"}),
-		"int  count = null"
+		"count (int) = null"
 	) and all_passed
 
 	all_passed = _check("value key fallback",
 		VariableRowUI.format_summary("x", {"type": "float", "value": 1.5}),
-		"float  x = 1.5"
+		"x (float) = 1.5"
 	) and all_passed
 
 	all_passed = _check("missing type key",
 		VariableRowUI.format_summary("n", {"default": 42}),
-		"Variant  n = 42"
+		"n (Variant) = 42"
 	) and all_passed
 
 	all_passed = _check("tooltip with description",
