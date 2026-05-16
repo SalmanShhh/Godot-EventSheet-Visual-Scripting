@@ -926,6 +926,7 @@ func _populate_expression_picker(filter_text: String = "") -> void:
 	_expression_picker_tree.clear()
 	var root: TreeItem = _expression_picker_tree.create_item()
 	var groups: Dictionary = {}
+	var added_items: int = 0
 	var filter_lower: String = filter_text.to_lower().strip_edges()
 	if filter_lower.is_empty():
 		for name: String in EXPRESSION_PICKER_GROUPS:
@@ -956,7 +957,8 @@ func _populate_expression_picker(filter_text: String = "") -> void:
 		item.set_tooltip_text(0, "[Expression]  %s" % desc_text)
 		item.set_custom_color(0, _get_picker_item_color(descriptor))
 		item.set_metadata(0, descriptor)
-	if groups.is_empty() and _expression_picker_description != null:
+		added_items += 1
+	if added_items == 0 and _expression_picker_description != null:
 		_expression_picker_description.text = NO_EXPRESSIONS_AVAILABLE_TEXT
 
 ## Returns the group name used to organise a descriptor in the ACE picker.
@@ -1099,7 +1101,7 @@ func _build_expression_snippet(descriptor: ACEDescriptor, values: Dictionary) ->
 func _insert_expression_snippet(snippet: String) -> void:
 	if _expression_picker_target_input == null:
 		return
-	var existing_text: String = _expression_picker_target_input.text
+	var existing_text: String = _expression_picker_target_input.text.strip_edges(false, true)
 	var insert_text: String = snippet.strip_edges()
 	if insert_text.is_empty():
 		return
