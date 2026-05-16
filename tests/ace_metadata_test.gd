@@ -21,7 +21,9 @@ static func run() -> bool:
 				"name": "Enabled",
 				"desc": "Whether variable jump height is active.",
 				"type": "boolean",
-				"initialValue": "true"
+				"initialValue": "true",
+				"hint": "variable_reference",
+				"options": ["A", "B"]
 			}
 		]
 	})
@@ -33,6 +35,8 @@ static func run() -> bool:
 	all_passed = _check("param count", normalized.params.size(), 1) and all_passed
 	all_passed = _check("param desc alias", normalized.params[0].description, "Whether variable jump height is active.") and all_passed
 	all_passed = _check("param initialValue alias", str(normalized.params[0].get_initial_value()), "true") and all_passed
+	all_passed = _check("param hint preserved", normalized.params[0].hint, "variable_reference") and all_passed
+	all_passed = _check("param options preserved", normalized.params[0].options.size(), 2) and all_passed
 	all_passed = _check("default params generated", str(normalized.build_default_params().get("enabled", "")), "true") and all_passed
 	all_passed = _check("display template render", normalized.format_display(normalized.build_default_params()), "Set variable jump height to true") and all_passed
 

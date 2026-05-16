@@ -64,6 +64,34 @@ static func run() -> bool:
 	all_passed = _check("variable dropdown item count", var_dropdown.item_count, 2) and all_passed
 	all_passed = _check("variable dropdown selects existing", var_dropdown.get_item_text(var_dropdown.selected), "speed") and all_passed
 
+	# Variable dropdown empty-state is explicit and non-selectable.
+	editor.current_sheet = EventSheetResource.new()
+	var empty_var_dropdown: OptionButton = editor._create_variable_dropdown("")
+	all_passed = _check("variable dropdown empty item count", empty_var_dropdown.item_count, 1) and all_passed
+	all_passed = _check("variable dropdown empty text", empty_var_dropdown.get_item_text(0), EventSheetEditor.NO_VARIABLES_AVAILABLE_TEXT) and all_passed
+	all_passed = _check("variable dropdown empty item disabled", empty_var_dropdown.is_item_disabled(0), true) and all_passed
+	all_passed = _check("variable dropdown empty control disabled", empty_var_dropdown.disabled, true) and all_passed
+
+	var var_param: ACEParam = ACEParam.new()
+	var_param.hint = "variable_reference"
+	all_passed = _check("variable dropdown empty extracts blank", editor._extract_ace_param_input_value(var_param, empty_var_dropdown), "") and all_passed
+
+	# Operator params with options render as dropdowns.
+	var op_param: ACEParam = ACEParam.new()
+	op_param.type_name = "String"
+	op_param.options = ["==", "!=", "<", "<=", ">", ">="]
+	var op_input: Control = editor._create_ace_param_input(op_param, ">=")
+	all_passed = _check("operator options use dropdown control", op_input is OptionButton, true) and all_passed
+	if op_input is OptionButton:
+		var op_dropdown: OptionButton = op_input as OptionButton
+		all_passed = _check("operator dropdown item count", op_dropdown.item_count, 6) and all_passed
+		all_passed = _check("operator dropdown selected value", op_dropdown.get_item_text(op_dropdown.selected), ">=") and all_passed
+
+	var compare_var: ACEDescriptor = ACERegistry.find_descriptor("Core", "CompareVar")
+	all_passed = _check("compare var descriptor exists", compare_var != null, true) and all_passed
+	if compare_var != null and compare_var.params.size() > 1:
+		all_passed = _check("compare var op options count", compare_var.params[1].options.size(), 6) and all_passed
+
 	var group_default: EventGroup = EventGroup.new()
 	all_passed = _check("group default expanded", editor._is_group_collapsed(group_default), false) and all_passed
 
