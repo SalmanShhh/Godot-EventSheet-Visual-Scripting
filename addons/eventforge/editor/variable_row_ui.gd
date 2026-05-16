@@ -31,7 +31,7 @@ static func format_summary(v_name: String, v_desc: Dictionary) -> String:
 	var type_str: String = str(v_desc.get("type", "Variant"))
 	var default_val: Variant = v_desc.get("default", null)
 	var default_str: String = "" if default_val == null else str(default_val)
-	if type_str == "String":
+	if type_str == "String" and default_val != null:
 		default_str = '"%s"' % default_str
 	return "Global %s %s = %s" % [type_str, v_name, default_str]
 

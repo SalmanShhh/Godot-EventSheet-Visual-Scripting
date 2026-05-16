@@ -26,10 +26,15 @@ static func run() -> bool:
 	assert(bool_summary == "Global bool is_alive = true",
 		'Expected "Global bool is_alive = true", got "%s"' % bool_summary)
 
-	# Missing default falls back to empty string
+	# Missing default falls back to empty string (no quotes even for String type)
 	var no_default: String = VariableRowUI.format_summary("counter", {"type": "int"})
 	assert(no_default == "Global int counter = ",
 		'Expected "Global int counter = ", got "%s"' % no_default)
+
+	# String type with null default should NOT be quoted
+	var str_no_default: String = VariableRowUI.format_summary("tag", {"type": "String"})
+	assert(str_no_default == "Global String tag = ",
+		'Expected "Global String tag = ", got "%s"' % str_no_default)
 
 	print("[PASS] variable_row_format_test")
 	return true

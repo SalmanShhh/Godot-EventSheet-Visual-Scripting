@@ -136,8 +136,7 @@ func refresh_rows() -> void:
             var row: EventRow = entry
             var row_ui: EventRowUI = EventRowUI.new()
             row_ui.set_row(row)
-            var is_event_selected: bool = (row == _selected_row and _selected_entry_kind == "event")
-            row_ui.set_selected(is_event_selected or (row == _selected_row and _selected_entry_kind in ["condition", "action"]))
+            row_ui.set_selected(row == _selected_row and _selected_entry_kind in ["event", "condition", "action"])
             row_ui.selected.connect(_on_row_selected)
             row_ui.delete_requested.connect(_on_row_delete_requested)
             row_ui.add_condition_requested.connect(_on_add_condition_requested)
@@ -440,8 +439,10 @@ func _on_variable_row_selected(v_name: String) -> void:
 
 ## Handles a click on a group row header in the canvas.
 func _on_group_row_selected(_group: EventGroup) -> void:
+    _selected_row = null
     _selected_entry_kind = "event"
     _selected_entry_index = -1
+    _selected_variable_name = ""
     refresh_rows()
     _rebuild_inspector()
 
@@ -935,6 +936,7 @@ func _rebuild_inspector_variable(v_name: String) -> void:
     delete_btn.pressed.connect(func() -> void:
         _delete_variable(v_name)
         _selected_entry_kind = "event"
+        _selected_entry_index = -1
         _selected_variable_name = ""
     )
     _inspector_container.add_child(delete_btn)
