@@ -9,6 +9,8 @@
 #   Any type with options[]   → enum dropdown
 #   Any type with hint = "variable_reference"
 #                             → variable dropdown populated from sheet variables
+#   String params with hint = "expression"
+#                             → text field with expression picker button
 @tool
 extends Resource
 class_name ACEParam
@@ -28,6 +30,7 @@ class_name ACEParam
 @export var required: bool = false
 ## UI hint for richer control selection.
 ## Use "variable_reference" to show a dropdown of available sheet variables.
+## Use "expression" to show an expression picker button beside text input.
 @export var hint: String = ""
 
 ## Returns the best available display name for picker/inspector UI.

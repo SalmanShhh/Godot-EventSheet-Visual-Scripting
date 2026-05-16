@@ -51,6 +51,10 @@ It intentionally avoids describing unbuilt behavior as complete.
   - When no variables exist, the dropdown shows `No variables available` disabled.
   - Apply is blocked for missing variable references.
   - The dialog hint explicitly tells the user to add a variable first.
+- String params tagged with `hint = "expression"` show an inline `ƒx` button.
+  - `ƒx` opens an **Insert Expression** picker popup backed by ACE descriptors of type `EXPRESSION`.
+  - Expression entries are grouped by node type / namespace using the same grouping rules as the event picker (`node_type` first, then category/provider fallback).
+  - Selecting an expression inserts its code template (with descriptor default params) into the target field.
 
 ### 2.3 Event sheet row UX
 

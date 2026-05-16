@@ -110,3 +110,5 @@ The ACE picker supports live text filtering: typing in the search box narrows vi
 Each picker item is coloured by ACE type (trigger = soft green, condition = soft blue, action = soft teal) and item tooltips are prefixed with the ACE type label (e.g. `[Condition]`).
 
 Normalized metadata is used consistently by picker display and ACE param initialization.
+
+Expression ACEs (`ace_type = EXPRESSION`) are surfaced through an expression insertion popup used by ACE params with `hint = "expression"`.  The popup uses the same node-type/category/provider grouping rules as the main picker so expression discovery is namespace/node grouped in a consistent way.

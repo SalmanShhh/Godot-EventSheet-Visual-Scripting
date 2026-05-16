@@ -32,6 +32,19 @@ const EVENT_PICKER_GROUPS: PackedStringArray = [
 	"Signals / Scene / Input",
 	"Custom ACEs"
 ]
+## Pre-declared sections for expression insertion picker shown from ACE params.
+## Keep node-type sections first to align with #54 grouping and #51 expression UX.
+const EXPRESSION_PICKER_GROUPS: PackedStringArray = [
+	"CharacterBody2D",
+	"Area2D",
+	"Node2D",
+	"RigidBody2D",
+	"Timer",
+	"AnimationPlayer",
+	"General Expressions",
+	"Variables",
+	"Custom ACEs"
+]
 ## Category group names that are not node types — used to distinguish node-type
 ## groups (amber) from logical category groups (muted blue) in the picker.
 const CORE_CATEGORY_GROUP_NAMES: PackedStringArray = [
@@ -46,10 +59,13 @@ const CORE_CATEGORY_GROUP_NAMES: PackedStringArray = [
 ]
 const ACE_PARAMS_DIALOG_SIZE: Vector2i = Vector2i(420, 300)
 const ACE_PICKER_DIALOG_SIZE: Vector2i = Vector2i(520, 420)
+const EXPRESSION_PICKER_DIALOG_SIZE: Vector2i = Vector2i(520, 360)
 const NO_VARIABLES_AVAILABLE_TEXT: String = "No variables available"
 const NO_VARIABLES_AVAILABLE_HINT_TEXT: String = "No variables are available. Add a variable before applying this ACE."
+const NO_EXPRESSIONS_AVAILABLE_TEXT: String = "No expressions available"
 const ACE_PARAMS_LABEL_WIDTH: float = 110.0
 const ACE_PARAMS_LABEL_MIN_HEIGHT: float = 20.0
+const EXPRESSION_PARAM_HINTS: PackedStringArray = ["expression"]
 const BRANCH_GUIDE_CHAR: String = "└"
 const BRANCH_GUIDE_LABEL: String = "└─"
 const CANVAS_BG: Color = Color(0.060, 0.067, 0.088, 1.0)
@@ -105,6 +121,11 @@ var _ace_params_hint_base_text: String = ""
 ## True when the param dialog was opened from the ACE picker (enables Back button).
 var _ace_params_from_picker: bool = false
 var _ace_params_back_button: Button = null
+var _expression_picker_popup: Window = null
+var _expression_picker_search: LineEdit = null
+var _expression_picker_tree: Tree = null
+var _expression_picker_description: Label = null
+var _expression_picker_target_input: LineEdit = null
 
 var _variable_dialog: ConfirmationDialog = null
 var _variable_name_edit: LineEdit = null
@@ -454,6 +475,7 @@ func _build_layout() -> void:
 	_show_empty_inspector()
 	_refresh_toolbar_state()
 	_build_ace_picker_popup()
+	_build_expression_picker_popup()
 	_build_ace_params_dialog_popup()
 	_build_variable_dialog_popup()
 
@@ -751,6 +773,56 @@ func _build_ace_picker_popup() -> void:
 	wrapper.add_child(_ace_picker_description)
 	_ace_picker_popup.hide()
 
+func _build_expression_picker_popup() -> void:
+	_expression_picker_popup = Window.new()
+	_expression_picker_popup.name = "ExpressionPickerPopup"
+	_expression_picker_popup.min_size = EXPRESSION_PICKER_DIALOG_SIZE
+	_expression_picker_popup.title = "Insert Expression"
+	_expression_picker_popup.connect("close_requested", func():
+		_expression_picker_popup.hide()
+		_expression_picker_target_input = null
+	)
+	add_child(_expression_picker_popup)
+
+	var margin: MarginContainer = MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_top", 4)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	_expression_picker_popup.add_child(margin)
+
+	var wrapper: VBoxContainer = VBoxContainer.new()
+	wrapper.add_theme_constant_override("separation", 6)
+	margin.add_child(wrapper)
+
+	var title_label: Label = Label.new()
+	title_label.text = "Insert Expression"
+	title_label.add_theme_color_override("font_color", Color(0.80, 0.90, 1.0))
+	title_label.add_theme_font_size_override("font_size", 14)
+	wrapper.add_child(title_label)
+
+	_expression_picker_search = LineEdit.new()
+	_expression_picker_search.name = "ExpressionPickerSearch"
+	_expression_picker_search.placeholder_text = "Filter expressions…"
+	_expression_picker_search.connect("text_changed", _on_expression_picker_search_changed)
+	wrapper.add_child(_expression_picker_search)
+
+	_expression_picker_tree = Tree.new()
+	_expression_picker_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_expression_picker_tree.hide_root = true
+	_expression_picker_tree.select_mode = Tree.SELECT_ROW
+	_expression_picker_tree.connect("item_activated", _on_expression_picker_item_activated)
+	_expression_picker_tree.connect("item_selected", _on_expression_picker_item_selected)
+	wrapper.add_child(_expression_picker_tree)
+
+	_expression_picker_description = Label.new()
+	_expression_picker_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_expression_picker_description.add_theme_color_override("font_color", Color(0.65, 0.70, 0.78))
+	_expression_picker_description.text = "Pick an expression ACE to insert."
+	wrapper.add_child(_expression_picker_description)
+	_expression_picker_popup.hide()
+
 func _open_add_event_picker() -> void:
 	_ace_picker_mode = "new_event"
 	_ace_picker_target_row = null
@@ -788,6 +860,16 @@ func _show_ace_picker(title: String, include_triggers: bool, include_conditions:
 		_ace_picker_search.text = ""
 	_populate_ace_picker(include_triggers, include_conditions, include_actions)
 	_ace_picker_popup.popup_centered(ACE_PICKER_DIALOG_SIZE)
+
+func _open_expression_picker(target_input: LineEdit) -> void:
+	if target_input == null or _expression_picker_popup == null:
+		return
+	_expression_picker_target_input = target_input
+	_expression_picker_description.text = "Pick an expression ACE to insert."
+	if _expression_picker_search != null:
+		_expression_picker_search.text = ""
+	_populate_expression_picker()
+	_expression_picker_popup.popup_centered(EXPRESSION_PICKER_DIALOG_SIZE)
 
 func _populate_ace_picker(include_triggers: bool, include_conditions: bool, include_actions: bool, filter_text: String = "") -> void:
 	if _ace_picker_tree == null:
@@ -838,6 +920,47 @@ func _populate_ace_picker(include_triggers: bool, include_conditions: bool, incl
 		item.set_custom_color(0, _get_picker_item_color(descriptor))
 		item.set_metadata(0, descriptor)
 
+func _populate_expression_picker(filter_text: String = "") -> void:
+	if _expression_picker_tree == null:
+		return
+	_expression_picker_tree.clear()
+	var root: TreeItem = _expression_picker_tree.create_item()
+	var groups: Dictionary = {}
+	var added_items: int = 0
+	var filter_lower: String = filter_text.to_lower().strip_edges()
+	if filter_lower.is_empty():
+		for name: String in EXPRESSION_PICKER_GROUPS:
+			var section: TreeItem = _expression_picker_tree.create_item(root)
+			section.set_text(0, name)
+			section.set_selectable(0, false)
+			section.set_custom_color(0, _get_picker_group_color(name))
+			groups[name] = section
+	for descriptor: ACEDescriptor in ACERegistry.get_all_descriptors():
+		if descriptor == null or descriptor.ace_type != ACEDescriptor.ACEType.EXPRESSION:
+			continue
+		if not filter_lower.is_empty():
+			var name_match: bool = descriptor.get_list_name().to_lower().contains(filter_lower)
+			var desc_match: bool = descriptor.description.to_lower().contains(filter_lower)
+			var node_match: bool = descriptor.node_type.to_lower().contains(filter_lower)
+			if not name_match and not desc_match and not node_match:
+				continue
+		var group_name: String = _get_picker_group(descriptor)
+		if not groups.has(group_name):
+			var group_item: TreeItem = _expression_picker_tree.create_item(root)
+			group_item.set_text(0, group_name)
+			group_item.set_selectable(0, false)
+			group_item.set_custom_color(0, _get_picker_group_color(group_name))
+			groups[group_name] = group_item
+		var item: TreeItem = _expression_picker_tree.create_item(groups[group_name])
+		item.set_text(0, descriptor.get_list_name())
+		var desc_text: String = descriptor.description if not descriptor.description.is_empty() else descriptor.get_display_text()
+		item.set_tooltip_text(0, "[Expression]  %s" % desc_text)
+		item.set_custom_color(0, _get_picker_item_color(descriptor))
+		item.set_metadata(0, descriptor)
+		added_items += 1
+	if added_items == 0 and _expression_picker_description != null:
+		_expression_picker_description.text = NO_EXPRESSIONS_AVAILABLE_TEXT
+
 ## Returns the group name used to organise a descriptor in the ACE picker.
 ## node_type takes priority; non-Core providers group by provider_id; Core ACEs
 ## fall back to category.  This supports issue #54 node-type grouping.
@@ -854,7 +977,11 @@ func _get_picker_group(descriptor: ACEDescriptor) -> String:
 		return "Run Context / Triggers"
 	var category: String = descriptor.category
 	if category.is_empty():
-		return "General Conditions" if descriptor.ace_type == ACEDescriptor.ACEType.CONDITION else "General Actions"
+		if descriptor.ace_type == ACEDescriptor.ACEType.CONDITION:
+			return "General Conditions"
+		if descriptor.ace_type == ACEDescriptor.ACEType.EXPRESSION:
+			return "General Expressions"
+		return "General Actions"
 	return category
 
 ## Returns the header colour for an ACE picker group.
@@ -900,6 +1027,9 @@ static func _get_ace_type_label(ace_type: ACEDescriptor.ACEType) -> String:
 func _on_ace_picker_search_changed(new_text: String) -> void:
 	_populate_ace_picker(_ace_picker_include_triggers, _ace_picker_include_conditions, _ace_picker_include_actions, new_text)
 
+func _on_expression_picker_search_changed(new_text: String) -> void:
+	_populate_expression_picker(new_text)
+
 func _on_ace_picker_item_selected() -> void:
 	if _ace_picker_tree == null:
 		return
@@ -910,6 +1040,17 @@ func _on_ace_picker_item_selected() -> void:
 	if value is ACEDescriptor:
 		var descriptor: ACEDescriptor = value
 		_ace_picker_description.text = descriptor.description if not descriptor.description.is_empty() else descriptor.get_display_text()
+
+func _on_expression_picker_item_selected() -> void:
+	if _expression_picker_tree == null:
+		return
+	var item: TreeItem = _expression_picker_tree.get_selected()
+	if item == null:
+		return
+	var value: Variant = item.get_metadata(0)
+	if value is ACEDescriptor:
+		var descriptor: ACEDescriptor = value
+		_expression_picker_description.text = descriptor.description if not descriptor.description.is_empty() else descriptor.get_display_text()
 
 func _on_ace_picker_item_activated() -> void:
 	if _ace_picker_tree == null:
@@ -924,6 +1065,66 @@ func _on_ace_picker_item_activated() -> void:
 	if _ace_picker_popup != null:
 		_ace_picker_popup.hide()
 	_open_ace_params_dialog_for_picker_selection(descriptor)
+
+func _on_expression_picker_item_activated() -> void:
+	if _expression_picker_tree == null:
+		return
+	var item: TreeItem = _expression_picker_tree.get_selected()
+	if item == null:
+		return
+	var value: Variant = item.get_metadata(0)
+	if not (value is ACEDescriptor):
+		return
+	var descriptor: ACEDescriptor = value as ACEDescriptor
+	var snippet: String = _build_expression_snippet(descriptor, descriptor.build_default_params())
+	_insert_expression_snippet(snippet)
+
+func _build_expression_snippet(descriptor: ACEDescriptor, values: Dictionary) -> String:
+	if descriptor == null:
+		return ""
+	var template: String = descriptor.codegen_template if not descriptor.codegen_template.is_empty() else descriptor.get_display_text()
+	var keys: Array[String] = []
+	for key: Variant in values.keys():
+		keys.append(str(key))
+	# Replace longer tokens first so names like {amount} are not partially
+	# affected by shorter tokens such as {a}.
+	keys.sort_custom(func(a: String, b: String) -> bool:
+		return a.length() > b.length()
+	)
+	for key: String in keys:
+		var token: String = "{%s}" % key
+		# Missing keys intentionally leave unresolved tokens in place so users can
+		# keep editing partially-specified expression templates.
+		template = template.replace(token, str(values.get(key, token)))
+	return template
+
+func _insert_expression_snippet(snippet: String) -> void:
+	if _expression_picker_target_input == null:
+		return
+	var existing_text: String = _expression_picker_target_input.text.strip_edges(false, true)
+	var insert_text: String = snippet.strip_edges()
+	if insert_text.is_empty():
+		return
+	if existing_text.strip_edges().is_empty():
+		_expression_picker_target_input.text = insert_text
+	else:
+		var separator: String = " " if _should_insert_expression_separator(existing_text, insert_text) else ""
+		_expression_picker_target_input.text = "%s%s%s" % [existing_text, separator, insert_text]
+	_expression_picker_target_input.grab_focus()
+	if _expression_picker_popup != null:
+		_expression_picker_popup.hide()
+	_expression_picker_target_input = null
+
+func _should_insert_expression_separator(existing_text: String, insert_text: String) -> bool:
+	if existing_text.is_empty() or insert_text.is_empty():
+		return false
+	var last_char: String = existing_text[-1]
+	if last_char in [" ", "\t", "\n", "(", "[", "{", ".", "!", "~"]:
+		return false
+	var first_char: String = insert_text[0]
+	if first_char in [")", "]", "}", ".", ",", ";"]:
+		return false
+	return true
 
 func _build_ace_params_dialog_popup() -> void:
 	_ace_params_dialog = ConfirmationDialog.new()
@@ -1084,7 +1285,19 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 
 			var input: Control = _create_ace_param_input(param, _ace_params_existing_values.get(key, param.get_initial_value()))
 			input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			form_row.add_child(input)
+			var input_host: Control = input
+			if _param_supports_expression_picker(param, input):
+				var inline_row: HBoxContainer = HBoxContainer.new()
+				inline_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				inline_row.add_theme_constant_override("separation", 6)
+				inline_row.add_child(input)
+				var expression_btn: Button = Button.new()
+				expression_btn.text = "ƒx"
+				expression_btn.tooltip_text = "Insert expression…"
+				expression_btn.connect("pressed", _on_expression_insert_requested.bind(input))
+				inline_row.add_child(expression_btn)
+				input_host = inline_row
+			form_row.add_child(input_host)
 			_ace_params_fields[key] = {
 				"param": param,
 				"input": input
@@ -1103,6 +1316,16 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 	_refresh_ace_params_dialog_confirm_state()
 	_ace_params_dialog.reset_size()
 	_ace_params_dialog.popup_centered(ACE_PARAMS_DIALOG_SIZE)
+
+func _param_supports_expression_picker(param: ACEParam, input: Control) -> bool:
+	if param == null or not (input is LineEdit):
+		return false
+	return EXPRESSION_PARAM_HINTS.has(param.hint.to_lower())
+
+func _on_expression_insert_requested(target_input: Control) -> void:
+	if not (target_input is LineEdit):
+		return
+	_open_expression_picker(target_input as LineEdit)
 
 ## Creates an appropriate UI control for the given ACE parameter.
 ## Control type is chosen based on type_name, hint, and options metadata:
