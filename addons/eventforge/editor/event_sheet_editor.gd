@@ -114,6 +114,7 @@ func refresh_rows() -> void:
         row_ui.delete_requested.connect(_on_row_delete_requested)
         row_ui.add_condition_requested.connect(_on_add_condition_requested)
         row_ui.add_action_requested.connect(_on_add_action_requested)
+        row_ui.duplicate_requested.connect(_on_row_duplicate_requested)
         _row_list.add_child(row_ui)
 
     var add_more_button: Button = Button.new()
@@ -303,7 +304,7 @@ func _build_ui() -> void:
     add_child(_preview_refresh_timer)
 
     _condition_picker = ConditionPicker.new()
-    _condition_picker.condition_selected.connect(_on_condition_selected)
+    _condition_picker.descriptor_selected.connect(_on_condition_descriptor_selected)
     add_child(_condition_picker)
 
     _action_picker = ActionPicker.new()
@@ -361,16 +362,12 @@ func _on_add_action_requested(row: EventRow) -> void:
     if _action_picker != null:
         _action_picker.open_picker()
 
-func _on_condition_selected(condition: ACECondition) -> void:
-    if _pending_row_for_condition == null or condition == null:
+func _on_condition_descriptor_selected(descriptor: ACEDescriptor) -> void:
+    if _pending_row_for_condition == null or descriptor == null:
         return
-    _materialize_condition_params(condition)
-    _pending_row_for_condition.conditions.append(condition)
     _selected_row = _pending_row_for_condition
     _pending_row_for_condition = null
-    refresh_rows()
-    _rebuild_inspector()
-    _mark_preview_dirty()
+    _apply_descriptor_to_selected_row(descriptor)
 
 func _on_action_selected(action: ACEAction) -> void:
     if _pending_row_for_action == null or action == null:
@@ -384,6 +381,12 @@ func _on_action_selected(action: ACEAction) -> void:
     refresh_rows()
     _rebuild_inspector()
     _mark_preview_dirty()
+
+func _on_row_duplicate_requested(row: EventRow) -> void:
+    _selected_row = row
+    refresh_rows()
+    _rebuild_inspector()
+    _on_duplicate_requested()
 
 func _on_toolbar_view_mode_changed(mode: int) -> void:
     match mode:
@@ -428,17 +431,28 @@ func _set_status(message: String) -> void:
 func _on_ace_selected(descriptor: ACEDescriptor) -> void:
     if descriptor == null:
         return
+    _apply_descriptor_to_selected_row(descriptor)
+
+func _apply_descriptor_to_selected_row(descriptor: ACEDescriptor) -> void:
+    if descriptor == null:
+        return
     match descriptor.ace_type:
         ACEDescriptor.ACEType.TRIGGER:
             var row: EventRow = _selected_row
             if row == null:
                 row = _add_row_for_trigger()
+            if TriggerResolver.has_trigger_condition(row):
+                _selected_row = row
+                refresh_rows()
+                _rebuild_inspector()
+                _set_status("Only one trigger condition is supported per event.")
+                return
             _assign_trigger(row, descriptor)
             _selected_row = row
             refresh_rows()
             _rebuild_inspector()
             _mark_preview_dirty()
-            _set_status("Trigger set to %s." % descriptor.ace_id)
+            _set_status("Run context set to %s." % _entry_name(descriptor.provider_id, descriptor.ace_id))
         ACEDescriptor.ACEType.CONDITION:
             if _selected_row == null:
                 _set_status("Select an event row first.")
@@ -469,12 +483,36 @@ func _add_row_for_trigger() -> EventRow:
     current_sheet.events.append(row)
     return row
 
+func _clear_trigger_condition(row: EventRow) -> void:
+    if row == null:
+        return
+    row.trigger_provider_id = ""
+    row.trigger_id = ""
+    row.trigger_params = {}
+    row.trigger = null
+
+func _sync_trigger_resource(row: EventRow) -> void:
+    if row == null:
+        return
+    if row.trigger_id.is_empty():
+        row.trigger = null
+        return
+    if row.trigger == null:
+        row.trigger = ACECondition.new()
+    row.trigger.provider_id = row.trigger_provider_id
+    row.trigger.ace_id = row.trigger_id
+    row.trigger.params = row.trigger_params.duplicate(true)
+    row.trigger.parameters = row.trigger_params.duplicate(true)
+
 func _assign_trigger(row: EventRow, descriptor: ACEDescriptor) -> void:
     if row == null or descriptor == null:
         return
     row.trigger_provider_id = descriptor.provider_id
     row.trigger_id = descriptor.ace_id
     row.trigger_params = _params_from_descriptor(descriptor)
+    row.trigger = _make_condition(descriptor)
+    row.trigger.params = row.trigger_params.duplicate(true)
+    row.trigger.parameters = row.trigger_params.duplicate(true)
 
 func _params_from_descriptor(descriptor: ACEDescriptor) -> Dictionary:
     var params: Dictionary = {}
@@ -538,6 +576,8 @@ func _default_param_value(descriptor: ACEDescriptor, param_id: String, param: AC
             if param_id == "group":
                 return "\"enemy\""
         "OnSignal":
+            if param_id == "target_node":
+                return "self"
             if param_id == "signal_name":
                 return "eventforge_signal"
 
@@ -600,8 +640,9 @@ func _rebuild_inspector() -> void:
         _inspector_container.add_child(empty_label)
         return
 
-    _inspector_container.add_child(_title_label("Inspector — Event Row"))
+    _inspector_container.add_child(_title_label("Inspector — Event"))
     _inspector_container.add_child(_read_only_line("UID", _selected_row.event_uid))
+    _inspector_container.add_child(_read_only_line("Runs", _run_summary_for_row(_selected_row)))
 
     var enabled_toggle: CheckBox = CheckBox.new()
     enabled_toggle.text = "Enabled"
@@ -609,31 +650,48 @@ func _rebuild_inspector() -> void:
     enabled_toggle.toggled.connect(_on_inspector_enabled_toggled)
     _inspector_container.add_child(enabled_toggle)
 
-    _add_text_editor("Trigger Provider", _selected_row.trigger_provider_id, func(value: String) -> void:
+    var run_context_provider: String = _run_context_provider_for_row(_selected_row)
+    var run_context_id: String = TriggerResolver.get_trigger_id(_selected_row)
+    _add_text_editor("Run Context Provider", run_context_provider, func(value: String) -> void:
         if _selected_row == null:
             return
         _selected_row.trigger_provider_id = value.strip_edges()
+        _sync_trigger_resource(_selected_row)
         refresh_rows()
         _mark_preview_dirty()
     )
-    _add_text_editor("Trigger ID", _selected_row.trigger_id, func(value: String) -> void:
+    _add_text_editor("Run Context ID", run_context_id, func(value: String) -> void:
         if _selected_row == null:
             return
         _selected_row.trigger_id = value.strip_edges()
+        _sync_trigger_resource(_selected_row)
         refresh_rows()
         _mark_preview_dirty()
     )
 
-    _inspector_container.add_child(_title_label("Trigger Params"))
+    var clear_run_context_button: Button = Button.new()
+    clear_run_context_button.text = "Clear Run Context"
+    clear_run_context_button.disabled = not TriggerResolver.has_trigger_condition(_selected_row)
+    clear_run_context_button.pressed.connect(func() -> void:
+        if _selected_row == null:
+            return
+        _clear_trigger_condition(_selected_row)
+        refresh_rows()
+        _rebuild_inspector()
+        _mark_preview_dirty()
+    )
+    _inspector_container.add_child(clear_run_context_button)
+
+    _inspector_container.add_child(_title_label("Run Context Params"))
     _add_params_editor(
-        _selected_row.trigger_params,
+        TriggerResolver.get_trigger_params(_selected_row),
         _on_trigger_param_changed,
-        _selected_row.trigger_id
+        TriggerResolver.get_trigger_id(_selected_row)
     )
 
     _inspector_container.add_child(_title_label("Conditions"))
     if _selected_row.conditions.is_empty():
-        _inspector_container.add_child(_read_only_line("-", "No conditions"))
+        _inspector_container.add_child(_read_only_line("-", "Always"))
     else:
         for index: int in range(_selected_row.conditions.size()):
             var condition: ACECondition = _selected_row.conditions[index]
@@ -684,6 +742,40 @@ func _entry_name(provider_id: String, ace_id: String) -> String:
     if descriptor != null and not descriptor.display_name.is_empty():
         return "%s (%s)" % [descriptor.display_name, ace_id]
     return ace_id
+
+func _run_summary_for_row(row: EventRow) -> String:
+    if row == null:
+        return "Every Frame"
+    var trigger_id: String = TriggerResolver.get_trigger_id(row)
+    match trigger_id:
+        "":
+            return "Every Frame"
+        "OnReady":
+            return "On Ready"
+        "OnProcess":
+            return "On Process"
+        "OnPhysicsProcess":
+            return "On Physics Process"
+        "OnBodyEntered":
+            return "On Body Entered"
+        "OnSignal":
+            var params: Dictionary = TriggerResolver.get_trigger_params(row)
+            var signal_name: String = str(params.get("signal_name", "eventforge_signal")).strip_edges()
+            var target_node: String = str(params.get("target_node", "self")).strip_edges()
+            if target_node.is_empty() or target_node == ".":
+                target_node = "self"
+            return "On Signal \"%s\" from %s" % [signal_name, target_node]
+        _:
+            return _entry_name(TriggerResolver.get_trigger_provider_id(row), trigger_id)
+
+func _run_context_provider_for_row(row: EventRow) -> String:
+    if row == null:
+        return ""
+    if not row.trigger_provider_id.is_empty():
+        return row.trigger_provider_id
+    if TriggerResolver.has_trigger_condition(row):
+        return TriggerResolver.get_trigger_provider_id(row)
+    return ""
 
 func _add_entry_header(text: String, button_text: String, callback: Callable) -> void:
     var header: HBoxContainer = HBoxContainer.new()
@@ -776,6 +868,7 @@ func _on_trigger_param_changed(key: String, value: String) -> void:
     if _selected_row == null:
         return
     _selected_row.trigger_params[key] = value
+    _sync_trigger_resource(_selected_row)
     _mark_preview_dirty()
 
 func _on_condition_param_changed(key: String, value: String, index: int) -> void:
