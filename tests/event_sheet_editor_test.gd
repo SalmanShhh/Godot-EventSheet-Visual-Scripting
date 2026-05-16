@@ -19,7 +19,7 @@ static func run() -> bool:
 	all_passed = _check("toolbar selection none", SheetToolbar.format_selection_meta("none"), "No selection") and all_passed
 	all_passed = _check("toolbar selection event", SheetToolbar.format_selection_meta("event"), "Selection: Event") and all_passed
 	var toolbar_ui: SheetToolbar = SheetToolbar.new()
-	all_passed = _check("toolbar shows shortcuts hint", _contains_label_text(toolbar_ui, "Shortcuts: Ctrl+E Event · Ctrl+Shift+V Variable · Ctrl+Shift+C Condition · Ctrl+Shift+A Action · Del Delete"), true) and all_passed
+	all_passed = _check("toolbar shows shortcuts hint", _contains_label_text(toolbar_ui, SheetToolbar.SHORTCUTS_HINT_TEXT), true) and all_passed
 	all_passed = _check("toolbar shortcuts hint hidden without sheet", toolbar_ui._shortcuts_hint_label.visible, false) and all_passed
 	toolbar_ui.set_sheet_loaded(true)
 	all_passed = _check("toolbar shortcuts hint visible with loaded sheet", toolbar_ui._shortcuts_hint_label.visible, true) and all_passed

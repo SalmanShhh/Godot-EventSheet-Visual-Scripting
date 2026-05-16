@@ -103,7 +103,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			handled = _handle_workflow_shortcut("add_condition")
 		elif key_event.shift_pressed and key_event.keycode == KEY_A:
 			handled = _handle_workflow_shortcut("add_action")
-	elif not key_event.alt_pressed and not key_event.ctrl_pressed and not key_event.meta_pressed and not key_event.shift_pressed and key_event.keycode == KEY_DELETE:
+	elif key_event.keycode == KEY_DELETE and not (key_event.alt_pressed or key_event.ctrl_pressed or key_event.meta_pressed or key_event.shift_pressed):
 		handled = _handle_workflow_shortcut("delete_selection")
 	if handled:
 		get_viewport().set_input_as_handled()
