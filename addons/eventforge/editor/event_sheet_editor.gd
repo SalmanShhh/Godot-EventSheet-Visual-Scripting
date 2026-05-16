@@ -12,6 +12,14 @@ var current_sheet: EventSheetResource = null
 # user:// is the editor's writable data path; keep preview output out of res:// assets.
 const PREVIEW_OUTPUT_PATH: String = "user://eventforge_preview_generated.gd"
 const DEFAULT_RUN_CONTEXT_ACE_ID: String = "OnProcess"
+const EVENT_PICKER_GROUPS: PackedStringArray = [
+	"Run Context / Triggers",
+	"General Conditions",
+	"Variables",
+	"Loops",
+	"Signals / Scene / Input",
+	"Custom ACEs"
+]
 
 ## Currently selected entry kind.
 ## One of: "none", "event", "condition", "action", "variable", "group"
@@ -318,7 +326,7 @@ func _populate_ace_picker(include_triggers: bool, include_conditions: bool, incl
 	var groups: Dictionary = {}
 	if _ace_picker_mode == "new_event":
 		# Keep Construct-style sections visible even before all ACE categories are populated.
-		for name: String in ["Run Context / Triggers", "General Conditions", "Variables", "Loops", "Signals / Scene / Input", "Custom ACEs"]:
+		for name: String in EVENT_PICKER_GROUPS:
 			var section: TreeItem = _ace_picker_tree.create_item(root)
 			section.set_text(0, name)
 			section.set_selectable(0, false)

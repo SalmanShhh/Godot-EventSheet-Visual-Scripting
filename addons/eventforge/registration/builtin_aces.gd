@@ -41,9 +41,7 @@ static func _make_descriptor(provider_id: String, ace_id: String, display_name: 
 	descriptor.ace_id = ace_id
 	descriptor.display_name = display_name
 	descriptor.list_name = display_name
-	descriptor.listName = display_name
 	descriptor.display_text = display_text if not display_text.is_empty() else display_name
-	descriptor.displayText = descriptor.display_text
 	descriptor.category = category
 	descriptor.ace_type = ace_type
 	descriptor.codegen_template = codegen_template

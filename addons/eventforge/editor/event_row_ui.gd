@@ -118,7 +118,7 @@ func refresh() -> void:
 ## Returns a human-readable run-context label for the event row's trigger_id.
 static func format_run_context(row: EventRow) -> String:
 	if row == null or row.trigger_id.is_empty():
-		return "Runs: Every tick (default)"
+		return "Runs: Every Tick (default)"
 	match row.trigger_id:
 		"OnProcess":
 			return "Runs: Every Frame"
