@@ -115,10 +115,8 @@ It intentionally avoids describing unbuilt behavior as complete.
 - Central workspace composition now uses `HSplitContainer` (`WorkspaceSplit`) for
   canvas/inspector, matching the dedicated-editor split model instead of a fixed
   panel stack + separator.
-- Document framing is sectioned into explicit shells:
-  - `SheetSectionGlobals` for global variables
-  - `SheetSectionEvents` for event/group rows
-- Section shells use a `ColorRect` accent rail in the header instead of a bullet label, providing a design-system-consistent visual hierarchy.
+- Document framing keeps `SheetSectionGlobals` as a shell, while `SheetSectionEvents` is now a flatter continuous host so authored rows dominate the canvas.
+- Section headers use a `ColorRect` accent rail in the header instead of a bullet label, providing a design-system-consistent visual hierarchy.
 - Each section header is separated from its body by an `HSeparator` to create a clear visual tier.
 - Section empty states are rendered as styled `PanelContainer` cards, providing a consistent visual affordance.
 - Empty states are presented as centered onboarding cards with direct create/open actions.

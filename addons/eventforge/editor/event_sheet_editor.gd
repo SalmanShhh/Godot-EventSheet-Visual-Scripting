@@ -1941,28 +1941,38 @@ func _add_document_header() -> void:
 
 	_canvas_vbox.add_child(header_panel)
 
-func _add_section_shell(name: String, title: String, subtitle: String, accent: Color, action_text: String = "", action_handler: Callable = Callable()) -> VBoxContainer:
-	var section_panel: PanelContainer = PanelContainer.new()
-	section_panel.name = name
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.068, 0.075, 0.100, 1.0)
-	style.border_color = Color(0.165, 0.190, 0.244, 1.0)
-	style.set_border_width_all(1)
-	style.border_width_left = 3
-	style.set_corner_radius_all(6)
-	style.set_content_margin(SIDE_LEFT, 9)
-	style.set_content_margin(SIDE_RIGHT, 9)
-	style.set_content_margin(SIDE_TOP, 7)
-	style.set_content_margin(SIDE_BOTTOM, 7)
-	section_panel.add_theme_stylebox_override("panel", style)
-	_canvas_vbox.add_child(section_panel)
-
+func _add_section_shell(name: String, title: String, subtitle: String, accent: Color, action_text: String = "", action_handler: Callable = Callable(), framed: bool = true) -> VBoxContainer:
+	var section_host: Control
 	var section_vbox: VBoxContainer = VBoxContainer.new()
-	section_vbox.add_theme_constant_override("separation", 5)
-	section_panel.add_child(section_vbox)
+	section_vbox.add_theme_constant_override("separation", 4)
+	if framed:
+		var section_panel: PanelContainer = PanelContainer.new()
+		section_panel.name = name
+		var style: StyleBoxFlat = StyleBoxFlat.new()
+		style.bg_color = Color(0.068, 0.075, 0.100, 1.0)
+		style.border_color = Color(0.165, 0.190, 0.244, 1.0)
+		style.set_border_width_all(1)
+		style.border_width_left = 3
+		style.set_corner_radius_all(6)
+		style.set_content_margin(SIDE_LEFT, 9)
+		style.set_content_margin(SIDE_RIGHT, 9)
+		style.set_content_margin(SIDE_TOP, 7)
+		style.set_content_margin(SIDE_BOTTOM, 7)
+		section_panel.add_theme_stylebox_override("panel", style)
+		_canvas_vbox.add_child(section_panel)
+		section_panel.add_child(section_vbox)
+		section_host = section_panel
+	else:
+		var section_box: VBoxContainer = VBoxContainer.new()
+		section_box.name = name
+		section_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		section_box.add_theme_constant_override("separation", 3)
+		_canvas_vbox.add_child(section_box)
+		section_box.add_child(section_vbox)
+		section_host = section_box
 
 	var header: HBoxContainer = HBoxContainer.new()
-	header.add_theme_constant_override("separation", 7)
+	header.add_theme_constant_override("separation", 6)
 	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	section_vbox.add_child(header)
 
@@ -1975,7 +1985,7 @@ func _add_section_shell(name: String, title: String, subtitle: String, accent: C
 	var title_label: Label = Label.new()
 	title_label.text = title
 	title_label.add_theme_color_override("font_color", accent)
-	title_label.add_theme_font_size_override("font_size", 12)
+	title_label.add_theme_font_size_override("font_size", 11)
 	header.add_child(title_label)
 
 	var sub: Label = Label.new()
@@ -2003,8 +2013,11 @@ func _add_section_shell(name: String, title: String, subtitle: String, accent: C
 	section_vbox.add_child(header_sep)
 
 	var body: VBoxContainer = VBoxContainer.new()
-	body.add_theme_constant_override("separation", 3)
+	body.add_theme_constant_override("separation", 2)
 	section_vbox.add_child(body)
+	if not framed:
+		body.add_theme_constant_override("separation", 1)
+	section_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return body
 
 func _add_variables_section() -> void:
@@ -2028,7 +2041,7 @@ func _add_variables_section() -> void:
 		section_body.add_child(row)
 
 func _add_events_section() -> void:
-	var section_body: VBoxContainer = _add_section_shell("SheetSectionEvents", "Events", "Authoring lines and nested flow", Color(0.78, 0.87, 1.0), "+ Event", Callable(self, "_on_add_event_requested"))
+	var section_body: VBoxContainer = _add_section_shell("SheetSectionEvents", "Events", "Continuous row surface", Color(0.78, 0.87, 1.0), "+ Event", Callable(self, "_on_add_event_requested"), false)
 	_current_rows_host = section_body
 
 	if current_sheet.events.is_empty():
@@ -2102,33 +2115,33 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 		row.call("set_depth", indent_level)
 	var wrap_margin: MarginContainer = MarginContainer.new()
 	wrap_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	wrap_margin.add_theme_constant_override("margin_top", 1)
-	wrap_margin.add_theme_constant_override("margin_bottom", 1)
+	wrap_margin.add_theme_constant_override("margin_top", 0)
+	wrap_margin.add_theme_constant_override("margin_bottom", 0)
 	var line: HBoxContainer = HBoxContainer.new()
 	line.name = "SheetLineRow"
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.add_theme_constant_override("separation", 4)
+	line.add_theme_constant_override("separation", 2)
 	wrap_margin.add_child(line)
 
 	var gutter: HBoxContainer = HBoxContainer.new()
 	gutter.name = "SheetGutter"
-	gutter.add_theme_constant_override("separation", 6)
-	gutter.custom_minimum_size = Vector2(20 + (14 * indent_level), 0)
+	gutter.add_theme_constant_override("separation", 4)
+	gutter.custom_minimum_size = Vector2(16 + (12 * indent_level), 0)
 	gutter.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	gutter.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	line.add_child(gutter)
 
 	var root_pin: Label = Label.new()
-	root_pin.text = "•"
-	root_pin.add_theme_color_override("font_color", Color(0.42, 0.50, 0.66))
+	root_pin.text = "│"
+	root_pin.add_theme_color_override("font_color", Color(0.40, 0.50, 0.68))
 	root_pin.add_theme_font_size_override("font_size", 9)
 	gutter.add_child(root_pin)
 
 	for i: int in range(indent_level):
 		var guide: ColorRect = ColorRect.new()
-		guide.custom_minimum_size = Vector2(2, 0)
+		guide.custom_minimum_size = Vector2(1, 0)
 		guide.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		guide.color = Color(0.30, 0.38, 0.53, 0.80)
+		guide.color = Color(0.30, 0.38, 0.53, 0.88)
 		gutter.add_child(guide)
 
 	if indent_level > 0:
