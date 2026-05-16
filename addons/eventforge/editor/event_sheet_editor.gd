@@ -891,9 +891,7 @@ func _on_group_collapsed_toggled(row: GroupRowUI, _collapsed: bool) -> void:
 func _is_group_collapsed(event_group: EventGroup) -> bool:
 	if event_group == null:
 		return false
-	if event_group.collapsed:
-		return true
-	return not event_group.expanded
+	return event_group.is_collapsed()
 
 # ── Inspector builders ────────────────────────────────────────────────────────
 

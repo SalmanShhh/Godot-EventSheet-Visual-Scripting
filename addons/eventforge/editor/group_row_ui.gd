@@ -68,7 +68,7 @@ func _build_ui() -> void:
 func refresh() -> void:
 	if event_group == null or _name_label == null:
 		return
-	var collapsed: bool = _is_group_collapsed(event_group)
+	var collapsed: bool = event_group.is_collapsed()
 	if _disclosure_btn != null:
 		_disclosure_btn.text = "▶" if collapsed else "▼"
 	var display_name: String = event_group.name
@@ -86,20 +86,10 @@ func _on_pressed() -> void:
 func _on_toggle_pressed() -> void:
 	if event_group == null:
 		return
-	var collapsed: bool = _is_group_collapsed(event_group)
-	event_group.collapsed = not collapsed
-	event_group.expanded = not event_group.collapsed
+	var collapsed: bool = event_group.is_collapsed()
+	event_group.set_collapsed_state(not collapsed)
 	refresh()
 	group_collapsed_toggled.emit(self, event_group.collapsed)
-
-func _is_group_collapsed(group: EventGroup) -> bool:
-	if group == null:
-		return false
-	if group.collapsed:
-		return true
-	if not group.expanded:
-		return true
-	return false
 
 func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
