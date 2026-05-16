@@ -306,6 +306,27 @@ static func run() -> bool:
 		editor._rebuild_inspector_event(sep_row_ui)
 		all_passed = _check("inspector event card has separator after heading", _count_separators(editor._inspector_vbox) >= 1, true) and all_passed
 
+	# Phase 6: empty inspector state also has a HSeparator after the heading.
+	editor._show_empty_inspector()
+	all_passed = _check("empty inspector has separator after heading", _count_separators(editor._inspector_vbox) >= 1, true) and all_passed
+
+	# Phase 6: inspector card has a left border accent (border_width_left = 3).
+	var card_sheet: EventSheetResource = EventSheetResource.new()
+	var card_event: EventRow = EventRow.new()
+	card_sheet.events.append(card_event)
+	editor.current_sheet = card_sheet
+	editor.refresh_canvas()
+	var card_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, card_event.event_uid)
+	if card_row_ui != null:
+		editor._rebuild_inspector_event(card_row_ui)
+		var card_node: PanelContainer = _find_first_panel_container(editor._inspector_vbox)
+		var has_left_accent: bool = false
+		if card_node != null:
+			var sb: StyleBox = card_node.get_theme_stylebox("panel")
+			if sb is StyleBoxFlat:
+				has_left_accent = (sb as StyleBoxFlat).border_width_left == 3
+		all_passed = _check("inspector card has left border accent", has_left_accent, true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
@@ -368,6 +389,17 @@ static func _count_separators(node: Node) -> int:
 	for child: Node in node.get_children():
 		total += _count_separators(child)
 	return total
+
+static func _find_first_panel_container(node: Node) -> PanelContainer:
+	if node == null:
+		return null
+	if node is PanelContainer:
+		return node as PanelContainer
+	for child: Node in node.get_children():
+		var found: PanelContainer = _find_first_panel_container(child)
+		if found != null:
+			return found
+	return null
 
 static func _find_node_named(node: Node, expected_name: String) -> Node:
 	if node == null:

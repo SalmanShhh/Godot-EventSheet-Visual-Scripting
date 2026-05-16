@@ -84,6 +84,15 @@ It intentionally avoids describing unbuilt behavior as complete.
 - Depth guide `ColorRect` lines use opacity 0.80 (up from 0.68) for better visibility at depth.
 - Clause `VSeparator` uses opacity 0.90 (up from 0.80) for slightly more visible lane division.
 
+### 2.8 Final cross-surface polish (Phase 6)
+
+- Inspector cards use `border_width_left = 3` for a left accent rail, visually anchoring them like row panels.
+- The inspector empty state includes an `HSeparator` after the "Inspector" heading, consistent with the event/variable/group inspector cards.
+- The group inspector card styles the Enabled and Collapsed labels with semantic colors: green-tinted for `true`, red-tinted for `false`, and muted blue-grey for Collapsed.
+- Section header separators are tinted with the section's accent color at low opacity (0.30), replacing the previous generic border color — improving visual coherence between the section accent rail and its separator.
+- The toolbar top row adds a `VSeparator` between the document-meta label and the selection-meta label for clearer visual separation of the two context streams.
+- The `+ action` inline button uses teal/green font colors matching the action lane (`do` clause prefix), making lane affinity of add buttons visually consistent (blue `+ condition` → blue condition lane, teal `+ action` → teal action lane).
+
 ### 2.5 Row type badges
 
 - Variable rows use a styled chip badge (`Global`) with a blue-tinted background and border.
