@@ -16,18 +16,29 @@ It intentionally avoids describing unbuilt behavior as complete.
   - `Add Condition`
   - `Replace Condition`
   - `Add Action`
+- **Live search/filter**: A `LineEdit` (`ACEPickerSearch`) below the title allows real-time filtering of entries by name, description, or node type.  When the search box is non-empty, pre-declared empty group headers are hidden so only groups that contain a matching entry are shown.  Clearing the search restores the full grouped list.
 - Picker entries are grouped by ACE category, with Construct-style event groups shown when adding events.
 - ACE groups are colour-coded by type:
-  - **Node-type groups** (e.g. `CharacterBody2D`, `Area2D`) use **amber** text — these group ACEs by the Godot class they belong to.
+  - **Node-type groups** (e.g. `CharacterBody2D`, `Area2D`, `Node2D`, `Timer`, `AnimationPlayer`, `RigidBody2D`) use **amber** text — these group ACEs by the Godot class they belong to.
   - `Run Context / Triggers` uses teal-green.
   - `Variables` uses muted blue.
   - `Custom ACEs` (runtime providers) uses purple.
   - Other logical category groups use a neutral muted colour.
+- **Per-item type colour-coding**: Each ACE entry in the picker tree has its text coloured by ACE type so conditions, actions, and triggers are visually distinguishable within a mixed group:
+  - **Triggers** use soft green.
+  - **Conditions** use soft blue.
+  - **Actions** use soft teal.
+- **Type-labelled tooltips**: Item tooltips are prefixed with the ACE type in brackets (e.g. `[Condition]  Is on floor`) so hovering immediately reveals whether an entry is a condition, action, or trigger.
 - `ACEDescriptor` carries a `node_type` field that determines the primary group.  When `node_type` is non-empty it takes priority over `category`.
-- `EVENT_PICKER_GROUPS` pre-declares node-type sections (`Area2D`, `CharacterBody2D`) so they appear even before descriptor scanning in the "Add Event" picker.
-- Built-in ACEs with clear Godot class origins are tagged:
-  - `IsOnFloor` → `CharacterBody2D`
-  - `OnBodyEntered` → `Area2D`
+- `EVENT_PICKER_GROUPS` pre-declares node-type sections so they appear before descriptor scanning in the "Add Event" picker.  Pre-declared node types:
+  - `CharacterBody2D`, `Area2D`, `Node2D`, `RigidBody2D`, `Timer`, `AnimationPlayer`
+- Built-in ACEs tagged with their Godot class origin:
+  - `IsOnFloor`, `MoveAndSlide`, `SetVelocity` → `CharacterBody2D`
+  - `OnBodyEntered`, `OnAreaEntered` → `Area2D`
+  - `SetPosition2D`, `SetRotationDeg` → `Node2D`
+  - `ApplyCentralImpulse` → `RigidBody2D`
+  - `StartTimer`, `StopTimer`, `IsTimerStopped`, `OnTimeout` → `Timer`
+  - `PlayAnimation`, `StopAnimation`, `IsAnimationPlaying`, `OnAnimationFinished` → `AnimationPlayer`
 
 ### 2.2 ACE parameter dialog
 

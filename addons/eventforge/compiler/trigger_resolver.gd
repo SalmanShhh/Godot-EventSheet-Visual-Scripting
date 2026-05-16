@@ -19,6 +19,12 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return {"function_name": "_physics_process", "args": "delta: float"}
 		"OnBodyEntered":
 			return {"function_name": "_on_body_entered", "args": "body: Node"}
+		"OnAreaEntered":
+			return {"function_name": "_on_area_entered", "args": "area: Area2D"}
+		"OnTimeout":
+			return {"function_name": "_on_timeout", "args": ""}
+		"OnAnimationFinished":
+			return {"function_name": "_on_animation_finished", "args": "anim_name: StringName"}
 		"OnSignal":
 			var signal_name: String = str(event.trigger_params.get("signal_name", "eventforge_signal"))
 			return {"function_name": "_on_%s" % signal_name, "args": ""}

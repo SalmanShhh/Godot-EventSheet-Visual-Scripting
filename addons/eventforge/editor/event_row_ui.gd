@@ -252,6 +252,15 @@ static func format_run_context(row: EventRow) -> String:
 			return "On Physics"
 		"OnBodyEntered":
 			return "On Body Entered"
+		"OnAreaEntered":
+			return "On Area Entered"
+		"OnTimeout":
+			return "On Timeout"
+		"OnAnimationFinished":
+			var anim: String = str(row.trigger_params.get("anim_name", ""))
+			if anim.is_empty():
+				return "On Animation Finished"
+			return 'On Animation "%s" Finished' % anim
 		"OnSignal":
 			var sig: String = str(row.trigger_params.get("signal_name", "signal"))
 			var src: String = str(row.trigger_params.get("source", ""))

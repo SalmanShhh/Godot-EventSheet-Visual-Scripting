@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+### ACE picker discoverability improvements (issue #54 – slice 2)
+- **Live search/filter in ACE picker**: A `LineEdit` search box (`ACEPickerSearch`) added
+  below the picker title.  Typing filters visible entries by list name, description, or
+  node type in real time.  Pre-declared empty group headers are hidden when a filter is
+  active so only groups with matches appear.  Clearing the search box restores the full
+  grouped list.  Stored picker flags (`_ace_picker_include_triggers/conditions/actions`)
+  allow the search handler to re-populate with the correct mode filters.
+- **Per-item ACE type colour-coding**: Each entry in the picker tree is now tinted by its
+  ACE type (triggers = soft green, conditions = soft blue, actions = soft teal) via the
+  new `_get_picker_item_color()` static helper.  Group headers retain their existing
+  colour scheme; item tints are deliberately softer to avoid visual conflict.
+- **Type-labelled tooltips**: Picker item tooltips now carry an ACE type prefix
+  (`[Trigger]`, `[Condition]`, `[Action]`) from the new `_get_ace_type_label()` helper,
+  giving an at-a-glance type signal without touching the item label text.
+- **Expanded built-in node-type ACEs**: Fourteen new Core ACEs added with `node_type` set
+  so they appear in the correct class section in the picker:
+  - `Node2D` — `SetPosition2D` (action), `SetRotationDeg` (action)
+  - `CharacterBody2D` — `MoveAndSlide` (action), `SetVelocity2D` (action)
+  - `Area2D` — `OnAreaEntered` (trigger)
+  - `RigidBody2D` — `ApplyCentralImpulse` (action)
+  - `Timer` — `StartTimer` (action), `StopTimer` (action), `IsTimerStopped` (condition),
+    `OnTimeout` (trigger)
+  - `AnimationPlayer` — `PlayAnimation` (action), `StopAnimation` (action),
+    `IsAnimationPlaying` (condition), `OnAnimationFinished` (trigger)
+- **Expanded `EVENT_PICKER_GROUPS`**: `Node2D`, `RigidBody2D`, `Timer`, and
+  `AnimationPlayer` added to the pre-declared group list so their sections are always
+  present at the top of the "Add Event" picker (node-type groups precede logical
+  categories).
+- **Tests**: Added assertions for all new built-in node-type groups, per-item colour
+  helper, ACE type label helper, and search filter behaviour (filter match + empty-filter
+  group count).
+- **Docs**: Updated `EDITOR-UI-SPEC.md` section 2.1 and `SPEC.md` section 7 to document
+  the search box, per-item colouring, type-labelled tooltips, expanded built-in ACE set,
+  and updated pre-declared group list.
+
 ### Workspace shell polish (issue #59 – slice 4)
 - **Central split composition**: Replaced fixed `HBox + VSeparator` canvas/inspector
   layout with a named `HSplitContainer` (`WorkspaceSplit`) so the editor body reads
