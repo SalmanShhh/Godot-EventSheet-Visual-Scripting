@@ -72,6 +72,7 @@ const CONDITION_PLACEHOLDER_BG: Color = Color(0.104, 0.137, 0.205, 1.0)
 const CONDITION_PLACEHOLDER_BORDER: Color = Color(0.190, 0.262, 0.385, 1.0)
 const ACTION_PLACEHOLDER_BG: Color = Color(0.088, 0.142, 0.132, 1.0)
 const ACTION_PLACEHOLDER_BORDER: Color = Color(0.155, 0.236, 0.218, 1.0)
+const TOKEN_LEFT_BORDER_WIDTH: int = 2
 const COND_LANE_RATIO: float = 1.0
 const ACTION_LANE_RATIO: float = 1.85
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
@@ -463,7 +464,7 @@ func _make_placeholder_token(text: String, is_condition: bool) -> PanelContainer
 	style.border_color = CONDITION_PLACEHOLDER_BORDER if is_condition else ACTION_PLACEHOLDER_BORDER
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(0)
-	style.border_width_left = 2
+	style.border_width_left = TOKEN_LEFT_BORDER_WIDTH
 	style.set_content_margin(SIDE_LEFT, 5)
 	style.set_content_margin(SIDE_RIGHT, 5)
 	style.set_content_margin(SIDE_TOP, 2)
@@ -498,7 +499,7 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	normal_style.bg_color = CONDITION_TOKEN_BG if is_condition else ACTION_TOKEN_BG
 	normal_style.border_color = CONDITION_TOKEN_BORDER if is_condition else ACTION_TOKEN_BORDER
 	normal_style.set_border_width_all(1)
-	normal_style.border_width_left = 2
+	normal_style.border_width_left = TOKEN_LEFT_BORDER_WIDTH
 	normal_style.set_corner_radius_all(0)
 	normal_style.set_content_margin(SIDE_LEFT, 6)
 	normal_style.set_content_margin(SIDE_RIGHT, 6)
