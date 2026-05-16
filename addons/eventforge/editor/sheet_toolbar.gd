@@ -24,6 +24,9 @@ const SHORTCUT_ADD_EVENT: String = "Ctrl+E Event"
 const SHORTCUT_ADD_VARIABLE: String = "Ctrl+Shift+V Variable"
 const SHORTCUT_ADD_CONDITION: String = "Ctrl+Shift+C Condition"
 const SHORTCUT_ADD_ACTION: String = "Ctrl+Shift+A Action"
+const SHORTCUT_ADD_COMMENT: String = "Q Comment"
+const SHORTCUT_COPY_EVENT: String = "Ctrl+C Copy Event"
+const SHORTCUT_PASTE_EVENT: String = "Ctrl+V Paste Event"
 const SHORTCUT_DELETE_SELECTION: String = "Del Delete"
 const SHORTCUTS_HINT_SEGMENTS: PackedStringArray = [
 	SHORTCUT_SAVE,
@@ -31,6 +34,9 @@ const SHORTCUTS_HINT_SEGMENTS: PackedStringArray = [
 	SHORTCUT_ADD_VARIABLE,
 	SHORTCUT_ADD_CONDITION,
 	SHORTCUT_ADD_ACTION,
+	SHORTCUT_ADD_COMMENT,
+	SHORTCUT_COPY_EVENT,
+	SHORTCUT_PASTE_EVENT,
 	SHORTCUT_DELETE_SELECTION
 ]
 const SHORTCUTS_HINT_COLOR: Color = Color(0.52, 0.61, 0.74)
