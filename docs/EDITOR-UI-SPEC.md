@@ -58,18 +58,31 @@ It intentionally avoids describing unbuilt behavior as complete.
 
 ### 2.3 Event sheet row UX
 
-- Event rows render as compact event-sheet lines with inline authored clauses/tokens.
-- Rows avoid explicit lane headers (`IF`, `THEN`, `Conditions`, `Actions`) and instead use inline flow, separators, and token rhythm.
-- Clause flow uses compact inline connectors (`when` → `do`) at 10pt with distinct per-lane colors:
-  - `when` prefix renders in blue (condition lane accent)
-  - `do` prefix renders in green-mint (action lane accent)
-- A thin vertical separator visually divides the condition area from the action area.
+- Event rows use a **two-lane composition**: a condition lane (left) and an action lane (right), separated by a 2 px `ColorRect` divider.
+- Rows avoid explicit lane headers (`IF`, `THEN`, `Conditions`, `Actions`) and instead use inline flow, lane panels, and token rhythm.
+- The condition lane occupies approximately 35 % of the row width (`COND_LANE_RATIO = 1.0`); the action lane occupies approximately 65 % (`ACTION_LANE_RATIO = 1.85`). These ratios are constant across all rows, providing cross-row column alignment.
+- Each lane is a `PanelContainer` with a subtly distinct background tint:
+  - Condition lane: `COND_LANE_BG` — slightly blue-tinted.
+  - Action lane: `ACTION_LANE_BG` — near-neutral, leans teal.
+- The outer `PanelContainer` (the row itself) carries zero content margins so the lane panels extend flush from the depth-accent left border to the right edge — lanes read as the row, not as widgets inside the row.
+- **Condition lane** composition (left to right within the lane):
+  - `⋮` select handle button.
+  - Run-context / trigger button (`◆ Every Frame` etc.) that expands horizontally.
+  - `when` clause prefix label at 10pt in blue.
+  - `+` add-condition button.
+  - `HFlowContainer` of condition tokens (wraps within the lane width).
+- **Action lane** composition (left to right within the lane):
+  - `do` clause prefix label at 10pt in green-mint.
+  - `HFlowContainer` of action tokens (expands to fill).
+  - `+ action` button.
+- Lane clause prefixes (`when` / `do`) anchor lane identity visually without introducing explicit `IF`/`THEN` headers.
+- The 2 px `LANE_DIVIDER_COLOR` `ColorRect` between lanes provides a clear, stable vertical boundary that creates the horizontal eventsheet rhythm.
 - Condition tokens use a blue-tinted background with a visible blue border.
 - Action tokens use a teal/green-tinted background with a visible teal border — clearly distinct from condition tokens.
 - A left gutter is rendered for every row, with branch guides for nested/sub-event rows.
 - Condition and action summaries are clickable for focused editing.
 - Delete affordances are implemented:
-  - event delete via inline row `✕` action
+  - event delete via inline row `✕` action (positioned right of the action lane)
   - condition delete via condition context menu (`Delete Condition`)
   - action delete via action context menu (`Delete Action`)
 - When deleting a focused condition/action, inspector selection falls back to the owning event view.
@@ -132,7 +145,7 @@ It intentionally avoids describing unbuilt behavior as complete.
 - All row types (event, variable, group) use tighter content margins (top/bottom 3px for events, 5px for variable/group).
 - Event, variable, and group rows use a `border_width_left` of 3+depth (up from 2+depth) for a stronger depth hierarchy accent.
 - Depth guide `ColorRect` lines use opacity 0.80 (up from 0.68) for better visibility at depth.
-- Clause `VSeparator` uses opacity 0.90 (up from 0.80) for slightly more visible lane division.
+- Event rows use a 2 px `ColorRect` lane divider (`LANE_DIVIDER_COLOR`) replacing the earlier `VSeparator` for a stronger, pixel-stable lane boundary.
 
 ### 2.8 Final cross-surface polish (Phase 6)
 
@@ -143,14 +156,22 @@ It intentionally avoids describing unbuilt behavior as complete.
 - The toolbar top row adds a `VSeparator` between the document-meta label and the selection-meta label for clearer visual separation of the two context streams.
 - The `+ action` inline button uses teal/green font colors matching the action lane (`do` clause prefix), making lane affinity of add buttons visually consistent (blue `+ condition` → blue condition lane, teal `+ action` → teal action lane).
 
-### 2.5 Row type badges
+### 2.9 Horizontal eventsheet lane composition (Phase 7)
 
-- Variable rows use a styled chip badge (`Global`) with a blue-tinted background and border.
+- Event rows now use a **two-panel lane layout**: a condition lane (`PanelContainer`, ~35% width) and an action lane (`PanelContainer`, ~65% width), with a 2 px `ColorRect` divider between them.
+- Both lane panels have zero outer separation (`HBoxContainer.separation = 0`) so the lanes sit flush against each other and the row border, composing a single horizontal eventsheet lane rather than floating widgets.
+- The run-context (trigger) button is anchored at the top of the condition lane and expands horizontally — it reads as the event's "heading" within the lane, making the trigger identity immediately visible.
+- The `+ condition` button moves into the condition lane header row, keeping add affordances visually co-located with their lane.
+- The `+ action` button sits at the trailing edge of the action lane flow, keeping it within the action lane.
+- The `✕` delete button sits outside both lane panels at the far-right edge of the row.
+- Consistent `COND_LANE_RATIO` / `ACTION_LANE_RATIO` constants ensure the lane boundary remains at the same horizontal position across all rows, creating a stable eventsheet column grid.
+
+### 2.10 Row type badges
 - Group rows use a styled chip badge (`Group`) with a purple-tinted background and border.
 - Group rows display the event count in parentheses when the group has child events (e.g., `(2)`).
 - The event count label is hidden (empty string) when the group has no child events.
 
-### 2.6 Sub-event support status
+### 2.11 Sub-event support status
 
 - Sub-event rendering groundwork exists:
   - nested event resources are rendered with indentation

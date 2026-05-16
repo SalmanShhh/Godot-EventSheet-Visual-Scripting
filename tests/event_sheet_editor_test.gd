@@ -732,6 +732,30 @@ static func run() -> bool:
 			group = group.get_next()
 	all_passed = _check("expression picker search finds velocity expression", found_velocity_expression, true) and all_passed
 
+	# Phase 7: horizontal lane composition — event row has a 2px lane divider ColorRect.
+	var lane_row_2: EventRowUI = EventRowUI.new()
+	lane_row_2.event_row = EventRow.new()
+	lane_row_2.refresh()
+	all_passed = _check("event row lane divider present", _has_color_rect_min_width(lane_row_2, 2), true) and all_passed
+
+	# Phase 7: event row has at least 2 inner PanelContainers (condition lane + action lane).
+	all_passed = _check("event row has lane panels", _count_panel_containers(lane_row_2) >= 2, true) and all_passed
+
+	# Phase 7: outer EventRowUI panel style has zero content margins (lanes flush to border).
+	var lane_row_outer_style: StyleBox = lane_row_2.get_theme_stylebox("panel")
+	var outer_margins_flush: bool = false
+	if lane_row_outer_style is StyleBoxFlat:
+		var sflat: StyleBoxFlat = lane_row_outer_style as StyleBoxFlat
+		outer_margins_flush = (
+			sflat.content_margin_left == 0 and
+			sflat.content_margin_right == 0 and
+			sflat.content_margin_top == 0 and
+			sflat.content_margin_bottom == 0
+		)
+	all_passed = _check("event row outer panel has flush margins for lane layout", outer_margins_flush, true) and all_passed
+
+	lane_row_2.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
@@ -805,6 +829,18 @@ static func _find_first_panel_container(node: Node) -> PanelContainer:
 		if found != null:
 			return found
 	return null
+
+static func _has_color_rect_min_width(node: Node, min_width: int) -> bool:
+	if node == null:
+		return false
+	if node is ColorRect:
+		var cr: ColorRect = node as ColorRect
+		if cr.custom_minimum_size.x >= min_width:
+			return true
+	for child: Node in node.get_children():
+		if _has_color_rect_min_width(child, min_width):
+			return true
+	return false
 
 static func _find_node_named(node: Node, expected_name: String) -> Node:
 	if node == null:
