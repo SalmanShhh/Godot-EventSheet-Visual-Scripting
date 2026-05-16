@@ -75,6 +75,23 @@ static func run() -> bool:
 	var var_param: ACEParam = ACEParam.new()
 	var_param.hint = "variable_reference"
 	all_passed = _check("variable dropdown empty extracts blank", editor._extract_ace_param_input_value(var_param, empty_var_dropdown), "") and all_passed
+	editor._ace_params_fields = {
+		"var_name": {
+			"param": var_param,
+			"input": empty_var_dropdown
+		}
+	}
+	all_passed = _check("variable dropdown empty blocks apply", editor._has_missing_variable_reference_selection(), true) and all_passed
+
+	editor.current_sheet = sheet
+	var valid_var_dropdown: OptionButton = editor._create_variable_dropdown("health")
+	editor._ace_params_fields = {
+		"var_name": {
+			"param": var_param,
+			"input": valid_var_dropdown
+		}
+	}
+	all_passed = _check("valid variable selection allows apply", editor._has_missing_variable_reference_selection(), false) and all_passed
 
 	# Operator params with options render as dropdowns.
 	var op_param: ACEParam = ACEParam.new()
@@ -104,6 +121,17 @@ static func run() -> bool:
 	group_legacy.expanded = false
 	all_passed = _check("group legacy expanded=false", editor._is_group_collapsed(group_legacy), true) and all_passed
 
+	# Event row sub-events are rendered as additional indented rows.
+	editor._build_layout()
+	var sub_event_sheet: EventSheetResource = EventSheetResource.new()
+	var parent_row: EventRow = EventRow.new()
+	var child_row: EventRow = EventRow.new()
+	parent_row.sub_events.append(child_row)
+	sub_event_sheet.events.append(parent_row)
+	editor.current_sheet = sub_event_sheet
+	editor.refresh_canvas()
+	all_passed = _check("sub events render nested rows", _count_event_row_nodes(editor), 2) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
@@ -114,3 +142,11 @@ static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	print("  expected: %s" % str(expected))
 	print("  actual:   %s" % str(actual))
 	return false
+
+static func _count_event_row_nodes(node: Node) -> int:
+	if node == null:
+		return 0
+	var total: int = 1 if node is EventRowUI else 0
+	for child: Node in node.get_children():
+		total += _count_event_row_nodes(child)
+	return total
