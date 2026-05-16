@@ -20,6 +20,9 @@ const EVENT_PICKER_GROUPS: PackedStringArray = [
 	"Signals / Scene / Input",
 	"Custom ACEs"
 ]
+const ACE_PARAMS_DIALOG_SIZE: Vector2i = Vector2i(460, 320)
+const NO_VARIABLES_AVAILABLE_TEXT: String = "No variables available"
+const NO_VARIABLES_AVAILABLE_HINT_TEXT: String = "No variables are available. Add a variable before applying this ACE."
 
 ## Currently selected entry kind.
 ## One of: "none", "event", "condition", "action", "variable", "group"
@@ -53,6 +56,7 @@ var _ace_params_descriptor: ACEDescriptor = null
 var _ace_params_target_row: EventRowUI = null
 var _ace_params_target_index: int = -1
 var _ace_params_existing_values: Dictionary = {}
+var _ace_params_hint_base_text: String = ""
 
 var _variable_dialog: ConfirmationDialog = null
 var _variable_name_edit: LineEdit = null
@@ -415,7 +419,7 @@ func _on_ace_picker_item_activated() -> void:
 func _build_ace_params_dialog_popup() -> void:
 	_ace_params_dialog = ConfirmationDialog.new()
 	_ace_params_dialog.title = "ACE Parameters"
-	_ace_params_dialog.min_size = Vector2i(420, 0)
+	_ace_params_dialog.min_size = ACE_PARAMS_DIALOG_SIZE
 	_ace_params_dialog.get_ok_button().text = "Apply"
 	_ace_params_dialog.connect("confirmed", _on_ace_params_dialog_confirmed)
 	add_child(_ace_params_dialog)
@@ -429,9 +433,15 @@ func _build_ace_params_dialog_popup() -> void:
 	_ace_params_hint.add_theme_color_override("font_color", Color(0.65, 0.70, 0.78))
 	body.add_child(_ace_params_hint)
 
+	var form_scroll: ScrollContainer = ScrollContainer.new()
+	form_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	form_scroll.custom_minimum_size = Vector2(0, 180)
+	form_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	body.add_child(form_scroll)
+
 	_ace_params_form = VBoxContainer.new()
 	_ace_params_form.add_theme_constant_override("separation", 4)
-	body.add_child(_ace_params_form)
+	form_scroll.add_child(_ace_params_form)
 
 ## Called after an ACE is picked. Skips the parameter dialog when the descriptor
 ## has no params and applies the selection immediately instead.
@@ -510,10 +520,12 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 	_ace_params_fields.clear()
 
 	for child: Node in _ace_params_form.get_children():
+		_ace_params_form.remove_child(child)
 		child.queue_free()
 
 	_ace_params_dialog.title = "%s Parameters" % descriptor.get_list_name()
-	_ace_params_hint.text = descriptor.description if not descriptor.description.is_empty() else descriptor.get_display_text()
+	_ace_params_hint_base_text = descriptor.description if not descriptor.description.is_empty() else descriptor.get_display_text()
+	_ace_params_hint.text = _ace_params_hint_base_text
 
 	if descriptor.params.is_empty():
 		var no_params: Label = Label.new()
@@ -549,8 +561,8 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 				row_box.add_child(desc_label)
 			_ace_params_form.add_child(row_box)
 
-	_ace_params_dialog.reset_size()
-	_ace_params_dialog.popup_centered()
+	_refresh_ace_params_dialog_confirm_state()
+	_ace_params_dialog.popup_centered(ACE_PARAMS_DIALOG_SIZE)
 
 ## Creates an appropriate UI control for the given ACE parameter.
 ## Control type is chosen based on type_name, hint, and options metadata:
@@ -602,14 +614,15 @@ func _create_ace_param_input(param: ACEParam, value: Variant) -> Control:
 	return line_input
 
 ## Creates a variable-name dropdown pre-populated with sheet variables.
-## Falls back to a text field entry (current value) if no variables are defined.
+## Shows an explicit empty-state item when no variables are available.
 func _create_variable_dropdown(current_value: String) -> OptionButton:
 	var option: OptionButton = OptionButton.new()
 	var var_names: Array[String] = _get_available_variable_names()
 	if var_names.is_empty():
-		# No sheet variables yet; show current value as a placeholder entry.
-		option.add_item(current_value if not current_value.is_empty() else "(no variables)")
+		option.add_item(NO_VARIABLES_AVAILABLE_TEXT)
+		option.set_item_disabled(0, true)
 		option.select(0)
+		option.disabled = true
 		return option
 	var selected_idx: int = 0
 	for i: int in range(var_names.size()):
@@ -662,7 +675,10 @@ func _extract_ace_param_input_value(param: ACEParam, input: Control) -> Variant:
 			selected = option.get_selected_id()
 		if selected < 0:
 			return ""
-		return option.get_item_text(selected)
+		var selected_text: String = option.get_item_text(selected)
+		if param.hint == "variable_reference" and selected_text == NO_VARIABLES_AVAILABLE_TEXT:
+			return ""
+		return selected_text
 	if input is LineEdit:
 		var text: String = (input as LineEdit).text.strip_edges()
 		var type_name: String = param.type_name.to_lower()
@@ -682,8 +698,47 @@ func _is_bool_param(param: ACEParam) -> bool:
 func _on_ace_params_dialog_confirmed() -> void:
 	if _ace_params_descriptor == null:
 		return
+	if _has_missing_variable_reference_selection():
+		_refresh_ace_params_dialog_confirm_state()
+		return
 	var values: Dictionary = _collect_ace_param_values()
 	_apply_ace_params(values)
+
+func _refresh_ace_params_dialog_confirm_state() -> void:
+	if _ace_params_dialog == null:
+		return
+	var has_invalid_variable_selection: bool = _has_missing_variable_reference_selection()
+	var ok_button: Button = _ace_params_dialog.get_ok_button()
+	if ok_button != null:
+		ok_button.disabled = has_invalid_variable_selection
+	if has_invalid_variable_selection:
+		_ace_params_hint.text = "%s\n%s" % [_ace_params_hint_base_text, NO_VARIABLES_AVAILABLE_HINT_TEXT]
+	else:
+		_ace_params_hint.text = _ace_params_hint_base_text
+
+func _has_missing_variable_reference_selection() -> bool:
+	for key: Variant in _ace_params_fields.keys():
+		var entry_dict: Variant = _ace_params_fields[key]
+		if not (entry_dict is Dictionary):
+			continue
+		var entry: Dictionary = entry_dict as Dictionary
+		var typed_param: ACEParam = entry.get("param")
+		if typed_param == null or typed_param.hint != "variable_reference":
+			continue
+		var input_control: Variant = entry.get("input")
+		if not (input_control is OptionButton):
+			return true
+		var option: OptionButton = input_control as OptionButton
+		if option.item_count <= 0:
+			return true
+		var selected: int = option.selected
+		if selected < 0:
+			selected = option.get_selected_id()
+		if selected < 0:
+			return true
+		if option.get_item_text(selected) == NO_VARIABLES_AVAILABLE_TEXT:
+			return true
+	return false
 
 func _apply_ace_params(values: Dictionary) -> void:
 	if _ace_params_descriptor == null:

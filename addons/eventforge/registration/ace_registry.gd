@@ -124,6 +124,11 @@ static func _normalize_params(raw_params: Variant) -> Array[ACEParam]:
 		param.default_value = data.get("default_value", data.get("defaultValue", data.get("initial_value", data.get("initialValue", ""))))
 		param.initial_value = data.get("initial_value", data.get("initialValue", param.default_value))
 		param.initialValue = param.initial_value
+		param.hint = str(data.get("hint", ""))
+		var options_data: Variant = data.get("options", [])
+		if options_data is Array:
+			for option: Variant in options_data:
+				param.options.append(str(option))
 		_apply_param_aliases(param)
 		output.append(param)
 	return output
