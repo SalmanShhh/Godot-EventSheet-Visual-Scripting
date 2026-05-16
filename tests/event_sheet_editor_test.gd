@@ -15,6 +15,26 @@ static func run() -> bool:
 	all_passed = _check("parse string", editor._parse_variable_initial_value("Player", "String"), "Player") and all_passed
 	all_passed = _check("parse variant empty -> null", editor._parse_variable_initial_value(" ", "Variant"), null) and all_passed
 
+	var int_param: ACEParam = ACEParam.new()
+	int_param.type_name = "int"
+	var int_input: LineEdit = LineEdit.new()
+	int_input.text = "13"
+	all_passed = _check("ace param int input", editor._extract_ace_param_input_value(int_param, int_input), 13) and all_passed
+	int_input.text = "abc"
+	all_passed = _check("ace param int invalid input", editor._extract_ace_param_input_value(int_param, int_input), 0) and all_passed
+	int_input.text = ""
+	all_passed = _check("ace param int empty input", editor._extract_ace_param_input_value(int_param, int_input), 0) and all_passed
+
+	var bool_param: ACEParam = ACEParam.new()
+	bool_param.type_name = "boolean"
+	var bool_input: OptionButton = OptionButton.new()
+	bool_input.add_item("False")
+	bool_input.add_item("True")
+	bool_input.select(1)
+	all_passed = _check("ace param bool input", editor._extract_ace_param_input_value(bool_param, bool_input), true) and all_passed
+	bool_input.select(0)
+	all_passed = _check("ace param bool false input", editor._extract_ace_param_input_value(bool_param, bool_input), false) and all_passed
+
 	var group_default: EventGroup = EventGroup.new()
 	all_passed = _check("group default expanded", editor._is_group_collapsed(group_default), false) and all_passed
 
