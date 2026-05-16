@@ -26,6 +26,7 @@ const NO_VARIABLES_AVAILABLE_TEXT: String = "No variables available"
 const NO_VARIABLES_AVAILABLE_HINT_TEXT: String = "No variables are available. Add a variable before applying this ACE."
 const ACE_PARAMS_LABEL_WIDTH: float = 110.0
 const ACE_PARAMS_LABEL_MIN_HEIGHT: float = 20.0
+const BRANCH_GUIDE_CHAR: String = "└"
 
 ## Currently selected entry kind.
 ## One of: "none", "event", "condition", "action", "variable", "group"
@@ -1204,7 +1205,7 @@ func _add_document_header() -> void:
 
 	if current_sheet != null:
 		var meta: Label = Label.new()
-		meta.text = "%d globals • %d rows" % [current_sheet.variables.size(), current_sheet.events.size()]
+		meta.text = "%d globals • %d events" % [current_sheet.variables.size(), current_sheet.events.size()]
 		meta.add_theme_color_override("font_color", Color(0.57, 0.64, 0.77))
 		meta.add_theme_font_size_override("font_size", 10)
 		line.add_child(meta)
@@ -1339,21 +1340,21 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 	var gutter: HBoxContainer = HBoxContainer.new()
 	gutter.name = "SheetGutter"
 	gutter.add_theme_constant_override("separation", 8)
-	gutter.custom_minimum_size = Vector2(16 + (12 * max(indent_level, 1)), 0)
+	gutter.custom_minimum_size = Vector2(16 + (12 * indent_level), 0)
 	gutter.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	gutter.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	line.add_child(gutter)
 
-	for i: int in range(max(indent_level, 1)):
+	for i: int in range(indent_level):
 		var guide: ColorRect = ColorRect.new()
 		guide.custom_minimum_size = Vector2(1, 0)
 		guide.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		guide.color = Color(0.30, 0.35, 0.46, 0.75) if i < indent_level else Color(0.21, 0.24, 0.31, 0.55)
+		guide.color = Color(0.30, 0.35, 0.46, 0.75)
 		gutter.add_child(guide)
 
 	if indent_level > 0:
 		var branch: Label = Label.new()
-		branch.text = "└"
+		branch.text = BRANCH_GUIDE_CHAR
 		branch.add_theme_color_override("font_color", Color(0.51, 0.58, 0.73))
 		branch.add_theme_font_size_override("font_size", 9)
 		gutter.add_child(branch)

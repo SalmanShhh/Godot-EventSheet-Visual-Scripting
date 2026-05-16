@@ -57,6 +57,8 @@ const CONDITION_TOKEN_BG: Color = Color(0.179, 0.200, 0.253, 1.0)
 const CONDITION_TOKEN_BG_HOVER: Color = Color(0.239, 0.264, 0.333, 1.0)
 const ACTION_TOKEN_BG: Color = Color(0.151, 0.172, 0.220, 1.0)
 const ACTION_TOKEN_BG_HOVER: Color = Color(0.206, 0.232, 0.296, 1.0)
+const RUN_CONTEXT_BULLET: String = "●"
+const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
 
 func _init() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -119,10 +121,10 @@ func _build_ui() -> void:
 	_runs_button.connect("pressed", _on_event_header_pressed)
 	line.add_child(_runs_button)
 
-	var cond_arrow: Label = Label.new()
-	cond_arrow.text = "•"
-	cond_arrow.add_theme_color_override("font_color", Color(0.43, 0.47, 0.56))
-	line.add_child(cond_arrow)
+	var cond_separator: Label = Label.new()
+	cond_separator.text = "•"
+	cond_separator.add_theme_color_override("font_color", Color(0.43, 0.47, 0.56))
+	line.add_child(cond_separator)
 
 	_conditions_container = HFlowContainer.new()
 	_conditions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -173,7 +175,7 @@ func _build_ui() -> void:
 	line.add_child(delete_event_btn)
 
 func set_depth(depth: int) -> void:
-	_depth = maxi(0, depth)
+	_depth = max(0, depth)
 	_apply_row_style()
 
 func set_selected(selected: bool) -> void:
@@ -185,7 +187,7 @@ func _apply_row_style() -> void:
 	style.bg_color = ROW_BG_SELECTED if _selected else ROW_BG
 	style.border_color = ROW_BORDER_SELECTED if _selected else ROW_BORDER
 	style.set_border_width_all(0)
-	style.border_width_left = 2 + mini(_depth, 4)
+	style.border_width_left = 2 + min(_depth, 4)
 	style.set_corner_radius_all(4)
 	style.set_content_margin(SIDE_LEFT, 5)
 	style.set_content_margin(SIDE_RIGHT, 4)
@@ -203,12 +205,11 @@ func refresh() -> void:
 	_refresh_actions()
 
 ## Returns a human-readable run-context label for the event row's trigger_id.
+## Defaults to "Every Frame" when row/trigger_id are empty.
 static func format_run_context(row: EventRow) -> String:
 	if row == null or row.trigger_id.is_empty():
 		return "Every Frame"
 	match row.trigger_id:
-		"OnProcess":
-			return "Every Frame"
 		"OnReady":
 			return "On Ready"
 		"OnPhysicsProcess":
@@ -304,7 +305,7 @@ static func _format_action_from_descriptor(action: ACEAction) -> String:
 func _refresh_runs() -> void:
 	if _runs_button == null:
 		return
-	_runs_button.text = "● %s" % format_run_context(event_row)
+	_runs_button.text = "%s %s" % [RUN_CONTEXT_BULLET, format_run_context(event_row)]
 
 func _refresh_conditions() -> void:
 	if _conditions_container == null:
@@ -384,11 +385,11 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	btn.add_theme_stylebox_override("focus", hover_style)
 
 	if is_condition:
-		btn.tooltip_text = "Left-click to edit · Right-click for options"
+		btn.tooltip_text = ENTRY_TOOLTIP_TEXT
 		btn.connect("pressed", func() -> void: condition_selected.emit(self, index))
 		btn.connect("gui_input", func(event: InputEvent) -> void: _on_condition_entry_gui_input(event, index))
 	else:
-		btn.tooltip_text = "Left-click to edit · Right-click for options"
+		btn.tooltip_text = ENTRY_TOOLTIP_TEXT
 		btn.connect("pressed", func() -> void: action_selected.emit(self, index))
 		btn.connect("gui_input", func(event: InputEvent) -> void: _on_action_entry_gui_input(event, index))
 	return btn

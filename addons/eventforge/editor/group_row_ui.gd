@@ -11,7 +11,7 @@ signal group_collapsed_toggled(row: GroupRowUI, collapsed: bool)
 
 var event_group: EventGroup = null
 
-var _name_label: Label = null
+var _group_name_label: Label = null
 var _disclosure_btn: Button = null
 var _depth: int = 0
 var _selected: bool = false
@@ -36,16 +36,16 @@ func _build_ui() -> void:
 	hbox.add_child(_disclosure_btn)
 
 	var badge: Label = Label.new()
-	badge.text = "group"
+	badge.text = "Group"
 	badge.add_theme_color_override("font_color", Color(0.77, 0.71, 0.95))
 	badge.add_theme_font_size_override("font_size", 9)
 	hbox.add_child(badge)
 
-	_name_label = Label.new()
-	_name_label.add_theme_color_override("font_color", Color(0.89, 0.89, 0.97))
-	_name_label.add_theme_font_size_override("font_size", 11)
-	_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(_name_label)
+	_group_name_label = Label.new()
+	_group_name_label.add_theme_color_override("font_color", Color(0.89, 0.89, 0.97))
+	_group_name_label.add_theme_font_size_override("font_size", 11)
+	_group_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(_group_name_label)
 
 	var btn: Button = Button.new()
 	btn.text = "✎"
@@ -60,7 +60,7 @@ func _build_ui() -> void:
 	connect("gui_input", _on_gui_input)
 
 func set_depth(depth: int) -> void:
-	_depth = maxi(0, depth)
+	_depth = max(0, depth)
 	_apply_row_style()
 
 func set_selected(selected: bool) -> void:
@@ -72,7 +72,7 @@ func _apply_row_style() -> void:
 	style.bg_color = Color(0.143, 0.126, 0.186, 1.0) if _selected else Color(0.110, 0.103, 0.149, 1.0)
 	style.border_color = Color(0.533, 0.419, 0.867, 1.0) if _selected else Color(0.262, 0.223, 0.396, 1.0)
 	style.set_border_width_all(0)
-	style.border_width_left = 2 + mini(_depth, 4)
+	style.border_width_left = 2 + min(_depth, 4)
 	style.set_corner_radius_all(4)
 	style.set_content_margin_all(5)
 	style.content_margin_left = 8
@@ -80,7 +80,7 @@ func _apply_row_style() -> void:
 
 ## Refreshes the display from the assigned event_group resource.
 func refresh() -> void:
-	if event_group == null or _name_label == null:
+	if event_group == null or _group_name_label == null:
 		return
 	var collapsed: bool = event_group.is_collapsed()
 	if _disclosure_btn != null:
@@ -90,7 +90,7 @@ func refresh() -> void:
 		display_name = event_group.group_name
 	if display_name.is_empty():
 		display_name = "(unnamed group)"
-	_name_label.text = display_name
+	_group_name_label.text = display_name
 
 func _on_pressed() -> void:
 	group_selected.emit(self)

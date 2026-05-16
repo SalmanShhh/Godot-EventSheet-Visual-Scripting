@@ -12,7 +12,7 @@ signal variable_selected(row: VariableRowUI)
 var var_name: String = ""
 var var_info: Dictionary = {}
 
-var _label: Label = null
+var _summary_label: Label = null
 var _edit_btn: Button = null
 var _depth: int = 0
 var _selected: bool = false
@@ -29,16 +29,16 @@ func _build_ui() -> void:
 	add_child(hbox)
 
 	var badge: Label = Label.new()
-	badge.text = "global"
+	badge.text = "Global"
 	badge.add_theme_color_override("font_color", Color(0.62, 0.70, 0.89))
 	badge.add_theme_font_size_override("font_size", 9)
 	hbox.add_child(badge)
 
-	_label = Label.new()
-	_label.add_theme_color_override("font_color", Color(0.86, 0.90, 0.98))
-	_label.add_theme_font_size_override("font_size", 11)
-	_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(_label)
+	_summary_label = Label.new()
+	_summary_label.add_theme_color_override("font_color", Color(0.86, 0.90, 0.98))
+	_summary_label.add_theme_font_size_override("font_size", 11)
+	_summary_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(_summary_label)
 
 	_edit_btn = Button.new()
 	_edit_btn.text = "✎"
@@ -54,7 +54,7 @@ func _build_ui() -> void:
 	connect("gui_input", _on_gui_input)
 
 func set_depth(depth: int) -> void:
-	_depth = maxi(0, depth)
+	_depth = max(0, depth)
 	_apply_row_style()
 
 func set_selected(selected: bool) -> void:
@@ -66,7 +66,7 @@ func _apply_row_style() -> void:
 	style.bg_color = Color(0.127, 0.165, 0.221, 1.0) if _selected else Color(0.099, 0.120, 0.160, 1.0)
 	style.border_color = Color(0.402, 0.633, 0.900, 1.0) if _selected else Color(0.171, 0.225, 0.306, 1.0)
 	style.set_border_width_all(0)
-	style.border_width_left = 2 + mini(_depth, 4)
+	style.border_width_left = 2 + min(_depth, 4)
 	style.set_corner_radius_all(4)
 	style.set_content_margin_all(5)
 	style.content_margin_left = 8
@@ -74,12 +74,12 @@ func _apply_row_style() -> void:
 
 ## Refreshes the label from var_name and var_info.
 func refresh() -> void:
-	if _label == null:
+	if _summary_label == null:
 		return
-	_label.text = format_summary(var_name, var_info)
+	_summary_label.text = format_summary(var_name, var_info)
 	var tooltip: String = format_tooltip(var_name, var_info)
 	tooltip_text = tooltip
-	_label.tooltip_text = tooltip
+	_summary_label.tooltip_text = tooltip
 	if _edit_btn != null:
 		_edit_btn.tooltip_text = EDIT_VARIABLE_TOOLTIP_PREFIX + "\n\n" + tooltip
 
