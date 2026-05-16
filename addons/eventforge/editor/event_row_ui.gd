@@ -65,7 +65,7 @@ const ACTION_TOKEN_BORDER: Color = Color(0.178, 0.268, 0.248, 1.0)
 const RUN_CONTEXT_SYMBOL: String = "◆"
 const CLAUSE_CONDITION_PREFIX: String = "when"
 const CLAUSE_ACTION_PREFIX: String = "do"
-const CLAUSE_VSEPARATOR_COLOR: Color = Color(0.22, 0.26, 0.35, 0.80)
+const CLAUSE_VSEPARATOR_COLOR: Color = Color(0.22, 0.26, 0.35, 0.90)
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
 
 func _init() -> void:
@@ -223,12 +223,12 @@ func _apply_row_style() -> void:
 		style.bg_color = ROW_BG
 		style.border_color = ROW_BORDER
 	style.set_border_width_all(1)
-	style.border_width_left = 2 + min(_depth, 4)
+	style.border_width_left = 3 + min(_depth, 4)
 	style.set_corner_radius_all(5)
 	style.set_content_margin(SIDE_LEFT, 6)
 	style.set_content_margin(SIDE_RIGHT, 5)
-	style.set_content_margin(SIDE_TOP, 4)
-	style.set_content_margin(SIDE_BOTTOM, 4)
+	style.set_content_margin(SIDE_TOP, 3)
+	style.set_content_margin(SIDE_BOTTOM, 3)
 	add_theme_stylebox_override("panel", style)
 
 ## Refreshes the display from the assigned event_row resource.

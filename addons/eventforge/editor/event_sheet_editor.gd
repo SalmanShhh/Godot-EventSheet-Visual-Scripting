@@ -144,7 +144,7 @@ func _build_layout() -> void:
 
 	_canvas_vbox = VBoxContainer.new()
 	_canvas_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_canvas_vbox.add_theme_constant_override("separation", 8)
+	_canvas_vbox.add_theme_constant_override("separation", 6)
 	_canvas_vbox.set("custom_minimum_size", Vector2(0, 0))
 	_scroll.add_child(_canvas_vbox)
 
@@ -1225,15 +1225,16 @@ func _add_document_header() -> void:
 	hstyle.bg_color = Color(0.089, 0.104, 0.140, 1.0)
 	hstyle.border_color = Color(0.205, 0.246, 0.326, 1.0)
 	hstyle.set_border_width_all(1)
+	hstyle.border_width_left = 3
 	hstyle.set_corner_radius_all(6)
 	hstyle.set_content_margin(SIDE_LEFT, 12)
 	hstyle.set_content_margin(SIDE_RIGHT, 12)
-	hstyle.set_content_margin(SIDE_TOP, 8)
-	hstyle.set_content_margin(SIDE_BOTTOM, 8)
+	hstyle.set_content_margin(SIDE_TOP, 7)
+	hstyle.set_content_margin(SIDE_BOTTOM, 7)
 	header_panel.add_theme_stylebox_override("panel", hstyle)
 
 	var shell: VBoxContainer = VBoxContainer.new()
-	shell.add_theme_constant_override("separation", 4)
+	shell.add_theme_constant_override("separation", 3)
 	header_panel.add_child(shell)
 
 	var line: HBoxContainer = HBoxContainer.new()
@@ -1248,8 +1249,8 @@ func _add_document_header() -> void:
 		title.text = "Untitled Sheet"
 	else:
 		title.text = "No Sheet Loaded"
-	title.add_theme_color_override("font_color", Color(0.83, 0.91, 1.0))
-	title.add_theme_font_size_override("font_size", 14)
+	title.add_theme_color_override("font_color", Color(0.88, 0.94, 1.0))
+	title.add_theme_font_size_override("font_size", 13)
 	line.add_child(title)
 
 	var spacer: Control = Control.new()
@@ -1261,7 +1262,7 @@ func _add_document_header() -> void:
 		subtitle.text = "Ready to author"
 	else:
 		subtitle.text = "%d globals • %d root entries" % [current_sheet.variables.size(), current_sheet.events.size()]
-	subtitle.add_theme_color_override("font_color", Color(0.63, 0.74, 0.91))
+	subtitle.add_theme_color_override("font_color", Color(0.55, 0.68, 0.88))
 	subtitle.add_theme_font_size_override("font_size", 10)
 	line.add_child(subtitle)
 
@@ -1272,7 +1273,7 @@ func _add_document_header() -> void:
 		path_hint.text = "Unsaved in-memory sheet"
 	else:
 		path_hint.text = "Open or create a sheet to begin"
-	path_hint.add_theme_color_override("font_color", Color(0.46, 0.56, 0.72))
+	path_hint.add_theme_color_override("font_color", Color(0.42, 0.52, 0.68))
 	path_hint.add_theme_font_size_override("font_size", 9)
 	shell.add_child(path_hint)
 
@@ -1285,38 +1286,39 @@ func _add_section_shell(name: String, title: String, subtitle: String, accent: C
 	style.bg_color = Color(0.068, 0.075, 0.100, 1.0)
 	style.border_color = Color(0.165, 0.190, 0.244, 1.0)
 	style.set_border_width_all(1)
+	style.border_width_left = 3
 	style.set_corner_radius_all(6)
 	style.set_content_margin(SIDE_LEFT, 9)
 	style.set_content_margin(SIDE_RIGHT, 9)
-	style.set_content_margin(SIDE_TOP, 9)
-	style.set_content_margin(SIDE_BOTTOM, 9)
+	style.set_content_margin(SIDE_TOP, 7)
+	style.set_content_margin(SIDE_BOTTOM, 7)
 	section_panel.add_theme_stylebox_override("panel", style)
 	_canvas_vbox.add_child(section_panel)
 
 	var section_vbox: VBoxContainer = VBoxContainer.new()
-	section_vbox.add_theme_constant_override("separation", 6)
+	section_vbox.add_theme_constant_override("separation", 5)
 	section_panel.add_child(section_vbox)
 
 	var header: HBoxContainer = HBoxContainer.new()
-	header.add_theme_constant_override("separation", 8)
+	header.add_theme_constant_override("separation", 7)
 	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	section_vbox.add_child(header)
 
-	var bullet: Label = Label.new()
-	bullet.text = "●"
-	bullet.add_theme_color_override("font_color", accent)
-	bullet.add_theme_font_size_override("font_size", 9)
-	header.add_child(bullet)
+	var accent_rail: ColorRect = ColorRect.new()
+	accent_rail.custom_minimum_size = Vector2(3, 0)
+	accent_rail.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	accent_rail.color = accent
+	header.add_child(accent_rail)
 
 	var title_label: Label = Label.new()
 	title_label.text = title
 	title_label.add_theme_color_override("font_color", accent)
-	title_label.add_theme_font_size_override("font_size", 11)
+	title_label.add_theme_font_size_override("font_size", 12)
 	header.add_child(title_label)
 
 	var sub: Label = Label.new()
 	sub.text = subtitle
-	sub.add_theme_color_override("font_color", Color(0.54, 0.62, 0.77))
+	sub.add_theme_color_override("font_color", Color(0.50, 0.58, 0.74))
 	sub.add_theme_font_size_override("font_size", 9)
 	header.add_child(sub)
 
@@ -1334,8 +1336,12 @@ func _add_section_shell(name: String, title: String, subtitle: String, accent: C
 		action_btn.connect("pressed", action_handler)
 		header.add_child(action_btn)
 
+	var header_sep: HSeparator = HSeparator.new()
+	header_sep.add_theme_color_override("color", Color(0.165, 0.190, 0.244, 0.80))
+	section_vbox.add_child(header_sep)
+
 	var body: VBoxContainer = VBoxContainer.new()
-	body.add_theme_constant_override("separation", 4)
+	body.add_theme_constant_override("separation", 3)
 	section_vbox.add_child(body)
 	return body
 
@@ -1432,8 +1438,8 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 		row.call("set_depth", indent_level)
 	var wrap_margin: MarginContainer = MarginContainer.new()
 	wrap_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	wrap_margin.add_theme_constant_override("margin_top", 2)
-	wrap_margin.add_theme_constant_override("margin_bottom", 2)
+	wrap_margin.add_theme_constant_override("margin_top", 1)
+	wrap_margin.add_theme_constant_override("margin_bottom", 1)
 	var line: HBoxContainer = HBoxContainer.new()
 	line.name = "SheetLineRow"
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1458,7 +1464,7 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 		var guide: ColorRect = ColorRect.new()
 		guide.custom_minimum_size = Vector2(2, 0)
 		guide.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		guide.color = Color(0.30, 0.38, 0.53, 0.68)
+		guide.color = Color(0.30, 0.38, 0.53, 0.80)
 		gutter.add_child(guide)
 
 	if indent_level > 0:
@@ -1774,14 +1780,16 @@ func _rebuild_inspector_event(row: EventRowUI) -> void:
 	heading.add_theme_font_size_override("font_size", 12)
 	card_vbox.add_child(heading)
 
+	var heading_sep: HSeparator = HSeparator.new()
+	heading_sep.add_theme_color_override("color", Color(0.196, 0.235, 0.320, 0.80))
+	card_vbox.add_child(heading_sep)
+
 	var runs_lbl: Label = Label.new()
 	runs_lbl.text = EventRowUI.format_run_context(event_row)
 	runs_lbl.add_theme_color_override("font_color", Color(0.85, 0.75, 0.45))
 	runs_lbl.add_theme_font_size_override("font_size", 10)
 	runs_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	card_vbox.add_child(runs_lbl)
-
-	card_vbox.add_child(HSeparator.new())
 
 	var summary: Label = Label.new()
 	summary.text = "%d condition(s)  ·  %d action(s)" % [event_row.conditions.size(), event_row.actions.size()]
@@ -1816,6 +1824,10 @@ func _rebuild_inspector_variable(row: VariableRowUI) -> void:
 	heading.add_theme_color_override("font_color", Color(0.35, 0.95, 0.55))
 	heading.add_theme_font_size_override("font_size", 12)
 	card_vbox.add_child(heading)
+
+	var heading_sep: HSeparator = HSeparator.new()
+	heading_sep.add_theme_color_override("color", Color(0.178, 0.240, 0.196, 0.80))
+	card_vbox.add_child(heading_sep)
 
 	var summary: Label = Label.new()
 	summary.text = VariableRowUI.format_summary(row.var_name, row.var_info)
@@ -1854,6 +1866,10 @@ func _rebuild_inspector_group(row: GroupRowUI) -> void:
 	heading.add_theme_font_size_override("font_size", 12)
 	card_vbox.add_child(heading)
 
+	var heading_sep: HSeparator = HSeparator.new()
+	heading_sep.add_theme_color_override("color", Color(0.220, 0.168, 0.310, 0.80))
+	card_vbox.add_child(heading_sep)
+
 	var desc_lbl: Label = Label.new()
 	desc_lbl.text = "Description: " + (event_group.description if not event_group.description.is_empty() else "(none)")
 	desc_lbl.add_theme_color_override("font_color", Color(0.75, 0.75, 0.80))
@@ -1868,7 +1884,8 @@ func _rebuild_inspector_group(row: GroupRowUI) -> void:
 	collapsed_lbl.text = "Collapsed: %s" % str(_is_group_collapsed(event_group))
 	card_vbox.add_child(collapsed_lbl)
 
-	card_vbox.add_child(HSeparator.new())
+	var note_sep: HSeparator = HSeparator.new()
+	card_vbox.add_child(note_sep)
 
 	var planned_note: Label = Label.new()
 	planned_note.text = "Nested local variables and group event bodies are planned."
