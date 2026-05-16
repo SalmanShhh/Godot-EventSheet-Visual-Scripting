@@ -65,7 +65,11 @@ const ACTION_TOKEN_BORDER: Color = Color(0.178, 0.268, 0.248, 1.0)
 const RUN_CONTEXT_SYMBOL: String = "◆"
 const CLAUSE_CONDITION_PREFIX: String = "when"
 const CLAUSE_ACTION_PREFIX: String = "do"
-const CLAUSE_VSEPARATOR_COLOR: Color = Color(0.22, 0.26, 0.35, 0.90)
+const LANE_DIVIDER_COLOR: Color = Color(0.22, 0.28, 0.42, 0.92)
+const COND_LANE_BG: Color = Color(0.082, 0.098, 0.135, 1.0)
+const ACTION_LANE_BG: Color = Color(0.074, 0.087, 0.118, 1.0)
+const COND_LANE_RATIO: float = 1.0
+const ACTION_LANE_RATIO: float = 1.85
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
 
 func _init() -> void:
@@ -103,10 +107,37 @@ func _build_ui() -> void:
 	_action_context_menu.connect("id_pressed", _on_action_context_menu_id_pressed)
 	add_child(_action_context_menu)
 
+	# Root row: flush 0-separation so lanes sit edge-to-edge inside the border.
 	var line: HBoxContainer = HBoxContainer.new()
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.add_theme_constant_override("separation", 4)
+	line.add_theme_constant_override("separation", 0)
 	add_child(line)
+
+	# ── Condition lane (left) ──────────────────────────────────────────────────
+	var cond_panel: PanelContainer = PanelContainer.new()
+	cond_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cond_panel.size_flags_stretch_ratio = COND_LANE_RATIO
+	var cond_style: StyleBoxFlat = StyleBoxFlat.new()
+	cond_style.bg_color = COND_LANE_BG
+	cond_style.set_border_width_all(0)
+	cond_style.set_corner_radius_all(0)
+	cond_style.set_content_margin(SIDE_LEFT, 6)
+	cond_style.set_content_margin(SIDE_RIGHT, 5)
+	cond_style.set_content_margin(SIDE_TOP, 3)
+	cond_style.set_content_margin(SIDE_BOTTOM, 3)
+	cond_panel.add_theme_stylebox_override("panel", cond_style)
+	line.add_child(cond_panel)
+
+	var cond_vbox: VBoxContainer = VBoxContainer.new()
+	cond_vbox.add_theme_constant_override("separation", 2)
+	cond_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cond_panel.add_child(cond_vbox)
+
+	# Event header row: select handle + run-context trigger + "when" clause + add
+	var cond_header: HBoxContainer = HBoxContainer.new()
+	cond_header.add_theme_constant_override("separation", 4)
+	cond_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cond_vbox.add_child(cond_header)
 
 	var select_btn: Button = Button.new()
 	select_btn.text = "⋮"
@@ -116,12 +147,13 @@ func _build_ui() -> void:
 	select_btn.add_theme_color_override("font_color", Color(0.72, 0.78, 0.92))
 	select_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.94, 1.0))
 	select_btn.connect("pressed", _on_event_header_pressed)
-	line.add_child(select_btn)
+	cond_header.add_child(select_btn)
 
 	_runs_button = Button.new()
 	_runs_button.flat = true
 	_runs_button.tooltip_text = "Select event run context"
 	_runs_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_runs_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_runs_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_runs_button.add_theme_color_override("font_color", Color(0.68, 0.77, 0.94))
 	_runs_button.add_theme_color_override("font_hover_color", Color(0.84, 0.90, 1.0))
@@ -142,19 +174,12 @@ func _build_ui() -> void:
 	_runs_button.add_theme_stylebox_override("pressed", run_hover)
 	_runs_button.add_theme_stylebox_override("focus", run_hover)
 	_runs_button.connect("pressed", _on_event_header_pressed)
-	line.add_child(_runs_button)
+	cond_header.add_child(_runs_button)
 
-	line.add_child(_make_clause_prefix(CLAUSE_CONDITION_PREFIX, Color(0.52, 0.68, 0.94)))
-
-	_conditions_container = HFlowContainer.new()
-	_conditions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_conditions_container.size_flags_stretch_ratio = 1.15
-	_conditions_container.add_theme_constant_override("h_separation", 5)
-	_conditions_container.add_theme_constant_override("v_separation", 2)
-	line.add_child(_conditions_container)
+	cond_header.add_child(_make_clause_prefix(CLAUSE_CONDITION_PREFIX, Color(0.52, 0.68, 0.94)))
 
 	var add_condition_btn: Button = Button.new()
-	add_condition_btn.text = "+ condition"
+	add_condition_btn.text = "+"
 	add_condition_btn.flat = true
 	add_condition_btn.tooltip_text = "Add condition"
 	add_condition_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -162,21 +187,50 @@ func _build_ui() -> void:
 	add_condition_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.92, 1.0))
 	add_condition_btn.add_theme_font_size_override("font_size", 10)
 	add_condition_btn.connect("pressed", _on_add_condition_pressed)
-	line.add_child(add_condition_btn)
+	cond_header.add_child(add_condition_btn)
 
-	var clause_sep: VSeparator = VSeparator.new()
-	clause_sep.add_theme_color_override("color", CLAUSE_VSEPARATOR_COLOR)
-	clause_sep.custom_minimum_size = Vector2(1, 0)
-	line.add_child(clause_sep)
+	# Conditions token flow (wraps within the lane)
+	_conditions_container = HFlowContainer.new()
+	_conditions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_conditions_container.add_theme_constant_override("h_separation", 4)
+	_conditions_container.add_theme_constant_override("v_separation", 2)
+	cond_vbox.add_child(_conditions_container)
 
-	line.add_child(_make_clause_prefix(CLAUSE_ACTION_PREFIX, Color(0.52, 0.83, 0.65)))
+	# ── Lane divider ───────────────────────────────────────────────────────────
+	var lane_div: ColorRect = ColorRect.new()
+	lane_div.custom_minimum_size = Vector2(2, 0)
+	lane_div.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	lane_div.color = LANE_DIVIDER_COLOR
+	lane_div.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_child(lane_div)
+
+	# ── Action lane (right) ────────────────────────────────────────────────────
+	var action_panel: PanelContainer = PanelContainer.new()
+	action_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_panel.size_flags_stretch_ratio = ACTION_LANE_RATIO
+	var action_style: StyleBoxFlat = StyleBoxFlat.new()
+	action_style.bg_color = ACTION_LANE_BG
+	action_style.set_border_width_all(0)
+	action_style.set_corner_radius_all(0)
+	action_style.set_content_margin(SIDE_LEFT, 6)
+	action_style.set_content_margin(SIDE_RIGHT, 5)
+	action_style.set_content_margin(SIDE_TOP, 3)
+	action_style.set_content_margin(SIDE_BOTTOM, 3)
+	action_panel.add_theme_stylebox_override("panel", action_style)
+	line.add_child(action_panel)
+
+	var action_hbox: HBoxContainer = HBoxContainer.new()
+	action_hbox.add_theme_constant_override("separation", 4)
+	action_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_panel.add_child(action_hbox)
+
+	action_hbox.add_child(_make_clause_prefix(CLAUSE_ACTION_PREFIX, Color(0.52, 0.83, 0.65)))
 
 	_actions_container = HFlowContainer.new()
 	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_actions_container.size_flags_stretch_ratio = 1.55
-	_actions_container.add_theme_constant_override("h_separation", 5)
+	_actions_container.add_theme_constant_override("h_separation", 4)
 	_actions_container.add_theme_constant_override("v_separation", 2)
-	line.add_child(_actions_container)
+	action_hbox.add_child(_actions_container)
 
 	var add_action_btn: Button = Button.new()
 	add_action_btn.text = "+ action"
@@ -187,8 +241,9 @@ func _build_ui() -> void:
 	add_action_btn.add_theme_color_override("font_hover_color", Color(0.65, 0.92, 0.74))
 	add_action_btn.add_theme_font_size_override("font_size", 10)
 	add_action_btn.connect("pressed", _on_add_action_pressed)
-	line.add_child(add_action_btn)
+	action_hbox.add_child(add_action_btn)
 
+	# ── Delete event (far right, outside lanes) ────────────────────────────────
 	var delete_event_btn: Button = Button.new()
 	delete_event_btn.text = "✕"
 	delete_event_btn.flat = true
@@ -226,10 +281,12 @@ func _apply_row_style() -> void:
 	style.set_border_width_all(1)
 	style.border_width_left = 4 + min(_depth, 4)
 	style.set_corner_radius_all(0)
-	style.set_content_margin(SIDE_LEFT, 6)
-	style.set_content_margin(SIDE_RIGHT, 5)
-	style.set_content_margin(SIDE_TOP, 2)
-	style.set_content_margin(SIDE_BOTTOM, 2)
+	# Zero content margins — inner lane panels carry their own padding so
+	# the lanes extend flush from the left depth-accent border to the right edge.
+	style.set_content_margin(SIDE_LEFT, 0)
+	style.set_content_margin(SIDE_RIGHT, 0)
+	style.set_content_margin(SIDE_TOP, 0)
+	style.set_content_margin(SIDE_BOTTOM, 0)
 	add_theme_stylebox_override("panel", style)
 
 ## Refreshes the display from the assigned event_row resource.
