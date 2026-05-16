@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Workspace shell polish (issue #59 – slice 4)
+- **Central split composition**: Replaced fixed `HBox + VSeparator` canvas/inspector
+  layout with a named `HSplitContainer` (`WorkspaceSplit`) so the editor body reads
+  as a dedicated workspace split surface.
+- **Canvas resource-tab framing**: Added `SheetCanvasResourceTab` inside
+  `SheetCanvasDocumentStrip` so active sheet title + dirty state are framed as an
+  editor-style document tab rather than plain strip labels.
+- **Inspector surface flattening**: Inspector shell now uses square-corner framing to
+  better match the main workspace/editor shell composition.
+- **Tests/docs**: Extended workspace-shell and editor tests to assert split-shell and
+  resource-tab presence, and updated editor UI spec for the new framing model.
+
 ### Workspace document framing improvements (issue #59 – slice 3)
 - **Toolbar resource-path context**: Added a dedicated path hint label in the toolbar
   top row so the currently opened EventSheet resource path is always visible.

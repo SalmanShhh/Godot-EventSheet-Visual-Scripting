@@ -94,8 +94,12 @@ It intentionally avoids describing unbuilt behavior as complete.
   - A 3px left-accent border rail to visually anchor the header as the document root
 - Canvas uses a **document strip** (`SheetCanvasDocumentStrip`) above the scroll surface:
   - Shows `EventSheetResource` kind tag
-  - Shows current document title + dirty dot + resource path hint
+  - Shows an active-resource tab shell (`SheetCanvasResourceTab`) with document title + dirty dot
+  - Shows resource path hint beside the active tab shell
   - Uses a 1px bottom border like editor tab/resource strips
+- Central workspace composition now uses `HSplitContainer` (`WorkspaceSplit`) for
+  canvas/inspector, matching the dedicated-editor split model instead of a fixed
+  panel stack + separator.
 - Document framing is sectioned into explicit shells:
   - `SheetSectionGlobals` for global variables
   - `SheetSectionEvents` for event/group rows
