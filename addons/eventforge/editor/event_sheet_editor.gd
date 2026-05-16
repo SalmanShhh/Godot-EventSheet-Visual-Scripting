@@ -103,10 +103,13 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			handled = _handle_workflow_shortcut("add_condition")
 		elif key_event.shift_pressed and key_event.keycode == KEY_A:
 			handled = _handle_workflow_shortcut("add_action")
-	elif key_event.keycode == KEY_DELETE and not (key_event.alt_pressed or key_event.ctrl_pressed or key_event.meta_pressed or key_event.shift_pressed):
+	elif key_event.keycode == KEY_DELETE and _has_no_modifiers(key_event):
 		handled = _handle_workflow_shortcut("delete_selection")
 	if handled:
 		get_viewport().set_input_as_handled()
+
+func _has_no_modifiers(key_event: InputEventKey) -> bool:
+	return not (key_event.alt_pressed or key_event.ctrl_pressed or key_event.meta_pressed or key_event.shift_pressed)
 
 func _is_workflow_shortcut_blocked() -> bool:
 	if _ace_picker_popup != null and _ace_picker_popup.visible:

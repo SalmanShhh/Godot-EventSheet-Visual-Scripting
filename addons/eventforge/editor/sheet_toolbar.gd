@@ -15,7 +15,7 @@ signal add_var_requested
 ## Emitted when the user requests a compile/preview.
 signal compile_requested
 
-const SHORTCUTS_HINT_TEXT: String = "Shortcuts: Ctrl+E Event · Ctrl+Shift+V Variable · Ctrl+Shift+C Condition · Ctrl+Shift+A Action · Del Delete"
+const SHORTCUTS_HINT_TEXT: String = "Shortcuts: Ctrl+E Event | Ctrl+Shift+V Variable | Ctrl+Shift+C Condition | Ctrl+Shift+A Action | Del Delete"
 
 var _add_event_btn: Button = null
 var _add_var_btn: Button = null
