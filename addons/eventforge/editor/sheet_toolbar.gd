@@ -22,6 +22,7 @@ var _status_label: Label = null
 var _doc_meta_label: Label = null
 var _selection_meta_label: Label = null
 var _sheet_name_label: Label = null
+var _shortcuts_hint_label: Label = null
 
 func _init() -> void:
 	_build_ui()
@@ -108,15 +109,22 @@ func _build_ui() -> void:
 
 	_add_event_btn = Button.new()
 	_add_event_btn.text = "+ Event"
-	_add_event_btn.tooltip_text = "Add a new event block to the sheet"
+	_add_event_btn.tooltip_text = "Add a new event block to the sheet (Ctrl+E)"
 	_add_event_btn.connect("pressed", func() -> void: add_event_requested.emit())
 	actions_line.add_child(_add_event_btn)
 
 	_add_var_btn = Button.new()
 	_add_var_btn.text = "+ Variable"
-	_add_var_btn.tooltip_text = "Add a new global variable to the sheet"
+	_add_var_btn.tooltip_text = "Add a new global variable to the sheet (Ctrl+Shift+V)"
 	_add_var_btn.connect("pressed", func() -> void: add_var_requested.emit())
 	actions_line.add_child(_add_var_btn)
+
+	_shortcuts_hint_label = Label.new()
+	_shortcuts_hint_label.text = "Shortcuts: Ctrl+E Event · Ctrl+Shift+V Variable · Ctrl+Shift+C Condition · Ctrl+Shift+A Action · Del Delete"
+	_shortcuts_hint_label.add_theme_color_override("font_color", Color(0.52, 0.61, 0.74))
+	_shortcuts_hint_label.add_theme_font_size_override("font_size", 10)
+	_shortcuts_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	actions_line.add_child(_shortcuts_hint_label)
 
 	var spacer: Control = Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -169,6 +177,8 @@ func set_sheet_loaded(loaded: bool) -> void:
 		_add_var_btn.disabled = not loaded
 	if _compile_btn != null:
 		_compile_btn.disabled = not loaded
+	if _shortcuts_hint_label != null:
+		_shortcuts_hint_label.visible = loaded
 	if not loaded:
 		set_context(null, "none")
 		if _sheet_name_label != null:

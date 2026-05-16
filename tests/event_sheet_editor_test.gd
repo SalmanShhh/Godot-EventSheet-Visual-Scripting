@@ -18,6 +18,10 @@ static func run() -> bool:
 	all_passed = _check("toolbar meta no sheet", SheetToolbar.format_document_meta(null), "No sheet loaded") and all_passed
 	all_passed = _check("toolbar selection none", SheetToolbar.format_selection_meta("none"), "No selection") and all_passed
 	all_passed = _check("toolbar selection event", SheetToolbar.format_selection_meta("event"), "Selection: Event") and all_passed
+	var toolbar_ui: SheetToolbar = SheetToolbar.new()
+	all_passed = _check("toolbar shows shortcuts hint", _contains_label_text(toolbar_ui, "Shortcuts: Ctrl+E Event · Ctrl+Shift+V Variable · Ctrl+Shift+C Condition · Ctrl+Shift+A Action · Del Delete"), true) and all_passed
+	all_passed = _check("toolbar add event tooltip includes shortcut", toolbar_ui._add_event_btn.tooltip_text.find("Ctrl+E") != -1, true) and all_passed
+	all_passed = _check("toolbar add variable tooltip includes shortcut", toolbar_ui._add_var_btn.tooltip_text.find("Ctrl+Shift+V") != -1, true) and all_passed
 	var toolbar_sheet: EventSheetResource = EventSheetResource.new()
 	toolbar_sheet.variables["health"] = {"type": "int", "default": 100}
 	toolbar_sheet.events.append(EventRow.new())
@@ -202,6 +206,38 @@ static func run() -> bool:
 	all_passed = _check("delete event removes from sheet", delete_sheet.events.size(), 0) and all_passed
 	all_passed = _check("delete event resets selection kind", editor._selected_entry_kind, "none") and all_passed
 	all_passed = _check("delete event refresh removes row ui", editor._find_event_row_ui_by_uid(editor._canvas_vbox, del_uid) == null, true) and all_passed
+
+	# Workflow: shortcut action dispatch opens add-condition picker for selected event.
+	var shortcut_sheet: EventSheetResource = EventSheetResource.new()
+	var shortcut_event: EventRow = EventRow.new()
+	shortcut_sheet.events.append(shortcut_event)
+	editor.current_sheet = shortcut_sheet
+	editor.refresh_canvas()
+	var shortcut_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, shortcut_event.event_uid)
+	if shortcut_row_ui != null:
+		editor._on_event_selected(shortcut_row_ui)
+		all_passed = _check("shortcut add condition handled", editor._handle_workflow_shortcut("add_condition"), true) and all_passed
+		all_passed = _check("shortcut add condition opens picker mode", editor._ace_picker_mode, "append_condition") and all_passed
+		all_passed = _check("shortcut add condition targets selected row", editor._ace_picker_target_row == shortcut_row_ui, true) and all_passed
+		if editor._ace_picker_popup != null:
+			editor._ace_picker_popup.hide()
+
+	# Workflow: shortcut delete dispatch removes selected action.
+	var shortcut_del_sheet: EventSheetResource = EventSheetResource.new()
+	var shortcut_del_event: EventRow = EventRow.new()
+	var shortcut_del_action: ACEAction = ACEAction.new()
+	shortcut_del_action.ace_id = "QueueFree"
+	shortcut_del_event.actions.append(shortcut_del_action)
+	shortcut_del_sheet.events.append(shortcut_del_event)
+	editor.current_sheet = shortcut_del_sheet
+	editor.refresh_canvas()
+	var shortcut_del_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, shortcut_del_event.event_uid)
+	if shortcut_del_row_ui != null:
+		editor._selected_row = shortcut_del_row_ui
+		editor._selected_entry_kind = "action"
+		editor._selected_index = 0
+		all_passed = _check("shortcut delete selected action handled", editor._handle_workflow_shortcut("delete_selection"), true) and all_passed
+		all_passed = _check("shortcut delete selected action removes action", shortcut_del_event.actions.size(), 0) and all_passed
 
 	# Delete condition removes it from the event row.
 	var del_cond_sheet: EventSheetResource = EventSheetResource.new()
