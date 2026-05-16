@@ -59,6 +59,9 @@ var _ace_params_target_row: EventRowUI = null
 var _ace_params_target_index: int = -1
 var _ace_params_existing_values: Dictionary = {}
 var _ace_params_hint_base_text: String = ""
+## True when the param dialog was opened from the ACE picker (enables Back button).
+var _ace_params_from_picker: bool = false
+var _ace_params_back_button: Button = null
 
 var _variable_dialog: ConfirmationDialog = null
 var _variable_name_edit: LineEdit = null
@@ -424,6 +427,8 @@ func _build_ace_params_dialog_popup() -> void:
 	_ace_params_dialog.min_size = ACE_PARAMS_DIALOG_SIZE
 	_ace_params_dialog.get_ok_button().text = "Apply"
 	_ace_params_dialog.connect("confirmed", _on_ace_params_dialog_confirmed)
+	_ace_params_dialog.connect("custom_action", _on_ace_params_dialog_custom_action)
+	_ace_params_back_button = _ace_params_dialog.add_button("◀ Back", true, "back")
 	add_child(_ace_params_dialog)
 
 	var body: VBoxContainer = VBoxContainer.new()
@@ -476,7 +481,7 @@ func _open_ace_params_dialog_for_picker_selection(descriptor: ACEDescriptor) -> 
 		_ace_params_target_index = _ace_picker_target_condition_index
 		_apply_ace_params({})
 		return
-	_open_ace_params_dialog(descriptor, params_dialog_mode, _ace_picker_target_row, _ace_picker_target_condition_index, descriptor.build_default_params())
+	_open_ace_params_dialog(descriptor, params_dialog_mode, _ace_picker_target_row, _ace_picker_target_condition_index, descriptor.build_default_params(), true)
 
 func _open_condition_params_dialog(row: EventRowUI, index: int) -> void:
 	if row == null or row.event_row == null:
@@ -490,7 +495,7 @@ func _open_condition_params_dialog(row: EventRowUI, index: int) -> void:
 	if descriptor == null:
 		return
 	var values: Dictionary = _merge_ace_param_values(descriptor, condition.params, condition.parameters)
-	_open_ace_params_dialog(descriptor, "edit_condition", row, index, values)
+	_open_ace_params_dialog(descriptor, "edit_condition", row, index, values, false)
 
 func _open_action_params_dialog(row: EventRowUI, index: int) -> void:
 	if row == null or row.event_row == null:
@@ -505,7 +510,7 @@ func _open_action_params_dialog(row: EventRowUI, index: int) -> void:
 	if descriptor == null:
 		return
 	var values: Dictionary = _merge_ace_param_values(descriptor, action.params, action.parameters)
-	_open_ace_params_dialog(descriptor, "edit_action", row, index, values)
+	_open_ace_params_dialog(descriptor, "edit_action", row, index, values, false)
 
 func _merge_ace_param_values(descriptor: ACEDescriptor, primary: Dictionary, fallback: Dictionary) -> Dictionary:
 	var values: Dictionary = descriptor.build_default_params()
@@ -514,7 +519,7 @@ func _merge_ace_param_values(descriptor: ACEDescriptor, primary: Dictionary, fal
 		values[key] = source[key]
 	return values
 
-func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: EventRowUI, index: int, values: Dictionary) -> void:
+func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: EventRowUI, index: int, values: Dictionary, from_picker: bool = false) -> void:
 	if _ace_params_dialog == null or _ace_params_form == null or descriptor == null:
 		return
 	_ace_params_mode = mode
@@ -523,6 +528,9 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 	_ace_params_target_index = index
 	_ace_params_existing_values = values.duplicate(true)
 	_ace_params_fields.clear()
+	_ace_params_from_picker = from_picker
+	if _ace_params_back_button != null:
+		_ace_params_back_button.visible = from_picker
 
 	for child: Node in _ace_params_form.get_children():
 		_ace_params_form.remove_child(child)
@@ -717,6 +725,26 @@ func _on_ace_params_dialog_confirmed() -> void:
 		return
 	var values: Dictionary = _collect_ace_param_values()
 	_apply_ace_params(values)
+
+func _on_ace_params_dialog_custom_action(action: StringName) -> void:
+	if action == "back":
+		_go_back_to_picker()
+
+## Closes the param dialog and reopens the ACE picker, preserving the picker context.
+func _go_back_to_picker() -> void:
+	if _ace_params_dialog != null:
+		_ace_params_dialog.hide()
+	if not _ace_params_from_picker:
+		return
+	match _ace_picker_mode:
+		"new_event":
+			_show_ace_picker("Add Event", true, true, false)
+		"append_condition":
+			_show_ace_picker("Add Condition", false, true, false)
+		"replace_condition":
+			_show_ace_picker("Replace Condition", false, true, false)
+		"append_action":
+			_show_ace_picker("Add Action", false, false, true)
 
 func _refresh_ace_params_dialog_confirm_state() -> void:
 	if _ace_params_dialog == null:

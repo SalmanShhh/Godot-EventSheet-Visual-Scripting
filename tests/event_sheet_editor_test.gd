@@ -137,6 +137,16 @@ static func run() -> bool:
 	editor.refresh_canvas()
 	all_passed = _check("sub events cycle guard prevents duplicate rendering", _count_event_row_nodes(editor), 2) and all_passed
 
+	# ACE params dialog back button is created and visible state reflects from_picker.
+	all_passed = _check("ace params back button created", editor._ace_params_back_button != null, true) and all_passed
+	if editor._ace_params_back_button != null:
+		editor._ace_params_from_picker = false
+		editor._ace_params_back_button.visible = false
+		all_passed = _check("back button hidden for edit flow", editor._ace_params_back_button.visible, false) and all_passed
+		editor._ace_params_from_picker = true
+		editor._ace_params_back_button.visible = true
+		all_passed = _check("back button visible for picker flow", editor._ace_params_back_button.visible, true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -96,16 +96,29 @@ func _build_ui() -> void:
 	conditions_lane_vbox.add_theme_constant_override("separation", 2)
 	conditions_lane.add_child(conditions_lane_vbox)
 
+	# Run-context label on its own line so the control row below stays clean.
+	var runs_row: HBoxContainer = HBoxContainer.new()
+	conditions_lane_vbox.add_child(runs_row)
+	_runs_label = Label.new()
+	_runs_label.add_theme_color_override("font_color", Color(0.45, 0.65, 0.45))
+	_runs_label.add_theme_font_size_override("font_size", 9)
+	_runs_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_runs_label.clip_text = true
+	runs_row.add_child(_runs_label)
+
 	var cond_row: HBoxContainer = HBoxContainer.new()
 	cond_row.add_theme_constant_override("separation", 3)
 	conditions_lane_vbox.add_child(cond_row)
 
-	_runs_label = Label.new()
-	_runs_label.add_theme_color_override("font_color", Color(0.55, 0.78, 0.55))
-	_runs_label.add_theme_font_size_override("font_size", 10)
-	_runs_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_runs_label.clip_text = true
-	cond_row.add_child(_runs_label)
+	var cond_heading: Label = Label.new()
+	cond_heading.text = "Conditions"
+	cond_heading.add_theme_color_override("font_color", Color(0.65, 0.85, 0.65))
+	cond_heading.add_theme_font_size_override("font_size", 10)
+	cond_row.add_child(cond_heading)
+
+	var cond_spacer: Control = Control.new()
+	cond_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cond_row.add_child(cond_spacer)
 
 	var header_btn: Button = Button.new()
 	header_btn.text = "✎"
@@ -116,14 +129,8 @@ func _build_ui() -> void:
 	header_btn.connect("pressed", _on_event_header_pressed)
 	cond_row.add_child(header_btn)
 
-	var cond_heading: Label = Label.new()
-	cond_heading.text = "Conditions"
-	cond_heading.add_theme_color_override("font_color", Color(0.65, 0.85, 0.65))
-	cond_heading.add_theme_font_size_override("font_size", 10)
-	cond_row.add_child(cond_heading)
-
 	var add_condition_btn: Button = Button.new()
-	add_condition_btn.text = "+ Add Condition"
+	add_condition_btn.text = "+ Add"
 	add_condition_btn.flat = true
 	add_condition_btn.tooltip_text = "Add a condition to this event"
 	add_condition_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
