@@ -602,6 +602,90 @@ static func run() -> bool:
 	if on_body_entered_desc != null:
 		all_passed = _check("OnBodyEntered picker group", editor._get_picker_group(on_body_entered_desc), "Area2D") and all_passed
 
+	# Expanded built-in ACEs: new node-type tagged descriptors.
+	var on_area_entered_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "OnAreaEntered")
+	if on_area_entered_desc != null:
+		all_passed = _check("OnAreaEntered picker group", editor._get_picker_group(on_area_entered_desc), "Area2D") and all_passed
+
+	var move_and_slide_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "MoveAndSlide")
+	if move_and_slide_desc != null:
+		all_passed = _check("MoveAndSlide picker group", editor._get_picker_group(move_and_slide_desc), "CharacterBody2D") and all_passed
+		all_passed = _check("MoveAndSlide is action", move_and_slide_desc.ace_type, ACEDescriptor.ACEType.ACTION) and all_passed
+
+	var start_timer_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "StartTimer")
+	if start_timer_desc != null:
+		all_passed = _check("StartTimer picker group", editor._get_picker_group(start_timer_desc), "Timer") and all_passed
+		all_passed = _check("StartTimer is action", start_timer_desc.ace_type, ACEDescriptor.ACEType.ACTION) and all_passed
+
+	var is_timer_stopped_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "IsTimerStopped")
+	if is_timer_stopped_desc != null:
+		all_passed = _check("IsTimerStopped picker group", editor._get_picker_group(is_timer_stopped_desc), "Timer") and all_passed
+		all_passed = _check("IsTimerStopped is condition", is_timer_stopped_desc.ace_type, ACEDescriptor.ACEType.CONDITION) and all_passed
+
+	var on_timeout_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "OnTimeout")
+	if on_timeout_desc != null:
+		all_passed = _check("OnTimeout picker group", editor._get_picker_group(on_timeout_desc), "Timer") and all_passed
+
+	var play_animation_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "PlayAnimation")
+	if play_animation_desc != null:
+		all_passed = _check("PlayAnimation picker group", editor._get_picker_group(play_animation_desc), "AnimationPlayer") and all_passed
+
+	var set_position_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "SetPosition2D")
+	if set_position_desc != null:
+		all_passed = _check("SetPosition2D picker group", editor._get_picker_group(set_position_desc), "Node2D") and all_passed
+
+	var apply_impulse_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "ApplyCentralImpulse")
+	if apply_impulse_desc != null:
+		all_passed = _check("ApplyCentralImpulse picker group", editor._get_picker_group(apply_impulse_desc), "RigidBody2D") and all_passed
+
+	# _get_picker_item_color: verify type-based item colouring.
+	var trigger_sample: ACEDescriptor = ACEDescriptor.new()
+	trigger_sample.ace_type = ACEDescriptor.ACEType.TRIGGER
+	var condition_sample: ACEDescriptor = ACEDescriptor.new()
+	condition_sample.ace_type = ACEDescriptor.ACEType.CONDITION
+	var action_sample: ACEDescriptor = ACEDescriptor.new()
+	action_sample.ace_type = ACEDescriptor.ACEType.ACTION
+	all_passed = _check("picker item color: trigger != condition", EventSheetEditor._get_picker_item_color(trigger_sample) != EventSheetEditor._get_picker_item_color(condition_sample), true) and all_passed
+	all_passed = _check("picker item color: action != condition", EventSheetEditor._get_picker_item_color(action_sample) != EventSheetEditor._get_picker_item_color(condition_sample), true) and all_passed
+	all_passed = _check("picker item color: trigger != action", EventSheetEditor._get_picker_item_color(trigger_sample) != EventSheetEditor._get_picker_item_color(action_sample), true) and all_passed
+
+	# _get_ace_type_label: verify human-readable labels.
+	all_passed = _check("ace type label trigger", EventSheetEditor._get_ace_type_label(ACEDescriptor.ACEType.TRIGGER), "Trigger") and all_passed
+	all_passed = _check("ace type label condition", EventSheetEditor._get_ace_type_label(ACEDescriptor.ACEType.CONDITION), "Condition") and all_passed
+	all_passed = _check("ace type label action", EventSheetEditor._get_ace_type_label(ACEDescriptor.ACEType.ACTION), "Action") and all_passed
+	all_passed = _check("ace type label expression", EventSheetEditor._get_ace_type_label(ACEDescriptor.ACEType.EXPRESSION), "Expression") and all_passed
+
+	# ACE picker search: _populate_ace_picker with filter_text omits non-matching items.
+	# Provide a minimal Tree so _populate_ace_picker can run without the full editor layout.
+	var search_tree: Tree = Tree.new()
+	search_tree.hide_root = true
+	editor._ace_picker_tree = search_tree
+	editor._ace_picker_mode = "new_event"
+	editor._populate_ace_picker(true, true, false, "floor")
+	var floor_root: TreeItem = search_tree.get_root()
+	var found_floor_item: bool = false
+	if floor_root != null:
+		var grp: TreeItem = floor_root.get_first_child()
+		while grp != null:
+			var child: TreeItem = grp.get_first_child()
+			while child != null:
+				if "floor" in child.get_text(0).to_lower():
+					found_floor_item = true
+				child = child.get_next()
+			grp = grp.get_next()
+	all_passed = _check("search filter 'floor' finds Is On Floor", found_floor_item, true) and all_passed
+
+	# Empty search should repopulate all (more than just one group).
+	editor._populate_ace_picker(true, true, true, "")
+	var empty_root: TreeItem = search_tree.get_root()
+	var empty_group_count: int = 0
+	if empty_root != null:
+		var g: TreeItem = empty_root.get_first_child()
+		while g != null:
+			empty_group_count += 1
+			g = g.get_next()
+	all_passed = _check("empty filter shows multiple groups", empty_group_count > 3, true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

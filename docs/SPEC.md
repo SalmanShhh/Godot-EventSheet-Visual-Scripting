@@ -101,6 +101,12 @@ These remain planned tracks and should not be implied as complete by compiler-ma
 ACE descriptors can be provided as `ACEDescriptor` resources or dictionary metadata.
 Dictionary metadata accepts snake_case and Construct-style camelCase aliases (for example `list_name/listName`, `display_text/displayText`, `description/desc`, and param default/name aliases).
 
-The `node_type`/`nodeType` field associates an ACE with a specific Godot class (e.g. `"CharacterBody2D"`, `"Area2D"`).  When set, the ACE picker groups the entry under that class name instead of using `category`.  This enables the node-type grouping introduced in issue #54.
+The `node_type`/`nodeType` field associates an ACE with a specific Godot class (e.g. `"CharacterBody2D"`, `"Area2D"`, `"Node2D"`, `"Timer"`, `"AnimationPlayer"`, `"RigidBody2D"`).  When set, the ACE picker groups the entry under that class name instead of using `category`.  This enables the node-type grouping introduced in issue #54.
+
+Built-in Core ACEs that carry a `node_type` are pre-registered into named picker groups so their class section is always visible in the "Add Event" picker, even before runtime descriptors are scanned.
+
+The ACE picker supports live text filtering: typing in the search box narrows visible entries by matching against list name, description, and node type.  Pre-declared empty group headers are hidden when a filter is active.
+
+Each picker item is coloured by ACE type (trigger = soft green, condition = soft blue, action = soft teal) and item tooltips are prefixed with the ACE type label (e.g. `[Condition]`).
 
 Normalized metadata is used consistently by picker display and ACE param initialization.

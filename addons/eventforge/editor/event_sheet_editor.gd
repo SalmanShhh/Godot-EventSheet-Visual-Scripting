@@ -15,13 +15,17 @@ var _is_dirty: bool = false
 const PREVIEW_OUTPUT_PATH: String = "user://eventforge_preview_generated.gd"
 const DEFAULT_RUN_CONTEXT_ACE_ID: String = "OnProcess"
 ## Pre-declared sections for the "Add Event" picker (triggers + conditions mode).
-## Node-type sections (Area2D, CharacterBody2D) are listed here so they appear even
-## before descriptor scanning populates them.  Additional node types registered at
-## runtime are added dynamically by _populate_ace_picker as descriptors are scanned.
+## Node-type sections are listed first so they appear even before descriptor scanning
+## populates them.  Additional node types registered at runtime are added dynamically
+## by _populate_ace_picker as descriptors are scanned.
 const EVENT_PICKER_GROUPS: PackedStringArray = [
 	"Run Context / Triggers",
-	"Area2D",
 	"CharacterBody2D",
+	"Area2D",
+	"Node2D",
+	"RigidBody2D",
+	"Timer",
+	"AnimationPlayer",
 	"General Conditions",
 	"Variables",
 	"Loops",
@@ -77,12 +81,17 @@ var _sheet_toolbar: SheetToolbar = null
 var _status_label: Label = null
 var _ace_picker_popup: Window = null
 var _ace_picker_title: Label = null
+var _ace_picker_search: LineEdit = null
 var _ace_picker_tree: Tree = null
 var _ace_picker_description: Label = null
 ## One of: "new_event", "append_condition", "replace_condition", "append_action"
 var _ace_picker_mode: String = ""
 var _ace_picker_target_row: EventRowUI = null
 var _ace_picker_target_condition_index: int = -1
+## Stored picker type flags so the search handler can re-populate with the same filters.
+var _ace_picker_include_triggers: bool = false
+var _ace_picker_include_conditions: bool = false
+var _ace_picker_include_actions: bool = false
 var _ace_params_dialog: ConfirmationDialog = null
 var _ace_params_form: VBoxContainer = null
 var _ace_params_hint: Label = null
@@ -721,6 +730,12 @@ func _build_ace_picker_popup() -> void:
 	_ace_picker_title.add_theme_font_size_override("font_size", 14)
 	wrapper.add_child(_ace_picker_title)
 
+	_ace_picker_search = LineEdit.new()
+	_ace_picker_search.name = "ACEPickerSearch"
+	_ace_picker_search.placeholder_text = "Filter ACEs…"
+	_ace_picker_search.connect("text_changed", _on_ace_picker_search_changed)
+	wrapper.add_child(_ace_picker_search)
+
 	_ace_picker_tree = Tree.new()
 	_ace_picker_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_ace_picker_tree.hide_root = true
@@ -763,20 +778,27 @@ func _open_add_action_picker(row: EventRowUI) -> void:
 func _show_ace_picker(title: String, include_triggers: bool, include_conditions: bool, include_actions: bool) -> void:
 	if _ace_picker_popup == null:
 		return
+	_ace_picker_include_triggers = include_triggers
+	_ace_picker_include_conditions = include_conditions
+	_ace_picker_include_actions = include_actions
 	_ace_picker_popup.title = title
 	_ace_picker_title.text = title
 	_ace_picker_description.text = "Pick an ACE to add."
+	if _ace_picker_search != null:
+		_ace_picker_search.text = ""
 	_populate_ace_picker(include_triggers, include_conditions, include_actions)
 	_ace_picker_popup.popup_centered(ACE_PICKER_DIALOG_SIZE)
 
-func _populate_ace_picker(include_triggers: bool, include_conditions: bool, include_actions: bool) -> void:
+func _populate_ace_picker(include_triggers: bool, include_conditions: bool, include_actions: bool, filter_text: String = "") -> void:
 	if _ace_picker_tree == null:
 		return
 	_ace_picker_tree.clear()
 	var root: TreeItem = _ace_picker_tree.create_item()
 	var groups: Dictionary = {}
-	if _ace_picker_mode == "new_event":
+	var filter_lower: String = filter_text.to_lower().strip_edges()
+	if _ace_picker_mode == "new_event" and filter_lower.is_empty():
 		# Pre-declare sections — node-type groups first, then logical categories.
+		# Omit pre-declared sections when filtering so only groups with matches appear.
 		for name: String in EVENT_PICKER_GROUPS:
 			var section: TreeItem = _ace_picker_tree.create_item(root)
 			section.set_text(0, name)
@@ -794,6 +816,13 @@ func _populate_ace_picker(include_triggers: bool, include_conditions: bool, incl
 			continue
 		if descriptor.ace_type == ACEDescriptor.ACEType.EXPRESSION:
 			continue
+		# Filter: skip items that don't match the search text (case-insensitive).
+		if not filter_lower.is_empty():
+			var name_match: bool = descriptor.get_list_name().to_lower().contains(filter_lower)
+			var desc_match: bool = descriptor.description.to_lower().contains(filter_lower)
+			var node_match: bool = descriptor.node_type.to_lower().contains(filter_lower)
+			if not name_match and not desc_match and not node_match:
+				continue
 		var group_name: String = _get_picker_group(descriptor)
 		if not groups.has(group_name):
 			var group_item: TreeItem = _ace_picker_tree.create_item(root)
@@ -803,7 +832,10 @@ func _populate_ace_picker(include_triggers: bool, include_conditions: bool, incl
 			groups[group_name] = group_item
 		var item: TreeItem = _ace_picker_tree.create_item(groups[group_name])
 		item.set_text(0, descriptor.get_list_name())
-		item.set_tooltip_text(0, descriptor.description if not descriptor.description.is_empty() else descriptor.get_display_text())
+		var ace_type_label: String = _get_ace_type_label(descriptor.ace_type)
+		var desc_text: String = descriptor.description if not descriptor.description.is_empty() else descriptor.get_display_text()
+		item.set_tooltip_text(0, "[%s]  %s" % [ace_type_label, desc_text])
+		item.set_custom_color(0, _get_picker_item_color(descriptor))
 		item.set_metadata(0, descriptor)
 
 ## Returns the group name used to organise a descriptor in the ACE picker.
@@ -840,6 +872,33 @@ static func _get_picker_group_color(group_name: String) -> Color:
 				return Color(0.68, 0.74, 0.84)  # default muted
 			# Node-type / class groups use amber to signal their Godot class origin.
 			return ACE_PICKER_NODE_TYPE_GROUP_COLOR
+
+## Returns the text colour for an individual ACE picker item based on its ACE type.
+## Soft-tinted so items are distinguishable within a group without overwhelming the group header.
+static func _get_picker_item_color(descriptor: ACEDescriptor) -> Color:
+	match descriptor.ace_type:
+		ACEDescriptor.ACEType.TRIGGER:
+			return Color(0.72, 0.94, 0.76)   # soft green  – triggers
+		ACEDescriptor.ACEType.CONDITION:
+			return Color(0.72, 0.88, 1.00)   # soft blue   – conditions
+		ACEDescriptor.ACEType.ACTION:
+			return Color(0.70, 0.95, 0.88)   # soft teal   – actions
+		_:
+			return Color(0.84, 0.87, 0.92)   # neutral
+
+## Returns a human-readable label for an ACE type used in picker tooltips.
+static func _get_ace_type_label(ace_type: ACEDescriptor.ACEType) -> String:
+	match ace_type:
+		ACEDescriptor.ACEType.TRIGGER:    return "Trigger"
+		ACEDescriptor.ACEType.CONDITION:  return "Condition"
+		ACEDescriptor.ACEType.ACTION:     return "Action"
+		ACEDescriptor.ACEType.EXPRESSION: return "Expression"
+		_:                                return "ACE"
+
+## Called when the ACE picker search box text changes.
+## Re-populates the tree with only entries matching the current filter.
+func _on_ace_picker_search_changed(new_text: String) -> void:
+	_populate_ace_picker(_ace_picker_include_triggers, _ace_picker_include_conditions, _ace_picker_include_actions, new_text)
 
 func _on_ace_picker_item_selected() -> void:
 	if _ace_picker_tree == null:
