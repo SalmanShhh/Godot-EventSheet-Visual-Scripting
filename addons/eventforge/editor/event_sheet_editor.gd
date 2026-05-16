@@ -11,9 +11,15 @@ class_name EventSheetEditor
 var current_sheet: EventSheetResource = null
 # user:// is the editor's writable data path; keep preview output out of res:// assets.
 const PREVIEW_OUTPUT_PATH: String = "user://eventforge_preview_generated.gd"
-const DEFAULT_CONDITION_ACE_ID: String = "Always"
-const DEFAULT_ACTION_ACE_ID: String = "PrintLog"
-const DEFAULT_ACTION_MESSAGE: String = "\"TODO\""
+const DEFAULT_RUN_CONTEXT_ACE_ID: String = "OnProcess"
+const EVENT_PICKER_GROUPS: PackedStringArray = [
+	"Run Context / Triggers",
+	"General Conditions",
+	"Variables",
+	"Loops",
+	"Signals / Scene / Input",
+	"Custom ACEs"
+]
 
 ## Currently selected entry kind.
 ## One of: "none", "event", "condition", "action", "variable", "group"
@@ -30,6 +36,13 @@ var _canvas_vbox: VBoxContainer = null
 var _inspector_panel: PanelContainer = null
 var _inspector_vbox: VBoxContainer = null
 var _sheet_toolbar: SheetToolbar = null
+var _ace_picker_popup: PopupPanel = null
+var _ace_picker_title: Label = null
+var _ace_picker_tree: Tree = null
+var _ace_picker_description: Label = null
+## One of: "new_event", "append_condition", "append_action"
+var _ace_picker_mode: String = ""
+var _ace_picker_target_row: EventRowUI = null
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
@@ -99,6 +112,7 @@ func _build_layout() -> void:
 
 	_show_empty_inspector()
 	_refresh_toolbar_state()
+	_build_ace_picker_popup()
 
 # ── Canvas rendering ──────────────────────────────────────────────────────────
 
@@ -212,14 +226,7 @@ func _on_add_event_requested() -> void:
 	_ensure_sheet()
 	if current_sheet == null:
 		return
-
-	var new_event: EventRow = EventRow.new()
-	new_event.trigger_id = "OnProcess"
-	current_sheet.events.append(new_event)
-	refresh_canvas()
-	_focus_event_by_uid(new_event.event_uid)
-	if _sheet_toolbar != null:
-		_sheet_toolbar.set_status("Added event")
+	_open_add_event_picker()
 
 func _on_compile_requested() -> void:
 	if current_sheet == null:
@@ -257,6 +264,185 @@ func _refresh_toolbar_state() -> void:
 	if _sheet_toolbar == null:
 		return
 	_sheet_toolbar.set_sheet_loaded(current_sheet != null)
+
+func _build_ace_picker_popup() -> void:
+	_ace_picker_popup = PopupPanel.new()
+	_ace_picker_popup.name = "ACEPickerPopup"
+	_ace_picker_popup.size = Vector2(520, 420)
+	add_child(_ace_picker_popup)
+
+	var wrapper: VBoxContainer = VBoxContainer.new()
+	wrapper.custom_minimum_size = Vector2(500, 380)
+	wrapper.add_theme_constant_override("separation", 6)
+	_ace_picker_popup.add_child(wrapper)
+
+	_ace_picker_title = Label.new()
+	_ace_picker_title.add_theme_color_override("font_color", Color(0.80, 0.90, 1.0))
+	_ace_picker_title.add_theme_font_size_override("font_size", 14)
+	wrapper.add_child(_ace_picker_title)
+
+	_ace_picker_tree = Tree.new()
+	_ace_picker_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_ace_picker_tree.hide_root = true
+	_ace_picker_tree.select_mode = Tree.SELECT_ROW
+	_ace_picker_tree.connect("item_activated", _on_ace_picker_item_activated)
+	_ace_picker_tree.connect("item_selected", _on_ace_picker_item_selected)
+	wrapper.add_child(_ace_picker_tree)
+
+	_ace_picker_description = Label.new()
+	_ace_picker_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_ace_picker_description.add_theme_color_override("font_color", Color(0.65, 0.70, 0.78))
+	_ace_picker_description.text = "Pick an ACE to add."
+	wrapper.add_child(_ace_picker_description)
+
+func _open_add_event_picker() -> void:
+	_ace_picker_mode = "new_event"
+	_ace_picker_target_row = null
+	_show_ace_picker("Add Event", true, true, false)
+
+func _open_add_condition_picker(row: EventRowUI) -> void:
+	_ace_picker_mode = "append_condition"
+	_ace_picker_target_row = row
+	_show_ace_picker("Add Condition", false, true, false)
+
+func _open_add_action_picker(row: EventRowUI) -> void:
+	_ace_picker_mode = "append_action"
+	_ace_picker_target_row = row
+	_show_ace_picker("Add Action", false, false, true)
+
+func _show_ace_picker(title: String, include_triggers: bool, include_conditions: bool, include_actions: bool) -> void:
+	if _ace_picker_popup == null:
+		return
+	_ace_picker_title.text = title
+	_ace_picker_description.text = "Pick an ACE to add."
+	_populate_ace_picker(include_triggers, include_conditions, include_actions)
+	_ace_picker_popup.popup_centered_ratio(0.55)
+
+func _populate_ace_picker(include_triggers: bool, include_conditions: bool, include_actions: bool) -> void:
+	if _ace_picker_tree == null:
+		return
+	_ace_picker_tree.clear()
+	var root: TreeItem = _ace_picker_tree.create_item()
+	var groups: Dictionary = {}
+	if _ace_picker_mode == "new_event":
+		# Keep Construct-style sections visible even before all ACE categories are populated.
+		for name: String in EVENT_PICKER_GROUPS:
+			var section: TreeItem = _ace_picker_tree.create_item(root)
+			section.set_text(0, name)
+			section.set_selectable(0, false)
+			groups[name] = section
+	for descriptor: ACEDescriptor in ACERegistry.get_all_descriptors():
+		if descriptor == null:
+			continue
+		if descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER and not include_triggers:
+			continue
+		if descriptor.ace_type == ACEDescriptor.ACEType.CONDITION and not include_conditions:
+			continue
+		if descriptor.ace_type == ACEDescriptor.ACEType.ACTION and not include_actions:
+			continue
+		if descriptor.ace_type == ACEDescriptor.ACEType.EXPRESSION:
+			continue
+		var group_name: String = _get_picker_group(descriptor)
+		if not groups.has(group_name):
+			var group_item: TreeItem = _ace_picker_tree.create_item(root)
+			group_item.set_text(0, group_name)
+			group_item.set_selectable(0, false)
+			groups[group_name] = group_item
+		var item: TreeItem = _ace_picker_tree.create_item(groups[group_name])
+		item.set_text(0, descriptor.get_list_name())
+		item.set_tooltip_text(0, descriptor.description if not descriptor.description.is_empty() else descriptor.get_display_text())
+		item.set_metadata(0, descriptor)
+
+func _get_picker_group(descriptor: ACEDescriptor) -> String:
+	if descriptor.provider_id != "Core":
+		return "Custom ACEs"
+	if descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER:
+		return "Run Context / Triggers"
+	var category: String = descriptor.category
+	if category.is_empty():
+		return "General Conditions" if descriptor.ace_type == ACEDescriptor.ACEType.CONDITION else "General Actions"
+	return category
+
+func _on_ace_picker_item_selected() -> void:
+	if _ace_picker_tree == null:
+		return
+	var item: TreeItem = _ace_picker_tree.get_selected()
+	if item == null:
+		return
+	var value: Variant = item.get_metadata(0)
+	if value is ACEDescriptor:
+		var descriptor: ACEDescriptor = value
+		_ace_picker_description.text = descriptor.description if not descriptor.description.is_empty() else descriptor.get_display_text()
+
+func _on_ace_picker_item_activated() -> void:
+	if _ace_picker_tree == null:
+		return
+	var item: TreeItem = _ace_picker_tree.get_selected()
+	if item == null:
+		return
+	var value: Variant = item.get_metadata(0)
+	if not (value is ACEDescriptor):
+		return
+	var descriptor: ACEDescriptor = value
+	match _ace_picker_mode:
+		"new_event":
+			_create_event_from_descriptor(descriptor)
+		"append_condition":
+			_append_condition_from_descriptor(descriptor)
+		"append_action":
+			_append_action_from_descriptor(descriptor)
+	if _ace_picker_popup != null:
+		_ace_picker_popup.hide()
+
+func _create_event_from_descriptor(descriptor: ACEDescriptor) -> void:
+	_ensure_sheet()
+	if current_sheet == null or descriptor == null:
+		return
+	var new_event: EventRow = EventRow.new()
+	if descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER:
+		new_event.trigger_provider_id = descriptor.provider_id
+		new_event.trigger_id = descriptor.ace_id
+		new_event.trigger_params = descriptor.build_default_params()
+	elif descriptor.ace_type == ACEDescriptor.ACEType.CONDITION:
+		new_event.trigger_provider_id = "Core"
+		new_event.trigger_id = DEFAULT_RUN_CONTEXT_ACE_ID
+		var condition: ACECondition = ACECondition.new()
+		condition.provider_id = descriptor.provider_id
+		condition.ace_id = descriptor.ace_id
+		condition.params = descriptor.build_default_params()
+		new_event.conditions.append(condition)
+	else:
+		new_event.trigger_provider_id = "Core"
+		new_event.trigger_id = DEFAULT_RUN_CONTEXT_ACE_ID
+	current_sheet.events.append(new_event)
+	refresh_canvas()
+	_focus_event_by_uid(new_event.event_uid)
+	if _sheet_toolbar != null:
+		_sheet_toolbar.set_status("Added event: %s" % descriptor.get_list_name())
+
+func _append_condition_from_descriptor(descriptor: ACEDescriptor) -> void:
+	var row: EventRowUI = _ace_picker_target_row
+	if row == null or row.event_row == null or descriptor == null:
+		return
+	var condition: ACECondition = ACECondition.new()
+	condition.provider_id = descriptor.provider_id
+	condition.ace_id = descriptor.ace_id
+	condition.params = descriptor.build_default_params()
+	row.event_row.conditions.append(condition)
+	row.refresh()
+	_rebuild_inspector_event(row)
+
+func _append_action_from_descriptor(descriptor: ACEDescriptor) -> void:
+	var row: EventRowUI = _ace_picker_target_row
+	if row == null or row.event_row == null or descriptor == null:
+		return
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = descriptor.provider_id
+	action.ace_id = descriptor.ace_id
+	action.params = descriptor.build_default_params()
+	row.event_row.actions.append(action)
+	row.refresh()
+	_rebuild_inspector_event(row)
 
 func _generate_unique_variable_name() -> String:
 	var base: String = "var_"
@@ -340,9 +526,16 @@ func _add_variables_section() -> void:
 func _add_events_section() -> void:
 	_add_section_heading("Events")
 
+	var add_event_btn: Button = Button.new()
+	add_event_btn.text = "+ Add Event"
+	add_event_btn.custom_minimum_size = Vector2(120, 0)
+	add_event_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	add_event_btn.connect("pressed", _on_add_event_requested)
+	_canvas_vbox.add_child(add_event_btn)
+
 	if current_sheet.events.is_empty():
 		var hint: Label = Label.new()
-		hint.text = "No events yet. Use 'Add Event' in the toolbar to create one."
+		hint.text = "No events yet. Click + Add Event to pick a run context or condition."
 		hint.add_theme_color_override("font_color", Color(0.50, 0.50, 0.60))
 		hint.add_theme_font_size_override("font_size", 11)
 		_canvas_vbox.add_child(hint)
@@ -361,6 +554,7 @@ func _add_event_row(event_row: EventRow) -> void:
 	row_ui.event_selected.connect(_on_event_selected)
 	row_ui.condition_selected.connect(_on_condition_selected)
 	row_ui.action_selected.connect(_on_action_selected)
+	row_ui.add_action_requested.connect(_on_row_add_action_requested)
 	_canvas_vbox.add_child(row_ui)
 
 func _add_group_row(event_group: EventGroup) -> void:
@@ -389,6 +583,14 @@ func _on_action_selected(row: EventRowUI, index: int) -> void:
 	_selected_row = row
 	_selected_index = index
 	_rebuild_inspector_action(row, index)
+
+func _on_row_add_action_requested(row: EventRowUI) -> void:
+	if row == null or row.event_row == null:
+		return
+	_selected_entry_kind = "event"
+	_selected_row = row
+	_selected_index = -1
+	_open_add_action_picker(row)
 
 func _on_variable_selected(row: VariableRowUI) -> void:
 	_selected_entry_kind = "variable"
@@ -472,7 +674,7 @@ func _rebuild_inspector_event(row: EventRowUI) -> void:
 
 	if event_row.conditions.is_empty():
 		var empty_conditions: Label = Label.new()
-		empty_conditions.text = "No conditions yet."
+		empty_conditions.text = "Always (default when no conditions are added)."
 		empty_conditions.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
 		_inspector_vbox.add_child(empty_conditions)
 
@@ -527,11 +729,7 @@ func _add_condition_to_selected_event() -> void:
 	var row: EventRowUI = _selected_row as EventRowUI
 	if row == null or row.event_row == null:
 		return
-	var condition: ACECondition = ACECondition.new()
-	condition.ace_id = DEFAULT_CONDITION_ACE_ID
-	row.event_row.conditions.append(condition)
-	row.refresh()
-	_rebuild_inspector_event(row)
+	_open_add_condition_picker(row)
 
 func _add_action_to_selected_event() -> void:
 	if not (_selected_row is EventRowUI):
@@ -539,12 +737,7 @@ func _add_action_to_selected_event() -> void:
 	var row: EventRowUI = _selected_row as EventRowUI
 	if row == null or row.event_row == null:
 		return
-	var action: ACEAction = ACEAction.new()
-	action.ace_id = DEFAULT_ACTION_ACE_ID
-	action.params = {"message": DEFAULT_ACTION_MESSAGE}
-	row.event_row.actions.append(action)
-	row.refresh()
-	_rebuild_inspector_event(row)
+	_open_add_action_picker(row)
 
 func _rebuild_inspector_condition(row: EventRowUI, index: int) -> void:
 	_clear_inspector()
