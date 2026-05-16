@@ -71,6 +71,7 @@ It intentionally avoids describing unbuilt behavior as complete.
   - Toolbar background has zero corner radius so it sits flush at the top edge of the workspace.
   - Toolbar bottom border (1 px) provides the only visual separation from the content area below.
   - Top row of the toolbar: `EventSheet` label | separator | sheet name | dirty indicator | document meta | separator | selection meta | spacer
+  - Top row now also includes a **document path hint** between document meta and selection meta so the active resource path is always visible.
   - Action row of the toolbar: `New Sheet` | `Open` | `Save` | `Save As…` | separator | `+ Event` | `+ Variable` | shortcut hints | spacer | `Compile Preview`
   - **Dirty indicator** `●` (amber dot) appears next to the sheet name when the sheet has unsaved changes; hidden when the sheet is clean.
   - **Save / Save As** buttons are present and enabled whenever a sheet is loaded.
@@ -88,9 +89,13 @@ It intentionally avoids describing unbuilt behavior as complete.
 - **Dirty state tracking**: `EventSheetEditor._is_dirty` is set on every mutation (add/edit/delete events, conditions, actions, variables, groups, condition inversion) and cleared on sheet load or successful save.
 - Document header (`SheetDocumentHeader`) inside the canvas shows:
   - The sheet file name (or "Untitled Sheet" / "No Sheet Loaded") as the document title
-  - The sheet resource path as a secondary hint line
+  - The sheet resource path as a secondary hint line (`Unsaved (in-memory)` for unsaved sheets)
   - A summary of globals and root entries
   - A 3px left-accent border rail to visually anchor the header as the document root
+- Canvas uses a **document strip** (`SheetCanvasDocumentStrip`) above the scroll surface:
+  - Shows `EventSheetResource` kind tag
+  - Shows current document title + dirty dot + resource path hint
+  - Uses a 1px bottom border like editor tab/resource strips
 - Document framing is sectioned into explicit shells:
   - `SheetSectionGlobals` for global variables
   - `SheetSectionEvents` for event/group rows

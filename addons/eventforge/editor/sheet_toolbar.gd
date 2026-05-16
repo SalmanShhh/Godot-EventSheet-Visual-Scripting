@@ -41,6 +41,7 @@ var _compile_btn: Button = null
 var _save_btn: Button = null
 var _save_as_btn: Button = null
 var _doc_meta_label: Label = null
+var _sheet_path_label: Label = null
 var _selection_meta_label: Label = null
 var _sheet_name_label: Label = null
 var _dirty_indicator: Label = null
@@ -102,6 +103,16 @@ func _build_ui() -> void:
 	var meta_sep: VSeparator = VSeparator.new()
 	meta_sep.add_theme_color_override("color", Color(0.22, 0.26, 0.36, 0.60))
 	top_line.add_child(meta_sep)
+
+	_sheet_path_label = Label.new()
+	_sheet_path_label.text = ""
+	_sheet_path_label.add_theme_color_override("font_color", Color(0.48, 0.56, 0.70))
+	_sheet_path_label.add_theme_font_size_override("font_size", 9)
+	top_line.add_child(_sheet_path_label)
+
+	var path_sep: VSeparator = VSeparator.new()
+	path_sep.add_theme_color_override("color", Color(0.22, 0.26, 0.36, 0.60))
+	top_line.add_child(path_sep)
 
 	_selection_meta_label = Label.new()
 	_selection_meta_label.text = "No selection"
@@ -194,6 +205,13 @@ static func _format_sheet_name(sheet: EventSheetResource) -> String:
 		return "Untitled Sheet"
 	return sheet.resource_path.get_file().get_basename()
 
+static func format_document_path(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return "No path"
+	if sheet.resource_path.is_empty():
+		return "Unsaved (in-memory)"
+	return sheet.resource_path
+
 static func format_selection_meta(selection_kind: String) -> String:
 	match selection_kind:
 		"event":
@@ -241,3 +259,5 @@ func set_context(sheet: EventSheetResource, selection_kind: String = "none") -> 
 		_selection_meta_label.text = format_selection_meta(selection_kind)
 	if _sheet_name_label != null:
 		_sheet_name_label.text = _format_sheet_name(sheet)
+	if _sheet_path_label != null:
+		_sheet_path_label.text = format_document_path(sheet)

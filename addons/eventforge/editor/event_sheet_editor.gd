@@ -67,6 +67,9 @@ var _selected_group: Variant = null     # GroupRowUI
 var _scroll: ScrollContainer = null
 var _canvas_vbox: VBoxContainer = null
 var _sheet_canvas_shell: PanelContainer = null
+var _canvas_doc_title_label: Label = null
+var _canvas_doc_path_label: Label = null
+var _canvas_doc_dirty_label: Label = null
 var _inspector_panel: PanelContainer = null
 var _inspector_vbox: VBoxContainer = null
 var _sheet_toolbar: SheetToolbar = null
@@ -283,25 +286,96 @@ func _build_layout() -> void:
 
 	# ── Left: canvas scroll ───────────────────────────────────────────────────
 	_sheet_canvas_shell = PanelContainer.new()
+	_sheet_canvas_shell.name = "SheetCanvasShell"
 	_sheet_canvas_shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_sheet_canvas_shell.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var canvas_style: StyleBoxFlat = StyleBoxFlat.new()
 	canvas_style.bg_color = CANVAS_BG
 	canvas_style.border_color = CANVAS_BORDER
 	canvas_style.set_border_width_all(1)
-	canvas_style.set_corner_radius_all(8)
-	canvas_style.set_content_margin(SIDE_LEFT, 12)
-	canvas_style.set_content_margin(SIDE_RIGHT, 12)
-	canvas_style.set_content_margin(SIDE_TOP, 12)
-	canvas_style.set_content_margin(SIDE_BOTTOM, 12)
+	canvas_style.set_corner_radius_all(0)
+	canvas_style.set_content_margin_all(0)
 	_sheet_canvas_shell.add_theme_stylebox_override("panel", canvas_style)
 	hbox.add_child(_sheet_canvas_shell)
+
+	var canvas_shell_vbox: VBoxContainer = VBoxContainer.new()
+	canvas_shell_vbox.add_theme_constant_override("separation", 0)
+	canvas_shell_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	canvas_shell_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_sheet_canvas_shell.add_child(canvas_shell_vbox)
+
+	var canvas_doc_strip: PanelContainer = PanelContainer.new()
+	canvas_doc_strip.name = "SheetCanvasDocumentStrip"
+	canvas_doc_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var strip_style: StyleBoxFlat = StyleBoxFlat.new()
+	strip_style.bg_color = Color(0.074, 0.084, 0.111, 1.0)
+	strip_style.border_color = Color(0.152, 0.178, 0.230, 1.0)
+	strip_style.set_border_width_all(0)
+	strip_style.border_width_bottom = 1
+	strip_style.set_content_margin(SIDE_LEFT, 10)
+	strip_style.set_content_margin(SIDE_RIGHT, 10)
+	strip_style.set_content_margin(SIDE_TOP, 4)
+	strip_style.set_content_margin(SIDE_BOTTOM, 4)
+	canvas_doc_strip.add_theme_stylebox_override("panel", strip_style)
+	canvas_shell_vbox.add_child(canvas_doc_strip)
+
+	var strip_row: HBoxContainer = HBoxContainer.new()
+	strip_row.add_theme_constant_override("separation", 7)
+	strip_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	canvas_doc_strip.add_child(strip_row)
+
+	var strip_kind: Label = Label.new()
+	strip_kind.text = "EventSheetResource"
+	strip_kind.add_theme_color_override("font_color", Color(0.62, 0.80, 1.0))
+	strip_kind.add_theme_font_size_override("font_size", 9)
+	strip_row.add_child(strip_kind)
+
+	var strip_sep: VSeparator = VSeparator.new()
+	strip_sep.add_theme_color_override("color", Color(0.24, 0.28, 0.36, 0.60))
+	strip_row.add_child(strip_sep)
+
+	_canvas_doc_title_label = Label.new()
+	_canvas_doc_title_label.text = "No Sheet Loaded"
+	_canvas_doc_title_label.add_theme_color_override("font_color", Color(0.86, 0.93, 1.0))
+	_canvas_doc_title_label.add_theme_font_size_override("font_size", 11)
+	strip_row.add_child(_canvas_doc_title_label)
+
+	_canvas_doc_dirty_label = Label.new()
+	_canvas_doc_dirty_label.text = "●"
+	_canvas_doc_dirty_label.add_theme_color_override("font_color", Color(0.95, 0.72, 0.30))
+	_canvas_doc_dirty_label.add_theme_font_size_override("font_size", 9)
+	_canvas_doc_dirty_label.tooltip_text = "Unsaved changes"
+	_canvas_doc_dirty_label.visible = false
+	strip_row.add_child(_canvas_doc_dirty_label)
+
+	var path_sep: VSeparator = VSeparator.new()
+	path_sep.add_theme_color_override("color", Color(0.24, 0.28, 0.36, 0.60))
+	strip_row.add_child(path_sep)
+
+	_canvas_doc_path_label = Label.new()
+	_canvas_doc_path_label.text = "Open or create a sheet to begin"
+	_canvas_doc_path_label.add_theme_color_override("font_color", Color(0.52, 0.62, 0.78))
+	_canvas_doc_path_label.add_theme_font_size_override("font_size", 9)
+	strip_row.add_child(_canvas_doc_path_label)
+
+	var strip_spacer: Control = Control.new()
+	strip_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	strip_row.add_child(strip_spacer)
+
+	var canvas_margin: MarginContainer = MarginContainer.new()
+	canvas_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	canvas_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	canvas_margin.add_theme_constant_override("margin_left", 10)
+	canvas_margin.add_theme_constant_override("margin_right", 10)
+	canvas_margin.add_theme_constant_override("margin_top", 10)
+	canvas_margin.add_theme_constant_override("margin_bottom", 10)
+	canvas_shell_vbox.add_child(canvas_margin)
 
 	_scroll = ScrollContainer.new()
 	_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_sheet_canvas_shell.add_child(_scroll)
+	canvas_margin.add_child(_scroll)
 
 	_canvas_vbox = VBoxContainer.new()
 	_canvas_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -551,12 +625,35 @@ func _refresh_toolbar_state() -> void:
 		return
 	_sheet_toolbar.set_sheet_loaded(current_sheet != null)
 	_sheet_toolbar.set_dirty(_is_dirty)
+	_refresh_canvas_document_strip_context()
 	_refresh_workspace_context()
 
 func _refresh_workspace_context() -> void:
 	if _sheet_toolbar == null:
 		return
 	_sheet_toolbar.set_context(current_sheet, _selected_entry_kind)
+
+func _refresh_canvas_document_strip_context() -> void:
+	if _canvas_doc_title_label != null:
+		_canvas_doc_title_label.text = _format_document_title(current_sheet)
+	if _canvas_doc_path_label != null:
+		_canvas_doc_path_label.text = _format_document_path_hint(current_sheet)
+	if _canvas_doc_dirty_label != null:
+		_canvas_doc_dirty_label.visible = _is_dirty and current_sheet != null
+
+static func _format_document_title(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return "No Sheet Loaded"
+	if sheet.resource_path.is_empty():
+		return "Untitled Sheet"
+	return sheet.resource_path.get_file().get_basename()
+
+static func _format_document_path_hint(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return "Open or create a sheet to begin"
+	if sheet.resource_path.is_empty():
+		return "Unsaved (in-memory)"
+	return sheet.resource_path
 
 ## Marks the current sheet as having unsaved changes.
 func _mark_dirty() -> void:
@@ -565,12 +662,14 @@ func _mark_dirty() -> void:
 	_is_dirty = true
 	if _sheet_toolbar != null:
 		_sheet_toolbar.set_dirty(true)
+	_refresh_canvas_document_strip_context()
 
 ## Clears the unsaved-changes flag and updates the toolbar indicator.
 func _clear_dirty() -> void:
 	_is_dirty = false
 	if _sheet_toolbar != null:
 		_sheet_toolbar.set_dirty(false)
+	_refresh_canvas_document_strip_context()
 
 ## Updates the workspace status bar text.
 func _set_status(text: String, is_error: bool = false) -> void:
@@ -1518,12 +1617,7 @@ func _add_document_header() -> void:
 	shell.add_child(line)
 
 	var title: Label = Label.new()
-	if current_sheet != null and not current_sheet.resource_path.is_empty():
-		title.text = current_sheet.resource_path.get_file().get_basename()
-	elif current_sheet != null:
-		title.text = "Untitled Sheet"
-	else:
-		title.text = "No Sheet Loaded"
+	title.text = _format_document_title(current_sheet)
 	title.add_theme_color_override("font_color", Color(0.88, 0.94, 1.0))
 	title.add_theme_font_size_override("font_size", 13)
 	line.add_child(title)
@@ -1542,12 +1636,7 @@ func _add_document_header() -> void:
 	line.add_child(subtitle)
 
 	var path_hint: Label = Label.new()
-	if current_sheet != null and not current_sheet.resource_path.is_empty():
-		path_hint.text = current_sheet.resource_path
-	elif current_sheet != null:
-		path_hint.text = "Unsaved in-memory sheet"
-	else:
-		path_hint.text = "Open or create a sheet to begin"
+	path_hint.text = _format_document_path_hint(current_sheet)
 	path_hint.add_theme_color_override("font_color", Color(0.42, 0.52, 0.68))
 	path_hint.add_theme_font_size_override("font_size", 9)
 	shell.add_child(path_hint)

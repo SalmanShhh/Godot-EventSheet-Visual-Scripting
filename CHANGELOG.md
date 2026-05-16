@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Workspace document framing improvements (issue #59 – slice 3)
+- **Toolbar resource-path context**: Added a dedicated path hint label in the toolbar
+  top row so the currently opened EventSheet resource path is always visible.
+- **Canvas document strip**: Added `SheetCanvasDocumentStrip` at the top of the main
+  canvas surface to provide document-like framing in the editor body:
+  - `EventSheetResource` kind tag
+  - active document title
+  - dirty indicator dot
+  - full resource path / unsaved hint
+- **Central surface composition**: Updated the main canvas shell from rounded utility
+  card framing to a flatter document surface with a top strip + content body margin,
+  making it feel more like a dedicated workspace document.
+- **Tests/docs**: Added test coverage for toolbar path formatting and new document-strip
+  presence, and updated the editor UI spec with path/document-strip behavior.
+
 ### Workspace shell improvements (issue #59 – slice 2)
 - **Toolbar flush at top**: Removed the 8px outer margin that wrapped the toolbar.
   The toolbar now spans the full workspace width with zero margin above or beside it,
