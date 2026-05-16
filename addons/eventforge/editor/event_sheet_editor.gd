@@ -22,6 +22,7 @@ const EVENT_PICKER_GROUPS: PackedStringArray = [
 ]
 const ACE_PARAMS_DIALOG_SIZE: Vector2i = Vector2i(460, 320)
 const NO_VARIABLES_AVAILABLE_TEXT: String = "No variables available"
+const NO_VARIABLES_AVAILABLE_HINT_TEXT: String = "No variables are available. Add a variable before applying this ACE."
 
 ## Currently selected entry kind.
 ## One of: "none", "event", "condition", "action", "variable", "group"
@@ -519,7 +520,8 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 	_ace_params_fields.clear()
 
 	for child: Node in _ace_params_form.get_children():
-		child.free()
+		_ace_params_form.remove_child(child)
+		child.queue_free()
 
 	_ace_params_dialog.title = "%s Parameters" % descriptor.get_list_name()
 	_ace_params_hint_base_text = descriptor.description if not descriptor.description.is_empty() else descriptor.get_display_text()
@@ -710,7 +712,7 @@ func _refresh_ace_params_dialog_confirm_state() -> void:
 	if ok_button != null:
 		ok_button.disabled = has_invalid_variable_selection
 	if has_invalid_variable_selection:
-		_ace_params_hint.text = "%s\n%s" % [_ace_params_hint_base_text, "No variables are available. Add a variable before applying this ACE."]
+		_ace_params_hint.text = "%s\n%s" % [_ace_params_hint_base_text, NO_VARIABLES_AVAILABLE_HINT_TEXT]
 	else:
 		_ace_params_hint.text = _ace_params_hint_base_text
 
