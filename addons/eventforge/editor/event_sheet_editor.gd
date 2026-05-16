@@ -20,9 +20,10 @@ const EVENT_PICKER_GROUPS: PackedStringArray = [
 	"Signals / Scene / Input",
 	"Custom ACEs"
 ]
-const ACE_PARAMS_DIALOG_SIZE: Vector2i = Vector2i(460, 320)
+const ACE_PARAMS_DIALOG_SIZE: Vector2i = Vector2i(400, 280)
 const NO_VARIABLES_AVAILABLE_TEXT: String = "No variables available"
 const NO_VARIABLES_AVAILABLE_HINT_TEXT: String = "No variables are available. Add a variable before applying this ACE."
+const ACE_PARAMS_LABEL_WIDTH: float = 110.0
 
 ## Currently selected entry kind.
 ## One of: "none", "event", "condition", "action", "variable", "group"
@@ -434,13 +435,16 @@ func _build_ace_params_dialog_popup() -> void:
 	body.add_child(_ace_params_hint)
 
 	var form_scroll: ScrollContainer = ScrollContainer.new()
+	form_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	form_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	form_scroll.custom_minimum_size = Vector2(0, 180)
+	form_scroll.custom_minimum_size = Vector2(0, 120)
 	form_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	form_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	body.add_child(form_scroll)
 
 	_ace_params_form = VBoxContainer.new()
 	_ace_params_form.add_theme_constant_override("separation", 4)
+	_ace_params_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	form_scroll.add_child(_ace_params_form)
 
 ## Called after an ACE is picked. Skips the parameter dialog when the descriptor
@@ -541,16 +545,25 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 				continue
 			var row_box: VBoxContainer = VBoxContainer.new()
 			row_box.add_theme_constant_override("separation", 2)
+			row_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+			var form_row: HBoxContainer = HBoxContainer.new()
+			form_row.add_theme_constant_override("separation", 8)
+			form_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			var label: Label = Label.new()
 			label.text = param.get_param_name()
-			row_box.add_child(label)
+			label.custom_minimum_size = Vector2(ACE_PARAMS_LABEL_WIDTH, 0)
+			label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			form_row.add_child(label)
 
 			var input: Control = _create_ace_param_input(param, _ace_params_existing_values.get(key, param.get_initial_value()))
-			row_box.add_child(input)
+			input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			form_row.add_child(input)
 			_ace_params_fields[key] = {
 				"param": param,
 				"input": input
 			}
+			row_box.add_child(form_row)
 
 			var desc: String = param.get_param_description()
 			if not desc.is_empty():
@@ -1195,6 +1208,11 @@ func _add_event_row(event_row: EventRow, indent_level: int = 0) -> void:
 	row_ui.add_condition_requested.connect(_on_row_add_condition_requested)
 	row_ui.add_action_requested.connect(_on_row_add_action_requested)
 	_add_canvas_row(row_ui, indent_level)
+
+	for sub_resource: Variant in event_row.sub_events:
+		if sub_resource == event_row:
+			continue
+		_add_event_resource(sub_resource, indent_level + 1)
 
 func _add_group_row(event_group: EventGroup, indent_level: int = 0) -> void:
 	var row_ui: GroupRowUI = GroupRowUI.new()
