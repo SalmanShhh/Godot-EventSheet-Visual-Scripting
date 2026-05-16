@@ -38,6 +38,7 @@ const CONDITION_MENU_EDIT: int = 1
 const CONDITION_MENU_ADD_ANOTHER: int = 2
 const CONDITION_MENU_REPLACE: int = 3
 const CONDITION_MENU_INVERT: int = 4
+const ACTIONS_LANE_STRETCH_RATIO: float = 1.4
 
 func _init() -> void:
 	_build_ui()
@@ -48,10 +49,10 @@ func _build_ui() -> void:
 	style.bg_color = Color(0.13, 0.15, 0.20, 1.0)
 	style.border_color = Color(0.35, 0.45, 0.65, 1.0)
 	style.set_border_width_all(0)
-	style.border_width_left = 3
-	style.border_width_top = 1
-	style.border_width_right = 1
-	style.border_width_bottom = 1
+	style.set_border_width(SIDE_LEFT, 3)
+	style.set_border_width(SIDE_TOP, 1)
+	style.set_border_width(SIDE_RIGHT, 1)
+	style.set_border_width(SIDE_BOTTOM, 1)
 	style.set_corner_radius_all(4)
 	style.set_content_margin_all(0)
 	add_theme_stylebox_override("panel", style)
@@ -138,7 +139,8 @@ func _build_ui() -> void:
 	# Actions lane
 	var actions_lane: PanelContainer = PanelContainer.new()
 	actions_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	actions_lane.size_flags_stretch_ratio = 1.4
+	# Actions summaries are usually longer than conditions; give the right lane ~40% more width.
+	actions_lane.size_flags_stretch_ratio = ACTIONS_LANE_STRETCH_RATIO
 	var actions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
 	actions_lane_style.bg_color = Color(0.10, 0.12, 0.18, 0.95)
 	actions_lane_style.set_border_width_all(0)

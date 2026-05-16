@@ -132,6 +132,11 @@ static func run() -> bool:
 	editor.refresh_canvas()
 	all_passed = _check("sub events render nested rows", _count_event_row_nodes(editor), 2) and all_passed
 
+	# Cycle safety: child referencing parent should still render each row once.
+	child_row.sub_events.append(parent_row)
+	editor.refresh_canvas()
+	all_passed = _check("sub events cycle guard prevents duplicate rendering", _count_event_row_nodes(editor), 2) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
