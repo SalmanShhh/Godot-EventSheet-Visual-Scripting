@@ -75,7 +75,7 @@ const ACE_PICKER_NODE_TYPE_GROUP_COLOR: Color = Color(0.92, 0.72, 0.38)
 const SHORTCUT_BLOCKING_FOCUS_TYPES: Array[String] = ["LineEdit", "TextEdit", "SpinBox"]
 
 ## Currently selected entry kind.
-## One of: "none", "event", "condition", "action", "variable", "group"
+## One of: "none", "event", "condition", "action", "variable", "group", "comment"
 var _selected_entry_kind: String = "none"
 var _selected_row: Variant = null       # EventRowUI / VariableRowUI / GroupRowUI
 var _selected_index: int = -1           # condition or action index within event
@@ -261,6 +261,12 @@ func _delete_current_selection() -> bool:
 				return false
 			var group_row: GroupRowUI = _selected_row as GroupRowUI
 			_on_group_delete_requested(group_row)
+			return true
+		"comment":
+			if not (_selected_row is CommentRowUI):
+				return false
+			var comment_row: CommentRowUI = _selected_row as CommentRowUI
+			_on_comment_delete_requested(comment_row)
 			return true
 		_:
 			return false
@@ -636,6 +642,18 @@ func _on_add_event_requested() -> void:
 	if current_sheet == null:
 		return
 	_open_add_event_picker()
+
+func _on_add_comment_requested() -> void:
+	_ensure_sheet()
+	if current_sheet == null:
+		return
+	var new_comment: CommentRow = CommentRow.new()
+	new_comment.text = "Comment"
+	current_sheet.events.append(new_comment)
+	refresh_canvas()
+	_focus_comment_row(new_comment)
+	_mark_dirty()
+	_set_status("Added comment row")
 
 func _on_compile_requested() -> void:
 	if current_sheet == null:
@@ -1884,6 +1902,13 @@ func _focus_group_by_uid(group_uid: String) -> void:
 	if row_ui != null:
 		_on_group_selected(row_ui)
 
+func _focus_comment_row(comment_row: CommentRow) -> void:
+	if comment_row == null:
+		return
+	var row_ui: CommentRowUI = _find_comment_row_ui_by_resource(_canvas_vbox, comment_row)
+	if row_ui != null:
+		_on_comment_selected(row_ui)
+
 func _find_event_row_ui_by_uid(node: Node, event_uid: String) -> EventRowUI:
 	if node is EventRowUI:
 		var row_ui: EventRowUI = node as EventRowUI
@@ -1913,6 +1938,17 @@ func _find_group_row_ui_by_uid(node: Node, group_uid: String) -> GroupRowUI:
 			return row_ui
 	for child: Node in node.get_children():
 		var nested: GroupRowUI = _find_group_row_ui_by_uid(child, group_uid)
+		if nested != null:
+			return nested
+	return null
+
+func _find_comment_row_ui_by_resource(node: Node, comment_row: CommentRow) -> CommentRowUI:
+	if node is CommentRowUI:
+		var row_ui: CommentRowUI = node as CommentRowUI
+		if row_ui.comment_row == comment_row:
+			return row_ui
+	for child: Node in node.get_children():
+		var nested: CommentRowUI = _find_comment_row_ui_by_resource(child, comment_row)
 		if nested != null:
 			return nested
 	return null
@@ -2083,7 +2119,7 @@ func _add_events_section() -> void:
 func _make_add_event_anchor_row() -> Control:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 0)
+	row.add_theme_constant_override("separation", 4)
 
 	var add_btn: Button = Button.new()
 	add_btn.text = "Add Event"
@@ -2113,6 +2149,27 @@ func _make_add_event_anchor_row() -> Control:
 	add_btn.add_theme_stylebox_override("focus", btn_hover)
 	add_btn.connect("pressed", Callable(self, "_on_add_event_requested"))
 	row.add_child(add_btn)
+
+	var add_comment_btn: Button = Button.new()
+	add_comment_btn.text = "Add Comment"
+	add_comment_btn.flat = true
+	add_comment_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	add_comment_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	add_comment_btn.tooltip_text = "Add inline comment row"
+	add_comment_btn.add_theme_color_override("font_color", Color(0.90, 0.82, 0.62))
+	add_comment_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.93, 0.76))
+	add_comment_btn.add_theme_font_size_override("font_size", 11)
+	var comment_btn_style: StyleBoxFlat = btn_style.duplicate()
+	comment_btn_style.bg_color = Color(0.174, 0.142, 0.090, 1.0)
+	comment_btn_style.border_color = Color(0.426, 0.332, 0.186, 1.0)
+	add_comment_btn.add_theme_stylebox_override("normal", comment_btn_style)
+	var comment_btn_hover: StyleBoxFlat = comment_btn_style.duplicate()
+	comment_btn_hover.bg_color = Color(0.205, 0.168, 0.108, 1.0)
+	add_comment_btn.add_theme_stylebox_override("hover", comment_btn_hover)
+	add_comment_btn.add_theme_stylebox_override("pressed", comment_btn_hover)
+	add_comment_btn.add_theme_stylebox_override("focus", comment_btn_hover)
+	add_comment_btn.connect("pressed", Callable(self, "_on_add_comment_requested"))
+	row.add_child(add_comment_btn)
 	return row
 
 func _add_event_resource(resource: Variant, indent_level: int, render_guard: Dictionary = {}) -> void:
@@ -2120,6 +2177,8 @@ func _add_event_resource(resource: Variant, indent_level: int, render_guard: Dic
 		_add_event_row(resource as EventRow, indent_level, render_guard)
 	elif resource is EventGroup:
 		_add_group_row(resource as EventGroup, indent_level, render_guard)
+	elif resource is CommentRow:
+		_add_comment_row(resource as CommentRow, indent_level, render_guard)
 
 func _add_event_row(event_row: EventRow, indent_level: int = 0, render_guard: Dictionary = {}) -> void:
 	var row_key: String = _make_render_guard_key("event", event_row.event_uid, event_row.get_instance_id())
@@ -2170,6 +2229,20 @@ func _add_group_row(event_group: EventGroup, indent_level: int = 0, render_guard
 	var child_rows: Array = event_group.events if not event_group.events.is_empty() else event_group.rows
 	for child: Variant in child_rows:
 		_add_event_resource(child, indent_level + 1, render_guard)
+
+func _add_comment_row(comment_row: CommentRow, indent_level: int = 0, render_guard: Dictionary = {}) -> void:
+	var comment_key: String = _make_render_guard_key("comment", "", comment_row.get_instance_id())
+	if render_guard.has(comment_key):
+		return
+	render_guard[comment_key] = true
+	var row_ui: CommentRowUI = CommentRowUI.new()
+	row_ui.comment_row = comment_row
+	row_ui.refresh()
+	row_ui.comment_selected.connect(_on_comment_selected)
+	row_ui.comment_delete_requested.connect(_on_comment_delete_requested)
+	row_ui.insert_comment_above_requested.connect(_on_comment_insert_above_requested)
+	row_ui.insert_comment_below_requested.connect(_on_comment_insert_below_requested)
+	_add_canvas_row(row_ui, indent_level)
 
 func _make_render_guard_key(prefix: String, stable_uid: String, fallback_instance_id: int) -> String:
 	if not stable_uid.is_empty():
@@ -2241,6 +2314,9 @@ func _refresh_row_selection_states_recursive(node: Node) -> void:
 	elif node is GroupRowUI:
 		var group_row_ui: GroupRowUI = node as GroupRowUI
 		group_row_ui.set_selected(_selected_row == group_row_ui)
+	elif node is CommentRowUI:
+		var comment_row_ui: CommentRowUI = node as CommentRowUI
+		comment_row_ui.set_selected(_selected_row == comment_row_ui)
 	for child: Node in node.get_children():
 		_refresh_row_selection_states_recursive(child)
 
@@ -2480,6 +2556,61 @@ func _insert_event_relative_in_array(arr: Array, target_uid: String, target_kind
 				return true
 	return false
 
+func _insert_new_comment_relative(target_resource: Resource, insert_after: bool) -> void:
+	if current_sheet == null:
+		_set_status("No sheet loaded for insertion", true)
+		return
+	if target_resource == null:
+		_set_status("Cannot insert relative to an empty target row", true)
+		return
+	var new_comment: CommentRow = CommentRow.new()
+	new_comment.text = "Comment"
+	if not _insert_resource_relative_in_array(current_sheet.events, target_resource, insert_after, new_comment):
+		_set_status("Could not locate target row for insertion", true)
+		return
+	refresh_canvas()
+	_focus_comment_row(new_comment)
+	_mark_dirty()
+	var direction: String = "below" if insert_after else "above"
+	_set_status("Inserted comment %s" % direction)
+
+func _insert_resource_relative_in_array(arr: Array, target_resource: Resource, insert_after: bool, new_resource: Resource) -> bool:
+	for i: int in range(arr.size()):
+		var resource: Variant = arr[i]
+		if resource == target_resource:
+			var insert_index: int = i + (1 if insert_after else 0)
+			arr.insert(insert_index, new_resource)
+			return true
+		if resource is EventRow:
+			var nested_event: EventRow = resource as EventRow
+			if _insert_resource_relative_in_array(nested_event.sub_events, target_resource, insert_after, new_resource):
+				return true
+		elif resource is EventGroup:
+			var nested_group: EventGroup = resource as EventGroup
+			if _insert_resource_relative_in_array(nested_group.events, target_resource, insert_after, new_resource):
+				return true
+			if _insert_resource_relative_in_array(nested_group.rows, target_resource, insert_after, new_resource):
+				return true
+	return false
+
+func _remove_resource_from_rows(arr: Array, target_resource: Resource) -> bool:
+	for i: int in range(arr.size()):
+		var resource: Variant = arr[i]
+		if resource == target_resource:
+			arr.remove_at(i)
+			return true
+		if resource is EventRow:
+			var event_row: EventRow = resource as EventRow
+			if _remove_resource_from_rows(event_row.sub_events, target_resource):
+				return true
+		elif resource is EventGroup:
+			var event_group: EventGroup = resource as EventGroup
+			if _remove_resource_from_rows(event_group.events, target_resource):
+				return true
+			if _remove_resource_from_rows(event_group.rows, target_resource):
+				return true
+	return false
+
 func _remove_sub_event_by_uid(parent: EventRow, uid: String) -> bool:
 	for i: int in range(parent.sub_events.size()):
 		var resource: Variant = parent.sub_events[i]
@@ -2511,6 +2642,16 @@ func _on_group_selected(row: GroupRowUI) -> void:
 	_refresh_row_selection_states()
 	_refresh_workspace_context()
 	_rebuild_inspector_group(row)
+
+func _on_comment_selected(row: CommentRowUI) -> void:
+	_selected_entry_kind = "comment"
+	_selected_row = row
+	_selected_index = -1
+	_selected_group = null
+	_selected_variable_name = ""
+	_refresh_row_selection_states()
+	_refresh_workspace_context()
+	_rebuild_inspector_comment(row)
 
 func _on_group_collapsed_toggled(row: GroupRowUI, _collapsed: bool) -> void:
 	if row == null or row.event_group == null:
@@ -2563,6 +2704,30 @@ func _on_group_delete_requested(row: GroupRowUI) -> void:
 		return
 	var uid: String = row.event_group.group_uid
 	_delete_group_by_uid(uid)
+
+func _on_comment_delete_requested(row: CommentRowUI) -> void:
+	if row == null or row.comment_row == null or current_sheet == null:
+		return
+	var was_selected: bool = (_selected_entry_kind == "comment" and _selected_row == row)
+	if _remove_resource_from_rows(current_sheet.events, row.comment_row):
+		if was_selected:
+			_reset_selection_state()
+		refresh_canvas()
+		if was_selected:
+			_show_empty_inspector()
+		_refresh_workspace_context()
+		_mark_dirty()
+		_set_status("Comment deleted")
+
+func _on_comment_insert_above_requested(row: CommentRowUI) -> void:
+	if row == null or row.comment_row == null:
+		return
+	_insert_new_comment_relative(row.comment_row, false)
+
+func _on_comment_insert_below_requested(row: CommentRowUI) -> void:
+	if row == null or row.comment_row == null:
+		return
+	_insert_new_comment_relative(row.comment_row, true)
 
 func _delete_group_by_uid(uid: String) -> void:
 	if current_sheet == null or uid.is_empty():
@@ -2689,7 +2854,7 @@ func _show_empty_inspector() -> void:
 	if current_sheet == null:
 		hint.text = "Create or open an event sheet to start editing."
 	else:
-		hint.text = "Select an event, condition, action, variable, or group to edit it."
+		hint.text = "Select an event, condition, action, variable, group, or comment row to edit it."
 	hint.add_theme_color_override("font_color", Color(0.56, 0.63, 0.75))
 	hint.add_theme_font_size_override("font_size", 10)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -2709,6 +2874,10 @@ func _refresh_inspector_for_current_selection() -> void:
 		"group":
 			if _selected_row is GroupRowUI:
 				_rebuild_inspector_group(_selected_row as GroupRowUI)
+				return
+		"comment":
+			if _selected_row is CommentRowUI:
+				_rebuild_inspector_comment(_selected_row as CommentRowUI)
 				return
 	_show_empty_inspector()
 
@@ -2849,5 +3018,43 @@ func _rebuild_inspector_group(row: GroupRowUI) -> void:
 	planned_note.add_theme_color_override("font_color", Color(0.50, 0.45, 0.60))
 	planned_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	card_vbox.add_child(planned_note)
+
+	_inspector_vbox.add_child(card)
+
+func _rebuild_inspector_comment(row: CommentRowUI) -> void:
+	_clear_inspector()
+	if row == null or row.comment_row == null:
+		_show_empty_inspector()
+		return
+
+	var card: PanelContainer = _make_inspector_card(Color(0.412, 0.338, 0.175, 1.0))
+	var card_vbox: VBoxContainer = VBoxContainer.new()
+	card_vbox.add_theme_constant_override("separation", 4)
+	card.add_child(card_vbox)
+
+	var heading: Label = Label.new()
+	heading.text = "Comment"
+	heading.add_theme_color_override("font_color", Color(1.0, 0.90, 0.60))
+	heading.add_theme_font_size_override("font_size", 12)
+	card_vbox.add_child(heading)
+
+	var heading_sep: HSeparator = HSeparator.new()
+	heading_sep.add_theme_color_override("color", Color(0.412, 0.338, 0.175, 0.80))
+	card_vbox.add_child(heading_sep)
+
+	var summary: Label = Label.new()
+	var text: String = row.comment_row.text.strip_edges()
+	summary.text = text if not text.is_empty() else "(empty comment)"
+	summary.add_theme_color_override("font_color", Color(0.90, 0.84, 0.74))
+	summary.add_theme_font_size_override("font_size", 10)
+	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	card_vbox.add_child(summary)
+
+	var note: Label = Label.new()
+	note.text = "Comment rows annotate authoring flow and are skipped by compilation."
+	note.add_theme_color_override("font_color", Color(0.52, 0.47, 0.38))
+	note.add_theme_font_size_override("font_size", 10)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	card_vbox.add_child(note)
 
 	_inspector_vbox.add_child(card)

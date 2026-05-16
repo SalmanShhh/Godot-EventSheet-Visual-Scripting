@@ -18,6 +18,7 @@ static func run() -> bool:
 	all_passed = _check("toolbar meta no sheet", SheetToolbar.format_document_meta(null), "No sheet loaded") and all_passed
 	all_passed = _check("toolbar selection none", SheetToolbar.format_selection_meta("none"), "No selection") and all_passed
 	all_passed = _check("toolbar selection event", SheetToolbar.format_selection_meta("event"), "Selection: Event") and all_passed
+	all_passed = _check("toolbar selection comment", SheetToolbar.format_selection_meta("comment"), "Selection: Comment") and all_passed
 	var toolbar_ui: SheetToolbar = SheetToolbar.new()
 	all_passed = _check("toolbar contains shortcuts hint label", _contains_label_text(toolbar_ui, SheetToolbar.shortcut_hint_text()), true) and all_passed
 	all_passed = _check("toolbar shortcuts hint hidden without sheet", toolbar_ui._shortcuts_hint_label.visible, false) and all_passed
@@ -256,6 +257,38 @@ static func run() -> bool:
 		all_passed = _check("insert below group row adds sibling event in root list", group_insert_sheet.events.size(), 2) and all_passed
 		all_passed = _check("insert below group row inserts event resource", group_insert_sheet.events[1] is EventRow, true) and all_passed
 
+	# Inline comment rows render in-flow and support structural relative insertion.
+	var comment_sheet: EventSheetResource = EventSheetResource.new()
+	var first_comment: CommentRow = CommentRow.new()
+	first_comment.text = "Before spawn"
+	var comment_event: EventRow = EventRow.new()
+	comment_sheet.events.append(first_comment)
+	comment_sheet.events.append(comment_event)
+	editor.current_sheet = comment_sheet
+	editor.refresh_canvas()
+	all_passed = _check("comment rows render inline in events section", _count_comment_row_nodes(editor), 1) and all_passed
+	var comment_row_ui: CommentRowUI = editor._find_comment_row_ui_by_resource(editor._canvas_vbox, first_comment)
+	all_passed = _check("comment row ui exists for comment resource", comment_row_ui != null, true) and all_passed
+	if comment_row_ui != null:
+		all_passed = _check("comment row lane divider present", _has_color_rect_min_width(comment_row_ui, 2), true) and all_passed
+		var comment_insert_above_btn: Button = _find_button_with_tooltip(comment_row_ui, "Insert comment above this row")
+		all_passed = _check("comment row insertion button above visible", comment_insert_above_btn != null, true) and all_passed
+		all_passed = _check("comment row insertion button below visible", _find_button_with_tooltip(comment_row_ui, "Insert comment below this row") != null, true) and all_passed
+		if comment_insert_above_btn != null:
+			all_passed = _check("comment row insertion affordance dimmed at rest", comment_insert_above_btn.modulate.a < 1.0, true) and all_passed
+			comment_row_ui._on_mouse_entered()
+			all_passed = _check("comment row insertion affordance brightens on hover", is_equal_approx(comment_insert_above_btn.modulate.a, 1.0), true) and all_passed
+		editor._on_comment_insert_below_requested(comment_row_ui)
+		all_passed = _check("insert below comment row adds sibling comment", comment_sheet.events.size(), 3) and all_passed
+		all_passed = _check("insert below comment row inserts comment resource", comment_sheet.events[1] is CommentRow, true) and all_passed
+		var inserted_comment: CommentRow = comment_sheet.events[1] as CommentRow
+		var inserted_comment_ui: CommentRowUI = editor._find_comment_row_ui_by_resource(editor._canvas_vbox, inserted_comment)
+		if inserted_comment_ui != null:
+			editor._on_comment_selected(inserted_comment_ui)
+			all_passed = _check("comment selection updates kind", editor._selected_entry_kind, "comment") and all_passed
+			editor._on_comment_delete_requested(inserted_comment_ui)
+			all_passed = _check("delete comment row removes from sheet", comment_sheet.events.size(), 2) and all_passed
+
 	# Workflow: shortcut action dispatch opens add-condition picker for selected event.
 	var shortcut_sheet: EventSheetResource = EventSheetResource.new()
 	var shortcut_event: EventRow = EventRow.new()
@@ -433,8 +466,13 @@ static func run() -> bool:
 	count_group_row.refresh()
 	all_passed = _check("group row shows event count", _contains_label_text(count_group_row, "(2)"), true) and all_passed
 	all_passed = _check("group row lane divider present", _has_color_rect_min_width(count_group_row, 2), true) and all_passed
-	all_passed = _check("group row insertion button above visible", _find_button_with_tooltip(count_group_row, "Insert event above this group") != null, true) and all_passed
+	var group_insert_above_btn: Button = _find_button_with_tooltip(count_group_row, "Insert event above this group")
+	all_passed = _check("group row insertion button above visible", group_insert_above_btn != null, true) and all_passed
 	all_passed = _check("group row insertion button below visible", _find_button_with_tooltip(count_group_row, "Insert event below this group") != null, true) and all_passed
+	if group_insert_above_btn != null:
+		all_passed = _check("group row insertion affordance dimmed at rest", group_insert_above_btn.modulate.a < 1.0, true) and all_passed
+		count_group_row._on_mouse_entered()
+		all_passed = _check("group row insertion affordance brightens on hover", is_equal_approx(group_insert_above_btn.modulate.a, 1.0), true) and all_passed
 
 	var empty_group: EventGroup = EventGroup.new()
 	var empty_group_row: GroupRowUI = GroupRowUI.new()
@@ -465,6 +503,7 @@ static func run() -> bool:
 	all_passed = _check("events empty state is card", events_section != null and _count_panel_containers(events_section) >= 1, true) and all_passed
 	all_passed = _check("events section is unframed host", events_section is PanelContainer, false) and all_passed
 	all_passed = _check("events section has anchored add event button", _find_button_with_text(events_section, "Add Event") != null, true) and all_passed
+	all_passed = _check("events section has anchored add comment button", _find_button_with_text(events_section, "Add Comment") != null, true) and all_passed
 	all_passed = _check("events section no old + Event header action", _find_button_with_text(events_section, "+ Event") == null, true) and all_passed
 
 	# Phase 5: section headers use ColorRect accent rail, not a "●" bullet label.
@@ -839,8 +878,13 @@ static func run() -> bool:
 	all_passed = _check("condition context menu label: replace", _popup_menu_has_item_text(lane_row_3, "Replace Condition"), true) and all_passed
 	all_passed = _check("condition context menu label: invert", _popup_menu_has_item_text(lane_row_3, "Invert"), true) and all_passed
 	all_passed = _check("condition context menu label: delete", _popup_menu_has_item_text(lane_row_3, "Delete Condition"), true) and all_passed
-	all_passed = _check("event row insertion button above visible", _find_button_with_tooltip(lane_row_3, "Insert event above this row") != null, true) and all_passed
+	var lane_insert_above_btn: Button = _find_button_with_tooltip(lane_row_3, "Insert event above this row")
+	all_passed = _check("event row insertion button above visible", lane_insert_above_btn != null, true) and all_passed
 	all_passed = _check("event row insertion button below visible", _find_button_with_tooltip(lane_row_3, "Insert event below this row") != null, true) and all_passed
+	if lane_insert_above_btn != null:
+		all_passed = _check("event row insertion affordance dimmed at rest", lane_insert_above_btn.modulate.a < 1.0, true) and all_passed
+		lane_row_3._on_mouse_entered()
+		all_passed = _check("event row insertion affordance brightens on hover", is_equal_approx(lane_insert_above_btn.modulate.a, 1.0), true) and all_passed
 
 	var depth_row_0: EventRowUI = EventRowUI.new()
 	depth_row_0.event_row = EventRow.new()
@@ -881,6 +925,14 @@ static func _count_event_row_nodes(node: Node) -> int:
 	var total: int = 1 if node is EventRowUI else 0
 	for child: Node in node.get_children():
 		total += _count_event_row_nodes(child)
+	return total
+
+static func _count_comment_row_nodes(node: Node) -> int:
+	if node == null:
+		return 0
+	var total: int = 1 if node is CommentRowUI else 0
+	for child: Node in node.get_children():
+		total += _count_comment_row_nodes(child)
 	return total
 
 static func _contains_label_text(node: Node, expected: String) -> bool:

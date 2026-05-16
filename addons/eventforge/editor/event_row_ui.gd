@@ -47,6 +47,8 @@ var _context_action_index: int = -1
 var _depth: int = 0
 var _selected: bool = false
 var _hovered: bool = false
+var _insert_above_btn: Button = null
+var _insert_below_btn: Button = null
 
 const CONDITION_MENU_EDIT: int = 1
 const CONDITION_MENU_ADD_ANOTHER: int = 2
@@ -263,25 +265,25 @@ func _build_ui() -> void:
 	insert_controls.add_theme_constant_override("separation", 0)
 	line.add_child(insert_controls)
 
-	var insert_above_btn: Button = Button.new()
-	insert_above_btn.text = "+↑"
-	insert_above_btn.flat = true
-	insert_above_btn.tooltip_text = "Insert event above this row"
-	insert_above_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	insert_above_btn.add_theme_color_override("font_color", Color(0.66, 0.77, 0.96))
-	insert_above_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.91, 1.0))
-	insert_above_btn.connect("pressed", _on_insert_above_pressed)
-	insert_controls.add_child(insert_above_btn)
+	_insert_above_btn = Button.new()
+	_insert_above_btn.text = "+↑"
+	_insert_above_btn.flat = true
+	_insert_above_btn.tooltip_text = "Insert event above this row"
+	_insert_above_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_insert_above_btn.add_theme_color_override("font_color", Color(0.66, 0.77, 0.96))
+	_insert_above_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.91, 1.0))
+	_insert_above_btn.connect("pressed", _on_insert_above_pressed)
+	insert_controls.add_child(_insert_above_btn)
 
-	var insert_below_btn: Button = Button.new()
-	insert_below_btn.text = "+↓"
-	insert_below_btn.flat = true
-	insert_below_btn.tooltip_text = "Insert event below this row"
-	insert_below_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	insert_below_btn.add_theme_color_override("font_color", Color(0.66, 0.77, 0.96))
-	insert_below_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.91, 1.0))
-	insert_below_btn.connect("pressed", _on_insert_below_pressed)
-	insert_controls.add_child(insert_below_btn)
+	_insert_below_btn = Button.new()
+	_insert_below_btn.text = "+↓"
+	_insert_below_btn.flat = true
+	_insert_below_btn.tooltip_text = "Insert event below this row"
+	_insert_below_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_insert_below_btn.add_theme_color_override("font_color", Color(0.66, 0.77, 0.96))
+	_insert_below_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.91, 1.0))
+	_insert_below_btn.connect("pressed", _on_insert_below_pressed)
+	insert_controls.add_child(_insert_below_btn)
 
 	var delete_event_btn: Button = Button.new()
 	delete_event_btn.text = "✕"
@@ -297,6 +299,7 @@ func _build_ui() -> void:
 	connect("mouse_entered", _on_mouse_entered)
 	connect("mouse_exited", _on_mouse_exited)
 	connect("gui_input", _on_row_gui_input)
+	_apply_structure_affordance_state()
 
 func set_depth(depth: int) -> void:
 	_depth = max(0, depth)
@@ -305,6 +308,7 @@ func set_depth(depth: int) -> void:
 func set_selected(selected: bool) -> void:
 	_selected = selected
 	_apply_row_style()
+	_apply_structure_affordance_state()
 
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
@@ -560,10 +564,19 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 func _on_mouse_entered() -> void:
 	_hovered = true
 	_apply_row_style()
+	_apply_structure_affordance_state()
 
 func _on_mouse_exited() -> void:
 	_hovered = false
 	_apply_row_style()
+	_apply_structure_affordance_state()
+
+func _apply_structure_affordance_state() -> void:
+	var controls_alpha: float = 1.0 if (_hovered or _selected) else 0.46
+	if _insert_above_btn != null:
+		_insert_above_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
+	if _insert_below_btn != null:
+		_insert_below_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
 
 func _on_row_gui_input(event: InputEvent) -> void:
 	if not (event is InputEventMouseButton):
