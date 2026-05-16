@@ -5,6 +5,7 @@ extends PanelContainer
 class_name VariableRowUI
 
 const EDIT_VARIABLE_TOOLTIP_PREFIX: String = "Edit variable"
+const MAX_NESTING_ACCENT_ADDITION: int = 2
 
 ## Emitted when this variable row is clicked for focused editing.
 signal variable_selected(row: VariableRowUI)
@@ -151,7 +152,7 @@ func _apply_row_style() -> void:
 		style.bg_color = Color(0.103, 0.115, 0.150, 1.0)
 	style.border_color = Color(0.38, 0.58, 0.94, 1.0) if _is_selected else Color(0.129, 0.145, 0.184, 1.0)
 	style.set_border_width_all(1)
-	style.border_width_left = 3 + mini(_nesting_depth, 2)
+	style.border_width_left = 3 + mini(_nesting_depth, MAX_NESTING_ACCENT_ADDITION)
 	style.set_corner_radius_all(6)
 	style.set_content_margin_all(5)
 	style.content_margin_left = 8

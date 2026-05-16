@@ -28,6 +28,8 @@ const ACE_PARAMS_LABEL_WIDTH: float = 110.0
 const ACE_PARAMS_LABEL_MIN_HEIGHT: float = 20.0
 const NESTED_ROW_INDENT_WIDTH: int = 18
 const NESTED_GUTTER_BASE_WIDTH: int = 14
+const NESTED_GUIDE_BASE_COLOR: Color = Color(0.175, 0.220, 0.312, 0.85)
+const NESTED_GUIDE_BRIGHTNESS_INCREMENT: float = 0.035
 
 ## Currently selected entry kind.
 ## One of: "none", "event", "condition", "action", "variable", "group"
@@ -1208,7 +1210,7 @@ func _add_document_header() -> void:
 	row.add_child(spacer)
 
 	var hint: Label = Label.new()
-	hint.text = "Conditions ➜ Actions"
+	hint.text = "Conditions -> Actions"
 	hint.add_theme_color_override("font_color", Color(0.53, 0.60, 0.74))
 	hint.add_theme_font_size_override("font_size", 10)
 	row.add_child(hint)
@@ -1354,15 +1356,21 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 	gutter.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	for i: int in range(indent_level):
-		if i > 0:
-			var spacer: Control = Control.new()
-			spacer.custom_minimum_size = Vector2(8, 0)
-			gutter.add_child(spacer)
 		var guide: ColorRect = ColorRect.new()
-		guide.color = Color(0.175 + (0.01 * float(i)), 0.220, 0.312, 0.85)
+		var brightness_step: float = NESTED_GUIDE_BRIGHTNESS_INCREMENT * float(i)
+		guide.color = Color(
+			minf(1.0, NESTED_GUIDE_BASE_COLOR.r + brightness_step),
+			minf(1.0, NESTED_GUIDE_BASE_COLOR.g + brightness_step),
+			minf(1.0, NESTED_GUIDE_BASE_COLOR.b + (brightness_step * 0.75)),
+			NESTED_GUIDE_BASE_COLOR.a
+		)
 		guide.custom_minimum_size = Vector2(2, 0)
 		guide.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		gutter.add_child(guide)
+		if i < indent_level - 1:
+			var spacer: Control = Control.new()
+			spacer.custom_minimum_size = Vector2(8, 0)
+			gutter.add_child(spacer)
 
 	shell.add_child(gutter)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1379,7 +1387,7 @@ func _apply_selection_state_recursive(node: Node) -> void:
 		return
 	if node is EventRowUI:
 		var event_ui: EventRowUI = node as EventRowUI
-		var selected: bool = (_selected_row == event_ui) and (_selected_entry_kind == "event" or _selected_entry_kind == "condition" or _selected_entry_kind == "action")
+		var selected: bool = (_selected_row == event_ui) and _is_event_related_selection_kind(_selected_entry_kind)
 		event_ui.set_selected(selected)
 	elif node is VariableRowUI:
 		var variable_ui: VariableRowUI = node as VariableRowUI
@@ -1389,6 +1397,9 @@ func _apply_selection_state_recursive(node: Node) -> void:
 		group_ui.set_selected((_selected_row == group_ui) and _selected_entry_kind == "group")
 	for child: Node in node.get_children():
 		_apply_selection_state_recursive(child)
+
+func _is_event_related_selection_kind(kind: String) -> bool:
+	return kind == "event" or kind == "condition" or kind == "action"
 
 # ── Selection handlers ────────────────────────────────────────────────────────
 

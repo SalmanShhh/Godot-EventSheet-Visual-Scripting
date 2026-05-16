@@ -53,6 +53,9 @@ const CONDITION_MENU_DELETE: int = 5
 const ACTION_MENU_EDIT: int = 1
 const ACTION_MENU_DELETE: int = 2
 const ACTIONS_LANE_STRETCH_RATIO: float = 1.4
+const MAX_NESTING_ACCENT_ADDITION: int = 2
+const EVENT_BADGE_TEXT: String = "EVENT"
+const ENTRY_LEFT_BORDER_WIDTH: int = 3
 const SHEET_BG: Color = Color(0.090, 0.100, 0.132, 1.0)
 const SHEET_BG_HOVER: Color = Color(0.108, 0.121, 0.158, 1.0)
 const SHEET_BG_SELECTED: Color = Color(0.124, 0.143, 0.191, 1.0)
@@ -134,7 +137,7 @@ func _build_ui() -> void:
 	meta_panel.add_child(meta_hbox)
 
 	var event_badge: Label = Label.new()
-	event_badge.text = "EVENT"
+	event_badge.text = EVENT_BADGE_TEXT
 	event_badge.add_theme_color_override("font_color", Color(0.60, 0.79, 1.0))
 	event_badge.add_theme_font_size_override("font_size", 9)
 	meta_hbox.add_child(event_badge)
@@ -483,7 +486,7 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	normal_style.bg_color = base_bg
 	normal_style.border_color = accent
 	normal_style.set_border_width_all(0)
-	normal_style.set_border_width(SIDE_LEFT, 3)
+	normal_style.set_border_width(SIDE_LEFT, ENTRY_LEFT_BORDER_WIDTH)
 	normal_style.set_corner_radius_all(5)
 	normal_style.set_content_margin(SIDE_LEFT, 8)
 	normal_style.set_content_margin(SIDE_RIGHT, 6)
@@ -584,7 +587,7 @@ func _apply_row_style() -> void:
 		style.bg_color = SHEET_BG
 	style.border_color = Color(0.22, 0.31, 0.48, 1.0) if _is_selected else SHEET_DIVIDER
 	style.set_border_width_all(1)
-	style.border_width_left = 3 + mini(_nesting_depth, 2)
+	style.border_width_left = 3 + mini(_nesting_depth, MAX_NESTING_ACCENT_ADDITION)
 	style.set_corner_radius_all(6)
 	style.set_content_margin_all(0)
 	add_theme_stylebox_override("panel", style)
