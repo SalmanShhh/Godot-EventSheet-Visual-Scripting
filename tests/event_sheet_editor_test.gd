@@ -391,12 +391,12 @@ static func run() -> bool:
 		all_passed = _check("inspector card has left border accent", has_left_accent, true) and all_passed
 
 	# Stabilization: variable_delete_requested signal exists on VariableRowUI.
-	var sig_var_row: VariableRowUI = VariableRowUI.new()
-	all_passed = _check("variable row has delete signal", sig_var_row.has_signal("variable_delete_requested"), true) and all_passed
+	var signal_var_row: VariableRowUI = VariableRowUI.new()
+	all_passed = _check("variable row has delete signal", signal_var_row.has_signal("variable_delete_requested"), true) and all_passed
 
 	# Stabilization: group_delete_requested signal exists on GroupRowUI.
-	var sig_group_row: GroupRowUI = GroupRowUI.new()
-	all_passed = _check("group row has delete signal", sig_group_row.has_signal("group_delete_requested"), true) and all_passed
+	var signal_group_row: GroupRowUI = GroupRowUI.new()
+	all_passed = _check("group row has delete signal", signal_group_row.has_signal("group_delete_requested"), true) and all_passed
 
 	# Stabilization: deleting the selected variable resets selection kind and shows empty inspector.
 	var del_var_sheet: EventSheetResource = EventSheetResource.new()
