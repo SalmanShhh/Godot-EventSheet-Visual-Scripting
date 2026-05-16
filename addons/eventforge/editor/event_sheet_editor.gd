@@ -554,6 +554,7 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 	# Disable OK if any variable_reference field has no available variables.
 	var needs_vars: bool = false
 	for key: Variant in _ace_params_fields.keys():
+		# Defensive: entries are always Dictionaries; guard against unexpected state.
 		var entry: Variant = _ace_params_fields[key]
 		if not (entry is Dictionary):
 			continue
@@ -1165,7 +1166,8 @@ func _add_event_row(event_row: EventRow, indent_level: int = 0) -> void:
 
 	# Render existing sub-events indented below this row, preparing the layout
 	# for future sub-event authoring without implementing drag/drop or nesting UI.
-	for sub_resource: Variant in event_row.sub_events:
+	# _add_event_resource handles type dispatch (EventRow / EventGroup) safely.
+	for sub_resource in event_row.sub_events:
 		_add_event_resource(sub_resource, indent_level + 1)
 
 func _add_group_row(event_group: EventGroup, indent_level: int = 0) -> void:
