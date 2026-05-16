@@ -115,8 +115,10 @@ static func _normalize_params(raw_params: Variant) -> Array[ACEParam]:
 		param.id = str(data.get("id", ""))
 		param.name = str(data.get("name", param.id))
 		param.display_name = str(data.get("display_name", data.get("displayName", param.name)))
-		param.description = str(data.get("description", data.get("desc", "")))
-		param.desc = str(data.get("desc", param.description))
+		var raw_description: String = str(data.get("description", ""))
+		var raw_desc: String = str(data.get("desc", ""))
+		param.description = raw_description if not raw_description.is_empty() else raw_desc
+		param.desc = raw_desc if not raw_desc.is_empty() else param.description
 		param.type_name = str(data.get("type_name", data.get("typeName", data.get("type", "String"))))
 		param.default_value = data.get("default_value", data.get("defaultValue", data.get("initial_value", data.get("initialValue", ""))))
 		param.initial_value = data.get("initial_value", data.get("initialValue", param.default_value))
