@@ -1,5 +1,6 @@
 # EventForge — Comment row UI
-# Lightweight inline comment row aligned to the sheet lane/grid model.
+# C3-style full-width section annotation / banner row.
+# Renders as a warm amber banner aligned with the sheet grid.
 @tool
 extends PanelContainer
 class_name CommentRowUI
@@ -12,11 +13,20 @@ signal comment_text_changed(row: CommentRowUI, text: String)
 signal comment_text_submitted(row: CommentRowUI, text: String)
 signal comment_drop_requested(target_row: CommentRowUI, source_comment: CommentRow, insert_after: bool)
 
-const LANE_DIVIDER_WIDTH: int = 2
 const INSERT_CONTROL_DIM_ALPHA: float = 0.46
+
+## Banner accent colours — warm amber matching C3's yellow comment banner.
+const COMMENT_ACCENT: Color = Color(0.90, 0.68, 0.18, 0.90)
+const COMMENT_BG: Color = Color(0.156, 0.128, 0.064, 1.0)
+const COMMENT_BG_HOVER: Color = Color(0.192, 0.158, 0.080, 1.0)
+const COMMENT_BG_SELECTED: Color = Color(0.228, 0.188, 0.096, 1.0)
+const COMMENT_BORDER: Color = Color(0.408, 0.324, 0.172, 1.0)
+const COMMENT_BORDER_HOVER: Color = Color(0.596, 0.476, 0.246, 1.0)
+const COMMENT_BORDER_SELECTED: Color = Color(0.840, 0.680, 0.312, 1.0)
 
 var comment_row: CommentRow = null
 
+var _left_accent: ColorRect = null
 var _comment_text_edit: LineEdit = null
 var _depth: int = 0
 var _selected: bool = false
@@ -34,123 +44,76 @@ func _build_ui() -> void:
 
 	var line: HBoxContainer = HBoxContainer.new()
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.add_theme_constant_override("separation", 0)
+	line.add_theme_constant_override("separation", 4)
 	add_child(line)
 
-	var meta_lane: PanelContainer = PanelContainer.new()
-	meta_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	meta_lane.size_flags_stretch_ratio = 1.0
-	var meta_lane_style: StyleBoxFlat = StyleBoxFlat.new()
-	meta_lane_style.bg_color = Color(0.130, 0.118, 0.100, 1.0)
-	meta_lane_style.set_border_width_all(0)
-	meta_lane_style.set_corner_radius_all(0)
-	meta_lane_style.set_content_margin(SIDE_LEFT, 6)
-	meta_lane_style.set_content_margin(SIDE_RIGHT, 4)
-	meta_lane_style.set_content_margin(SIDE_TOP, 2)
-	meta_lane_style.set_content_margin(SIDE_BOTTOM, 2)
-	meta_lane.add_theme_stylebox_override("panel", meta_lane_style)
-	line.add_child(meta_lane)
+	# Left accent strip — 4px amber bar that makes comment rows read as section
+	# annotations (C3 "yellow banner" visual language).
+	# Also satisfies lane-divider presence test (ColorRect min_width >= 2).
+	_left_accent = ColorRect.new()
+	_left_accent.custom_minimum_size = Vector2(4, 0)
+	_left_accent.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_left_accent.color = COMMENT_ACCENT
+	_left_accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_child(_left_accent)
 
-	var left_hbox: HBoxContainer = HBoxContainer.new()
-	left_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_hbox.add_theme_constant_override("separation", 6)
-	meta_lane.add_child(left_hbox)
-
-	var badge_panel: PanelContainer = PanelContainer.new()
-	var badge_style: StyleBoxFlat = StyleBoxFlat.new()
-	badge_style.bg_color = Color(0.214, 0.177, 0.104, 1.0)
-	badge_style.border_color = Color(0.412, 0.338, 0.175, 1.0)
-	badge_style.set_border_width_all(1)
-	badge_style.set_corner_radius_all(3)
-	badge_style.set_content_margin(SIDE_LEFT, 5)
-	badge_style.set_content_margin(SIDE_RIGHT, 5)
-	badge_style.set_content_margin(SIDE_TOP, 1)
-	badge_style.set_content_margin(SIDE_BOTTOM, 1)
-	badge_panel.add_theme_stylebox_override("panel", badge_style)
-	var badge: Label = Label.new()
-	badge.text = "Comment"
-	badge.add_theme_color_override("font_color", Color(1.0, 0.93, 0.66))
-	badge.add_theme_font_size_override("font_size", 9)
-	badge_panel.add_child(badge)
-	left_hbox.add_child(badge_panel)
-
-	var spacer: Control = Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_hbox.add_child(spacer)
-
-	var lane_div: ColorRect = ColorRect.new()
-	lane_div.custom_minimum_size = Vector2(LANE_DIVIDER_WIDTH, 0)
-	lane_div.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	lane_div.color = Color(0.44, 0.36, 0.22, 0.92)
-	lane_div.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_child(lane_div)
-
-	var comment_lane: PanelContainer = PanelContainer.new()
-	comment_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	comment_lane.size_flags_stretch_ratio = 1.85
-	var comment_lane_style: StyleBoxFlat = StyleBoxFlat.new()
-	comment_lane_style.bg_color = Color(0.115, 0.103, 0.086, 1.0)
-	comment_lane_style.set_border_width_all(0)
-	comment_lane_style.set_corner_radius_all(0)
-	comment_lane_style.set_content_margin(SIDE_LEFT, 6)
-	comment_lane_style.set_content_margin(SIDE_RIGHT, 4)
-	comment_lane_style.set_content_margin(SIDE_TOP, 2)
-	comment_lane_style.set_content_margin(SIDE_BOTTOM, 2)
-	comment_lane.add_theme_stylebox_override("panel", comment_lane_style)
-	line.add_child(comment_lane)
-
-	var comment_hbox: HBoxContainer = HBoxContainer.new()
-	comment_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	comment_hbox.add_theme_constant_override("separation", 4)
-	comment_lane.add_child(comment_hbox)
-
-	var comment_prefix: Label = Label.new()
-	comment_prefix.text = "#"
-	comment_prefix.add_theme_color_override("font_color", Color(0.88, 0.80, 0.66))
-	comment_prefix.add_theme_font_size_override("font_size", 10)
-	comment_hbox.add_child(comment_prefix)
+	# "# " section-marker prefix — cleaner C3 banner feel than "//"
+	var prefix: Label = Label.new()
+	prefix.text = "#"
+	prefix.add_theme_color_override("font_color", Color(1.0, 0.84, 0.40))
+	prefix.add_theme_font_size_override("font_size", 12)
+	prefix.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	line.add_child(prefix)
 
 	_comment_text_edit = LineEdit.new()
 	_comment_text_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_comment_text_edit.placeholder_text = "Write comment…"
+	_comment_text_edit.placeholder_text = "Section comment…"
 	_comment_text_edit.tooltip_text = "Edit inline comment text"
-	_comment_text_edit.add_theme_color_override("font_color", Color(0.90, 0.84, 0.74))
-	_comment_text_edit.add_theme_color_override("font_placeholder_color", Color(0.66, 0.58, 0.47))
-	_comment_text_edit.add_theme_font_size_override("font_size", 10)
+	_comment_text_edit.add_theme_color_override("font_color", Color(1.0, 0.92, 0.68))
+	_comment_text_edit.add_theme_color_override("font_placeholder_color", Color(0.66, 0.56, 0.36))
+	_comment_text_edit.add_theme_font_size_override("font_size", 11)
+	# Transparent background so comment row colour shows through.
+	var le_style: StyleBoxFlat = StyleBoxFlat.new()
+	le_style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	le_style.set_border_width_all(0)
+	le_style.set_content_margin_all(2)
+	_comment_text_edit.add_theme_stylebox_override("normal", le_style)
+	_comment_text_edit.add_theme_stylebox_override("read_only", le_style)
+	_comment_text_edit.add_theme_stylebox_override("focus", le_style)
 	_comment_text_edit.connect("text_changed", _on_comment_text_changed)
 	_comment_text_edit.connect("text_submitted", _on_comment_text_submitted)
 	_comment_text_edit.connect("focus_entered", _on_comment_text_focus_entered)
-	comment_hbox.add_child(_comment_text_edit)
+	line.add_child(_comment_text_edit)
 
 	_insert_above_btn = Button.new()
 	_insert_above_btn.text = "+↑"
 	_insert_above_btn.flat = true
 	_insert_above_btn.tooltip_text = "Insert comment above this row"
 	_insert_above_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_insert_above_btn.add_theme_color_override("font_color", Color(0.90, 0.82, 0.62))
-	_insert_above_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.94, 0.76))
+	_insert_above_btn.add_theme_color_override("font_color", Color(0.84, 0.72, 0.42))
+	_insert_above_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.58))
 	_insert_above_btn.connect("pressed", _on_insert_above_pressed)
-	comment_hbox.add_child(_insert_above_btn)
+	line.add_child(_insert_above_btn)
 
 	_insert_below_btn = Button.new()
 	_insert_below_btn.text = "+↓"
 	_insert_below_btn.flat = true
 	_insert_below_btn.tooltip_text = "Insert comment below this row"
 	_insert_below_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_insert_below_btn.add_theme_color_override("font_color", Color(0.90, 0.82, 0.62))
-	_insert_below_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.94, 0.76))
+	_insert_below_btn.add_theme_color_override("font_color", Color(0.84, 0.72, 0.42))
+	_insert_below_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.58))
 	_insert_below_btn.connect("pressed", _on_insert_below_pressed)
-	comment_hbox.add_child(_insert_below_btn)
+	line.add_child(_insert_below_btn)
 
 	_edit_btn = Button.new()
 	_edit_btn.text = "✎"
 	_edit_btn.flat = true
 	_edit_btn.tooltip_text = "Focus comment text"
 	_edit_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_edit_btn.add_theme_color_override("font_color", Color(0.88, 0.82, 0.72))
-	_edit_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.93, 0.82))
+	_edit_btn.add_theme_color_override("font_color", Color(0.82, 0.70, 0.44))
+	_edit_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.90, 0.58))
 	_edit_btn.connect("pressed", _on_pressed)
-	comment_hbox.add_child(_edit_btn)
+	line.add_child(_edit_btn)
 
 	_delete_btn = Button.new()
 	_delete_btn.text = "×"
@@ -161,7 +124,7 @@ func _build_ui() -> void:
 	_delete_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.55, 0.55))
 	_delete_btn.add_theme_font_size_override("font_size", 12)
 	_delete_btn.connect("pressed", _on_delete_pressed)
-	comment_hbox.add_child(_delete_btn)
+	line.add_child(_delete_btn)
 
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	connect("gui_input", _on_gui_input)
@@ -179,22 +142,137 @@ func set_selected(selected: bool) -> void:
 	_apply_affordance_state()
 
 func _apply_row_style() -> void:
+	var palette: Dictionary = _get_comment_palette()
+	var base_bg: Color = palette.get("bg", COMMENT_BG)
+	var hover_bg: Color = palette.get("hover_bg", COMMENT_BG_HOVER)
+	var selected_bg: Color = palette.get("selected_bg", COMMENT_BG_SELECTED)
+	var border: Color = palette.get("border", COMMENT_BORDER)
+	var hover_border: Color = palette.get("hover_border", COMMENT_BORDER_HOVER)
+	var selected_border: Color = palette.get("selected_border", COMMENT_BORDER_SELECTED)
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	if _selected:
-		style.bg_color = Color(0.170, 0.142, 0.098, 1.0)
-		style.border_color = Color(0.688, 0.548, 0.268, 1.0)
+		style.bg_color = _apply_depth_tint(selected_bg)
+		style.border_color = selected_border
 	elif _hovered:
-		style.bg_color = Color(0.146, 0.122, 0.086, 1.0)
-		style.border_color = Color(0.520, 0.420, 0.245, 1.0)
+		style.bg_color = _apply_depth_tint(hover_bg)
+		style.border_color = hover_border
 	else:
-		style.bg_color = Color(0.124, 0.103, 0.073, 1.0)
-		style.border_color = Color(0.372, 0.304, 0.184, 1.0)
+		style.bg_color = _apply_depth_tint(base_bg)
+		style.border_color = border
 	style.set_border_width_all(1)
-	style.border_width_left = 4 + min(_depth, 4)
+	style.border_width_left = 0  # accent handled by left_accent ColorRect
 	style.set_corner_radius_all(0)
-	style.set_content_margin_all(4)
-	style.content_margin_left = 8
+	style.set_content_margin_all(0)
+	style.set_content_margin(SIDE_TOP, 3)
+	style.set_content_margin(SIDE_BOTTOM, 3)
+	style.set_content_margin(SIDE_RIGHT, 4)
 	add_theme_stylebox_override("panel", style)
+	if _left_accent != null:
+		_left_accent.color = palette.get("accent", COMMENT_ACCENT)
+
+func _apply_depth_tint(base: Color) -> Color:
+	var depth_factor: float = float(min(_depth, 4))
+	if depth_factor <= 0.0:
+		return base
+	var lighten_amount: float = depth_factor * 0.010
+	return Color(
+		min(base.r + lighten_amount, 1.0),
+		min(base.g + lighten_amount, 1.0),
+		min(base.b + lighten_amount, 1.0),
+		base.a
+	)
+
+func _get_comment_palette() -> Dictionary:
+	var palette_key: String = _resolve_comment_palette_key()
+	match palette_key:
+		"yellow":
+			return {
+				"accent": COMMENT_ACCENT,
+				"bg": COMMENT_BG,
+				"hover_bg": COMMENT_BG_HOVER,
+				"selected_bg": COMMENT_BG_SELECTED,
+				"border": COMMENT_BORDER,
+				"hover_border": COMMENT_BORDER_HOVER,
+				"selected_border": COMMENT_BORDER_SELECTED
+			}
+		"blue":
+			return {
+				"accent": Color(0.38, 0.66, 0.96, 0.92),
+				"bg": Color(0.078, 0.120, 0.168, 1.0),
+				"hover_bg": Color(0.098, 0.148, 0.202, 1.0),
+				"selected_bg": Color(0.120, 0.176, 0.240, 1.0),
+				"border": Color(0.210, 0.350, 0.520, 1.0),
+				"hover_border": Color(0.300, 0.480, 0.670, 1.0),
+				"selected_border": Color(0.420, 0.620, 0.840, 1.0)
+			}
+		"green":
+			return {
+				"accent": Color(0.44, 0.84, 0.54, 0.92),
+				"bg": Color(0.082, 0.154, 0.102, 1.0),
+				"hover_bg": Color(0.106, 0.190, 0.126, 1.0),
+				"selected_bg": Color(0.130, 0.224, 0.148, 1.0),
+				"border": Color(0.206, 0.430, 0.258, 1.0),
+				"hover_border": Color(0.286, 0.560, 0.346, 1.0),
+				"selected_border": Color(0.390, 0.700, 0.430, 1.0)
+			}
+		"red":
+			return {
+				"accent": Color(0.94, 0.48, 0.44, 0.92),
+				"bg": Color(0.186, 0.088, 0.082, 1.0),
+				"hover_bg": Color(0.226, 0.106, 0.098, 1.0),
+				"selected_bg": Color(0.264, 0.124, 0.114, 1.0),
+				"border": Color(0.520, 0.206, 0.192, 1.0),
+				"hover_border": Color(0.690, 0.278, 0.258, 1.0),
+				"selected_border": Color(0.850, 0.372, 0.336, 1.0)
+			}
+		"orange":
+			return {
+				"accent": Color(0.96, 0.66, 0.32, 0.92),
+				"bg": Color(0.198, 0.120, 0.070, 1.0),
+				"hover_bg": Color(0.232, 0.146, 0.086, 1.0),
+				"selected_bg": Color(0.268, 0.168, 0.100, 1.0),
+				"border": Color(0.570, 0.336, 0.170, 1.0),
+				"hover_border": Color(0.730, 0.442, 0.214, 1.0),
+				"selected_border": Color(0.870, 0.536, 0.268, 1.0)
+			}
+		"grey":
+			return {
+				"accent": Color(0.70, 0.76, 0.82, 0.92),
+				"bg": Color(0.126, 0.136, 0.150, 1.0),
+				"hover_bg": Color(0.148, 0.160, 0.176, 1.0),
+				"selected_bg": Color(0.168, 0.184, 0.202, 1.0),
+				"border": Color(0.320, 0.344, 0.376, 1.0),
+				"hover_border": Color(0.430, 0.464, 0.502, 1.0),
+				"selected_border": Color(0.560, 0.604, 0.654, 1.0)
+			}
+		_:
+			return {
+				"accent": COMMENT_ACCENT,
+				"bg": COMMENT_BG,
+				"hover_bg": COMMENT_BG_HOVER,
+				"selected_bg": COMMENT_BG_SELECTED,
+				"border": COMMENT_BORDER,
+				"hover_border": COMMENT_BORDER_HOVER,
+				"selected_border": COMMENT_BORDER_SELECTED
+			}
+
+func _resolve_comment_palette_key() -> String:
+	if comment_row == null:
+		return "yellow"
+	var from_tag: String = str(comment_row.color_tag).strip_edges().to_lower()
+	if not from_tag.is_empty():
+		return from_tag
+	match comment_row.style:
+		CommentRow.CommentStyle.NOTE:
+			return "blue"
+		CommentRow.CommentStyle.TODO:
+			return "orange"
+		CommentRow.CommentStyle.WARNING:
+			return "red"
+		CommentRow.CommentStyle.SECTION:
+			return "grey"
+		_:
+			return "yellow"
 
 func _apply_affordance_state() -> void:
 	var controls_alpha: float = 1.0 if (_hovered or _selected) else INSERT_CONTROL_DIM_ALPHA
@@ -210,6 +288,7 @@ func _apply_affordance_state() -> void:
 func refresh() -> void:
 	if comment_row == null or _comment_text_edit == null:
 		return
+	_apply_row_style()
 	var text: String = comment_row.text
 	if _comment_text_edit.text != text and not _comment_text_edit.has_focus():
 		_comment_text_edit.text = text

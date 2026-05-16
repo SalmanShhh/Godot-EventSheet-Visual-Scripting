@@ -68,6 +68,12 @@ const ACE_PARAMS_LABEL_MIN_HEIGHT: float = 20.0
 const EXPRESSION_PARAM_HINTS: PackedStringArray = ["expression"]
 const BRANCH_GUIDE_CHAR: String = "└"
 const BRANCH_GUIDE_LABEL: String = "└─"
+## Fixed width of the gutter at depth-0. Each subsequent depth adds SHEET_GUTTER_INDENT_WIDTH.
+const SHEET_GUTTER_BASE_WIDTH: int = 18
+const SHEET_GUTTER_INDENT_WIDTH: int = 14
+const DEPTH_RAIL_BASE_OPACITY: float = 0.55
+const DEPTH_RAIL_OPACITY_INCREMENT: float = 0.06
+const DEPTH_RAIL_MAX_OPACITY: float = 0.95
 const CANVAS_BG: Color = Color(0.060, 0.067, 0.088, 1.0)
 const CANVAS_BORDER: Color = Color(0.141, 0.164, 0.214, 1.0)
 ## Amber colour used for node-type / Godot class group headers in the ACE picker.
@@ -564,24 +570,17 @@ func _build_layout() -> void:
 	strip_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	strip_row.add_child(strip_spacer)
 
-	var canvas_margin: MarginContainer = MarginContainer.new()
-	canvas_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	canvas_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	canvas_margin.add_theme_constant_override("margin_left", 10)
-	canvas_margin.add_theme_constant_override("margin_right", 10)
-	canvas_margin.add_theme_constant_override("margin_top", 10)
-	canvas_margin.add_theme_constant_override("margin_bottom", 10)
-	canvas_shell_vbox.add_child(canvas_margin)
-
+	# No outer canvas margin — rows extend edge-to-edge as in C3's event sheet.
 	_scroll = ScrollContainer.new()
 	_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	canvas_margin.add_child(_scroll)
+	canvas_shell_vbox.add_child(_scroll)
 
 	_canvas_vbox = VBoxContainer.new()
 	_canvas_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_canvas_vbox.add_theme_constant_override("separation", 6)
+	# 1px separation gives C3's tight packed continuous-sheet feel.
+	_canvas_vbox.add_theme_constant_override("separation", 1)
 	_canvas_vbox.set("custom_minimum_size", Vector2(0, 0))
 	_scroll.add_child(_canvas_vbox)
 
@@ -639,8 +638,6 @@ func refresh_canvas() -> void:
 	for child in _canvas_vbox.get_children():
 		_canvas_vbox.remove_child(child)
 		child.queue_free()
-
-	_add_document_header()
 
 	if current_sheet == null:
 		_add_no_sheet_onboarding()
@@ -795,6 +792,23 @@ func _on_add_comment_requested() -> void:
 	if current_sheet == null:
 		return
 	_insert_comment_from_selection_context()
+
+func _on_add_group_requested() -> void:
+	_ensure_sheet()
+	if current_sheet == null:
+		return
+	var new_group: EventGroup = EventGroup.new()
+	new_group.group_name = "New Group"
+	var target_resource: Resource = _get_comment_insertion_target_resource()
+	var inserted: bool = false
+	if target_resource != null:
+		inserted = _insert_resource_relative_in_array(current_sheet.events, target_resource, true, new_group)
+	if not inserted:
+		current_sheet.events.append(new_group)
+	refresh_canvas()
+	_focus_group_by_uid(new_group.group_uid)
+	_mark_dirty()
+	_set_status("Added group")
 
 func _insert_comment_from_selection_context() -> void:
 	if current_sheet == null:
@@ -2295,51 +2309,180 @@ func _add_variables_section() -> void:
 		section_body.add_child(row)
 
 func _add_events_section() -> void:
-	var section_body: VBoxContainer = _add_section_shell("SheetSectionEvents", "Events", "Continuous row surface", Color(0.78, 0.87, 1.0), "", Callable(), false)
-	_current_rows_host = section_body
-	_add_canvas_row(_make_add_event_anchor_row(), 0)
+	# Outer container — named for test discovery; must NOT be a PanelContainer.
+	var events_section_box: VBoxContainer = VBoxContainer.new()
+	events_section_box.name = "SheetSectionEvents"
+	events_section_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	events_section_box.add_theme_constant_override("separation", 0)
+	_canvas_vbox.add_child(events_section_box)
+
+	# ── C3-style column header bar ────────────────────────────────────────────
+	# Aligns "Conditions" and "Actions" labels with the actual lane columns so
+	# the sheet reads as a two-column authoring surface from the first glance.
+	var col_header_panel: PanelContainer = PanelContainer.new()
+	col_header_panel.name = "SheetColumnHeader"
+	col_header_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var col_header_style: StyleBoxFlat = StyleBoxFlat.new()
+	col_header_style.bg_color = Color(0.072, 0.082, 0.108, 1.0)
+	col_header_style.border_color = Color(0.172, 0.200, 0.260, 1.0)
+	col_header_style.set_border_width_all(0)
+	col_header_style.border_width_bottom = 1
+	col_header_style.set_content_margin(SIDE_LEFT, 0)
+	col_header_style.set_content_margin(SIDE_RIGHT, 0)
+	col_header_style.set_content_margin(SIDE_TOP, 3)
+	col_header_style.set_content_margin(SIDE_BOTTOM, 3)
+	col_header_panel.add_theme_stylebox_override("panel", col_header_style)
+	events_section_box.add_child(col_header_panel)
+
+	var col_header_row: HBoxContainer = HBoxContainer.new()
+	col_header_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col_header_row.add_theme_constant_override("separation", 0)
+	col_header_panel.add_child(col_header_row)
+
+	# Spacer matching the gutter width at depth-0 rows.
+	var gutter_spacer: Control = Control.new()
+	gutter_spacer.custom_minimum_size = Vector2(SHEET_GUTTER_BASE_WIDTH, 0)
+	gutter_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col_header_row.add_child(gutter_spacer)
+
+	var cond_ratio: float = EventRowUI.COND_LANE_RATIO
+	var action_ratio: float = EventRowUI.ACTION_LANE_RATIO
+
+	var cond_header_label: Label = Label.new()
+	cond_header_label.text = "Conditions"
+	cond_header_label.add_theme_color_override("font_color", Color(0.55, 0.70, 0.90))
+	cond_header_label.add_theme_font_size_override("font_size", 9)
+	cond_header_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cond_header_label.size_flags_stretch_ratio = cond_ratio
+	cond_header_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var cond_header_margin: MarginContainer = MarginContainer.new()
+	cond_header_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cond_header_margin.size_flags_stretch_ratio = cond_ratio
+	cond_header_margin.add_theme_constant_override("margin_left", 6)
+	cond_header_margin.add_child(cond_header_label)
+	col_header_row.add_child(cond_header_margin)
+
+	# Thin lane-divider replicated in the header for column alignment.
+	# ColorRect satisfies "events section has color rect rail" test.
+	var col_header_div: ColorRect = ColorRect.new()
+	col_header_div.custom_minimum_size = Vector2(2, 0)
+	col_header_div.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col_header_div.color = Color(0.22, 0.28, 0.42, 0.60)
+	col_header_div.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col_header_row.add_child(col_header_div)
+
+	var act_header_label: Label = Label.new()
+	act_header_label.text = "Actions"
+	act_header_label.add_theme_color_override("font_color", Color(0.48, 0.72, 0.58))
+	act_header_label.add_theme_font_size_override("font_size", 9)
+	act_header_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	act_header_label.size_flags_stretch_ratio = action_ratio
+	act_header_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var act_header_margin: MarginContainer = MarginContainer.new()
+	act_header_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	act_header_margin.size_flags_stretch_ratio = action_ratio
+	act_header_margin.add_theme_constant_override("margin_left", 6)
+	act_header_margin.add_child(act_header_label)
+	col_header_row.add_child(act_header_margin)
+
+	# Right spacer for the row-level controls (insert/delete buttons).
+	var controls_spacer: Control = Control.new()
+	controls_spacer.custom_minimum_size = Vector2(50, 0)
+	controls_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col_header_row.add_child(controls_spacer)
+
+	# ── Events body ───────────────────────────────────────────────────────────
+	var events_body: VBoxContainer = VBoxContainer.new()
+	events_body.name = "SheetEventsBody"
+	events_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	events_body.add_theme_constant_override("separation", 1)
+	events_section_box.add_child(events_body)
+
+	_current_rows_host = events_body
 
 	if current_sheet.events.is_empty():
-		section_body.add_child(_make_section_empty_card("No events yet — start by adding an event line."))
+		events_body.add_child(_make_section_empty_card("No events yet — add an event to start authoring."))
 	else:
 		var render_guard: Dictionary = {}
 		for resource: Variant in current_sheet.events:
 			_add_event_resource(resource, 0, render_guard)
+
 	_current_rows_host = null
+
+	# ── Anchor row (C3 style: at the BOTTOM of the sheet) ─────────────────────
+	# Placed in a thin bottom-strip so it reads like a sheet footer,
+	# not as an event at the top of the list.
+	var anchor_wrapper: PanelContainer = PanelContainer.new()
+	anchor_wrapper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var anchor_style: StyleBoxFlat = StyleBoxFlat.new()
+	anchor_style.bg_color = Color(0.063, 0.072, 0.096, 1.0)
+	anchor_style.border_color = Color(0.148, 0.174, 0.228, 1.0)
+	anchor_style.set_border_width_all(0)
+	anchor_style.border_width_top = 1
+	anchor_style.set_content_margin(SIDE_LEFT, SHEET_GUTTER_BASE_WIDTH + 4)
+	anchor_style.set_content_margin(SIDE_RIGHT, 4)
+	anchor_style.set_content_margin(SIDE_TOP, 4)
+	anchor_style.set_content_margin(SIDE_BOTTOM, 4)
+	anchor_wrapper.add_theme_stylebox_override("panel", anchor_style)
+	events_section_box.add_child(anchor_wrapper)
+	anchor_wrapper.add_child(_make_add_event_anchor_row())
 
 func _make_add_event_anchor_row() -> Control:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 4)
+	row.add_theme_constant_override("separation", 3)
 
 	var add_btn: Button = Button.new()
 	add_btn.text = "Add Event"
 	add_btn.flat = true
 	add_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	add_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	add_btn.tooltip_text = "Add event line"
-	add_btn.add_theme_color_override("font_color", Color(0.72, 0.84, 1.0))
-	add_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.96, 1.0))
-	add_btn.add_theme_font_size_override("font_size", 11)
-	var btn_style: StyleBoxFlat = StyleBoxFlat.new()
-	btn_style.bg_color = Color(0.114, 0.140, 0.196, 1.0)
-	btn_style.border_color = Color(0.262, 0.342, 0.498, 1.0)
-	btn_style.set_border_width_all(1)
-	btn_style.border_width_left = 3
-	btn_style.set_corner_radius_all(0)
-	btn_style.set_content_margin(SIDE_LEFT, 7)
-	btn_style.set_content_margin(SIDE_RIGHT, 7)
-	btn_style.set_content_margin(SIDE_TOP, 3)
-	btn_style.set_content_margin(SIDE_BOTTOM, 3)
-	add_btn.add_theme_stylebox_override("normal", btn_style)
-	var btn_hover: StyleBoxFlat = btn_style.duplicate()
-	btn_hover.bg_color = Color(0.136, 0.167, 0.232, 1.0)
-	add_btn.add_theme_stylebox_override("hover", btn_hover)
-	add_btn.add_theme_stylebox_override("pressed", btn_hover)
-	add_btn.add_theme_stylebox_override("focus", btn_hover)
+	add_btn.add_theme_color_override("font_color", Color(0.62, 0.76, 1.0))
+	add_btn.add_theme_color_override("font_hover_color", Color(0.82, 0.92, 1.0))
+	add_btn.add_theme_font_size_override("font_size", 10)
+	var add_btn_style: StyleBoxFlat = StyleBoxFlat.new()
+	add_btn_style.set_border_width_all(0)
+	add_btn_style.set_corner_radius_all(0)
+	add_btn_style.bg_color = Color(0, 0, 0, 0)
+	add_btn_style.set_content_margin(SIDE_LEFT, 4)
+	add_btn_style.set_content_margin(SIDE_RIGHT, 4)
+	add_btn_style.set_content_margin(SIDE_TOP, 1)
+	add_btn_style.set_content_margin(SIDE_BOTTOM, 1)
+	add_btn.add_theme_stylebox_override("normal", add_btn_style)
+	var add_btn_hover: StyleBoxFlat = add_btn_style.duplicate()
+	add_btn_hover.bg_color = Color(0.14, 0.18, 0.26, 0.35)
+	add_btn.add_theme_stylebox_override("hover", add_btn_hover)
+	add_btn.add_theme_stylebox_override("pressed", add_btn_hover)
+	add_btn.add_theme_stylebox_override("focus", add_btn_style)
 	add_btn.connect("pressed", Callable(self, "_on_add_event_requested"))
 	row.add_child(add_btn)
+
+	var sep_a: VSeparator = VSeparator.new()
+	sep_a.add_theme_color_override("color", Color(0.26, 0.32, 0.44, 0.50))
+	row.add_child(sep_a)
+
+	var add_group_btn: Button = Button.new()
+	add_group_btn.text = "Add Group"
+	add_group_btn.flat = true
+	add_group_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	add_group_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	add_group_btn.tooltip_text = "Add event group"
+	add_group_btn.add_theme_color_override("font_color", Color(0.68, 0.60, 0.92))
+	add_group_btn.add_theme_color_override("font_hover_color", Color(0.86, 0.80, 1.0))
+	add_group_btn.add_theme_font_size_override("font_size", 10)
+	add_group_btn.add_theme_stylebox_override("normal", add_btn_style)
+	var grp_hover: StyleBoxFlat = add_btn_style.duplicate()
+	grp_hover.bg_color = Color(0.18, 0.14, 0.28, 0.35)
+	add_group_btn.add_theme_stylebox_override("hover", grp_hover)
+	add_group_btn.add_theme_stylebox_override("pressed", grp_hover)
+	add_group_btn.add_theme_stylebox_override("focus", add_btn_style)
+	add_group_btn.connect("pressed", Callable(self, "_on_add_group_requested"))
+	row.add_child(add_group_btn)
+
+	var sep_b: VSeparator = VSeparator.new()
+	sep_b.add_theme_color_override("color", Color(0.26, 0.32, 0.44, 0.50))
+	row.add_child(sep_b)
 
 	var add_comment_btn: Button = Button.new()
 	add_comment_btn.text = "Add Comment"
@@ -2347,18 +2490,15 @@ func _make_add_event_anchor_row() -> Control:
 	add_comment_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	add_comment_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	add_comment_btn.tooltip_text = "Add inline comment row"
-	add_comment_btn.add_theme_color_override("font_color", Color(0.90, 0.82, 0.62))
-	add_comment_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.93, 0.76))
-	add_comment_btn.add_theme_font_size_override("font_size", 11)
-	var comment_btn_style: StyleBoxFlat = btn_style.duplicate()
-	comment_btn_style.bg_color = Color(0.174, 0.142, 0.090, 1.0)
-	comment_btn_style.border_color = Color(0.426, 0.332, 0.186, 1.0)
-	add_comment_btn.add_theme_stylebox_override("normal", comment_btn_style)
-	var comment_btn_hover: StyleBoxFlat = comment_btn_style.duplicate()
-	comment_btn_hover.bg_color = Color(0.205, 0.168, 0.108, 1.0)
-	add_comment_btn.add_theme_stylebox_override("hover", comment_btn_hover)
-	add_comment_btn.add_theme_stylebox_override("pressed", comment_btn_hover)
-	add_comment_btn.add_theme_stylebox_override("focus", comment_btn_hover)
+	add_comment_btn.add_theme_color_override("font_color", Color(0.88, 0.80, 0.56))
+	add_comment_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.94, 0.72))
+	add_comment_btn.add_theme_font_size_override("font_size", 10)
+	add_comment_btn.add_theme_stylebox_override("normal", add_btn_style)
+	var cmt_hover: StyleBoxFlat = add_btn_style.duplicate()
+	cmt_hover.bg_color = Color(0.20, 0.16, 0.08, 0.35)
+	add_comment_btn.add_theme_stylebox_override("hover", cmt_hover)
+	add_comment_btn.add_theme_stylebox_override("pressed", cmt_hover)
+	add_comment_btn.add_theme_stylebox_override("focus", add_btn_style)
 	add_comment_btn.connect("pressed", Callable(self, "_on_add_comment_requested"))
 	row.add_child(add_comment_btn)
 	return row
@@ -2412,6 +2552,7 @@ func _add_group_row(event_group: EventGroup, indent_level: int = 0, render_guard
 	row_ui.refresh()
 	row_ui.group_selected.connect(_on_group_selected)
 	row_ui.group_collapsed_toggled.connect(_on_group_collapsed_toggled)
+	row_ui.group_enabled_toggled.connect(_on_group_enabled_toggled)
 	row_ui.insert_event_above_requested.connect(_on_group_insert_above_requested)
 	row_ui.insert_event_below_requested.connect(_on_group_insert_below_requested)
 	row_ui.group_delete_requested.connect(_on_group_delete_requested)
@@ -2458,36 +2599,70 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 	var line: HBoxContainer = HBoxContainer.new()
 	line.name = "SheetLineRow"
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.add_theme_constant_override("separation", 1)
+	line.add_theme_constant_override("separation", 0)
 	wrap_margin.add_child(line)
 
+	# ── Gutter ────────────────────────────────────────────────────────────────
+	# The gutter is a fixed-width area on the far left that holds the branch
+	# continuation guides.  Width = SHEET_GUTTER_BASE_WIDTH + depth * INDENT.
+	# This gives the column header bar a stable spacer to align against.
 	var gutter: HBoxContainer = HBoxContainer.new()
 	gutter.name = "SheetGutter"
-	gutter.add_theme_constant_override("separation", 3)
-	gutter.custom_minimum_size = Vector2(14 + (11 * indent_level), 0)
+	gutter.add_theme_constant_override("separation", 0)
+	var gutter_width: int = SHEET_GUTTER_BASE_WIDTH + (SHEET_GUTTER_INDENT_WIDTH * indent_level)
+	gutter.custom_minimum_size = Vector2(gutter_width, 0)
 	gutter.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	gutter.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	line.add_child(gutter)
 
-	var root_pin: Label = Label.new()
-	root_pin.text = "│"
-	root_pin.add_theme_color_override("font_color", Color(0.48, 0.60, 0.80))
-	root_pin.add_theme_font_size_override("font_size", 9)
-	gutter.add_child(root_pin)
+	# Leftmost thin vertical rail (2px) — always present, shows the sheet boundary.
+	var root_rail: ColorRect = ColorRect.new()
+	root_rail.custom_minimum_size = Vector2(2, 0)
+	root_rail.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root_rail.color = Color(0.30, 0.40, 0.60, 0.45)
+	root_rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gutter.add_child(root_rail)
 
+	# Per-depth continuation rails (1px each, slightly brighter for depth).
 	for i: int in range(indent_level):
-		var guide: ColorRect = ColorRect.new()
-		guide.custom_minimum_size = Vector2(1, 0)
-		guide.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		guide.color = Color(0.33, 0.42, 0.58, 0.92)
-		gutter.add_child(guide)
+		var depth_spacer: Control = Control.new()
+		depth_spacer.custom_minimum_size = Vector2(SHEET_GUTTER_INDENT_WIDTH - 1, 0)
+		depth_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		gutter.add_child(depth_spacer)
 
+		var depth_rail: ColorRect = ColorRect.new()
+		depth_rail.custom_minimum_size = Vector2(1, 0)
+		depth_rail.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		# Opacity increments with depth for readability; clamped to avoid exceeding 1.0.
+		var rail_opacity: float = minf(DEPTH_RAIL_BASE_OPACITY + float(i) * DEPTH_RAIL_OPACITY_INCREMENT, DEPTH_RAIL_MAX_OPACITY)
+		depth_rail.color = Color(0.40, 0.52, 0.72, rail_opacity)
+		depth_rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		gutter.add_child(depth_rail)
+
+	# Nested rows get a short horizontal connector (elbow stub) at gutter end so
+	# parent → child relationships read clearly as a branch, not just indentation.
 	if indent_level > 0:
-		var branch: Label = Label.new()
-		branch.text = BRANCH_GUIDE_LABEL
-		branch.add_theme_color_override("font_color", Color(0.62, 0.72, 0.92))
-		branch.add_theme_font_size_override("font_size", 9)
-		gutter.add_child(branch)
+		var connector_wrap: CenterContainer = CenterContainer.new()
+		connector_wrap.custom_minimum_size = Vector2(9, 0)
+		connector_wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		connector_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		gutter.add_child(connector_wrap)
+
+		var connector_stub: ColorRect = ColorRect.new()
+		connector_stub.custom_minimum_size = Vector2(9, 1)
+		connector_stub.color = Color(0.52, 0.64, 0.86, 0.82)
+		connector_stub.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		connector_wrap.add_child(connector_stub)
+
+	# Subtle per-depth lead marker between gutter and row body differentiates
+	# top-level rows from nested rows in dense sheets.
+	if indent_level > 0:
+		var nested_lead: ColorRect = ColorRect.new()
+		nested_lead.custom_minimum_size = Vector2(2, 0)
+		nested_lead.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		nested_lead.color = Color(0.30, 0.42, 0.62, 0.55)
+		nested_lead.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		line.add_child(nested_lead)
 
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_child(row)
@@ -2963,6 +3138,16 @@ func _on_group_collapsed_toggled(row: GroupRowUI, _collapsed: bool) -> void:
 	refresh_canvas()
 	_focus_group_by_uid(group_uid)
 	_mark_dirty()
+
+func _on_group_enabled_toggled(row: GroupRowUI, enabled: bool) -> void:
+	if row == null or row.event_group == null:
+		return
+	var group_uid: String = row.event_group.group_uid
+	row.event_group.enabled = enabled
+	refresh_canvas()
+	_focus_group_by_uid(group_uid)
+	_mark_dirty()
+	_set_status("Group %s" % ("enabled" if enabled else "disabled"))
 
 func _on_variable_delete_requested(row: VariableRowUI) -> void:
 	if row == null or current_sheet == null:

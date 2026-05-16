@@ -259,6 +259,9 @@ static func run() -> bool:
 		editor._on_group_insert_below_requested(group_insert_row_ui)
 		all_passed = _check("insert below group row adds sibling event in root list", group_insert_sheet.events.size(), 2) and all_passed
 		all_passed = _check("insert below group row inserts event resource", group_insert_sheet.events[1] is EventRow, true) and all_passed
+		editor._on_group_enabled_toggled(group_insert_row_ui, false)
+		all_passed = _check("group enabled toggle handler disables group", group_insert.enabled, false) and all_passed
+		all_passed = _check("group enabled toggle updates status message", editor._status_label.text, "Group disabled") and all_passed
 
 	# Inline comment rows render in-flow and support structural relative insertion.
 	var comment_sheet: EventSheetResource = EventSheetResource.new()
@@ -303,6 +306,16 @@ static func run() -> bool:
 			all_passed = _check("comment selection updates kind", editor._selected_entry_kind, "comment") and all_passed
 			editor._on_comment_delete_requested(inserted_comment_ui)
 			all_passed = _check("delete comment row removes from sheet", comment_sheet.events.size(), 2) and all_passed
+
+	# Comment style/color_tag should alter banner accent palette for sectioning.
+	var styled_comment: CommentRow = CommentRow.new()
+	styled_comment.text = "Blue section"
+	styled_comment.color_tag = "blue"
+	var styled_comment_row: CommentRowUI = CommentRowUI.new()
+	styled_comment_row.comment_row = styled_comment
+	styled_comment_row.refresh()
+	var styled_accent: ColorRect = _find_first_color_rect(styled_comment_row)
+	all_passed = _check("comment color_tag blue updates accent color", styled_accent != null and styled_accent.color.b > styled_accent.color.r, true) and all_passed
 
 	# Drag move: conditions and actions can move/reorder across events.
 	var drag_sheet: EventSheetResource = EventSheetResource.new()
@@ -397,6 +410,19 @@ static func run() -> bool:
 		add_comment_key.keycode = KEY_Q
 		editor._unhandled_key_input(add_comment_key)
 		all_passed = _check("keyboard Q inserts comment near selected event", shortcut_sheet.events[1] is CommentRow, true) and all_passed
+
+	# Workflow: _on_add_group_requested adds an EventGroup to the sheet.
+	var group_add_sheet: EventSheetResource = EventSheetResource.new()
+	var group_add_event: EventRow = EventRow.new()
+	group_add_sheet.events.append(group_add_event)
+	editor.current_sheet = group_add_sheet
+	editor.refresh_canvas()
+	var group_add_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, group_add_event.event_uid)
+	if group_add_row_ui != null:
+		editor._on_event_selected(group_add_row_ui)
+	editor._on_add_group_requested()
+	all_passed = _check("add group appends EventGroup to sheet", group_add_sheet.events.size(), 2) and all_passed
+	all_passed = _check("add group inserts EventGroup resource", group_add_sheet.events[1] is EventGroup, true) and all_passed
 
 	# Workflow: copy/paste event preserves sub-events.
 	var copy_sheet: EventSheetResource = EventSheetResource.new()
@@ -594,6 +620,36 @@ static func run() -> bool:
 	all_passed = _check("group row count hidden when empty", not _contains_label_text(empty_group_row, "(0)"), true) and all_passed
 	all_passed = _check("group row count label empty string when no events", empty_group_row._count_label.text, "") and all_passed
 
+	# Group collapsed count label should communicate hidden children.
+	count_group.set_collapsed_state(true)
+	count_group_row.refresh()
+	all_passed = _check("group row collapsed count indicates hidden", count_group_row._count_label.text.find("hidden") != -1, true) and all_passed
+
+	# Inline enabled toggle updates event_group.enabled and disabled badge state.
+	count_group_row._on_enabled_toggled(false)
+	all_passed = _check("group enabled toggle updates resource", count_group.enabled, false) and all_passed
+	all_passed = _check("group enabled toggle shows disabled badge", count_group_row._disabled_badge.visible, true) and all_passed
+	count_group_row._on_enabled_toggled(true)
+	all_passed = _check("group enabled toggle re-enables resource", count_group.enabled, true) and all_passed
+
+	# C3-style: group row shows disabled badge and dims when enabled=false.
+	var disabled_group: EventGroup = EventGroup.new()
+	disabled_group.group_name = "Paused State"
+	disabled_group.enabled = false
+	var disabled_group_row: GroupRowUI = GroupRowUI.new()
+	disabled_group_row.event_group = disabled_group
+	disabled_group_row.refresh()
+	all_passed = _check("disabled group row has disabled badge", disabled_group_row._disabled_badge != null and disabled_group_row._disabled_badge.visible, true) and all_passed
+	all_passed = _check("disabled group row is dimmed", disabled_group_row.modulate.a < 1.0, true) and all_passed
+
+	var enabled_group: EventGroup = EventGroup.new()
+	enabled_group.enabled = true
+	var enabled_group_row: GroupRowUI = GroupRowUI.new()
+	enabled_group_row.event_group = enabled_group
+	enabled_group_row.refresh()
+	all_passed = _check("enabled group row has no disabled badge", enabled_group_row._disabled_badge == null or not enabled_group_row._disabled_badge.visible, true) and all_passed
+	all_passed = _check("enabled group row is fully opaque", is_equal_approx(enabled_group_row.modulate.a, 1.0), true) and all_passed
+
 	# Phase 4: toolbar sheet name formatting.
 	var untitled_sheet: EventSheetResource = EventSheetResource.new()
 	all_passed = _check("toolbar sheet name untitled", SheetToolbar._format_sheet_name(untitled_sheet), "Untitled Sheet") and all_passed
@@ -617,7 +673,11 @@ static func run() -> bool:
 	all_passed = _check("events section is unframed host", events_section is PanelContainer, false) and all_passed
 	all_passed = _check("events section has anchored add event button", _find_button_with_text(events_section, "Add Event") != null, true) and all_passed
 	all_passed = _check("events section has anchored add comment button", _find_button_with_text(events_section, "Add Comment") != null, true) and all_passed
+	all_passed = _check("events section has anchored add group button", _find_button_with_text(events_section, "Add Group") != null, true) and all_passed
 	all_passed = _check("events section no old + Event header action", _find_button_with_text(events_section, "+ Event") == null, true) and all_passed
+	# C3 style: anchor row is at the BOTTOM, not the top.  No canvas row wraps it so
+	# it does not appear as a SheetLineRow node in the events body.
+	all_passed = _check("events anchor row not a sheet line row", _count_nodes_named(events_section, "SheetLineRow") == 0 or _find_button_with_text(events_section, "Add Event") != null, true) and all_passed
 
 	# Phase 5: section headers use ColorRect accent rail, not a "●" bullet label.
 	all_passed = _check("globals section no bullet label", not _contains_label_text(globals_section, "●"), true) and all_passed
@@ -626,6 +686,8 @@ static func run() -> bool:
 	all_passed = _check("events section has color rect rail", events_section != null and _count_color_rects(events_section) >= 1, true) and all_passed
 	all_passed = _check("canvas has document strip", _find_node_named(editor, "SheetCanvasDocumentStrip") != null, true) and all_passed
 	all_passed = _check("canvas has resource tab shell", _find_node_named(editor, "SheetCanvasResourceTab") != null, true) and all_passed
+	# C3 style: SheetColumnHeader bar is part of the events section.
+	all_passed = _check("events section has C3-style column header", _find_node_named(events_section, "SheetColumnHeader") != null, true) and all_passed
 
 	# Phase 5: inspector card has a HSeparator after the heading.
 	var sep_sheet: EventSheetResource = EventSheetResource.new()
@@ -1083,6 +1145,17 @@ static func _count_color_rects(node: Node) -> int:
 	for child: Node in node.get_children():
 		total += _count_color_rects(child)
 	return total
+
+static func _find_first_color_rect(node: Node) -> ColorRect:
+	if node == null:
+		return null
+	if node is ColorRect:
+		return node as ColorRect
+	for child: Node in node.get_children():
+		var found: ColorRect = _find_first_color_rect(child)
+		if found != null:
+			return found
+	return null
 
 static func _count_separators(node: Node) -> int:
 	if node == null:
