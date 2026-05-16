@@ -23,6 +23,12 @@ signal event_selected(row: EventRowUI)
 signal add_action_requested(row: EventRowUI)
 ## Emitted when inline Add Condition is requested.
 signal add_condition_requested(row: EventRowUI)
+## Emitted when delete is requested for this event row.
+signal event_delete_requested(row: EventRowUI)
+## Emitted when delete is requested for a condition.
+signal condition_delete_requested(row: EventRowUI, index: int)
+## Emitted when delete is requested for an action.
+signal action_delete_requested(row: EventRowUI, index: int)
 
 var event_row: EventRow = null
 
@@ -33,11 +39,16 @@ var _conditions_container: VBoxContainer = null
 var _actions_container: VBoxContainer = null
 var _condition_context_menu: PopupMenu = null
 var _context_condition_index: int = -1
+var _action_context_menu: PopupMenu = null
+var _context_action_index: int = -1
 
 const CONDITION_MENU_EDIT: int = 1
 const CONDITION_MENU_ADD_ANOTHER: int = 2
 const CONDITION_MENU_REPLACE: int = 3
 const CONDITION_MENU_INVERT: int = 4
+const CONDITION_MENU_DELETE: int = 5
+const ACTION_MENU_EDIT: int = 1
+const ACTION_MENU_DELETE: int = 2
 const ACTIONS_LANE_STRETCH_RATIO: float = 1.4
 
 func _init() -> void:
@@ -67,8 +78,17 @@ func _build_ui() -> void:
 	_condition_context_menu.add_item("Replace Condition", CONDITION_MENU_REPLACE)
 	_condition_context_menu.add_separator()
 	_condition_context_menu.add_item("Invert Condition", CONDITION_MENU_INVERT)
+	_condition_context_menu.add_separator()
+	_condition_context_menu.add_item("Delete Condition", CONDITION_MENU_DELETE)
 	_condition_context_menu.connect("id_pressed", _on_condition_context_menu_id_pressed)
 	add_child(_condition_context_menu)
+
+	_action_context_menu = PopupMenu.new()
+	_action_context_menu.add_item("Edit", ACTION_MENU_EDIT)
+	_action_context_menu.add_separator()
+	_action_context_menu.add_item("Delete Action", ACTION_MENU_DELETE)
+	_action_context_menu.connect("id_pressed", _on_action_context_menu_id_pressed)
+	add_child(_action_context_menu)
 
 	# Side-by-side lanes
 	var lanes_hbox: HBoxContainer = HBoxContainer.new()
@@ -128,6 +148,16 @@ func _build_ui() -> void:
 	header_btn.add_theme_font_size_override("font_size", 10)
 	header_btn.connect("pressed", _on_event_header_pressed)
 	cond_row.add_child(header_btn)
+
+	var delete_event_btn: Button = Button.new()
+	delete_event_btn.text = "✕"
+	delete_event_btn.flat = true
+	delete_event_btn.tooltip_text = "Delete this event"
+	delete_event_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	delete_event_btn.add_theme_color_override("font_color", Color(0.85, 0.35, 0.35))
+	delete_event_btn.add_theme_font_size_override("font_size", 10)
+	delete_event_btn.connect("pressed", _on_delete_event_pressed)
+	cond_row.add_child(delete_event_btn)
 
 	var add_condition_btn: Button = Button.new()
 	add_condition_btn.text = "+ Add"
@@ -371,8 +401,9 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 		btn.connect("pressed", func() -> void: condition_selected.emit(self, index))
 		btn.connect("gui_input", func(event: InputEvent) -> void: _on_condition_entry_gui_input(event, index))
 	else:
-		btn.tooltip_text = "Left-click to edit action parameters"
+		btn.tooltip_text = "Left-click to edit - Right-click for options"
 		btn.connect("pressed", func() -> void: action_selected.emit(self, index))
+		btn.connect("gui_input", func(event: InputEvent) -> void: _on_action_entry_gui_input(event, index))
 	return btn
 
 func _on_event_header_pressed() -> void:
@@ -383,6 +414,9 @@ func _on_add_condition_pressed() -> void:
 
 func _on_add_action_pressed() -> void:
 	add_action_requested.emit(self)
+
+func _on_delete_event_pressed() -> void:
+	event_delete_requested.emit(self)
 
 func _on_condition_entry_gui_input(event: InputEvent, index: int) -> void:
 	if not (event is InputEventMouseButton):
@@ -398,6 +432,20 @@ func _on_condition_entry_gui_input(event: InputEvent, index: int) -> void:
 	_condition_context_menu.popup()
 	get_viewport().set_input_as_handled()
 
+func _on_action_entry_gui_input(event: InputEvent, index: int) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	var mb: InputEventMouseButton = event as InputEventMouseButton
+	if mb.button_index != MOUSE_BUTTON_RIGHT or not mb.pressed:
+		return
+	_context_action_index = index
+	if _action_context_menu == null:
+		return
+	_action_context_menu.position = DisplayServer.mouse_get_position()
+	_action_context_menu.reset_size()
+	_action_context_menu.popup()
+	get_viewport().set_input_as_handled()
+
 func _on_condition_context_menu_id_pressed(id: int) -> void:
 	if _context_condition_index < 0:
 		return
@@ -410,3 +458,14 @@ func _on_condition_context_menu_id_pressed(id: int) -> void:
 			condition_replace_requested.emit(self, _context_condition_index)
 		CONDITION_MENU_INVERT:
 			condition_invert_requested.emit(self, _context_condition_index)
+		CONDITION_MENU_DELETE:
+			condition_delete_requested.emit(self, _context_condition_index)
+
+func _on_action_context_menu_id_pressed(id: int) -> void:
+	if _context_action_index < 0:
+		return
+	match id:
+		ACTION_MENU_EDIT:
+			action_selected.emit(self, _context_action_index)
+		ACTION_MENU_DELETE:
+			action_delete_requested.emit(self, _context_action_index)
