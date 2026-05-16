@@ -32,7 +32,11 @@ static func format_summary(v_name: String, v_desc: Dictionary) -> String:
 	var default_val: Variant = v_desc.get("default", null)
 	var default_str: String = "" if default_val == null else str(default_val)
 	if type_str == "String" and default_val != null:
-		default_str = '"%s"' % default_str
+		var raw: String = str(default_val)
+		if raw.length() >= 2 and raw.begins_with('"') and raw.ends_with('"'):
+			raw = raw.substr(1, raw.length() - 2)
+		raw = raw.replace('"', '\\"')
+		default_str = '"%s"' % raw
 	return "Global %s %s = %s" % [type_str, v_name, default_str]
 
 ## Updates the selection highlight.

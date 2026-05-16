@@ -24,10 +24,11 @@ var _pending_row_for_condition: EventRow = null
 var _pending_row_for_action: EventRow = null
 
 ## Tracks which sub-element is focused for inspector editing.
-## Values: "event", "condition", "action", "variable"
+## Values: "event", "condition", "action", "variable", "group"
 var _selected_entry_kind: String = "event"
 var _selected_entry_index: int = -1
 var _selected_variable_name: String = ""
+var _selected_group: EventGroup = null
 
 var _row_clipboard: Resource = null
 var _row_clipboard_kind: String = ""
@@ -63,6 +64,7 @@ func set_sheet(sheet: EventSheetResource) -> void:
     _selected_entry_kind = "event"
     _selected_entry_index = -1
     _selected_variable_name = ""
+    _selected_group = null
     _preview_dirty = false
     _sheet_dirty = false
     refresh_rows()
@@ -105,7 +107,9 @@ func refresh_rows() -> void:
         return
 
     # --- Global variable rows (top of document) ---
-    for var_key: Variant in current_sheet.variables.keys():
+    var var_keys: Array = current_sheet.variables.keys()
+    var_keys.sort()
+    for var_key: Variant in var_keys:
         var v_name: String = str(var_key)
         var v_desc: Variant = current_sheet.variables[var_key]
         if not (v_desc is Dictionary):
@@ -130,6 +134,7 @@ func refresh_rows() -> void:
         if entry is EventGroup:
             var group_ui: GroupRowUI = GroupRowUI.new()
             group_ui.setup(entry as EventGroup)
+            group_ui.set_selected(entry == _selected_group and _selected_entry_kind == "group")
             group_ui.selected.connect(_on_group_row_selected)
             _row_list.add_child(group_ui)
         elif entry is EventRow:
@@ -350,6 +355,10 @@ func _on_add_event_requested() -> void:
     var row: EventRow = EventRow.new()
     current_sheet.events.append(row)
     _selected_row = row
+    _selected_group = null
+    _selected_entry_kind = "event"
+    _selected_entry_index = -1
+    _selected_variable_name = ""
     refresh_rows()
     _rebuild_inspector()
     _mark_preview_dirty()
@@ -357,6 +366,7 @@ func _on_add_event_requested() -> void:
 
 func _on_row_selected(row: EventRow) -> void:
     _selected_row = row
+    _selected_group = null
     _selected_entry_kind = "event"
     _selected_entry_index = -1
     _selected_variable_name = ""
@@ -382,6 +392,7 @@ func _on_row_delete_requested(row: EventRow) -> void:
 
 func _on_add_condition_requested(row: EventRow) -> void:
     _selected_row = row
+    _selected_group = null
     _selected_entry_kind = "event"
     _selected_entry_index = -1
     refresh_rows()
@@ -392,6 +403,7 @@ func _on_add_condition_requested(row: EventRow) -> void:
 
 func _on_add_action_requested(row: EventRow) -> void:
     _selected_row = row
+    _selected_group = null
     _selected_entry_kind = "event"
     _selected_entry_index = -1
     refresh_rows()
@@ -422,6 +434,7 @@ func _on_action_selected(action: ACEAction) -> void:
 
 func _on_row_duplicate_requested(row: EventRow) -> void:
     _selected_row = row
+    _selected_group = null
     _selected_entry_kind = "event"
     _selected_entry_index = -1
     refresh_rows()
@@ -431,6 +444,7 @@ func _on_row_duplicate_requested(row: EventRow) -> void:
 ## Handles a click on a global variable row in the canvas.
 func _on_variable_row_selected(v_name: String) -> void:
     _selected_row = null
+    _selected_group = null
     _selected_entry_kind = "variable"
     _selected_entry_index = -1
     _selected_variable_name = v_name
@@ -438,9 +452,10 @@ func _on_variable_row_selected(v_name: String) -> void:
     _rebuild_inspector()
 
 ## Handles a click on a group row header in the canvas.
-func _on_group_row_selected(_group: EventGroup) -> void:
+func _on_group_row_selected(group: EventGroup) -> void:
     _selected_row = null
-    _selected_entry_kind = "event"
+    _selected_group = group
+    _selected_entry_kind = "group"
     _selected_entry_index = -1
     _selected_variable_name = ""
     refresh_rows()
@@ -449,6 +464,7 @@ func _on_group_row_selected(_group: EventGroup) -> void:
 ## Handles a click on a specific condition entry inside an event row.
 func _on_condition_entry_selected(row: EventRow, index: int) -> void:
     _selected_row = row
+    _selected_group = null
     _selected_entry_kind = "condition"
     _selected_entry_index = index
     _selected_variable_name = ""
@@ -458,6 +474,7 @@ func _on_condition_entry_selected(row: EventRow, index: int) -> void:
 ## Handles a click on a specific action entry inside an event row.
 func _on_action_entry_selected(row: EventRow, index: int) -> void:
     _selected_row = row
+    _selected_group = null
     _selected_entry_kind = "action"
     _selected_entry_index = index
     _selected_variable_name = ""
@@ -716,9 +733,14 @@ func _rebuild_inspector() -> void:
         _rebuild_inspector_variable(_selected_variable_name)
         return
 
+    # --- Focused: group selected ---
+    if _selected_entry_kind == "group" and _selected_group != null:
+        _rebuild_inspector_group(_selected_group)
+        return
+
     if _selected_row == null:
         var empty_label: Label = Label.new()
-        empty_label.text = "Select an event row or variable to edit."
+        empty_label.text = "Select an event row, group, or variable to edit."
         _inspector_container.add_child(empty_label)
         return
 
@@ -934,12 +956,77 @@ func _rebuild_inspector_variable(v_name: String) -> void:
     var delete_btn: Button = Button.new()
     delete_btn.text = "Delete Variable"
     delete_btn.pressed.connect(func() -> void:
-        _delete_variable(v_name)
         _selected_entry_kind = "event"
         _selected_entry_index = -1
         _selected_variable_name = ""
+        _selected_group = null
+        _selected_row = null
+        _delete_variable(v_name)
     )
     _inspector_container.add_child(delete_btn)
+
+## Builds a focused inspector for a selected group header.
+func _rebuild_inspector_group(group: EventGroup) -> void:
+    _inspector_container.add_child(_title_label("Group: %s" % _group_display_name(group)))
+    _add_text_editor("name", group.name, func(value: String) -> void:
+        if _selected_group == null:
+            return
+        _selected_group.name = value
+        refresh_rows()
+        _mark_preview_dirty()
+    )
+    _add_text_editor("group_name", group.group_name, func(value: String) -> void:
+        if _selected_group == null:
+            return
+        _selected_group.group_name = value
+        refresh_rows()
+        _mark_preview_dirty()
+    )
+    _add_text_editor("description", group.description, func(value: String) -> void:
+        if _selected_group == null:
+            return
+        _selected_group.description = value
+        _mark_preview_dirty()
+    )
+
+    var enabled_toggle: CheckBox = CheckBox.new()
+    enabled_toggle.text = "Enabled"
+    enabled_toggle.button_pressed = group.enabled
+    enabled_toggle.toggled.connect(func(is_enabled: bool) -> void:
+        if _selected_group == null:
+            return
+        _selected_group.enabled = is_enabled
+        refresh_rows()
+        _mark_preview_dirty()
+    )
+    _inspector_container.add_child(enabled_toggle)
+
+    var collapsed_toggle: CheckBox = CheckBox.new()
+    collapsed_toggle.text = "Collapsed"
+    collapsed_toggle.button_pressed = group.collapsed
+    collapsed_toggle.toggled.connect(func(is_collapsed: bool) -> void:
+        if _selected_group == null:
+            return
+        _selected_group.collapsed = is_collapsed
+        _selected_group.expanded = not is_collapsed
+        _mark_preview_dirty()
+    )
+    _inspector_container.add_child(collapsed_toggle)
+
+    var note: Label = Label.new()
+    note.text = "Nested local variables and group event bodies are planned."
+    note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _inspector_container.add_child(note)
+
+func _group_display_name(group: EventGroup) -> String:
+    if group == null:
+        return "Group"
+    var display_name: String = group.name
+    if display_name.is_empty():
+        display_name = group.group_name
+    if display_name.is_empty():
+        display_name = "Group"
+    return display_name
 
 func _on_inspector_enabled_toggled(is_enabled: bool) -> void:
     if _selected_row == null:
@@ -1062,6 +1149,9 @@ func _remove_condition(index: int) -> void:
         return
     if index < 0 or index >= _selected_row.conditions.size():
         return
+    if _selected_entry_kind == "condition":
+        _selected_entry_kind = "event"
+        _selected_entry_index = -1
     _selected_row.conditions.remove_at(index)
     refresh_rows()
     _rebuild_inspector()
@@ -1072,6 +1162,9 @@ func _remove_action(index: int) -> void:
         return
     if index < 0 or index >= _selected_row.actions.size():
         return
+    if _selected_entry_kind == "action":
+        _selected_entry_kind = "event"
+        _selected_entry_index = -1
     _selected_row.actions.remove_at(index)
     refresh_rows()
     _rebuild_inspector()
@@ -1311,7 +1404,14 @@ func _rename_variable(old_name: String, new_name: String) -> void:
 func _delete_variable(var_name: String) -> void:
     if current_sheet == null:
         return
+    if _selected_entry_kind == "variable" and _selected_variable_name == var_name:
+        _selected_entry_kind = "event"
+        _selected_entry_index = -1
+        _selected_variable_name = ""
+        _selected_row = null
+        _selected_group = null
     current_sheet.variables.erase(var_name)
+    refresh_rows()
     _rebuild_vars_panel()
     _rebuild_inspector()
     _mark_preview_dirty()

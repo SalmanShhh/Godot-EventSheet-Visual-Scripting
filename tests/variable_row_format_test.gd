@@ -16,6 +16,16 @@ static func run() -> bool:
 	assert(str_summary == 'Global String player_name = "Player"',
 		'Expected \'Global String player_name = "Player"\', got "%s"' % str_summary)
 
+	# String variable with already-quoted default should not be double-quoted
+	var prequoted_summary: String = VariableRowUI.format_summary("player_name", {"type": "String", "default": '"Player"'})
+	assert(prequoted_summary == 'Global String player_name = "Player"',
+		'Expected \'Global String player_name = "Player"\', got "%s"' % prequoted_summary)
+
+	# String variable should escape embedded quotes in summary
+	var embedded_quotes_summary: String = VariableRowUI.format_summary("dialogue", {"type": "String", "default": 'He said "Hi"'})
+	assert(embedded_quotes_summary == 'Global String dialogue = "He said \\"Hi\\""',
+		'Expected \'Global String dialogue = "He said \\"Hi\\""\', got "%s"' % embedded_quotes_summary)
+
 	# float variable
 	var float_summary: String = VariableRowUI.format_summary("speed", {"type": "float", "default": 1.5})
 	assert(float_summary == "Global float speed = 1.5",
