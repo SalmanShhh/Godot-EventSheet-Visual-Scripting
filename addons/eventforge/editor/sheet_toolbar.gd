@@ -281,15 +281,15 @@ func set_dirty(dirty: bool) -> void:
 		_dirty_indicator.visible = dirty
 
 func set_context(sheet: EventSheetResource, selection_kind: String = "none") -> void:
+	var meta: String = format_document_meta(sheet)
+	var path: String = format_document_path(sheet)
+	var selection: String = format_selection_meta(selection_kind)
 	if _doc_meta_label != null:
-		_doc_meta_label.text = format_document_meta(sheet)
+		_doc_meta_label.text = meta
 	if _selection_meta_label != null:
-		_selection_meta_label.text = format_selection_meta(selection_kind)
+		_selection_meta_label.text = selection
+	if _sheet_path_label != null:
+		_sheet_path_label.text = path
 	if _sheet_name_label != null:
 		_sheet_name_label.text = _format_sheet_name(sheet)
-		var meta: String = format_document_meta(sheet)
-		var path: String = format_document_path(sheet)
-		var selection: String = format_selection_meta(selection_kind)
 		_sheet_name_label.tooltip_text = "Meta: %s\nPath: %s\nSelection: %s" % [meta, path, selection]
-	if _sheet_path_label != null:
-		_sheet_path_label.text = format_document_path(sheet)
