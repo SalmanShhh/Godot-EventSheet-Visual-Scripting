@@ -2139,6 +2139,8 @@ func _add_event_row(event_row: EventRow, indent_level: int = 0, render_guard: Di
 	row_ui.action_replace_requested.connect(_on_action_replace_requested)
 	row_ui.add_condition_requested.connect(_on_row_add_condition_requested)
 	row_ui.add_action_requested.connect(_on_row_add_action_requested)
+	row_ui.insert_event_above_requested.connect(_on_event_insert_above_requested)
+	row_ui.insert_event_below_requested.connect(_on_event_insert_below_requested)
 	row_ui.event_delete_requested.connect(_on_event_delete_requested)
 	row_ui.condition_delete_requested.connect(_on_condition_delete_requested)
 	row_ui.action_delete_requested.connect(_on_action_delete_requested)
@@ -2157,6 +2159,8 @@ func _add_group_row(event_group: EventGroup, indent_level: int = 0, render_guard
 	row_ui.refresh()
 	row_ui.group_selected.connect(_on_group_selected)
 	row_ui.group_collapsed_toggled.connect(_on_group_collapsed_toggled)
+	row_ui.insert_event_above_requested.connect(_on_group_insert_above_requested)
+	row_ui.insert_event_below_requested.connect(_on_group_insert_below_requested)
 	row_ui.group_delete_requested.connect(_on_group_delete_requested)
 	_add_canvas_row(row_ui, indent_level)
 
@@ -2337,6 +2341,26 @@ func _on_row_add_action_requested(row: EventRowUI) -> void:
 	_refresh_workspace_context()
 	_open_add_action_picker(row)
 
+func _on_event_insert_above_requested(row: EventRowUI) -> void:
+	if row == null or row.event_row == null:
+		return
+	_insert_new_event_relative(row.event_row.event_uid, "event", false)
+
+func _on_event_insert_below_requested(row: EventRowUI) -> void:
+	if row == null or row.event_row == null:
+		return
+	_insert_new_event_relative(row.event_row.event_uid, "event", true)
+
+func _on_group_insert_above_requested(row: GroupRowUI) -> void:
+	if row == null or row.event_group == null:
+		return
+	_insert_new_event_relative(row.event_group.group_uid, "group", false)
+
+func _on_group_insert_below_requested(row: GroupRowUI) -> void:
+	if row == null or row.event_group == null:
+		return
+	_insert_new_event_relative(row.event_group.group_uid, "group", true)
+
 func _on_event_delete_requested(row: EventRowUI) -> void:
 	if row == null or row.event_row == null:
 		return
@@ -2403,6 +2427,58 @@ func _delete_event_by_uid(uid: String) -> void:
 				_mark_dirty()
 				_set_status("Event deleted")
 				return
+
+func _insert_new_event_relative(target_uid: String, target_kind: String, insert_after: bool) -> void:
+	if current_sheet == null:
+		_set_status("No sheet loaded for insertion", true)
+		return
+	if target_uid.is_empty():
+		_set_status("Cannot insert relative to an empty target row id", true)
+		return
+	var new_event: EventRow = _make_default_insert_event_row()
+	if not _insert_event_relative_in_array(current_sheet.events, target_uid, target_kind, insert_after, new_event):
+		_set_status("Could not locate target row for insertion", true)
+		return
+	refresh_canvas()
+	_focus_event_by_uid(new_event.event_uid)
+	_mark_dirty()
+	var direction: String = "below" if insert_after else "above"
+	_set_status("Inserted event %s" % direction)
+
+func _make_default_insert_event_row() -> EventRow:
+	var new_event: EventRow = EventRow.new()
+	new_event.trigger_provider_id = "Core"
+	new_event.trigger_id = DEFAULT_RUN_CONTEXT_ACE_ID
+	return new_event
+
+func _insert_event_relative_in_array(arr: Array, target_uid: String, target_kind: String, insert_after: bool, new_event: EventRow) -> bool:
+	for i: int in range(arr.size()):
+		var resource: Variant = arr[i]
+		if target_kind == "event" and resource is EventRow:
+			var event_row: EventRow = resource as EventRow
+			if event_row.event_uid == target_uid:
+				var event_insert_index: int = i + (1 if insert_after else 0)
+				arr.insert(event_insert_index, new_event)
+				return true
+		elif target_kind == "group" and resource is EventGroup:
+			var event_group: EventGroup = resource as EventGroup
+			if event_group.group_uid == target_uid:
+				var group_insert_index: int = i + (1 if insert_after else 0)
+				arr.insert(group_insert_index, new_event)
+				return true
+
+		if resource is EventRow:
+			var nested_event: EventRow = resource as EventRow
+			if _insert_event_relative_in_array(nested_event.sub_events, target_uid, target_kind, insert_after, new_event):
+				return true
+		elif resource is EventGroup:
+			var nested_group: EventGroup = resource as EventGroup
+			if _insert_event_relative_in_array(nested_group.events, target_uid, target_kind, insert_after, new_event):
+				return true
+			# `rows` is the legacy alias of `events`; older sheets may still carry children there.
+			if _insert_event_relative_in_array(nested_group.rows, target_uid, target_kind, insert_after, new_event):
+				return true
+	return false
 
 func _remove_sub_event_by_uid(parent: EventRow, uid: String) -> bool:
 	for i: int in range(parent.sub_events.size()):

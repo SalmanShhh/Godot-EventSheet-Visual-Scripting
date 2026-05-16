@@ -10,6 +10,10 @@ signal group_selected(row: GroupRowUI)
 signal group_collapsed_toggled(row: GroupRowUI, collapsed: bool)
 ## Emitted when the delete button is pressed on this group row.
 signal group_delete_requested(row: GroupRowUI)
+## Emitted when insertion of a new event is requested above this group row.
+signal insert_event_above_requested(row: GroupRowUI)
+## Emitted when insertion of a new event is requested below this group row.
+signal insert_event_below_requested(row: GroupRowUI)
 
 var event_group: EventGroup = null
 
@@ -19,6 +23,7 @@ var _disclosure_btn: Button = null
 var _depth: int = 0
 var _selected: bool = false
 var _hovered: bool = false
+const LANE_DIVIDER_WIDTH: int = 2
 
 func _init() -> void:
 	_build_ui()
@@ -26,10 +31,29 @@ func _init() -> void:
 func _build_ui() -> void:
 	_apply_row_style()
 
-	var hbox: HBoxContainer = HBoxContainer.new()
-	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_theme_constant_override("separation", 6)
-	add_child(hbox)
+	var line: HBoxContainer = HBoxContainer.new()
+	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	line.add_theme_constant_override("separation", 0)
+	add_child(line)
+
+	var group_lane: PanelContainer = PanelContainer.new()
+	group_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	group_lane.size_flags_stretch_ratio = 1.0
+	var group_lane_style: StyleBoxFlat = StyleBoxFlat.new()
+	group_lane_style.bg_color = Color(0.132, 0.098, 0.191, 1.0)
+	group_lane_style.set_border_width_all(0)
+	group_lane_style.set_corner_radius_all(0)
+	group_lane_style.set_content_margin(SIDE_LEFT, 6)
+	group_lane_style.set_content_margin(SIDE_RIGHT, 4)
+	group_lane_style.set_content_margin(SIDE_TOP, 2)
+	group_lane_style.set_content_margin(SIDE_BOTTOM, 2)
+	group_lane.add_theme_stylebox_override("panel", group_lane_style)
+	line.add_child(group_lane)
+
+	var left_hbox: HBoxContainer = HBoxContainer.new()
+	left_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_hbox.add_theme_constant_override("separation", 6)
+	group_lane.add_child(left_hbox)
 
 	_disclosure_btn = Button.new()
 	_disclosure_btn.flat = true
@@ -37,7 +61,7 @@ func _build_ui() -> void:
 	_disclosure_btn.add_theme_color_override("font_color", Color(0.78, 0.72, 0.96))
 	_disclosure_btn.add_theme_color_override("font_hover_color", Color(0.91, 0.86, 1.0))
 	_disclosure_btn.connect("pressed", _on_toggle_pressed)
-	hbox.add_child(_disclosure_btn)
+	left_hbox.add_child(_disclosure_btn)
 
 	var badge_panel: PanelContainer = PanelContainer.new()
 	var badge_style: StyleBoxFlat = StyleBoxFlat.new()
@@ -55,18 +79,68 @@ func _build_ui() -> void:
 	badge.add_theme_color_override("font_color", Color(0.88, 0.82, 1.0))
 	badge.add_theme_font_size_override("font_size", 9)
 	badge_panel.add_child(badge)
-	hbox.add_child(badge_panel)
+	left_hbox.add_child(badge_panel)
 
 	_group_name_label = Label.new()
 	_group_name_label.add_theme_color_override("font_color", Color(0.93, 0.92, 1.0))
 	_group_name_label.add_theme_font_size_override("font_size", 11)
 	_group_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(_group_name_label)
+	left_hbox.add_child(_group_name_label)
+
+	var lane_div: ColorRect = ColorRect.new()
+	lane_div.custom_minimum_size = Vector2(LANE_DIVIDER_WIDTH, 0)
+	lane_div.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	lane_div.color = Color(0.34, 0.24, 0.49, 0.92)
+	lane_div.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_child(lane_div)
+
+	var actions_lane: PanelContainer = PanelContainer.new()
+	actions_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions_lane.size_flags_stretch_ratio = 1.85
+	var actions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
+	actions_lane_style.bg_color = Color(0.120, 0.089, 0.176, 1.0)
+	actions_lane_style.set_border_width_all(0)
+	actions_lane_style.set_corner_radius_all(0)
+	actions_lane_style.set_content_margin(SIDE_LEFT, 6)
+	actions_lane_style.set_content_margin(SIDE_RIGHT, 4)
+	actions_lane_style.set_content_margin(SIDE_TOP, 2)
+	actions_lane_style.set_content_margin(SIDE_BOTTOM, 2)
+	actions_lane.add_theme_stylebox_override("panel", actions_lane_style)
+	line.add_child(actions_lane)
+
+	var right_hbox: HBoxContainer = HBoxContainer.new()
+	right_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_hbox.add_theme_constant_override("separation", 4)
+	actions_lane.add_child(right_hbox)
 
 	_count_label = Label.new()
 	_count_label.add_theme_color_override("font_color", Color(0.60, 0.55, 0.78))
 	_count_label.add_theme_font_size_override("font_size", 9)
-	hbox.add_child(_count_label)
+	right_hbox.add_child(_count_label)
+
+	var spacer: Control = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_hbox.add_child(spacer)
+
+	var insert_above_btn: Button = Button.new()
+	insert_above_btn.text = "+↑"
+	insert_above_btn.flat = true
+	insert_above_btn.tooltip_text = "Insert event above this group"
+	insert_above_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	insert_above_btn.add_theme_color_override("font_color", Color(0.78, 0.73, 0.96))
+	insert_above_btn.add_theme_color_override("font_hover_color", Color(0.91, 0.88, 1.0))
+	insert_above_btn.connect("pressed", _on_insert_above_pressed)
+	right_hbox.add_child(insert_above_btn)
+
+	var insert_below_btn: Button = Button.new()
+	insert_below_btn.text = "+↓"
+	insert_below_btn.flat = true
+	insert_below_btn.tooltip_text = "Insert event below this group"
+	insert_below_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	insert_below_btn.add_theme_color_override("font_color", Color(0.78, 0.73, 0.96))
+	insert_below_btn.add_theme_color_override("font_hover_color", Color(0.91, 0.88, 1.0))
+	insert_below_btn.connect("pressed", _on_insert_below_pressed)
+	right_hbox.add_child(insert_below_btn)
 
 	var btn: Button = Button.new()
 	btn.text = "✎"
@@ -75,7 +149,7 @@ func _build_ui() -> void:
 	btn.add_theme_color_override("font_color", Color(0.83, 0.77, 0.98))
 	btn.add_theme_color_override("font_hover_color", Color(0.90, 0.85, 1.0))
 	btn.connect("pressed", _on_pressed)
-	hbox.add_child(btn)
+	right_hbox.add_child(btn)
 
 	var delete_btn: Button = Button.new()
 	delete_btn.text = "×"
@@ -86,7 +160,7 @@ func _build_ui() -> void:
 	delete_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.55, 0.55))
 	delete_btn.add_theme_font_size_override("font_size", 12)
 	delete_btn.connect("pressed", _on_delete_pressed)
-	hbox.add_child(delete_btn)
+	right_hbox.add_child(delete_btn)
 
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	connect("gui_input", _on_gui_input)
@@ -142,6 +216,12 @@ func _on_pressed() -> void:
 
 func _on_delete_pressed() -> void:
 	group_delete_requested.emit(self)
+
+func _on_insert_above_pressed() -> void:
+	insert_event_above_requested.emit(self)
+
+func _on_insert_below_pressed() -> void:
+	insert_event_below_requested.emit(self)
 
 func _on_toggle_pressed() -> void:
 	if event_group == null:
