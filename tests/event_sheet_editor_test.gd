@@ -138,6 +138,9 @@ static func run() -> bool:
 	sub_event_sheet.events.append(parent_row)
 	editor.current_sheet = sub_event_sheet
 	editor.refresh_canvas()
+	all_passed = _check("document header rendered", _count_nodes_named(editor, "SheetDocumentHeader") >= 1, true) and all_passed
+	all_passed = _check("globals section shell rendered", _count_nodes_named(editor, "SheetSectionGlobals") >= 1, true) and all_passed
+	all_passed = _check("events section shell rendered", _count_nodes_named(editor, "SheetSectionEvents") >= 1, true) and all_passed
 	all_passed = _check("sub events render nested rows", _count_event_row_nodes(editor), 2) and all_passed
 	all_passed = _check("sheet gutter wrappers rendered", _count_nodes_named(editor, "SheetGutter") >= 2, true) and all_passed
 

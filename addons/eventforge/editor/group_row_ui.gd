@@ -30,19 +30,19 @@ func _build_ui() -> void:
 	_disclosure_btn = Button.new()
 	_disclosure_btn.flat = true
 	_disclosure_btn.tooltip_text = "Expand/collapse group"
-	_disclosure_btn.add_theme_color_override("font_color", Color(0.77, 0.71, 0.95))
-	_disclosure_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.85, 1.0))
+	_disclosure_btn.add_theme_color_override("font_color", Color(0.78, 0.72, 0.96))
+	_disclosure_btn.add_theme_color_override("font_hover_color", Color(0.91, 0.86, 1.0))
 	_disclosure_btn.connect("pressed", _on_toggle_pressed)
 	hbox.add_child(_disclosure_btn)
 
 	var badge: Label = Label.new()
 	badge.text = "Group"
-	badge.add_theme_color_override("font_color", Color(0.77, 0.71, 0.95))
+	badge.add_theme_color_override("font_color", Color(0.83, 0.77, 0.98))
 	badge.add_theme_font_size_override("font_size", 9)
 	hbox.add_child(badge)
 
 	_group_name_label = Label.new()
-	_group_name_label.add_theme_color_override("font_color", Color(0.89, 0.89, 0.97))
+	_group_name_label.add_theme_color_override("font_color", Color(0.93, 0.92, 1.0))
 	_group_name_label.add_theme_font_size_override("font_size", 11)
 	_group_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(_group_name_label)
@@ -51,7 +51,7 @@ func _build_ui() -> void:
 	btn.text = "✎"
 	btn.flat = true
 	btn.tooltip_text = "Edit group"
-	btn.add_theme_color_override("font_color", Color(0.77, 0.71, 0.95))
+	btn.add_theme_color_override("font_color", Color(0.83, 0.77, 0.98))
 	btn.add_theme_color_override("font_hover_color", Color(0.90, 0.85, 1.0))
 	btn.connect("pressed", _on_pressed)
 	hbox.add_child(btn)
@@ -69,13 +69,13 @@ func set_selected(selected: bool) -> void:
 
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.143, 0.126, 0.186, 1.0) if _selected else Color(0.110, 0.103, 0.149, 1.0)
-	style.border_color = Color(0.533, 0.419, 0.867, 1.0) if _selected else Color(0.262, 0.223, 0.396, 1.0)
+	style.bg_color = Color(0.166, 0.116, 0.221, 1.0) if _selected else Color(0.122, 0.090, 0.171, 1.0)
+	style.border_color = Color(0.607, 0.455, 0.920, 1.0) if _selected else Color(0.304, 0.238, 0.442, 1.0)
 	style.set_border_width_all(0)
 	style.border_width_left = 2 + min(_depth, 4)
-	style.set_corner_radius_all(4)
-	style.set_content_margin_all(5)
-	style.content_margin_left = 8
+	style.set_corner_radius_all(5)
+	style.set_content_margin_all(6)
+	style.content_margin_left = 9
 	add_theme_stylebox_override("panel", style)
 
 ## Refreshes the display from the assigned event_group resource.

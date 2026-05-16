@@ -44,7 +44,18 @@ It intentionally avoids describing unbuilt behavior as complete.
 - Variable and group rows share the same sheet-line/gutter composition model.
 - Variable rows remain compact in-canvas, with rich hover tooltips that include type/default and optional variable descriptions.
 
-### 2.4 Sub-event support status
+### 2.4 Editor shell and document framing
+
+- The editor uses a dedicated sheet workspace shell:
+  - top chrome toolbar panel (`Event Sheet Workspace`) with focused authoring actions
+  - framed canvas surface for the event-sheet document
+  - inspector-adjacent panel using the same dark design system
+- Document framing is sectioned into explicit shells:
+  - `SheetSectionGlobals` for global variables
+  - `SheetSectionEvents` for event/group rows
+- Empty states are presented as centered onboarding cards with direct create/open actions.
+
+### 2.5 Sub-event support status
 
 - Sub-event rendering groundwork exists:
   - nested event resources are rendered with indentation

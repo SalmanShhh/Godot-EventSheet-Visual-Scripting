@@ -27,6 +27,8 @@ const NO_VARIABLES_AVAILABLE_HINT_TEXT: String = "No variables are available. Ad
 const ACE_PARAMS_LABEL_WIDTH: float = 110.0
 const ACE_PARAMS_LABEL_MIN_HEIGHT: float = 20.0
 const BRANCH_GUIDE_CHAR: String = "└"
+const CANVAS_BG: Color = Color(0.060, 0.067, 0.088, 1.0)
+const CANVAS_BORDER: Color = Color(0.141, 0.164, 0.214, 1.0)
 
 ## Currently selected entry kind.
 ## One of: "none", "event", "condition", "action", "variable", "group"
@@ -40,6 +42,7 @@ var _selected_group: Variant = null     # GroupRowUI
 
 var _scroll: ScrollContainer = null
 var _canvas_vbox: VBoxContainer = null
+var _sheet_canvas_shell: PanelContainer = null
 var _inspector_panel: PanelContainer = null
 var _inspector_vbox: VBoxContainer = null
 var _sheet_toolbar: SheetToolbar = null
@@ -73,6 +76,7 @@ var _variable_description_edit: LineEdit = null
 var _variable_dialog_mode: String = ""
 var _variable_dialog_original_name: String = ""
 var _suppress_variable_popup_on_select: bool = false
+var _current_rows_host: VBoxContainer = null
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
@@ -89,10 +93,17 @@ func _build_layout() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 
+	var root_margin: MarginContainer = MarginContainer.new()
+	root_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root_margin.add_theme_constant_override("margin_left", 8)
+	root_margin.add_theme_constant_override("margin_right", 8)
+	root_margin.add_theme_constant_override("margin_top", 8)
+	root_margin.add_theme_constant_override("margin_bottom", 8)
+	add_child(root_margin)
+
 	var root: VBoxContainer = VBoxContainer.new()
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.add_theme_constant_override("separation", 0)
-	add_child(root)
+	root.add_theme_constant_override("separation", 8)
+	root_margin.add_child(root)
 
 	_sheet_toolbar = SheetToolbar.new()
 	_sheet_toolbar.new_sheet_requested.connect(_on_create_new_sheet)
@@ -105,19 +116,34 @@ func _build_layout() -> void:
 	var hbox: HBoxContainer = HBoxContainer.new()
 	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	hbox.add_theme_constant_override("separation", 0)
+	hbox.add_theme_constant_override("separation", 8)
 	root.add_child(hbox)
 
 	# ── Left: canvas scroll ───────────────────────────────────────────────────
+	_sheet_canvas_shell = PanelContainer.new()
+	_sheet_canvas_shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_sheet_canvas_shell.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var canvas_style: StyleBoxFlat = StyleBoxFlat.new()
+	canvas_style.bg_color = CANVAS_BG
+	canvas_style.border_color = CANVAS_BORDER
+	canvas_style.set_border_width_all(1)
+	canvas_style.set_corner_radius_all(8)
+	canvas_style.set_content_margin(SIDE_LEFT, 12)
+	canvas_style.set_content_margin(SIDE_RIGHT, 12)
+	canvas_style.set_content_margin(SIDE_TOP, 12)
+	canvas_style.set_content_margin(SIDE_BOTTOM, 12)
+	_sheet_canvas_shell.add_theme_stylebox_override("panel", canvas_style)
+	hbox.add_child(_sheet_canvas_shell)
+
 	_scroll = ScrollContainer.new()
 	_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	hbox.add_child(_scroll)
+	_sheet_canvas_shell.add_child(_scroll)
 
 	_canvas_vbox = VBoxContainer.new()
 	_canvas_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_canvas_vbox.add_theme_constant_override("separation", 2)
+	_canvas_vbox.add_theme_constant_override("separation", 8)
 	_canvas_vbox.set("custom_minimum_size", Vector2(0, 0))
 	_scroll.add_child(_canvas_vbox)
 
@@ -127,12 +153,15 @@ func _build_layout() -> void:
 
 	# ── Right: inspector panel (passive context panel) ────────────────────────
 	_inspector_panel = PanelContainer.new()
-	_inspector_panel.custom_minimum_size = Vector2(200, 0)
+	_inspector_panel.custom_minimum_size = Vector2(220, 0)
 	_inspector_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	var insp_style: StyleBoxFlat = StyleBoxFlat.new()
-	insp_style.bg_color = Color(0.12, 0.13, 0.16, 1.0)
-	insp_style.set_content_margin_all(8)
+	insp_style.bg_color = Color(0.079, 0.087, 0.113, 1.0)
+	insp_style.border_color = Color(0.157, 0.181, 0.233, 1.0)
+	insp_style.set_border_width_all(1)
+	insp_style.set_corner_radius_all(8)
+	insp_style.set_content_margin_all(10)
 	_inspector_panel.add_theme_stylebox_override("panel", insp_style)
 	hbox.add_child(_inspector_panel)
 
@@ -167,15 +196,17 @@ func refresh_canvas() -> void:
 func _add_no_sheet_onboarding() -> void:
 	var margin: MarginContainer = MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.add_theme_constant_override("margin_top", 40)
-	margin.add_theme_constant_override("margin_left", 40)
-	margin.add_theme_constant_override("margin_right", 40)
-	margin.add_theme_constant_override("margin_bottom", 40)
+	margin.add_theme_constant_override("margin_top", 28)
+	margin.add_theme_constant_override("margin_left", 26)
+	margin.add_theme_constant_override("margin_right", 26)
+	margin.add_theme_constant_override("margin_bottom", 28)
 
 	var card: PanelContainer = PanelContainer.new()
 	var card_style: StyleBoxFlat = StyleBoxFlat.new()
-	card_style.bg_color = Color(0.14, 0.16, 0.20, 1.0)
-	card_style.set_corner_radius_all(6)
+	card_style.bg_color = Color(0.095, 0.110, 0.145, 1.0)
+	card_style.border_color = Color(0.214, 0.264, 0.347, 1.0)
+	card_style.set_border_width_all(1)
+	card_style.set_corner_radius_all(8)
 	card_style.set_content_margin_all(24)
 	card.add_theme_stylebox_override("panel", card_style)
 
@@ -185,14 +216,14 @@ func _add_no_sheet_onboarding() -> void:
 
 	var title: Label = Label.new()
 	title.text = "No Event Sheet Open"
-	title.add_theme_color_override("font_color", Color(0.80, 0.90, 1.0))
-	title.add_theme_font_size_override("font_size", 16)
+	title.add_theme_color_override("font_color", Color(0.83, 0.92, 1.0))
+	title.add_theme_font_size_override("font_size", 17)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
 
 	var body: Label = Label.new()
-	body.text = "Create a new Event Sheet to start building event logic."
-	body.add_theme_color_override("font_color", Color(0.60, 0.65, 0.70))
+	body.text = "Create or open a sheet to start writing inline event clauses."
+	body.add_theme_color_override("font_color", Color(0.62, 0.71, 0.83))
 	body.add_theme_font_size_override("font_size", 11)
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -201,17 +232,22 @@ func _add_no_sheet_onboarding() -> void:
 	var sep: HSeparator = HSeparator.new()
 	vbox.add_child(sep)
 
+	var actions: HBoxContainer = HBoxContainer.new()
+	actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	actions.add_theme_constant_override("separation", 10)
+	vbox.add_child(actions)
+
 	var create_btn: Button = Button.new()
 	create_btn.text = "Create New Event Sheet"
 	create_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	create_btn.connect("pressed", _on_create_new_sheet)
-	vbox.add_child(create_btn)
+	actions.add_child(create_btn)
 
 	var open_btn: Button = Button.new()
 	open_btn.text = "Open Existing Event Sheet"
 	open_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	open_btn.connect("pressed", _on_open_existing_sheet)
-	vbox.add_child(open_btn)
+	actions.add_child(open_btn)
 
 	margin.add_child(card)
 	_canvas_vbox.add_child(margin)
@@ -1176,59 +1212,125 @@ func _find_group_row_ui_by_uid(node: Node, group_uid: String) -> GroupRowUI:
 
 func _add_document_header() -> void:
 	var header_panel: PanelContainer = PanelContainer.new()
+	header_panel.name = "SheetDocumentHeader"
 	var hstyle: StyleBoxFlat = StyleBoxFlat.new()
-	hstyle.bg_color = Color(0.12, 0.14, 0.18, 1.0)
-	hstyle.border_color = Color(0.23, 0.28, 0.37, 1.0)
-	hstyle.set_border_width_all(0)
-	hstyle.border_width_bottom = 1
-	hstyle.set_corner_radius_all(4)
-	hstyle.set_content_margin(SIDE_LEFT, 10)
-	hstyle.set_content_margin(SIDE_RIGHT, 10)
-	hstyle.set_content_margin(SIDE_TOP, 6)
-	hstyle.set_content_margin(SIDE_BOTTOM, 6)
+	hstyle.bg_color = Color(0.089, 0.104, 0.140, 1.0)
+	hstyle.border_color = Color(0.205, 0.246, 0.326, 1.0)
+	hstyle.set_border_width_all(1)
+	hstyle.set_corner_radius_all(6)
+	hstyle.set_content_margin(SIDE_LEFT, 12)
+	hstyle.set_content_margin(SIDE_RIGHT, 12)
+	hstyle.set_content_margin(SIDE_TOP, 8)
+	hstyle.set_content_margin(SIDE_BOTTOM, 8)
 	header_panel.add_theme_stylebox_override("panel", hstyle)
+
+	var shell: VBoxContainer = VBoxContainer.new()
+	shell.add_theme_constant_override("separation", 5)
+	header_panel.add_child(shell)
 
 	var line: HBoxContainer = HBoxContainer.new()
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_theme_constant_override("separation", 8)
-	header_panel.add_child(line)
+	shell.add_child(line)
 
 	var title: Label = Label.new()
-	title.text = "Event Sheet"
-	title.add_theme_color_override("font_color", Color(0.76, 0.86, 1.0))
-	title.add_theme_font_size_override("font_size", 13)
+	title.text = "Event Sheet Document"
+	title.add_theme_color_override("font_color", Color(0.83, 0.91, 1.0))
+	title.add_theme_font_size_override("font_size", 14)
 	line.add_child(title)
 
 	var spacer: Control = Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_child(spacer)
 
-	if current_sheet != null:
-		var meta: Label = Label.new()
-		meta.text = "%d globals • %d events" % [current_sheet.variables.size(), current_sheet.events.size()]
-		meta.add_theme_color_override("font_color", Color(0.57, 0.64, 0.77))
-		meta.add_theme_font_size_override("font_size", 10)
-		line.add_child(meta)
+	var subtitle: Label = Label.new()
+	if current_sheet == null:
+		subtitle.text = "Ready to author"
+	else:
+		subtitle.text = "%d globals • %d root entries" % [current_sheet.variables.size(), current_sheet.events.size()]
+	subtitle.add_theme_color_override("font_color", Color(0.63, 0.74, 0.91))
+	subtitle.add_theme_font_size_override("font_size", 10)
+	line.add_child(subtitle)
+
+	var rhythm: Label = Label.new()
+	rhythm.text = "Inline clauses • Nested flow"
+	rhythm.add_theme_color_override("font_color", Color(0.46, 0.56, 0.72))
+	rhythm.add_theme_font_size_override("font_size", 9)
+	shell.add_child(rhythm)
 
 	_canvas_vbox.add_child(header_panel)
 
-func _add_sheet_marker(text: String, color: Color) -> void:
-	var marker: Label = Label.new()
-	marker.text = text
-	marker.add_theme_color_override("font_color", color)
-	marker.add_theme_font_size_override("font_size", 9)
-	_canvas_vbox.add_child(marker)
+func _add_section_shell(name: String, title: String, subtitle: String, accent: Color, action_text: String = "", action_handler: Callable = Callable()) -> VBoxContainer:
+	var section_panel: PanelContainer = PanelContainer.new()
+	section_panel.name = name
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.068, 0.075, 0.100, 1.0)
+	style.border_color = Color(0.142, 0.164, 0.212, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.set_content_margin(SIDE_LEFT, 9)
+	style.set_content_margin(SIDE_RIGHT, 9)
+	style.set_content_margin(SIDE_TOP, 9)
+	style.set_content_margin(SIDE_BOTTOM, 9)
+	section_panel.add_theme_stylebox_override("panel", style)
+	_canvas_vbox.add_child(section_panel)
+
+	var section_vbox: VBoxContainer = VBoxContainer.new()
+	section_vbox.add_theme_constant_override("separation", 6)
+	section_panel.add_child(section_vbox)
+
+	var header: HBoxContainer = HBoxContainer.new()
+	header.add_theme_constant_override("separation", 8)
+	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	section_vbox.add_child(header)
+
+	var bullet: Label = Label.new()
+	bullet.text = "●"
+	bullet.add_theme_color_override("font_color", accent)
+	bullet.add_theme_font_size_override("font_size", 9)
+	header.add_child(bullet)
+
+	var title_label: Label = Label.new()
+	title_label.text = title
+	title_label.add_theme_color_override("font_color", accent)
+	title_label.add_theme_font_size_override("font_size", 11)
+	header.add_child(title_label)
+
+	var sub: Label = Label.new()
+	sub.text = subtitle
+	sub.add_theme_color_override("font_color", Color(0.47, 0.55, 0.69))
+	sub.add_theme_font_size_override("font_size", 9)
+	header.add_child(sub)
+
+	var spacer: Control = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(spacer)
+
+	if not action_text.is_empty() and action_handler.is_valid():
+		var action_btn: Button = Button.new()
+		action_btn.text = action_text
+		action_btn.flat = true
+		action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		action_btn.add_theme_color_override("font_color", accent)
+		action_btn.add_theme_color_override("font_hover_color", Color(0.88, 0.94, 1.0))
+		action_btn.connect("pressed", action_handler)
+		header.add_child(action_btn)
+
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation", 4)
+	section_vbox.add_child(body)
+	return body
 
 func _add_variables_section() -> void:
-	_add_sheet_marker("Globals", Color(0.55, 0.72, 0.95))
+	var section_body: VBoxContainer = _add_section_shell("SheetSectionGlobals", "Globals", "Project-level data", Color(0.62, 0.80, 1.0), "+ Variable", Callable(self, "_on_add_variable_requested"))
 
 	var variables: Dictionary = current_sheet.variables
 	if variables.is_empty():
 		var hint: Label = Label.new()
-		hint.text = "No global variables yet — use + Add Variable."
-		hint.add_theme_color_override("font_color", Color(0.50, 0.60, 0.50))
+		hint.text = "No global variables yet — add one to seed authored clauses."
+		hint.add_theme_color_override("font_color", Color(0.50, 0.63, 0.74))
 		hint.add_theme_font_size_override("font_size", 10)
-		_canvas_vbox.add_child(hint)
+		section_body.add_child(hint)
 		return
 
 	var sorted_keys: Array = variables.keys()
@@ -1240,32 +1342,23 @@ func _add_variables_section() -> void:
 		row.set_depth(0)
 		row.refresh()
 		row.variable_selected.connect(_on_variable_selected)
-		_canvas_vbox.add_child(row)
+		section_body.add_child(row)
 
 func _add_events_section() -> void:
-	_add_sheet_marker("Events", Color(0.76, 0.82, 0.95))
+	var section_body: VBoxContainer = _add_section_shell("SheetSectionEvents", "Events", "Authoring lines and nested flow", Color(0.78, 0.87, 1.0), "+ Event", Callable(self, "_on_add_event_requested"))
+	_current_rows_host = section_body
 
 	if current_sheet.events.is_empty():
 		var hint: Label = Label.new()
-		hint.text = "No events yet — click + Add Event."
-		hint.add_theme_color_override("font_color", Color(0.50, 0.50, 0.60))
+		hint.text = "No events yet — start by adding an event line."
+		hint.add_theme_color_override("font_color", Color(0.52, 0.56, 0.67))
 		hint.add_theme_font_size_override("font_size", 10)
-		_canvas_vbox.add_child(hint)
+		section_body.add_child(hint)
 	else:
 		var render_guard: Dictionary = {}
 		for resource: Variant in current_sheet.events:
 			_add_event_resource(resource, 0, render_guard)
-
-	var add_event_btn: Button = Button.new()
-	add_event_btn.text = "+ Add Event"
-	add_event_btn.flat = true
-	add_event_btn.tooltip_text = "Add a new event block to the sheet"
-	add_event_btn.custom_minimum_size = Vector2(120, 0)
-	add_event_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	add_event_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	add_event_btn.add_theme_color_override("font_color", Color(0.65, 0.78, 1.0))
-	add_event_btn.connect("pressed", _on_add_event_requested)
-	_canvas_vbox.add_child(add_event_btn)
+	_current_rows_host = null
 
 func _add_event_resource(resource: Variant, indent_level: int, render_guard: Dictionary = {}) -> void:
 	if resource is EventRow:
@@ -1329,39 +1422,46 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 		row.call("set_depth", indent_level)
 	var wrap_margin: MarginContainer = MarginContainer.new()
 	wrap_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	wrap_margin.add_theme_constant_override("margin_top", 1)
-	wrap_margin.add_theme_constant_override("margin_bottom", 1)
+	wrap_margin.add_theme_constant_override("margin_top", 2)
+	wrap_margin.add_theme_constant_override("margin_bottom", 2)
 	var line: HBoxContainer = HBoxContainer.new()
 	line.name = "SheetLineRow"
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.add_theme_constant_override("separation", 0)
+	line.add_theme_constant_override("separation", 4)
 	wrap_margin.add_child(line)
 
 	var gutter: HBoxContainer = HBoxContainer.new()
 	gutter.name = "SheetGutter"
-	gutter.add_theme_constant_override("separation", 8)
-	gutter.custom_minimum_size = Vector2(16 + (12 * indent_level), 0)
+	gutter.add_theme_constant_override("separation", 6)
+	gutter.custom_minimum_size = Vector2(20 + (14 * indent_level), 0)
 	gutter.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	gutter.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	line.add_child(gutter)
 
+	var root_pin: Label = Label.new()
+	root_pin.text = "•"
+	root_pin.add_theme_color_override("font_color", Color(0.33, 0.41, 0.56))
+	root_pin.add_theme_font_size_override("font_size", 9)
+	gutter.add_child(root_pin)
+
 	for i: int in range(indent_level):
 		var guide: ColorRect = ColorRect.new()
-		guide.custom_minimum_size = Vector2(1, 0)
+		guide.custom_minimum_size = Vector2(2, 0)
 		guide.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		guide.color = Color(0.30, 0.35, 0.46, 0.75)
+		guide.color = Color(0.30, 0.38, 0.53, 0.68)
 		gutter.add_child(guide)
 
 	if indent_level > 0:
 		var branch: Label = Label.new()
-		branch.text = BRANCH_GUIDE_CHAR
-		branch.add_theme_color_override("font_color", Color(0.51, 0.58, 0.73))
+		branch.text = "%s─" % BRANCH_GUIDE_CHAR
+		branch.add_theme_color_override("font_color", Color(0.56, 0.65, 0.84))
 		branch.add_theme_font_size_override("font_size", 9)
 		gutter.add_child(branch)
 
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_child(row)
-	_canvas_vbox.add_child(wrap_margin)
+	var host: Node = _current_rows_host if _current_rows_host != null else _canvas_vbox
+	host.add_child(wrap_margin)
 
 func _refresh_row_selection_states() -> void:
 	if _canvas_vbox == null:
