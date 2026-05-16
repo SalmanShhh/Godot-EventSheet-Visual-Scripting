@@ -15,10 +15,10 @@ const LEFT_SIDEBAR_MIN_WIDTH: float = 320.0
 const INSPECTOR_MIN_WIDTH: float = 300.0
 const VARIABLES_PANEL_MIN_HEIGHT: float = 170.0
 # Transitional Script-style split ratios for the temporary bottom-panel shell.
-const SHEET_AREA_STRETCH_RATIO: float = 1.8
-const ROW_LIST_STRETCH_RATIO: float = 2.2
-const INSPECTOR_STRETCH_RATIO: float = 1.1
-const PREVIEW_STRETCH_RATIO: float = 0.95
+const SHEET_AREA_STRETCH_RATIO: float = 1.8 # Keep the authoring workspace comfortably wider than preview in Split mode.
+const ROW_LIST_STRETCH_RATIO: float = 2.2 # Let the center row list win most of the space inside the event workspace.
+const INSPECTOR_STRETCH_RATIO: float = 1.1 # Keep the right inspector readable without letting it crowd the row list.
+const PREVIEW_STRETCH_RATIO: float = 0.95 # Leave preview slightly narrower than the editable workspace.
 
 var current_sheet: EventSheetResource = null
 var current_view_mode: ViewMode = ViewMode.SPLIT
