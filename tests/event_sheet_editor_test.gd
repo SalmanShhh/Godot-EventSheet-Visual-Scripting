@@ -400,6 +400,13 @@ static func run() -> bool:
 	var untitled_sheet: EventSheetResource = EventSheetResource.new()
 	all_passed = _check("toolbar sheet name untitled", SheetToolbar._format_sheet_name(untitled_sheet), "Untitled Sheet") and all_passed
 	all_passed = _check("toolbar sheet name null", SheetToolbar._format_sheet_name(null), "") and all_passed
+	all_passed = _check("editor doc title null", EventSheetEditor._format_document_title(null), "No Sheet Loaded") and all_passed
+	all_passed = _check("editor doc title unsaved", EventSheetEditor._format_document_title(untitled_sheet), "Untitled Sheet") and all_passed
+	all_passed = _check("editor doc path null", EventSheetEditor._format_document_path_hint(null), "Open or create a sheet to begin") and all_passed
+	all_passed = _check("editor doc path unsaved", EventSheetEditor._format_document_path_hint(untitled_sheet), "Unsaved (in-memory)") and all_passed
+	untitled_sheet.take_over_path("res://demo/event_sheet_editor_test_sheet.tres")
+	all_passed = _check("editor doc title saved", EventSheetEditor._format_document_title(untitled_sheet), "event_sheet_editor_test_sheet") and all_passed
+	all_passed = _check("editor doc path saved", EventSheetEditor._format_document_path_hint(untitled_sheet), "res://demo/event_sheet_editor_test_sheet.tres") and all_passed
 
 	# Phase 4: section empty states use PanelContainer cards.
 	var empty_section_sheet: EventSheetResource = EventSheetResource.new()
@@ -415,6 +422,7 @@ static func run() -> bool:
 	all_passed = _check("events section no bullet label", not _contains_label_text(events_section, "●"), true) and all_passed
 	all_passed = _check("globals section has color rect rail", globals_section != null and _count_color_rects(globals_section) >= 1, true) and all_passed
 	all_passed = _check("events section has color rect rail", events_section != null and _count_color_rects(events_section) >= 1, true) and all_passed
+	all_passed = _check("canvas has document strip", _find_node_named(editor, "SheetCanvasDocumentStrip") != null, true) and all_passed
 
 	# Phase 5: inspector card has a HSeparator after the heading.
 	var sep_sheet: EventSheetResource = EventSheetResource.new()

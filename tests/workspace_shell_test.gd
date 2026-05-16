@@ -100,12 +100,34 @@ static func run() -> bool:
 		SheetToolbar.format_document_meta(null),
 		"No sheet loaded"
 	) and all_passed
+	all_passed = _check(
+		"toolbar path null sheet",
+		SheetToolbar.format_document_path(null),
+		"No path"
+	) and all_passed
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.variables["hp"] = {"type": "int", "default": 100}
 	all_passed = _check(
 		"toolbar meta with 1 var 0 events",
 		SheetToolbar.format_document_meta(sheet),
 		"1 globals · 0 root rows"
+	) and all_passed
+	all_passed = _check(
+		"toolbar path unsaved sheet",
+		SheetToolbar.format_document_path(sheet),
+		"Unsaved (in-memory)"
+	) and all_passed
+	sheet.take_over_path("res://demo/workspace_shell_test_sheet.tres")
+	all_passed = _check(
+		"toolbar path saved sheet",
+		SheetToolbar.format_document_path(sheet),
+		"res://demo/workspace_shell_test_sheet.tres"
+	) and all_passed
+	toolbar.set_context(sheet, "none")
+	all_passed = _check(
+		"toolbar path label follows context",
+		toolbar._sheet_path_label.text,
+		"res://demo/workspace_shell_test_sheet.tres"
 	) and all_passed
 
 	# ── EventSheetEditor: dirty state flag ────────────────────────────────────
