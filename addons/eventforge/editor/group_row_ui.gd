@@ -1,5 +1,6 @@
 # EventForge — Group row UI
-# Lightweight display row for EventGroup in sheet-native composition.
+# C3-style full-width group header row with disclosure, name, count, and
+# enabled/disabled visual state.
 @tool
 extends PanelContainer
 class_name GroupRowUI
@@ -20,12 +21,22 @@ var event_group: EventGroup = null
 var _group_name_label: Label = null
 var _count_label: Label = null
 var _disclosure_btn: Button = null
+var _disabled_badge: Label = null
 var _depth: int = 0
 var _selected: bool = false
 var _hovered: bool = false
 var _insert_above_btn: Button = null
 var _insert_below_btn: Button = null
 const INSERT_CONTROL_DIM_ALPHA: float = 0.46
+
+## Group accent colours — purple/indigo matching C3's group block visual language.
+const GROUP_ACCENT: Color = Color(0.62, 0.50, 0.90, 0.90)
+const GROUP_BG: Color = Color(0.118, 0.090, 0.172, 1.0)
+const GROUP_BG_HOVER: Color = Color(0.148, 0.112, 0.210, 1.0)
+const GROUP_BG_SELECTED: Color = Color(0.178, 0.136, 0.256, 1.0)
+const GROUP_BORDER: Color = Color(0.310, 0.246, 0.460, 1.0)
+const GROUP_BORDER_HOVER: Color = Color(0.430, 0.340, 0.630, 1.0)
+const GROUP_BORDER_SELECTED: Color = Color(0.648, 0.500, 0.960, 1.0)
 
 func _init() -> void:
 	_build_ui()
@@ -38,41 +49,44 @@ func _build_ui() -> void:
 	line.add_theme_constant_override("separation", 4)
 	add_child(line)
 
-	# Left accent strip — thin purple/indigo bar that identifies group rows
-	# (also satisfies the lane-divider presence test: ColorRect with min_width >= 2)
+	# Left accent strip — 4px purple bar that identifies group header rows.
+	# ColorRect satisfies "lane-divider presence" test (min_width >= 2).
 	var left_accent: ColorRect = ColorRect.new()
-	left_accent.custom_minimum_size = Vector2(3, 0)
+	left_accent.custom_minimum_size = Vector2(4, 0)
 	left_accent.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	left_accent.color = Color(0.60, 0.48, 0.88, 0.80)
+	left_accent.color = GROUP_ACCENT
 	left_accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	line.add_child(left_accent)
 
 	_disclosure_btn = Button.new()
 	_disclosure_btn.flat = true
 	_disclosure_btn.tooltip_text = "Expand/collapse group"
-	_disclosure_btn.add_theme_color_override("font_color", Color(0.80, 0.74, 0.98))
-	_disclosure_btn.add_theme_color_override("font_hover_color", Color(0.94, 0.90, 1.0))
+	_disclosure_btn.add_theme_color_override("font_color", Color(0.82, 0.76, 1.0))
+	_disclosure_btn.add_theme_color_override("font_hover_color", Color(0.96, 0.92, 1.0))
+	_disclosure_btn.add_theme_font_size_override("font_size", 10)
 	_disclosure_btn.connect("pressed", _on_toggle_pressed)
 	line.add_child(_disclosure_btn)
 
-	var badge_label: Label = Label.new()
-	badge_label.text = "Group"
-	badge_label.add_theme_color_override("font_color", Color(0.68, 0.60, 0.90))
-	badge_label.add_theme_font_size_override("font_size", 9)
-	badge_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	line.add_child(badge_label)
-
 	_group_name_label = Label.new()
-	_group_name_label.add_theme_color_override("font_color", Color(0.95, 0.93, 1.0))
+	_group_name_label.add_theme_color_override("font_color", Color(0.94, 0.90, 1.0))
 	_group_name_label.add_theme_font_size_override("font_size", 11)
 	_group_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_child(_group_name_label)
 
 	_count_label = Label.new()
-	_count_label.add_theme_color_override("font_color", Color(0.56, 0.50, 0.74))
+	_count_label.add_theme_color_override("font_color", Color(0.58, 0.52, 0.76))
 	_count_label.add_theme_font_size_override("font_size", 9)
 	_count_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(_count_label)
+
+	# Disabled badge — shown when event_group.enabled == false.
+	_disabled_badge = Label.new()
+	_disabled_badge.text = "Disabled"
+	_disabled_badge.add_theme_color_override("font_color", Color(0.72, 0.52, 0.52))
+	_disabled_badge.add_theme_font_size_override("font_size", 9)
+	_disabled_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_disabled_badge.visible = false
+	line.add_child(_disabled_badge)
 
 	_insert_above_btn = Button.new()
 	_insert_above_btn.text = "+↑"
@@ -132,19 +146,21 @@ func set_selected(selected: bool) -> void:
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	if _selected:
-		style.bg_color = Color(0.168, 0.124, 0.230, 1.0)
-		style.border_color = Color(0.640, 0.490, 0.940, 1.0)
+		style.bg_color = GROUP_BG_SELECTED
+		style.border_color = GROUP_BORDER_SELECTED
 	elif _hovered:
-		style.bg_color = Color(0.148, 0.108, 0.208, 1.0)
-		style.border_color = Color(0.432, 0.338, 0.624, 1.0)
+		style.bg_color = GROUP_BG_HOVER
+		style.border_color = GROUP_BORDER_HOVER
 	else:
-		style.bg_color = Color(0.125, 0.094, 0.178, 1.0)
-		style.border_color = Color(0.312, 0.248, 0.456, 1.0)
+		style.bg_color = GROUP_BG
+		style.border_color = GROUP_BORDER
 	style.set_border_width_all(1)
-	style.border_width_left = 3 + min(_depth, 4)
+	style.border_width_left = 0   # accent handled by left_accent ColorRect
 	style.set_corner_radius_all(0)
-	style.set_content_margin_all(3)
-	style.content_margin_left = 2
+	style.set_content_margin_all(0)
+	style.set_content_margin(SIDE_TOP, 2)
+	style.set_content_margin(SIDE_BOTTOM, 2)
+	style.set_content_margin(SIDE_RIGHT, 4)
 	add_theme_stylebox_override("panel", style)
 
 ## Refreshes the display from the assigned event_group resource.
@@ -164,6 +180,11 @@ func refresh() -> void:
 		var child_rows: Array = event_group.events if not event_group.events.is_empty() else event_group.rows
 		var count: int = child_rows.size()
 		_count_label.text = "(%d)" % count if count > 0 else ""
+	# Enabled/disabled visual state: dim row and show badge when disabled.
+	var is_enabled: bool = event_group.enabled
+	if _disabled_badge != null:
+		_disabled_badge.visible = not is_enabled
+	modulate = Color(1.0, 1.0, 1.0, 0.55) if not is_enabled else Color(1.0, 1.0, 1.0, 1.0)
 
 func _on_pressed() -> void:
 	group_selected.emit(self)
@@ -207,3 +228,4 @@ func _apply_affordance_state() -> void:
 		_insert_above_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
 	if _insert_below_btn != null:
 		_insert_below_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
+

@@ -152,6 +152,7 @@ It intentionally avoids describing unbuilt behavior as complete.
   canvas/inspector, matching the dedicated-editor split model instead of a fixed
   panel stack + separator.
 - Document framing keeps `SheetSectionGlobals` as a shell, while `SheetSectionEvents` is now a flatter continuous host so authored rows dominate the canvas.
+- The document header card (formerly `SheetDocumentHeader`) is no longer rendered inside the canvas scroll surface — resource info is exclusively shown in the `SheetCanvasDocumentStrip` above the canvas. This keeps the scrollable area free for event rows from the very first pixel.
 - Section headers use a `ColorRect` accent rail in the header instead of a bullet label, providing a design-system-consistent visual hierarchy.
 - Each section header is separated from its body by an `HSeparator` to create a clear visual tier.
 - Section empty states are rendered as styled `PanelContainer` cards, providing a consistent visual affordance.
@@ -163,7 +164,7 @@ It intentionally avoids describing unbuilt behavior as complete.
 ### 2.7 Dense-sheet readability (Phase 5)
 
 - Row wrap margins are 1px top/bottom (down from 2px) for denser sheet rendering.
-- Canvas `VBoxContainer` separation is 6px (down from 8px).
+- Canvas `VBoxContainer` separation is 1px (down from 6px in Phase 8) for continuous packed sheet presentation.
 - Section body `VBoxContainer` separation is 3px (down from 4px).
 - All row types (event, variable, group) use tighter content margins (top/bottom 3px for events, 5px for variable/group).
 - Event, variable, and group rows use a `border_width_left` of 3+depth (up from 2+depth) for a stronger depth hierarchy accent.
@@ -195,12 +196,101 @@ It intentionally avoids describing unbuilt behavior as complete.
 - Events section now uses an in-flow `Add Event` anchor row aligned to the same gutter/row grid as authored event rows.
 
 ### 2.10 Row type badges
-- Group rows use a plain `Group` type label (no chip badge panel) with subtle purple text.
+- Group rows use the **4 px purple accent strip** as the sole type indicator (no text `Group` badge needed).
 - Group rows display the event count in parentheses when the group has child events (e.g., `(2)`).
 - The event count label is hidden (empty string) when the group has no child events.
-- Comment rows use `//` as a plain text prefix label within the amber banner row.
+- Comment rows use `#` as a plain text prefix label within the amber banner row.
 
-### 2.11 Sub-event support status
+### 2.11 C3-aligned sheet-level anatomy (Phase 8)
+
+This phase pushes the EventSheet editor from row-anatomy improvements toward a full
+Construct 3-style event sheet surface, guided by `c3-eventsheet-spec.md` and
+`godot-c3-eventsheet-port.md`.
+
+#### Sheet structure
+- `SheetSectionEvents` is now a plain `VBoxContainer` (not a PanelContainer), making the
+  events body a continuous unframed host — events dominate the canvas surface.
+- Canvas `VBoxContainer` separation reduced from 6 px to **1 px** so rows read as a
+  continuous packed sheet rather than spaced-out widgets.
+- Canvas outer margin reduced to **zero** — rows extend edge-to-edge, matching C3's
+  full-width sheet surface.
+- Document header card removed from `refresh_canvas()` — resource info lives in the
+  existing `SheetCanvasDocumentStrip`, not as a repeated sheet-interior widget.
+
+#### C3-style column header bar
+- A `SheetColumnHeader` `PanelContainer` is now rendered at the top of the events
+  section, pinned above all rows.
+- The header shows **"Conditions"** (left, blue-tinted) and **"Actions"** (right,
+  teal-tinted) labels aligned with the actual lane columns in every event row below —
+  making the two-column authoring surface immediately readable.
+- A `gutter_spacer` Control of exactly `SHEET_GUTTER_BASE_WIDTH` pixels keeps the
+  "Conditions" label aligned to the left edge of the conditions column, not the sheet edge.
+- A 2 px `ColorRect` divider in the header mirrors the lane divider in event rows,
+  creating a consistent vertical column boundary from the header down through all rows.
+- A right-side `controls_spacer` Control accounts for row-level controls (insert/delete
+  buttons) so the column labels are not visually offset by the controls column.
+
+#### Gutter improvements
+- The per-row gutter width is now determined by `SHEET_GUTTER_BASE_WIDTH + indent_level
+  × SHEET_GUTTER_INDENT_WIDTH` constants (`18 px` base, `14 px` per indent level) for
+  explicit, stable sizing.
+- The leftmost gutter element is now a 2 px `ColorRect` rail (solid boundary colour)
+  rather than a `│` text label — a pixel-accurate boundary that scales cleanly.
+- Per-depth continuation rails are now `1 px ColorRect` slices preceded by explicit
+  spacer Controls of `SHEET_GUTTER_INDENT_WIDTH - 1` px — the spacer + rail pattern
+  ensures each depth level's guide line is positioned exactly at the branch origin point.
+- Rail opacity now increments with depth (`0.55 + depth × 0.06`) so deeper guides are
+  progressively more visible, helping hierarchy readability in dense sheets.
+- `SheetLineRow` HBoxContainer separation reduced to **0** — rows and their gutters are
+  flush-adjacent, no gap between the gutter column and the row content.
+
+#### Anchor row (C3-style sheet footer)
+- The "Add Event / Add Group / Add Comment" anchor row is now placed at the **bottom**
+  of the events section (after the last event row), wrapped in a thin
+  `PanelContainer` with a top border — reads as a sheet footer, not as a top-of-sheet
+  toolbar.
+- The anchor row contains three flat buttons: **"Add Event"**, **"Add Group"**, and
+  **"Add Comment"**, separated by `VSeparator`s.  Each button uses colour-coded text
+  matching its row type (blue / purple / amber).
+- The left margin of the anchor wrapper matches `SHEET_GUTTER_BASE_WIDTH` so its
+  content is horizontally aligned with the event row content (not with the gutter).
+
+#### "Add Group" authoring
+- `_on_add_group_requested()` is now wired to the anchor row "Add Group" button.
+- Creates an `EventGroup` with `group_name = "New Group"`, appends it to
+  `current_sheet.events` (or inserts relative to the selected row), refreshes the
+  canvas, and focuses the new group row.
+
+#### Group row improvements
+- Left accent strip widened from 3 px to **4 px** — clearer visual boundary, matching
+  the C3 port guide's `ColorAccent (ColorRect, 4px wide)` specification.
+- `_apply_row_style` now uses named colour constants (`GROUP_BG`, `GROUP_BG_HOVER`,
+  `GROUP_BG_SELECTED`, `GROUP_BORDER*`) for clarity and consistency.
+- Content margins simplified: the PanelContainer panel handles no left margin (accent
+  is provided by the ColorRect, not the border), 0 top/bottom from the panel (margin
+  in the HBoxContainer separation), and 4 px right.
+- **Enabled/disabled visual state**: when `event_group.enabled == false`:
+  - A `_disabled_badge` Label ("Disabled", red-tinted) is shown.
+  - The entire row is dimmed to **55 % opacity** — matching the C3 port guide's
+    "Disabled groups are rendered at 40% opacity" guidance, adjusted to 55% for
+    dark-theme readability.
+- When `enabled == true`, the badge is hidden and opacity is 100 %.
+- The `"Group"` type badge label is removed from the layout — the purple accent strip
+  and the name label alone identify the row type cleanly.
+
+#### Comment row improvements
+- Left accent strip widened from 3 px to **4 px** — matches the group row update for
+  visual consistency across full-width row types.
+- Prefix changed from `//` to `#` — closer to C3's section-annotation style
+  (single-hash section markers).
+- Named colour constants (`COMMENT_ACCENT`, `COMMENT_BG*`, `COMMENT_BORDER*`) used
+  throughout for maintainability.
+- Content margins simplified: no left margin in PanelContainer (accent handled by
+  ColorRect), 3 px top/bottom, 4 px right.
+- Background colour slightly warmer/more saturated amber (`0.156, 0.128, 0.064`) for
+  a cleaner banner differentiation from event rows.
+
+### 2.12 Sub-event support status
 
 - Sub-event rendering groundwork exists:
   - nested event resources are rendered with indentation

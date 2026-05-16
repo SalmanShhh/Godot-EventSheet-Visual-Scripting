@@ -1,5 +1,6 @@
 # EventForge — Comment row UI
-# Lightweight inline comment row aligned to the sheet lane/grid model.
+# C3-style full-width section annotation / banner row.
+# Renders as a warm amber banner aligned with the sheet grid.
 @tool
 extends PanelContainer
 class_name CommentRowUI
@@ -13,6 +14,15 @@ signal comment_text_submitted(row: CommentRowUI, text: String)
 signal comment_drop_requested(target_row: CommentRowUI, source_comment: CommentRow, insert_after: bool)
 
 const INSERT_CONTROL_DIM_ALPHA: float = 0.46
+
+## Banner accent colours — warm amber matching C3's yellow comment banner.
+const COMMENT_ACCENT: Color = Color(0.90, 0.68, 0.18, 0.90)
+const COMMENT_BG: Color = Color(0.156, 0.128, 0.064, 1.0)
+const COMMENT_BG_HOVER: Color = Color(0.192, 0.158, 0.080, 1.0)
+const COMMENT_BG_SELECTED: Color = Color(0.228, 0.188, 0.096, 1.0)
+const COMMENT_BORDER: Color = Color(0.408, 0.324, 0.172, 1.0)
+const COMMENT_BORDER_HOVER: Color = Color(0.596, 0.476, 0.246, 1.0)
+const COMMENT_BORDER_SELECTED: Color = Color(0.840, 0.680, 0.312, 1.0)
 
 var comment_row: CommentRow = null
 
@@ -36,30 +46,32 @@ func _build_ui() -> void:
 	line.add_theme_constant_override("separation", 4)
 	add_child(line)
 
-	# Left accent strip — thin amber bar that identifies comment rows (also
-	# satisfies the lane-divider presence test: ColorRect with min_width >= 2)
+	# Left accent strip — 4px amber bar that makes comment rows read as section
+	# annotations (C3 "yellow banner" visual language).
+	# Also satisfies lane-divider presence test (ColorRect min_width >= 2).
 	var left_accent: ColorRect = ColorRect.new()
-	left_accent.custom_minimum_size = Vector2(3, 0)
+	left_accent.custom_minimum_size = Vector2(4, 0)
 	left_accent.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	left_accent.color = Color(0.88, 0.72, 0.30, 0.80)
+	left_accent.color = COMMENT_ACCENT
 	left_accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	line.add_child(left_accent)
 
+	# "# " section-marker prefix — cleaner C3 banner feel than "//"
 	var prefix: Label = Label.new()
-	prefix.text = "//"
-	prefix.add_theme_color_override("font_color", Color(0.96, 0.84, 0.50))
-	prefix.add_theme_font_size_override("font_size", 11)
+	prefix.text = "#"
+	prefix.add_theme_color_override("font_color", Color(1.0, 0.84, 0.40))
+	prefix.add_theme_font_size_override("font_size", 12)
 	prefix.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	line.add_child(prefix)
 
 	_comment_text_edit = LineEdit.new()
 	_comment_text_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_comment_text_edit.placeholder_text = "Add comment…"
+	_comment_text_edit.placeholder_text = "Section comment…"
 	_comment_text_edit.tooltip_text = "Edit inline comment text"
-	_comment_text_edit.add_theme_color_override("font_color", Color(0.96, 0.90, 0.70))
-	_comment_text_edit.add_theme_color_override("font_placeholder_color", Color(0.62, 0.54, 0.40))
+	_comment_text_edit.add_theme_color_override("font_color", Color(1.0, 0.92, 0.68))
+	_comment_text_edit.add_theme_color_override("font_placeholder_color", Color(0.66, 0.56, 0.36))
 	_comment_text_edit.add_theme_font_size_override("font_size", 11)
-	# Transparent background so the comment row colour shows through
+	# Transparent background so comment row colour shows through.
 	var le_style: StyleBoxFlat = StyleBoxFlat.new()
 	le_style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
 	le_style.set_border_width_all(0)
@@ -77,8 +89,8 @@ func _build_ui() -> void:
 	_insert_above_btn.flat = true
 	_insert_above_btn.tooltip_text = "Insert comment above this row"
 	_insert_above_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_insert_above_btn.add_theme_color_override("font_color", Color(0.82, 0.72, 0.42))
-	_insert_above_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.60))
+	_insert_above_btn.add_theme_color_override("font_color", Color(0.84, 0.72, 0.42))
+	_insert_above_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.58))
 	_insert_above_btn.connect("pressed", _on_insert_above_pressed)
 	line.add_child(_insert_above_btn)
 
@@ -87,8 +99,8 @@ func _build_ui() -> void:
 	_insert_below_btn.flat = true
 	_insert_below_btn.tooltip_text = "Insert comment below this row"
 	_insert_below_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_insert_below_btn.add_theme_color_override("font_color", Color(0.82, 0.72, 0.42))
-	_insert_below_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.60))
+	_insert_below_btn.add_theme_color_override("font_color", Color(0.84, 0.72, 0.42))
+	_insert_below_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.58))
 	_insert_below_btn.connect("pressed", _on_insert_below_pressed)
 	line.add_child(_insert_below_btn)
 
@@ -97,7 +109,7 @@ func _build_ui() -> void:
 	_edit_btn.flat = true
 	_edit_btn.tooltip_text = "Focus comment text"
 	_edit_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_edit_btn.add_theme_color_override("font_color", Color(0.80, 0.70, 0.44))
+	_edit_btn.add_theme_color_override("font_color", Color(0.82, 0.70, 0.44))
 	_edit_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.90, 0.58))
 	_edit_btn.connect("pressed", _on_pressed)
 	line.add_child(_edit_btn)
@@ -131,19 +143,21 @@ func set_selected(selected: bool) -> void:
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	if _selected:
-		style.bg_color = Color(0.210, 0.172, 0.092, 1.0)
-		style.border_color = Color(0.820, 0.660, 0.300, 1.0)
+		style.bg_color = COMMENT_BG_SELECTED
+		style.border_color = COMMENT_BORDER_SELECTED
 	elif _hovered:
-		style.bg_color = Color(0.188, 0.155, 0.082, 1.0)
-		style.border_color = Color(0.590, 0.472, 0.228, 1.0)
+		style.bg_color = COMMENT_BG_HOVER
+		style.border_color = COMMENT_BORDER_HOVER
 	else:
-		style.bg_color = Color(0.158, 0.130, 0.072, 1.0)
-		style.border_color = Color(0.408, 0.324, 0.172, 1.0)
+		style.bg_color = COMMENT_BG
+		style.border_color = COMMENT_BORDER
 	style.set_border_width_all(1)
-	style.border_width_left = 3 + min(_depth, 4)
+	style.border_width_left = 0  # accent handled by left_accent ColorRect
 	style.set_corner_radius_all(0)
-	style.set_content_margin_all(3)
-	style.content_margin_left = 2
+	style.set_content_margin_all(0)
+	style.set_content_margin(SIDE_TOP, 3)
+	style.set_content_margin(SIDE_BOTTOM, 3)
+	style.set_content_margin(SIDE_RIGHT, 4)
 	add_theme_stylebox_override("panel", style)
 
 func _apply_affordance_state() -> void:
@@ -234,3 +248,4 @@ func _on_mouse_exited() -> void:
 	_hovered = false
 	_apply_row_style()
 	_apply_affordance_state()
+
