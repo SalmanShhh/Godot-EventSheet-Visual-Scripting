@@ -13,6 +13,8 @@ static func run() -> bool:
 	all_passed = _check("event row no IF label", _contains_label_text(lane_row, "IF"), false) and all_passed
 	all_passed = _check("event row no THEN label", _contains_label_text(lane_row, "THEN"), false) and all_passed
 	all_passed = _check("event row no lane marker dots", _contains_label_text(lane_row, "●"), false) and all_passed
+	all_passed = _check("event row no Conditions label", _contains_label_text(lane_row, "Conditions"), false) and all_passed
+	all_passed = _check("event row no Actions label", _contains_label_text(lane_row, "Actions"), false) and all_passed
 
 	all_passed = _check("parse int", editor._parse_variable_initial_value("42", "int"), 42) and all_passed
 	all_passed = _check("parse float", editor._parse_variable_initial_value("3.5", "float"), 3.5) and all_passed
@@ -137,6 +139,7 @@ static func run() -> bool:
 	editor.current_sheet = sub_event_sheet
 	editor.refresh_canvas()
 	all_passed = _check("sub events render nested rows", _count_event_row_nodes(editor), 2) and all_passed
+	all_passed = _check("sheet gutter wrappers rendered", _count_nodes_named(editor, "SheetGutter") >= 2, true) and all_passed
 
 	# Cycle safety: child referencing parent should still render each row once.
 	child_row.sub_events.append(parent_row)
@@ -256,3 +259,11 @@ static func _contains_label_text(node: Node, expected: String) -> bool:
 		if _contains_label_text(child, expected):
 			return true
 	return false
+
+static func _count_nodes_named(node: Node, expected_name: String) -> int:
+	if node == null:
+		return 0
+	var total: int = 1 if node.name == expected_name else 0
+	for child: Node in node.get_children():
+		total += _count_nodes_named(child, expected_name)
+	return total
