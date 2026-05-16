@@ -872,7 +872,7 @@ func _rebuild_inspector_condition(row: EventRow, index: int) -> void:
     )
     var remove_btn: Button = Button.new()
     remove_btn.text = "Remove Condition"
-    remove_btn.pressed.connect(Callable(self, "_remove_condition").bind(index))
+    remove_btn.pressed.connect(Callable(self, "_remove_focused_condition").bind(index))
     _inspector_container.add_child(remove_btn)
 
 ## Builds a focused inspector for a single action entry.
@@ -904,7 +904,7 @@ func _rebuild_inspector_action(row: EventRow, index: int) -> void:
     )
     var remove_btn: Button = Button.new()
     remove_btn.text = "Remove Action"
-    remove_btn.pressed.connect(Callable(self, "_remove_action").bind(index))
+    remove_btn.pressed.connect(Callable(self, "_remove_focused_action").bind(index))
     _inspector_container.add_child(remove_btn)
 
 ## Builds a focused inspector for a global sheet variable.
@@ -1162,6 +1162,16 @@ func _remove_action(index: int) -> void:
     refresh_rows()
     _rebuild_inspector()
     _mark_preview_dirty()
+
+func _remove_focused_condition(index: int) -> void:
+    _selected_entry_kind = "event"
+    _selected_entry_index = -1
+    _remove_condition(index)
+
+func _remove_focused_action(index: int) -> void:
+    _selected_entry_kind = "event"
+    _selected_entry_index = -1
+    _remove_action(index)
 
 func _on_trigger_param_changed(key: String, value: String) -> void:
     if _selected_row == null:
