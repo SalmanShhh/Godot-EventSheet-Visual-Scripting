@@ -12,6 +12,7 @@ static func run() -> bool:
 	lane_row.refresh()
 	all_passed = _check("event row no IF label", _contains_label_text(lane_row, "IF"), false) and all_passed
 	all_passed = _check("event row no THEN label", _contains_label_text(lane_row, "THEN"), false) and all_passed
+	all_passed = _check("event row no lane marker dots", _contains_label_text(lane_row, "●"), false) and all_passed
 
 	all_passed = _check("parse int", editor._parse_variable_initial_value("42", "int"), 42) and all_passed
 	all_passed = _check("parse float", editor._parse_variable_initial_value("3.5", "float"), 3.5) and all_passed
