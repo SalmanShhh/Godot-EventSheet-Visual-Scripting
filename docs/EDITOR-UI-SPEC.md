@@ -243,6 +243,11 @@ Construct 3-style event sheet surface, guided by `c3-eventsheet-spec.md` and
   progressively more visible, helping hierarchy readability in dense sheets.
 - `SheetLineRow` HBoxContainer separation reduced to **0** — rows and their gutters are
   flush-adjacent, no gap between the gutter column and the row content.
+- Nested rows now include a short horizontal connector stub at the gutter end, so
+  parent→child branch continuity reads as an actual tree connection rather than
+  indentation alone.
+- Nested rows now include a subtle 2 px "nested lead" strip between gutter and row
+  body, making top-level vs nested event rhythm clearer in dense sheets.
 
 #### Anchor row (C3-style sheet footer)
 - The "Add Event / Add Group / Add Comment" anchor row is now placed at the **bottom**
@@ -275,8 +280,14 @@ Construct 3-style event sheet surface, guided by `c3-eventsheet-spec.md` and
     "Disabled groups are rendered at 40% opacity" guidance, adjusted to 55% for
     dark-theme readability.
 - When `enabled == true`, the badge is hidden and opacity is 100 %.
+- Group rows now expose an inline enable/disable `CheckBox` (left of the group name)
+  that toggles `event_group.enabled` directly in-row and immediately refreshes the
+  sheet + inspector selection context.
 - The `"Group"` type badge label is removed from the layout — the purple accent strip
   and the name label alone identify the row type cleanly.
+- Child-count readability now improves when collapsed:
+  - expanded group count shows `(N)`
+  - collapsed group count shows `(N hidden)`
 
 #### Comment row improvements
 - Left accent strip widened from 3 px to **4 px** — matches the group row update for
@@ -285,6 +296,12 @@ Construct 3-style event sheet surface, guided by `c3-eventsheet-spec.md` and
   (single-hash section markers).
 - Named colour constants (`COMMENT_ACCENT`, `COMMENT_BG*`, `COMMENT_BORDER*`) used
   throughout for maintainability.
+- Comment banners now support style-aware and `color_tag`-aware palettes:
+  - `color_tag` values (e.g. `blue`, `green`, `red`, `orange`, `grey`) map to distinct
+    section colours
+  - fallback mapping from `CommentStyle` (`NOTE`, `TODO`, `WARNING`, `SECTION`) maps to
+    corresponding palettes
+  - default remains warm yellow/amber
 - Content margins simplified: no left margin in PanelContainer (accent handled by
   ColorRect), 3 px top/bottom, 4 px right.
 - Background colour slightly warmer/more saturated amber (`0.156, 0.128, 0.064`) for

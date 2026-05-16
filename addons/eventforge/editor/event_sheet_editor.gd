@@ -2342,16 +2342,19 @@ func _add_events_section() -> void:
 	gutter_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col_header_row.add_child(gutter_spacer)
 
+	var cond_ratio: float = EventRowUI.COND_LANE_RATIO
+	var action_ratio: float = EventRowUI.ACTION_LANE_RATIO
+
 	var cond_header_label: Label = Label.new()
 	cond_header_label.text = "Conditions"
 	cond_header_label.add_theme_color_override("font_color", Color(0.55, 0.70, 0.90))
 	cond_header_label.add_theme_font_size_override("font_size", 9)
 	cond_header_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cond_header_label.size_flags_stretch_ratio = 1.0
+	cond_header_label.size_flags_stretch_ratio = cond_ratio
 	cond_header_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	var cond_header_margin: MarginContainer = MarginContainer.new()
 	cond_header_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cond_header_margin.size_flags_stretch_ratio = 1.0
+	cond_header_margin.size_flags_stretch_ratio = cond_ratio
 	cond_header_margin.add_theme_constant_override("margin_left", 6)
 	cond_header_margin.add_child(cond_header_label)
 	col_header_row.add_child(cond_header_margin)
@@ -2370,11 +2373,11 @@ func _add_events_section() -> void:
 	act_header_label.add_theme_color_override("font_color", Color(0.48, 0.72, 0.58))
 	act_header_label.add_theme_font_size_override("font_size", 9)
 	act_header_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	act_header_label.size_flags_stretch_ratio = 1.85
+	act_header_label.size_flags_stretch_ratio = action_ratio
 	act_header_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	var act_header_margin: MarginContainer = MarginContainer.new()
 	act_header_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	act_header_margin.size_flags_stretch_ratio = 1.85
+	act_header_margin.size_flags_stretch_ratio = action_ratio
 	act_header_margin.add_theme_constant_override("margin_left", 6)
 	act_header_margin.add_child(act_header_label)
 	col_header_row.add_child(act_header_margin)
@@ -2546,6 +2549,7 @@ func _add_group_row(event_group: EventGroup, indent_level: int = 0, render_guard
 	row_ui.refresh()
 	row_ui.group_selected.connect(_on_group_selected)
 	row_ui.group_collapsed_toggled.connect(_on_group_collapsed_toggled)
+	row_ui.group_enabled_toggled.connect(_on_group_enabled_toggled)
 	row_ui.insert_event_above_requested.connect(_on_group_insert_above_requested)
 	row_ui.insert_event_below_requested.connect(_on_group_insert_below_requested)
 	row_ui.group_delete_requested.connect(_on_group_delete_requested)
@@ -2630,6 +2634,31 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 		depth_rail.color = Color(0.40, 0.52, 0.72, minf(0.55 + float(i) * 0.06, 0.95))
 		depth_rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		gutter.add_child(depth_rail)
+
+	# Nested rows get a short horizontal connector (elbow stub) at gutter end so
+	# parent → child relationships read clearly as a branch, not just indentation.
+	if indent_level > 0:
+		var connector_wrap: CenterContainer = CenterContainer.new()
+		connector_wrap.custom_minimum_size = Vector2(9, 0)
+		connector_wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		connector_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		gutter.add_child(connector_wrap)
+
+		var connector_stub: ColorRect = ColorRect.new()
+		connector_stub.custom_minimum_size = Vector2(9, 1)
+		connector_stub.color = Color(0.52, 0.64, 0.86, 0.82)
+		connector_stub.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		connector_wrap.add_child(connector_stub)
+
+	# Subtle per-depth lead marker between gutter and row body differentiates
+	# top-level rows from nested rows in dense sheets.
+	if indent_level > 0:
+		var nested_lead: ColorRect = ColorRect.new()
+		nested_lead.custom_minimum_size = Vector2(2, 0)
+		nested_lead.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		nested_lead.color = Color(0.30, 0.42, 0.62, 0.55)
+		nested_lead.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		line.add_child(nested_lead)
 
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_child(row)
@@ -3105,6 +3134,16 @@ func _on_group_collapsed_toggled(row: GroupRowUI, _collapsed: bool) -> void:
 	refresh_canvas()
 	_focus_group_by_uid(group_uid)
 	_mark_dirty()
+
+func _on_group_enabled_toggled(row: GroupRowUI, enabled: bool) -> void:
+	if row == null or row.event_group == null:
+		return
+	var group_uid: String = row.event_group.group_uid
+	row.event_group.enabled = enabled
+	refresh_canvas()
+	_focus_group_by_uid(group_uid)
+	_mark_dirty()
+	_set_status("Group %s" % ("enabled" if enabled else "disabled"))
 
 func _on_variable_delete_requested(row: VariableRowUI) -> void:
 	if row == null or current_sheet == null:

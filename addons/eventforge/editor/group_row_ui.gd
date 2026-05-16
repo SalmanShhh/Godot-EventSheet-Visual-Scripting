@@ -9,6 +9,8 @@ class_name GroupRowUI
 signal group_selected(row: GroupRowUI)
 ## Emitted when this group's collapsed state is toggled.
 signal group_collapsed_toggled(row: GroupRowUI, collapsed: bool)
+## Emitted when this group's enabled state is toggled inline.
+signal group_enabled_toggled(row: GroupRowUI, enabled: bool)
 ## Emitted when the delete button is pressed on this group row.
 signal group_delete_requested(row: GroupRowUI)
 ## Emitted when insertion of a new event is requested above this group row.
@@ -21,6 +23,7 @@ var event_group: EventGroup = null
 var _group_name_label: Label = null
 var _count_label: Label = null
 var _disclosure_btn: Button = null
+var _enabled_toggle: CheckBox = null
 var _disabled_badge: Label = null
 var _depth: int = 0
 var _selected: bool = false
@@ -66,6 +69,14 @@ func _build_ui() -> void:
 	_disclosure_btn.add_theme_font_size_override("font_size", 10)
 	_disclosure_btn.connect("pressed", _on_toggle_pressed)
 	line.add_child(_disclosure_btn)
+
+	_enabled_toggle = CheckBox.new()
+	_enabled_toggle.text = ""
+	_enabled_toggle.tooltip_text = "Enable/disable group"
+	_enabled_toggle.custom_minimum_size = Vector2(16, 0)
+	_enabled_toggle.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_enabled_toggle.connect("toggled", _on_enabled_toggled)
+	line.add_child(_enabled_toggle)
 
 	_group_name_label = Label.new()
 	_group_name_label.add_theme_color_override("font_color", Color(0.94, 0.90, 1.0))
@@ -146,13 +157,13 @@ func set_selected(selected: bool) -> void:
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	if _selected:
-		style.bg_color = GROUP_BG_SELECTED
+		style.bg_color = _apply_depth_tint(GROUP_BG_SELECTED)
 		style.border_color = GROUP_BORDER_SELECTED
 	elif _hovered:
-		style.bg_color = GROUP_BG_HOVER
+		style.bg_color = _apply_depth_tint(GROUP_BG_HOVER)
 		style.border_color = GROUP_BORDER_HOVER
 	else:
-		style.bg_color = GROUP_BG
+		style.bg_color = _apply_depth_tint(GROUP_BG)
 		style.border_color = GROUP_BORDER
 	style.set_border_width_all(1)
 	style.border_width_left = 0   # accent handled by left_accent ColorRect
@@ -163,6 +174,18 @@ func _apply_row_style() -> void:
 	style.set_content_margin(SIDE_RIGHT, 4)
 	add_theme_stylebox_override("panel", style)
 
+func _apply_depth_tint(base: Color) -> Color:
+	var depth_factor: float = float(min(_depth, 4))
+	if depth_factor <= 0.0:
+		return base
+	var lighten_amount: float = depth_factor * 0.011
+	return Color(
+		min(base.r + lighten_amount, 1.0),
+		min(base.g + lighten_amount, 1.0),
+		min(base.b + lighten_amount, 1.0),
+		base.a
+	)
+
 ## Refreshes the display from the assigned event_group resource.
 func refresh() -> void:
 	if event_group == null or _group_name_label == null:
@@ -170,6 +193,8 @@ func refresh() -> void:
 	var collapsed: bool = event_group.is_collapsed()
 	if _disclosure_btn != null:
 		_disclosure_btn.text = "▶" if collapsed else "▼"
+	if _enabled_toggle != null:
+		_enabled_toggle.set_pressed_no_signal(event_group.enabled)
 	var display_name: String = event_group.name
 	if display_name.is_empty():
 		display_name = event_group.group_name
@@ -179,7 +204,12 @@ func refresh() -> void:
 	if _count_label != null:
 		var child_rows: Array = event_group.events if not event_group.events.is_empty() else event_group.rows
 		var count: int = child_rows.size()
-		_count_label.text = "(%d)" % count if count > 0 else ""
+		if count <= 0:
+			_count_label.text = ""
+		elif collapsed:
+			_count_label.text = "(%d hidden)" % count
+		else:
+			_count_label.text = "(%d)" % count
 	# Enabled/disabled visual state: dim row and show badge when disabled.
 	var is_enabled: bool = event_group.enabled
 	if _disabled_badge != null:
@@ -206,6 +236,15 @@ func _on_toggle_pressed() -> void:
 	refresh()
 	group_collapsed_toggled.emit(self, event_group.collapsed)
 
+func _on_enabled_toggled(enabled: bool) -> void:
+	if event_group == null:
+		return
+	if event_group.enabled == enabled:
+		return
+	event_group.enabled = enabled
+	refresh()
+	group_enabled_toggled.emit(self, enabled)
+
 func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
@@ -228,4 +267,3 @@ func _apply_affordance_state() -> void:
 		_insert_above_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
 	if _insert_below_btn != null:
 		_insert_below_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
-

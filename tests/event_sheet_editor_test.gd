@@ -259,6 +259,9 @@ static func run() -> bool:
 		editor._on_group_insert_below_requested(group_insert_row_ui)
 		all_passed = _check("insert below group row adds sibling event in root list", group_insert_sheet.events.size(), 2) and all_passed
 		all_passed = _check("insert below group row inserts event resource", group_insert_sheet.events[1] is EventRow, true) and all_passed
+		editor._on_group_enabled_toggled(group_insert_row_ui, false)
+		all_passed = _check("group enabled toggle handler disables group", group_insert.enabled, false) and all_passed
+		all_passed = _check("group enabled toggle updates status message", editor._status_label.text, "Group disabled") and all_passed
 
 	# Inline comment rows render in-flow and support structural relative insertion.
 	var comment_sheet: EventSheetResource = EventSheetResource.new()
@@ -303,6 +306,16 @@ static func run() -> bool:
 			all_passed = _check("comment selection updates kind", editor._selected_entry_kind, "comment") and all_passed
 			editor._on_comment_delete_requested(inserted_comment_ui)
 			all_passed = _check("delete comment row removes from sheet", comment_sheet.events.size(), 2) and all_passed
+
+	# Comment style/color_tag should alter banner accent palette for sectioning.
+	var styled_comment: CommentRow = CommentRow.new()
+	styled_comment.text = "Blue section"
+	styled_comment.color_tag = "blue"
+	var styled_comment_row: CommentRowUI = CommentRowUI.new()
+	styled_comment_row.comment_row = styled_comment
+	styled_comment_row.refresh()
+	var styled_accent: ColorRect = _find_first_color_rect(styled_comment_row)
+	all_passed = _check("comment color_tag blue updates accent color", styled_accent != null and styled_accent.color.b > styled_accent.color.r, true) and all_passed
 
 	# Drag move: conditions and actions can move/reorder across events.
 	var drag_sheet: EventSheetResource = EventSheetResource.new()
@@ -606,6 +619,18 @@ static func run() -> bool:
 	empty_group_row.refresh()
 	all_passed = _check("group row count hidden when empty", not _contains_label_text(empty_group_row, "(0)"), true) and all_passed
 	all_passed = _check("group row count label empty string when no events", empty_group_row._count_label.text, "") and all_passed
+
+	# Group collapsed count label should communicate hidden children.
+	count_group.set_collapsed_state(true)
+	count_group_row.refresh()
+	all_passed = _check("group row collapsed count indicates hidden", count_group_row._count_label.text.find("hidden") != -1, true) and all_passed
+
+	# Inline enabled toggle updates event_group.enabled and disabled badge state.
+	count_group_row._on_enabled_toggled(false)
+	all_passed = _check("group enabled toggle updates resource", count_group.enabled, false) and all_passed
+	all_passed = _check("group enabled toggle shows disabled badge", count_group_row._disabled_badge.visible, true) and all_passed
+	count_group_row._on_enabled_toggled(true)
+	all_passed = _check("group enabled toggle re-enables resource", count_group.enabled, true) and all_passed
 
 	# C3-style: group row shows disabled badge and dims when enabled=false.
 	var disabled_group: EventGroup = EventGroup.new()
@@ -1120,6 +1145,17 @@ static func _count_color_rects(node: Node) -> int:
 	for child: Node in node.get_children():
 		total += _count_color_rects(child)
 	return total
+
+static func _find_first_color_rect(node: Node) -> ColorRect:
+	if node == null:
+		return null
+	if node is ColorRect:
+		return node as ColorRect
+	for child: Node in node.get_children():
+		var found: ColorRect = _find_first_color_rect(child)
+		if found != null:
+			return found
+	return null
 
 static func _count_separators(node: Node) -> int:
 	if node == null:
