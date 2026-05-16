@@ -62,13 +62,27 @@ It intentionally avoids describing unbuilt behavior as complete.
   - The sheet file name (or "Untitled Sheet" / "No Sheet Loaded") as the document title
   - The sheet resource path as a secondary hint line
   - A summary of globals and root entries
+  - A 3px left-accent border rail to visually anchor the header as the document root
 - Document framing is sectioned into explicit shells:
   - `SheetSectionGlobals` for global variables
   - `SheetSectionEvents` for event/group rows
+- Section shells use a `ColorRect` accent rail in the header instead of a bullet label, providing a design-system-consistent visual hierarchy.
+- Each section header is separated from its body by an `HSeparator` to create a clear visual tier.
 - Section empty states are rendered as styled `PanelContainer` cards, providing a consistent visual affordance.
 - Empty states are presented as centered onboarding cards with direct create/open actions.
 - The inspector empty state is rendered as a contextual card to keep selection/idle surfaces visually consistent with canvas sections.
 - Inspector content for selected events, variables, and groups is wrapped in consistently styled card shells using the same design system as the empty state card.
+- Each inspector card includes a tinted `HSeparator` immediately after the heading label, separating the card type label from its content rows.
+
+### 2.7 Dense-sheet readability (Phase 5)
+
+- Row wrap margins are 1px top/bottom (down from 2px) for denser sheet rendering.
+- Canvas `VBoxContainer` separation is 6px (down from 8px).
+- Section body `VBoxContainer` separation is 3px (down from 4px).
+- All row types (event, variable, group) use tighter content margins (top/bottom 3px for events, 5px for variable/group).
+- Event, variable, and group rows use a `border_width_left` of 3+depth (up from 2+depth) for a stronger depth hierarchy accent.
+- Depth guide `ColorRect` lines use opacity 0.80 (up from 0.68) for better visibility at depth.
+- Clause `VSeparator` uses opacity 0.90 (up from 0.80) for slightly more visible lane division.
 
 ### 2.5 Row type badges
 

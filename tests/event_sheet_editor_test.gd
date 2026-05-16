@@ -289,6 +289,23 @@ static func run() -> bool:
 	var events_section: Node = _find_node_named(editor, "SheetSectionEvents")
 	all_passed = _check("events empty state is card", events_section != null and _count_panel_containers(events_section) >= 1, true) and all_passed
 
+	# Phase 5: section headers use ColorRect accent rail, not a "●" bullet label.
+	all_passed = _check("globals section no bullet label", not _contains_label_text(globals_section, "●"), true) and all_passed
+	all_passed = _check("events section no bullet label", not _contains_label_text(events_section, "●"), true) and all_passed
+	all_passed = _check("globals section has color rect rail", globals_section != null and _count_color_rects(globals_section) >= 1, true) and all_passed
+	all_passed = _check("events section has color rect rail", events_section != null and _count_color_rects(events_section) >= 1, true) and all_passed
+
+	# Phase 5: inspector card has a HSeparator after the heading.
+	var sep_sheet: EventSheetResource = EventSheetResource.new()
+	var sep_event: EventRow = EventRow.new()
+	sep_sheet.events.append(sep_event)
+	editor.current_sheet = sep_sheet
+	editor.refresh_canvas()
+	var sep_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, sep_event.event_uid)
+	if sep_row_ui != null:
+		editor._rebuild_inspector_event(sep_row_ui)
+		all_passed = _check("inspector event card has separator after heading", _count_separators(editor._inspector_vbox) >= 1, true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
@@ -334,6 +351,22 @@ static func _count_panel_containers(node: Node) -> int:
 	var total: int = 1 if node is PanelContainer else 0
 	for child: Node in node.get_children():
 		total += _count_panel_containers(child)
+	return total
+
+static func _count_color_rects(node: Node) -> int:
+	if node == null:
+		return 0
+	var total: int = 1 if node is ColorRect else 0
+	for child: Node in node.get_children():
+		total += _count_color_rects(child)
+	return total
+
+static func _count_separators(node: Node) -> int:
+	if node == null:
+		return 0
+	var total: int = 1 if node is HSeparator else 0
+	for child: Node in node.get_children():
+		total += _count_separators(child)
 	return total
 
 static func _find_node_named(node: Node, expected_name: String) -> Node:

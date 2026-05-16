@@ -37,11 +37,11 @@ func _build_ui() -> void:
 	add_theme_stylebox_override("panel", panel_style)
 
 	var shell: VBoxContainer = VBoxContainer.new()
-	shell.add_theme_constant_override("separation", 8)
+	shell.add_theme_constant_override("separation", 6)
 	add_child(shell)
 
 	var top_line: HBoxContainer = HBoxContainer.new()
-	top_line.add_theme_constant_override("separation", 8)
+	top_line.add_theme_constant_override("separation", 6)
 	shell.add_child(top_line)
 
 	var title: Label = Label.new()
@@ -84,7 +84,7 @@ func _build_ui() -> void:
 	top_line.add_child(_status_label)
 
 	var actions_line: HBoxContainer = HBoxContainer.new()
-	actions_line.add_theme_constant_override("separation", 6)
+	actions_line.add_theme_constant_override("separation", 5)
 	shell.add_child(actions_line)
 
 	var new_sheet_btn: Button = Button.new()
