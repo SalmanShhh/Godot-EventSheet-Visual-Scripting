@@ -74,6 +74,7 @@ const SHEET_GUTTER_INDENT_WIDTH: int = 14
 const DEPTH_RAIL_BASE_OPACITY: float = 0.55
 const DEPTH_RAIL_OPACITY_INCREMENT: float = 0.06
 const DEPTH_RAIL_MAX_OPACITY: float = 0.95
+const SECTION_UNFRAMED: bool = false
 const CANVAS_BG: Color = Color(0.060, 0.067, 0.088, 1.0)
 const CANVAS_BORDER: Color = Color(0.141, 0.164, 0.214, 1.0)
 ## Amber colour used for node-type / Godot class group headers in the ACE picker.
@@ -2481,7 +2482,7 @@ func _add_section_shell(name: String, title: String, subtitle: String, accent: C
 	return body
 
 func _add_variables_section() -> void:
-	var section_body: VBoxContainer = _add_section_shell("SheetSectionGlobals", "Globals", "Project-level data", Color(0.62, 0.80, 1.0), "+ Variable", Callable(self, "_on_add_variable_requested"), false)
+	var section_body: VBoxContainer = _add_section_shell("SheetSectionGlobals", "Globals", "Project-level data", Color(0.62, 0.80, 1.0), "+ Variable", Callable(self, "_on_add_variable_requested"), SECTION_UNFRAMED)
 
 	var variables: Dictionary = current_sheet.variables
 	if variables.is_empty():

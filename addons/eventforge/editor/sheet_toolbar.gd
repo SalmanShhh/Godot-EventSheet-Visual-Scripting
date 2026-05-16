@@ -77,7 +77,7 @@ func _build_ui() -> void:
 	add_theme_stylebox_override("panel", panel_style)
 
 	var shell: VBoxContainer = VBoxContainer.new()
-	shell.add_theme_constant_override("separation", 0)
+	shell.add_theme_constant_override("separation", 1)
 	add_child(shell)
 
 	var top_line: HBoxContainer = HBoxContainer.new()
@@ -290,6 +290,6 @@ func set_context(sheet: EventSheetResource, selection_kind: String = "none") -> 
 		var meta: String = format_document_meta(sheet)
 		var path: String = format_document_path(sheet)
 		var selection: String = format_selection_meta(selection_kind)
-		_sheet_name_label.tooltip_text = "%s\n%s\n%s" % [meta, path, selection]
+		_sheet_name_label.tooltip_text = "Meta: %s\nPath: %s\nSelection: %s" % [meta, path, selection]
 	if _sheet_path_label != null:
 		_sheet_path_label.text = format_document_path(sheet)
