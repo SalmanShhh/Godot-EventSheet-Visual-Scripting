@@ -23,6 +23,7 @@ var _disclosure_btn: Button = null
 var _depth: int = 0
 var _selected: bool = false
 var _hovered: bool = false
+const LANE_DIVIDER_WIDTH: int = 2
 
 func _init() -> void:
 	_build_ui()
@@ -87,7 +88,7 @@ func _build_ui() -> void:
 	left_hbox.add_child(_group_name_label)
 
 	var lane_div: ColorRect = ColorRect.new()
-	lane_div.custom_minimum_size = Vector2(2, 0)
+	lane_div.custom_minimum_size = Vector2(LANE_DIVIDER_WIDTH, 0)
 	lane_div.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	lane_div.color = Color(0.34, 0.24, 0.49, 0.92)
 	lane_div.mouse_filter = Control.MOUSE_FILTER_IGNORE
