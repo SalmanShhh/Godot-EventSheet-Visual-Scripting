@@ -248,6 +248,7 @@ func _copy_selected_event_tree() -> bool:
 	_copied_event_row = row.event_row.duplicate(true) as EventRow
 	if _copied_event_row == null:
 		return false
+	_regenerate_event_tree_uids(_copied_event_row)
 	_set_status("Copied event")
 	return true
 
