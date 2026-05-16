@@ -66,20 +66,27 @@ It intentionally avoids describing unbuilt behavior as complete.
 - EventForge registers as a **main editor workspace** via `EditorPlugin._has_main_screen()`.
 - EventSheet editing is hosted in the central editor viewport, not a bottom dock panel.
 - Selecting an `EventSheetResource` in the editor routes into this workspace via plugin `_handles()`/`_edit()` integration.
-- The editor uses a dedicated sheet workspace shell:
-  - top chrome toolbar panel (`EventForge`) showing the loaded sheet name and document summary
-  - toolbar sheet name chip displays file basename when a path exists, or `Untitled Sheet` for in-memory sheets
-  - toolbar metadata tracks both document summary and current selection context
-  - toolbar action strip shows workflow shortcut hints for event authoring
-  - framed canvas surface for the event-sheet document
-  - inspector-adjacent panel using the same dark design system
-- Keyboard workflow shortcuts are supported for fast authoring:
+- The editor uses a main-screen workspace shell modelled after Godot's Script editor:
+  - **Toolbar** spans the full workspace width, flush at the top with no outer margin — no dock-panel-era padding above or beside it.
+  - Toolbar background has zero corner radius so it sits flush at the top edge of the workspace.
+  - Toolbar bottom border (1 px) provides the only visual separation from the content area below.
+  - Top row of the toolbar: `EventSheet` label | separator | sheet name | dirty indicator | document meta | separator | selection meta | spacer
+  - Action row of the toolbar: `New Sheet` | `Open` | `Save` | `Save As…` | separator | `+ Event` | `+ Variable` | shortcut hints | spacer | `Compile Preview`
+  - **Dirty indicator** `●` (amber dot) appears next to the sheet name when the sheet has unsaved changes; hidden when the sheet is clean.
+  - **Save / Save As** buttons are present and enabled whenever a sheet is loaded.
+  - Canvas section and inspector section have small 6 px breathing margins on left/right/top and 4 px bottom margin — just enough visual separation from the toolbar, no bottom-dock-era outer padding.
+  - **Status bar** sits at the very bottom of the workspace, full-width, with a 1 px top border — matches the Godot editor idiom for script-editor feedback lines.
+  - Status bar shows operation results (save, compile, add/delete events and variables) replacing the old toolbar top-row status text.
+- Keyboard workflow shortcuts:
+  - `Ctrl+S` → save sheet in place (Save As if no path)
+  - `Ctrl+Shift+S` → save sheet to new path (Save As)
   - `Ctrl+E` → add event
   - `Ctrl+Shift+V` → add variable
   - `Ctrl+Shift+C` → add condition on selected event row
   - `Ctrl+Shift+A` → add action on selected event row
   - `Delete` → remove selected event/condition/action/variable/group
-- Document header (`SheetDocumentHeader`) shows:
+- **Dirty state tracking**: `EventSheetEditor._is_dirty` is set on every mutation (add/edit/delete events, conditions, actions, variables, groups, condition inversion) and cleared on sheet load or successful save.
+- Document header (`SheetDocumentHeader`) inside the canvas shows:
   - The sheet file name (or "Untitled Sheet" / "No Sheet Loaded") as the document title
   - The sheet resource path as a secondary hint line
   - A summary of globals and root entries

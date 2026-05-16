@@ -12,6 +12,7 @@ func _init() -> void:
 	passed = ACEMetadataTest.run() and passed
 	passed = EventSheetEditorTest.run() and passed
 	passed = PluginWorkspaceTest.run() and passed
+	passed = WorkspaceShellTest.run() and passed
 	if passed:
 		print("All tests passed.")
 		quit(0)
