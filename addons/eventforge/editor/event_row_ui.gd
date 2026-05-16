@@ -299,7 +299,7 @@ func _build_ui() -> void:
 	action_header.add_child(action_header_spacer)
 
 	var add_action_btn: Button = Button.new()
-	add_action_btn.text = "+"
+	add_action_btn.text = "+Action"
 	add_action_btn.flat = true
 	add_action_btn.tooltip_text = "Add action"
 	add_action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
