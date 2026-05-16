@@ -88,7 +88,11 @@ It intentionally avoids describing unbuilt behavior as complete.
 - Row-level insertion affordances are in-flow with the sheet row surface:
   - event rows expose `+↑` / `+↓` controls to insert a new event above or below
   - group rows expose `+↑` / `+↓` controls to insert sibling events above or below the group
+  - comment rows expose `+↑` / `+↓` controls to insert inline comment rows above or below
   - insertion respects structural containers (root events, nested sub-events, and group child arrays) so above/below behavior stays local to hierarchy depth
+- Events now provide a paired in-flow anchor: `Add Event` and `Add Comment`.
+- Comment rows render inline in the same sheet gutter/lane rhythm (left metadata lane + divider + right content lane) so annotations stay in-flow with authored rows instead of appearing as detached cards.
+- Row-level insertion controls are intentionally de-emphasized at rest and become full-emphasis on row hover/selection, improving discoverability without adding persistent visual noise.
 - When deleting a focused condition/action, inspector selection falls back to the owning event view.
 - Variable and group rows share the same sheet-line/gutter composition model.
 - Group rows now align to the lane/grid rhythm with a left metadata lane, a 2px lane divider, and a right actions lane so nested/group structure reads as part of the same continuous sheet grid.

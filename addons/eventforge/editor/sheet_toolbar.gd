@@ -224,6 +224,8 @@ static func format_selection_meta(selection_kind: String) -> String:
 			return "Selection: Variable"
 		"group":
 			return "Selection: Group"
+		"comment":
+			return "Selection: Comment"
 		_:
 			return "No selection"
 
