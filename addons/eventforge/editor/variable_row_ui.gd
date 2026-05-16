@@ -19,30 +19,31 @@ func _init() -> void:
 	_build_ui()
 
 func _build_ui() -> void:
-	# Green-tinted card with left accent border
+	# Compact blue-gray row matching the event strip chrome.
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.10, 0.22, 0.14, 1.0)
-	style.border_color = Color(0.25, 0.75, 0.40, 1.0)
+	style.bg_color = Color(0.103, 0.115, 0.150, 1.0)
+	style.border_color = Color(0.129, 0.145, 0.184, 1.0)
 	style.set_border_width_all(0)
 	style.border_width_left = 3
-	style.set_corner_radius_all(3)
-	style.set_content_margin_all(6)
-	style.content_margin_left = 10
+	style.set_corner_radius_all(5)
+	style.set_content_margin_all(5)
+	style.content_margin_left = 8
 	add_theme_stylebox_override("panel", style)
 
 	var hbox: HBoxContainer = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
 	add_child(hbox)
 
 	# Global badge
 	var badge: Label = Label.new()
 	badge.text = "Global"
-	badge.add_theme_color_override("font_color", Color(0.35, 0.95, 0.55))
+	badge.add_theme_color_override("font_color", Color(0.62, 0.70, 0.89))
 	badge.add_theme_font_size_override("font_size", 10)
 	hbox.add_child(badge)
 
 	# Summary label
 	_label = Label.new()
-	_label.add_theme_color_override("font_color", Color(0.90, 0.95, 0.90))
+	_label.add_theme_color_override("font_color", Color(0.86, 0.90, 0.98))
 	_label.add_theme_font_size_override("font_size", 11)
 	_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(_label)
@@ -51,6 +52,10 @@ func _build_ui() -> void:
 	_edit_btn = Button.new()
 	_edit_btn.text = "✎"
 	_edit_btn.flat = true
+	_edit_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_edit_btn.add_theme_color_override("font_color", Color(0.73, 0.79, 0.92))
+	_edit_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.94, 1.0))
+	_edit_btn.add_theme_font_size_override("font_size", 10)
 	_edit_btn.connect("pressed", _on_pressed)
 	hbox.add_child(_edit_btn)
 
