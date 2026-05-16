@@ -16,6 +16,8 @@ signal condition_replace_requested(row: EventRowUI, index: int)
 signal condition_invert_requested(row: EventRowUI, index: int)
 ## Emitted when an action summary is clicked.
 signal action_selected(row: EventRowUI, index: int)
+## Emitted when an action right-click menu requests replacement.
+signal action_replace_requested(row: EventRowUI, index: int)
 ## Emitted when the event row itself is clicked for full event inspection.
 signal event_selected(row: EventRowUI)
 ## Emitted when inline Add Action is requested.
@@ -48,26 +50,33 @@ const CONDITION_MENU_REPLACE: int = 3
 const CONDITION_MENU_INVERT: int = 4
 const CONDITION_MENU_DELETE: int = 5
 const ACTION_MENU_EDIT: int = 1
-const ACTION_MENU_DELETE: int = 2
+const ACTION_MENU_ADD_ANOTHER: int = 2
+const ACTION_MENU_REPLACE: int = 3
+const ACTION_MENU_DELETE: int = 4
 
-const ROW_BG: Color = Color(0.074, 0.085, 0.114, 1.0)
-const ROW_BG_HOVER: Color = Color(0.091, 0.105, 0.139, 1.0)
-const ROW_BG_SELECTED: Color = Color(0.108, 0.136, 0.186, 1.0)
-const ROW_BORDER: Color = Color(0.142, 0.168, 0.224, 1.0)
-const ROW_BORDER_HOVER: Color = Color(0.243, 0.312, 0.438, 1.0)
-const ROW_BORDER_SELECTED: Color = Color(0.356, 0.522, 0.812, 1.0)
-const CONDITION_TOKEN_BG: Color = Color(0.155, 0.206, 0.310, 1.0)
-const CONDITION_TOKEN_BG_HOVER: Color = Color(0.205, 0.260, 0.385, 1.0)
-const ACTION_TOKEN_BG: Color = Color(0.110, 0.170, 0.155, 1.0)
-const ACTION_TOKEN_BG_HOVER: Color = Color(0.148, 0.218, 0.198, 1.0)
-const CONDITION_TOKEN_BORDER: Color = Color(0.225, 0.315, 0.462, 1.0)
-const ACTION_TOKEN_BORDER: Color = Color(0.178, 0.268, 0.248, 1.0)
+const ROW_BG: Color = Color(0.105, 0.126, 0.169, 1.0)
+const ROW_BG_HOVER: Color = Color(0.130, 0.157, 0.211, 1.0)
+const ROW_BG_SELECTED: Color = Color(0.165, 0.201, 0.272, 1.0)
+const ROW_BORDER: Color = Color(0.256, 0.308, 0.414, 1.0)
+const ROW_BORDER_HOVER: Color = Color(0.338, 0.415, 0.552, 1.0)
+const ROW_BORDER_SELECTED: Color = Color(0.458, 0.618, 0.900, 1.0)
+const CONDITION_TOKEN_BG: Color = Color(0.210, 0.270, 0.402, 1.0)
+const CONDITION_TOKEN_BG_HOVER: Color = Color(0.238, 0.306, 0.452, 1.0)
+const ACTION_TOKEN_BG: Color = Color(0.161, 0.242, 0.223, 1.0)
+const ACTION_TOKEN_BG_HOVER: Color = Color(0.184, 0.278, 0.255, 1.0)
+const CONDITION_TOKEN_BORDER: Color = Color(0.332, 0.448, 0.664, 1.0)
+const ACTION_TOKEN_BORDER: Color = Color(0.286, 0.430, 0.397, 1.0)
 const RUN_CONTEXT_SYMBOL: String = "◆"
 const CLAUSE_CONDITION_PREFIX: String = "when"
 const CLAUSE_ACTION_PREFIX: String = "do"
 const LANE_DIVIDER_COLOR: Color = Color(0.22, 0.28, 0.42, 0.92)
-const COND_LANE_BG: Color = Color(0.082, 0.098, 0.135, 1.0)
-const ACTION_LANE_BG: Color = Color(0.074, 0.087, 0.118, 1.0)
+const COND_LANE_BG: Color = Color(0.111, 0.134, 0.182, 1.0)
+const ACTION_LANE_BG: Color = Color(0.103, 0.125, 0.168, 1.0)
+const CONDITION_PLACEHOLDER_BG: Color = Color(0.168, 0.216, 0.318, 1.0)
+const CONDITION_PLACEHOLDER_BORDER: Color = Color(0.284, 0.376, 0.548, 1.0)
+const ACTION_PLACEHOLDER_BG: Color = Color(0.142, 0.208, 0.191, 1.0)
+const ACTION_PLACEHOLDER_BORDER: Color = Color(0.240, 0.354, 0.329, 1.0)
+const TOKEN_LEFT_BORDER_WIDTH: int = 2
 const COND_LANE_RATIO: float = 1.0
 const ACTION_LANE_RATIO: float = 1.85
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
@@ -90,18 +99,20 @@ func _build_ui() -> void:
 	_apply_row_style()
 
 	_condition_context_menu = PopupMenu.new()
-	_condition_context_menu.add_item("Edit", CONDITION_MENU_EDIT)
-	_condition_context_menu.add_item("Add Another Condition", CONDITION_MENU_ADD_ANOTHER)
+	_condition_context_menu.add_item("Edit Condition", CONDITION_MENU_EDIT)
+	_condition_context_menu.add_item("Add Condition", CONDITION_MENU_ADD_ANOTHER)
 	_condition_context_menu.add_item("Replace Condition", CONDITION_MENU_REPLACE)
 	_condition_context_menu.add_separator()
-	_condition_context_menu.add_item("Invert Condition", CONDITION_MENU_INVERT)
+	_condition_context_menu.add_item("Invert", CONDITION_MENU_INVERT)
 	_condition_context_menu.add_separator()
 	_condition_context_menu.add_item("Delete Condition", CONDITION_MENU_DELETE)
 	_condition_context_menu.connect("id_pressed", _on_condition_context_menu_id_pressed)
 	add_child(_condition_context_menu)
 
 	_action_context_menu = PopupMenu.new()
-	_action_context_menu.add_item("Edit", ACTION_MENU_EDIT)
+	_action_context_menu.add_item("Edit Action", ACTION_MENU_EDIT)
+	_action_context_menu.add_item("Add Action", ACTION_MENU_ADD_ANOTHER)
+	_action_context_menu.add_item("Replace Action", ACTION_MENU_REPLACE)
 	_action_context_menu.add_separator()
 	_action_context_menu.add_item("Delete Action", ACTION_MENU_DELETE)
 	_action_context_menu.connect("id_pressed", _on_action_context_menu_id_pressed)
@@ -121,21 +132,21 @@ func _build_ui() -> void:
 	cond_style.bg_color = COND_LANE_BG
 	cond_style.set_border_width_all(0)
 	cond_style.set_corner_radius_all(0)
-	cond_style.set_content_margin(SIDE_LEFT, 6)
-	cond_style.set_content_margin(SIDE_RIGHT, 5)
-	cond_style.set_content_margin(SIDE_TOP, 3)
-	cond_style.set_content_margin(SIDE_BOTTOM, 3)
+	cond_style.set_content_margin(SIDE_LEFT, 5)
+	cond_style.set_content_margin(SIDE_RIGHT, 4)
+	cond_style.set_content_margin(SIDE_TOP, 2)
+	cond_style.set_content_margin(SIDE_BOTTOM, 2)
 	cond_panel.add_theme_stylebox_override("panel", cond_style)
 	line.add_child(cond_panel)
 
 	var cond_vbox: VBoxContainer = VBoxContainer.new()
-	cond_vbox.add_theme_constant_override("separation", 2)
+	cond_vbox.add_theme_constant_override("separation", 1)
 	cond_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cond_panel.add_child(cond_vbox)
 
 	# Event header row: select handle + run-context trigger + "when" clause + add
 	var cond_header: HBoxContainer = HBoxContainer.new()
-	cond_header.add_theme_constant_override("separation", 4)
+	cond_header.add_theme_constant_override("separation", 3)
 	cond_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cond_vbox.add_child(cond_header)
 
@@ -161,12 +172,12 @@ func _build_ui() -> void:
 	var run_style: StyleBoxFlat = StyleBoxFlat.new()
 	run_style.bg_color = Color(0.143, 0.176, 0.250, 1.0)
 	run_style.border_color = Color(0.269, 0.357, 0.525, 1.0)
-	run_style.set_border_width_all(0)
-	run_style.set_corner_radius_all(3)
-	run_style.set_content_margin(SIDE_LEFT, 6)
-	run_style.set_content_margin(SIDE_RIGHT, 6)
-	run_style.set_content_margin(SIDE_TOP, 1)
-	run_style.set_content_margin(SIDE_BOTTOM, 1)
+	run_style.set_border_width_all(1)
+	run_style.set_corner_radius_all(0)
+	run_style.set_content_margin(SIDE_LEFT, 5)
+	run_style.set_content_margin(SIDE_RIGHT, 5)
+	run_style.set_content_margin(SIDE_TOP, 0)
+	run_style.set_content_margin(SIDE_BOTTOM, 0)
 	_runs_button.add_theme_stylebox_override("normal", run_style)
 	var run_hover: StyleBoxFlat = run_style.duplicate()
 	run_hover.bg_color = Color(0.181, 0.218, 0.308, 1.0)
@@ -192,8 +203,8 @@ func _build_ui() -> void:
 	# Conditions token flow (wraps within the lane)
 	_conditions_container = HFlowContainer.new()
 	_conditions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_conditions_container.add_theme_constant_override("h_separation", 4)
-	_conditions_container.add_theme_constant_override("v_separation", 2)
+	_conditions_container.add_theme_constant_override("h_separation", 3)
+	_conditions_container.add_theme_constant_override("v_separation", 1)
 	cond_vbox.add_child(_conditions_container)
 
 	# ── Lane divider ───────────────────────────────────────────────────────────
@@ -212,15 +223,15 @@ func _build_ui() -> void:
 	action_style.bg_color = ACTION_LANE_BG
 	action_style.set_border_width_all(0)
 	action_style.set_corner_radius_all(0)
-	action_style.set_content_margin(SIDE_LEFT, 6)
-	action_style.set_content_margin(SIDE_RIGHT, 5)
-	action_style.set_content_margin(SIDE_TOP, 3)
-	action_style.set_content_margin(SIDE_BOTTOM, 3)
+	action_style.set_content_margin(SIDE_LEFT, 5)
+	action_style.set_content_margin(SIDE_RIGHT, 4)
+	action_style.set_content_margin(SIDE_TOP, 2)
+	action_style.set_content_margin(SIDE_BOTTOM, 2)
 	action_panel.add_theme_stylebox_override("panel", action_style)
 	line.add_child(action_panel)
 
 	var action_hbox: HBoxContainer = HBoxContainer.new()
-	action_hbox.add_theme_constant_override("separation", 4)
+	action_hbox.add_theme_constant_override("separation", 3)
 	action_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	action_panel.add_child(action_hbox)
 
@@ -228,12 +239,12 @@ func _build_ui() -> void:
 
 	_actions_container = HFlowContainer.new()
 	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_actions_container.add_theme_constant_override("h_separation", 4)
-	_actions_container.add_theme_constant_override("v_separation", 2)
+	_actions_container.add_theme_constant_override("h_separation", 3)
+	_actions_container.add_theme_constant_override("v_separation", 1)
 	action_hbox.add_child(_actions_container)
 
 	var add_action_btn: Button = Button.new()
-	add_action_btn.text = "+ action"
+	add_action_btn.text = "+Add"
 	add_action_btn.flat = true
 	add_action_btn.tooltip_text = "Add action"
 	add_action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -273,10 +284,10 @@ func _apply_row_style() -> void:
 		style.bg_color = ROW_BG_SELECTED
 		style.border_color = ROW_BORDER_SELECTED
 	elif _hovered:
-		style.bg_color = ROW_BG_HOVER
+		style.bg_color = _apply_depth_tint(ROW_BG_HOVER)
 		style.border_color = ROW_BORDER_HOVER
 	else:
-		style.bg_color = ROW_BG
+		style.bg_color = _apply_depth_tint(ROW_BG)
 		style.border_color = ROW_BORDER
 	style.set_border_width_all(1)
 	style.border_width_left = 4 + min(_depth, 4)
@@ -288,6 +299,18 @@ func _apply_row_style() -> void:
 	style.set_content_margin(SIDE_TOP, 0)
 	style.set_content_margin(SIDE_BOTTOM, 0)
 	add_theme_stylebox_override("panel", style)
+
+func _apply_depth_tint(base: Color) -> Color:
+	var depth_factor: float = float(min(_depth, 4))
+	if depth_factor <= 0.0:
+		return base
+	var lighten_amount: float = depth_factor * 0.012
+	return Color(
+		min(base.r + lighten_amount, 1.0),
+		min(base.g + lighten_amount, 1.0),
+		min(base.b + lighten_amount, 1.0),
+		base.a
+	)
 
 ## Refreshes the display from the assigned event_row resource.
 func refresh() -> void:
@@ -417,7 +440,7 @@ func _refresh_conditions() -> void:
 		child.queue_free()
 
 	if event_row.conditions.is_empty():
-		_conditions_container.add_child(_make_placeholder_token("Always"))
+		_conditions_container.add_child(_make_placeholder_token("Always", true))
 		return
 
 	for i: int in range(event_row.conditions.size()):
@@ -431,7 +454,7 @@ func _refresh_actions() -> void:
 		child.queue_free()
 
 	if event_row.actions.is_empty():
-		_actions_container.add_child(_make_placeholder_token("(no actions)"))
+		_actions_container.add_child(_make_placeholder_token("(no actions)", false))
 		return
 
 	for i: int in range(event_row.actions.size()):
@@ -440,15 +463,16 @@ func _refresh_actions() -> void:
 			continue
 		_actions_container.add_child(_make_entry_button(format_action_summary(action), i, false))
 
-func _make_placeholder_token(text: String) -> PanelContainer:
+func _make_placeholder_token(text: String, is_condition: bool) -> PanelContainer:
 	var panel: PanelContainer = PanelContainer.new()
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.115, 0.133, 0.174, 1.0)
-	style.border_color = Color(0.167, 0.186, 0.242, 1.0)
+	style.bg_color = CONDITION_PLACEHOLDER_BG if is_condition else ACTION_PLACEHOLDER_BG
+	style.border_color = CONDITION_PLACEHOLDER_BORDER if is_condition else ACTION_PLACEHOLDER_BORDER
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(0)
-	style.set_content_margin(SIDE_LEFT, 6)
-	style.set_content_margin(SIDE_RIGHT, 6)
+	style.border_width_left = TOKEN_LEFT_BORDER_WIDTH
+	style.set_content_margin(SIDE_LEFT, 5)
+	style.set_content_margin(SIDE_RIGHT, 5)
 	style.set_content_margin(SIDE_TOP, 2)
 	style.set_content_margin(SIDE_BOTTOM, 2)
 	panel.add_theme_stylebox_override("panel", style)
@@ -481,11 +505,12 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	normal_style.bg_color = CONDITION_TOKEN_BG if is_condition else ACTION_TOKEN_BG
 	normal_style.border_color = CONDITION_TOKEN_BORDER if is_condition else ACTION_TOKEN_BORDER
 	normal_style.set_border_width_all(1)
+	normal_style.border_width_left = TOKEN_LEFT_BORDER_WIDTH
 	normal_style.set_corner_radius_all(0)
-	normal_style.set_content_margin(SIDE_LEFT, 7)
-	normal_style.set_content_margin(SIDE_RIGHT, 7)
-	normal_style.set_content_margin(SIDE_TOP, 3)
-	normal_style.set_content_margin(SIDE_BOTTOM, 3)
+	normal_style.set_content_margin(SIDE_LEFT, 6)
+	normal_style.set_content_margin(SIDE_RIGHT, 6)
+	normal_style.set_content_margin(SIDE_TOP, 2)
+	normal_style.set_content_margin(SIDE_BOTTOM, 2)
 	btn.add_theme_stylebox_override("normal", normal_style)
 
 	var hover_style: StyleBoxFlat = normal_style.duplicate()
@@ -581,5 +606,9 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 	match id:
 		ACTION_MENU_EDIT:
 			action_selected.emit(self, _context_action_index)
+		ACTION_MENU_ADD_ANOTHER:
+			add_action_requested.emit(self)
+		ACTION_MENU_REPLACE:
+			action_replace_requested.emit(self, _context_action_index)
 		ACTION_MENU_DELETE:
 			action_delete_requested.emit(self, _context_action_index)

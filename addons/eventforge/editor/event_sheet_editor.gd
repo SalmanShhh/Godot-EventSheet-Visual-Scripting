@@ -100,7 +100,7 @@ var _ace_picker_title: Label = null
 var _ace_picker_search: LineEdit = null
 var _ace_picker_tree: Tree = null
 var _ace_picker_description: Label = null
-## One of: "new_event", "append_condition", "replace_condition", "append_action"
+## One of: "new_event", "append_condition", "replace_condition", "append_action", "replace_action"
 var _ace_picker_mode: String = ""
 var _ace_picker_target_row: EventRowUI = null
 var _ace_picker_target_condition_index: int = -1
@@ -847,6 +847,12 @@ func _open_add_action_picker(row: EventRowUI) -> void:
 	_ace_picker_target_condition_index = -1
 	_show_ace_picker("Add Action", false, false, true)
 
+func _open_replace_action_picker(row: EventRowUI, index: int) -> void:
+	_ace_picker_mode = "replace_action"
+	_ace_picker_target_row = row
+	_ace_picker_target_condition_index = index
+	_show_ace_picker("Replace Action", false, false, true)
+
 func _show_ace_picker(title: String, include_triggers: bool, include_conditions: bool, include_actions: bool) -> void:
 	if _ace_picker_popup == null:
 		return
@@ -1176,6 +1182,8 @@ func _open_ace_params_dialog_for_picker_selection(descriptor: ACEDescriptor) -> 
 			params_dialog_mode = "replace_condition"
 		"append_action":
 			params_dialog_mode = "append_action"
+		"replace_action":
+			params_dialog_mode = "replace_action"
 	if params_dialog_mode.is_empty():
 		return
 	# If there are no editable parameters, apply immediately using a snapshot of
@@ -1490,6 +1498,8 @@ func _reshow_ace_picker_for_current_mode() -> void:
 			_show_ace_picker("Replace Condition", false, true, false)
 		"append_action":
 			_show_ace_picker("Add Action", false, false, true)
+		"replace_action":
+			_show_ace_picker("Replace Action", false, false, true)
 
 func _refresh_ace_params_dialog_confirm_state() -> void:
 	if _ace_params_dialog == null:
@@ -1541,6 +1551,8 @@ func _apply_ace_params(values: Dictionary) -> void:
 			_replace_condition_with_params(_ace_params_descriptor, _ace_params_target_index, values)
 		"append_action":
 			_append_action_with_params(_ace_params_descriptor, values)
+		"replace_action":
+			_replace_action_with_params(_ace_params_descriptor, _ace_params_target_index, values)
 		"edit_condition":
 			_edit_condition_params(_ace_params_target_index, values)
 		"edit_action":
@@ -1615,6 +1627,21 @@ func _append_action_with_params(descriptor: ACEDescriptor, params: Dictionary) -
 	action.ace_id = descriptor.ace_id
 	_set_action_params(action, params)
 	row.event_row.actions.append(action)
+	row.refresh()
+	_rebuild_inspector_event(row)
+	_mark_dirty()
+
+func _replace_action_with_params(descriptor: ACEDescriptor, index: int, params: Dictionary) -> void:
+	var row: EventRowUI = _ace_params_target_row
+	if row == null or row.event_row == null or descriptor == null:
+		return
+	if index < 0 or index >= row.event_row.actions.size():
+		return
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = descriptor.provider_id
+	action.ace_id = descriptor.ace_id
+	_set_action_params(action, params)
+	row.event_row.actions[index] = action
 	row.refresh()
 	_rebuild_inspector_event(row)
 	_mark_dirty()
@@ -2041,8 +2068,9 @@ func _add_variables_section() -> void:
 		section_body.add_child(row)
 
 func _add_events_section() -> void:
-	var section_body: VBoxContainer = _add_section_shell("SheetSectionEvents", "Events", "Continuous row surface", Color(0.78, 0.87, 1.0), "+ Event", Callable(self, "_on_add_event_requested"), false)
+	var section_body: VBoxContainer = _add_section_shell("SheetSectionEvents", "Events", "Continuous row surface", Color(0.78, 0.87, 1.0), "", Callable(), false)
 	_current_rows_host = section_body
+	_add_canvas_row(_make_add_event_anchor_row(), 0)
 
 	if current_sheet.events.is_empty():
 		section_body.add_child(_make_section_empty_card("No events yet — start by adding an event line."))
@@ -2051,6 +2079,41 @@ func _add_events_section() -> void:
 		for resource: Variant in current_sheet.events:
 			_add_event_resource(resource, 0, render_guard)
 	_current_rows_host = null
+
+func _make_add_event_anchor_row() -> Control:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 0)
+
+	var add_btn: Button = Button.new()
+	add_btn.text = "Add Event"
+	add_btn.flat = true
+	add_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	add_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	add_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	add_btn.tooltip_text = "Add event line"
+	add_btn.add_theme_color_override("font_color", Color(0.72, 0.84, 1.0))
+	add_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.96, 1.0))
+	add_btn.add_theme_font_size_override("font_size", 11)
+	var btn_style: StyleBoxFlat = StyleBoxFlat.new()
+	btn_style.bg_color = Color(0.114, 0.140, 0.196, 1.0)
+	btn_style.border_color = Color(0.262, 0.342, 0.498, 1.0)
+	btn_style.set_border_width_all(1)
+	btn_style.border_width_left = 3
+	btn_style.set_corner_radius_all(0)
+	btn_style.set_content_margin(SIDE_LEFT, 7)
+	btn_style.set_content_margin(SIDE_RIGHT, 7)
+	btn_style.set_content_margin(SIDE_TOP, 3)
+	btn_style.set_content_margin(SIDE_BOTTOM, 3)
+	add_btn.add_theme_stylebox_override("normal", btn_style)
+	var btn_hover: StyleBoxFlat = btn_style.duplicate()
+	btn_hover.bg_color = Color(0.136, 0.167, 0.232, 1.0)
+	add_btn.add_theme_stylebox_override("hover", btn_hover)
+	add_btn.add_theme_stylebox_override("pressed", btn_hover)
+	add_btn.add_theme_stylebox_override("focus", btn_hover)
+	add_btn.connect("pressed", Callable(self, "_on_add_event_requested"))
+	row.add_child(add_btn)
+	return row
 
 func _add_event_resource(resource: Variant, indent_level: int, render_guard: Dictionary = {}) -> void:
 	if resource is EventRow:
@@ -2073,6 +2136,7 @@ func _add_event_row(event_row: EventRow, indent_level: int = 0, render_guard: Di
 	row_ui.condition_replace_requested.connect(_on_condition_replace_requested)
 	row_ui.condition_invert_requested.connect(_on_condition_invert_requested)
 	row_ui.action_selected.connect(_on_action_selected)
+	row_ui.action_replace_requested.connect(_on_action_replace_requested)
 	row_ui.add_condition_requested.connect(_on_row_add_condition_requested)
 	row_ui.add_action_requested.connect(_on_row_add_action_requested)
 	row_ui.event_delete_requested.connect(_on_event_delete_requested)
@@ -2120,20 +2184,20 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 	var line: HBoxContainer = HBoxContainer.new()
 	line.name = "SheetLineRow"
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.add_theme_constant_override("separation", 2)
+	line.add_theme_constant_override("separation", 1)
 	wrap_margin.add_child(line)
 
 	var gutter: HBoxContainer = HBoxContainer.new()
 	gutter.name = "SheetGutter"
-	gutter.add_theme_constant_override("separation", 4)
-	gutter.custom_minimum_size = Vector2(16 + (12 * indent_level), 0)
+	gutter.add_theme_constant_override("separation", 3)
+	gutter.custom_minimum_size = Vector2(14 + (11 * indent_level), 0)
 	gutter.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	gutter.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	line.add_child(gutter)
 
 	var root_pin: Label = Label.new()
 	root_pin.text = "│"
-	root_pin.add_theme_color_override("font_color", Color(0.40, 0.50, 0.68))
+	root_pin.add_theme_color_override("font_color", Color(0.48, 0.60, 0.80))
 	root_pin.add_theme_font_size_override("font_size", 9)
 	gutter.add_child(root_pin)
 
@@ -2141,13 +2205,13 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 		var guide: ColorRect = ColorRect.new()
 		guide.custom_minimum_size = Vector2(1, 0)
 		guide.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		guide.color = Color(0.30, 0.38, 0.53, 0.88)
+		guide.color = Color(0.33, 0.42, 0.58, 0.92)
 		gutter.add_child(guide)
 
 	if indent_level > 0:
 		var branch: Label = Label.new()
 		branch.text = BRANCH_GUIDE_LABEL
-		branch.add_theme_color_override("font_color", Color(0.56, 0.65, 0.84))
+		branch.add_theme_color_override("font_color", Color(0.62, 0.72, 0.92))
 		branch.add_theme_font_size_override("font_size", 9)
 		gutter.add_child(branch)
 
@@ -2240,6 +2304,18 @@ func _on_action_selected(row: EventRowUI, index: int) -> void:
 	_refresh_row_selection_states()
 	_refresh_workspace_context()
 	_open_action_params_dialog(row, index)
+
+func _on_action_replace_requested(row: EventRowUI, index: int) -> void:
+	if row == null or row.event_row == null:
+		return
+	if index < 0 or index >= row.event_row.actions.size():
+		return
+	_selected_entry_kind = "action"
+	_selected_row = row
+	_selected_index = index
+	_refresh_row_selection_states()
+	_refresh_workspace_context()
+	_open_replace_action_picker(row, index)
 
 func _on_row_add_condition_requested(row: EventRowUI) -> void:
 	if row == null or row.event_row == null:
