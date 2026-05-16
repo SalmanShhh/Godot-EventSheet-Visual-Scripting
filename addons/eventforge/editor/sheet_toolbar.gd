@@ -65,7 +65,7 @@ func _build_ui() -> void:
 
 	_compile_btn = Button.new()
 	_compile_btn.text = "Compile / Refresh Preview"
-	_compile_btn.tooltip_text = "Compile the current event sheet for preview"
+	_compile_btn.tooltip_text = "Compile / Refresh Preview for the current event sheet"
 	_compile_btn.connect("pressed", func() -> void: compile_requested.emit())
 	add_child(_compile_btn)
 

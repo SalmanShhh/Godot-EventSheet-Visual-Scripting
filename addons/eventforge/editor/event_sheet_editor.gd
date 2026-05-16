@@ -9,7 +9,11 @@ class_name EventSheetEditor
 # ── State ────────────────────────────────────────────────────────────────────
 
 var current_sheet: EventSheetResource = null
+# user:// is the editor's writable data path; keep preview output out of res:// assets.
 const PREVIEW_OUTPUT_PATH: String = "user://eventforge_preview_generated.gd"
+const DEFAULT_CONDITION_ACE_ID: String = "Always"
+const DEFAULT_ACTION_ACE_ID: String = "PrintLog"
+const DEFAULT_ACTION_MESSAGE: String = "\"TODO\""
 
 ## Currently selected entry kind.
 ## One of: "none", "event", "condition", "action", "variable", "group"
@@ -25,7 +29,7 @@ var _scroll: ScrollContainer = null
 var _canvas_vbox: VBoxContainer = null
 var _inspector_panel: PanelContainer = null
 var _inspector_vbox: VBoxContainer = null
-var _toolbar: SheetToolbar = null
+var _sheet_toolbar: SheetToolbar = null
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
@@ -47,13 +51,13 @@ func _build_layout() -> void:
 	root.add_theme_constant_override("separation", 0)
 	add_child(root)
 
-	_toolbar = SheetToolbar.new()
-	_toolbar.new_sheet_requested.connect(_on_create_new_sheet)
-	_toolbar.open_sheet_requested.connect(_on_open_existing_sheet)
-	_toolbar.add_event_requested.connect(_on_add_event_requested)
-	_toolbar.add_var_requested.connect(_on_add_variable_requested)
-	_toolbar.compile_requested.connect(_on_compile_requested)
-	root.add_child(_toolbar)
+	_sheet_toolbar = SheetToolbar.new()
+	_sheet_toolbar.new_sheet_requested.connect(_on_create_new_sheet)
+	_sheet_toolbar.open_sheet_requested.connect(_on_open_existing_sheet)
+	_sheet_toolbar.add_event_requested.connect(_on_add_event_requested)
+	_sheet_toolbar.add_var_requested.connect(_on_add_variable_requested)
+	_sheet_toolbar.compile_requested.connect(_on_compile_requested)
+	root.add_child(_sheet_toolbar)
 
 	var hbox: HBoxContainer = HBoxContainer.new()
 	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -167,8 +171,8 @@ func _add_no_sheet_onboarding() -> void:
 ## Creates a blank in-memory EventSheetResource and loads it into the editor.
 func _on_create_new_sheet() -> void:
 	_load_sheet(EventSheetResource.new())
-	if _toolbar != null:
-		_toolbar.set_status("Created new Event Sheet")
+	if _sheet_toolbar != null:
+		_sheet_toolbar.set_status("Created new Event Sheet")
 
 ## Opens a FileDialog so the user can pick an existing EventSheetResource.
 func _on_open_existing_sheet() -> void:
@@ -180,12 +184,12 @@ func _on_open_existing_sheet() -> void:
 		var sheet: Variant = load(path)
 		if sheet is EventSheetResource:
 			_load_sheet(sheet as EventSheetResource)
-			if _toolbar != null:
-				_toolbar.set_status("Opened: %s" % path.get_file())
+			if _sheet_toolbar != null:
+				_sheet_toolbar.set_status("Opened: %s" % path.get_file())
 		else:
 			push_warning("[EventForge] Selected file is not an EventSheetResource: %s" % path)
-			if _toolbar != null:
-				_toolbar.set_status("Selected file is not an EventSheetResource", true)
+			if _sheet_toolbar != null:
+				_sheet_toolbar.set_status("Selected file is not an EventSheetResource", true)
 		dialog.queue_free()
 	)
 	dialog.connect("canceled", func() -> void: dialog.queue_free())
@@ -197,16 +201,12 @@ func _on_add_variable_requested() -> void:
 	if current_sheet == null:
 		return
 
-	var var_name: String = _next_variable_name()
-	current_sheet.variables[var_name] = {
-		"type": "int",
-		"default": 0,
-		"exported": true
-	}
+	var var_name: String = _generate_unique_variable_name()
+	current_sheet.variables[var_name] = _make_default_variable_descriptor()
 	refresh_canvas()
 	_focus_variable_by_name(var_name)
-	if _toolbar != null:
-		_toolbar.set_status("Added variable: %s" % var_name)
+	if _sheet_toolbar != null:
+		_sheet_toolbar.set_status("Added variable: %s" % var_name)
 
 func _on_add_event_requested() -> void:
 	_ensure_sheet()
@@ -218,26 +218,28 @@ func _on_add_event_requested() -> void:
 	current_sheet.events.append(new_event)
 	refresh_canvas()
 	_focus_event_by_uid(new_event.event_uid)
-	if _toolbar != null:
-		_toolbar.set_status("Added event")
+	if _sheet_toolbar != null:
+		_sheet_toolbar.set_status("Added event")
 
 func _on_compile_requested() -> void:
 	if current_sheet == null:
-		if _toolbar != null:
-			_toolbar.set_status("Create or open a sheet before compiling", true)
+		if _sheet_toolbar != null:
+			_sheet_toolbar.set_status("Create or open a sheet before compiling", true)
 		return
 
 	var result: Dictionary = SheetCompiler.compile(current_sheet, PREVIEW_OUTPUT_PATH)
 	var ok: bool = bool(result.get("success", false))
-	if _toolbar != null:
+	if _sheet_toolbar != null:
 		if ok:
-			_toolbar.set_status("Compiled preview to %s" % PREVIEW_OUTPUT_PATH)
+			_sheet_toolbar.set_status("Compiled preview to %s" % PREVIEW_OUTPUT_PATH)
 		else:
 			var errors: Array = result.get("errors", [])
-			_toolbar.set_status("Compile failed: %s" % (str(errors[0]) if not errors.is_empty() else "unknown error"), true)
+			var first_error_text: String = str(errors[0]) if not errors.is_empty() else "No error details available"
+			_sheet_toolbar.set_status("Compile failed: %s" % first_error_text, true)
 
 func _load_sheet(sheet: EventSheetResource) -> void:
 	current_sheet = sheet
+	# Avoid stale references in inspector selection when switching sheets.
 	_reset_selection_state()
 	if is_inside_tree():
 		refresh_canvas()
@@ -248,20 +250,27 @@ func _ensure_sheet() -> void:
 	if current_sheet != null:
 		return
 	_load_sheet(EventSheetResource.new())
-	if _toolbar != null:
-		_toolbar.set_status("Created new Event Sheet")
+	if _sheet_toolbar != null:
+		_sheet_toolbar.set_status("Created new Event Sheet")
 
 func _refresh_toolbar_state() -> void:
-	if _toolbar == null:
+	if _sheet_toolbar == null:
 		return
-	_toolbar.set_sheet_loaded(current_sheet != null)
+	_sheet_toolbar.set_sheet_loaded(current_sheet != null)
 
-func _next_variable_name() -> String:
+func _generate_unique_variable_name() -> String:
 	var base: String = "var_"
 	var index: int = 1
 	while current_sheet.variables.has("%s%d" % [base, index]):
 		index += 1
 	return "%s%d" % [base, index]
+
+func _make_default_variable_descriptor() -> Dictionary:
+	return {
+		"type": "int",
+		"default": 0,
+		"exported": true
+	}
 
 func _focus_event_by_uid(event_uid: String) -> void:
 	for child: Node in _canvas_vbox.get_children():
@@ -312,7 +321,7 @@ func _add_variables_section() -> void:
 	var variables: Dictionary = current_sheet.variables
 	if variables.is_empty():
 		var hint: Label = Label.new()
-		hint.text = "No global variables yet. Use Add Variable in the toolbar to create one."
+		hint.text = "No global variables yet. Use 'Add Variable' in the toolbar to create one."
 		hint.add_theme_color_override("font_color", Color(0.50, 0.60, 0.50))
 		hint.add_theme_font_size_override("font_size", 11)
 		_canvas_vbox.add_child(hint)
@@ -333,7 +342,7 @@ func _add_events_section() -> void:
 
 	if current_sheet.events.is_empty():
 		var hint: Label = Label.new()
-		hint.text = "No events yet. Use Add Event in the toolbar to create one."
+		hint.text = "No events yet. Use 'Add Event' in the toolbar to create one."
 		hint.add_theme_color_override("font_color", Color(0.50, 0.50, 0.60))
 		hint.add_theme_font_size_override("font_size", 11)
 		_canvas_vbox.add_child(hint)
@@ -411,7 +420,7 @@ func _show_empty_inspector() -> void:
 	_reset_selection_state()
 	var hint: Label = Label.new()
 	if current_sheet == null:
-		hint.text = "Create or open an Event Sheet to start editing."
+		hint.text = "Create or open an event sheet to start editing."
 	else:
 		hint.text = "Select an event, condition, action, variable, or group to edit it."
 	hint.add_theme_color_override("font_color", Color(0.45, 0.45, 0.45))
@@ -441,11 +450,11 @@ func _rebuild_inspector_event(row: EventRowUI) -> void:
 	_inspector_vbox.add_child(heading)
 
 	# Run context
-	var runs_heading: Label = Label.new()
-	runs_heading.text = "Run Context:"
-	runs_heading.add_theme_color_override("font_color", Color(0.70, 0.70, 0.70))
-	runs_heading.add_theme_font_size_override("font_size", 10)
-	_inspector_vbox.add_child(runs_heading)
+	var run_context_heading: Label = Label.new()
+	run_context_heading.text = "Run Context:"
+	run_context_heading.add_theme_color_override("font_color", Color(0.70, 0.70, 0.70))
+	run_context_heading.add_theme_font_size_override("font_size", 10)
+	_inspector_vbox.add_child(run_context_heading)
 
 	var runs_lbl: Label = Label.new()
 	runs_lbl.text = EventRowUI.format_run_context(event_row)
@@ -519,6 +528,7 @@ func _add_condition_to_selected_event() -> void:
 	if row == null or row.event_row == null:
 		return
 	var condition: ACECondition = ACECondition.new()
+	condition.ace_id = DEFAULT_CONDITION_ACE_ID
 	row.event_row.conditions.append(condition)
 	row.refresh()
 	_rebuild_inspector_event(row)
@@ -530,8 +540,8 @@ func _add_action_to_selected_event() -> void:
 	if row == null or row.event_row == null:
 		return
 	var action: ACEAction = ACEAction.new()
-	action.ace_id = "PrintLog"
-	action.params = {"message": "\"TODO\""}
+	action.ace_id = DEFAULT_ACTION_ACE_ID
+	action.params = {"message": DEFAULT_ACTION_MESSAGE}
 	row.event_row.actions.append(action)
 	row.refresh()
 	_rebuild_inspector_event(row)
