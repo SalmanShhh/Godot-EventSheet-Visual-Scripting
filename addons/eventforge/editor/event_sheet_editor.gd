@@ -981,9 +981,6 @@ func _get_selected_insertion_target_resource() -> Resource:
 				return comment_row_ui.comment_row
 	return null
 
-func _get_comment_insertion_target_resource() -> Resource:
-	return _get_selected_insertion_target_resource()
-
 func _describe_selected_target_resource(target_resource: Resource) -> String:
 	if target_resource == null:
 		return "current selection"
