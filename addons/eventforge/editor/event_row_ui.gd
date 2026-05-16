@@ -90,6 +90,8 @@ const CONDITION_PREVIEW_BG_COLOR: Color = Color(0.14, 0.18, 0.28, 0.96)
 const CONDITION_PREVIEW_BORDER_COLOR: Color = Color(0.44, 0.66, 1.00, 0.82)
 const ACTION_PREVIEW_BG_COLOR: Color = Color(0.10, 0.17, 0.15, 0.96)
 const ACTION_PREVIEW_BORDER_COLOR: Color = Color(0.36, 0.74, 0.56, 0.82)
+const ROW_MIN_HEIGHT: float = 30.0
+const ROW_CORNER_RADIUS: int = 4
 
 class EntryTokenButton extends Button:
 	var owner_row: EventRowUI = null
@@ -153,6 +155,7 @@ func _ensure_ui_built() -> void:
 
 func _build_ui() -> void:
 	_apply_row_style()
+	custom_minimum_size = Vector2(0, ROW_MIN_HEIGHT)
 
 	_condition_context_menu = PopupMenu.new()
 	_condition_context_menu.add_item("Edit Condition", CONDITION_MENU_EDIT)
@@ -262,7 +265,7 @@ func _build_ui() -> void:
 
 	# ── Lane divider ───────────────────────────────────────────────────────────
 	var lane_div: ColorRect = ColorRect.new()
-	lane_div.custom_minimum_size = Vector2(1, 0)
+	lane_div.custom_minimum_size = Vector2(2, 0)
 	lane_div.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	lane_div.color = LANE_DIVIDER_COLOR
 	lane_div.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -384,7 +387,7 @@ func _apply_row_style() -> void:
 	style.border_width_left = 2 + min(_depth, 4)
 	style.border_width_top = 0
 	style.border_width_right = 0
-	style.set_corner_radius_all(0)
+	style.set_corner_radius_all(ROW_CORNER_RADIUS)
 	# Zero content margins — inner lane panels carry their own padding so
 	# the lanes extend flush from the left depth-accent border to the right edge.
 	style.set_content_margin(SIDE_LEFT, 0)

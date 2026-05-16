@@ -58,7 +58,7 @@ It intentionally avoids describing unbuilt behavior as complete.
 
 ### 2.3 Event sheet row UX
 
-- Event rows use a **two-lane composition**: a condition lane (left) and an action lane (right), separated by a thin `ColorRect` lane divider — closely matching Construct 3's event sheet grammar.
+- Event rows use a **two-lane composition**: a condition lane (left) and an action lane (right), separated by a **2 px** `ColorRect` lane divider — closely matching Construct 3's event sheet grammar.
 - Rows avoid explicit lane headers (`IF`, `THEN`, `Conditions`, `Actions`, `when`, `do`) — the column position alone conveys lane identity.
 - The condition lane occupies approximately 35 % of the row width (`COND_LANE_RATIO = 1.0`); the action lane occupies approximately 65 % (`ACTION_LANE_RATIO = 1.85`). These ratios are constant across all rows, providing cross-row column alignment.
 - Each lane is a `PanelContainer` with a subtly distinct background tint:
@@ -174,7 +174,8 @@ It intentionally avoids describing unbuilt behavior as complete.
 - All row types (event, variable, group) use tighter content margins (top/bottom 3px for events, 5px for variable/group).
 - Event, variable, and group rows use a `border_width_left` of 3+depth (up from 2+depth) for a stronger depth hierarchy accent.
 - Depth guide `ColorRect` lines use opacity 0.80 (up from 0.68) for better visibility at depth.
-- Event rows use a thin `ColorRect` lane divider (`LANE_DIVIDER_COLOR`) replacing the earlier `VSeparator` for a stronger, pixel-stable lane boundary.
+- Event rows use a **2 px** `ColorRect` lane divider (`LANE_DIVIDER_COLOR`) replacing the earlier `VSeparator` for a stronger, pixel-stable lane boundary.
+- Event rows keep a compact minimum height of **30 px** so the sheet line rhythm stays close to Construct-style event rows while remaining Godot-themed.
 
 ### 2.8 Final cross-surface polish (Phase 6)
 
