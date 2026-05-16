@@ -577,7 +577,7 @@ static func run() -> bool:
 	all_passed = _check("picker group runtime provider uses provider_id", editor._get_picker_group(runtime_ace), "MyPlugin") and all_passed
 
 	# _get_picker_group_color: node-type groups get amber; known categories get distinct colours.
-	var amber: Color = Color(0.92, 0.72, 0.38)
+	var amber: Color = EventSheetEditor.ACE_PICKER_NODE_TYPE_GROUP_COLOR
 	all_passed = _check("picker color CharacterBody2D is amber", EventSheetEditor._get_picker_group_color("CharacterBody2D"), amber) and all_passed
 	all_passed = _check("picker color Area2D is amber", EventSheetEditor._get_picker_group_color("Area2D"), amber) and all_passed
 	all_passed = _check("picker color custom class is amber", EventSheetEditor._get_picker_group_color("RigidBody2D"), amber) and all_passed

@@ -44,6 +44,8 @@ const BRANCH_GUIDE_CHAR: String = "└"
 const BRANCH_GUIDE_LABEL: String = "└─"
 const CANVAS_BG: Color = Color(0.060, 0.067, 0.088, 1.0)
 const CANVAS_BORDER: Color = Color(0.141, 0.164, 0.214, 1.0)
+## Amber colour used for node-type / Godot class group headers in the ACE picker.
+const ACE_PICKER_NODE_TYPE_GROUP_COLOR: Color = Color(0.92, 0.72, 0.38)
 const SHORTCUT_BLOCKING_FOCUS_TYPES: Array[String] = ["LineEdit", "TextEdit", "SpinBox"]
 
 ## Currently selected entry kind.
@@ -582,6 +584,8 @@ func _get_picker_group(descriptor: ACEDescriptor) -> String:
 	if not descriptor.node_type.is_empty():
 		return descriptor.node_type
 	# Runtime providers group under their provider ID.
+	# An empty provider_id falls back to "Custom ACEs" (treated as a catch-all category,
+	# not a node-type group) since a nameless descriptor may indicate a registration issue.
 	if descriptor.provider_id != "Core":
 		return descriptor.provider_id if not descriptor.provider_id.is_empty() else "Custom ACEs"
 	if descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER:
@@ -605,7 +609,7 @@ static func _get_picker_group_color(group_name: String) -> Color:
 			if CORE_CATEGORY_GROUP_NAMES.has(group_name):
 				return Color(0.68, 0.74, 0.84)  # default muted
 			# Node-type / class groups use amber to signal their Godot class origin.
-			return Color(0.92, 0.72, 0.38)
+			return ACE_PICKER_NODE_TYPE_GROUP_COLOR
 
 func _on_ace_picker_item_selected() -> void:
 	if _ace_picker_tree == null:
