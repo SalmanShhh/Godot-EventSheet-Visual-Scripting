@@ -428,10 +428,10 @@ func _on_condition_entry_gui_input(event: InputEvent, index: int) -> void:
 	_context_condition_index = index
 	if _condition_context_menu == null:
 		return
+	get_viewport().set_input_as_handled()
 	_condition_context_menu.position = DisplayServer.mouse_get_position()
 	_condition_context_menu.reset_size()
 	_condition_context_menu.popup()
-	get_viewport().set_input_as_handled()
 
 func _on_action_entry_gui_input(event: InputEvent, index: int) -> void:
 	if not (event is InputEventMouseButton):
@@ -442,10 +442,10 @@ func _on_action_entry_gui_input(event: InputEvent, index: int) -> void:
 	_context_action_index = index
 	if _action_context_menu == null:
 		return
+	get_viewport().set_input_as_handled()
 	_action_context_menu.position = DisplayServer.mouse_get_position()
 	_action_context_menu.reset_size()
 	_action_context_menu.popup()
-	get_viewport().set_input_as_handled()
 
 func _on_condition_context_menu_id_pressed(id: int) -> void:
 	if _context_condition_index < 0:
