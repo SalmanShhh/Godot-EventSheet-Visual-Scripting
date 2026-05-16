@@ -59,10 +59,6 @@ Construct / GDevelop event sheets.
 
 ### UX and document-flow notes
 
-- The sheet canvas is a **vertical document** of ordered blocks:
-  - `Global variable` rows (top of canvas)
-  - `Group` header rows (planned: contain local variables + nested events)
-  - `Event` rows (Conditions + Actions)
 - EventForge direction is Script-editor-style workspace UX:
   - left sidebar (ACE palette + sheet variables)
   - center event canvas
