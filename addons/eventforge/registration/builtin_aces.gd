@@ -42,7 +42,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(_make_descriptor("Core", "QueueFree", "Queue Free", ACEDescriptor.ACEType.ACTION, "queue_free()", "", [], "General Actions", "Queue free"))
 	descriptors.append(_make_descriptor("Core", "EmitSignal", "Emit Signal", ACEDescriptor.ACEType.ACTION, "emit_signal({signal_name}{, args})", "", [_make_param("signal_name", "String", "signal", "Signal Name", "Signal to emit."), _make_param("args", "String", "", "Arguments", "Optional signal arguments.")], "Signals / Scene / Input", "Emit signal {signal_name}"))
 	descriptors.append(_make_descriptor("Core", "SetProcess", "Set Process", ACEDescriptor.ACEType.ACTION, "set_process({enabled})", "", [_make_param("enabled", "bool", true, "Enabled", "Enable or disable _process.")], "General Actions", "Set process {enabled}"))
-	descriptors.append(_make_descriptor("Core", "ChangeSceneToFile", "Change Scene", ACEDescriptor.ACEType.ACTION, "get_tree().change_scene_to_file({scene_path})", "", [_make_param("scene_path", "String", "\"res://\"", "Scene Path", "Path to the scene file.")], "Signals / Scene / Input", "Change scene to {scene_path}"))
+	descriptors.append(_make_descriptor("Core", "ChangeSceneToFile", "Change Scene", ACEDescriptor.ACEType.ACTION, "get_tree().change_scene_to_file({scene_path})", "", [_make_param("scene_path", "String", "\"res://demo/scenes/player.tscn\"", "Scene Path", "Path to the scene file.")], "Signals / Scene / Input", "Change scene to {scene_path}"))
 
 	# Expressions
 	descriptors.append(_make_descriptor("Core", "GetVar", "Get Variable", ACEDescriptor.ACEType.EXPRESSION, "{var_name}", "", [_make_param("var_name", "String", "var", "Variable", "Variable to read.", "variable_reference")], "Variables", "{var_name}"))
