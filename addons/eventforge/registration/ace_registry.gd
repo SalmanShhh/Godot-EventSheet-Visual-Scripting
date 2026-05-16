@@ -147,7 +147,7 @@ static func _find_custom_param_missing_initial(raw_params: Variant) -> String:
 			var data: Dictionary = entry
 			if not _has_param_initial_or_default_key(data):
 				var param_id: String = str(data.get("id", data.get("name", "")))
-				return param_id if not param_id.is_empty() else "unnamed_param_%d" % i
+				return param_id if not param_id.is_empty() else "unnamed_param_%d" % (i + 1)
 	return ""
 
 static func _has_param_initial_or_default_key(data: Dictionary) -> bool:
