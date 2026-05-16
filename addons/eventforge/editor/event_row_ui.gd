@@ -1,6 +1,5 @@
 # EventForge — Event row UI
-# Renders a single EventRow as a Construct/GDevelop-style document block.
-# Each condition and action entry is a clickable summary.
+# Renders a single EventRow as an event-sheet entry line with inline clauses.
 @tool
 extends PanelContainer
 class_name EventRowUI
@@ -17,7 +16,7 @@ signal condition_replace_requested(row: EventRowUI, index: int)
 signal condition_invert_requested(row: EventRowUI, index: int)
 ## Emitted when an action summary is clicked.
 signal action_selected(row: EventRowUI, index: int)
-## Emitted when the event header/row itself is clicked for full event inspection.
+## Emitted when the event row itself is clicked for full event inspection.
 signal event_selected(row: EventRowUI)
 ## Emitted when inline Add Action is requested.
 signal add_action_requested(row: EventRowUI)
@@ -32,15 +31,15 @@ signal action_delete_requested(row: EventRowUI, index: int)
 
 var event_row: EventRow = null
 
-var _vbox: VBoxContainer = null
-var _header_label: Label = null
-var _runs_label: Label = null
-var _conditions_container: VBoxContainer = null
-var _actions_container: VBoxContainer = null
+var _runs_button: Button = null
+var _conditions_container: HFlowContainer = null
+var _actions_container: HFlowContainer = null
 var _condition_context_menu: PopupMenu = null
 var _context_condition_index: int = -1
 var _action_context_menu: PopupMenu = null
 var _context_action_index: int = -1
+var _depth: int = 0
+var _selected: bool = false
 
 const CONDITION_MENU_EDIT: int = 1
 const CONDITION_MENU_ADD_ANOTHER: int = 2
@@ -49,53 +48,32 @@ const CONDITION_MENU_INVERT: int = 4
 const CONDITION_MENU_DELETE: int = 5
 const ACTION_MENU_EDIT: int = 1
 const ACTION_MENU_DELETE: int = 2
-const ACTIONS_LANE_STRETCH_RATIO: float = 1.4
-const SHEET_BG: Color = Color(0.094, 0.105, 0.138, 1.0)
-const SHEET_DIVIDER: Color = Color(0.130, 0.145, 0.183, 1.0)
-const CONDITIONS_BG: Color = Color(0.117, 0.130, 0.166, 1.0)
-const CONDITION_ENTRY_BG: Color = Color(0.170, 0.188, 0.234, 1.0)
-const CONDITION_ENTRY_BG_HOVER: Color = Color(0.228, 0.250, 0.308, 1.0)
-const CONDITION_ENTRY_BG_PRESSED: Color = Color(0.202, 0.223, 0.279, 1.0)
-const ACTION_ENTRY_BG: Color = Color(0.139, 0.154, 0.195, 1.0)
-const ACTION_ENTRY_BG_HOVER: Color = Color(0.178, 0.196, 0.247, 1.0)
-const ACTION_ENTRY_BG_PRESSED: Color = Color(0.152, 0.168, 0.211, 1.0)
+
+const ROW_BG: Color = Color(0.096, 0.106, 0.137, 1.0)
+const ROW_BG_SELECTED: Color = Color(0.138, 0.165, 0.218, 1.0)
+const ROW_BORDER: Color = Color(0.152, 0.172, 0.220, 1.0)
+const ROW_BORDER_SELECTED: Color = Color(0.357, 0.525, 0.804, 1.0)
+const CONDITION_TOKEN_BG: Color = Color(0.179, 0.200, 0.253, 1.0)
+const CONDITION_TOKEN_BG_HOVER: Color = Color(0.239, 0.264, 0.333, 1.0)
+const ACTION_TOKEN_BG: Color = Color(0.151, 0.172, 0.220, 1.0)
+const ACTION_TOKEN_BG_HOVER: Color = Color(0.206, 0.232, 0.296, 1.0)
 
 func _init() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_build_ui()
 
 func _ensure_ui_built() -> void:
-	if _runs_label != null and _conditions_container != null and _actions_container != null:
+	if _runs_button != null and _conditions_container != null and _actions_container != null:
 		return
-	_reset_ui()
-	_build_ui()
-
-func _reset_ui() -> void:
-	_vbox = null
-	_runs_label = null
-	_conditions_container = null
-	_actions_container = null
-	_condition_context_menu = null
-	_action_context_menu = null
-	var existing_children: Array[Node] = get_children()
-	for child: Node in existing_children:
+	for child: Node in get_children():
 		remove_child(child)
 		child.queue_free()
+	_condition_context_menu = null
+	_action_context_menu = null
+	_build_ui()
 
 func _build_ui() -> void:
-	# Outer row styling
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = SHEET_BG
-	style.border_color = SHEET_DIVIDER
-	style.set_border_width_all(0)
-	style.set_corner_radius_all(5)
-	style.set_content_margin_all(0)
-	add_theme_stylebox_override("panel", style)
-
-	_vbox = VBoxContainer.new()
-	_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_vbox.add_theme_constant_override("separation", 0)
-	add_child(_vbox)
+	_apply_row_style()
 
 	_condition_context_menu = PopupMenu.new()
 	_condition_context_menu.add_item("Edit", CONDITION_MENU_EDIT)
@@ -115,57 +93,74 @@ func _build_ui() -> void:
 	_action_context_menu.connect("id_pressed", _on_action_context_menu_id_pressed)
 	add_child(_action_context_menu)
 
-	# Side-by-side lanes
-	var lanes_hbox: HBoxContainer = HBoxContainer.new()
-	lanes_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lanes_hbox.add_theme_constant_override("separation", 0)
-	_vbox.add_child(lanes_hbox)
+	var line: HBoxContainer = HBoxContainer.new()
+	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	line.add_theme_constant_override("separation", 6)
+	add_child(line)
 
-	# Conditions lane
-	var conditions_lane: PanelContainer = PanelContainer.new()
-	conditions_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var conditions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
-	conditions_lane_style.bg_color = CONDITIONS_BG
-	conditions_lane_style.border_color = SHEET_DIVIDER
-	conditions_lane_style.set_border_width_all(0)
-	conditions_lane_style.set_border_width(SIDE_RIGHT, 1)
-	conditions_lane_style.corner_radius_top_left = 5
-	conditions_lane_style.corner_radius_bottom_left = 5
-	conditions_lane_style.set_content_margin(SIDE_LEFT, 6)
-	conditions_lane_style.set_content_margin(SIDE_RIGHT, 8)
-	conditions_lane_style.set_content_margin(SIDE_TOP, 5)
-	conditions_lane_style.set_content_margin(SIDE_BOTTOM, 5)
-	conditions_lane.add_theme_stylebox_override("panel", conditions_lane_style)
-	lanes_hbox.add_child(conditions_lane)
+	var menu_btn: Button = Button.new()
+	menu_btn.text = "⋮"
+	menu_btn.flat = true
+	menu_btn.tooltip_text = "Select event"
+	menu_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	menu_btn.add_theme_color_override("font_color", Color(0.72, 0.78, 0.92))
+	menu_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.94, 1.0))
+	menu_btn.connect("pressed", _on_event_header_pressed)
+	line.add_child(menu_btn)
 
-	var conditions_lane_vbox: VBoxContainer = VBoxContainer.new()
-	conditions_lane_vbox.add_theme_constant_override("separation", 2)
-	conditions_lane.add_child(conditions_lane_vbox)
+	_runs_button = Button.new()
+	_runs_button.flat = true
+	_runs_button.tooltip_text = "Select event"
+	_runs_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_runs_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_runs_button.add_theme_color_override("font_color", Color(0.68, 0.77, 0.94))
+	_runs_button.add_theme_color_override("font_hover_color", Color(0.84, 0.90, 1.0))
+	_runs_button.add_theme_font_size_override("font_size", 10)
+	_runs_button.connect("pressed", _on_event_header_pressed)
+	line.add_child(_runs_button)
 
-	# Run-context label on its own line so the control row below stays clean.
-	var runs_row: HBoxContainer = HBoxContainer.new()
-	conditions_lane_vbox.add_child(runs_row)
-	_runs_label = Label.new()
-	_runs_label.add_theme_color_override("font_color", Color(0.58, 0.64, 0.81))
-	_runs_label.add_theme_font_size_override("font_size", 9)
-	_runs_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_runs_label.clip_text = true
-	runs_row.add_child(_runs_label)
+	var cond_arrow: Label = Label.new()
+	cond_arrow.text = "•"
+	cond_arrow.add_theme_color_override("font_color", Color(0.43, 0.47, 0.56))
+	line.add_child(cond_arrow)
 
-	var cond_row: HBoxContainer = HBoxContainer.new()
-	cond_row.add_theme_constant_override("separation", 4)
-	conditions_lane_vbox.add_child(cond_row)
+	_conditions_container = HFlowContainer.new()
+	_conditions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_conditions_container.add_theme_constant_override("h_separation", 4)
+	_conditions_container.add_theme_constant_override("v_separation", 2)
+	line.add_child(_conditions_container)
 
-	var header_btn: Button = Button.new()
-	header_btn.text = "✎"
-	header_btn.flat = true
-	header_btn.tooltip_text = "Select event"
-	header_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	header_btn.add_theme_color_override("font_color", Color(0.74, 0.79, 0.92))
-	header_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.94, 1.0))
-	header_btn.add_theme_font_size_override("font_size", 11)
-	header_btn.connect("pressed", _on_event_header_pressed)
-	cond_row.add_child(header_btn)
+	var add_condition_btn: Button = Button.new()
+	add_condition_btn.text = "+"
+	add_condition_btn.flat = true
+	add_condition_btn.tooltip_text = "Add condition"
+	add_condition_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	add_condition_btn.add_theme_color_override("font_color", Color(0.51, 0.56, 0.67))
+	add_condition_btn.add_theme_color_override("font_hover_color", Color(0.73, 0.79, 0.92))
+	add_condition_btn.connect("pressed", _on_add_condition_pressed)
+	line.add_child(add_condition_btn)
+
+	var action_arrow: Label = Label.new()
+	action_arrow.text = "→"
+	action_arrow.add_theme_color_override("font_color", Color(0.45, 0.54, 0.71))
+	line.add_child(action_arrow)
+
+	_actions_container = HFlowContainer.new()
+	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_actions_container.size_flags_stretch_ratio = 1.3
+	_actions_container.add_theme_constant_override("h_separation", 4)
+	_actions_container.add_theme_constant_override("v_separation", 2)
+	line.add_child(_actions_container)
+
+	var add_action_btn: Button = Button.new()
+	add_action_btn.text = "+"
+	add_action_btn.flat = true
+	add_action_btn.tooltip_text = "Add action"
+	add_action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	add_action_btn.add_theme_color_override("font_color", Color(0.51, 0.56, 0.67))
+	add_action_btn.add_theme_color_override("font_hover_color", Color(0.73, 0.79, 0.92))
+	add_action_btn.connect("pressed", _on_add_action_pressed)
+	line.add_child(add_action_btn)
 
 	var delete_event_btn: Button = Button.new()
 	delete_event_btn.text = "✕"
@@ -174,73 +169,29 @@ func _build_ui() -> void:
 	delete_event_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	delete_event_btn.add_theme_color_override("font_color", Color(0.86, 0.46, 0.51))
 	delete_event_btn.add_theme_color_override("font_hover_color", Color(0.98, 0.62, 0.67))
-	delete_event_btn.add_theme_font_size_override("font_size", 11)
 	delete_event_btn.connect("pressed", _on_delete_event_pressed)
-	cond_row.add_child(delete_event_btn)
+	line.add_child(delete_event_btn)
 
-	var cond_spacer: Control = Control.new()
-	cond_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cond_row.add_child(cond_spacer)
+func set_depth(depth: int) -> void:
+	_depth = maxi(0, depth)
+	_apply_row_style()
 
-	var add_condition_btn: Button = Button.new()
-	add_condition_btn.text = "+ Add Condition"
-	add_condition_btn.flat = true
-	add_condition_btn.tooltip_text = "Add condition to this event"
-	add_condition_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	add_condition_btn.add_theme_color_override("font_color", Color(0.38, 0.41, 0.50))
-	add_condition_btn.add_theme_color_override("font_hover_color", Color(0.57, 0.61, 0.72))
-	add_condition_btn.add_theme_font_size_override("font_size", 11)
-	add_condition_btn.connect("pressed", _on_add_condition_pressed)
-	cond_row.add_child(add_condition_btn)
+func set_selected(selected: bool) -> void:
+	_selected = selected
+	_apply_row_style()
 
-	_conditions_container = VBoxContainer.new()
-	_conditions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_conditions_container.add_theme_constant_override("separation", 1)
-	conditions_lane_vbox.add_child(_conditions_container)
-
-	# Actions lane
-	var actions_lane: PanelContainer = PanelContainer.new()
-	actions_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# Actions summaries are usually longer than conditions; give the right lane ~40% more width.
-	actions_lane.size_flags_stretch_ratio = ACTIONS_LANE_STRETCH_RATIO
-	var actions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
-	actions_lane_style.bg_color = SHEET_BG
-	actions_lane_style.border_color = Color(0, 0, 0, 0)
-	actions_lane_style.set_border_width_all(0)
-	actions_lane_style.set_content_margin(SIDE_LEFT, 8)
-	actions_lane_style.set_content_margin(SIDE_RIGHT, 8)
-	actions_lane_style.set_content_margin(SIDE_TOP, 5)
-	actions_lane_style.set_content_margin(SIDE_BOTTOM, 5)
-	actions_lane.add_theme_stylebox_override("panel", actions_lane_style)
-	lanes_hbox.add_child(actions_lane)
-
-	var actions_lane_vbox: VBoxContainer = VBoxContainer.new()
-	actions_lane_vbox.add_theme_constant_override("separation", 2)
-	actions_lane.add_child(actions_lane_vbox)
-
-	var actions_row: HBoxContainer = HBoxContainer.new()
-	actions_row.add_theme_constant_override("separation", 4)
-	actions_lane_vbox.add_child(actions_row)
-
-	var action_spacer: Control = Control.new()
-	action_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	actions_row.add_child(action_spacer)
-
-	var add_action_btn: Button = Button.new()
-	add_action_btn.text = "+ Add Action"
-	add_action_btn.flat = true
-	add_action_btn.tooltip_text = "Add action to this event"
-	add_action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	add_action_btn.add_theme_color_override("font_color", Color(0.38, 0.41, 0.50))
-	add_action_btn.add_theme_color_override("font_hover_color", Color(0.57, 0.61, 0.72))
-	add_action_btn.add_theme_font_size_override("font_size", 11)
-	add_action_btn.connect("pressed", _on_add_action_pressed)
-	actions_row.add_child(add_action_btn)
-
-	_actions_container = VBoxContainer.new()
-	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_actions_container.add_theme_constant_override("separation", 1)
-	actions_lane_vbox.add_child(_actions_container)
+func _apply_row_style() -> void:
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = ROW_BG_SELECTED if _selected else ROW_BG
+	style.border_color = ROW_BORDER_SELECTED if _selected else ROW_BORDER
+	style.set_border_width_all(0)
+	style.border_width_left = 2 + mini(_depth, 4)
+	style.set_corner_radius_all(4)
+	style.set_content_margin(SIDE_LEFT, 5)
+	style.set_content_margin(SIDE_RIGHT, 4)
+	style.set_content_margin(SIDE_TOP, 3)
+	style.set_content_margin(SIDE_BOTTOM, 3)
+	add_theme_stylebox_override("panel", style)
 
 ## Refreshes the display from the assigned event_row resource.
 func refresh() -> void:
@@ -254,29 +205,29 @@ func refresh() -> void:
 ## Returns a human-readable run-context label for the event row's trigger_id.
 static func format_run_context(row: EventRow) -> String:
 	if row == null or row.trigger_id.is_empty():
-		return "Runs: Every Tick (default)"
+		return "Every Frame"
 	match row.trigger_id:
 		"OnProcess":
-			return "Runs: Every Frame"
+			return "Every Frame"
 		"OnReady":
-			return "Runs: On Ready"
+			return "On Ready"
 		"OnPhysicsProcess":
-			return "Runs: On Physics Process"
+			return "On Physics"
 		"OnBodyEntered":
-			return "Runs: On Body Entered"
+			return "On Body Entered"
 		"OnSignal":
 			var sig: String = str(row.trigger_params.get("signal_name", "signal"))
 			var src: String = str(row.trigger_params.get("source", ""))
 			if src.is_empty():
-				return 'Runs: On Signal "%s"' % sig
-			return 'Runs: On Signal "%s" from %s' % [sig, src]
+				return 'On "%s"' % sig
+			return 'On "%s" from %s' % [sig, src]
 		_:
-			return "Runs: %s" % row.trigger_id
+			return row.trigger_id
 
 ## Returns a readable summary of an ACECondition.
 static func format_condition_summary(condition: ACECondition) -> String:
 	if condition == null:
-		return "(empty condition)"
+		return "(condition)"
 	if condition.ace_id.is_empty():
 		return "(condition)"
 	var prefix: String = "NOT " if condition.negated else ""
@@ -302,7 +253,7 @@ static func format_condition_summary(condition: ACECondition) -> String:
 ## Returns a readable summary of an ACEAction.
 static func format_action_summary(action: ACEAction) -> String:
 	if action == null:
-		return "(empty action)"
+		return "(action)"
 	if action.ace_id.is_empty():
 		return "(action)"
 	var from_descriptor: String = _format_action_from_descriptor(action)
@@ -350,12 +301,10 @@ static func _format_action_from_descriptor(action: ACEAction) -> String:
 	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
 	return descriptor.format_display(params_dict)
 
-# ── Private helpers ──────────────────────────────────────────────────────────
-
 func _refresh_runs() -> void:
-	if _runs_label == null:
+	if _runs_button == null:
 		return
-	_runs_label.text = format_run_context(event_row)
+	_runs_button.text = "● %s" % format_run_context(event_row)
 
 func _refresh_conditions() -> void:
 	if _conditions_container == null:
@@ -364,21 +313,12 @@ func _refresh_conditions() -> void:
 		child.queue_free()
 
 	if event_row.conditions.is_empty():
-		var hint: Label = Label.new()
-		hint.text = "Always (implicit true)"
-		hint.add_theme_color_override("font_color", Color(0.58, 0.62, 0.73))
-		hint.add_theme_font_size_override("font_size", 11)
-		_conditions_container.add_child(hint)
+		_conditions_container.add_child(_make_placeholder_token("Always"))
 		return
 
 	for i: int in range(event_row.conditions.size()):
 		var condition: ACECondition = event_row.conditions[i]
-		var btn: Button = _make_entry_button(
-			"  " + format_condition_summary(condition),
-			i,
-			true
-		)
-		_conditions_container.add_child(btn)
+		_conditions_container.add_child(_make_entry_button(format_condition_summary(condition), i, true))
 
 func _refresh_actions() -> void:
 	if _actions_container == null:
@@ -387,71 +327,68 @@ func _refresh_actions() -> void:
 		child.queue_free()
 
 	if event_row.actions.is_empty():
-		var hint: Label = Label.new()
-		hint.text = "(no actions)"
-		hint.add_theme_color_override("font_color", Color(0.58, 0.62, 0.73))
-		hint.add_theme_font_size_override("font_size", 11)
-		_actions_container.add_child(hint)
+		_actions_container.add_child(_make_placeholder_token("(no actions)"))
 		return
 
 	for i: int in range(event_row.actions.size()):
 		var action: ACEAction = event_row.actions[i] as ACEAction
 		if action == null:
 			continue
-		var btn: Button = _make_entry_button(
-			"  " + format_action_summary(action),
-			i,
-			false
-		)
-		_actions_container.add_child(btn)
+		_actions_container.add_child(_make_entry_button(format_action_summary(action), i, false))
+
+func _make_placeholder_token(text: String) -> PanelContainer:
+	var panel: PanelContainer = PanelContainer.new()
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.127, 0.141, 0.182, 1.0)
+	style.border_color = Color(0.167, 0.186, 0.242, 1.0)
+	style.set_border_width_all(0)
+	style.set_corner_radius_all(3)
+	style.set_content_margin(SIDE_LEFT, 6)
+	style.set_content_margin(SIDE_RIGHT, 6)
+	style.set_content_margin(SIDE_TOP, 2)
+	style.set_content_margin(SIDE_BOTTOM, 2)
+	panel.add_theme_stylebox_override("panel", style)
+	var label: Label = Label.new()
+	label.text = text
+	label.add_theme_color_override("font_color", Color(0.64, 0.69, 0.79))
+	label.add_theme_font_size_override("font_size", 10)
+	panel.add_child(label)
+	return panel
 
 ## Creates a clickable entry button for a condition (is_condition=true) or action.
-## Condition buttons support right-click context menus; the cursor and hover
-## styling signal interactivity clearly to the user.
 func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	var btn: Button = Button.new()
 	btn.text = text
-	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn.flat = true
+	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	btn.add_theme_color_override("font_color", Color(0.86, 0.90, 0.98))
+	btn.add_theme_color_override("font_color", Color(0.88, 0.92, 0.99))
 	btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
-	btn.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0))
-	btn.add_theme_font_size_override("font_size", 11)
-	btn.add_theme_constant_override("h_separation", 4)
-
-	var base_bg: Color = CONDITION_ENTRY_BG if is_condition else ACTION_ENTRY_BG
-	var hover_bg: Color = CONDITION_ENTRY_BG_HOVER if is_condition else ACTION_ENTRY_BG_HOVER
-	var pressed_bg: Color = CONDITION_ENTRY_BG_PRESSED if is_condition else ACTION_ENTRY_BG_PRESSED
-	var accent: Color = Color(0.100, 0.110, 0.144, 1.0)
+	btn.add_theme_font_size_override("font_size", 10)
 
 	var normal_style: StyleBoxFlat = StyleBoxFlat.new()
-	normal_style.bg_color = base_bg
-	normal_style.border_color = accent
+	normal_style.bg_color = CONDITION_TOKEN_BG if is_condition else ACTION_TOKEN_BG
+	normal_style.border_color = Color(0.130, 0.145, 0.184, 1.0)
 	normal_style.set_border_width_all(0)
-	normal_style.set_corner_radius_all(5)
-	normal_style.set_content_margin(SIDE_LEFT, 8)
+	normal_style.set_corner_radius_all(3)
+	normal_style.set_content_margin(SIDE_LEFT, 6)
 	normal_style.set_content_margin(SIDE_RIGHT, 6)
-	normal_style.set_content_margin(SIDE_TOP, 3)
-	normal_style.set_content_margin(SIDE_BOTTOM, 3)
+	normal_style.set_content_margin(SIDE_TOP, 2)
+	normal_style.set_content_margin(SIDE_BOTTOM, 2)
 	btn.add_theme_stylebox_override("normal", normal_style)
 
 	var hover_style: StyleBoxFlat = normal_style.duplicate()
-	hover_style.bg_color = hover_bg
+	hover_style.bg_color = CONDITION_TOKEN_BG_HOVER if is_condition else ACTION_TOKEN_BG_HOVER
 	btn.add_theme_stylebox_override("hover", hover_style)
-
-	var pressed_style: StyleBoxFlat = normal_style.duplicate()
-	pressed_style.bg_color = pressed_bg
-	btn.add_theme_stylebox_override("pressed", pressed_style)
+	btn.add_theme_stylebox_override("pressed", hover_style)
 	btn.add_theme_stylebox_override("focus", hover_style)
 
 	if is_condition:
-		btn.tooltip_text = "Left-click to edit - Right-click for options"
+		btn.tooltip_text = "Left-click to edit · Right-click for options"
 		btn.connect("pressed", func() -> void: condition_selected.emit(self, index))
 		btn.connect("gui_input", func(event: InputEvent) -> void: _on_condition_entry_gui_input(event, index))
 	else:
-		btn.tooltip_text = "Left-click to edit - Right-click for options"
+		btn.tooltip_text = "Left-click to edit · Right-click for options"
 		btn.connect("pressed", func() -> void: action_selected.emit(self, index))
 		btn.connect("gui_input", func(event: InputEvent) -> void: _on_action_entry_gui_input(event, index))
 	return btn

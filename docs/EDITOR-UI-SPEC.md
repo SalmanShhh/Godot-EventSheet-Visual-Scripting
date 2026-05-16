@@ -32,16 +32,16 @@ It intentionally avoids describing unbuilt behavior as complete.
 
 ### 2.3 Event sheet row UX
 
-- Event rows render as a unified strip with side-by-side lanes:
-  - left lane: run context + conditions
-  - right lane: actions
-- Rows use a Construct/GDevelop-inspired treatment without explicit IF/THEN text labels: C3-like blue-gray strip chrome, subtle lane tint contrast, compact inline condition/action chips, and embedded add affordances.
+- Event rows render as compact event-sheet lines with inline authored clauses/tokens.
+- Rows avoid explicit lane headers (`IF`, `THEN`, `Conditions`, `Actions`) and instead use inline flow, separators, and token rhythm.
+- A left gutter is rendered for every row, with branch guides for nested/sub-event rows.
 - Condition and action summaries are clickable for focused editing.
 - Delete affordances are implemented:
-  - event delete via header `✕` action
+  - event delete via inline row `✕` action
   - condition delete via condition context menu (`Delete Condition`)
   - action delete via action context menu (`Delete Action`)
 - When deleting a focused condition/action, inspector selection falls back to the owning event view.
+- Variable and group rows share the same sheet-line/gutter composition model.
 - Variable rows remain compact in-canvas, with rich hover tooltips that include type/default and optional variable descriptions.
 
 ### 2.4 Sub-event support status
@@ -63,7 +63,7 @@ It intentionally avoids describing unbuilt behavior as complete.
 ## 4. Implementation anchors
 
 - Main editor: `addons/eventforge/editor/event_sheet_editor.gd`
-- Event row lanes/menus: `addons/eventforge/editor/event_row_ui.gd`
+- Event row inline clauses/menus: `addons/eventforge/editor/event_row_ui.gd`
 - Group groundwork row: `addons/eventforge/editor/group_row_ui.gd`
 
 Current selection state is tracked by entry kind (`event`, `condition`, `action`, `variable`, `group`) plus row/index references in `EventSheetEditor`.
