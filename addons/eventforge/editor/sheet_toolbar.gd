@@ -1,4 +1,4 @@
-# EventForge — Sheet toolbar
+# EventForge — EventSheet workspace toolbar
 # Provides document-level and authoring actions for the EventSheet workspace.
 @tool
 extends PanelContainer

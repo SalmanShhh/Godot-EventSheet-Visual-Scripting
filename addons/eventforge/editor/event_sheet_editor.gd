@@ -239,6 +239,10 @@ func setup(sheet: EventSheetResource = null) -> void:
 # ── Layout construction ───────────────────────────────────────────────────────
 
 func _build_layout() -> void:
+	# Size flags ensure proper expansion when the parent is a container
+	# (e.g. the editor main screen); PRESET_FULL_RECT covers anchor-based parents.
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	# Workspace shell: VBoxContainer fills the full main-screen area.
