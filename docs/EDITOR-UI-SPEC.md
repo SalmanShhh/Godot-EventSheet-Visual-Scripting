@@ -35,7 +35,7 @@ It intentionally avoids describing unbuilt behavior as complete.
 - Event rows render with side-by-side lanes:
   - left lane: run context + conditions
   - right lane: actions
-- Current polish direction is compact, readable lane headers and tighter row chrome (header controls, lane tinting, hover cues).
+- Rows use an IF/THEN block treatment (Construct/GDevelop-inspired): stronger lane framing, tinted condition/action cards, and per-entry accent rails for scanability.
 - Condition and action summaries are clickable for focused editing.
 - Delete affordances are implemented:
   - event delete via header `✕` action

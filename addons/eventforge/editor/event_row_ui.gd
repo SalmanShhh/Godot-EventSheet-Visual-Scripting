@@ -50,6 +50,12 @@ const CONDITION_MENU_DELETE: int = 5
 const ACTION_MENU_EDIT: int = 1
 const ACTION_MENU_DELETE: int = 2
 const ACTIONS_LANE_STRETCH_RATIO: float = 1.4
+const CONDITION_ENTRY_BG: Color = Color(0.14, 0.24, 0.18, 0.95)
+const CONDITION_ENTRY_BG_HOVER: Color = Color(0.18, 0.30, 0.23, 1.0)
+const CONDITION_ENTRY_BG_PRESSED: Color = Color(0.12, 0.21, 0.16, 1.0)
+const ACTION_ENTRY_BG: Color = Color(0.14, 0.17, 0.28, 0.95)
+const ACTION_ENTRY_BG_HOVER: Color = Color(0.18, 0.22, 0.36, 1.0)
+const ACTION_ENTRY_BG_PRESSED: Color = Color(0.12, 0.15, 0.24, 1.0)
 
 func _init() -> void:
 	_build_ui()
@@ -57,10 +63,10 @@ func _init() -> void:
 func _build_ui() -> void:
 	# Outer row styling
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.13, 0.15, 0.20, 1.0)
-	style.border_color = Color(0.35, 0.45, 0.65, 1.0)
+	style.bg_color = Color(0.12, 0.14, 0.20, 1.0)
+	style.border_color = Color(0.30, 0.37, 0.55, 1.0)
 	style.set_border_width_all(0)
-	style.set_border_width(SIDE_LEFT, 3)
+	style.set_border_width(SIDE_LEFT, 4)
 	style.set_border_width(SIDE_TOP, 1)
 	style.set_border_width(SIDE_RIGHT, 1)
 	style.set_border_width(SIDE_BOTTOM, 1)
@@ -93,7 +99,7 @@ func _build_ui() -> void:
 	# Side-by-side lanes
 	var lanes_hbox: HBoxContainer = HBoxContainer.new()
 	lanes_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lanes_hbox.add_theme_constant_override("separation", 0)
+	lanes_hbox.add_theme_constant_override("separation", 1)
 	_vbox.add_child(lanes_hbox)
 
 	# Conditions lane
@@ -103,8 +109,11 @@ func _build_ui() -> void:
 	conditions_lane_style.bg_color = Color(0.09, 0.15, 0.11, 0.95)
 	conditions_lane_style.border_color = Color(0.30, 0.62, 0.42, 0.65)
 	conditions_lane_style.set_border_width_all(0)
-	conditions_lane_style.border_width_right = 1
-	conditions_lane_style.set_corner_radius_all(0)
+	conditions_lane_style.set_border_width(SIDE_TOP, 1)
+	conditions_lane_style.set_border_width(SIDE_LEFT, 1)
+	conditions_lane_style.set_border_width(SIDE_BOTTOM, 1)
+	conditions_lane_style.set_corner_radius(SIDE_TOP_LEFT, 4)
+	conditions_lane_style.set_corner_radius(SIDE_BOTTOM_LEFT, 4)
 	conditions_lane_style.set_content_margin(SIDE_LEFT, 6)
 	conditions_lane_style.set_content_margin(SIDE_RIGHT, 5)
 	conditions_lane_style.set_content_margin(SIDE_TOP, 4)
@@ -131,7 +140,7 @@ func _build_ui() -> void:
 	conditions_lane_vbox.add_child(cond_row)
 
 	var cond_heading: Label = Label.new()
-	cond_heading.text = "Conditions"
+	cond_heading.text = "IF"
 	cond_heading.add_theme_color_override("font_color", Color(0.65, 0.85, 0.65))
 	cond_heading.add_theme_font_size_override("font_size", 10)
 	cond_row.add_child(cond_heading)
@@ -181,8 +190,13 @@ func _build_ui() -> void:
 	actions_lane.size_flags_stretch_ratio = ACTIONS_LANE_STRETCH_RATIO
 	var actions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
 	actions_lane_style.bg_color = Color(0.10, 0.12, 0.18, 0.95)
+	actions_lane_style.border_color = Color(0.33, 0.44, 0.75, 0.65)
 	actions_lane_style.set_border_width_all(0)
-	actions_lane_style.set_corner_radius_all(0)
+	actions_lane_style.set_border_width(SIDE_TOP, 1)
+	actions_lane_style.set_border_width(SIDE_RIGHT, 1)
+	actions_lane_style.set_border_width(SIDE_BOTTOM, 1)
+	actions_lane_style.set_corner_radius(SIDE_TOP_RIGHT, 4)
+	actions_lane_style.set_corner_radius(SIDE_BOTTOM_RIGHT, 4)
 	actions_lane_style.set_content_margin(SIDE_LEFT, 6)
 	actions_lane_style.set_content_margin(SIDE_RIGHT, 5)
 	actions_lane_style.set_content_margin(SIDE_TOP, 4)
@@ -199,7 +213,7 @@ func _build_ui() -> void:
 	actions_lane_vbox.add_child(actions_row)
 
 	var action_heading: Label = Label.new()
-	action_heading.text = "Actions"
+	action_heading.text = "THEN"
 	action_heading.add_theme_color_override("font_color", Color(0.50, 0.65, 0.95))
 	action_heading.add_theme_font_size_override("font_size", 10)
 	actions_row.add_child(action_heading)
@@ -340,7 +354,7 @@ func _refresh_conditions() -> void:
 
 	if event_row.conditions.is_empty():
 		var hint: Label = Label.new()
-		hint.text = "  Always"
+		hint.text = "  Always (implicit true)"
 		hint.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
 		hint.add_theme_font_size_override("font_size", 11)
 		_conditions_container.add_child(hint)
@@ -385,17 +399,39 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	var btn: Button = Button.new()
 	btn.text = text
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	btn.flat = true
+	btn.flat = false
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	btn.add_theme_color_override("font_color", Color(0.88, 0.88, 0.88))
 	btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+	btn.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0))
 	btn.add_theme_font_size_override("font_size", 11)
+	btn.add_theme_constant_override("h_separation", 6)
 
-	# Subtle hover highlight so users can see the entry is interactive.
-	var hover_style: StyleBoxFlat = StyleBoxFlat.new()
-	hover_style.bg_color = Color(1.0, 1.0, 1.0, 0.07)
-	hover_style.set_corner_radius_all(3)
+	var base_bg: Color = CONDITION_ENTRY_BG if is_condition else ACTION_ENTRY_BG
+	var hover_bg: Color = CONDITION_ENTRY_BG_HOVER if is_condition else ACTION_ENTRY_BG_HOVER
+	var pressed_bg: Color = CONDITION_ENTRY_BG_PRESSED if is_condition else ACTION_ENTRY_BG_PRESSED
+	var accent: Color = Color(0.45, 0.82, 0.56, 0.9) if is_condition else Color(0.45, 0.67, 0.98, 0.9)
+
+	var normal_style: StyleBoxFlat = StyleBoxFlat.new()
+	normal_style.bg_color = base_bg
+	normal_style.border_color = accent
+	normal_style.set_border_width_all(0)
+	normal_style.set_border_width(SIDE_LEFT, 3)
+	normal_style.set_corner_radius_all(2)
+	normal_style.set_content_margin(SIDE_LEFT, 2)
+	normal_style.set_content_margin(SIDE_RIGHT, 2)
+	normal_style.set_content_margin(SIDE_TOP, 1)
+	normal_style.set_content_margin(SIDE_BOTTOM, 1)
+	btn.add_theme_stylebox_override("normal", normal_style)
+
+	var hover_style: StyleBoxFlat = normal_style.duplicate()
+	hover_style.bg_color = hover_bg
 	btn.add_theme_stylebox_override("hover", hover_style)
+
+	var pressed_style: StyleBoxFlat = normal_style.duplicate()
+	pressed_style.bg_color = pressed_bg
+	btn.add_theme_stylebox_override("pressed", pressed_style)
+	btn.add_theme_stylebox_override("focus", hover_style)
 
 	if is_condition:
 		btn.tooltip_text = "Left-click to edit - Right-click for options"
