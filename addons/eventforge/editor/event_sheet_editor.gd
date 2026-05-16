@@ -12,6 +12,10 @@ var current_sheet: EventSheetResource = null
 # user:// is the editor's writable data path; keep preview output out of res:// assets.
 const PREVIEW_OUTPUT_PATH: String = "user://eventforge_preview_generated.gd"
 const DEFAULT_RUN_CONTEXT_ACE_ID: String = "OnProcess"
+## Pre-declared sections for the "Add Event" picker (triggers + conditions mode).
+## Node-type sections (Area2D, CharacterBody2D) are listed here so they appear even
+## before descriptor scanning populates them.  Additional node types registered at
+## runtime are added dynamically by _populate_ace_picker as descriptors are scanned.
 const EVENT_PICKER_GROUPS: PackedStringArray = [
 	"Run Context / Triggers",
 	"Area2D",

@@ -150,6 +150,9 @@ static func _apply_descriptor_aliases(descriptor: ACEDescriptor) -> void:
 		descriptor.displayText = descriptor.display_text
 	if descriptor.category.is_empty():
 		descriptor.category = "Custom ACEs"
+	# node_type / nodeType alias sync: snake_case takes priority.
+	# If node_type is empty, copy from nodeType; if nodeType is empty, copy from node_type.
+	# When both are non-empty they are treated as already reconciled and left unchanged.
 	if descriptor.node_type.is_empty():
 		descriptor.node_type = descriptor.nodeType
 	if descriptor.nodeType.is_empty():
