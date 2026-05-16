@@ -92,14 +92,86 @@ func refresh_canvas() -> void:
 	_add_document_header()
 
 	if current_sheet == null:
-		var no_sheet: Label = Label.new()
-		no_sheet.text = "No sheet loaded. Open or create an EventSheetResource."
-		no_sheet.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
-		_canvas_vbox.add_child(no_sheet)
+		_add_no_sheet_onboarding()
 		return
 
 	_add_variables_section()
 	_add_events_section()
+
+func _add_no_sheet_onboarding() -> void:
+	var margin: MarginContainer = MarginContainer.new()
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.add_theme_constant_override("margin_top", 40)
+	margin.add_theme_constant_override("margin_left", 40)
+	margin.add_theme_constant_override("margin_right", 40)
+	margin.add_theme_constant_override("margin_bottom", 40)
+
+	var card: PanelContainer = PanelContainer.new()
+	var card_style: StyleBoxFlat = StyleBoxFlat.new()
+	card_style.bg_color = Color(0.14, 0.16, 0.20, 1.0)
+	card_style.set_corner_radius_all(6)
+	card_style.set_content_margin_all(24)
+	card.add_theme_stylebox_override("panel", card_style)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	card.add_child(vbox)
+
+	var title: Label = Label.new()
+	title.text = "No Event Sheet Open"
+	title.add_theme_color_override("font_color", Color(0.80, 0.90, 1.0))
+	title.add_theme_font_size_override("font_size", 16)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	var body: Label = Label.new()
+	body.text = "Create a new Event Sheet to start building event logic."
+	body.add_theme_color_override("font_color", Color(0.60, 0.65, 0.70))
+	body.add_theme_font_size_override("font_size", 11)
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(body)
+
+	var sep: HSeparator = HSeparator.new()
+	vbox.add_child(sep)
+
+	var create_btn: Button = Button.new()
+	create_btn.text = "Create New Event Sheet"
+	create_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	create_btn.connect("pressed", _on_create_new_sheet)
+	vbox.add_child(create_btn)
+
+	var open_btn: Button = Button.new()
+	open_btn.text = "Open Existing Event Sheet"
+	open_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	open_btn.connect("pressed", _on_open_existing_sheet)
+	vbox.add_child(open_btn)
+
+	margin.add_child(card)
+	_canvas_vbox.add_child(margin)
+
+## Creates a blank in-memory EventSheetResource and loads it into the editor.
+func _on_create_new_sheet() -> void:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	setup(sheet)
+
+## Opens a FileDialog so the user can pick an existing EventSheetResource.
+func _on_open_existing_sheet() -> void:
+	var dialog: FileDialog = FileDialog.new()
+	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	dialog.access = FileDialog.ACCESS_RESOURCES
+	dialog.filters = PackedStringArray(["*.tres, *.res ; EventSheetResource"])
+	dialog.connect("file_selected", func(path: String) -> void:
+		var sheet: Variant = load(path)
+		if sheet is EventSheetResource:
+			setup(sheet as EventSheetResource)
+		else:
+			push_warning("[EventForge] Selected file is not an EventSheetResource: %s" % path)
+		dialog.queue_free()
+	)
+	dialog.connect("canceled", func() -> void: dialog.queue_free())
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(700, 500))
 
 func _add_document_header() -> void:
 	var header_panel: PanelContainer = PanelContainer.new()
