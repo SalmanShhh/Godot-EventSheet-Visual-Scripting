@@ -71,6 +71,9 @@ const BRANCH_GUIDE_LABEL: String = "└─"
 ## Fixed width of the gutter at depth-0. Each subsequent depth adds SHEET_GUTTER_INDENT_WIDTH.
 const SHEET_GUTTER_BASE_WIDTH: int = 18
 const SHEET_GUTTER_INDENT_WIDTH: int = 14
+const DEPTH_RAIL_BASE_OPACITY: float = 0.55
+const DEPTH_RAIL_OPACITY_INCREMENT: float = 0.06
+const DEPTH_RAIL_MAX_OPACITY: float = 0.95
 const CANVAS_BG: Color = Color(0.060, 0.067, 0.088, 1.0)
 const CANVAS_BORDER: Color = Color(0.141, 0.164, 0.214, 1.0)
 ## Amber colour used for node-type / Godot class group headers in the ACE picker.
@@ -2631,7 +2634,8 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 		depth_rail.custom_minimum_size = Vector2(1, 0)
 		depth_rail.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		# Opacity increments with depth for readability; clamped to avoid exceeding 1.0.
-		depth_rail.color = Color(0.40, 0.52, 0.72, minf(0.55 + float(i) * 0.06, 0.95))
+		var rail_opacity: float = minf(DEPTH_RAIL_BASE_OPACITY + float(i) * DEPTH_RAIL_OPACITY_INCREMENT, DEPTH_RAIL_MAX_OPACITY)
+		depth_rail.color = Color(0.40, 0.52, 0.72, rail_opacity)
 		depth_rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		gutter.add_child(depth_rail)
 

@@ -239,8 +239,6 @@ func _on_toggle_pressed() -> void:
 func _on_enabled_toggled(enabled: bool) -> void:
 	if event_group == null:
 		return
-	if event_group.enabled == enabled:
-		return
 	event_group.enabled = enabled
 	refresh()
 	group_enabled_toggled.emit(self, enabled)

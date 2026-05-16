@@ -185,6 +185,16 @@ func _apply_depth_tint(base: Color) -> Color:
 func _get_comment_palette() -> Dictionary:
 	var palette_key: String = _resolve_comment_palette_key()
 	match palette_key:
+		"yellow":
+			return {
+				"accent": COMMENT_ACCENT,
+				"bg": COMMENT_BG,
+				"hover_bg": COMMENT_BG_HOVER,
+				"selected_bg": COMMENT_BG_SELECTED,
+				"border": COMMENT_BORDER,
+				"hover_border": COMMENT_BORDER_HOVER,
+				"selected_border": COMMENT_BORDER_SELECTED
+			}
 		"blue":
 			return {
 				"accent": Color(0.38, 0.66, 0.96, 0.92),
