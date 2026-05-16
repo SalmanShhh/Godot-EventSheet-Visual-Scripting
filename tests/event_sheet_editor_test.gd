@@ -228,6 +228,33 @@ static func run() -> bool:
 	all_passed = _check("delete event resets selection kind", editor._selected_entry_kind, "none") and all_passed
 	all_passed = _check("delete event refresh removes row ui", editor._find_event_row_ui_by_uid(editor._canvas_vbox, del_uid) == null, true) and all_passed
 
+	# Row-level insertion affordances insert relative to nested and group rows.
+	var nested_insert_sheet: EventSheetResource = EventSheetResource.new()
+	var parent_insert_event: EventRow = EventRow.new()
+	var child_insert_event: EventRow = EventRow.new()
+	parent_insert_event.sub_events.append(child_insert_event)
+	nested_insert_sheet.events.append(parent_insert_event)
+	editor.current_sheet = nested_insert_sheet
+	editor.refresh_canvas()
+	var child_insert_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, child_insert_event.event_uid)
+	if child_insert_row_ui != null:
+		editor._on_event_insert_above_requested(child_insert_row_ui)
+		all_passed = _check("insert above nested row adds sibling in parent sub-events", parent_insert_event.sub_events.size(), 2) and all_passed
+		var inserted_nested: Variant = parent_insert_event.sub_events[0]
+		all_passed = _check("insert above nested row places new row before target", inserted_nested is EventRow and (inserted_nested as EventRow).event_uid != child_insert_event.event_uid, true) and all_passed
+
+	var group_insert_sheet: EventSheetResource = EventSheetResource.new()
+	var group_insert: EventGroup = EventGroup.new()
+	group_insert.events.append(EventRow.new())
+	group_insert_sheet.events.append(group_insert)
+	editor.current_sheet = group_insert_sheet
+	editor.refresh_canvas()
+	var group_insert_row_ui: GroupRowUI = editor._find_group_row_ui_by_uid(editor._canvas_vbox, group_insert.group_uid)
+	if group_insert_row_ui != null:
+		editor._on_group_insert_below_requested(group_insert_row_ui)
+		all_passed = _check("insert below group row adds sibling event in root list", group_insert_sheet.events.size(), 2) and all_passed
+		all_passed = _check("insert below group row inserts event resource", group_insert_sheet.events[1] is EventRow, true) and all_passed
+
 	# Workflow: shortcut action dispatch opens add-condition picker for selected event.
 	var shortcut_sheet: EventSheetResource = EventSheetResource.new()
 	var shortcut_event: EventRow = EventRow.new()
@@ -404,6 +431,9 @@ static func run() -> bool:
 	count_group_row.event_group = count_group
 	count_group_row.refresh()
 	all_passed = _check("group row shows event count", _contains_label_text(count_group_row, "(2)"), true) and all_passed
+	all_passed = _check("group row lane divider present", _has_color_rect_min_width(count_group_row, 2), true) and all_passed
+	all_passed = _check("group row insertion button above visible", _find_button_with_tooltip(count_group_row, "Insert event above this group") != null, true) and all_passed
+	all_passed = _check("group row insertion button below visible", _find_button_with_tooltip(count_group_row, "Insert event below this group") != null, true) and all_passed
 
 	var empty_group: EventGroup = EventGroup.new()
 	var empty_group_row: GroupRowUI = GroupRowUI.new()
@@ -808,6 +838,8 @@ static func run() -> bool:
 	all_passed = _check("condition context menu label: replace", _popup_menu_has_item_text(lane_row_3, "Replace Condition"), true) and all_passed
 	all_passed = _check("condition context menu label: invert", _popup_menu_has_item_text(lane_row_3, "Invert"), true) and all_passed
 	all_passed = _check("condition context menu label: delete", _popup_menu_has_item_text(lane_row_3, "Delete Condition"), true) and all_passed
+	all_passed = _check("event row insertion button above visible", _find_button_with_tooltip(lane_row_3, "Insert event above this row") != null, true) and all_passed
+	all_passed = _check("event row insertion button below visible", _find_button_with_tooltip(lane_row_3, "Insert event below this row") != null, true) and all_passed
 
 	var depth_row_0: EventRowUI = EventRowUI.new()
 	depth_row_0.event_row = EventRow.new()
@@ -955,6 +987,15 @@ static func _find_buttons_with_tooltip(node: Node, tooltip: String) -> Array:
 	var found: Array = []
 	_collect_buttons_with_tooltip(node, tooltip, found)
 	return found
+
+static func _find_button_with_tooltip(node: Node, tooltip: String) -> Button:
+	var buttons: Array = _find_buttons_with_tooltip(node, tooltip)
+	if buttons.is_empty():
+		return null
+	var first: Variant = buttons[0]
+	if first is Button:
+		return first as Button
+	return null
 
 static func _collect_buttons_with_tooltip(node: Node, tooltip: String, out: Array) -> void:
 	if node == null:

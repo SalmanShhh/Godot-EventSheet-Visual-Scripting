@@ -85,8 +85,13 @@ It intentionally avoids describing unbuilt behavior as complete.
   - event delete via inline row `✕` action (positioned right of the action lane)
   - condition delete via condition context menu (`Delete Condition`)
   - action delete via action context menu (`Delete Action`)
+- Row-level insertion affordances are in-flow with the sheet row surface:
+  - event rows expose `+↑` / `+↓` controls to insert a new event above or below
+  - group rows expose `+↑` / `+↓` controls to insert sibling events above or below the group
+  - insertion respects structural containers (root events, nested sub-events, and group child arrays) so above/below behavior stays local to hierarchy depth
 - When deleting a focused condition/action, inspector selection falls back to the owning event view.
 - Variable and group rows share the same sheet-line/gutter composition model.
+- Group rows now align to the lane/grid rhythm with a left metadata lane, a 2px lane divider, and a right actions lane so nested/group structure reads as part of the same continuous sheet grid.
 - Variable rows remain compact in-canvas, with rich hover tooltips that include type/default and optional variable descriptions.
 
 ### 2.4 Editor shell and document framing

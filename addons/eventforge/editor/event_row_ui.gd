@@ -26,6 +26,10 @@ signal add_action_requested(row: EventRowUI)
 signal add_condition_requested(row: EventRowUI)
 ## Emitted when delete is requested for this event row.
 signal event_delete_requested(row: EventRowUI)
+## Emitted when insertion of a new event is requested above this row.
+signal insert_event_above_requested(row: EventRowUI)
+## Emitted when insertion of a new event is requested below this row.
+signal insert_event_below_requested(row: EventRowUI)
 ## Emitted when delete is requested for a condition.
 signal condition_delete_requested(row: EventRowUI, index: int)
 ## Emitted when delete is requested for an action.
@@ -254,7 +258,31 @@ func _build_ui() -> void:
 	add_action_btn.connect("pressed", _on_add_action_pressed)
 	action_hbox.add_child(add_action_btn)
 
-	# ── Delete event (far right, outside lanes) ────────────────────────────────
+	# ── Row-level insertion + delete (far right, outside lanes) ────────────────
+	var insert_controls: VBoxContainer = VBoxContainer.new()
+	insert_controls.add_theme_constant_override("separation", 0)
+	line.add_child(insert_controls)
+
+	var insert_above_btn: Button = Button.new()
+	insert_above_btn.text = "+↑"
+	insert_above_btn.flat = true
+	insert_above_btn.tooltip_text = "Insert event above this row"
+	insert_above_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	insert_above_btn.add_theme_color_override("font_color", Color(0.66, 0.77, 0.96))
+	insert_above_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.91, 1.0))
+	insert_above_btn.connect("pressed", _on_insert_above_pressed)
+	insert_controls.add_child(insert_above_btn)
+
+	var insert_below_btn: Button = Button.new()
+	insert_below_btn.text = "+↓"
+	insert_below_btn.flat = true
+	insert_below_btn.tooltip_text = "Insert event below this row"
+	insert_below_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	insert_below_btn.add_theme_color_override("font_color", Color(0.66, 0.77, 0.96))
+	insert_below_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.91, 1.0))
+	insert_below_btn.connect("pressed", _on_insert_below_pressed)
+	insert_controls.add_child(insert_below_btn)
+
 	var delete_event_btn: Button = Button.new()
 	delete_event_btn.text = "✕"
 	delete_event_btn.flat = true
@@ -556,6 +584,12 @@ func _on_add_action_pressed() -> void:
 
 func _on_delete_event_pressed() -> void:
 	event_delete_requested.emit(self)
+
+func _on_insert_above_pressed() -> void:
+	insert_event_above_requested.emit(self)
+
+func _on_insert_below_pressed() -> void:
+	insert_event_below_requested.emit(self)
 
 func _on_condition_entry_gui_input(event: InputEvent, index: int) -> void:
 	if not (event is InputEventMouseButton):
