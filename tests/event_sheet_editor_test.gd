@@ -736,7 +736,7 @@ static func run() -> bool:
 	var lane_row_2: EventRowUI = EventRowUI.new()
 	lane_row_2.event_row = EventRow.new()
 	lane_row_2.refresh()
-	all_passed = _check("event row lane divider present", _count_color_rects_min_width(lane_row_2, 2), true) and all_passed
+	all_passed = _check("event row lane divider present", _has_color_rect_min_width(lane_row_2, 2), true) and all_passed
 
 	# Phase 7: event row has at least 2 inner PanelContainers (condition lane + action lane).
 	all_passed = _check("event row has lane panels", _count_panel_containers(lane_row_2) >= 2, true) and all_passed
@@ -830,7 +830,7 @@ static func _find_first_panel_container(node: Node) -> PanelContainer:
 			return found
 	return null
 
-static func _count_color_rects_min_width(node: Node, min_width: int) -> bool:
+static func _has_color_rect_min_width(node: Node, min_width: int) -> bool:
 	if node == null:
 		return false
 	if node is ColorRect:
@@ -838,7 +838,7 @@ static func _count_color_rects_min_width(node: Node, min_width: int) -> bool:
 		if cr.custom_minimum_size.x >= min_width:
 			return true
 	for child: Node in node.get_children():
-		if _count_color_rects_min_width(child, min_width):
+		if _has_color_rect_min_width(child, min_width):
 			return true
 	return false
 

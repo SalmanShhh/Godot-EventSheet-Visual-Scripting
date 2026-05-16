@@ -166,12 +166,12 @@ It intentionally avoids describing unbuilt behavior as complete.
 - The `✕` delete button sits outside both lane panels at the far-right edge of the row.
 - Consistent `COND_LANE_RATIO` / `ACTION_LANE_RATIO` constants ensure the lane boundary remains at the same horizontal position across all rows, creating a stable eventsheet column grid.
 
-### 2.5 Row type badges
+### 2.10 Row type badges
 - Group rows use a styled chip badge (`Group`) with a purple-tinted background and border.
 - Group rows display the event count in parentheses when the group has child events (e.g., `(2)`).
 - The event count label is hidden (empty string) when the group has no child events.
 
-### 2.6 Sub-event support status
+### 2.11 Sub-event support status
 
 - Sub-event rendering groundwork exists:
   - nested event resources are rendered with indentation

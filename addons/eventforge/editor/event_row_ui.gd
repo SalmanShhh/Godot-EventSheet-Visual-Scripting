@@ -181,7 +181,7 @@ func _build_ui() -> void:
 	var add_condition_btn: Button = Button.new()
 	add_condition_btn.text = "+"
 	add_condition_btn.flat = true
-	add_condition_btn.tooltip_text = "Add condition"
+	add_condition_btn.tooltip_text = "Add condition to this event"
 	add_condition_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	add_condition_btn.add_theme_color_override("font_color", Color(0.62, 0.76, 0.98))
 	add_condition_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.92, 1.0))
