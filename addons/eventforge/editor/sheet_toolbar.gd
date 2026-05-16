@@ -27,7 +27,6 @@ const SHORTCUTS_HINT_SEGMENTS: PackedStringArray = [
 	SHORTCUT_ADD_ACTION,
 	SHORTCUT_DELETE_SELECTION
 ]
-const SHORTCUTS_HINT_TEXT: String = "Shortcuts: %s" % " | ".join(SHORTCUTS_HINT_SEGMENTS)
 const SHORTCUTS_HINT_COLOR: Color = Color(0.52, 0.61, 0.74)
 
 var _add_event_btn: Button = null
@@ -135,7 +134,7 @@ func _build_ui() -> void:
 	actions_line.add_child(_add_var_btn)
 
 	_shortcuts_hint_label = Label.new()
-	_shortcuts_hint_label.text = SHORTCUTS_HINT_TEXT
+	_shortcuts_hint_label.text = shortcut_hint_text()
 	_shortcuts_hint_label.add_theme_color_override("font_color", SHORTCUTS_HINT_COLOR)
 	_shortcuts_hint_label.add_theme_font_size_override("font_size", 10)
 	_shortcuts_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -156,6 +155,9 @@ func _build_ui() -> void:
 ## Called by the plugin when the toolbar is attached to an editor instance.
 func setup() -> void:
 	pass
+
+static func shortcut_hint_text() -> String:
+	return "Shortcuts: %s" % " | ".join(SHORTCUTS_HINT_SEGMENTS)
 
 static func format_document_meta(sheet: EventSheetResource) -> String:
 	if sheet == null:

@@ -19,7 +19,7 @@ static func run() -> bool:
 	all_passed = _check("toolbar selection none", SheetToolbar.format_selection_meta("none"), "No selection") and all_passed
 	all_passed = _check("toolbar selection event", SheetToolbar.format_selection_meta("event"), "Selection: Event") and all_passed
 	var toolbar_ui: SheetToolbar = SheetToolbar.new()
-	all_passed = _check("toolbar contains shortcuts hint label", _contains_label_text(toolbar_ui, SheetToolbar.SHORTCUTS_HINT_TEXT), true) and all_passed
+	all_passed = _check("toolbar contains shortcuts hint label", _contains_label_text(toolbar_ui, SheetToolbar.shortcut_hint_text()), true) and all_passed
 	all_passed = _check("toolbar shortcuts hint hidden without sheet", toolbar_ui._shortcuts_hint_label.visible, false) and all_passed
 	toolbar_ui.set_sheet_loaded(true)
 	all_passed = _check("toolbar shortcuts hint visible with loaded sheet", toolbar_ui._shortcuts_hint_label.visible, true) and all_passed
@@ -226,6 +226,14 @@ static func run() -> bool:
 		all_passed = _check("shortcut add condition targets selected row", editor._ace_picker_target_row == shortcut_row_ui, true) and all_passed
 		if editor._ace_picker_popup != null:
 			editor._ace_picker_popup.hide()
+		var add_event_key: InputEventKey = InputEventKey.new()
+		add_event_key.pressed = true
+		add_event_key.ctrl_pressed = true
+		add_event_key.keycode = KEY_E
+		editor._unhandled_key_input(add_event_key)
+		all_passed = _check("keyboard Ctrl+E opens add event picker", editor._ace_picker_mode, "new_event") and all_passed
+		if editor._ace_picker_popup != null:
+			editor._ace_picker_popup.hide()
 
 	# Workflow: shortcut delete dispatch removes selected action.
 	var shortcut_del_sheet: EventSheetResource = EventSheetResource.new()
@@ -243,6 +251,15 @@ static func run() -> bool:
 		editor._selected_index = 0
 		all_passed = _check("shortcut delete selected action handled", editor._handle_workflow_shortcut("delete_selection"), true) and all_passed
 		all_passed = _check("shortcut delete selected action removes action", shortcut_del_event.actions.size(), 0) and all_passed
+		shortcut_del_event.actions.append(shortcut_del_action)
+		editor._selected_row = shortcut_del_row_ui
+		editor._selected_entry_kind = "action"
+		editor._selected_index = 0
+		var delete_key: InputEventKey = InputEventKey.new()
+		delete_key.pressed = true
+		delete_key.keycode = KEY_DELETE
+		editor._unhandled_key_input(delete_key)
+		all_passed = _check("keyboard Delete removes selected action", shortcut_del_event.actions.size(), 0) and all_passed
 
 	# Delete condition removes it from the event row.
 	var del_cond_sheet: EventSheetResource = EventSheetResource.new()
