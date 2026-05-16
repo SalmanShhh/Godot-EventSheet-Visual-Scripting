@@ -113,9 +113,9 @@ func _apply_row_style() -> void:
 		style.bg_color = Color(0.122, 0.090, 0.171, 1.0)
 		style.border_color = Color(0.304, 0.238, 0.442, 1.0)
 	style.set_border_width_all(1)
-	style.border_width_left = 3 + min(_depth, 4)
-	style.set_corner_radius_all(5)
-	style.set_content_margin_all(5)
+	style.border_width_left = 4 + min(_depth, 4)
+	style.set_corner_radius_all(0)
+	style.set_content_margin_all(4)
 	style.content_margin_left = 8
 	add_theme_stylebox_override("panel", style)
 

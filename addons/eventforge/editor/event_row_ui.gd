@@ -50,9 +50,9 @@ const CONDITION_MENU_DELETE: int = 5
 const ACTION_MENU_EDIT: int = 1
 const ACTION_MENU_DELETE: int = 2
 
-const ROW_BG: Color = Color(0.080, 0.091, 0.119, 1.0)
-const ROW_BG_HOVER: Color = Color(0.097, 0.112, 0.148, 1.0)
-const ROW_BG_SELECTED: Color = Color(0.111, 0.142, 0.195, 1.0)
+const ROW_BG: Color = Color(0.074, 0.085, 0.114, 1.0)
+const ROW_BG_HOVER: Color = Color(0.091, 0.105, 0.139, 1.0)
+const ROW_BG_SELECTED: Color = Color(0.108, 0.136, 0.186, 1.0)
 const ROW_BORDER: Color = Color(0.142, 0.168, 0.224, 1.0)
 const ROW_BORDER_HOVER: Color = Color(0.243, 0.312, 0.438, 1.0)
 const ROW_BORDER_SELECTED: Color = Color(0.356, 0.522, 0.812, 1.0)
@@ -105,7 +105,7 @@ func _build_ui() -> void:
 
 	var line: HBoxContainer = HBoxContainer.new()
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.add_theme_constant_override("separation", 6)
+	line.add_theme_constant_override("separation", 4)
 	add_child(line)
 
 	var select_btn: Button = Button.new()
@@ -148,8 +148,9 @@ func _build_ui() -> void:
 
 	_conditions_container = HFlowContainer.new()
 	_conditions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_conditions_container.size_flags_stretch_ratio = 1.15
 	_conditions_container.add_theme_constant_override("h_separation", 5)
-	_conditions_container.add_theme_constant_override("v_separation", 3)
+	_conditions_container.add_theme_constant_override("v_separation", 2)
 	line.add_child(_conditions_container)
 
 	var add_condition_btn: Button = Button.new()
@@ -172,9 +173,9 @@ func _build_ui() -> void:
 
 	_actions_container = HFlowContainer.new()
 	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_actions_container.size_flags_stretch_ratio = 1.3
+	_actions_container.size_flags_stretch_ratio = 1.55
 	_actions_container.add_theme_constant_override("h_separation", 5)
-	_actions_container.add_theme_constant_override("v_separation", 3)
+	_actions_container.add_theme_constant_override("v_separation", 2)
 	line.add_child(_actions_container)
 
 	var add_action_btn: Button = Button.new()
@@ -223,12 +224,12 @@ func _apply_row_style() -> void:
 		style.bg_color = ROW_BG
 		style.border_color = ROW_BORDER
 	style.set_border_width_all(1)
-	style.border_width_left = 3 + min(_depth, 4)
-	style.set_corner_radius_all(5)
+	style.border_width_left = 4 + min(_depth, 4)
+	style.set_corner_radius_all(0)
 	style.set_content_margin(SIDE_LEFT, 6)
 	style.set_content_margin(SIDE_RIGHT, 5)
-	style.set_content_margin(SIDE_TOP, 3)
-	style.set_content_margin(SIDE_BOTTOM, 3)
+	style.set_content_margin(SIDE_TOP, 2)
+	style.set_content_margin(SIDE_BOTTOM, 2)
 	add_theme_stylebox_override("panel", style)
 
 ## Refreshes the display from the assigned event_row resource.
@@ -388,7 +389,7 @@ func _make_placeholder_token(text: String) -> PanelContainer:
 	style.bg_color = Color(0.115, 0.133, 0.174, 1.0)
 	style.border_color = Color(0.167, 0.186, 0.242, 1.0)
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
+	style.set_corner_radius_all(0)
 	style.set_content_margin(SIDE_LEFT, 6)
 	style.set_content_margin(SIDE_RIGHT, 6)
 	style.set_content_margin(SIDE_TOP, 2)
@@ -423,7 +424,7 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	normal_style.bg_color = CONDITION_TOKEN_BG if is_condition else ACTION_TOKEN_BG
 	normal_style.border_color = CONDITION_TOKEN_BORDER if is_condition else ACTION_TOKEN_BORDER
 	normal_style.set_border_width_all(1)
-	normal_style.set_corner_radius_all(3)
+	normal_style.set_corner_radius_all(0)
 	normal_style.set_content_margin(SIDE_LEFT, 7)
 	normal_style.set_content_margin(SIDE_RIGHT, 7)
 	normal_style.set_content_margin(SIDE_TOP, 3)

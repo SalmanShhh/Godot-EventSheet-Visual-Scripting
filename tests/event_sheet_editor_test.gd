@@ -432,6 +432,7 @@ static func run() -> bool:
 	all_passed = _check("globals empty state is card", globals_section != null and _count_panel_containers(globals_section) >= 1, true) and all_passed
 	var events_section: Node = _find_node_named(editor, "SheetSectionEvents")
 	all_passed = _check("events empty state is card", events_section != null and _count_panel_containers(events_section) >= 1, true) and all_passed
+	all_passed = _check("events section is unframed host", events_section is PanelContainer, false) and all_passed
 
 	# Phase 5: section headers use ColorRect accent rail, not a "●" bullet label.
 	all_passed = _check("globals section no bullet label", not _contains_label_text(globals_section, "●"), true) and all_passed
