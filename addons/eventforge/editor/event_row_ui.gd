@@ -559,8 +559,8 @@ func _make_clause_prefix(text: String, color: Color) -> Label:
 	prefix.add_theme_font_size_override("font_size", 10)
 	return prefix
 
-## Creates a clickable entry button for a condition (is_condition=true) or action.
-func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
+## Creates a draggable/clickable entry button for a condition (is_condition=true) or action.
+func _make_entry_button(text: String, index: int, is_condition: bool) -> EntryTokenButton:
 	var btn: EntryTokenButton = EntryTokenButton.new()
 	btn.owner_row = self
 	btn.entry_index = index
