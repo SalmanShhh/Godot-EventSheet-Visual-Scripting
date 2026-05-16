@@ -84,6 +84,12 @@ const COND_LANE_RATIO: float = 1.0
 const ACTION_LANE_RATIO: float = 1.85
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
 const INSERT_CONTROL_DIM_ALPHA: float = 0.46
+## Drop / drag-preview colours
+const DROP_HIGHLIGHT_COLOR: Color = Color(0.38, 0.60, 1.00, 0.15)
+const CONDITION_PREVIEW_BG_COLOR: Color = Color(0.14, 0.18, 0.28, 0.96)
+const CONDITION_PREVIEW_BORDER_COLOR: Color = Color(0.44, 0.66, 1.00, 0.82)
+const ACTION_PREVIEW_BG_COLOR: Color = Color(0.10, 0.17, 0.15, 0.96)
+const ACTION_PREVIEW_BORDER_COLOR: Color = Color(0.36, 0.74, 0.56, 0.82)
 
 class EntryTokenButton extends Button:
 	var owner_row: EventRowUI = null
@@ -103,9 +109,9 @@ class EntryTokenButton extends Button:
 		# Styled drag preview — matches the entry's lane colour for clear type identity.
 		var preview: PanelContainer = PanelContainer.new()
 		var preview_style: StyleBoxFlat = StyleBoxFlat.new()
-		preview_style.bg_color = Color(0.14, 0.18, 0.28, 0.96) if is_condition else Color(0.10, 0.17, 0.15, 0.96)
+		preview_style.bg_color = CONDITION_PREVIEW_BG_COLOR if is_condition else ACTION_PREVIEW_BG_COLOR
 		preview_style.set_border_width_all(1)
-		preview_style.border_color = Color(0.44, 0.66, 1.00, 0.82) if is_condition else Color(0.36, 0.74, 0.56, 0.82)
+		preview_style.border_color = CONDITION_PREVIEW_BORDER_COLOR if is_condition else ACTION_PREVIEW_BORDER_COLOR
 		preview_style.set_corner_radius_all(3)
 		preview_style.set_content_margin_all(5)
 		preview.add_theme_stylebox_override("panel", preview_style)
@@ -691,7 +697,7 @@ func _set_drop_hovered(hovered: bool) -> void:
 		return
 	_drop_hovered = hovered
 	if _drop_highlight_rect != null:
-		_drop_highlight_rect.color = Color(0.38, 0.60, 1.00, 0.15) if hovered else Color(0.0, 0.0, 0.0, 0.0)
+		_drop_highlight_rect.color = DROP_HIGHLIGHT_COLOR if hovered else Color(0.0, 0.0, 0.0, 0.0)
 	set_process(hovered)
 
 func _process(_delta: float) -> void:

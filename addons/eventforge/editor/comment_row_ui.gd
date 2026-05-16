@@ -14,6 +14,10 @@ signal comment_text_submitted(row: CommentRowUI, text: String)
 signal comment_drop_requested(target_row: CommentRowUI, source_comment: CommentRow, insert_after: bool)
 
 const INSERT_CONTROL_DIM_ALPHA: float = 0.46
+## Drop / drag-preview colours
+const DROP_HIGHLIGHT_COLOR: Color = Color(1.0, 0.86, 0.40, 0.18)
+const COMMENT_PREVIEW_BG_COLOR: Color = Color(0.17, 0.13, 0.06, 0.96)
+const COMMENT_PREVIEW_BORDER_COLOR: Color = Color(0.90, 0.68, 0.18, 0.82)
 
 ## Banner accent colours — warm amber matching C3's yellow comment banner.
 const COMMENT_ACCENT: Color = Color(0.90, 0.68, 0.18, 0.90)
@@ -337,9 +341,9 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 	# Styled drag preview — amber banner colours matching comment row identity.
 	var preview: PanelContainer = PanelContainer.new()
 	var preview_style: StyleBoxFlat = StyleBoxFlat.new()
-	preview_style.bg_color = Color(0.17, 0.13, 0.06, 0.96)
+	preview_style.bg_color = COMMENT_PREVIEW_BG_COLOR
 	preview_style.set_border_width_all(1)
-	preview_style.border_color = Color(0.90, 0.68, 0.18, 0.82)
+	preview_style.border_color = COMMENT_PREVIEW_BORDER_COLOR
 	preview_style.set_corner_radius_all(3)
 	preview_style.set_content_margin_all(5)
 	preview.add_theme_stylebox_override("panel", preview_style)
@@ -398,7 +402,7 @@ func _clear_drop_indicator() -> void:
 func _update_drop_highlight() -> void:
 	if _drop_highlight_rect == null:
 		return
-	_drop_highlight_rect.color = Color(1.0, 0.86, 0.40, 0.18) if _drop_indicator_frac >= 0.0 else Color(0.0, 0.0, 0.0, 0.0)
+	_drop_highlight_rect.color = DROP_HIGHLIGHT_COLOR if _drop_indicator_frac >= 0.0 else Color(0.0, 0.0, 0.0, 0.0)
 
 func _process(_delta: float) -> void:
 	if _drop_indicator_frac >= 0.0 and not get_viewport().gui_is_dragging():
