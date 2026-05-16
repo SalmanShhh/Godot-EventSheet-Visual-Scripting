@@ -86,6 +86,7 @@ const TOKEN_LEFT_BORDER_WIDTH: int = 2
 const COND_LANE_RATIO: float = 1.0
 const ACTION_LANE_RATIO: float = 1.85
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
+const INSERT_CONTROL_DIM_ALPHA: float = 0.46
 
 func _init() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -572,7 +573,7 @@ func _on_mouse_exited() -> void:
 	_apply_structure_affordance_state()
 
 func _apply_structure_affordance_state() -> void:
-	var controls_alpha: float = 1.0 if (_hovered or _selected) else 0.46
+	var controls_alpha: float = 1.0 if (_hovered or _selected) else INSERT_CONTROL_DIM_ALPHA
 	if _insert_above_btn != null:
 		_insert_above_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
 	if _insert_below_btn != null:

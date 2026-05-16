@@ -10,6 +10,7 @@ signal insert_comment_above_requested(row: CommentRowUI)
 signal insert_comment_below_requested(row: CommentRowUI)
 
 const LANE_DIVIDER_WIDTH: int = 2
+const INSERT_CONTROL_DIM_ALPHA: float = 0.46
 
 var comment_row: CommentRow = null
 
@@ -179,7 +180,7 @@ func _apply_row_style() -> void:
 	add_theme_stylebox_override("panel", style)
 
 func _apply_affordance_state() -> void:
-	var controls_alpha: float = 1.0 if (_hovered or _selected) else 0.48
+	var controls_alpha: float = 1.0 if (_hovered or _selected) else INSERT_CONTROL_DIM_ALPHA
 	if _insert_above_btn != null:
 		_insert_above_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
 	if _insert_below_btn != null:

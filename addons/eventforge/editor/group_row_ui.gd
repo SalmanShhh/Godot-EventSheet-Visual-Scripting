@@ -26,6 +26,7 @@ var _hovered: bool = false
 var _insert_above_btn: Button = null
 var _insert_below_btn: Button = null
 const LANE_DIVIDER_WIDTH: int = 2
+const INSERT_CONTROL_DIM_ALPHA: float = 0.46
 
 func _init() -> void:
 	_build_ui()
@@ -252,7 +253,7 @@ func _on_mouse_exited() -> void:
 	_apply_affordance_state()
 
 func _apply_affordance_state() -> void:
-	var controls_alpha: float = 1.0 if (_hovered or _selected) else 0.46
+	var controls_alpha: float = 1.0 if (_hovered or _selected) else INSERT_CONTROL_DIM_ALPHA
 	if _insert_above_btn != null:
 		_insert_above_btn.modulate = Color(1.0, 1.0, 1.0, controls_alpha)
 	if _insert_below_btn != null:
