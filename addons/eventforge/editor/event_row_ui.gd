@@ -19,6 +19,8 @@ signal action_selected(row: EventRowUI, index: int)
 signal event_selected(row: EventRowUI)
 ## Emitted when inline Add Action is requested.
 signal add_action_requested(row: EventRowUI)
+## Emitted when inline Add Condition is requested.
+signal add_condition_requested(row: EventRowUI)
 
 var event_row: EventRow = null
 
@@ -94,8 +96,15 @@ func _build_ui() -> void:
 	_runs_label.add_theme_font_size_override("font_size", 11)
 	_vbox.add_child(_runs_label)
 
+	# Side-by-side lanes
+	var lanes_hbox: HBoxContainer = HBoxContainer.new()
+	lanes_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lanes_hbox.add_theme_constant_override("separation", 6)
+	_vbox.add_child(lanes_hbox)
+
 	# Conditions lane
 	var conditions_lane: PanelContainer = PanelContainer.new()
+	conditions_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var conditions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
 	conditions_lane_style.bg_color = Color(0.09, 0.15, 0.11, 0.95)
 	conditions_lane_style.border_color = Color(0.30, 0.62, 0.42, 1.0)
@@ -103,17 +112,31 @@ func _build_ui() -> void:
 	conditions_lane_style.set_corner_radius_all(3)
 	conditions_lane_style.set_content_margin_all(5)
 	conditions_lane.add_theme_stylebox_override("panel", conditions_lane_style)
-	_vbox.add_child(conditions_lane)
+	lanes_hbox.add_child(conditions_lane)
 
 	var conditions_lane_vbox: VBoxContainer = VBoxContainer.new()
 	conditions_lane_vbox.add_theme_constant_override("separation", 2)
 	conditions_lane.add_child(conditions_lane_vbox)
 
+	var cond_row: HBoxContainer = HBoxContainer.new()
+	conditions_lane_vbox.add_child(cond_row)
+
 	var cond_heading: Label = Label.new()
 	cond_heading.text = "Conditions"
 	cond_heading.add_theme_color_override("font_color", Color(0.65, 0.85, 0.65))
 	cond_heading.add_theme_font_size_override("font_size", 11)
-	conditions_lane_vbox.add_child(cond_heading)
+	cond_row.add_child(cond_heading)
+
+	var cond_spacer: Control = Control.new()
+	cond_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cond_row.add_child(cond_spacer)
+
+	var add_condition_btn: Button = Button.new()
+	add_condition_btn.text = "+ Add Condition"
+	add_condition_btn.flat = true
+	add_condition_btn.tooltip_text = "Add a condition to this event"
+	add_condition_btn.connect("pressed", _on_add_condition_pressed)
+	cond_row.add_child(add_condition_btn)
 
 	_conditions_container = VBoxContainer.new()
 	_conditions_container.add_theme_constant_override("separation", 2)
@@ -121,6 +144,7 @@ func _build_ui() -> void:
 
 	# Actions lane
 	var actions_lane: PanelContainer = PanelContainer.new()
+	actions_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var actions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
 	actions_lane_style.bg_color = Color(0.10, 0.12, 0.18, 0.95)
 	actions_lane_style.border_color = Color(0.35, 0.48, 0.75, 1.0)
@@ -128,7 +152,7 @@ func _build_ui() -> void:
 	actions_lane_style.set_corner_radius_all(3)
 	actions_lane_style.set_content_margin_all(5)
 	actions_lane.add_theme_stylebox_override("panel", actions_lane_style)
-	_vbox.add_child(actions_lane)
+	lanes_hbox.add_child(actions_lane)
 
 	var actions_lane_vbox: VBoxContainer = VBoxContainer.new()
 	actions_lane_vbox.add_theme_constant_override("separation", 2)
@@ -151,7 +175,7 @@ func _build_ui() -> void:
 	add_action_btn.text = "+ Add Action"
 	add_action_btn.flat = true
 	add_action_btn.tooltip_text = "Add an action to this event"
-	add_action_btn.connect("pressed", func() -> void: add_action_requested.emit(self))
+	add_action_btn.connect("pressed", _on_add_action_pressed)
 	actions_row.add_child(add_action_btn)
 
 	_actions_container = VBoxContainer.new()
@@ -331,6 +355,12 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 
 func _on_event_header_pressed() -> void:
 	event_selected.emit(self)
+
+func _on_add_condition_pressed() -> void:
+	add_condition_requested.emit(self)
+
+func _on_add_action_pressed() -> void:
+	add_action_requested.emit(self)
 
 func _on_condition_entry_gui_input(event: InputEvent, index: int) -> void:
 	if not (event is InputEventMouseButton):

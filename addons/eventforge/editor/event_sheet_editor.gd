@@ -44,6 +44,15 @@ var _ace_picker_description: Label = null
 var _ace_picker_mode: String = ""
 var _ace_picker_target_row: EventRowUI = null
 var _ace_picker_target_condition_index: int = -1
+var _ace_params_dialog: ConfirmationDialog = null
+var _ace_params_form: VBoxContainer = null
+var _ace_params_hint: Label = null
+var _ace_params_fields: Dictionary = {}
+var _ace_params_mode: String = ""
+var _ace_params_descriptor: ACEDescriptor = null
+var _ace_params_target_row: EventRowUI = null
+var _ace_params_target_index: int = -1
+var _ace_params_existing_values: Dictionary = {}
 
 var _variable_dialog: ConfirmationDialog = null
 var _variable_name_edit: LineEdit = null
@@ -52,6 +61,7 @@ var _variable_initial_edit: LineEdit = null
 var _variable_description_edit: LineEdit = null
 var _variable_dialog_mode: String = ""
 var _variable_dialog_original_name: String = ""
+var _suppress_variable_popup_on_select: bool = false
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
@@ -122,6 +132,7 @@ func _build_layout() -> void:
 	_show_empty_inspector()
 	_refresh_toolbar_state()
 	_build_ace_picker_popup()
+	_build_ace_params_dialog_popup()
 	_build_variable_dialog_popup()
 
 # ── Canvas rendering ──────────────────────────────────────────────────────────
@@ -397,82 +408,338 @@ func _on_ace_picker_item_activated() -> void:
 	if not (value is ACEDescriptor):
 		return
 	var descriptor: ACEDescriptor = value
-	match _ace_picker_mode:
-		"new_event":
-			_create_event_from_descriptor(descriptor)
-		"append_condition":
-			_append_condition_from_descriptor(descriptor)
-		"replace_condition":
-			_replace_condition_from_descriptor(descriptor)
-		"append_action":
-			_append_action_from_descriptor(descriptor)
 	if _ace_picker_popup != null:
 		_ace_picker_popup.hide()
+	_open_ace_params_dialog_for_picker_selection(descriptor)
 
-func _create_event_from_descriptor(descriptor: ACEDescriptor) -> void:
+func _build_ace_params_dialog_popup() -> void:
+	_ace_params_dialog = ConfirmationDialog.new()
+	_ace_params_dialog.title = "ACE Parameters"
+	_ace_params_dialog.min_size = Vector2i(420, 0)
+	_ace_params_dialog.get_ok_button().text = "Apply"
+	_ace_params_dialog.connect("confirmed", _on_ace_params_dialog_confirmed)
+	add_child(_ace_params_dialog)
+
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation", 6)
+	_ace_params_dialog.add_child(body)
+
+	_ace_params_hint = Label.new()
+	_ace_params_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_ace_params_hint.add_theme_color_override("font_color", Color(0.65, 0.70, 0.78))
+	body.add_child(_ace_params_hint)
+
+	_ace_params_form = VBoxContainer.new()
+	_ace_params_form.add_theme_constant_override("separation", 4)
+	body.add_child(_ace_params_form)
+
+func _open_ace_params_dialog_for_picker_selection(descriptor: ACEDescriptor) -> void:
+	if descriptor == null:
+		return
+	var params_dialog_mode: String = ""
+	match _ace_picker_mode:
+		"new_event":
+			if descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER:
+				params_dialog_mode = "new_event_trigger"
+			elif descriptor.ace_type == ACEDescriptor.ACEType.CONDITION:
+				params_dialog_mode = "new_event_condition"
+		"append_condition":
+			params_dialog_mode = "append_condition"
+		"replace_condition":
+			params_dialog_mode = "replace_condition"
+		"append_action":
+			params_dialog_mode = "append_action"
+	if params_dialog_mode.is_empty():
+		return
+	_open_ace_params_dialog(descriptor, params_dialog_mode, _ace_picker_target_row, _ace_picker_target_condition_index, descriptor.build_default_params())
+
+func _open_condition_params_dialog(row: EventRowUI, index: int) -> void:
+	if row == null or row.event_row == null:
+		return
+	if index < 0 or index >= row.event_row.conditions.size():
+		return
+	var condition: ACECondition = row.event_row.conditions[index]
+	if condition == null:
+		return
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
+	if descriptor == null:
+		return
+	var values: Dictionary = _merge_ace_param_values(descriptor, condition.params, condition.parameters)
+	_open_ace_params_dialog(descriptor, "edit_condition", row, index, values)
+
+func _open_action_params_dialog(row: EventRowUI, index: int) -> void:
+	if row == null or row.event_row == null:
+		return
+	if index < 0 or index >= row.event_row.actions.size():
+		return
+	var action_value: Variant = row.event_row.actions[index]
+	if not (action_value is ACEAction):
+		return
+	var action: ACEAction = action_value as ACEAction
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(action.provider_id, action.ace_id)
+	if descriptor == null:
+		return
+	var values: Dictionary = _merge_ace_param_values(descriptor, action.params, action.parameters)
+	_open_ace_params_dialog(descriptor, "edit_action", row, index, values)
+
+func _merge_ace_param_values(descriptor: ACEDescriptor, primary: Dictionary, fallback: Dictionary) -> Dictionary:
+	var values: Dictionary = descriptor.build_default_params()
+	var source: Dictionary = primary if not primary.is_empty() else fallback
+	for key: Variant in source.keys():
+		values[key] = source[key]
+	return values
+
+func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: EventRowUI, index: int, values: Dictionary) -> void:
+	if _ace_params_dialog == null or _ace_params_form == null or descriptor == null:
+		return
+	_ace_params_mode = mode
+	_ace_params_descriptor = descriptor
+	_ace_params_target_row = row
+	_ace_params_target_index = index
+	_ace_params_existing_values = values.duplicate(true)
+	_ace_params_fields.clear()
+
+	for child: Node in _ace_params_form.get_children():
+		child.queue_free()
+
+	_ace_params_dialog.title = "%s Parameters" % descriptor.get_list_name()
+	_ace_params_hint.text = descriptor.description if not descriptor.description.is_empty() else descriptor.get_display_text()
+
+	if descriptor.params.is_empty():
+		var no_params: Label = Label.new()
+		no_params.text = "No parameters for this ACE. Confirm to apply."
+		no_params.add_theme_color_override("font_color", Color(0.55, 0.55, 0.60))
+		_ace_params_form.add_child(no_params)
+	else:
+		for param: ACEParam in descriptor.params:
+			if param == null:
+				continue
+			var key: String = param.id if not param.id.is_empty() else param.name
+			if key.is_empty():
+				continue
+			var row_box: VBoxContainer = VBoxContainer.new()
+			row_box.add_theme_constant_override("separation", 2)
+			var label: Label = Label.new()
+			label.text = param.get_param_name()
+			row_box.add_child(label)
+
+			var input: Control = _create_ace_param_input(param, _ace_params_existing_values.get(key, param.get_initial_value()))
+			row_box.add_child(input)
+			_ace_params_fields[key] = {
+				"param": param,
+				"input": input
+			}
+
+			var desc: String = param.get_param_description()
+			if not desc.is_empty():
+				var desc_label: Label = Label.new()
+				desc_label.text = desc
+				desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				desc_label.add_theme_color_override("font_color", Color(0.55, 0.60, 0.65))
+				row_box.add_child(desc_label)
+			_ace_params_form.add_child(row_box)
+
+	_ace_params_dialog.popup_centered()
+
+func _create_ace_param_input(param: ACEParam, value: Variant) -> Control:
+	var type_name: String = param.type_name.to_lower()
+	if type_name in ["bool", "boolean"] or param.type == TYPE_BOOL:
+		var bool_input: OptionButton = OptionButton.new()
+		bool_input.add_item("False")
+		bool_input.add_item("True")
+		bool_input.select(1 if bool(value) else 0)
+		return bool_input
+	if not param.options.is_empty():
+		var option_input: OptionButton = OptionButton.new()
+		for item: String in param.options:
+			option_input.add_item(item)
+		var wanted: String = str(value)
+		for i: int in range(option_input.item_count):
+			if option_input.get_item_text(i) == wanted:
+				option_input.select(i)
+				break
+		return option_input
+	var line_input: LineEdit = LineEdit.new()
+	line_input.text = str(value)
+	return line_input
+
+func _collect_ace_param_values() -> Dictionary:
+	var output: Dictionary = {}
+	for key: Variant in _ace_params_fields.keys():
+		var entry_dict: Variant = _ace_params_fields[key]
+		if not (entry_dict is Dictionary):
+			continue
+		var entry: Dictionary = entry_dict as Dictionary
+		var typed_param: ACEParam = entry.get("param")
+		if typed_param == null:
+			continue
+		var input_control: Variant = entry.get("input")
+		var input: Control = input_control as Control
+		output[str(key)] = _extract_ace_param_input_value(typed_param, input)
+	return output
+
+func _extract_ace_param_input_value(param: ACEParam, input: Control) -> Variant:
+	if input == null:
+		return param.get_initial_value()
+	if input is OptionButton:
+		var option: OptionButton = input as OptionButton
+		if _is_bool_param(param):
+			return option.selected == 1
+		var selected: int = option.selected
+		if selected < 0:
+			selected = option.get_selected_id()
+		if selected < 0:
+			return ""
+		return option.get_item_text(selected)
+	if input is LineEdit:
+		var text: String = (input as LineEdit).text.strip_edges()
+		var type_name: String = param.type_name.to_lower()
+		if type_name in ["int", "integer"] or param.type == TYPE_INT:
+			return int(text) if text.is_valid_int() else 0
+		if type_name in ["float", "double"] or param.type == TYPE_FLOAT:
+			return float(text) if text.is_valid_float() else 0.0
+		if _is_bool_param(param):
+			var lower: String = text.to_lower()
+			return lower in ["1", "true", "yes", "on"]
+		return text
+	return param.get_initial_value()
+
+func _is_bool_param(param: ACEParam) -> bool:
+	return param.type == TYPE_BOOL or param.type_name.to_lower() in ["bool", "boolean"]
+
+func _on_ace_params_dialog_confirmed() -> void:
+	if _ace_params_descriptor == null:
+		return
+	var values: Dictionary = _collect_ace_param_values()
+	_apply_ace_params(values)
+
+func _apply_ace_params(values: Dictionary) -> void:
+	if _ace_params_descriptor == null:
+		return
+	match _ace_params_mode:
+		"new_event_trigger":
+			_create_event_with_trigger(_ace_params_descriptor, values)
+		"new_event_condition":
+			_create_event_with_condition(_ace_params_descriptor, values)
+		"append_condition":
+			_append_condition_with_params(_ace_params_descriptor, values)
+		"replace_condition":
+			_replace_condition_with_params(_ace_params_descriptor, _ace_params_target_index, values)
+		"append_action":
+			_append_action_with_params(_ace_params_descriptor, values)
+		"edit_condition":
+			_edit_condition_params(_ace_params_target_index, values)
+		"edit_action":
+			_edit_action_params(_ace_params_target_index, values)
+
+func _create_event_with_trigger(descriptor: ACEDescriptor, params: Dictionary) -> void:
 	_ensure_sheet()
 	if current_sheet == null or descriptor == null:
 		return
 	var new_event: EventRow = EventRow.new()
-	if descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER:
-		new_event.trigger_provider_id = descriptor.provider_id
-		new_event.trigger_id = descriptor.ace_id
-		new_event.trigger_params = descriptor.build_default_params()
-	elif descriptor.ace_type == ACEDescriptor.ACEType.CONDITION:
-		new_event.trigger_provider_id = "Core"
-		new_event.trigger_id = DEFAULT_RUN_CONTEXT_ACE_ID
-		var condition: ACECondition = ACECondition.new()
-		condition.provider_id = descriptor.provider_id
-		condition.ace_id = descriptor.ace_id
-		condition.params = descriptor.build_default_params()
-		new_event.conditions.append(condition)
-	else:
-		new_event.trigger_provider_id = "Core"
-		new_event.trigger_id = DEFAULT_RUN_CONTEXT_ACE_ID
+	new_event.trigger_provider_id = descriptor.provider_id
+	new_event.trigger_id = descriptor.ace_id
+	new_event.trigger_params = params.duplicate(true)
 	current_sheet.events.append(new_event)
 	refresh_canvas()
 	_focus_event_by_uid(new_event.event_uid)
 	if _sheet_toolbar != null:
 		_sheet_toolbar.set_status("Added event: %s" % descriptor.get_list_name())
 
-func _append_condition_from_descriptor(descriptor: ACEDescriptor) -> void:
-	var row: EventRowUI = _ace_picker_target_row
+func _create_event_with_condition(descriptor: ACEDescriptor, params: Dictionary) -> void:
+	_ensure_sheet()
+	if current_sheet == null or descriptor == null:
+		return
+	var new_event: EventRow = EventRow.new()
+	new_event.trigger_provider_id = "Core"
+	new_event.trigger_id = DEFAULT_RUN_CONTEXT_ACE_ID
+	var condition: ACECondition = ACECondition.new()
+	condition.provider_id = descriptor.provider_id
+	condition.ace_id = descriptor.ace_id
+	_set_condition_params(condition, params)
+	new_event.conditions.append(condition)
+	current_sheet.events.append(new_event)
+	refresh_canvas()
+	_focus_event_by_uid(new_event.event_uid)
+	if _sheet_toolbar != null:
+		_sheet_toolbar.set_status("Added event: %s" % descriptor.get_list_name())
+
+func _append_condition_with_params(descriptor: ACEDescriptor, params: Dictionary) -> void:
+	var row: EventRowUI = _ace_params_target_row
 	if row == null or row.event_row == null or descriptor == null:
 		return
 	var condition: ACECondition = ACECondition.new()
 	condition.provider_id = descriptor.provider_id
 	condition.ace_id = descriptor.ace_id
-	condition.params = descriptor.build_default_params()
+	_set_condition_params(condition, params)
 	row.event_row.conditions.append(condition)
 	row.refresh()
 	_rebuild_inspector_event(row)
 
-func _replace_condition_from_descriptor(descriptor: ACEDescriptor) -> void:
-	var row: EventRowUI = _ace_picker_target_row
-	var condition_index: int = _ace_picker_target_condition_index
+func _replace_condition_with_params(descriptor: ACEDescriptor, index: int, params: Dictionary) -> void:
+	var row: EventRowUI = _ace_params_target_row
 	if row == null or row.event_row == null or descriptor == null:
 		return
-	if condition_index < 0 or condition_index >= row.event_row.conditions.size():
+	if index < 0 or index >= row.event_row.conditions.size():
 		return
 	var condition: ACECondition = ACECondition.new()
 	condition.provider_id = descriptor.provider_id
 	condition.ace_id = descriptor.ace_id
-	condition.params = descriptor.build_default_params()
-	row.event_row.conditions[condition_index] = condition
+	_set_condition_params(condition, params)
+	row.event_row.conditions[index] = condition
 	row.refresh()
-	_on_condition_selected(row, condition_index)
+	_rebuild_inspector_event(row)
 
-func _append_action_from_descriptor(descriptor: ACEDescriptor) -> void:
-	var row: EventRowUI = _ace_picker_target_row
+func _append_action_with_params(descriptor: ACEDescriptor, params: Dictionary) -> void:
+	var row: EventRowUI = _ace_params_target_row
 	if row == null or row.event_row == null or descriptor == null:
 		return
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = descriptor.provider_id
 	action.ace_id = descriptor.ace_id
-	action.params = descriptor.build_default_params()
+	_set_action_params(action, params)
 	row.event_row.actions.append(action)
 	row.refresh()
 	_rebuild_inspector_event(row)
+
+func _edit_condition_params(index: int, params: Dictionary) -> void:
+	var row: EventRowUI = _ace_params_target_row
+	if row == null or row.event_row == null:
+		return
+	if index < 0 or index >= row.event_row.conditions.size():
+		return
+	var condition: ACECondition = row.event_row.conditions[index]
+	if condition == null:
+		return
+	_set_condition_params(condition, params)
+	row.refresh()
+	_rebuild_inspector_event(row)
+
+func _edit_action_params(index: int, params: Dictionary) -> void:
+	var row: EventRowUI = _ace_params_target_row
+	if row == null or row.event_row == null:
+		return
+	if index < 0 or index >= row.event_row.actions.size():
+		return
+	var item: Variant = row.event_row.actions[index]
+	if not (item is ACEAction):
+		return
+	var action: ACEAction = item as ACEAction
+	_set_action_params(action, params)
+	row.refresh()
+	_rebuild_inspector_event(row)
+
+func _set_condition_params(condition: ACECondition, params: Dictionary) -> void:
+	if condition == null:
+		return
+	condition.params = params.duplicate(true)
+	condition.parameters = condition.params.duplicate(true)
+
+func _set_action_params(action: ACEAction, params: Dictionary) -> void:
+	if action == null:
+		return
+	action.params = params.duplicate(true)
+	action.parameters = action.params.duplicate(true)
 
 func _generate_unique_variable_name() -> String:
 	var base: String = "var_"
@@ -662,7 +929,9 @@ func _focus_event_by_uid(event_uid: String) -> void:
 func _focus_variable_by_name(var_name: String) -> void:
 	var row_ui: VariableRowUI = _find_variable_row_ui_by_name(_canvas_vbox, var_name)
 	if row_ui != null:
+		_suppress_variable_popup_on_select = true
 		_on_variable_selected(row_ui)
+		_suppress_variable_popup_on_select = false
 
 func _focus_group_by_uid(group_uid: String) -> void:
 	if group_uid.is_empty():
@@ -790,6 +1059,7 @@ func _add_event_row(event_row: EventRow, indent_level: int = 0) -> void:
 	row_ui.condition_add_another_requested.connect(_on_condition_add_another_requested)
 	row_ui.condition_replace_requested.connect(_on_condition_replace_requested)
 	row_ui.action_selected.connect(_on_action_selected)
+	row_ui.add_condition_requested.connect(_on_row_add_condition_requested)
 	row_ui.add_action_requested.connect(_on_row_add_action_requested)
 	_add_canvas_row(row_ui, indent_level)
 
@@ -832,7 +1102,7 @@ func _on_condition_selected(row: EventRowUI, index: int) -> void:
 	_selected_entry_kind = "condition"
 	_selected_row = row
 	_selected_index = index
-	_rebuild_inspector_condition(row, index)
+	_open_condition_params_dialog(row, index)
 
 func _on_condition_edit_requested(row: EventRowUI, index: int) -> void:
 	_on_condition_selected(row, index)
@@ -859,7 +1129,15 @@ func _on_action_selected(row: EventRowUI, index: int) -> void:
 	_selected_entry_kind = "action"
 	_selected_row = row
 	_selected_index = index
-	_rebuild_inspector_action(row, index)
+	_open_action_params_dialog(row, index)
+
+func _on_row_add_condition_requested(row: EventRowUI) -> void:
+	if row == null or row.event_row == null:
+		return
+	_selected_entry_kind = "event"
+	_selected_row = row
+	_selected_index = -1
+	_open_add_condition_picker(row)
 
 func _on_row_add_action_requested(row: EventRowUI) -> void:
 	if row == null or row.event_row == null:
@@ -874,6 +1152,11 @@ func _on_variable_selected(row: VariableRowUI) -> void:
 	_selected_row = row
 	_selected_variable_name = row.var_name
 	_rebuild_inspector_variable(row)
+	if _suppress_variable_popup_on_select:
+		return
+	if _variable_dialog != null and _variable_dialog.visible:
+		return
+	_open_variable_dialog_for_edit(row.var_name, row.var_info)
 
 func _on_group_selected(row: GroupRowUI) -> void:
 	_selected_entry_kind = "group"
@@ -918,14 +1201,6 @@ func _show_empty_inspector() -> void:
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_inspector_vbox.add_child(hint)
 
-func _add_back_button(label: String = "← Back to Event") -> void:
-	var btn: Button = Button.new()
-	btn.text = label
-	btn.connect("pressed", _on_back_pressed)
-	_inspector_vbox.add_child(btn)
-	var sep: HSeparator = HSeparator.new()
-	_inspector_vbox.add_child(sep)
-
 func _rebuild_inspector_event(row: EventRowUI) -> void:
 	_clear_inspector()
 	if row == null or row.event_row == null:
@@ -955,139 +1230,38 @@ func _rebuild_inspector_event(row: EventRowUI) -> void:
 	var sep1: HSeparator = HSeparator.new()
 	_inspector_vbox.add_child(sep1)
 
-	# Conditions list
+	# Conditions summary
 	var cond_lbl: Label = Label.new()
 	cond_lbl.text = "Conditions:"
 	cond_lbl.add_theme_color_override("font_color", Color(0.65, 0.85, 0.65))
 	_inspector_vbox.add_child(cond_lbl)
 
+	var cond_summary: Label = Label.new()
+	cond_summary.text = "Count: %d" % event_row.conditions.size()
 	if event_row.conditions.is_empty():
-		var empty_conditions: Label = Label.new()
-		empty_conditions.text = "Always (default when no conditions are added)."
-		empty_conditions.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
-		_inspector_vbox.add_child(empty_conditions)
-
-	for i: int in range(event_row.conditions.size()):
-		var condition: ACECondition = event_row.conditions[i]
-		var btn: Button = Button.new()
-		btn.text = "  " + EventRowUI.format_condition_summary(condition)
-		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		btn.flat = true
-		btn.connect("pressed", func() -> void: _on_condition_selected(row, i))
-		_inspector_vbox.add_child(btn)
-
-	var add_condition_btn: Button = Button.new()
-	add_condition_btn.text = "Add Condition"
-	add_condition_btn.connect("pressed", _add_condition_to_selected_event)
-	_inspector_vbox.add_child(add_condition_btn)
+		cond_summary.text += " (Default: always true)"
+	cond_summary.add_theme_color_override("font_color", Color(0.75, 0.80, 0.75))
+	_inspector_vbox.add_child(cond_summary)
 
 	var sep2: HSeparator = HSeparator.new()
 	_inspector_vbox.add_child(sep2)
 
-	# Actions list
+	# Actions summary
 	var act_lbl: Label = Label.new()
 	act_lbl.text = "Actions:"
 	act_lbl.add_theme_color_override("font_color", Color(0.65, 0.75, 1.0))
 	_inspector_vbox.add_child(act_lbl)
 
-	if event_row.actions.is_empty():
-		var empty_actions: Label = Label.new()
-		empty_actions.text = "No actions yet."
-		empty_actions.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
-		_inspector_vbox.add_child(empty_actions)
+	var act_summary: Label = Label.new()
+	act_summary.text = "Count: %d" % event_row.actions.size()
+	act_summary.add_theme_color_override("font_color", Color(0.75, 0.78, 0.88))
+	_inspector_vbox.add_child(act_summary)
 
-	for i: int in range(event_row.actions.size()):
-		var action: ACEAction = event_row.actions[i] as ACEAction
-		if action == null:
-			continue
-		var btn: Button = Button.new()
-		btn.text = "  " + EventRowUI.format_action_summary(action)
-		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		btn.flat = true
-		btn.connect("pressed", func() -> void: _on_action_selected(row, i))
-		_inspector_vbox.add_child(btn)
-
-	var add_action_btn: Button = Button.new()
-	add_action_btn.text = "Add Action"
-	add_action_btn.connect("pressed", _add_action_to_selected_event)
-	_inspector_vbox.add_child(add_action_btn)
-
-func _add_condition_to_selected_event() -> void:
-	if not (_selected_row is EventRowUI):
-		return
-	var row: EventRowUI = _selected_row as EventRowUI
-	if row == null or row.event_row == null:
-		return
-	_open_add_condition_picker(row)
-
-func _add_action_to_selected_event() -> void:
-	if not (_selected_row is EventRowUI):
-		return
-	var row: EventRowUI = _selected_row as EventRowUI
-	if row == null or row.event_row == null:
-		return
-	_open_add_action_picker(row)
-
-func _rebuild_inspector_condition(row: EventRowUI, index: int) -> void:
-	_clear_inspector()
-	if row == null or row.event_row == null:
-		_show_empty_inspector()
-		return
-
-	_add_back_button()
-
-	var event_row: EventRow = row.event_row
-	if index < 0 or index >= event_row.conditions.size():
-		_show_empty_inspector()
-		return
-
-	var condition: ACECondition = event_row.conditions[index]
-
-	var heading: Label = Label.new()
-	heading.text = "Condition: " + EventRowUI.format_condition_summary(condition)
-	heading.add_theme_color_override("font_color", Color(0.65, 0.85, 0.65))
-	heading.add_theme_font_size_override("font_size", 12)
-	heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_inspector_vbox.add_child(heading)
-
-	# Remove button
-	var remove_btn: Button = Button.new()
-	remove_btn.text = "Remove Condition"
-	remove_btn.connect("pressed", func() -> void: _remove_focused_condition(index))
-	_inspector_vbox.add_child(remove_btn)
-
-func _rebuild_inspector_action(row: EventRowUI, index: int) -> void:
-	_clear_inspector()
-	if row == null or row.event_row == null:
-		_show_empty_inspector()
-		return
-
-	_add_back_button()
-
-	var event_row: EventRow = row.event_row
-	if index < 0 or index >= event_row.actions.size():
-		_show_empty_inspector()
-		return
-
-	var item: Variant = event_row.actions[index]
-	if not (item is ACEAction):
-		_show_empty_inspector()
-		return
-
-	var action: ACEAction = item as ACEAction
-
-	var heading: Label = Label.new()
-	heading.text = "Action: " + EventRowUI.format_action_summary(action)
-	heading.add_theme_color_override("font_color", Color(0.65, 0.75, 1.0))
-	heading.add_theme_font_size_override("font_size", 12)
-	heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_inspector_vbox.add_child(heading)
-
-	# Remove button
-	var remove_btn: Button = Button.new()
-	remove_btn.text = "Remove Action"
-	remove_btn.connect("pressed", func() -> void: _remove_focused_action(index))
-	_inspector_vbox.add_child(remove_btn)
+	var authoring_note: Label = Label.new()
+	authoring_note.text = "Use event block lanes and popups to add/edit/replace conditions and actions."
+	authoring_note.add_theme_color_override("font_color", Color(0.50, 0.55, 0.60))
+	authoring_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_inspector_vbox.add_child(authoring_note)
 
 func _rebuild_inspector_variable(row: VariableRowUI) -> void:
 	_clear_inspector()
@@ -1156,46 +1330,3 @@ func _rebuild_inspector_group(row: GroupRowUI) -> void:
 	planned_note.add_theme_color_override("font_color", Color(0.50, 0.45, 0.60))
 	planned_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_inspector_vbox.add_child(planned_note)
-
-# ── Focused entry removal ─────────────────────────────────────────────────────
-
-## Removes the focused condition at [index] and returns to full event inspector.
-func _remove_focused_condition(index: int) -> void:
-	if _selected_row == null or not (_selected_row is EventRowUI):
-		return
-	var row: EventRowUI = _selected_row as EventRowUI
-	if row.event_row == null:
-		return
-	if index >= 0 and index < row.event_row.conditions.size():
-		row.event_row.conditions.remove_at(index)
-		row.refresh()
-	_clear_focused_entry_state()
-	_rebuild_inspector_event(row)
-
-## Removes the focused action at [index] and returns to full event inspector.
-func _remove_focused_action(index: int) -> void:
-	if _selected_row == null or not (_selected_row is EventRowUI):
-		return
-	var row: EventRowUI = _selected_row as EventRowUI
-	if row.event_row == null:
-		return
-	if index >= 0 and index < row.event_row.actions.size():
-		row.event_row.actions.remove_at(index)
-		row.refresh()
-	_clear_focused_entry_state()
-	_rebuild_inspector_event(row)
-
-## Resets focused condition/action state while keeping the selected row.
-func _clear_focused_entry_state() -> void:
-	_selected_entry_kind = "event"
-	_selected_index = -1
-
-# ── Back button ───────────────────────────────────────────────────────────────
-
-func _on_back_pressed() -> void:
-	if _selected_row is EventRowUI:
-		_selected_entry_kind = "event"
-		_selected_index = -1
-		_rebuild_inspector_event(_selected_row as EventRowUI)
-	else:
-		_show_empty_inspector()
