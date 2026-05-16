@@ -956,7 +956,6 @@ func _rebuild_inspector_variable(v_name: String) -> void:
     var delete_btn: Button = Button.new()
     delete_btn.text = "Delete Variable"
     delete_btn.pressed.connect(func() -> void:
-        # Focus state is cleared inside _delete_variable before the erase.
         _delete_variable(v_name)
     )
     _inspector_container.add_child(delete_btn)

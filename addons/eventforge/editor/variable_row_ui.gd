@@ -34,7 +34,7 @@ static func format_summary(v_name: String, v_desc: Dictionary) -> String:
 	if type_str == "String" and default_val != null:
 		var raw: String = str(default_val)
 		if raw.length() >= 2 and raw.begins_with('"') and raw.ends_with('"'):
-			raw = raw.slice(1, -1)
+			raw = raw.substr(1, raw.length() - 2)
 		raw = raw.replace('"', '\\"')
 		default_str = '"%s"' % raw
 	return "Global %s %s = %s" % [type_str, v_name, default_str]
