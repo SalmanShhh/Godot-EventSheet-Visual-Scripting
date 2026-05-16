@@ -30,6 +30,7 @@ const BRANCH_GUIDE_CHAR: String = "└"
 const BRANCH_GUIDE_LABEL: String = "└─"
 const CANVAS_BG: Color = Color(0.060, 0.067, 0.088, 1.0)
 const CANVAS_BORDER: Color = Color(0.141, 0.164, 0.214, 1.0)
+const SHORTCUT_BLOCKING_FOCUS_TYPES: Array[StringName] = [&"LineEdit", &"TextEdit", &"SpinBox"]
 
 ## Currently selected entry kind.
 ## One of: "none", "event", "condition", "action", "variable", "group"
@@ -115,7 +116,12 @@ func _is_workflow_shortcut_blocked() -> bool:
 	if _variable_dialog != null and _variable_dialog.visible:
 		return true
 	var focus_owner: Control = get_viewport().gui_get_focus_owner()
-	return focus_owner != null and (focus_owner is LineEdit or focus_owner is TextEdit or focus_owner is SpinBox)
+	if focus_owner == null:
+		return false
+	for focus_type: StringName in SHORTCUT_BLOCKING_FOCUS_TYPES:
+		if focus_owner.is_class(focus_type):
+			return true
+	return false
 
 func _handle_workflow_shortcut(action: String) -> bool:
 	match action:
