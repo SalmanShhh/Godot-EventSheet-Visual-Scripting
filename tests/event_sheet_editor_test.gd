@@ -311,7 +311,7 @@ static func run() -> bool:
 	var drag_cond_a: ACECondition = ACECondition.new()
 	drag_cond_a.ace_id = "Always"
 	var drag_cond_b: ACECondition = ACECondition.new()
-	drag_cond_b.ace_id = "Always"
+	drag_cond_b.ace_id = "CompareVar"
 	drag_source_event.conditions.append(drag_cond_a)
 	drag_source_event.conditions.append(drag_cond_b)
 	var drag_action: ACEAction = ACEAction.new()
@@ -332,6 +332,22 @@ static func run() -> bool:
 		all_passed = _check("drag move action inserts in target", drag_target_event.actions.size(), 1) and all_passed
 		editor._on_condition_move_requested(drag_source_event.event_uid, 0, drag_source_row_ui, 1)
 		all_passed = _check("drag reorder condition keeps count", drag_source_event.conditions.size(), 1) and all_passed
+
+	var drag_reorder_sheet: EventSheetResource = EventSheetResource.new()
+	var drag_reorder_event: EventRow = EventRow.new()
+	var drag_reorder_first: ACECondition = ACECondition.new()
+	drag_reorder_first.ace_id = "Always"
+	var drag_reorder_second: ACECondition = ACECondition.new()
+	drag_reorder_second.ace_id = "CompareVar"
+	drag_reorder_event.conditions.append(drag_reorder_first)
+	drag_reorder_event.conditions.append(drag_reorder_second)
+	drag_reorder_sheet.events.append(drag_reorder_event)
+	editor.current_sheet = drag_reorder_sheet
+	editor.refresh_canvas()
+	var drag_reorder_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, drag_reorder_event.event_uid)
+	if drag_reorder_row_ui != null:
+		editor._on_condition_move_requested(drag_reorder_event.event_uid, 0, drag_reorder_row_ui, 2)
+		all_passed = _check("drag reorder condition moves original second to front", drag_reorder_event.conditions[0] == drag_reorder_second, true) and all_passed
 
 	# Drag move: comments can move relative to events and other comments.
 	var drag_comment_sheet: EventSheetResource = EventSheetResource.new()
