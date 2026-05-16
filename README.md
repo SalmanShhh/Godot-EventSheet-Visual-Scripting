@@ -59,10 +59,18 @@ Construct / GDevelop event sheets.
 
 ### UX and document-flow notes
 
+- EventForge direction is Script-editor-style workspace UX:
+  - left sidebar (ACE palette + sheet variables)
+  - center event canvas
+  - right inspector/preview
 - The sheet canvas is a **vertical document** of ordered blocks:
   - `Global variable` rows (top of canvas)
   - `Group` header rows (planned: contain local variables + nested events)
-  - `Event` rows (Conditions + Actions)
+  - `Event` rows (Conditions + Actions, `Runs: ...` summary)
+- Event blocks follow a GDevelop-style model:
+  - `Runs: ...`
+  - `Conditions` (shows `Always` when no regular conditions exist)
+  - `Actions`
 - Run-context ACEs are **not** shown as a separate `Trigger` section.
   Use `Runs: ...` summary and `Run Context` label instead.
 - Condition and action entries are **clickable** for focused inspector editing.
@@ -77,6 +85,8 @@ Construct / GDevelop event sheets.
   after selection or at end.
 - Preview refresh is auto-debounced after edits, while manual `Refresh Preview`
   remains available.
+- Naming/grouping follows Construct/GDevelop-style event-sheet wording adapted
+  to Godot UI conventions (for example `On Ready` / `On Process` under `System`).
 - Godot Signals are the primary run-context equivalent for event-driven logic.
   `On Signal` connects the chosen signal in `_ready()` and runs the event body
   in a generated callback.
