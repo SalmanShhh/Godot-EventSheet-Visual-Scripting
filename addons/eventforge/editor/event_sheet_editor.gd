@@ -245,20 +245,18 @@ func _copy_selected_event_tree() -> bool:
 	var row: EventRowUI = _get_selected_event_row_for_shortcuts()
 	if row == null or row.event_row == null:
 		return false
-	_copied_event_row = row.event_row.duplicate(true) as EventRow
+	_copied_event_row = _clone_event_tree(row.event_row)
 	if _copied_event_row == null:
 		return false
-	_regenerate_event_tree_uids(_copied_event_row)
 	_set_status("Copied event")
 	return true
 
 func _paste_copied_event_tree() -> bool:
 	if current_sheet == null or _copied_event_row == null:
 		return false
-	var pasted_event: EventRow = _copied_event_row.duplicate(true) as EventRow
+	var pasted_event: EventRow = _clone_event_tree(_copied_event_row)
 	if pasted_event == null:
 		return false
-	_regenerate_event_tree_uids(pasted_event)
 	var target_resource: Resource = _get_comment_insertion_target_resource()
 	var inserted: bool = false
 	if target_resource != null:
@@ -271,30 +269,109 @@ func _paste_copied_event_tree() -> bool:
 	_set_status("Pasted event")
 	return true
 
-func _regenerate_event_tree_uids(event_row: EventRow) -> void:
-	if event_row == null:
-		return
-	event_row.event_uid = EventRow._generate_short_uid()
-	for sub_resource: Variant in event_row.sub_events:
+func _clone_event_tree(source: EventRow) -> EventRow:
+	if source == null:
+		return null
+	var clone: EventRow = EventRow.new()
+	clone.enabled = source.enabled
+	clone.comment = source.comment
+	clone.trigger_provider_id = source.trigger_provider_id
+	clone.trigger_id = source.trigger_id
+	clone.trigger_params = source.trigger_params.duplicate(true)
+	clone.trigger = _clone_condition(source.trigger)
+	clone.condition_mode = source.condition_mode
+	clone.else_mode = source.else_mode
+	for condition_item: Variant in source.conditions:
+		if condition_item is ACECondition:
+			clone.conditions.append(_clone_condition(condition_item as ACECondition))
+	for action_item: Variant in source.actions:
+		if action_item is ACEAction:
+			clone.actions.append(_clone_action(action_item as ACEAction))
+		elif action_item is Resource:
+			clone.actions.append((action_item as Resource).duplicate(true))
+	for local_var: Variant in source.local_variables:
+		if local_var is Resource:
+			clone.local_variables.append((local_var as Resource).duplicate(true) as LocalVariable)
+	for pick_filter: Variant in source.pick_filters:
+		if pick_filter is Resource:
+			clone.pick_filters.append((pick_filter as Resource).duplicate(true) as PickFilter)
+	for sub_resource: Variant in source.sub_events:
 		if sub_resource is EventRow:
-			_regenerate_event_tree_uids(sub_resource as EventRow)
+			clone.sub_events.append(_clone_event_tree(sub_resource as EventRow))
 		elif sub_resource is EventGroup:
-			_regenerate_group_tree_uids(sub_resource as EventGroup)
+			clone.sub_events.append(_clone_group_tree(sub_resource as EventGroup))
+		elif sub_resource is CommentRow:
+			clone.sub_events.append(_clone_comment_row(sub_resource as CommentRow))
+		elif sub_resource is Resource:
+			clone.sub_events.append((sub_resource as Resource).duplicate(true))
+	return clone
 
-func _regenerate_group_tree_uids(event_group: EventGroup) -> void:
-	if event_group == null:
-		return
-	event_group.group_uid = EventGroup._generate_short_uid()
-	for child: Variant in event_group.events:
+func _clone_group_tree(source: EventGroup) -> EventGroup:
+	if source == null:
+		return null
+	var clone: EventGroup = EventGroup.new()
+	clone.enabled = source.enabled
+	clone.name = source.name
+	clone.group_name = source.group_name
+	clone.description = source.description
+	clone.collapsed = source.collapsed
+	clone.expanded = source.expanded
+	clone.color_tag = source.color_tag
+	for child: Variant in source.events:
 		if child is EventRow:
-			_regenerate_event_tree_uids(child as EventRow)
+			clone.events.append(_clone_event_tree(child as EventRow))
 		elif child is EventGroup:
-			_regenerate_group_tree_uids(child as EventGroup)
-	for legacy_child: Variant in event_group.rows:
+			clone.events.append(_clone_group_tree(child as EventGroup))
+		elif child is CommentRow:
+			clone.events.append(_clone_comment_row(child as CommentRow))
+		elif child is Resource:
+			clone.events.append((child as Resource).duplicate(true))
+	for legacy_child: Variant in source.rows:
 		if legacy_child is EventRow:
-			_regenerate_event_tree_uids(legacy_child as EventRow)
+			clone.rows.append(_clone_event_tree(legacy_child as EventRow))
 		elif legacy_child is EventGroup:
-			_regenerate_group_tree_uids(legacy_child as EventGroup)
+			clone.rows.append(_clone_group_tree(legacy_child as EventGroup))
+		elif legacy_child is CommentRow:
+			clone.rows.append(_clone_comment_row(legacy_child as CommentRow))
+		elif legacy_child is Resource:
+			clone.rows.append((legacy_child as Resource).duplicate(true))
+	return clone
+
+func _clone_comment_row(source: CommentRow) -> CommentRow:
+	if source == null:
+		return null
+	var clone: CommentRow = CommentRow.new()
+	clone.enabled = source.enabled
+	clone.text = source.text
+	clone.style = source.style
+	clone.color_tag = source.color_tag
+	return clone
+
+func _clone_condition(source: ACECondition) -> ACECondition:
+	if source == null:
+		return null
+	var clone: ACECondition = ACECondition.new()
+	clone.provider_id = source.provider_id
+	clone.ace_id = source.ace_id
+	clone.params = source.params.duplicate(true)
+	clone.parameters = source.parameters.duplicate(true)
+	clone.negated = source.negated
+	clone.enabled = source.enabled
+	return clone
+
+func _clone_action(source: ACEAction) -> ACEAction:
+	if source == null:
+		return null
+	var clone: ACEAction = ACEAction.new()
+	clone.provider_id = source.provider_id
+	clone.ace_id = source.ace_id
+	clone.params = source.params.duplicate(true)
+	clone.parameters = source.parameters.duplicate(true)
+	clone.is_awaited = source.is_awaited
+	clone.await_call = source.await_call
+	clone.comment = source.comment
+	clone.enabled = source.enabled
+	return clone
 
 func _delete_current_selection() -> bool:
 	match _selected_entry_kind:
