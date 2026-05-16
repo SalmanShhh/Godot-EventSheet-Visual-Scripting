@@ -58,6 +58,16 @@ static func run() -> bool:
 		"Variant  n = 42"
 	) and all_passed
 
+	all_passed = _check("tooltip with description",
+		VariableRowUI.format_tooltip("health", {"type": "int", "default": 100, "description": "Current HP"}),
+		"health (int)\nDefault: 100\n\nCurrent HP"
+	) and all_passed
+
+	all_passed = _check("tooltip without description",
+		VariableRowUI.format_tooltip("speed", {"type": "float", "default": 5.0}),
+		"speed (float)\nDefault: 5.0"
+	) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: String, expected: String) -> bool:

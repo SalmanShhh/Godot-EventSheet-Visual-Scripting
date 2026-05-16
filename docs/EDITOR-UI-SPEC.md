@@ -35,13 +35,14 @@ It intentionally avoids describing unbuilt behavior as complete.
 - Event rows render with side-by-side lanes:
   - left lane: run context + conditions
   - right lane: actions
-- Rows use an IF/THEN block treatment (Construct/GDevelop-inspired): stronger lane framing, tinted condition/action cards, and per-entry accent rails for scanability.
+- Rows use a Construct/GDevelop-inspired block treatment without explicit IF/THEN text labels: stronger lane framing, tinted condition/action cards, and per-entry accent rails for scanability.
 - Condition and action summaries are clickable for focused editing.
 - Delete affordances are implemented:
   - event delete via header `✕` action
   - condition delete via condition context menu (`Delete Condition`)
   - action delete via action context menu (`Delete Action`)
 - When deleting a focused condition/action, inspector selection falls back to the owning event view.
+- Variable rows remain compact in-canvas, with rich hover tooltips that include type/default and optional variable descriptions.
 
 ### 2.4 Sub-event support status
 

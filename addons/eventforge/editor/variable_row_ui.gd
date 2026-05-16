@@ -11,6 +11,7 @@ var var_name: String = ""
 var var_info: Dictionary = {}
 
 var _label: Label = null
+var _edit_btn: Button = null
 
 func _init() -> void:
 	_build_ui()
@@ -45,12 +46,11 @@ func _build_ui() -> void:
 	hbox.add_child(_label)
 
 	# Click button
-	var btn: Button = Button.new()
-	btn.text = "✎"
-	btn.flat = true
-	btn.tooltip_text = "Edit variable"
-	btn.connect("pressed", _on_pressed)
-	hbox.add_child(btn)
+	_edit_btn = Button.new()
+	_edit_btn.text = "✎"
+	_edit_btn.flat = true
+	_edit_btn.connect("pressed", _on_pressed)
+	hbox.add_child(_edit_btn)
 
 	# Make full row clickable via mouse input
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -61,6 +61,11 @@ func refresh() -> void:
 	if _label == null:
 		return
 	_label.text = "  " + format_summary(var_name, var_info)
+	var tooltip: String = format_tooltip(var_name, var_info)
+	tooltip_text = tooltip
+	_label.tooltip_text = tooltip
+	if _edit_btn != null:
+		_edit_btn.tooltip_text = "Edit variable\n\n" + tooltip
 
 ## Returns a formatted summary string for a global variable.
 ## var_info may contain: type (String), default (Variant), value (Variant)
@@ -69,6 +74,21 @@ static func format_summary(name: String, info: Dictionary) -> String:
 	var raw_default: Variant = info.get("default", info.get("value", null))
 	var default_str: String = _format_default(type_str, raw_default)
 	return "%s  %s = %s" % [type_str, name, default_str]
+
+## Returns compact tooltip text for a global variable row/button.
+## Includes optional description when present.
+static func format_tooltip(name: String, info: Dictionary) -> String:
+	var type_str: String = str(info.get("type", "Variant"))
+	var raw_default: Variant = info.get("default", info.get("value", null))
+	var default_str: String = _format_default(type_str, raw_default)
+	var lines: Array[String] = []
+	lines.append("%s (%s)" % [name, type_str])
+	lines.append("Default: %s" % default_str)
+	var description: String = str(info.get("description", "")).strip_edges()
+	if not description.is_empty():
+		lines.append("")
+		lines.append(description)
+	return "\n".join(lines)
 
 ## Formats a default value for display.
 static func _format_default(type_str: String, raw: Variant) -> String:
