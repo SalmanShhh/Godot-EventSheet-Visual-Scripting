@@ -9,6 +9,7 @@ func _init() -> void:
 	var passed: bool = true
 	passed = CompileDemoTest.run() and passed
 	passed = VariableRowFormatTest.run() and passed
+	passed = ACEMetadataTest.run() and passed
 	if passed:
 		print("All tests passed.")
 		quit(0)

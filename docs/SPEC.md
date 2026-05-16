@@ -52,3 +52,22 @@ Return dictionary keys:
 - `output: String`
 
 Generated files include a stable header and are emitted with `\n` line endings.
+
+## 6. ACE metadata normalization
+
+ACE descriptors can be provided either as `ACEDescriptor` resources or dictionary metadata.
+Dictionary metadata supports both snake_case and Construct-style camelCase keys.
+
+Supported descriptor aliases:
+
+- `list_name` / `listName`
+- `display_text` / `displayText`
+- `description` / `desc`
+- `params` entries with:
+  - `id`
+  - `name` / `display_name` / `displayName`
+  - `description` / `desc`
+  - `type`
+  - `default_value` / `defaultValue` / `initial_value` / `initialValue`
+
+Normalized metadata is used by pickers and event/action initialization defaults.

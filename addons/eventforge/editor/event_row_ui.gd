@@ -11,6 +11,8 @@ signal condition_selected(row: EventRowUI, index: int)
 signal action_selected(row: EventRowUI, index: int)
 ## Emitted when the event header/row itself is clicked for full event inspection.
 signal event_selected(row: EventRowUI)
+## Emitted when inline Add Action is requested.
+signal add_action_requested(row: EventRowUI)
 
 var event_row: EventRow = null
 
@@ -81,11 +83,25 @@ func _build_ui() -> void:
 	_vbox.add_child(_conditions_container)
 
 	# Actions section
+	var actions_row: HBoxContainer = HBoxContainer.new()
+	_vbox.add_child(actions_row)
+
 	var action_heading: Label = Label.new()
 	action_heading.text = "Actions"
 	action_heading.add_theme_color_override("font_color", Color(0.65, 0.75, 1.0))
 	action_heading.add_theme_font_size_override("font_size", 11)
-	_vbox.add_child(action_heading)
+	actions_row.add_child(action_heading)
+
+	var action_spacer: Control = Control.new()
+	action_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions_row.add_child(action_spacer)
+
+	var add_action_btn: Button = Button.new()
+	add_action_btn.text = "+ Add Action"
+	add_action_btn.flat = true
+	add_action_btn.tooltip_text = "Add an action to this event"
+	add_action_btn.connect("pressed", func() -> void: add_action_requested.emit(self))
+	actions_row.add_child(add_action_btn)
 
 	_actions_container = VBoxContainer.new()
 	_actions_container.add_theme_constant_override("separation", 2)
@@ -102,7 +118,7 @@ func refresh() -> void:
 ## Returns a human-readable run-context label for the event row's trigger_id.
 static func format_run_context(row: EventRow) -> String:
 	if row == null or row.trigger_id.is_empty():
-		return "Choose when this event runs…"
+		return "Runs: Every tick (default)"
 	match row.trigger_id:
 		"OnProcess":
 			return "Runs: Every Frame"
@@ -128,6 +144,9 @@ static func format_condition_summary(condition: ACECondition) -> String:
 	if condition.ace_id.is_empty():
 		return "(condition)"
 	var prefix: String = "NOT " if condition.negated else ""
+	var from_descriptor: String = _format_condition_from_descriptor(condition)
+	if not from_descriptor.is_empty():
+		return prefix + from_descriptor
 	match condition.ace_id:
 		"IsOnFloor":
 			return prefix + "Is On Floor"
@@ -150,6 +169,9 @@ static func format_action_summary(action: ACEAction) -> String:
 		return "(empty action)"
 	if action.ace_id.is_empty():
 		return "(action)"
+	var from_descriptor: String = _format_action_from_descriptor(action)
+	if not from_descriptor.is_empty():
+		return from_descriptor
 	match action.ace_id:
 		"SetVar":
 			var vname: String = str(_ace_param(action.params, action.parameters, "var_name", "var"))
@@ -177,6 +199,20 @@ static func _ace_param(primary: Dictionary, fallback: Dictionary, key: String, d
 	if fallback.has(key):
 		return fallback[key]
 	return default
+
+static func _format_condition_from_descriptor(condition: ACECondition) -> String:
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
+	if descriptor == null:
+		return ""
+	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+	return descriptor.format_display(params_dict)
+
+static func _format_action_from_descriptor(action: ACEAction) -> String:
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(action.provider_id, action.ace_id)
+	if descriptor == null:
+		return ""
+	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	return descriptor.format_display(params_dict)
 
 # ── Private helpers ──────────────────────────────────────────────────────────
 
