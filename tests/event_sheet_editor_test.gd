@@ -144,6 +144,7 @@ static func run() -> bool:
 
 	var compare_var: ACEDescriptor = ACERegistry.find_descriptor("Core", "CompareVar")
 	all_passed = _check("compare var descriptor exists", compare_var != null, true) and all_passed
+	# CompareVar params: [0]=var_name, [1]=op, [2]=value.
 	if compare_var != null and compare_var.params.size() > 2:
 		all_passed = _check("compare var op options count", compare_var.params[1].options.size(), 6) and all_passed
 		all_passed = _check("compare var value marked expression", compare_var.params[2].hint, "expression") and all_passed

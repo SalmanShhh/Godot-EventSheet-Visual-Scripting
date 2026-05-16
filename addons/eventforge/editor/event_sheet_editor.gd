@@ -1091,6 +1091,8 @@ func _build_expression_snippet(descriptor: ACEDescriptor, values: Dictionary) ->
 	)
 	for key: String in keys:
 		var token: String = "{%s}" % key
+		# Missing keys intentionally leave unresolved tokens in place so users can
+		# keep editing partially-specified expression templates.
 		template = template.replace(token, str(values.get(key, "")))
 	return template
 
