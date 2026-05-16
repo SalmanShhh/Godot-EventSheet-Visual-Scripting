@@ -182,8 +182,8 @@ func _build_ui() -> void:
 	add_action_btn.flat = true
 	add_action_btn.tooltip_text = "Add action"
 	add_action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	add_action_btn.add_theme_color_override("font_color", Color(0.62, 0.76, 0.98))
-	add_action_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.92, 1.0))
+	add_action_btn.add_theme_color_override("font_color", Color(0.48, 0.76, 0.60))
+	add_action_btn.add_theme_color_override("font_hover_color", Color(0.65, 0.92, 0.74))
 	add_action_btn.add_theme_font_size_override("font_size", 10)
 	add_action_btn.connect("pressed", _on_add_action_pressed)
 	line.add_child(add_action_btn)

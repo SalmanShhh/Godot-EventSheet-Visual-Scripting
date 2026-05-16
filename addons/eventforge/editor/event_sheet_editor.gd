@@ -1337,7 +1337,7 @@ func _add_section_shell(name: String, title: String, subtitle: String, accent: C
 		header.add_child(action_btn)
 
 	var header_sep: HSeparator = HSeparator.new()
-	header_sep.add_theme_color_override("color", Color(0.165, 0.190, 0.244, 0.80))
+	header_sep.add_theme_color_override("color", Color(accent.r, accent.g, accent.b, 0.30))
 	section_vbox.add_child(header_sep)
 
 	var body: VBoxContainer = VBoxContainer.new()
@@ -1707,6 +1707,7 @@ func _make_inspector_card(border_accent: Color = Color(0.196, 0.223, 0.279, 1.0)
 	style.bg_color = Color(0.100, 0.112, 0.145, 1.0)
 	style.border_color = border_accent
 	style.set_border_width_all(1)
+	style.border_width_left = 3
 	style.set_corner_radius_all(6)
 	style.set_content_margin_all(10)
 	card.add_theme_stylebox_override("panel", style)
@@ -1747,6 +1748,10 @@ func _show_empty_inspector() -> void:
 	title.add_theme_color_override("font_color", Color(0.73, 0.83, 0.98))
 	title.add_theme_font_size_override("font_size", 12)
 	vbox.add_child(title)
+
+	var heading_sep: HSeparator = HSeparator.new()
+	heading_sep.add_theme_color_override("color", Color(0.196, 0.223, 0.279, 0.80))
+	vbox.add_child(heading_sep)
 
 	var hint: Label = Label.new()
 	if current_sheet == null:
@@ -1878,10 +1883,14 @@ func _rebuild_inspector_group(row: GroupRowUI) -> void:
 
 	var enabled_lbl: Label = Label.new()
 	enabled_lbl.text = "Enabled: %s" % str(event_group.enabled)
+	enabled_lbl.add_theme_color_override("font_color", Color(0.70, 0.92, 0.68) if event_group.enabled else Color(0.84, 0.56, 0.56))
+	enabled_lbl.add_theme_font_size_override("font_size", 10)
 	card_vbox.add_child(enabled_lbl)
 
 	var collapsed_lbl: Label = Label.new()
 	collapsed_lbl.text = "Collapsed: %s" % str(_is_group_collapsed(event_group))
+	collapsed_lbl.add_theme_color_override("font_color", Color(0.65, 0.70, 0.80))
+	collapsed_lbl.add_theme_font_size_override("font_size", 10)
 	card_vbox.add_child(collapsed_lbl)
 
 	var note_sep: HSeparator = HSeparator.new()

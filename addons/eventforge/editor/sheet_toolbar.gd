@@ -66,6 +66,10 @@ func _build_ui() -> void:
 	_doc_meta_label.add_theme_font_size_override("font_size", 10)
 	top_line.add_child(_doc_meta_label)
 
+	var meta_sep: VSeparator = VSeparator.new()
+	meta_sep.add_theme_color_override("color", Color(0.22, 0.26, 0.36, 0.60))
+	top_line.add_child(meta_sep)
+
 	_selection_meta_label = Label.new()
 	_selection_meta_label.text = "No selection"
 	_selection_meta_label.add_theme_color_override("font_color", Color(0.60, 0.70, 0.84))
