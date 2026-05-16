@@ -25,6 +25,7 @@ static func run() -> bool:
 	all_passed = _check("toolbar shortcuts hint visible with loaded sheet", toolbar_ui._shortcuts_hint_label.visible, true) and all_passed
 	all_passed = _check("toolbar add event tooltip includes shortcut", toolbar_ui._add_event_btn.tooltip_text.find("Ctrl+E") != -1, true) and all_passed
 	all_passed = _check("toolbar add variable tooltip includes shortcut", toolbar_ui._add_var_btn.tooltip_text.find("Ctrl+Shift+V") != -1, true) and all_passed
+	toolbar_ui.free()
 	var toolbar_sheet: EventSheetResource = EventSheetResource.new()
 	toolbar_sheet.variables["health"] = {"type": "int", "default": 100}
 	toolbar_sheet.events.append(EventRow.new())

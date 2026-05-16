@@ -16,6 +16,7 @@ signal add_var_requested
 signal compile_requested
 
 const SHORTCUTS_HINT_TEXT: String = "Shortcuts: Ctrl+E Event | Ctrl+Shift+V Variable | Ctrl+Shift+C Condition | Ctrl+Shift+A Action | Del Delete"
+const SHORTCUTS_HINT_COLOR: Color = Color(0.52, 0.61, 0.74)
 
 var _add_event_btn: Button = null
 var _add_var_btn: Button = null
@@ -123,7 +124,7 @@ func _build_ui() -> void:
 
 	_shortcuts_hint_label = Label.new()
 	_shortcuts_hint_label.text = SHORTCUTS_HINT_TEXT
-	_shortcuts_hint_label.add_theme_color_override("font_color", Color(0.52, 0.61, 0.74))
+	_shortcuts_hint_label.add_theme_color_override("font_color", SHORTCUTS_HINT_COLOR)
 	_shortcuts_hint_label.add_theme_font_size_override("font_size", 10)
 	_shortcuts_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	actions_line.add_child(_shortcuts_hint_label)
