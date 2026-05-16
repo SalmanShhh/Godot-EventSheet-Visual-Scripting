@@ -123,12 +123,11 @@ It intentionally avoids describing unbuilt behavior as complete.
   - Toolbar background has zero corner radius so it sits flush at the top edge of the workspace.
   - Toolbar chrome is intentionally compact: reduced padding and de-emphasized metadata labels so the sheet surface starts sooner.
   - Toolbar bottom border (1 px) provides the only visual separation from the content area below.
-  - Top row of the toolbar: `EventSheet` label | separator | sheet name | dirty indicator | document meta | separator | selection meta | spacer
-  - Top row now also includes a **document path hint** between document meta and selection meta so the active resource path is always visible.
-  - Action row of the toolbar: `New Sheet` | `Open` | `Save` | `Save As…` | separator | `+ Event` | `+ Variable` | shortcut hints | spacer | `Compile Preview`
+  - Primary toolbar line is action-first (`New/Open/Save/Save As`, add actions, compile) with metadata moved out of the always-visible line.
+  - Legacy metadata labels (meta/path/selection) remain available as context text but are visually suppressed by default to keep chrome minimal.
   - **Dirty indicator** `●` (amber dot) appears next to the sheet name when the sheet has unsaved changes; hidden when the sheet is clean.
   - **Save / Save As** buttons are present and enabled whenever a sheet is loaded.
-  - Canvas section and inspector section have small 6 px breathing margins on left/right/top and 4 px bottom margin — just enough visual separation from the toolbar, no bottom-dock-era outer padding.
+  - Canvas section and inspector section use very tight outer margins so the sheet starts quickly under the toolbar.
   - **Status bar** sits at the very bottom of the workspace, full-width, with a 1 px top border — matches the Godot editor idiom for script-editor feedback lines.
   - Status bar shows operation results (save, compile, add/delete events and variables) replacing the old toolbar top-row status text.
 - Keyboard workflow shortcuts:
@@ -153,11 +152,7 @@ It intentionally avoids describing unbuilt behavior as complete.
   - The sheet resource path as a secondary hint line (`Unsaved (in-memory)` for unsaved sheets)
   - A summary of globals and root entries
   - A 3px left-accent border rail to visually anchor the header as the document root
-- Canvas uses a **document strip** (`SheetCanvasDocumentStrip`) above the scroll surface:
-  - Shows `EventSheetResource` kind tag
-  - Shows an active-resource tab shell (`SheetCanvasResourceTab`) with document title + dirty dot
-  - Shows resource path hint beside the active tab shell
-  - Uses a 1px bottom border like editor tab/resource strips
+- Canvas keeps a lightweight document-strip structure (`SheetCanvasDocumentStrip` / `SheetCanvasResourceTab`) for context plumbing, but it is visually suppressed by default in the current compact C3-oriented pass.
 - Central workspace composition now uses `HSplitContainer` (`WorkspaceSplit`) for
   canvas/inspector, matching the dedicated-editor split model instead of a fixed
   panel stack + separator.
@@ -376,8 +371,7 @@ inside the Construct 3-style sheet established by Phase 8.
   lane palette; comment previews use the amber banner palette.
 
 #### Toolbar shortcut hints
-- The shortcuts hint strip in the toolbar now also shows:
-  `G Group` · `Ctrl+D Duplicate` · `Esc Deselect`
+- The shortcuts hint label remains implemented but is hidden by default in the compact-toolbar pass to reduce top chrome.
 
 ## 3. Still planned (not implemented yet)
 

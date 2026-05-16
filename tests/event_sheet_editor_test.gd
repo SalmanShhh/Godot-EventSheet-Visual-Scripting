@@ -23,7 +23,7 @@ static func run() -> bool:
 	all_passed = _check("toolbar contains shortcuts hint label", _contains_label_text(toolbar_ui, SheetToolbar.shortcut_hint_text()), true) and all_passed
 	all_passed = _check("toolbar shortcuts hint hidden without sheet", toolbar_ui._shortcuts_hint_label.visible, false) and all_passed
 	toolbar_ui.set_sheet_loaded(true)
-	all_passed = _check("toolbar shortcuts hint visible with loaded sheet", toolbar_ui._shortcuts_hint_label.visible, true) and all_passed
+	all_passed = _check("toolbar shortcuts hint remains hidden with loaded sheet", toolbar_ui._shortcuts_hint_label.visible, false) and all_passed
 	all_passed = _check("toolbar add event tooltip includes shortcut", toolbar_ui._add_event_btn.tooltip_text.find("Ctrl+E") != -1, true) and all_passed
 	all_passed = _check("toolbar add variable tooltip includes shortcut", toolbar_ui._add_var_btn.tooltip_text.find("Ctrl+Shift+V") != -1, true) and all_passed
 	all_passed = _check("toolbar shortcuts hint includes quick comment", SheetToolbar.shortcut_hint_text().find("Q Comment") != -1, true) and all_passed

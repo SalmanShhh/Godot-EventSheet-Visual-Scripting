@@ -70,16 +70,16 @@ const ACTION_MENU_ADD_ANOTHER: int = 2
 const ACTION_MENU_REPLACE: int = 3
 const ACTION_MENU_DELETE: int = 4
 
-const ROW_BG: Color = Color(0.096, 0.114, 0.153, 1.0)
-const ROW_BG_HOVER: Color = Color(0.116, 0.138, 0.186, 1.0)
-const ROW_BG_SELECTED: Color = Color(0.150, 0.182, 0.246, 1.0)
-const ROW_BORDER: Color = Color(0.226, 0.270, 0.358, 1.0)
-const ROW_BORDER_HOVER: Color = Color(0.296, 0.362, 0.478, 1.0)
+const ROW_BG: Color = Color(0.084, 0.098, 0.126, 1.0)
+const ROW_BG_HOVER: Color = Color(0.102, 0.118, 0.152, 1.0)
+const ROW_BG_SELECTED: Color = Color(0.130, 0.158, 0.212, 1.0)
+const ROW_BORDER: Color = Color(0.188, 0.222, 0.292, 0.86)
+const ROW_BORDER_HOVER: Color = Color(0.248, 0.298, 0.396, 0.92)
 const ROW_BORDER_SELECTED: Color = Color(0.458, 0.618, 0.900, 1.0)
 const RUN_CONTEXT_SYMBOL: String = "◆"
-const LANE_DIVIDER_COLOR: Color = Color(0.24, 0.30, 0.44, 0.55)
-const COND_LANE_BG: Color = Color(0.100, 0.120, 0.160, 0.58)
-const ACTION_LANE_BG: Color = Color(0.096, 0.116, 0.154, 0.46)
+const LANE_DIVIDER_COLOR: Color = Color(0.24, 0.30, 0.44, 0.32)
+const COND_LANE_BG: Color = Color(0.100, 0.120, 0.160, 0.22)
+const ACTION_LANE_BG: Color = Color(0.096, 0.116, 0.154, 0.12)
 const COND_LANE_RATIO: float = 1.0
 const ACTION_LANE_RATIO: float = 1.85
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
@@ -381,7 +381,9 @@ func _apply_row_style() -> void:
 		style.bg_color = _apply_depth_tint(ROW_BG)
 		style.border_color = ROW_BORDER
 	style.set_border_width_all(1)
-	style.border_width_left = 3 + min(_depth, 4)
+	style.border_width_left = 2 + min(_depth, 4)
+	style.border_width_top = 0
+	style.border_width_right = 0
 	style.set_corner_radius_all(0)
 	# Zero content margins — inner lane panels carry their own padding so
 	# the lanes extend flush from the left depth-accent border to the right edge.

@@ -634,6 +634,7 @@ func _build_layout() -> void:
 	var canvas_doc_strip: PanelContainer = PanelContainer.new()
 	canvas_doc_strip.name = "SheetCanvasDocumentStrip"
 	canvas_doc_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	canvas_doc_strip.visible = false
 	var strip_style: StyleBoxFlat = StyleBoxFlat.new()
 	strip_style.bg_color = Color(0.070, 0.078, 0.102, 1.0)
 	strip_style.border_color = Color(0.138, 0.162, 0.208, 1.0)
@@ -724,16 +725,17 @@ func _build_layout() -> void:
 
 	# ── Right: inspector panel (passive context panel) ────────────────────────
 	_inspector_panel = PanelContainer.new()
-	_inspector_panel.custom_minimum_size = Vector2(190, 0)
+	_inspector_panel.custom_minimum_size = Vector2(150, 0)
 	_inspector_panel.size_flags_horizontal = Control.SIZE_FILL
 	_inspector_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	var insp_style: StyleBoxFlat = StyleBoxFlat.new()
-	insp_style.bg_color = Color(0.073, 0.081, 0.104, 1.0)
-	insp_style.border_color = Color(0.132, 0.154, 0.198, 0.95)
-	insp_style.set_border_width_all(1)
+	insp_style.bg_color = Color(0.068, 0.076, 0.096, 0.68)
+	insp_style.border_color = Color(0.116, 0.136, 0.176, 0.62)
+	insp_style.set_border_width_all(0)
+	insp_style.border_width_left = 1
 	insp_style.set_corner_radius_all(0)
-	insp_style.set_content_margin_all(8)
+	insp_style.set_content_margin_all(6)
 	_inspector_panel.add_theme_stylebox_override("panel", insp_style)
 	workspace_split.add_child(_inspector_panel)
 

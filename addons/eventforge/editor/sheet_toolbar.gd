@@ -70,18 +70,19 @@ func _build_ui() -> void:
 	panel_style.border_width_bottom = 1
 	# No corner radius: toolbar sits flush at the top of the main-screen workspace.
 	panel_style.set_corner_radius_all(0)
-	panel_style.set_content_margin(SIDE_LEFT, 7)
-	panel_style.set_content_margin(SIDE_RIGHT, 7)
-	panel_style.set_content_margin(SIDE_TOP, 5)
-	panel_style.set_content_margin(SIDE_BOTTOM, 5)
+	panel_style.set_content_margin(SIDE_LEFT, 6)
+	panel_style.set_content_margin(SIDE_RIGHT, 6)
+	panel_style.set_content_margin(SIDE_TOP, 3)
+	panel_style.set_content_margin(SIDE_BOTTOM, 3)
 	add_theme_stylebox_override("panel", panel_style)
 
 	var shell: VBoxContainer = VBoxContainer.new()
-	shell.add_theme_constant_override("separation", 3)
+	shell.add_theme_constant_override("separation", 0)
 	add_child(shell)
 
 	var top_line: HBoxContainer = HBoxContainer.new()
 	top_line.add_theme_constant_override("separation", 4)
+	top_line.visible = false
 	shell.add_child(top_line)
 
 	var title: Label = Label.new()
@@ -143,7 +144,7 @@ func _build_ui() -> void:
 	top_line.add_child(top_spacer)
 
 	var actions_line: HBoxContainer = HBoxContainer.new()
-	actions_line.add_theme_constant_override("separation", 4)
+	actions_line.add_theme_constant_override("separation", 2)
 	shell.add_child(actions_line)
 
 	var new_sheet_btn: Button = Button.new()
@@ -188,8 +189,9 @@ func _build_ui() -> void:
 	_shortcuts_hint_label = Label.new()
 	_shortcuts_hint_label.text = shortcut_hint_text()
 	_shortcuts_hint_label.add_theme_color_override("font_color", SHORTCUTS_HINT_COLOR)
-	_shortcuts_hint_label.add_theme_font_size_override("font_size", 9)
+	_shortcuts_hint_label.add_theme_font_size_override("font_size", 8)
 	_shortcuts_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_shortcuts_hint_label.visible = false
 	actions_line.add_child(_shortcuts_hint_label)
 
 	var spacer: Control = Control.new()
@@ -260,7 +262,7 @@ func set_sheet_loaded(loaded: bool) -> void:
 	if _save_as_btn != null:
 		_save_as_btn.disabled = not loaded
 	if _shortcuts_hint_label != null:
-		_shortcuts_hint_label.visible = loaded
+		_shortcuts_hint_label.visible = false
 	if _doc_meta_label != null:
 		_doc_meta_label.visible = loaded
 	if _sheet_path_label != null:

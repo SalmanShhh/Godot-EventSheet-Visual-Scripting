@@ -81,16 +81,18 @@ func set_selected(selected: bool) -> void:
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	if _selected:
-		style.bg_color = Color(0.128, 0.192, 0.284, 1.0)
+		style.bg_color = Color(0.118, 0.178, 0.262, 1.0)
 		style.border_color = Color(0.500, 0.740, 0.980, 1.0)
 	elif _hovered:
-		style.bg_color = Color(0.114, 0.169, 0.252, 1.0)
-		style.border_color = Color(0.296, 0.444, 0.626, 1.0)
+		style.bg_color = Color(0.104, 0.152, 0.228, 1.0)
+		style.border_color = Color(0.258, 0.386, 0.546, 1.0)
 	else:
-		style.bg_color = Color(0.098, 0.146, 0.218, 1.0)
-		style.border_color = Color(0.238, 0.354, 0.506, 1.0)
+		style.bg_color = Color(0.088, 0.130, 0.194, 1.0)
+		style.border_color = Color(0.208, 0.310, 0.444, 1.0)
 	style.set_border_width_all(1)
-	style.border_width_left = 3 + min(_depth, 4)
+	style.border_width_left = 2 + min(_depth, 4)
+	style.border_width_top = 0
+	style.border_width_right = 0
 	style.set_corner_radius_all(0)
 	style.set_content_margin_all(3)
 	style.content_margin_left = 6
