@@ -15,7 +15,19 @@ signal add_var_requested
 ## Emitted when the user requests a compile/preview.
 signal compile_requested
 
-const SHORTCUTS_HINT_TEXT: String = "Shortcuts: Ctrl+E Event | Ctrl+Shift+V Variable | Ctrl+Shift+C Condition | Ctrl+Shift+A Action | Del Delete"
+const SHORTCUT_ADD_EVENT: String = "Ctrl+E Event"
+const SHORTCUT_ADD_VARIABLE: String = "Ctrl+Shift+V Variable"
+const SHORTCUT_ADD_CONDITION: String = "Ctrl+Shift+C Condition"
+const SHORTCUT_ADD_ACTION: String = "Ctrl+Shift+A Action"
+const SHORTCUT_DELETE_SELECTION: String = "Del Delete"
+const SHORTCUTS_HINT_SEGMENTS: PackedStringArray = [
+	SHORTCUT_ADD_EVENT,
+	SHORTCUT_ADD_VARIABLE,
+	SHORTCUT_ADD_CONDITION,
+	SHORTCUT_ADD_ACTION,
+	SHORTCUT_DELETE_SELECTION
+]
+const SHORTCUTS_HINT_TEXT: String = "Shortcuts: %s" % " | ".join(SHORTCUTS_HINT_SEGMENTS)
 const SHORTCUTS_HINT_COLOR: Color = Color(0.52, 0.61, 0.74)
 
 var _add_event_btn: Button = null

@@ -29,6 +29,7 @@ static func run() -> bool:
 	toolbar_sheet.variables["health"] = {"type": "int", "default": 100}
 	toolbar_sheet.events.append(EventRow.new())
 	all_passed = _check("toolbar meta loaded sheet", SheetToolbar.format_document_meta(toolbar_sheet), "1 globals · 1 root rows") and all_passed
+	toolbar_sheet = null
 	toolbar_ui.free()
 
 	all_passed = _check("parse int", editor._parse_variable_initial_value("42", "int"), 42) and all_passed
