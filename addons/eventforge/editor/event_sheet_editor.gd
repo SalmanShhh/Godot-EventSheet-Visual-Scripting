@@ -2475,7 +2475,7 @@ func _insert_event_relative_in_array(arr: Array, target_uid: String, target_kind
 			var nested_group: EventGroup = resource as EventGroup
 			if _insert_event_relative_in_array(nested_group.events, target_uid, target_kind, insert_after, new_event):
 				return true
-			# `rows` is a legacy alias path for group children that may still exist in older sheets.
+			# `rows` is the legacy alias of `events`; older sheets may still carry children there.
 			if _insert_event_relative_in_array(nested_group.rows, target_uid, target_kind, insert_after, new_event):
 				return true
 	return false

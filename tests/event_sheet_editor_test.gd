@@ -242,6 +242,7 @@ static func run() -> bool:
 		all_passed = _check("insert above nested row adds sibling in parent sub-events", parent_insert_event.sub_events.size(), 2) and all_passed
 		var inserted_nested: Variant = parent_insert_event.sub_events[0]
 		all_passed = _check("insert above nested row places new row before target", inserted_nested is EventRow and (inserted_nested as EventRow).event_uid != child_insert_event.event_uid, true) and all_passed
+		all_passed = _check("insert above nested row keeps target shifted to next index", parent_insert_event.sub_events[1] == child_insert_event, true) and all_passed
 
 	var group_insert_sheet: EventSheetResource = EventSheetResource.new()
 	var group_insert: EventGroup = EventGroup.new()
