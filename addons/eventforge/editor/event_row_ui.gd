@@ -61,6 +61,8 @@ func _init() -> void:
 	_build_ui()
 
 func _build_ui() -> void:
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
 	# Outer row styling
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(0.12, 0.14, 0.20, 1.0)
@@ -75,6 +77,7 @@ func _build_ui() -> void:
 	add_theme_stylebox_override("panel", style)
 
 	_vbox = VBoxContainer.new()
+	_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_vbox.add_theme_constant_override("separation", 0)
 	add_child(_vbox)
 
@@ -122,6 +125,7 @@ func _build_ui() -> void:
 	lanes_hbox.add_child(conditions_lane)
 
 	var conditions_lane_vbox: VBoxContainer = VBoxContainer.new()
+	conditions_lane_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	conditions_lane_vbox.add_theme_constant_override("separation", 2)
 	conditions_lane.add_child(conditions_lane_vbox)
 
@@ -180,6 +184,7 @@ func _build_ui() -> void:
 	cond_row.add_child(add_condition_btn)
 
 	_conditions_container = VBoxContainer.new()
+	_conditions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_conditions_container.add_theme_constant_override("separation", 1)
 	conditions_lane_vbox.add_child(_conditions_container)
 
@@ -205,6 +210,7 @@ func _build_ui() -> void:
 	lanes_hbox.add_child(actions_lane)
 
 	var actions_lane_vbox: VBoxContainer = VBoxContainer.new()
+	actions_lane_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions_lane_vbox.add_theme_constant_override("separation", 2)
 	actions_lane.add_child(actions_lane_vbox)
 
@@ -233,6 +239,7 @@ func _build_ui() -> void:
 	actions_row.add_child(add_action_btn)
 
 	_actions_container = VBoxContainer.new()
+	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_actions_container.add_theme_constant_override("separation", 1)
 	actions_lane_vbox.add_child(_actions_container)
 
@@ -287,6 +294,11 @@ static func format_condition_summary(condition: ACECondition) -> String:
 			var op: String = str(_ace_param(condition.params, condition.parameters, "op", "=="))
 			var val: String = str(_ace_param(condition.params, condition.parameters, "value", ""))
 			return prefix + ("%s %s %s" % [vname, op, val])
+		"CompareValue":
+			var left: String = str(_ace_param(condition.params, condition.parameters, "left", "0"))
+			var op: String = str(_ace_param(condition.params, condition.parameters, "op", "=="))
+			var right: String = str(_ace_param(condition.params, condition.parameters, "right", "0"))
+			return prefix + ("%s %s %s" % [left, op, right])
 		"Always":
 			return prefix + "Always"
 		_:
@@ -399,6 +411,8 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	var btn: Button = Button.new()
 	btn.text = text
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn.clip_text = true
 	btn.flat = false
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	btn.add_theme_color_override("font_color", Color(0.88, 0.88, 0.88))

@@ -102,3 +102,24 @@ ACE descriptors can be provided as `ACEDescriptor` resources or dictionary metad
 Dictionary metadata accepts snake_case and Construct-style camelCase aliases (for example `list_name/listName`, `display_text/displayText`, `description/desc`, and param default/name aliases).
 
 Normalized metadata is used consistently by picker display and ACE param initialization.
+
+## 8. ACE descriptor display contract
+
+- `ListName`/`list_name` defines the label shown in the add Condition/Action picker.
+- `DisplayText`/`display_text` defines the in-sheet summary shown on event rows.
+- If `DisplayText` is omitted, the editor falls back to `ListName`.
+
+## 9. Param initial/default contract
+
+- Every ACE param should define an initial/default value used for picker-to-sheet insertion.
+- For custom non-Core ACE dictionary metadata, this is required per param (`initial_value`/`initialValue` or `default_value`/`defaultValue`).
+- Descriptors that violate this custom-provider contract are rejected during normalization.
+
+## 10. Practical starter ACE coverage (Core provider)
+
+Current built-in practical subset intentionally includes common conditions/actions:
+
+- Conditions: `Always`, `CompareVar`, `CompareValue`, `HasGroupMember`, `IsOnFloor`, `IsActionPressed`
+- Actions: `SetVar`, `AddVar`, `PrintLog`, `QueueFree`, `EmitSignal`, `SetProcess`, `ChangeSceneToFile`
+
+Expression descriptors are first-class ACEs (`ACEType.EXPRESSION`) for value-producing operations (for example `GetVar`, `GetDelta`), with metadata and parameter defaults defined through the same descriptor/param schema.

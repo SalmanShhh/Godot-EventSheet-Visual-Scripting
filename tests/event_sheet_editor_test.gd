@@ -137,6 +137,25 @@ static func run() -> bool:
 	editor.refresh_canvas()
 	all_passed = _check("sub events cycle guard prevents duplicate rendering", _count_event_row_nodes(editor), 2) and all_passed
 
+	# Real editor composition path: rendered row includes action entries and add-action affordance.
+	var render_sheet: EventSheetResource = EventSheetResource.new()
+	var render_event: EventRow = EventRow.new()
+	var render_action: ACEAction = ACEAction.new()
+	render_action.provider_id = "Core"
+	render_action.ace_id = "QueueFree"
+	render_event.actions.append(render_action)
+	render_sheet.events.append(render_event)
+	editor.current_sheet = render_sheet
+	editor.refresh_canvas()
+	var composed_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, render_event.event_uid)
+	all_passed = _check("composed row is discoverable from canvas tree", composed_row_ui != null, true) and all_passed
+	if composed_row_ui != null:
+		all_passed = _check("composed row renders action entries", composed_row_ui._actions_container.get_child_count() > 0, true) and all_passed
+		var add_action_button: Button = _find_button_by_text(composed_row_ui, "+ Add Action")
+		all_passed = _check("composed row has + Add Action affordance", add_action_button != null, true) and all_passed
+		if add_action_button != null:
+			all_passed = _check("composed + Add Action visible", add_action_button.visible, true) and all_passed
+
 	# ACE params dialog back button is created and visible state reflects from_picker.
 	all_passed = _check("ace params back button created", editor._ace_params_back_button != null, true) and all_passed
 	if editor._ace_params_back_button != null:
@@ -238,3 +257,16 @@ static func _count_event_row_nodes(node: Node) -> int:
 	for child: Node in node.get_children():
 		total += _count_event_row_nodes(child)
 	return total
+
+static func _find_button_by_text(node: Node, wanted_text: String) -> Button:
+	if node == null:
+		return null
+	if node is Button:
+		var btn: Button = node as Button
+		if btn.text == wanted_text:
+			return btn
+	for child: Node in node.get_children():
+		var found: Button = _find_button_by_text(child, wanted_text)
+		if found != null:
+			return found
+	return null

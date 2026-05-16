@@ -1305,12 +1305,14 @@ func _make_render_guard_key(prefix: String, stable_uid: String, fallback_instanc
 func _add_canvas_row(row: Control, indent_level: int) -> void:
 	if row == null:
 		return
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if indent_level <= 0:
 		_canvas_vbox.add_child(row)
 		return
 	var margin: MarginContainer = MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.add_theme_constant_override("margin_left", 20 * indent_level)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.add_child(row)
 	_canvas_vbox.add_child(margin)
 

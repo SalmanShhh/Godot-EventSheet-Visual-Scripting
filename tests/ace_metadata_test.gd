@@ -45,6 +45,37 @@ static func run() -> bool:
 	if always_descriptor != null:
 		all_passed = _check("core Always codegen", always_descriptor.codegen_template, "true") and all_passed
 
+	var compare_value_descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "CompareValue")
+	all_passed = _check("core CompareValue condition registered", compare_value_descriptor != null, true) and all_passed
+	if compare_value_descriptor != null:
+		all_passed = _check("compare value list name", compare_value_descriptor.get_list_name(), "Compare Value") and all_passed
+		all_passed = _check("compare value display text", compare_value_descriptor.get_display_text(), "{left} {op} {right}") and all_passed
+		all_passed = _check("compare value operator options", compare_value_descriptor.params[1].options.size(), 6) and all_passed
+
+	var practical_ids: Array[String] = [
+		"CompareVar",
+		"HasGroupMember",
+		"IsOnFloor",
+		"SetVar",
+		"PrintLog",
+		"QueueFree",
+		"EmitSignal"
+	]
+	for ace_id: String in practical_ids:
+		all_passed = _check("core practical ACE exists: %s" % ace_id, ACERegistry.find_descriptor("Core", ace_id) != null, true) and all_passed
+
+	var invalid_custom: ACEDescriptor = ACERegistry.normalize_descriptor({
+		"providerId": "CustomPlatformer",
+		"aceId": "MissingInitial",
+		"type": "action",
+		"listName": "Missing Initial",
+		"displayText": "Missing Initial",
+		"params": [
+			{"id": "amount", "name": "amount", "type": "int"}
+		]
+	})
+	all_passed = _check("custom ACE without initial/default is rejected", invalid_custom == null, true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
