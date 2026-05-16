@@ -78,6 +78,8 @@ static func _normalize_descriptor(entry: Variant) -> ACEDescriptor:
 	descriptor_from_dict.displayText = descriptor_from_dict.display_text
 	descriptor_from_dict.description = str(data.get("description", data.get("desc", "")))
 	descriptor_from_dict.category = str(data.get("category", "Custom ACEs"))
+	descriptor_from_dict.node_type = str(data.get("node_type", data.get("nodeType", "")))
+	descriptor_from_dict.nodeType = descriptor_from_dict.node_type
 	descriptor_from_dict.signal_name = str(data.get("signal_name", data.get("signalName", "")))
 	descriptor_from_dict.codegen_template = str(data.get("codegen_template", data.get("codegenTemplate", "")))
 	descriptor_from_dict.params = _normalize_params(data.get("params", []))
@@ -148,6 +150,10 @@ static func _apply_descriptor_aliases(descriptor: ACEDescriptor) -> void:
 		descriptor.displayText = descriptor.display_text
 	if descriptor.category.is_empty():
 		descriptor.category = "Custom ACEs"
+	if descriptor.node_type.is_empty():
+		descriptor.node_type = descriptor.nodeType
+	if descriptor.nodeType.is_empty():
+		descriptor.nodeType = descriptor.node_type
 
 static func _apply_param_aliases(param: ACEParam) -> void:
 	if param.display_name.is_empty():

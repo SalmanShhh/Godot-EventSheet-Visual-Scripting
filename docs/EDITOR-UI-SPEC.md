@@ -17,6 +17,17 @@ It intentionally avoids describing unbuilt behavior as complete.
   - `Replace Condition`
   - `Add Action`
 - Picker entries are grouped by ACE category, with Construct-style event groups shown when adding events.
+- ACE groups are colour-coded by type:
+  - **Node-type groups** (e.g. `CharacterBody2D`, `Area2D`) use **amber** text — these group ACEs by the Godot class they belong to.
+  - `Run Context / Triggers` uses teal-green.
+  - `Variables` uses muted blue.
+  - `Custom ACEs` (runtime providers) uses purple.
+  - Other logical category groups use a neutral muted colour.
+- `ACEDescriptor` carries a `node_type` field that determines the primary group.  When `node_type` is non-empty it takes priority over `category`.
+- `EVENT_PICKER_GROUPS` pre-declares node-type sections (`Area2D`, `CharacterBody2D`) so they appear even before descriptor scanning in the "Add Event" picker.
+- Built-in ACEs with clear Godot class origins are tagged:
+  - `IsOnFloor` → `CharacterBody2D`
+  - `OnBodyEntered` → `Area2D`
 
 ### 2.2 ACE parameter dialog
 

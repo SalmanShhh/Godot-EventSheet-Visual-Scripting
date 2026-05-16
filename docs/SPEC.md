@@ -101,4 +101,6 @@ These remain planned tracks and should not be implied as complete by compiler-ma
 ACE descriptors can be provided as `ACEDescriptor` resources or dictionary metadata.
 Dictionary metadata accepts snake_case and Construct-style camelCase aliases (for example `list_name/listName`, `display_text/displayText`, `description/desc`, and param default/name aliases).
 
+The `node_type`/`nodeType` field associates an ACE with a specific Godot class (e.g. `"CharacterBody2D"`, `"Area2D"`).  When set, the ACE picker groups the entry under that class name instead of using `category`.  This enables the node-type grouping introduced in issue #54.
+
 Normalized metadata is used consistently by picker display and ACE param initialization.

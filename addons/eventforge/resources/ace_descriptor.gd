@@ -21,6 +21,10 @@ enum ACEType {
 @export_multiline var display_text: String = ""
 @export_multiline var displayText: String = "" # Construct-style alias.
 @export var category: String = ""
+## Godot class/namespace this ACE belongs to (e.g. "CharacterBody2D", "Area2D", "Node").
+## When set, the ACE picker groups the entry under this node type instead of its category.
+@export var node_type: String = ""
+@export var nodeType: String = "" # Construct-style alias for node_type.
 @export var params: Array[ACEParam] = []
 @export var signal_name: String = ""
 @export var return_type: int = TYPE_NIL
