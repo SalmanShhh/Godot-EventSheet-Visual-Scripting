@@ -2433,7 +2433,8 @@ func _insert_new_event_relative(target_uid: String, target_kind: String, insert_
 		return
 	var new_event: EventRow = _make_default_insert_event_row()
 	if not _insert_event_relative_in_array(current_sheet.events, target_uid, target_kind, insert_after, new_event):
-		current_sheet.events.append(new_event)
+		_set_status("Could not locate target row for insertion", true)
+		return
 	refresh_canvas()
 	_focus_event_by_uid(new_event.event_uid)
 	_mark_dirty()
@@ -2468,7 +2469,7 @@ func _insert_event_relative_in_array(arr: Array, target_uid: String, target_kind
 			var nested_group: EventGroup = resource as EventGroup
 			if _insert_event_relative_in_array(nested_group.events, target_uid, target_kind, insert_after, new_event):
 				return true
-			# Backwards compatibility: legacy data may still store children in `rows`.
+			# Backward compatibility: legacy data may still store children in `rows`.
 			if not nested_group.rows.is_empty() and _insert_event_relative_in_array(nested_group.rows, target_uid, target_kind, insert_after, new_event):
 				return true
 	return false
