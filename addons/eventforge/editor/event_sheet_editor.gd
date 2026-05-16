@@ -21,6 +21,7 @@ const EVENT_PICKER_GROUPS: PackedStringArray = [
 	"Custom ACEs"
 ]
 const ACE_PARAMS_DIALOG_SIZE: Vector2i = Vector2i(420, 300)
+const ACE_PICKER_DIALOG_SIZE: Vector2i = Vector2i(520, 420)
 const NO_VARIABLES_AVAILABLE_TEXT: String = "No variables available"
 const NO_VARIABLES_AVAILABLE_HINT_TEXT: String = "No variables are available. Add a variable before applying this ACE."
 const ACE_PARAMS_LABEL_WIDTH: float = 110.0
@@ -41,7 +42,7 @@ var _canvas_vbox: VBoxContainer = null
 var _inspector_panel: PanelContainer = null
 var _inspector_vbox: VBoxContainer = null
 var _sheet_toolbar: SheetToolbar = null
-var _ace_picker_popup: PopupPanel = null
+var _ace_picker_popup: Window = null
 var _ace_picker_title: Label = null
 var _ace_picker_tree: Tree = null
 var _ace_picker_description: Label = null
@@ -290,15 +291,23 @@ func _refresh_toolbar_state() -> void:
 	_sheet_toolbar.set_sheet_loaded(current_sheet != null)
 
 func _build_ace_picker_popup() -> void:
-	_ace_picker_popup = PopupPanel.new()
+	_ace_picker_popup = Window.new()
 	_ace_picker_popup.name = "ACEPickerPopup"
-	_ace_picker_popup.size = Vector2(520, 420)
+	_ace_picker_popup.min_size = ACE_PICKER_DIALOG_SIZE
+	_ace_picker_popup.connect("close_requested", func(): _ace_picker_popup.hide())
 	add_child(_ace_picker_popup)
 
+	var margin: MarginContainer = MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_top", 4)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	_ace_picker_popup.add_child(margin)
+
 	var wrapper: VBoxContainer = VBoxContainer.new()
-	wrapper.custom_minimum_size = Vector2(500, 380)
 	wrapper.add_theme_constant_override("separation", 6)
-	_ace_picker_popup.add_child(wrapper)
+	margin.add_child(wrapper)
 
 	_ace_picker_title = Label.new()
 	_ace_picker_title.add_theme_color_override("font_color", Color(0.80, 0.90, 1.0))
@@ -346,10 +355,11 @@ func _open_add_action_picker(row: EventRowUI) -> void:
 func _show_ace_picker(title: String, include_triggers: bool, include_conditions: bool, include_actions: bool) -> void:
 	if _ace_picker_popup == null:
 		return
+	_ace_picker_popup.title = title
 	_ace_picker_title.text = title
 	_ace_picker_description.text = "Pick an ACE to add."
 	_populate_ace_picker(include_triggers, include_conditions, include_actions)
-	_ace_picker_popup.popup_centered_ratio(0.55)
+	_ace_picker_popup.popup_centered(ACE_PICKER_DIALOG_SIZE)
 
 func _populate_ace_picker(include_triggers: bool, include_conditions: bool, include_actions: bool) -> void:
 	if _ace_picker_tree == null:
@@ -473,13 +483,15 @@ func _open_ace_params_dialog_for_picker_selection(descriptor: ACEDescriptor) -> 
 			params_dialog_mode = "append_action"
 	if params_dialog_mode.is_empty():
 		return
-	# If there are no editable parameters, apply immediately without a dialog.
+	# If there are no editable parameters, apply immediately and reopen the picker
+	# so the flow feels consistent with the two-step picker → params → Back model.
 	if descriptor.params.is_empty():
 		_ace_params_mode = params_dialog_mode
 		_ace_params_descriptor = descriptor
 		_ace_params_target_row = _ace_picker_target_row
 		_ace_params_target_index = _ace_picker_target_condition_index
 		_apply_ace_params({})
+		_reshow_ace_picker_for_current_mode()
 		return
 	_open_ace_params_dialog(descriptor, params_dialog_mode, _ace_picker_target_row, _ace_picker_target_condition_index, descriptor.build_default_params(), true)
 
@@ -584,6 +596,7 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 			_ace_params_form.add_child(row_box)
 
 	_refresh_ace_params_dialog_confirm_state()
+	_ace_params_dialog.reset_size()
 	_ace_params_dialog.popup_centered(ACE_PARAMS_DIALOG_SIZE)
 
 ## Creates an appropriate UI control for the given ACE parameter.
@@ -736,6 +749,10 @@ func _go_back_to_picker() -> void:
 		_ace_params_dialog.hide()
 	if not _ace_params_from_picker:
 		return
+	_reshow_ace_picker_for_current_mode()
+
+## Reopens the ACE picker for the current _ace_picker_mode without requiring a param dialog.
+func _reshow_ace_picker_for_current_mode() -> void:
 	match _ace_picker_mode:
 		"new_event":
 			_show_ace_picker("Add Event", true, true, false)

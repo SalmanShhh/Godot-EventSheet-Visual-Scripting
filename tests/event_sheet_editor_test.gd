@@ -147,6 +147,11 @@ static func run() -> bool:
 		editor._ace_params_back_button.visible = true
 		all_passed = _check("back button visible for picker flow", editor._ace_params_back_button.visible, true) and all_passed
 
+	# ACE picker popup is created as a Window (movable and titled).
+	all_passed = _check("ace picker popup created", editor._ace_picker_popup != null, true) and all_passed
+	if editor._ace_picker_popup != null:
+		all_passed = _check("ace picker popup is window", editor._ace_picker_popup is Window, true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
