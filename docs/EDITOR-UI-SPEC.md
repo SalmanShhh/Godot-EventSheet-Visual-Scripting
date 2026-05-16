@@ -58,29 +58,25 @@ It intentionally avoids describing unbuilt behavior as complete.
 
 ### 2.3 Event sheet row UX
 
-- Event rows use a **two-lane composition**: a condition lane (left) and an action lane (right), separated by a 2 px `ColorRect` divider.
-- Rows avoid explicit lane headers (`IF`, `THEN`, `Conditions`, `Actions`) and instead use inline flow, lane panels, and token rhythm.
+- Event rows use a **two-lane composition**: a condition lane (left) and an action lane (right), separated by a 2 px `ColorRect` lane divider — closely matching Construct 3's event sheet grammar.
+- Rows avoid explicit lane headers (`IF`, `THEN`, `Conditions`, `Actions`, `when`, `do`) — the column position alone conveys lane identity.
 - The condition lane occupies approximately 35 % of the row width (`COND_LANE_RATIO = 1.0`); the action lane occupies approximately 65 % (`ACTION_LANE_RATIO = 1.85`). These ratios are constant across all rows, providing cross-row column alignment.
 - Each lane is a `PanelContainer` with a subtly distinct background tint:
   - Condition lane: `COND_LANE_BG` — slightly blue-tinted.
   - Action lane: `ACTION_LANE_BG` — near-neutral, leans teal.
 - The outer `PanelContainer` (the row itself) carries zero content margins so the lane panels extend flush from the depth-accent left border to the right edge — lanes read as the row, not as widgets inside the row.
-- **Condition lane** composition (left to right within the lane):
-  - `⋮` select handle button.
-  - Run-context / trigger button (`◆ Every Frame` etc.) that expands horizontally.
-  - `when` clause prefix label at 10pt in blue.
-  - `+` add-condition button.
-  - `HFlowContainer` of condition tokens (wraps within the lane width).
-- **Action lane** composition (left to right within the lane):
-  - `do` clause prefix label at 10pt in green-mint.
-  - `HFlowContainer` of action tokens (expands to fill).
-  - `+ action` button.
-- Lane clause prefixes (`when` / `do`) anchor lane identity visually without introducing explicit `IF`/`THEN` headers.
+- **Condition lane** composition (top-to-bottom, then left-to-right):
+  - Header row: `⋮` select handle · run-context/trigger button (expands) · `+` add-condition button.
+  - `VBoxContainer` of condition entries, one per line — **C3-style vertical list**, not horizontal token chips.
+- **Action lane** composition:
+  - Header row: spacer (expands) · `+Add` action button.
+  - `VBoxContainer` of action entries, one per line — **C3-style vertical list**, not horizontal token chips.
+- Each condition/action entry is a full-width flat `Button` (left-aligned text, transparent background, subtle hover tint) that spans the entire column — no chip borders, no chip backgrounds. This matches Construct 3's text-based row grammar.
 - The 2 px `LANE_DIVIDER_COLOR` `ColorRect` between lanes provides a clear, stable vertical boundary that creates the horizontal eventsheet rhythm.
-- Condition tokens use a blue-tinted background with a visible blue border.
-- Action tokens use a teal/green-tinted background with a visible teal border — clearly distinct from condition tokens.
+- Condition entries use blue-tinted text; action entries use teal/green-tinted text — clearly distinct from each other.
+- Entry text color uses C3-style column affinity: blue for conditions (cold/left), teal for actions (warm/right).
 - A left gutter is rendered for every row, with branch guides for nested/sub-event rows.
-- Condition and action summaries are clickable for focused editing.
+- Condition and action entries are clickable (left-click to edit, right-click for context menu).
 - Delete affordances are implemented:
   - event delete via inline row `✕` action (positioned right of the action lane)
   - condition delete via condition context menu (`Delete Condition`)
@@ -91,15 +87,26 @@ It intentionally avoids describing unbuilt behavior as complete.
   - comment rows expose `+↑` / `+↓` controls to insert inline comment rows above or below
   - insertion respects structural containers (root events, nested sub-events, and group child arrays) so above/below behavior stays local to hierarchy depth
 - Events now provide a paired in-flow anchor: `Add Event` and `Add Comment`.
-- Comment rows render inline in the same sheet gutter/lane rhythm (left metadata lane + divider + right content lane) so annotations stay in-flow with authored rows instead of appearing as detached cards.
-- Comment rows now support direct inline text editing in the row lane, with inspector text editing kept in sync for revision workflows.
-- Condition/action tokens support drag-and-drop reordering and cross-event moves.
+- **Comment rows** are now **full-width amber banner rows** — no lane split. Layout:
+  - A 3 px amber left-accent `ColorRect` (type indicator).
+  - `//` prefix label.
+  - Inline `LineEdit` spanning the full remaining width (transparent background, amber text).
+  - `+↑` / `+↓` / `✎` / `×` contextual controls (dimmed at rest, brightened on hover/selection).
+  - Comments are visually distinctive through amber background color, not through a lane split.
+- Comment rows support direct inline text editing, with inspector text editing kept in sync.
+- Condition/action entries support drag-and-drop reordering and cross-event moves (via `EntryTokenButton`).
 - Comment rows support drag-and-drop relocation above/below event rows and relative to other comment rows.
-- Row-level insertion controls are intentionally de-emphasized at rest and become full-emphasis on row hover/selection, improving discoverability without adding persistent visual noise.
-- Comment row contextual controls (`+↑`, `+↓`, `✎`, `×`) share the same hover/selection emphasis model to reduce idle noise while keeping authoring actions discoverable.
+- Row-level insertion controls are intentionally de-emphasized at rest and become full-emphasis on row hover/selection.
 - When deleting a focused condition/action, inspector selection falls back to the owning event view.
 - Variable and group rows share the same sheet-line/gutter composition model.
-- Group rows now align to the lane/grid rhythm with a left metadata lane, a 2px lane divider, and a right actions lane so nested/group structure reads as part of the same continuous sheet grid.
+- **Group rows** are now **full-width header rows** — no lane split. Layout:
+  - A 3 px purple/indigo left-accent `ColorRect`.
+  - Collapse/expand `▶/▼` button.
+  - `Group` type label.
+  - Group name label (expands).
+  - Event count label (e.g. `(2)`).
+  - `+↑` / `+↓` / `✎` / `×` controls.
+  - Groups are visually distinctive through purple/indigo background color.
 - Variable rows remain compact in-canvas, with rich hover tooltips that include type/default and optional variable descriptions.
 
 ### 2.4 Editor shell and document framing
@@ -188,9 +195,10 @@ It intentionally avoids describing unbuilt behavior as complete.
 - Events section now uses an in-flow `Add Event` anchor row aligned to the same gutter/row grid as authored event rows.
 
 ### 2.10 Row type badges
-- Group rows use a styled chip badge (`Group`) with a purple-tinted background and border.
+- Group rows use a plain `Group` type label (no chip badge panel) with subtle purple text.
 - Group rows display the event count in parentheses when the group has child events (e.g., `(2)`).
 - The event count label is hidden (empty string) when the group has no child events.
+- Comment rows use `//` as a plain text prefix label within the amber banner row.
 
 ### 2.11 Sub-event support status
 

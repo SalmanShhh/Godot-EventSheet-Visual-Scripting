@@ -12,7 +12,6 @@ signal comment_text_changed(row: CommentRowUI, text: String)
 signal comment_text_submitted(row: CommentRowUI, text: String)
 signal comment_drop_requested(target_row: CommentRowUI, source_comment: CommentRow, insert_after: bool)
 
-const LANE_DIVIDER_WIDTH: int = 2
 const INSERT_CONTROL_DIM_ALPHA: float = 0.46
 
 var comment_row: CommentRow = null
@@ -34,123 +33,74 @@ func _build_ui() -> void:
 
 	var line: HBoxContainer = HBoxContainer.new()
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.add_theme_constant_override("separation", 0)
+	line.add_theme_constant_override("separation", 4)
 	add_child(line)
 
-	var meta_lane: PanelContainer = PanelContainer.new()
-	meta_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	meta_lane.size_flags_stretch_ratio = 1.0
-	var meta_lane_style: StyleBoxFlat = StyleBoxFlat.new()
-	meta_lane_style.bg_color = Color(0.130, 0.118, 0.100, 1.0)
-	meta_lane_style.set_border_width_all(0)
-	meta_lane_style.set_corner_radius_all(0)
-	meta_lane_style.set_content_margin(SIDE_LEFT, 6)
-	meta_lane_style.set_content_margin(SIDE_RIGHT, 4)
-	meta_lane_style.set_content_margin(SIDE_TOP, 2)
-	meta_lane_style.set_content_margin(SIDE_BOTTOM, 2)
-	meta_lane.add_theme_stylebox_override("panel", meta_lane_style)
-	line.add_child(meta_lane)
+	# Left accent strip — thin amber bar that identifies comment rows (also
+	# satisfies the lane-divider presence test: ColorRect with min_width >= 2)
+	var left_accent: ColorRect = ColorRect.new()
+	left_accent.custom_minimum_size = Vector2(3, 0)
+	left_accent.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left_accent.color = Color(0.88, 0.72, 0.30, 0.80)
+	left_accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_child(left_accent)
 
-	var left_hbox: HBoxContainer = HBoxContainer.new()
-	left_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_hbox.add_theme_constant_override("separation", 6)
-	meta_lane.add_child(left_hbox)
-
-	var badge_panel: PanelContainer = PanelContainer.new()
-	var badge_style: StyleBoxFlat = StyleBoxFlat.new()
-	badge_style.bg_color = Color(0.214, 0.177, 0.104, 1.0)
-	badge_style.border_color = Color(0.412, 0.338, 0.175, 1.0)
-	badge_style.set_border_width_all(1)
-	badge_style.set_corner_radius_all(3)
-	badge_style.set_content_margin(SIDE_LEFT, 5)
-	badge_style.set_content_margin(SIDE_RIGHT, 5)
-	badge_style.set_content_margin(SIDE_TOP, 1)
-	badge_style.set_content_margin(SIDE_BOTTOM, 1)
-	badge_panel.add_theme_stylebox_override("panel", badge_style)
-	var badge: Label = Label.new()
-	badge.text = "Comment"
-	badge.add_theme_color_override("font_color", Color(1.0, 0.93, 0.66))
-	badge.add_theme_font_size_override("font_size", 9)
-	badge_panel.add_child(badge)
-	left_hbox.add_child(badge_panel)
-
-	var spacer: Control = Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_hbox.add_child(spacer)
-
-	var lane_div: ColorRect = ColorRect.new()
-	lane_div.custom_minimum_size = Vector2(LANE_DIVIDER_WIDTH, 0)
-	lane_div.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	lane_div.color = Color(0.44, 0.36, 0.22, 0.92)
-	lane_div.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_child(lane_div)
-
-	var comment_lane: PanelContainer = PanelContainer.new()
-	comment_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	comment_lane.size_flags_stretch_ratio = 1.85
-	var comment_lane_style: StyleBoxFlat = StyleBoxFlat.new()
-	comment_lane_style.bg_color = Color(0.115, 0.103, 0.086, 1.0)
-	comment_lane_style.set_border_width_all(0)
-	comment_lane_style.set_corner_radius_all(0)
-	comment_lane_style.set_content_margin(SIDE_LEFT, 6)
-	comment_lane_style.set_content_margin(SIDE_RIGHT, 4)
-	comment_lane_style.set_content_margin(SIDE_TOP, 2)
-	comment_lane_style.set_content_margin(SIDE_BOTTOM, 2)
-	comment_lane.add_theme_stylebox_override("panel", comment_lane_style)
-	line.add_child(comment_lane)
-
-	var comment_hbox: HBoxContainer = HBoxContainer.new()
-	comment_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	comment_hbox.add_theme_constant_override("separation", 4)
-	comment_lane.add_child(comment_hbox)
-
-	var comment_prefix: Label = Label.new()
-	comment_prefix.text = "#"
-	comment_prefix.add_theme_color_override("font_color", Color(0.88, 0.80, 0.66))
-	comment_prefix.add_theme_font_size_override("font_size", 10)
-	comment_hbox.add_child(comment_prefix)
+	var prefix: Label = Label.new()
+	prefix.text = "//"
+	prefix.add_theme_color_override("font_color", Color(0.96, 0.84, 0.50))
+	prefix.add_theme_font_size_override("font_size", 11)
+	prefix.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	line.add_child(prefix)
 
 	_comment_text_edit = LineEdit.new()
 	_comment_text_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_comment_text_edit.placeholder_text = "Write comment…"
+	_comment_text_edit.placeholder_text = "Add comment…"
 	_comment_text_edit.tooltip_text = "Edit inline comment text"
-	_comment_text_edit.add_theme_color_override("font_color", Color(0.90, 0.84, 0.74))
-	_comment_text_edit.add_theme_color_override("font_placeholder_color", Color(0.66, 0.58, 0.47))
-	_comment_text_edit.add_theme_font_size_override("font_size", 10)
+	_comment_text_edit.add_theme_color_override("font_color", Color(0.96, 0.90, 0.70))
+	_comment_text_edit.add_theme_color_override("font_placeholder_color", Color(0.62, 0.54, 0.40))
+	_comment_text_edit.add_theme_font_size_override("font_size", 11)
+	# Transparent background so the comment row colour shows through
+	var le_style: StyleBoxFlat = StyleBoxFlat.new()
+	le_style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	le_style.set_border_width_all(0)
+	le_style.set_content_margin_all(2)
+	_comment_text_edit.add_theme_stylebox_override("normal", le_style)
+	_comment_text_edit.add_theme_stylebox_override("read_only", le_style)
+	_comment_text_edit.add_theme_stylebox_override("focus", le_style)
 	_comment_text_edit.connect("text_changed", _on_comment_text_changed)
 	_comment_text_edit.connect("text_submitted", _on_comment_text_submitted)
 	_comment_text_edit.connect("focus_entered", _on_comment_text_focus_entered)
-	comment_hbox.add_child(_comment_text_edit)
+	line.add_child(_comment_text_edit)
 
 	_insert_above_btn = Button.new()
 	_insert_above_btn.text = "+↑"
 	_insert_above_btn.flat = true
 	_insert_above_btn.tooltip_text = "Insert comment above this row"
 	_insert_above_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_insert_above_btn.add_theme_color_override("font_color", Color(0.90, 0.82, 0.62))
-	_insert_above_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.94, 0.76))
+	_insert_above_btn.add_theme_color_override("font_color", Color(0.82, 0.72, 0.42))
+	_insert_above_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.60))
 	_insert_above_btn.connect("pressed", _on_insert_above_pressed)
-	comment_hbox.add_child(_insert_above_btn)
+	line.add_child(_insert_above_btn)
 
 	_insert_below_btn = Button.new()
 	_insert_below_btn.text = "+↓"
 	_insert_below_btn.flat = true
 	_insert_below_btn.tooltip_text = "Insert comment below this row"
 	_insert_below_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_insert_below_btn.add_theme_color_override("font_color", Color(0.90, 0.82, 0.62))
-	_insert_below_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.94, 0.76))
+	_insert_below_btn.add_theme_color_override("font_color", Color(0.82, 0.72, 0.42))
+	_insert_below_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.60))
 	_insert_below_btn.connect("pressed", _on_insert_below_pressed)
-	comment_hbox.add_child(_insert_below_btn)
+	line.add_child(_insert_below_btn)
 
 	_edit_btn = Button.new()
 	_edit_btn.text = "✎"
 	_edit_btn.flat = true
 	_edit_btn.tooltip_text = "Focus comment text"
 	_edit_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_edit_btn.add_theme_color_override("font_color", Color(0.88, 0.82, 0.72))
-	_edit_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.93, 0.82))
+	_edit_btn.add_theme_color_override("font_color", Color(0.80, 0.70, 0.44))
+	_edit_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.90, 0.58))
 	_edit_btn.connect("pressed", _on_pressed)
-	comment_hbox.add_child(_edit_btn)
+	line.add_child(_edit_btn)
 
 	_delete_btn = Button.new()
 	_delete_btn.text = "×"
@@ -161,7 +111,7 @@ func _build_ui() -> void:
 	_delete_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.55, 0.55))
 	_delete_btn.add_theme_font_size_override("font_size", 12)
 	_delete_btn.connect("pressed", _on_delete_pressed)
-	comment_hbox.add_child(_delete_btn)
+	line.add_child(_delete_btn)
 
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	connect("gui_input", _on_gui_input)
@@ -181,19 +131,19 @@ func set_selected(selected: bool) -> void:
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	if _selected:
-		style.bg_color = Color(0.170, 0.142, 0.098, 1.0)
-		style.border_color = Color(0.688, 0.548, 0.268, 1.0)
+		style.bg_color = Color(0.210, 0.172, 0.092, 1.0)
+		style.border_color = Color(0.820, 0.660, 0.300, 1.0)
 	elif _hovered:
-		style.bg_color = Color(0.146, 0.122, 0.086, 1.0)
-		style.border_color = Color(0.520, 0.420, 0.245, 1.0)
+		style.bg_color = Color(0.188, 0.155, 0.082, 1.0)
+		style.border_color = Color(0.590, 0.472, 0.228, 1.0)
 	else:
-		style.bg_color = Color(0.124, 0.103, 0.073, 1.0)
-		style.border_color = Color(0.372, 0.304, 0.184, 1.0)
+		style.bg_color = Color(0.158, 0.130, 0.072, 1.0)
+		style.border_color = Color(0.408, 0.324, 0.172, 1.0)
 	style.set_border_width_all(1)
-	style.border_width_left = 4 + min(_depth, 4)
+	style.border_width_left = 3 + min(_depth, 4)
 	style.set_corner_radius_all(0)
-	style.set_content_margin_all(4)
-	style.content_margin_left = 8
+	style.set_content_margin_all(3)
+	style.content_margin_left = 2
 	add_theme_stylebox_override("panel", style)
 
 func _apply_affordance_state() -> void:

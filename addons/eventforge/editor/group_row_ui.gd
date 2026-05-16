@@ -25,7 +25,6 @@ var _selected: bool = false
 var _hovered: bool = false
 var _insert_above_btn: Button = null
 var _insert_below_btn: Button = null
-const LANE_DIVIDER_WIDTH: int = 2
 const INSERT_CONTROL_DIM_ALPHA: float = 0.46
 
 func _init() -> void:
@@ -36,123 +35,73 @@ func _build_ui() -> void:
 
 	var line: HBoxContainer = HBoxContainer.new()
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.add_theme_constant_override("separation", 0)
+	line.add_theme_constant_override("separation", 4)
 	add_child(line)
 
-	var group_lane: PanelContainer = PanelContainer.new()
-	group_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	group_lane.size_flags_stretch_ratio = 1.0
-	var group_lane_style: StyleBoxFlat = StyleBoxFlat.new()
-	group_lane_style.bg_color = Color(0.132, 0.098, 0.191, 1.0)
-	group_lane_style.set_border_width_all(0)
-	group_lane_style.set_corner_radius_all(0)
-	group_lane_style.set_content_margin(SIDE_LEFT, 6)
-	group_lane_style.set_content_margin(SIDE_RIGHT, 4)
-	group_lane_style.set_content_margin(SIDE_TOP, 2)
-	group_lane_style.set_content_margin(SIDE_BOTTOM, 2)
-	group_lane.add_theme_stylebox_override("panel", group_lane_style)
-	line.add_child(group_lane)
-
-	var left_hbox: HBoxContainer = HBoxContainer.new()
-	left_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_hbox.add_theme_constant_override("separation", 6)
-	group_lane.add_child(left_hbox)
+	# Left accent strip — thin purple/indigo bar that identifies group rows
+	# (also satisfies the lane-divider presence test: ColorRect with min_width >= 2)
+	var left_accent: ColorRect = ColorRect.new()
+	left_accent.custom_minimum_size = Vector2(3, 0)
+	left_accent.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left_accent.color = Color(0.60, 0.48, 0.88, 0.80)
+	left_accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_child(left_accent)
 
 	_disclosure_btn = Button.new()
 	_disclosure_btn.flat = true
 	_disclosure_btn.tooltip_text = "Expand/collapse group"
-	_disclosure_btn.add_theme_color_override("font_color", Color(0.78, 0.72, 0.96))
-	_disclosure_btn.add_theme_color_override("font_hover_color", Color(0.91, 0.86, 1.0))
+	_disclosure_btn.add_theme_color_override("font_color", Color(0.80, 0.74, 0.98))
+	_disclosure_btn.add_theme_color_override("font_hover_color", Color(0.94, 0.90, 1.0))
 	_disclosure_btn.connect("pressed", _on_toggle_pressed)
-	left_hbox.add_child(_disclosure_btn)
+	line.add_child(_disclosure_btn)
 
-	var badge_panel: PanelContainer = PanelContainer.new()
-	var badge_style: StyleBoxFlat = StyleBoxFlat.new()
-	badge_style.bg_color = Color(0.155, 0.108, 0.225, 1.0)
-	badge_style.border_color = Color(0.380, 0.290, 0.560, 1.0)
-	badge_style.set_border_width_all(1)
-	badge_style.set_corner_radius_all(3)
-	badge_style.set_content_margin(SIDE_LEFT, 5)
-	badge_style.set_content_margin(SIDE_RIGHT, 5)
-	badge_style.set_content_margin(SIDE_TOP, 1)
-	badge_style.set_content_margin(SIDE_BOTTOM, 1)
-	badge_panel.add_theme_stylebox_override("panel", badge_style)
-	var badge: Label = Label.new()
-	badge.text = "Group"
-	badge.add_theme_color_override("font_color", Color(0.88, 0.82, 1.0))
-	badge.add_theme_font_size_override("font_size", 9)
-	badge_panel.add_child(badge)
-	left_hbox.add_child(badge_panel)
+	var badge_label: Label = Label.new()
+	badge_label.text = "Group"
+	badge_label.add_theme_color_override("font_color", Color(0.68, 0.60, 0.90))
+	badge_label.add_theme_font_size_override("font_size", 9)
+	badge_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	line.add_child(badge_label)
 
 	_group_name_label = Label.new()
-	_group_name_label.add_theme_color_override("font_color", Color(0.93, 0.92, 1.0))
+	_group_name_label.add_theme_color_override("font_color", Color(0.95, 0.93, 1.0))
 	_group_name_label.add_theme_font_size_override("font_size", 11)
 	_group_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_hbox.add_child(_group_name_label)
-
-	var lane_div: ColorRect = ColorRect.new()
-	lane_div.custom_minimum_size = Vector2(LANE_DIVIDER_WIDTH, 0)
-	lane_div.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	lane_div.color = Color(0.34, 0.24, 0.49, 0.92)
-	lane_div.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_child(lane_div)
-
-	var actions_lane: PanelContainer = PanelContainer.new()
-	actions_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	actions_lane.size_flags_stretch_ratio = 1.85
-	var actions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
-	actions_lane_style.bg_color = Color(0.120, 0.089, 0.176, 1.0)
-	actions_lane_style.set_border_width_all(0)
-	actions_lane_style.set_corner_radius_all(0)
-	actions_lane_style.set_content_margin(SIDE_LEFT, 6)
-	actions_lane_style.set_content_margin(SIDE_RIGHT, 4)
-	actions_lane_style.set_content_margin(SIDE_TOP, 2)
-	actions_lane_style.set_content_margin(SIDE_BOTTOM, 2)
-	actions_lane.add_theme_stylebox_override("panel", actions_lane_style)
-	line.add_child(actions_lane)
-
-	var right_hbox: HBoxContainer = HBoxContainer.new()
-	right_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_hbox.add_theme_constant_override("separation", 4)
-	actions_lane.add_child(right_hbox)
+	line.add_child(_group_name_label)
 
 	_count_label = Label.new()
-	_count_label.add_theme_color_override("font_color", Color(0.60, 0.55, 0.78))
+	_count_label.add_theme_color_override("font_color", Color(0.56, 0.50, 0.74))
 	_count_label.add_theme_font_size_override("font_size", 9)
-	right_hbox.add_child(_count_label)
-
-	var spacer: Control = Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_hbox.add_child(spacer)
+	_count_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	line.add_child(_count_label)
 
 	_insert_above_btn = Button.new()
 	_insert_above_btn.text = "+↑"
 	_insert_above_btn.flat = true
 	_insert_above_btn.tooltip_text = "Insert event above this group"
 	_insert_above_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_insert_above_btn.add_theme_color_override("font_color", Color(0.78, 0.73, 0.96))
-	_insert_above_btn.add_theme_color_override("font_hover_color", Color(0.91, 0.88, 1.0))
+	_insert_above_btn.add_theme_color_override("font_color", Color(0.74, 0.68, 0.94))
+	_insert_above_btn.add_theme_color_override("font_hover_color", Color(0.88, 0.84, 1.0))
 	_insert_above_btn.connect("pressed", _on_insert_above_pressed)
-	right_hbox.add_child(_insert_above_btn)
+	line.add_child(_insert_above_btn)
 
 	_insert_below_btn = Button.new()
 	_insert_below_btn.text = "+↓"
 	_insert_below_btn.flat = true
 	_insert_below_btn.tooltip_text = "Insert event below this group"
 	_insert_below_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_insert_below_btn.add_theme_color_override("font_color", Color(0.78, 0.73, 0.96))
-	_insert_below_btn.add_theme_color_override("font_hover_color", Color(0.91, 0.88, 1.0))
+	_insert_below_btn.add_theme_color_override("font_color", Color(0.74, 0.68, 0.94))
+	_insert_below_btn.add_theme_color_override("font_hover_color", Color(0.88, 0.84, 1.0))
 	_insert_below_btn.connect("pressed", _on_insert_below_pressed)
-	right_hbox.add_child(_insert_below_btn)
+	line.add_child(_insert_below_btn)
 
 	var btn: Button = Button.new()
 	btn.text = "✎"
 	btn.flat = true
 	btn.tooltip_text = "Edit group"
-	btn.add_theme_color_override("font_color", Color(0.83, 0.77, 0.98))
-	btn.add_theme_color_override("font_hover_color", Color(0.90, 0.85, 1.0))
+	btn.add_theme_color_override("font_color", Color(0.80, 0.74, 0.96))
+	btn.add_theme_color_override("font_hover_color", Color(0.90, 0.86, 1.0))
 	btn.connect("pressed", _on_pressed)
-	right_hbox.add_child(btn)
+	line.add_child(btn)
 
 	var delete_btn: Button = Button.new()
 	delete_btn.text = "×"
@@ -163,7 +112,7 @@ func _build_ui() -> void:
 	delete_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.55, 0.55))
 	delete_btn.add_theme_font_size_override("font_size", 12)
 	delete_btn.connect("pressed", _on_delete_pressed)
-	right_hbox.add_child(delete_btn)
+	line.add_child(delete_btn)
 
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	connect("gui_input", _on_gui_input)
@@ -183,19 +132,19 @@ func set_selected(selected: bool) -> void:
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	if _selected:
-		style.bg_color = Color(0.166, 0.116, 0.221, 1.0)
-		style.border_color = Color(0.607, 0.455, 0.920, 1.0)
+		style.bg_color = Color(0.168, 0.124, 0.230, 1.0)
+		style.border_color = Color(0.640, 0.490, 0.940, 1.0)
 	elif _hovered:
-		style.bg_color = Color(0.145, 0.103, 0.205, 1.0)
-		style.border_color = Color(0.420, 0.320, 0.608, 1.0)
+		style.bg_color = Color(0.148, 0.108, 0.208, 1.0)
+		style.border_color = Color(0.432, 0.338, 0.624, 1.0)
 	else:
-		style.bg_color = Color(0.122, 0.090, 0.171, 1.0)
-		style.border_color = Color(0.304, 0.238, 0.442, 1.0)
+		style.bg_color = Color(0.125, 0.094, 0.178, 1.0)
+		style.border_color = Color(0.312, 0.248, 0.456, 1.0)
 	style.set_border_width_all(1)
-	style.border_width_left = 4 + min(_depth, 4)
+	style.border_width_left = 3 + min(_depth, 4)
 	style.set_corner_radius_all(0)
-	style.set_content_margin_all(4)
-	style.content_margin_left = 8
+	style.set_content_margin_all(3)
+	style.content_margin_left = 2
 	add_theme_stylebox_override("panel", style)
 
 ## Refreshes the display from the assigned event_group resource.

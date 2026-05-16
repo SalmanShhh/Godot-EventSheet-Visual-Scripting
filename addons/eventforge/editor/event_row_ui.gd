@@ -44,8 +44,8 @@ signal comment_drop_requested(target_row: EventRowUI, source_comment: CommentRow
 var event_row: EventRow = null
 
 var _runs_button: Button = null
-var _conditions_container: HFlowContainer = null
-var _actions_container: HFlowContainer = null
+var _conditions_container: VBoxContainer = null
+var _actions_container: VBoxContainer = null
 var _condition_context_menu: PopupMenu = null
 var _context_condition_index: int = -1
 var _action_context_menu: PopupMenu = null
@@ -72,23 +72,10 @@ const ROW_BG_SELECTED: Color = Color(0.165, 0.201, 0.272, 1.0)
 const ROW_BORDER: Color = Color(0.256, 0.308, 0.414, 1.0)
 const ROW_BORDER_HOVER: Color = Color(0.338, 0.415, 0.552, 1.0)
 const ROW_BORDER_SELECTED: Color = Color(0.458, 0.618, 0.900, 1.0)
-const CONDITION_TOKEN_BG: Color = Color(0.210, 0.270, 0.402, 1.0)
-const CONDITION_TOKEN_BG_HOVER: Color = Color(0.238, 0.306, 0.452, 1.0)
-const ACTION_TOKEN_BG: Color = Color(0.161, 0.242, 0.223, 1.0)
-const ACTION_TOKEN_BG_HOVER: Color = Color(0.184, 0.278, 0.255, 1.0)
-const CONDITION_TOKEN_BORDER: Color = Color(0.332, 0.448, 0.664, 1.0)
-const ACTION_TOKEN_BORDER: Color = Color(0.286, 0.430, 0.397, 1.0)
 const RUN_CONTEXT_SYMBOL: String = "◆"
-const CLAUSE_CONDITION_PREFIX: String = "when"
-const CLAUSE_ACTION_PREFIX: String = "do"
 const LANE_DIVIDER_COLOR: Color = Color(0.22, 0.28, 0.42, 0.92)
 const COND_LANE_BG: Color = Color(0.111, 0.134, 0.182, 1.0)
 const ACTION_LANE_BG: Color = Color(0.103, 0.125, 0.168, 1.0)
-const CONDITION_PLACEHOLDER_BG: Color = Color(0.168, 0.216, 0.318, 1.0)
-const CONDITION_PLACEHOLDER_BORDER: Color = Color(0.284, 0.376, 0.548, 1.0)
-const ACTION_PLACEHOLDER_BG: Color = Color(0.142, 0.208, 0.191, 1.0)
-const ACTION_PLACEHOLDER_BORDER: Color = Color(0.240, 0.354, 0.329, 1.0)
-const TOKEN_LEFT_BORDER_WIDTH: int = 2
 const COND_LANE_RATIO: float = 1.0
 const ACTION_LANE_RATIO: float = 1.85
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
@@ -187,7 +174,7 @@ func _build_ui() -> void:
 	cond_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cond_panel.add_child(cond_vbox)
 
-	# Event header row: select handle + run-context trigger + "when" clause + add
+	# Event header row: select handle + run-context trigger + add condition
 	var cond_header: HBoxContainer = HBoxContainer.new()
 	cond_header.add_theme_constant_override("separation", 3)
 	cond_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -198,8 +185,8 @@ func _build_ui() -> void:
 	select_btn.flat = true
 	select_btn.tooltip_text = "Select event line"
 	select_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	select_btn.add_theme_color_override("font_color", Color(0.72, 0.78, 0.92))
-	select_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.94, 1.0))
+	select_btn.add_theme_color_override("font_color", Color(0.50, 0.56, 0.72))
+	select_btn.add_theme_color_override("font_hover_color", Color(0.78, 0.84, 0.98))
 	select_btn.connect("pressed", _on_event_header_pressed)
 	cond_header.add_child(select_btn)
 
@@ -209,45 +196,42 @@ func _build_ui() -> void:
 	_runs_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_runs_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_runs_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_runs_button.add_theme_color_override("font_color", Color(0.68, 0.77, 0.94))
-	_runs_button.add_theme_color_override("font_hover_color", Color(0.84, 0.90, 1.0))
+	_runs_button.add_theme_color_override("font_color", Color(0.62, 0.74, 0.96))
+	_runs_button.add_theme_color_override("font_hover_color", Color(0.82, 0.90, 1.0))
 	_runs_button.add_theme_font_size_override("font_size", 10)
 	var run_style: StyleBoxFlat = StyleBoxFlat.new()
-	run_style.bg_color = Color(0.143, 0.176, 0.250, 1.0)
-	run_style.border_color = Color(0.269, 0.357, 0.525, 1.0)
+	run_style.bg_color = Color(0.130, 0.162, 0.236, 1.0)
+	run_style.border_color = Color(0.240, 0.322, 0.502, 1.0)
 	run_style.set_border_width_all(1)
-	run_style.set_corner_radius_all(0)
+	run_style.set_corner_radius_all(2)
 	run_style.set_content_margin(SIDE_LEFT, 5)
 	run_style.set_content_margin(SIDE_RIGHT, 5)
-	run_style.set_content_margin(SIDE_TOP, 0)
-	run_style.set_content_margin(SIDE_BOTTOM, 0)
+	run_style.set_content_margin(SIDE_TOP, 1)
+	run_style.set_content_margin(SIDE_BOTTOM, 1)
 	_runs_button.add_theme_stylebox_override("normal", run_style)
 	var run_hover: StyleBoxFlat = run_style.duplicate()
-	run_hover.bg_color = Color(0.181, 0.218, 0.308, 1.0)
+	run_hover.bg_color = Color(0.168, 0.204, 0.296, 1.0)
 	_runs_button.add_theme_stylebox_override("hover", run_hover)
 	_runs_button.add_theme_stylebox_override("pressed", run_hover)
 	_runs_button.add_theme_stylebox_override("focus", run_hover)
 	_runs_button.connect("pressed", _on_event_header_pressed)
 	cond_header.add_child(_runs_button)
 
-	cond_header.add_child(_make_clause_prefix(CLAUSE_CONDITION_PREFIX, Color(0.52, 0.68, 0.94)))
-
 	var add_condition_btn: Button = Button.new()
 	add_condition_btn.text = "+"
 	add_condition_btn.flat = true
 	add_condition_btn.tooltip_text = "Add condition to this event"
 	add_condition_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	add_condition_btn.add_theme_color_override("font_color", Color(0.62, 0.76, 0.98))
-	add_condition_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.92, 1.0))
-	add_condition_btn.add_theme_font_size_override("font_size", 10)
+	add_condition_btn.add_theme_color_override("font_color", Color(0.52, 0.68, 0.94))
+	add_condition_btn.add_theme_color_override("font_hover_color", Color(0.76, 0.88, 1.0))
+	add_condition_btn.add_theme_font_size_override("font_size", 11)
 	add_condition_btn.connect("pressed", _on_add_condition_pressed)
 	cond_header.add_child(add_condition_btn)
 
-	# Conditions token flow (wraps within the lane)
-	_conditions_container = HFlowContainer.new()
+	# Conditions list (vertical — one row per condition, C3-style)
+	_conditions_container = VBoxContainer.new()
 	_conditions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_conditions_container.add_theme_constant_override("h_separation", 3)
-	_conditions_container.add_theme_constant_override("v_separation", 1)
+	_conditions_container.add_theme_constant_override("separation", 1)
 	cond_vbox.add_child(_conditions_container)
 
 	# ── Lane divider ───────────────────────────────────────────────────────────
@@ -273,29 +257,37 @@ func _build_ui() -> void:
 	action_panel.add_theme_stylebox_override("panel", action_style)
 	line.add_child(action_panel)
 
-	var action_hbox: HBoxContainer = HBoxContainer.new()
-	action_hbox.add_theme_constant_override("separation", 3)
-	action_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	action_panel.add_child(action_hbox)
+	var action_vbox: VBoxContainer = VBoxContainer.new()
+	action_vbox.add_theme_constant_override("separation", 1)
+	action_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_panel.add_child(action_vbox)
 
-	action_hbox.add_child(_make_clause_prefix(CLAUSE_ACTION_PREFIX, Color(0.52, 0.83, 0.65)))
+	# Action header: spacer + add action button
+	var action_header: HBoxContainer = HBoxContainer.new()
+	action_header.add_theme_constant_override("separation", 3)
+	action_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_vbox.add_child(action_header)
 
-	_actions_container = HFlowContainer.new()
-	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_actions_container.add_theme_constant_override("h_separation", 3)
-	_actions_container.add_theme_constant_override("v_separation", 1)
-	action_hbox.add_child(_actions_container)
+	var action_header_spacer: Control = Control.new()
+	action_header_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_header.add_child(action_header_spacer)
 
 	var add_action_btn: Button = Button.new()
 	add_action_btn.text = "+Add"
 	add_action_btn.flat = true
 	add_action_btn.tooltip_text = "Add action"
 	add_action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	add_action_btn.add_theme_color_override("font_color", Color(0.48, 0.76, 0.60))
-	add_action_btn.add_theme_color_override("font_hover_color", Color(0.65, 0.92, 0.74))
-	add_action_btn.add_theme_font_size_override("font_size", 10)
+	add_action_btn.add_theme_color_override("font_color", Color(0.42, 0.72, 0.58))
+	add_action_btn.add_theme_color_override("font_hover_color", Color(0.60, 0.90, 0.72))
+	add_action_btn.add_theme_font_size_override("font_size", 11)
 	add_action_btn.connect("pressed", _on_add_action_pressed)
-	action_hbox.add_child(add_action_btn)
+	action_header.add_child(add_action_btn)
+
+	# Actions list (vertical — one row per action, C3-style)
+	_actions_container = VBoxContainer.new()
+	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_actions_container.add_theme_constant_override("separation", 1)
+	action_vbox.add_child(_actions_container)
 
 	# ── Row-level controls (far right, outside lanes) ───────────────────────────
 	var insert_controls: VBoxContainer = VBoxContainer.new()
@@ -532,34 +524,16 @@ func _refresh_actions() -> void:
 			continue
 		_actions_container.add_child(_make_entry_button(format_action_summary(action), i, false))
 
-func _make_placeholder_token(text: String, is_condition: bool) -> PanelContainer:
-	var panel: PanelContainer = PanelContainer.new()
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = CONDITION_PLACEHOLDER_BG if is_condition else ACTION_PLACEHOLDER_BG
-	style.border_color = CONDITION_PLACEHOLDER_BORDER if is_condition else ACTION_PLACEHOLDER_BORDER
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(0)
-	style.border_width_left = TOKEN_LEFT_BORDER_WIDTH
-	style.set_content_margin(SIDE_LEFT, 5)
-	style.set_content_margin(SIDE_RIGHT, 5)
-	style.set_content_margin(SIDE_TOP, 2)
-	style.set_content_margin(SIDE_BOTTOM, 2)
-	panel.add_theme_stylebox_override("panel", style)
+func _make_placeholder_token(text: String, is_condition: bool) -> Label:
 	var label: Label = Label.new()
 	label.text = text
-	label.add_theme_color_override("font_color", Color(0.67, 0.74, 0.85))
+	label.add_theme_color_override("font_color",
+		Color(0.40, 0.50, 0.62) if is_condition else Color(0.36, 0.50, 0.44))
 	label.add_theme_font_size_override("font_size", 10)
-	panel.add_child(label)
-	return panel
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return label
 
-func _make_clause_prefix(text: String, color: Color) -> Label:
-	var prefix: Label = Label.new()
-	prefix.text = text
-	prefix.add_theme_color_override("font_color", color)
-	prefix.add_theme_font_size_override("font_size", 10)
-	return prefix
-
-## Creates a draggable/clickable EntryTokenButton for a condition (is_condition=true) or action.
+## Creates a draggable/clickable full-width list row for a condition or action.
 func _make_entry_button(text: String, index: int, is_condition: bool) -> EntryTokenButton:
 	var btn: EntryTokenButton = EntryTokenButton.new()
 	btn.owner_row = self
@@ -568,28 +542,30 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> EntryTo
 	btn.text = text
 	btn.flat = true
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	btn.add_theme_color_override("font_color", Color(0.88, 0.92, 0.99))
+	btn.add_theme_color_override("font_color",
+		Color(0.76, 0.88, 1.00) if is_condition else Color(0.68, 0.92, 0.78))
 	btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
 	btn.add_theme_font_size_override("font_size", 11)
 
+	# Flat transparent style — no chip border, full column width
 	var normal_style: StyleBoxFlat = StyleBoxFlat.new()
-	normal_style.bg_color = CONDITION_TOKEN_BG if is_condition else ACTION_TOKEN_BG
-	normal_style.border_color = CONDITION_TOKEN_BORDER if is_condition else ACTION_TOKEN_BORDER
-	normal_style.set_border_width_all(1)
-	normal_style.border_width_left = TOKEN_LEFT_BORDER_WIDTH
+	normal_style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	normal_style.set_border_width_all(0)
 	normal_style.set_corner_radius_all(0)
-	normal_style.set_content_margin(SIDE_LEFT, 6)
-	normal_style.set_content_margin(SIDE_RIGHT, 6)
-	normal_style.set_content_margin(SIDE_TOP, 2)
-	normal_style.set_content_margin(SIDE_BOTTOM, 2)
+	normal_style.set_content_margin(SIDE_LEFT, 7)
+	normal_style.set_content_margin(SIDE_RIGHT, 4)
+	normal_style.set_content_margin(SIDE_TOP, 1)
+	normal_style.set_content_margin(SIDE_BOTTOM, 1)
 	btn.add_theme_stylebox_override("normal", normal_style)
 
 	var hover_style: StyleBoxFlat = normal_style.duplicate()
-	hover_style.bg_color = CONDITION_TOKEN_BG_HOVER if is_condition else ACTION_TOKEN_BG_HOVER
+	hover_style.bg_color = Color(0.22, 0.30, 0.46, 0.38) if is_condition else Color(0.16, 0.26, 0.24, 0.38)
 	btn.add_theme_stylebox_override("hover", hover_style)
 	btn.add_theme_stylebox_override("pressed", hover_style)
-	btn.add_theme_stylebox_override("focus", hover_style)
+	var focus_style: StyleBoxFlat = normal_style.duplicate()
+	btn.add_theme_stylebox_override("focus", focus_style)
 
 	if is_condition:
 		btn.tooltip_text = ENTRY_TOOLTIP_TEXT
