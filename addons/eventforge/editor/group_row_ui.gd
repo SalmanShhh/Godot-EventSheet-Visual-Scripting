@@ -19,13 +19,13 @@ func _init() -> void:
 	_build_ui()
 
 func _build_ui() -> void:
-	# Purple-tinted card
+	# Group row uses the same C3-style blue-gray base with a subtle violet accent.
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.18, 0.12, 0.24, 1.0)
-	style.border_color = Color(0.65, 0.35, 0.90, 1.0)
+	style.bg_color = Color(0.103, 0.115, 0.150, 1.0)
+	style.border_color = Color(0.129, 0.145, 0.184, 1.0)
 	style.set_border_width_all(0)
 	style.border_width_left = 3
-	style.set_corner_radius_all(3)
+	style.set_corner_radius_all(5)
 	style.set_content_margin_all(6)
 	style.content_margin_left = 10
 	add_theme_stylebox_override("panel", style)
@@ -36,19 +36,21 @@ func _build_ui() -> void:
 	_disclosure_btn = Button.new()
 	_disclosure_btn.flat = true
 	_disclosure_btn.tooltip_text = "Expand/collapse group"
+	_disclosure_btn.add_theme_color_override("font_color", Color(0.77, 0.71, 0.95))
+	_disclosure_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.85, 1.0))
 	_disclosure_btn.connect("pressed", _on_toggle_pressed)
 	hbox.add_child(_disclosure_btn)
 
 	# Group badge
 	var badge: Label = Label.new()
 	badge.text = "Group"
-	badge.add_theme_color_override("font_color", Color(0.80, 0.50, 1.0))
+	badge.add_theme_color_override("font_color", Color(0.77, 0.71, 0.95))
 	badge.add_theme_font_size_override("font_size", 10)
 	hbox.add_child(badge)
 
 	# Group name label
 	_name_label = Label.new()
-	_name_label.add_theme_color_override("font_color", Color(0.92, 0.88, 1.0))
+	_name_label.add_theme_color_override("font_color", Color(0.89, 0.89, 0.97))
 	_name_label.add_theme_font_size_override("font_size", 11)
 	_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(_name_label)
@@ -58,6 +60,8 @@ func _build_ui() -> void:
 	btn.text = "✎"
 	btn.flat = true
 	btn.tooltip_text = "Edit group"
+	btn.add_theme_color_override("font_color", Color(0.77, 0.71, 0.95))
+	btn.add_theme_color_override("font_hover_color", Color(0.90, 0.85, 1.0))
 	btn.connect("pressed", _on_pressed)
 	hbox.add_child(btn)
 

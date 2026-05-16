@@ -49,13 +49,16 @@ const CONDITION_MENU_INVERT: int = 4
 const CONDITION_MENU_DELETE: int = 5
 const ACTION_MENU_EDIT: int = 1
 const ACTION_MENU_DELETE: int = 2
-const ACTIONS_LANE_STRETCH_RATIO: float = 1.35
-const CONDITION_ENTRY_BG: Color = Color(0.13, 0.20, 0.17, 0.86)
-const CONDITION_ENTRY_BG_HOVER: Color = Color(0.17, 0.27, 0.22, 0.96)
-const CONDITION_ENTRY_BG_PRESSED: Color = Color(0.11, 0.17, 0.14, 0.96)
-const ACTION_ENTRY_BG: Color = Color(0.13, 0.16, 0.25, 0.86)
-const ACTION_ENTRY_BG_HOVER: Color = Color(0.17, 0.21, 0.33, 0.96)
-const ACTION_ENTRY_BG_PRESSED: Color = Color(0.10, 0.13, 0.21, 0.96)
+const ACTIONS_LANE_STRETCH_RATIO: float = 1.4
+const SHEET_BG: Color = Color(0.094, 0.105, 0.138, 1.0)
+const SHEET_DIVIDER: Color = Color(0.130, 0.145, 0.183, 1.0)
+const CONDITIONS_BG: Color = Color(0.117, 0.130, 0.166, 1.0)
+const CONDITION_ENTRY_BG: Color = Color(0.170, 0.188, 0.234, 1.0)
+const CONDITION_ENTRY_BG_HOVER: Color = Color(0.228, 0.250, 0.308, 1.0)
+const CONDITION_ENTRY_BG_PRESSED: Color = Color(0.202, 0.223, 0.279, 1.0)
+const ACTION_ENTRY_BG: Color = Color(0.139, 0.154, 0.195, 1.0)
+const ACTION_ENTRY_BG_HOVER: Color = Color(0.178, 0.196, 0.247, 1.0)
+const ACTION_ENTRY_BG_PRESSED: Color = Color(0.152, 0.168, 0.211, 1.0)
 
 func _init() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -82,20 +85,16 @@ func _reset_ui() -> void:
 func _build_ui() -> void:
 	# Outer row styling
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.10, 0.12, 0.18, 0.98)
-	style.border_color = Color(0.27, 0.33, 0.49, 0.90)
-	style.set_border_width_all(1)
-	style.set_border_width(SIDE_LEFT, 3)
-	style.set_border_width(SIDE_TOP, 1)
-	style.set_border_width(SIDE_RIGHT, 1)
-	style.set_border_width(SIDE_BOTTOM, 1)
-	style.set_corner_radius_all(3)
+	style.bg_color = SHEET_BG
+	style.border_color = SHEET_DIVIDER
+	style.set_border_width_all(0)
+	style.set_corner_radius_all(5)
 	style.set_content_margin_all(0)
 	add_theme_stylebox_override("panel", style)
 
 	_vbox = VBoxContainer.new()
 	_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_vbox.add_theme_constant_override("separation", 1)
+	_vbox.add_theme_constant_override("separation", 0)
 	add_child(_vbox)
 
 	_condition_context_menu = PopupMenu.new()
@@ -126,13 +125,15 @@ func _build_ui() -> void:
 	var conditions_lane: PanelContainer = PanelContainer.new()
 	conditions_lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var conditions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
-	conditions_lane_style.bg_color = Color(0.10, 0.16, 0.13, 0.78)
-	conditions_lane_style.border_color = Color(0.30, 0.62, 0.42, 0.38)
+	conditions_lane_style.bg_color = CONDITIONS_BG
+	conditions_lane_style.border_color = SHEET_DIVIDER
 	conditions_lane_style.set_border_width_all(0)
 	conditions_lane_style.set_border_width(SIDE_RIGHT, 1)
-	conditions_lane_style.set_content_margin(SIDE_LEFT, 8)
+	conditions_lane_style.corner_radius_top_left = 5
+	conditions_lane_style.corner_radius_bottom_left = 5
+	conditions_lane_style.set_content_margin(SIDE_LEFT, 6)
 	conditions_lane_style.set_content_margin(SIDE_RIGHT, 8)
-	conditions_lane_style.set_content_margin(SIDE_TOP, 4)
+	conditions_lane_style.set_content_margin(SIDE_TOP, 5)
 	conditions_lane_style.set_content_margin(SIDE_BOTTOM, 5)
 	conditions_lane.add_theme_stylebox_override("panel", conditions_lane_style)
 	lanes_hbox.add_child(conditions_lane)
@@ -145,7 +146,7 @@ func _build_ui() -> void:
 	var runs_row: HBoxContainer = HBoxContainer.new()
 	conditions_lane_vbox.add_child(runs_row)
 	_runs_label = Label.new()
-	_runs_label.add_theme_color_override("font_color", Color(0.45, 0.65, 0.45))
+	_runs_label.add_theme_color_override("font_color", Color(0.58, 0.64, 0.81))
 	_runs_label.add_theme_font_size_override("font_size", 9)
 	_runs_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_runs_label.clip_text = true
@@ -160,7 +161,9 @@ func _build_ui() -> void:
 	header_btn.flat = true
 	header_btn.tooltip_text = "Select event"
 	header_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	header_btn.add_theme_font_size_override("font_size", 10)
+	header_btn.add_theme_color_override("font_color", Color(0.74, 0.79, 0.92))
+	header_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.94, 1.0))
+	header_btn.add_theme_font_size_override("font_size", 11)
 	header_btn.connect("pressed", _on_event_header_pressed)
 	cond_row.add_child(header_btn)
 
@@ -169,8 +172,9 @@ func _build_ui() -> void:
 	delete_event_btn.flat = true
 	delete_event_btn.tooltip_text = "Delete this event"
 	delete_event_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	delete_event_btn.add_theme_color_override("font_color", Color(0.85, 0.35, 0.35))
-	delete_event_btn.add_theme_font_size_override("font_size", 10)
+	delete_event_btn.add_theme_color_override("font_color", Color(0.86, 0.46, 0.51))
+	delete_event_btn.add_theme_color_override("font_hover_color", Color(0.98, 0.62, 0.67))
+	delete_event_btn.add_theme_font_size_override("font_size", 11)
 	delete_event_btn.connect("pressed", _on_delete_event_pressed)
 	cond_row.add_child(delete_event_btn)
 
@@ -179,13 +183,13 @@ func _build_ui() -> void:
 	cond_row.add_child(cond_spacer)
 
 	var add_condition_btn: Button = Button.new()
-	add_condition_btn.text = "+ Condition"
+	add_condition_btn.text = "+ Add Condition"
 	add_condition_btn.flat = true
 	add_condition_btn.tooltip_text = "Add condition to this event"
 	add_condition_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	add_condition_btn.add_theme_color_override("font_color", Color(0.55, 0.83, 0.63))
-	add_condition_btn.add_theme_color_override("font_hover_color", Color(0.68, 0.95, 0.75))
-	add_condition_btn.add_theme_font_size_override("font_size", 9)
+	add_condition_btn.add_theme_color_override("font_color", Color(0.38, 0.41, 0.50))
+	add_condition_btn.add_theme_color_override("font_hover_color", Color(0.57, 0.61, 0.72))
+	add_condition_btn.add_theme_font_size_override("font_size", 11)
 	add_condition_btn.connect("pressed", _on_add_condition_pressed)
 	cond_row.add_child(add_condition_btn)
 
@@ -200,12 +204,12 @@ func _build_ui() -> void:
 	# Actions summaries are usually longer than conditions; give the right lane ~40% more width.
 	actions_lane.size_flags_stretch_ratio = ACTIONS_LANE_STRETCH_RATIO
 	var actions_lane_style: StyleBoxFlat = StyleBoxFlat.new()
-	actions_lane_style.bg_color = Color(0.10, 0.13, 0.20, 0.78)
-	actions_lane_style.border_color = Color(0.33, 0.44, 0.75, 0.30)
+	actions_lane_style.bg_color = SHEET_BG
+	actions_lane_style.border_color = Color(0, 0, 0, 0)
 	actions_lane_style.set_border_width_all(0)
 	actions_lane_style.set_content_margin(SIDE_LEFT, 8)
 	actions_lane_style.set_content_margin(SIDE_RIGHT, 8)
-	actions_lane_style.set_content_margin(SIDE_TOP, 4)
+	actions_lane_style.set_content_margin(SIDE_TOP, 5)
 	actions_lane_style.set_content_margin(SIDE_BOTTOM, 5)
 	actions_lane.add_theme_stylebox_override("panel", actions_lane_style)
 	lanes_hbox.add_child(actions_lane)
@@ -223,13 +227,13 @@ func _build_ui() -> void:
 	actions_row.add_child(action_spacer)
 
 	var add_action_btn: Button = Button.new()
-	add_action_btn.text = "+ Action"
+	add_action_btn.text = "+ Add Action"
 	add_action_btn.flat = true
 	add_action_btn.tooltip_text = "Add action to this event"
 	add_action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	add_action_btn.add_theme_color_override("font_color", Color(0.55, 0.74, 0.98))
-	add_action_btn.add_theme_color_override("font_hover_color", Color(0.67, 0.84, 1.0))
-	add_action_btn.add_theme_font_size_override("font_size", 9)
+	add_action_btn.add_theme_color_override("font_color", Color(0.38, 0.41, 0.50))
+	add_action_btn.add_theme_color_override("font_hover_color", Color(0.57, 0.61, 0.72))
+	add_action_btn.add_theme_font_size_override("font_size", 11)
 	add_action_btn.connect("pressed", _on_add_action_pressed)
 	actions_row.add_child(add_action_btn)
 
@@ -362,8 +366,8 @@ func _refresh_conditions() -> void:
 	if event_row.conditions.is_empty():
 		var hint: Label = Label.new()
 		hint.text = "Always (implicit true)"
-		hint.add_theme_color_override("font_color", Color(0.50, 0.57, 0.53))
-		hint.add_theme_font_size_override("font_size", 10)
+		hint.add_theme_color_override("font_color", Color(0.58, 0.62, 0.73))
+		hint.add_theme_font_size_override("font_size", 11)
 		_conditions_container.add_child(hint)
 		return
 
@@ -385,8 +389,8 @@ func _refresh_actions() -> void:
 	if event_row.actions.is_empty():
 		var hint: Label = Label.new()
 		hint.text = "(no actions)"
-		hint.add_theme_color_override("font_color", Color(0.50, 0.56, 0.62))
-		hint.add_theme_font_size_override("font_size", 10)
+		hint.add_theme_color_override("font_color", Color(0.58, 0.62, 0.73))
+		hint.add_theme_font_size_override("font_size", 11)
 		_actions_container.add_child(hint)
 		return
 
@@ -411,24 +415,23 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn.flat = true
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	btn.add_theme_color_override("font_color", Color(0.87, 0.89, 0.93))
+	btn.add_theme_color_override("font_color", Color(0.86, 0.90, 0.98))
 	btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
 	btn.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0))
-	btn.add_theme_font_size_override("font_size", 10)
+	btn.add_theme_font_size_override("font_size", 11)
 	btn.add_theme_constant_override("h_separation", 4)
 
 	var base_bg: Color = CONDITION_ENTRY_BG if is_condition else ACTION_ENTRY_BG
 	var hover_bg: Color = CONDITION_ENTRY_BG_HOVER if is_condition else ACTION_ENTRY_BG_HOVER
 	var pressed_bg: Color = CONDITION_ENTRY_BG_PRESSED if is_condition else ACTION_ENTRY_BG_PRESSED
-	var accent: Color = Color(0.45, 0.82, 0.56, 0.78) if is_condition else Color(0.45, 0.67, 0.98, 0.78)
+	var accent: Color = Color(0.100, 0.110, 0.144, 1.0)
 
 	var normal_style: StyleBoxFlat = StyleBoxFlat.new()
 	normal_style.bg_color = base_bg
 	normal_style.border_color = accent
-	normal_style.set_border_width_all(1)
-	normal_style.set_border_width(SIDE_LEFT, 2)
-	normal_style.set_corner_radius_all(3)
-	normal_style.set_content_margin(SIDE_LEFT, 6)
+	normal_style.set_border_width_all(0)
+	normal_style.set_corner_radius_all(5)
+	normal_style.set_content_margin(SIDE_LEFT, 8)
 	normal_style.set_content_margin(SIDE_RIGHT, 6)
 	normal_style.set_content_margin(SIDE_TOP, 3)
 	normal_style.set_content_margin(SIDE_BOTTOM, 3)
