@@ -8,6 +8,8 @@ class_name GroupRowUI
 signal group_selected(row: GroupRowUI)
 ## Emitted when this group's collapsed state is toggled.
 signal group_collapsed_toggled(row: GroupRowUI, collapsed: bool)
+## Emitted when the delete button is pressed on this group row.
+signal group_delete_requested(row: GroupRowUI)
 
 var event_group: EventGroup = null
 
@@ -75,6 +77,17 @@ func _build_ui() -> void:
 	btn.connect("pressed", _on_pressed)
 	hbox.add_child(btn)
 
+	var delete_btn: Button = Button.new()
+	delete_btn.text = "×"
+	delete_btn.flat = true
+	delete_btn.tooltip_text = "Delete group"
+	delete_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	delete_btn.add_theme_color_override("font_color", Color(0.80, 0.42, 0.42))
+	delete_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.55, 0.55))
+	delete_btn.add_theme_font_size_override("font_size", 12)
+	delete_btn.connect("pressed", _on_delete_pressed)
+	hbox.add_child(delete_btn)
+
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	connect("gui_input", _on_gui_input)
 	connect("mouse_entered", _on_mouse_entered)
@@ -126,6 +139,9 @@ func refresh() -> void:
 
 func _on_pressed() -> void:
 	group_selected.emit(self)
+
+func _on_delete_pressed() -> void:
+	group_delete_requested.emit(self)
 
 func _on_toggle_pressed() -> void:
 	if event_group == null:

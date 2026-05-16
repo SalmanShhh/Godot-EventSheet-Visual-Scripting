@@ -390,6 +390,101 @@ static func run() -> bool:
 				has_left_accent = (sb as StyleBoxFlat).border_width_left == 3
 		all_passed = _check("inspector card has left border accent", has_left_accent, true) and all_passed
 
+	# Stabilization: variable_delete_requested signal exists on VariableRowUI.
+	var sig_var_row: VariableRowUI = VariableRowUI.new()
+	all_passed = _check("variable row has delete signal", sig_var_row.has_signal("variable_delete_requested"), true) and all_passed
+
+	# Stabilization: group_delete_requested signal exists on GroupRowUI.
+	var sig_group_row: GroupRowUI = GroupRowUI.new()
+	all_passed = _check("group row has delete signal", sig_group_row.has_signal("group_delete_requested"), true) and all_passed
+
+	# Stabilization: deleting the selected variable resets selection kind and shows empty inspector.
+	var del_var_sheet: EventSheetResource = EventSheetResource.new()
+	del_var_sheet.variables["lives"] = {"type": "int", "default": 3}
+	editor.current_sheet = del_var_sheet
+	editor.refresh_canvas()
+	var del_var_row_ui: VariableRowUI = editor._find_variable_row_ui_by_name(editor._canvas_vbox, "lives")
+	if del_var_row_ui != null:
+		editor._suppress_variable_popup_on_select = true
+		editor._on_variable_selected(del_var_row_ui)
+		editor._suppress_variable_popup_on_select = false
+		editor._on_variable_delete_requested(del_var_row_ui)
+		all_passed = _check("delete selected variable resets selection kind", editor._selected_entry_kind, "none") and all_passed
+		all_passed = _check("delete selected variable removes from sheet", del_var_sheet.variables.has("lives"), false) and all_passed
+		all_passed = _check("delete selected variable shows empty inspector", not _contains_label_text(editor._inspector_vbox, "Variable"), true) and all_passed
+
+	# Stabilization: deleting a non-selected variable keeps selection kind intact.
+	var del_var2_sheet: EventSheetResource = EventSheetResource.new()
+	del_var2_sheet.variables["hp"] = {"type": "int", "default": 100}
+	del_var2_sheet.variables["mp"] = {"type": "int", "default": 50}
+	var del_var2_event: EventRow = EventRow.new()
+	del_var2_sheet.events.append(del_var2_event)
+	editor.current_sheet = del_var2_sheet
+	editor.refresh_canvas()
+	var del_var2_event_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, del_var2_event.event_uid)
+	var del_var2_mp_ui: VariableRowUI = editor._find_variable_row_ui_by_name(editor._canvas_vbox, "mp")
+	if del_var2_event_ui != null and del_var2_mp_ui != null:
+		editor._on_event_selected(del_var2_event_ui)
+		editor._on_variable_delete_requested(del_var2_mp_ui)
+		all_passed = _check("delete non-selected variable keeps event selection kind", editor._selected_entry_kind, "event") and all_passed
+		all_passed = _check("delete non-selected variable removes from sheet", del_var2_sheet.variables.has("mp"), false) and all_passed
+
+	# Stabilization: deleting the selected group resets selection kind and shows empty inspector.
+	var del_grp_sheet: EventSheetResource = EventSheetResource.new()
+	var del_grp_group: EventGroup = EventGroup.new()
+	del_grp_sheet.events.append(del_grp_group)
+	editor.current_sheet = del_grp_sheet
+	editor.refresh_canvas()
+	var del_grp_uid: String = del_grp_group.group_uid
+	var del_grp_row_ui: GroupRowUI = editor._find_group_row_ui_by_uid(editor._canvas_vbox, del_grp_uid)
+	if del_grp_row_ui != null:
+		editor._on_group_selected(del_grp_row_ui)
+		editor._on_group_delete_requested(del_grp_row_ui)
+		all_passed = _check("delete selected group resets selection kind", editor._selected_entry_kind, "none") and all_passed
+		all_passed = _check("delete selected group removes from sheet", del_grp_sheet.events.size(), 0) and all_passed
+
+	# Stabilization: cross-row condition deletion keeps selected variable inspector intact.
+	var cross_cond_sheet: EventSheetResource = EventSheetResource.new()
+	cross_cond_sheet.variables["coins"] = {"type": "int", "default": 0}
+	var cross_cond_event: EventRow = EventRow.new()
+	var cross_cond: ACECondition = ACECondition.new()
+	cross_cond.ace_id = "Always"
+	cross_cond_event.conditions.append(cross_cond)
+	cross_cond_sheet.events.append(cross_cond_event)
+	editor.current_sheet = cross_cond_sheet
+	editor.refresh_canvas()
+	var cross_cond_var_ui: VariableRowUI = editor._find_variable_row_ui_by_name(editor._canvas_vbox, "coins")
+	var cross_cond_event_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, cross_cond_event.event_uid)
+	if cross_cond_var_ui != null and cross_cond_event_ui != null:
+		editor._suppress_variable_popup_on_select = true
+		editor._on_variable_selected(cross_cond_var_ui)
+		editor._suppress_variable_popup_on_select = false
+		editor._on_condition_delete_requested(cross_cond_event_ui, 0)
+		all_passed = _check("cross-row cond delete keeps variable selection kind", editor._selected_entry_kind, "variable") and all_passed
+		all_passed = _check("cross-row cond delete keeps variable inspector heading", _contains_label_text(editor._inspector_vbox, "Variable"), true) and all_passed
+		all_passed = _check("cross-row cond delete does not switch inspector to event", _contains_label_text(editor._inspector_vbox, "Event"), false) and all_passed
+
+	# Stabilization: condition inversion on non-selected row does not corrupt selection/inspector.
+	var invert_sheet: EventSheetResource = EventSheetResource.new()
+	invert_sheet.variables["power"] = {"type": "int", "default": 5}
+	var invert_event: EventRow = EventRow.new()
+	var invert_cond: ACECondition = ACECondition.new()
+	invert_cond.ace_id = "Always"
+	invert_event.conditions.append(invert_cond)
+	invert_sheet.events.append(invert_event)
+	editor.current_sheet = invert_sheet
+	editor.refresh_canvas()
+	var invert_var_ui: VariableRowUI = editor._find_variable_row_ui_by_name(editor._canvas_vbox, "power")
+	var invert_event_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, invert_event.event_uid)
+	if invert_var_ui != null and invert_event_ui != null:
+		editor._suppress_variable_popup_on_select = true
+		editor._on_variable_selected(invert_var_ui)
+		editor._suppress_variable_popup_on_select = false
+		editor._on_condition_invert_requested(invert_event_ui, 0)
+		all_passed = _check("invert condition keeps variable selection kind", editor._selected_entry_kind, "variable") and all_passed
+		all_passed = _check("invert condition keeps variable inspector heading", _contains_label_text(editor._inspector_vbox, "Variable"), true) and all_passed
+		all_passed = _check("invert condition does not switch inspector to event", _contains_label_text(editor._inspector_vbox, "Event"), false) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

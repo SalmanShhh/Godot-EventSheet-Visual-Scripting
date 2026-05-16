@@ -8,6 +8,8 @@ const EDIT_VARIABLE_TOOLTIP_PREFIX: String = "Edit variable"
 
 ## Emitted when this variable row is clicked for focused editing.
 signal variable_selected(row: VariableRowUI)
+## Emitted when the delete button is pressed on this variable row.
+signal variable_delete_requested(row: VariableRowUI)
 
 var var_name: String = ""
 var var_info: Dictionary = {}
@@ -56,12 +58,24 @@ func _build_ui() -> void:
 	_edit_btn = Button.new()
 	_edit_btn.text = "✎"
 	_edit_btn.flat = true
+	_edit_btn.tooltip_text = "Edit variable"
 	_edit_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_edit_btn.add_theme_color_override("font_color", Color(0.78, 0.85, 0.98))
 	_edit_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.94, 1.0))
 	_edit_btn.add_theme_font_size_override("font_size", 10)
 	_edit_btn.connect("pressed", _on_pressed)
 	hbox.add_child(_edit_btn)
+
+	var delete_btn: Button = Button.new()
+	delete_btn.text = "×"
+	delete_btn.flat = true
+	delete_btn.tooltip_text = "Delete variable"
+	delete_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	delete_btn.add_theme_color_override("font_color", Color(0.80, 0.42, 0.42))
+	delete_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.55, 0.55))
+	delete_btn.add_theme_font_size_override("font_size", 12)
+	delete_btn.connect("pressed", _on_delete_pressed)
+	hbox.add_child(delete_btn)
 
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	connect("gui_input", _on_gui_input)
@@ -148,6 +162,9 @@ static func _format_default(type_str: String, raw: Variant) -> String:
 
 func _on_pressed() -> void:
 	variable_selected.emit(self)
+
+func _on_delete_pressed() -> void:
+	variable_delete_requested.emit(self)
 
 func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
