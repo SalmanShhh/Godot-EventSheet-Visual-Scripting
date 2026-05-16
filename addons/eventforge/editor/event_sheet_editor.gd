@@ -160,7 +160,7 @@ func _on_open_existing_sheet() -> void:
 	var dialog: FileDialog = FileDialog.new()
 	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	dialog.access = FileDialog.ACCESS_RESOURCES
-	dialog.filters = PackedStringArray(["*.tres, *.res ; EventSheetResource"])
+	dialog.filters = PackedStringArray(["*.tres ; EventSheetResource", "*.res ; EventSheetResource"])
 	dialog.connect("file_selected", func(path: String) -> void:
 		var sheet: Variant = load(path)
 		if sheet is EventSheetResource:
