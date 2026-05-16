@@ -20,14 +20,18 @@ func _enter_tree() -> void:
 	add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)
 	var editor_script: Script = load(EVENT_SHEET_EDITOR_PATH)
 	if editor_script == null:
-		push_warning("[EventForge] Failed to load editor script at %s" % EVENT_SHEET_EDITOR_PATH)
+		push_warning("[EventForge] Failed to load EventSheetEditor script at %s. Verify the file exists and contains valid GDScript." % EVENT_SHEET_EDITOR_PATH)
 	else:
-		_event_sheet_editor = editor_script.new()
-		_bottom_panel_button = add_control_to_bottom_panel(_event_sheet_editor, "EventForge")
-		# setup() is treated as an optional integration entrypoint.
-		if _event_sheet_editor.has_method("setup"):
-			_event_sheet_editor.call("setup")
-		make_bottom_panel_item_visible(_event_sheet_editor)
+		var editor_instance: Variant = editor_script.new()
+		if editor_instance is Control:
+			_event_sheet_editor = editor_instance
+			_bottom_panel_button = add_control_to_bottom_panel(_event_sheet_editor, "EventForge")
+			# setup() is treated as an optional integration entrypoint.
+			if _event_sheet_editor.has_method("setup"):
+				_event_sheet_editor.call("setup")
+			make_bottom_panel_item_visible(_event_sheet_editor)
+		else:
+			push_warning("[EventForge] EventSheetEditor script must extend Control: %s" % EVENT_SHEET_EDITOR_PATH)
 	print("[EventForge] v0.1.0 loaded")
 
 ## Unregisters plugin services when the plugin is disabled.
