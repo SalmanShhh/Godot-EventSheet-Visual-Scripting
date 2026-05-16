@@ -93,6 +93,8 @@ It intentionally avoids describing unbuilt behavior as complete.
 - Events now provide a paired in-flow anchor: `Add Event` and `Add Comment`.
 - Comment rows render inline in the same sheet gutter/lane rhythm (left metadata lane + divider + right content lane) so annotations stay in-flow with authored rows instead of appearing as detached cards.
 - Comment rows now support direct inline text editing in the row lane, with inspector text editing kept in sync for revision workflows.
+- Condition/action tokens support drag-and-drop reordering and cross-event moves.
+- Comment rows support drag-and-drop relocation above/below event rows and relative to other comment rows.
 - Row-level insertion controls are intentionally de-emphasized at rest and become full-emphasis on row hover/selection, improving discoverability without adding persistent visual noise.
 - Comment row contextual controls (`+↑`, `+↓`, `✎`, `×`) share the same hover/selection emphasis model to reduce idle noise while keeping authoring actions discoverable.
 - When deleting a focused condition/action, inspector selection falls back to the owning event view.
@@ -124,6 +126,9 @@ It intentionally avoids describing unbuilt behavior as complete.
   - `Ctrl+Shift+V` → add variable
   - `Ctrl+Shift+C` → add condition on selected event row
   - `Ctrl+Shift+A` → add action on selected event row
+  - `Q` → add comment row using current structural selection context
+  - `Ctrl+C` → copy selected event row (including nested sub-events)
+  - `Ctrl+V` → paste copied event row below current selection context
   - `Delete` → remove selected event/condition/action/variable/group
 - **Dirty state tracking**: `EventSheetEditor._is_dirty` is set on every mutation (add/edit/delete events, conditions, actions, variables, groups, condition inversion) and cleared on sheet load or successful save.
 - Document header (`SheetDocumentHeader`) inside the canvas shows:

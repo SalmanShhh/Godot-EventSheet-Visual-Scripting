@@ -26,6 +26,9 @@ static func run() -> bool:
 	all_passed = _check("toolbar shortcuts hint visible with loaded sheet", toolbar_ui._shortcuts_hint_label.visible, true) and all_passed
 	all_passed = _check("toolbar add event tooltip includes shortcut", toolbar_ui._add_event_btn.tooltip_text.find("Ctrl+E") != -1, true) and all_passed
 	all_passed = _check("toolbar add variable tooltip includes shortcut", toolbar_ui._add_var_btn.tooltip_text.find("Ctrl+Shift+V") != -1, true) and all_passed
+	all_passed = _check("toolbar shortcuts hint includes quick comment", SheetToolbar.shortcut_hint_text().find("Q Comment") != -1, true) and all_passed
+	all_passed = _check("toolbar shortcuts hint includes copy event", SheetToolbar.shortcut_hint_text().find("Ctrl+C Copy Event") != -1, true) and all_passed
+	all_passed = _check("toolbar shortcuts hint includes paste event", SheetToolbar.shortcut_hint_text().find("Ctrl+V Paste Event") != -1, true) and all_passed
 	var toolbar_sheet: EventSheetResource = EventSheetResource.new()
 	toolbar_sheet.variables["health"] = {"type": "int", "default": 100}
 	toolbar_sheet.events.append(EventRow.new())
@@ -301,6 +304,72 @@ static func run() -> bool:
 			editor._on_comment_delete_requested(inserted_comment_ui)
 			all_passed = _check("delete comment row removes from sheet", comment_sheet.events.size(), 2) and all_passed
 
+	# Drag move: conditions and actions can move/reorder across events.
+	var drag_sheet: EventSheetResource = EventSheetResource.new()
+	var drag_source_event: EventRow = EventRow.new()
+	var drag_target_event: EventRow = EventRow.new()
+	var drag_cond_a: ACECondition = ACECondition.new()
+	drag_cond_a.ace_id = "Always"
+	var drag_cond_b: ACECondition = ACECondition.new()
+	drag_cond_b.ace_id = "CompareVar"
+	drag_source_event.conditions.append(drag_cond_a)
+	drag_source_event.conditions.append(drag_cond_b)
+	var drag_action: ACEAction = ACEAction.new()
+	drag_action.ace_id = "QueueFree"
+	drag_source_event.actions.append(drag_action)
+	drag_sheet.events.append(drag_source_event)
+	drag_sheet.events.append(drag_target_event)
+	editor.current_sheet = drag_sheet
+	editor.refresh_canvas()
+	var drag_source_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, drag_source_event.event_uid)
+	var drag_target_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, drag_target_event.event_uid)
+	if drag_source_row_ui != null and drag_target_row_ui != null:
+		editor._on_condition_move_requested(drag_source_event.event_uid, 0, drag_target_row_ui, -1)
+		all_passed = _check("drag move condition removes from source", drag_source_event.conditions.size(), 1) and all_passed
+		all_passed = _check("drag move condition appends to target", drag_target_event.conditions.size(), 1) and all_passed
+		editor._on_action_move_requested(drag_source_event.event_uid, 0, drag_target_row_ui, 0)
+		all_passed = _check("drag move action removes from source", drag_source_event.actions.size(), 0) and all_passed
+		all_passed = _check("drag move action inserts in target", drag_target_event.actions.size(), 1) and all_passed
+		editor._on_condition_move_requested(drag_source_event.event_uid, 0, drag_source_row_ui, 1)
+		all_passed = _check("drag reorder condition keeps count", drag_source_event.conditions.size(), 1) and all_passed
+
+	var drag_reorder_sheet: EventSheetResource = EventSheetResource.new()
+	var drag_reorder_event: EventRow = EventRow.new()
+	var drag_reorder_first: ACECondition = ACECondition.new()
+	drag_reorder_first.ace_id = "Always"
+	var drag_reorder_second: ACECondition = ACECondition.new()
+	drag_reorder_second.ace_id = "CompareVar"
+	drag_reorder_event.conditions.append(drag_reorder_first)
+	drag_reorder_event.conditions.append(drag_reorder_second)
+	drag_reorder_sheet.events.append(drag_reorder_event)
+	editor.current_sheet = drag_reorder_sheet
+	editor.refresh_canvas()
+	var drag_reorder_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, drag_reorder_event.event_uid)
+	if drag_reorder_row_ui != null:
+		editor._on_condition_move_requested(drag_reorder_event.event_uid, 0, drag_reorder_row_ui, 2)
+		all_passed = _check("drag reorder condition moves original second to front", drag_reorder_event.conditions[0] == drag_reorder_second, true) and all_passed
+
+	# Drag move: comments can move relative to events and other comments.
+	var drag_comment_sheet: EventSheetResource = EventSheetResource.new()
+	var drag_comment_a: CommentRow = CommentRow.new()
+	drag_comment_a.text = "A"
+	var drag_comment_b: CommentRow = CommentRow.new()
+	drag_comment_b.text = "B"
+	var drag_comment_event: EventRow = EventRow.new()
+	drag_comment_sheet.events.append(drag_comment_a)
+	drag_comment_sheet.events.append(drag_comment_event)
+	drag_comment_sheet.events.append(drag_comment_b)
+	editor.current_sheet = drag_comment_sheet
+	editor.refresh_canvas()
+	var drag_comment_event_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, drag_comment_event.event_uid)
+	var drag_comment_b_ui: CommentRowUI = editor._find_comment_row_ui_by_resource(editor._canvas_vbox, drag_comment_b)
+	if drag_comment_event_ui != null:
+		editor._on_comment_drop_on_event_requested(drag_comment_event_ui, drag_comment_a, true)
+		all_passed = _check("drag comment below event places comment after event", drag_comment_sheet.events[0] == drag_comment_event and drag_comment_sheet.events[1] == drag_comment_a, true) and all_passed
+	if drag_comment_b_ui != null:
+		editor._on_comment_drop_on_comment_requested(drag_comment_b_ui, drag_comment_a, false)
+		all_passed = _check("drag comment above comment reorders comments", drag_comment_sheet.events[1] == drag_comment_a, true) and all_passed
+
 	# Workflow: shortcut action dispatch opens add-condition picker for selected event.
 	var shortcut_sheet: EventSheetResource = EventSheetResource.new()
 	var shortcut_event: EventRow = EventRow.new()
@@ -323,6 +392,38 @@ static func run() -> bool:
 		all_passed = _check("keyboard Ctrl+E opens add event picker", editor._ace_picker_mode, "new_event") and all_passed
 		if editor._ace_picker_popup != null:
 			editor._ace_picker_popup.hide()
+		var add_comment_key: InputEventKey = InputEventKey.new()
+		add_comment_key.pressed = true
+		add_comment_key.keycode = KEY_Q
+		editor._unhandled_key_input(add_comment_key)
+		all_passed = _check("keyboard Q inserts comment near selected event", shortcut_sheet.events[1] is CommentRow, true) and all_passed
+
+	# Workflow: copy/paste event preserves sub-events.
+	var copy_sheet: EventSheetResource = EventSheetResource.new()
+	var copy_parent: EventRow = EventRow.new()
+	var copy_child: EventRow = EventRow.new()
+	var copy_grandchild: EventRow = EventRow.new()
+	copy_child.sub_events.append(copy_grandchild)
+	copy_parent.sub_events.append(copy_child)
+	copy_sheet.events.append(copy_parent)
+	editor.current_sheet = copy_sheet
+	editor.refresh_canvas()
+	var copy_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, copy_parent.event_uid)
+	if copy_row_ui != null:
+		editor._on_event_selected(copy_row_ui)
+		all_passed = _check("copy shortcut handles selected event", editor._handle_workflow_shortcut("copy_event"), true) and all_passed
+		all_passed = _check("paste shortcut handles copied event", editor._handle_workflow_shortcut("paste_event"), true) and all_passed
+		all_passed = _check("paste adds root event copy", copy_sheet.events.size(), 2) and all_passed
+		var pasted_event: EventRow = copy_sheet.events[1] as EventRow
+		all_passed = _check("pasted event exists", pasted_event != null, true) and all_passed
+		if pasted_event != null:
+			all_passed = _check("pasted event gets new uid", pasted_event.event_uid == copy_parent.event_uid, false) and all_passed
+			all_passed = _check("pasted event preserves child hierarchy", pasted_event.sub_events.size(), 1) and all_passed
+			var pasted_child: EventRow = pasted_event.sub_events[0] as EventRow
+			all_passed = _check("pasted child is event row", pasted_child != null, true) and all_passed
+			if pasted_child != null:
+				all_passed = _check("pasted child preserves nested sub-events", pasted_child.sub_events.size(), 1) and all_passed
+
 
 	# Workflow: shortcut delete dispatch removes selected action.
 	var shortcut_del_sheet: EventSheetResource = EventSheetResource.new()

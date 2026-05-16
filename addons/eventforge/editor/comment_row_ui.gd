@@ -10,6 +10,7 @@ signal insert_comment_above_requested(row: CommentRowUI)
 signal insert_comment_below_requested(row: CommentRowUI)
 signal comment_text_changed(row: CommentRowUI, text: String)
 signal comment_text_submitted(row: CommentRowUI, text: String)
+signal comment_drop_requested(target_row: CommentRowUI, source_comment: CommentRow, insert_after: bool)
 
 const LANE_DIVIDER_WIDTH: int = 2
 const INSERT_CONTROL_DIM_ALPHA: float = 0.46
@@ -233,6 +234,37 @@ func _on_gui_input(event: InputEvent) -> void:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
 			comment_selected.emit(self)
+
+func _get_drag_data(_at_position: Vector2) -> Variant:
+	if comment_row == null:
+		return null
+	var payload: Dictionary = {
+		"type": "event_comment_row",
+		"source_comment": comment_row
+	}
+	var preview: Label = Label.new()
+	preview.text = "# %s" % comment_row.text
+	set_drag_preview(preview)
+	return payload
+
+func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+	if comment_row == null or not (data is Dictionary):
+		return false
+	var payload: Dictionary = data as Dictionary
+	if str(payload.get("type", "")) != "event_comment_row":
+		return false
+	var source_comment: Variant = payload.get("source_comment", null)
+	return source_comment is CommentRow and source_comment != comment_row
+
+func _drop_data(at_position: Vector2, data: Variant) -> void:
+	if not _can_drop_data(at_position, data):
+		return
+	var payload: Dictionary = data as Dictionary
+	var source_comment: CommentRow = payload.get("source_comment", null) as CommentRow
+	if source_comment == null:
+		return
+	var insert_after: bool = at_position.y >= (size.y * 0.5)
+	comment_drop_requested.emit(self, source_comment, insert_after)
 
 func _on_comment_text_focus_entered() -> void:
 	comment_selected.emit(self)

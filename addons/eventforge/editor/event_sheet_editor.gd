@@ -137,6 +137,7 @@ var _variable_dialog_original_name: String = ""
 var _suppress_variable_popup_on_select: bool = false
 var _current_rows_host: VBoxContainer = null
 var _comment_text_edit: LineEdit = null
+var _copied_event_row: EventRow = null
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
@@ -155,6 +156,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if key_event.ctrl_pressed and not key_event.alt_pressed and not key_event.meta_pressed:
 		if not key_event.shift_pressed and key_event.keycode == KEY_E:
 			handled = _handle_workflow_shortcut("add_event")
+		elif not key_event.shift_pressed and key_event.keycode == KEY_C:
+			handled = _handle_workflow_shortcut("copy_event")
+		elif not key_event.shift_pressed and key_event.keycode == KEY_V:
+			handled = _handle_workflow_shortcut("paste_event")
 		elif not key_event.shift_pressed and key_event.keycode == KEY_S:
 			handled = _handle_workflow_shortcut("save")
 		elif key_event.shift_pressed and key_event.keycode == KEY_S:
@@ -165,6 +170,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			handled = _handle_workflow_shortcut("add_condition")
 		elif key_event.shift_pressed and key_event.keycode == KEY_A:
 			handled = _handle_workflow_shortcut("add_action")
+	elif key_event.keycode == KEY_Q and _has_no_modifiers(key_event):
+		handled = _handle_workflow_shortcut("add_comment")
 	elif key_event.keycode == KEY_DELETE and _has_no_modifiers(key_event):
 		handled = _handle_workflow_shortcut("delete_selection")
 	if handled:
@@ -214,6 +221,13 @@ func _handle_workflow_shortcut(action: String) -> bool:
 				return false
 			_on_row_add_action_requested(action_row)
 			return true
+		"add_comment":
+			_insert_comment_from_selection_context()
+			return true
+		"copy_event":
+			return _copy_selected_event_tree()
+		"paste_event":
+			return _paste_copied_event_tree()
 		"delete_selection":
 			return _delete_current_selection()
 		_:
@@ -226,6 +240,138 @@ func _get_selected_event_row_for_shortcuts() -> EventRowUI:
 	if row.event_row == null:
 		return null
 	return row
+
+func _copy_selected_event_tree() -> bool:
+	var row: EventRowUI = _get_selected_event_row_for_shortcuts()
+	if row == null or row.event_row == null:
+		return false
+	_copied_event_row = _clone_event_tree(row.event_row)
+	if _copied_event_row == null:
+		return false
+	_set_status("Copied event")
+	return true
+
+func _paste_copied_event_tree() -> bool:
+	if current_sheet == null or _copied_event_row == null:
+		return false
+	var pasted_event: EventRow = _clone_event_tree(_copied_event_row)
+	if pasted_event == null:
+		return false
+	var target_resource: Resource = _get_comment_insertion_target_resource()
+	var inserted: bool = false
+	if target_resource != null:
+		inserted = _insert_resource_relative_in_array(current_sheet.events, target_resource, true, pasted_event)
+	if not inserted:
+		current_sheet.events.append(pasted_event)
+	refresh_canvas()
+	_focus_event_by_uid(pasted_event.event_uid)
+	_mark_dirty()
+	_set_status("Pasted event")
+	return true
+
+func _clone_event_tree(source: EventRow) -> EventRow:
+	if source == null:
+		return null
+	var clone: EventRow = EventRow.new()
+	clone.enabled = source.enabled
+	clone.comment = source.comment
+	clone.trigger_provider_id = source.trigger_provider_id
+	clone.trigger_id = source.trigger_id
+	clone.trigger_params = source.trigger_params.duplicate(true)
+	clone.trigger = _clone_condition(source.trigger)
+	clone.condition_mode = source.condition_mode
+	clone.else_mode = source.else_mode
+	for condition_item: Variant in source.conditions:
+		if condition_item is ACECondition:
+			clone.conditions.append(_clone_condition(condition_item as ACECondition))
+	for action_item: Variant in source.actions:
+		if action_item is ACEAction:
+			clone.actions.append(_clone_action(action_item as ACEAction))
+		elif action_item is Resource:
+			clone.actions.append((action_item as Resource).duplicate(true))
+	for local_var: Variant in source.local_variables:
+		if local_var is Resource:
+			clone.local_variables.append((local_var as Resource).duplicate(true) as LocalVariable)
+	for pick_filter: Variant in source.pick_filters:
+		if pick_filter is Resource:
+			clone.pick_filters.append((pick_filter as Resource).duplicate(true) as PickFilter)
+	for sub_resource: Variant in source.sub_events:
+		if sub_resource is EventRow:
+			clone.sub_events.append(_clone_event_tree(sub_resource as EventRow))
+		elif sub_resource is EventGroup:
+			clone.sub_events.append(_clone_group_tree(sub_resource as EventGroup))
+		elif sub_resource is CommentRow:
+			clone.sub_events.append(_clone_comment_row(sub_resource as CommentRow))
+		elif sub_resource is Resource:
+			clone.sub_events.append((sub_resource as Resource).duplicate(true))
+	return clone
+
+func _clone_group_tree(source: EventGroup) -> EventGroup:
+	if source == null:
+		return null
+	var clone: EventGroup = EventGroup.new()
+	clone.enabled = source.enabled
+	clone.name = source.name
+	clone.group_name = source.group_name
+	clone.description = source.description
+	clone.collapsed = source.collapsed
+	clone.expanded = source.expanded
+	clone.color_tag = source.color_tag
+	for child: Variant in source.events:
+		if child is EventRow:
+			clone.events.append(_clone_event_tree(child as EventRow))
+		elif child is EventGroup:
+			clone.events.append(_clone_group_tree(child as EventGroup))
+		elif child is CommentRow:
+			clone.events.append(_clone_comment_row(child as CommentRow))
+		elif child is Resource:
+			clone.events.append((child as Resource).duplicate(true))
+	for legacy_child: Variant in source.rows:
+		if legacy_child is EventRow:
+			clone.rows.append(_clone_event_tree(legacy_child as EventRow))
+		elif legacy_child is EventGroup:
+			clone.rows.append(_clone_group_tree(legacy_child as EventGroup))
+		elif legacy_child is CommentRow:
+			clone.rows.append(_clone_comment_row(legacy_child as CommentRow))
+		elif legacy_child is Resource:
+			clone.rows.append((legacy_child as Resource).duplicate(true))
+	return clone
+
+func _clone_comment_row(source: CommentRow) -> CommentRow:
+	if source == null:
+		return null
+	var clone: CommentRow = CommentRow.new()
+	clone.enabled = source.enabled
+	clone.text = source.text
+	clone.style = source.style
+	clone.color_tag = source.color_tag
+	return clone
+
+func _clone_condition(source: ACECondition) -> ACECondition:
+	if source == null:
+		return null
+	var clone: ACECondition = ACECondition.new()
+	clone.provider_id = source.provider_id
+	clone.ace_id = source.ace_id
+	clone.params = source.params.duplicate(true)
+	clone.parameters = source.parameters.duplicate(true)
+	clone.negated = source.negated
+	clone.enabled = source.enabled
+	return clone
+
+func _clone_action(source: ACEAction) -> ACEAction:
+	if source == null:
+		return null
+	var clone: ACEAction = ACEAction.new()
+	clone.provider_id = source.provider_id
+	clone.ace_id = source.ace_id
+	clone.params = source.params.duplicate(true)
+	clone.parameters = source.parameters.duplicate(true)
+	clone.is_awaited = source.is_awaited
+	clone.await_call = source.await_call
+	clone.comment = source.comment
+	clone.enabled = source.enabled
+	return clone
 
 func _delete_current_selection() -> bool:
 	match _selected_entry_kind:
@@ -648,6 +794,15 @@ func _on_add_comment_requested() -> void:
 	_ensure_sheet()
 	if current_sheet == null:
 		return
+	_insert_comment_from_selection_context()
+
+func _insert_comment_from_selection_context() -> void:
+	if current_sheet == null:
+		return
+	var target_resource: Resource = _get_comment_insertion_target_resource()
+	if target_resource != null:
+		_insert_new_comment_relative(target_resource, true)
+		return
 	var new_comment: CommentRow = CommentRow.new()
 	new_comment.text = "Comment"
 	current_sheet.events.append(new_comment)
@@ -655,6 +810,22 @@ func _on_add_comment_requested() -> void:
 	_focus_comment_row(new_comment)
 	_mark_dirty()
 	_set_status("Added comment row")
+
+func _get_comment_insertion_target_resource() -> Resource:
+	match _selected_entry_kind:
+		"event", "condition", "action":
+			if _selected_row is EventRowUI:
+				var event_row_ui: EventRowUI = _selected_row as EventRowUI
+				return event_row_ui.event_row
+		"group":
+			if _selected_row is GroupRowUI:
+				var group_row_ui: GroupRowUI = _selected_row as GroupRowUI
+				return group_row_ui.event_group
+		"comment":
+			if _selected_row is CommentRowUI:
+				var comment_row_ui: CommentRowUI = _selected_row as CommentRowUI
+				return comment_row_ui.comment_row
+	return null
 
 func _on_compile_requested() -> void:
 	if current_sheet == null:
@@ -1921,6 +2092,25 @@ func _find_event_row_ui_by_uid(node: Node, event_uid: String) -> EventRowUI:
 			return nested
 	return null
 
+func _find_event_row_resource_by_uid(arr: Array, event_uid: String) -> EventRow:
+	for resource: Variant in arr:
+		if resource is EventRow:
+			var event_row: EventRow = resource as EventRow
+			if event_row.event_uid == event_uid:
+				return event_row
+			var nested: EventRow = _find_event_row_resource_by_uid(event_row.sub_events, event_uid)
+			if nested != null:
+				return nested
+		elif resource is EventGroup:
+			var event_group: EventGroup = resource as EventGroup
+			var from_events: EventRow = _find_event_row_resource_by_uid(event_group.events, event_uid)
+			if from_events != null:
+				return from_events
+			var from_rows: EventRow = _find_event_row_resource_by_uid(event_group.rows, event_uid)
+			if from_rows != null:
+				return from_rows
+	return null
+
 func _find_variable_row_ui_by_name(node: Node, var_name: String) -> VariableRowUI:
 	if node is VariableRowUI:
 		var row_ui: VariableRowUI = node as VariableRowUI
@@ -2204,6 +2394,9 @@ func _add_event_row(event_row: EventRow, indent_level: int = 0, render_guard: Di
 	row_ui.event_delete_requested.connect(_on_event_delete_requested)
 	row_ui.condition_delete_requested.connect(_on_condition_delete_requested)
 	row_ui.action_delete_requested.connect(_on_action_delete_requested)
+	row_ui.condition_move_requested.connect(_on_condition_move_requested)
+	row_ui.action_move_requested.connect(_on_action_move_requested)
+	row_ui.comment_drop_requested.connect(_on_comment_drop_on_event_requested)
 	_add_canvas_row(row_ui, indent_level)
 
 	for sub_resource: Variant in event_row.sub_events:
@@ -2245,6 +2438,7 @@ func _add_comment_row(comment_row: CommentRow, indent_level: int = 0, render_gua
 	row_ui.insert_comment_below_requested.connect(_on_comment_insert_below_requested)
 	row_ui.comment_text_changed.connect(_on_comment_text_changed)
 	row_ui.comment_text_submitted.connect(_on_comment_text_submitted)
+	row_ui.comment_drop_requested.connect(_on_comment_drop_on_comment_requested)
 	_add_canvas_row(row_ui, indent_level)
 
 func _make_render_guard_key(prefix: String, stable_uid: String, fallback_instance_id: int) -> String:
@@ -2481,6 +2675,96 @@ func _on_action_delete_requested(row: EventRowUI, index: int) -> void:
 	_refresh_workspace_context()
 	_refresh_inspector_for_current_selection()
 	_mark_dirty()
+
+func _on_condition_move_requested(source_event_uid: String, source_index: int, target_row: EventRowUI, target_index: int) -> void:
+	if current_sheet == null or target_row == null or target_row.event_row == null:
+		return
+	var source_event: EventRow = _find_event_row_resource_by_uid(current_sheet.events, source_event_uid)
+	var target_event: EventRow = target_row.event_row
+	if source_event == null:
+		return
+	if source_index < 0 or source_index >= source_event.conditions.size():
+		return
+	var moving_condition: ACECondition = source_event.conditions[source_index] as ACECondition
+	if moving_condition == null:
+		return
+	source_event.conditions.remove_at(source_index)
+	var insert_index: int = target_index
+	if insert_index < 0:
+		insert_index = target_event.conditions.size()
+	if source_event == target_event and insert_index > source_index:
+		insert_index -= 1
+	insert_index = clampi(insert_index, 0, target_event.conditions.size())
+	target_event.conditions.insert(insert_index, moving_condition)
+	refresh_canvas()
+	var focus_row: EventRowUI = _find_event_row_ui_by_uid(_canvas_vbox, target_event.event_uid)
+	if focus_row != null:
+		_selected_entry_kind = "condition"
+		_selected_row = focus_row
+		_selected_index = insert_index
+		_refresh_row_selection_states()
+		_refresh_workspace_context()
+		_refresh_inspector_for_current_selection()
+	_mark_dirty()
+	_set_status("Moved condition")
+
+func _on_action_move_requested(source_event_uid: String, source_index: int, target_row: EventRowUI, target_index: int) -> void:
+	if current_sheet == null or target_row == null or target_row.event_row == null:
+		return
+	var source_event: EventRow = _find_event_row_resource_by_uid(current_sheet.events, source_event_uid)
+	var target_event: EventRow = target_row.event_row
+	if source_event == null:
+		return
+	if source_index < 0 or source_index >= source_event.actions.size():
+		return
+	var moving_action: ACEAction = source_event.actions[source_index] as ACEAction
+	if moving_action == null:
+		return
+	source_event.actions.remove_at(source_index)
+	var insert_index: int = target_index
+	if insert_index < 0:
+		insert_index = target_event.actions.size()
+	if source_event == target_event and insert_index > source_index:
+		insert_index -= 1
+	insert_index = clampi(insert_index, 0, target_event.actions.size())
+	target_event.actions.insert(insert_index, moving_action)
+	refresh_canvas()
+	var focus_row: EventRowUI = _find_event_row_ui_by_uid(_canvas_vbox, target_event.event_uid)
+	if focus_row != null:
+		_selected_entry_kind = "action"
+		_selected_row = focus_row
+		_selected_index = insert_index
+		_refresh_row_selection_states()
+		_refresh_workspace_context()
+		_refresh_inspector_for_current_selection()
+	_mark_dirty()
+	_set_status("Moved action")
+
+func _on_comment_drop_on_event_requested(target_row: EventRowUI, source_comment: CommentRow, insert_after: bool) -> void:
+	if current_sheet == null or target_row == null or target_row.event_row == null or source_comment == null:
+		return
+	if not _remove_resource_from_rows(current_sheet.events, source_comment):
+		return
+	if not _insert_resource_relative_in_array(current_sheet.events, target_row.event_row, insert_after, source_comment):
+		return
+	refresh_canvas()
+	_focus_comment_row(source_comment)
+	_mark_dirty()
+	_set_status("Moved comment")
+
+func _on_comment_drop_on_comment_requested(target_row: CommentRowUI, source_comment: CommentRow, insert_after: bool) -> void:
+	if current_sheet == null or target_row == null or target_row.comment_row == null or source_comment == null:
+		return
+	if source_comment == target_row.comment_row:
+		return
+	if not _remove_resource_from_rows(current_sheet.events, source_comment):
+		return
+	if not _insert_resource_relative_in_array(current_sheet.events, target_row.comment_row, insert_after, source_comment):
+		return
+	refresh_canvas()
+	_focus_comment_row(source_comment)
+	_mark_dirty()
+	_set_status("Moved comment")
 
 func _delete_event_by_uid(uid: String) -> void:
 	if current_sheet == null or uid.is_empty():

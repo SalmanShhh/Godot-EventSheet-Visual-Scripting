@@ -34,6 +34,12 @@ signal insert_event_below_requested(row: EventRowUI)
 signal condition_delete_requested(row: EventRowUI, index: int)
 ## Emitted when delete is requested for an action.
 signal action_delete_requested(row: EventRowUI, index: int)
+## Emitted when a condition token is dropped to move/reorder it.
+signal condition_move_requested(source_event_uid: String, source_index: int, target_row: EventRowUI, target_index: int)
+## Emitted when an action token is dropped to move/reorder it.
+signal action_move_requested(source_event_uid: String, source_index: int, target_row: EventRowUI, target_index: int)
+## Emitted when a comment row is dropped relative to this event row.
+signal comment_drop_requested(target_row: EventRowUI, source_comment: CommentRow, insert_after: bool)
 
 var event_row: EventRow = null
 
@@ -87,6 +93,36 @@ const COND_LANE_RATIO: float = 1.0
 const ACTION_LANE_RATIO: float = 1.85
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
 const INSERT_CONTROL_DIM_ALPHA: float = 0.46
+
+class EntryTokenButton extends Button:
+	var owner_row: EventRowUI = null
+	var entry_index: int = -1
+	var is_condition: bool = true
+
+	func _get_drag_data(_at_position: Vector2) -> Variant:
+		if owner_row == null or owner_row.event_row == null or entry_index < 0:
+			return null
+		var entry_kind: String = "condition" if is_condition else "action"
+		var payload: Dictionary = {
+			"type": "event_row_entry",
+			"entry_kind": entry_kind,
+			"source_event_uid": owner_row.event_row.event_uid,
+			"source_index": entry_index
+		}
+		var preview: Label = Label.new()
+		preview.text = text
+		set_drag_preview(preview)
+		return payload
+
+	func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+		if owner_row == null:
+			return false
+		return owner_row._can_accept_entry_drop_data(data, is_condition)
+
+	func _drop_data(_at_position: Vector2, data: Variant) -> void:
+		if owner_row == null:
+			return
+		owner_row._handle_entry_drop_data(data, is_condition, entry_index)
 
 func _init() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -523,9 +559,12 @@ func _make_clause_prefix(text: String, color: Color) -> Label:
 	prefix.add_theme_font_size_override("font_size", 10)
 	return prefix
 
-## Creates a clickable entry button for a condition (is_condition=true) or action.
-func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
-	var btn: Button = Button.new()
+## Creates a draggable/clickable EntryTokenButton for a condition (is_condition=true) or action.
+func _make_entry_button(text: String, index: int, is_condition: bool) -> EntryTokenButton:
+	var btn: EntryTokenButton = EntryTokenButton.new()
+	btn.owner_row = self
+	btn.entry_index = index
+	btn.is_condition = is_condition
 	btn.text = text
 	btn.flat = true
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -562,6 +601,29 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 		btn.connect("gui_input", func(event: InputEvent) -> void: _on_action_entry_gui_input(event, index))
 	return btn
 
+func _can_accept_entry_drop_data(data: Variant, target_is_condition: bool) -> bool:
+	if not (data is Dictionary):
+		return false
+	var payload: Dictionary = data as Dictionary
+	if str(payload.get("type", "")) != "event_row_entry":
+		return false
+	var entry_kind: String = str(payload.get("entry_kind", ""))
+	var expected_kind: String = "condition" if target_is_condition else "action"
+	return entry_kind == expected_kind
+
+func _handle_entry_drop_data(data: Variant, target_is_condition: bool, target_index: int = -1) -> void:
+	if not _can_accept_entry_drop_data(data, target_is_condition):
+		return
+	var payload: Dictionary = data as Dictionary
+	var source_event_uid: String = str(payload.get("source_event_uid", ""))
+	var source_index: int = int(payload.get("source_index", -1))
+	if source_event_uid.is_empty() or source_index < 0:
+		return
+	if target_is_condition:
+		condition_move_requested.emit(source_event_uid, source_index, self, target_index)
+	else:
+		action_move_requested.emit(source_event_uid, source_index, self, target_index)
+
 func _on_mouse_entered() -> void:
 	_hovered = true
 	_apply_row_style()
@@ -586,6 +648,34 @@ func _on_row_gui_input(event: InputEvent) -> void:
 	if mb.button_index != MOUSE_BUTTON_LEFT or not mb.pressed:
 		return
 	event_selected.emit(self)
+
+func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+	if data is Dictionary:
+		var payload: Dictionary = data as Dictionary
+		var payload_type: String = str(payload.get("type", ""))
+		if payload_type == "event_comment_row":
+			return payload.get("source_comment", null) is CommentRow
+		if _can_accept_entry_drop_data(payload, true):
+			return true
+		if _can_accept_entry_drop_data(payload, false):
+			return true
+	return false
+
+func _drop_data(at_position: Vector2, data: Variant) -> void:
+	if not (data is Dictionary):
+		return
+	var payload: Dictionary = data as Dictionary
+	var payload_type: String = str(payload.get("type", ""))
+	if payload_type == "event_comment_row":
+		var source_comment: Variant = payload.get("source_comment", null)
+		if source_comment is CommentRow:
+			var insert_after: bool = at_position.y >= (size.y * 0.5)
+			comment_drop_requested.emit(self, source_comment as CommentRow, insert_after)
+		return
+	if _can_accept_entry_drop_data(payload, true):
+		_handle_entry_drop_data(payload, true, -1)
+	elif _can_accept_entry_drop_data(payload, false):
+		_handle_entry_drop_data(payload, false, -1)
 
 func _on_event_header_pressed() -> void:
 	event_selected.emit(self)
