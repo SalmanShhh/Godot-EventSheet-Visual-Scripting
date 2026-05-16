@@ -222,6 +222,27 @@ static func run() -> bool:
 		all_passed = _check("delete condition keeps sane selection kind", editor._selected_entry_kind, "event") and all_passed
 		all_passed = _check("delete condition resets selected index", editor._selected_index, -1) and all_passed
 
+	# Deleting an earlier condition keeps selected condition index in sync.
+	var shift_cond_event: EventRow = EventRow.new()
+	var shift_cond_a: ACECondition = ACECondition.new()
+	shift_cond_a.ace_id = "Always"
+	var shift_cond_b: ACECondition = ACECondition.new()
+	shift_cond_b.ace_id = "Always"
+	shift_cond_event.conditions.append(shift_cond_a)
+	shift_cond_event.conditions.append(shift_cond_b)
+	var shift_cond_sheet: EventSheetResource = EventSheetResource.new()
+	shift_cond_sheet.events.append(shift_cond_event)
+	editor.current_sheet = shift_cond_sheet
+	editor.refresh_canvas()
+	var shift_cond_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, shift_cond_event.event_uid)
+	if shift_cond_row_ui != null:
+		editor._selected_row = shift_cond_row_ui
+		editor._selected_entry_kind = "condition"
+		editor._selected_index = 1
+		editor._on_condition_delete_requested(shift_cond_row_ui, 0)
+		all_passed = _check("delete earlier condition keeps condition selection kind", editor._selected_entry_kind, "condition") and all_passed
+		all_passed = _check("delete earlier condition shifts selected index", editor._selected_index, 0) and all_passed
+
 	# Delete action removes it from the event row.
 	var del_act_event: EventRow = EventRow.new()
 	var del_action: ACEAction = ACEAction.new()
@@ -238,6 +259,27 @@ static func run() -> bool:
 		all_passed = _check("delete action removes from event", del_act_event.actions.size(), 0) and all_passed
 		all_passed = _check("delete action keeps sane selection kind", editor._selected_entry_kind, "event") and all_passed
 		all_passed = _check("delete action resets selected index", editor._selected_index, -1) and all_passed
+
+	# Deleting an earlier action keeps selected action index in sync.
+	var shift_act_event: EventRow = EventRow.new()
+	var shift_act_a: ACEAction = ACEAction.new()
+	shift_act_a.ace_id = "QueueFree"
+	var shift_act_b: ACEAction = ACEAction.new()
+	shift_act_b.ace_id = "QueueFree"
+	shift_act_event.actions.append(shift_act_a)
+	shift_act_event.actions.append(shift_act_b)
+	var shift_act_sheet: EventSheetResource = EventSheetResource.new()
+	shift_act_sheet.events.append(shift_act_event)
+	editor.current_sheet = shift_act_sheet
+	editor.refresh_canvas()
+	var shift_act_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, shift_act_event.event_uid)
+	if shift_act_row_ui != null:
+		editor._selected_row = shift_act_row_ui
+		editor._selected_entry_kind = "action"
+		editor._selected_index = 1
+		editor._on_action_delete_requested(shift_act_row_ui, 0)
+		all_passed = _check("delete earlier action keeps action selection kind", editor._selected_entry_kind, "action") and all_passed
+		all_passed = _check("delete earlier action shifts selected index", editor._selected_index, 0) and all_passed
 
 	# Phase 4: inspector content wrapped in card shells.
 	var inspector_sheet: EventSheetResource = EventSheetResource.new()
