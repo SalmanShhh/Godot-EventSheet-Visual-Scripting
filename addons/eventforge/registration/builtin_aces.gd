@@ -65,7 +65,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(_make_descriptor("Core", "GetPosition2D", "Get Position", ACEDescriptor.ACEType.EXPRESSION, "position", "", [], "General Expressions", "position", "Node2D"))
 	descriptors.append(_make_descriptor("Core", "GetVelocity2D", "Get Velocity", ACEDescriptor.ACEType.EXPRESSION, "velocity", "", [], "General Expressions", "velocity", "CharacterBody2D"))
 	descriptors.append(_make_descriptor("Core", "GetLinearVelocity2D", "Get Linear Velocity", ACEDescriptor.ACEType.EXPRESSION, "linear_velocity", "", [], "General Expressions", "linear_velocity", "RigidBody2D"))
-	descriptors.append(_make_descriptor("Core", "GetAreaMonitoring", "Get Monitoring", ACEDescriptor.ACEType.EXPRESSION, "monitoring", "", [], "General Expressions", "monitoring", "Area2D"))
+	descriptors.append(_make_descriptor("Core", "GetMonitoring", "Get Monitoring", ACEDescriptor.ACEType.EXPRESSION, "monitoring", "", [], "General Expressions", "monitoring", "Area2D"))
 	descriptors.append(_make_descriptor("Core", "GetTimerTimeLeft", "Get Time Left", ACEDescriptor.ACEType.EXPRESSION, "time_left", "", [], "General Expressions", "time_left", "Timer"))
 	descriptors.append(_make_descriptor("Core", "GetCurrentAnimation", "Get Current Animation", ACEDescriptor.ACEType.EXPRESSION, "current_animation", "", [], "General Expressions", "current_animation", "AnimationPlayer"))
 
