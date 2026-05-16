@@ -956,11 +956,6 @@ func _rebuild_inspector_variable(v_name: String) -> void:
     var delete_btn: Button = Button.new()
     delete_btn.text = "Delete Variable"
     delete_btn.pressed.connect(func() -> void:
-        _selected_entry_kind = "event"
-        _selected_entry_index = -1
-        _selected_variable_name = ""
-        _selected_group = null
-        _selected_row = null
         _delete_variable(v_name)
     )
     _inspector_container.add_child(delete_btn)
