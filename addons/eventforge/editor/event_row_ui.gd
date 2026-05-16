@@ -288,7 +288,7 @@ func _build_ui() -> void:
 	action_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	action_panel.add_child(action_vbox)
 
-	# Action header: spacer + add/action/row controls
+	# Action header: spacer + add-action + row controls
 	var action_header: HBoxContainer = HBoxContainer.new()
 	action_header.add_theme_constant_override("separation", 3)
 	action_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
