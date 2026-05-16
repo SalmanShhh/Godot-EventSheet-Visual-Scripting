@@ -2469,7 +2469,6 @@ func _insert_event_relative_in_array(arr: Array, target_uid: String, target_kind
 			var nested_group: EventGroup = resource as EventGroup
 			if _insert_event_relative_in_array(nested_group.events, target_uid, target_kind, insert_after, new_event):
 				return true
-			# Backward compatibility: legacy data may still store children in `rows`.
 			if not nested_group.rows.is_empty() and _insert_event_relative_in_array(nested_group.rows, target_uid, target_kind, insert_after, new_event):
 				return true
 	return false
