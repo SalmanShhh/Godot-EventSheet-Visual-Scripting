@@ -12,9 +12,27 @@ var current_sheet: EventSheetResource = null
 # user:// is the editor's writable data path; keep preview output out of res:// assets.
 const PREVIEW_OUTPUT_PATH: String = "user://eventforge_preview_generated.gd"
 const DEFAULT_RUN_CONTEXT_ACE_ID: String = "OnProcess"
+## Pre-declared sections for the "Add Event" picker (triggers + conditions mode).
+## Node-type sections (Area2D, CharacterBody2D) are listed here so they appear even
+## before descriptor scanning populates them.  Additional node types registered at
+## runtime are added dynamically by _populate_ace_picker as descriptors are scanned.
 const EVENT_PICKER_GROUPS: PackedStringArray = [
 	"Run Context / Triggers",
+	"Area2D",
+	"CharacterBody2D",
 	"General Conditions",
+	"Variables",
+	"Loops",
+	"Signals / Scene / Input",
+	"Custom ACEs"
+]
+## Category group names that are not node types — used to distinguish node-type
+## groups (amber) from logical category groups (muted blue) in the picker.
+const CORE_CATEGORY_GROUP_NAMES: PackedStringArray = [
+	"Run Context / Triggers",
+	"General Conditions",
+	"General Actions",
+	"General Expressions",
 	"Variables",
 	"Loops",
 	"Signals / Scene / Input",
@@ -30,6 +48,8 @@ const BRANCH_GUIDE_CHAR: String = "└"
 const BRANCH_GUIDE_LABEL: String = "└─"
 const CANVAS_BG: Color = Color(0.060, 0.067, 0.088, 1.0)
 const CANVAS_BORDER: Color = Color(0.141, 0.164, 0.214, 1.0)
+## Amber colour used for node-type / Godot class group headers in the ACE picker.
+const ACE_PICKER_NODE_TYPE_GROUP_COLOR: Color = Color(0.92, 0.72, 0.38)
 const SHORTCUT_BLOCKING_FOCUS_TYPES: Array[String] = ["LineEdit", "TextEdit", "SpinBox"]
 
 ## Currently selected entry kind.
@@ -530,11 +550,12 @@ func _populate_ace_picker(include_triggers: bool, include_conditions: bool, incl
 	var root: TreeItem = _ace_picker_tree.create_item()
 	var groups: Dictionary = {}
 	if _ace_picker_mode == "new_event":
-		# Keep Construct-style sections visible even before all ACE categories are populated.
+		# Pre-declare sections — node-type groups first, then logical categories.
 		for name: String in EVENT_PICKER_GROUPS:
 			var section: TreeItem = _ace_picker_tree.create_item(root)
 			section.set_text(0, name)
 			section.set_selectable(0, false)
+			section.set_custom_color(0, _get_picker_group_color(name))
 			groups[name] = section
 	for descriptor: ACEDescriptor in ACERegistry.get_all_descriptors():
 		if descriptor == null:
@@ -552,21 +573,47 @@ func _populate_ace_picker(include_triggers: bool, include_conditions: bool, incl
 			var group_item: TreeItem = _ace_picker_tree.create_item(root)
 			group_item.set_text(0, group_name)
 			group_item.set_selectable(0, false)
+			group_item.set_custom_color(0, _get_picker_group_color(group_name))
 			groups[group_name] = group_item
 		var item: TreeItem = _ace_picker_tree.create_item(groups[group_name])
 		item.set_text(0, descriptor.get_list_name())
 		item.set_tooltip_text(0, descriptor.description if not descriptor.description.is_empty() else descriptor.get_display_text())
 		item.set_metadata(0, descriptor)
 
+## Returns the group name used to organise a descriptor in the ACE picker.
+## node_type takes priority; non-Core providers group by provider_id; Core ACEs
+## fall back to category.  This supports issue #54 node-type grouping.
 func _get_picker_group(descriptor: ACEDescriptor) -> String:
+	# Node-type grouping takes priority (issue #54).
+	if not descriptor.node_type.is_empty():
+		return descriptor.node_type
+	# Runtime providers group under their provider ID.
+	# An empty provider_id falls back to "Custom ACEs" (treated as a catch-all category,
+	# not a node-type group) since a nameless descriptor may indicate a registration issue.
 	if descriptor.provider_id != "Core":
-		return "Custom ACEs"
+		return descriptor.provider_id if not descriptor.provider_id.is_empty() else "Custom ACEs"
 	if descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER:
 		return "Run Context / Triggers"
 	var category: String = descriptor.category
 	if category.is_empty():
 		return "General Conditions" if descriptor.ace_type == ACEDescriptor.ACEType.CONDITION else "General Actions"
 	return category
+
+## Returns the header colour for an ACE picker group.
+## Groups not in CORE_CATEGORY_GROUP_NAMES are treated as node-type groups (amber).
+static func _get_picker_group_color(group_name: String) -> Color:
+	match group_name:
+		"Run Context / Triggers":
+			return Color(0.55, 0.85, 0.70)  # teal-green
+		"Variables":
+			return Color(0.65, 0.82, 0.98)  # muted blue
+		"Custom ACEs":
+			return Color(0.80, 0.65, 0.95)  # purple
+		_:
+			if CORE_CATEGORY_GROUP_NAMES.has(group_name):
+				return Color(0.68, 0.74, 0.84)  # default muted
+			# Node-type / class groups use amber to signal their Godot class origin.
+			return ACE_PICKER_NODE_TYPE_GROUP_COLOR
 
 func _on_ace_picker_item_selected() -> void:
 	if _ace_picker_tree == null:

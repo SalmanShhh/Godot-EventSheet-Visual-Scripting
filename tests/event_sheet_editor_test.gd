@@ -543,6 +543,56 @@ static func run() -> bool:
 		all_passed = _check("invert condition keeps variable inspector heading", _contains_label_text(editor._inspector_vbox, "Variable"), true) and all_passed
 		all_passed = _check("invert condition does not switch inspector to event", _contains_label_text(editor._inspector_vbox, "Event"), false) and all_passed
 
+	# ACE picker grouping: _get_picker_group prioritises node_type over category.
+	var node_type_ace: ACEDescriptor = ACEDescriptor.new()
+	node_type_ace.provider_id = "Core"
+	node_type_ace.ace_type = ACEDescriptor.ACEType.CONDITION
+	node_type_ace.category = "General Conditions"
+	node_type_ace.node_type = "CharacterBody2D"
+	all_passed = _check("picker group uses node_type when set", editor._get_picker_group(node_type_ace), "CharacterBody2D") and all_passed
+
+	var category_ace: ACEDescriptor = ACEDescriptor.new()
+	category_ace.provider_id = "Core"
+	category_ace.ace_type = ACEDescriptor.ACEType.CONDITION
+	category_ace.category = "Variables"
+	category_ace.node_type = ""
+	all_passed = _check("picker group falls back to category", editor._get_picker_group(category_ace), "Variables") and all_passed
+
+	var trigger_ace: ACEDescriptor = ACEDescriptor.new()
+	trigger_ace.provider_id = "Core"
+	trigger_ace.ace_type = ACEDescriptor.ACEType.TRIGGER
+	trigger_ace.node_type = ""
+	all_passed = _check("picker group triggers group when no node_type", editor._get_picker_group(trigger_ace), "Run Context / Triggers") and all_passed
+
+	var trigger_with_node_type: ACEDescriptor = ACEDescriptor.new()
+	trigger_with_node_type.provider_id = "Core"
+	trigger_with_node_type.ace_type = ACEDescriptor.ACEType.TRIGGER
+	trigger_with_node_type.node_type = "Area2D"
+	all_passed = _check("picker group trigger with node_type uses node_type", editor._get_picker_group(trigger_with_node_type), "Area2D") and all_passed
+
+	var runtime_ace: ACEDescriptor = ACEDescriptor.new()
+	runtime_ace.provider_id = "MyPlugin"
+	runtime_ace.ace_type = ACEDescriptor.ACEType.ACTION
+	runtime_ace.node_type = ""
+	all_passed = _check("picker group runtime provider uses provider_id", editor._get_picker_group(runtime_ace), "MyPlugin") and all_passed
+
+	# _get_picker_group_color: node-type groups get amber; known categories get distinct colours.
+	var amber: Color = EventSheetEditor.ACE_PICKER_NODE_TYPE_GROUP_COLOR
+	all_passed = _check("picker color CharacterBody2D is amber", EventSheetEditor._get_picker_group_color("CharacterBody2D"), amber) and all_passed
+	all_passed = _check("picker color Area2D is amber", EventSheetEditor._get_picker_group_color("Area2D"), amber) and all_passed
+	all_passed = _check("picker color custom class is amber", EventSheetEditor._get_picker_group_color("RigidBody2D"), amber) and all_passed
+	all_passed = _check("picker color Variables is not amber", EventSheetEditor._get_picker_group_color("Variables") != amber, true) and all_passed
+	all_passed = _check("picker color Custom ACEs is not amber", EventSheetEditor._get_picker_group_color("Custom ACEs") != amber, true) and all_passed
+
+	# IsOnFloor built-in maps to CharacterBody2D group; OnBodyEntered to Area2D.
+	var is_on_floor_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "IsOnFloor")
+	if is_on_floor_desc != null:
+		all_passed = _check("IsOnFloor picker group", editor._get_picker_group(is_on_floor_desc), "CharacterBody2D") and all_passed
+
+	var on_body_entered_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "OnBodyEntered")
+	if on_body_entered_desc != null:
+		all_passed = _check("OnBodyEntered picker group", editor._get_picker_group(on_body_entered_desc), "Area2D") and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

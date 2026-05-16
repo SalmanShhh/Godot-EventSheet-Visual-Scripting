@@ -45,6 +45,46 @@ static func run() -> bool:
 	if always_descriptor != null:
 		all_passed = _check("core Always codegen", always_descriptor.codegen_template, "true") and all_passed
 
+	# node_type field is propagated from dict using snake_case and camelCase keys.
+	var node_type_descriptor: ACEDescriptor = ACERegistry.normalize_descriptor({
+		"providerId": "MyPlugin",
+		"aceId": "MoveAndSlide",
+		"type": "action",
+		"listName": "Move and slide",
+		"node_type": "CharacterBody2D",
+		"category": "Physics",
+		"params": []
+	})
+	all_passed = _check("node_type from snake_case key", node_type_descriptor.node_type, "CharacterBody2D") and all_passed
+	all_passed = _check("nodeType alias synced from node_type", node_type_descriptor.nodeType, "CharacterBody2D") and all_passed
+
+	var node_type_camel_descriptor: ACEDescriptor = ACERegistry.normalize_descriptor({
+		"aceId": "OverlapBody",
+		"type": "condition",
+		"listName": "Overlaps body",
+		"nodeType": "Area2D",
+		"params": []
+	})
+	all_passed = _check("node_type from camelCase nodeType key", node_type_camel_descriptor.node_type, "Area2D") and all_passed
+
+	# Built-in ACEs: IsOnFloor is tagged as CharacterBody2D.
+	var is_on_floor: ACEDescriptor = ACERegistry.find_descriptor("Core", "IsOnFloor")
+	all_passed = _check("IsOnFloor registered", is_on_floor != null, true) and all_passed
+	if is_on_floor != null:
+		all_passed = _check("IsOnFloor node_type", is_on_floor.node_type, "CharacterBody2D") and all_passed
+
+	# Built-in ACEs: OnBodyEntered is tagged as Area2D.
+	var on_body_entered: ACEDescriptor = ACERegistry.find_descriptor("Core", "OnBodyEntered")
+	all_passed = _check("OnBodyEntered registered", on_body_entered != null, true) and all_passed
+	if on_body_entered != null:
+		all_passed = _check("OnBodyEntered node_type", on_body_entered.node_type, "Area2D") and all_passed
+
+	# Core ACEs without a specific node type have empty node_type.
+	var set_var: ACEDescriptor = ACERegistry.find_descriptor("Core", "SetVar")
+	all_passed = _check("SetVar registered", set_var != null, true) and all_passed
+	if set_var != null:
+		all_passed = _check("SetVar node_type is empty", set_var.node_type, "") and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
