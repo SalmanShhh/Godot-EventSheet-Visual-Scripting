@@ -65,7 +65,7 @@ const ACTION_TOKEN_BORDER: Color = Color(0.178, 0.268, 0.248, 1.0)
 const RUN_CONTEXT_SYMBOL: String = "◆"
 const CLAUSE_CONDITION_PREFIX: String = "when"
 const CLAUSE_ACTION_PREFIX: String = "do"
-const CLAUSE_SEPARATOR_COLOR: Color = Color(0.22, 0.26, 0.35, 0.80)
+const CLAUSE_VSEPARATOR_COLOR: Color = Color(0.22, 0.26, 0.35, 0.80)
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
 
 func _init() -> void:
@@ -164,7 +164,7 @@ func _build_ui() -> void:
 	line.add_child(add_condition_btn)
 
 	var clause_sep: VSeparator = VSeparator.new()
-	clause_sep.add_theme_color_override("color", CLAUSE_SEPARATOR_COLOR)
+	clause_sep.add_theme_color_override("color", CLAUSE_VSEPARATOR_COLOR)
 	clause_sep.custom_minimum_size = Vector2(1, 0)
 	line.add_child(clause_sep)
 

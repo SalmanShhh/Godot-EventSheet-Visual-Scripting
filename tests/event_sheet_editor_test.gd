@@ -273,6 +273,7 @@ static func run() -> bool:
 	empty_group_row.event_group = empty_group
 	empty_group_row.refresh()
 	all_passed = _check("group row count hidden when empty", not _contains_label_text(empty_group_row, "(0)"), true) and all_passed
+	all_passed = _check("group row count label empty string when no events", empty_group_row._count_label.text, "") and all_passed
 
 	# Phase 4: toolbar sheet name formatting.
 	var untitled_sheet: EventSheetResource = EventSheetResource.new()
