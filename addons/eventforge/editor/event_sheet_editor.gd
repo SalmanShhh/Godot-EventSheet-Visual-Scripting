@@ -136,6 +136,7 @@ var _variable_dialog_mode: String = ""
 var _variable_dialog_original_name: String = ""
 var _suppress_variable_popup_on_select: bool = false
 var _current_rows_host: VBoxContainer = null
+var _comment_text_edit: LineEdit = null
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
@@ -2242,6 +2243,8 @@ func _add_comment_row(comment_row: CommentRow, indent_level: int = 0, render_gua
 	row_ui.comment_delete_requested.connect(_on_comment_delete_requested)
 	row_ui.insert_comment_above_requested.connect(_on_comment_insert_above_requested)
 	row_ui.insert_comment_below_requested.connect(_on_comment_insert_below_requested)
+	row_ui.comment_text_changed.connect(_on_comment_text_changed)
+	row_ui.comment_text_submitted.connect(_on_comment_text_submitted)
 	_add_canvas_row(row_ui, indent_level)
 
 func _make_render_guard_key(prefix: String, stable_uid: String, fallback_instance_id: int) -> String:
@@ -2653,6 +2656,20 @@ func _on_comment_selected(row: CommentRowUI) -> void:
 	_refresh_workspace_context()
 	_rebuild_inspector_comment(row)
 
+func _on_comment_text_changed(row: CommentRowUI, text: String) -> void:
+	if row == null or row.comment_row == null:
+		return
+	if row.comment_row.text == text:
+		return
+	row.comment_row.text = text
+	if _selected_entry_kind == "comment" and _selected_row == row and _comment_text_edit != null and not _comment_text_edit.has_focus() and _comment_text_edit.text != text:
+		_comment_text_edit.text = text
+	_mark_dirty()
+
+func _on_comment_text_submitted(row: CommentRowUI, text: String) -> void:
+	_on_comment_text_changed(row, text)
+	_set_status("Comment updated")
+
 func _on_group_collapsed_toggled(row: GroupRowUI, _collapsed: bool) -> void:
 	if row == null or row.event_group == null:
 		return
@@ -2786,6 +2803,7 @@ func _is_group_collapsed(event_group: EventGroup) -> bool:
 # ── Inspector builders ────────────────────────────────────────────────────────
 
 func _clear_inspector() -> void:
+	_comment_text_edit = null
 	for child in _inspector_vbox.get_children():
 		child.queue_free()
 
@@ -3023,6 +3041,7 @@ func _rebuild_inspector_group(row: GroupRowUI) -> void:
 
 func _rebuild_inspector_comment(row: CommentRowUI) -> void:
 	_clear_inspector()
+	_comment_text_edit = null
 	if row == null or row.comment_row == null:
 		_show_empty_inspector()
 		return
@@ -3042,13 +3061,27 @@ func _rebuild_inspector_comment(row: CommentRowUI) -> void:
 	heading_sep.add_theme_color_override("color", Color(0.412, 0.338, 0.175, 0.80))
 	card_vbox.add_child(heading_sep)
 
-	var summary: Label = Label.new()
-	var text: String = row.comment_row.text.strip_edges()
-	summary.text = text if not text.is_empty() else "(empty comment)"
-	summary.add_theme_color_override("font_color", Color(0.90, 0.84, 0.74))
-	summary.add_theme_font_size_override("font_size", 10)
-	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	card_vbox.add_child(summary)
+	var edit_label: Label = Label.new()
+	edit_label.text = "Text"
+	edit_label.add_theme_color_override("font_color", Color(0.72, 0.64, 0.50))
+	edit_label.add_theme_font_size_override("font_size", 10)
+	card_vbox.add_child(edit_label)
+
+	_comment_text_edit = LineEdit.new()
+	_comment_text_edit.placeholder_text = "Write comment…"
+	_comment_text_edit.text = row.comment_row.text
+	_comment_text_edit.tooltip_text = "Comment text (inline row updates live)"
+	_comment_text_edit.add_theme_font_size_override("font_size", 10)
+	_comment_text_edit.connect("text_changed", func(text: String) -> void: _on_comment_text_changed(row, text))
+	_comment_text_edit.connect("text_submitted", func(text: String) -> void: _on_comment_text_submitted(row, text))
+	card_vbox.add_child(_comment_text_edit)
+
+	var interaction_hint: Label = Label.new()
+	interaction_hint.text = "Tip: Click ✎ on the row or type directly in-row for contextual authoring."
+	interaction_hint.add_theme_color_override("font_color", Color(0.62, 0.56, 0.45))
+	interaction_hint.add_theme_font_size_override("font_size", 9)
+	interaction_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	card_vbox.add_child(interaction_hint)
 
 	var note: Label = Label.new()
 	note.text = "Comment rows annotate authoring flow and are skipped by compilation."

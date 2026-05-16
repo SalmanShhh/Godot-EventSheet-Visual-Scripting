@@ -272,12 +272,24 @@ static func run() -> bool:
 	if comment_row_ui != null:
 		all_passed = _check("comment row lane divider present", _has_color_rect_min_width(comment_row_ui, 2), true) and all_passed
 		var comment_insert_above_btn: Button = _find_button_with_tooltip(comment_row_ui, "Insert comment above this row")
+		var comment_focus_btn: Button = _find_button_with_tooltip(comment_row_ui, "Focus comment text")
 		all_passed = _check("comment row insertion button above visible", comment_insert_above_btn != null, true) and all_passed
 		all_passed = _check("comment row insertion button below visible", _find_button_with_tooltip(comment_row_ui, "Insert comment below this row") != null, true) and all_passed
+		all_passed = _check("comment row focus button visible", comment_focus_btn != null, true) and all_passed
+		all_passed = _check("comment row has inline text edit", _find_line_edit_with_tooltip(comment_row_ui, "Edit inline comment text") != null, true) and all_passed
+		comment_row_ui._on_comment_text_changed("Before spawn refined")
+		all_passed = _check("inline comment edit updates resource text", first_comment.text, "Before spawn refined") and all_passed
+		comment_row_ui._on_comment_text_submitted("Before spawn refined")
+		all_passed = _check("comment submit updates status message", editor._status_label.text, "Comment updated") and all_passed
 		if comment_insert_above_btn != null:
 			all_passed = _check("comment row insertion affordance dimmed at rest", comment_insert_above_btn.modulate.a < 1.0, true) and all_passed
+		if comment_focus_btn != null:
+			all_passed = _check("comment row focus affordance dimmed at rest", comment_focus_btn.modulate.a < 1.0, true) and all_passed
+		if comment_insert_above_btn != null:
 			comment_row_ui._on_mouse_entered()
 			all_passed = _check("comment row insertion affordance brightens on hover", is_equal_approx(comment_insert_above_btn.modulate.a, 1.0), true) and all_passed
+		if comment_focus_btn != null:
+			all_passed = _check("comment row focus affordance brightens on hover", is_equal_approx(comment_focus_btn.modulate.a, 1.0), true) and all_passed
 		editor._on_comment_insert_below_requested(comment_row_ui)
 		all_passed = _check("insert below comment row adds sibling comment", comment_sheet.events.size(), 3) and all_passed
 		all_passed = _check("insert below comment row inserts comment resource", comment_sheet.events[1] is CommentRow, true) and all_passed
@@ -1024,6 +1036,19 @@ static func _find_button_with_prefix(node: Node, prefix: String) -> Button:
 			return btn
 	for child: Node in node.get_children():
 		var found: Button = _find_button_with_prefix(child, prefix)
+		if found != null:
+			return found
+	return null
+
+static func _find_line_edit_with_tooltip(node: Node, tooltip: String) -> LineEdit:
+	if node == null:
+		return null
+	if node is LineEdit:
+		var line: LineEdit = node as LineEdit
+		if line.tooltip_text == tooltip:
+			return line
+	for child: Node in node.get_children():
+		var found: LineEdit = _find_line_edit_with_tooltip(child, tooltip)
 		if found != null:
 			return found
 	return null
