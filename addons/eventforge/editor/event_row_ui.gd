@@ -247,7 +247,7 @@ func _build_ui() -> void:
 	cond_header.add_child(_runs_button)
 
 	var add_condition_btn: Button = Button.new()
-	add_condition_btn.text = "+"
+	add_condition_btn.text = "+Condition"
 	add_condition_btn.flat = true
 	add_condition_btn.tooltip_text = "Add condition to this event"
 	add_condition_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND

@@ -176,6 +176,7 @@ It intentionally avoids describing unbuilt behavior as complete.
 - Depth guide `ColorRect` lines use opacity 0.80 (up from 0.68) for better visibility at depth.
 - Event rows use a **2 px** `ColorRect` lane divider (`LANE_DIVIDER_COLOR`) replacing the earlier `VSeparator` for a stronger, pixel-stable lane boundary.
 - Event rows keep a compact minimum height of **30 px** so the sheet line rhythm stays close to Construct-style event rows while remaining Godot-themed.
+- Event rows use a subtle **4 px** corner radius to stay visually close to the PoC row chip shape without abandoning Godot editor theming.
 
 ### 2.8 Final cross-surface polish (Phase 6)
 
