@@ -114,9 +114,9 @@ func _build_layout() -> void:
 	var vsep: VSeparator = VSeparator.new()
 	hbox.add_child(vsep)
 
-	# ── Right: inspector panel ────────────────────────────────────────────────
+	# ── Right: inspector panel (passive context panel) ────────────────────────
 	_inspector_panel = PanelContainer.new()
-	_inspector_panel.custom_minimum_size = Vector2(260, 0)
+	_inspector_panel.custom_minimum_size = Vector2(200, 0)
 	_inspector_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	var insp_style: StyleBoxFlat = StyleBoxFlat.new()
@@ -433,6 +433,8 @@ func _build_ace_params_dialog_popup() -> void:
 	_ace_params_form.add_theme_constant_override("separation", 4)
 	body.add_child(_ace_params_form)
 
+## Called after an ACE is picked. Skips the parameter dialog when the descriptor
+## has no params and applies the selection immediately instead.
 func _open_ace_params_dialog_for_picker_selection(descriptor: ACEDescriptor) -> void:
 	if descriptor == null:
 		return
@@ -450,6 +452,14 @@ func _open_ace_params_dialog_for_picker_selection(descriptor: ACEDescriptor) -> 
 		"append_action":
 			params_dialog_mode = "append_action"
 	if params_dialog_mode.is_empty():
+		return
+	# If there are no editable parameters, apply immediately without a dialog.
+	if descriptor.params.is_empty():
+		_ace_params_mode = params_dialog_mode
+		_ace_params_descriptor = descriptor
+		_ace_params_target_row = _ace_picker_target_row
+		_ace_params_target_index = _ace_picker_target_condition_index
+		_apply_ace_params({})
 		return
 	_open_ace_params_dialog(descriptor, params_dialog_mode, _ace_picker_target_row, _ace_picker_target_condition_index, descriptor.build_default_params())
 
@@ -539,9 +549,21 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 				row_box.add_child(desc_label)
 			_ace_params_form.add_child(row_box)
 
+	_ace_params_dialog.reset_size()
 	_ace_params_dialog.popup_centered()
 
+## Creates an appropriate UI control for the given ACE parameter.
+## Control type is chosen based on type_name, hint, and options metadata:
+##   hint == "variable_reference"      → variable dropdown
+##   type_name bool/boolean             → bool OptionButton
+##   type_name int/integer              → integer SpinBox
+##   type_name float/double             → float SpinBox
+##   options[] non-empty               → enum OptionButton
+##   (fallback)                         → LineEdit
 func _create_ace_param_input(param: ACEParam, value: Variant) -> Control:
+	# Variable reference — show a dropdown of sheet variables.
+	if param.hint == "variable_reference":
+		return _create_variable_dropdown(str(value))
 	var type_name: String = param.type_name.to_lower()
 	if type_name in ["bool", "boolean"] or param.type == TYPE_BOOL:
 		var bool_input: OptionButton = OptionButton.new()
@@ -549,6 +571,22 @@ func _create_ace_param_input(param: ACEParam, value: Variant) -> Control:
 		bool_input.add_item("True")
 		bool_input.select(1 if bool(value) else 0)
 		return bool_input
+	if type_name in ["int", "integer"] or param.type == TYPE_INT:
+		var spin: SpinBox = SpinBox.new()
+		spin.step = 1.0
+		spin.allow_lesser = true
+		spin.allow_greater = true
+		var v: float = float(str(value)) if str(value).is_valid_float() else 0.0
+		spin.value = v
+		return spin
+	if type_name in ["float", "double"] or param.type == TYPE_FLOAT:
+		var spin: SpinBox = SpinBox.new()
+		spin.step = 0.01
+		spin.allow_lesser = true
+		spin.allow_greater = true
+		var v: float = float(str(value)) if str(value).is_valid_float() else 0.0
+		spin.value = v
+		return spin
 	if not param.options.is_empty():
 		var option_input: OptionButton = OptionButton.new()
 		for item: String in param.options:
@@ -562,6 +600,34 @@ func _create_ace_param_input(param: ACEParam, value: Variant) -> Control:
 	var line_input: LineEdit = LineEdit.new()
 	line_input.text = str(value)
 	return line_input
+
+## Creates a variable-name dropdown pre-populated with sheet variables.
+## Falls back to a text field entry (current value) if no variables are defined.
+func _create_variable_dropdown(current_value: String) -> OptionButton:
+	var option: OptionButton = OptionButton.new()
+	var var_names: Array[String] = _get_available_variable_names()
+	if var_names.is_empty():
+		# No sheet variables yet; show current value as a placeholder entry.
+		option.add_item(current_value if not current_value.is_empty() else "(no variables)")
+		option.select(0)
+		return option
+	var selected_idx: int = 0
+	for i: int in range(var_names.size()):
+		option.add_item(var_names[i])
+		if var_names[i] == current_value:
+			selected_idx = i
+	option.select(selected_idx)
+	return option
+
+## Returns a sorted list of variable names available in the current sheet.
+func _get_available_variable_names() -> Array[String]:
+	var names: Array[String] = []
+	if current_sheet == null:
+		return names
+	for key: Variant in current_sheet.variables.keys():
+		names.append(str(key))
+	names.sort()
+	return names
 
 func _collect_ace_param_values() -> Dictionary:
 	var output: Dictionary = {}
@@ -581,6 +647,12 @@ func _collect_ace_param_values() -> Dictionary:
 func _extract_ace_param_input_value(param: ACEParam, input: Control) -> Variant:
 	if input == null:
 		return param.get_initial_value()
+	if input is SpinBox:
+		var spin: SpinBox = input as SpinBox
+		var type_name: String = param.type_name.to_lower()
+		if type_name in ["int", "integer"] or param.type == TYPE_INT:
+			return int(spin.value)
+		return spin.value
 	if input is OptionButton:
 		var option: OptionButton = input as OptionButton
 		if _is_bool_param(param):
@@ -1025,23 +1097,28 @@ func _add_variables_section() -> void:
 func _add_events_section() -> void:
 	_add_section_heading("Events")
 
-	var add_event_btn: Button = Button.new()
-	add_event_btn.text = "+ Add Event"
-	add_event_btn.custom_minimum_size = Vector2(120, 0)
-	add_event_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	add_event_btn.connect("pressed", _on_add_event_requested)
-	_canvas_vbox.add_child(add_event_btn)
-
 	if current_sheet.events.is_empty():
 		var hint: Label = Label.new()
 		hint.text = "No events yet. Click + Add Event to pick a run context or condition."
 		hint.add_theme_color_override("font_color", Color(0.50, 0.50, 0.60))
 		hint.add_theme_font_size_override("font_size", 11)
 		_canvas_vbox.add_child(hint)
-		return
+	else:
+		for resource: Variant in current_sheet.events:
+			_add_event_resource(resource, 0)
 
-	for resource: Variant in current_sheet.events:
-		_add_event_resource(resource, 0)
+	# Inline "Add Event" at the bottom of the events area — mirrors the
+	# per-row "Add Action" / "Add Condition" affordance pattern.
+	var add_event_btn: Button = Button.new()
+	add_event_btn.text = "+ Add Event"
+	add_event_btn.flat = true
+	add_event_btn.tooltip_text = "Add a new event block to the sheet"
+	add_event_btn.custom_minimum_size = Vector2(120, 0)
+	add_event_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	add_event_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	add_event_btn.add_theme_color_override("font_color", Color(0.65, 0.78, 1.0))
+	add_event_btn.connect("pressed", _on_add_event_requested)
+	_canvas_vbox.add_child(add_event_btn)
 
 func _add_event_resource(resource: Variant, indent_level: int) -> void:
 	if resource is EventRow:
@@ -1058,6 +1135,7 @@ func _add_event_row(event_row: EventRow, indent_level: int = 0) -> void:
 	row_ui.condition_edit_requested.connect(_on_condition_edit_requested)
 	row_ui.condition_add_another_requested.connect(_on_condition_add_another_requested)
 	row_ui.condition_replace_requested.connect(_on_condition_replace_requested)
+	row_ui.condition_invert_requested.connect(_on_condition_invert_requested)
 	row_ui.action_selected.connect(_on_action_selected)
 	row_ui.add_condition_requested.connect(_on_row_add_condition_requested)
 	row_ui.add_action_requested.connect(_on_row_add_action_requested)
@@ -1124,6 +1202,19 @@ func _on_condition_replace_requested(row: EventRowUI, index: int) -> void:
 	_selected_row = row
 	_selected_index = index
 	_open_replace_condition_picker(row, index)
+
+## Toggles the negated flag on the condition at the given index.
+func _on_condition_invert_requested(row: EventRowUI, index: int) -> void:
+	if row == null or row.event_row == null:
+		return
+	if index < 0 or index >= row.event_row.conditions.size():
+		return
+	var condition: ACECondition = row.event_row.conditions[index]
+	if condition == null:
+		return
+	condition.negated = not condition.negated
+	row.refresh()
+	_rebuild_inspector_event(row)
 
 func _on_action_selected(row: EventRowUI, index: int) -> void:
 	_selected_entry_kind = "action"
@@ -1201,6 +1292,8 @@ func _show_empty_inspector() -> void:
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_inspector_vbox.add_child(hint)
 
+## Rebuilds the inspector to show a compact event summary.
+## Primary editing is handled through event block lanes and popups.
 func _rebuild_inspector_event(row: EventRowUI) -> void:
 	_clear_inspector()
 	if row == null or row.event_row == null:
@@ -1215,54 +1308,31 @@ func _rebuild_inspector_event(row: EventRowUI) -> void:
 	heading.add_theme_font_size_override("font_size", 12)
 	_inspector_vbox.add_child(heading)
 
-	# Run context
-	var run_context_heading: Label = Label.new()
-	run_context_heading.text = "Run Context:"
-	run_context_heading.add_theme_color_override("font_color", Color(0.70, 0.70, 0.70))
-	run_context_heading.add_theme_font_size_override("font_size", 10)
-	_inspector_vbox.add_child(run_context_heading)
-
 	var runs_lbl: Label = Label.new()
 	runs_lbl.text = EventRowUI.format_run_context(event_row)
 	runs_lbl.add_theme_color_override("font_color", Color(0.85, 0.75, 0.45))
+	runs_lbl.add_theme_font_size_override("font_size", 10)
+	runs_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_inspector_vbox.add_child(runs_lbl)
 
 	var sep1: HSeparator = HSeparator.new()
 	_inspector_vbox.add_child(sep1)
 
-	# Conditions summary
-	var cond_lbl: Label = Label.new()
-	cond_lbl.text = "Conditions:"
-	cond_lbl.add_theme_color_override("font_color", Color(0.65, 0.85, 0.65))
-	_inspector_vbox.add_child(cond_lbl)
-
-	var cond_summary: Label = Label.new()
-	cond_summary.text = "Count: %d" % event_row.conditions.size()
-	if event_row.conditions.is_empty():
-		cond_summary.text += " (Default: always true)"
-	cond_summary.add_theme_color_override("font_color", Color(0.75, 0.80, 0.75))
-	_inspector_vbox.add_child(cond_summary)
-
-	var sep2: HSeparator = HSeparator.new()
-	_inspector_vbox.add_child(sep2)
-
-	# Actions summary
-	var act_lbl: Label = Label.new()
-	act_lbl.text = "Actions:"
-	act_lbl.add_theme_color_override("font_color", Color(0.65, 0.75, 1.0))
-	_inspector_vbox.add_child(act_lbl)
-
-	var act_summary: Label = Label.new()
-	act_summary.text = "Count: %d" % event_row.actions.size()
-	act_summary.add_theme_color_override("font_color", Color(0.75, 0.78, 0.88))
-	_inspector_vbox.add_child(act_summary)
+	var summary: Label = Label.new()
+	summary.text = "%d condition(s)  ·  %d action(s)" % [event_row.conditions.size(), event_row.actions.size()]
+	summary.add_theme_color_override("font_color", Color(0.65, 0.70, 0.75))
+	summary.add_theme_font_size_override("font_size", 10)
+	_inspector_vbox.add_child(summary)
 
 	var authoring_note: Label = Label.new()
-	authoring_note.text = "Use event block lanes and popups to add/edit/replace conditions and actions."
-	authoring_note.add_theme_color_override("font_color", Color(0.50, 0.55, 0.60))
+	authoring_note.text = "Edit via event block."
+	authoring_note.add_theme_color_override("font_color", Color(0.40, 0.45, 0.50))
+	authoring_note.add_theme_font_size_override("font_size", 10)
 	authoring_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_inspector_vbox.add_child(authoring_note)
 
+## Rebuilds the inspector for a selected variable.
+## The popup dialog is the primary editing path (clicking the row opens it).
 func _rebuild_inspector_variable(row: VariableRowUI) -> void:
 	_clear_inspector()
 	if row == null:
@@ -1270,7 +1340,7 @@ func _rebuild_inspector_variable(row: VariableRowUI) -> void:
 		return
 
 	var heading: Label = Label.new()
-	heading.text = "Variable: " + row.var_name
+	heading.text = "Variable"
 	heading.add_theme_color_override("font_color", Color(0.35, 0.95, 0.55))
 	heading.add_theme_font_size_override("font_size", 12)
 	_inspector_vbox.add_child(heading)
@@ -1278,17 +1348,14 @@ func _rebuild_inspector_variable(row: VariableRowUI) -> void:
 	var summary: Label = Label.new()
 	summary.text = VariableRowUI.format_summary(row.var_name, row.var_info)
 	summary.add_theme_color_override("font_color", Color(0.80, 0.90, 0.80))
+	summary.add_theme_font_size_override("font_size", 10)
+	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_inspector_vbox.add_child(summary)
 
-	var edit_btn: Button = Button.new()
-	edit_btn.text = "Edit Variable…"
-	edit_btn.connect("pressed", func() -> void: _open_variable_dialog_for_edit(row.var_name, row.var_info))
-	_inspector_vbox.add_child(edit_btn)
-
 	var note: Label = Label.new()
-	note.text = "Edit variable details in the compact popup dialog."
-	note.add_theme_color_override("font_color", Color(0.50, 0.55, 0.50))
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.text = "Click the row to edit."
+	note.add_theme_color_override("font_color", Color(0.40, 0.50, 0.40))
+	note.add_theme_font_size_override("font_size", 10)
 	_inspector_vbox.add_child(note)
 
 func _rebuild_inspector_group(row: GroupRowUI) -> void:
