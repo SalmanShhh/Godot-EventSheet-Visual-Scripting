@@ -2626,7 +2626,8 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 		var depth_rail: ColorRect = ColorRect.new()
 		depth_rail.custom_minimum_size = Vector2(1, 0)
 		depth_rail.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		depth_rail.color = Color(0.40, 0.52, 0.72, 0.55 + float(i) * 0.06)
+		# Opacity increments with depth for readability; clamped to avoid exceeding 1.0.
+		depth_rail.color = Color(0.40, 0.52, 0.72, minf(0.55 + float(i) * 0.06, 0.95))
 		depth_rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		gutter.add_child(depth_rail)
 

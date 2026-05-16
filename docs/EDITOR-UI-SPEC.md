@@ -239,7 +239,7 @@ Construct 3-style event sheet surface, guided by `c3-eventsheet-spec.md` and
 - Per-depth continuation rails are now `1 px ColorRect` slices preceded by explicit
   spacer Controls of `SHEET_GUTTER_INDENT_WIDTH - 1` px — the spacer + rail pattern
   ensures each depth level's guide line is positioned exactly at the branch origin point.
-- Rail opacity now increments with depth (`0.55 + depth × 0.06`) so deeper guides are
+- Rail opacity now increments with depth (`minf(0.55 + depth × 0.06, 0.95)`, clamped below 1.0) so deeper guides are
   progressively more visible, helping hierarchy readability in dense sheets.
 - `SheetLineRow` HBoxContainer separation reduced to **0** — rows and their gutters are
   flush-adjacent, no gap between the gutter column and the row content.
@@ -281,7 +281,7 @@ Construct 3-style event sheet surface, guided by `c3-eventsheet-spec.md` and
 #### Comment row improvements
 - Left accent strip widened from 3 px to **4 px** — matches the group row update for
   visual consistency across full-width row types.
-- Prefix changed from `//` to `#` — closer to C3's section-annotation style
+- Prefix label changed from `//` (two-slash code comment) to `#` (single-hash section marker) — closer to C3's section-annotation style
   (single-hash section markers).
 - Named colour constants (`COMMENT_ACCENT`, `COMMENT_BG*`, `COMMENT_BORDER*`) used
   throughout for maintainability.
