@@ -317,6 +317,7 @@ func _populate_ace_picker(include_triggers: bool, include_conditions: bool, incl
 	var root: TreeItem = _ace_picker_tree.create_item()
 	var groups: Dictionary = {}
 	if _ace_picker_mode == "new_event":
+		# Keep Construct-style sections visible even before all ACE categories are populated.
 		for name: String in ["Run Context / Triggers", "General Conditions", "Variables", "Loops", "Signals / Scene / Input", "Custom ACEs"]:
 			var section: TreeItem = _ace_picker_tree.create_item(root)
 			section.set_text(0, name)

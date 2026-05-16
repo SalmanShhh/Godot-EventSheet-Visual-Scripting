@@ -148,9 +148,10 @@ static func _apply_param_aliases(param: ACEParam) -> void:
 		param.description = param.desc
 	if param.desc.is_empty():
 		param.desc = param.description
-	if param.initial_value == null:
-		param.initial_value = param.initialValue
-	if param.initial_value == null:
-		param.initial_value = param.default_value
-	if param.initialValue == null:
-		param.initialValue = param.initial_value
+	var resolved_initial: Variant = param.initial_value
+	if resolved_initial == null:
+		resolved_initial = param.initialValue
+	if resolved_initial == null:
+		resolved_initial = param.default_value
+	param.initial_value = resolved_initial
+	param.initialValue = resolved_initial
