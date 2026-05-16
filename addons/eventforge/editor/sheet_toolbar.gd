@@ -20,6 +20,7 @@ var _add_var_btn: Button = null
 var _compile_btn: Button = null
 var _status_label: Label = null
 var _doc_meta_label: Label = null
+var _selection_meta_label: Label = null
 
 func _init() -> void:
 	_build_ui()
@@ -53,6 +54,12 @@ func _build_ui() -> void:
 	_doc_meta_label.add_theme_color_override("font_color", Color(0.50, 0.58, 0.72))
 	_doc_meta_label.add_theme_font_size_override("font_size", 10)
 	top_line.add_child(_doc_meta_label)
+
+	_selection_meta_label = Label.new()
+	_selection_meta_label.text = "No selection"
+	_selection_meta_label.add_theme_color_override("font_color", Color(0.60, 0.70, 0.84))
+	_selection_meta_label.add_theme_font_size_override("font_size", 10)
+	top_line.add_child(_selection_meta_label)
 
 	var top_spacer: Control = Control.new()
 	top_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -112,6 +119,26 @@ func _build_ui() -> void:
 func setup() -> void:
 	pass
 
+static func format_document_meta(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return "No sheet loaded"
+	return "%d globals · %d root rows" % [sheet.variables.size(), sheet.events.size()]
+
+static func format_selection_meta(selection_kind: String) -> String:
+	match selection_kind:
+		"event":
+			return "Selection: Event"
+		"condition":
+			return "Selection: Condition"
+		"action":
+			return "Selection: Action"
+		"variable":
+			return "Selection: Variable"
+		"group":
+			return "Selection: Group"
+		_:
+			return "No selection"
+
 ## Enables or disables sheet-editing actions that require a loaded sheet.
 func set_sheet_loaded(loaded: bool) -> void:
 	if _add_event_btn != null:
@@ -120,8 +147,14 @@ func set_sheet_loaded(loaded: bool) -> void:
 		_add_var_btn.disabled = not loaded
 	if _compile_btn != null:
 		_compile_btn.disabled = not loaded
+	if not loaded:
+		set_context(null, "none")
+
+func set_context(sheet: EventSheetResource, selection_kind: String = "none") -> void:
 	if _doc_meta_label != null:
-		_doc_meta_label.text = "Document ready" if loaded else "No sheet loaded"
+		_doc_meta_label.text = format_document_meta(sheet)
+	if _selection_meta_label != null:
+		_selection_meta_label.text = format_selection_meta(selection_kind)
 
 ## Updates the toolbar status text.
 func set_status(text: String, is_error: bool = false) -> void:

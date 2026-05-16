@@ -193,6 +193,7 @@ func refresh_canvas() -> void:
 	_add_variables_section()
 	_add_events_section()
 	_refresh_row_selection_states()
+	_refresh_workspace_context()
 
 func _add_no_sheet_onboarding() -> void:
 	var margin: MarginContainer = MarginContainer.new()
@@ -329,6 +330,12 @@ func _refresh_toolbar_state() -> void:
 	if _sheet_toolbar == null:
 		return
 	_sheet_toolbar.set_sheet_loaded(current_sheet != null)
+	_refresh_workspace_context()
+
+func _refresh_workspace_context() -> void:
+	if _sheet_toolbar == null:
+		return
+	_sheet_toolbar.set_context(current_sheet, _selected_entry_kind)
 
 func _build_ace_picker_popup() -> void:
 	_ace_picker_popup = Window.new()
@@ -1266,7 +1273,7 @@ func _add_section_shell(name: String, title: String, subtitle: String, accent: C
 	section_panel.name = name
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(0.068, 0.075, 0.100, 1.0)
-	style.border_color = Color(0.142, 0.164, 0.212, 1.0)
+	style.border_color = Color(0.165, 0.190, 0.244, 1.0)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(6)
 	style.set_content_margin(SIDE_LEFT, 9)
@@ -1299,7 +1306,7 @@ func _add_section_shell(name: String, title: String, subtitle: String, accent: C
 
 	var sub: Label = Label.new()
 	sub.text = subtitle
-	sub.add_theme_color_override("font_color", Color(0.47, 0.55, 0.69))
+	sub.add_theme_color_override("font_color", Color(0.54, 0.62, 0.77))
 	sub.add_theme_font_size_override("font_size", 9)
 	header.add_child(sub)
 
@@ -1441,7 +1448,7 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 
 	var root_pin: Label = Label.new()
 	root_pin.text = "•"
-	root_pin.add_theme_color_override("font_color", Color(0.33, 0.41, 0.56))
+	root_pin.add_theme_color_override("font_color", Color(0.42, 0.50, 0.66))
 	root_pin.add_theme_font_size_override("font_size", 9)
 	gutter.add_child(root_pin)
 
@@ -1491,6 +1498,7 @@ func _on_event_selected(row: EventRowUI) -> void:
 	_selected_row = row
 	_selected_index = -1
 	_refresh_row_selection_states()
+	_refresh_workspace_context()
 	_rebuild_inspector_event(row)
 
 func _on_condition_selected(row: EventRowUI, index: int) -> void:
@@ -1498,6 +1506,7 @@ func _on_condition_selected(row: EventRowUI, index: int) -> void:
 	_selected_row = row
 	_selected_index = index
 	_refresh_row_selection_states()
+	_refresh_workspace_context()
 	_open_condition_params_dialog(row, index)
 
 func _on_condition_edit_requested(row: EventRowUI, index: int) -> void:
@@ -1510,6 +1519,7 @@ func _on_condition_add_another_requested(row: EventRowUI, _index: int) -> void:
 	_selected_row = row
 	_selected_index = -1
 	_refresh_row_selection_states()
+	_refresh_workspace_context()
 	_open_add_condition_picker(row)
 
 func _on_condition_replace_requested(row: EventRowUI, index: int) -> void:
@@ -1521,6 +1531,7 @@ func _on_condition_replace_requested(row: EventRowUI, index: int) -> void:
 	_selected_row = row
 	_selected_index = index
 	_refresh_row_selection_states()
+	_refresh_workspace_context()
 	_open_replace_condition_picker(row, index)
 
 ## Toggles the negated flag on the condition at the given index.
@@ -1541,6 +1552,7 @@ func _on_action_selected(row: EventRowUI, index: int) -> void:
 	_selected_row = row
 	_selected_index = index
 	_refresh_row_selection_states()
+	_refresh_workspace_context()
 	_open_action_params_dialog(row, index)
 
 func _on_row_add_condition_requested(row: EventRowUI) -> void:
@@ -1550,6 +1562,7 @@ func _on_row_add_condition_requested(row: EventRowUI) -> void:
 	_selected_row = row
 	_selected_index = -1
 	_refresh_row_selection_states()
+	_refresh_workspace_context()
 	_open_add_condition_picker(row)
 
 func _on_row_add_action_requested(row: EventRowUI) -> void:
@@ -1559,6 +1572,7 @@ func _on_row_add_action_requested(row: EventRowUI) -> void:
 	_selected_row = row
 	_selected_index = -1
 	_refresh_row_selection_states()
+	_refresh_workspace_context()
 	_open_add_action_picker(row)
 
 func _on_event_delete_requested(row: EventRowUI) -> void:
@@ -1578,6 +1592,7 @@ func _on_condition_delete_requested(row: EventRowUI, index: int) -> void:
 		_selected_entry_kind = "event"
 		_selected_index = -1
 	_refresh_row_selection_states()
+	_refresh_workspace_context()
 	_rebuild_inspector_event(row)
 
 func _on_action_delete_requested(row: EventRowUI, index: int) -> void:
@@ -1591,6 +1606,7 @@ func _on_action_delete_requested(row: EventRowUI, index: int) -> void:
 		_selected_entry_kind = "event"
 		_selected_index = -1
 	_refresh_row_selection_states()
+	_refresh_workspace_context()
 	_rebuild_inspector_event(row)
 
 func _delete_event_by_uid(uid: String) -> void:
@@ -1603,6 +1619,7 @@ func _delete_event_by_uid(uid: String) -> void:
 			_reset_selection_state()
 			refresh_canvas()
 			_show_empty_inspector()
+			_refresh_workspace_context()
 			if _sheet_toolbar != null:
 				_sheet_toolbar.set_status("Event deleted")
 			return
@@ -1612,6 +1629,7 @@ func _delete_event_by_uid(uid: String) -> void:
 				_reset_selection_state()
 				refresh_canvas()
 				_show_empty_inspector()
+				_refresh_workspace_context()
 				if _sheet_toolbar != null:
 					_sheet_toolbar.set_status("Event deleted")
 				return
@@ -1632,6 +1650,7 @@ func _on_variable_selected(row: VariableRowUI) -> void:
 	_selected_row = row
 	_selected_variable_name = row.var_name
 	_refresh_row_selection_states()
+	_refresh_workspace_context()
 	_rebuild_inspector_variable(row)
 	if _suppress_variable_popup_on_select:
 		return
@@ -1644,6 +1663,7 @@ func _on_group_selected(row: GroupRowUI) -> void:
 	_selected_row = row
 	_selected_group = row
 	_refresh_row_selection_states()
+	_refresh_workspace_context()
 	_rebuild_inspector_group(row)
 
 func _on_group_collapsed_toggled(row: GroupRowUI, _collapsed: bool) -> void:
@@ -1675,14 +1695,36 @@ func _show_empty_inspector() -> void:
 	_clear_inspector()
 	_reset_selection_state()
 	_refresh_row_selection_states()
+	_refresh_workspace_context()
+	var shell: PanelContainer = PanelContainer.new()
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.100, 0.112, 0.145, 1.0)
+	style.border_color = Color(0.196, 0.223, 0.279, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(10)
+	shell.add_theme_stylebox_override("panel", style)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	shell.add_child(vbox)
+
+	var title: Label = Label.new()
+	title.text = "Inspector"
+	title.add_theme_color_override("font_color", Color(0.73, 0.83, 0.98))
+	title.add_theme_font_size_override("font_size", 12)
+	vbox.add_child(title)
+
 	var hint: Label = Label.new()
 	if current_sheet == null:
 		hint.text = "Create or open an event sheet to start editing."
 	else:
 		hint.text = "Select an event, condition, action, variable, or group to edit it."
-	hint.add_theme_color_override("font_color", Color(0.45, 0.45, 0.45))
+	hint.add_theme_color_override("font_color", Color(0.56, 0.63, 0.75))
+	hint.add_theme_font_size_override("font_size", 10)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_inspector_vbox.add_child(hint)
+	vbox.add_child(hint)
+	_inspector_vbox.add_child(shell)
 
 ## Rebuilds the inspector to show a compact event summary.
 ## Primary editing is handled through event block lanes and popups.
