@@ -30,12 +30,12 @@ func _build_ui() -> void:
 
 	var badge: Label = Label.new()
 	badge.text = "Global"
-	badge.add_theme_color_override("font_color", Color(0.62, 0.70, 0.89))
+	badge.add_theme_color_override("font_color", Color(0.70, 0.80, 0.98))
 	badge.add_theme_font_size_override("font_size", 9)
 	hbox.add_child(badge)
 
 	_summary_label = Label.new()
-	_summary_label.add_theme_color_override("font_color", Color(0.86, 0.90, 0.98))
+	_summary_label.add_theme_color_override("font_color", Color(0.90, 0.94, 1.0))
 	_summary_label.add_theme_font_size_override("font_size", 11)
 	_summary_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(_summary_label)
@@ -44,7 +44,7 @@ func _build_ui() -> void:
 	_edit_btn.text = "✎"
 	_edit_btn.flat = true
 	_edit_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_edit_btn.add_theme_color_override("font_color", Color(0.73, 0.79, 0.92))
+	_edit_btn.add_theme_color_override("font_color", Color(0.78, 0.85, 0.98))
 	_edit_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.94, 1.0))
 	_edit_btn.add_theme_font_size_override("font_size", 10)
 	_edit_btn.connect("pressed", _on_pressed)
@@ -63,13 +63,13 @@ func set_selected(selected: bool) -> void:
 
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.127, 0.165, 0.221, 1.0) if _selected else Color(0.099, 0.120, 0.160, 1.0)
-	style.border_color = Color(0.402, 0.633, 0.900, 1.0) if _selected else Color(0.171, 0.225, 0.306, 1.0)
+	style.bg_color = Color(0.114, 0.177, 0.265, 1.0) if _selected else Color(0.082, 0.126, 0.188, 1.0)
+	style.border_color = Color(0.410, 0.663, 0.953, 1.0) if _selected else Color(0.180, 0.278, 0.408, 1.0)
 	style.set_border_width_all(0)
 	style.border_width_left = 2 + min(_depth, 4)
-	style.set_corner_radius_all(4)
-	style.set_content_margin_all(5)
-	style.content_margin_left = 8
+	style.set_corner_radius_all(5)
+	style.set_content_margin_all(6)
+	style.content_margin_left = 9
 	add_theme_stylebox_override("panel", style)
 
 ## Refreshes the label from var_name and var_info.
