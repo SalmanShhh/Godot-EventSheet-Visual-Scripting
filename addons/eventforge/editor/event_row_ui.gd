@@ -58,6 +58,7 @@ const ACTION_ENTRY_BG_HOVER: Color = Color(0.18, 0.22, 0.36, 1.0)
 const ACTION_ENTRY_BG_PRESSED: Color = Color(0.12, 0.15, 0.24, 1.0)
 
 func _init() -> void:
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_build_ui()
 
 func _ensure_ui_built() -> void:
@@ -79,7 +80,6 @@ func _reset_ui() -> void:
 		child.queue_free()
 
 func _build_ui() -> void:
-	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# Outer row styling
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(0.12, 0.14, 0.20, 1.0)
