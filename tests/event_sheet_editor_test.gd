@@ -137,6 +137,38 @@ static func run() -> bool:
 	editor.refresh_canvas()
 	all_passed = _check("sub events cycle guard prevents duplicate rendering", _count_event_row_nodes(editor), 2) and all_passed
 
+	# Live editor composition renders action lane content and add-action affordance.
+	var action_sheet: EventSheetResource = EventSheetResource.new()
+	var action_event: EventRow = EventRow.new()
+	var action_condition: ACECondition = ACECondition.new()
+	action_condition.ace_id = "Always"
+	action_event.conditions.append(action_condition)
+	var queue_free_action: ACEAction = ACEAction.new()
+	queue_free_action.ace_id = "QueueFree"
+	action_event.actions.append(queue_free_action)
+	action_sheet.events.append(action_event)
+	editor.current_sheet = action_sheet
+	editor.refresh_canvas()
+	var live_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, action_event.event_uid)
+	all_passed = _check("live editor renders event row ui", live_row_ui != null, true) and all_passed
+	if live_row_ui != null:
+		all_passed = _check("live editor action entry button exists", _find_button_with_text(live_row_ui, "  Queue Free") != null, true) and all_passed
+		all_passed = _check("live editor add action button exists", _find_button_with_text(live_row_ui, "+ Add Action") != null, true) and all_passed
+
+	# EventRowUI refresh rebuilds missing UI references instead of crashing.
+	var standalone_row_ui: EventRowUI = EventRowUI.new()
+	standalone_row_ui.event_row = action_event
+	standalone_row_ui._runs_label = null
+	standalone_row_ui._conditions_container = null
+	standalone_row_ui._actions_container = null
+	standalone_row_ui.refresh()
+	all_passed = _check("standalone row ui rebuilds runs label", standalone_row_ui._runs_label != null, true) and all_passed
+	all_passed = _check("standalone row ui rebuilds conditions container", standalone_row_ui._conditions_container != null, true) and all_passed
+	all_passed = _check("standalone row ui rebuilds actions container", standalone_row_ui._actions_container != null, true) and all_passed
+	if standalone_row_ui._actions_container != null and standalone_row_ui._actions_container.get_child_count() > 0:
+		var first_action_child: Node = standalone_row_ui._actions_container.get_child(0)
+		all_passed = _check("standalone row ui action summary survives refresh", first_action_child is Button and (first_action_child as Button).text == "  Queue Free", true) and all_passed
+
 	# ACE params dialog back button is created and visible state reflects from_picker.
 	all_passed = _check("ace params back button created", editor._ace_params_back_button != null, true) and all_passed
 	if editor._ace_params_back_button != null:
@@ -238,3 +270,14 @@ static func _count_event_row_nodes(node: Node) -> int:
 	for child: Node in node.get_children():
 		total += _count_event_row_nodes(child)
 	return total
+
+static func _find_button_with_text(node: Node, text: String) -> Button:
+	if node == null:
+		return null
+	if node is Button and (node as Button).text == text:
+		return node as Button
+	for child: Node in node.get_children():
+		var found: Button = _find_button_with_text(child, text)
+		if found != null:
+			return found
+	return null

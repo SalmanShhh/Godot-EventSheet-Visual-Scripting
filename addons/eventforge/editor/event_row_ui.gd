@@ -60,7 +60,26 @@ const ACTION_ENTRY_BG_PRESSED: Color = Color(0.12, 0.15, 0.24, 1.0)
 func _init() -> void:
 	_build_ui()
 
+func _ensure_ui_built() -> void:
+	if _runs_label != null and _conditions_container != null and _actions_container != null:
+		return
+	_reset_ui()
+	_build_ui()
+
+func _reset_ui() -> void:
+	_vbox = null
+	_runs_label = null
+	_conditions_container = null
+	_actions_container = null
+	_condition_context_menu = null
+	_action_context_menu = null
+	var existing_children: Array[Node] = get_children()
+	for child: Node in existing_children:
+		remove_child(child)
+		child.queue_free()
+
 func _build_ui() -> void:
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# Outer row styling
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(0.12, 0.14, 0.20, 1.0)
@@ -75,6 +94,7 @@ func _build_ui() -> void:
 	add_theme_stylebox_override("panel", style)
 
 	_vbox = VBoxContainer.new()
+	_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_vbox.add_theme_constant_override("separation", 0)
 	add_child(_vbox)
 
@@ -162,7 +182,6 @@ func _build_ui() -> void:
 	delete_event_btn.text = "✕"
 	delete_event_btn.flat = true
 	delete_event_btn.tooltip_text = "Delete this event"
-	delete_event_btn.accessible_name = "Delete this event"
 	delete_event_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	delete_event_btn.add_theme_color_override("font_color", Color(0.85, 0.35, 0.35))
 	delete_event_btn.add_theme_font_size_override("font_size", 10)
@@ -180,6 +199,7 @@ func _build_ui() -> void:
 	cond_row.add_child(add_condition_btn)
 
 	_conditions_container = VBoxContainer.new()
+	_conditions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_conditions_container.add_theme_constant_override("separation", 1)
 	conditions_lane_vbox.add_child(_conditions_container)
 
@@ -233,6 +253,7 @@ func _build_ui() -> void:
 	actions_row.add_child(add_action_btn)
 
 	_actions_container = VBoxContainer.new()
+	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_actions_container.add_theme_constant_override("separation", 1)
 	actions_lane_vbox.add_child(_actions_container)
 
@@ -240,6 +261,7 @@ func _build_ui() -> void:
 func refresh() -> void:
 	if event_row == null:
 		return
+	_ensure_ui_built()
 	_refresh_runs()
 	_refresh_conditions()
 	_refresh_actions()
@@ -346,9 +368,13 @@ static func _format_action_from_descriptor(action: ACEAction) -> String:
 # ── Private helpers ──────────────────────────────────────────────────────────
 
 func _refresh_runs() -> void:
+	if _runs_label == null:
+		return
 	_runs_label.text = format_run_context(event_row)
 
 func _refresh_conditions() -> void:
+	if _conditions_container == null:
+		return
 	for child in _conditions_container.get_children():
 		child.queue_free()
 
@@ -370,6 +396,8 @@ func _refresh_conditions() -> void:
 		_conditions_container.add_child(btn)
 
 func _refresh_actions() -> void:
+	if _actions_container == null:
+		return
 	for child in _actions_container.get_children():
 		child.queue_free()
 
@@ -399,6 +427,7 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	var btn: Button = Button.new()
 	btn.text = text
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn.flat = false
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	btn.add_theme_color_override("font_color", Color(0.88, 0.88, 0.88))
