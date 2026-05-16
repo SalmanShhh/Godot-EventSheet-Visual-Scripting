@@ -81,8 +81,9 @@ static func _normalize_descriptor(entry: Variant) -> ACEDescriptor:
 	descriptor_from_dict.signal_name = str(data.get("signal_name", data.get("signalName", "")))
 	descriptor_from_dict.codegen_template = str(data.get("codegen_template", data.get("codegenTemplate", "")))
 	var raw_params: Variant = data.get("params", [])
-	if descriptor_from_dict.provider_id != "Core" and not _custom_params_have_initial_values(raw_params):
-		push_error("[EventForge] Custom ACE '%s/%s' must define initial/default values for every param." % [descriptor_from_dict.provider_id, descriptor_from_dict.ace_id])
+	var missing_initial_param: String = _find_custom_param_missing_initial(raw_params)
+	if descriptor_from_dict.provider_id != "Core" and not missing_initial_param.is_empty():
+		push_error("[EventForge] Custom ACE '%s/%s' param '%s' must define initial/default value metadata." % [descriptor_from_dict.provider_id, descriptor_from_dict.ace_id, missing_initial_param])
 		return null
 	descriptor_from_dict.params = _normalize_params(raw_params)
 	_apply_descriptor_aliases(descriptor_from_dict)
@@ -137,15 +138,17 @@ static func _normalize_params(raw_params: Variant) -> Array[ACEParam]:
 		output.append(param)
 	return output
 
-static func _custom_params_have_initial_values(raw_params: Variant) -> bool:
+static func _find_custom_param_missing_initial(raw_params: Variant) -> String:
 	if not (raw_params is Array):
-		return true
-	for entry: Variant in raw_params:
+		return ""
+	for i: int in range(raw_params.size()):
+		var entry: Variant = raw_params[i]
 		if entry is Dictionary:
 			var data: Dictionary = entry
 			if not _has_param_initial_or_default_key(data):
-				return false
-	return true
+				var param_id: String = str(data.get("id", data.get("name", "")))
+				return param_id if not param_id.is_empty() else "#%d" % i
+	return ""
 
 static func _has_param_initial_or_default_key(data: Dictionary) -> bool:
 	return data.has("initial_value") \
