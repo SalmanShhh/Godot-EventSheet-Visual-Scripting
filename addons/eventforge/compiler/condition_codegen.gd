@@ -26,7 +26,10 @@ static func generate_condition_slice(condition: ACECondition) -> Dictionary:
 		"CompareVar":
 			var compare_expression: String = _generate_compare_var(_get_params(condition))
 			if compare_expression.is_empty():
-				result["warning"] = "Condition Core::CompareVar has invalid parameters and was skipped"
+				result["warning"] = "Condition %s::%s has invalid parameters and was skipped" % [
+					condition.provider_id,
+					condition.ace_id
+				]
 				return result
 			result["supported"] = true
 			result["expression"] = compare_expression

@@ -25,7 +25,10 @@ static func generate_action_slice(action: ACEAction) -> Dictionary:
 			var var_name: String = str(params.get("var_name", "")).strip_edges()
 			var value: String = str(params.get("value", "")).strip_edges()
 			if var_name.is_empty() or value.is_empty():
-				result["warning"] = "Action Core::SetVar has invalid parameters and was skipped"
+				result["warning"] = "Action %s::%s has invalid parameters and was skipped" % [
+					action.provider_id,
+					action.ace_id
+				]
 				return result
 			result["supported"] = true
 			result["statement"] = "%s = %s" % [var_name, value]
@@ -33,7 +36,10 @@ static func generate_action_slice(action: ACEAction) -> Dictionary:
 		"PrintLog":
 			var message: String = str(params.get("message", "")).strip_edges()
 			if message.is_empty():
-				result["warning"] = "Action Core::PrintLog has invalid parameters and was skipped"
+				result["warning"] = "Action %s::%s has invalid parameters and was skipped" % [
+					action.provider_id,
+					action.ace_id
+				]
 				return result
 			result["supported"] = true
 			result["statement"] = "print(%s)" % message

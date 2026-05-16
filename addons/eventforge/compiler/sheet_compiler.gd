@@ -90,7 +90,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 					condition_texts.append(condition_line)
 
 			var body_indent: String = "\t"
-			var event_has_statements: bool = false
+			var action_statement_emitted: bool = false
 			if condition_texts.size() > 0:
 				lines.append("\tif %s:" % " and ".join(condition_texts))
 				body_indent = "\t\t"
@@ -108,13 +108,13 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 						action_line = "await %s" % action_line
 					lines.append(body_indent + action_line)
 					had_body = true
-					event_has_statements = true
+					action_statement_emitted = true
 				elif action_item is Resource and action_item.has_method("get_row_kind"):
 					lines.append(body_indent + "# TODO: row type not yet implemented in Phase 1")
 					had_body = true
-					event_has_statements = true
+					action_statement_emitted = true
 
-			if condition_texts.size() > 0 and not event_has_statements:
+			if condition_texts.size() > 0 and not action_statement_emitted:
 				lines.append(body_indent + "pass")
 				had_body = true
 

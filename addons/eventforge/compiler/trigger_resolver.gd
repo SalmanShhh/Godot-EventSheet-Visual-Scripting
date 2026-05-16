@@ -13,10 +13,13 @@ const SUPPORTED_TRIGGER_SIGNATURES: Dictionary = {
 
 ## Returns a stable trigger-group key from an event row.
 static func get_trigger_key(event: EventRow) -> String:
-	var signature: Dictionary = resolve_trigger(event)
-	var function_name: String = str(signature.get("function_name", ""))
-	var args: String = str(signature.get("args", ""))
-	return "%s::%s::%s::%s" % [event.trigger_provider_id, event.trigger_id, function_name, args]
+	if event.trigger_id == SIGNAL_TRIGGER_ID:
+		return "%s::%s::%s" % [
+			event.trigger_provider_id,
+			event.trigger_id,
+			_sanitize_signal_name(str(event.trigger_params.get("signal_name", "")))
+		]
+	return "%s::%s" % [event.trigger_provider_id, event.trigger_id]
 
 ## Resolves trigger metadata for code generation.
 static func resolve_trigger(event: EventRow) -> Dictionary:
