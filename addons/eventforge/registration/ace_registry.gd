@@ -143,14 +143,15 @@ static func _custom_params_have_initial_values(raw_params: Variant) -> bool:
 	for entry: Variant in raw_params:
 		if entry is Dictionary:
 			var data: Dictionary = entry
-			if not data.has("initial_value") and not data.has("initialValue") and not data.has("default_value") and not data.has("defaultValue"):
-				return false
-			continue
-		if entry is ACEParam:
-			var param: ACEParam = entry
-			if param.get_initial_value() == null and param.default_value == null and param.initial_value == null:
+			if not _has_param_initial_or_default_key(data):
 				return false
 	return true
+
+static func _has_param_initial_or_default_key(data: Dictionary) -> bool:
+	return data.has("initial_value") \
+		or data.has("initialValue") \
+		or data.has("default_value") \
+		or data.has("defaultValue")
 
 static func _apply_descriptor_aliases(descriptor: ACEDescriptor) -> void:
 	if descriptor.list_name.is_empty():
