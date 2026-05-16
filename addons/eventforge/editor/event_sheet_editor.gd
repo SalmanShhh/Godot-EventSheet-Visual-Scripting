@@ -9,6 +9,8 @@ class_name EventSheetEditor
 # ── State ────────────────────────────────────────────────────────────────────
 
 var current_sheet: EventSheetResource = null
+## True when the loaded sheet has unsaved changes.
+var _is_dirty: bool = false
 # user:// is the editor's writable data path; keep preview output out of res:// assets.
 const PREVIEW_OUTPUT_PATH: String = "user://eventforge_preview_generated.gd"
 const DEFAULT_RUN_CONTEXT_ACE_ID: String = "OnProcess"
@@ -68,6 +70,8 @@ var _sheet_canvas_shell: PanelContainer = null
 var _inspector_panel: PanelContainer = null
 var _inspector_vbox: VBoxContainer = null
 var _sheet_toolbar: SheetToolbar = null
+## Status bar label at the bottom of the workspace.
+var _status_label: Label = null
 var _ace_picker_popup: Window = null
 var _ace_picker_title: Label = null
 var _ace_picker_tree: Tree = null
@@ -117,6 +121,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if key_event.ctrl_pressed and not key_event.alt_pressed and not key_event.meta_pressed:
 		if not key_event.shift_pressed and key_event.keycode == KEY_E:
 			handled = _handle_workflow_shortcut("add_event")
+		elif not key_event.shift_pressed and key_event.keycode == KEY_S:
+			handled = _handle_workflow_shortcut("save")
+		elif key_event.shift_pressed and key_event.keycode == KEY_S:
+			handled = _handle_workflow_shortcut("save_as")
 		elif key_event.shift_pressed and key_event.keycode == KEY_V:
 			handled = _handle_workflow_shortcut("add_variable")
 		elif key_event.shift_pressed and key_event.keycode == KEY_C:
@@ -150,6 +158,12 @@ func _handle_workflow_shortcut(action: String) -> bool:
 	match action:
 		"add_event":
 			_on_add_event_requested()
+			return true
+		"save":
+			_on_save_sheet()
+			return true
+		"save_as":
+			_on_save_as_sheet()
 			return true
 		"add_variable":
 			_on_add_variable_requested()
@@ -225,34 +239,43 @@ func setup(sheet: EventSheetResource = null) -> void:
 # ── Layout construction ───────────────────────────────────────────────────────
 
 func _build_layout() -> void:
-	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	size_flags_vertical = Control.SIZE_EXPAND_FILL
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	var root_margin: MarginContainer = MarginContainer.new()
-	root_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root_margin.add_theme_constant_override("margin_left", 8)
-	root_margin.add_theme_constant_override("margin_right", 8)
-	root_margin.add_theme_constant_override("margin_top", 8)
-	root_margin.add_theme_constant_override("margin_bottom", 8)
-	add_child(root_margin)
+	# Workspace shell: VBoxContainer fills the full main-screen area.
+	# Separation is 0 so each zone (toolbar / content / status bar) butts directly
+	# against the next without any gap — matching the Script editor composition.
+	var workspace_vbox: VBoxContainer = VBoxContainer.new()
+	workspace_vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	workspace_vbox.add_theme_constant_override("separation", 0)
+	add_child(workspace_vbox)
 
-	var root: VBoxContainer = VBoxContainer.new()
-	root.add_theme_constant_override("separation", 8)
-	root_margin.add_child(root)
-
+	# ── Toolbar (full-width, flush at top) ────────────────────────────────────
 	_sheet_toolbar = SheetToolbar.new()
+	_sheet_toolbar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_sheet_toolbar.new_sheet_requested.connect(_on_create_new_sheet)
 	_sheet_toolbar.open_sheet_requested.connect(_on_open_existing_sheet)
+	_sheet_toolbar.save_requested.connect(_on_save_sheet)
+	_sheet_toolbar.save_as_requested.connect(_on_save_as_sheet)
 	_sheet_toolbar.add_event_requested.connect(_on_add_event_requested)
 	_sheet_toolbar.add_var_requested.connect(_on_add_variable_requested)
 	_sheet_toolbar.compile_requested.connect(_on_compile_requested)
-	root.add_child(_sheet_toolbar)
+	workspace_vbox.add_child(_sheet_toolbar)
+
+	# ── Content area (canvas + inspector) with small breathing margins ─────────
+	var content_margin: MarginContainer = MarginContainer.new()
+	content_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content_margin.add_theme_constant_override("margin_left", 6)
+	content_margin.add_theme_constant_override("margin_right", 6)
+	content_margin.add_theme_constant_override("margin_top", 6)
+	content_margin.add_theme_constant_override("margin_bottom", 4)
+	workspace_vbox.add_child(content_margin)
 
 	var hbox: HBoxContainer = HBoxContainer.new()
 	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	hbox.add_theme_constant_override("separation", 8)
-	root.add_child(hbox)
+	content_margin.add_child(hbox)
 
 	# ── Left: canvas scroll ───────────────────────────────────────────────────
 	_sheet_canvas_shell = PanelContainer.new()
@@ -303,6 +326,27 @@ func _build_layout() -> void:
 	_inspector_vbox = VBoxContainer.new()
 	_inspector_vbox.add_theme_constant_override("separation", 6)
 	_inspector_panel.add_child(_inspector_vbox)
+
+	# ── Status bar (full-width at bottom) ──────────────────────────────────────
+	var status_bar: PanelContainer = PanelContainer.new()
+	status_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var sb_style: StyleBoxFlat = StyleBoxFlat.new()
+	sb_style.bg_color = Color(0.064, 0.071, 0.092, 1.0)
+	sb_style.border_color = Color(0.141, 0.164, 0.214, 1.0)
+	sb_style.set_border_width_all(0)
+	sb_style.border_width_top = 1
+	sb_style.set_content_margin(SIDE_LEFT, 10)
+	sb_style.set_content_margin(SIDE_RIGHT, 10)
+	sb_style.set_content_margin(SIDE_TOP, 3)
+	sb_style.set_content_margin(SIDE_BOTTOM, 3)
+	status_bar.add_theme_stylebox_override("panel", sb_style)
+	workspace_vbox.add_child(status_bar)
+
+	_status_label = Label.new()
+	_status_label.text = ""
+	_status_label.add_theme_color_override("font_color", Color(0.70, 0.74, 0.80))
+	_status_label.add_theme_font_size_override("font_size", 10)
+	status_bar.add_child(_status_label)
 
 	_show_empty_inspector()
 	_refresh_toolbar_state()
@@ -391,8 +435,7 @@ func _add_no_sheet_onboarding() -> void:
 ## Creates a blank in-memory EventSheetResource and loads it into the editor.
 func _on_create_new_sheet() -> void:
 	_load_sheet(EventSheetResource.new())
-	if _sheet_toolbar != null:
-		_sheet_toolbar.set_status("Created new Event Sheet")
+	_set_status("Created new Event Sheet")
 
 ## Opens a FileDialog so the user can pick an existing EventSheetResource.
 func _on_open_existing_sheet() -> void:
@@ -404,12 +447,53 @@ func _on_open_existing_sheet() -> void:
 		var sheet: Variant = load(path)
 		if sheet is EventSheetResource:
 			_load_sheet(sheet as EventSheetResource)
-			if _sheet_toolbar != null:
-				_sheet_toolbar.set_status("Opened: %s" % path.get_file())
+			_set_status("Opened: %s" % path.get_file())
 		else:
 			push_warning("[EventForge] Selected file is not an EventSheetResource: %s" % path)
-			if _sheet_toolbar != null:
-				_sheet_toolbar.set_status("Selected file is not an EventSheetResource", true)
+			_set_status("Selected file is not an EventSheetResource", true)
+		dialog.queue_free()
+	)
+	dialog.connect("canceled", func() -> void: dialog.queue_free())
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(700, 500))
+
+## Saves the current sheet to its existing resource path.
+## If the sheet has no path yet, delegates to Save As.
+func _on_save_sheet() -> void:
+	if current_sheet == null:
+		_set_status("No sheet to save", true)
+		return
+	if current_sheet.resource_path.is_empty():
+		_on_save_as_sheet()
+		return
+	var err: Error = ResourceSaver.save(current_sheet, current_sheet.resource_path)
+	if err == OK:
+		_clear_dirty()
+		_set_status("Saved: %s" % current_sheet.resource_path.get_file())
+	else:
+		_set_status("Save failed (error %d)" % err, true)
+
+## Opens a FileDialog for the user to choose a save path.
+func _on_save_as_sheet() -> void:
+	if current_sheet == null:
+		_set_status("No sheet to save", true)
+		return
+	var dialog: FileDialog = FileDialog.new()
+	dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	dialog.access = FileDialog.ACCESS_RESOURCES
+	dialog.filters = PackedStringArray(["*.tres ; EventSheetResource"])
+	if not current_sheet.resource_path.is_empty():
+		dialog.current_path = current_sheet.resource_path
+	dialog.connect("file_selected", func(path: String) -> void:
+		var err: Error = ResourceSaver.save(current_sheet, path)
+		if err == OK:
+			current_sheet.take_over_path(path)
+			_clear_dirty()
+			refresh_canvas()
+			_refresh_toolbar_state()
+			_set_status("Saved as: %s" % path.get_file())
+		else:
+			_set_status("Save failed (error %d)" % err, true)
 		dialog.queue_free()
 	)
 	dialog.connect("canceled", func() -> void: dialog.queue_free())
@@ -430,24 +514,23 @@ func _on_add_event_requested() -> void:
 
 func _on_compile_requested() -> void:
 	if current_sheet == null:
-		if _sheet_toolbar != null:
-			_sheet_toolbar.set_status("Create or open a sheet before compiling", true)
+		_set_status("Create or open a sheet before compiling", true)
 		return
 
 	var result: Dictionary = SheetCompiler.compile(current_sheet, PREVIEW_OUTPUT_PATH)
 	var ok: bool = bool(result.get("success", false))
-	if _sheet_toolbar != null:
-		if ok:
-			_sheet_toolbar.set_status("Compiled preview to %s" % PREVIEW_OUTPUT_PATH)
-		else:
-			var errors: Array = result.get("errors", [])
-			var first_error_text: String = str(errors[0]) if not errors.is_empty() else "No error details available"
-			_sheet_toolbar.set_status("Compile failed: %s" % first_error_text, true)
+	if ok:
+		_set_status("Compiled preview to %s" % PREVIEW_OUTPUT_PATH)
+	else:
+		var errors: Array = result.get("errors", [])
+		var first_error_text: String = str(errors[0]) if not errors.is_empty() else "No error details available"
+		_set_status("Compile failed: %s" % first_error_text, true)
 
 func _load_sheet(sheet: EventSheetResource) -> void:
 	current_sheet = sheet
 	# Avoid stale references in inspector selection when switching sheets.
 	_reset_selection_state()
+	_clear_dirty()
 	if is_inside_tree():
 		refresh_canvas()
 		_show_empty_inspector()
@@ -457,19 +540,43 @@ func _ensure_sheet() -> void:
 	if current_sheet != null:
 		return
 	_load_sheet(EventSheetResource.new())
-	if _sheet_toolbar != null:
-		_sheet_toolbar.set_status("Created new Event Sheet")
+	_set_status("Created new Event Sheet")
 
 func _refresh_toolbar_state() -> void:
 	if _sheet_toolbar == null:
 		return
 	_sheet_toolbar.set_sheet_loaded(current_sheet != null)
+	_sheet_toolbar.set_dirty(_is_dirty)
 	_refresh_workspace_context()
 
 func _refresh_workspace_context() -> void:
 	if _sheet_toolbar == null:
 		return
 	_sheet_toolbar.set_context(current_sheet, _selected_entry_kind)
+
+## Marks the current sheet as having unsaved changes.
+func _mark_dirty() -> void:
+	if _is_dirty:
+		return
+	_is_dirty = true
+	if _sheet_toolbar != null:
+		_sheet_toolbar.set_dirty(true)
+
+## Clears the unsaved-changes flag and updates the toolbar indicator.
+func _clear_dirty() -> void:
+	_is_dirty = false
+	if _sheet_toolbar != null:
+		_sheet_toolbar.set_dirty(false)
+
+## Updates the workspace status bar text.
+func _set_status(text: String, is_error: bool = false) -> void:
+	if _status_label == null:
+		return
+	_status_label.text = text
+	_status_label.add_theme_color_override(
+		"font_color",
+		Color(0.90, 0.55, 0.55) if is_error else Color(0.70, 0.74, 0.80)
+	)
 
 func _build_ace_picker_popup() -> void:
 	_ace_picker_popup = Window.new()
@@ -1049,8 +1156,8 @@ func _create_event_with_trigger(descriptor: ACEDescriptor, params: Dictionary) -
 	current_sheet.events.append(new_event)
 	refresh_canvas()
 	_focus_event_by_uid(new_event.event_uid)
-	if _sheet_toolbar != null:
-		_sheet_toolbar.set_status("Added event: %s" % descriptor.get_list_name())
+	_mark_dirty()
+	_set_status("Added event: %s" % descriptor.get_list_name())
 
 func _create_event_with_condition(descriptor: ACEDescriptor, params: Dictionary) -> void:
 	_ensure_sheet()
@@ -1067,8 +1174,8 @@ func _create_event_with_condition(descriptor: ACEDescriptor, params: Dictionary)
 	current_sheet.events.append(new_event)
 	refresh_canvas()
 	_focus_event_by_uid(new_event.event_uid)
-	if _sheet_toolbar != null:
-		_sheet_toolbar.set_status("Added event: %s" % descriptor.get_list_name())
+	_mark_dirty()
+	_set_status("Added event: %s" % descriptor.get_list_name())
 
 func _append_condition_with_params(descriptor: ACEDescriptor, params: Dictionary) -> void:
 	var row: EventRowUI = _ace_params_target_row
@@ -1081,6 +1188,7 @@ func _append_condition_with_params(descriptor: ACEDescriptor, params: Dictionary
 	row.event_row.conditions.append(condition)
 	row.refresh()
 	_rebuild_inspector_event(row)
+	_mark_dirty()
 
 func _replace_condition_with_params(descriptor: ACEDescriptor, index: int, params: Dictionary) -> void:
 	var row: EventRowUI = _ace_params_target_row
@@ -1095,6 +1203,7 @@ func _replace_condition_with_params(descriptor: ACEDescriptor, index: int, param
 	row.event_row.conditions[index] = condition
 	row.refresh()
 	_rebuild_inspector_event(row)
+	_mark_dirty()
 
 func _append_action_with_params(descriptor: ACEDescriptor, params: Dictionary) -> void:
 	var row: EventRowUI = _ace_params_target_row
@@ -1107,6 +1216,7 @@ func _append_action_with_params(descriptor: ACEDescriptor, params: Dictionary) -
 	row.event_row.actions.append(action)
 	row.refresh()
 	_rebuild_inspector_event(row)
+	_mark_dirty()
 
 func _edit_condition_params(index: int, params: Dictionary) -> void:
 	var row: EventRowUI = _ace_params_target_row
@@ -1120,6 +1230,7 @@ func _edit_condition_params(index: int, params: Dictionary) -> void:
 	_set_condition_params(condition, params)
 	row.refresh()
 	_rebuild_inspector_event(row)
+	_mark_dirty()
 
 func _edit_action_params(index: int, params: Dictionary) -> void:
 	var row: EventRowUI = _ace_params_target_row
@@ -1134,6 +1245,7 @@ func _edit_action_params(index: int, params: Dictionary) -> void:
 	_set_action_params(action, params)
 	row.refresh()
 	_rebuild_inspector_event(row)
+	_mark_dirty()
 
 func _set_condition_params(condition: ACECondition, params: Dictionary) -> void:
 	if condition == null:
@@ -1268,13 +1380,11 @@ func _on_variable_dialog_confirmed() -> void:
 		return
 	var new_name: String = _variable_name_edit.text.strip_edges()
 	if new_name.is_empty():
-		if _sheet_toolbar != null:
-			_sheet_toolbar.set_status("Variable name cannot be empty", true)
+		_set_status("Variable name cannot be empty", true)
 		return
 	var is_editing: bool = _variable_dialog_mode == "edit"
 	if current_sheet.variables.has(new_name) and (not is_editing or new_name != _variable_dialog_original_name):
-		if _sheet_toolbar != null:
-			_sheet_toolbar.set_status("Variable name already exists: %s" % new_name, true)
+		_set_status("Variable name already exists: %s" % new_name, true)
 		return
 
 	var target_descriptor: Dictionary = {}
@@ -1298,11 +1408,11 @@ func _on_variable_dialog_confirmed() -> void:
 
 	refresh_canvas()
 	_focus_variable_by_name(new_name)
-	if _sheet_toolbar != null:
-		if is_editing:
-			_sheet_toolbar.set_status("Updated variable: %s" % new_name)
-		else:
-			_sheet_toolbar.set_status("Added variable: %s" % new_name)
+	_mark_dirty()
+	if is_editing:
+		_set_status("Updated variable: %s" % new_name)
+	else:
+		_set_status("Added variable: %s" % new_name)
 
 func _parse_variable_initial_value(raw_text: String, type_name: String) -> Variant:
 	var text: String = raw_text.strip_edges()
@@ -1717,6 +1827,7 @@ func _on_condition_invert_requested(row: EventRowUI, index: int) -> void:
 	condition.negated = not condition.negated
 	row.refresh()
 	_refresh_inspector_for_current_selection()
+	_mark_dirty()
 
 func _on_action_selected(row: EventRowUI, index: int) -> void:
 	_selected_entry_kind = "action"
@@ -1768,6 +1879,7 @@ func _on_condition_delete_requested(row: EventRowUI, index: int) -> void:
 	_refresh_row_selection_states()
 	_refresh_workspace_context()
 	_refresh_inspector_for_current_selection()
+	_mark_dirty()
 
 func _on_action_delete_requested(row: EventRowUI, index: int) -> void:
 	if row == null or row.event_row == null:
@@ -1785,6 +1897,7 @@ func _on_action_delete_requested(row: EventRowUI, index: int) -> void:
 	_refresh_row_selection_states()
 	_refresh_workspace_context()
 	_refresh_inspector_for_current_selection()
+	_mark_dirty()
 
 func _delete_event_by_uid(uid: String) -> void:
 	if current_sheet == null or uid.is_empty():
@@ -1797,8 +1910,8 @@ func _delete_event_by_uid(uid: String) -> void:
 			refresh_canvas()
 			_show_empty_inspector()
 			_refresh_workspace_context()
-			if _sheet_toolbar != null:
-				_sheet_toolbar.set_status("Event deleted")
+			_mark_dirty()
+			_set_status("Event deleted")
 			return
 	for event_resource: Variant in current_sheet.events:
 		if event_resource is EventRow:
@@ -1807,8 +1920,8 @@ func _delete_event_by_uid(uid: String) -> void:
 				refresh_canvas()
 				_show_empty_inspector()
 				_refresh_workspace_context()
-				if _sheet_toolbar != null:
-					_sheet_toolbar.set_status("Event deleted")
+				_mark_dirty()
+				_set_status("Event deleted")
 				return
 
 func _remove_sub_event_by_uid(parent: EventRow, uid: String) -> bool:
@@ -1849,6 +1962,7 @@ func _on_group_collapsed_toggled(row: GroupRowUI, _collapsed: bool) -> void:
 	var group_uid: String = row.event_group.group_uid
 	refresh_canvas()
 	_focus_group_by_uid(group_uid)
+	_mark_dirty()
 
 func _on_variable_delete_requested(row: VariableRowUI) -> void:
 	if row == null or current_sheet == null:
@@ -1885,8 +1999,8 @@ func _on_variable_delete_requested(row: VariableRowUI) -> void:
 	elif not refocus_group_uid.is_empty():
 		_focus_group_by_uid(refocus_group_uid)
 	_refresh_workspace_context()
-	if _sheet_toolbar != null:
-		_sheet_toolbar.set_status("Variable deleted: %s" % var_name)
+	_mark_dirty()
+	_set_status("Variable deleted: %s" % var_name)
 
 func _on_group_delete_requested(row: GroupRowUI) -> void:
 	if row == null or row.event_group == null or current_sheet == null:
@@ -1919,8 +2033,8 @@ func _delete_group_by_uid(uid: String) -> void:
 		elif not refocus_var_name.is_empty():
 			_focus_variable_by_name(refocus_var_name)
 		_refresh_workspace_context()
-		if _sheet_toolbar != null:
-			_sheet_toolbar.set_status("Group deleted")
+		_mark_dirty()
+		_set_status("Group deleted")
 
 ## Recursively removes the first EventGroup with the given uid from an array.
 ## Searches top-level entries and nested EventGroup.events/rows as well as EventRow.sub_events.
