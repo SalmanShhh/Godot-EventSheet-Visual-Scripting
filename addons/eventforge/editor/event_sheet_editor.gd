@@ -155,7 +155,7 @@ func _get_selected_event_row_for_shortcuts() -> EventRowUI:
 	if not (_selected_row is EventRowUI):
 		return null
 	var row: EventRowUI = _selected_row as EventRowUI
-	if row == null or row.event_row == null:
+	if row.event_row == null:
 		return null
 	return row
 
