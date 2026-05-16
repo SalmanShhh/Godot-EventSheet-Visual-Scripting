@@ -13,6 +13,7 @@ var row: EventRow = null
 var _enabled_checkbox: CheckBox
 var _trigger_label: Label
 var _counts_label: Label
+var _prompt_label: Label
 var _add_condition_button: Button
 var _add_action_button: Button
 var _delete_button: Button
@@ -22,8 +23,11 @@ func setup() -> void:
     if _enabled_checkbox != null:
         return
 
+    var wrapper: VBoxContainer = VBoxContainer.new()
+    add_child(wrapper)
+
     var content: HBoxContainer = HBoxContainer.new()
-    add_child(content)
+    wrapper.add_child(content)
 
     _enabled_checkbox = CheckBox.new()
     _enabled_checkbox.toggled.connect(_on_enabled_toggled)
@@ -35,6 +39,11 @@ func setup() -> void:
 
     _counts_label = Label.new()
     content.add_child(_counts_label)
+
+    _prompt_label = Label.new()
+    _prompt_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _prompt_label.visible = false
+    wrapper.add_child(_prompt_label)
 
     _add_condition_button = Button.new()
     _add_condition_button.text = "+Condition"
@@ -61,6 +70,7 @@ func set_row(value: EventRow) -> void:
         _enabled_checkbox.button_pressed = false
         _trigger_label.text = "<no row>"
         _counts_label.text = ""
+        _prompt_label.visible = false
         return
 
     _enabled_checkbox.button_pressed = row.enabled
@@ -68,7 +78,7 @@ func set_row(value: EventRow) -> void:
     if trigger_id.is_empty() and row.trigger != null:
         trigger_id = row.trigger.ace_id
     if trigger_id.is_empty():
-        _trigger_label.text = "<no trigger>"
+        _trigger_label.text = "No Trigger"
         _trigger_label.add_theme_color_override("font_color", Color(0.95, 0.55, 0.55))
     else:
         _trigger_label.text = _descriptor_summary(row.trigger_provider_id, trigger_id)
@@ -77,19 +87,30 @@ func set_row(value: EventRow) -> void:
     var condition_summary: String = _condition_summary()
     var action_summary: String = _action_summary()
     _counts_label.text = "C:%d %s | A:%d %s" % [row.conditions.size(), condition_summary, row.actions.size(), action_summary]
+    var is_new_event: bool = trigger_id.is_empty() and row.conditions.is_empty() and row.actions.is_empty()
+    _prompt_label.visible = is_new_event
+    if is_new_event:
+        _prompt_label.text = "New Event\nChoose a Trigger, Condition, or Action from the left panel."
+    else:
+        _prompt_label.text = ""
 
 ## Updates selected highlight.
 func set_selected(is_selected: bool) -> void:
-    var background: Color = Color(0.20, 0.32, 0.55, 0.35) if is_selected else Color(0.12, 0.12, 0.12, 0.08)
-    add_theme_stylebox_override("panel", _make_stylebox(background))
+    var background: Color = Color(0.20, 0.32, 0.55, 0.45) if is_selected else Color(0.12, 0.12, 0.12, 0.08)
+    add_theme_stylebox_override("panel", _make_stylebox(background, is_selected))
 
 func _gui_input(event: InputEvent) -> void:
     if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and row != null:
         emit_signal("selected", row)
 
-func _make_stylebox(color: Color) -> StyleBoxFlat:
+func _make_stylebox(color: Color, is_selected: bool) -> StyleBoxFlat:
     var box: StyleBoxFlat = StyleBoxFlat.new()
     box.bg_color = color
+    box.border_width_left = 2
+    box.border_width_top = 2
+    box.border_width_right = 2
+    box.border_width_bottom = 2
+    box.border_color = Color(0.38, 0.62, 0.96, 0.9) if is_selected else Color(0.30, 0.30, 0.30, 0.35)
     box.corner_radius_top_left = 4
     box.corner_radius_top_right = 4
     box.corner_radius_bottom_left = 4

@@ -39,3 +39,14 @@ func _exit_tree() -> void:
         remove_autoload_singleton(BRIDGE_NAME)
         _autoload_added_by_plugin = false
     print("[EventForge] unloaded")
+
+## Allows EventForge to claim EventSheetResource assets from editor open flow.
+func _handles(object: Object) -> bool:
+    return object is EventSheetResource
+
+## Opens the EventForge editor and assigns the selected EventSheet resource.
+func _edit(object: Object) -> void:
+    if _sheet_editor == null or not (object is EventSheetResource):
+        return
+    _sheet_editor.set_sheet(object as EventSheetResource)
+    make_bottom_panel_item_visible(_sheet_editor)

@@ -1,5 +1,7 @@
 # EventForge Editor UI Spec
 
+Last updated: 2026-05-16
+
 ## Phase implementation status
 
 | Phase | Feature | Status |
@@ -35,7 +37,9 @@ Generated GDScript remains read-only until the importer/round-trip system is mat
 
 ## 2) Main screen architecture
 
-The editor shell is hosted by the EventForge plugin and mounted as an editor panel. Phase 2 uses a bottom panel fallback; the long-term target is a dedicated main screen.
+The editor shell is hosted by the EventForge plugin and mounted as an editor panel.
+Phase 2 currently uses a bottom panel fallback; this is temporary. The long-term
+target is a dedicated Script-editor-style workspace.
 
 The editor controller owns:
 
@@ -80,7 +84,32 @@ Recommended long-term layout:
 └ Status Bar ────────────────────────────────────────────────────────────────────┘
 ```
 
-For the current bottom-panel MVP, some regions may collapse or stack to preserve space.
+For the current bottom-panel fallback, some regions may collapse or stack to preserve space.
+
+### Workflow/UX direction (Phase 2.2 follow-up)
+
+- UX inspiration: Construct 3 / GDevelop event sheets adapted to Godot-native
+  editor conventions.
+- Active-sheet header is always visible and shows:
+  - `No Event Sheet Open`
+  - `Unsaved Event Sheet`
+  - `Event Sheet: <name/path>`
+- Header shows `*` when unsaved edits and/or unrefreshed preview changes exist.
+- Event canvas empty state is clickable:
+  `No events yet. Click here or press Add Event to create one.`
+- Clicking blank canvas space below rows supports quick add-event flow.
+- New rows are selected immediately and prompt:
+  `New Event` and `Choose a Trigger, Condition, or Action from the left panel.`
+- Rows with no trigger should show `No Trigger` clearly.
+- Copy/paste context is explicit:
+  - copy requires open sheet + selected row
+  - paste requires open sheet
+  - paste inserts after selected row or at end when no row is selected
+  - no-sheet paste message: `Open or create an Event Sheet before pasting.`
+- Preview refresh is automatic with debounce (~0.4s) after edits, while manual
+  `Refresh Preview` remains available.
+- Built-in Core ACEs are grouped under `System` for event-sheet-friendly
+  presentation, with user-facing labels like `On Ready` and `On Process`.
 
 ---
 
@@ -160,7 +189,7 @@ Future toolbar improvements:
 
 ## 7) ACE palette behavior
 
-The ACE palette lists descriptors from `ACERegistry`, grouped by type:
+The ACE palette lists descriptors from `ACERegistry`, grouped by type and category:
 
 - Triggers
 - Conditions
@@ -276,12 +305,13 @@ Split mode:
 
 Status examples:
 
-- Success: `Compile succeeded.`
+- Success: `Preview updated.`
 - Success + warnings: `Compile succeeded with warnings: ...`
 - Failure: `Compile failed: ...`
-- Dirty state after edits: `Preview may be out of date — click Refresh Preview.`
+- Dirty state after edits: `Preview update scheduled...`
 - Missing row selection: `Select an event row first.`
-- Copy without selection: `Select an event row to copy.`
+- Copy without selection: `Select an event row before copying.`
+- Paste without open sheet: `Open or create an Event Sheet before pasting.`
 - Paste with empty clipboard: `Nothing to paste.`
 
 Validation should eventually exist at three levels:

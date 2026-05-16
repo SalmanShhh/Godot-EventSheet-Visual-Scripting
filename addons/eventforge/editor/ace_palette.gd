@@ -74,11 +74,28 @@ func _render_tree(filter_text: String) -> void:
 		var section: TreeItem = _tree.create_item(root)
 		section.set_text(0, str(SECTION_LABELS.get(ace_type, "Other")))
 		section.set_selectable(0, false)
-
+		var category_items: Dictionary = {}
 		for descriptor: ACEDescriptor in section_items:
-			var item: TreeItem = _tree.create_item(section)
-			item.set_text(0, descriptor.display_name if not descriptor.display_name.is_empty() else descriptor.ace_id)
-			item.set_metadata(0, descriptor)
+			var category: String = descriptor.category.strip_edges()
+			if category.is_empty():
+				category = descriptor.provider_id if not descriptor.provider_id.is_empty() else "General"
+			if not category_items.has(category):
+				category_items[category] = [] as Array[ACEDescriptor]
+			(category_items[category] as Array[ACEDescriptor]).append(descriptor)
+
+		var category_names: Array[String] = []
+		for category_key: Variant in category_items.keys():
+			category_names.append(str(category_key))
+		category_names.sort()
+		for category_name: String in category_names:
+			var category_node: TreeItem = _tree.create_item(section)
+			category_node.set_text(0, category_name)
+			category_node.set_selectable(0, false)
+			var entries: Array[ACEDescriptor] = category_items[category_name] as Array[ACEDescriptor]
+			for descriptor: ACEDescriptor in entries:
+				var item: TreeItem = _tree.create_item(category_node)
+				item.set_text(0, descriptor.display_name if not descriptor.display_name.is_empty() else descriptor.ace_id)
+				item.set_metadata(0, descriptor)
 
 func _emit_selected_from_item(item: TreeItem) -> void:
 	if item == null:

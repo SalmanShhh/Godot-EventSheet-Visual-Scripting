@@ -26,7 +26,7 @@ EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 
 
 1. Open the repository root project.
 2. Enable the EventForge plugin.
-3. Open the EventForge panel.
+3. Open the EventForge panel (bottom panel is currently a fallback shell).
 4. Create a new sheet or open an existing `.tres` sheet.
 5. Add an event row.
 6. Select trigger/conditions/actions from the ACE palette (or row pickers).
@@ -43,6 +43,27 @@ EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 
    - Pasted rows receive a new unique `event_uid`.
 10. Refresh/compile preview in read-only GDScript mode.
 11. Save the sheet.
+
+### Workflow/UX notes (Phase 2.2 follow-up)
+
+- EventForge direction is Script-editor-style workspace UX:
+  - left sidebar (ACE palette + sheet variables)
+  - center event canvas
+  - right inspector/preview
+- Active sheet header always indicates:
+  - `No Event Sheet Open`
+  - `Unsaved Event Sheet`
+  - `Event Sheet: <name>`
+  - `*` marker for unsaved/preview-dirty state
+- Empty event canvas supports click-to-add:
+  `No events yet. Click here or press Add Event to create one.`
+- New rows are selected immediately and prompt ACE selection from the left panel.
+- Copy requires open sheet + selected row; paste requires open sheet and inserts
+  after selection or at end.
+- Preview refresh is auto-debounced after edits, while manual `Refresh Preview`
+  remains available.
+- Naming/grouping follows Construct/GDevelop-style event-sheet wording adapted
+  to Godot UI conventions (for example `On Ready` / `On Process` under `System`).
 
 > **Tip:** Create sheet variables before using `SetVar`, `AddVar`, or
 > `CompareVar`. These ACEs can select sheet variables from the inspector

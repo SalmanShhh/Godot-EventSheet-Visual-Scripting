@@ -16,6 +16,8 @@ var current_sheet: EventSheetResource = null
 var current_view_mode: ViewMode = ViewMode.SPLIT
 var generated_code_preview: String = ""
 var _preview_dirty: bool = false
+var _sheet_dirty: bool = false
+var _refreshing_preview: bool = false
 
 var _selected_row: EventRow = null
 var _pending_row_for_condition: EventRow = null
@@ -26,6 +28,7 @@ var _row_clipboard_kind: String = ""
 var _identifier_regex: RegEx = null
 
 var _toolbar: SheetToolbar
+var _active_sheet_label: Label
 var _main_split: HSplitContainer
 var _sheet_area: HSplitContainer
 var _ace_palette: ACEPalette
@@ -40,21 +43,31 @@ var _condition_picker: ConditionPicker
 var _action_picker: ActionPicker
 var _open_dialog: EditorFileDialog
 var _save_dialog: EditorFileDialog
+var _preview_refresh_timer: Timer
 
 func _ready() -> void:
     _build_ui()
-    create_new_sheet()
     set_view_mode(ViewMode.SPLIT)
+    set_sheet(null)
 
 ## Assigns an active sheet resource and refreshes editor content.
 func set_sheet(sheet: EventSheetResource) -> void:
     current_sheet = sheet
     _selected_row = null
     _preview_dirty = false
+    _sheet_dirty = false
     refresh_rows()
     _rebuild_vars_panel()
     _rebuild_inspector()
-    refresh_preview()
+    _update_active_sheet_header()
+    _refresh_preview_for_sheet_change()
+
+func _refresh_preview_for_sheet_change() -> void:
+    if current_sheet == null:
+        # Ensure preview/status panels immediately reflect "no sheet loaded".
+        refresh_preview()
+        return
+    _mark_preview_dirty(false)
 
 ## Creates a new in-memory sheet and resets editor state.
 func create_new_sheet() -> void:
@@ -62,6 +75,8 @@ func create_new_sheet() -> void:
     sheet.host_class = "Node"
     sheet.events = []
     set_sheet(sheet)
+    _sheet_dirty = true
+    _update_active_sheet_header()
     _set_status("New in-memory sheet created.")
 
 ## Rebuilds visible event rows.
@@ -71,6 +86,21 @@ func refresh_rows() -> void:
 
     _clear_children(_row_list)
     if current_sheet == null:
+        var no_sheet_label: Label = Label.new()
+        no_sheet_label.text = "No Event Sheet Open"
+        no_sheet_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        no_sheet_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        _row_list.add_child(no_sheet_label)
+        return
+
+    if current_sheet.events.is_empty():
+        var empty_button: Button = Button.new()
+        empty_button.text = "No events yet. Click here or press Add Event to create one."
+        empty_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        empty_button.custom_minimum_size = Vector2(0, 84)
+        empty_button.flat = true
+        empty_button.pressed.connect(_on_add_event_requested)
+        _row_list.add_child(empty_button)
         return
 
     for entry: Resource in current_sheet.events:
@@ -86,15 +116,26 @@ func refresh_rows() -> void:
         row_ui.add_action_requested.connect(_on_add_action_requested)
         _row_list.add_child(row_ui)
 
+    var add_more_button: Button = Button.new()
+    add_more_button.text = "Click empty space to add another event."
+    add_more_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    add_more_button.flat = true
+    add_more_button.custom_minimum_size = Vector2(0, 56)
+    add_more_button.pressed.connect(_on_add_event_requested)
+    _row_list.add_child(add_more_button)
+
 ## Recompiles the sheet to update the generated code preview panel.
 func refresh_preview() -> void:
-    if _gdscript_panel == null:
+    if _gdscript_panel == null or _refreshing_preview:
         return
+    _refreshing_preview = true
 
     if current_sheet == null:
         generated_code_preview = "# No sheet loaded\n"
         _gdscript_panel.set_source(generated_code_preview)
         _set_status("No sheet loaded.")
+        _update_active_sheet_header()
+        _refreshing_preview = false
         return
 
     var output_path: String = ""
@@ -107,14 +148,17 @@ func refresh_preview() -> void:
 
     if bool(result.get("success", false)):
         _preview_dirty = false
+        _update_active_sheet_header()
         var warnings: Array = result.get("warnings", [])
         if warnings.is_empty():
-            _set_status("Compile succeeded.")
+            _set_status("Preview updated.")
         else:
             _set_status("Compile succeeded with warnings: %s" % "; ".join(warnings))
     else:
         var errors: Array = result.get("errors", [])
         _set_status("Compile failed: %s" % "; ".join(errors))
+        _update_active_sheet_header()
+    _refreshing_preview = false
 
 ## Applies Event Sheet / GDScript / Split layout visibility.
 func set_view_mode(mode: ViewMode) -> void:
@@ -164,6 +208,11 @@ func _build_ui() -> void:
     _toolbar.delete_requested.connect(_on_delete_requested)
     root.add_child(_toolbar)
 
+    _active_sheet_label = Label.new()
+    _active_sheet_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _active_sheet_label.text = "No Event Sheet Open"
+    root.add_child(_active_sheet_label)
+
     _main_split = HSplitContainer.new()
     _main_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _main_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -175,7 +224,8 @@ func _build_ui() -> void:
     _main_split.add_child(_sheet_area)
 
     var left_panel: VBoxContainer = VBoxContainer.new()
-    left_panel.custom_minimum_size = Vector2(260, 0)
+    left_panel.custom_minimum_size = Vector2(300, 0)
+    left_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     left_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _sheet_area.add_child(left_panel)
 
@@ -185,23 +235,27 @@ func _build_ui() -> void:
     _ace_palette.ace_selected.connect(_on_ace_selected)
     left_panel.add_child(_ace_palette)
 
+    var left_spacer: Control = Control.new()
+    left_spacer.custom_minimum_size = Vector2(0, 8)
+    left_panel.add_child(left_spacer)
+
     # Sheet Variables sub-panel
     var vars_outer: VBoxContainer = VBoxContainer.new()
     vars_outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     left_panel.add_child(vars_outer)
 
-    var vars_header: HBoxContainer = HBoxContainer.new()
-    vars_outer.add_child(vars_header)
+    var vars_controls: VBoxContainer = VBoxContainer.new()
+    vars_outer.add_child(vars_controls)
 
     var vars_title: Label = Label.new()
     vars_title.text = "Sheet Variables"
-    vars_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    vars_header.add_child(vars_title)
+    vars_controls.add_child(vars_title)
 
     var add_var_btn: Button = Button.new()
     add_var_btn.text = "+ Add Var"
+    add_var_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
     add_var_btn.pressed.connect(_on_add_variable_pressed)
-    vars_header.add_child(add_var_btn)
+    vars_controls.add_child(add_var_btn)
 
     var vars_scroll: ScrollContainer = ScrollContainer.new()
     vars_scroll.custom_minimum_size = Vector2(0, 120)
@@ -220,6 +274,7 @@ func _build_ui() -> void:
     _row_list = VBoxContainer.new()
     _row_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _row_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _row_list.add_theme_constant_override("separation", 8)
     _row_scroll.add_child(_row_list)
 
     _inspector_scroll = ScrollContainer.new()
@@ -240,6 +295,12 @@ func _build_ui() -> void:
     _status_label = Label.new()
     _status_label.text = "Ready"
     root.add_child(_status_label)
+
+    _preview_refresh_timer = Timer.new()
+    _preview_refresh_timer.one_shot = true
+    _preview_refresh_timer.wait_time = 0.4
+    _preview_refresh_timer.timeout.connect(_on_preview_refresh_timeout)
+    add_child(_preview_refresh_timer)
 
     _condition_picker = ConditionPicker.new()
     _condition_picker.condition_selected.connect(_on_condition_selected)
@@ -262,6 +323,7 @@ func _on_add_event_requested() -> void:
     refresh_rows()
     _rebuild_inspector()
     _mark_preview_dirty()
+    _set_status("New Event created. Choose a Trigger, Condition, or Action from the left panel.")
 
 func _on_row_selected(row: EventRow) -> void:
     _selected_row = row
@@ -332,9 +394,32 @@ func _on_toolbar_view_mode_changed(mode: int) -> void:
         ViewMode.SPLIT:
             set_view_mode(ViewMode.SPLIT)
 
-func _mark_preview_dirty() -> void:
+func _mark_preview_dirty(mark_sheet_dirty: bool = true) -> void:
+    if mark_sheet_dirty:
+        _sheet_dirty = true
     _preview_dirty = true
-    _set_status("Preview may be out of date — click Refresh Preview.")
+    _update_active_sheet_header()
+    _set_status("Preview update scheduled...")
+    if _preview_refresh_timer != null:
+        _preview_refresh_timer.start()
+
+func _on_preview_refresh_timeout() -> void:
+    if not _preview_dirty:
+        return
+    refresh_preview()
+
+func _active_sheet_title() -> String:
+    if current_sheet == null:
+        return "No Event Sheet Open"
+    if current_sheet.resource_path.is_empty():
+        return "Unsaved Event Sheet"
+    return "Event Sheet: %s" % current_sheet.resource_path.get_file()
+
+func _update_active_sheet_header() -> void:
+    if _active_sheet_label == null:
+        return
+    var dirty_marker: String = " *" if _sheet_dirty or _preview_dirty else ""
+    _active_sheet_label.text = "%s%s" % [_active_sheet_title(), dirty_marker]
 
 func _set_status(message: String) -> void:
     if _status_label != null:
@@ -785,6 +870,8 @@ func _save_sheet_to_path(path: String) -> void:
         _set_status("Failed to save sheet: %s" % final_path)
         return
     current_sheet.take_over_path(final_path)
+    _sheet_dirty = false
+    _update_active_sheet_header()
     _set_status("Saved sheet: %s" % final_path)
 
 func _clear_children(container: Node) -> void:
@@ -1064,8 +1151,11 @@ func _regenerate_row_tree_identity(resource: Resource) -> void:
 ## Copies the selected event row into the editor-local clipboard.
 ## The clipboard stores a deep duplicate so later edits to the original don't corrupt the copy.
 func _on_copy_requested() -> void:
+    if current_sheet == null:
+        _set_status("Open or create an Event Sheet before copying.")
+        return
     if _selected_row == null:
-        _set_status("Select an event row to copy.")
+        _set_status("Select an event row before copying.")
         return
     _row_clipboard = _selected_row.duplicate(true)
     _row_clipboard_kind = _selected_row.get_row_kind()
@@ -1074,10 +1164,11 @@ func _on_copy_requested() -> void:
 ## Pastes the clipboard row after the selected row, or at the end if nothing is selected.
 ## Regenerates identities for the entire pasted row tree to avoid UID collisions with originals.
 func _on_paste_requested() -> void:
+    if current_sheet == null:
+        _set_status("Open or create an Event Sheet before pasting.")
+        return
     if _row_clipboard == null:
         _set_status("Nothing to paste.")
-        return
-    if current_sheet == null:
         return
     var pasted: EventRow = _row_clipboard.duplicate(true) as EventRow
     if pasted == null:
