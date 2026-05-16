@@ -1,5 +1,14 @@
 # EventForge — ACEParam resource
 # Describes a typed parameter accepted by an ACE descriptor.
+#
+# Supported type_name values (GDScript-aligned):
+#   "bool" / "boolean"        → checkbox / bool dropdown
+#   "int" / "integer"         → integer SpinBox
+#   "float" / "double"        → float SpinBox
+#   "String" / "string"       → text field (default)
+#   Any type with options[]   → enum dropdown
+#   Any type with hint = "variable_reference"
+#                             → variable dropdown populated from sheet variables
 @tool
 extends Resource
 class_name ACEParam
@@ -10,12 +19,16 @@ class_name ACEParam
 @export var description: String = ""
 @export var desc: String = "" # Construct-style alias.
 @export var type: int = TYPE_STRING
-@export var type_name: String = "String" # Human-readable convenience field.
+## Human-readable GDScript type name. Drives the UI control choice.
+@export var type_name: String = "String"
 @export var default_value: Variant = ""
 @export var initial_value: Variant = null
 @export var initialValue: Variant = null # Construct-style alias.
 @export var options: Array[String] = []
 @export var required: bool = false
+## UI hint for richer control selection.
+## Use "variable_reference" to show a dropdown of available sheet variables.
+@export var hint: String = ""
 
 ## Returns the best available display name for picker/inspector UI.
 func get_param_name() -> String:

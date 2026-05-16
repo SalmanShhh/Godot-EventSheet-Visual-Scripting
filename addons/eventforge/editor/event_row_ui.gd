@@ -13,6 +13,8 @@ signal condition_edit_requested(row: EventRowUI, index: int)
 signal condition_add_another_requested(row: EventRowUI, index: int)
 ## Emitted when a condition right-click menu requests replacement.
 signal condition_replace_requested(row: EventRowUI, index: int)
+## Emitted when a condition right-click menu requests inversion toggle.
+signal condition_invert_requested(row: EventRowUI, index: int)
 ## Emitted when an action summary is clicked.
 signal action_selected(row: EventRowUI, index: int)
 ## Emitted when the event header/row itself is clicked for full event inspection.
@@ -35,6 +37,7 @@ var _context_condition_index: int = -1
 const CONDITION_MENU_EDIT: int = 1
 const CONDITION_MENU_ADD_ANOTHER: int = 2
 const CONDITION_MENU_REPLACE: int = 3
+const CONDITION_MENU_INVERT: int = 4
 
 func _init() -> void:
 	_build_ui()
@@ -61,6 +64,8 @@ func _build_ui() -> void:
 	_condition_context_menu.add_item("Edit", CONDITION_MENU_EDIT)
 	_condition_context_menu.add_item("Add Another Condition", CONDITION_MENU_ADD_ANOTHER)
 	_condition_context_menu.add_item("Replace Condition", CONDITION_MENU_REPLACE)
+	_condition_context_menu.add_separator()
+	_condition_context_menu.add_item("Invert Condition", CONDITION_MENU_INVERT)
 	_condition_context_menu.connect("id_pressed", _on_condition_context_menu_id_pressed)
 	add_child(_condition_context_menu)
 
@@ -339,17 +344,30 @@ func _refresh_actions() -> void:
 		_actions_container.add_child(btn)
 
 ## Creates a clickable entry button for a condition (is_condition=true) or action.
+## Condition buttons support right-click context menus; the cursor and hover
+## styling signal interactivity clearly to the user.
 func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	var btn: Button = Button.new()
 	btn.text = text
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn.flat = true
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	btn.add_theme_color_override("font_color", Color(0.88, 0.88, 0.88))
+	btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
 	btn.add_theme_font_size_override("font_size", 11)
+
+	# Subtle hover highlight so users can see the entry is interactive.
+	var hover_style: StyleBoxFlat = StyleBoxFlat.new()
+	hover_style.bg_color = Color(1.0, 1.0, 1.0, 0.07)
+	hover_style.set_corner_radius_all(3)
+	btn.add_theme_stylebox_override("hover", hover_style)
+
 	if is_condition:
+		btn.tooltip_text = "Left-click to edit - Right-click for options"
 		btn.connect("pressed", func() -> void: condition_selected.emit(self, index))
 		btn.connect("gui_input", func(event: InputEvent) -> void: _on_condition_entry_gui_input(event, index))
 	else:
+		btn.tooltip_text = "Left-click to edit action parameters"
 		btn.connect("pressed", func() -> void: action_selected.emit(self, index))
 	return btn
 
@@ -386,3 +404,5 @@ func _on_condition_context_menu_id_pressed(id: int) -> void:
 			condition_add_another_requested.emit(self, _context_condition_index)
 		CONDITION_MENU_REPLACE:
 			condition_replace_requested.emit(self, _context_condition_index)
+		CONDITION_MENU_INVERT:
+			condition_invert_requested.emit(self, _context_condition_index)
