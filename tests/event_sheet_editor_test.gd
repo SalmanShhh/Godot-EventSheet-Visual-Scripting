@@ -15,6 +15,13 @@ static func run() -> bool:
 	all_passed = _check("event row no lane marker dots", _contains_label_text(lane_row, "●"), false) and all_passed
 	all_passed = _check("event row no Conditions label", _contains_label_text(lane_row, "Conditions"), false) and all_passed
 	all_passed = _check("event row no Actions label", _contains_label_text(lane_row, "Actions"), false) and all_passed
+	all_passed = _check("toolbar meta no sheet", SheetToolbar.format_document_meta(null), "No sheet loaded") and all_passed
+	all_passed = _check("toolbar selection none", SheetToolbar.format_selection_meta("none"), "No selection") and all_passed
+	all_passed = _check("toolbar selection event", SheetToolbar.format_selection_meta("event"), "Selection: Event") and all_passed
+	var toolbar_sheet: EventSheetResource = EventSheetResource.new()
+	toolbar_sheet.variables["health"] = {"type": "int", "default": 100}
+	toolbar_sheet.events.append(EventRow.new())
+	all_passed = _check("toolbar meta loaded sheet", SheetToolbar.format_document_meta(toolbar_sheet), "1 globals · 1 root rows") and all_passed
 
 	all_passed = _check("parse int", editor._parse_variable_initial_value("42", "int"), 42) and all_passed
 	all_passed = _check("parse float", editor._parse_variable_initial_value("3.5", "float"), 3.5) and all_passed

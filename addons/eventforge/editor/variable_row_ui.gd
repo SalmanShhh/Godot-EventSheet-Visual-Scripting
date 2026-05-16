@@ -16,6 +16,7 @@ var _summary_label: Label = null
 var _edit_btn: Button = null
 var _depth: int = 0
 var _selected: bool = false
+var _hovered: bool = false
 
 func _init() -> void:
 	_build_ui()
@@ -52,6 +53,8 @@ func _build_ui() -> void:
 
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	connect("gui_input", _on_gui_input)
+	connect("mouse_entered", _on_mouse_entered)
+	connect("mouse_exited", _on_mouse_exited)
 
 func set_depth(depth: int) -> void:
 	_depth = max(0, depth)
@@ -63,9 +66,16 @@ func set_selected(selected: bool) -> void:
 
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.114, 0.177, 0.265, 1.0) if _selected else Color(0.082, 0.126, 0.188, 1.0)
-	style.border_color = Color(0.410, 0.663, 0.953, 1.0) if _selected else Color(0.180, 0.278, 0.408, 1.0)
-	style.set_border_width_all(0)
+	if _selected:
+		style.bg_color = Color(0.114, 0.177, 0.265, 1.0)
+		style.border_color = Color(0.410, 0.663, 0.953, 1.0)
+	elif _hovered:
+		style.bg_color = Color(0.095, 0.146, 0.218, 1.0)
+		style.border_color = Color(0.260, 0.410, 0.608, 1.0)
+	else:
+		style.bg_color = Color(0.082, 0.126, 0.188, 1.0)
+		style.border_color = Color(0.180, 0.278, 0.408, 1.0)
+	style.set_border_width_all(1)
 	style.border_width_left = 2 + min(_depth, 4)
 	style.set_corner_radius_all(5)
 	style.set_content_margin_all(6)
@@ -132,3 +142,11 @@ func _on_gui_input(event: InputEvent) -> void:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
 			variable_selected.emit(self)
+
+func _on_mouse_entered() -> void:
+	_hovered = true
+	_apply_row_style()
+
+func _on_mouse_exited() -> void:
+	_hovered = false
+	_apply_row_style()

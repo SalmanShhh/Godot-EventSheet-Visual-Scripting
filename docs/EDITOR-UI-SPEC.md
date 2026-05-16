@@ -34,6 +34,7 @@ It intentionally avoids describing unbuilt behavior as complete.
 
 - Event rows render as compact event-sheet lines with inline authored clauses/tokens.
 - Rows avoid explicit lane headers (`IF`, `THEN`, `Conditions`, `Actions`) and instead use inline flow, separators, and token rhythm.
+- Clause flow now uses compact inline connectors (`when` → `do`) with improved token spacing and hover/selection contrast for faster scanning.
 - A left gutter is rendered for every row, with branch guides for nested/sub-event rows.
 - Condition and action summaries are clickable for focused editing.
 - Delete affordances are implemented:
@@ -48,12 +49,14 @@ It intentionally avoids describing unbuilt behavior as complete.
 
 - The editor uses a dedicated sheet workspace shell:
   - top chrome toolbar panel (`Event Sheet Workspace`) with focused authoring actions
+  - toolbar metadata tracks both document summary and current selection context
   - framed canvas surface for the event-sheet document
   - inspector-adjacent panel using the same dark design system
 - Document framing is sectioned into explicit shells:
   - `SheetSectionGlobals` for global variables
   - `SheetSectionEvents` for event/group rows
 - Empty states are presented as centered onboarding cards with direct create/open actions.
+- The inspector empty state is rendered as a contextual card to keep selection/idle surfaces visually consistent with canvas sections.
 
 ### 2.5 Sub-event support status
 

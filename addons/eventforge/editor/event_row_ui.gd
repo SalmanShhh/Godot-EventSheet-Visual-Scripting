@@ -40,6 +40,7 @@ var _action_context_menu: PopupMenu = null
 var _context_action_index: int = -1
 var _depth: int = 0
 var _selected: bool = false
+var _hovered: bool = false
 
 const CONDITION_MENU_EDIT: int = 1
 const CONDITION_MENU_ADD_ANOTHER: int = 2
@@ -50,14 +51,18 @@ const ACTION_MENU_EDIT: int = 1
 const ACTION_MENU_DELETE: int = 2
 
 const ROW_BG: Color = Color(0.080, 0.091, 0.119, 1.0)
+const ROW_BG_HOVER: Color = Color(0.097, 0.112, 0.148, 1.0)
 const ROW_BG_SELECTED: Color = Color(0.111, 0.142, 0.195, 1.0)
 const ROW_BORDER: Color = Color(0.142, 0.168, 0.224, 1.0)
+const ROW_BORDER_HOVER: Color = Color(0.243, 0.312, 0.438, 1.0)
 const ROW_BORDER_SELECTED: Color = Color(0.356, 0.522, 0.812, 1.0)
 const CONDITION_TOKEN_BG: Color = Color(0.171, 0.221, 0.321, 1.0)
 const CONDITION_TOKEN_BG_HOVER: Color = Color(0.225, 0.281, 0.394, 1.0)
 const ACTION_TOKEN_BG: Color = Color(0.172, 0.198, 0.267, 1.0)
 const ACTION_TOKEN_BG_HOVER: Color = Color(0.223, 0.256, 0.338, 1.0)
 const RUN_CONTEXT_SYMBOL: String = "◆"
+const CLAUSE_CONDITION_PREFIX: String = "when"
+const CLAUSE_ACTION_PREFIX: String = "do"
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
 
 func _init() -> void:
@@ -97,7 +102,7 @@ func _build_ui() -> void:
 
 	var line: HBoxContainer = HBoxContainer.new()
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.add_theme_constant_override("separation", 7)
+	line.add_theme_constant_override("separation", 6)
 	add_child(line)
 
 	var select_btn: Button = Button.new()
@@ -136,46 +141,42 @@ func _build_ui() -> void:
 	_runs_button.connect("pressed", _on_event_header_pressed)
 	line.add_child(_runs_button)
 
-	var cond_separator: Label = Label.new()
-	cond_separator.text = "•"
-	cond_separator.add_theme_color_override("font_color", Color(0.43, 0.47, 0.56))
-	line.add_child(cond_separator)
+	line.add_child(_make_clause_prefix(CLAUSE_CONDITION_PREFIX, Color(0.48, 0.61, 0.84)))
 
 	_conditions_container = HFlowContainer.new()
 	_conditions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_conditions_container.add_theme_constant_override("h_separation", 4)
-	_conditions_container.add_theme_constant_override("v_separation", 2)
+	_conditions_container.add_theme_constant_override("h_separation", 5)
+	_conditions_container.add_theme_constant_override("v_separation", 3)
 	line.add_child(_conditions_container)
 
 	var add_condition_btn: Button = Button.new()
-	add_condition_btn.text = "+ Cond"
+	add_condition_btn.text = "+ condition"
 	add_condition_btn.flat = true
 	add_condition_btn.tooltip_text = "Add condition"
 	add_condition_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	add_condition_btn.add_theme_color_override("font_color", Color(0.58, 0.69, 0.88))
-	add_condition_btn.add_theme_color_override("font_hover_color", Color(0.78, 0.86, 1.0))
+	add_condition_btn.add_theme_color_override("font_color", Color(0.62, 0.76, 0.98))
+	add_condition_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.92, 1.0))
+	add_condition_btn.add_theme_font_size_override("font_size", 10)
 	add_condition_btn.connect("pressed", _on_add_condition_pressed)
 	line.add_child(add_condition_btn)
 
-	var action_arrow: Label = Label.new()
-	action_arrow.text = "→"
-	action_arrow.add_theme_color_override("font_color", Color(0.45, 0.54, 0.71))
-	line.add_child(action_arrow)
+	line.add_child(_make_clause_prefix(CLAUSE_ACTION_PREFIX, Color(0.52, 0.66, 0.88)))
 
 	_actions_container = HFlowContainer.new()
 	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_actions_container.size_flags_stretch_ratio = 1.3
-	_actions_container.add_theme_constant_override("h_separation", 4)
-	_actions_container.add_theme_constant_override("v_separation", 2)
+	_actions_container.add_theme_constant_override("h_separation", 5)
+	_actions_container.add_theme_constant_override("v_separation", 3)
 	line.add_child(_actions_container)
 
 	var add_action_btn: Button = Button.new()
-	add_action_btn.text = "+ Act"
+	add_action_btn.text = "+ action"
 	add_action_btn.flat = true
 	add_action_btn.tooltip_text = "Add action"
 	add_action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	add_action_btn.add_theme_color_override("font_color", Color(0.58, 0.69, 0.88))
-	add_action_btn.add_theme_color_override("font_hover_color", Color(0.78, 0.86, 1.0))
+	add_action_btn.add_theme_color_override("font_color", Color(0.62, 0.76, 0.98))
+	add_action_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.92, 1.0))
+	add_action_btn.add_theme_font_size_override("font_size", 10)
 	add_action_btn.connect("pressed", _on_add_action_pressed)
 	line.add_child(add_action_btn)
 
@@ -189,6 +190,11 @@ func _build_ui() -> void:
 	delete_event_btn.connect("pressed", _on_delete_event_pressed)
 	line.add_child(delete_event_btn)
 
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	connect("mouse_entered", _on_mouse_entered)
+	connect("mouse_exited", _on_mouse_exited)
+	connect("gui_input", _on_row_gui_input)
+
 func set_depth(depth: int) -> void:
 	_depth = max(0, depth)
 	_apply_row_style()
@@ -199,9 +205,16 @@ func set_selected(selected: bool) -> void:
 
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = ROW_BG_SELECTED if _selected else ROW_BG
-	style.border_color = ROW_BORDER_SELECTED if _selected else ROW_BORDER
-	style.set_border_width_all(0)
+	if _selected:
+		style.bg_color = ROW_BG_SELECTED
+		style.border_color = ROW_BORDER_SELECTED
+	elif _hovered:
+		style.bg_color = ROW_BG_HOVER
+		style.border_color = ROW_BORDER_HOVER
+	else:
+		style.bg_color = ROW_BG
+		style.border_color = ROW_BORDER
+	style.set_border_width_all(1)
 	style.border_width_left = 2 + min(_depth, 4)
 	style.set_corner_radius_all(5)
 	style.set_content_margin(SIDE_LEFT, 6)
@@ -357,7 +370,7 @@ func _make_placeholder_token(text: String) -> PanelContainer:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(0.115, 0.133, 0.174, 1.0)
 	style.border_color = Color(0.167, 0.186, 0.242, 1.0)
-	style.set_border_width_all(0)
+	style.set_border_width_all(1)
 	style.set_corner_radius_all(3)
 	style.set_content_margin(SIDE_LEFT, 6)
 	style.set_content_margin(SIDE_RIGHT, 6)
@@ -370,6 +383,13 @@ func _make_placeholder_token(text: String) -> PanelContainer:
 	label.add_theme_font_size_override("font_size", 10)
 	panel.add_child(label)
 	return panel
+
+func _make_clause_prefix(text: String, color: Color) -> Label:
+	var prefix: Label = Label.new()
+	prefix.text = text
+	prefix.add_theme_color_override("font_color", color)
+	prefix.add_theme_font_size_override("font_size", 9)
+	return prefix
 
 ## Creates a clickable entry button for a condition (is_condition=true) or action.
 func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
@@ -385,7 +405,7 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	var normal_style: StyleBoxFlat = StyleBoxFlat.new()
 	normal_style.bg_color = CONDITION_TOKEN_BG if is_condition else ACTION_TOKEN_BG
 	normal_style.border_color = Color(0.130, 0.145, 0.184, 1.0)
-	normal_style.set_border_width_all(0)
+	normal_style.set_border_width_all(1)
 	normal_style.set_corner_radius_all(3)
 	normal_style.set_content_margin(SIDE_LEFT, 7)
 	normal_style.set_content_margin(SIDE_RIGHT, 7)
@@ -408,6 +428,22 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 		btn.connect("pressed", func() -> void: action_selected.emit(self, index))
 		btn.connect("gui_input", func(event: InputEvent) -> void: _on_action_entry_gui_input(event, index))
 	return btn
+
+func _on_mouse_entered() -> void:
+	_hovered = true
+	_apply_row_style()
+
+func _on_mouse_exited() -> void:
+	_hovered = false
+	_apply_row_style()
+
+func _on_row_gui_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	var mb: InputEventMouseButton = event as InputEventMouseButton
+	if mb.button_index != MOUSE_BUTTON_LEFT or not mb.pressed:
+		return
+	event_selected.emit(self)
 
 func _on_event_header_pressed() -> void:
 	event_selected.emit(self)
