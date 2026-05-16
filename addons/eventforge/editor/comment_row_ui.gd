@@ -35,6 +35,10 @@ var _insert_above_btn: Button = null
 var _insert_below_btn: Button = null
 var _edit_btn: Button = null
 var _delete_btn: Button = null
+## Drop position indicator.  -1.0 = hidden; 0..1 = fraction of row height (< 0.5 → top, ≥ 0.5 → bottom).
+var _drop_indicator_frac: float = -1.0
+## Semi-transparent tint overlay drawn on top of row contents during drag-hover.
+var _drop_highlight_rect: ColorRect = null
 
 func _init() -> void:
 	_build_ui()
@@ -131,6 +135,15 @@ func _build_ui() -> void:
 	connect("mouse_entered", _on_mouse_entered)
 	connect("mouse_exited", _on_mouse_exited)
 	_apply_affordance_state()
+
+	# Drop-position highlight overlay — amber tint composited above row contents.
+	# Mouse-ignored so pointer events still reach interactive children.
+	_drop_highlight_rect = ColorRect.new()
+	_drop_highlight_rect.color = Color(0.0, 0.0, 0.0, 0.0)
+	_drop_highlight_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_drop_highlight_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_drop_highlight_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(_drop_highlight_rect)
 
 func set_depth(depth: int) -> void:
 	_depth = max(0, depth)
@@ -321,29 +334,82 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 		"type": "event_comment_row",
 		"source_comment": comment_row
 	}
-	var preview: Label = Label.new()
-	preview.text = "# %s" % comment_row.text
+	# Styled drag preview — amber banner colours matching comment row identity.
+	var preview: PanelContainer = PanelContainer.new()
+	var preview_style: StyleBoxFlat = StyleBoxFlat.new()
+	preview_style.bg_color = Color(0.17, 0.13, 0.06, 0.96)
+	preview_style.set_border_width_all(1)
+	preview_style.border_color = Color(0.90, 0.68, 0.18, 0.82)
+	preview_style.set_corner_radius_all(3)
+	preview_style.set_content_margin_all(5)
+	preview.add_theme_stylebox_override("panel", preview_style)
+	var preview_label: Label = Label.new()
+	preview_label.text = "# %s" % comment_row.text
+	preview_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.68))
+	preview_label.add_theme_font_size_override("font_size", 11)
+	preview.add_child(preview_label)
 	set_drag_preview(preview)
 	return payload
 
-func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	if comment_row == null or not (data is Dictionary):
+		_clear_drop_indicator()
 		return false
 	var payload: Dictionary = data as Dictionary
 	if str(payload.get("type", "")) != "event_comment_row":
+		_clear_drop_indicator()
 		return false
 	var source_comment: Variant = payload.get("source_comment", null)
-	return source_comment is CommentRow and source_comment != comment_row
+	if not (source_comment is CommentRow) or source_comment == comment_row:
+		_clear_drop_indicator()
+		return false
+	var frac: float = at_position.y / max(size.y, 1.0)
+	_set_drop_indicator(frac)
+	return true
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
-	if not _can_drop_data(at_position, data):
+	_clear_drop_indicator()
+	if not (data is Dictionary):
 		return
 	var payload: Dictionary = data as Dictionary
-	var source_comment: CommentRow = payload.get("source_comment", null) as CommentRow
-	if source_comment == null:
+	if str(payload.get("type", "")) != "event_comment_row":
+		return
+	var source_comment: Variant = payload.get("source_comment", null)
+	if not (source_comment is CommentRow) or source_comment == comment_row:
 		return
 	var insert_after: bool = at_position.y >= (size.y * 0.5)
-	comment_drop_requested.emit(self, source_comment, insert_after)
+	comment_drop_requested.emit(self, source_comment as CommentRow, insert_after)
+
+## Sets the drop-position indicator fractional position and shows the tint overlay.
+func _set_drop_indicator(frac: float) -> void:
+	_drop_indicator_frac = frac
+	_update_drop_highlight()
+	set_process(true)
+
+## Clears the drop-position indicator and hides the tint overlay.
+func _clear_drop_indicator() -> void:
+	if _drop_indicator_frac < 0.0:
+		return
+	_drop_indicator_frac = -1.0
+	_update_drop_highlight()
+	set_process(false)
+
+## Syncs the highlight overlay colour to the current drop-indicator state.
+func _update_drop_highlight() -> void:
+	if _drop_highlight_rect == null:
+		return
+	_drop_highlight_rect.color = Color(1.0, 0.86, 0.40, 0.18) if _drop_indicator_frac >= 0.0 else Color(0.0, 0.0, 0.0, 0.0)
+
+func _process(_delta: float) -> void:
+	if _drop_indicator_frac >= 0.0 and not get_viewport().gui_is_dragging():
+		_clear_drop_indicator()
+
+## Moves keyboard focus directly to the inline text edit for fast authoring.
+## Useful for programmatic focus after inserting a new comment row.
+func grab_text_focus() -> void:
+	if _comment_text_edit != null:
+		_comment_text_edit.grab_focus()
+		_comment_text_edit.caret_column = _comment_text_edit.text.length()
 
 func _on_comment_text_focus_entered() -> void:
 	comment_selected.emit(self)

@@ -176,10 +176,22 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			handled = _handle_workflow_shortcut("add_condition")
 		elif key_event.shift_pressed and key_event.keycode == KEY_A:
 			handled = _handle_workflow_shortcut("add_action")
+		elif not key_event.shift_pressed and key_event.keycode == KEY_D:
+			handled = _handle_workflow_shortcut("duplicate_event")
 	elif key_event.keycode == KEY_Q and _has_no_modifiers(key_event):
 		handled = _handle_workflow_shortcut("add_comment")
+	elif key_event.keycode == KEY_G and _has_no_modifiers(key_event):
+		handled = _handle_workflow_shortcut("add_group")
 	elif key_event.keycode == KEY_DELETE and _has_no_modifiers(key_event):
 		handled = _handle_workflow_shortcut("delete_selection")
+	elif key_event.keycode == KEY_ESCAPE and _has_no_modifiers(key_event):
+		handled = _handle_workflow_shortcut("escape")
+	elif key_event.keycode in [KEY_ENTER, KEY_KP_ENTER] and _has_no_modifiers(key_event):
+		handled = _handle_workflow_shortcut("edit_selection")
+	elif key_event.keycode == KEY_UP and _has_no_modifiers(key_event):
+		handled = _handle_workflow_shortcut("navigate_up")
+	elif key_event.keycode == KEY_DOWN and _has_no_modifiers(key_event):
+		handled = _handle_workflow_shortcut("navigate_down")
 	if handled:
 		get_viewport().set_input_as_handled()
 
@@ -230,10 +242,26 @@ func _handle_workflow_shortcut(action: String) -> bool:
 		"add_comment":
 			_insert_comment_from_selection_context()
 			return true
+		"add_group":
+			_on_add_group_requested()
+			return true
 		"copy_event":
 			return _copy_selected_event_tree()
 		"paste_event":
 			return _paste_copied_event_tree()
+		"duplicate_event":
+			return _duplicate_selected_event_tree()
+		"escape":
+			if _selected_entry_kind != "none":
+				_show_empty_inspector()
+				return true
+			return false
+		"edit_selection":
+			return _edit_current_selection()
+		"navigate_up":
+			return _navigate_selection(-1)
+		"navigate_down":
+			return _navigate_selection(1)
 		"delete_selection":
 			return _delete_current_selection()
 		_:
@@ -423,6 +451,112 @@ func _delete_current_selection() -> bool:
 			return true
 		_:
 			return false
+
+## Duplicates the currently selected event tree and inserts it immediately after the source.
+func _duplicate_selected_event_tree() -> bool:
+	if current_sheet == null:
+		return false
+	if not (_selected_row is EventRowUI):
+		return false
+	var row: EventRowUI = _selected_row as EventRowUI
+	if row.event_row == null:
+		return false
+	var clone: EventRow = _clone_event_tree(row.event_row)
+	if clone == null:
+		return false
+	var source_uid: String = row.event_row.event_uid
+	if not _insert_event_relative_in_array(current_sheet.events, source_uid, "event", true, clone):
+		current_sheet.events.append(clone)
+	refresh_canvas()
+	_focus_event_by_uid(clone.event_uid)
+	_mark_dirty()
+	_set_status("Event duplicated")
+	return true
+
+## Opens the most relevant edit dialog/picker for the current selection.
+## - condition → open params dialog for that condition
+## - action    → open params dialog for that action
+## - event     → open add-condition picker for the event
+## - comment   → grab text focus in the comment row's inline editor
+func _edit_current_selection() -> bool:
+	match _selected_entry_kind:
+		"condition":
+			var row: EventRowUI = _get_selected_event_row_for_shortcuts()
+			if row == null:
+				return false
+			if _selected_index < 0 or _selected_index >= row.event_row.conditions.size():
+				return false
+			_open_condition_params_dialog(row, _selected_index)
+			return true
+		"action":
+			var row: EventRowUI = _get_selected_event_row_for_shortcuts()
+			if row == null:
+				return false
+			if _selected_index < 0 or _selected_index >= row.event_row.actions.size():
+				return false
+			_open_action_params_dialog(row, _selected_index)
+			return true
+		"event":
+			var row: EventRowUI = _get_selected_event_row_for_shortcuts()
+			if row == null:
+				return false
+			_open_add_condition_picker(row)
+			return true
+		"comment":
+			if _selected_row is CommentRowUI:
+				(_selected_row as CommentRowUI).grab_text_focus()
+				return true
+	return false
+
+## Moves the sheet selection to the next (direction > 0) or previous (direction < 0) row.
+## Cycles through event rows, group rows, and comment rows in visual order.
+func _navigate_selection(direction: int) -> bool:
+	if _canvas_vbox == null:
+		return false
+	var all_rows: Array = []
+	_collect_selectable_rows_in_order(_canvas_vbox, all_rows)
+	if all_rows.is_empty():
+		return false
+	var current_idx: int = -1
+	for i: int in range(all_rows.size()):
+		if all_rows[i] == _selected_row:
+			current_idx = i
+			break
+	var next_idx: int
+	if current_idx < 0:
+		next_idx = 0 if direction > 0 else all_rows.size() - 1
+	else:
+		next_idx = clampi(current_idx + direction, 0, all_rows.size() - 1)
+	if next_idx == current_idx and current_idx >= 0:
+		return false
+	var next_row: Variant = all_rows[next_idx]
+	if next_row is EventRowUI:
+		_on_event_selected(next_row as EventRowUI)
+		return true
+	elif next_row is GroupRowUI:
+		_on_group_selected(next_row as GroupRowUI)
+		return true
+	elif next_row is CommentRowUI:
+		_on_comment_selected(next_row as CommentRowUI)
+		return true
+	return false
+
+## Collects all selectable row widgets (EventRowUI, GroupRowUI, CommentRowUI) from the
+## canvas in their visual top-to-bottom order, recursing into child nodes.
+func _collect_selectable_rows_in_order(node: Node, result: Array) -> void:
+	if node is EventRowUI or node is GroupRowUI or node is CommentRowUI:
+		result.append(node)
+	for child: Node in node.get_children():
+		_collect_selectable_rows_in_order(child, result)
+
+## Moves keyboard focus to the inline text editor of the given comment row widget,
+## allowing fast authoring immediately after a new comment is inserted.
+func _focus_comment_row_text(comment_row: CommentRow) -> void:
+	if comment_row == null:
+		return
+	var row_ui: CommentRowUI = _find_comment_row_ui_by_resource(_canvas_vbox, comment_row)
+	if row_ui != null:
+		row_ui.grab_text_focus()
 
 ## Called by the plugin to load a sheet into the editor.
 func setup(sheet: EventSheetResource = null) -> void:
@@ -822,6 +956,7 @@ func _insert_comment_from_selection_context() -> void:
 	current_sheet.events.append(new_comment)
 	refresh_canvas()
 	_focus_comment_row(new_comment)
+	_focus_comment_row_text(new_comment)
 	_mark_dirty()
 	_set_status("Added comment row")
 
@@ -3032,6 +3167,7 @@ func _insert_new_comment_relative(target_resource: Resource, insert_after: bool)
 		return
 	refresh_canvas()
 	_focus_comment_row(new_comment)
+	_focus_comment_row_text(new_comment)
 	_mark_dirty()
 	var direction: String = "below" if insert_after else "above"
 	_set_status("Inserted comment %s" % direction)
