@@ -185,7 +185,7 @@ func _build_ui() -> void:
 	var add_condition_btn: Button = Button.new()
 	add_condition_btn.text = "+ Add Condition"
 	add_condition_btn.flat = true
-	add_condition_btn.tooltip_text = "Add Condition to this event"
+	add_condition_btn.tooltip_text = "Add condition to this event"
 	add_condition_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	add_condition_btn.add_theme_color_override("font_color", Color(0.38, 0.41, 0.50))
 	add_condition_btn.add_theme_color_override("font_hover_color", Color(0.57, 0.61, 0.72))
@@ -229,7 +229,7 @@ func _build_ui() -> void:
 	var add_action_btn: Button = Button.new()
 	add_action_btn.text = "+ Add Action"
 	add_action_btn.flat = true
-	add_action_btn.tooltip_text = "Add Action to this event"
+	add_action_btn.tooltip_text = "Add action to this event"
 	add_action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	add_action_btn.add_theme_color_override("font_color", Color(0.38, 0.41, 0.50))
 	add_action_btn.add_theme_color_override("font_hover_color", Color(0.57, 0.61, 0.72))
