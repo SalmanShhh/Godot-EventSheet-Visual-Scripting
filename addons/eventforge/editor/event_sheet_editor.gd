@@ -150,6 +150,7 @@ func _build_layout() -> void:
 ## Rebuilds the full canvas document from current_sheet.
 func refresh_canvas() -> void:
 	for child in _canvas_vbox.get_children():
+		_canvas_vbox.remove_child(child)
 		child.queue_free()
 
 	_add_document_header()

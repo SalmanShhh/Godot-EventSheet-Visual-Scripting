@@ -23,3 +23,5 @@ Thumbs.db
 
 # Python cache (tooling)
 __pycache__/
+# Godot engine-generated UID sidecar files
+**/*.uid

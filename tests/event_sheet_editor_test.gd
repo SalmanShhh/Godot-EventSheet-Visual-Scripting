@@ -36,6 +36,7 @@ static func run() -> bool:
 	var spin_float_param: ACEParam = ACEParam.new()
 	spin_float_param.type_name = "float"
 	var spin_float: SpinBox = SpinBox.new()
+	spin_float.step = 0.01
 	spin_float.value = 3.14
 	all_passed = _check("ace param float spinbox", editor._extract_ace_param_input_value(spin_float_param, spin_float), 3.14) and all_passed
 
@@ -152,7 +153,7 @@ static func run() -> bool:
 	var live_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, action_event.event_uid)
 	all_passed = _check("live editor renders event row ui", live_row_ui != null, true) and all_passed
 	if live_row_ui != null:
-		all_passed = _check("live editor action entry button exists", _find_button_with_text(live_row_ui, "  Queue Free") != null, true) and all_passed
+		all_passed = _check("live editor action entry button exists", _find_button_with_text(live_row_ui, "  Queue free") != null, true) and all_passed
 		all_passed = _check("live editor add action button exists", _find_button_with_text(live_row_ui, "+ Add Action") != null, true) and all_passed
 
 	# EventRowUI refresh rebuilds missing UI references instead of crashing.
@@ -167,7 +168,7 @@ static func run() -> bool:
 	all_passed = _check("standalone row ui rebuilds actions container", standalone_row_ui._actions_container != null, true) and all_passed
 	if standalone_row_ui._actions_container != null and standalone_row_ui._actions_container.get_child_count() > 0:
 		var first_action_child: Node = standalone_row_ui._actions_container.get_child(0)
-		all_passed = _check("standalone row ui action summary survives refresh", first_action_child is Button and (first_action_child as Button).text == "  Queue Free", true) and all_passed
+		all_passed = _check("standalone row ui action summary survives refresh", first_action_child is Button and (first_action_child as Button).text == "  Queue free", true) and all_passed
 
 	# ACE params dialog back button is created and visible state reflects from_picker.
 	all_passed = _check("ace params back button created", editor._ace_params_back_button != null, true) and all_passed
