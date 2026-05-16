@@ -298,11 +298,11 @@ func _apply_depth_tint(base: Color) -> Color:
 	var depth_factor: float = float(min(_depth, 4))
 	if depth_factor <= 0.0:
 		return base
-	var lifted: float = depth_factor * 0.012
+	var lighten_amount: float = depth_factor * 0.012
 	return Color(
-		min(base.r + lifted, 1.0),
-		min(base.g + lifted, 1.0),
-		min(base.b + lifted, 1.0),
+		min(base.r + lighten_amount, 1.0),
+		min(base.g + lighten_amount, 1.0),
+		min(base.b + lighten_amount, 1.0),
 		base.a
 	)
 
