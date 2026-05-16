@@ -13,6 +13,8 @@ static func run() -> bool:
 	assert(on_signal != null, "Missing Core/OnSignal descriptor")
 	assert(on_ready.display_name == "On Ready", "OnReady display_name mismatch")
 	assert(on_process.display_name == "On Process", "OnProcess display_name mismatch")
+	assert(on_signal.display_name == "On Signal", "OnSignal display_name mismatch")
+	assert(on_signal.params.size() == 2, "OnSignal should expose target_node and signal_name params")
 	assert(on_ready.category == "System", "OnReady category should be System")
 	assert(on_process.category == "System", "OnProcess category should be System")
 	assert(on_signal.category == "Signals", "OnSignal category should be Signals")

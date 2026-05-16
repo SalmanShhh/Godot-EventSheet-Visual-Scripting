@@ -650,7 +650,7 @@ func _rebuild_inspector() -> void:
     enabled_toggle.toggled.connect(_on_inspector_enabled_toggled)
     _inspector_container.add_child(enabled_toggle)
 
-    var run_context_provider: String = _selected_row.trigger_provider_id if not _selected_row.trigger_provider_id.is_empty() else (TriggerResolver.get_trigger_provider_id(_selected_row) if TriggerResolver.has_trigger_condition(_selected_row) else "")
+    var run_context_provider: String = _run_context_provider_for_row(_selected_row)
     var run_context_id: String = TriggerResolver.get_trigger_id(_selected_row)
     _add_text_editor("Run Context Provider", run_context_provider, func(value: String) -> void:
         if _selected_row == null:
@@ -767,6 +767,15 @@ func _run_summary_for_row(row: EventRow) -> String:
             return "On Signal \"%s\" from %s" % [signal_name, target_node]
         _:
             return _entry_name(TriggerResolver.get_trigger_provider_id(row), trigger_id)
+
+func _run_context_provider_for_row(row: EventRow) -> String:
+    if row == null:
+        return ""
+    if not row.trigger_provider_id.is_empty():
+        return row.trigger_provider_id
+    if TriggerResolver.has_trigger_condition(row):
+        return TriggerResolver.get_trigger_provider_id(row)
+    return ""
 
 func _add_entry_header(text: String, button_text: String, callback: Callable) -> void:
     var header: HBoxContainer = HBoxContainer.new()
