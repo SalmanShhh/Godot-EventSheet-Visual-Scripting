@@ -1145,8 +1145,7 @@ func _remove_condition(index: int) -> void:
     if index < 0 or index >= _selected_row.conditions.size():
         return
     if _selected_entry_kind == "condition":
-        _selected_entry_kind = "event"
-        _selected_entry_index = -1
+        _clear_focused_entry_state()
     _selected_row.conditions.remove_at(index)
     refresh_rows()
     _rebuild_inspector()
@@ -1158,8 +1157,7 @@ func _remove_action(index: int) -> void:
     if index < 0 or index >= _selected_row.actions.size():
         return
     if _selected_entry_kind == "action":
-        _selected_entry_kind = "event"
-        _selected_entry_index = -1
+        _clear_focused_entry_state()
     _selected_row.actions.remove_at(index)
     refresh_rows()
     _rebuild_inspector()
@@ -1400,11 +1398,8 @@ func _delete_variable(var_name: String) -> void:
     if current_sheet == null:
         return
     if _selected_entry_kind == "variable" and _selected_variable_name == var_name:
-        _selected_entry_kind = "event"
-        _selected_entry_index = -1
-        _selected_variable_name = ""
+        _clear_focused_entry_state()
         _selected_row = null
-        _selected_group = null
     current_sheet.variables.erase(var_name)
     refresh_rows()
     _rebuild_vars_panel()
@@ -1474,6 +1469,12 @@ func _is_valid_identifier_name(value: String) -> bool:
         _identifier_regex = RegEx.new()
         _identifier_regex.compile("^[A-Za-z_][A-Za-z0-9_]*$")
     return _identifier_regex.search(value) != null
+
+func _clear_focused_entry_state() -> void:
+    _selected_entry_kind = "event"
+    _selected_entry_index = -1
+    _selected_variable_name = ""
+    _selected_group = null
 
 # ---------------------------------------------------------------------------
 # Variable-aware param picker
