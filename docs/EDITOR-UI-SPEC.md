@@ -35,7 +35,7 @@ It intentionally avoids describing unbuilt behavior as complete.
 - Event rows render as a unified strip with side-by-side lanes:
   - left lane: run context + conditions
   - right lane: actions
-- Rows use a Construct/GDevelop-inspired treatment without explicit IF/THEN text labels: subtle lane tint contrast, compact inline condition/action chips, and embedded add affordances.
+- Rows use a Construct/GDevelop-inspired treatment without explicit IF/THEN text labels: C3-like blue-gray strip chrome, subtle lane tint contrast, compact inline condition/action chips, and embedded add affordances.
 - Condition and action summaries are clickable for focused editing.
 - Delete affordances are implemented:
   - event delete via header `✕` action

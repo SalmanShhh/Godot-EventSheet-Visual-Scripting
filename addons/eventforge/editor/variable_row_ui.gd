@@ -19,13 +19,13 @@ func _init() -> void:
 	_build_ui()
 
 func _build_ui() -> void:
-	# Green-tinted compact row with subtle accent to match the event sheet styling.
+	# Compact blue-gray row matching the event strip chrome.
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.10, 0.15, 0.13, 0.98)
-	style.border_color = Color(0.26, 0.56, 0.40, 0.88)
-	style.set_border_width_all(1)
-	style.border_width_left = 2
-	style.set_corner_radius_all(3)
+	style.bg_color = Color(0.103, 0.115, 0.150, 1.0)
+	style.border_color = Color(0.129, 0.145, 0.184, 1.0)
+	style.set_border_width_all(0)
+	style.border_width_left = 3
+	style.set_corner_radius_all(5)
 	style.set_content_margin_all(5)
 	style.content_margin_left = 8
 	add_theme_stylebox_override("panel", style)
@@ -37,13 +37,13 @@ func _build_ui() -> void:
 	# Global badge
 	var badge: Label = Label.new()
 	badge.text = "Global"
-	badge.add_theme_color_override("font_color", Color(0.42, 0.83, 0.60))
-	badge.add_theme_font_size_override("font_size", 9)
+	badge.add_theme_color_override("font_color", Color(0.62, 0.70, 0.89))
+	badge.add_theme_font_size_override("font_size", 10)
 	hbox.add_child(badge)
 
 	# Summary label
 	_label = Label.new()
-	_label.add_theme_color_override("font_color", Color(0.86, 0.92, 0.89))
+	_label.add_theme_color_override("font_color", Color(0.86, 0.90, 0.98))
 	_label.add_theme_font_size_override("font_size", 11)
 	_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(_label)
@@ -53,8 +53,8 @@ func _build_ui() -> void:
 	_edit_btn.text = "✎"
 	_edit_btn.flat = true
 	_edit_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_edit_btn.add_theme_color_override("font_color", Color(0.58, 0.84, 0.67))
-	_edit_btn.add_theme_color_override("font_hover_color", Color(0.70, 0.95, 0.78))
+	_edit_btn.add_theme_color_override("font_color", Color(0.73, 0.79, 0.92))
+	_edit_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.94, 1.0))
 	_edit_btn.add_theme_font_size_override("font_size", 10)
 	_edit_btn.connect("pressed", _on_pressed)
 	hbox.add_child(_edit_btn)
