@@ -796,8 +796,27 @@ static func run() -> bool:
 			all_passed = _check("action token has lane-accent left border", action_style.border_width_left, 2) and all_passed
 			all_passed = _check("action token top padding tightened", action_style.content_margin_top, 2) and all_passed
 
+	var depth_row_0: EventRowUI = EventRowUI.new()
+	depth_row_0.event_row = EventRow.new()
+	depth_row_0.set_depth(0)
+	depth_row_0.refresh()
+	var depth_row_3: EventRowUI = EventRowUI.new()
+	depth_row_3.event_row = EventRow.new()
+	depth_row_3.set_depth(3)
+	depth_row_3.refresh()
+	var depth_style_0: StyleBoxFlat = _get_flat_stylebox(depth_row_0, "panel")
+	var depth_style_3: StyleBoxFlat = _get_flat_stylebox(depth_row_3, "panel")
+	all_passed = _check("depth row style depth0 exists", depth_style_0 != null, true) and all_passed
+	all_passed = _check("depth row style depth3 exists", depth_style_3 != null, true) and all_passed
+	if depth_style_0 != null and depth_style_3 != null:
+		all_passed = _check("nested depth tint lightens row red channel", depth_style_3.bg_color.r > depth_style_0.bg_color.r, true) and all_passed
+		all_passed = _check("nested depth tint lightens row green channel", depth_style_3.bg_color.g > depth_style_0.bg_color.g, true) and all_passed
+		all_passed = _check("nested depth tint lightens row blue channel", depth_style_3.bg_color.b > depth_style_0.bg_color.b, true) and all_passed
+
 	lane_row_2.free()
 	lane_row_3.free()
+	depth_row_0.free()
+	depth_row_3.free()
 
 	return all_passed
 
