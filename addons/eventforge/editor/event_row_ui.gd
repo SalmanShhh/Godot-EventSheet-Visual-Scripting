@@ -57,7 +57,7 @@ const CONDITION_TOKEN_BG: Color = Color(0.171, 0.221, 0.321, 1.0)
 const CONDITION_TOKEN_BG_HOVER: Color = Color(0.225, 0.281, 0.394, 1.0)
 const ACTION_TOKEN_BG: Color = Color(0.172, 0.198, 0.267, 1.0)
 const ACTION_TOKEN_BG_HOVER: Color = Color(0.223, 0.256, 0.338, 1.0)
-const RUN_CONTEXT_BULLET: String = "◆"
+const RUN_CONTEXT_SYMBOL: String = "◆"
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
 
 func _init() -> void:
@@ -100,15 +100,15 @@ func _build_ui() -> void:
 	line.add_theme_constant_override("separation", 7)
 	add_child(line)
 
-	var menu_btn: Button = Button.new()
-	menu_btn.text = "≡"
-	menu_btn.flat = true
-	menu_btn.tooltip_text = "Select event line"
-	menu_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	menu_btn.add_theme_color_override("font_color", Color(0.72, 0.78, 0.92))
-	menu_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.94, 1.0))
-	menu_btn.connect("pressed", _on_event_header_pressed)
-	line.add_child(menu_btn)
+	var select_btn: Button = Button.new()
+	select_btn.text = "⋮"
+	select_btn.flat = true
+	select_btn.tooltip_text = "Select event line"
+	select_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	select_btn.add_theme_color_override("font_color", Color(0.72, 0.78, 0.92))
+	select_btn.add_theme_color_override("font_hover_color", Color(0.90, 0.94, 1.0))
+	select_btn.connect("pressed", _on_event_header_pressed)
+	line.add_child(select_btn)
 
 	_runs_button = Button.new()
 	_runs_button.flat = true
@@ -148,7 +148,7 @@ func _build_ui() -> void:
 	line.add_child(_conditions_container)
 
 	var add_condition_btn: Button = Button.new()
-	add_condition_btn.text = "+ C"
+	add_condition_btn.text = "+ Cond"
 	add_condition_btn.flat = true
 	add_condition_btn.tooltip_text = "Add condition"
 	add_condition_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -170,7 +170,7 @@ func _build_ui() -> void:
 	line.add_child(_actions_container)
 
 	var add_action_btn: Button = Button.new()
-	add_action_btn.text = "+ A"
+	add_action_btn.text = "+ Act"
 	add_action_btn.flat = true
 	add_action_btn.tooltip_text = "Add action"
 	add_action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -320,7 +320,7 @@ static func _format_action_from_descriptor(action: ACEAction) -> String:
 func _refresh_runs() -> void:
 	if _runs_button == null:
 		return
-	_runs_button.text = "%s %s" % [RUN_CONTEXT_BULLET, format_run_context(event_row)]
+	_runs_button.text = "%s %s" % [RUN_CONTEXT_SYMBOL, format_run_context(event_row)]
 
 func _refresh_conditions() -> void:
 	if _conditions_container == null:

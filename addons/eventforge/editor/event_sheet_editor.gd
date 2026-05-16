@@ -27,6 +27,7 @@ const NO_VARIABLES_AVAILABLE_HINT_TEXT: String = "No variables are available. Ad
 const ACE_PARAMS_LABEL_WIDTH: float = 110.0
 const ACE_PARAMS_LABEL_MIN_HEIGHT: float = 20.0
 const BRANCH_GUIDE_CHAR: String = "└"
+const BRANCH_GUIDE_LABEL: String = "└─"
 const CANVAS_BG: Color = Color(0.060, 0.067, 0.088, 1.0)
 const CANVAS_BORDER: Color = Color(0.141, 0.164, 0.214, 1.0)
 
@@ -1252,11 +1253,11 @@ func _add_document_header() -> void:
 	subtitle.add_theme_font_size_override("font_size", 10)
 	line.add_child(subtitle)
 
-	var rhythm: Label = Label.new()
-	rhythm.text = "Inline clauses • Nested flow"
-	rhythm.add_theme_color_override("font_color", Color(0.46, 0.56, 0.72))
-	rhythm.add_theme_font_size_override("font_size", 9)
-	shell.add_child(rhythm)
+	var feature_tagline: Label = Label.new()
+	feature_tagline.text = "Inline clauses • Nested flow" if current_sheet != null else "Ready for inline authoring"
+	feature_tagline.add_theme_color_override("font_color", Color(0.46, 0.56, 0.72))
+	feature_tagline.add_theme_font_size_override("font_size", 9)
+	shell.add_child(feature_tagline)
 
 	_canvas_vbox.add_child(header_panel)
 
@@ -1453,7 +1454,7 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 
 	if indent_level > 0:
 		var branch: Label = Label.new()
-		branch.text = "%s─" % BRANCH_GUIDE_CHAR
+		branch.text = BRANCH_GUIDE_LABEL
 		branch.add_theme_color_override("font_color", Color(0.56, 0.65, 0.84))
 		branch.add_theme_font_size_override("font_size", 9)
 		gutter.add_child(branch)
