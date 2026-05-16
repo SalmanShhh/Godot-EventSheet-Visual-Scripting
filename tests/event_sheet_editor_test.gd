@@ -180,6 +180,8 @@ static func run() -> bool:
 	var del_uid: String = del_event.event_uid
 	editor._delete_event_by_uid(del_uid)
 	all_passed = _check("delete event removes from sheet", delete_sheet.events.size(), 0) and all_passed
+	all_passed = _check("delete event resets selection kind", editor._selected_entry_kind, "none") and all_passed
+	all_passed = _check("delete event refresh removes row ui", editor._find_event_row_ui_by_uid(editor._canvas_vbox, del_uid) == null, true) and all_passed
 
 	# Delete condition removes it from the event row.
 	var del_cond_sheet: EventSheetResource = EventSheetResource.new()
@@ -192,8 +194,13 @@ static func run() -> bool:
 	editor.refresh_canvas()
 	var del_cond_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, del_cond_event.event_uid)
 	if del_cond_row_ui != null:
+		editor._selected_row = del_cond_row_ui
+		editor._selected_entry_kind = "condition"
+		editor._selected_index = 0
 		editor._on_condition_delete_requested(del_cond_row_ui, 0)
 		all_passed = _check("delete condition removes from event", del_cond_event.conditions.size(), 0) and all_passed
+		all_passed = _check("delete condition keeps sane selection kind", editor._selected_entry_kind, "event") and all_passed
+		all_passed = _check("delete condition resets selected index", editor._selected_index, -1) and all_passed
 
 	# Delete action removes it from the event row.
 	var del_act_event: EventRow = EventRow.new()
@@ -204,8 +211,13 @@ static func run() -> bool:
 	editor.refresh_canvas()
 	var del_act_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, del_act_event.event_uid)
 	if del_act_row_ui != null:
+		editor._selected_row = del_act_row_ui
+		editor._selected_entry_kind = "action"
+		editor._selected_index = 0
 		editor._on_action_delete_requested(del_act_row_ui, 0)
 		all_passed = _check("delete action removes from event", del_act_event.actions.size(), 0) and all_passed
+		all_passed = _check("delete action keeps sane selection kind", editor._selected_entry_kind, "event") and all_passed
+		all_passed = _check("delete action resets selected index", editor._selected_index, -1) and all_passed
 
 	return all_passed
 
