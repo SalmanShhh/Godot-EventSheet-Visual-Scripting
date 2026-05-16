@@ -7,6 +7,7 @@ EventForge is a Construct-style event sheet plugin for Godot 4.x. Event sheets c
 1. Copy `addons/eventforge/` into your Godot project.
 2. In **Project > Project Settings > Plugins**, enable **EventForge**.
 3. Confirm the `EventForgeBridge` autoload is available.
+4. Open the **EventSheet** workspace tab in the main editor strip (next to Script/2D/3D) to author sheets in the central editor surface.
 
 ## Quickstart with the demo assets
 

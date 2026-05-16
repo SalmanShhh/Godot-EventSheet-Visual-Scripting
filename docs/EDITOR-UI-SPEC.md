@@ -63,6 +63,9 @@ It intentionally avoids describing unbuilt behavior as complete.
 
 ### 2.4 Editor shell and document framing
 
+- EventForge registers as a **main editor workspace** via `EditorPlugin._has_main_screen()`.
+- EventSheet editing is hosted in the central editor viewport, not a bottom dock panel.
+- Selecting an `EventSheetResource` in the editor routes into this workspace via plugin `_handles()`/`_edit()` integration.
 - The editor uses a dedicated sheet workspace shell:
   - top chrome toolbar panel (`EventForge`) showing the loaded sheet name and document summary
   - toolbar sheet name chip displays file basename when a path exists, or `Untitled Sheet` for in-memory sheets
