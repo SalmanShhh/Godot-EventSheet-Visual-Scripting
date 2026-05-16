@@ -8,6 +8,10 @@ signal delete_requested(row: EventRow)
 signal add_condition_requested(row: EventRow)
 signal add_action_requested(row: EventRow)
 signal duplicate_requested(row: EventRow)
+## Emitted when the user clicks a specific condition entry.
+signal condition_selected(row: EventRow, index: int)
+## Emitted when the user clicks a specific action entry.
+signal action_selected(row: EventRow, index: int)
 
 var row: EventRow = null
 
@@ -108,21 +112,23 @@ func set_row(value: EventRow) -> void:
 	if row.conditions.is_empty():
 		_conditions_list.add_child(_entry_label("Always"))
 	else:
-		for condition: ACECondition in row.conditions:
-			_conditions_list.add_child(_entry_label(_condition_summary(condition)))
+		for i: int in range(row.conditions.size()):
+			var condition: ACECondition = row.conditions[i]
+			_conditions_list.add_child(_entry_button(_condition_summary(condition), i, false))
 
 	if row.actions.is_empty():
 		_actions_list.add_child(_entry_label("No actions yet"))
 	else:
-		for action_item: Variant in row.actions:
+		for i: int in range(row.actions.size()):
+			var action_item: Variant = row.actions[i]
 			if action_item is ACEAction:
-				_actions_list.add_child(_entry_label(_action_summary(action_item)))
+				_actions_list.add_child(_entry_button(_action_summary(action_item), i, true))
 
 	var has_trigger: bool = TriggerResolver.has_trigger_condition(row)
 	var is_new_event: bool = not has_trigger and row.conditions.is_empty() and row.actions.is_empty()
 	_prompt_label.visible = is_new_event
 	if is_new_event:
-		_prompt_label.text = "New Event\nChoose a Trigger, Condition, or Action from the left panel."
+		_prompt_label.text = "New Event\nChoose when this event runs, then add conditions and actions."
 	else:
 		_prompt_label.text = ""
 
@@ -163,6 +169,27 @@ func _entry_label(text: String) -> Label:
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.text = "  %s" % text
 	return label
+
+## Creates a clickable button for a condition or action entry.
+## is_action distinguishes which signal to emit on press.
+func _entry_button(text: String, index: int, is_action: bool) -> Button:
+	var btn: Button = Button.new()
+	btn.text = "  %s" % text
+	btn.flat = true
+	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if is_action:
+		btn.pressed.connect(func() -> void:
+			if row != null:
+				emit_signal("action_selected", row, index)
+		)
+	else:
+		btn.pressed.connect(func() -> void:
+			if row != null:
+				emit_signal("condition_selected", row, index)
+		)
+	return btn
 
 func _run_summary() -> String:
 	if row == null:

@@ -9,10 +9,13 @@ Last updated: 2026-05-16
 | 2 MVP | Editor shell, dual/split view | ✅ |
 | 2.1 | Editable rows, param inspector, save/load | ✅ |
 | 2.2 | Sheet variable editor, variable-aware ACE params, copy/paste/duplicate/delete rows | ✅ |
-| 2.3 | Sheet functions / local subsheets | ⏳ Deferred |
-| 3 | Scripted ACE providers | ⏳ Deferred |
-| 4 | Scripted structural blocks | ⏳ Deferred |
-| 5 | Importer / editable GDScript round-trip | ⏳ Deferred |
+| 2.3 | Construct/GDevelop-style document flow: variable rows in canvas, clickable conditions/actions, group groundwork | ✅ |
+| 2.4 | Multiple EventSheet tabs | ⏳ Planned |
+| 2.5 | Group blocks with local variable scoping | ⏳ Planned |
+| 3 | Sheet functions / local subsheets | ⏳ Deferred |
+| 4 | Scripted ACE providers | ⏳ Deferred |
+| 5 | Scripted structural blocks | ⏳ Deferred |
+| 6 | Importer / editable GDScript round-trip | ⏳ Deferred |
 
 ---
 
@@ -86,10 +89,41 @@ Recommended long-term layout:
 
 For the current bottom-panel fallback, some regions may collapse or stack to preserve space.
 
-### Workflow/UX direction (Phase 2.2 follow-up)
+### Workflow/UX direction (Phase 2.3+)
 
-- UX inspiration: Construct 3 / GDevelop event sheets adapted to Godot-native
-  editor conventions.
+EventForge sheets are **vertical, scrollable documents** modelled after
+Construct 3 / GDevelop event sheets, adapted to Godot-native conventions.
+
+The sheet document contains a ordered sequence of **blocks**, rendered
+top-to-bottom in the main event sheet canvas:
+
+| Block type | Description |
+|---|---|
+| `Global variable` | One row per sheet variable: `Global int health = 100` |
+| `Group` | A labelled container for nested variable and event blocks |
+| `Local variable` | (Planned) Variable scoped to the parent group/event subtree |
+| `Event` | Conditions + Actions |
+| `Comment` | Plain-text annotation row |
+
+Global variable rows appear at the **top** of the canvas document, before event
+blocks, matching the Construct/GDevelop document convention.
+
+Groups can (planned) contain local variables and nested event rows.
+Local variables scoped to a group/event subtree are planned; see section 16.
+
+**UX language** (user-facing):
+
+- `Event` — one visual event block
+- `Conditions` — regular conditions on the event
+- `Actions` — actions on the event
+- `Runs: ...` — run context summary line
+- `Run Context` / `Run Condition` — internal naming for trigger-style ACEs
+- `Global variable` / `Local variable` — variable scope labels
+- `Group` — group block header
+- Avoid `Trigger` in user-facing UI; prefer `run context` or `run condition`.
+
+Detailed conventions:
+
 - Active-sheet header is always visible and shows:
   - `No Event Sheet Open`
   - `Unsaved Event Sheet`
@@ -99,16 +133,21 @@ For the current bottom-panel fallback, some regions may collapse or stack to pre
   `No events yet. Click here or press Add Event to create one.`
 - Clicking blank canvas space below rows supports quick add-event flow.
 - New rows are selected immediately and prompt:
-  `New Event` and `Choose a Trigger, Condition, or Action from the left panel.`
+  `New Event` and `Choose when this event runs, then add conditions and actions.`
 - Event blocks use `Event = Conditions + Actions`.
-- Trigger-style ACEs are presented as condition-like run context, not as a
-  separate top-level Trigger section.
+- Run-context ACEs (e.g. `On Ready`, `On Signal`) are condition-like and do
+  **not** appear as a separate top-level `Trigger` section.
 - Rows show a summary line such as:
   - `Runs: Every Frame`
   - `Runs: On Ready`
   - `Runs: On Signal "pressed" from Button`
 - Conditions section displays regular conditions only, and shows `Always` when
   none are present.
+- Condition and action entries inside event rows are **clickable**: clicking an
+  entry opens focused inspector editing for that entry only.
+  - Inspector shows a `← Back to Event` button to return to full-event view.
+- Global variable rows are clickable: clicking a variable row opens its
+  inspector for focused type/default/export editing.
 - Copy/paste context is explicit:
   - copy requires open sheet + selected row
   - paste requires open sheet
@@ -145,25 +184,50 @@ For the current bottom-panel fallback, some regions may collapse or stack to pre
 
 ## 5) Row rendering model
 
-Each row card displays:
+The event sheet canvas renders blocks top-to-bottom as a vertical document:
+
+### Global variable rows (`VariableRowUI`)
+
+- Rendered **before** event rows, at the top of the canvas.
+- Format: `Global <type> <name> = <default>`
+- Example: `Global int health = 100`
+- Green-tinted card styling to distinguish from event blocks.
+- Clicking selects the variable and opens focused inspector editing.
+- Backed directly by `current_sheet.variables` dictionary.
+
+### Group rows (`GroupRowUI`)
+
+- Purple-tinted card with bold group label: `Group: <name>`
+- Clicking selects the group header.
+- Nested event/variable rows will render indented below the header (planned).
+- Local variable rows inside a group are planned; see section 16.
+
+### Event rows (`EventRowUI`)
+
+Each event row card displays:
 
 - enabled checkbox
-- `Runs: ...` summary
-- Conditions section
-- Actions section
-- Add Condition button
-- Add Action button
-- Duplicate control
+- `Runs: ...` summary line
+- `Conditions` section
+  - Each condition shown as a **clickable button**: click to open focused editing.
+  - Shows `Always` when empty.
+- `Actions` section
+  - Each action shown as a **clickable button**: click to open focused editing.
+  - Shows `No actions yet` when empty.
+- `+ Condition` and `+ Action` buttons
+- Duplicate button
 - Delete button
 
 Selection is visualized by a highlighted card background.
 
-Future row types:
+Clicking a condition/action entry emits `condition_selected(row, index)` or
+`action_selected(row, index)` and shows focused inspector editing for that entry.
+
+### Future row types
 
 - Comment rows
 - Loop rows
 - Else/Elif rows
-- Group rows
 - Sheet function body rows
 - Scripted structural block rows
 
@@ -840,3 +904,105 @@ Future expansion criteria include:
 - call sheet functions/subsheets
 - register a custom scripted ACE provider
 - define a scripted structural block with body slots
+
+---
+
+## 16) Group blocks and local variable scoping
+
+### Goal
+
+Groups act as named containers for nested event rows and local variables.
+This mirrors the GDevelop concept of event groups with sub-events.
+
+### Document structure
+
+```text
+Group Player
+  Local float speed = 200.0
+  Event
+    Runs: Every Frame
+    Conditions: player_alive = true
+    Actions: move_player(speed)
+  Event
+    Runs: On Signal "hit" from self
+    Conditions
+    Actions: take_damage(10)
+```
+
+### Current state (Phase 2.3)
+
+- `EventGroup` resource exists in `resources/event_group.gd`.
+- `GroupRowUI` renders a group header block in the canvas (purple-tinted card).
+- Clicking a group header selects it.
+- Nested event/variable rendering inside a group is **planned**.
+
+### Local variable scoping (planned)
+
+- Local variables declared inside a group are intended to scope to that group's
+  nested event subtree.
+- The compiler does not yet implement group-local scoping.
+- **Do not** fake local variable compiler behavior until the data model
+  explicitly supports it (a group-owned variables dictionary).
+- When implemented, local variables should compile to function-local GDScript
+  variables or a scoped helper dictionary.
+- `LocalVariable` resource exists at `resources/local_variable.gd` and is used
+  on `EventRow.local_variables` — reuse this for group-owned locals when ready.
+
+### Minimum viable path
+
+1. Add `variables: Array[Resource]` (or `Dictionary`) field to `EventGroup`.
+2. Render `Local <type> <name> = <default>` rows inside the group's indented block.
+3. Pass group locals into compiler scope when processing nested event rows.
+4. Keep global variables separate — global rows remain at the top of the canvas.
+
+---
+
+## 17) Multiple EventSheet tabs
+
+### Goal
+
+Users should be able to open multiple EventSheets in tabs, similar to the
+Godot script editor:
+
+```text
+player_events.tres | enemy_events.tres | ui_events.tres
+```
+
+### Desired behavior
+
+- Opening an EventSheet creates a tab for that resource or reuses an existing tab.
+- Tabs show:
+  - saved filename (e.g. `player_events.tres`)
+  - `Untitled` for unsaved in-memory sheets
+  - `*` dirty marker when the sheet has unsaved or uncompiled changes
+- Switching tabs changes the active sheet and refreshes the full editor state.
+- The existing **Open Sheet** button and `EditorPlugin._edit()` flow should route
+  into the tab system rather than replacing the single active sheet.
+
+### Current state (Phase 2.3)
+
+- The editor hosts a single `current_sheet` at a time.
+- Tabs are **not yet implemented**.
+- The existing `set_sheet()` / `_edit()` flow remains intact.
+
+### Implementation plan (Phase 2.4)
+
+Preferred approach when implemented:
+
+1. Replace the `_active_sheet_label` + single `current_sheet` model with a
+   `TabBar` at the top of the editor content area.
+2. Each tab entry stores:
+   - `EventSheetResource` reference
+   - dirty flag
+   - last compile result
+3. `set_sheet(sheet)` should check for an existing tab and switch to it, or
+   create a new tab.
+4. Switching tabs must save/restore selected row, entry selection, and scroll
+   position for each tab.
+5. Preserve existing Open/Save/SaveAs behavior.
+6. Add a close-tab button with a dirty-state prompt on unsaved changes.
+
+### Minimum acceptable (now)
+
+- Document this section for future implementation.
+- Do not implement partial tabs if it risks breaking existing open/save behavior.
