@@ -20,10 +20,11 @@ const EVENT_PICKER_GROUPS: PackedStringArray = [
 	"Signals / Scene / Input",
 	"Custom ACEs"
 ]
-const ACE_PARAMS_DIALOG_SIZE: Vector2i = Vector2i(400, 280)
+const ACE_PARAMS_DIALOG_SIZE: Vector2i = Vector2i(420, 300)
 const NO_VARIABLES_AVAILABLE_TEXT: String = "No variables available"
 const NO_VARIABLES_AVAILABLE_HINT_TEXT: String = "No variables are available. Add a variable before applying this ACE."
 const ACE_PARAMS_LABEL_WIDTH: float = 110.0
+const ACE_PARAMS_LABEL_MIN_HEIGHT: float = 20.0
 
 ## Currently selected entry kind.
 ## One of: "none", "event", "condition", "action", "variable", "group"
@@ -437,7 +438,7 @@ func _build_ace_params_dialog_popup() -> void:
 	var form_scroll: ScrollContainer = ScrollContainer.new()
 	form_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	form_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	form_scroll.custom_minimum_size = Vector2(0, 120)
+	form_scroll.custom_minimum_size = Vector2(0, 140)
 	form_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	form_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	body.add_child(form_scroll)
@@ -552,7 +553,7 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 			form_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			var label: Label = Label.new()
 			label.text = param.get_param_name()
-			label.custom_minimum_size = Vector2(ACE_PARAMS_LABEL_WIDTH, 0)
+			label.custom_minimum_size = Vector2(ACE_PARAMS_LABEL_WIDTH, ACE_PARAMS_LABEL_MIN_HEIGHT)
 			label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			form_row.add_child(label)
 
@@ -1172,8 +1173,9 @@ func _add_events_section() -> void:
 		hint.add_theme_font_size_override("font_size", 11)
 		_canvas_vbox.add_child(hint)
 	else:
+		var render_guard: Dictionary = {}
 		for resource: Variant in current_sheet.events:
-			_add_event_resource(resource, 0)
+			_add_event_resource(resource, 0, render_guard)
 
 	# Inline "Add Event" at the bottom of the events area — mirrors the
 	# per-row "Add Action" / "Add Condition" affordance pattern.
@@ -1188,13 +1190,17 @@ func _add_events_section() -> void:
 	add_event_btn.connect("pressed", _on_add_event_requested)
 	_canvas_vbox.add_child(add_event_btn)
 
-func _add_event_resource(resource: Variant, indent_level: int) -> void:
+func _add_event_resource(resource: Variant, indent_level: int, render_guard: Dictionary = {}) -> void:
 	if resource is EventRow:
-		_add_event_row(resource as EventRow, indent_level)
+		_add_event_row(resource as EventRow, indent_level, render_guard)
 	elif resource is EventGroup:
-		_add_group_row(resource as EventGroup, indent_level)
+		_add_group_row(resource as EventGroup, indent_level, render_guard)
 
-func _add_event_row(event_row: EventRow, indent_level: int = 0) -> void:
+func _add_event_row(event_row: EventRow, indent_level: int = 0, render_guard: Dictionary = {}) -> void:
+	var row_key: String = _make_render_guard_key("event", event_row.event_uid, event_row.get_instance_id())
+	if render_guard.has(row_key):
+		return
+	render_guard[row_key] = true
 	var row_ui: EventRowUI = EventRowUI.new()
 	row_ui.event_row = event_row
 	row_ui.refresh()
@@ -1210,11 +1216,13 @@ func _add_event_row(event_row: EventRow, indent_level: int = 0) -> void:
 	_add_canvas_row(row_ui, indent_level)
 
 	for sub_resource: Variant in event_row.sub_events:
-		if sub_resource == event_row:
-			continue
-		_add_event_resource(sub_resource, indent_level + 1)
+		_add_event_resource(sub_resource, indent_level + 1, render_guard)
 
-func _add_group_row(event_group: EventGroup, indent_level: int = 0) -> void:
+func _add_group_row(event_group: EventGroup, indent_level: int = 0, render_guard: Dictionary = {}) -> void:
+	var group_key: String = _make_render_guard_key("group", event_group.group_uid, event_group.get_instance_id())
+	if render_guard.has(group_key):
+		return
+	render_guard[group_key] = true
 	var row_ui: GroupRowUI = GroupRowUI.new()
 	row_ui.event_group = event_group
 	row_ui.refresh()
@@ -1227,7 +1235,12 @@ func _add_group_row(event_group: EventGroup, indent_level: int = 0) -> void:
 
 	var child_rows: Array = event_group.events if not event_group.events.is_empty() else event_group.rows
 	for child: Variant in child_rows:
-		_add_event_resource(child, indent_level + 1)
+		_add_event_resource(child, indent_level + 1, render_guard)
+
+func _make_render_guard_key(prefix: String, stable_uid: String, fallback_instance_id: int) -> String:
+	if not stable_uid.is_empty():
+		return "%s:%s" % [prefix, stable_uid]
+	return "%s:%s" % [prefix, str(fallback_instance_id)]
 
 func _add_canvas_row(row: Control, indent_level: int) -> void:
 	if row == null:
