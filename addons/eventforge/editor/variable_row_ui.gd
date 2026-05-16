@@ -29,11 +29,23 @@ func _build_ui() -> void:
 	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(hbox)
 
+	var badge_panel: PanelContainer = PanelContainer.new()
+	var badge_style: StyleBoxFlat = StyleBoxFlat.new()
+	badge_style.bg_color = Color(0.100, 0.148, 0.218, 1.0)
+	badge_style.border_color = Color(0.220, 0.340, 0.500, 1.0)
+	badge_style.set_border_width_all(1)
+	badge_style.set_corner_radius_all(3)
+	badge_style.set_content_margin(SIDE_LEFT, 5)
+	badge_style.set_content_margin(SIDE_RIGHT, 5)
+	badge_style.set_content_margin(SIDE_TOP, 1)
+	badge_style.set_content_margin(SIDE_BOTTOM, 1)
+	badge_panel.add_theme_stylebox_override("panel", badge_style)
 	var badge: Label = Label.new()
 	badge.text = "Global"
-	badge.add_theme_color_override("font_color", Color(0.70, 0.80, 0.98))
+	badge.add_theme_color_override("font_color", Color(0.72, 0.86, 1.0))
 	badge.add_theme_font_size_override("font_size", 9)
-	hbox.add_child(badge)
+	badge_panel.add_child(badge)
+	hbox.add_child(badge_panel)
 
 	_summary_label = Label.new()
 	_summary_label.add_theme_color_override("font_color", Color(0.90, 0.94, 1.0))

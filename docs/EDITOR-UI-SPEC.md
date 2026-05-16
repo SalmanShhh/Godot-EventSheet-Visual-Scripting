@@ -34,7 +34,12 @@ It intentionally avoids describing unbuilt behavior as complete.
 
 - Event rows render as compact event-sheet lines with inline authored clauses/tokens.
 - Rows avoid explicit lane headers (`IF`, `THEN`, `Conditions`, `Actions`) and instead use inline flow, separators, and token rhythm.
-- Clause flow now uses compact inline connectors (`when` → `do`) with improved token spacing and hover/selection contrast for faster scanning.
+- Clause flow uses compact inline connectors (`when` → `do`) at 10pt with distinct per-lane colors:
+  - `when` prefix renders in blue (condition lane accent)
+  - `do` prefix renders in green-mint (action lane accent)
+- A thin vertical separator visually divides the condition area from the action area.
+- Condition tokens use a blue-tinted background with a visible blue border.
+- Action tokens use a teal/green-tinted background with a visible teal border — clearly distinct from condition tokens.
 - A left gutter is rendered for every row, with branch guides for nested/sub-event rows.
 - Condition and action summaries are clickable for focused editing.
 - Delete affordances are implemented:
@@ -48,17 +53,31 @@ It intentionally avoids describing unbuilt behavior as complete.
 ### 2.4 Editor shell and document framing
 
 - The editor uses a dedicated sheet workspace shell:
-  - top chrome toolbar panel (`Event Sheet Workspace`) with focused authoring actions
+  - top chrome toolbar panel (`EventForge`) showing the loaded sheet name and document summary
+  - toolbar sheet name chip displays file basename when a path exists, or `Untitled Sheet` for in-memory sheets
   - toolbar metadata tracks both document summary and current selection context
   - framed canvas surface for the event-sheet document
   - inspector-adjacent panel using the same dark design system
+- Document header (`SheetDocumentHeader`) shows:
+  - The sheet file name (or "Untitled Sheet" / "No Sheet Loaded") as the document title
+  - The sheet resource path as a secondary hint line
+  - A summary of globals and root entries
 - Document framing is sectioned into explicit shells:
   - `SheetSectionGlobals` for global variables
   - `SheetSectionEvents` for event/group rows
+- Section empty states are rendered as styled `PanelContainer` cards, providing a consistent visual affordance.
 - Empty states are presented as centered onboarding cards with direct create/open actions.
 - The inspector empty state is rendered as a contextual card to keep selection/idle surfaces visually consistent with canvas sections.
+- Inspector content for selected events, variables, and groups is wrapped in consistently styled card shells using the same design system as the empty state card.
 
-### 2.5 Sub-event support status
+### 2.5 Row type badges
+
+- Variable rows use a styled chip badge (`Global`) with a blue-tinted background and border.
+- Group rows use a styled chip badge (`Group`) with a purple-tinted background and border.
+- Group rows display the event count in parentheses when the group has child events (e.g., `(2)`).
+- The event count label is hidden (empty string) when the group has no child events.
+
+### 2.6 Sub-event support status
 
 - Sub-event rendering groundwork exists:
   - nested event resources are rendered with indentation

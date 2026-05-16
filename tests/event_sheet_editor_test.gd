@@ -239,6 +239,55 @@ static func run() -> bool:
 		all_passed = _check("delete action keeps sane selection kind", editor._selected_entry_kind, "event") and all_passed
 		all_passed = _check("delete action resets selected index", editor._selected_index, -1) and all_passed
 
+	# Phase 4: inspector content wrapped in card shells.
+	var inspector_sheet: EventSheetResource = EventSheetResource.new()
+	var inspector_event: EventRow = EventRow.new()
+	inspector_sheet.events.append(inspector_event)
+	editor.current_sheet = inspector_sheet
+	editor.refresh_canvas()
+	var inspector_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, inspector_event.event_uid)
+	if inspector_row_ui != null:
+		editor._rebuild_inspector_event(inspector_row_ui)
+		all_passed = _check("inspector event uses card shell", _count_panel_containers(editor._inspector_vbox) >= 1, true) and all_passed
+
+	var inspector_var_sheet: EventSheetResource = EventSheetResource.new()
+	inspector_var_sheet.variables["score"] = {"type": "int", "default": 0}
+	editor.current_sheet = inspector_var_sheet
+	editor.refresh_canvas()
+	var inspector_var_ui: VariableRowUI = editor._find_variable_row_ui_by_name(editor._canvas_vbox, "score")
+	if inspector_var_ui != null:
+		editor._rebuild_inspector_variable(inspector_var_ui)
+		all_passed = _check("inspector variable uses card shell", _count_panel_containers(editor._inspector_vbox) >= 1, true) and all_passed
+
+	# Phase 4: group row shows event count.
+	var count_group: EventGroup = EventGroup.new()
+	count_group.events.append(EventRow.new())
+	count_group.events.append(EventRow.new())
+	var count_group_row: GroupRowUI = GroupRowUI.new()
+	count_group_row.event_group = count_group
+	count_group_row.refresh()
+	all_passed = _check("group row shows event count", _contains_label_text(count_group_row, "(2)"), true) and all_passed
+
+	var empty_group: EventGroup = EventGroup.new()
+	var empty_group_row: GroupRowUI = GroupRowUI.new()
+	empty_group_row.event_group = empty_group
+	empty_group_row.refresh()
+	all_passed = _check("group row count hidden when empty", not _contains_label_text(empty_group_row, "(0)"), true) and all_passed
+
+	# Phase 4: toolbar sheet name formatting.
+	var untitled_sheet: EventSheetResource = EventSheetResource.new()
+	all_passed = _check("toolbar sheet name untitled", SheetToolbar._format_sheet_name(untitled_sheet), "Untitled Sheet") and all_passed
+	all_passed = _check("toolbar sheet name null", SheetToolbar._format_sheet_name(null), "") and all_passed
+
+	# Phase 4: section empty states use PanelContainer cards.
+	var empty_section_sheet: EventSheetResource = EventSheetResource.new()
+	editor.current_sheet = empty_section_sheet
+	editor.refresh_canvas()
+	var globals_section: Node = _find_node_named(editor, "SheetSectionGlobals")
+	all_passed = _check("globals empty state is card", globals_section != null and _count_panel_containers(globals_section) >= 1, true) and all_passed
+	var events_section: Node = _find_node_named(editor, "SheetSectionEvents")
+	all_passed = _check("events empty state is card", events_section != null and _count_panel_containers(events_section) >= 1, true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
@@ -277,3 +326,22 @@ static func _count_nodes_named(node: Node, expected_name: String) -> int:
 	for child: Node in node.get_children():
 		total += _count_nodes_named(child, expected_name)
 	return total
+
+static func _count_panel_containers(node: Node) -> int:
+	if node == null:
+		return 0
+	var total: int = 1 if node is PanelContainer else 0
+	for child: Node in node.get_children():
+		total += _count_panel_containers(child)
+	return total
+
+static func _find_node_named(node: Node, expected_name: String) -> Node:
+	if node == null:
+		return null
+	if node.name == expected_name:
+		return node
+	for child: Node in node.get_children():
+		var found: Node = _find_node_named(child, expected_name)
+		if found != null:
+			return found
+	return null

@@ -1233,7 +1233,7 @@ func _add_document_header() -> void:
 	header_panel.add_theme_stylebox_override("panel", hstyle)
 
 	var shell: VBoxContainer = VBoxContainer.new()
-	shell.add_theme_constant_override("separation", 5)
+	shell.add_theme_constant_override("separation", 4)
 	header_panel.add_child(shell)
 
 	var line: HBoxContainer = HBoxContainer.new()
@@ -1242,7 +1242,12 @@ func _add_document_header() -> void:
 	shell.add_child(line)
 
 	var title: Label = Label.new()
-	title.text = "Event Sheet Document"
+	if current_sheet != null and not current_sheet.resource_path.is_empty():
+		title.text = current_sheet.resource_path.get_file().get_basename()
+	elif current_sheet != null:
+		title.text = "Untitled Sheet"
+	else:
+		title.text = "No Sheet Loaded"
 	title.add_theme_color_override("font_color", Color(0.83, 0.91, 1.0))
 	title.add_theme_font_size_override("font_size", 14)
 	line.add_child(title)
@@ -1260,11 +1265,16 @@ func _add_document_header() -> void:
 	subtitle.add_theme_font_size_override("font_size", 10)
 	line.add_child(subtitle)
 
-	var feature_tagline: Label = Label.new()
-	feature_tagline.text = "Inline clauses • Nested flow" if current_sheet != null else "Ready for inline authoring"
-	feature_tagline.add_theme_color_override("font_color", Color(0.46, 0.56, 0.72))
-	feature_tagline.add_theme_font_size_override("font_size", 9)
-	shell.add_child(feature_tagline)
+	var path_hint: Label = Label.new()
+	if current_sheet != null and not current_sheet.resource_path.is_empty():
+		path_hint.text = current_sheet.resource_path
+	elif current_sheet != null:
+		path_hint.text = "Unsaved in-memory sheet"
+	else:
+		path_hint.text = "Open or create a sheet to begin"
+	path_hint.add_theme_color_override("font_color", Color(0.46, 0.56, 0.72))
+	path_hint.add_theme_font_size_override("font_size", 9)
+	shell.add_child(path_hint)
 
 	_canvas_vbox.add_child(header_panel)
 
@@ -1334,11 +1344,7 @@ func _add_variables_section() -> void:
 
 	var variables: Dictionary = current_sheet.variables
 	if variables.is_empty():
-		var hint: Label = Label.new()
-		hint.text = "No global variables yet — add one to seed authored clauses."
-		hint.add_theme_color_override("font_color", Color(0.50, 0.63, 0.74))
-		hint.add_theme_font_size_override("font_size", 10)
-		section_body.add_child(hint)
+		section_body.add_child(_make_section_empty_card("No global variables yet — add one to seed authored clauses."))
 		return
 
 	var sorted_keys: Array = variables.keys()
@@ -1357,11 +1363,7 @@ func _add_events_section() -> void:
 	_current_rows_host = section_body
 
 	if current_sheet.events.is_empty():
-		var hint: Label = Label.new()
-		hint.text = "No events yet — start by adding an event line."
-		hint.add_theme_color_override("font_color", Color(0.52, 0.56, 0.67))
-		hint.add_theme_font_size_override("font_size", 10)
-		section_body.add_child(hint)
+		section_body.add_child(_make_section_empty_card("No events yet — start by adding an event line."))
 	else:
 		var render_guard: Dictionary = {}
 		for resource: Variant in current_sheet.events:
@@ -1691,19 +1693,44 @@ func _reset_selection_state() -> void:
 	_selected_variable_name = ""
 	_selected_group = null
 
+## Creates a styled card container for inspector content.
+func _make_inspector_card(border_accent: Color = Color(0.196, 0.223, 0.279, 1.0)) -> PanelContainer:
+	var card: PanelContainer = PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.100, 0.112, 0.145, 1.0)
+	style.border_color = border_accent
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(10)
+	card.add_theme_stylebox_override("panel", style)
+	return card
+
+## Creates a styled empty-state card for use inside section bodies.
+func _make_section_empty_card(hint_text: String) -> PanelContainer:
+	var card: PanelContainer = PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.070, 0.078, 0.102, 1.0)
+	style.border_color = Color(0.150, 0.170, 0.220, 0.70)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(5)
+	style.set_content_margin_all(10)
+	card.add_theme_stylebox_override("panel", style)
+	var hint: Label = Label.new()
+	hint.text = hint_text
+	hint.add_theme_color_override("font_color", Color(0.48, 0.56, 0.68))
+	hint.add_theme_font_size_override("font_size", 10)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	card.add_child(hint)
+	return card
+
 func _show_empty_inspector() -> void:
 	_clear_inspector()
 	_reset_selection_state()
 	_refresh_row_selection_states()
 	_refresh_workspace_context()
-	var shell: PanelContainer = PanelContainer.new()
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.100, 0.112, 0.145, 1.0)
-	style.border_color = Color(0.196, 0.223, 0.279, 1.0)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(6)
-	style.set_content_margin_all(10)
-	shell.add_theme_stylebox_override("panel", style)
+	var shell: PanelContainer = _make_inspector_card()
 
 	var vbox: VBoxContainer = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
@@ -1736,33 +1763,40 @@ func _rebuild_inspector_event(row: EventRowUI) -> void:
 
 	var event_row: EventRow = row.event_row
 
+	var card: PanelContainer = _make_inspector_card(Color(0.196, 0.235, 0.320, 1.0))
+	var card_vbox: VBoxContainer = VBoxContainer.new()
+	card_vbox.add_theme_constant_override("separation", 4)
+	card.add_child(card_vbox)
+
 	var heading: Label = Label.new()
 	heading.text = "Event"
 	heading.add_theme_color_override("font_color", Color(0.55, 0.78, 1.0))
 	heading.add_theme_font_size_override("font_size", 12)
-	_inspector_vbox.add_child(heading)
+	card_vbox.add_child(heading)
 
 	var runs_lbl: Label = Label.new()
 	runs_lbl.text = EventRowUI.format_run_context(event_row)
 	runs_lbl.add_theme_color_override("font_color", Color(0.85, 0.75, 0.45))
 	runs_lbl.add_theme_font_size_override("font_size", 10)
 	runs_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_inspector_vbox.add_child(runs_lbl)
+	card_vbox.add_child(runs_lbl)
 
-	_inspector_vbox.add_child(HSeparator.new())
+	card_vbox.add_child(HSeparator.new())
 
 	var summary: Label = Label.new()
 	summary.text = "%d condition(s)  ·  %d action(s)" % [event_row.conditions.size(), event_row.actions.size()]
 	summary.add_theme_color_override("font_color", Color(0.65, 0.70, 0.75))
 	summary.add_theme_font_size_override("font_size", 10)
-	_inspector_vbox.add_child(summary)
+	card_vbox.add_child(summary)
 
 	var authoring_note: Label = Label.new()
 	authoring_note.text = "Edit via event block."
 	authoring_note.add_theme_color_override("font_color", Color(0.40, 0.45, 0.50))
 	authoring_note.add_theme_font_size_override("font_size", 10)
 	authoring_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_inspector_vbox.add_child(authoring_note)
+	card_vbox.add_child(authoring_note)
+
+	_inspector_vbox.add_child(card)
 
 ## Rebuilds the inspector for a selected variable.
 ## The popup dialog is the primary editing path (clicking the row opens it).
@@ -1772,24 +1806,31 @@ func _rebuild_inspector_variable(row: VariableRowUI) -> void:
 		_show_empty_inspector()
 		return
 
+	var card: PanelContainer = _make_inspector_card(Color(0.178, 0.240, 0.196, 1.0))
+	var card_vbox: VBoxContainer = VBoxContainer.new()
+	card_vbox.add_theme_constant_override("separation", 4)
+	card.add_child(card_vbox)
+
 	var heading: Label = Label.new()
 	heading.text = "Variable"
 	heading.add_theme_color_override("font_color", Color(0.35, 0.95, 0.55))
 	heading.add_theme_font_size_override("font_size", 12)
-	_inspector_vbox.add_child(heading)
+	card_vbox.add_child(heading)
 
 	var summary: Label = Label.new()
 	summary.text = VariableRowUI.format_summary(row.var_name, row.var_info)
 	summary.add_theme_color_override("font_color", Color(0.80, 0.90, 0.80))
 	summary.add_theme_font_size_override("font_size", 10)
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_inspector_vbox.add_child(summary)
+	card_vbox.add_child(summary)
 
 	var note: Label = Label.new()
 	note.text = "Click the row to edit."
 	note.add_theme_color_override("font_color", Color(0.40, 0.50, 0.40))
 	note.add_theme_font_size_override("font_size", 10)
-	_inspector_vbox.add_child(note)
+	card_vbox.add_child(note)
+
+	_inspector_vbox.add_child(card)
 
 func _rebuild_inspector_group(row: GroupRowUI) -> void:
 	_clear_inspector()
@@ -1799,6 +1840,11 @@ func _rebuild_inspector_group(row: GroupRowUI) -> void:
 
 	var event_group: EventGroup = row.event_group
 
+	var card: PanelContainer = _make_inspector_card(Color(0.220, 0.168, 0.310, 1.0))
+	var card_vbox: VBoxContainer = VBoxContainer.new()
+	card_vbox.add_theme_constant_override("separation", 4)
+	card.add_child(card_vbox)
+
 	var heading: Label = Label.new()
 	var display_name: String = event_group.name
 	if display_name.is_empty():
@@ -1806,27 +1852,28 @@ func _rebuild_inspector_group(row: GroupRowUI) -> void:
 	heading.text = "Group: " + (display_name if not display_name.is_empty() else "(unnamed)")
 	heading.add_theme_color_override("font_color", Color(0.80, 0.50, 1.0))
 	heading.add_theme_font_size_override("font_size", 12)
-	_inspector_vbox.add_child(heading)
+	card_vbox.add_child(heading)
 
 	var desc_lbl: Label = Label.new()
 	desc_lbl.text = "Description: " + (event_group.description if not event_group.description.is_empty() else "(none)")
 	desc_lbl.add_theme_color_override("font_color", Color(0.75, 0.75, 0.80))
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_inspector_vbox.add_child(desc_lbl)
+	card_vbox.add_child(desc_lbl)
 
 	var enabled_lbl: Label = Label.new()
 	enabled_lbl.text = "Enabled: %s" % str(event_group.enabled)
-	_inspector_vbox.add_child(enabled_lbl)
+	card_vbox.add_child(enabled_lbl)
 
 	var collapsed_lbl: Label = Label.new()
 	collapsed_lbl.text = "Collapsed: %s" % str(_is_group_collapsed(event_group))
-	_inspector_vbox.add_child(collapsed_lbl)
+	card_vbox.add_child(collapsed_lbl)
 
-	var sep: HSeparator = HSeparator.new()
-	_inspector_vbox.add_child(sep)
+	card_vbox.add_child(HSeparator.new())
 
 	var planned_note: Label = Label.new()
 	planned_note.text = "Nested local variables and group event bodies are planned."
 	planned_note.add_theme_color_override("font_color", Color(0.50, 0.45, 0.60))
 	planned_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_inspector_vbox.add_child(planned_note)
+	card_vbox.add_child(planned_note)
+
+	_inspector_vbox.add_child(card)
