@@ -17,6 +17,7 @@ It intentionally avoids describing unbuilt behavior as complete.
   - `Replace Condition`
   - `Add Action`
 - Picker entries are grouped by ACE category, with Construct-style event groups shown when adding events.
+- Picker labels use ACE `ListName`/`list_name` metadata (`ACEDescriptor.get_list_name()`), so picker naming can differ from event-sheet summary text.
 
 ### 2.2 ACE parameter dialog
 
@@ -37,6 +38,7 @@ It intentionally avoids describing unbuilt behavior as complete.
   - right lane: actions
 - Rows use an IF/THEN block treatment (Construct/GDevelop-inspired): stronger lane framing, tinted condition/action cards, and per-entry accent rails for scanability.
 - Condition and action summaries are clickable for focused editing.
+- In-row condition/action summaries use ACE `DisplayText`/`display_text` metadata (`ACEDescriptor.get_display_text()`), so rendered summaries can be richer than picker labels.
 - Delete affordances are implemented:
   - event delete via header `✕` action
   - condition delete via condition context menu (`Delete Condition`)

@@ -45,6 +45,11 @@ Return dictionary keys:
 
 Generated files include a stable header and use `\n` line endings.
 
+Current condition translation slice includes:
+- `Always`
+- `CompareVar` (`{var_name} {op} {value}`)
+- `CompareValue` (`{left} {op} {right}`)
+
 ## 4. Next planned phase: translation/compiler matrix
 
 Next phase focus is specification-first compiler expansion from current sheet concepts to generated GDScript.
@@ -102,3 +107,40 @@ ACE descriptors can be provided as `ACEDescriptor` resources or dictionary metad
 Dictionary metadata accepts snake_case and Construct-style camelCase aliases (for example `list_name/listName`, `display_text/displayText`, `description/desc`, and param default/name aliases).
 
 Normalized metadata is used consistently by picker display and ACE param initialization.
+
+### 7.1 Picker label vs in-sheet summary
+
+- `ListName` / `list_name`: label shown in ACE picker trees/lists (`get_list_name()`).
+- `DisplayText` / `display_text`: rendered summary template used in event rows/inspector (`get_display_text()` and `format_display()`).
+
+These are intentionally distinct so one ACE can use concise picker naming while still rendering meaningful in-sheet summaries.
+
+### 7.2 Parameter initial/default value contract
+
+- Every ACE param has an initial/default value concept (`initial_value`/`initialValue` with `default_value`/`defaultValue` fallback).
+- For custom/script-provided ACE descriptor dictionaries (non-`Core` provider), each param is required to declare initial/default metadata.
+- Custom descriptors missing required param initial/default metadata are rejected by registry normalization.
+
+## 8. Expressions in the ACE model
+
+Expressions are first-class ACE descriptors (`ACEType.EXPRESSION`) that produce values, not side effects.
+
+- **Triggers** define when an event function runs.
+- **Conditions** evaluate to boolean guards (`if ...:`).
+- **Actions** emit statements with side effects.
+- **Expressions** represent value-producing snippets for params/conditions/actions.
+
+### 8.1 Expression metadata shape
+
+Expression descriptors use the same normalized metadata surface as other ACEs:
+
+- `provider_id`, `ace_id`, `category`
+- picker/display metadata: `list_name`/`listName`, `display_text`/`displayText`
+- param metadata (including initial/default values)
+- `return_type` and `codegen_template` for compiler-facing planning
+
+### 8.2 Compiler-facing expectations (current roadmap alignment)
+
+- Current translation slice remains expression-as-string: params and expression snippets are emitted deterministically through template substitution.
+- Compiler matrix expansion should map expression descriptors to deterministic output rules (typing/coercion/escaping/operator handling) alongside trigger/condition/action coverage.
+- Unsupported expression constructs should continue to surface explicit warnings/errors as matrix coverage expands.

@@ -287,6 +287,11 @@ static func format_condition_summary(condition: ACECondition) -> String:
 			var op: String = str(_ace_param(condition.params, condition.parameters, "op", "=="))
 			var val: String = str(_ace_param(condition.params, condition.parameters, "value", ""))
 			return prefix + ("%s %s %s" % [vname, op, val])
+		"CompareValue":
+			var left: String = str(_ace_param(condition.params, condition.parameters, "left", "0"))
+			var op: String = str(_ace_param(condition.params, condition.parameters, "op", "=="))
+			var right: String = str(_ace_param(condition.params, condition.parameters, "right", "0"))
+			return prefix + ("%s %s %s" % [left, op, right])
 		"Always":
 			return prefix + "Always"
 		_:

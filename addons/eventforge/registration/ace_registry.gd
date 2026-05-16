@@ -62,6 +62,9 @@ static func _normalize_descriptor(entry: Variant) -> ACEDescriptor:
 	if entry is ACEDescriptor:
 		var descriptor: ACEDescriptor = entry
 		_apply_descriptor_aliases(descriptor)
+		if descriptor.provider_id != "Core" and not _descriptor_has_required_custom_param_defaults(descriptor):
+			push_warning("[EventForge] Skipping custom ACE descriptor '%s/%s': each param must define initial/default metadata." % [descriptor.provider_id, descriptor.ace_id])
+			return null
 		return descriptor
 	if not (entry is Dictionary):
 		return null
@@ -80,6 +83,9 @@ static func _normalize_descriptor(entry: Variant) -> ACEDescriptor:
 	descriptor_from_dict.category = str(data.get("category", "Custom ACEs"))
 	descriptor_from_dict.signal_name = str(data.get("signal_name", data.get("signalName", "")))
 	descriptor_from_dict.codegen_template = str(data.get("codegen_template", data.get("codegenTemplate", "")))
+	if descriptor_from_dict.provider_id != "Core" and not _raw_params_have_custom_initial_defaults(data.get("params", [])):
+		push_warning("[EventForge] Skipping custom ACE descriptor '%s/%s': each param must include initial/default metadata (initial_value/initialValue/default_value/defaultValue)." % [descriptor_from_dict.provider_id, descriptor_from_dict.ace_id])
+		return null
 	descriptor_from_dict.params = _normalize_params(data.get("params", []))
 	_apply_descriptor_aliases(descriptor_from_dict)
 	return descriptor_from_dict
@@ -159,3 +165,40 @@ static func _apply_param_aliases(param: ACEParam) -> void:
 	var resolved_initial: Variant = param.get_initial_value()
 	param.initial_value = resolved_initial
 	param.initialValue = resolved_initial
+
+static func _raw_params_have_custom_initial_defaults(raw_params: Variant) -> bool:
+	if not (raw_params is Array):
+		return true
+	for entry: Variant in raw_params:
+		if entry is ACEParam:
+			var typed_param: ACEParam = entry
+			if _param_has_initial_default_value(typed_param):
+				continue
+			return false
+		if not (entry is Dictionary):
+			continue
+		var data: Dictionary = entry
+		var has_initial_metadata: bool = (
+			data.has("initial_value")
+			or data.has("initialValue")
+			or data.has("default_value")
+			or data.has("defaultValue")
+		)
+		if not has_initial_metadata:
+			return false
+	return true
+
+static func _descriptor_has_required_custom_param_defaults(descriptor: ACEDescriptor) -> bool:
+	if descriptor == null:
+		return false
+	for param: ACEParam in descriptor.params:
+		if param == null:
+			continue
+		if not _param_has_initial_default_value(param):
+			return false
+	return true
+
+static func _param_has_initial_default_value(param: ACEParam) -> bool:
+	if param.initial_value != null or param.initialValue != null:
+		return true
+	return param.default_value != null

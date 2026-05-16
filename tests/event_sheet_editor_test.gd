@@ -109,6 +109,20 @@ static func run() -> bool:
 	if compare_var != null and compare_var.params.size() > 1:
 		all_passed = _check("compare var op options count", compare_var.params[1].options.size(), 6) and all_passed
 
+	# Event row keeps visible actions lane content and add-action affordance.
+	var ui_event: EventRow = EventRow.new()
+	var ui_action: ACEAction = ACEAction.new()
+	ui_action.provider_id = "Core"
+	ui_action.ace_id = "QueueFree"
+	ui_event.actions.append(ui_action)
+	var event_row_ui: EventRowUI = EventRowUI.new()
+	event_row_ui.event_row = ui_event
+	event_row_ui.refresh()
+	all_passed = _check("event row action entry rendered", event_row_ui._actions_container.get_child_count(), 1) and all_passed
+	var action_entry_button: Button = event_row_ui._actions_container.get_child(0) as Button
+	all_passed = _check("event row action summary text", action_entry_button != null and action_entry_button.text.contains("Queue free"), true) and all_passed
+	all_passed = _check("event row add action affordance visible", _find_button_by_text(event_row_ui, "+ Add Action") != null, true) and all_passed
+
 	var group_default: EventGroup = EventGroup.new()
 	all_passed = _check("group default expanded", editor._is_group_collapsed(group_default), false) and all_passed
 
@@ -238,3 +252,16 @@ static func _count_event_row_nodes(node: Node) -> int:
 	for child: Node in node.get_children():
 		total += _count_event_row_nodes(child)
 	return total
+
+static func _find_button_by_text(node: Node, text: String) -> Button:
+	if node == null:
+		return null
+	if node is Button:
+		var btn: Button = node as Button
+		if btn.text == text:
+			return btn
+	for child: Node in node.get_children():
+		var nested: Button = _find_button_by_text(child, text)
+		if nested != null:
+			return nested
+	return null

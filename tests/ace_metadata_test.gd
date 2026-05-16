@@ -40,6 +40,34 @@ static func run() -> bool:
 	all_passed = _check("default params generated", str(normalized.build_default_params().get("enabled", "")), "true") and all_passed
 	all_passed = _check("display template render", normalized.format_display(normalized.build_default_params()), "Set variable jump height to true") and all_passed
 
+	var compare_var_descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "CompareVar")
+	all_passed = _check("compare var descriptor exists", compare_var_descriptor != null, true) and all_passed
+	if compare_var_descriptor != null:
+		all_passed = _check("compare var picker list label", compare_var_descriptor.get_list_name(), "Compare Variable") and all_passed
+		all_passed = _check("compare var summary display text", compare_var_descriptor.get_display_text(), "{var_name} {op} {value}") and all_passed
+
+	var compare_value_descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "CompareValue")
+	all_passed = _check("compare value descriptor exists", compare_value_descriptor != null, true) and all_passed
+	if compare_value_descriptor != null:
+		all_passed = _check("compare value codegen template", compare_value_descriptor.codegen_template, "{left} {op} {right}") and all_passed
+		all_passed = _check("compare value params count", compare_value_descriptor.params.size(), 3) and all_passed
+
+	var invalid_custom_missing_initial: ACEDescriptor = ACERegistry.normalize_descriptor({
+		"providerId": "CustomPlatformer",
+		"aceId": "MissingDefaults",
+		"type": "condition",
+		"listName": "Missing Defaults",
+		"displayText": "{value}",
+		"params": [
+			{
+				"id": "value",
+				"name": "Value",
+				"type": "String"
+			}
+		]
+	})
+	all_passed = _check("custom descriptor without initial/default is rejected", invalid_custom_missing_initial == null, true) and all_passed
+
 	var always_descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "Always")
 	all_passed = _check("core Always condition registered", always_descriptor != null, true) and all_passed
 	if always_descriptor != null:
