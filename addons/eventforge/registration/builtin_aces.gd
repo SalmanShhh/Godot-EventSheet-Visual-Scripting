@@ -13,7 +13,17 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(_make_descriptor("Core", "OnProcess", "Every Tick", ACEDescriptor.ACEType.TRIGGER, "", "_process", [], "Run Context", "Run every tick"))
 	descriptors.append(_make_descriptor("Core", "OnPhysicsProcess", "On Physics Process", ACEDescriptor.ACEType.TRIGGER, "", "_physics_process", [], "Run Context", "Run on physics process"))
 	descriptors.append(_make_descriptor("Core", "OnBodyEntered", "On Body Entered", ACEDescriptor.ACEType.TRIGGER, "", "body_entered", [_make_param("body", "Node")], "Signals / Scene / Input", "On body entered {body}"))
-	descriptors.append(_make_descriptor("Core", "OnSignal", "On Signal", ACEDescriptor.ACEType.TRIGGER, "", "", [_make_param("signal_name", "String", "eventforge_signal", "Signal Name", "Signal to listen for.")], "Signals / Scene / Input", "On signal {signal_name}"))
+	descriptors.append(_make_descriptor(
+		"Core",
+		"OnSignal",
+		"On Signal",
+		ACEDescriptor.ACEType.TRIGGER,
+		"",
+		"",
+		[_make_param("signal_name", "String", "eventforge_signal", "Signal Name", "Signal to listen for.")],
+		"Signals / Scene / Input",
+		"On signal {signal_name}"
+	))
 
 	# Conditions
 	descriptors.append(_make_descriptor("Core", "Always", "Always", ACEDescriptor.ACEType.CONDITION, "true", "", [], "General Conditions", "Always"))
