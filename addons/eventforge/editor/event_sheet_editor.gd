@@ -2120,20 +2120,20 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 	var line: HBoxContainer = HBoxContainer.new()
 	line.name = "SheetLineRow"
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.add_theme_constant_override("separation", 2)
+	line.add_theme_constant_override("separation", 1)
 	wrap_margin.add_child(line)
 
 	var gutter: HBoxContainer = HBoxContainer.new()
 	gutter.name = "SheetGutter"
-	gutter.add_theme_constant_override("separation", 4)
-	gutter.custom_minimum_size = Vector2(16 + (12 * indent_level), 0)
+	gutter.add_theme_constant_override("separation", 3)
+	gutter.custom_minimum_size = Vector2(14 + (11 * indent_level), 0)
 	gutter.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	gutter.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	line.add_child(gutter)
 
 	var root_pin: Label = Label.new()
 	root_pin.text = "│"
-	root_pin.add_theme_color_override("font_color", Color(0.40, 0.50, 0.68))
+	root_pin.add_theme_color_override("font_color", Color(0.48, 0.60, 0.80))
 	root_pin.add_theme_font_size_override("font_size", 9)
 	gutter.add_child(root_pin)
 
@@ -2141,13 +2141,13 @@ func _add_canvas_row(row: Control, indent_level: int) -> void:
 		var guide: ColorRect = ColorRect.new()
 		guide.custom_minimum_size = Vector2(1, 0)
 		guide.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		guide.color = Color(0.30, 0.38, 0.53, 0.88)
+		guide.color = Color(0.33, 0.42, 0.58, 0.92)
 		gutter.add_child(guide)
 
 	if indent_level > 0:
 		var branch: Label = Label.new()
 		branch.text = BRANCH_GUIDE_LABEL
-		branch.add_theme_color_override("font_color", Color(0.56, 0.65, 0.84))
+		branch.add_theme_color_override("font_color", Color(0.62, 0.72, 0.92))
 		branch.add_theme_font_size_override("font_size", 9)
 		gutter.add_child(branch)
 

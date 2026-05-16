@@ -754,7 +754,50 @@ static func run() -> bool:
 		)
 	all_passed = _check("event row outer panel has flush margins for lane layout", outer_margins_flush, true) and all_passed
 
+	# Phase 8: lane rows use denser, cell-like controls while preserving lane composition.
+	var cell_like_event: EventRow = EventRow.new()
+	var cell_like_condition: ACECondition = ACECondition.new()
+	cell_like_condition.ace_id = "Always"
+	cell_like_event.conditions.append(cell_like_condition)
+	var cell_like_action: ACEAction = ACEAction.new()
+	cell_like_action.ace_id = "QueueFree"
+	cell_like_event.actions.append(cell_like_action)
+	var lane_row_3: EventRowUI = EventRowUI.new()
+	lane_row_3.event_row = cell_like_event
+	lane_row_3.refresh()
+
+	var run_btn: Button = _find_button_with_prefix(lane_row_3, EventRowUI.RUN_CONTEXT_SYMBOL + " ")
+	all_passed = _check("run-context button found in condition lane", run_btn != null, true) and all_passed
+	if run_btn != null:
+		var run_style_flat: StyleBoxFlat = _get_flat_stylebox(run_btn, "normal")
+		all_passed = _check("run-context style exists", run_style_flat != null, true) and all_passed
+		if run_style_flat != null:
+			all_passed = _check("run-context uses square cell corners", run_style_flat.corner_radius_top_left, 0) and all_passed
+			all_passed = _check("run-context has visible cell border", run_style_flat.border_width_left, 1) and all_passed
+			all_passed = _check("run-context vertical padding tightened", run_style_flat.content_margin_top, 0) and all_passed
+
+	var condition_btn: Button = _find_button_with_text(lane_row_3, "Always")
+	all_passed = _check("condition token button found", condition_btn != null, true) and all_passed
+	if condition_btn != null:
+		var condition_style: StyleBoxFlat = _get_flat_stylebox(condition_btn, "normal")
+		all_passed = _check("condition token style exists", condition_style != null, true) and all_passed
+		if condition_style != null:
+			all_passed = _check("condition token has lane-accent left border", condition_style.border_width_left, 2) and all_passed
+			all_passed = _check("condition token top padding tightened", condition_style.content_margin_top, 2) and all_passed
+
+	var lane_entry_buttons: Array = _find_buttons_with_tooltip(lane_row_3, EventRowUI.ENTRY_TOOLTIP_TEXT)
+	all_passed = _check("lane entry tokens rendered", lane_entry_buttons.size() >= 2, true) and all_passed
+	var action_btn: Button = lane_entry_buttons[1] as Button if lane_entry_buttons.size() >= 2 else null
+	all_passed = _check("action token button found", action_btn != null, true) and all_passed
+	if action_btn != null:
+		var action_style: StyleBoxFlat = _get_flat_stylebox(action_btn, "normal")
+		all_passed = _check("action token style exists", action_style != null, true) and all_passed
+		if action_style != null:
+			all_passed = _check("action token has lane-accent left border", action_style.border_width_left, 2) and all_passed
+			all_passed = _check("action token top padding tightened", action_style.content_margin_top, 2) and all_passed
+
 	lane_row_2.free()
+	lane_row_3.free()
 
 	return all_passed
 
@@ -841,6 +884,55 @@ static func _has_color_rect_min_width(node: Node, min_width: int) -> bool:
 		if _has_color_rect_min_width(child, min_width):
 			return true
 	return false
+
+static func _find_button_with_text(node: Node, expected_text: String) -> Button:
+	if node == null:
+		return null
+	if node is Button:
+		var btn: Button = node as Button
+		if btn.text == expected_text:
+			return btn
+	for child: Node in node.get_children():
+		var found: Button = _find_button_with_text(child, expected_text)
+		if found != null:
+			return found
+	return null
+
+static func _find_button_with_prefix(node: Node, prefix: String) -> Button:
+	if node == null:
+		return null
+	if node is Button:
+		var btn: Button = node as Button
+		if btn.text.begins_with(prefix):
+			return btn
+	for child: Node in node.get_children():
+		var found: Button = _find_button_with_prefix(child, prefix)
+		if found != null:
+			return found
+	return null
+
+static func _get_flat_stylebox(control: Control, style_name: String) -> StyleBoxFlat:
+	if control == null:
+		return null
+	var style: StyleBox = control.get_theme_stylebox(style_name)
+	if style is StyleBoxFlat:
+		return style as StyleBoxFlat
+	return null
+
+static func _find_buttons_with_tooltip(node: Node, tooltip: String) -> Array:
+	var found: Array = []
+	_collect_buttons_with_tooltip(node, tooltip, found)
+	return found
+
+static func _collect_buttons_with_tooltip(node: Node, tooltip: String, out: Array) -> void:
+	if node == null:
+		return
+	if node is Button:
+		var btn: Button = node as Button
+		if btn.tooltip_text == tooltip:
+			out.append(btn)
+	for child: Node in node.get_children():
+		_collect_buttons_with_tooltip(child, tooltip, out)
 
 static func _find_node_named(node: Node, expected_name: String) -> Node:
 	if node == null:

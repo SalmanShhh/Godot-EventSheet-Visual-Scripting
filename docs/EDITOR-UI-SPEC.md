@@ -165,6 +165,10 @@ It intentionally avoids describing unbuilt behavior as complete.
 - The `+ action` button sits at the trailing edge of the action lane flow, keeping it within the action lane.
 - The `✕` delete button sits outside both lane panels at the far-right edge of the row.
 - Consistent `COND_LANE_RATIO` / `ACTION_LANE_RATIO` constants ensure the lane boundary remains at the same horizontal position across all rows, creating a stable eventsheet column grid.
+- Lane spacing and token padding are tightened (`h_separation`/`v_separation` and lane panel insets) to increase vertical density while keeping row readability.
+- Run-context and condition/action entries use square, bordered cell styling (including a stronger left border accent on tokens) so entries read as sheet cells rather than rounded chips.
+- Empty lane placeholders are lane-tinted (condition vs action) to preserve lane identity even when one side has no authored entries.
+- Nested sheet gutters use tighter spacing plus stronger guide contrast to improve parent/child readability in dense lane-based rows.
 
 ### 2.10 Row type badges
 - Group rows use a styled chip badge (`Group`) with a purple-tinted background and border.

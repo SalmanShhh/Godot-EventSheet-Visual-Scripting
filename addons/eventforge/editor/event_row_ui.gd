@@ -68,6 +68,10 @@ const CLAUSE_ACTION_PREFIX: String = "do"
 const LANE_DIVIDER_COLOR: Color = Color(0.22, 0.28, 0.42, 0.92)
 const COND_LANE_BG: Color = Color(0.082, 0.098, 0.135, 1.0)
 const ACTION_LANE_BG: Color = Color(0.074, 0.087, 0.118, 1.0)
+const CONDITION_PLACEHOLDER_BG: Color = Color(0.104, 0.137, 0.205, 1.0)
+const CONDITION_PLACEHOLDER_BORDER: Color = Color(0.190, 0.262, 0.385, 1.0)
+const ACTION_PLACEHOLDER_BG: Color = Color(0.088, 0.142, 0.132, 1.0)
+const ACTION_PLACEHOLDER_BORDER: Color = Color(0.155, 0.236, 0.218, 1.0)
 const COND_LANE_RATIO: float = 1.0
 const ACTION_LANE_RATIO: float = 1.85
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
@@ -121,21 +125,21 @@ func _build_ui() -> void:
 	cond_style.bg_color = COND_LANE_BG
 	cond_style.set_border_width_all(0)
 	cond_style.set_corner_radius_all(0)
-	cond_style.set_content_margin(SIDE_LEFT, 6)
-	cond_style.set_content_margin(SIDE_RIGHT, 5)
-	cond_style.set_content_margin(SIDE_TOP, 3)
-	cond_style.set_content_margin(SIDE_BOTTOM, 3)
+	cond_style.set_content_margin(SIDE_LEFT, 5)
+	cond_style.set_content_margin(SIDE_RIGHT, 4)
+	cond_style.set_content_margin(SIDE_TOP, 2)
+	cond_style.set_content_margin(SIDE_BOTTOM, 2)
 	cond_panel.add_theme_stylebox_override("panel", cond_style)
 	line.add_child(cond_panel)
 
 	var cond_vbox: VBoxContainer = VBoxContainer.new()
-	cond_vbox.add_theme_constant_override("separation", 2)
+	cond_vbox.add_theme_constant_override("separation", 1)
 	cond_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cond_panel.add_child(cond_vbox)
 
 	# Event header row: select handle + run-context trigger + "when" clause + add
 	var cond_header: HBoxContainer = HBoxContainer.new()
-	cond_header.add_theme_constant_override("separation", 4)
+	cond_header.add_theme_constant_override("separation", 3)
 	cond_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cond_vbox.add_child(cond_header)
 
@@ -161,12 +165,12 @@ func _build_ui() -> void:
 	var run_style: StyleBoxFlat = StyleBoxFlat.new()
 	run_style.bg_color = Color(0.143, 0.176, 0.250, 1.0)
 	run_style.border_color = Color(0.269, 0.357, 0.525, 1.0)
-	run_style.set_border_width_all(0)
-	run_style.set_corner_radius_all(3)
-	run_style.set_content_margin(SIDE_LEFT, 6)
-	run_style.set_content_margin(SIDE_RIGHT, 6)
-	run_style.set_content_margin(SIDE_TOP, 1)
-	run_style.set_content_margin(SIDE_BOTTOM, 1)
+	run_style.set_border_width_all(1)
+	run_style.set_corner_radius_all(0)
+	run_style.set_content_margin(SIDE_LEFT, 5)
+	run_style.set_content_margin(SIDE_RIGHT, 5)
+	run_style.set_content_margin(SIDE_TOP, 0)
+	run_style.set_content_margin(SIDE_BOTTOM, 0)
 	_runs_button.add_theme_stylebox_override("normal", run_style)
 	var run_hover: StyleBoxFlat = run_style.duplicate()
 	run_hover.bg_color = Color(0.181, 0.218, 0.308, 1.0)
@@ -192,8 +196,8 @@ func _build_ui() -> void:
 	# Conditions token flow (wraps within the lane)
 	_conditions_container = HFlowContainer.new()
 	_conditions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_conditions_container.add_theme_constant_override("h_separation", 4)
-	_conditions_container.add_theme_constant_override("v_separation", 2)
+	_conditions_container.add_theme_constant_override("h_separation", 3)
+	_conditions_container.add_theme_constant_override("v_separation", 1)
 	cond_vbox.add_child(_conditions_container)
 
 	# ── Lane divider ───────────────────────────────────────────────────────────
@@ -212,15 +216,15 @@ func _build_ui() -> void:
 	action_style.bg_color = ACTION_LANE_BG
 	action_style.set_border_width_all(0)
 	action_style.set_corner_radius_all(0)
-	action_style.set_content_margin(SIDE_LEFT, 6)
-	action_style.set_content_margin(SIDE_RIGHT, 5)
-	action_style.set_content_margin(SIDE_TOP, 3)
-	action_style.set_content_margin(SIDE_BOTTOM, 3)
+	action_style.set_content_margin(SIDE_LEFT, 5)
+	action_style.set_content_margin(SIDE_RIGHT, 4)
+	action_style.set_content_margin(SIDE_TOP, 2)
+	action_style.set_content_margin(SIDE_BOTTOM, 2)
 	action_panel.add_theme_stylebox_override("panel", action_style)
 	line.add_child(action_panel)
 
 	var action_hbox: HBoxContainer = HBoxContainer.new()
-	action_hbox.add_theme_constant_override("separation", 4)
+	action_hbox.add_theme_constant_override("separation", 3)
 	action_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	action_panel.add_child(action_hbox)
 
@@ -228,8 +232,8 @@ func _build_ui() -> void:
 
 	_actions_container = HFlowContainer.new()
 	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_actions_container.add_theme_constant_override("h_separation", 4)
-	_actions_container.add_theme_constant_override("v_separation", 2)
+	_actions_container.add_theme_constant_override("h_separation", 3)
+	_actions_container.add_theme_constant_override("v_separation", 1)
 	action_hbox.add_child(_actions_container)
 
 	var add_action_btn: Button = Button.new()
@@ -273,10 +277,10 @@ func _apply_row_style() -> void:
 		style.bg_color = ROW_BG_SELECTED
 		style.border_color = ROW_BORDER_SELECTED
 	elif _hovered:
-		style.bg_color = ROW_BG_HOVER
+		style.bg_color = _apply_depth_tint(ROW_BG_HOVER)
 		style.border_color = ROW_BORDER_HOVER
 	else:
-		style.bg_color = ROW_BG
+		style.bg_color = _apply_depth_tint(ROW_BG)
 		style.border_color = ROW_BORDER
 	style.set_border_width_all(1)
 	style.border_width_left = 4 + min(_depth, 4)
@@ -288,6 +292,18 @@ func _apply_row_style() -> void:
 	style.set_content_margin(SIDE_TOP, 0)
 	style.set_content_margin(SIDE_BOTTOM, 0)
 	add_theme_stylebox_override("panel", style)
+
+func _apply_depth_tint(base: Color) -> Color:
+	var depth_factor: float = float(min(_depth, 4))
+	if depth_factor <= 0.0:
+		return base
+	var lifted: float = depth_factor * 0.012
+	return Color(
+		min(base.r + lifted, 1.0),
+		min(base.g + lifted, 1.0),
+		min(base.b + lifted, 1.0),
+		base.a
+	)
 
 ## Refreshes the display from the assigned event_row resource.
 func refresh() -> void:
@@ -417,7 +433,7 @@ func _refresh_conditions() -> void:
 		child.queue_free()
 
 	if event_row.conditions.is_empty():
-		_conditions_container.add_child(_make_placeholder_token("Always"))
+		_conditions_container.add_child(_make_placeholder_token("Always", true))
 		return
 
 	for i: int in range(event_row.conditions.size()):
@@ -431,7 +447,7 @@ func _refresh_actions() -> void:
 		child.queue_free()
 
 	if event_row.actions.is_empty():
-		_actions_container.add_child(_make_placeholder_token("(no actions)"))
+		_actions_container.add_child(_make_placeholder_token("(no actions)", false))
 		return
 
 	for i: int in range(event_row.actions.size()):
@@ -440,15 +456,16 @@ func _refresh_actions() -> void:
 			continue
 		_actions_container.add_child(_make_entry_button(format_action_summary(action), i, false))
 
-func _make_placeholder_token(text: String) -> PanelContainer:
+func _make_placeholder_token(text: String, is_condition: bool) -> PanelContainer:
 	var panel: PanelContainer = PanelContainer.new()
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.115, 0.133, 0.174, 1.0)
-	style.border_color = Color(0.167, 0.186, 0.242, 1.0)
+	style.bg_color = CONDITION_PLACEHOLDER_BG if is_condition else ACTION_PLACEHOLDER_BG
+	style.border_color = CONDITION_PLACEHOLDER_BORDER if is_condition else ACTION_PLACEHOLDER_BORDER
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(0)
-	style.set_content_margin(SIDE_LEFT, 6)
-	style.set_content_margin(SIDE_RIGHT, 6)
+	style.border_width_left = 2
+	style.set_content_margin(SIDE_LEFT, 5)
+	style.set_content_margin(SIDE_RIGHT, 5)
 	style.set_content_margin(SIDE_TOP, 2)
 	style.set_content_margin(SIDE_BOTTOM, 2)
 	panel.add_theme_stylebox_override("panel", style)
@@ -481,11 +498,12 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	normal_style.bg_color = CONDITION_TOKEN_BG if is_condition else ACTION_TOKEN_BG
 	normal_style.border_color = CONDITION_TOKEN_BORDER if is_condition else ACTION_TOKEN_BORDER
 	normal_style.set_border_width_all(1)
+	normal_style.border_width_left = 2
 	normal_style.set_corner_radius_all(0)
-	normal_style.set_content_margin(SIDE_LEFT, 7)
-	normal_style.set_content_margin(SIDE_RIGHT, 7)
-	normal_style.set_content_margin(SIDE_TOP, 3)
-	normal_style.set_content_margin(SIDE_BOTTOM, 3)
+	normal_style.set_content_margin(SIDE_LEFT, 6)
+	normal_style.set_content_margin(SIDE_RIGHT, 6)
+	normal_style.set_content_margin(SIDE_TOP, 2)
+	normal_style.set_content_margin(SIDE_BOTTOM, 2)
 	btn.add_theme_stylebox_override("normal", normal_style)
 
 	var hover_style: StyleBoxFlat = normal_style.duplicate()
