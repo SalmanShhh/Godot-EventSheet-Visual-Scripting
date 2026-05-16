@@ -1604,7 +1604,7 @@ func _on_condition_delete_requested(row: EventRowUI, index: int) -> void:
 			_selected_index -= 1
 	_refresh_row_selection_states()
 	_refresh_workspace_context()
-	_rebuild_inspector_event(row)
+	_refresh_inspector_for_current_selection()
 
 func _on_action_delete_requested(row: EventRowUI, index: int) -> void:
 	if row == null or row.event_row == null:
@@ -1621,7 +1621,7 @@ func _on_action_delete_requested(row: EventRowUI, index: int) -> void:
 			_selected_index -= 1
 	_refresh_row_selection_states()
 	_refresh_workspace_context()
-	_rebuild_inspector_event(row)
+	_refresh_inspector_for_current_selection()
 
 func _delete_event_by_uid(uid: String) -> void:
 	if current_sheet == null or uid.is_empty():
@@ -1769,6 +1769,22 @@ func _show_empty_inspector() -> void:
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(hint)
 	_inspector_vbox.add_child(shell)
+
+func _refresh_inspector_for_current_selection() -> void:
+	match _selected_entry_kind:
+		"event", "condition", "action":
+			if _selected_row is EventRowUI:
+				_rebuild_inspector_event(_selected_row as EventRowUI)
+				return
+		"variable":
+			if _selected_row is VariableRowUI:
+				_rebuild_inspector_variable(_selected_row as VariableRowUI)
+				return
+		"group":
+			if _selected_row is GroupRowUI:
+				_rebuild_inspector_group(_selected_row as GroupRowUI)
+				return
+	_show_empty_inspector()
 
 ## Rebuilds the inspector to show a compact event summary.
 ## Primary editing is handled through event block lanes and popups.

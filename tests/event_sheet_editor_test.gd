@@ -281,6 +281,27 @@ static func run() -> bool:
 		all_passed = _check("delete earlier action keeps action selection kind", editor._selected_entry_kind, "action") and all_passed
 		all_passed = _check("delete earlier action shifts selected index", editor._selected_index, 0) and all_passed
 
+	# Deleting an action in another row keeps selected variable inspector/context intact.
+	var cross_row_sheet: EventSheetResource = EventSheetResource.new()
+	cross_row_sheet.variables["score"] = {"type": "int", "default": 0}
+	var cross_row_event: EventRow = EventRow.new()
+	var cross_row_action: ACEAction = ACEAction.new()
+	cross_row_action.ace_id = "QueueFree"
+	cross_row_event.actions.append(cross_row_action)
+	cross_row_sheet.events.append(cross_row_event)
+	editor.current_sheet = cross_row_sheet
+	editor.refresh_canvas()
+	var cross_row_var_ui: VariableRowUI = editor._find_variable_row_ui_by_name(editor._canvas_vbox, "score")
+	var cross_row_event_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, cross_row_event.event_uid)
+	if cross_row_var_ui != null and cross_row_event_ui != null:
+		editor._suppress_variable_popup_on_select = true
+		editor._on_variable_selected(cross_row_var_ui)
+		editor._suppress_variable_popup_on_select = false
+		editor._on_action_delete_requested(cross_row_event_ui, 0)
+		all_passed = _check("cross-row delete keeps variable selection kind", editor._selected_entry_kind, "variable") and all_passed
+		all_passed = _check("cross-row delete keeps variable inspector heading", _contains_label_text(editor._inspector_vbox, "Variable"), true) and all_passed
+		all_passed = _check("cross-row delete does not switch inspector to event", _contains_label_text(editor._inspector_vbox, "Event"), false) and all_passed
+
 	# Phase 4: inspector content wrapped in card shells.
 	var inspector_sheet: EventSheetResource = EventSheetResource.new()
 	var inspector_event: EventRow = EventRow.new()
