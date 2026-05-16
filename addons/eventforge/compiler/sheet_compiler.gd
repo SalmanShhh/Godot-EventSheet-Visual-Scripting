@@ -67,7 +67,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		var signature: Dictionary = TriggerResolver.resolve_trigger(events[0])
 		var function_name: String = str(signature.get("function_name", ""))
 		if function_name.is_empty():
-			(result["warnings"] as Array[String]).append("Unsupported trigger %s" % key)
+			(result["warnings"] as Array[String]).append(TriggerResolver.unsupported_warning(events[0]))
 			continue
 
 		var args: String = str(signature.get("args", ""))
@@ -81,28 +81,42 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		for event_row: EventRow in events:
 			var condition_texts: PackedStringArray = PackedStringArray()
 			for condition: ACECondition in event_row.conditions:
-				var condition_line: String = ConditionCodegen.generate_condition(condition)
+				var condition_codegen: Dictionary = ConditionCodegen.generate_condition_slice(condition)
+				var condition_warning: String = str(condition_codegen.get("warning", ""))
+				if not condition_warning.is_empty():
+					(result["warnings"] as Array[String]).append("%s (event %s)" % [condition_warning, event_row.event_uid])
+				var condition_line: String = str(condition_codegen.get("expression", ""))
 				if not condition_line.is_empty():
 					condition_texts.append(condition_line)
 
 			var body_indent: String = "\t"
+			var event_has_statements: bool = false
 			if condition_texts.size() > 0:
 				lines.append("\tif %s:" % " and ".join(condition_texts))
 				body_indent = "\t\t"
-				had_body = true
 
 			for action_item: Variant in event_row.actions:
 				if action_item is ACEAction:
-					var action_line: String = ActionCodegen.generate_action(action_item)
+					var action_codegen: Dictionary = ActionCodegen.generate_action_slice(action_item)
+					var action_warning: String = str(action_codegen.get("warning", ""))
+					if not action_warning.is_empty():
+						(result["warnings"] as Array[String]).append("%s (event %s)" % [action_warning, event_row.event_uid])
+					var action_line: String = str(action_codegen.get("statement", ""))
 					if action_line.is_empty():
 						continue
 					if action_item.is_awaited or action_item.await_call:
 						action_line = "await %s" % action_line
 					lines.append(body_indent + action_line)
 					had_body = true
+					event_has_statements = true
 				elif action_item is Resource and action_item.has_method("get_row_kind"):
 					lines.append(body_indent + "# TODO: row type not yet implemented in Phase 1")
 					had_body = true
+					event_has_statements = true
+
+			if condition_texts.size() > 0 and not event_has_statements:
+				lines.append(body_indent + "pass")
+				had_body = true
 
 			if event_row.else_mode != EventRow.ElseMode.NONE or event_row.sub_events.size() > 0 or event_row.pick_filters.size() > 0:
 				lines.append("\t# TODO: row type not yet implemented in Phase 1")

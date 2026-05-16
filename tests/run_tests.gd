@@ -8,6 +8,7 @@ class_name EventForgeTestRunner
 func _init() -> void:
 	var passed: bool = true
 	passed = CompileDemoTest.run() and passed
+	passed = TranslationMatrixSliceTest.run() and passed
 	passed = VariableRowFormatTest.run() and passed
 	passed = ACEMetadataTest.run() and passed
 	passed = EventSheetEditorTest.run() and passed

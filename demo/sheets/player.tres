@@ -53,42 +53,47 @@ conditions = [SubResource("ACECondition_low_health")]
 trigger_id = "OnProcess"
 trigger_provider_id = "Core"
 
-[sub_resource type="Resource" id="ACECondition_enemy_group"]
+[sub_resource type="Resource" id="ACECondition_always"]
 script = ExtResource("4_ace_condition")
-ace_id = "HasGroupMember"
-parameters = {
-"group": "\"enemy\""
-}
+ace_id = "Always"
 provider_id = "Core"
 
-[sub_resource type="Resource" id="ACEAction_damage_add"]
+[sub_resource type="Resource" id="ACEAction_physics_set"]
 script = ExtResource("3_ace_action")
-ace_id = "AddVar"
+ace_id = "SetVar"
 parameters = {
-"amount": "-10",
+"value": "health - 1",
 "var_name": "health"
 }
 provider_id = "Core"
 
-[sub_resource type="Resource" id="ACEAction_damage_emit"]
+[sub_resource type="Resource" id="EventRow_physics_process"]
+script = ExtResource("2_event_row")
+actions = [SubResource("ACEAction_physics_set")]
+conditions = [SubResource("ACECondition_always")]
+trigger_id = "OnPhysicsProcess"
+trigger_provider_id = "Core"
+
+[sub_resource type="Resource" id="ACEAction_signal_log"]
 script = ExtResource("3_ace_action")
-ace_id = "EmitSignal"
+ace_id = "PrintLog"
 parameters = {
-"args": "10",
-"signal_name": "\"damage_taken\""
+"message": "\"Signal fired\""
 }
 provider_id = "Core"
 
-[sub_resource type="Resource" id="EventRow_body_entered"]
+[sub_resource type="Resource" id="EventRow_signal"]
 script = ExtResource("2_event_row")
-actions = [SubResource("ACEAction_damage_add"), SubResource("ACEAction_damage_emit")]
-conditions = [SubResource("ACECondition_enemy_group")]
-trigger_id = "OnBodyEntered"
+actions = [SubResource("ACEAction_signal_log")]
+trigger_id = "OnSignal"
+trigger_params = {
+"signal_name": "damage_taken"
+}
 trigger_provider_id = "Core"
 
 [resource]
 script = ExtResource("1_event_sheet")
-events = [SubResource("EventRow_ready"), SubResource("EventRow_process_low_health"), SubResource("EventRow_body_entered")]
+events = [SubResource("EventRow_ready"), SubResource("EventRow_process_low_health"), SubResource("EventRow_physics_process"), SubResource("EventRow_signal")]
 host_class = "CharacterBody2D"
 variables = {
 "health": {

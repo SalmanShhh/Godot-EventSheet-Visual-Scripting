@@ -76,6 +76,16 @@ Specify deterministic conversion rules for ACE params/expressions into GDScript-
 - fixture-style tests that lock expected output for mapped constructs
 - explicit warnings/errors for constructs still outside the mapped subset
 
+### 4.4 First implemented slice (current)
+
+The first compiler-matrix slice now translates this deterministic subset:
+
+- **Triggers/run contexts:** `OnReady`, `OnProcess`, `OnPhysicsProcess`, `OnSignal`
+- **Conditions:** `Always`, `CompareVar`
+- **Actions:** `SetVar`, `PrintLog`
+
+Constructs outside this slice are not silently treated as supported. The compiler emits explicit warnings for unsupported triggers, conditions, and actions.
+
 ## 5. Explicitly out of scope for this phase
 
 - drag/drop sorting/reordering UX

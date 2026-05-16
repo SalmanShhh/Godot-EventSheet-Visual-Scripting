@@ -1,0 +1,94 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="1_event_sheet"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="2_event_row"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="3_ace_action"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="4_ace_condition"]
+
+[sub_resource type="Resource" id="ACECondition_always"]
+script = ExtResource("4_ace_condition")
+ace_id = "Always"
+provider_id = "Core"
+
+[sub_resource type="Resource" id="ACEAction_ready_log"]
+script = ExtResource("3_ace_action")
+ace_id = "PrintLog"
+parameters = {
+"message": "\"ready\""
+}
+provider_id = "Core"
+
+[sub_resource type="Resource" id="EventRow_ready"]
+script = ExtResource("2_event_row")
+actions = [SubResource("ACEAction_ready_log")]
+conditions = [SubResource("ACECondition_always")]
+trigger_id = "OnReady"
+trigger_provider_id = "Core"
+
+[sub_resource type="Resource" id="ACECondition_compare_health"]
+script = ExtResource("4_ace_condition")
+ace_id = "CompareVar"
+parameters = {
+"op": ">",
+"value": "0",
+"var_name": "health"
+}
+provider_id = "Core"
+
+[sub_resource type="Resource" id="ACEAction_process_set"]
+script = ExtResource("3_ace_action")
+ace_id = "SetVar"
+parameters = {
+"value": "health - 1",
+"var_name": "health"
+}
+provider_id = "Core"
+
+[sub_resource type="Resource" id="EventRow_process"]
+script = ExtResource("2_event_row")
+actions = [SubResource("ACEAction_process_set")]
+conditions = [SubResource("ACECondition_compare_health")]
+trigger_id = "OnProcess"
+trigger_provider_id = "Core"
+
+[sub_resource type="Resource" id="ACEAction_physics_log"]
+script = ExtResource("3_ace_action")
+ace_id = "PrintLog"
+parameters = {
+"message": "\"physics\""
+}
+provider_id = "Core"
+
+[sub_resource type="Resource" id="EventRow_physics"]
+script = ExtResource("2_event_row")
+actions = [SubResource("ACEAction_physics_log")]
+trigger_id = "OnPhysicsProcess"
+trigger_provider_id = "Core"
+
+[sub_resource type="Resource" id="ACEAction_signal_log"]
+script = ExtResource("3_ace_action")
+ace_id = "PrintLog"
+parameters = {
+"message": "\"signal\""
+}
+provider_id = "Core"
+
+[sub_resource type="Resource" id="EventRow_signal"]
+script = ExtResource("2_event_row")
+actions = [SubResource("ACEAction_signal_log")]
+trigger_id = "OnSignal"
+trigger_params = {
+"signal_name": "Damage Taken!"
+}
+trigger_provider_id = "Core"
+
+[resource]
+script = ExtResource("1_event_sheet")
+events = [SubResource("EventRow_ready"), SubResource("EventRow_process"), SubResource("EventRow_physics"), SubResource("EventRow_signal")]
+host_class = "Node2D"
+variables = {
+"health": {
+"default": 3,
+"type": "int"
+}
+}

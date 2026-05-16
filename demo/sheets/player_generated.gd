@@ -15,7 +15,9 @@ func _process(delta: float) -> void:
 	if health < 50:
 		print("Low health!")
 
-func _on_body_entered(body: Node) -> void:
-	if is_in_group("enemy"):
-		health += -10
-		emit_signal("damage_taken", 10)
+func _physics_process(delta: float) -> void:
+	if true:
+		health = health - 1
+
+func _on_damage_taken() -> void:
+	print("Signal fired")
