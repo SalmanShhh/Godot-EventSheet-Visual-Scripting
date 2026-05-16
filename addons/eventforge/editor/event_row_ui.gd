@@ -363,7 +363,7 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 	btn.add_theme_stylebox_override("hover", hover_style)
 
 	if is_condition:
-		btn.tooltip_text = "Left-click to edit · Right-click for options"
+		btn.tooltip_text = "Left-click to edit - Right-click for options"
 		btn.connect("pressed", func() -> void: condition_selected.emit(self, index))
 		btn.connect("gui_input", func(event: InputEvent) -> void: _on_condition_entry_gui_input(event, index))
 	else:

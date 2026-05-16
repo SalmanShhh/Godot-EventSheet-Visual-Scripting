@@ -1315,8 +1315,7 @@ func _rebuild_inspector_event(row: EventRowUI) -> void:
 	runs_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_inspector_vbox.add_child(runs_lbl)
 
-	var sep1: HSeparator = HSeparator.new()
-	_inspector_vbox.add_child(sep1)
+	_inspector_vbox.add_child(HSeparator.new())
 
 	var summary: Label = Label.new()
 	summary.text = "%d condition(s)  ·  %d action(s)" % [event_row.conditions.size(), event_row.actions.size()]
