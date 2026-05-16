@@ -20,6 +20,8 @@ func _enter_tree() -> void:
 	var editor_script: Script = load(EVENT_SHEET_EDITOR_PATH)
 	if editor_script == null:
 		push_warning("[EventForge] Failed to load EventSheetEditor script at %s. Verify the file exists and contains valid GDScript." % EVENT_SHEET_EDITOR_PATH)
+	elif not editor_script.can_instantiate():
+		push_warning("[EventForge] EventSheetEditor script is not instantiable: %s" % EVENT_SHEET_EDITOR_PATH)
 	else:
 		var editor_candidate: Variant = editor_script.new()
 		if editor_candidate == null:
@@ -35,6 +37,7 @@ func _enter_tree() -> void:
 			push_warning("[EventForge] EventSheetEditor script must extend Control: %s" % EVENT_SHEET_EDITOR_PATH)
 			if editor_candidate is Node:
 				(editor_candidate as Node).queue_free()
+			# Non-Node objects here are RefCounted and released automatically.
 	if _event_sheet_editor != null:
 		print("[EventForge] v0.1.0 loaded")
 	else:
