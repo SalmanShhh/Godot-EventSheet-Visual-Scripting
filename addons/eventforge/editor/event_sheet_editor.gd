@@ -21,6 +21,7 @@ const EVENT_PICKER_GROUPS: PackedStringArray = [
 	"Custom ACEs"
 ]
 const ACE_PARAMS_DIALOG_SIZE: Vector2i = Vector2i(420, 300)
+const ACE_PICKER_DIALOG_SIZE: Vector2i = Vector2i(520, 420)
 const NO_VARIABLES_AVAILABLE_TEXT: String = "No variables available"
 const NO_VARIABLES_AVAILABLE_HINT_TEXT: String = "No variables are available. Add a variable before applying this ACE."
 const ACE_PARAMS_LABEL_WIDTH: float = 110.0
@@ -292,7 +293,7 @@ func _refresh_toolbar_state() -> void:
 func _build_ace_picker_popup() -> void:
 	_ace_picker_popup = Window.new()
 	_ace_picker_popup.name = "ACEPickerPopup"
-	_ace_picker_popup.min_size = Vector2i(520, 420)
+	_ace_picker_popup.min_size = ACE_PICKER_DIALOG_SIZE
 	_ace_picker_popup.connect("close_requested", func(): _ace_picker_popup.hide())
 	add_child(_ace_picker_popup)
 
@@ -358,7 +359,7 @@ func _show_ace_picker(title: String, include_triggers: bool, include_conditions:
 	_ace_picker_title.text = title
 	_ace_picker_description.text = "Pick an ACE to add."
 	_populate_ace_picker(include_triggers, include_conditions, include_actions)
-	_ace_picker_popup.popup_centered(Vector2i(520, 420))
+	_ace_picker_popup.popup_centered(ACE_PICKER_DIALOG_SIZE)
 
 func _populate_ace_picker(include_triggers: bool, include_conditions: bool, include_actions: bool) -> void:
 	if _ace_picker_tree == null:
