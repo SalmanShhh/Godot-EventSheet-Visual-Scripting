@@ -1362,6 +1362,7 @@ func _add_variables_section() -> void:
 		row.set_depth(0)
 		row.refresh()
 		row.variable_selected.connect(_on_variable_selected)
+		row.variable_delete_requested.connect(_on_variable_delete_requested)
 		section_body.add_child(row)
 
 func _add_events_section() -> void:
@@ -1417,6 +1418,7 @@ func _add_group_row(event_group: EventGroup, indent_level: int = 0, render_guard
 	row_ui.refresh()
 	row_ui.group_selected.connect(_on_group_selected)
 	row_ui.group_collapsed_toggled.connect(_on_group_collapsed_toggled)
+	row_ui.group_delete_requested.connect(_on_group_delete_requested)
 	_add_canvas_row(row_ui, indent_level)
 
 	if _is_group_collapsed(event_group):
@@ -1553,7 +1555,7 @@ func _on_condition_invert_requested(row: EventRowUI, index: int) -> void:
 		return
 	condition.negated = not condition.negated
 	row.refresh()
-	_rebuild_inspector_event(row)
+	_refresh_inspector_for_current_selection()
 
 func _on_action_selected(row: EventRowUI, index: int) -> void:
 	_selected_entry_kind = "action"
@@ -1686,6 +1688,99 @@ func _on_group_collapsed_toggled(row: GroupRowUI, _collapsed: bool) -> void:
 	var group_uid: String = row.event_group.group_uid
 	refresh_canvas()
 	_focus_group_by_uid(group_uid)
+
+func _on_variable_delete_requested(row: VariableRowUI) -> void:
+	if row == null or current_sheet == null:
+		return
+	var var_name: String = row.var_name
+	if not current_sheet.variables.has(var_name):
+		return
+	var was_selected: bool = (_selected_entry_kind == "variable" and _selected_variable_name == var_name)
+	# Capture re-focus info before any state changes (canvas refresh invalidates row references).
+	var refocus_event_uid: String = ""
+	var refocus_var_name: String = ""
+	var refocus_group_uid: String = ""
+	if not was_selected:
+		if _selected_entry_kind in ["event", "condition", "action"] and _selected_row is EventRowUI:
+			var sel_event_row: EventRowUI = _selected_row as EventRowUI
+			if sel_event_row.event_row != null:
+				refocus_event_uid = sel_event_row.event_row.event_uid
+		elif _selected_entry_kind == "variable":
+			refocus_var_name = _selected_variable_name
+		elif _selected_entry_kind == "group" and _selected_group is GroupRowUI:
+			var sel_group_row: GroupRowUI = _selected_group as GroupRowUI
+			if sel_group_row.event_group != null:
+				refocus_group_uid = sel_group_row.event_group.group_uid
+	current_sheet.variables.erase(var_name)
+	if was_selected:
+		_reset_selection_state()
+	refresh_canvas()
+	if was_selected:
+		_show_empty_inspector()
+	elif not refocus_event_uid.is_empty():
+		_focus_event_by_uid(refocus_event_uid)
+	elif not refocus_var_name.is_empty():
+		_focus_variable_by_name(refocus_var_name)
+	elif not refocus_group_uid.is_empty():
+		_focus_group_by_uid(refocus_group_uid)
+	_refresh_workspace_context()
+	if _sheet_toolbar != null:
+		_sheet_toolbar.set_status("Variable deleted: %s" % var_name)
+
+func _on_group_delete_requested(row: GroupRowUI) -> void:
+	if row == null or row.event_group == null or current_sheet == null:
+		return
+	var uid: String = row.event_group.group_uid
+	_delete_group_by_uid(uid)
+
+func _delete_group_by_uid(uid: String) -> void:
+	if current_sheet == null or uid.is_empty():
+		return
+	var was_selected: bool = (_selected_entry_kind == "group" and _selected_group is GroupRowUI and (_selected_group as GroupRowUI).event_group != null and (_selected_group as GroupRowUI).event_group.group_uid == uid)
+	# Capture re-focus info before any state changes (canvas refresh invalidates row references).
+	var refocus_event_uid: String = ""
+	var refocus_var_name: String = ""
+	if not was_selected:
+		if _selected_entry_kind in ["event", "condition", "action"] and _selected_row is EventRowUI:
+			var sel_event_row: EventRowUI = _selected_row as EventRowUI
+			if sel_event_row.event_row != null:
+				refocus_event_uid = sel_event_row.event_row.event_uid
+		elif _selected_entry_kind == "variable":
+			refocus_var_name = _selected_variable_name
+	if _remove_group_by_uid_from_array(current_sheet.events, uid):
+		if was_selected:
+			_reset_selection_state()
+		refresh_canvas()
+		if was_selected:
+			_show_empty_inspector()
+		elif not refocus_event_uid.is_empty():
+			_focus_event_by_uid(refocus_event_uid)
+		elif not refocus_var_name.is_empty():
+			_focus_variable_by_name(refocus_var_name)
+		_refresh_workspace_context()
+		if _sheet_toolbar != null:
+			_sheet_toolbar.set_status("Group deleted")
+
+## Recursively removes the first EventGroup with the given uid from an array.
+## Searches top-level entries and nested EventGroup.events/rows as well as EventRow.sub_events.
+## Returns true if a match was found and removed.
+func _remove_group_by_uid_from_array(arr: Array, uid: String) -> bool:
+	for i: int in range(arr.size()):
+		var resource: Variant = arr[i]
+		if resource is EventGroup:
+			var group: EventGroup = resource as EventGroup
+			if group.group_uid == uid:
+				arr.remove_at(i)
+				return true
+			if _remove_group_by_uid_from_array(group.events, uid):
+				return true
+			if not group.rows.is_empty() and _remove_group_by_uid_from_array(group.rows, uid):
+				return true
+		elif resource is EventRow:
+			var event_row: EventRow = resource as EventRow
+			if _remove_group_by_uid_from_array(event_row.sub_events, uid):
+				return true
+	return false
 
 func _is_group_collapsed(event_group: EventGroup) -> bool:
 	if event_group == null:
