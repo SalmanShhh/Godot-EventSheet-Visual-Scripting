@@ -12,8 +12,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(_make_descriptor("Core", "OnReady", "On Ready", ACEDescriptor.ACEType.TRIGGER, "", "ready", [], "Run Context", "Run on ready"))
 	descriptors.append(_make_descriptor("Core", "OnProcess", "Every Tick", ACEDescriptor.ACEType.TRIGGER, "", "_process", [], "Run Context", "Run every tick"))
 	descriptors.append(_make_descriptor("Core", "OnPhysicsProcess", "On Physics Process", ACEDescriptor.ACEType.TRIGGER, "", "_physics_process", [], "Run Context", "Run on physics process"))
-	descriptors.append(_make_descriptor("Core", "OnBodyEntered", "On Body Entered", ACEDescriptor.ACEType.TRIGGER, "", "body_entered", [_make_param("body", "Node")], "Signals / Scene", "On body entered {body}"))
-	descriptors.append(_make_descriptor("Core", "OnSignal", "On Signal", ACEDescriptor.ACEType.TRIGGER, "", "", [_make_param("signal_name", "String", "eventforge_signal", "Signal Name", "Signal to listen for.")], "Signals / Scene", "On signal {signal_name}"))
+	descriptors.append(_make_descriptor("Core", "OnBodyEntered", "On Body Entered", ACEDescriptor.ACEType.TRIGGER, "", "body_entered", [_make_param("body", "Node")], "Signals / Scene / Input", "On body entered {body}"))
+	descriptors.append(_make_descriptor("Core", "OnSignal", "On Signal", ACEDescriptor.ACEType.TRIGGER, "", "", [_make_param("signal_name", "String", "eventforge_signal", "Signal Name", "Signal to listen for.")], "Signals / Scene / Input", "On signal {signal_name}"))
 
 	# Conditions
 	descriptors.append(_make_descriptor("Core", "Always", "Always", ACEDescriptor.ACEType.CONDITION, "true", "", [], "General Conditions", "Always"))
@@ -26,7 +26,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(_make_descriptor("Core", "AddVar", "Add Variable", ACEDescriptor.ACEType.ACTION, "{var_name} += {amount}", "", [_make_param("var_name", "String", "var", "Variable", "Variable name to increment."), _make_param("amount", "String", "1", "Amount", "Amount to add.")], "Variables", "Add {amount} to {var_name}"))
 	descriptors.append(_make_descriptor("Core", "PrintLog", "Print Log", ACEDescriptor.ACEType.ACTION, "print({message})", "", [_make_param("message", "String", "\"TODO\"", "Message", "Message to print.")], "General Actions", "Print {message}"))
 	descriptors.append(_make_descriptor("Core", "QueueFree", "Queue Free", ACEDescriptor.ACEType.ACTION, "queue_free()", "", [], "General Actions", "Queue free"))
-	descriptors.append(_make_descriptor("Core", "EmitSignal", "Emit Signal", ACEDescriptor.ACEType.ACTION, "emit_signal({signal_name}{, args})", "", [_make_param("signal_name", "String", "signal", "Signal Name", "Signal to emit."), _make_param("args", "String", "", "Arguments", "Optional signal arguments.")], "Signals / Scene", "Emit signal {signal_name}"))
+	descriptors.append(_make_descriptor("Core", "EmitSignal", "Emit Signal", ACEDescriptor.ACEType.ACTION, "emit_signal({signal_name}{, args})", "", [_make_param("signal_name", "String", "signal", "Signal Name", "Signal to emit."), _make_param("args", "String", "", "Arguments", "Optional signal arguments.")], "Signals / Scene / Input", "Emit signal {signal_name}"))
 
 	# Expressions
 	descriptors.append(_make_descriptor("Core", "GetVar", "Get Variable", ACEDescriptor.ACEType.EXPRESSION, "{var_name}", "", [_make_param("var_name", "String", "var", "Variable", "Variable to read.")], "Variables", "{var_name}"))

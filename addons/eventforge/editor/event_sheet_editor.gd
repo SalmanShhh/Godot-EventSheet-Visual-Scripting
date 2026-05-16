@@ -361,8 +361,6 @@ func _get_picker_group(descriptor: ACEDescriptor) -> String:
 	var category: String = descriptor.category
 	if category.is_empty():
 		return "General Conditions" if descriptor.ace_type == ACEDescriptor.ACEType.CONDITION else "General Actions"
-	if category == "Signals / Scene":
-		return "Signals / Scene / Input"
 	return category
 
 func _on_ace_picker_item_selected() -> void:
