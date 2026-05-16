@@ -112,8 +112,8 @@ func _build_ui() -> void:
 	conditions_lane_style.set_border_width(SIDE_TOP, 1)
 	conditions_lane_style.set_border_width(SIDE_LEFT, 1)
 	conditions_lane_style.set_border_width(SIDE_BOTTOM, 1)
-	conditions_lane_style.set_corner_radius(SIDE_TOP_LEFT, 4)
-	conditions_lane_style.set_corner_radius(SIDE_BOTTOM_LEFT, 4)
+	conditions_lane_style.corner_radius_top_left = 4
+	conditions_lane_style.corner_radius_bottom_left = 4
 	conditions_lane_style.set_content_margin(SIDE_LEFT, 6)
 	conditions_lane_style.set_content_margin(SIDE_RIGHT, 5)
 	conditions_lane_style.set_content_margin(SIDE_TOP, 4)
@@ -195,8 +195,8 @@ func _build_ui() -> void:
 	actions_lane_style.set_border_width(SIDE_TOP, 1)
 	actions_lane_style.set_border_width(SIDE_RIGHT, 1)
 	actions_lane_style.set_border_width(SIDE_BOTTOM, 1)
-	actions_lane_style.set_corner_radius(SIDE_TOP_RIGHT, 4)
-	actions_lane_style.set_corner_radius(SIDE_BOTTOM_RIGHT, 4)
+	actions_lane_style.corner_radius_top_right = 4
+	actions_lane_style.corner_radius_bottom_right = 4
 	actions_lane_style.set_content_margin(SIDE_LEFT, 6)
 	actions_lane_style.set_content_margin(SIDE_RIGHT, 5)
 	actions_lane_style.set_content_margin(SIDE_TOP, 4)

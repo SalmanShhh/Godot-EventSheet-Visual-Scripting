@@ -151,6 +151,7 @@ static func run() -> bool:
 	all_passed = _check("ace picker popup created", editor._ace_picker_popup != null, true) and all_passed
 	if editor._ace_picker_popup != null:
 		all_passed = _check("ace picker popup is window", editor._ace_picker_popup is Window, true) and all_passed
+		all_passed = _check("ace picker popup starts hidden", editor._ace_picker_popup.visible, false) and all_passed
 
 	# Zero-param ACE applies once and clears picker/params state after apply.
 	var zero_param_sheet: EventSheetResource = EventSheetResource.new()

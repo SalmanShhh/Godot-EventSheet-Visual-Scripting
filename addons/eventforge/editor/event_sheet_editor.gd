@@ -295,6 +295,7 @@ func _build_ace_picker_popup() -> void:
 	_ace_picker_popup.name = "ACEPickerPopup"
 	_ace_picker_popup.min_size = ACE_PICKER_DIALOG_SIZE
 	_ace_picker_popup.connect("close_requested", func(): _ace_picker_popup.hide())
+	_ace_picker_popup.hide()
 	add_child(_ace_picker_popup)
 
 	var margin: MarginContainer = MarginContainer.new()
@@ -327,6 +328,7 @@ func _build_ace_picker_popup() -> void:
 	_ace_picker_description.add_theme_color_override("font_color", Color(0.65, 0.70, 0.78))
 	_ace_picker_description.text = "Pick an ACE to add."
 	wrapper.add_child(_ace_picker_description)
+	_ace_picker_popup.hide()
 
 func _open_add_event_picker() -> void:
 	_ace_picker_mode = "new_event"
