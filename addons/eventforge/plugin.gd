@@ -7,12 +7,41 @@ class_name EventForgePlugin
 const BRIDGE_NAME: String = "EventForgeBridge"
 const BRIDGE_PATH: String = "res://addons/eventforge/runtime/eventforge_bridge.gd"
 const EVENT_SHEET_EDITOR_PATH: String = "res://addons/eventforge/editor/event_sheet_editor.gd"
+const MAIN_SCREEN_ROOT_NAME: String = "EventSheetWorkspace"
 
 var _event_sheet_editor: Control = null
 
 ## Returns the display name of the plugin.
 func _get_plugin_name() -> String:
-	return "EventForge"
+	return "EventSheet"
+
+## EventSheet is exposed as a dedicated main editor workspace.
+func _has_main_screen() -> bool:
+	return true
+
+## Returns the icon shown in the top editor workspace strip.
+func _get_plugin_icon() -> Texture2D:
+	return get_editor_interface().get_editor_theme().get_icon("Node", "EditorIcons")
+
+## Controls visibility for the workspace surface when selected in top tabs.
+func _make_visible(visible: bool) -> void:
+	if _event_sheet_editor != null:
+		_event_sheet_editor.visible = visible
+
+## Checks whether the selected object can be edited by this plugin.
+func _handles(object: Object) -> bool:
+	return is_event_sheet_resource(object)
+
+## Loads the selected EventSheet into the workspace editor.
+func _edit(object: Object) -> void:
+	if _event_sheet_editor == null:
+		return
+	if is_event_sheet_resource(object):
+		_event_sheet_editor.call("setup", object as EventSheetResource)
+
+## Shared object guard used by plugin handlers and tests.
+static func is_event_sheet_resource(object: Object) -> bool:
+	return object is EventSheetResource
 
 ## Registers plugin services when the plugin is enabled.
 func _enter_tree() -> void:
@@ -28,11 +57,12 @@ func _enter_tree() -> void:
 			push_warning("[EventForge] EventSheetEditor script could not be instantiated: %s" % EVENT_SHEET_EDITOR_PATH)
 		elif editor_candidate is Control:
 			_event_sheet_editor = editor_candidate
-			add_control_to_bottom_panel(_event_sheet_editor, "EventForge")
+			_event_sheet_editor.name = MAIN_SCREEN_ROOT_NAME
+			get_editor_interface().get_editor_main_screen().add_child(_event_sheet_editor)
 			# Contract: EventSheetEditor can expose setup(sheet := null) for safe initial state.
 			if _event_sheet_editor.has_method("setup"):
 				_event_sheet_editor.call("setup")
-			make_bottom_panel_item_visible(_event_sheet_editor)
+			_make_visible(false)
 		else:
 			push_warning("[EventForge] EventSheetEditor script must extend Control: %s" % EVENT_SHEET_EDITOR_PATH)
 			if editor_candidate is Node:
@@ -46,7 +76,8 @@ func _enter_tree() -> void:
 ## Unregisters plugin services when the plugin is disabled.
 func _exit_tree() -> void:
 	if _event_sheet_editor != null:
-		remove_control_from_bottom_panel(_event_sheet_editor)
+		if _event_sheet_editor.get_parent() != null:
+			_event_sheet_editor.get_parent().remove_child(_event_sheet_editor)
 		_event_sheet_editor.queue_free()
 		_event_sheet_editor = null
 	remove_autoload_singleton(BRIDGE_NAME)
