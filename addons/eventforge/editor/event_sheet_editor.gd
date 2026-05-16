@@ -1084,6 +1084,8 @@ func _build_expression_snippet(descriptor: ACEDescriptor, values: Dictionary) ->
 	var keys: Array[String] = []
 	for key: Variant in values.keys():
 		keys.append(str(key))
+	# Replace longer tokens first so names like {amount} are not partially
+	# affected by shorter tokens such as {a}.
 	keys.sort_custom(func(a: String, b: String) -> bool:
 		return a.length() > b.length()
 	)
@@ -1112,10 +1114,10 @@ func _insert_expression_snippet(snippet: String) -> void:
 func _should_insert_expression_separator(existing_text: String, insert_text: String) -> bool:
 	if existing_text.is_empty() or insert_text.is_empty():
 		return false
-	var last_char: String = existing_text.substr(existing_text.length() - 1, 1)
+	var last_char: String = existing_text[-1]
 	if last_char in [" ", "\t", "\n", "(", "[", "{", ".", "!", "~"]:
 		return false
-	var first_char: String = insert_text.substr(0, 1)
+	var first_char: String = insert_text[0]
 	if first_char in [")", "]", "}", ".", ",", ";"]:
 		return false
 	return true
