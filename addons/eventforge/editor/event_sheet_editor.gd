@@ -100,7 +100,7 @@ var _ace_picker_title: Label = null
 var _ace_picker_search: LineEdit = null
 var _ace_picker_tree: Tree = null
 var _ace_picker_description: Label = null
-## One of: "new_event", "append_condition", "replace_condition", "append_action"
+## One of: "new_event", "append_condition", "replace_condition", "append_action", "replace_action"
 var _ace_picker_mode: String = ""
 var _ace_picker_target_row: EventRowUI = null
 var _ace_picker_target_condition_index: int = -1
@@ -847,6 +847,12 @@ func _open_add_action_picker(row: EventRowUI) -> void:
 	_ace_picker_target_condition_index = -1
 	_show_ace_picker("Add Action", false, false, true)
 
+func _open_replace_action_picker(row: EventRowUI, index: int) -> void:
+	_ace_picker_mode = "replace_action"
+	_ace_picker_target_row = row
+	_ace_picker_target_condition_index = index
+	_show_ace_picker("Replace Action", false, false, true)
+
 func _show_ace_picker(title: String, include_triggers: bool, include_conditions: bool, include_actions: bool) -> void:
 	if _ace_picker_popup == null:
 		return
@@ -1176,6 +1182,8 @@ func _open_ace_params_dialog_for_picker_selection(descriptor: ACEDescriptor) -> 
 			params_dialog_mode = "replace_condition"
 		"append_action":
 			params_dialog_mode = "append_action"
+		"replace_action":
+			params_dialog_mode = "replace_action"
 	if params_dialog_mode.is_empty():
 		return
 	# If there are no editable parameters, apply immediately using a snapshot of
@@ -1490,6 +1498,8 @@ func _reshow_ace_picker_for_current_mode() -> void:
 			_show_ace_picker("Replace Condition", false, true, false)
 		"append_action":
 			_show_ace_picker("Add Action", false, false, true)
+		"replace_action":
+			_show_ace_picker("Replace Action", false, false, true)
 
 func _refresh_ace_params_dialog_confirm_state() -> void:
 	if _ace_params_dialog == null:
@@ -1541,6 +1551,8 @@ func _apply_ace_params(values: Dictionary) -> void:
 			_replace_condition_with_params(_ace_params_descriptor, _ace_params_target_index, values)
 		"append_action":
 			_append_action_with_params(_ace_params_descriptor, values)
+		"replace_action":
+			_replace_action_with_params(_ace_params_descriptor, _ace_params_target_index, values)
 		"edit_condition":
 			_edit_condition_params(_ace_params_target_index, values)
 		"edit_action":
@@ -1615,6 +1627,21 @@ func _append_action_with_params(descriptor: ACEDescriptor, params: Dictionary) -
 	action.ace_id = descriptor.ace_id
 	_set_action_params(action, params)
 	row.event_row.actions.append(action)
+	row.refresh()
+	_rebuild_inspector_event(row)
+	_mark_dirty()
+
+func _replace_action_with_params(descriptor: ACEDescriptor, index: int, params: Dictionary) -> void:
+	var row: EventRowUI = _ace_params_target_row
+	if row == null or row.event_row == null or descriptor == null:
+		return
+	if index < 0 or index >= row.event_row.actions.size():
+		return
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = descriptor.provider_id
+	action.ace_id = descriptor.ace_id
+	_set_action_params(action, params)
+	row.event_row.actions[index] = action
 	row.refresh()
 	_rebuild_inspector_event(row)
 	_mark_dirty()
@@ -2109,6 +2136,7 @@ func _add_event_row(event_row: EventRow, indent_level: int = 0, render_guard: Di
 	row_ui.condition_replace_requested.connect(_on_condition_replace_requested)
 	row_ui.condition_invert_requested.connect(_on_condition_invert_requested)
 	row_ui.action_selected.connect(_on_action_selected)
+	row_ui.action_replace_requested.connect(_on_action_replace_requested)
 	row_ui.add_condition_requested.connect(_on_row_add_condition_requested)
 	row_ui.add_action_requested.connect(_on_row_add_action_requested)
 	row_ui.event_delete_requested.connect(_on_event_delete_requested)
@@ -2276,6 +2304,18 @@ func _on_action_selected(row: EventRowUI, index: int) -> void:
 	_refresh_row_selection_states()
 	_refresh_workspace_context()
 	_open_action_params_dialog(row, index)
+
+func _on_action_replace_requested(row: EventRowUI, index: int) -> void:
+	if row == null or row.event_row == null:
+		return
+	if index < 0 or index >= row.event_row.actions.size():
+		return
+	_selected_entry_kind = "action"
+	_selected_row = row
+	_selected_index = index
+	_refresh_row_selection_states()
+	_refresh_workspace_context()
+	_open_replace_action_picker(row, index)
 
 func _on_row_add_condition_requested(row: EventRowUI) -> void:
 	if row == null or row.event_row == null:

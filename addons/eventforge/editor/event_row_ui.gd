@@ -16,6 +16,8 @@ signal condition_replace_requested(row: EventRowUI, index: int)
 signal condition_invert_requested(row: EventRowUI, index: int)
 ## Emitted when an action summary is clicked.
 signal action_selected(row: EventRowUI, index: int)
+## Emitted when an action right-click menu requests replacement.
+signal action_replace_requested(row: EventRowUI, index: int)
 ## Emitted when the event row itself is clicked for full event inspection.
 signal event_selected(row: EventRowUI)
 ## Emitted when inline Add Action is requested.
@@ -607,6 +609,6 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 		ACTION_MENU_ADD_ANOTHER:
 			add_action_requested.emit(self)
 		ACTION_MENU_REPLACE:
-			action_selected.emit(self, _context_action_index)
+			action_replace_requested.emit(self, _context_action_index)
 		ACTION_MENU_DELETE:
 			action_delete_requested.emit(self, _context_action_index)
