@@ -49,15 +49,16 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		var event_row: EventRow = row
 		if not event_row.enabled:
 			continue
-		if event_row.trigger_id.is_empty():
-			(result["warnings"] as Array[String]).append("Skipping event %s with no trigger" % event_row.event_uid)
-			continue
 
 		var key: String = TriggerResolver.get_trigger_key(event_row)
 		if not grouped.has(key):
 			grouped[key] = []
 			trigger_order.append(key)
 		(grouped[key] as Array).append(event_row)
+
+	var function_order: PackedStringArray = PackedStringArray()
+	var function_bodies: Dictionary = {}
+	var ready_setup_lines: PackedStringArray = PackedStringArray()
 
 	for key: String in trigger_order:
 		var events: Array = grouped.get(key, [])
@@ -71,45 +72,49 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			continue
 
 		var args: String = str(signature.get("args", ""))
+		if bool(signature.get("connect_in_ready", false)):
+			var connection_line: String = str(signature.get("connection_line", ""))
+			if not connection_line.is_empty():
+				var ready_line: String = "	" + connection_line
+				if not ready_setup_lines.has(ready_line):
+					ready_setup_lines.append(ready_line)
+
+		_append_function_body(
+			function_bodies,
+			function_order,
+			function_name,
+			args,
+			_build_event_body_lines(events)
+		)
+
+	if ready_setup_lines.size() > 0:
+		if not function_bodies.has("_ready"):
+			function_bodies["_ready"] = {"args": "", "lines": PackedStringArray()}
+			function_order.insert(0, "_ready")
+		var ready_function: Dictionary = function_bodies["_ready"]
+		var ready_lines: PackedStringArray = PackedStringArray()
+		for ready_setup_line: String in ready_setup_lines:
+			ready_lines.append(ready_setup_line)
+		for existing_line: String in ready_function.get("lines", PackedStringArray()):
+			ready_lines.append(existing_line)
+		ready_function["lines"] = ready_lines
+		function_bodies["_ready"] = ready_function
+
+	for function_name: String in function_order:
+		var function_data: Dictionary = function_bodies.get(function_name, {})
+		var args: String = str(function_data.get("args", ""))
+		var body_lines: PackedStringArray = function_data.get("lines", PackedStringArray())
 		lines.append("")
 		if args.is_empty():
 			lines.append("func %s() -> void:" % function_name)
 		else:
 			lines.append("func %s(%s) -> void:" % [function_name, args])
 
-		var had_body: bool = false
-		for event_row: EventRow in events:
-			var condition_texts: PackedStringArray = PackedStringArray()
-			for condition: ACECondition in event_row.conditions:
-				var condition_line: String = ConditionCodegen.generate_condition(condition)
-				if not condition_line.is_empty():
-					condition_texts.append(condition_line)
-
-			var body_indent: String = "\t"
-			if condition_texts.size() > 0:
-				lines.append("\tif %s:" % " and ".join(condition_texts))
-				body_indent = "\t\t"
-				had_body = true
-
-			for action_item: Variant in event_row.actions:
-				if action_item is ACEAction:
-					var action_line: String = ActionCodegen.generate_action(action_item)
-					if action_line.is_empty():
-						continue
-					if action_item.is_awaited or action_item.await_call:
-						action_line = "await %s" % action_line
-					lines.append(body_indent + action_line)
-					had_body = true
-				elif action_item is Resource and action_item.has_method("get_row_kind"):
-					lines.append(body_indent + "# TODO: row type not yet implemented in Phase 1")
-					had_body = true
-
-			if event_row.else_mode != EventRow.ElseMode.NONE or event_row.sub_events.size() > 0 or event_row.pick_filters.size() > 0:
-				lines.append("\t# TODO: row type not yet implemented in Phase 1")
-				had_body = true
-
-		if not had_body:
-			lines.append("\tpass")
+		if body_lines.is_empty():
+			lines.append("	pass")
+			continue
+		for body_line: String in body_lines:
+			lines.append(body_line)
 
 	for deferred: String in deferred_rows:
 		lines.append("")
@@ -129,6 +134,59 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 	file.flush()
 	file.close()
 	return result
+
+static func _append_function_body(function_bodies: Dictionary, function_order: PackedStringArray, function_name: String, args: String, body_lines: PackedStringArray) -> void:
+	if not function_bodies.has(function_name):
+		function_bodies[function_name] = {
+			"args": args,
+			"lines": PackedStringArray()
+		}
+		function_order.append(function_name)
+	var function_data: Dictionary = function_bodies[function_name]
+	var lines: PackedStringArray = function_data.get("lines", PackedStringArray())
+	for body_line: String in body_lines:
+		lines.append(body_line)
+	function_data["lines"] = lines
+	function_bodies[function_name] = function_data
+
+static func _build_event_body_lines(events: Array) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	for event_row: EventRow in events:
+		for row_line: String in _build_single_event_body(event_row, "	"):
+			lines.append(row_line)
+	return lines
+
+static func _build_single_event_body(event_row: EventRow, base_indent: String) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	var condition_texts: PackedStringArray = PackedStringArray()
+	for condition: ACECondition in event_row.conditions:
+		var condition_line: String = ConditionCodegen.generate_condition(condition)
+		if not condition_line.is_empty():
+			condition_texts.append(condition_line)
+
+	var body_indent: String = base_indent
+	if condition_texts.size() > 0:
+		lines.append("%sif %s:" % [base_indent, " and ".join(condition_texts)])
+		body_indent = base_indent + "	"
+
+	for action_item: Variant in event_row.actions:
+		if action_item is ACEAction:
+			var action_line: String = ActionCodegen.generate_action(action_item)
+			if action_line.is_empty():
+				continue
+			if action_item.is_awaited or action_item.await_call:
+				action_line = "await %s" % action_line
+			lines.append(body_indent + action_line)
+		elif action_item is Resource and action_item.has_method("get_row_kind"):
+			lines.append(body_indent + "# TODO: row type not yet implemented in Phase 1")
+
+	if event_row.else_mode != EventRow.ElseMode.NONE or event_row.sub_events.size() > 0 or event_row.pick_filters.size() > 0:
+		lines.append(body_indent + "# TODO: row type not yet implemented in Phase 1")
+
+	if condition_texts.size() > 0 and lines.size() == 1:
+		lines.append(body_indent + "pass")
+
+	return lines
 
 ## Emits `@export var` lines from the sheet variables dictionary.
 static func _emit_variables(variables: Dictionary) -> PackedStringArray:

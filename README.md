@@ -1,6 +1,6 @@
 # EventForge (GodotEventSheet)
 
-EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 4.x. Event sheets compile to deterministic, readable GDScript.
+EventForge is a Construct/GDevelop-style event sheet visual scripting plugin for Godot 4.x. Event sheets compile to deterministic, readable GDScript.
 
 ## Install
 
@@ -29,8 +29,12 @@ EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 
 3. Open the EventForge panel (bottom panel is currently a fallback shell).
 4. Create a new sheet or open an existing `.tres` sheet.
 5. Add an event row.
-6. Select trigger/conditions/actions from the ACE palette (or row pickers).
-7. Edit trigger/condition/action parameters in the inspector.
+6. Build each event as **Conditions + Actions**.
+   - Trigger-style conditions (`On Ready`, `On Process`, `On Physics Process`,
+     `On Signal`, `On Body Entered`) determine when the event runs.
+   - If an event has no trigger-style condition, it runs every frame.
+   - MVP supports at most one trigger-style condition per event.
+7. Edit run context / condition / action parameters in the inspector.
    - For `SetVar`, `AddVar`, and `CompareVar`, the `var_name` param shows a
      variable dropdown populated from Sheet Variables.
 8. Use the **Sheet Variables** panel (below the ACE palette) to:
@@ -50,6 +54,11 @@ EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 
   - left sidebar (ACE palette + sheet variables)
   - center event canvas
   - right inspector/preview
+- Event blocks follow a GDevelop-style model:
+  - `Runs: ...`
+  - `Conditions`
+  - `Actions`
+  - conditions show `Always` when no regular conditions exist
 - Active sheet header always indicates:
   - `No Event Sheet Open`
   - `Unsaved Event Sheet`
@@ -64,6 +73,9 @@ EventForge is a Construct 3-style event sheet visual scripting plugin for Godot 
   remains available.
 - Naming/grouping follows Construct/GDevelop-style event-sheet wording adapted
   to Godot UI conventions (for example `On Ready` / `On Process` under `System`).
+- Godot Signals are the primary Construct/GDevelop-style trigger equivalent.
+  `On Signal` connects the chosen signal in `_ready()` and runs the event body in
+  a generated callback.
 
 > **Tip:** Create sheet variables before using `SetVar`, `AddVar`, or
 > `CompareVar`. These ACEs can select sheet variables from the inspector

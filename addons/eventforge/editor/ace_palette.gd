@@ -5,19 +5,7 @@ class_name ACEPalette
 
 signal ace_selected(descriptor: ACEDescriptor)
 
-const SECTION_ORDER: Array[int] = [
-	ACEDescriptor.ACEType.TRIGGER,
-	ACEDescriptor.ACEType.CONDITION,
-	ACEDescriptor.ACEType.ACTION,
-	ACEDescriptor.ACEType.EXPRESSION
-]
-
-const SECTION_LABELS: Dictionary = {
-	ACEDescriptor.ACEType.TRIGGER: "Triggers",
-	ACEDescriptor.ACEType.CONDITION: "Conditions",
-	ACEDescriptor.ACEType.ACTION: "Actions",
-	ACEDescriptor.ACEType.EXPRESSION: "Expressions"
-}
+const SECTION_ORDER: Array[String] = ["Conditions", "Actions", "Expressions"]
 
 var _search: LineEdit
 var _tree: Tree
@@ -58,10 +46,10 @@ func _render_tree(filter_text: String) -> void:
 	var root: TreeItem = _tree.create_item()
 	var query: String = filter_text.strip_edges().to_lower()
 
-	for ace_type: int in SECTION_ORDER:
+	for section_name: String in SECTION_ORDER:
 		var section_items: Array[ACEDescriptor] = []
 		for descriptor: ACEDescriptor in _descriptors:
-			if descriptor == null or descriptor.ace_type != ace_type:
+			if descriptor == null or not _descriptor_in_section(descriptor, section_name):
 				continue
 			var haystack: String = "%s %s %s" % [descriptor.display_name, descriptor.ace_id, descriptor.category]
 			if not query.is_empty() and not haystack.to_lower().contains(query):
@@ -72,7 +60,7 @@ func _render_tree(filter_text: String) -> void:
 			continue
 
 		var section: TreeItem = _tree.create_item(root)
-		section.set_text(0, str(SECTION_LABELS.get(ace_type, "Other")))
+		section.set_text(0, section_name)
 		section.set_selectable(0, false)
 		var category_items: Dictionary = {}
 		for descriptor: ACEDescriptor in section_items:
@@ -96,6 +84,17 @@ func _render_tree(filter_text: String) -> void:
 				var item: TreeItem = _tree.create_item(category_node)
 				item.set_text(0, descriptor.display_name if not descriptor.display_name.is_empty() else descriptor.ace_id)
 				item.set_metadata(0, descriptor)
+
+func _descriptor_in_section(descriptor: ACEDescriptor, section_name: String) -> bool:
+	match section_name:
+		"Conditions":
+			return descriptor.ace_type == ACEDescriptor.ACEType.CONDITION or descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER
+		"Actions":
+			return descriptor.ace_type == ACEDescriptor.ACEType.ACTION
+		"Expressions":
+			return descriptor.ace_type == ACEDescriptor.ACEType.EXPRESSION
+		_:
+			return false
 
 func _emit_selected_from_item(item: TreeItem) -> void:
 	if item == null:

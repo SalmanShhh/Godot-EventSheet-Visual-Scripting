@@ -3,7 +3,7 @@
 extends PopupPanel
 class_name ConditionPicker
 
-signal condition_selected(condition: ACECondition)
+signal descriptor_selected(descriptor: ACEDescriptor)
 
 var _search: LineEdit
 var _list: ItemList
@@ -28,7 +28,7 @@ func setup() -> void:
     add_child(root)
 
     _search = LineEdit.new()
-    _search.placeholder_text = "Search conditions"
+    _search.placeholder_text = "Search conditions and run context"
     _search.text_changed.connect(_on_search_changed)
     root.add_child(_search)
 
@@ -41,7 +41,9 @@ func setup() -> void:
 func _refresh_descriptors(filter_text: String = "") -> void:
     _descriptors.clear()
     for descriptor: ACEDescriptor in ACERegistry.get_builtin_descriptors():
-        if descriptor == null or descriptor.ace_type != ACEDescriptor.ACEType.CONDITION:
+        if descriptor == null:
+            continue
+        if descriptor.ace_type != ACEDescriptor.ACEType.CONDITION and descriptor.ace_type != ACEDescriptor.ACEType.TRIGGER:
             continue
         var haystack: String = "%s %s" % [descriptor.display_name, descriptor.ace_id]
         if not filter_text.is_empty() and not haystack.to_lower().contains(filter_text.to_lower()):
@@ -56,12 +58,7 @@ func _emit_selection(index: int) -> void:
     if index < 0 or index >= _descriptors.size():
         return
 
-    var descriptor: ACEDescriptor = _descriptors[index]
-    var condition: ACECondition = ACECondition.new()
-    condition.provider_id = descriptor.provider_id
-    condition.ace_id = descriptor.ace_id
-    condition.params = {}
-    emit_signal("condition_selected", condition)
+    emit_signal("descriptor_selected", _descriptors[index])
     hide()
 
 func _on_search_changed(new_text: String) -> void:

@@ -100,7 +100,15 @@ For the current bottom-panel fallback, some regions may collapse or stack to pre
 - Clicking blank canvas space below rows supports quick add-event flow.
 - New rows are selected immediately and prompt:
   `New Event` and `Choose a Trigger, Condition, or Action from the left panel.`
-- Rows with no trigger should show `No Trigger` clearly.
+- Event blocks use `Event = Conditions + Actions`.
+- Trigger-style ACEs are presented as condition-like run context, not as a
+  separate top-level Trigger section.
+- Rows show a summary line such as:
+  - `Runs: Every Frame`
+  - `Runs: On Ready`
+  - `Runs: On Signal "pressed" from Button`
+- Conditions section displays regular conditions only, and shows `Always` when
+  none are present.
 - Copy/paste context is explicit:
   - copy requires open sheet + selected row
   - paste requires open sheet
@@ -125,7 +133,9 @@ For the current bottom-panel fallback, some regions may collapse or stack to pre
 - Paste row/block: inserts a cloned row/block after the selected row or at the end of the current sheet/function body.
 - Duplicate row/block: copy + paste in one command.
 - ACE palette selection:
-  - Trigger: assign to selected row, or create a row first if none selected.
+  - Trigger-style condition: assign as run context on the selected row, or
+    create a row first if none is selected.
+  - Only one trigger-style condition is supported per event.
   - Condition: append to selected row.
   - Action: append to selected row.
   - Expression: reserved for future expression insertion.
@@ -138,12 +148,12 @@ For the current bottom-panel fallback, some regions may collapse or stack to pre
 Each row card displays:
 
 - enabled checkbox
-- trigger display name or `<no trigger>` fallback
-- compact condition summary
-- compact action summary
+- `Runs: ...` summary
+- Conditions section
+- Actions section
 - Add Condition button
 - Add Action button
-- Copy/Duplicate controls or context menu entries
+- Duplicate control
 - Delete button
 
 Selection is visualized by a highlighted card background.
@@ -189,10 +199,11 @@ Future toolbar improvements:
 
 ## 7) ACE palette behavior
 
-The ACE palette lists descriptors from `ACERegistry`, grouped by type and category:
+The ACE palette lists descriptors from `ACERegistry`, grouped by user-facing
+type and category:
 
-- Triggers
 - Conditions
+  - includes trigger-style ACEs such as `On Ready`, `On Process`, `On Signal`
 - Actions
 - Expressions
 
@@ -213,8 +224,8 @@ Phase 2.1 adds a basic right-side inspector for the selected event row:
 
 - row UID display
 - enabled toggle
-- editable trigger provider/ID
-- editable trigger params
+- editable run context provider/ID
+- editable run context params
 - condition/action parameter editors (`Label + LineEdit`)
 - remove condition/action buttons
 
