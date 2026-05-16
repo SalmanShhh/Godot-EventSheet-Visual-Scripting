@@ -11,6 +11,9 @@ enum ViewMode {
 
 const FALLBACK_OPEN_PATH: String = "res://demo/sheets/player.tres"
 const FALLBACK_SAVE_PATH: String = "res://demo/sheets/editor_saved_sheet.tres"
+const LEFT_SIDEBAR_MIN_WIDTH: float = 320.0
+const INSPECTOR_MIN_WIDTH: float = 300.0
+const VARIABLES_PANEL_MIN_HEIGHT: float = 170.0
 
 var current_sheet: EventSheetResource = null
 var current_view_mode: ViewMode = ViewMode.SPLIT
@@ -146,6 +149,7 @@ func _build_ui() -> void:
     var root: VBoxContainer = VBoxContainer.new()
     root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     root.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    root.add_theme_constant_override("separation", 8)
     add_child(root)
 
     _toolbar = SheetToolbar.new()
@@ -172,49 +176,81 @@ func _build_ui() -> void:
     _sheet_area = HSplitContainer.new()
     _sheet_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _sheet_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _sheet_area.size_flags_stretch_ratio = 1.8
     _main_split.add_child(_sheet_area)
 
     var left_panel: VBoxContainer = VBoxContainer.new()
-    left_panel.custom_minimum_size = Vector2(260, 0)
+    # Transitional layout: keep the sidebar intentionally wider until EventForge moves to a Script-style shell.
+    left_panel.custom_minimum_size = Vector2(LEFT_SIDEBAR_MIN_WIDTH, 0)
+    left_panel.size_flags_horizontal = Control.SIZE_FILL
     left_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    left_panel.add_theme_constant_override("separation", 12)
     _sheet_area.add_child(left_panel)
 
     _ace_palette = ACEPalette.new()
+    _ace_palette.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _ace_palette.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _ace_palette.refresh()
     _ace_palette.ace_selected.connect(_on_ace_selected)
     left_panel.add_child(_ace_palette)
 
+    var vars_gap: HSeparator = HSeparator.new()
+    left_panel.add_child(vars_gap)
+
     # Sheet Variables sub-panel
-    var vars_outer: VBoxContainer = VBoxContainer.new()
+    var vars_outer: PanelContainer = PanelContainer.new()
     vars_outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     left_panel.add_child(vars_outer)
 
-    var vars_header: HBoxContainer = HBoxContainer.new()
-    vars_outer.add_child(vars_header)
+    var vars_margin: MarginContainer = MarginContainer.new()
+    vars_margin.add_theme_constant_override("margin_left", 8)
+    vars_margin.add_theme_constant_override("margin_top", 8)
+    vars_margin.add_theme_constant_override("margin_right", 8)
+    vars_margin.add_theme_constant_override("margin_bottom", 8)
+    vars_outer.add_child(vars_margin)
+
+    var vars_content: VBoxContainer = VBoxContainer.new()
+    vars_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    vars_content.add_theme_constant_override("separation", 8)
+    vars_margin.add_child(vars_content)
+
+    var vars_header: VBoxContainer = VBoxContainer.new()
+    vars_header.add_theme_constant_override("separation", 4)
+    vars_content.add_child(vars_header)
 
     var vars_title: Label = Label.new()
     vars_title.text = "Sheet Variables"
     vars_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     vars_header.add_child(vars_title)
 
+    # Stack header actions under the title so the button shrinks or wraps before labels collide.
+    var vars_actions: HBoxContainer = HBoxContainer.new()
+    vars_header.add_child(vars_actions)
+
+    var vars_spacer: Control = Control.new()
+    vars_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    vars_actions.add_child(vars_spacer)
+
     var add_var_btn: Button = Button.new()
     add_var_btn.text = "+ Add Var"
     add_var_btn.pressed.connect(_on_add_variable_pressed)
-    vars_header.add_child(add_var_btn)
+    vars_actions.add_child(add_var_btn)
 
     var vars_scroll: ScrollContainer = ScrollContainer.new()
-    vars_scroll.custom_minimum_size = Vector2(0, 120)
+    vars_scroll.custom_minimum_size = Vector2(0, VARIABLES_PANEL_MIN_HEIGHT)
     vars_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    vars_outer.add_child(vars_scroll)
+    vars_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    vars_content.add_child(vars_scroll)
 
     _vars_list = VBoxContainer.new()
     _vars_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _vars_list.add_theme_constant_override("separation", 8)
     vars_scroll.add_child(_vars_list)
 
     _row_scroll = ScrollContainer.new()
     _row_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _row_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _row_scroll.size_flags_stretch_ratio = 2.2
     _sheet_area.add_child(_row_scroll)
 
     _row_list = VBoxContainer.new()
@@ -223,8 +259,10 @@ func _build_ui() -> void:
     _row_scroll.add_child(_row_list)
 
     _inspector_scroll = ScrollContainer.new()
-    _inspector_scroll.custom_minimum_size = Vector2(320, 260)
+    _inspector_scroll.custom_minimum_size = Vector2(INSPECTOR_MIN_WIDTH, 260)
+    _inspector_scroll.size_flags_horizontal = Control.SIZE_FILL
     _inspector_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _inspector_scroll.size_flags_stretch_ratio = 1.1
     _sheet_area.add_child(_inspector_scroll)
 
     _inspector_container = VBoxContainer.new()
@@ -233,8 +271,11 @@ func _build_ui() -> void:
     _inspector_scroll.add_child(_inspector_container)
 
     _gdscript_panel = GDScriptPanel.new()
+    _gdscript_panel.custom_minimum_size = Vector2(360, 0)
     _gdscript_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _gdscript_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    # Bias split mode toward the authoring workspace until the dedicated Script-style editor shell exists.
+    _gdscript_panel.size_flags_stretch_ratio = 0.95
     _main_split.add_child(_gdscript_panel)
 
     _status_label = Label.new()
@@ -812,22 +853,49 @@ func _rebuild_vars_panel() -> void:
         _add_var_row_ui(var_name, descriptor)
 
 ## Builds the UI row for a single sheet variable entry (name, type, export, default, delete).
+## Stacks controls vertically so the temporary bottom-panel shell stays readable at common editor widths.
 ## Closures capture var_name by value so each row correctly targets its own variable.
 func _add_var_row_ui(var_name: String, descriptor: Dictionary) -> void:
     var var_types: Array[String] = ["int", "float", "String", "bool", "NodePath", "Variant"]
-    var container: VBoxContainer = VBoxContainer.new()
+    var card: PanelContainer = PanelContainer.new()
+    card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-    var header: HBoxContainer = HBoxContainer.new()
+    var card_margin: MarginContainer = MarginContainer.new()
+    card_margin.add_theme_constant_override("margin_left", 8)
+    card_margin.add_theme_constant_override("margin_top", 8)
+    card_margin.add_theme_constant_override("margin_right", 8)
+    card_margin.add_theme_constant_override("margin_bottom", 8)
+    card.add_child(card_margin)
+
+    var container: VBoxContainer = VBoxContainer.new()
+    container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    container.add_theme_constant_override("separation", 6)
+    card_margin.add_child(container)
+
+    var name_row: HBoxContainer = HBoxContainer.new()
+    name_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
     var name_edit: LineEdit = LineEdit.new()
     name_edit.text = var_name
+    name_edit.placeholder_text = "Variable name"
     name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     name_edit.text_submitted.connect(func(new_name: String) -> void:
         _rename_variable(var_name, new_name)
     )
-    header.add_child(name_edit)
+    name_row.add_child(name_edit)
+    container.add_child(name_row)
+
+    var controls_row: HBoxContainer = HBoxContainer.new()
+    controls_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+    var type_label: Label = Label.new()
+    type_label.text = "Type"
+    type_label.custom_minimum_size = Vector2(34, 0)
+    controls_row.add_child(type_label)
 
     var type_opt: OptionButton = OptionButton.new()
+    type_opt.custom_minimum_size = Vector2(110, 0)
+    type_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     for type_str: String in var_types:
         type_opt.add_item(type_str)
     var current_type: String = str(descriptor.get("type", "int"))
@@ -838,26 +906,26 @@ func _add_var_row_ui(var_name: String, descriptor: Dictionary) -> void:
     type_opt.item_selected.connect(func(index: int) -> void:
         _set_variable_type(var_name, var_types[index])
     )
-    header.add_child(type_opt)
+    controls_row.add_child(type_opt)
 
     var export_check: CheckBox = CheckBox.new()
-    export_check.text = "Exp"
+    export_check.text = "Export"
     export_check.button_pressed = bool(descriptor.get("exported", true))
     export_check.toggled.connect(func(is_on: bool) -> void:
         _set_variable_exported(var_name, is_on)
     )
-    header.add_child(export_check)
+    controls_row.add_child(export_check)
 
     var delete_btn: Button = Button.new()
-    delete_btn.text = "X"
+    delete_btn.text = "Del"
     delete_btn.pressed.connect(func() -> void:
         _delete_variable(var_name)
     )
-    header.add_child(delete_btn)
-
-    container.add_child(header)
+    controls_row.add_child(delete_btn)
+    container.add_child(controls_row)
 
     var default_row: HBoxContainer = HBoxContainer.new()
+    default_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     var default_label: Label = Label.new()
     default_label.text = "Default:"
     default_label.custom_minimum_size = Vector2(55, 0)
@@ -873,7 +941,7 @@ func _add_var_row_ui(var_name: String, descriptor: Dictionary) -> void:
     default_row.add_child(default_edit)
     container.add_child(default_row)
 
-    _vars_list.add_child(container)
+    _vars_list.add_child(card)
 
 func _on_add_variable_pressed() -> void:
     if current_sheet == null:

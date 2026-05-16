@@ -35,7 +35,7 @@ Generated GDScript remains read-only until the importer/round-trip system is mat
 
 ## 2) Main screen architecture
 
-The editor shell is hosted by the EventForge plugin and mounted as an editor panel. Phase 2 uses a bottom panel fallback; the long-term target is a dedicated main screen.
+The editor shell is hosted by the EventForge plugin and mounted as an editor panel. Phase 2 uses a temporary bottom-panel fallback for implementation speed; the intended long-term direction is a dedicated Script-editor-style workspace rather than a permanent bottom strip.
 
 The editor controller owns:
 
@@ -75,12 +75,19 @@ Main content can show event UI, code UI, or both depending on mode.
 Recommended long-term layout:
 
 ```text
-┌ Toolbar ───────────────────────────────────────────────────────────────────────┐
-├ Left Palette/Vars ┬ Event Sheet Canvas ┬ Inspector ┬ GDScript Preview ────────┤
-└ Status Bar ────────────────────────────────────────────────────────────────────┘
+┌ Toolbar ───────────────────────────────────────────────────────────────────────────┐
+├ Left Sidebar: Palette / Variables / Future Functions ┬ Authoring Canvas / Rows ┬ Inspector / Preview ┤
+└ Status Bar ────────────────────────────────────────────────────────────────────────┘
 ```
 
-For the current bottom-panel MVP, some regions may collapse or stack to preserve space.
+Near-term bottom-panel behavior should preserve the same mental model even when the shell is constrained:
+
+- left sidebar for ACE palette, variables, and later sheet functions
+- center authoring canvas / row list
+- right inspector, with preview still available in Split / GDScript modes
+- controls must not overlap at common editor widths
+- sidebar sections must degrade gracefully when space is constrained
+- header actions should stack or resize before they collide with labels
 
 ---
 
@@ -250,7 +257,7 @@ Event Sheet mode:
 
 ```text
 ┌ Toolbar: [New] [Open] [Save] [Add Event] [Copy] [Paste] [Compile] [Sheet|Split|Code] ┐
-├ ACE Palette / Vars ┬ Event Sheet Canvas ┬ Inspector ─────────────────────────────────┤
+├ Left Sidebar (ACE Palette / Vars / Future Functions) ┬ Event Sheet Canvas ┬ Inspector ┤
 └ Status Bar ───────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -266,9 +273,11 @@ Split mode:
 
 ```text
 ┌ Toolbar: [New] [Open] [Save] [Add Event] [Copy] [Paste] [Compile] [Sheet|Split|Code] ┐
-├ ACE Palette / Vars ┬ Event Sheet Canvas ┬ GDScript Preview (read-only) ──────────────┤
+├ Left Sidebar / Canvas / Inspector ┬ GDScript Preview (read-only) ────────────────────┤
 └ Status Bar ───────────────────────────────────────────────────────────────────────────┘
 ```
+
+Split mode should bias width toward the authoring workspace so the temporary bottom-panel presentation still feels closer to the Godot Script editor than to a cramped utility strip.
 
 ---
 
@@ -437,6 +446,8 @@ MVP variable UI should support:
 - Default value editor
 - Export checkbox
 - Validation for duplicate/invalid names
+- variable rows that remain readable when the sidebar narrows
+- stacked or wrapped header controls instead of overlapping labels/buttons
 
 Initial types:
 
@@ -736,7 +747,8 @@ Deferred dependencies:
 - UI is currently built programmatically; `.tscn` editor scenes are optional later.
 - Keep plugin startup behavior and autoload bridge compatibility.
 - Keep bridge class name as `EventForgeBridgeRuntime` while autoload singleton remains `EventForgeBridge`.
-- Bottom panel integration is acceptable Phase 2 fallback for reduced complexity.
+- Bottom panel integration is an acceptable temporary Phase 2 fallback, not the desired long-term home for the editor.
+- Keep steering layout decisions toward the Script editor shape: left navigation/sidebar, center authoring area, right-side inspection/preview.
 - Prefer typed GDScript and tabs for indentation.
 - Avoid writing generated preview files into `res://` for unsaved sheets.
 - Copy/paste should deep-copy resources and regenerate row/block identities.
