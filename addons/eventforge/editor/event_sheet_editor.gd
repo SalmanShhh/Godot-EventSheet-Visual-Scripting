@@ -14,6 +14,11 @@ const FALLBACK_SAVE_PATH: String = "res://demo/sheets/editor_saved_sheet.tres"
 const LEFT_SIDEBAR_MIN_WIDTH: float = 320.0
 const INSPECTOR_MIN_WIDTH: float = 300.0
 const VARIABLES_PANEL_MIN_HEIGHT: float = 170.0
+# Transitional Script-style split ratios for the temporary bottom-panel shell.
+const SHEET_AREA_STRETCH_RATIO: float = 1.8
+const ROW_LIST_STRETCH_RATIO: float = 2.2
+const INSPECTOR_STRETCH_RATIO: float = 1.1
+const PREVIEW_STRETCH_RATIO: float = 0.95
 
 var current_sheet: EventSheetResource = null
 var current_view_mode: ViewMode = ViewMode.SPLIT
@@ -176,7 +181,7 @@ func _build_ui() -> void:
     _sheet_area = HSplitContainer.new()
     _sheet_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _sheet_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _sheet_area.size_flags_stretch_ratio = 1.8
+    _sheet_area.size_flags_stretch_ratio = SHEET_AREA_STRETCH_RATIO
     _main_split.add_child(_sheet_area)
 
     var left_panel: VBoxContainer = VBoxContainer.new()
@@ -250,7 +255,7 @@ func _build_ui() -> void:
     _row_scroll = ScrollContainer.new()
     _row_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _row_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _row_scroll.size_flags_stretch_ratio = 2.2
+    _row_scroll.size_flags_stretch_ratio = ROW_LIST_STRETCH_RATIO
     _sheet_area.add_child(_row_scroll)
 
     _row_list = VBoxContainer.new()
@@ -262,7 +267,7 @@ func _build_ui() -> void:
     _inspector_scroll.custom_minimum_size = Vector2(INSPECTOR_MIN_WIDTH, 260)
     _inspector_scroll.size_flags_horizontal = Control.SIZE_FILL
     _inspector_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _inspector_scroll.size_flags_stretch_ratio = 1.1
+    _inspector_scroll.size_flags_stretch_ratio = INSPECTOR_STRETCH_RATIO
     _sheet_area.add_child(_inspector_scroll)
 
     _inspector_container = VBoxContainer.new()
@@ -274,8 +279,8 @@ func _build_ui() -> void:
     _gdscript_panel.custom_minimum_size = Vector2(360, 0)
     _gdscript_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _gdscript_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    # Bias split mode toward the authoring workspace until the dedicated Script-style editor shell exists.
-    _gdscript_panel.size_flags_stretch_ratio = 0.95
+    # Keep preview slightly smaller than the authoring workspace until the dedicated Script-style editor shell exists.
+    _gdscript_panel.size_flags_stretch_ratio = PREVIEW_STRETCH_RATIO
     _main_split.add_child(_gdscript_panel)
 
     _status_label = Label.new()
