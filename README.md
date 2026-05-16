@@ -22,43 +22,50 @@ EventForge is a Construct/GDevelop-style event sheet visual scripting plugin for
 4. Verify output matches `demo/sheets/player_generated.gd`.
 5. In the EventForge editor UI, generated GDScript is currently a read-only preview.
 
-## Editor usage flow (Phase 2.2)
+## Editor usage flow (Phase 2.3)
+
+EventForge sheets are **vertical, scrollable documents** modelled after
+Construct / GDevelop event sheets.
 
 1. Open the repository root project.
 2. Enable the EventForge plugin.
 3. Open the EventForge panel (bottom panel is currently a fallback shell).
 4. Create a new sheet or open an existing `.tres` sheet.
-5. Add an event row.
-6. Build each event as **Conditions + Actions**.
-   - Trigger-style conditions (`On Ready`, `On Process`, `On Physics Process`,
+5. Global sheet variables appear as **variable rows at the top of the canvas**:
+   ```
+   Global int health = 100
+   Global String player_name = "Player"
+   ```
+   Click a variable row to edit its type, default value, and export flag in the
+   inspector.
+6. Add an event row.  Build each event as **Conditions + Actions**:
+   - Run-context conditions (`On Ready`, `On Process`, `On Physics Process`,
      `On Signal`, `On Body Entered`) determine when the event runs.
-   - If an event has no trigger-style condition, it runs every frame.
-   - MVP supports at most one trigger-style condition per event.
-7. Edit run context / condition / action parameters in the inspector.
+   - If an event has no run context, it runs every frame.
+   - At most one run context is supported per event.
+7. Click a **condition or action entry** inside an event row to open focused
+   inspector editing for that entry only.  Use **← Back to Event** to return to
+   the full event inspector.
+8. Edit run context / condition / action parameters in the inspector.
    - For `SetVar`, `AddVar`, and `CompareVar`, the `var_name` param shows a
      variable dropdown populated from Sheet Variables.
-8. Use the **Sheet Variables** panel (below the ACE palette) to:
-   - Add variables with **+ Add Var**.
-   - Edit name, type, default value, and export flag.
-   - Delete variables with **X**.
-   - Create a variable before using `SetVar`, `AddVar`, or `CompareVar`.
-9. Copy, Paste, Duplicate, and Delete selected event rows via the toolbar buttons
-   or keyboard shortcuts: Ctrl+C / Ctrl+V / Ctrl+D / Delete.
-   - Pasted rows receive a new unique `event_uid`.
-10. Refresh/compile preview in read-only GDScript mode.
-11. Save the sheet.
+9. Use the **Sheet Variables** sidebar panel (below the ACE palette) to add,
+   rename, and delete variables.  Variables also appear as canvas rows.
+10. Copy, Paste, Duplicate, and Delete selected event rows via the toolbar
+    buttons or keyboard shortcuts: Ctrl+C / Ctrl+V / Ctrl+D / Delete.
+    - Pasted rows receive a new unique `event_uid`.
+11. Refresh/compile preview in read-only GDScript mode.
+12. Save the sheet.
 
-### Workflow/UX notes (Phase 2.2 follow-up)
+### UX and document-flow notes
 
-- EventForge direction is Script-editor-style workspace UX:
-  - left sidebar (ACE palette + sheet variables)
-  - center event canvas
-  - right inspector/preview
-- Event blocks follow a GDevelop-style model:
-  - `Runs: ...`
-  - `Conditions`
-  - `Actions`
-  - conditions show `Always` when no regular conditions exist
+- The sheet canvas is a **vertical document** of ordered blocks:
+  - `Global variable` rows (top of canvas)
+  - `Group` header rows (planned: contain local variables + nested events)
+  - `Event` rows (Conditions + Actions)
+- Run-context ACEs are **not** shown as a separate `Trigger` section.
+  Use `Runs: ...` summary and `Run Context` label instead.
+- Condition and action entries are **clickable** for focused inspector editing.
 - Active sheet header always indicates:
   - `No Event Sheet Open`
   - `Unsaved Event Sheet`
@@ -66,21 +73,17 @@ EventForge is a Construct/GDevelop-style event sheet visual scripting plugin for
   - `*` marker for unsaved/preview-dirty state
 - Empty event canvas supports click-to-add:
   `No events yet. Click here or press Add Event to create one.`
-- New rows are selected immediately and prompt ACE selection from the left panel.
 - Copy requires open sheet + selected row; paste requires open sheet and inserts
   after selection or at end.
 - Preview refresh is auto-debounced after edits, while manual `Refresh Preview`
   remains available.
-- Naming/grouping follows Construct/GDevelop-style event-sheet wording adapted
-  to Godot UI conventions (for example `On Ready` / `On Process` under `System`).
-- Godot Signals are the primary Construct/GDevelop-style trigger equivalent.
-  `On Signal` connects the chosen signal in `_ready()` and runs the event body in
-  a generated callback.
+- Godot Signals are the primary run-context equivalent for event-driven logic.
+  `On Signal` connects the chosen signal in `_ready()` and runs the event body
+  in a generated callback.
 
 > **Tip:** Create sheet variables before using `SetVar`, `AddVar`, or
 > `CompareVar`. These ACEs can select sheet variables from the inspector
-> dropdown. If no variables exist, a fallback text field is shown with a
-> suggestion to create one.
+> dropdown. Variable rows appear both in the canvas and in the sidebar panel.
 
 ## Phase 2 MVP status
 
@@ -95,6 +98,11 @@ EventForge is a Construct/GDevelop-style event sheet visual scripting plugin for
 | Sheet variables panel (Phase 2.2) | ✅ |
 | Variable-aware ACE param editing (Phase 2.2) | ✅ |
 | Copy/paste/duplicate/delete rows (Phase 2.2) | ✅ |
+| Global variable rows in canvas (Phase 2.3) | ✅ |
+| Clickable condition/action entries (Phase 2.3) | ✅ |
+| Group block UI groundwork (Phase 2.3) | ✅ |
+| Multiple EventSheet tabs (Phase 2.4) | ⏳ Planned |
+| Group local variable scoping (Phase 2.5) | ⏳ Planned |
 | Import/binding pipelines | ⏳ Deferred |
 | Editable GDScript round-trip | ⏳ Deferred |
 

@@ -23,6 +23,12 @@ var _selected_row: EventRow = null
 var _pending_row_for_condition: EventRow = null
 var _pending_row_for_action: EventRow = null
 
+## Tracks which sub-element is focused for inspector editing.
+## Values: "event", "condition", "action", "variable"
+var _selected_entry_kind: String = "event"
+var _selected_entry_index: int = -1
+var _selected_variable_name: String = ""
+
 var _row_clipboard: Resource = null
 var _row_clipboard_kind: String = ""
 var _identifier_regex: RegEx = null
@@ -54,6 +60,9 @@ func _ready() -> void:
 func set_sheet(sheet: EventSheetResource) -> void:
     current_sheet = sheet
     _selected_row = null
+    _selected_entry_kind = "event"
+    _selected_entry_index = -1
+    _selected_variable_name = ""
     _preview_dirty = false
     _sheet_dirty = false
     refresh_rows()
@@ -80,6 +89,8 @@ func create_new_sheet() -> void:
     _set_status("New in-memory sheet created.")
 
 ## Rebuilds visible event rows.
+## Global variable rows are rendered at the top, followed by group/event rows,
+## mirroring a Construct/GDevelop-style vertical document flow.
 func refresh_rows() -> void:
     if _row_list == null:
         return
@@ -93,6 +104,18 @@ func refresh_rows() -> void:
         _row_list.add_child(no_sheet_label)
         return
 
+    # --- Global variable rows (top of document) ---
+    for var_key: Variant in current_sheet.variables.keys():
+        var v_name: String = str(var_key)
+        var v_desc: Variant = current_sheet.variables[var_key]
+        if not (v_desc is Dictionary):
+            v_desc = {"type": "Variant", "default": null}
+        var var_row: VariableRowUI = VariableRowUI.new()
+        var_row.setup(v_name, v_desc as Dictionary)
+        var_row.set_selected(v_name == _selected_variable_name and _selected_entry_kind == "variable")
+        var_row.selected.connect(_on_variable_row_selected)
+        _row_list.add_child(var_row)
+
     if current_sheet.events.is_empty():
         var empty_button: Button = Button.new()
         empty_button.text = "No events yet. Click here or press Add Event to create one."
@@ -104,18 +127,25 @@ func refresh_rows() -> void:
         return
 
     for entry: Resource in current_sheet.events:
-        if not (entry is EventRow):
-            continue
-        var row: EventRow = entry
-        var row_ui: EventRowUI = EventRowUI.new()
-        row_ui.set_row(row)
-        row_ui.set_selected(row == _selected_row)
-        row_ui.selected.connect(_on_row_selected)
-        row_ui.delete_requested.connect(_on_row_delete_requested)
-        row_ui.add_condition_requested.connect(_on_add_condition_requested)
-        row_ui.add_action_requested.connect(_on_add_action_requested)
-        row_ui.duplicate_requested.connect(_on_row_duplicate_requested)
-        _row_list.add_child(row_ui)
+        if entry is EventGroup:
+            var group_ui: GroupRowUI = GroupRowUI.new()
+            group_ui.setup(entry as EventGroup)
+            group_ui.selected.connect(_on_group_row_selected)
+            _row_list.add_child(group_ui)
+        elif entry is EventRow:
+            var row: EventRow = entry
+            var row_ui: EventRowUI = EventRowUI.new()
+            row_ui.set_row(row)
+            var is_event_selected: bool = (row == _selected_row and _selected_entry_kind == "event")
+            row_ui.set_selected(is_event_selected or (row == _selected_row and _selected_entry_kind in ["condition", "action"]))
+            row_ui.selected.connect(_on_row_selected)
+            row_ui.delete_requested.connect(_on_row_delete_requested)
+            row_ui.add_condition_requested.connect(_on_add_condition_requested)
+            row_ui.add_action_requested.connect(_on_add_action_requested)
+            row_ui.duplicate_requested.connect(_on_row_duplicate_requested)
+            row_ui.condition_selected.connect(_on_condition_entry_selected)
+            row_ui.action_selected.connect(_on_action_entry_selected)
+            _row_list.add_child(row_ui)
 
     var add_more_button: Button = Button.new()
     add_more_button.text = "Click empty space to add another event."
@@ -324,10 +354,13 @@ func _on_add_event_requested() -> void:
     refresh_rows()
     _rebuild_inspector()
     _mark_preview_dirty()
-    _set_status("New Event created. Choose a Trigger, Condition, or Action from the left panel.")
+    _set_status("New Event created. Choose when this event runs, then add conditions and actions.")
 
 func _on_row_selected(row: EventRow) -> void:
     _selected_row = row
+    _selected_entry_kind = "event"
+    _selected_entry_index = -1
+    _selected_variable_name = ""
     refresh_rows()
     _rebuild_inspector()
 
@@ -342,12 +375,16 @@ func _on_row_delete_requested(row: EventRow) -> void:
             break
     if _selected_row == row:
         _selected_row = null
+        _selected_entry_kind = "event"
+        _selected_entry_index = -1
     refresh_rows()
     _rebuild_inspector()
     _mark_preview_dirty()
 
 func _on_add_condition_requested(row: EventRow) -> void:
     _selected_row = row
+    _selected_entry_kind = "event"
+    _selected_entry_index = -1
     refresh_rows()
     _rebuild_inspector()
     _pending_row_for_condition = row
@@ -356,6 +393,8 @@ func _on_add_condition_requested(row: EventRow) -> void:
 
 func _on_add_action_requested(row: EventRow) -> void:
     _selected_row = row
+    _selected_entry_kind = "event"
+    _selected_entry_index = -1
     refresh_rows()
     _rebuild_inspector()
     _pending_row_for_action = row
@@ -384,9 +423,45 @@ func _on_action_selected(action: ACEAction) -> void:
 
 func _on_row_duplicate_requested(row: EventRow) -> void:
     _selected_row = row
+    _selected_entry_kind = "event"
+    _selected_entry_index = -1
     refresh_rows()
     _rebuild_inspector()
     _on_duplicate_requested()
+
+## Handles a click on a global variable row in the canvas.
+func _on_variable_row_selected(v_name: String) -> void:
+    _selected_row = null
+    _selected_entry_kind = "variable"
+    _selected_entry_index = -1
+    _selected_variable_name = v_name
+    refresh_rows()
+    _rebuild_inspector()
+
+## Handles a click on a group row header in the canvas.
+func _on_group_row_selected(_group: EventGroup) -> void:
+    _selected_entry_kind = "event"
+    _selected_entry_index = -1
+    refresh_rows()
+    _rebuild_inspector()
+
+## Handles a click on a specific condition entry inside an event row.
+func _on_condition_entry_selected(row: EventRow, index: int) -> void:
+    _selected_row = row
+    _selected_entry_kind = "condition"
+    _selected_entry_index = index
+    _selected_variable_name = ""
+    refresh_rows()
+    _rebuild_inspector()
+
+## Handles a click on a specific action entry inside an event row.
+func _on_action_entry_selected(row: EventRow, index: int) -> void:
+    _selected_row = row
+    _selected_entry_kind = "action"
+    _selected_entry_index = index
+    _selected_variable_name = ""
+    refresh_rows()
+    _rebuild_inspector()
 
 func _on_toolbar_view_mode_changed(mode: int) -> void:
     match mode:
@@ -445,7 +520,7 @@ func _apply_descriptor_to_selected_row(descriptor: ACEDescriptor) -> void:
                 _selected_row = row
                 refresh_rows()
                 _rebuild_inspector()
-                _set_status("Only one trigger condition is supported per event.")
+                _set_status("Only one run context is supported per event.")
                 return
             _assign_trigger(row, descriptor)
             _selected_row = row
@@ -634,24 +709,45 @@ func _rebuild_inspector() -> void:
         return
 
     _clear_children(_inspector_container)
+
+    # --- Focused: variable selected ---
+    if _selected_entry_kind == "variable" and not _selected_variable_name.is_empty():
+        _rebuild_inspector_variable(_selected_variable_name)
+        return
+
     if _selected_row == null:
         var empty_label: Label = Label.new()
-        empty_label.text = "Select an event row to edit."
+        empty_label.text = "Select an event row or variable to edit."
         _inspector_container.add_child(empty_label)
         return
 
+    # --- Focused: condition selected ---
+    if _selected_entry_kind == "condition" and _selected_entry_index >= 0:
+        _rebuild_inspector_condition(_selected_row, _selected_entry_index)
+        return
+
+    # --- Focused: action selected ---
+    if _selected_entry_kind == "action" and _selected_entry_index >= 0:
+        _rebuild_inspector_action(_selected_row, _selected_entry_index)
+        return
+
+    # --- Full event inspector (default) ---
+    _rebuild_inspector_event(_selected_row)
+
+## Builds the full event inspector for the selected row.
+func _rebuild_inspector_event(row: EventRow) -> void:
     _inspector_container.add_child(_title_label("Inspector — Event"))
-    _inspector_container.add_child(_read_only_line("UID", _selected_row.event_uid))
-    _inspector_container.add_child(_read_only_line("Runs", _run_summary_for_row(_selected_row)))
+    _inspector_container.add_child(_read_only_line("UID", row.event_uid))
+    _inspector_container.add_child(_read_only_line("Runs", _run_summary_for_row(row)))
 
     var enabled_toggle: CheckBox = CheckBox.new()
     enabled_toggle.text = "Enabled"
-    enabled_toggle.button_pressed = _selected_row.enabled
+    enabled_toggle.button_pressed = row.enabled
     enabled_toggle.toggled.connect(_on_inspector_enabled_toggled)
     _inspector_container.add_child(enabled_toggle)
 
-    var run_context_provider: String = _run_context_provider_for_row(_selected_row)
-    var run_context_id: String = TriggerResolver.get_trigger_id(_selected_row)
+    var run_context_provider: String = _run_context_provider_for_row(row)
+    var run_context_id: String = TriggerResolver.get_trigger_id(row)
     _add_text_editor("Run Context Provider", run_context_provider, func(value: String) -> void:
         if _selected_row == null:
             return
@@ -671,7 +767,7 @@ func _rebuild_inspector() -> void:
 
     var clear_run_context_button: Button = Button.new()
     clear_run_context_button.text = "Clear Run Context"
-    clear_run_context_button.disabled = not TriggerResolver.has_trigger_condition(_selected_row)
+    clear_run_context_button.disabled = not TriggerResolver.has_trigger_condition(row)
     clear_run_context_button.pressed.connect(func() -> void:
         if _selected_row == null:
             return
@@ -684,17 +780,17 @@ func _rebuild_inspector() -> void:
 
     _inspector_container.add_child(_title_label("Run Context Params"))
     _add_params_editor(
-        TriggerResolver.get_trigger_params(_selected_row),
+        TriggerResolver.get_trigger_params(row),
         _on_trigger_param_changed,
-        TriggerResolver.get_trigger_id(_selected_row)
+        TriggerResolver.get_trigger_id(row)
     )
 
     _inspector_container.add_child(_title_label("Conditions"))
-    if _selected_row.conditions.is_empty():
+    if row.conditions.is_empty():
         _inspector_container.add_child(_read_only_line("-", "Always"))
     else:
-        for index: int in range(_selected_row.conditions.size()):
-            var condition: ACECondition = _selected_row.conditions[index]
+        for index: int in range(row.conditions.size()):
+            var condition: ACECondition = row.conditions[index]
             _materialize_condition_params(condition)
             _add_entry_header(
                 "Condition %d: %s" % [index + 1, _entry_name(condition.provider_id, condition.ace_id)],
@@ -708,11 +804,11 @@ func _rebuild_inspector() -> void:
             )
 
     _inspector_container.add_child(_title_label("Actions"))
-    if _selected_row.actions.is_empty():
+    if row.actions.is_empty():
         _inspector_container.add_child(_read_only_line("-", "No actions"))
     else:
-        for index: int in range(_selected_row.actions.size()):
-            var action_variant: Variant = _selected_row.actions[index]
+        for index: int in range(row.actions.size()):
+            var action_variant: Variant = row.actions[index]
             if not (action_variant is ACEAction):
                 continue
             var action: ACEAction = action_variant
@@ -727,6 +823,121 @@ func _rebuild_inspector() -> void:
                 Callable(self, "_on_action_param_changed").bind(index),
                 action.ace_id
             )
+
+## Builds a focused inspector for a single condition entry.
+func _rebuild_inspector_condition(row: EventRow, index: int) -> void:
+    if index < 0 or index >= row.conditions.size():
+        _rebuild_inspector_event(row)
+        return
+    var condition: ACECondition = row.conditions[index]
+    _materialize_condition_params(condition)
+    _inspector_container.add_child(_title_label(
+        "Condition %d: %s" % [index + 1, _entry_name(condition.provider_id, condition.ace_id)]
+    ))
+    var back_btn: Button = Button.new()
+    back_btn.text = "← Back to Event"
+    back_btn.pressed.connect(func() -> void:
+        _selected_entry_kind = "event"
+        _selected_entry_index = -1
+        _rebuild_inspector()
+    )
+    _inspector_container.add_child(back_btn)
+    _add_params_editor(
+        condition.params,
+        Callable(self, "_on_condition_param_changed").bind(index),
+        condition.ace_id
+    )
+    var remove_btn: Button = Button.new()
+    remove_btn.text = "Remove Condition"
+    remove_btn.pressed.connect(Callable(self, "_remove_condition").bind(index))
+    _inspector_container.add_child(remove_btn)
+
+## Builds a focused inspector for a single action entry.
+func _rebuild_inspector_action(row: EventRow, index: int) -> void:
+    if index < 0 or index >= row.actions.size():
+        _rebuild_inspector_event(row)
+        return
+    var action_variant: Variant = row.actions[index]
+    if not (action_variant is ACEAction):
+        _rebuild_inspector_event(row)
+        return
+    var action: ACEAction = action_variant
+    _materialize_action_params(action)
+    _inspector_container.add_child(_title_label(
+        "Action %d: %s" % [index + 1, _entry_name(action.provider_id, action.ace_id)]
+    ))
+    var back_btn: Button = Button.new()
+    back_btn.text = "← Back to Event"
+    back_btn.pressed.connect(func() -> void:
+        _selected_entry_kind = "event"
+        _selected_entry_index = -1
+        _rebuild_inspector()
+    )
+    _inspector_container.add_child(back_btn)
+    _add_params_editor(
+        action.params,
+        Callable(self, "_on_action_param_changed").bind(index),
+        action.ace_id
+    )
+    var remove_btn: Button = Button.new()
+    remove_btn.text = "Remove Action"
+    remove_btn.pressed.connect(Callable(self, "_remove_action").bind(index))
+    _inspector_container.add_child(remove_btn)
+
+## Builds a focused inspector for a global sheet variable.
+func _rebuild_inspector_variable(v_name: String) -> void:
+    if current_sheet == null or not current_sheet.variables.has(v_name):
+        var lbl: Label = Label.new()
+        lbl.text = "Variable not found."
+        _inspector_container.add_child(lbl)
+        return
+    var descriptor: Dictionary = current_sheet.variables[v_name]
+    _inspector_container.add_child(_title_label("Global Variable: %s" % v_name))
+    _inspector_container.add_child(_read_only_line("Scope", "Global"))
+
+    var var_types: Array[String] = ["int", "float", "String", "bool", "NodePath", "Variant"]
+    var type_row: HBoxContainer = HBoxContainer.new()
+    var type_label: Label = Label.new()
+    type_label.text = "Type"
+    type_label.custom_minimum_size = Vector2(120, 0)
+    type_row.add_child(type_label)
+    var type_opt: OptionButton = OptionButton.new()
+    type_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    for type_str: String in var_types:
+        type_opt.add_item(type_str)
+    var current_type: String = str(descriptor.get("type", "int"))
+    var type_index: int = var_types.find(current_type)
+    if type_index < 0:
+        type_index = 0
+    type_opt.selected = type_index
+    type_opt.item_selected.connect(func(index: int) -> void:
+        _set_variable_type(v_name, var_types[index])
+        _rebuild_inspector()
+    )
+    type_row.add_child(type_opt)
+    _inspector_container.add_child(type_row)
+
+    var default_val: Variant = descriptor.get("default", null)
+    _add_text_editor("Default", "" if default_val == null else str(default_val), func(value: String) -> void:
+        _set_variable_default(v_name, value)
+    )
+
+    var export_check: CheckBox = CheckBox.new()
+    export_check.text = "Exported"
+    export_check.button_pressed = bool(descriptor.get("exported", true))
+    export_check.toggled.connect(func(is_on: bool) -> void:
+        _set_variable_exported(v_name, is_on)
+    )
+    _inspector_container.add_child(export_check)
+
+    var delete_btn: Button = Button.new()
+    delete_btn.text = "Delete Variable"
+    delete_btn.pressed.connect(func() -> void:
+        _delete_variable(v_name)
+        _selected_entry_kind = "event"
+        _selected_variable_name = ""
+    )
+    _inspector_container.add_child(delete_btn)
 
 func _on_inspector_enabled_toggled(is_enabled: bool) -> void:
     if _selected_row == null:
