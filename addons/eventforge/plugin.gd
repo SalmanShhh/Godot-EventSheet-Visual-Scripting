@@ -6,6 +6,9 @@ class_name EventForgePlugin
 
 const BRIDGE_NAME: String = "EventForgeBridge"
 const BRIDGE_PATH: String = "res://addons/eventforge/runtime/eventforge_bridge.gd"
+const EVENT_SHEET_EDITOR_PATH: String = "res://addons/eventforge/editor/event_sheet_editor.gd"
+
+var _event_sheet_editor: Control = null
 
 ## Returns the display name of the plugin.
 func _get_plugin_name() -> String:
@@ -14,9 +17,37 @@ func _get_plugin_name() -> String:
 ## Registers plugin services when the plugin is enabled.
 func _enter_tree() -> void:
 	add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)
-	print("[EventForge] v0.1.0 loaded")
+	var editor_script: Script = load(EVENT_SHEET_EDITOR_PATH)
+	if editor_script == null:
+		push_warning("[EventForge] Failed to load EventSheetEditor script at %s. Verify the file exists and contains valid GDScript." % EVENT_SHEET_EDITOR_PATH)
+	elif not editor_script.can_instantiate():
+		push_warning("[EventForge] EventSheetEditor script is not instantiable: %s" % EVENT_SHEET_EDITOR_PATH)
+	else:
+		var editor_candidate: Variant = editor_script.new()
+		if editor_candidate == null:
+			push_warning("[EventForge] EventSheetEditor script could not be instantiated: %s" % EVENT_SHEET_EDITOR_PATH)
+		elif editor_candidate is Control:
+			_event_sheet_editor = editor_candidate
+			add_control_to_bottom_panel(_event_sheet_editor, "EventForge")
+			# Contract: EventSheetEditor can expose setup(sheet := null) for safe initial state.
+			if _event_sheet_editor.has_method("setup"):
+				_event_sheet_editor.call("setup")
+			make_bottom_panel_item_visible(_event_sheet_editor)
+		else:
+			push_warning("[EventForge] EventSheetEditor script must extend Control: %s" % EVENT_SHEET_EDITOR_PATH)
+			if editor_candidate is Node:
+				(editor_candidate as Node).queue_free()
+			# Non-Node objects here are RefCounted and released automatically.
+	if _event_sheet_editor != null:
+		print("[EventForge] v0.1.0 loaded")
+	else:
+		print("[EventForge] v0.1.0 loaded (editor panel unavailable)")
 
 ## Unregisters plugin services when the plugin is disabled.
 func _exit_tree() -> void:
+	if _event_sheet_editor != null:
+		remove_control_from_bottom_panel(_event_sheet_editor)
+		_event_sheet_editor.queue_free()
+		_event_sheet_editor = null
 	remove_autoload_singleton(BRIDGE_NAME)
 	print("[EventForge] unloaded")
