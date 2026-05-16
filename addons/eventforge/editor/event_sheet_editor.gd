@@ -278,11 +278,11 @@ func _build_layout() -> void:
 	content_margin.add_theme_constant_override("margin_bottom", 4)
 	workspace_vbox.add_child(content_margin)
 
-	var hbox: HBoxContainer = HBoxContainer.new()
-	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	hbox.add_theme_constant_override("separation", 8)
-	content_margin.add_child(hbox)
+	var workspace_split: HSplitContainer = HSplitContainer.new()
+	workspace_split.name = "WorkspaceSplit"
+	workspace_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	workspace_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content_margin.add_child(workspace_split)
 
 	# ── Left: canvas scroll ───────────────────────────────────────────────────
 	_sheet_canvas_shell = PanelContainer.new()
@@ -296,7 +296,7 @@ func _build_layout() -> void:
 	canvas_style.set_corner_radius_all(0)
 	canvas_style.set_content_margin_all(0)
 	_sheet_canvas_shell.add_theme_stylebox_override("panel", canvas_style)
-	hbox.add_child(_sheet_canvas_shell)
+	workspace_split.add_child(_sheet_canvas_shell)
 
 	var canvas_shell_vbox: VBoxContainer = VBoxContainer.new()
 	canvas_shell_vbox.add_theme_constant_override("separation", 0)
@@ -334,11 +334,30 @@ func _build_layout() -> void:
 	strip_sep.add_theme_color_override("color", Color(0.24, 0.28, 0.36, 0.60))
 	strip_row.add_child(strip_sep)
 
+	var resource_tab: PanelContainer = PanelContainer.new()
+	resource_tab.name = "SheetCanvasResourceTab"
+	var resource_tab_style: StyleBoxFlat = StyleBoxFlat.new()
+	resource_tab_style.bg_color = Color(0.102, 0.117, 0.151, 1.0)
+	resource_tab_style.border_color = Color(0.222, 0.262, 0.336, 1.0)
+	resource_tab_style.set_border_width_all(1)
+	resource_tab_style.border_width_bottom = 0
+	resource_tab_style.set_corner_radius_all(0)
+	resource_tab_style.set_content_margin(SIDE_LEFT, 8)
+	resource_tab_style.set_content_margin(SIDE_RIGHT, 8)
+	resource_tab_style.set_content_margin(SIDE_TOP, 3)
+	resource_tab_style.set_content_margin(SIDE_BOTTOM, 3)
+	resource_tab.add_theme_stylebox_override("panel", resource_tab_style)
+	strip_row.add_child(resource_tab)
+
+	var resource_tab_row: HBoxContainer = HBoxContainer.new()
+	resource_tab_row.add_theme_constant_override("separation", 6)
+	resource_tab.add_child(resource_tab_row)
+
 	_canvas_doc_title_label = Label.new()
 	_canvas_doc_title_label.text = "No Sheet Loaded"
 	_canvas_doc_title_label.add_theme_color_override("font_color", Color(0.86, 0.93, 1.0))
 	_canvas_doc_title_label.add_theme_font_size_override("font_size", 11)
-	strip_row.add_child(_canvas_doc_title_label)
+	resource_tab_row.add_child(_canvas_doc_title_label)
 
 	_canvas_doc_dirty_label = Label.new()
 	_canvas_doc_dirty_label.text = "●"
@@ -346,7 +365,7 @@ func _build_layout() -> void:
 	_canvas_doc_dirty_label.add_theme_font_size_override("font_size", 9)
 	_canvas_doc_dirty_label.tooltip_text = "Unsaved changes"
 	_canvas_doc_dirty_label.visible = false
-	strip_row.add_child(_canvas_doc_dirty_label)
+	resource_tab_row.add_child(_canvas_doc_dirty_label)
 
 	var path_sep: VSeparator = VSeparator.new()
 	path_sep.add_theme_color_override("color", Color(0.24, 0.28, 0.36, 0.60))
@@ -383,23 +402,20 @@ func _build_layout() -> void:
 	_canvas_vbox.set("custom_minimum_size", Vector2(0, 0))
 	_scroll.add_child(_canvas_vbox)
 
-	# ── Vertical separator ────────────────────────────────────────────────────
-	var vsep: VSeparator = VSeparator.new()
-	hbox.add_child(vsep)
-
 	# ── Right: inspector panel (passive context panel) ────────────────────────
 	_inspector_panel = PanelContainer.new()
 	_inspector_panel.custom_minimum_size = Vector2(220, 0)
+	_inspector_panel.size_flags_horizontal = Control.SIZE_FILL
 	_inspector_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	var insp_style: StyleBoxFlat = StyleBoxFlat.new()
 	insp_style.bg_color = Color(0.079, 0.087, 0.113, 1.0)
 	insp_style.border_color = Color(0.157, 0.181, 0.233, 1.0)
 	insp_style.set_border_width_all(1)
-	insp_style.set_corner_radius_all(8)
+	insp_style.set_corner_radius_all(0)
 	insp_style.set_content_margin_all(10)
 	_inspector_panel.add_theme_stylebox_override("panel", insp_style)
-	hbox.add_child(_inspector_panel)
+	workspace_split.add_child(_inspector_panel)
 
 	_inspector_vbox = VBoxContainer.new()
 	_inspector_vbox.add_theme_constant_override("separation", 6)

@@ -133,6 +133,18 @@ static func run() -> bool:
 	# ── EventSheetEditor: dirty state flag ────────────────────────────────────
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.current_sheet = EventSheetResource.new()
+	var workspace_split: Node = editor.find_child("WorkspaceSplit", true, false)
+	all_passed = _check(
+		"editor uses central split container shell",
+		workspace_split is HSplitContainer,
+		true
+	) and all_passed
+	var resource_tab: Node = editor.find_child("SheetCanvasResourceTab", true, false)
+	all_passed = _check(
+		"canvas document strip includes resource tab shell",
+		resource_tab is PanelContainer,
+		true
+	) and all_passed
 	all_passed = _check(
 		"editor not dirty initially",
 		editor._is_dirty,

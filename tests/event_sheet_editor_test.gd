@@ -423,6 +423,7 @@ static func run() -> bool:
 	all_passed = _check("globals section has color rect rail", globals_section != null and _count_color_rects(globals_section) >= 1, true) and all_passed
 	all_passed = _check("events section has color rect rail", events_section != null and _count_color_rects(events_section) >= 1, true) and all_passed
 	all_passed = _check("canvas has document strip", _find_node_named(editor, "SheetCanvasDocumentStrip") != null, true) and all_passed
+	all_passed = _check("canvas has resource tab shell", _find_node_named(editor, "SheetCanvasResourceTab") != null, true) and all_passed
 
 	# Phase 5: inspector card has a HSeparator after the heading.
 	var sep_sheet: EventSheetResource = EventSheetResource.new()
