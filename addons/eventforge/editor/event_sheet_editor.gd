@@ -956,6 +956,7 @@ func _rebuild_inspector_variable(v_name: String) -> void:
     var delete_btn: Button = Button.new()
     delete_btn.text = "Delete Variable"
     delete_btn.pressed.connect(func() -> void:
+        # Focus state is cleared inside _delete_variable before the erase.
         _delete_variable(v_name)
     )
     _inspector_container.add_child(delete_btn)
@@ -1144,7 +1145,7 @@ func _remove_condition(index: int) -> void:
         return
     if index < 0 or index >= _selected_row.conditions.size():
         return
-    if _selected_entry_kind == "condition":
+    if _selected_entry_kind == "condition" and _selected_entry_index == index:
         _clear_focused_entry_state()
     _selected_row.conditions.remove_at(index)
     refresh_rows()
@@ -1156,7 +1157,7 @@ func _remove_action(index: int) -> void:
         return
     if index < 0 or index >= _selected_row.actions.size():
         return
-    if _selected_entry_kind == "action":
+    if _selected_entry_kind == "action" and _selected_entry_index == index:
         _clear_focused_entry_state()
     _selected_row.actions.remove_at(index)
     refresh_rows()
