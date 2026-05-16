@@ -424,6 +424,27 @@ static func run() -> bool:
 	all_passed = _check("add group appends EventGroup to sheet", group_add_sheet.events.size(), 2) and all_passed
 	all_passed = _check("add group inserts EventGroup resource", group_add_sheet.events[1] is EventGroup, true) and all_passed
 
+	# Workflow: add-event picker reflects relative insertion target and inserts below selection.
+	var relative_add_sheet: EventSheetResource = EventSheetResource.new()
+	var relative_anchor_event: EventRow = EventRow.new()
+	var relative_tail_event: EventRow = EventRow.new()
+	relative_add_sheet.events.append(relative_anchor_event)
+	relative_add_sheet.events.append(relative_tail_event)
+	editor.current_sheet = relative_add_sheet
+	editor.refresh_canvas()
+	var relative_anchor_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, relative_anchor_event.event_uid)
+	if relative_anchor_row_ui != null:
+		editor._on_event_selected(relative_anchor_row_ui)
+		editor._on_add_event_requested()
+		all_passed = _check("add event picker shows relative insertion hint", editor._ace_picker_description != null and editor._ace_picker_description.text.find("below the selected event") != -1, true) and all_passed
+		var always_new_event_descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "Always")
+		if always_new_event_descriptor != null:
+			editor._open_ace_params_dialog_for_picker_selection(always_new_event_descriptor)
+			all_passed = _check("relative add event increases sheet row count", relative_add_sheet.events.size(), 3) and all_passed
+			all_passed = _check("relative add event inserts below selected event", relative_add_sheet.events[1] is EventRow and relative_add_sheet.events[1] != relative_tail_event, true) and all_passed
+			all_passed = _check("relative add event keeps prior trailing event after inserted row", relative_add_sheet.events[2] == relative_tail_event, true) and all_passed
+			all_passed = _check("relative add event status includes target placement", editor._status_label.text.find("below selected event") != -1, true) and all_passed
+
 	# Workflow: copy/paste event preserves sub-events.
 	var copy_sheet: EventSheetResource = EventSheetResource.new()
 	var copy_parent: EventRow = EventRow.new()
