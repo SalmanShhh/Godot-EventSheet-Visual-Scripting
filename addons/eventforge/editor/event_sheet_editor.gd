@@ -40,9 +40,18 @@ var _ace_picker_popup: PopupPanel = null
 var _ace_picker_title: Label = null
 var _ace_picker_tree: Tree = null
 var _ace_picker_description: Label = null
-## One of: "new_event", "append_condition", "append_action"
+## One of: "new_event", "append_condition", "replace_condition", "append_action"
 var _ace_picker_mode: String = ""
 var _ace_picker_target_row: EventRowUI = null
+var _ace_picker_target_condition_index: int = -1
+
+var _variable_dialog: ConfirmationDialog = null
+var _variable_name_edit: LineEdit = null
+var _variable_type_option: OptionButton = null
+var _variable_initial_edit: LineEdit = null
+var _variable_description_edit: LineEdit = null
+var _variable_dialog_mode: String = ""
+var _variable_dialog_original_name: String = ""
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
@@ -113,6 +122,7 @@ func _build_layout() -> void:
 	_show_empty_inspector()
 	_refresh_toolbar_state()
 	_build_ace_picker_popup()
+	_build_variable_dialog_popup()
 
 # ── Canvas rendering ──────────────────────────────────────────────────────────
 
@@ -214,13 +224,7 @@ func _on_add_variable_requested() -> void:
 	_ensure_sheet()
 	if current_sheet == null:
 		return
-
-	var var_name: String = _generate_unique_variable_name()
-	current_sheet.variables[var_name] = _make_default_variable_descriptor()
-	refresh_canvas()
-	_focus_variable_by_name(var_name)
-	if _sheet_toolbar != null:
-		_sheet_toolbar.set_status("Added variable: %s" % var_name)
+	_open_variable_dialog_for_create()
 
 func _on_add_event_requested() -> void:
 	_ensure_sheet()
@@ -298,16 +302,25 @@ func _build_ace_picker_popup() -> void:
 func _open_add_event_picker() -> void:
 	_ace_picker_mode = "new_event"
 	_ace_picker_target_row = null
+	_ace_picker_target_condition_index = -1
 	_show_ace_picker("Add Event", true, true, false)
 
 func _open_add_condition_picker(row: EventRowUI) -> void:
 	_ace_picker_mode = "append_condition"
 	_ace_picker_target_row = row
+	_ace_picker_target_condition_index = -1
 	_show_ace_picker("Add Condition", false, true, false)
+
+func _open_replace_condition_picker(row: EventRowUI, index: int) -> void:
+	_ace_picker_mode = "replace_condition"
+	_ace_picker_target_row = row
+	_ace_picker_target_condition_index = index
+	_show_ace_picker("Replace Condition", false, true, false)
 
 func _open_add_action_picker(row: EventRowUI) -> void:
 	_ace_picker_mode = "append_action"
 	_ace_picker_target_row = row
+	_ace_picker_target_condition_index = -1
 	_show_ace_picker("Add Action", false, false, true)
 
 func _show_ace_picker(title: String, include_triggers: bool, include_conditions: bool, include_actions: bool) -> void:
@@ -389,6 +402,8 @@ func _on_ace_picker_item_activated() -> void:
 			_create_event_from_descriptor(descriptor)
 		"append_condition":
 			_append_condition_from_descriptor(descriptor)
+		"replace_condition":
+			_replace_condition_from_descriptor(descriptor)
 		"append_action":
 			_append_action_from_descriptor(descriptor)
 	if _ace_picker_popup != null:
@@ -432,6 +447,21 @@ func _append_condition_from_descriptor(descriptor: ACEDescriptor) -> void:
 	row.refresh()
 	_rebuild_inspector_event(row)
 
+func _replace_condition_from_descriptor(descriptor: ACEDescriptor) -> void:
+	var row: EventRowUI = _ace_picker_target_row
+	var condition_index: int = _ace_picker_target_condition_index
+	if row == null or row.event_row == null or descriptor == null:
+		return
+	if condition_index < 0 or condition_index >= row.event_row.conditions.size():
+		return
+	var condition: ACECondition = ACECondition.new()
+	condition.provider_id = descriptor.provider_id
+	condition.ace_id = descriptor.ace_id
+	condition.params = descriptor.build_default_params()
+	row.event_row.conditions[condition_index] = condition
+	row.refresh()
+	_on_condition_selected(row, condition_index)
+
 func _append_action_from_descriptor(descriptor: ACEDescriptor) -> void:
 	var row: EventRowUI = _ace_picker_target_row
 	if row == null or row.event_row == null or descriptor == null:
@@ -458,21 +488,221 @@ func _make_default_variable_descriptor() -> Dictionary:
 		"exported": true
 	}
 
+func _build_variable_dialog_popup() -> void:
+	_variable_dialog = ConfirmationDialog.new()
+	_variable_dialog.title = "Variable"
+	_variable_dialog.min_size = Vector2i(360, 0)
+	_variable_dialog.get_ok_button().text = "Save"
+	_variable_dialog.connect("confirmed", _on_variable_dialog_confirmed)
+	add_child(_variable_dialog)
+
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation", 6)
+	_variable_dialog.add_child(body)
+
+	var name_row: HBoxContainer = HBoxContainer.new()
+	var name_label: Label = Label.new()
+	name_label.text = "Name"
+	name_label.custom_minimum_size = Vector2(90, 0)
+	name_row.add_child(name_label)
+	_variable_name_edit = LineEdit.new()
+	_variable_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_row.add_child(_variable_name_edit)
+	body.add_child(name_row)
+
+	var type_row: HBoxContainer = HBoxContainer.new()
+	var type_label: Label = Label.new()
+	type_label.text = "Type"
+	type_label.custom_minimum_size = Vector2(90, 0)
+	type_row.add_child(type_label)
+	_variable_type_option = OptionButton.new()
+	_variable_type_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for type_name: String in ["int", "float", "bool", "String", "Variant"]:
+		_variable_type_option.add_item(type_name)
+	type_row.add_child(_variable_type_option)
+	body.add_child(type_row)
+
+	var initial_row: HBoxContainer = HBoxContainer.new()
+	var initial_label: Label = Label.new()
+	initial_label.text = "Initial value"
+	initial_label.custom_minimum_size = Vector2(90, 0)
+	initial_row.add_child(initial_label)
+	_variable_initial_edit = LineEdit.new()
+	_variable_initial_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	initial_row.add_child(_variable_initial_edit)
+	body.add_child(initial_row)
+
+	var description_row: HBoxContainer = HBoxContainer.new()
+	var description_label: Label = Label.new()
+	description_label.text = "Description"
+	description_label.custom_minimum_size = Vector2(90, 0)
+	description_row.add_child(description_label)
+	_variable_description_edit = LineEdit.new()
+	_variable_description_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	description_row.add_child(_variable_description_edit)
+	body.add_child(description_row)
+
+func _open_variable_dialog_for_create() -> void:
+	if _variable_dialog == null:
+		return
+	_variable_dialog_mode = "create"
+	_variable_dialog_original_name = ""
+	_variable_dialog.title = "Create Variable"
+	_variable_name_edit.text = _generate_unique_variable_name()
+	_select_variable_type("int")
+	_variable_initial_edit.text = "0"
+	_variable_description_edit.text = ""
+	_variable_dialog.popup_centered()
+	_variable_name_edit.grab_focus()
+	_variable_name_edit.select_all()
+
+func _open_variable_dialog_for_edit(var_name: String, var_info: Dictionary) -> void:
+	if _variable_dialog == null:
+		return
+	_variable_dialog_mode = "edit"
+	_variable_dialog_original_name = var_name
+	_variable_dialog.title = "Edit Variable"
+	_variable_name_edit.text = var_name
+	_select_variable_type(str(var_info.get("type", "Variant")))
+	_variable_initial_edit.text = str(var_info.get("default", var_info.get("value", "")))
+	_variable_description_edit.text = str(var_info.get("description", ""))
+	_variable_dialog.popup_centered()
+	_variable_name_edit.grab_focus()
+	_variable_name_edit.select_all()
+
+func _select_variable_type(type_name: String) -> void:
+	if _variable_type_option == null:
+		return
+	for i: int in range(_variable_type_option.item_count):
+		if _variable_type_option.get_item_text(i) == type_name:
+			_variable_type_option.select(i)
+			return
+	_variable_type_option.add_item(type_name)
+	_variable_type_option.select(_variable_type_option.item_count - 1)
+
+func _get_selected_variable_type() -> String:
+	if _variable_type_option == null or _variable_type_option.item_count == 0:
+		return "Variant"
+	var selected: int = _variable_type_option.get_selected_id()
+	if selected < 0:
+		selected = _variable_type_option.selected
+	if selected < 0:
+		return "Variant"
+	return _variable_type_option.get_item_text(selected)
+
+func _on_variable_dialog_confirmed() -> void:
+	if current_sheet == null:
+		return
+	var new_name: String = _variable_name_edit.text.strip_edges()
+	if new_name.is_empty():
+		if _sheet_toolbar != null:
+			_sheet_toolbar.set_status("Variable name cannot be empty", true)
+		return
+	var is_editing: bool = _variable_dialog_mode == "edit"
+	if current_sheet.variables.has(new_name) and (not is_editing or new_name != _variable_dialog_original_name):
+		if _sheet_toolbar != null:
+			_sheet_toolbar.set_status("Variable name already exists: %s" % new_name, true)
+		return
+
+	var target_descriptor: Dictionary = {}
+	if is_editing and current_sheet.variables.has(_variable_dialog_original_name):
+		var existing: Variant = current_sheet.variables[_variable_dialog_original_name]
+		if existing is Dictionary:
+			target_descriptor = (existing as Dictionary).duplicate(true)
+	if target_descriptor.is_empty():
+		target_descriptor = _make_default_variable_descriptor().duplicate(true)
+
+	var selected_type: String = _get_selected_variable_type()
+	target_descriptor["type"] = selected_type
+	target_descriptor["default"] = _parse_variable_initial_value(_variable_initial_edit.text, selected_type)
+	target_descriptor["description"] = _variable_description_edit.text.strip_edges()
+	if not target_descriptor.has("exported"):
+		target_descriptor["exported"] = true
+
+	if is_editing and current_sheet.variables.has(_variable_dialog_original_name) and _variable_dialog_original_name != new_name:
+		current_sheet.variables.erase(_variable_dialog_original_name)
+	current_sheet.variables[new_name] = target_descriptor
+
+	refresh_canvas()
+	_focus_variable_by_name(new_name)
+	if _sheet_toolbar != null:
+		if is_editing:
+			_sheet_toolbar.set_status("Updated variable: %s" % new_name)
+		else:
+			_sheet_toolbar.set_status("Added variable: %s" % new_name)
+
+func _parse_variable_initial_value(raw_text: String, type_name: String) -> Variant:
+	var text: String = raw_text.strip_edges()
+	match type_name:
+		"int":
+			if text.is_empty():
+				return 0
+			return int(text)
+		"float":
+			if text.is_empty():
+				return 0.0
+			return float(text)
+		"bool":
+			if text.is_empty():
+				return false
+			var lower: String = text.to_lower()
+			return lower in ["1", "true", "yes", "on"]
+		"String", "StringName":
+			return text
+		_:
+			if text.is_empty():
+				return null
+			return text
+
 func _focus_event_by_uid(event_uid: String) -> void:
-	for child: Node in _canvas_vbox.get_children():
-		if child is EventRowUI:
-			var row_ui: EventRowUI = child
-			if row_ui.event_row != null and row_ui.event_row.event_uid == event_uid:
-				_on_event_selected(row_ui)
-				return
+	var row_ui: EventRowUI = _find_event_row_ui_by_uid(_canvas_vbox, event_uid)
+	if row_ui != null:
+		_on_event_selected(row_ui)
 
 func _focus_variable_by_name(var_name: String) -> void:
-	for child: Node in _canvas_vbox.get_children():
-		if child is VariableRowUI:
-			var row_ui: VariableRowUI = child
-			if row_ui.var_name == var_name:
-				_on_variable_selected(row_ui)
-				return
+	var row_ui: VariableRowUI = _find_variable_row_ui_by_name(_canvas_vbox, var_name)
+	if row_ui != null:
+		_on_variable_selected(row_ui)
+
+func _focus_group_by_uid(group_uid: String) -> void:
+	if group_uid.is_empty():
+		return
+	var row_ui: GroupRowUI = _find_group_row_ui_by_uid(_canvas_vbox, group_uid)
+	if row_ui != null:
+		_on_group_selected(row_ui)
+
+func _find_event_row_ui_by_uid(node: Node, event_uid: String) -> EventRowUI:
+	if node is EventRowUI:
+		var row_ui: EventRowUI = node as EventRowUI
+		if row_ui.event_row != null and row_ui.event_row.event_uid == event_uid:
+			return row_ui
+	for child: Node in node.get_children():
+		var nested: EventRowUI = _find_event_row_ui_by_uid(child, event_uid)
+		if nested != null:
+			return nested
+	return null
+
+func _find_variable_row_ui_by_name(node: Node, var_name: String) -> VariableRowUI:
+	if node is VariableRowUI:
+		var row_ui: VariableRowUI = node as VariableRowUI
+		if row_ui.var_name == var_name:
+			return row_ui
+	for child: Node in node.get_children():
+		var nested: VariableRowUI = _find_variable_row_ui_by_name(child, var_name)
+		if nested != null:
+			return nested
+	return null
+
+func _find_group_row_ui_by_uid(node: Node, group_uid: String) -> GroupRowUI:
+	if node is GroupRowUI:
+		var row_ui: GroupRowUI = node as GroupRowUI
+		if row_ui.event_group != null and row_ui.event_group.group_uid == group_uid:
+			return row_ui
+	for child: Node in node.get_children():
+		var nested: GroupRowUI = _find_group_row_ui_by_uid(child, group_uid)
+		if nested != null:
+			return nested
+	return null
 
 func _add_document_header() -> void:
 	var header_panel: PanelContainer = PanelContainer.new()
@@ -542,27 +772,53 @@ func _add_events_section() -> void:
 		return
 
 	for resource: Variant in current_sheet.events:
-		if resource is EventRow:
-			_add_event_row(resource as EventRow)
-		elif resource is EventGroup:
-			_add_group_row(resource as EventGroup)
+		_add_event_resource(resource, 0)
 
-func _add_event_row(event_row: EventRow) -> void:
+func _add_event_resource(resource: Variant, indent_level: int) -> void:
+	if resource is EventRow:
+		_add_event_row(resource as EventRow, indent_level)
+	elif resource is EventGroup:
+		_add_group_row(resource as EventGroup, indent_level)
+
+func _add_event_row(event_row: EventRow, indent_level: int = 0) -> void:
 	var row_ui: EventRowUI = EventRowUI.new()
 	row_ui.event_row = event_row
 	row_ui.refresh()
 	row_ui.event_selected.connect(_on_event_selected)
 	row_ui.condition_selected.connect(_on_condition_selected)
+	row_ui.condition_edit_requested.connect(_on_condition_edit_requested)
+	row_ui.condition_add_another_requested.connect(_on_condition_add_another_requested)
+	row_ui.condition_replace_requested.connect(_on_condition_replace_requested)
 	row_ui.action_selected.connect(_on_action_selected)
 	row_ui.add_action_requested.connect(_on_row_add_action_requested)
-	_canvas_vbox.add_child(row_ui)
+	_add_canvas_row(row_ui, indent_level)
 
-func _add_group_row(event_group: EventGroup) -> void:
+func _add_group_row(event_group: EventGroup, indent_level: int = 0) -> void:
 	var row_ui: GroupRowUI = GroupRowUI.new()
 	row_ui.event_group = event_group
 	row_ui.refresh()
 	row_ui.group_selected.connect(_on_group_selected)
-	_canvas_vbox.add_child(row_ui)
+	row_ui.group_collapsed_toggled.connect(_on_group_collapsed_toggled)
+	_add_canvas_row(row_ui, indent_level)
+
+	if _is_group_collapsed(event_group):
+		return
+
+	var child_rows: Array = event_group.events if not event_group.events.is_empty() else event_group.rows
+	for child: Variant in child_rows:
+		_add_event_resource(child, indent_level + 1)
+
+func _add_canvas_row(row: Control, indent_level: int) -> void:
+	if row == null:
+		return
+	if indent_level <= 0:
+		_canvas_vbox.add_child(row)
+		return
+	var margin: MarginContainer = MarginContainer.new()
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.add_theme_constant_override("margin_left", 20 * indent_level)
+	margin.add_child(row)
+	_canvas_vbox.add_child(margin)
 
 # ── Selection handlers ────────────────────────────────────────────────────────
 
@@ -577,6 +833,27 @@ func _on_condition_selected(row: EventRowUI, index: int) -> void:
 	_selected_row = row
 	_selected_index = index
 	_rebuild_inspector_condition(row, index)
+
+func _on_condition_edit_requested(row: EventRowUI, index: int) -> void:
+	_on_condition_selected(row, index)
+
+func _on_condition_add_another_requested(row: EventRowUI, _index: int) -> void:
+	if row == null or row.event_row == null:
+		return
+	_selected_entry_kind = "event"
+	_selected_row = row
+	_selected_index = -1
+	_open_add_condition_picker(row)
+
+func _on_condition_replace_requested(row: EventRowUI, index: int) -> void:
+	if row == null or row.event_row == null:
+		return
+	if index < 0 or index >= row.event_row.conditions.size():
+		return
+	_selected_entry_kind = "condition"
+	_selected_row = row
+	_selected_index = index
+	_open_replace_condition_picker(row, index)
 
 func _on_action_selected(row: EventRowUI, index: int) -> void:
 	_selected_entry_kind = "action"
@@ -603,6 +880,18 @@ func _on_group_selected(row: GroupRowUI) -> void:
 	_selected_row = row
 	_selected_group = row
 	_rebuild_inspector_group(row)
+
+func _on_group_collapsed_toggled(row: GroupRowUI, _collapsed: bool) -> void:
+	if row == null or row.event_group == null:
+		return
+	var group_uid: String = row.event_group.group_uid
+	refresh_canvas()
+	_focus_group_by_uid(group_uid)
+
+func _is_group_collapsed(event_group: EventGroup) -> bool:
+	if event_group == null:
+		return false
+	return event_group.is_collapsed()
 
 # ── Inspector builders ────────────────────────────────────────────────────────
 
@@ -817,8 +1106,13 @@ func _rebuild_inspector_variable(row: VariableRowUI) -> void:
 	summary.add_theme_color_override("font_color", Color(0.80, 0.90, 0.80))
 	_inspector_vbox.add_child(summary)
 
+	var edit_btn: Button = Button.new()
+	edit_btn.text = "Edit Variable…"
+	edit_btn.connect("pressed", func() -> void: _open_variable_dialog_for_edit(row.var_name, row.var_info))
+	_inspector_vbox.add_child(edit_btn)
+
 	var note: Label = Label.new()
-	note.text = "Edit variable name, type, and default value in the Sheet Variables panel."
+	note.text = "Edit variable details in the compact popup dialog."
 	note.add_theme_color_override("font_color", Color(0.50, 0.55, 0.50))
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_inspector_vbox.add_child(note)
@@ -849,6 +1143,10 @@ func _rebuild_inspector_group(row: GroupRowUI) -> void:
 	var enabled_lbl: Label = Label.new()
 	enabled_lbl.text = "Enabled: %s" % str(event_group.enabled)
 	_inspector_vbox.add_child(enabled_lbl)
+
+	var collapsed_lbl: Label = Label.new()
+	collapsed_lbl.text = "Collapsed: %s" % str(_is_group_collapsed(event_group))
+	_inspector_vbox.add_child(collapsed_lbl)
 
 	var sep: HSeparator = HSeparator.new()
 	_inspector_vbox.add_child(sep)

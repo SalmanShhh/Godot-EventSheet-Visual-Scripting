@@ -25,6 +25,17 @@ func _init() -> void:
 func get_row_kind() -> String:
 	return "group"
 
+## Returns effective collapsed state across collapsed/expanded aliases.
+func is_collapsed() -> bool:
+	if collapsed:
+		return true
+	return not expanded
+
+## Sets collapsed state while keeping expanded alias in sync.
+func set_collapsed_state(value: bool) -> void:
+	collapsed = value
+	expanded = not value
+
 ## Generates a short UID with a deterministic fallback counter.
 static func _generate_short_uid() -> String:
 	var crypto: Crypto = Crypto.new()
