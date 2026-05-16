@@ -21,6 +21,7 @@ var _compile_btn: Button = null
 var _status_label: Label = null
 var _doc_meta_label: Label = null
 var _selection_meta_label: Label = null
+var _sheet_name_label: Label = null
 
 func _init() -> void:
 	_build_ui()
@@ -44,10 +45,20 @@ func _build_ui() -> void:
 	shell.add_child(top_line)
 
 	var title: Label = Label.new()
-	title.text = "Event Sheet Workspace"
+	title.text = "EventForge"
 	title.add_theme_color_override("font_color", Color(0.78, 0.86, 0.98))
 	title.add_theme_font_size_override("font_size", 12)
 	top_line.add_child(title)
+
+	var title_sep: VSeparator = VSeparator.new()
+	title_sep.add_theme_color_override("color", Color(0.22, 0.26, 0.36, 0.60))
+	top_line.add_child(title_sep)
+
+	_sheet_name_label = Label.new()
+	_sheet_name_label.text = ""
+	_sheet_name_label.add_theme_color_override("font_color", Color(0.88, 0.94, 1.0))
+	_sheet_name_label.add_theme_font_size_override("font_size", 12)
+	top_line.add_child(_sheet_name_label)
 
 	_doc_meta_label = Label.new()
 	_doc_meta_label.text = "No sheet loaded"
@@ -124,6 +135,13 @@ static func format_document_meta(sheet: EventSheetResource) -> String:
 		return "No sheet loaded"
 	return "%d globals · %d root rows" % [sheet.variables.size(), sheet.events.size()]
 
+static func _format_sheet_name(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return ""
+	if sheet.resource_path.is_empty():
+		return "Untitled Sheet"
+	return sheet.resource_path.get_file().get_basename()
+
 static func format_selection_meta(selection_kind: String) -> String:
 	match selection_kind:
 		"event":
@@ -149,12 +167,16 @@ func set_sheet_loaded(loaded: bool) -> void:
 		_compile_btn.disabled = not loaded
 	if not loaded:
 		set_context(null, "none")
+		if _sheet_name_label != null:
+			_sheet_name_label.text = ""
 
 func set_context(sheet: EventSheetResource, selection_kind: String = "none") -> void:
 	if _doc_meta_label != null:
 		_doc_meta_label.text = format_document_meta(sheet)
 	if _selection_meta_label != null:
 		_selection_meta_label.text = format_selection_meta(selection_kind)
+	if _sheet_name_label != null:
+		_sheet_name_label.text = _format_sheet_name(sheet)
 
 ## Updates the toolbar status text.
 func set_status(text: String, is_error: bool = false) -> void:

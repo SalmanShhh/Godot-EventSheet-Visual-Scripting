@@ -56,13 +56,16 @@ const ROW_BG_SELECTED: Color = Color(0.111, 0.142, 0.195, 1.0)
 const ROW_BORDER: Color = Color(0.142, 0.168, 0.224, 1.0)
 const ROW_BORDER_HOVER: Color = Color(0.243, 0.312, 0.438, 1.0)
 const ROW_BORDER_SELECTED: Color = Color(0.356, 0.522, 0.812, 1.0)
-const CONDITION_TOKEN_BG: Color = Color(0.171, 0.221, 0.321, 1.0)
-const CONDITION_TOKEN_BG_HOVER: Color = Color(0.225, 0.281, 0.394, 1.0)
-const ACTION_TOKEN_BG: Color = Color(0.172, 0.198, 0.267, 1.0)
-const ACTION_TOKEN_BG_HOVER: Color = Color(0.223, 0.256, 0.338, 1.0)
+const CONDITION_TOKEN_BG: Color = Color(0.155, 0.206, 0.310, 1.0)
+const CONDITION_TOKEN_BG_HOVER: Color = Color(0.205, 0.260, 0.385, 1.0)
+const ACTION_TOKEN_BG: Color = Color(0.110, 0.170, 0.155, 1.0)
+const ACTION_TOKEN_BG_HOVER: Color = Color(0.148, 0.218, 0.198, 1.0)
+const CONDITION_TOKEN_BORDER: Color = Color(0.225, 0.315, 0.462, 1.0)
+const ACTION_TOKEN_BORDER: Color = Color(0.178, 0.268, 0.248, 1.0)
 const RUN_CONTEXT_SYMBOL: String = "◆"
 const CLAUSE_CONDITION_PREFIX: String = "when"
 const CLAUSE_ACTION_PREFIX: String = "do"
+const CLAUSE_VSEPARATOR_COLOR: Color = Color(0.22, 0.26, 0.35, 0.80)
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
 
 func _init() -> void:
@@ -141,7 +144,7 @@ func _build_ui() -> void:
 	_runs_button.connect("pressed", _on_event_header_pressed)
 	line.add_child(_runs_button)
 
-	line.add_child(_make_clause_prefix(CLAUSE_CONDITION_PREFIX, Color(0.48, 0.61, 0.84)))
+	line.add_child(_make_clause_prefix(CLAUSE_CONDITION_PREFIX, Color(0.52, 0.68, 0.94)))
 
 	_conditions_container = HFlowContainer.new()
 	_conditions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -160,7 +163,12 @@ func _build_ui() -> void:
 	add_condition_btn.connect("pressed", _on_add_condition_pressed)
 	line.add_child(add_condition_btn)
 
-	line.add_child(_make_clause_prefix(CLAUSE_ACTION_PREFIX, Color(0.52, 0.66, 0.88)))
+	var clause_sep: VSeparator = VSeparator.new()
+	clause_sep.add_theme_color_override("color", CLAUSE_VSEPARATOR_COLOR)
+	clause_sep.custom_minimum_size = Vector2(1, 0)
+	line.add_child(clause_sep)
+
+	line.add_child(_make_clause_prefix(CLAUSE_ACTION_PREFIX, Color(0.52, 0.83, 0.65)))
 
 	_actions_container = HFlowContainer.new()
 	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -388,7 +396,7 @@ func _make_clause_prefix(text: String, color: Color) -> Label:
 	var prefix: Label = Label.new()
 	prefix.text = text
 	prefix.add_theme_color_override("font_color", color)
-	prefix.add_theme_font_size_override("font_size", 9)
+	prefix.add_theme_font_size_override("font_size", 10)
 	return prefix
 
 ## Creates a clickable entry button for a condition (is_condition=true) or action.
@@ -404,7 +412,7 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> Button:
 
 	var normal_style: StyleBoxFlat = StyleBoxFlat.new()
 	normal_style.bg_color = CONDITION_TOKEN_BG if is_condition else ACTION_TOKEN_BG
-	normal_style.border_color = Color(0.130, 0.145, 0.184, 1.0)
+	normal_style.border_color = CONDITION_TOKEN_BORDER if is_condition else ACTION_TOKEN_BORDER
 	normal_style.set_border_width_all(1)
 	normal_style.set_corner_radius_all(3)
 	normal_style.set_content_margin(SIDE_LEFT, 7)
