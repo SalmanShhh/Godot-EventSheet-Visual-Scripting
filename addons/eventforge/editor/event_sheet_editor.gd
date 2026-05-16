@@ -295,6 +295,7 @@ func _build_ace_picker_popup() -> void:
 	_ace_picker_popup = Window.new()
 	_ace_picker_popup.name = "ACEPickerPopup"
 	_ace_picker_popup.min_size = ACE_PICKER_DIALOG_SIZE
+	_configure_ace_dialog_window(_ace_picker_popup)
 	_ace_picker_popup.connect("close_requested", func(): _ace_picker_popup.hide())
 	add_child(_ace_picker_popup)
 
@@ -437,6 +438,7 @@ func _build_ace_params_dialog_popup() -> void:
 	_ace_params_dialog = ConfirmationDialog.new()
 	_ace_params_dialog.title = "ACE Parameters"
 	_ace_params_dialog.min_size = ACE_PARAMS_DIALOG_SIZE
+	_configure_ace_dialog_window(_ace_params_dialog)
 	_ace_params_dialog.get_ok_button().text = "Apply"
 	_ace_params_dialog.connect("confirmed", _on_ace_params_dialog_confirmed)
 	_ace_params_dialog.connect("custom_action", _on_ace_params_dialog_custom_action)
@@ -611,6 +613,15 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 	_refresh_ace_params_dialog_confirm_state()
 	_ace_params_dialog.reset_size()
 	_ace_params_dialog.popup_centered(ACE_PARAMS_DIALOG_SIZE)
+
+func _configure_ace_dialog_window(dialog_window: Window) -> void:
+	if dialog_window == null:
+		return
+	dialog_window.transient = true
+	dialog_window.exclusive = true
+	dialog_window.always_on_top = true
+	dialog_window.close_on_escape = true
+	dialog_window.popup_window = true
 
 ## Creates an appropriate UI control for the given ACE parameter.
 ## Control type is chosen based on type_name, hint, and options metadata:
