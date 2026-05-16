@@ -26,8 +26,8 @@ const SHORTCUT_ADD_CONDITION: String = "Ctrl+Shift+C Condition"
 const SHORTCUT_ADD_ACTION: String = "Ctrl+Shift+A Action"
 const SHORTCUT_ADD_COMMENT: String = "Q Comment"
 const SHORTCUT_ADD_GROUP: String = "G Group"
-const SHORTCUT_COPY_EVENT: String = "Ctrl+C Copy"
-const SHORTCUT_PASTE_EVENT: String = "Ctrl+V Paste"
+const SHORTCUT_COPY_EVENT: String = "Ctrl+C Copy Event"
+const SHORTCUT_PASTE_EVENT: String = "Ctrl+V Paste Event"
 const SHORTCUT_DUPLICATE_EVENT: String = "Ctrl+D Duplicate"
 const SHORTCUT_DELETE_SELECTION: String = "Del Delete"
 const SHORTCUT_ESCAPE: String = "Esc Deselect"
@@ -64,21 +64,24 @@ func _init() -> void:
 
 func _build_ui() -> void:
 	var panel_style: StyleBoxFlat = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.082, 0.090, 0.116, 1.0)
-	panel_style.border_color = Color(0.168, 0.195, 0.248, 1.0)
+	panel_style.bg_color = Color(0.076, 0.084, 0.108, 1.0)
+	panel_style.border_color = Color(0.148, 0.171, 0.218, 1.0)
 	panel_style.set_border_width_all(0)
 	panel_style.border_width_bottom = 1
 	# No corner radius: toolbar sits flush at the top of the main-screen workspace.
 	panel_style.set_corner_radius_all(0)
-	panel_style.set_content_margin_all(10)
+	panel_style.set_content_margin(SIDE_LEFT, 7)
+	panel_style.set_content_margin(SIDE_RIGHT, 7)
+	panel_style.set_content_margin(SIDE_TOP, 5)
+	panel_style.set_content_margin(SIDE_BOTTOM, 5)
 	add_theme_stylebox_override("panel", panel_style)
 
 	var shell: VBoxContainer = VBoxContainer.new()
-	shell.add_theme_constant_override("separation", 6)
+	shell.add_theme_constant_override("separation", 3)
 	add_child(shell)
 
 	var top_line: HBoxContainer = HBoxContainer.new()
-	top_line.add_theme_constant_override("separation", 6)
+	top_line.add_theme_constant_override("separation", 4)
 	shell.add_child(top_line)
 
 	var title: Label = Label.new()
@@ -108,8 +111,9 @@ func _build_ui() -> void:
 
 	_doc_meta_label = Label.new()
 	_doc_meta_label.text = "No sheet loaded"
-	_doc_meta_label.add_theme_color_override("font_color", Color(0.50, 0.58, 0.72))
-	_doc_meta_label.add_theme_font_size_override("font_size", 10)
+	_doc_meta_label.add_theme_color_override("font_color", Color(0.44, 0.52, 0.66))
+	_doc_meta_label.add_theme_font_size_override("font_size", 9)
+	_doc_meta_label.visible = false
 	top_line.add_child(_doc_meta_label)
 
 	var meta_sep: VSeparator = VSeparator.new()
@@ -118,8 +122,9 @@ func _build_ui() -> void:
 
 	_sheet_path_label = Label.new()
 	_sheet_path_label.text = ""
-	_sheet_path_label.add_theme_color_override("font_color", Color(0.48, 0.56, 0.70))
+	_sheet_path_label.add_theme_color_override("font_color", Color(0.42, 0.50, 0.64))
 	_sheet_path_label.add_theme_font_size_override("font_size", 9)
+	_sheet_path_label.visible = false
 	top_line.add_child(_sheet_path_label)
 
 	var path_sep: VSeparator = VSeparator.new()
@@ -128,8 +133,9 @@ func _build_ui() -> void:
 
 	_selection_meta_label = Label.new()
 	_selection_meta_label.text = "No selection"
-	_selection_meta_label.add_theme_color_override("font_color", Color(0.60, 0.70, 0.84))
-	_selection_meta_label.add_theme_font_size_override("font_size", 10)
+	_selection_meta_label.add_theme_color_override("font_color", Color(0.52, 0.62, 0.76))
+	_selection_meta_label.add_theme_font_size_override("font_size", 9)
+	_selection_meta_label.visible = false
 	top_line.add_child(_selection_meta_label)
 
 	var top_spacer: Control = Control.new()
@@ -137,7 +143,7 @@ func _build_ui() -> void:
 	top_line.add_child(top_spacer)
 
 	var actions_line: HBoxContainer = HBoxContainer.new()
-	actions_line.add_theme_constant_override("separation", 5)
+	actions_line.add_theme_constant_override("separation", 4)
 	shell.add_child(actions_line)
 
 	var new_sheet_btn: Button = Button.new()
@@ -182,7 +188,7 @@ func _build_ui() -> void:
 	_shortcuts_hint_label = Label.new()
 	_shortcuts_hint_label.text = shortcut_hint_text()
 	_shortcuts_hint_label.add_theme_color_override("font_color", SHORTCUTS_HINT_COLOR)
-	_shortcuts_hint_label.add_theme_font_size_override("font_size", 10)
+	_shortcuts_hint_label.add_theme_font_size_override("font_size", 9)
 	_shortcuts_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	actions_line.add_child(_shortcuts_hint_label)
 
@@ -255,6 +261,12 @@ func set_sheet_loaded(loaded: bool) -> void:
 		_save_as_btn.disabled = not loaded
 	if _shortcuts_hint_label != null:
 		_shortcuts_hint_label.visible = loaded
+	if _doc_meta_label != null:
+		_doc_meta_label.visible = loaded
+	if _sheet_path_label != null:
+		_sheet_path_label.visible = false
+	if _selection_meta_label != null:
+		_selection_meta_label.visible = false
 	if not loaded:
 		set_context(null, "none")
 		set_dirty(false)
@@ -273,5 +285,9 @@ func set_context(sheet: EventSheetResource, selection_kind: String = "none") -> 
 		_selection_meta_label.text = format_selection_meta(selection_kind)
 	if _sheet_name_label != null:
 		_sheet_name_label.text = _format_sheet_name(sheet)
+		var meta: String = format_document_meta(sheet)
+		var path: String = format_document_path(sheet)
+		var selection: String = format_selection_meta(selection_kind)
+		_sheet_name_label.tooltip_text = "%s\n%s\n%s" % [meta, path, selection]
 	if _sheet_path_label != null:
 		_sheet_path_label.text = format_document_path(sheet)

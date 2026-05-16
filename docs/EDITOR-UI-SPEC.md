@@ -58,7 +58,7 @@ It intentionally avoids describing unbuilt behavior as complete.
 
 ### 2.3 Event sheet row UX
 
-- Event rows use a **two-lane composition**: a condition lane (left) and an action lane (right), separated by a 2 px `ColorRect` lane divider — closely matching Construct 3's event sheet grammar.
+- Event rows use a **two-lane composition**: a condition lane (left) and an action lane (right), separated by a thin `ColorRect` lane divider — closely matching Construct 3's event sheet grammar.
 - Rows avoid explicit lane headers (`IF`, `THEN`, `Conditions`, `Actions`, `when`, `do`) — the column position alone conveys lane identity.
 - The condition lane occupies approximately 35 % of the row width (`COND_LANE_RATIO = 1.0`); the action lane occupies approximately 65 % (`ACTION_LANE_RATIO = 1.85`). These ratios are constant across all rows, providing cross-row column alignment.
 - Each lane is a `PanelContainer` with a subtly distinct background tint:
@@ -72,7 +72,7 @@ It intentionally avoids describing unbuilt behavior as complete.
   - Header row: spacer (expands) · `+Add` action button.
   - `VBoxContainer` of action entries, one per line — **C3-style vertical list**, not horizontal token chips.
 - Each condition/action entry is a full-width flat `Button` (left-aligned text, transparent background, subtle hover tint) that spans the entire column — no chip borders, no chip backgrounds. This matches Construct 3's text-based row grammar.
-- The 2 px `LANE_DIVIDER_COLOR` `ColorRect` between lanes provides a clear, stable vertical boundary that creates the horizontal eventsheet rhythm.
+- The thin `LANE_DIVIDER_COLOR` `ColorRect` between lanes provides a clear, stable vertical boundary that creates the horizontal eventsheet rhythm.
 - Condition entries use blue-tinted text; action entries use teal/green-tinted text — clearly distinct from each other.
 - Entry text color uses C3-style column affinity: blue for conditions (cold/left), teal for actions (warm/right).
 - A left gutter is rendered for every row, with branch guides for nested/sub-event rows.
@@ -121,6 +121,7 @@ It intentionally avoids describing unbuilt behavior as complete.
 - The editor uses a main-screen workspace shell modelled after Godot's Script editor:
   - **Toolbar** spans the full workspace width, flush at the top with no outer margin — no dock-panel-era padding above or beside it.
   - Toolbar background has zero corner radius so it sits flush at the top edge of the workspace.
+  - Toolbar chrome is intentionally compact: reduced padding and de-emphasized metadata labels so the sheet surface starts sooner.
   - Toolbar bottom border (1 px) provides the only visual separation from the content area below.
   - Top row of the toolbar: `EventSheet` label | separator | sheet name | dirty indicator | document meta | separator | selection meta | spacer
   - Top row now also includes a **document path hint** between document meta and selection meta so the active resource path is always visible.
@@ -160,7 +161,7 @@ It intentionally avoids describing unbuilt behavior as complete.
 - Central workspace composition now uses `HSplitContainer` (`WorkspaceSplit`) for
   canvas/inspector, matching the dedicated-editor split model instead of a fixed
   panel stack + separator.
-- Document framing keeps `SheetSectionGlobals` as a shell, while `SheetSectionEvents` is now a flatter continuous host so authored rows dominate the canvas.
+- Document framing keeps both `SheetSectionGlobals` and `SheetSectionEvents` as flatter continuous hosts so authored rows dominate the canvas.
 - The document header card (formerly `SheetDocumentHeader`) is no longer rendered inside the canvas scroll surface — resource info is exclusively shown in the `SheetCanvasDocumentStrip` above the canvas. This keeps the scrollable area free for event rows from the very first pixel.
 - Section headers use a `ColorRect` accent rail in the header instead of a bullet label, providing a design-system-consistent visual hierarchy.
 - Each section header is separated from its body by an `HSeparator` to create a clear visual tier.
@@ -178,7 +179,7 @@ It intentionally avoids describing unbuilt behavior as complete.
 - All row types (event, variable, group) use tighter content margins (top/bottom 3px for events, 5px for variable/group).
 - Event, variable, and group rows use a `border_width_left` of 3+depth (up from 2+depth) for a stronger depth hierarchy accent.
 - Depth guide `ColorRect` lines use opacity 0.80 (up from 0.68) for better visibility at depth.
-- Event rows use a 2 px `ColorRect` lane divider (`LANE_DIVIDER_COLOR`) replacing the earlier `VSeparator` for a stronger, pixel-stable lane boundary.
+- Event rows use a thin `ColorRect` lane divider (`LANE_DIVIDER_COLOR`) replacing the earlier `VSeparator` for a stronger, pixel-stable lane boundary.
 
 ### 2.8 Final cross-surface polish (Phase 6)
 
@@ -191,12 +192,12 @@ It intentionally avoids describing unbuilt behavior as complete.
 
 ### 2.9 Horizontal eventsheet lane composition (Phase 7)
 
-- Event rows now use a **two-panel lane layout**: a condition lane (`PanelContainer`, ~35% width) and an action lane (`PanelContainer`, ~65% width), with a 2 px `ColorRect` divider between them.
+- Event rows now use a **two-panel lane layout**: a condition lane (`PanelContainer`, ~35% width) and an action lane (`PanelContainer`, ~65% width), with a thin `ColorRect` divider between them.
 - Both lane panels have zero outer separation (`HBoxContainer.separation = 0`) so the lanes sit flush against each other and the row border, composing a single horizontal eventsheet lane rather than floating widgets.
 - The run-context (trigger) button is anchored at the top of the condition lane and expands horizontally — it reads as the event's "heading" within the lane, making the trigger identity immediately visible.
 - The `+ condition` button moves into the condition lane header row, keeping add affordances visually co-located with their lane.
 - The `+Add` action button sits at the trailing edge of the action lane flow, keeping it within the action lane with compact labeling.
-- The `✕` delete button sits outside both lane panels at the far-right edge of the row.
+- Row-level insertion/delete controls (`+↑`, `+↓`, `✕`) sit in the action-lane header so each event reads as one continuous sheet line.
 - Consistent `COND_LANE_RATIO` / `ACTION_LANE_RATIO` constants ensure the lane boundary remains at the same horizontal position across all rows, creating a stable eventsheet column grid.
 - Lane spacing and token padding are tightened (`h_separation`/`v_separation` and lane panel insets) to increase vertical density while keeping row readability.
 - Run-context and condition/action entries use square, bordered cell styling (including a stronger left border accent on tokens) so entries read as sheet cells rather than rounded chips.

@@ -146,6 +146,11 @@ static func run() -> bool:
 		true
 	) and all_passed
 	all_passed = _check(
+		"inspector shell is compact",
+		editor._inspector_panel != null and editor._inspector_panel.custom_minimum_size.x <= 200.0,
+		true
+	) and all_passed
+	all_passed = _check(
 		"editor not dirty initially",
 		editor._is_dirty,
 		false

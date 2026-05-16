@@ -70,16 +70,16 @@ const ACTION_MENU_ADD_ANOTHER: int = 2
 const ACTION_MENU_REPLACE: int = 3
 const ACTION_MENU_DELETE: int = 4
 
-const ROW_BG: Color = Color(0.105, 0.126, 0.169, 1.0)
-const ROW_BG_HOVER: Color = Color(0.130, 0.157, 0.211, 1.0)
-const ROW_BG_SELECTED: Color = Color(0.165, 0.201, 0.272, 1.0)
-const ROW_BORDER: Color = Color(0.256, 0.308, 0.414, 1.0)
-const ROW_BORDER_HOVER: Color = Color(0.338, 0.415, 0.552, 1.0)
+const ROW_BG: Color = Color(0.096, 0.114, 0.153, 1.0)
+const ROW_BG_HOVER: Color = Color(0.116, 0.138, 0.186, 1.0)
+const ROW_BG_SELECTED: Color = Color(0.150, 0.182, 0.246, 1.0)
+const ROW_BORDER: Color = Color(0.226, 0.270, 0.358, 1.0)
+const ROW_BORDER_HOVER: Color = Color(0.296, 0.362, 0.478, 1.0)
 const ROW_BORDER_SELECTED: Color = Color(0.458, 0.618, 0.900, 1.0)
 const RUN_CONTEXT_SYMBOL: String = "◆"
-const LANE_DIVIDER_COLOR: Color = Color(0.22, 0.28, 0.42, 0.92)
-const COND_LANE_BG: Color = Color(0.111, 0.134, 0.182, 1.0)
-const ACTION_LANE_BG: Color = Color(0.103, 0.125, 0.168, 1.0)
+const LANE_DIVIDER_COLOR: Color = Color(0.24, 0.30, 0.44, 0.55)
+const COND_LANE_BG: Color = Color(0.100, 0.120, 0.160, 0.58)
+const ACTION_LANE_BG: Color = Color(0.096, 0.116, 0.154, 0.46)
 const COND_LANE_RATIO: float = 1.0
 const ACTION_LANE_RATIO: float = 1.85
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
@@ -226,17 +226,17 @@ func _build_ui() -> void:
 	_runs_button.add_theme_color_override("font_hover_color", Color(0.82, 0.90, 1.0))
 	_runs_button.add_theme_font_size_override("font_size", 10)
 	var run_style: StyleBoxFlat = StyleBoxFlat.new()
-	run_style.bg_color = Color(0.130, 0.162, 0.236, 1.0)
-	run_style.border_color = Color(0.240, 0.322, 0.502, 1.0)
-	run_style.set_border_width_all(1)
+	run_style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	run_style.border_color = Color(0.0, 0.0, 0.0, 0.0)
+	run_style.set_border_width_all(0)
 	run_style.set_corner_radius_all(2)
-	run_style.set_content_margin(SIDE_LEFT, 5)
-	run_style.set_content_margin(SIDE_RIGHT, 5)
+	run_style.set_content_margin(SIDE_LEFT, 2)
+	run_style.set_content_margin(SIDE_RIGHT, 2)
 	run_style.set_content_margin(SIDE_TOP, 1)
 	run_style.set_content_margin(SIDE_BOTTOM, 1)
 	_runs_button.add_theme_stylebox_override("normal", run_style)
 	var run_hover: StyleBoxFlat = run_style.duplicate()
-	run_hover.bg_color = Color(0.168, 0.204, 0.296, 1.0)
+	run_hover.bg_color = Color(0.14, 0.18, 0.26, 0.36)
 	_runs_button.add_theme_stylebox_override("hover", run_hover)
 	_runs_button.add_theme_stylebox_override("pressed", run_hover)
 	_runs_button.add_theme_stylebox_override("focus", run_hover)
@@ -262,7 +262,7 @@ func _build_ui() -> void:
 
 	# ── Lane divider ───────────────────────────────────────────────────────────
 	var lane_div: ColorRect = ColorRect.new()
-	lane_div.custom_minimum_size = Vector2(2, 0)
+	lane_div.custom_minimum_size = Vector2(1, 0)
 	lane_div.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	lane_div.color = LANE_DIVIDER_COLOR
 	lane_div.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -288,7 +288,7 @@ func _build_ui() -> void:
 	action_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	action_panel.add_child(action_vbox)
 
-	# Action header: spacer + add action button
+	# Action header: spacer + add/action/row controls
 	var action_header: HBoxContainer = HBoxContainer.new()
 	action_header.add_theme_constant_override("separation", 3)
 	action_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -299,7 +299,7 @@ func _build_ui() -> void:
 	action_header.add_child(action_header_spacer)
 
 	var add_action_btn: Button = Button.new()
-	add_action_btn.text = "+Add"
+	add_action_btn.text = "+"
 	add_action_btn.flat = true
 	add_action_btn.tooltip_text = "Add action"
 	add_action_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -309,17 +309,6 @@ func _build_ui() -> void:
 	add_action_btn.connect("pressed", _on_add_action_pressed)
 	action_header.add_child(add_action_btn)
 
-	# Actions list (vertical — one row per action, C3-style)
-	_actions_container = VBoxContainer.new()
-	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_actions_container.add_theme_constant_override("separation", 1)
-	action_vbox.add_child(_actions_container)
-
-	# ── Row-level controls (far right, outside lanes) ───────────────────────────
-	var insert_controls: VBoxContainer = VBoxContainer.new()
-	insert_controls.add_theme_constant_override("separation", 0)
-	line.add_child(insert_controls)
-
 	_insert_above_btn = Button.new()
 	_insert_above_btn.text = "+↑"
 	_insert_above_btn.flat = true
@@ -328,7 +317,7 @@ func _build_ui() -> void:
 	_insert_above_btn.add_theme_color_override("font_color", Color(0.66, 0.77, 0.96))
 	_insert_above_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.91, 1.0))
 	_insert_above_btn.connect("pressed", _on_insert_above_pressed)
-	insert_controls.add_child(_insert_above_btn)
+	action_header.add_child(_insert_above_btn)
 
 	_insert_below_btn = Button.new()
 	_insert_below_btn.text = "+↓"
@@ -338,7 +327,7 @@ func _build_ui() -> void:
 	_insert_below_btn.add_theme_color_override("font_color", Color(0.66, 0.77, 0.96))
 	_insert_below_btn.add_theme_color_override("font_hover_color", Color(0.84, 0.91, 1.0))
 	_insert_below_btn.connect("pressed", _on_insert_below_pressed)
-	insert_controls.add_child(_insert_below_btn)
+	action_header.add_child(_insert_below_btn)
 
 	var delete_event_btn: Button = Button.new()
 	delete_event_btn.text = "✕"
@@ -348,7 +337,13 @@ func _build_ui() -> void:
 	delete_event_btn.add_theme_color_override("font_color", Color(0.86, 0.46, 0.51))
 	delete_event_btn.add_theme_color_override("font_hover_color", Color(0.98, 0.62, 0.67))
 	delete_event_btn.connect("pressed", _on_delete_event_pressed)
-	line.add_child(delete_event_btn)
+	action_header.add_child(delete_event_btn)
+
+	# Actions list (vertical — one row per action, C3-style)
+	_actions_container = VBoxContainer.new()
+	_actions_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_actions_container.add_theme_constant_override("separation", 1)
+	action_vbox.add_child(_actions_container)
 
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	connect("mouse_entered", _on_mouse_entered)
@@ -386,7 +381,7 @@ func _apply_row_style() -> void:
 		style.bg_color = _apply_depth_tint(ROW_BG)
 		style.border_color = ROW_BORDER
 	style.set_border_width_all(1)
-	style.border_width_left = 4 + min(_depth, 4)
+	style.border_width_left = 3 + min(_depth, 4)
 	style.set_corner_radius_all(0)
 	# Zero content margins — inner lane panels carry their own padding so
 	# the lanes extend flush from the left depth-accent border to the right edge.

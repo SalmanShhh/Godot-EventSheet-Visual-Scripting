@@ -811,6 +811,7 @@ static func run() -> bool:
 	all_passed = _check("globals empty state is card", globals_section != null and _count_panel_containers(globals_section) >= 1, true) and all_passed
 	var events_section: Node = _find_node_named(editor, "SheetSectionEvents")
 	all_passed = _check("events empty state is card", events_section != null and _count_panel_containers(events_section) >= 1, true) and all_passed
+	all_passed = _check("globals section is unframed host", globals_section is PanelContainer, false) and all_passed
 	all_passed = _check("events section is unframed host", events_section is PanelContainer, false) and all_passed
 	all_passed = _check("events section has anchored add event button", _find_button_with_text(events_section, "Add Event") != null, true) and all_passed
 	all_passed = _check("events section has anchored add comment button", _find_button_with_text(events_section, "Add Comment") != null, true) and all_passed

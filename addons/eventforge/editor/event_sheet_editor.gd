@@ -599,10 +599,10 @@ func _build_layout() -> void:
 	var content_margin: MarginContainer = MarginContainer.new()
 	content_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content_margin.add_theme_constant_override("margin_left", 6)
-	content_margin.add_theme_constant_override("margin_right", 6)
-	content_margin.add_theme_constant_override("margin_top", 6)
-	content_margin.add_theme_constant_override("margin_bottom", 4)
+	content_margin.add_theme_constant_override("margin_left", 2)
+	content_margin.add_theme_constant_override("margin_right", 2)
+	content_margin.add_theme_constant_override("margin_top", 2)
+	content_margin.add_theme_constant_override("margin_bottom", 2)
 	workspace_vbox.add_child(content_margin)
 
 	var workspace_split: HSplitContainer = HSplitContainer.new()
@@ -635,14 +635,14 @@ func _build_layout() -> void:
 	canvas_doc_strip.name = "SheetCanvasDocumentStrip"
 	canvas_doc_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var strip_style: StyleBoxFlat = StyleBoxFlat.new()
-	strip_style.bg_color = Color(0.074, 0.084, 0.111, 1.0)
-	strip_style.border_color = Color(0.152, 0.178, 0.230, 1.0)
+	strip_style.bg_color = Color(0.070, 0.078, 0.102, 1.0)
+	strip_style.border_color = Color(0.138, 0.162, 0.208, 1.0)
 	strip_style.set_border_width_all(0)
 	strip_style.border_width_bottom = 1
-	strip_style.set_content_margin(SIDE_LEFT, 10)
-	strip_style.set_content_margin(SIDE_RIGHT, 10)
-	strip_style.set_content_margin(SIDE_TOP, 4)
-	strip_style.set_content_margin(SIDE_BOTTOM, 4)
+	strip_style.set_content_margin(SIDE_LEFT, 6)
+	strip_style.set_content_margin(SIDE_RIGHT, 6)
+	strip_style.set_content_margin(SIDE_TOP, 2)
+	strip_style.set_content_margin(SIDE_BOTTOM, 2)
 	canvas_doc_strip.add_theme_stylebox_override("panel", strip_style)
 	canvas_shell_vbox.add_child(canvas_doc_strip)
 
@@ -664,15 +664,15 @@ func _build_layout() -> void:
 	var resource_tab: PanelContainer = PanelContainer.new()
 	resource_tab.name = "SheetCanvasResourceTab"
 	var resource_tab_style: StyleBoxFlat = StyleBoxFlat.new()
-	resource_tab_style.bg_color = Color(0.102, 0.117, 0.151, 1.0)
-	resource_tab_style.border_color = Color(0.222, 0.262, 0.336, 1.0)
-	resource_tab_style.set_border_width_all(1)
+	resource_tab_style.bg_color = Color(0.094, 0.108, 0.138, 1.0)
+	resource_tab_style.border_color = Color(0.180, 0.214, 0.276, 1.0)
+	resource_tab_style.set_border_width_all(0)
 	resource_tab_style.border_width_bottom = 0
 	resource_tab_style.set_corner_radius_all(0)
-	resource_tab_style.set_content_margin(SIDE_LEFT, 8)
-	resource_tab_style.set_content_margin(SIDE_RIGHT, 8)
-	resource_tab_style.set_content_margin(SIDE_TOP, 3)
-	resource_tab_style.set_content_margin(SIDE_BOTTOM, 3)
+	resource_tab_style.set_content_margin(SIDE_LEFT, 5)
+	resource_tab_style.set_content_margin(SIDE_RIGHT, 5)
+	resource_tab_style.set_content_margin(SIDE_TOP, 2)
+	resource_tab_style.set_content_margin(SIDE_BOTTOM, 2)
 	resource_tab.add_theme_stylebox_override("panel", resource_tab_style)
 	strip_row.add_child(resource_tab)
 
@@ -724,16 +724,16 @@ func _build_layout() -> void:
 
 	# ── Right: inspector panel (passive context panel) ────────────────────────
 	_inspector_panel = PanelContainer.new()
-	_inspector_panel.custom_minimum_size = Vector2(220, 0)
+	_inspector_panel.custom_minimum_size = Vector2(190, 0)
 	_inspector_panel.size_flags_horizontal = Control.SIZE_FILL
 	_inspector_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	var insp_style: StyleBoxFlat = StyleBoxFlat.new()
-	insp_style.bg_color = Color(0.079, 0.087, 0.113, 1.0)
-	insp_style.border_color = Color(0.157, 0.181, 0.233, 1.0)
+	insp_style.bg_color = Color(0.073, 0.081, 0.104, 1.0)
+	insp_style.border_color = Color(0.132, 0.154, 0.198, 0.95)
 	insp_style.set_border_width_all(1)
 	insp_style.set_corner_radius_all(0)
-	insp_style.set_content_margin_all(10)
+	insp_style.set_content_margin_all(8)
 	_inspector_panel.add_theme_stylebox_override("panel", insp_style)
 	workspace_split.add_child(_inspector_panel)
 
@@ -2479,7 +2479,7 @@ func _add_section_shell(name: String, title: String, subtitle: String, accent: C
 	return body
 
 func _add_variables_section() -> void:
-	var section_body: VBoxContainer = _add_section_shell("SheetSectionGlobals", "Globals", "Project-level data", Color(0.62, 0.80, 1.0), "+ Variable", Callable(self, "_on_add_variable_requested"))
+	var section_body: VBoxContainer = _add_section_shell("SheetSectionGlobals", "Globals", "Project-level data", Color(0.62, 0.80, 1.0), "+ Variable", Callable(self, "_on_add_variable_requested"), false)
 
 	var variables: Dictionary = current_sheet.variables
 	if variables.is_empty():
@@ -2513,14 +2513,14 @@ func _add_events_section() -> void:
 	col_header_panel.name = "SheetColumnHeader"
 	col_header_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var col_header_style: StyleBoxFlat = StyleBoxFlat.new()
-	col_header_style.bg_color = Color(0.072, 0.082, 0.108, 1.0)
-	col_header_style.border_color = Color(0.172, 0.200, 0.260, 1.0)
+	col_header_style.bg_color = Color(0.066, 0.074, 0.098, 1.0)
+	col_header_style.border_color = Color(0.148, 0.174, 0.226, 1.0)
 	col_header_style.set_border_width_all(0)
 	col_header_style.border_width_bottom = 1
 	col_header_style.set_content_margin(SIDE_LEFT, 0)
 	col_header_style.set_content_margin(SIDE_RIGHT, 0)
-	col_header_style.set_content_margin(SIDE_TOP, 3)
-	col_header_style.set_content_margin(SIDE_BOTTOM, 3)
+	col_header_style.set_content_margin(SIDE_TOP, 2)
+	col_header_style.set_content_margin(SIDE_BOTTOM, 2)
 	col_header_panel.add_theme_stylebox_override("panel", col_header_style)
 	events_section_box.add_child(col_header_panel)
 
@@ -2577,7 +2577,7 @@ func _add_events_section() -> void:
 
 	# Right spacer for the row-level controls (insert/delete buttons).
 	var controls_spacer: Control = Control.new()
-	controls_spacer.custom_minimum_size = Vector2(50, 0)
+	controls_spacer.custom_minimum_size = Vector2(8, 0)
 	controls_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col_header_row.add_child(controls_spacer)
 
@@ -2605,14 +2605,14 @@ func _add_events_section() -> void:
 	var anchor_wrapper: PanelContainer = PanelContainer.new()
 	anchor_wrapper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var anchor_style: StyleBoxFlat = StyleBoxFlat.new()
-	anchor_style.bg_color = Color(0.063, 0.072, 0.096, 1.0)
-	anchor_style.border_color = Color(0.148, 0.174, 0.228, 1.0)
+	anchor_style.bg_color = Color(0.063, 0.072, 0.096, 0.55)
+	anchor_style.border_color = Color(0.148, 0.174, 0.228, 0.70)
 	anchor_style.set_border_width_all(0)
 	anchor_style.border_width_top = 1
-	anchor_style.set_content_margin(SIDE_LEFT, SHEET_GUTTER_BASE_WIDTH + 4)
-	anchor_style.set_content_margin(SIDE_RIGHT, 4)
-	anchor_style.set_content_margin(SIDE_TOP, 4)
-	anchor_style.set_content_margin(SIDE_BOTTOM, 4)
+	anchor_style.set_content_margin(SIDE_LEFT, SHEET_GUTTER_BASE_WIDTH + 2)
+	anchor_style.set_content_margin(SIDE_RIGHT, 2)
+	anchor_style.set_content_margin(SIDE_TOP, 2)
+	anchor_style.set_content_margin(SIDE_BOTTOM, 2)
 	anchor_wrapper.add_theme_stylebox_override("panel", anchor_style)
 	events_section_box.add_child(anchor_wrapper)
 	anchor_wrapper.add_child(_make_add_event_anchor_row())
@@ -3481,12 +3481,12 @@ func _make_inspector_card(border_accent: Color = Color(0.196, 0.223, 0.279, 1.0)
 	var card: PanelContainer = PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.100, 0.112, 0.145, 1.0)
+	style.bg_color = Color(0.084, 0.094, 0.120, 1.0)
 	style.border_color = border_accent
-	style.set_border_width_all(1)
+	style.set_border_width_all(0)
 	style.border_width_left = 3
-	style.set_corner_radius_all(6)
-	style.set_content_margin_all(10)
+	style.set_corner_radius_all(0)
+	style.set_content_margin_all(7)
 	card.add_theme_stylebox_override("panel", style)
 	return card
 
@@ -3495,11 +3495,11 @@ func _make_section_empty_card(hint_text: String) -> PanelContainer:
 	var card: PanelContainer = PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.070, 0.078, 0.102, 1.0)
-	style.border_color = Color(0.150, 0.170, 0.220, 0.70)
+	style.bg_color = Color(0.070, 0.078, 0.102, 0.62)
+	style.border_color = Color(0.150, 0.170, 0.220, 0.42)
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(5)
-	style.set_content_margin_all(10)
+	style.set_corner_radius_all(0)
+	style.set_content_margin_all(7)
 	card.add_theme_stylebox_override("panel", style)
 	var hint: Label = Label.new()
 	hint.text = hint_text

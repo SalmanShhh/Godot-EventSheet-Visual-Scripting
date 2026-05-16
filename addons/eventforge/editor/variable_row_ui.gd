@@ -31,27 +31,15 @@ func _build_ui() -> void:
 	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(hbox)
 
-	var badge_panel: PanelContainer = PanelContainer.new()
-	var badge_style: StyleBoxFlat = StyleBoxFlat.new()
-	badge_style.bg_color = Color(0.168, 0.240, 0.342, 1.0)
-	badge_style.border_color = Color(0.320, 0.466, 0.674, 1.0)
-	badge_style.set_border_width_all(1)
-	badge_style.set_corner_radius_all(0)
-	badge_style.set_content_margin(SIDE_LEFT, 5)
-	badge_style.set_content_margin(SIDE_RIGHT, 5)
-	badge_style.set_content_margin(SIDE_TOP, 1)
-	badge_style.set_content_margin(SIDE_BOTTOM, 1)
-	badge_panel.add_theme_stylebox_override("panel", badge_style)
 	var badge: Label = Label.new()
-	badge.text = "Global"
-	badge.add_theme_color_override("font_color", Color(0.90, 0.96, 1.0))
-	badge.add_theme_font_size_override("font_size", 10)
-	badge_panel.add_child(badge)
-	hbox.add_child(badge_panel)
+	badge.text = "global"
+	badge.add_theme_color_override("font_color", Color(0.58, 0.76, 0.98))
+	badge.add_theme_font_size_override("font_size", 9)
+	hbox.add_child(badge)
 
 	_summary_label = Label.new()
 	_summary_label.add_theme_color_override("font_color", Color(0.96, 0.98, 1.0))
-	_summary_label.add_theme_font_size_override("font_size", 12)
+	_summary_label.add_theme_font_size_override("font_size", 11)
 	_summary_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(_summary_label)
 
@@ -93,19 +81,19 @@ func set_selected(selected: bool) -> void:
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	if _selected:
-		style.bg_color = Color(0.146, 0.220, 0.323, 1.0)
+		style.bg_color = Color(0.128, 0.192, 0.284, 1.0)
 		style.border_color = Color(0.500, 0.740, 0.980, 1.0)
 	elif _hovered:
-		style.bg_color = Color(0.126, 0.187, 0.279, 1.0)
-		style.border_color = Color(0.342, 0.510, 0.718, 1.0)
+		style.bg_color = Color(0.114, 0.169, 0.252, 1.0)
+		style.border_color = Color(0.296, 0.444, 0.626, 1.0)
 	else:
-		style.bg_color = Color(0.110, 0.165, 0.246, 1.0)
-		style.border_color = Color(0.262, 0.390, 0.558, 1.0)
+		style.bg_color = Color(0.098, 0.146, 0.218, 1.0)
+		style.border_color = Color(0.238, 0.354, 0.506, 1.0)
 	style.set_border_width_all(1)
-	style.border_width_left = 4 + min(_depth, 4)
+	style.border_width_left = 3 + min(_depth, 4)
 	style.set_corner_radius_all(0)
-	style.set_content_margin_all(4)
-	style.content_margin_left = 8
+	style.set_content_margin_all(3)
+	style.content_margin_left = 6
 	add_theme_stylebox_override("panel", style)
 
 ## Refreshes the label from var_name and var_info.
