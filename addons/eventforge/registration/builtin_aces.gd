@@ -29,7 +29,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(_make_descriptor("Core", "Always", "Always", ACEDescriptor.ACEType.CONDITION, "true", "", [], "General Conditions", "Always"))
 	descriptors.append(_make_descriptor("Core", "IsOnFloor", "Is On Floor", ACEDescriptor.ACEType.CONDITION, "is_on_floor()", "", [], "General Conditions", "Is on floor"))
 	descriptors.append(_make_descriptor("Core", "HasGroupMember", "Has Group Member", ACEDescriptor.ACEType.CONDITION, "is_in_group({group})", "", [_make_param("group", "String", "", "Group", "Group name to test.")], "General Conditions", "In group {group}"))
-	descriptors.append(_make_descriptor("Core", "CompareVar", "Compare Variable", ACEDescriptor.ACEType.CONDITION, "{var_name} {op} {value}", "", [_make_param("var_name", "String", "var", "Variable", "Variable name to compare.", "variable_reference"), _make_param("op", "String", "==", "Operator", "Comparison operator."), _make_param("value", "String", "0", "Value", "Comparison value.")], "Variables", "{var_name} {op} {value}"))
+	descriptors.append(_make_descriptor("Core", "CompareVar", "Compare Variable", ACEDescriptor.ACEType.CONDITION, "{var_name} {op} {value}", "", [_make_param("var_name", "String", "var", "Variable", "Variable name to compare.", "variable_reference"), _make_param("op", "String", "==", "Operator", "Comparison operator.", "", ["==", "!=", "<", "<=", ">", ">="]), _make_param("value", "String", "0", "Value", "Comparison value.")], "Variables", "{var_name} {op} {value}"))
 
 	# Actions
 	descriptors.append(_make_descriptor("Core", "SetVar", "Set Variable", ACEDescriptor.ACEType.ACTION, "{var_name} = {value}", "", [_make_param("var_name", "String", "var", "Variable", "Variable name to set.", "variable_reference"), _make_param("value", "String", "0", "Value", "Value to assign.")], "Variables", "Set variable {var_name} to {value}"))
@@ -60,7 +60,7 @@ static func _make_descriptor(provider_id: String, ace_id: String, display_name: 
 	return descriptor
 
 ## Creates an ACE parameter instance.
-static func _make_param(param_id: String, type_name: String, default_value: Variant = "", display_name: String = "", description: String = "", hint: String = "") -> ACEParam:
+static func _make_param(param_id: String, type_name: String, default_value: Variant = "", display_name: String = "", description: String = "", hint: String = "", options: Array[String] = []) -> ACEParam:
 	var parameter: ACEParam = ACEParam.new()
 	parameter.id = param_id
 	parameter.name = param_id
@@ -72,4 +72,5 @@ static func _make_param(param_id: String, type_name: String, default_value: Vari
 	parameter.initial_value = default_value
 	parameter.initialValue = default_value
 	parameter.hint = hint
+	parameter.options = options
 	return parameter

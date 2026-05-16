@@ -106,7 +106,7 @@ func _build_layout() -> void:
 
 	_canvas_vbox = VBoxContainer.new()
 	_canvas_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_canvas_vbox.add_theme_constant_override("separation", 8)
+	_canvas_vbox.add_theme_constant_override("separation", 4)
 	_canvas_vbox.set("custom_minimum_size", Vector2(0, 0))
 	_scroll.add_child(_canvas_vbox)
 
@@ -415,7 +415,7 @@ func _on_ace_picker_item_activated() -> void:
 func _build_ace_params_dialog_popup() -> void:
 	_ace_params_dialog = ConfirmationDialog.new()
 	_ace_params_dialog.title = "ACE Parameters"
-	_ace_params_dialog.min_size = Vector2i(420, 0)
+	_ace_params_dialog.min_size = Vector2i(320, 0)
 	_ace_params_dialog.get_ok_button().text = "Apply"
 	_ace_params_dialog.connect("confirmed", _on_ace_params_dialog_confirmed)
 	add_child(_ace_params_dialog)
@@ -427,10 +427,11 @@ func _build_ace_params_dialog_popup() -> void:
 	_ace_params_hint = Label.new()
 	_ace_params_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_ace_params_hint.add_theme_color_override("font_color", Color(0.65, 0.70, 0.78))
+	_ace_params_hint.add_theme_font_size_override("font_size", 11)
 	body.add_child(_ace_params_hint)
 
 	_ace_params_form = VBoxContainer.new()
-	_ace_params_form.add_theme_constant_override("separation", 4)
+	_ace_params_form.add_theme_constant_override("separation", 6)
 	body.add_child(_ace_params_form)
 
 ## Called after an ACE is picked. Skips the parameter dialog when the descriptor
@@ -509,7 +510,9 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 	_ace_params_existing_values = values.duplicate(true)
 	_ace_params_fields.clear()
 
+	# Remove children immediately so reset_size works correctly.
 	for child: Node in _ace_params_form.get_children():
+		_ace_params_form.remove_child(child)
 		child.queue_free()
 
 	_ace_params_dialog.title = "%s Parameters" % descriptor.get_list_name()
@@ -527,27 +530,45 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 			var key: String = param.id if not param.id.is_empty() else param.name
 			if key.is_empty():
 				continue
-			var row_box: VBoxContainer = VBoxContainer.new()
-			row_box.add_theme_constant_override("separation", 2)
+			# Form row: label on the left, input filling the right.
+			var row_box: HBoxContainer = HBoxContainer.new()
+			row_box.add_theme_constant_override("separation", 8)
+
 			var label: Label = Label.new()
-			label.text = param.get_param_name()
+			label.text = param.get_param_name() + ":"
+			label.custom_minimum_size = Vector2(86, 0)
+			label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			label.add_theme_font_size_override("font_size", 12)
 			row_box.add_child(label)
 
 			var input: Control = _create_ace_param_input(param, _ace_params_existing_values.get(key, param.get_initial_value()))
+			input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			row_box.add_child(input)
 			_ace_params_fields[key] = {
 				"param": param,
 				"input": input
 			}
 
-			var desc: String = param.get_param_description()
-			if not desc.is_empty():
-				var desc_label: Label = Label.new()
-				desc_label.text = desc
-				desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-				desc_label.add_theme_color_override("font_color", Color(0.55, 0.60, 0.65))
-				row_box.add_child(desc_label)
 			_ace_params_form.add_child(row_box)
+
+	# Disable OK if any variable_reference field has no available variables.
+	var needs_vars: bool = false
+	for key: Variant in _ace_params_fields.keys():
+		var entry: Variant = _ace_params_fields[key]
+		if not (entry is Dictionary):
+			continue
+		var param: ACEParam = (entry as Dictionary).get("param")
+		if param != null and param.hint == "variable_reference" and _get_available_variable_names().is_empty():
+			needs_vars = true
+			break
+	if needs_vars:
+		var warn: Label = Label.new()
+		warn.text = "⚠ No variables available. Add a variable first."
+		warn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		warn.add_theme_color_override("font_color", Color(1.0, 0.75, 0.35))
+		warn.add_theme_font_size_override("font_size", 11)
+		_ace_params_form.add_child(warn)
+	_ace_params_dialog.get_ok_button().disabled = needs_vars
 
 	_ace_params_dialog.reset_size()
 	_ace_params_dialog.popup_centered()
@@ -602,13 +623,14 @@ func _create_ace_param_input(param: ACEParam, value: Variant) -> Control:
 	return line_input
 
 ## Creates a variable-name dropdown pre-populated with sheet variables.
-## Falls back to a text field entry (current value) if no variables are defined.
+## Shows a disabled placeholder when no variables exist, so the user knows
+## they need to create a variable before using this ACE.
 func _create_variable_dropdown(current_value: String) -> OptionButton:
 	var option: OptionButton = OptionButton.new()
 	var var_names: Array[String] = _get_available_variable_names()
 	if var_names.is_empty():
-		# No sheet variables yet; show current value as a placeholder entry.
-		option.add_item(current_value if not current_value.is_empty() else "(no variables)")
+		option.add_item("(no variables)")
+		option.set_item_disabled(0, true)
 		option.select(0)
 		return option
 	var selected_idx: int = 0
@@ -1140,6 +1162,11 @@ func _add_event_row(event_row: EventRow, indent_level: int = 0) -> void:
 	row_ui.add_condition_requested.connect(_on_row_add_condition_requested)
 	row_ui.add_action_requested.connect(_on_row_add_action_requested)
 	_add_canvas_row(row_ui, indent_level)
+
+	# Render existing sub-events indented below this row, preparing the layout
+	# for future sub-event authoring without implementing drag/drop or nesting UI.
+	for sub_resource: Variant in event_row.sub_events:
+		_add_event_resource(sub_resource, indent_level + 1)
 
 func _add_group_row(event_group: EventGroup, indent_level: int = 0) -> void:
 	var row_ui: GroupRowUI = GroupRowUI.new()
