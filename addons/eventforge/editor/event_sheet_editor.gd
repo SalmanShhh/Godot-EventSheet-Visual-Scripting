@@ -114,6 +114,8 @@ var _ace_picker_target_condition_index: int = -1
 var _ace_picker_include_triggers: bool = false
 var _ace_picker_include_conditions: bool = false
 var _ace_picker_include_actions: bool = false
+## Relative insertion target for "new_event" picker flow.
+var _ace_picker_insert_target: Resource = null
 var _ace_params_dialog: ConfirmationDialog = null
 var _ace_params_form: VBoxContainer = null
 var _ace_params_hint: Label = null
@@ -122,6 +124,8 @@ var _ace_params_mode: String = ""
 var _ace_params_descriptor: ACEDescriptor = null
 var _ace_params_target_row: EventRowUI = null
 var _ace_params_target_index: int = -1
+## Snapshotted insertion target used while applying "new_event" picker selections.
+var _ace_params_insert_target: Resource = null
 var _ace_params_existing_values: Dictionary = {}
 var _ace_params_hint_base_text: String = ""
 ## True when the param dialog was opened from the ACE picker (enables Back button).
@@ -291,7 +295,7 @@ func _paste_copied_event_tree() -> bool:
 	var pasted_event: EventRow = _clone_event_tree(_copied_event_row)
 	if pasted_event == null:
 		return false
-	var target_resource: Resource = _get_comment_insertion_target_resource()
+	var target_resource: Resource = _get_selected_insertion_target_resource()
 	var inserted: bool = false
 	if target_resource != null:
 		inserted = _insert_resource_relative_in_array(current_sheet.events, target_resource, true, pasted_event)
@@ -933,7 +937,7 @@ func _on_add_group_requested() -> void:
 		return
 	var new_group: EventGroup = EventGroup.new()
 	new_group.group_name = "New Group"
-	var target_resource: Resource = _get_comment_insertion_target_resource()
+	var target_resource: Resource = _get_selected_insertion_target_resource()
 	var inserted: bool = false
 	if target_resource != null:
 		inserted = _insert_resource_relative_in_array(current_sheet.events, target_resource, true, new_group)
@@ -942,12 +946,13 @@ func _on_add_group_requested() -> void:
 	refresh_canvas()
 	_focus_group_by_uid(new_group.group_uid)
 	_mark_dirty()
-	_set_status("Added group")
+	var placement_text: String = _describe_relative_insertion_result(target_resource, inserted, true, "at root")
+	_set_status("Added group %s" % placement_text)
 
 func _insert_comment_from_selection_context() -> void:
 	if current_sheet == null:
 		return
-	var target_resource: Resource = _get_comment_insertion_target_resource()
+	var target_resource: Resource = _get_selected_insertion_target_resource()
 	if target_resource != null:
 		_insert_new_comment_relative(target_resource, true)
 		return
@@ -958,9 +963,9 @@ func _insert_comment_from_selection_context() -> void:
 	_focus_comment_row(new_comment)
 	_focus_comment_row_text(new_comment)
 	_mark_dirty()
-	_set_status("Added comment row")
+	_set_status("Added comment row at root")
 
-func _get_comment_insertion_target_resource() -> Resource:
+func _get_selected_insertion_target_resource() -> Resource:
 	match _selected_entry_kind:
 		"event", "condition", "action":
 			if _selected_row is EventRowUI:
@@ -975,6 +980,23 @@ func _get_comment_insertion_target_resource() -> Resource:
 				var comment_row_ui: CommentRowUI = _selected_row as CommentRowUI
 				return comment_row_ui.comment_row
 	return null
+
+func _describe_selected_target_resource(target_resource: Resource) -> String:
+	if target_resource == null:
+		return "current selection"
+	if target_resource is EventRow:
+		return "selected event"
+	if target_resource is EventGroup:
+		return "selected group"
+	if target_resource is CommentRow:
+		return "selected comment"
+	return "selected row"
+
+func _describe_relative_insertion_result(target_resource: Resource, inserted: bool, insert_after: bool, fallback_text: String) -> String:
+	if inserted and target_resource != null:
+		var direction: String = "below" if insert_after else "above"
+		return "%s %s" % [direction, _describe_selected_target_resource(target_resource)]
+	return fallback_text
 
 func _on_compile_requested() -> void:
 	if current_sheet == null:
@@ -1166,33 +1188,43 @@ func _open_add_event_picker() -> void:
 	_ace_picker_mode = "new_event"
 	_ace_picker_target_row = null
 	_ace_picker_target_condition_index = -1
-	_show_ace_picker("Add Event", true, true, false)
+	_ace_picker_insert_target = _get_selected_insertion_target_resource()
+	var placement_hint: String = ""
+	if _ace_picker_insert_target == null:
+		placement_hint = "New events are appended at root."
+	else:
+		placement_hint = "New events will be inserted below the %s." % _describe_selected_target_resource(_ace_picker_insert_target)
+	_show_ace_picker("Add Event", true, true, false, placement_hint)
 
 func _open_add_condition_picker(row: EventRowUI) -> void:
 	_ace_picker_mode = "append_condition"
 	_ace_picker_target_row = row
 	_ace_picker_target_condition_index = -1
+	_ace_picker_insert_target = null
 	_show_ace_picker("Add Condition", false, true, false)
 
 func _open_replace_condition_picker(row: EventRowUI, index: int) -> void:
 	_ace_picker_mode = "replace_condition"
 	_ace_picker_target_row = row
 	_ace_picker_target_condition_index = index
+	_ace_picker_insert_target = null
 	_show_ace_picker("Replace Condition", false, true, false)
 
 func _open_add_action_picker(row: EventRowUI) -> void:
 	_ace_picker_mode = "append_action"
 	_ace_picker_target_row = row
 	_ace_picker_target_condition_index = -1
+	_ace_picker_insert_target = null
 	_show_ace_picker("Add Action", false, false, true)
 
 func _open_replace_action_picker(row: EventRowUI, index: int) -> void:
 	_ace_picker_mode = "replace_action"
 	_ace_picker_target_row = row
 	_ace_picker_target_condition_index = index
+	_ace_picker_insert_target = null
 	_show_ace_picker("Replace Action", false, false, true)
 
-func _show_ace_picker(title: String, include_triggers: bool, include_conditions: bool, include_actions: bool) -> void:
+func _show_ace_picker(title: String, include_triggers: bool, include_conditions: bool, include_actions: bool, picker_hint: String = "") -> void:
 	if _ace_picker_popup == null:
 		return
 	_ace_picker_include_triggers = include_triggers
@@ -1200,7 +1232,7 @@ func _show_ace_picker(title: String, include_triggers: bool, include_conditions:
 	_ace_picker_include_actions = include_actions
 	_ace_picker_popup.title = title
 	_ace_picker_title.text = title
-	_ace_picker_description.text = "Pick an ACE to add."
+	_ace_picker_description.text = picker_hint if not picker_hint.is_empty() else "Pick an ACE to add."
 	if _ace_picker_search != null:
 		_ace_picker_search.text = ""
 	_populate_ace_picker(include_triggers, include_conditions, include_actions)
@@ -1509,6 +1541,7 @@ func _open_ace_params_dialog_for_picker_selection(descriptor: ACEDescriptor) -> 
 	if descriptor == null:
 		return
 	var params_dialog_mode: String = ""
+	var apply_target_resource: Resource = _ace_picker_insert_target
 	match _ace_picker_mode:
 		"new_event":
 			if descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER:
@@ -1534,18 +1567,22 @@ func _open_ace_params_dialog_for_picker_selection(descriptor: ACEDescriptor) -> 
 		_ace_picker_mode = ""
 		_ace_picker_target_row = null
 		_ace_picker_target_condition_index = -1
+		_ace_picker_insert_target = null
 		if _ace_picker_popup != null:
 			_ace_picker_popup.hide()
 		_ace_params_mode = apply_mode
 		_ace_params_descriptor = descriptor
 		_ace_params_target_row = apply_target_row
 		_ace_params_target_index = apply_target_index
+		_ace_params_insert_target = apply_target_resource
 		_apply_ace_params({})
 		_ace_params_descriptor = null
 		_ace_params_mode = ""
 		_ace_params_target_row = null
 		_ace_params_target_index = -1
+		_ace_params_insert_target = null
 		return
+	_ace_params_insert_target = apply_target_resource
 	_open_ace_params_dialog(descriptor, params_dialog_mode, _ace_picker_target_row, _ace_picker_target_condition_index, descriptor.build_default_params(), true)
 
 func _open_condition_params_dialog(row: EventRowUI, index: int) -> void:
@@ -1594,6 +1631,8 @@ func _open_ace_params_dialog(descriptor: ACEDescriptor, mode: String, row: Event
 	_ace_params_existing_values = values.duplicate(true)
 	_ace_params_fields.clear()
 	_ace_params_from_picker = from_picker
+	if not from_picker:
+		_ace_params_insert_target = null
 	if _ace_params_back_button != null:
 		_ace_params_back_button.visible = from_picker
 
@@ -1830,7 +1869,12 @@ func _go_back_to_picker() -> void:
 func _reshow_ace_picker_for_current_mode() -> void:
 	match _ace_picker_mode:
 		"new_event":
-			_show_ace_picker("Add Event", true, true, false)
+			var placement_hint: String = ""
+			if _ace_picker_insert_target == null:
+				placement_hint = "New events are appended at root."
+			else:
+				placement_hint = "New events will be inserted below the %s." % _describe_selected_target_resource(_ace_picker_insert_target)
+			_show_ace_picker("Add Event", true, true, false, placement_hint)
 		"append_condition":
 			_show_ace_picker("Add Condition", false, true, false)
 		"replace_condition":
@@ -1896,6 +1940,7 @@ func _apply_ace_params(values: Dictionary) -> void:
 			_edit_condition_params(_ace_params_target_index, values)
 		"edit_action":
 			_edit_action_params(_ace_params_target_index, values)
+	_ace_params_insert_target = null
 
 func _create_event_with_trigger(descriptor: ACEDescriptor, params: Dictionary) -> void:
 	_ensure_sheet()
@@ -1905,11 +1950,16 @@ func _create_event_with_trigger(descriptor: ACEDescriptor, params: Dictionary) -
 	new_event.trigger_provider_id = descriptor.provider_id
 	new_event.trigger_id = descriptor.ace_id
 	new_event.trigger_params = params.duplicate(true)
-	current_sheet.events.append(new_event)
+	var inserted: bool = false
+	if _ace_params_insert_target != null:
+		inserted = _insert_resource_relative_in_array(current_sheet.events, _ace_params_insert_target, true, new_event)
+	if not inserted:
+		current_sheet.events.append(new_event)
 	refresh_canvas()
 	_focus_event_by_uid(new_event.event_uid)
 	_mark_dirty()
-	_set_status("Added event: %s" % descriptor.get_list_name())
+	var placement_text: String = _describe_relative_insertion_result(_ace_params_insert_target, inserted, true, "at root")
+	_set_status("Added event: %s (%s)" % [descriptor.get_list_name(), placement_text])
 
 func _create_event_with_condition(descriptor: ACEDescriptor, params: Dictionary) -> void:
 	_ensure_sheet()
@@ -1923,11 +1973,16 @@ func _create_event_with_condition(descriptor: ACEDescriptor, params: Dictionary)
 	condition.ace_id = descriptor.ace_id
 	_set_condition_params(condition, params)
 	new_event.conditions.append(condition)
-	current_sheet.events.append(new_event)
+	var inserted: bool = false
+	if _ace_params_insert_target != null:
+		inserted = _insert_resource_relative_in_array(current_sheet.events, _ace_params_insert_target, true, new_event)
+	if not inserted:
+		current_sheet.events.append(new_event)
 	refresh_canvas()
 	_focus_event_by_uid(new_event.event_uid)
 	_mark_dirty()
-	_set_status("Added event: %s" % descriptor.get_list_name())
+	var placement_text: String = _describe_relative_insertion_result(_ace_params_insert_target, inserted, true, "at root")
+	_set_status("Added event: %s (%s)" % [descriptor.get_list_name(), placement_text])
 
 func _append_condition_with_params(descriptor: ACEDescriptor, params: Dictionary) -> void:
 	var row: EventRowUI = _ace_params_target_row
@@ -3169,8 +3224,8 @@ func _insert_new_comment_relative(target_resource: Resource, insert_after: bool)
 	_focus_comment_row(new_comment)
 	_focus_comment_row_text(new_comment)
 	_mark_dirty()
-	var direction: String = "below" if insert_after else "above"
-	_set_status("Inserted comment %s" % direction)
+	var placement_text: String = _describe_relative_insertion_result(target_resource, true, insert_after, "at root")
+	_set_status("Inserted comment %s" % placement_text)
 
 func _insert_resource_relative_in_array(arr: Array, target_resource: Resource, insert_after: bool, new_resource: Resource) -> bool:
 	for i: int in range(arr.size()):

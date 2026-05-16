@@ -87,6 +87,10 @@ It intentionally avoids describing unbuilt behavior as complete.
   - comment rows expose `+↑` / `+↓` controls to insert inline comment rows above or below
   - insertion respects structural containers (root events, nested sub-events, and group child arrays) so above/below behavior stays local to hierarchy depth
 - Events now provide a paired in-flow anchor: `Add Event` and `Add Comment`.
+- `Add Event` now follows the same structural insertion context as group/comment add flows:
+  - when an event/group/comment row is selected, the new event is inserted **below** that selected row
+  - when nothing is selected, the new event is appended at root
+  - the `Add Event` picker description explicitly states the current insertion placement target
 - **Comment rows** are now **full-width amber banner rows** — no lane split. Layout:
   - A 3 px amber left-accent `ColorRect` (type indicator).
   - `//` prefix label.
@@ -129,7 +133,7 @@ It intentionally avoids describing unbuilt behavior as complete.
 - Keyboard workflow shortcuts:
   - `Ctrl+S` → save sheet in place (Save As if no path)
   - `Ctrl+Shift+S` → save sheet to new path (Save As)
-  - `Ctrl+E` → add event
+  - `Ctrl+E` → add event (inserts below selected row context when available; otherwise appends at root)
   - `Ctrl+Shift+V` → add variable
   - `Ctrl+Shift+C` → add condition on selected event row
   - `Ctrl+Shift+A` → add action on selected event row
