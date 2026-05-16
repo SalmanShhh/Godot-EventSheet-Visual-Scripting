@@ -56,8 +56,15 @@ It intentionally avoids describing unbuilt behavior as complete.
   - top chrome toolbar panel (`EventForge`) showing the loaded sheet name and document summary
   - toolbar sheet name chip displays file basename when a path exists, or `Untitled Sheet` for in-memory sheets
   - toolbar metadata tracks both document summary and current selection context
+  - toolbar action strip shows workflow shortcut hints for event authoring
   - framed canvas surface for the event-sheet document
   - inspector-adjacent panel using the same dark design system
+- Keyboard workflow shortcuts are supported for fast authoring:
+  - `Ctrl+E` → add event
+  - `Ctrl+Shift+V` → add variable
+  - `Ctrl+Shift+C` → add condition on selected event row
+  - `Ctrl+Shift+A` → add action on selected event row
+  - `Delete` → remove selected event/condition/action/variable/group
 - Document header (`SheetDocumentHeader`) shows:
   - The sheet file name (or "Untitled Sheet" / "No Sheet Loaded") as the document title
   - The sheet resource path as a secondary hint line

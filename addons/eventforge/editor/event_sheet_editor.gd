@@ -30,6 +30,7 @@ const BRANCH_GUIDE_CHAR: String = "└"
 const BRANCH_GUIDE_LABEL: String = "└─"
 const CANVAS_BG: Color = Color(0.060, 0.067, 0.088, 1.0)
 const CANVAS_BORDER: Color = Color(0.141, 0.164, 0.214, 1.0)
+const SHORTCUT_BLOCKING_FOCUS_TYPES: Array[String] = ["LineEdit", "TextEdit", "SpinBox"]
 
 ## Currently selected entry kind.
 ## One of: "none", "event", "condition", "action", "variable", "group"
@@ -83,6 +84,119 @@ var _current_rows_host: VBoxContainer = null
 
 func _ready() -> void:
 	_build_layout()
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not (event is InputEventKey):
+		return
+	var key_event: InputEventKey = event as InputEventKey
+	if not key_event.pressed or key_event.echo:
+		return
+	if _is_workflow_shortcut_blocked():
+		return
+	var handled: bool = false
+	if key_event.ctrl_pressed and not key_event.alt_pressed and not key_event.meta_pressed:
+		if not key_event.shift_pressed and key_event.keycode == KEY_E:
+			handled = _handle_workflow_shortcut("add_event")
+		elif key_event.shift_pressed and key_event.keycode == KEY_V:
+			handled = _handle_workflow_shortcut("add_variable")
+		elif key_event.shift_pressed and key_event.keycode == KEY_C:
+			handled = _handle_workflow_shortcut("add_condition")
+		elif key_event.shift_pressed and key_event.keycode == KEY_A:
+			handled = _handle_workflow_shortcut("add_action")
+	elif key_event.keycode == KEY_DELETE and _has_no_modifiers(key_event):
+		handled = _handle_workflow_shortcut("delete_selection")
+	if handled:
+		get_viewport().set_input_as_handled()
+
+func _has_no_modifiers(key_event: InputEventKey) -> bool:
+	return not (key_event.alt_pressed or key_event.ctrl_pressed or key_event.meta_pressed or key_event.shift_pressed)
+
+func _is_workflow_shortcut_blocked() -> bool:
+	if _ace_picker_popup != null and _ace_picker_popup.visible:
+		return true
+	if _ace_params_dialog != null and _ace_params_dialog.visible:
+		return true
+	if _variable_dialog != null and _variable_dialog.visible:
+		return true
+	var focus_owner: Control = get_viewport().gui_get_focus_owner()
+	if focus_owner == null:
+		return false
+	for focus_type: String in SHORTCUT_BLOCKING_FOCUS_TYPES:
+		if focus_owner.is_class(focus_type):
+			return true
+	return false
+
+func _handle_workflow_shortcut(action: String) -> bool:
+	match action:
+		"add_event":
+			_on_add_event_requested()
+			return true
+		"add_variable":
+			_on_add_variable_requested()
+			return true
+		"add_condition":
+			var condition_row: EventRowUI = _get_selected_event_row_for_shortcuts()
+			if condition_row == null:
+				return false
+			_on_row_add_condition_requested(condition_row)
+			return true
+		"add_action":
+			var action_row: EventRowUI = _get_selected_event_row_for_shortcuts()
+			if action_row == null:
+				return false
+			_on_row_add_action_requested(action_row)
+			return true
+		"delete_selection":
+			return _delete_current_selection()
+		_:
+			return false
+
+func _get_selected_event_row_for_shortcuts() -> EventRowUI:
+	if not (_selected_row is EventRowUI):
+		return null
+	var row: EventRowUI = _selected_row as EventRowUI
+	if row.event_row == null:
+		return null
+	return row
+
+func _delete_current_selection() -> bool:
+	match _selected_entry_kind:
+		"event":
+			var event_row: EventRowUI = _get_selected_event_row_for_shortcuts()
+			if event_row == null:
+				return false
+			_on_event_delete_requested(event_row)
+			return true
+		"condition":
+			var condition_row: EventRowUI = _get_selected_event_row_for_shortcuts()
+			if condition_row == null:
+				return false
+			if _selected_index < 0 or _selected_index >= condition_row.event_row.conditions.size():
+				return false
+			_on_condition_delete_requested(condition_row, _selected_index)
+			return true
+		"action":
+			var action_row: EventRowUI = _get_selected_event_row_for_shortcuts()
+			if action_row == null:
+				return false
+			if _selected_index < 0 or _selected_index >= action_row.event_row.actions.size():
+				return false
+			_on_action_delete_requested(action_row, _selected_index)
+			return true
+		"variable":
+			if not (_selected_row is VariableRowUI):
+				return false
+			var variable_row: VariableRowUI = _selected_row as VariableRowUI
+			_on_variable_delete_requested(variable_row)
+			return true
+		"group":
+			if not (_selected_row is GroupRowUI):
+				return false
+			var group_row: GroupRowUI = _selected_row as GroupRowUI
+			_on_group_delete_requested(group_row)
+			return true
+		_:
+			return false
 
 ## Called by the plugin to load a sheet into the editor.
 func setup(sheet: EventSheetResource = null) -> void:

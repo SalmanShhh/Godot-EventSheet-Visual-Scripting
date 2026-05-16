@@ -15,6 +15,20 @@ signal add_var_requested
 ## Emitted when the user requests a compile/preview.
 signal compile_requested
 
+const SHORTCUT_ADD_EVENT: String = "Ctrl+E Event"
+const SHORTCUT_ADD_VARIABLE: String = "Ctrl+Shift+V Variable"
+const SHORTCUT_ADD_CONDITION: String = "Ctrl+Shift+C Condition"
+const SHORTCUT_ADD_ACTION: String = "Ctrl+Shift+A Action"
+const SHORTCUT_DELETE_SELECTION: String = "Del Delete"
+const SHORTCUTS_HINT_SEGMENTS: PackedStringArray = [
+	SHORTCUT_ADD_EVENT,
+	SHORTCUT_ADD_VARIABLE,
+	SHORTCUT_ADD_CONDITION,
+	SHORTCUT_ADD_ACTION,
+	SHORTCUT_DELETE_SELECTION
+]
+const SHORTCUTS_HINT_COLOR: Color = Color(0.52, 0.61, 0.74)
+
 var _add_event_btn: Button = null
 var _add_var_btn: Button = null
 var _compile_btn: Button = null
@@ -22,6 +36,7 @@ var _status_label: Label = null
 var _doc_meta_label: Label = null
 var _selection_meta_label: Label = null
 var _sheet_name_label: Label = null
+var _shortcuts_hint_label: Label = null
 
 func _init() -> void:
 	_build_ui()
@@ -108,15 +123,22 @@ func _build_ui() -> void:
 
 	_add_event_btn = Button.new()
 	_add_event_btn.text = "+ Event"
-	_add_event_btn.tooltip_text = "Add a new event block to the sheet"
+	_add_event_btn.tooltip_text = "Add a new event block to the sheet (Ctrl+E)"
 	_add_event_btn.connect("pressed", func() -> void: add_event_requested.emit())
 	actions_line.add_child(_add_event_btn)
 
 	_add_var_btn = Button.new()
 	_add_var_btn.text = "+ Variable"
-	_add_var_btn.tooltip_text = "Add a new global variable to the sheet"
+	_add_var_btn.tooltip_text = "Add a new global variable to the sheet (Ctrl+Shift+V)"
 	_add_var_btn.connect("pressed", func() -> void: add_var_requested.emit())
 	actions_line.add_child(_add_var_btn)
+
+	_shortcuts_hint_label = Label.new()
+	_shortcuts_hint_label.text = shortcut_hint_text()
+	_shortcuts_hint_label.add_theme_color_override("font_color", SHORTCUTS_HINT_COLOR)
+	_shortcuts_hint_label.add_theme_font_size_override("font_size", 10)
+	_shortcuts_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	actions_line.add_child(_shortcuts_hint_label)
 
 	var spacer: Control = Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -133,6 +155,9 @@ func _build_ui() -> void:
 ## Called by the plugin when the toolbar is attached to an editor instance.
 func setup() -> void:
 	pass
+
+static func shortcut_hint_text() -> String:
+	return "Shortcuts: %s" % " | ".join(SHORTCUTS_HINT_SEGMENTS)
 
 static func format_document_meta(sheet: EventSheetResource) -> String:
 	if sheet == null:
@@ -169,6 +194,8 @@ func set_sheet_loaded(loaded: bool) -> void:
 		_add_var_btn.disabled = not loaded
 	if _compile_btn != null:
 		_compile_btn.disabled = not loaded
+	if _shortcuts_hint_label != null:
+		_shortcuts_hint_label.visible = loaded
 	if not loaded:
 		set_context(null, "none")
 		if _sheet_name_label != null:
