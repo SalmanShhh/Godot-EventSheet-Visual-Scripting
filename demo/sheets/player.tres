@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="EventSheetResource" load_steps=15 format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="1_event_sheet"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="2_event_row"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="3_ace_action"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="4_ace_condition"]
+[ext_resource type="Script" path="res://../addons/eventforge/resources/event_sheet.gd" id="1_event_sheet"]
+[ext_resource type="Script" path="res://../addons/eventforge/resources/event_row.gd" id="2_event_row"]
+[ext_resource type="Script" path="res://../addons/eventforge/resources/ace_action.gd" id="3_ace_action"]
+[ext_resource type="Script" path="res://../addons/eventforge/resources/ace_condition.gd" id="4_ace_condition"]
 
 [sub_resource type="Resource" id="ACEAction_ready_log"]
 script = ExtResource("3_ace_action")
