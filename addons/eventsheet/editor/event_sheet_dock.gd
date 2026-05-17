@@ -854,7 +854,9 @@ func _configure_context_menu(menu: PopupMenu) -> void:
     elif menu == _row_context_menu:
         var toggle_index: int = menu.get_item_index(ROW_MENU_TOGGLE_CONDITION_BLOCK)
         if toggle_index >= 0:
-            var context_event: EventRow = _context_row.source_resource as EventRow if _context_row != null and _context_row.source_resource is EventRow else null
+            var context_event: EventRow = null
+            if _context_row != null and _context_row.source_resource is EventRow:
+                context_event = _context_row.source_resource as EventRow
             var is_event_row: bool = context_event != null
             menu.set_item_disabled(toggle_index, not is_event_row)
             if is_event_row:
@@ -1201,9 +1203,17 @@ func _ace_entry_uses_variable(entry: Resource, var_name: String) -> bool:
     if entry == null:
         return false
     if entry is ACECondition:
-        return _dictionary_uses_variable((entry as ACECondition).params if not (entry as ACECondition).params.is_empty() else (entry as ACECondition).parameters, var_name, 0)
+        var condition_entry: ACECondition = entry as ACECondition
+        var condition_params: Dictionary = condition_entry.params
+        if condition_params.is_empty():
+            condition_params = condition_entry.parameters
+        return _dictionary_uses_variable(condition_params, var_name, 0)
     if entry is ACEAction:
-        return _dictionary_uses_variable((entry as ACEAction).params if not (entry as ACEAction).params.is_empty() else (entry as ACEAction).parameters, var_name, 0)
+        var action_entry: ACEAction = entry as ACEAction
+        var action_params: Dictionary = action_entry.params
+        if action_params.is_empty():
+            action_params = action_entry.parameters
+        return _dictionary_uses_variable(action_params, var_name, 0)
     return false
 
 func _dictionary_uses_variable(values: Dictionary, var_name: String, depth: int) -> bool:
