@@ -220,7 +220,7 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
             "property_hint": int(parameter_override.get("property_hint", PROPERTY_HINT_NONE)),
             "hint_string": str(parameter_override.get("hint_string", "")),
             "widget_hint": str(parameter_override.get("widget_hint", "")),
-            "options": _normalize_param_options(parameter_override.get("options", []))
+            "options": _normalize_options_to_key_label(parameter_override.get("options", []))
         })
     return output
 
@@ -295,7 +295,7 @@ func _string_override(overrides: Dictionary, key: String, default_value: String)
     var resolved: String = str(overrides.get(key, ""))
     return resolved if not resolved.is_empty() else default_value
 
-func _normalize_param_options(raw_options: Variant) -> Array:
+func _normalize_options_to_key_label(raw_options: Variant) -> Array:
     var output: Array = []
     if not (raw_options is Array):
         return output

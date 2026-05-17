@@ -13,21 +13,21 @@ func get_manager() -> Variant:
 func has_manager() -> bool:
 	return _manager != null
 
-func create_action(action_name: String) -> bool:
-	return bool(_call("create_action", [action_name], false))
+func create_action(action_name: String) -> void:
+	_call("create_action", [action_name], false)
 
-func add_do_method(target: Object, method_name: String, args: Array = []) -> bool:
+func add_do_method(target: Object, method_name: String, args: Array = []) -> void:
 	var payload: Array = [target, method_name]
 	payload.append_array(args)
-	return bool(_call("add_do_method", payload, false))
+	_call("add_do_method", payload, false)
 
-func add_undo_method(target: Object, method_name: String, args: Array = []) -> bool:
+func add_undo_method(target: Object, method_name: String, args: Array = []) -> void:
 	var payload: Array = [target, method_name]
 	payload.append_array(args)
-	return bool(_call("add_undo_method", payload, false))
+	_call("add_undo_method", payload, false)
 
-func commit_action() -> bool:
-	return bool(_call("commit_action", [], false))
+func commit_action() -> void:
+	_call("commit_action", [], false)
 
 func has_undo() -> bool:
 	return bool(_call("has_undo", [], false))
