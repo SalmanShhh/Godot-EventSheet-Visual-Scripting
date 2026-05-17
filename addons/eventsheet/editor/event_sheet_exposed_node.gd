@@ -76,8 +76,7 @@ func _get_property_list() -> Array[Dictionary]:
 			"type": int(entry.get("type", TYPE_STRING)),
 			"hint": int(entry.get("hint", PROPERTY_HINT_NONE)),
 			"hint_string": str(entry.get("hint_string", "")),
-			"usage": PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_EDITOR,
-			"class_name": str(entry.get("display_name", prop_key))
+			"usage": PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_EDITOR
 		})
 	return result
 

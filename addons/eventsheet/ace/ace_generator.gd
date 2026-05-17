@@ -237,10 +237,14 @@ func _icon_for_ace_type(ace_type: int) -> String:
 
 ## Returns true when a method ACE is eligible for editor parameter exposure.
 ## Conditions and actions with all-primitive parameters are exposable.
-## Expressions whose return type is non-primitive are not.
+## Expressions are only exposable when their return type is a primitive.
+## Triggers are never editor-exposed.
 func _method_is_exposable(ace_type: int, return_type: int, params: Array) -> bool:
     if ace_type == ACEDefinition.ACEType.TRIGGER:
         return false
+    if ace_type == ACEDefinition.ACEType.EXPRESSION:
+        if return_type not in [TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING]:
+            return false
     for param in params:
         if not (param is Dictionary):
             return false

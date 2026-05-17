@@ -88,7 +88,7 @@ func _on_confirmed() -> void:
 	var default_value: Variant = _parse_default(type_name, _default_edit.text)
 	variable_confirmed.emit(var_name, type_name, default_value, _scope)
 
-## Returns the name that was empty, so callers know validation failed.
+## Returns the trimmed text from the name field.
 func get_last_name_text() -> String:
 	if _name_edit == null:
 		return ""

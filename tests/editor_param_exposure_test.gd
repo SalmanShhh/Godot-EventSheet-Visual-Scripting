@@ -136,6 +136,18 @@ static func _test_ace_generator_exposure_inference() -> bool:
 	var take_dmg: ACEDefinition = registry.find_definition(provider_id, "method:take_damage")
 	passed = _check("void method with primitive param is editor_exposed", take_dmg.editor_exposed if take_dmg != null else false, true) and passed
 
+	# String-returning expression should also be editor_exposed
+	var status_text: ACEDefinition = registry.find_definition(provider_id, "method:get_status_label")
+	passed = _check("string-returning expression is editor_exposed", status_text.editor_exposed if status_text != null else false, true) and passed
+
+	# Falsy param default (0) must be preserved — not skipped — by the resolver
+	var store2 := EditorParamStore.new()
+	var resolver2 := ParamDefaultResolver.new()
+	resolver2.set_param_store(store2)
+	var zero_meta := {"id": "count", "type": TYPE_INT, "default_value": 0}
+	var resolved_zero: Variant = resolver2.resolve("P", "A", "count", zero_meta, null)
+	passed = _check("resolver preserves zero ACE default", resolved_zero, 0) and passed
+
 	sample.free()
 	return passed
 

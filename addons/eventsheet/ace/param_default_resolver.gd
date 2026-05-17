@@ -29,10 +29,9 @@ func resolve(provider_id: String, ace_id: String, param_id: String,
 	if _param_store != null and _param_store.has_param(provider_id, ace_id, param_id):
 		return _param_store.get_param(provider_id, ace_id, param_id)
 
-	# 3. ACE default from metadata.
-	var ace_default: Variant = param_meta.get("default_value", null)
-	if ace_default != null:
-		return ace_default
+	# 3. ACE default from metadata.  Use has() to preserve falsy defaults (0, false, "").
+	if param_meta.has("default_value"):
+		return param_meta["default_value"]
 
 	# 4. Type zero-value fallback.
 	return _zero_value(int(param_meta.get("type", TYPE_NIL)))
@@ -49,7 +48,8 @@ func resolve_all(definition: ACEDefinition, row_params: Dictionary) -> Dictionar
 		var param_id: String = str(param_dict.get("id", ""))
 		if param_id.is_empty():
 			continue
-		var row_val: Variant = row_params.get(param_id, null)
+		# Use null only as sentinel for "not present"; this preserves falsy row values.
+		var row_val: Variant = row_params[param_id] if row_params.has(param_id) else null
 		output[param_id] = resolve(definition.provider_id, definition.id, param_id, param_dict, row_val)
 	return output
 
