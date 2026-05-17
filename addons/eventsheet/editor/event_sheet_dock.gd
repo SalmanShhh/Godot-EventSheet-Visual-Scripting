@@ -266,7 +266,7 @@ func _gui_input(event: InputEvent) -> void:
         return
     if not _ace_picker.is_open():
         return
-    if _ace_picker.get_popup_rect().has_point(mouse_event.position):
+    if _ace_picker.get_popup_rect().has_point(get_global_mouse_position()):
         return
     _ace_picker.close()
 
@@ -279,7 +279,7 @@ func _on_open_requested() -> void:
     dialog.current_dir = _suggest_sheet_directory()
     dialog.file_selected.connect(func(path: String) -> void:
         _load_sheet_from_path(path)
-        dialog.queue_free()
+        dialog.call_deferred("queue_free")
     )
     dialog.canceled.connect(func() -> void: dialog.queue_free())
     add_child(dialog)
@@ -328,7 +328,7 @@ func _on_save_as_requested() -> void:
     dialog.current_path = _build_initial_save_path()
     dialog.file_selected.connect(func(path: String) -> void:
         _save_sheet_to_path(path)
-        dialog.queue_free()
+        dialog.call_deferred("queue_free")
     )
     dialog.canceled.connect(func() -> void: dialog.queue_free())
     add_child(dialog)
