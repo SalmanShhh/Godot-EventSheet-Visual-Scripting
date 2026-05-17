@@ -9,6 +9,7 @@ signal ace_preview_requested(source_label: String, definitions: Array[ACEDefinit
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
 const FONT_SIZE := EventSheetPalette.FONT_SIZE
+const CONDITION_KEYWORD_METADATA := {"lane": "condition", "hoverable": false}
 
 var _renderer: EventRowRenderer = EventRowRenderer.new()
 var _layout_cache: RowLayoutCache = RowLayoutCache.new()
@@ -370,23 +371,23 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
     var spans: Array[SemanticSpan] = []
     if event_row.trigger != null:
-        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, {"lane": "condition", "hoverable": false}))
+        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
         spans.append(_make_span(_format_condition_descriptor(event_row.trigger), SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "trigger", "ace_index": 0}))
     elif not event_row.trigger_id.is_empty():
-        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, {"lane": "condition", "hoverable": false}))
+        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
         spans.append(_make_span(event_row.trigger_id, SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "trigger", "ace_index": 0}))
     if not event_row.conditions.is_empty():
         if not spans.is_empty():
-            spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, {"lane": "condition", "hoverable": false}))
+            spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
         for condition_index in range(event_row.conditions.size()):
             var condition: ACECondition = event_row.conditions[condition_index]
             if condition == null:
                 continue
             if condition_index > 0:
-                spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, {"lane": "condition", "hoverable": false}))
+                spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
             spans.append(_make_span(_format_condition_descriptor(condition), SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "condition", "ace_index": condition_index}))
     if spans.is_empty():
-        spans.append(_make_span("when", SemanticSpan.SpanType.KEYWORD, {"lane": "condition", "hoverable": false}))
+        spans.append(_make_span("when", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
         spans.append(_make_span("Always", SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "condition", "ace_index": -1}))
     if not event_row.actions.is_empty():
         spans.append(_make_span("→", SemanticSpan.SpanType.OPERATOR, {"hoverable": false, "lane": "action"}))

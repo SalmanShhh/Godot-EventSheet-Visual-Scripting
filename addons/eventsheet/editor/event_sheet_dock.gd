@@ -474,7 +474,7 @@ func _is_definition_allowed_for_mode(definition: ACEDefinition, mode: String, si
     if definition == null:
         return false
     if signals_only:
-        return definition.ace_type == ACEDefinition.ACEType.TRIGGER and definition.category.to_lower().find("signal") != -1
+        return definition.ace_type == ACEDefinition.ACEType.TRIGGER and definition.category.to_lower().contains("signal")
     match mode:
         "append_condition":
             return definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]
@@ -546,7 +546,7 @@ func _create_param_field(param_dict: Dictionary) -> Control:
     var default_value: Variant = param_dict.get("default_value", "")
     if field_type == TYPE_BOOL:
         var check: CheckBox = CheckBox.new()
-        check.button_pressed = str(default_value).to_lower() in ["true", "1"]
+        check.button_pressed = _parse_bool_value(default_value)
         return check
     if field_type in [TYPE_INT, TYPE_FLOAT]:
         var spin: SpinBox = SpinBox.new()
@@ -681,6 +681,8 @@ func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData) 
     if source_index < 0 or target_index < 0:
         return
     source_container.remove_at(source_index)
+    # This branch only applies when both locations reference the same underlying Array instance.
+    # Removing the source first shifts trailing indices down, so the target insertion index must be decremented.
     if source_container == target_container and source_index < target_index:
         target_index -= 1
     target_container.insert(target_index, source_resource)
@@ -804,7 +806,7 @@ func _parse_variable_default(type_name: String, raw: String) -> Variant:
         "float":
             return float(value) if not value.is_empty() else 0.0
         "bool":
-            return value.to_lower() in ["true", "1", "yes"]
+            return _parse_bool_value(value)
         "String":
             return value
         _:
@@ -822,6 +824,9 @@ func _type_from_name(type_name: String) -> int:
             return TYPE_STRING
         _:
             return TYPE_NIL
+
+func _parse_bool_value(value: Variant) -> bool:
+    return str(value).to_lower() in ["true", "1", "yes"]
 
 func _refresh_variable_panel() -> void:
     if _global_var_list == null or _local_var_list == null:
