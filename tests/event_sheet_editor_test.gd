@@ -271,7 +271,7 @@ static func run() -> bool:
         dock.setup(EventSheetResource.new())
         dock._apply_ace_definition(new_condition_definition, {}, {"mode": "new_condition_event", "selected_resource": null})
         all_passed = _check("new condition mode creates event row", dock.get_current_sheet().events.size(), 1) and all_passed
-        all_passed = _check("new condition mode stores condition on new event", ((dock.get_current_sheet().events[0] as EventRow).conditions.size()) + (1 if (dock.get_current_sheet().events[0] as EventRow).trigger != null else 0) > 0, true) and all_passed
+        all_passed = _check("new condition mode creates event with condition or trigger", ((dock.get_current_sheet().events[0] as EventRow).conditions.size()) + (1 if (dock.get_current_sheet().events[0] as EventRow).trigger != null else 0) > 0, true) and all_passed
 
     # Undo/redo workflow.
     var undo_before: int = ((dock.get_current_sheet().events[0] as EventRow).actions.size())

@@ -2,7 +2,7 @@
 class_name EventSheetDock
 extends Control
 
-const EVENT_SHEET_FILTERS: Array[String] = ["*.tres ; EventSheetResource", "*.res ; EventSheetResource"]
+const EVENT_SHEET_FILTERS := PackedStringArray(["*.tres, *.res ; EventSheetResource"])
 
 var _toolbar: HBoxContainer = null
 var _status_label: Label = null
@@ -266,7 +266,7 @@ func _gui_input(event: InputEvent) -> void:
         return
     if not _ace_picker.is_open():
         return
-    if _ace_picker.get_popup_rect().has_point(get_global_mouse_position()):
+    if _ace_picker.get_popup_rect().has_point(mouse_event.position):
         return
     _ace_picker.close()
 
@@ -275,7 +275,7 @@ func _on_open_requested() -> void:
     dialog.title = "Open EventSheet"
     dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
     dialog.access = FileDialog.ACCESS_RESOURCES
-    dialog.filters = PackedStringArray(EVENT_SHEET_FILTERS)
+    dialog.filters = EVENT_SHEET_FILTERS
     dialog.current_dir = _suggest_sheet_directory()
     dialog.file_selected.connect(func(path: String) -> void:
         _load_sheet_from_path(path)
@@ -324,7 +324,7 @@ func _on_save_as_requested() -> void:
     dialog.title = "Save EventSheet As"
     dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
     dialog.access = FileDialog.ACCESS_RESOURCES
-    dialog.filters = PackedStringArray(EVENT_SHEET_FILTERS)
+    dialog.filters = EVENT_SHEET_FILTERS
     dialog.current_path = _build_initial_save_path()
     dialog.file_selected.connect(func(path: String) -> void:
         _save_sheet_to_path(path)
