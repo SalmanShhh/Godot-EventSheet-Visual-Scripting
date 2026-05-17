@@ -2,7 +2,7 @@
 class_name EventSheetDock
 extends Control
 
-const EVENT_SHEET_FILTERS: Array[String] = ["*.tres ; EventSheetResource", "*.res ; EventSheetResource"]
+const EVENT_SHEET_FILTERS: PackedStringArray = PackedStringArray(["*.tres ; EventSheetResource", "*.res ; EventSheetResource"])
 const VARIABLE_USAGE_MAX_DEPTH := 8
 const CONDITION_MENU_EDIT := 1
 const CONDITION_MENU_ADD := 2

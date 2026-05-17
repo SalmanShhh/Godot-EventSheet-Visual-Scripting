@@ -162,6 +162,7 @@ static func run() -> bool:
     all_passed = _check("or block adds badge before each condition", _count_span_text(or_row_data, "OR"), 2) and all_passed
     all_passed = _check("negated condition adds red x badge text", _count_span_text(or_row_data, "✕"), 1) and all_passed
     all_passed = _check("or badge appears before first condition span", _find_span_index_by_text(or_row_data, "OR"), _find_span_index_by_kind(or_row_data, "condition") - 1) and all_passed
+    all_passed = _check("or badge appears before second condition span", _find_last_span_index_by_text(or_row_data, "OR"), _find_last_span_index_by_kind(or_row_data, "condition") - 1) and all_passed
     dock._context_row = or_row_data
     dock._context_hit = {"span_metadata": {"kind": "condition", "ace_index": 1}, "span_index": _find_last_span_index_by_kind(or_row_data, "condition")}
     dock._on_condition_context_menu_id_pressed(4)
@@ -428,6 +429,15 @@ static func _find_span_index_by_text(row_data: EventRowData, expected_text: Stri
     if row_data == null:
         return -1
     for index in range(row_data.spans.size()):
+        var span: SemanticSpan = row_data.spans[index]
+        if span != null and span.text == expected_text:
+            return index
+    return -1
+
+static func _find_last_span_index_by_text(row_data: EventRowData, expected_text: String) -> int:
+    if row_data == null:
+        return -1
+    for index in range(row_data.spans.size() - 1, -1, -1):
         var span: SemanticSpan = row_data.spans[index]
         if span != null and span.text == expected_text:
             return index

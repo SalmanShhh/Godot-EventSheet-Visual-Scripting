@@ -427,8 +427,8 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
             var condition: ACECondition = event_row.conditions[condition_index]
             if condition == null:
                 continue
-            if condition_index > 0 and event_row.condition_mode != EventRow.ConditionMode.OR:
-                spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
+            if condition_index > 0:
+                spans.append(_make_span("or" if event_row.condition_mode == EventRow.ConditionMode.OR else "and", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
             _append_condition_prefix_spans(spans, event_row, condition, condition_index)
             spans.append(_make_span(_format_condition_descriptor(condition), SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "condition", "ace_index": condition_index}))
     if spans.is_empty():
