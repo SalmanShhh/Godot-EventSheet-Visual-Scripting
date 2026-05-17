@@ -3,10 +3,12 @@ class_name EventSheetViewport
 extends Control
 
 signal selection_changed(row_data: EventRowData)
-signal row_drop_requested(source_row: EventRowData, target_row: EventRowData)
+signal row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String)
 signal ace_preview_requested(source_label: String, definitions: Array[ACEDefinition])
 signal ace_picker_requested(row_data: EventRowData, lane: String)
 signal span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String)
+signal ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary)
+signal context_menu_requested(row_data: EventRowData, hit: Dictionary, global_position: Vector2)
 
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
@@ -21,6 +23,8 @@ var _root_rows: Array[EventRowData] = []
 var _flat_rows: Array[Dictionary] = []
 var _selected_row_index: int = -1
 var _selected_span_index: int = -1
+var _selected_row_uids: Dictionary = {}
+var _selected_span_indices: Dictionary = {}
 var _hovered_row_index: int = -1
 var _hovered_span_index: int = -1
 var _editing_row_index: int = -1
@@ -29,6 +33,7 @@ var _editing_buffer: String = ""
 var _editing_caret: int = 0
 var _drag_row_index: int = -1
 var _drag_target_index: int = -1
+var _drag_target_mode: String = "before"
 var _last_scroll: int = -1
 var _fold_state: Dictionary = {}
 var _debug_rows: Dictionary = {}
@@ -107,7 +112,9 @@ func get_editor_state_snapshot() -> Dictionary:
         "focused_lane": _focused_lane,
         "selection_anchor_index": _selection_anchor_index,
         "breakpoint_row_count": _breakpoint_rows.size(),
-        "disabled_row_count": _row_disabled_state.size()
+        "disabled_row_count": _row_disabled_state.size(),
+        "selected_row_count": _selected_row_uids.size(),
+        "selected_span_count": _get_selected_span_count()
     }
 
 func get_row_layout_for_test(row_index: int, width: float = -1.0) -> Dictionary:
@@ -176,40 +183,51 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
     _set_hover_state(int(hit.get("row_index", -1)), int(hit.get("span_index", -1)))
     if _drag_row_index >= 0:
         _drag_target_index = int(hit.get("row_index", -1))
+        _drag_target_mode = _resolve_drop_mode(hit, event.position)
         queue_redraw()
 
 func _handle_mouse_button(event: InputEventMouseButton) -> void:
-    if event.button_index != MOUSE_BUTTON_LEFT:
-        return
     var hit: Dictionary = _hit_test(event.position)
     var row_index: int = int(hit.get("row_index", -1))
     var span_index: int = int(hit.get("span_index", -1))
+    if event.button_index == MOUSE_BUTTON_RIGHT:
+        if not event.pressed:
+            return
+        grab_focus()
+        if row_index >= 0:
+            _select_from_click(row_index, span_index, false)
+            var row_data: EventRowData = _row_at(row_index)
+            if row_data != null:
+                context_menu_requested.emit(row_data, hit.duplicate(true), get_global_mouse_position())
+                accept_event()
+        return
+    if event.button_index != MOUSE_BUTTON_LEFT:
+        return
     if event.pressed:
         grab_focus()
-        if bool(hit.get("gutter", false)):
-            _toggle_breakpoint(row_index)
-            _select_row(row_index, span_index)
-            return
-        _select_row(row_index, span_index)
         if bool(hit.get("fold", false)):
+            _select_from_click(row_index, span_index, false)
             _toggle_row_fold(row_index)
             return
-        if _maybe_request_ace_picker(hit, row_index):
-            accept_event()
-            return
+        _select_from_click(row_index, span_index, event.ctrl_pressed or event.meta_pressed)
         if event.double_click:
+            if _maybe_request_ace_edit(hit, row_index):
+                accept_event()
+                return
             _begin_edit(row_index, span_index)
             return
         _drag_row_index = row_index
         _drag_target_index = -1
+        _drag_target_mode = "before"
         return
     if _drag_row_index >= 0 and _drag_target_index >= 0 and _drag_target_index != _drag_row_index:
         var source_row: EventRowData = _row_at(_drag_row_index)
         var target_row: EventRowData = _row_at(_drag_target_index)
         if source_row != null and target_row != null:
-            row_drop_requested.emit(source_row, target_row)
+            row_drop_requested.emit(source_row, target_row, _drag_target_mode)
     _drag_row_index = -1
     _drag_target_index = -1
+    _drag_target_mode = "before"
     queue_redraw()
 
 func _handle_key(event: InputEventKey) -> void:
@@ -297,7 +315,7 @@ func _refresh_rows() -> void:
         var row_data_state: EventRowData = _flat_rows[index].get("row")
         if row_data_state == null:
             continue
-        row_data_state.selected = index == _selected_row_index
+        row_data_state.selected = _selected_row_uids.has(row_data_state.row_uid)
         row_data_state.hovered = index == _hovered_row_index
     custom_minimum_size = Vector2(640.0, max(float(_flat_rows.size() * ROW_HEIGHT), 240.0))
     _layout_cache.clear()
@@ -459,7 +477,13 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         x += span.rect.size.x + EventSheetPalette.SPAN_GAP
     var drag_rect := Rect2()
     if _drag_row_index >= 0 and _drag_target_index == index:
-        drag_rect = Rect2(0.0, row_rect.position.y - 1.0, width, 2.0)
+        match _drag_target_mode:
+            "after":
+                drag_rect = Rect2(0.0, row_rect.end.y - 1.0, width, 2.0)
+            "inside":
+                drag_rect = row_rect.grow(-2.0)
+            _:
+                drag_rect = Rect2(0.0, row_rect.position.y - 1.0, width, 2.0)
     var layout := {
         "row_rect": row_rect,
         "gutter_rect": gutter_rect,
@@ -477,7 +501,10 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         "disabled": row_data.disabled,
         "editing_span_index": _editing_span_index if index == _editing_row_index else -1,
         "editing_buffer": _editing_buffer if index == _editing_row_index else "",
-        "editing_caret": _editing_caret if index == _editing_row_index else -1
+        "editing_caret": _editing_caret if index == _editing_row_index else -1,
+        "selected_span_indices": _selected_span_indices.get(row_data.row_uid, []).duplicate(),
+        "hovered_span_index": _hovered_span_index if index == _hovered_row_index else -1,
+        "drag_mode": _drag_target_mode if _drag_target_index == index else ""
     }
     _layout_cache.store(key, layout)
     return layout
@@ -492,6 +519,8 @@ func _draw_empty_state(width: float) -> void:
 
 func _select_row(row_index: int, span_index: int = -1) -> void:
     if _flat_rows.is_empty():
+        _selected_row_uids.clear()
+        _selected_span_indices.clear()
         _selected_row_index = -1
         _selected_span_index = -1
         queue_redraw()
@@ -500,15 +529,86 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
     _selected_span_index = span_index
     _selection_anchor_index = _selected_row_index
     var selected_row: EventRowData = _row_at(_selected_row_index)
+    _selected_row_uids.clear()
+    _selected_span_indices.clear()
     if selected_row != null:
+        _selected_row_uids[selected_row.row_uid] = true
+        if span_index >= 0:
+            _selected_span_indices[selected_row.row_uid] = [span_index]
         _focused_lane = _resolve_lane_for_row(selected_row, span_index)
     for index in range(_flat_rows.size()):
         var row_data: EventRowData = _flat_rows[index].get("row")
         if row_data == null:
             continue
-        row_data.selected = index == _selected_row_index
+        row_data.selected = _selected_row_uids.has(row_data.row_uid)
     selection_changed.emit(selected_row)
     queue_redraw()
+
+func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
+    if row_index < 0:
+        if not toggle:
+            _clear_selection()
+        return
+    if not toggle:
+        _select_row(row_index, span_index)
+        return
+    var row_data: EventRowData = _row_at(row_index)
+    if row_data == null:
+        return
+    var row_uid: String = row_data.row_uid
+    var changed: bool = false
+    if span_index >= 0:
+        var indices: Array = _selected_span_indices.get(row_uid, []).duplicate()
+        if indices.has(span_index):
+            indices.erase(span_index)
+        else:
+            indices.append(span_index)
+            changed = true
+        if indices.is_empty():
+            _selected_span_indices.erase(row_uid)
+            if not _selected_row_uids.has(row_uid):
+                _selected_row_index = -1
+                _selected_span_index = -1
+        else:
+            _selected_span_indices[row_uid] = indices
+            _selected_row_uids[row_uid] = true
+            _selected_row_index = row_index
+            _selected_span_index = span_index
+            changed = true
+    else:
+        if _selected_row_uids.has(row_uid) and not _selected_span_indices.has(row_uid):
+            _selected_row_uids.erase(row_uid)
+            if _selected_row_index == row_index:
+                _selected_row_index = -1
+                _selected_span_index = -1
+        else:
+            _selected_row_uids[row_uid] = true
+            _selected_row_index = row_index
+            _selected_span_index = -1
+            changed = true
+    if changed:
+        _selection_anchor_index = row_index
+        _focused_lane = _resolve_lane_for_row(row_data, span_index)
+    _sync_row_selection_flags()
+    selection_changed.emit(_row_at(_selected_row_index))
+    queue_redraw()
+
+func _clear_selection() -> void:
+    _selected_row_uids.clear()
+    _selected_span_indices.clear()
+    _selected_row_index = -1
+    _selected_span_index = -1
+    _selection_anchor_index = -1
+    _sync_row_selection_flags()
+    selection_changed.emit(null)
+    queue_redraw()
+
+func _sync_row_selection_flags() -> void:
+    for entry in _flat_rows:
+        var row_data: EventRowData = entry.get("row")
+        if row_data == null:
+            continue
+        row_data.selected = _selected_row_uids.has(row_data.row_uid)
 
 func _set_hover_state(row_index: int, span_index: int) -> void:
     _hovered_row_index = row_index
@@ -619,6 +719,7 @@ func _hit_test(position: Vector2) -> Dictionary:
         if span != null and span.hoverable and span.rect.has_point(position):
             result["span_index"] = span_index
             result["lane"] = _resolve_span_lane(span)
+            result["span_metadata"] = span.metadata if span.metadata is Dictionary else {}
             return result
     var divider_x: float = float(layout.get("lane_divider_x", -1.0))
     if divider_x > 0.0:
@@ -628,9 +729,7 @@ func _hit_test(position: Vector2) -> Dictionary:
         result["gutter"] = true
     return result
 
-## Opens the lane-appropriate ACE picker for event row clicks and returns true
-## when the click should not continue into drag/edit handling.
-func _maybe_request_ace_picker(hit: Dictionary, row_index: int) -> bool:
+func _maybe_request_ace_edit(hit: Dictionary, row_index: int) -> bool:
     var row_data: EventRowData = _row_at(row_index)
     if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
         return false
@@ -638,21 +737,29 @@ func _maybe_request_ace_picker(hit: Dictionary, row_index: int) -> bool:
     if span_index >= 0 and span_index < row_data.spans.size():
         var span: SemanticSpan = row_data.spans[span_index]
         var metadata: Dictionary = span.metadata if span != null and span.metadata is Dictionary else {}
-        if bool(metadata.get("editable", false)):
-            return false
         var kind: String = str(metadata.get("kind", ""))
-        if kind in ["condition", "trigger"]:
-            ace_picker_requested.emit(row_data, "condition")
+        if kind in ["condition", "trigger", "action"]:
+            ace_edit_requested.emit(row_data, span_index, metadata.duplicate(true))
             return true
-        if kind == "action":
-            ace_picker_requested.emit(row_data, "action")
-            return true
-        return false
-    var lane: String = str(hit.get("lane", ""))
-    if lane in ["condition", "action"]:
-        ace_picker_requested.emit(row_data, lane)
-        return true
     return false
+
+func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
+    var row_index: int = int(hit.get("row_index", -1))
+    var row_data: EventRowData = _row_at(row_index)
+    if row_data == null:
+        return "before"
+    var row_top: float = float(row_index * ROW_HEIGHT)
+    var relative_y: float = clampf(position.y - row_top, 0.0, float(ROW_HEIGHT))
+    if row_data.row_type in [EventRowData.RowType.EVENT, EventRowData.RowType.GROUP] and relative_y >= float(ROW_HEIGHT) * 0.33 and relative_y <= float(ROW_HEIGHT) * 0.67:
+        return "inside"
+    return "after" if relative_y > float(ROW_HEIGHT) * 0.5 else "before"
+
+func _get_selected_span_count() -> int:
+    var total: int = 0
+    for indices in _selected_span_indices.values():
+        if indices is Array:
+            total += (indices as Array).size()
+    return total
 
 func _row_at(index: int) -> EventRowData:
     if index < 0 or index >= _flat_rows.size():

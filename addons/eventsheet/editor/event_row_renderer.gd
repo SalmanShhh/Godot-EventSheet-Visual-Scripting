@@ -31,6 +31,8 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     var editing_span_index: int = int(layout.get("editing_span_index", -1))
     var editing_buffer: String = str(layout.get("editing_buffer", ""))
     var editing_caret: int = int(layout.get("editing_caret", -1))
+    var selected_span_indices: Array = layout.get("selected_span_indices", [])
+    var hovered_span_index: int = int(layout.get("hovered_span_index", -1))
     var line_number: int = int(layout.get("line_number", 0))
     var breakpoint_enabled: bool = bool(layout.get("breakpoint_enabled", false))
     var disabled: bool = bool(layout.get("disabled", false))
@@ -50,7 +52,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
         control.draw_rect(row_rect, EventSheetPalette.COLOR_HOVER, true)
     _draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
     _draw_icon(control, icon_rect, row_data)
-    _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret)
+    _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index)
     if drag_rect.size != Vector2.ZERO:
         control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
     if disabled:
@@ -123,11 +125,19 @@ func _draw_icon(control: Control, icon_rect: Rect2, row_data: EventRowData) -> v
             color = TEXT_MUTED
     control.draw_rect(icon_rect, color, true)
 
-func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size: int, editing_span_index: int, editing_buffer: String, editing_caret: int) -> void:
+func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size: int, editing_span_index: int, editing_buffer: String, editing_caret: int, selected_span_indices: Array, hovered_span_index: int) -> void:
     for span_index: int in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null:
             continue
+        if selected_span_indices.has(span_index):
+            var selected_bg: Color = EventSheetPalette.COLOR_SELECTION
+            selected_bg.a = 0.72
+            control.draw_rect(span.rect.grow(2.0), selected_bg, true)
+        elif span_index == hovered_span_index:
+            var hover_bg: Color = EventSheetPalette.COLOR_HOVER
+            hover_bg.a = 0.6
+            control.draw_rect(span.rect.grow(1.0), hover_bg, true)
         var color: Color = _get_span_color(span.type)
         var draw_text: String = editing_buffer if span_index == editing_span_index else span.text
         var baseline_y: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) + (font_size * FONT_BASELINE_OFFSET_RATIO)

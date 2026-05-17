@@ -5,16 +5,18 @@
 class_name VariableDialog
 extends RefCounted
 
-## Emitted when the user confirms variable creation.
+## Emitted when the user confirms variable creation or editing.
 ## scope is "global" or "local".
-signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String)
+signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary)
 
 var _dialog: ConfirmationDialog = null
 var _scope_label: Label = null
 var _name_edit: LineEdit = null
 var _type_option: OptionButton = null
 var _default_edit: LineEdit = null
+var _type_help: Label = null
 var _scope: String = "global"
+var _context: Dictionary = {}
 
 ## Initialise and attach the dialog to parent_node.
 ## Must be called before open().
@@ -73,16 +75,42 @@ func init_dialog(parent_node: Node) -> void:
 	default_row.add_child(_default_edit)
 	form.add_child(default_row)
 
+	_type_help = Label.new()
+	_type_help.visible = false
+	_type_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
+	form.add_child(_type_help)
+
 ## Open the dialog for the given scope ("global" or "local").
 func open(scope: String) -> void:
+	open_for_edit(scope, {}, "", "int", "", false, "Create Variable")
+
+func open_for_edit(
+	scope: String,
+	context: Dictionary = {},
+	name: String = "",
+	type_name: String = "int",
+	default_value: Variant = "",
+	lock_type: bool = false,
+	title: String = "Edit Variable"
+) -> void:
 	if _dialog == null:
 		push_error("VariableDialog.open() called before init_dialog().")
 		return
 	_scope = scope
+	_context = context.duplicate(true)
 	_scope_label.text = "Scope: %s" % scope.capitalize()
-	_name_edit.text = ""
-	_default_edit.text = ""
-	_type_option.selected = 0
+	_dialog.title = title
+	_name_edit.text = name
+	_default_edit.text = str(default_value)
+	var selected_index: int = 0
+	for index: int in range(_type_option.item_count):
+		if _type_option.get_item_text(index) == type_name:
+			selected_index = index
+			break
+	_type_option.select(selected_index)
+	_type_option.disabled = lock_type
+	_type_help.visible = lock_type
+	_type_help.text = "Type is locked because this variable is already in use."
 	_dialog.popup_centered(Vector2i(440, 220))
 
 func _close() -> void:
@@ -95,7 +123,7 @@ func _on_confirmed() -> void:
 		return
 	var type_name: String = _type_option.get_item_text(_type_option.selected)
 	var default_value: Variant = _parse_default(type_name, _default_edit.text)
-	variable_confirmed.emit(var_name, type_name, default_value, _scope)
+	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true))
 
 ## Returns the trimmed text from the name field.
 func get_last_name_text() -> String:

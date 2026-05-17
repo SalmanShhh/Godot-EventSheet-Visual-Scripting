@@ -60,9 +60,10 @@ func set_registry(registry: EventSheetACERegistry) -> void:
 
 ## Open the picker for the given mode.
 ## mode: "new_event" | "new_condition_event" | "append_condition" | "append_action"
+##       | "replace_condition" | "replace_action" | "replace_trigger"
 ## signals_only: restrict results to signal triggers
 ## selected_resource: the currently selected EventRow (for context passing)
-func open(mode: String, signals_only: bool, selected_resource: Resource) -> void:
+func open(mode: String, signals_only: bool, selected_resource: Resource, extra_context: Dictionary = {}) -> void:
 	if _window == null:
 		push_error("ACEPickerDialog.open() called before init_dialog().")
 		return
@@ -71,6 +72,8 @@ func open(mode: String, signals_only: bool, selected_resource: Resource) -> void
 		"signals_only": signals_only,
 		"selected_resource": selected_resource
 	}
+	for key in extra_context.keys():
+		_context[key] = extra_context[key]
 	_search.text = ""
 	_hint.text = _build_hint_text(mode, signals_only)
 	_refresh_tree()
@@ -88,6 +91,12 @@ func _build_hint_text(mode: String, signals_only: bool) -> String:
 			return "Select a condition or trigger ACE to append to the selected event."
 		"append_action":
 			return "Select an action ACE to append to the selected event."
+		"replace_condition":
+			return "Select a condition ACE to replace the current condition."
+		"replace_trigger":
+			return "Select a trigger ACE to replace the current trigger."
+		"replace_action":
+			return "Select an action ACE to replace the current action."
 		_:
 			return "Select an ACE to create a new event."
 
@@ -134,6 +143,12 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 		"append_condition":
 			return definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]
 		"append_action":
+			return definition.ace_type == ACEDefinition.ACEType.ACTION
+		"replace_condition":
+			return definition.ace_type == ACEDefinition.ACEType.CONDITION
+		"replace_trigger":
+			return definition.ace_type == ACEDefinition.ACEType.TRIGGER
+		"replace_action":
 			return definition.ace_type == ACEDefinition.ACEType.ACTION
 		_:
 			return definition.ace_type in [ACEDefinition.ACEType.TRIGGER, ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.ACTION]

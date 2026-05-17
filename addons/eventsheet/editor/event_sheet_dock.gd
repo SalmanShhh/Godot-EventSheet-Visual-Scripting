@@ -30,6 +30,13 @@ var _undo_redo_adapter: EventSheetUndoRedoAdapter = EventSheetUndoRedoAdapter.ne
 var _ace_picker: ACEPickerDialog = ACEPickerDialog.new()
 var _ace_params: ACEParamsDialog = ACEParamsDialog.new()
 var _variable_dlg: VariableDialog = VariableDialog.new()
+var _condition_context_menu: PopupMenu = null
+var _action_context_menu: PopupMenu = null
+var _row_context_menu: PopupMenu = null
+var _context_row: EventRowData = null
+var _context_hit: Dictionary = {}
+var _global_variable_entries: Array[Dictionary] = []
+var _local_variable_entries: Array[Dictionary] = []
 
 func _init() -> void:
     if not _undo_redo_adapter.has_manager():
@@ -165,6 +172,8 @@ func _build_ui() -> void:
     _viewport.ace_preview_requested.connect(_on_ace_preview_requested)
     _viewport.ace_picker_requested.connect(_on_viewport_ace_picker_requested)
     _viewport.span_edit_requested.connect(_on_viewport_span_edit_requested)
+    _viewport.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
+    _viewport.context_menu_requested.connect(_on_viewport_context_menu_requested)
     _viewport.set_external_span_edit_handler_enabled(true)
 
     _side_panel = VBoxContainer.new()
@@ -192,6 +201,7 @@ func _build_ui() -> void:
     _global_var_list.name = "GlobalVariableList"
     _global_var_list.custom_minimum_size = Vector2(180.0, 100.0)
     _global_var_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _global_var_list.item_activated.connect(_on_global_variable_activated)
     _side_panel.add_child(_global_var_list)
 
     var locals_label: Label = Label.new()
@@ -202,6 +212,7 @@ func _build_ui() -> void:
     _local_var_list.name = "LocalVariableList"
     _local_var_list.custom_minimum_size = Vector2(180.0, 100.0)
     _local_var_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _local_var_list.item_activated.connect(_on_local_variable_activated)
     _side_panel.add_child(_local_var_list)
 
     _status_label = Label.new()
@@ -213,6 +224,41 @@ func _build_ui() -> void:
     add_child(_exposed_node)
     _exposed_node.setup(_ace_registry, _editor_param_store, _current_sheet, _param_resolver)
     _exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
+    _build_context_menus()
+
+func _build_context_menus() -> void:
+    if _condition_context_menu != null:
+        return
+    _condition_context_menu = PopupMenu.new()
+    _condition_context_menu.add_item("Edit Condition", 1)
+    _condition_context_menu.add_item("Add Condition", 2)
+    _condition_context_menu.add_item("Replace Condition", 3)
+    _condition_context_menu.add_separator()
+    _condition_context_menu.add_item("Delete Condition", 4)
+    _condition_context_menu.id_pressed.connect(_on_condition_context_menu_id_pressed)
+    add_child(_condition_context_menu)
+
+    _action_context_menu = PopupMenu.new()
+    _action_context_menu.add_item("Edit Action", 1)
+    _action_context_menu.add_item("Add Action", 2)
+    _action_context_menu.add_item("Replace Action", 3)
+    _action_context_menu.add_separator()
+    _action_context_menu.add_item("Delete Action", 4)
+    _action_context_menu.id_pressed.connect(_on_action_context_menu_id_pressed)
+    add_child(_action_context_menu)
+
+    _row_context_menu = PopupMenu.new()
+    _row_context_menu.add_item("Add Sub-Event", 1)
+    _row_context_menu.add_item("Add Event Below", 2)
+    _row_context_menu.add_item("Add Group Below", 3)
+    _row_context_menu.add_item("Add Comment Below", 4)
+    _row_context_menu.add_separator()
+    _row_context_menu.add_item("Copy", 5)
+    _row_context_menu.add_item("Paste", 6)
+    _row_context_menu.add_separator()
+    _row_context_menu.add_item("Delete Row", 7)
+    _row_context_menu.id_pressed.connect(_on_row_context_menu_id_pressed)
+    add_child(_row_context_menu)
 
 func _add_toolbar_button(text: String, callable: Callable) -> void:
     var button: Button = Button.new()
@@ -266,7 +312,7 @@ func _gui_input(event: InputEvent) -> void:
         return
     if not _ace_picker.is_open():
         return
-    if _ace_picker.get_popup_rect().has_point(mouse_event.position):
+    if _ace_picker.get_popup_rect().has_point(get_global_mouse_position()):
         return
     _ace_picker.close()
 
@@ -469,7 +515,8 @@ func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> 
     if definition.parameters.is_empty():
         _apply_ace_definition(definition, {}, context)
         return
-    _ace_params.open(definition, context)
+    var initial_values: Dictionary = context.get("existing_params", {})
+    _ace_params.open_with_values(definition, context, initial_values)
 
 func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> void:
     if row_data == null or not (row_data.source_resource is EventRow):
@@ -479,6 +526,22 @@ func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> 
             _ace_picker.open("append_action", false, row_data.source_resource)
         _:
             _ace_picker.open("append_condition", false, row_data.source_resource)
+
+func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary) -> void:
+    if row_data == null or not (row_data.source_resource is EventRow):
+        return
+    var event_row: EventRow = row_data.source_resource as EventRow
+    var edit_context: Dictionary = _build_ace_edit_context(event_row, span_index, metadata)
+    if edit_context.is_empty():
+        return
+    var definition: ACEDefinition = edit_context.get("definition", null)
+    if definition == null:
+        _set_status("ACE metadata could not be resolved for editing.", true)
+        return
+    if definition.parameters.is_empty():
+        _ace_picker.open(str(edit_context.get("mode", "")), false, event_row, edit_context)
+        return
+    _ace_params.open_with_values(definition, edit_context, edit_context.get("existing_params", {}))
 
 # ── ACE params dialog signal handler ────────────────────────────────────────
 
@@ -518,6 +581,25 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
                     (selected_resource as EventRow).actions.append(action_entry)
                     message["text"] = "Added action."
                     return true
+            "replace_trigger":
+                if selected_resource is EventRow:
+                    (selected_resource as EventRow).trigger = _create_condition_from_definition(definition, params)
+                    message["text"] = "Updated trigger."
+                    return true
+            "replace_condition":
+                if selected_resource is EventRow:
+                    var condition_index: int = int(context.get("ace_index", -1))
+                    if condition_index >= 0 and condition_index < (selected_resource as EventRow).conditions.size():
+                        (selected_resource as EventRow).conditions[condition_index] = _create_condition_from_definition(definition, params)
+                        message["text"] = "Updated condition."
+                        return true
+            "replace_action":
+                if selected_resource is EventRow:
+                    var action_index: int = int(context.get("ace_index", -1))
+                    if action_index >= 0 and action_index < (selected_resource as EventRow).actions.size():
+                        (selected_resource as EventRow).actions[action_index] = _create_action_from_definition(definition, params)
+                        message["text"] = "Updated action."
+                        return true
             _:
                 var event_row: EventRow = EventRow.new()
                 if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
@@ -551,10 +633,10 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
 func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionary) -> Dictionary:
     return _param_resolver.resolve_all(definition, row_params if row_params != null else {})
 
-func _insert_row_below_selection(row_resource: Resource) -> void:
+func _insert_row_below_selection(row_resource: Resource, explicit_selected_resource: Resource = null) -> void:
     if _current_sheet == null or row_resource == null:
         return
-    var selected_resource: Resource = _viewport.get_selected_context().get("source_resource", null)
+    var selected_resource: Resource = explicit_selected_resource if explicit_selected_resource != null else _viewport.get_selected_context().get("source_resource", null)
     if selected_resource == null:
         _current_sheet.events.append(row_resource)
         return
@@ -634,7 +716,7 @@ func _group_children_array(group: EventGroup) -> Array:
         return group.events
     return group.rows
 
-func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData) -> void:
+func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String = "before") -> void:
     if source_row == null or target_row == null or _current_sheet == null:
         return
     var source_resource: Resource = source_row.source_resource
@@ -655,7 +737,16 @@ func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData) 
         _set_status("Cannot move a row into one of its descendants.", true)
         return
     var insertion_index: int = target_index
-    if source_container == target_container and source_index < target_index:
+    if drop_mode == "inside":
+        if target_resource is EventGroup:
+            target_container = _group_children_array(target_resource as EventGroup)
+            insertion_index = target_container.size()
+        elif target_resource is EventRow:
+            target_container = (target_resource as EventRow).sub_events
+            insertion_index = target_container.size()
+    elif drop_mode == "after":
+        insertion_index = target_index + 1
+    if source_container == target_container and source_index < insertion_index:
         insertion_index -= 1
     var moved: bool = _perform_undoable_sheet_edit("Drag Row", func() -> bool:
         source_container.remove_at(source_index)
@@ -683,6 +774,146 @@ func _ace_type_label(ace_type: int) -> String:
             return "Expression"
         _:
             return "Action"
+
+func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary, global_position: Vector2) -> void:
+    _context_row = row_data
+    _context_hit = hit.duplicate(true)
+    if row_data == null:
+        return
+    var metadata: Dictionary = hit.get("span_metadata", {})
+    var kind: String = str(metadata.get("kind", ""))
+    if kind in ["condition", "trigger"]:
+        _show_popup_menu(_condition_context_menu, global_position)
+        return
+    if kind == "action":
+        _show_popup_menu(_action_context_menu, global_position)
+        return
+    _show_popup_menu(_row_context_menu, global_position)
+
+func _show_popup_menu(menu: PopupMenu, global_position: Vector2) -> void:
+    if menu == null:
+        return
+    menu.position = Vector2i(global_position)
+    menu.reset_size()
+    menu.popup()
+
+func _on_condition_context_menu_id_pressed(id: int) -> void:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        return
+    match id:
+        1:
+            _on_viewport_ace_edit_requested(_context_row, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
+        2:
+            _ace_picker.open("append_condition", false, _context_row.source_resource)
+        3:
+            var replace_context: Dictionary = _build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
+            if not replace_context.is_empty():
+                _ace_picker.open(str(replace_context.get("mode", "replace_condition")), false, _context_row.source_resource, replace_context)
+        4:
+            _delete_context_ace()
+
+func _on_action_context_menu_id_pressed(id: int) -> void:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        return
+    match id:
+        1:
+            _on_viewport_ace_edit_requested(_context_row, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
+        2:
+            _ace_picker.open("append_action", false, _context_row.source_resource)
+        3:
+            var replace_context: Dictionary = _build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
+            if not replace_context.is_empty():
+                _ace_picker.open("replace_action", false, _context_row.source_resource, replace_context)
+        4:
+            _delete_context_ace()
+
+func _on_row_context_menu_id_pressed(id: int) -> void:
+    if _context_row == null:
+        return
+    match id:
+        1:
+            _insert_child_event_for_context_row()
+        2:
+            _insert_context_row_below(EventRow.new(), "Added event.")
+        3:
+            var group: EventGroup = EventGroup.new()
+            group.name = "Group"
+            group.group_name = group.name
+            _insert_context_row_below(group, "Added group.")
+        4:
+            var comment: CommentRow = CommentRow.new()
+            comment.text = "Comment"
+            _insert_context_row_below(comment, "Added comment.")
+        5:
+            _on_copy_requested()
+        6:
+            _on_paste_requested()
+        7:
+            _delete_context_row()
+
+func _delete_context_ace() -> void:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        return
+    var event_row: EventRow = _context_row.source_resource as EventRow
+    var metadata: Dictionary = _context_hit.get("span_metadata", {})
+    var ace_index: int = int(metadata.get("ace_index", -1))
+    var kind: String = str(metadata.get("kind", ""))
+    var deleted: bool = _perform_undoable_sheet_edit("Delete ACE", func() -> bool:
+        match kind:
+            "trigger":
+                if event_row.trigger != null:
+                    event_row.trigger = null
+                    return true
+            "condition":
+                if ace_index >= 0 and ace_index < event_row.conditions.size():
+                    event_row.conditions.remove_at(ace_index)
+                    return true
+            "action":
+                if ace_index >= 0 and ace_index < event_row.actions.size():
+                    event_row.actions.remove_at(ace_index)
+                    return true
+        return false
+    )
+    if deleted:
+        _mark_dirty("Deleted ACE.")
+
+func _delete_context_row() -> void:
+    if _context_row == null or _context_row.source_resource == null:
+        return
+    var target_resource: Resource = _context_row.source_resource
+    var location: Dictionary = _find_resource_location(target_resource)
+    if location.is_empty():
+        return
+    var container: Array = location.get("container", [])
+    var index: int = int(location.get("index", -1))
+    if index < 0 or index >= container.size():
+        return
+    var deleted: bool = _perform_undoable_sheet_edit("Delete Row", func() -> bool:
+        container.remove_at(index)
+        return true
+    )
+    if deleted:
+        _mark_dirty("Deleted row.")
+
+func _insert_child_event_for_context_row() -> void:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Add Sub Event", func() -> bool:
+        (_context_row.source_resource as EventRow).sub_events.append(EventRow.new())
+        return true
+    )
+    if changed:
+        _mark_dirty("Added sub-event.")
+
+func _insert_context_row_below(resource_entry: Resource, message: String) -> void:
+    if resource_entry == null or _context_row == null:
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Insert Row", func() -> bool:
+        _insert_row_below_selection(resource_entry, _context_row.source_resource)
+        return true
+    )
+    if changed:
+        _mark_dirty(message)
 
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
     _refresh_variable_panel()
@@ -715,36 +946,46 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 
 # ── Variable dialog signal handler ────────────────────────────────────────────
 
-func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_value: Variant, scope: String) -> void:
+func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary = {}) -> void:
     if var_name.is_empty():
         _set_status("Variable name is required.", true)
         return
-    var selected: Resource = _viewport.get_selected_context().get("source_resource", null)
+    var selected: Resource = context.get("selected_resource", _viewport.get_selected_context().get("source_resource", null))
+    var original_name: String = str(context.get("original_name", ""))
+    var editing: bool = bool(context.get("editing", false))
     var message := {"text": ""}
     var added: bool = _perform_undoable_sheet_edit("Create Variable", func() -> bool:
         if scope == "global":
+            if editing and not original_name.is_empty() and original_name != var_name:
+                _current_sheet.variables.erase(original_name)
             _current_sheet.variables[var_name] = {
                 "type": type_name,
                 "default": default_value
             }
-            message["text"] = "Added global variable %s." % var_name
+            message["text"] = "%s global variable %s." % ["Updated" if editing else "Added", var_name]
             return true
         if not (selected is EventRow):
             return false
-        var local_var: LocalVariable = LocalVariable.new()
+        var target_event: EventRow = selected as EventRow
+        var variable_index: int = int(context.get("variable_index", -1))
+        var local_var: LocalVariable = null
+        if editing and variable_index >= 0 and variable_index < target_event.local_variables.size():
+            local_var = target_event.local_variables[variable_index]
+        else:
+            local_var = LocalVariable.new()
+            target_event.local_variables.append(local_var)
         local_var.name = var_name
         local_var.type_name = type_name
         local_var.type = _type_from_name(type_name)
         local_var.default_value = default_value
-        (selected as EventRow).local_variables.append(local_var)
-        message["text"] = "Added local variable %s." % var_name
+        message["text"] = "%s local variable %s." % ["Updated" if editing else "Added", var_name]
         return true
     )
     if not added and scope != "global":
-        _set_status("Select an event row for local variable creation.", true)
+        _set_status("Select an event row for local variable editing.", true)
         return
     if added:
-        _mark_dirty(str(message.get("text", "Added variable.")))
+        _mark_dirty(str(message.get("text", "Saved variable.")))
 
 func _type_from_name(type_name: String) -> int:
     match type_name:
@@ -759,24 +1000,183 @@ func _type_from_name(type_name: String) -> int:
         _:
             return TYPE_NIL
 
+func _on_global_variable_activated(index: int) -> void:
+    if index < 0 or index >= _global_variable_entries.size():
+        return
+    var entry: Dictionary = _global_variable_entries[index]
+    var var_name: String = str(entry.get("name", ""))
+    _variable_dlg.open_for_edit(
+        "global",
+        {"editing": true, "original_name": var_name},
+        var_name,
+        str(entry.get("type", "Variant")),
+        entry.get("default", ""),
+        _is_global_variable_in_use(var_name),
+        "Edit Variable"
+    )
+
+func _on_local_variable_activated(index: int) -> void:
+    if index < 0 or index >= _local_variable_entries.size():
+        return
+    var entry: Dictionary = _local_variable_entries[index]
+    var var_name: String = str(entry.get("name", ""))
+    var selected_resource: Resource = entry.get("selected_resource", null)
+    _variable_dlg.open_for_edit(
+        "local",
+        {
+            "editing": true,
+            "original_name": var_name,
+            "variable_index": int(entry.get("index", -1)),
+            "selected_resource": selected_resource
+        },
+        var_name,
+        str(entry.get("type", "Variant")),
+        entry.get("default", ""),
+        _is_local_variable_in_use(var_name, selected_resource),
+        "Edit Variable"
+    )
+
+func _is_global_variable_in_use(var_name: String) -> bool:
+    if _current_sheet == null or var_name.is_empty():
+        return false
+    return _resource_array_uses_variable(_current_sheet.events, var_name)
+
+func _is_local_variable_in_use(var_name: String, selected_resource: Resource) -> bool:
+    if var_name.is_empty() or not (selected_resource is EventRow):
+        return false
+    return _event_row_uses_variable(selected_resource as EventRow, var_name)
+
+func _resource_array_uses_variable(resources: Array, var_name: String) -> bool:
+    for resource_entry in resources:
+        if _resource_uses_variable(resource_entry, var_name):
+            return true
+    return false
+
+func _resource_uses_variable(resource_entry: Resource, var_name: String) -> bool:
+    if resource_entry == null:
+        return false
+    if resource_entry is EventRow:
+        return _event_row_uses_variable(resource_entry as EventRow, var_name)
+    if resource_entry is EventGroup:
+        return _resource_array_uses_variable(_group_children_array(resource_entry as EventGroup), var_name)
+    return false
+
+func _event_row_uses_variable(event_row: EventRow, var_name: String) -> bool:
+    if event_row == null:
+        return false
+    if _ace_entry_uses_variable(event_row.trigger, var_name):
+        return true
+    for condition in event_row.conditions:
+        if _ace_entry_uses_variable(condition, var_name):
+            return true
+    for action_entry in event_row.actions:
+        if _ace_entry_uses_variable(action_entry, var_name):
+            return true
+    return _resource_array_uses_variable(event_row.sub_events, var_name)
+
+func _ace_entry_uses_variable(entry: Resource, var_name: String) -> bool:
+    if entry == null:
+        return false
+    if entry is ACECondition:
+        return _dictionary_uses_variable((entry as ACECondition).params if not (entry as ACECondition).params.is_empty() else (entry as ACECondition).parameters, var_name)
+    if entry is ACEAction:
+        return _dictionary_uses_variable((entry as ACEAction).params if not (entry as ACEAction).params.is_empty() else (entry as ACEAction).parameters, var_name)
+    return false
+
+func _dictionary_uses_variable(values: Dictionary, var_name: String) -> bool:
+    for value in values.values():
+        if value is Dictionary and _dictionary_uses_variable(value as Dictionary, var_name):
+            return true
+        if value is Array:
+            for nested_value in value:
+                if nested_value is Dictionary and _dictionary_uses_variable(nested_value as Dictionary, var_name):
+                    return true
+                if nested_value == var_name:
+                    return true
+        elif str(value) == var_name:
+            return true
+    return false
+
+func _build_ace_edit_context(event_row: EventRow, span_index: int, metadata: Dictionary) -> Dictionary:
+    if event_row == null:
+        return {}
+    var ace_index: int = int(metadata.get("ace_index", -1))
+    var kind: String = str(metadata.get("kind", ""))
+    var definition: ACEDefinition = null
+    var existing_params: Dictionary = {}
+    var mode: String = ""
+    match kind:
+        "trigger":
+            if event_row.trigger == null:
+                return {}
+            definition = _find_definition(event_row.trigger.provider_id, event_row.trigger.ace_id)
+            existing_params = event_row.trigger.params if not event_row.trigger.params.is_empty() else event_row.trigger.parameters
+            mode = "replace_trigger"
+        "condition":
+            if ace_index < 0 or ace_index >= event_row.conditions.size():
+                return {}
+            var condition_entry: ACECondition = event_row.conditions[ace_index]
+            definition = _find_definition(condition_entry.provider_id, condition_entry.ace_id)
+            existing_params = condition_entry.params if not condition_entry.params.is_empty() else condition_entry.parameters
+            mode = "replace_condition"
+        "action":
+            if ace_index < 0 or ace_index >= event_row.actions.size() or not (event_row.actions[ace_index] is ACEAction):
+                return {}
+            var action_entry: ACEAction = event_row.actions[ace_index] as ACEAction
+            definition = _find_definition(action_entry.provider_id, action_entry.ace_id)
+            existing_params = action_entry.params if not action_entry.params.is_empty() else action_entry.parameters
+            mode = "replace_action"
+        _:
+            return {}
+    return {
+        "mode": mode,
+        "selected_resource": event_row,
+        "row_data": _context_row,
+        "definition": definition,
+        "existing_params": existing_params.duplicate(true),
+        "ace_index": ace_index,
+        "span_index": span_index,
+        "kind": kind
+    }
+
+func _find_definition(provider_id: String, ace_id: String) -> ACEDefinition:
+    if _ace_registry == null:
+        return null
+    return _ace_registry.find_definition(provider_id, ace_id)
+
 
 func _refresh_variable_panel() -> void:
     if _global_var_list == null or _local_var_list == null:
         return
     _global_var_list.clear()
     _local_var_list.clear()
+    _global_variable_entries.clear()
+    _local_variable_entries.clear()
     if _current_sheet != null:
         var names: Array = _current_sheet.variables.keys()
         names.sort()
         for var_name in names:
             var descriptor: Dictionary = _current_sheet.variables.get(var_name, {})
             _global_var_list.add_item("%s : %s = %s" % [var_name, str(descriptor.get("type", "Variant")), str(descriptor.get("default", ""))])
+            _global_variable_entries.append({
+                "name": var_name,
+                "type": str(descriptor.get("type", "Variant")),
+                "default": descriptor.get("default", "")
+            })
     var selected_resource: Resource = _viewport.get_selected_context().get("source_resource", null)
     if selected_resource is EventRow:
-        for local_var in (selected_resource as EventRow).local_variables:
+        for index in range((selected_resource as EventRow).local_variables.size()):
+            var local_var: LocalVariable = (selected_resource as EventRow).local_variables[index]
             if local_var == null:
                 continue
             _local_var_list.add_item("%s : %s = %s" % [local_var.name, local_var.type_name, str(local_var.default_value)])
+            _local_variable_entries.append({
+                "index": index,
+                "name": local_var.name,
+                "type": local_var.type_name,
+                "default": local_var.default_value,
+                "selected_resource": selected_resource
+            })
 
 func _refresh_after_edit() -> void:
     if _viewport == null:

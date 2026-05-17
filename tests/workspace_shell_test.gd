@@ -14,6 +14,8 @@ static func run() -> bool:
     all_passed = _check("scroll has exactly one child", scroll != null and scroll.get_child_count() == 1, true) and all_passed
     all_passed = _check("viewport supports selection API", viewport != null and viewport.has_signal("selection_changed"), true) and all_passed
     all_passed = _check("viewport supports row drop API", viewport != null and viewport.has_signal("row_drop_requested"), true) and all_passed
+    all_passed = _check("viewport supports ace edit API", viewport != null and viewport.has_signal("ace_edit_requested"), true) and all_passed
+    all_passed = _check("viewport supports context menu API", viewport != null and viewport.has_signal("context_menu_requested"), true) and all_passed
     all_passed = _check("viewport exposes editor state scaffold", viewport != null and viewport.has_method("get_editor_state_snapshot"), true) and all_passed
     all_passed = _check("viewport exposes disabled row scaffold", viewport != null and viewport.has_method("set_row_disabled"), true) and all_passed
     editor.free()

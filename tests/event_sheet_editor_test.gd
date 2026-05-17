@@ -147,6 +147,19 @@ static func run() -> bool:
     all_passed = _check("selection tracks row index", dock_viewport.get_selected_row_index(), 2) and all_passed
     var editor_state: Dictionary = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("selection stores anchor for range scaffolding", editor_state.get("selection_anchor_index", -1), 2) and all_passed
+    all_passed = _check("single selection tracks row count", editor_state.get("selected_row_count", 0), 1) and all_passed
+
+    dock.setup(sheet)
+    dock_viewport = dock.get_viewport_control()
+    var event_rows_for_selection: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock_viewport._select_from_click(1, -1, false)
+    dock_viewport._select_from_click(2, _find_span_index_by_kind(event_rows_for_selection[2].get("row"), "condition"), true)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("ctrl selection tracks multiple rows", editor_state.get("selected_row_count", 0), 2) and all_passed
+    all_passed = _check("ctrl selection tracks span highlight count", editor_state.get("selected_span_count", 0), 1) and all_passed
+    dock_viewport._select_from_click(2, _find_span_index_by_kind(event_rows_for_selection[2].get("row"), "condition"), true)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("ctrl click toggles selected span off", editor_state.get("selected_span_count", 0), 0) and all_passed
 
     dock_viewport.custom_minimum_size = Vector2(640.0, 1200.0)
     dock_viewport.size = Vector2(640.0, 1200.0)
@@ -186,6 +199,21 @@ static func run() -> bool:
     dock._on_redo_requested()
     all_passed = _check("redo reapplies drag-drop reorder", ((dock.get_current_sheet().events[0] as EventRow).comment), "B") and all_passed
 
+    var nested_sheet := EventSheetResource.new()
+    var root_event := EventRow.new()
+    root_event.comment = "root"
+    var nested_group := EventGroup.new()
+    nested_group.name = "Group"
+    nested_group.group_name = nested_group.name
+    nested_sheet.events = [root_event, nested_group]
+    dock.setup(nested_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var nested_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._on_row_drop_requested(nested_rows[0].get("row"), nested_rows[1].get("row"), "inside")
+    all_passed = _check("drag-drop can move event into group", ((dock.get_current_sheet().events[0] as EventGroup).events.size()), 1) and all_passed
+    dock._on_row_drop_requested(dock_viewport.get_flat_rows()[1].get("row"), dock_viewport.get_flat_rows()[0].get("row"), "after")
+    all_passed = _check("drag-drop can move event back out of group", ((dock.get_current_sheet().events[1] as EventRow).comment), "root") and all_passed
+
     # Copy/paste event row.
     dock_viewport._select_row(0)
     dock._on_copy_requested()
@@ -223,6 +251,11 @@ static func run() -> bool:
     all_passed = _check("undo removes global variable creation", dock.get_current_sheet().variables.has("ammo"), false) and all_passed
     dock._on_redo_requested()
     all_passed = _check("redo restores global variable creation", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
+    var variable_action := ACEAction.new()
+    variable_action.provider_id = "Core"
+    variable_action.ace_id = "SetVar"
+    variable_action.params = {"var_name": "ammo", "value": "3"}
+    ((dock.get_current_sheet().events[0] as EventRow).actions).append(variable_action)
     dock_viewport._select_row(0)
     dock._on_variable_dialog_confirmed("cooldown", "float", 0.5, "local")
     all_passed = _check("create local variable stores on selected event", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
@@ -230,6 +263,10 @@ static func run() -> bool:
     all_passed = _check("undo removes local variable creation", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 0) and all_passed
     dock._on_redo_requested()
     all_passed = _check("redo restores local variable creation", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
+    dock._on_global_variable_activated(0)
+    all_passed = _check("editing global variable in use locks type selector", dock._variable_dlg._type_option.disabled, true) and all_passed
+    dock._on_variable_dialog_confirmed("ammo", "int", 99, "global", {"editing": true, "original_name": "ammo"})
+    all_passed = _check("editing global variable updates default", dock.get_current_sheet().variables["ammo"].get("default", 0), 99) and all_passed
 
     # Clicking event lanes opens the ACE picker in the matching mode.
     dock.setup(copy_sheet)
@@ -267,6 +304,8 @@ static func run() -> bool:
         dock.setup(copy_sheet)
         dock._on_ace_picker_selected(action_definition, {"mode": "append_action", "selected_resource": dock.get_current_sheet().events[0]})
         all_passed = _check("ace apply appends action", ((dock.get_current_sheet().events[0] as EventRow).actions.size()) >= 2, true) and all_passed
+        dock._on_ace_picker_selected(action_definition, {"mode": "replace_action", "selected_resource": dock.get_current_sheet().events[0], "ace_index": 0, "existing_params": {"var_name": "ammo", "value": "12"}})
+        all_passed = _check("editing ace with params opens param dialog", dock._ace_params._dialog.visible, true) and all_passed
     if new_condition_definition != null:
         dock.setup(EventSheetResource.new())
         dock._apply_ace_definition(new_condition_definition, {}, {"mode": "new_condition_event", "selected_resource": null})

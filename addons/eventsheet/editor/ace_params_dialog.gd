@@ -44,6 +44,9 @@ func init_dialog(parent_node: Node) -> void:
 ## Open the parameter form for the given ACEDefinition.
 ## context is an opaque dictionary forwarded in the params_confirmed signal.
 func open(definition: ACEDefinition, context: Dictionary) -> void:
+	open_with_values(definition, context, {})
+
+func open_with_values(definition: ACEDefinition, context: Dictionary, initial_values: Dictionary) -> void:
 	if _dialog == null:
 		push_error("ACEParamsDialog.open() called before init_dialog().")
 		return
@@ -66,7 +69,7 @@ func open(definition: ACEDefinition, context: Dictionary) -> void:
 			label.tooltip_text = description
 		label.custom_minimum_size = Vector2(160.0, 0.0)
 		row.add_child(label)
-		var field: Control = _create_field(param_dict)
+		var field: Control = _create_field(param_dict, initial_values)
 		field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(field)
 		_form.add_child(row)
@@ -79,9 +82,10 @@ func _close() -> void:
 		_dialog.hide()
 
 ## Build a typed input widget for one parameter entry.
-func _create_field(param_dict: Dictionary) -> Control:
+func _create_field(param_dict: Dictionary, initial_values: Dictionary) -> Control:
 	var field_type: int = int(param_dict.get("type", TYPE_NIL))
-	var default_value: Variant = param_dict.get("default_value", "")
+	var key: String = str(param_dict.get("id", ""))
+	var default_value: Variant = initial_values.get(key, param_dict.get("default_value", ""))
 	var options: Array = param_dict.get("options", [])
 	if options is Array and not options.is_empty():
 		var dropdown: OptionButton = OptionButton.new()
