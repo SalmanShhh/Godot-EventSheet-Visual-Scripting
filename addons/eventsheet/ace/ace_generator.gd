@@ -72,7 +72,7 @@ func _build_signal_definition(provider_id: String, signal_name: String, signal_i
     definition.category = _string_override(overrides, "category", "Signals")
     definition.ace_type = ACEDefinition.ACEType.TRIGGER
     definition.description = _string_override(overrides, "description", "Signal trigger generated from gameplay code.")
-    definition.parameters = _build_parameter_definitions(signal_info.get("args", []))
+    definition.parameters = _build_parameter_definitions(signal_info.get("args", []), overrides)
     definition.return_type = TYPE_NIL
     definition.icon = _string_override(overrides, "icon", "signal")
     definition.metadata = {
@@ -109,9 +109,11 @@ func _build_property_definitions(provider_id: String, property_name: String, pro
         "display_template": display_name
     }
     # Exported properties are editor-exposed: their value can be overridden in the inspector.
-    expression_definition.editor_exposed = true
+    expression_definition.editor_exposed = bool(overrides.get("editor_exposed", true))
     expression_definition.property_hint = _infer_property_hint(property_type, overrides)
     expression_definition.hint_string = _string_override(overrides, "hint_string", "")
+    expression_definition.widget_hint = _string_override(overrides, "widget_hint", "")
+    expression_definition.category_override = _string_override(overrides, "category_override", "")
     output.append(expression_definition)
 
     var set_definition := _build_property_action_definition(provider_id, property_name, display_name, category, "set", "Set %s" % display_name, TYPE_NIL)
@@ -148,7 +150,7 @@ func _build_property_action_definition(provider_id: String, property_name: Strin
     return definition
 
 func _build_method_definition(provider_id: String, method_name: String, method_info: Dictionary, overrides: Dictionary) -> ACEDefinition:
-    var parameter_definitions: Array = _build_parameter_definitions(method_info.get("args", []))
+    var parameter_definitions: Array = _build_parameter_definitions(method_info.get("args", []), overrides)
     var parameter_types: Array = []
     for parameter_definition in parameter_definitions:
         parameter_types.append(parameter_definition.get("type", TYPE_NIL))
@@ -176,7 +178,11 @@ func _build_method_definition(provider_id: String, method_name: String, method_i
         "display_template": _build_method_display_template(display_name, parameter_definitions)
     }
     # Methods with primitive params (non-signal, non-hidden) can be editor-exposed.
-    definition.editor_exposed = _method_is_exposable(ace_type, return_type, parameter_definitions)
+    definition.editor_exposed = bool(overrides.get("editor_exposed", _method_is_exposable(ace_type, return_type, parameter_definitions)))
+    definition.property_hint = int(overrides.get("property_hint", PROPERTY_HINT_NONE))
+    definition.hint_string = _string_override(overrides, "hint_string", "")
+    definition.widget_hint = _string_override(overrides, "widget_hint", "")
+    definition.category_override = _string_override(overrides, "category_override", "")
     return definition
 
 func _resolve_method_ace_type(return_type: int, overrides: Dictionary) -> int:
@@ -189,10 +195,11 @@ func _resolve_method_ace_type(return_type: int, overrides: Dictionary) -> int:
         return ACEDefinition.ACEType.ACTION
     return ACEDefinition.ACEType.EXPRESSION
 
-func _build_parameter_definitions(raw_args: Variant) -> Array:
+func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {}) -> Array:
     var output: Array = []
     if not (raw_args is Array):
         return output
+    var param_overrides: Dictionary = overrides.get("params", {})
     for argument_info in raw_args:
         if not (argument_info is Dictionary):
             continue
@@ -200,11 +207,16 @@ func _build_parameter_definitions(raw_args: Variant) -> Array:
         var argument_name: String = str(argument_dict.get("name", ""))
         if argument_name.is_empty():
             continue
+        var parameter_override: Dictionary = param_overrides.get(argument_name, {})
+        var param_type: int = int(parameter_override.get("type", argument_dict.get("type", TYPE_NIL)))
         output.append({
             "id": argument_name,
-            "display_name": _analyzer.build_property_display_name(argument_name),
-            "type": int(argument_dict.get("type", TYPE_NIL)),
-            "default_value": _default_value_for_type(int(argument_dict.get("type", TYPE_NIL)))
+            "display_name": str(parameter_override.get("display_name", _analyzer.build_property_display_name(argument_name))),
+            "type": param_type,
+            "default_value": parameter_override.get("default_value", _default_value_for_type(param_type)),
+            "property_hint": int(parameter_override.get("property_hint", PROPERTY_HINT_NONE)),
+            "hint_string": str(parameter_override.get("hint_string", "")),
+            "widget_hint": str(parameter_override.get("widget_hint", ""))
         })
     return output
 

@@ -5,6 +5,7 @@ extends Control
 signal selection_changed(row_data: EventRowData)
 signal row_drop_requested(source_row: EventRowData, target_row: EventRowData)
 signal ace_preview_requested(source_label: String, definitions: Array[ACEDefinition])
+signal span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String)
 
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
@@ -548,18 +549,24 @@ func _find_first_editable_span(row_data: EventRowData) -> int:
     return -1
 
 func _commit_edit() -> void:
-    var row_data: EventRowData = _row_at(_editing_row_index)
-    if row_data == null or _editing_span_index < 0 or _editing_span_index >= row_data.spans.size():
-        _cancel_edit()
-        return
-    var span: SemanticSpan = row_data.spans[_editing_span_index]
-    span.text = _editing_buffer
-    _apply_span_edit(row_data, span, _editing_buffer)
-    _editing_row_index = -1
-    _editing_span_index = -1
-    _editing_buffer = ""
-    _editing_caret = 0
-    _refresh_rows()
+	var row_data: EventRowData = _row_at(_editing_row_index)
+	if row_data == null or _editing_span_index < 0 or _editing_span_index >= row_data.spans.size():
+		_cancel_edit()
+		return
+	var span: SemanticSpan = row_data.spans[_editing_span_index]
+	var previous_value: String = span.text
+	span.text = _editing_buffer
+	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+	var edit_kind: String = str(metadata.get("edit_kind", ""))
+	if span_edit_requested.get_connections().is_empty():
+		_apply_span_edit(row_data, span, _editing_buffer)
+	else:
+		span_edit_requested.emit(row_data, edit_kind, previous_value, _editing_buffer)
+	_editing_row_index = -1
+	_editing_span_index = -1
+	_editing_buffer = ""
+	_editing_caret = 0
+	_refresh_rows()
 
 func _cancel_edit() -> void:
     _editing_row_index = -1

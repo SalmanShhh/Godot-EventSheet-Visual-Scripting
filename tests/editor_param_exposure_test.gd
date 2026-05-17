@@ -13,6 +13,7 @@ static func run() -> bool:
 	all_passed = _test_ace_definition_exposure_fields() and all_passed
 	all_passed = _test_param_default_resolver() and all_passed
 	all_passed = _test_ace_generator_exposure_inference() and all_passed
+	all_passed = _test_exposed_node_scope_and_undo() and all_passed
 	return all_passed
 
 # ── EditorParamStore ──────────────────────────────────────────────────────────
@@ -148,6 +149,41 @@ static func _test_ace_generator_exposure_inference() -> bool:
 	var resolved_zero: Variant = resolver2.resolve("P", "A", "count", zero_meta, null)
 	passed = _check("resolver preserves zero ACE default", resolved_zero, 0) and passed
 
+	sample.free()
+	return passed
+
+static func _test_exposed_node_scope_and_undo() -> bool:
+	var passed: bool = true
+	var sample: Node = SAMPLE_SCRIPT.new()
+	var registry := EventSheetACERegistry.new()
+	registry.refresh_from_sources([sample], false)
+	var store := EditorParamStore.new()
+	var resolver := ParamDefaultResolver.new()
+	resolver.set_param_store(store)
+	var sheet := EventSheetResource.new()
+	var row := EventRow.new()
+	row.actions = [ACEAction.new()]
+	(row.actions[0] as ACEAction).provider_id = "AutoACESample"
+	(row.actions[0] as ACEAction).ace_id = "method:take_damage"
+	sheet.events = [row]
+	var exposed := EventSheetExposedNode.new()
+	exposed.setup(registry, store, sheet, resolver)
+	var prop_list: Array[Dictionary] = exposed._get_property_list()
+	passed = _check("exposed node emits scoped property list", prop_list.is_empty(), false) and passed
+	var first_property: String = ""
+	for property_entry in prop_list:
+		if int(property_entry.get("usage", 0)) & PROPERTY_USAGE_CATEGORY != 0:
+			continue
+		first_property = str(property_entry.get("name", ""))
+		break
+	passed = _check("exposed node has at least one dynamic property", first_property.is_empty(), false) and passed
+	if not first_property.is_empty():
+		var undo_redo := UndoRedo.new()
+		exposed.set_undo_redo(undo_redo)
+		passed = _check("setting exposed property succeeds", exposed._set(first_property, 33), true) and passed
+		passed = _check("store updated from exposed property", store.override_count() > 0, true) and passed
+		undo_redo.undo()
+		passed = _check("undo clears property override", store.override_count(), 0) and passed
 	sample.free()
 	return passed
 

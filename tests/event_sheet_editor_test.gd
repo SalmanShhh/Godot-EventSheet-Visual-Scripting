@@ -88,11 +88,10 @@ static func run() -> bool:
     var row_after_disable: EventRowData = dock_viewport.get_flat_rows()[2].get("row")
     all_passed = _check("row disabled scaffold persists by uid", row_after_disable.disabled, true) and all_passed
 
-    var editable_comment: EventRowData = flat_rows[0].get("row")
     dock_viewport._begin_edit(0, 1)
     dock_viewport._editing_buffer = "Changed note"
     dock_viewport._commit_edit()
-    all_passed = _check("inline edit updates comment resource", (editable_comment.source_resource as CommentRow).text, "Changed note") and all_passed
+    all_passed = _check("inline edit updates comment resource", ((dock.get_current_sheet().events[0] as CommentRow).text), "Changed note") and all_passed
 
     # Drag-drop moves rows in underlying model.
     var move_sheet := EventSheetResource.new()
@@ -104,13 +103,13 @@ static func run() -> bool:
     dock.setup(move_sheet)
     var move_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     dock._on_row_drop_requested(move_rows[0].get("row"), move_rows[1].get("row"))
-    all_passed = _check("drag-drop reorders rows", (move_sheet.events[0] as EventRow).comment, "B") and all_passed
+    all_passed = _check("drag-drop reorders rows", ((dock.get_current_sheet().events[0] as EventRow).comment), "B") and all_passed
 
     # Copy/paste event row.
     dock_viewport._select_row(0)
     dock._on_copy_requested()
     dock._on_paste_requested()
-    all_passed = _check("copy paste row inserts duplicate", move_sheet.events.size(), 3) and all_passed
+    all_passed = _check("copy paste row inserts duplicate", dock.get_current_sheet().events.size(), 3) and all_passed
 
     # Copy/paste condition and action entries.
     var copy_sheet := EventSheetResource.new()
@@ -128,32 +127,22 @@ static func run() -> bool:
     dock_viewport._select_row(0, _find_span_index_by_kind(dock_viewport.get_flat_rows()[0].get("row"), "condition"))
     dock._on_copy_requested()
     dock._on_paste_requested()
-    all_passed = _check("copy paste condition appends condition", copy_event.conditions.size(), 2) and all_passed
+    all_passed = _check("copy paste condition appends condition", ((dock.get_current_sheet().events[0] as EventRow).conditions.size()), 2) and all_passed
     dock.setup(copy_sheet)
     dock_viewport._select_row(0, _find_span_index_by_kind(dock_viewport.get_flat_rows()[0].get("row"), "action"))
     dock._on_copy_requested()
     dock._on_paste_requested()
-    all_passed = _check("copy paste action appends action", copy_event.actions.size(), 2) and all_passed
+    all_passed = _check("copy paste action appends action", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), 2) and all_passed
 
     # Global and local variable creation workflow.
     dock.setup(copy_sheet)
-    dock._open_variable_dialog("global")
-    dock._variable_name_edit.text = "ammo"
-    dock._variable_type_option.select(0)
-    dock._variable_default_edit.text = "12"
-    dock._on_variable_dialog_confirmed()
-    all_passed = _check("create global variable stores sheet variable", copy_sheet.variables.has("ammo"), true) and all_passed
+    dock._on_variable_dialog_confirmed("ammo", "int", 12, "global")
+    all_passed = _check("create global variable stores sheet variable", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
     dock_viewport._select_row(0)
-    dock._open_variable_dialog("local")
-    dock._variable_name_edit.text = "cooldown"
-    dock._variable_type_option.select(1)
-    dock._variable_default_edit.text = "0.5"
-    dock._on_variable_dialog_confirmed()
-    all_passed = _check("create local variable stores on selected event", copy_event.local_variables.size(), 1) and all_passed
+    dock._on_variable_dialog_confirmed("cooldown", "float", 0.5, "local")
+    all_passed = _check("create local variable stores on selected event", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
 
-    # ACE picker and parameter dialog workflow.
-    dock._open_ace_picker("append_action", false)
-    all_passed = _check("ace picker tree built for selection", dock._ace_picker_tree != null, true) and all_passed
+    # ACE selection and apply workflow.
     var action_definition: ACEDefinition = null
     for definition in ace_registry.search("set variable"):
         if definition.ace_type == ACEDefinition.ACEType.ACTION:
@@ -161,8 +150,15 @@ static func run() -> bool:
             break
     all_passed = _check("found action definition with params", action_definition != null and not action_definition.parameters.is_empty(), true) and all_passed
     if action_definition != null:
-        dock._open_ace_params_dialog(action_definition, {"mode": "append_action", "selected_resource": copy_event})
-        all_passed = _check("params dialog creates parameter fields", dock._ace_params_fields.is_empty(), false) and all_passed
+        dock._on_ace_picker_selected(action_definition, {"mode": "append_action", "selected_resource": dock.get_current_sheet().events[0]})
+        all_passed = _check("ace apply appends action", ((dock.get_current_sheet().events[0] as EventRow).actions.size()) >= 2, true) and all_passed
+
+    # Undo/redo workflow.
+    var undo_before: int = ((dock.get_current_sheet().events[0] as EventRow).actions.size())
+    dock._on_undo_requested()
+    all_passed = _check("undo removes last ace apply", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), undo_before - 1) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo reapplies ace apply", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), undo_before) and all_passed
 
     # Save and reload EventSheet.
     var temp_path: String = "user://event_sheet_editor_test.tres"

@@ -10,6 +10,7 @@ const EVENT_SHEET_EDITOR_PATH: String = "res://addons/eventforge/editor/event_sh
 const MAIN_SCREEN_ROOT_NAME: String = "EventSheetWorkspace"
 
 var _event_sheet_editor: Control = null
+var _ace_param_inspector_plugin: ACEParamInspectorPlugin = null
 
 ## Returns the display name of the plugin.
 func _get_plugin_name() -> String:
@@ -38,6 +39,10 @@ func _edit(object: Object) -> void:
 		return
 	if is_event_sheet_resource(object):
 		_event_sheet_editor.call("setup", object as EventSheetResource)
+		if _event_sheet_editor.has_method("get_exposed_node"):
+			var exposed_node: Variant = _event_sheet_editor.call("get_exposed_node")
+			if exposed_node is Object:
+				get_editor_interface().inspect_object(exposed_node)
 
 ## Shared object guard used by plugin handlers and tests.
 static func is_event_sheet_resource(object: Object) -> bool:
@@ -62,6 +67,14 @@ func _enter_tree() -> void:
 			# Contract: EventSheetEditor can expose setup(sheet := null) for safe initial state.
 			if _event_sheet_editor.has_method("setup"):
 				_event_sheet_editor.call("setup")
+			if _event_sheet_editor.has_method("set_undo_redo_manager"):
+				_event_sheet_editor.call("set_undo_redo_manager", get_undo_redo())
+			if _event_sheet_editor.has_method("get_editor_param_store"):
+				var store: Variant = _event_sheet_editor.call("get_editor_param_store")
+				if store is EditorParamStore:
+					_ace_param_inspector_plugin = ACEParamInspectorPlugin.new()
+					_ace_param_inspector_plugin.set_param_store(store as EditorParamStore)
+					add_inspector_plugin(_ace_param_inspector_plugin)
 			_make_visible(false)
 		else:
 			push_warning("[EventForge] EventSheetEditor script must extend Control: %s" % EVENT_SHEET_EDITOR_PATH)
@@ -75,6 +88,9 @@ func _enter_tree() -> void:
 
 ## Unregisters plugin services when the plugin is disabled.
 func _exit_tree() -> void:
+	if _ace_param_inspector_plugin != null:
+		remove_inspector_plugin(_ace_param_inspector_plugin)
+		_ace_param_inspector_plugin = null
 	if _event_sheet_editor != null:
 		if _event_sheet_editor.get_parent() != null:
 			_event_sheet_editor.get_parent().remove_child(_event_sheet_editor)

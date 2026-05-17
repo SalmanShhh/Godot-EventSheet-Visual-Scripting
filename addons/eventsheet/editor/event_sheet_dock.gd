@@ -19,8 +19,12 @@ var _current_sheet: EventSheetResource = null
 var _current_sheet_path: String = ""
 var _dirty: bool = false
 var _ace_registry: EventSheetACERegistry = EventSheetACERegistry.new()
+var _editor_param_store: EditorParamStore = EditorParamStore.new()
+var _param_resolver: ParamDefaultResolver = ParamDefaultResolver.new()
+var _exposed_node: EventSheetExposedNode = EventSheetExposedNode.new()
 var _ace_sources: Array[Object] = []
 var _clipboard: Dictionary = {}
+var _undo_redo: UndoRedo = UndoRedo.new()
 
 # ── Extracted sub-components ─────────────────────────────────────────────────
 var _ace_picker: ACEPickerDialog = ACEPickerDialog.new()
@@ -32,6 +36,7 @@ func _init() -> void:
 
 func _ready() -> void:
     _build_ui()
+    _param_resolver.set_param_store(_editor_param_store)
     _ace_picker.init_dialog(self, _ace_registry)
     _ace_picker.ace_selected.connect(_on_ace_picker_selected)
     _ace_params.init_dialog(self)
@@ -63,8 +68,10 @@ func setup(sheet: EventSheetResource = null) -> void:
         _viewport.set_debug_overlay_states({})
         _set_status("Loaded: %s" % (_current_sheet_path.get_file() if not _current_sheet_path.is_empty() else "(unsaved EventSheet)"))
     _dirty = false
+    _clear_undo_history()
     _refresh_ace_registry()
     _viewport.set_sheet(_current_sheet)
+    _refresh_exposed_node()
     _refresh_variable_panel()
 
 func get_viewport_control() -> EventSheetViewport:
@@ -75,6 +82,19 @@ func get_ace_registry() -> EventSheetACERegistry:
 
 func get_current_sheet() -> EventSheetResource:
     return _current_sheet
+
+func get_editor_param_store() -> EditorParamStore:
+    return _editor_param_store
+
+func get_exposed_node() -> EventSheetExposedNode:
+    return _exposed_node
+
+func set_undo_redo_manager(undo_redo: UndoRedo) -> void:
+    if undo_redo == null:
+        return
+    _undo_redo = undo_redo
+    if _exposed_node != null:
+        _exposed_node.set_undo_redo(_undo_redo)
 
 func set_auto_ace_sources(sources: Array[Object]) -> void:
     _release_ace_sources()
@@ -110,6 +130,8 @@ func _build_ui() -> void:
     _add_toolbar_separator()
     _add_toolbar_button("Copy", _on_copy_requested)
     _add_toolbar_button("Paste", _on_paste_requested)
+    _add_toolbar_button("Undo", _on_undo_requested)
+    _add_toolbar_button("Redo", _on_redo_requested)
     _add_toolbar_separator()
     _add_toolbar_button("Add Global Var", _on_add_global_variable_requested)
     _add_toolbar_button("Add Local Var", _on_add_local_variable_requested)
@@ -139,6 +161,7 @@ func _build_ui() -> void:
     _viewport.selection_changed.connect(_on_viewport_selection_changed)
     _viewport.row_drop_requested.connect(_on_row_drop_requested)
     _viewport.ace_preview_requested.connect(_on_ace_preview_requested)
+    _viewport.span_edit_requested.connect(_on_viewport_span_edit_requested)
 
     _side_panel = VBoxContainer.new()
     _side_panel.name = "EventSheetSidePanel"
@@ -182,6 +205,11 @@ func _build_ui() -> void:
     _status_label.text = "Ready"
     root.add_child(_status_label)
 
+    _exposed_node.name = "EventSheetExposedParams"
+    add_child(_exposed_node)
+    _exposed_node.setup(_ace_registry, _editor_param_store, _current_sheet, _param_resolver)
+    _exposed_node.set_undo_redo(_undo_redo)
+
 func _add_toolbar_button(text: String, callable: Callable) -> void:
     var button: Button = Button.new()
     button.text = text
@@ -208,6 +236,15 @@ func _unhandled_key_input(event: InputEvent) -> void:
         elif key_event.keycode == KEY_S:
             _on_save_requested()
             accept_event()
+        elif key_event.keycode == KEY_Z and key_event.shift_pressed:
+            _on_redo_requested()
+            accept_event()
+        elif key_event.keycode == KEY_Z:
+            _on_undo_requested()
+            accept_event()
+        elif key_event.keycode == KEY_Y:
+            _on_redo_requested()
+            accept_event()
         elif key_event.keycode == KEY_O:
             _on_open_requested()
             accept_event()
@@ -229,6 +266,7 @@ func _load_sheet_from_path(path: String) -> void:
         setup(loaded as EventSheetResource)
         _current_sheet_path = path
         _dirty = false
+        _clear_undo_history()
         return
     _set_status("Open failed: %s is not an EventSheetResource." % path.get_file(), true)
 
@@ -333,24 +371,35 @@ func _on_paste_requested() -> void:
     var payload: Variant = _clipboard.get("payload", null)
     var context: Dictionary = _viewport.get_selected_context()
     var selected_resource: Resource = context.get("source_resource", null)
-    match clip_type:
-        "row":
-            if payload is Resource:
-                _insert_row_below_selection((payload as Resource).duplicate(true))
-                _mark_dirty("Pasted row.")
-        "condition":
-            if selected_resource is EventRow and payload is ACECondition:
-                (selected_resource as EventRow).conditions.append((payload as ACECondition).duplicate(true))
-                _mark_dirty("Pasted condition.")
-        "action":
-            if selected_resource is EventRow and payload is ACEAction:
-                (selected_resource as EventRow).actions.append((payload as ACEAction).duplicate(true))
-                _mark_dirty("Pasted action.")
-        "trigger":
-            if selected_resource is EventRow and payload is ACECondition:
-                (selected_resource as EventRow).trigger = (payload as ACECondition).duplicate(true)
-                _mark_dirty("Pasted trigger.")
-    _refresh_after_edit()
+    var result := {"label": ""}
+    var changed: bool = _perform_undoable_sheet_edit("Paste", func() -> bool:
+        match clip_type:
+            "row":
+                if payload is Resource:
+                    _insert_row_below_selection((payload as Resource).duplicate(true))
+                    result["label"] = "Pasted row."
+                    return true
+            "condition":
+                if selected_resource is EventRow and payload is ACECondition:
+                    (selected_resource as EventRow).conditions.append((payload as ACECondition).duplicate(true))
+                    result["label"] = "Pasted condition."
+                    return true
+            "action":
+                if selected_resource is EventRow and payload is ACEAction:
+                    (selected_resource as EventRow).actions.append((payload as ACEAction).duplicate(true))
+                    result["label"] = "Pasted action."
+                    return true
+            "trigger":
+                if selected_resource is EventRow and payload is ACECondition:
+                    (selected_resource as EventRow).trigger = (payload as ACECondition).duplicate(true)
+                    result["label"] = "Pasted trigger."
+                    return true
+        return false
+    )
+    if not changed:
+        _set_status("Paste target is not valid for clipboard payload.", true)
+    else:
+        _mark_dirty(str(result.get("label", "Pasted.")))
 
 func _on_add_global_variable_requested() -> void:
     if not _ensure_sheet_for_editing():
@@ -395,46 +444,60 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
         return
     var mode: String = str(context.get("mode", "new_event"))
     var selected_resource: Resource = context.get("selected_resource", null)
-    match mode:
-        "append_condition":
-            if selected_resource is EventRow:
-                var target_event: EventRow = selected_resource as EventRow
-                var condition_entry: ACECondition = _create_condition_from_definition(definition, params)
+    var message := {"text": ""}
+    var changed: bool = _perform_undoable_sheet_edit("Apply ACE", func() -> bool:
+        match mode:
+            "append_condition":
+                if selected_resource is EventRow:
+                    var target_event: EventRow = selected_resource as EventRow
+                    var condition_entry: ACECondition = _create_condition_from_definition(definition, params)
+                    if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
+                        target_event.trigger = condition_entry
+                    else:
+                        target_event.conditions.append(condition_entry)
+                    message["text"] = "Added condition."
+                    return true
+            "append_action":
+                if selected_resource is EventRow:
+                    var action_entry: ACEAction = _create_action_from_definition(definition, params)
+                    (selected_resource as EventRow).actions.append(action_entry)
+                    message["text"] = "Added action."
+                    return true
+            _:
+                var event_row: EventRow = EventRow.new()
                 if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
-                    target_event.trigger = condition_entry
-                else:
-                    target_event.conditions.append(condition_entry)
-                _mark_dirty("Added condition.")
-        "append_action":
-            if selected_resource is EventRow:
-                var action_entry: ACEAction = _create_action_from_definition(definition, params)
-                (selected_resource as EventRow).actions.append(action_entry)
-                _mark_dirty("Added action.")
-        _:
-            var event_row: EventRow = EventRow.new()
-            if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
-                event_row.trigger = _create_condition_from_definition(definition, params)
-            elif definition.ace_type == ACEDefinition.ACEType.CONDITION:
-                event_row.conditions.append(_create_condition_from_definition(definition, params))
-            elif definition.ace_type == ACEDefinition.ACEType.ACTION:
-                event_row.actions.append(_create_action_from_definition(definition, params))
-            _insert_row_below_selection(event_row)
-            _mark_dirty("Added event.")
-    _refresh_after_edit()
+                    event_row.trigger = _create_condition_from_definition(definition, params)
+                elif definition.ace_type == ACEDefinition.ACEType.CONDITION:
+                    event_row.conditions.append(_create_condition_from_definition(definition, params))
+                elif definition.ace_type == ACEDefinition.ACEType.ACTION:
+                    event_row.actions.append(_create_action_from_definition(definition, params))
+                _insert_row_below_selection(event_row)
+                message["text"] = "Added event."
+                return true
+        return false
+    )
+    if changed:
+        _mark_dirty(str(message.get("text", "Applied ACE.")))
 
 func _create_condition_from_definition(definition: ACEDefinition, params: Dictionary) -> ACECondition:
     var condition: ACECondition = ACECondition.new()
     condition.provider_id = definition.provider_id
     condition.ace_id = definition.id
-    condition.params = params.duplicate(true)
+    condition.params = _resolve_definition_params(definition, params)
     return condition
 
 func _create_action_from_definition(definition: ACEDefinition, params: Dictionary) -> ACEAction:
     var action: ACEAction = ACEAction.new()
     action.provider_id = definition.provider_id
     action.ace_id = definition.id
-    action.params = params.duplicate(true)
+    action.params = _resolve_definition_params(definition, params)
     return action
+
+func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionary) -> Dictionary:
+    if _param_resolver == null:
+        _param_resolver = ParamDefaultResolver.new()
+        _param_resolver.set_param_store(_editor_param_store)
+    return _param_resolver.resolve_all(definition, row_params if row_params != null else {})
 
 func _insert_row_below_selection(row_resource: Resource) -> void:
     if _current_sheet == null or row_resource == null:
@@ -489,14 +552,19 @@ func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData) 
     var target_index: int = int(target_location.get("index", -1))
     if source_index < 0 or target_index < 0:
         return
-    source_container.remove_at(source_index)
-    # This branch only applies when both locations reference the same underlying Array instance.
-    # Removing the source first shifts trailing indices down, so the target insertion index must be decremented.
+    var insertion_index: int = target_index
     if source_container == target_container and source_index < target_index:
-        target_index -= 1
-    target_container.insert(target_index, source_resource)
-    _mark_dirty("Moved row via drag and drop.")
-    _refresh_after_edit()
+        insertion_index -= 1
+    if _resource_contains_descendant(source_resource, target_resource):
+        _set_status("Cannot move a row into one of its descendants.", true)
+        return
+    var moved: bool = _perform_undoable_sheet_edit("Drag Row", func() -> bool:
+        source_container.remove_at(source_index)
+        target_container.insert(insertion_index, source_resource)
+        return true
+    )
+    if moved:
+        _mark_dirty("Moved row via drag and drop.")
 
 func _on_ace_preview_requested(source_label: String, definitions: Array[ACEDefinition]) -> void:
     _preview_title.text = "Dropped ACE Preview — %s (%d)" % [source_label, definitions.size()]
@@ -520,31 +588,64 @@ func _ace_type_label(ace_type: int) -> String:
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
     _refresh_variable_panel()
 
+func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String) -> void:
+    if row_data == null or row_data.source_resource == null:
+        return
+    if old_value == new_value:
+        return
+    var updated: bool = _perform_undoable_sheet_edit("Edit Row Text", func() -> bool:
+        match edit_kind:
+            "group_name":
+                if row_data.source_resource is EventGroup:
+                    var group: EventGroup = row_data.source_resource as EventGroup
+                    group.name = new_value
+                    group.group_name = new_value
+                    return true
+            "comment_text":
+                if row_data.source_resource is CommentRow:
+                    (row_data.source_resource as CommentRow).text = new_value
+                    return true
+            "event_comment":
+                if row_data.source_resource is EventRow:
+                    (row_data.source_resource as EventRow).comment = new_value
+                    return true
+        return false
+    )
+    if updated:
+        _mark_dirty("Updated row text.")
+
 # ── Variable dialog signal handler ────────────────────────────────────────────
 
 func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_value: Variant, scope: String) -> void:
     if var_name.is_empty():
         _set_status("Variable name is required.", true)
         return
-    if scope == "global":
-        _current_sheet.variables[var_name] = {
-            "type": type_name,
-            "default": default_value
-        }
-        _mark_dirty("Added global variable %s." % var_name)
-    else:
-        var selected: Resource = _viewport.get_selected_context().get("source_resource", null)
+    var selected: Resource = _viewport.get_selected_context().get("source_resource", null)
+    var message := {"text": ""}
+    var added: bool = _perform_undoable_sheet_edit("Create Variable", func() -> bool:
+        if scope == "global":
+            _current_sheet.variables[var_name] = {
+                "type": type_name,
+                "default": default_value
+            }
+            message["text"] = "Added global variable %s." % var_name
+            return true
         if not (selected is EventRow):
-            _set_status("Select an event row for local variable creation.", true)
-            return
+            return false
         var local_var: LocalVariable = LocalVariable.new()
         local_var.name = var_name
         local_var.type_name = type_name
         local_var.type = _type_from_name(type_name)
         local_var.default_value = default_value
         (selected as EventRow).local_variables.append(local_var)
-        _mark_dirty("Added local variable %s." % var_name)
-    _refresh_after_edit()
+        message["text"] = "Added local variable %s." % var_name
+        return true
+    )
+    if not added and scope != "global":
+        _set_status("Select an event row for local variable creation.", true)
+        return
+    if added:
+        _mark_dirty(str(message.get("text", "Added variable.")))
 
 func _type_from_name(type_name: String) -> int:
     match type_name:
@@ -582,6 +683,7 @@ func _refresh_after_edit() -> void:
     if _viewport == null:
         return
     _viewport.set_sheet(_current_sheet)
+    _refresh_exposed_node()
     _refresh_variable_panel()
 
 func _mark_dirty(message: String) -> void:
@@ -606,6 +708,7 @@ func _refresh_ace_registry() -> void:
     if _viewport != null:
         _viewport.set_ace_registry(_ace_registry)
     _ace_picker.set_registry(_ace_registry)
+    _refresh_exposed_node()
 
 func _build_default_ace_sources() -> Array[Object]:
     var demo_script: Script = load("res://addons/eventsheet/runtime/demo_gameplay_actor.gd")
@@ -690,3 +793,76 @@ func _release_ace_sources() -> void:
         if source_object is Node:
             (source_object as Node).free()
     _ace_sources.clear()
+
+func _refresh_exposed_node() -> void:
+    if _exposed_node == null:
+        return
+    _exposed_node.setup(_ace_registry, _editor_param_store, _current_sheet, _param_resolver)
+    _exposed_node.set_undo_redo(_undo_redo)
+    _exposed_node.on_registry_refreshed()
+
+func _on_undo_requested() -> void:
+    if _undo_redo == null or not _undo_redo.has_undo():
+        _set_status("Nothing to undo.", true)
+        return
+    _undo_redo.undo()
+
+func _on_redo_requested() -> void:
+    if _undo_redo == null or not _undo_redo.has_redo():
+        _set_status("Nothing to redo.", true)
+        return
+    _undo_redo.redo()
+
+func _capture_sheet_snapshot() -> EventSheetResource:
+    if _current_sheet == null:
+        return null
+    return _current_sheet.duplicate(true)
+
+func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
+    if snapshot == null:
+        return
+    _current_sheet = snapshot.duplicate(true)
+    if not _current_sheet_path.is_empty():
+        _current_sheet.take_over_path(_current_sheet_path)
+    _refresh_after_edit()
+    _mark_dirty("Applied undo/redo.")
+
+func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> bool:
+    if _current_sheet == null or not operation.is_valid():
+        return false
+    var before: EventSheetResource = _capture_sheet_snapshot()
+    var changed: bool = bool(operation.call())
+    if not changed:
+        return false
+    var after: EventSheetResource = _capture_sheet_snapshot()
+    if before == null or after == null:
+        return false
+    if _undo_redo == null:
+        _refresh_after_edit()
+        return true
+    _undo_redo.create_action(action_name)
+    _undo_redo.add_do_method(self, "_restore_sheet_snapshot", after)
+    _undo_redo.add_undo_method(self, "_restore_sheet_snapshot", before)
+    _undo_redo.commit_action()
+    return true
+
+func _clear_undo_history() -> void:
+    if _undo_redo != null and _undo_redo.has_method("clear_history"):
+        _undo_redo.clear_history()
+
+func _resource_contains_descendant(source: Resource, candidate: Resource) -> bool:
+    if source == null or candidate == null:
+        return false
+    if source == candidate:
+        return true
+    if source is EventRow:
+        for child in (source as EventRow).sub_events:
+            if _resource_contains_descendant(child, candidate):
+                return true
+    elif source is EventGroup:
+        var group: EventGroup = source as EventGroup
+        var children: Array = group.events if not group.events.is_empty() else group.rows
+        for child in children:
+            if _resource_contains_descendant(child, candidate):
+                return true
+    return false
