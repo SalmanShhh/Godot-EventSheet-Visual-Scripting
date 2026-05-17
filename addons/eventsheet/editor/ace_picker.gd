@@ -26,8 +26,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_window.title = "Select ACE"
 	_window.visible = false
 	_window.min_size = Vector2i(640, 420)
-	_window.close_requested.connect(_close)
-	_window.focus_exited.connect(_on_window_focus_exited)
+	_window.close_requested.connect(close)
 	parent_node.add_child(_window)
 
 	var content: VBoxContainer = VBoxContainer.new()
@@ -146,14 +145,18 @@ func _on_item_activated() -> void:
 	var definition: ACEDefinition = item.get_metadata(0)
 	if definition == null:
 		return
-	_close()
+	close()
 	ace_selected.emit(definition, _context.duplicate(true))
 
-func _close() -> void:
+func close() -> void:
 	if _window == null:
 		return
 	_window.hide()
 
-func _on_window_focus_exited() -> void:
-	if _window != null and _window.visible:
-		_window.hide()
+func is_open() -> bool:
+	return _window != null and _window.visible
+
+func get_popup_rect() -> Rect2:
+	if _window == null:
+		return Rect2()
+	return Rect2(Vector2(_window.position), Vector2(_window.size))

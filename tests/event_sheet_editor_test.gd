@@ -253,23 +253,23 @@ static func run() -> bool:
 
     # ACE selection and apply workflow.
     var action_definition: ACEDefinition = null
-    var condition_definition: ACEDefinition = null
+    var new_condition_definition: ACEDefinition = null
     for definition in ace_registry.search("set variable"):
         if definition.ace_type == ACEDefinition.ACEType.ACTION:
             action_definition = definition
             break
     for definition in ace_registry.search("always"):
         if definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]:
-            condition_definition = definition
+            new_condition_definition = definition
             break
     all_passed = _check("found action definition with params", action_definition != null and not action_definition.parameters.is_empty(), true) and all_passed
     if action_definition != null:
         dock.setup(copy_sheet)
         dock._on_ace_picker_selected(action_definition, {"mode": "append_action", "selected_resource": dock.get_current_sheet().events[0]})
         all_passed = _check("ace apply appends action", ((dock.get_current_sheet().events[0] as EventRow).actions.size()) >= 2, true) and all_passed
-    if condition_definition != null:
+    if new_condition_definition != null:
         dock.setup(EventSheetResource.new())
-        dock._apply_ace_definition(condition_definition, {}, {"mode": "new_condition_event", "selected_resource": null})
+        dock._apply_ace_definition(new_condition_definition, {}, {"mode": "new_condition_event", "selected_resource": null})
         all_passed = _check("new condition mode creates event row", dock.get_current_sheet().events.size(), 1) and all_passed
         all_passed = _check("new condition mode stores condition on new event", ((dock.get_current_sheet().events[0] as EventRow).conditions.size()) + (1 if (dock.get_current_sheet().events[0] as EventRow).trigger != null else 0) > 0, true) and all_passed
 

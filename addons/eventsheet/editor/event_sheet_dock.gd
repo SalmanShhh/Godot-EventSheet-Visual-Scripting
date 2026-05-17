@@ -230,6 +230,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
     var key_event: InputEventKey = event as InputEventKey
     if not key_event.pressed or key_event.echo:
         return
+    if key_event.keycode == KEY_ESCAPE and _ace_picker.is_open():
+        _ace_picker.close()
+        accept_event()
+        return
     if key_event.ctrl_pressed or key_event.meta_pressed:
         if key_event.keycode == KEY_C:
             _on_copy_requested()
@@ -252,6 +256,18 @@ func _unhandled_key_input(event: InputEvent) -> void:
         elif key_event.keycode == KEY_O:
             _on_open_requested()
             accept_event()
+
+func _gui_input(event: InputEvent) -> void:
+    if not (event is InputEventMouseButton):
+        return
+    var mouse_event: InputEventMouseButton = event as InputEventMouseButton
+    if not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_LEFT:
+        return
+    if not _ace_picker.is_open():
+        return
+    if _ace_picker.get_popup_rect().has_point(mouse_event.position):
+        return
+    _ace_picker.close()
 
 func _on_open_requested() -> void:
     var dialog: FileDialog = FileDialog.new()
