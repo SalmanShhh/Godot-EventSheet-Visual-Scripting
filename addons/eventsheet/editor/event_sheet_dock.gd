@@ -256,6 +256,8 @@ func _build_ui() -> void:
 func _notification(what: int) -> void:
     if what == NOTIFICATION_RESIZED:
         call_deferred("_sync_workspace_layout")
+    elif what == NOTIFICATION_PREDELETE:
+        _release_ace_sources()
 
 func _sync_workspace_layout() -> void:
     if _split == null:
@@ -1436,10 +1438,6 @@ func _get_demo_provider_id() -> String:
         if not reflected_providers.is_empty():
             return reflected_providers[0]
     return "Core"
-
-func _notification(what: int) -> void:
-    if what == NOTIFICATION_PREDELETE:
-        _release_ace_sources()
 
 func _release_ace_sources() -> void:
     for source_object in _ace_sources:
