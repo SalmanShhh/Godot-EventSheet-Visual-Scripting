@@ -28,6 +28,13 @@ const BADGE_NEGATED_METADATA := {
     "badge_bg": Color(0.73, 0.20, 0.24, 0.95),
     "badge_fg": Color(1.0, 1.0, 1.0, 1.0)
 }
+const BADGE_TRIGGER_METADATA := {
+    "lane": "condition",
+    "hoverable": false,
+    "badge": true,
+    "badge_bg": EventSheetPalette.COLOR_TRIGGER_ARROW_BG,
+    "badge_fg": EventSheetPalette.COLOR_TRIGGER_ARROW_FG
+}
 const DROP_ZONE_INSIDE_TOP := 0.33
 const DROP_ZONE_INSIDE_BOTTOM := 0.67
 const DROP_ZONE_AFTER_THRESHOLD := 0.5
@@ -164,6 +171,7 @@ func ensure_selection_visible() -> void:
 
 func _notification(what: int) -> void:
     if what == NOTIFICATION_RESIZED:
+        _update_canvas_min_size()
         queue_redraw()
 
 func _draw() -> void:
@@ -334,7 +342,7 @@ func _refresh_rows() -> void:
             continue
         row_data_state.selected = _selected_row_uids.has(row_data_state.row_uid)
         row_data_state.hovered = index == _hovered_row_index
-    custom_minimum_size = Vector2(640.0, max(float(_flat_rows.size() * ROW_HEIGHT), 240.0))
+    _update_canvas_min_size()
     _layout_cache.clear()
     queue_redraw()
 
@@ -416,9 +424,11 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
     var spans: Array[SemanticSpan] = []
     if event_row.trigger != null:
         spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
+        spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, BADGE_TRIGGER_METADATA))
         spans.append(_make_span(_format_condition_descriptor(event_row.trigger), SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "trigger", "ace_index": 0}))
     elif not event_row.trigger_id.is_empty():
         spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
+        spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, BADGE_TRIGGER_METADATA))
         spans.append(_make_span(event_row.trigger_id, SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "trigger", "ace_index": 0}))
     if not event_row.conditions.is_empty():
         if not spans.is_empty():
@@ -548,6 +558,10 @@ func _draw_empty_state(width: float) -> void:
     var text: String = "No rows. Select an EventSheet resource or use the dock's demo sheet."
     var text_size: Vector2 = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size)
     draw_string(font, Vector2(16.0, 40.0 + text_size.y), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, EventSheetPalette.TEXT_MUTED)
+
+func _update_canvas_min_size() -> void:
+    var canvas_width: float = max(max(size.x, _get_scroll_width()), 640.0)
+    custom_minimum_size = Vector2(canvas_width, max(float(_flat_rows.size() * ROW_HEIGHT), 240.0))
 
 func _select_row(row_index: int, span_index: int = -1) -> void:
     if _flat_rows.is_empty():

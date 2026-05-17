@@ -105,6 +105,7 @@ static func run() -> bool:
     all_passed = _check("demo sheet exposes semantic spans", first_demo_row.spans.size() > 0, true) and all_passed
     all_passed = _check("demo flow exposes reflected ace registry", ace_registry.get_reflected_provider_ids().is_empty(), false) and all_passed
     all_passed = _check("demo rows render auto ace trigger text", _rows_contain_text(demo_rows, "On Died"), true) and all_passed
+    all_passed = _check("demo rows render trigger arrow badge", _rows_contain_text(demo_rows, "➜"), true) and all_passed
     all_passed = _check("demo rows render auto ace action text", _rows_contain_text(demo_rows, "Take Damage 10"), true) and all_passed
 
     var sheet := EventSheetResource.new()
@@ -303,6 +304,18 @@ static func run() -> bool:
     all_passed = _check("editing global variable in use locks type selector", dock._variable_dlg._type_option.disabled, true) and all_passed
     dock._on_variable_dialog_confirmed("ammo", "int", 99, "global", {"editing": true, "original_name": "ammo"})
     all_passed = _check("editing global variable updates default", dock.get_current_sheet().variables["ammo"].get("default", 0), 99) and all_passed
+
+    var unselected_local_sheet := EventSheetResource.new()
+    unselected_local_sheet.events = [EventRow.new()]
+    dock.setup(unselected_local_sheet)
+    dock_viewport._clear_selection()
+    dock._on_variable_dialog_confirmed("speed", "float", 2.5, "local")
+    all_passed = _check("create local variable without selection targets first event", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
+    all_passed = _check("create local variable without selection reselects target event", dock.get_viewport_control().get_selected_context().get("source_resource", null) is EventRow, true) and all_passed
+
+    dock_viewport.set_size(Vector2(1180.0, 640.0))
+    dock_viewport.set_sheet(dock.get_current_sheet())
+    all_passed = _check("viewport canvas expands to available width", dock_viewport.custom_minimum_size.x >= 1180.0, true) and all_passed
 
     # Clicking event lanes opens the ACE picker in the matching mode.
     dock.setup(copy_sheet)

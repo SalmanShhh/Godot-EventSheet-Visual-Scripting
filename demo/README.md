@@ -2,7 +2,7 @@
 
 ## Open
 
-Open `demo/` with Godot 4.3.
+Open the repository root project for normal editing, or temporarily rename `demo/demo_project.godot` back to `demo/project.godot` if you need to import the demo as a standalone Godot project.
 
 ## Compile manually
 

@@ -21,6 +21,9 @@ const ROW_MENU_COPY := 5
 const ROW_MENU_PASTE := 6
 const ROW_MENU_DELETE := 7
 const ROW_MENU_TOGGLE_CONDITION_BLOCK := 8
+const SIDE_PANEL_MIN_WIDTH := 240.0
+const SIDE_PANEL_MAX_WIDTH := 320.0
+const SIDE_PANEL_WIDTH_RATIO := 0.24
 
 var _toolbar: HBoxContainer = null
 var _status_label: Label = null
@@ -167,7 +170,6 @@ func _build_ui() -> void:
     _split.name = "EventSheetWorkspaceSplit"
     _split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _split.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _split.split_offset = 860
     root.add_child(_split)
 
     _scroll = ScrollContainer.new()
@@ -196,7 +198,8 @@ func _build_ui() -> void:
 
     _side_panel = VBoxContainer.new()
     _side_panel.name = "EventSheetSidePanel"
-    _side_panel.custom_minimum_size = Vector2(250.0, 220.0)
+    _side_panel.custom_minimum_size = Vector2(SIDE_PANEL_MIN_WIDTH, 0.0)
+    _side_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _split.add_child(_side_panel)
 
     _preview_title = Label.new()
@@ -208,7 +211,8 @@ func _build_ui() -> void:
     _preview_list.name = "ACEPreviewList"
     _preview_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _preview_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _preview_list.custom_minimum_size = Vector2(180.0, 160.0)
+    _preview_list.size_flags_stretch_ratio = 1.15
+    _preview_list.custom_minimum_size = Vector2(180.0, 120.0)
     _side_panel.add_child(_preview_list)
 
     var globals_label: Label = Label.new()
@@ -217,8 +221,10 @@ func _build_ui() -> void:
 
     _global_var_list = ItemList.new()
     _global_var_list.name = "GlobalVariableList"
-    _global_var_list.custom_minimum_size = Vector2(180.0, 100.0)
+    _global_var_list.custom_minimum_size = Vector2(180.0, 96.0)
     _global_var_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _global_var_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _global_var_list.size_flags_stretch_ratio = 0.55
     _global_var_list.item_activated.connect(_on_global_variable_activated)
     _side_panel.add_child(_global_var_list)
 
@@ -228,8 +234,10 @@ func _build_ui() -> void:
 
     _local_var_list = ItemList.new()
     _local_var_list.name = "LocalVariableList"
-    _local_var_list.custom_minimum_size = Vector2(180.0, 100.0)
+    _local_var_list.custom_minimum_size = Vector2(180.0, 96.0)
     _local_var_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _local_var_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _local_var_list.size_flags_stretch_ratio = 0.55
     _local_var_list.item_activated.connect(_on_local_variable_activated)
     _side_panel.add_child(_local_var_list)
 
@@ -243,6 +251,20 @@ func _build_ui() -> void:
     _exposed_node.setup(_ace_registry, _editor_param_store, _current_sheet, _param_resolver)
     _exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
     _build_context_menus()
+    call_deferred("_sync_workspace_layout")
+
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_RESIZED:
+        call_deferred("_sync_workspace_layout")
+
+func _sync_workspace_layout() -> void:
+    if _split == null:
+        return
+    var total_width: float = size.x
+    if total_width <= 0.0:
+        return
+    var side_panel_width: float = clampf(total_width * SIDE_PANEL_WIDTH_RATIO, SIDE_PANEL_MIN_WIDTH, SIDE_PANEL_MAX_WIDTH)
+    _split.split_offset = int(max(total_width - side_panel_width, 0.0))
 
 func _build_context_menus() -> void:
     if _condition_context_menu != null:
@@ -511,9 +533,14 @@ func _on_add_global_variable_requested() -> void:
     _variable_dlg.open("global")
 
 func _on_add_local_variable_requested() -> void:
-    if not _ensure_selected_event():
+    if not _ensure_sheet_for_editing():
         return
-    _variable_dlg.open("local")
+    var target_event: EventRow = _find_first_event_row_resource()
+    var context: Dictionary = {"create_event_if_missing": true}
+    if target_event != null:
+        _select_first_event_row()
+        context["selected_resource"] = target_event
+    _variable_dlg.open_for_edit("local", context, "", "int", "", false, "Create Variable")
 
 func _ensure_sheet_for_editing() -> bool:
     if _current_sheet != null:
@@ -1035,9 +1062,16 @@ func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_
             }
             message["text"] = "%s global variable %s." % [action_verb, var_name]
             return true
-        if not (selected is EventRow):
+        var target_event: EventRow = null
+        if selected is EventRow:
+            target_event = selected as EventRow
+        else:
+            target_event = _find_first_event_row_resource()
+        if target_event == null and not editing and bool(context.get("create_event_if_missing", true)):
+            target_event = EventRow.new()
+            _current_sheet.events.append(target_event)
+        if target_event == null:
             return false
-        var target_event: EventRow = selected as EventRow
         var variable_index: int = int(context.get("variable_index", -1))
         var local_var: LocalVariable = null
         if editing and variable_index >= 0 and variable_index < target_event.local_variables.size():
@@ -1053,10 +1087,12 @@ func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_
         return true
     )
     if not added and scope != "global":
-        _set_status("Select an event row for local variable editing.", true)
+        _set_status("Add or select an event row before editing local variables.", true)
         return
     if added:
         _mark_dirty(str(message.get("text", "Saved variable.")))
+        if scope == "local" and not (selected is EventRow):
+            _select_first_event_row()
 
 func _type_from_name(type_name: String) -> int:
     match type_name:
@@ -1266,6 +1302,25 @@ func _refresh_variable_panel() -> void:
                 "default": local_var.default_value,
                 "selected_resource": selected_resource
             })
+
+func _find_first_event_row_resource() -> EventRow:
+    if _viewport == null:
+        return null
+    for row_entry: Dictionary in _viewport.get_flat_rows():
+        var row_data: EventRowData = row_entry.get("row")
+        if row_data != null and row_data.source_resource is EventRow:
+            return row_data.source_resource as EventRow
+    return null
+
+func _select_first_event_row() -> void:
+    if _viewport == null:
+        return
+    var rows: Array[Dictionary] = _viewport.get_flat_rows()
+    for row_index: int in range(rows.size()):
+        var row_data: EventRowData = rows[row_index].get("row")
+        if row_data != null and row_data.source_resource is EventRow:
+            _viewport._select_row(row_index)
+            return
 
 func _refresh_after_edit() -> void:
     if _viewport == null:
