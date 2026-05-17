@@ -15,11 +15,25 @@ class FakeEditorUndoRedoManager:
         _pending_do.clear()
         _pending_undo.clear()
 
-    func add_do_method(target: Object, method_name: String, arg1 := null, arg2 := null, arg3 := null, arg4 := null) -> void:
+    func add_do_method(
+        target: Object,
+        method_name: String,
+        arg1: Variant = null,
+        arg2: Variant = null,
+        arg3: Variant = null,
+        arg4: Variant = null
+    ) -> void:
         var args: Array = [arg1, arg2, arg3, arg4]
         _pending_do.append(func() -> void: target.callv(method_name, _trim_null_args(args)))
 
-    func add_undo_method(target: Object, method_name: String, arg1 := null, arg2 := null, arg3 := null, arg4 := null) -> void:
+    func add_undo_method(
+        target: Object,
+        method_name: String,
+        arg1: Variant = null,
+        arg2: Variant = null,
+        arg3: Variant = null,
+        arg4: Variant = null
+    ) -> void:
         var args: Array = [arg1, arg2, arg3, arg4]
         _pending_undo.append(func() -> void: target.callv(method_name, _trim_null_args(args)))
 
