@@ -257,6 +257,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
             _on_open_requested()
             accept_event()
 
+## Closes the ACE picker when the user clicks anywhere outside the popup rect.
 func _gui_input(event: InputEvent) -> void:
     if not (event is InputEventMouseButton):
         return
@@ -562,6 +563,7 @@ func _insert_row_below_selection(row_resource: Resource) -> void:
     var index: int = int(location.get("index", container.size() - 1))
     container.insert(index + 1, row_resource)
 
+## Returns the best available EventSheet file name suggestion for save dialogs.
 func _suggest_sheet_filename() -> String:
     var candidate_path: String = _current_sheet_path
     if candidate_path.is_empty() and _current_sheet != null:
@@ -573,6 +575,7 @@ func _suggest_sheet_filename() -> String:
         file_name += ".tres"
     return file_name
 
+## Returns the preferred directory for open/save dialogs, defaulting to res://.
 func _suggest_sheet_directory() -> String:
     var candidate_path: String = _current_sheet_path
     if candidate_path.is_empty() and _current_sheet != null:
@@ -582,6 +585,7 @@ func _suggest_sheet_directory() -> String:
         return "res://"
     return directory
 
+## Builds the initial save path shown in the Save As dialog.
 func _build_initial_save_path() -> String:
     var candidate_path: String = _current_sheet_path
     if candidate_path.is_empty() and _current_sheet != null:
@@ -590,6 +594,7 @@ func _build_initial_save_path() -> String:
         return "res://%s" % _suggest_sheet_filename()
     return _normalize_sheet_save_path(candidate_path)
 
+## Ensures save paths always include a valid filename and EventSheet resource extension.
 func _normalize_sheet_save_path(path: String) -> String:
     var resolved_path: String = path.strip_edges()
     if resolved_path.is_empty():

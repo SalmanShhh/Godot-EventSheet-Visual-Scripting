@@ -628,6 +628,8 @@ func _hit_test(position: Vector2) -> Dictionary:
         result["gutter"] = true
     return result
 
+## Opens the lane-appropriate ACE picker for event row clicks and returns true
+## when the click should not continue into drag/edit handling.
 func _maybe_request_ace_picker(hit: Dictionary, row_index: int) -> bool:
     var row_data: EventRowData = _row_at(row_index)
     if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
