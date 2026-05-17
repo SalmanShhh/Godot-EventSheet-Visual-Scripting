@@ -562,10 +562,10 @@ func _commit_edit() -> void:
 	span.text = _editing_buffer
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 	var edit_kind: String = str(metadata.get("edit_kind", ""))
-    if _external_span_edit_handler_enabled:
-        span_edit_requested.emit(row_data, edit_kind, previous_value, _editing_buffer)
-    else:
-        _apply_span_edit(row_data, span, _editing_buffer)
+	if _external_span_edit_handler_enabled:
+		span_edit_requested.emit(row_data, edit_kind, previous_value, _editing_buffer)
+	else:
+		_apply_span_edit(row_data, span, _editing_buffer)
 	_editing_row_index = -1
 	_editing_span_index = -1
 	_editing_buffer = ""
