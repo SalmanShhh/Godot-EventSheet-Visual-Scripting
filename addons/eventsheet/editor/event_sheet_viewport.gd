@@ -82,6 +82,10 @@ func get_editor_state_snapshot() -> Dictionary:
         "disabled_row_count": _row_disabled_state.size()
     }
 
+func get_row_layout_for_test(row_index: int, width: float = -1.0) -> Dictionary:
+    var resolved_width: float = width if width > 0.0 else max(max(size.x, _get_scroll_width()), 640.0)
+    return _get_or_build_row_layout(row_index, resolved_width, _get_font(), _get_font_size())
+
 func get_visible_row_range() -> Vector2i:
     if _flat_rows.is_empty():
         return Vector2i(-1, -1)
@@ -401,7 +405,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     if row_data.row_type == EventRowData.RowType.EVENT:
         var content_left: float = EventSheetPalette.GUTTER_WIDTH
         var content_width: float = max(width - content_left, 120.0)
-        lane_divider_x = content_left + max(160.0, floor(content_width * EventSheetPalette.CONDITIONS_LANE_RATIO))
+        lane_divider_x = content_left + max(EventSheetPalette.MIN_CONDITIONS_LANE_WIDTH, floor(content_width * EventSheetPalette.CONDITIONS_LANE_RATIO))
         condition_lane_rect = Rect2(content_left, row_top, max(lane_divider_x - content_left, 1.0), ROW_HEIGHT)
         lane_divider_rect = Rect2(lane_divider_x, row_top, EventSheetPalette.LANE_DIVIDER_WIDTH, ROW_HEIGHT)
         action_lane_rect = Rect2(lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH, row_top, max(width - lane_divider_x - EventSheetPalette.LANE_DIVIDER_WIDTH, 1.0), ROW_HEIGHT)
@@ -411,7 +415,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             continue
         var span_lane: String = _resolve_span_lane(span)
         if lane_divider_x > 0.0 and span_lane == "action":
-            x = max(x, lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH + 8.0)
+            x = max(x, lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH + EventSheetPalette.ACTION_LANE_PADDING)
         var measured_text: String = _editing_buffer if index == _editing_row_index and span_index == _editing_span_index else span.text
         var span_width: float = font.get_string_size(measured_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
         span.rect = Rect2(x, row_top + 4.0, span_width + 2.0, ROW_HEIGHT - 8.0)

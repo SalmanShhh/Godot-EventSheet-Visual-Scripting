@@ -56,7 +56,7 @@ static func run() -> bool:
     all_passed = _check("event row inherits indent", event_row_data.indent, 1) and all_passed
     all_passed = _check("event row action span exists", _row_contains_text(event_row_data, "Queue free"), true) and all_passed
     all_passed = _check("event row includes lane metadata spans", _row_has_lane(event_row_data, "condition") and _row_has_lane(event_row_data, "action"), true) and all_passed
-    var layout: Dictionary = dock_viewport._get_or_build_row_layout(2, 640.0, dock_viewport._get_font(), dock_viewport._get_font_size())
+    var layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
     all_passed = _check("event row layout contains lane divider scaffold", float(layout.get("lane_divider_x", -1.0)) > 0.0, true) and all_passed
 
     dock_viewport._toggle_row_fold(1)
