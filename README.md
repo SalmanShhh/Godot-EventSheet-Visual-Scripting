@@ -25,7 +25,7 @@ EventForge is a Construct-style event sheet plugin for Godot 4.x. Event sheets c
 | Runtime bridge | ✅ |
 | Built-in ACE registry | ✅ |
 | End-to-end compile (`.tres` -> `.gd`) | ✅ (current subset) |
-| Editor UI foundation (canvas, picker, params, delete flows) | ✅ Implemented; under active refinement |
+| Editor UI foundation (custom-rendered viewport, virtualization, semantic spans) | ✅ Restarted around the new dock/viewport architecture |
 | Import/binding pipelines | ⏳ Planned |
 
 ## Roadmap
