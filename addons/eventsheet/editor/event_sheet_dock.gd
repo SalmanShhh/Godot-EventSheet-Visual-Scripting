@@ -2,7 +2,7 @@
 class_name EventSheetDock
 extends Control
 
-const EVENT_SHEET_FILTERS := PackedStringArray(["*.tres, *.res ; EventSheetResource"])
+const EVENT_SHEET_FILTERS: Array[String] = ["*.tres ; EventSheetResource", "*.res ; EventSheetResource"]
 
 var _toolbar: HBoxContainer = null
 var _status_label: Label = null
