@@ -25,9 +25,12 @@ func init_dialog(parent_node: Node) -> void:
 	_dialog.title = "ACE Parameters"
 	_dialog.visible = false
 	_dialog.confirmed.connect(_on_confirmed)
+	_dialog.close_requested.connect(_close)
+	_dialog.canceled.connect(_close)
 	parent_node.add_child(_dialog)
 
 	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scroll.custom_minimum_size = Vector2(520.0, 260.0)
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -35,6 +38,7 @@ func init_dialog(parent_node: Node) -> void:
 
 	_form = VBoxContainer.new()
 	_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_form.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_form)
 
 ## Open the parameter form for the given ACEDefinition.
@@ -69,6 +73,10 @@ func open(definition: ACEDefinition, context: Dictionary) -> void:
 		_fields[key] = field
 	_dialog.title = "%s Parameters" % definition.display_name
 	_dialog.popup_centered(Vector2i(560, 360))
+
+func _close() -> void:
+	if _dialog != null:
+		_dialog.hide()
 
 ## Build a typed input widget for one parameter entry.
 func _create_field(param_dict: Dictionary) -> Control:

@@ -26,9 +26,12 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_window.title = "Select ACE"
 	_window.visible = false
 	_window.min_size = Vector2i(640, 420)
+	_window.close_requested.connect(_close)
+	_window.focus_exited.connect(_on_window_focus_exited)
 	parent_node.add_child(_window)
 
 	var content: VBoxContainer = VBoxContainer.new()
+	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_window.add_child(content)
@@ -57,7 +60,7 @@ func set_registry(registry: EventSheetACERegistry) -> void:
 	_registry = registry
 
 ## Open the picker for the given mode.
-## mode: "new_event" | "append_condition" | "append_action"
+## mode: "new_event" | "new_condition_event" | "append_condition" | "append_action"
 ## signals_only: restrict results to signal triggers
 ## selected_resource: the currently selected EventRow (for context passing)
 func open(mode: String, signals_only: bool, selected_resource: Resource) -> void:
@@ -73,11 +76,15 @@ func open(mode: String, signals_only: bool, selected_resource: Resource) -> void
 	_hint.text = _build_hint_text(mode, signals_only)
 	_refresh_tree()
 	_window.popup_centered(Vector2i(720, 520))
+	_window.grab_focus()
+	_search.grab_focus()
 
 func _build_hint_text(mode: String, signals_only: bool) -> String:
 	if signals_only:
 		return "Select a signal trigger ACE to create a signal event."
 	match mode:
+		"new_condition_event":
+			return "Select a condition or trigger ACE to create a new event."
 		"append_condition":
 			return "Select a condition or trigger ACE to append to the selected event."
 		"append_action":
@@ -123,6 +130,8 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 		var is_signal: bool = source_kind == "signal" or (source_kind.is_empty() and definition.category.to_lower().contains("signal"))
 		return definition.ace_type == ACEDefinition.ACEType.TRIGGER and is_signal
 	match mode:
+		"new_condition_event":
+			return definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]
 		"append_condition":
 			return definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]
 		"append_action":
@@ -137,5 +146,14 @@ func _on_item_activated() -> void:
 	var definition: ACEDefinition = item.get_metadata(0)
 	if definition == null:
 		return
-	_window.hide()
+	_close()
 	ace_selected.emit(definition, _context.duplicate(true))
+
+func _close() -> void:
+	if _window == null:
+		return
+	_window.hide()
+
+func _on_window_focus_exited() -> void:
+	if _window != null and _window.visible:
+		_window.hide()

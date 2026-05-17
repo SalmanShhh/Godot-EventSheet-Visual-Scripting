@@ -25,10 +25,15 @@ func init_dialog(parent_node: Node) -> void:
 	_dialog.title = "Create Variable"
 	_dialog.visible = false
 	_dialog.confirmed.connect(_on_confirmed)
+	_dialog.close_requested.connect(_close)
+	_dialog.canceled.connect(_close)
 	parent_node.add_child(_dialog)
 
 	var form: VBoxContainer = VBoxContainer.new()
+	form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	form.custom_minimum_size = Vector2(420.0, 180.0)
+	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	form.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dialog.add_child(form)
 
 	_scope_label = Label.new()
@@ -79,6 +84,10 @@ func open(scope: String) -> void:
 	_default_edit.text = ""
 	_type_option.selected = 0
 	_dialog.popup_centered(Vector2i(440, 220))
+
+func _close() -> void:
+	if _dialog != null:
+		_dialog.hide()
 
 func _on_confirmed() -> void:
 	var var_name: String = _name_edit.text.strip_edges()

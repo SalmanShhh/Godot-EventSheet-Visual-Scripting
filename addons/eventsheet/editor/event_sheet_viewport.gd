@@ -5,6 +5,7 @@ extends Control
 signal selection_changed(row_data: EventRowData)
 signal row_drop_requested(source_row: EventRowData, target_row: EventRowData)
 signal ace_preview_requested(source_label: String, definitions: Array[ACEDefinition])
+signal ace_picker_requested(row_data: EventRowData, lane: String)
 signal span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String)
 
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
@@ -192,6 +193,9 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
         _select_row(row_index, span_index)
         if bool(hit.get("fold", false)):
             _toggle_row_fold(row_index)
+            return
+        if _maybe_request_ace_picker(hit, row_index):
+            accept_event()
             return
         if event.double_click:
             _begin_edit(row_index, span_index)
@@ -623,6 +627,30 @@ func _hit_test(position: Vector2) -> Dictionary:
     if gutter_rect.size != Vector2.ZERO and gutter_rect.has_point(position):
         result["gutter"] = true
     return result
+
+func _maybe_request_ace_picker(hit: Dictionary, row_index: int) -> bool:
+    var row_data: EventRowData = _row_at(row_index)
+    if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
+        return false
+    var span_index: int = int(hit.get("span_index", -1))
+    if span_index >= 0 and span_index < row_data.spans.size():
+        var span: SemanticSpan = row_data.spans[span_index]
+        var metadata: Dictionary = span.metadata if span != null and span.metadata is Dictionary else {}
+        if bool(metadata.get("editable", false)):
+            return false
+        var kind: String = str(metadata.get("kind", ""))
+        if kind in ["condition", "trigger"]:
+            ace_picker_requested.emit(row_data, "condition")
+            return true
+        if kind == "action":
+            ace_picker_requested.emit(row_data, "action")
+            return true
+        return false
+    var lane: String = str(hit.get("lane", ""))
+    if lane in ["condition", "action"]:
+        ace_picker_requested.emit(row_data, lane)
+        return true
+    return false
 
 func _row_at(index: int) -> EventRowData:
     if index < 0 or index >= _flat_rows.size():

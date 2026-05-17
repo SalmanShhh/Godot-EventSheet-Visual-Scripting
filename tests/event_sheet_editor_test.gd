@@ -231,16 +231,47 @@ static func run() -> bool:
     dock._on_redo_requested()
     all_passed = _check("redo restores local variable creation", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
 
+    # Clicking event lanes opens the ACE picker in the matching mode.
+    dock.setup(copy_sheet)
+    var clickable_row: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
+    dock._ace_picker._window.hide()
+    dock._on_viewport_ace_picker_requested(clickable_row, "condition")
+    all_passed = _check("condition lane click opens ace picker", dock._ace_picker._window.visible, true) and all_passed
+    all_passed = _check("condition lane click uses append condition mode", dock._ace_picker._context.get("mode", ""), "append_condition") and all_passed
+    dock._ace_picker._window.hide()
+    dock._on_viewport_ace_picker_requested(clickable_row, "action")
+    all_passed = _check("action lane click opens ace picker", dock._ace_picker._window.visible, true) and all_passed
+    all_passed = _check("action lane click uses append action mode", dock._ace_picker._context.get("mode", ""), "append_action") and all_passed
+    dock._ace_picker._window.close_requested.emit()
+    all_passed = _check("ace picker close button hides window", dock._ace_picker._window.visible, false) and all_passed
+
+    # Add Condition opens a new-event picker flow when no event row is selected.
+    dock.setup(EventSheetResource.new())
+    dock._on_add_condition_requested()
+    all_passed = _check("add condition without selection opens ace picker", dock._ace_picker._window.visible, true) and all_passed
+    all_passed = _check("add condition without selection uses new event mode", dock._ace_picker._context.get("mode", ""), "new_condition_event") and all_passed
+
     # ACE selection and apply workflow.
     var action_definition: ACEDefinition = null
+    var condition_definition: ACEDefinition = null
     for definition in ace_registry.search("set variable"):
         if definition.ace_type == ACEDefinition.ACEType.ACTION:
             action_definition = definition
             break
+    for definition in ace_registry.search("always"):
+        if definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]:
+            condition_definition = definition
+            break
     all_passed = _check("found action definition with params", action_definition != null and not action_definition.parameters.is_empty(), true) and all_passed
     if action_definition != null:
+        dock.setup(copy_sheet)
         dock._on_ace_picker_selected(action_definition, {"mode": "append_action", "selected_resource": dock.get_current_sheet().events[0]})
         all_passed = _check("ace apply appends action", ((dock.get_current_sheet().events[0] as EventRow).actions.size()) >= 2, true) and all_passed
+    if condition_definition != null:
+        dock.setup(EventSheetResource.new())
+        dock._apply_ace_definition(condition_definition, {}, {"mode": "new_condition_event", "selected_resource": null})
+        all_passed = _check("new condition mode creates event row", dock.get_current_sheet().events.size(), 1) and all_passed
+        all_passed = _check("new condition mode stores condition on new event", ((dock.get_current_sheet().events[0] as EventRow).conditions.size()) + (1 if (dock.get_current_sheet().events[0] as EventRow).trigger != null else 0) > 0, true) and all_passed
 
     # Undo/redo workflow.
     var undo_before: int = ((dock.get_current_sheet().events[0] as EventRow).actions.size())
@@ -258,6 +289,8 @@ static func run() -> bool:
     if exists_after_save:
         dock._load_sheet_from_path(temp_path)
         all_passed = _check("open workflow loads EventSheet resource", dock.get_current_sheet() is EventSheetResource, true) and all_passed
+    all_passed = _check("save normalization adds default filename", dock._normalize_sheet_save_path("res://"), "res://event_sheet.tres") and all_passed
+    all_passed = _check("save normalization appends tres extension", dock._normalize_sheet_save_path("res://sheets/editor_sheet"), "res://sheets/editor_sheet.tres") and all_passed
 
     # Drag-drop ACE preview updates side panel list.
     var preview_defs: Array[ACEDefinition] = []

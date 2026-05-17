@@ -163,6 +163,7 @@ func _build_ui() -> void:
     _viewport.selection_changed.connect(_on_viewport_selection_changed)
     _viewport.row_drop_requested.connect(_on_row_drop_requested)
     _viewport.ace_preview_requested.connect(_on_ace_preview_requested)
+    _viewport.ace_picker_requested.connect(_on_viewport_ace_picker_requested)
     _viewport.span_edit_requested.connect(_on_viewport_span_edit_requested)
     _viewport.set_external_span_edit_handler_enabled(true)
 
@@ -258,20 +259,28 @@ func _on_open_requested() -> void:
     dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
     dialog.access = FileDialog.ACCESS_RESOURCES
     dialog.filters = PackedStringArray(EVENT_SHEET_FILTERS)
-    dialog.file_selected.connect(_load_sheet_from_path)
+    dialog.current_dir = _suggest_sheet_directory()
+    dialog.file_selected.connect(func(path: String) -> void:
+        _load_sheet_from_path(path)
+        dialog.queue_free()
+    )
     dialog.canceled.connect(func() -> void: dialog.queue_free())
     add_child(dialog)
     dialog.popup_centered(Vector2i(860, 580))
 
 func _load_sheet_from_path(path: String) -> void:
-    var loaded: Resource = ResourceLoader.load(path)
+    var resolved_path: String = path.strip_edges()
+    if resolved_path.is_empty():
+        _set_status("Open failed: no file selected.", true)
+        return
+    var loaded: Resource = ResourceLoader.load(resolved_path)
     if loaded is EventSheetResource:
         setup(loaded as EventSheetResource)
-        _current_sheet_path = path
+        _current_sheet_path = resolved_path
         _dirty = false
         _clear_undo_history()
         return
-    _set_status("Open failed: %s is not an EventSheetResource." % path.get_file(), true)
+    _set_status("Open failed: %s is not an EventSheetResource." % resolved_path.get_file(), true)
 
 func _on_save_requested() -> void:
     if _current_sheet == null:
@@ -299,22 +308,26 @@ func _on_save_as_requested() -> void:
     dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
     dialog.access = FileDialog.ACCESS_RESOURCES
     dialog.filters = PackedStringArray(EVENT_SHEET_FILTERS)
-    if not _current_sheet_path.is_empty():
-        dialog.current_path = _current_sheet_path
-    elif not _current_sheet.resource_path.is_empty():
-        dialog.current_path = _current_sheet.resource_path
-    dialog.file_selected.connect(_save_sheet_to_path)
+    dialog.current_path = _build_initial_save_path()
+    dialog.file_selected.connect(func(path: String) -> void:
+        _save_sheet_to_path(path)
+        dialog.queue_free()
+    )
     dialog.canceled.connect(func() -> void: dialog.queue_free())
     add_child(dialog)
     dialog.popup_centered(Vector2i(860, 580))
 
 func _save_sheet_to_path(path: String) -> void:
-    var err: Error = ResourceSaver.save(_current_sheet, path)
+    if _current_sheet == null:
+        _set_status("Nothing to save.", true)
+        return
+    var resolved_path: String = _normalize_sheet_save_path(path)
+    var err: Error = ResourceSaver.save(_current_sheet, resolved_path)
     if err == OK:
-        _current_sheet.take_over_path(path)
-        _current_sheet_path = path
+        _current_sheet.take_over_path(resolved_path)
+        _current_sheet_path = resolved_path
         _dirty = false
-        _set_status("Saved as: %s" % path.get_file())
+        _set_status("Saved as: %s" % resolved_path.get_file())
     else:
         _set_status("Save failed (error %d)." % err, true)
 
@@ -329,9 +342,13 @@ func _on_add_signal_event_requested() -> void:
     _ace_picker.open("new_event", true, _viewport.get_selected_context().get("source_resource", null))
 
 func _on_add_condition_requested() -> void:
-    if not _ensure_selected_event():
+    if not _ensure_sheet_for_editing():
         return
-    _ace_picker.open("append_condition", false, _viewport.get_selected_context().get("source_resource", null))
+    var selected_resource: Resource = _viewport.get_selected_context().get("source_resource", null)
+    if selected_resource is EventRow:
+        _ace_picker.open("append_condition", false, selected_resource)
+        return
+    _ace_picker.open("new_condition_event", false, selected_resource)
 
 func _on_add_action_requested() -> void:
     if not _ensure_selected_event():
@@ -437,6 +454,15 @@ func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> 
         return
     _ace_params.open(definition, context)
 
+func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> void:
+    if row_data == null or not (row_data.source_resource is EventRow):
+        return
+    match lane:
+        "action":
+            _ace_picker.open("append_action", false, row_data.source_resource)
+        _:
+            _ace_picker.open("append_condition", false, row_data.source_resource)
+
 # ── ACE params dialog signal handler ────────────────────────────────────────
 
 func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
@@ -450,6 +476,15 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
     var message := {"text": ""}
     var changed: bool = _perform_undoable_sheet_edit("Apply ACE", func() -> bool:
         match mode:
+            "new_condition_event":
+                var condition_event: EventRow = EventRow.new()
+                if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
+                    condition_event.trigger = _create_condition_from_definition(definition, params)
+                else:
+                    condition_event.conditions.append(_create_condition_from_definition(definition, params))
+                _insert_row_below_selection(condition_event)
+                message["text"] = "Added event."
+                return true
             "append_condition":
                 if selected_resource is EventRow:
                     var target_event: EventRow = selected_resource as EventRow
@@ -510,6 +545,49 @@ func _insert_row_below_selection(row_resource: Resource) -> void:
     var container: Array = location.get("container", _current_sheet.events)
     var index: int = int(location.get("index", container.size() - 1))
     container.insert(index + 1, row_resource)
+
+func _suggest_sheet_filename() -> String:
+    var candidate_path: String = _current_sheet_path
+    if candidate_path.is_empty() and _current_sheet != null:
+        candidate_path = _current_sheet.resource_path
+    var file_name: String = candidate_path.get_file()
+    if file_name.is_empty():
+        file_name = "event_sheet.tres"
+    elif file_name.get_extension().is_empty():
+        file_name += ".tres"
+    return file_name
+
+func _suggest_sheet_directory() -> String:
+    var candidate_path: String = _current_sheet_path
+    if candidate_path.is_empty() and _current_sheet != null:
+        candidate_path = _current_sheet.resource_path
+    var directory: String = candidate_path.get_base_dir()
+    if directory.is_empty():
+        return "res://"
+    return directory
+
+func _build_initial_save_path() -> String:
+    var candidate_path: String = _current_sheet_path
+    if candidate_path.is_empty() and _current_sheet != null:
+        candidate_path = _current_sheet.resource_path
+    if candidate_path.is_empty():
+        return "res://%s" % _suggest_sheet_filename()
+    return _normalize_sheet_save_path(candidate_path)
+
+func _normalize_sheet_save_path(path: String) -> String:
+    var resolved_path: String = path.strip_edges()
+    if resolved_path.is_empty():
+        resolved_path = "res://%s" % _suggest_sheet_filename()
+    var file_name: String = resolved_path.get_file()
+    if file_name.is_empty():
+        resolved_path = resolved_path.path_join(_suggest_sheet_filename())
+        file_name = resolved_path.get_file()
+    var extension: String = file_name.get_extension().to_lower()
+    if extension.is_empty():
+        resolved_path += ".tres"
+    elif extension not in ["tres", "res"]:
+        resolved_path = "%s.tres" % resolved_path.get_basename()
+    return resolved_path
 
 func _find_resource_location(target: Resource) -> Dictionary:
     return _find_resource_location_in_array(target, _current_sheet.events)
