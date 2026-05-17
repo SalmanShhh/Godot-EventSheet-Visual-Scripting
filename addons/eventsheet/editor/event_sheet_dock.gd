@@ -827,10 +827,11 @@ func _configure_context_menu(menu: PopupMenu) -> void:
     elif menu == _row_context_menu:
         var toggle_index: int = menu.get_item_index(ROW_MENU_TOGGLE_CONDITION_BLOCK)
         if toggle_index >= 0:
-            var is_event_row: bool = _context_row != null and _context_row.source_resource is EventRow
+            var context_event: EventRow = _context_row.source_resource as EventRow if _context_row != null and _context_row.source_resource is EventRow else null
+            var is_event_row: bool = context_event != null
             menu.set_item_disabled(toggle_index, not is_event_row)
             if is_event_row:
-                menu.set_item_text(toggle_index, "Convert to AND Block" if _event_row_uses_or_mode(_context_row.source_resource as EventRow) else "Convert to OR Block")
+                menu.set_item_text(toggle_index, "Convert to AND Block" if _event_row_uses_or_mode(context_event) else "Convert to OR Block")
 
 func _on_condition_context_menu_id_pressed(id: int) -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
