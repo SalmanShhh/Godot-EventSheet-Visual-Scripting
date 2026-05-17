@@ -2,7 +2,7 @@
 class_name EventSheetDock
 extends Control
 
-const EVENT_SHEET_FILTERS := PackedStringArray(["*.tres ; EventSheetResource", "*.res ; EventSheetResource"])
+const EVENT_SHEET_FILTERS: Array[String] = ["*.tres ; EventSheetResource", "*.res ; EventSheetResource"]
 
 var _toolbar: HBoxContainer = null
 var _status_label: Label = null
@@ -257,7 +257,7 @@ func _on_open_requested() -> void:
     dialog.title = "Open EventSheet"
     dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
     dialog.access = FileDialog.ACCESS_RESOURCES
-    dialog.filters = EVENT_SHEET_FILTERS
+    dialog.filters = PackedStringArray(EVENT_SHEET_FILTERS)
     dialog.file_selected.connect(_load_sheet_from_path)
     dialog.canceled.connect(func() -> void: dialog.queue_free())
     add_child(dialog)
@@ -298,7 +298,7 @@ func _on_save_as_requested() -> void:
     dialog.title = "Save EventSheet As"
     dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
     dialog.access = FileDialog.ACCESS_RESOURCES
-    dialog.filters = EVENT_SHEET_FILTERS
+    dialog.filters = PackedStringArray(EVENT_SHEET_FILTERS)
     if not _current_sheet_path.is_empty():
         dialog.current_path = _current_sheet_path
     elif not _current_sheet.resource_path.is_empty():

@@ -18,7 +18,7 @@ var description: String = ""
 var parameters: Array = []
 var return_type: Variant.Type = TYPE_NIL
 var icon: String = ""
-var metadata := {}
+var metadata: Dictionary = {}
 
 # ── Editor parameter exposure ────────────────────────────────────────────────
 

@@ -4,66 +4,66 @@ extends RefCounted
 class_name EventSheetEditorTest
 
 class FakeEditorUndoRedoManager:
-	extends RefCounted
+    extends RefCounted
 
-	var _pending_do: Array[Callable] = []
-	var _pending_undo: Array[Callable] = []
-	var _undo_stack: Array[Dictionary] = []
-	var _redo_stack: Array[Dictionary] = []
+    var _pending_do: Array[Callable] = []
+    var _pending_undo: Array[Callable] = []
+    var _undo_stack: Array[Dictionary] = []
+    var _redo_stack: Array[Dictionary] = []
 
-	func create_action(_name: String) -> void:
-		_pending_do.clear()
-		_pending_undo.clear()
+    func create_action(_name: String) -> void:
+        _pending_do.clear()
+        _pending_undo.clear()
 
-	func add_do_method(target: Object, method_name: String, arg1 := null, arg2 := null, arg3 := null, arg4 := null) -> void:
-		var args: Array = [arg1, arg2, arg3, arg4]
-		_pending_do.append(func() -> void: target.callv(method_name, _trim_null_args(args)))
+    func add_do_method(target: Object, method_name: String, arg1 := null, arg2 := null, arg3 := null, arg4 := null) -> void:
+        var args: Array = [arg1, arg2, arg3, arg4]
+        _pending_do.append(func() -> void: target.callv(method_name, _trim_null_args(args)))
 
-	func add_undo_method(target: Object, method_name: String, arg1 := null, arg2 := null, arg3 := null, arg4 := null) -> void:
-		var args: Array = [arg1, arg2, arg3, arg4]
-		_pending_undo.append(func() -> void: target.callv(method_name, _trim_null_args(args)))
+    func add_undo_method(target: Object, method_name: String, arg1 := null, arg2 := null, arg3 := null, arg4 := null) -> void:
+        var args: Array = [arg1, arg2, arg3, arg4]
+        _pending_undo.append(func() -> void: target.callv(method_name, _trim_null_args(args)))
 
-	func commit_action() -> void:
-		for action in _pending_do:
-			action.call()
-		_undo_stack.append({"do": _pending_do.duplicate(), "undo": _pending_undo.duplicate()})
-		_pending_do.clear()
-		_pending_undo.clear()
-		_redo_stack.clear()
+    func commit_action() -> void:
+        for action in _pending_do:
+            action.call()
+        _undo_stack.append({"do": _pending_do.duplicate(), "undo": _pending_undo.duplicate()})
+        _pending_do.clear()
+        _pending_undo.clear()
+        _redo_stack.clear()
 
-	func has_undo() -> bool:
-		return not _undo_stack.is_empty()
+    func has_undo() -> bool:
+        return not _undo_stack.is_empty()
 
-	func has_redo() -> bool:
-		return not _redo_stack.is_empty()
+    func has_redo() -> bool:
+        return not _redo_stack.is_empty()
 
-	func undo() -> void:
-		if _undo_stack.is_empty():
-			return
-		var action: Dictionary = _undo_stack.pop_back()
-		for undo_action in action.get("undo", []):
-			(undo_action as Callable).call()
-		_redo_stack.append(action)
+    func undo() -> void:
+        if _undo_stack.is_empty():
+            return
+        var action: Dictionary = _undo_stack.pop_back()
+        for undo_action in action.get("undo", []):
+            (undo_action as Callable).call()
+        _redo_stack.append(action)
 
-	func redo() -> void:
-		if _redo_stack.is_empty():
-			return
-		var action: Dictionary = _redo_stack.pop_back()
-		for do_action in action.get("do", []):
-			(do_action as Callable).call()
-		_undo_stack.append(action)
+    func redo() -> void:
+        if _redo_stack.is_empty():
+            return
+        var action: Dictionary = _redo_stack.pop_back()
+        for do_action in action.get("do", []):
+            (do_action as Callable).call()
+        _undo_stack.append(action)
 
-	func clear_history() -> void:
-		_pending_do.clear()
-		_pending_undo.clear()
-		_undo_stack.clear()
-		_redo_stack.clear()
+    func clear_history() -> void:
+        _pending_do.clear()
+        _pending_undo.clear()
+        _undo_stack.clear()
+        _redo_stack.clear()
 
-	static func _trim_null_args(args: Array) -> Array:
-		var output: Array = args.duplicate()
-		while not output.is_empty() and output[output.size() - 1] == null:
-			output.pop_back()
-		return output
+    static func _trim_null_args(args: Array) -> Array:
+        var output: Array = args.duplicate()
+        while not output.is_empty() and output[output.size() - 1] == null:
+            output.pop_back()
+        return output
 
 ## Runs EventSheetEditor architecture tests.
 static func run() -> bool:
@@ -111,8 +111,8 @@ static func run() -> bool:
     event_row.actions = [action]
     group.events.append(event_row)
     sheet.events = [comment, group]
-	dock.setup(sheet)
-	dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
+    dock.setup(sheet)
+    dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
     all_passed = _check("sheet renders flattened rows", dock_viewport.get_total_row_count(), 3) and all_passed
     var flat_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     var group_row: EventRowData = flat_rows[1].get("row")
@@ -165,12 +165,12 @@ static func run() -> bool:
     move_sheet.events = [move_a, move_b]
     dock.setup(move_sheet)
     var move_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
-	dock._on_row_drop_requested(move_rows[0].get("row"), move_rows[1].get("row"))
-	all_passed = _check("drag-drop reorders rows", ((dock.get_current_sheet().events[0] as EventRow).comment), "B") and all_passed
-	dock._on_undo_requested()
-	all_passed = _check("undo restores drag-drop reorder", ((dock.get_current_sheet().events[0] as EventRow).comment), "A") and all_passed
-	dock._on_redo_requested()
-	all_passed = _check("redo reapplies drag-drop reorder", ((dock.get_current_sheet().events[0] as EventRow).comment), "B") and all_passed
+    dock._on_row_drop_requested(move_rows[0].get("row"), move_rows[1].get("row"))
+    all_passed = _check("drag-drop reorders rows", ((dock.get_current_sheet().events[0] as EventRow).comment), "B") and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo restores drag-drop reorder", ((dock.get_current_sheet().events[0] as EventRow).comment), "A") and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo reapplies drag-drop reorder", ((dock.get_current_sheet().events[0] as EventRow).comment), "B") and all_passed
 
     # Copy/paste event row.
     dock_viewport._select_row(0)
@@ -203,19 +203,19 @@ static func run() -> bool:
 
     # Global and local variable creation workflow.
     dock.setup(copy_sheet)
-	dock._on_variable_dialog_confirmed("ammo", "int", 12, "global")
-	all_passed = _check("create global variable stores sheet variable", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
-	dock._on_undo_requested()
-	all_passed = _check("undo removes global variable creation", dock.get_current_sheet().variables.has("ammo"), false) and all_passed
-	dock._on_redo_requested()
-	all_passed = _check("redo restores global variable creation", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
-	dock_viewport._select_row(0)
-	dock._on_variable_dialog_confirmed("cooldown", "float", 0.5, "local")
-	all_passed = _check("create local variable stores on selected event", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
-	dock._on_undo_requested()
-	all_passed = _check("undo removes local variable creation", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 0) and all_passed
-	dock._on_redo_requested()
-	all_passed = _check("redo restores local variable creation", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
+    dock._on_variable_dialog_confirmed("ammo", "int", 12, "global")
+    all_passed = _check("create global variable stores sheet variable", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo removes global variable creation", dock.get_current_sheet().variables.has("ammo"), false) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo restores global variable creation", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
+    dock_viewport._select_row(0)
+    dock._on_variable_dialog_confirmed("cooldown", "float", 0.5, "local")
+    all_passed = _check("create local variable stores on selected event", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo removes local variable creation", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 0) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo restores local variable creation", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
 
     # ACE selection and apply workflow.
     var action_definition: ACEDefinition = null

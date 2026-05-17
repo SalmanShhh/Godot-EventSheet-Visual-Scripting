@@ -39,21 +39,21 @@ static func _map_params(params: Array[ACEParam]) -> Array:
     for param in params:
         if param == null:
             continue
-		var key: String = param.id if not param.id.is_empty() else param.name
-		var normalized_options: Array = []
-		for option in param.options:
-			var option_text: String = str(option)
-			if option_text.is_empty():
-				continue
-			normalized_options.append({"key": option_text, "label": option_text})
-		output.append({
-			"id": key,
-			"display_name": param.display_name if not param.display_name.is_empty() else key,
-			"description": param.get_param_description(),
-			"type": param.type,
-			"type_name": param.type_name,
-			"default_value": param.get_initial_value(),
-			"hint": param.hint,
-			"options": normalized_options
-		})
-	return output
+        var key: String = param.id if not param.id.is_empty() else param.name
+        var normalized_options: Array = []
+        for option in param.options:
+            var option_text: String = str(option)
+            if option_text.is_empty():
+                continue
+            normalized_options.append({"key": option_text, "label": option_text})
+        output.append({
+            "id": key,
+            "display_name": param.display_name if not param.display_name.is_empty() else key,
+            "description": param.get_param_description(),
+            "type": param.type,
+            "type_name": param.type_name,
+            "default_value": param.get_initial_value(),
+            "hint": param.hint,
+            "options": normalized_options
+        })
+    return output
