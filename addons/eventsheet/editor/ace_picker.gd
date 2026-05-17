@@ -114,7 +114,11 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 	if definition == null:
 		return false
 	if signals_only:
-		return definition.ace_type == ACEDefinition.ACEType.TRIGGER and definition.category.to_lower().contains("signal")
+		# Use source_kind metadata for precise signal detection (set by the generator).
+		# Fall back to category string only when metadata is absent.
+		var source_kind: String = str(definition.metadata.get("source_kind", ""))
+		var is_signal: bool = source_kind == "signal" or (source_kind.is_empty() and definition.category.to_lower().contains("signal"))
+		return definition.ace_type == ACEDefinition.ACEType.TRIGGER and is_signal
 	match mode:
 		"append_condition":
 			return definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]

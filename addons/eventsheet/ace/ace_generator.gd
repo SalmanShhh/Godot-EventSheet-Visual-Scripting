@@ -2,6 +2,9 @@
 class_name EventSheetACEGenerator
 extends RefCounted
 
+## Types considered primitive for editor exposure purposes.
+const PRIMITIVE_TYPES := [TYPE_NIL, TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING]
+
 const COMMON_METHOD_IGNORE := {
     "_get_property_list": true,
     "_get": true,
@@ -243,25 +246,26 @@ func _method_is_exposable(ace_type: int, return_type: int, params: Array) -> boo
     if ace_type == ACEDefinition.ACEType.TRIGGER:
         return false
     if ace_type == ACEDefinition.ACEType.EXPRESSION:
-        if return_type not in [TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING]:
+        if return_type not in PRIMITIVE_TYPES:
             return false
     for param in params:
         if not (param is Dictionary):
             return false
         var ptype: int = int((param as Dictionary).get("type", TYPE_NIL))
-        if ptype not in [TYPE_NIL, TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING]:
+        if ptype not in PRIMITIVE_TYPES:
             return false
     return true
 
-## Infer a basic PropertyHint for the given Variant type.
+## Infer a PropertyHint for the given Variant type.
+## Callers can pass a "property_hint" override in the overrides dict
+## (e.g. PROPERTY_HINT_RANGE for a bounded integer).
 func _infer_property_hint(value_type: int, overrides: Dictionary) -> int:
     var hint_override: int = int(overrides.get("property_hint", -1))
     if hint_override >= 0:
         return hint_override
+    # Default hints by type; extend here as richer widgets are added.
     match value_type:
-        TYPE_INT:
-            return PROPERTY_HINT_NONE
-        TYPE_FLOAT:
+        TYPE_INT, TYPE_FLOAT:
             return PROPERTY_HINT_NONE
         TYPE_STRING:
             return PROPERTY_HINT_NONE

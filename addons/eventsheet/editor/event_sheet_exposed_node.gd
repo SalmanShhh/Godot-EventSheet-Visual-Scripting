@@ -48,7 +48,7 @@ func _rebuild_prop_map() -> void:
 				"provider_id": definition.provider_id,
 				"ace_id": definition.id,
 				"param_id": param_id,
-				"type": int(param_dict.get("type", TYPE_STRING)),
+				"type": int(param_dict.get("type", TYPE_NIL)),
 				"hint": definition.property_hint,
 				"hint_string": definition.hint_string,
 				"display_name": str(param_dict.get("display_name", param_id)),
@@ -73,7 +73,7 @@ func _get_property_list() -> Array[Dictionary]:
 			seen_categories[category] = true
 		result.append({
 			"name": prop_key,
-			"type": int(entry.get("type", TYPE_STRING)),
+			"type": int(entry.get("type", TYPE_NIL)),
 			"hint": int(entry.get("hint", PROPERTY_HINT_NONE)),
 			"hint_string": str(entry.get("hint_string", "")),
 			"usage": PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_EDITOR
