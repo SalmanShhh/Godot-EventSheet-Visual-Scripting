@@ -202,7 +202,7 @@ func _handle_key(event: InputEventKey) -> void:
         if right_row != null and not right_row.children.is_empty() and right_row.folded:
             _toggle_row_fold(_selected_row_index)
             accept_event()
-    elif event.keycode == KEY_B:
+    elif event.keycode == KEY_B and (event.ctrl_pressed or event.meta_pressed):
         _toggle_breakpoint(_selected_row_index)
         accept_event()
     elif event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_F2]:
@@ -418,6 +418,9 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             x = max(x, lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH + EventSheetPalette.ACTION_LANE_PADDING)
         var measured_text: String = _editing_buffer if index == _editing_row_index and span_index == _editing_span_index else span.text
         var span_width: float = font.get_string_size(measured_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+        if lane_divider_x > 0.0 and span_lane != "action":
+            var max_condition_right: float = lane_divider_x - EventSheetPalette.ACTION_LANE_PADDING
+            span_width = max(min(span_width, max_condition_right - x), 10.0)
         span.rect = Rect2(x, row_top + 4.0, span_width + 2.0, ROW_HEIGHT - 8.0)
         x += span.rect.size.x + EventSheetPalette.SPAN_GAP
     var drag_rect := Rect2()
