@@ -313,6 +313,13 @@ static func run() -> bool:
     all_passed = _check("create local variable without selection targets first event", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
     all_passed = _check("create local variable without selection reselects target event", dock.get_viewport_control().get_selected_context().get("source_resource", null) is EventRow, true) and all_passed
 
+    var empty_local_sheet := EventSheetResource.new()
+    dock.setup(empty_local_sheet)
+    dock_viewport._clear_selection()
+    dock._on_variable_dialog_confirmed("spawned", "bool", true, "local")
+    all_passed = _check("create local variable without events creates host event", dock.get_current_sheet().events.size(), 1) and all_passed
+    all_passed = _check("create local variable without events stores on created host event", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
+
     dock_viewport.set_size(Vector2(1180.0, 640.0))
     dock_viewport.set_sheet(dock.get_current_sheet())
     all_passed = _check("viewport canvas expands to available width", dock_viewport.custom_minimum_size.x >= 1180.0, true) and all_passed
