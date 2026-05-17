@@ -22,6 +22,7 @@ var _resolver: ParamDefaultResolver = null
 var _undo_redo: UndoRedo = null
 var _sheet: EventSheetResource = null
 var _provider_filter: Dictionary = {}
+var _connected_store: EditorParamStore = null
 ## Cache of (property_name -> {provider_id, ace_id, param_id, type}) built in setup().
 var _prop_map: Dictionary = {}
 
@@ -29,7 +30,15 @@ var _prop_map: Dictionary = {}
 func setup(registry: EventSheetACERegistry, param_store: EditorParamStore,
 		sheet: EventSheetResource = null, resolver: ParamDefaultResolver = null) -> void:
 	_registry = registry
+	if _connected_store != null and _connected_store != param_store:
+		if _connected_store.override_changed.is_connected(_on_store_changed):
+			_connected_store.override_changed.disconnect(_on_store_changed)
+		if _connected_store.override_removed.is_connected(_on_store_removed):
+			_connected_store.override_removed.disconnect(_on_store_removed)
+		if _connected_store.overrides_cleared.is_connected(_on_store_cleared):
+			_connected_store.overrides_cleared.disconnect(_on_store_cleared)
 	_param_store = param_store
+	_connected_store = param_store
 	_sheet = sheet
 	_resolver = resolver if resolver != null else ParamDefaultResolver.new()
 	_resolver.set_param_store(_param_store)
@@ -110,9 +119,6 @@ func _get(property: StringName) -> Variant:
 	var provider_id: String = str(entry.get("provider_id", ""))
 	var ace_id: String = str(entry.get("ace_id", ""))
 	var param_id: String = str(entry.get("param_id", ""))
-	if _resolver == null:
-		_resolver = ParamDefaultResolver.new()
-		_resolver.set_param_store(_param_store)
 	return _resolver.resolve(provider_id, ace_id, param_id, entry.get("param_meta", {}), null)
 
 ## Called by Godot's property system to set a property value.

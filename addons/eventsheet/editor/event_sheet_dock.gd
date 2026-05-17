@@ -494,9 +494,6 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
     return action
 
 func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionary) -> Dictionary:
-    if _param_resolver == null:
-        _param_resolver = ParamDefaultResolver.new()
-        _param_resolver.set_param_store(_editor_param_store)
     return _param_resolver.resolve_all(definition, row_params if row_params != null else {})
 
 func _insert_row_below_selection(row_resource: Resource) -> void:
@@ -552,12 +549,12 @@ func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData) 
     var target_index: int = int(target_location.get("index", -1))
     if source_index < 0 or target_index < 0:
         return
-    var insertion_index: int = target_index
-    if source_container == target_container and source_index < target_index:
-        insertion_index -= 1
     if _resource_contains_descendant(source_resource, target_resource):
         _set_status("Cannot move a row into one of its descendants.", true)
         return
+    var insertion_index: int = target_index
+    if source_container == target_container and source_index < target_index:
+        insertion_index -= 1
     var moved: bool = _perform_undoable_sheet_edit("Drag Row", func() -> bool:
         source_container.remove_at(source_index)
         target_container.insert(insertion_index, source_resource)
