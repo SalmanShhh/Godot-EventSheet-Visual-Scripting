@@ -21,9 +21,9 @@ const ROW_MENU_COPY := 5
 const ROW_MENU_PASTE := 6
 const ROW_MENU_DELETE := 7
 const ROW_MENU_TOGGLE_CONDITION_BLOCK := 8
-const SIDE_PANEL_MIN_WIDTH := 240.0
-const SIDE_PANEL_MAX_WIDTH := 320.0
-const SIDE_PANEL_WIDTH_RATIO := 0.24
+const SIDE_PANEL_MIN_WIDTH := 160.0
+const SIDE_PANEL_MAX_WIDTH := 220.0
+const SIDE_PANEL_WIDTH_RATIO := 0.18
 
 var _toolbar: HBoxContainer = null
 var _status_label: Label = null
@@ -212,7 +212,7 @@ func _build_ui() -> void:
     _preview_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _preview_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _preview_list.size_flags_stretch_ratio = 1.15
-    _preview_list.custom_minimum_size = Vector2(180.0, 120.0)
+    _preview_list.custom_minimum_size = Vector2(140.0, 120.0)
     _side_panel.add_child(_preview_list)
 
     var globals_label: Label = Label.new()
@@ -221,7 +221,7 @@ func _build_ui() -> void:
 
     _global_var_list = ItemList.new()
     _global_var_list.name = "GlobalVariableList"
-    _global_var_list.custom_minimum_size = Vector2(180.0, 96.0)
+    _global_var_list.custom_minimum_size = Vector2(140.0, 96.0)
     _global_var_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _global_var_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _global_var_list.size_flags_stretch_ratio = 0.55
@@ -234,7 +234,7 @@ func _build_ui() -> void:
 
     _local_var_list = ItemList.new()
     _local_var_list.name = "LocalVariableList"
-    _local_var_list.custom_minimum_size = Vector2(180.0, 96.0)
+    _local_var_list.custom_minimum_size = Vector2(140.0, 96.0)
     _local_var_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _local_var_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _local_var_list.size_flags_stretch_ratio = 0.55

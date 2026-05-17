@@ -22,6 +22,18 @@ static func run() -> bool:
     all_passed = _check("viewport supports context menu API", viewport != null and viewport.has_signal("context_menu_requested"), true) and all_passed
     all_passed = _check("viewport exposes editor state scaffold", viewport != null and viewport.has_method("get_editor_state_snapshot"), true) and all_passed
     all_passed = _check("viewport exposes disabled row scaffold", viewport != null and viewport.has_method("set_row_disabled"), true) and all_passed
+    editor.set_size(Vector2(1200.0, 720.0))
+    editor._sync_workspace_layout()
+    all_passed = _check(
+        "side panel minimum width stays compact",
+        side_panel != null and side_panel.custom_minimum_size.x <= 160.0,
+        true
+    ) and all_passed
+    all_passed = _check(
+        "split keeps most width for the sheet canvas",
+        split != null and split.split_offset >= 980,
+        true
+    ) and all_passed
     editor.free()
     return all_passed
 
