@@ -20,10 +20,14 @@ static func run() -> bool:
     var dock: EventSheetDock = editor as EventSheetDock
     dock.setup(null)
     var dock_viewport: EventSheetViewport = dock.get_viewport_control()
+    var ace_registry: EventSheetACERegistry = dock.get_ace_registry()
     all_passed = _check("demo sheet populates rows", dock_viewport.get_total_row_count() > 0, true) and all_passed
     var demo_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     var first_demo_row: EventRowData = demo_rows[0].get("row")
     all_passed = _check("demo sheet exposes semantic spans", first_demo_row.spans.size() > 0, true) and all_passed
+    all_passed = _check("demo flow exposes reflected ace registry", ace_registry.get_reflected_provider_ids().is_empty(), false) and all_passed
+    all_passed = _check("demo rows render auto ace trigger text", _rows_contain_text(demo_rows, "On Died"), true) and all_passed
+    all_passed = _check("demo rows render auto ace action text", _rows_contain_text(demo_rows, "Take Damage 10"), true) and all_passed
 
     var sheet := EventSheetResource.new()
     var group := EventGroup.new()
@@ -72,6 +76,13 @@ static func run() -> bool:
 static func _row_contains_text(row_data: EventRowData, expected_text: String) -> bool:
     for span: SemanticSpan in row_data.spans:
         if span != null and span.text == expected_text:
+            return true
+    return false
+
+static func _rows_contain_text(rows: Array[Dictionary], expected_text: String) -> bool:
+    for row_entry: Dictionary in rows:
+        var row_data: EventRowData = row_entry.get("row")
+        if row_data != null and _row_contains_text(row_data, expected_text):
             return true
     return false
 

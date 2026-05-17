@@ -11,6 +11,7 @@ const FONT_SIZE := EventSheetPalette.FONT_SIZE
 
 var _renderer: EventRowRenderer = EventRowRenderer.new()
 var _layout_cache: RowLayoutCache = RowLayoutCache.new()
+var _ace_registry: EventSheetACERegistry = EventSheetACERegistry.new()
 var _sheet: EventSheetResource = null
 var _root_rows: Array[EventRowData] = []
 var _flat_rows: Array[Dictionary] = []
@@ -45,6 +46,16 @@ func _process(_delta: float) -> void:
 func set_sheet(sheet: EventSheetResource) -> void:
     _sheet = sheet
     _refresh_rows()
+
+func set_ace_registry(ace_registry: EventSheetACERegistry) -> void:
+    if ace_registry == null:
+        _ace_registry = EventSheetACERegistry.new()
+    else:
+        _ace_registry = ace_registry
+    _refresh_rows()
+
+func get_ace_registry() -> EventSheetACERegistry:
+    return _ace_registry
 
 func set_debug_overlay_states(states: Dictionary) -> void:
     _debug_rows = states.duplicate(true)
@@ -520,17 +531,23 @@ func _group_name(group: EventGroup) -> String:
     return "Group"
 
 func _format_condition_descriptor(condition: ACECondition) -> String:
+    var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+    var generated_definition: ACEDefinition = _find_definition(condition.provider_id, condition.ace_id)
+    if generated_definition != null:
+        return generated_definition.format_display(params_dict)
     var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
     if descriptor == null:
         return condition.ace_id
-    var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
     return descriptor.format_display(params_dict)
 
 func _format_action_descriptor(action: ACEAction) -> String:
+    var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
+    var generated_definition: ACEDefinition = _find_definition(action.provider_id, action.ace_id)
+    if generated_definition != null:
+        return generated_definition.format_display(params_dict)
     var descriptor: ACEDescriptor = ACERegistry.find_descriptor(action.provider_id, action.ace_id)
     if descriptor == null:
         return action.ace_id
-    var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
     return descriptor.format_display(params_dict)
 
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
@@ -547,6 +564,11 @@ func _configure_viewport() -> void:
     size_flags_horizontal = Control.SIZE_EXPAND_FILL
     size_flags_vertical = Control.SIZE_EXPAND_FILL
     set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+func _find_definition(provider_id: String, ace_id: String) -> ACEDefinition:
+    if _ace_registry == null:
+        return null
+    return _ace_registry.find_definition(provider_id, ace_id)
 
 func _get_font() -> Font:
     var font: Font = get_theme_default_font()
