@@ -4,6 +4,23 @@ extends Control
 
 const EVENT_SHEET_FILTERS: Array[String] = ["*.tres ; EventSheetResource", "*.res ; EventSheetResource"]
 const VARIABLE_USAGE_MAX_DEPTH := 8
+const CONDITION_MENU_EDIT := 1
+const CONDITION_MENU_ADD := 2
+const CONDITION_MENU_REPLACE := 3
+const CONDITION_MENU_INVERT := 4
+const CONDITION_MENU_DELETE := 5
+const ACTION_MENU_EDIT := 1
+const ACTION_MENU_ADD := 2
+const ACTION_MENU_REPLACE := 3
+const ACTION_MENU_DELETE := 4
+const ROW_MENU_ADD_SUB_EVENT := 1
+const ROW_MENU_ADD_EVENT_BELOW := 2
+const ROW_MENU_ADD_GROUP_BELOW := 3
+const ROW_MENU_ADD_COMMENT_BELOW := 4
+const ROW_MENU_COPY := 5
+const ROW_MENU_PASTE := 6
+const ROW_MENU_DELETE := 7
+const ROW_MENU_TOGGLE_CONDITION_BLOCK := 8
 
 var _toolbar: HBoxContainer = null
 var _status_label: Label = null
@@ -231,33 +248,36 @@ func _build_context_menus() -> void:
     if _condition_context_menu != null:
         return
     _condition_context_menu = PopupMenu.new()
-    _condition_context_menu.add_item("Edit Condition", 1)
-    _condition_context_menu.add_item("Add Condition", 2)
-    _condition_context_menu.add_item("Replace Condition", 3)
+    _condition_context_menu.add_item("Edit Condition", CONDITION_MENU_EDIT)
+    _condition_context_menu.add_item("Add Condition", CONDITION_MENU_ADD)
+    _condition_context_menu.add_item("Replace Condition", CONDITION_MENU_REPLACE)
     _condition_context_menu.add_separator()
-    _condition_context_menu.add_item("Delete Condition", 4)
+    _condition_context_menu.add_item("Invert Condition", CONDITION_MENU_INVERT)
+    _condition_context_menu.add_separator()
+    _condition_context_menu.add_item("Delete Condition", CONDITION_MENU_DELETE)
     _condition_context_menu.id_pressed.connect(_on_condition_context_menu_id_pressed)
     add_child(_condition_context_menu)
 
     _action_context_menu = PopupMenu.new()
-    _action_context_menu.add_item("Edit Action", 1)
-    _action_context_menu.add_item("Add Action", 2)
-    _action_context_menu.add_item("Replace Action", 3)
+    _action_context_menu.add_item("Edit Action", ACTION_MENU_EDIT)
+    _action_context_menu.add_item("Add Action", ACTION_MENU_ADD)
+    _action_context_menu.add_item("Replace Action", ACTION_MENU_REPLACE)
     _action_context_menu.add_separator()
-    _action_context_menu.add_item("Delete Action", 4)
+    _action_context_menu.add_item("Delete Action", ACTION_MENU_DELETE)
     _action_context_menu.id_pressed.connect(_on_action_context_menu_id_pressed)
     add_child(_action_context_menu)
 
     _row_context_menu = PopupMenu.new()
-    _row_context_menu.add_item("Add Sub-Event", 1)
-    _row_context_menu.add_item("Add Event Below", 2)
-    _row_context_menu.add_item("Add Group Below", 3)
-    _row_context_menu.add_item("Add Comment Below", 4)
+    _row_context_menu.add_item("Add Sub-Event", ROW_MENU_ADD_SUB_EVENT)
+    _row_context_menu.add_item("Add Event Below", ROW_MENU_ADD_EVENT_BELOW)
+    _row_context_menu.add_item("Add Group Below", ROW_MENU_ADD_GROUP_BELOW)
+    _row_context_menu.add_item("Add Comment Below", ROW_MENU_ADD_COMMENT_BELOW)
     _row_context_menu.add_separator()
-    _row_context_menu.add_item("Copy", 5)
-    _row_context_menu.add_item("Paste", 6)
+    _row_context_menu.add_item("Copy", ROW_MENU_COPY)
+    _row_context_menu.add_item("Paste", ROW_MENU_PASTE)
     _row_context_menu.add_separator()
-    _row_context_menu.add_item("Delete Row", 7)
+    _row_context_menu.add_item("Delete Row", ROW_MENU_DELETE)
+    _row_context_menu.add_item("Convert to OR Block", ROW_MENU_TOGGLE_CONDITION_BLOCK)
     _row_context_menu.id_pressed.connect(_on_row_context_menu_id_pressed)
     add_child(_row_context_menu)
 
@@ -794,63 +814,81 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
 func _show_popup_menu(menu: PopupMenu, global_position: Vector2) -> void:
     if menu == null:
         return
+    _configure_context_menu(menu)
     menu.position = Vector2i(global_position)
     menu.reset_size()
     menu.popup()
+
+func _configure_context_menu(menu: PopupMenu) -> void:
+    if menu == _condition_context_menu:
+        var invert_index: int = menu.get_item_index(CONDITION_MENU_INVERT)
+        if invert_index >= 0:
+            menu.set_item_text(invert_index, "Remove Inversion" if _context_condition_is_negated() else "Invert Condition")
+    elif menu == _row_context_menu:
+        var toggle_index: int = menu.get_item_index(ROW_MENU_TOGGLE_CONDITION_BLOCK)
+        if toggle_index >= 0:
+            var is_event_row: bool = _context_row != null and _context_row.source_resource is EventRow
+            menu.set_item_disabled(toggle_index, not is_event_row)
+            if is_event_row:
+                menu.set_item_text(toggle_index, "Convert to AND Block" if _event_row_uses_or_mode(_context_row.source_resource as EventRow) else "Convert to OR Block")
 
 func _on_condition_context_menu_id_pressed(id: int) -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
         return
     match id:
-        1:
+        CONDITION_MENU_EDIT:
             _on_viewport_ace_edit_requested(_context_row, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
-        2:
+        CONDITION_MENU_ADD:
             _ace_picker.open("append_condition", false, _context_row.source_resource)
-        3:
+        CONDITION_MENU_REPLACE:
             var replace_context: Dictionary = _build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
             if not replace_context.is_empty():
                 _ace_picker.open(str(replace_context.get("mode", "replace_condition")), false, _context_row.source_resource, replace_context)
-        4:
+        CONDITION_MENU_INVERT:
+            _toggle_context_condition_inversion()
+        CONDITION_MENU_DELETE:
             _delete_context_ace()
 
 func _on_action_context_menu_id_pressed(id: int) -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
         return
     match id:
-        1:
+        ACTION_MENU_EDIT:
             _on_viewport_ace_edit_requested(_context_row, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
-        2:
+        ACTION_MENU_ADD:
             _ace_picker.open("append_action", false, _context_row.source_resource)
-        3:
+        ACTION_MENU_REPLACE:
             var replace_context: Dictionary = _build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
             if not replace_context.is_empty():
                 _ace_picker.open("replace_action", false, _context_row.source_resource, replace_context)
-        4:
+        ACTION_MENU_DELETE:
             _delete_context_ace()
 
 func _on_row_context_menu_id_pressed(id: int) -> void:
     if _context_row == null:
         return
     match id:
-        1:
+        ROW_MENU_ADD_SUB_EVENT:
             _insert_child_event_for_context_row()
-        2:
+        ROW_MENU_ADD_EVENT_BELOW:
             _insert_context_row_below(EventRow.new(), "Added event.")
-        3:
+        ROW_MENU_ADD_GROUP_BELOW:
             var group: EventGroup = EventGroup.new()
             group.name = "Group"
             group.group_name = group.name
             _insert_context_row_below(group, "Added group.")
-        4:
+        ROW_MENU_ADD_COMMENT_BELOW:
             var comment: CommentRow = CommentRow.new()
             comment.text = "Comment"
             _insert_context_row_below(comment, "Added comment.")
-        5:
+        ROW_MENU_COPY:
             _on_copy_requested()
-        6:
+        ROW_MENU_PASTE:
             _on_paste_requested()
-        7:
+        ROW_MENU_DELETE:
             _delete_context_row()
+        ROW_MENU_TOGGLE_CONDITION_BLOCK:
+            _toggle_context_condition_block()
 
 func _delete_context_ace() -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
@@ -877,6 +915,36 @@ func _delete_context_ace() -> void:
     )
     if deleted:
         _mark_dirty("Deleted ACE.")
+
+func _toggle_context_condition_inversion() -> void:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        return
+    var event_row: EventRow = _context_row.source_resource as EventRow
+    var metadata: Dictionary = _context_hit.get("span_metadata", {})
+    var kind: String = str(metadata.get("kind", ""))
+    var ace_index: int = int(metadata.get("ace_index", -1))
+    var toggled: bool = _perform_undoable_sheet_edit("Invert Condition", func() -> bool:
+        if kind == "trigger" and event_row.trigger != null:
+            event_row.trigger.negated = not event_row.trigger.negated
+            return true
+        if kind == "condition" and ace_index >= 0 and ace_index < event_row.conditions.size():
+            event_row.conditions[ace_index].negated = not event_row.conditions[ace_index].negated
+            return true
+        return false
+    )
+    if toggled:
+        _mark_dirty("Updated condition inversion.")
+
+func _toggle_context_condition_block() -> void:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        return
+    var event_row: EventRow = _context_row.source_resource as EventRow
+    var toggled: bool = _perform_undoable_sheet_edit("Toggle Condition Block", func() -> bool:
+        event_row.condition_mode = EventRow.ConditionMode.AND if _event_row_uses_or_mode(event_row) else EventRow.ConditionMode.OR
+        return true
+    )
+    if toggled:
+        _mark_dirty("Updated condition block.")
 
 func _delete_context_row() -> void:
     if _context_row == null or _context_row.source_resource == null:
@@ -1075,6 +1143,22 @@ func _event_row_uses_variable(event_row: EventRow, var_name: String) -> bool:
         if _ace_entry_uses_variable(action_entry, var_name):
             return true
     return _resource_array_uses_variable(event_row.sub_events, var_name)
+
+func _event_row_uses_or_mode(event_row: EventRow) -> bool:
+    return event_row != null and event_row.condition_mode == EventRow.ConditionMode.OR
+
+func _context_condition_is_negated() -> bool:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        return false
+    var event_row: EventRow = _context_row.source_resource as EventRow
+    var metadata: Dictionary = _context_hit.get("span_metadata", {})
+    var kind: String = str(metadata.get("kind", ""))
+    var ace_index: int = int(metadata.get("ace_index", -1))
+    if kind == "trigger" and event_row.trigger != null:
+        return event_row.trigger.negated
+    if kind == "condition" and ace_index >= 0 and ace_index < event_row.conditions.size():
+        return event_row.conditions[ace_index].negated
+    return false
 
 func _ace_entry_uses_variable(entry: Resource, var_name: String) -> bool:
     if entry == null:

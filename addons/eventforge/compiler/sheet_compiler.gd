@@ -87,7 +87,8 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 
 			var body_indent: String = "\t"
 			if condition_texts.size() > 0:
-				lines.append("\tif %s:" % " and ".join(condition_texts))
+				var joiner: String = " or " if event_row.condition_mode == EventRow.ConditionMode.OR else " and "
+				lines.append("\tif %s:" % joiner.join(condition_texts))
 				body_indent = "\t\t"
 				had_body = true
 

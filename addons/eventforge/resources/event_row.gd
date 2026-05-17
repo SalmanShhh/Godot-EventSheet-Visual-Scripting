@@ -10,6 +10,11 @@ enum ElseMode {
 	ELIF
 }
 
+enum ConditionMode {
+	AND,
+	OR
+}
+
 static var _uid_counter: int = 0
 
 @export var enabled: bool = true
@@ -19,7 +24,7 @@ static var _uid_counter: int = 0
 @export var trigger_params: Dictionary = {}
 @export var trigger: ACECondition = null
 @export var conditions: Array[ACECondition] = []
-@export var condition_mode: int = 0
+@export var condition_mode: int = ConditionMode.AND
 @export var actions: Array[Resource] = []
 @export var sub_events: Array[Resource] = []
 @export var else_mode: ElseMode = ElseMode.NONE

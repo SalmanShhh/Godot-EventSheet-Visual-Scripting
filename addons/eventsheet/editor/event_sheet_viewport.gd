@@ -14,6 +14,20 @@ const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
 const FONT_SIZE := EventSheetPalette.FONT_SIZE
 const CONDITION_KEYWORD_METADATA := {"lane": "condition", "hoverable": false}
+const BADGE_OR_METADATA := {
+    "lane": "condition",
+    "hoverable": false,
+    "badge": true,
+    "badge_bg": Color(0.26, 0.29, 0.36, 0.95),
+    "badge_fg": Color(0.82, 0.87, 0.95, 1.0)
+}
+const BADGE_NEGATED_METADATA := {
+    "lane": "condition",
+    "hoverable": false,
+    "badge": true,
+    "badge_bg": Color(0.73, 0.20, 0.24, 0.95),
+    "badge_fg": Color(1.0, 1.0, 1.0, 1.0)
+}
 const DROP_ZONE_INSIDE_TOP := 0.33
 const DROP_ZONE_INSIDE_BOTTOM := 0.67
 const DROP_ZONE_AFTER_THRESHOLD := 0.5
@@ -413,8 +427,9 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
             var condition: ACECondition = event_row.conditions[condition_index]
             if condition == null:
                 continue
-            if condition_index > 0:
+            if condition_index > 0 and event_row.condition_mode != EventRow.ConditionMode.OR:
                 spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
+            _append_condition_prefix_spans(spans, event_row, condition, condition_index)
             spans.append(_make_span(_format_condition_descriptor(condition), SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "condition", "ace_index": condition_index}))
     if spans.is_empty():
         spans.append(_make_span("when", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
@@ -431,6 +446,18 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
         spans.append(_make_span("//", SemanticSpan.SpanType.KEYWORD, {"hoverable": false, "lane": "action"}))
         spans.append(_make_span(event_row.comment, SemanticSpan.SpanType.COMMENT, {"editable": true, "edit_kind": "event_comment", "lane": "action"}))
     return spans
+
+func _append_condition_prefix_spans(spans: Array[SemanticSpan], event_row: EventRow, condition: ACECondition, condition_index: int) -> void:
+    if event_row == null or condition == null:
+        return
+    if event_row.condition_mode == EventRow.ConditionMode.OR and event_row.conditions.size() > 1:
+        var or_meta: Dictionary = BADGE_OR_METADATA.duplicate(true)
+        or_meta["condition_index"] = condition_index
+        spans.append(_make_span("OR", SemanticSpan.SpanType.KEYWORD, or_meta))
+    if condition.negated:
+        var negated_meta: Dictionary = BADGE_NEGATED_METADATA.duplicate(true)
+        negated_meta["condition_index"] = condition_index
+        spans.append(_make_span("✕", SemanticSpan.SpanType.KEYWORD, negated_meta))
 
 func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
     _flat_rows.append({"row": row_data, "parent": parent_row})
@@ -473,6 +500,8 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             x = max(x, lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH + EventSheetPalette.ACTION_LANE_PADDING)
         var display_text: String = _editing_buffer if index == _editing_row_index and span_index == _editing_span_index else span.text
         var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+        if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("badge", false)):
+            span_width += 12.0
         if lane_divider_x > 0.0 and span_lane != "action":
             var max_condition_right: float = lane_divider_x - EventSheetPalette.ACTION_LANE_PADDING
             span_width = max(min(span_width, max_condition_right - x), 10.0)
@@ -719,11 +748,21 @@ func _hit_test(position: Vector2) -> Dictionary:
         return result
     for span_index in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
-        if span != null and span.hoverable and span.rect.has_point(position):
+        if span == null or not span.rect.has_point(position):
+            continue
+        if span.hoverable:
             result["span_index"] = span_index
             result["lane"] = _resolve_span_lane(span)
             result["span_metadata"] = span.metadata if span.metadata is Dictionary else {}
             return result
+        if span.metadata is Dictionary and (span.metadata as Dictionary).has("condition_index"):
+            var condition_span_index: int = _find_condition_span_index(row_data, int((span.metadata as Dictionary).get("condition_index", -1)))
+            if condition_span_index >= 0:
+                var condition_span: SemanticSpan = row_data.spans[condition_span_index]
+                result["span_index"] = condition_span_index
+                result["lane"] = _resolve_span_lane(condition_span)
+                result["span_metadata"] = condition_span.metadata if condition_span.metadata is Dictionary else {}
+                return result
     var divider_x: float = float(layout.get("lane_divider_x", -1.0))
     if divider_x > 0.0:
         result["lane"] = "action" if position.x >= divider_x else "condition"
@@ -762,6 +801,18 @@ func _get_selected_span_count() -> int:
     for indices in _selected_span_indices.values():
         total += (indices as Array).size()
     return total
+
+func _find_condition_span_index(row_data: EventRowData, ace_index: int) -> int:
+    if row_data == null:
+        return -1
+    for span_index in range(row_data.spans.size()):
+        var span: SemanticSpan = row_data.spans[span_index]
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        var metadata: Dictionary = span.metadata as Dictionary
+        if str(metadata.get("kind", "")) == "condition" and int(metadata.get("ace_index", -1)) == ace_index:
+            return span_index
+    return -1
 
 func _row_at(index: int) -> EventRowData:
     if index < 0 or index >= _flat_rows.size():

@@ -138,6 +138,41 @@ static func run() -> bool:
     var layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
     all_passed = _check("event row layout contains lane divider scaffold", float(layout.get("lane_divider_x", -1.0)) > 0.0, true) and all_passed
 
+    var or_sheet := EventSheetResource.new()
+    var or_event := EventRow.new()
+    or_event.trigger_provider_id = "Core"
+    or_event.trigger_id = "OnReady"
+    var or_condition_a := ACECondition.new()
+    or_condition_a.provider_id = "Core"
+    or_condition_a.ace_id = "Always"
+    var or_condition_b := ACECondition.new()
+    or_condition_b.provider_id = "Core"
+    or_condition_b.ace_id = "Always"
+    or_condition_b.negated = true
+    or_event.conditions = [or_condition_a, or_condition_b]
+    or_event.condition_mode = EventRow.ConditionMode.OR
+    var or_action := ACEAction.new()
+    or_action.provider_id = "Core"
+    or_action.ace_id = "QueueFree"
+    or_event.actions = [or_action]
+    or_sheet.events = [or_event]
+    dock.setup(or_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var or_row_data: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
+    all_passed = _check("or block adds badge before each condition", _count_span_text(or_row_data, "OR"), 2) and all_passed
+    all_passed = _check("negated condition adds red x badge text", _count_span_text(or_row_data, "✕"), 1) and all_passed
+    all_passed = _check("or badge appears before first condition span", _find_span_index_by_text(or_row_data, "OR"), _find_span_index_by_kind(or_row_data, "condition") - 1) and all_passed
+    dock._context_row = or_row_data
+    dock._context_hit = {"span_metadata": {"kind": "condition", "ace_index": 1}, "span_index": _find_last_span_index_by_kind(or_row_data, "condition")}
+    dock._on_condition_context_menu_id_pressed(4)
+    all_passed = _check("condition context menu toggles inversion", ((dock.get_current_sheet().events[0] as EventRow).conditions[1] as ACECondition).negated, false) and all_passed
+    dock._context_row = or_row_data
+    dock._context_hit = {"span_metadata": {}, "span_index": -1}
+    dock._on_row_context_menu_id_pressed(8)
+    all_passed = _check("row context menu toggles or block to and block", ((dock.get_current_sheet().events[0] as EventRow).condition_mode), EventRow.ConditionMode.AND) and all_passed
+    var compile_result: Dictionary = SheetCompiler.compile(dock.get_current_sheet(), "user://event_sheet_or_block_test.gd")
+    all_passed = _check("compiler uses and join after row conversion", str(compile_result.get("output", "")).contains(" and "), true) and all_passed
+
     dock_viewport._toggle_row_fold(1)
     all_passed = _check("folding hides child rows", dock_viewport.get_total_row_count(), 2) and all_passed
     dock_viewport._toggle_row_fold(1)
@@ -377,6 +412,35 @@ static func _find_span_index_by_kind(row_data: EventRowData, expected_kind: Stri
         if str((span.metadata as Dictionary).get("kind", "")) == expected_kind:
             return index
     return -1
+
+static func _find_last_span_index_by_kind(row_data: EventRowData, expected_kind: String) -> int:
+    if row_data == null:
+        return -1
+    for index in range(row_data.spans.size() - 1, -1, -1):
+        var span: SemanticSpan = row_data.spans[index]
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        if str((span.metadata as Dictionary).get("kind", "")) == expected_kind:
+            return index
+    return -1
+
+static func _find_span_index_by_text(row_data: EventRowData, expected_text: String) -> int:
+    if row_data == null:
+        return -1
+    for index in range(row_data.spans.size()):
+        var span: SemanticSpan = row_data.spans[index]
+        if span != null and span.text == expected_text:
+            return index
+    return -1
+
+static func _count_span_text(row_data: EventRowData, expected_text: String) -> int:
+    if row_data == null:
+        return 0
+    var total: int = 0
+    for span: SemanticSpan in row_data.spans:
+        if span != null and span.text == expected_text:
+            total += 1
+    return total
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
     if actual == expected:
