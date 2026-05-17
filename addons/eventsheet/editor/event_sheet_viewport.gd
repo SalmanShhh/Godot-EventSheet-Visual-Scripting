@@ -4,6 +4,7 @@ extends Control
 
 signal selection_changed(row_data: EventRowData)
 signal row_drop_requested(source_row: EventRowData, target_row: EventRowData)
+signal ace_preview_requested(source_label: String, definitions: Array[ACEDefinition])
 
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
@@ -73,6 +74,29 @@ func get_selected_row_index() -> int:
 
 func get_flat_rows() -> Array[Dictionary]:
     return _flat_rows.duplicate(true)
+
+func get_selected_row_data() -> EventRowData:
+    return _row_at(_selected_row_index)
+
+func get_selected_span() -> SemanticSpan:
+    var row_data: EventRowData = get_selected_row_data()
+    if row_data == null:
+        return null
+    if _selected_span_index < 0 or _selected_span_index >= row_data.spans.size():
+        return null
+    return row_data.spans[_selected_span_index]
+
+func get_selected_context() -> Dictionary:
+    var row_data: EventRowData = get_selected_row_data()
+    var span: SemanticSpan = get_selected_span()
+    return {
+        "row_index": _selected_row_index,
+        "span_index": _selected_span_index,
+        "row_data": row_data,
+        "source_resource": row_data.source_resource if row_data != null else null,
+        "span": span,
+        "span_metadata": span.metadata if span != null and span.metadata is Dictionary else {}
+    }
 
 func get_editor_state_snapshot() -> Dictionary:
     return {
@@ -346,24 +370,24 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
     var spans: Array[SemanticSpan] = []
     if event_row.trigger != null:
-        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, {"lane": "condition"}))
-        spans.append(_make_span(_format_condition_descriptor(event_row.trigger), SemanticSpan.SpanType.CONDITION, {"lane": "condition"}))
+        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, {"lane": "condition", "hoverable": false}))
+        spans.append(_make_span(_format_condition_descriptor(event_row.trigger), SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "trigger", "ace_index": 0}))
     elif not event_row.trigger_id.is_empty():
-        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, {"lane": "condition"}))
-        spans.append(_make_span(event_row.trigger_id, SemanticSpan.SpanType.CONDITION, {"lane": "condition"}))
+        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, {"lane": "condition", "hoverable": false}))
+        spans.append(_make_span(event_row.trigger_id, SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "trigger", "ace_index": 0}))
     if not event_row.conditions.is_empty():
         if not spans.is_empty():
-            spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, {"lane": "condition"}))
+            spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, {"lane": "condition", "hoverable": false}))
         for condition_index in range(event_row.conditions.size()):
             var condition: ACECondition = event_row.conditions[condition_index]
             if condition == null:
                 continue
             if condition_index > 0:
-                spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, {"lane": "condition"}))
-            spans.append(_make_span(_format_condition_descriptor(condition), SemanticSpan.SpanType.CONDITION, {"lane": "condition"}))
+                spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, {"lane": "condition", "hoverable": false}))
+            spans.append(_make_span(_format_condition_descriptor(condition), SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "condition", "ace_index": condition_index}))
     if spans.is_empty():
-        spans.append(_make_span("when", SemanticSpan.SpanType.KEYWORD, {"lane": "condition"}))
-        spans.append(_make_span("Always", SemanticSpan.SpanType.CONDITION, {"lane": "condition"}))
+        spans.append(_make_span("when", SemanticSpan.SpanType.KEYWORD, {"lane": "condition", "hoverable": false}))
+        spans.append(_make_span("Always", SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "condition", "ace_index": -1}))
     if not event_row.actions.is_empty():
         spans.append(_make_span("→", SemanticSpan.SpanType.OPERATOR, {"hoverable": false, "lane": "action"}))
         for action_index in range(event_row.actions.size()):
@@ -371,7 +395,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
             if action_resource is ACEAction:
                 if action_index > 0:
                     spans.append(_make_span(";", SemanticSpan.SpanType.OPERATOR, {"hoverable": false, "lane": "action"}))
-                spans.append(_make_span(_format_action_descriptor(action_resource as ACEAction), SemanticSpan.SpanType.ACTION, {"lane": "action"}))
+                spans.append(_make_span(_format_action_descriptor(action_resource as ACEAction), SemanticSpan.SpanType.ACTION, {"lane": "action", "kind": "action", "ace_index": action_index}))
     if not event_row.comment.is_empty():
         spans.append(_make_span("//", SemanticSpan.SpanType.KEYWORD, {"hoverable": false, "lane": "action"}))
         spans.append(_make_span(event_row.comment, SemanticSpan.SpanType.COMMENT, {"editable": true, "edit_kind": "event_comment", "lane": "action"}))
@@ -707,3 +731,42 @@ func _get_scroll_width() -> float:
     if scroll != null and scroll.size.x > 0.0:
         return scroll.size.x
     return size.x if size.x > 0.0 else 640.0
+
+func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+    return not _resolve_dropped_source_objects(data).is_empty()
+
+func _drop_data(_at_position: Vector2, data: Variant) -> void:
+    var source_objects: Array[Object] = _resolve_dropped_source_objects(data)
+    if source_objects.is_empty():
+        return
+    var preview_registry: EventSheetACERegistry = EventSheetACERegistry.new()
+    preview_registry.refresh_from_sources(source_objects, false)
+    var definitions: Array[ACEDefinition] = preview_registry.get_all_definitions()
+    var source_label: String = source_objects[0].get_class()
+    if source_objects[0] is Node:
+        source_label = (source_objects[0] as Node).name
+    ace_preview_requested.emit(source_label, definitions)
+
+func _resolve_dropped_source_objects(data: Variant) -> Array[Object]:
+    var objects: Array[Object] = []
+    if data is Object:
+        objects.append(data as Object)
+        return objects
+    if data is Dictionary:
+        var payload: Dictionary = data as Dictionary
+        var source_object: Variant = payload.get("source_object", null)
+        if source_object is Object:
+            objects.append(source_object as Object)
+            return objects
+        var source_node: Variant = payload.get("node", null)
+        if source_node is Object:
+            objects.append(source_node as Object)
+            return objects
+        var source_nodes: Variant = payload.get("nodes", [])
+        if source_nodes is Array:
+            for candidate in source_nodes:
+                if candidate is Object:
+                    objects.append(candidate as Object)
+            if not objects.is_empty():
+                return objects
+    return objects

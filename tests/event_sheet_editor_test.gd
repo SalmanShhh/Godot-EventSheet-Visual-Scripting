@@ -21,7 +21,9 @@ static func run() -> bool:
     dock.setup(null)
     var dock_viewport: EventSheetViewport = dock.get_viewport_control()
     var ace_registry: EventSheetACERegistry = dock.get_ace_registry()
+    var toolbar: Node = dock.find_child("EventSheetToolbar", true, false)
     all_passed = _check("demo sheet populates rows", dock_viewport.get_total_row_count() > 0, true) and all_passed
+    all_passed = _check("workflow toolbar is present", toolbar is HBoxContainer, true) and all_passed
     var demo_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     var first_demo_row: EventRowData = demo_rows[0].get("row")
     all_passed = _check("demo sheet exposes semantic spans", first_demo_row.spans.size() > 0, true) and all_passed
@@ -92,6 +94,98 @@ static func run() -> bool:
     dock_viewport._commit_edit()
     all_passed = _check("inline edit updates comment resource", (editable_comment.source_resource as CommentRow).text, "Changed note") and all_passed
 
+    # Drag-drop moves rows in underlying model.
+    var move_sheet := EventSheetResource.new()
+    var move_a := EventRow.new()
+    move_a.comment = "A"
+    var move_b := EventRow.new()
+    move_b.comment = "B"
+    move_sheet.events = [move_a, move_b]
+    dock.setup(move_sheet)
+    var move_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._on_row_drop_requested(move_rows[0].get("row"), move_rows[1].get("row"))
+    all_passed = _check("drag-drop reorders rows", (move_sheet.events[0] as EventRow).comment, "B") and all_passed
+
+    # Copy/paste event row.
+    dock_viewport._select_row(0)
+    dock._on_copy_requested()
+    dock._on_paste_requested()
+    all_passed = _check("copy paste row inserts duplicate", move_sheet.events.size(), 3) and all_passed
+
+    # Copy/paste condition and action entries.
+    var copy_sheet := EventSheetResource.new()
+    var copy_event := EventRow.new()
+    var copy_condition := ACECondition.new()
+    copy_condition.provider_id = "Core"
+    copy_condition.ace_id = "Always"
+    copy_event.conditions = [copy_condition]
+    var copy_action := ACEAction.new()
+    copy_action.provider_id = "Core"
+    copy_action.ace_id = "QueueFree"
+    copy_event.actions = [copy_action]
+    copy_sheet.events = [copy_event]
+    dock.setup(copy_sheet)
+    dock_viewport._select_row(0, _find_span_index_by_kind(dock_viewport.get_flat_rows()[0].get("row"), "condition"))
+    dock._on_copy_requested()
+    dock._on_paste_requested()
+    all_passed = _check("copy paste condition appends condition", copy_event.conditions.size(), 2) and all_passed
+    dock.setup(copy_sheet)
+    dock_viewport._select_row(0, _find_span_index_by_kind(dock_viewport.get_flat_rows()[0].get("row"), "action"))
+    dock._on_copy_requested()
+    dock._on_paste_requested()
+    all_passed = _check("copy paste action appends action", copy_event.actions.size(), 2) and all_passed
+
+    # Global and local variable creation workflow.
+    dock.setup(copy_sheet)
+    dock._open_variable_dialog("global")
+    dock._variable_name_edit.text = "ammo"
+    dock._variable_type_option.select(0)
+    dock._variable_default_edit.text = "12"
+    dock._on_variable_dialog_confirmed()
+    all_passed = _check("create global variable stores sheet variable", copy_sheet.variables.has("ammo"), true) and all_passed
+    dock_viewport._select_row(0)
+    dock._open_variable_dialog("local")
+    dock._variable_name_edit.text = "cooldown"
+    dock._variable_type_option.select(1)
+    dock._variable_default_edit.text = "0.5"
+    dock._on_variable_dialog_confirmed()
+    all_passed = _check("create local variable stores on selected event", copy_event.local_variables.size(), 1) and all_passed
+
+    # ACE picker and parameter dialog workflow.
+    dock._open_ace_picker("append_action", false)
+    all_passed = _check("ace picker tree built for selection", dock._ace_picker_tree != null, true) and all_passed
+    var action_definition: ACEDefinition = null
+    for definition in ace_registry.search("set variable"):
+        if definition.ace_type == ACEDefinition.ACEType.ACTION:
+            action_definition = definition
+            break
+    all_passed = _check("found action definition with params", action_definition != null and not action_definition.parameters.is_empty(), true) and all_passed
+    if action_definition != null:
+        dock._open_ace_params_dialog(action_definition, {"mode": "append_action", "selected_resource": copy_event})
+        all_passed = _check("params dialog creates parameter fields", dock._ace_params_fields.is_empty(), false) and all_passed
+
+    # Save and reload EventSheet.
+    var temp_path: String = "user://event_sheet_editor_test.tres"
+    dock.setup(copy_sheet)
+    dock._save_sheet_to_path(temp_path)
+    var exists_after_save: bool = FileAccess.file_exists(temp_path)
+    all_passed = _check("save workflow writes EventSheet resource", exists_after_save, true) and all_passed
+    if exists_after_save:
+        dock._load_sheet_from_path(temp_path)
+        all_passed = _check("open workflow loads EventSheet resource", dock.get_current_sheet() is EventSheetResource, true) and all_passed
+
+    # Drag-drop ACE preview updates side panel list.
+    var preview_defs: Array[ACEDefinition] = []
+    var on_signal_def: ACEDefinition = ACEDefinition.new()
+    on_signal_def.provider_id = "Core"
+    on_signal_def.id = "OnSignal"
+    on_signal_def.display_name = "On Signal"
+    on_signal_def.category = "Signals / Scene / Input"
+    on_signal_def.ace_type = ACEDefinition.ACEType.TRIGGER
+    preview_defs.append(on_signal_def)
+    dock._on_ace_preview_requested("DemoNode", preview_defs)
+    all_passed = _check("ace drag-in preview list gets populated", dock._preview_list.item_count > 0, true) and all_passed
+
     editor.free()
     return all_passed
 
@@ -115,6 +209,17 @@ static func _row_has_lane(row_data: EventRowData, expected_lane: String) -> bool
         if str((span.metadata as Dictionary).get("lane", "")) == expected_lane:
             return true
     return false
+
+static func _find_span_index_by_kind(row_data: EventRowData, expected_kind: String) -> int:
+    if row_data == null:
+        return -1
+    for index in range(row_data.spans.size()):
+        var span: SemanticSpan = row_data.spans[index]
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        if str((span.metadata as Dictionary).get("kind", "")) == expected_kind:
+            return index
+    return -1
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
     if actual == expected:
