@@ -23,6 +23,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     var fold_rect: Rect2 = layout.get("fold_rect", Rect2())
     var icon_rect: Rect2 = layout.get("icon_rect", Rect2())
     var drag_rect: Rect2 = layout.get("drag_rect", Rect2())
+    var ace_drag_rect: Rect2 = layout.get("ace_drag_rect", Rect2())
     var condition_lane_rect: Rect2 = layout.get("condition_lane_rect", Rect2())
     var action_lane_rect: Rect2 = layout.get("action_lane_rect", Rect2())
     var lane_divider_rect: Rect2 = layout.get("lane_divider_rect", Rect2())
@@ -55,6 +56,8 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index)
     if drag_rect.size != Vector2.ZERO:
         control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
+    if ace_drag_rect.size != Vector2.ZERO:
+        control.draw_rect(ace_drag_rect, EventSheetPalette.COLOR_DRAG_LINE, false, 2.0)
     if disabled:
         control.draw_rect(row_rect, EventSheetPalette.COLOR_DISABLED, true)
     if not debug_text.is_empty():
@@ -131,6 +134,8 @@ func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size
         if span == null:
             continue
         var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+        if bool(metadata.get("chip", false)):
+            _draw_chip_span(control, span, metadata)
         if selected_span_indices.has(span_index):
             var selected_bg: Color = EventSheetPalette.COLOR_SELECTION
             selected_bg.a = 0.72
@@ -145,11 +150,12 @@ func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size
         var color: Color = _get_span_color(span.type)
         var draw_text: String = editing_buffer if span_index == editing_span_index else span.text
         var baseline_y: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) + (font_size * FONT_BASELINE_OFFSET_RATIO)
-        control.draw_string(font, Vector2(span.rect.position.x, baseline_y), draw_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)
+        var text_x: float = span.rect.position.x + (8.0 if bool(metadata.get("chip", false)) else 0.0)
+        control.draw_string(font, Vector2(text_x, baseline_y), draw_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)
         if span_index == editing_span_index:
             var prefix: String = draw_text.substr(0, clamp(editing_caret, 0, draw_text.length()))
             var prefix_width: float = font.get_string_size(prefix, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-            var caret_x: float = span.rect.position.x + prefix_width + 1.0
+            var caret_x: float = text_x + prefix_width + 1.0
             control.draw_line(
                 Vector2(caret_x, span.rect.position.y + 5.0),
                 Vector2(caret_x, span.rect.end.y - 5.0),
@@ -157,6 +163,15 @@ func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size
                 1.0,
                 true
             )
+
+func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary) -> void:
+    var style: StyleBoxFlat = StyleBoxFlat.new()
+    style.bg_color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.05))
+    style.border_color = metadata.get("chip_border", Color(1.0, 1.0, 1.0, 0.14))
+    style.set_border_width_all(1)
+    style.set_corner_radius_all(5)
+    style.set_content_margin_all(0)
+    control.draw_style_box(style, span.rect)
 
 func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_size: int, metadata: Dictionary) -> void:
     var badge_rect: Rect2 = span.rect

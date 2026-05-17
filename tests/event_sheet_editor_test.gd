@@ -172,6 +172,7 @@ static func run() -> bool:
     dock._context_hit = {"span_metadata": {}, "span_index": -1}
     dock._on_row_context_menu_id_pressed(8)
     all_passed = _check("row context menu toggles or block to and block", ((dock.get_current_sheet().events[0] as EventRow).condition_mode), EventRow.ConditionMode.AND) and all_passed
+    all_passed = _check("or block toggle is second row menu item", dock._row_context_menu.get_item_id(1), EventSheetDock.ROW_MENU_TOGGLE_CONDITION_BLOCK) and all_passed
     var compile_result: Dictionary = SheetCompiler.compile(dock.get_current_sheet(), "user://event_sheet_or_block_test.gd")
     all_passed = _check("compiler uses and join after row conversion", str(compile_result.get("output", "")).contains(" and "), true) and all_passed
 
@@ -236,6 +237,31 @@ static func run() -> bool:
     dock._on_redo_requested()
     all_passed = _check("redo reapplies drag-drop reorder", ((dock.get_current_sheet().events[0] as EventRow).comment), "B") and all_passed
 
+    var multi_move_sheet := EventSheetResource.new()
+    var multi_comment_a := CommentRow.new()
+    multi_comment_a.text = "First"
+    var multi_comment_b := CommentRow.new()
+    multi_comment_b.text = "Second"
+    var multi_target_event := EventRow.new()
+    multi_target_event.comment = "Target"
+    multi_move_sheet.events = [multi_comment_a, multi_comment_b, multi_target_event]
+    dock.setup(multi_move_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var multi_move_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._on_rows_drop_requested(
+        [multi_move_rows[0].get("row"), multi_move_rows[1].get("row")],
+        multi_move_rows[2].get("row"),
+        "after"
+    )
+    all_passed = _check(
+        "multi-row drag preserves selected row order",
+        [
+            (dock.get_current_sheet().events[1] as CommentRow).text,
+            (dock.get_current_sheet().events[2] as CommentRow).text
+        ],
+        ["First", "Second"]
+    ) and all_passed
+
     var nested_sheet := EventSheetResource.new()
     var root_event := EventRow.new()
     root_event.comment = "root"
@@ -279,6 +305,42 @@ static func run() -> bool:
     dock._on_copy_requested()
     dock._on_paste_requested()
     all_passed = _check("copy paste action appends action", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), 2) and all_passed
+
+    var ace_drag_sheet := EventSheetResource.new()
+    var ace_drag_source := EventRow.new()
+    var ace_drag_condition_a := ACECondition.new()
+    ace_drag_condition_a.provider_id = "Core"
+    ace_drag_condition_a.ace_id = "Always"
+    var ace_drag_condition_b := ACECondition.new()
+    ace_drag_condition_b.provider_id = "Core"
+    ace_drag_condition_b.ace_id = "OnReady"
+    ace_drag_source.conditions = [ace_drag_condition_a, ace_drag_condition_b]
+    var ace_drag_target := EventRow.new()
+    var ace_drag_target_condition := ACECondition.new()
+    ace_drag_target_condition.provider_id = "Core"
+    ace_drag_target_condition.ace_id = "IsInstanceValid"
+    ace_drag_target.conditions = [ace_drag_target_condition]
+    ace_drag_sheet.events = [ace_drag_source, ace_drag_target]
+    dock.setup(ace_drag_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var ace_drag_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._on_viewport_ace_drop_requested(
+        [{"source_resource": ace_drag_source, "kind": "condition", "ace_index": 0}],
+        ace_drag_rows[1].get("row"),
+        "condition",
+        0,
+        "before"
+    )
+    all_passed = _check(
+        "ace drag inserts condition into target event",
+        ((dock.get_current_sheet().events[1] as EventRow).conditions[0] as ACECondition).ace_id,
+        "Always"
+    ) and all_passed
+    all_passed = _check(
+        "ace drag removes moved condition from source event",
+        (dock.get_current_sheet().events[0] as EventRow).conditions.size(),
+        1
+    ) and all_passed
 
     # Global and local variable creation workflow.
     dock.setup(copy_sheet)

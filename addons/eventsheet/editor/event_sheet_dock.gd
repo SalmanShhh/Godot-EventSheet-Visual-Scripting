@@ -21,6 +21,7 @@ const ROW_MENU_COPY := 5
 const ROW_MENU_PASTE := 6
 const ROW_MENU_DELETE := 7
 const ROW_MENU_TOGGLE_CONDITION_BLOCK := 8
+const ACE_DRAG_KINDS := ["condition", "action"]
 const SIDE_PANEL_MIN_WIDTH := 160.0
 const SIDE_PANEL_MAX_WIDTH := 220.0
 const SIDE_PANEL_WIDTH_RATIO := 0.18
@@ -189,10 +190,12 @@ func _build_ui() -> void:
 
     _viewport.selection_changed.connect(_on_viewport_selection_changed)
     _viewport.row_drop_requested.connect(_on_row_drop_requested)
+    _viewport.rows_drop_requested.connect(_on_rows_drop_requested)
     _viewport.ace_preview_requested.connect(_on_ace_preview_requested)
     _viewport.ace_picker_requested.connect(_on_viewport_ace_picker_requested)
     _viewport.span_edit_requested.connect(_on_viewport_span_edit_requested)
     _viewport.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
+    _viewport.ace_drop_requested.connect(_on_viewport_ace_drop_requested)
     _viewport.context_menu_requested.connect(_on_viewport_context_menu_requested)
     _viewport.set_external_span_edit_handler_enabled(true)
 
@@ -293,6 +296,7 @@ func _build_context_menus() -> void:
 
     _row_context_menu = PopupMenu.new()
     _row_context_menu.add_item("Add Sub-Event", ROW_MENU_ADD_SUB_EVENT)
+    _row_context_menu.add_item("Convert to OR Block", ROW_MENU_TOGGLE_CONDITION_BLOCK)
     _row_context_menu.add_item("Add Event Below", ROW_MENU_ADD_EVENT_BELOW)
     _row_context_menu.add_item("Add Group Below", ROW_MENU_ADD_GROUP_BELOW)
     _row_context_menu.add_item("Add Comment Below", ROW_MENU_ADD_COMMENT_BELOW)
@@ -301,7 +305,7 @@ func _build_context_menus() -> void:
     _row_context_menu.add_item("Paste", ROW_MENU_PASTE)
     _row_context_menu.add_separator()
     _row_context_menu.add_item("Delete Row", ROW_MENU_DELETE)
-    _row_context_menu.add_item("Convert to OR Block", ROW_MENU_TOGGLE_CONDITION_BLOCK)
+    _row_context_menu.add_theme_font_size_override("font_size", 14)
     _row_context_menu.id_pressed.connect(_on_row_context_menu_id_pressed)
     add_child(_row_context_menu)
 
@@ -767,44 +771,152 @@ func _group_children_array(group: EventGroup) -> Array:
     return group.rows
 
 func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String = "before") -> void:
-    if source_row == null or target_row == null or _current_sheet == null:
+    if source_row == null:
         return
-    var source_resource: Resource = source_row.source_resource
+    _move_rows([source_row], target_row, drop_mode)
+
+func _on_rows_drop_requested(
+    source_rows: Array,
+    target_row: EventRowData,
+    drop_mode: String = "before"
+) -> void:
+    _move_rows(source_rows, target_row, drop_mode)
+
+func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String) -> void:
+    if target_row == null or _current_sheet == null or source_rows.is_empty():
+        return
     var target_resource: Resource = target_row.source_resource
-    if source_resource == null or target_resource == null or source_resource == target_resource:
+    if target_resource == null:
         return
-    var source_location: Dictionary = _find_resource_location(source_resource)
-    var target_location: Dictionary = _find_resource_location(target_resource)
-    if source_location.is_empty() or target_location.is_empty():
+    var source_resources: Array[Resource] = []
+    for source_row in source_rows:
+        if not (source_row is EventRowData):
+            continue
+        var source_resource: Resource = (source_row as EventRowData).source_resource
+        if source_resource == null or source_resource == target_resource or source_resources.has(source_resource):
+            continue
+        if _resource_contains_descendant(source_resource, target_resource):
+            _set_status("Cannot move a row into one of its descendants.", true)
+            return
+        source_resources.append(source_resource)
+    if source_resources.is_empty():
         return
-    var source_container: Array = source_location.get("container", [])
-    var target_container: Array = target_location.get("container", [])
-    var source_index: int = int(source_location.get("index", -1))
-    var target_index: int = int(target_location.get("index", -1))
-    if source_index < 0 or target_index < 0:
-        return
-    if _resource_contains_descendant(source_resource, target_resource):
-        _set_status("Cannot move a row into one of its descendants.", true)
-        return
-    var insertion_index: int = target_index
-    if drop_mode == "inside":
-        if target_resource is EventGroup:
-            target_container = _group_children_array(target_resource as EventGroup)
-            insertion_index = target_container.size()
-        elif target_resource is EventRow:
-            target_container = (target_resource as EventRow).sub_events
-            insertion_index = target_container.size()
-    elif drop_mode == "after":
-        insertion_index = target_index + 1
-    if source_container == target_container and source_index < insertion_index:
-        insertion_index -= 1
     var moved: bool = _perform_undoable_sheet_edit("Drag Row", func() -> bool:
-        source_container.remove_at(source_index)
-        target_container.insert(insertion_index, source_resource)
+        for source_resource in source_resources:
+            var source_location: Dictionary = _find_resource_location(source_resource)
+            if source_location.is_empty():
+                continue
+            var source_container: Array = source_location.get("container", [])
+            var source_index: int = int(source_location.get("index", -1))
+            if source_index >= 0 and source_index < source_container.size():
+                source_container.remove_at(source_index)
+        var target_container: Array = []
+        var insertion_index: int = 0
+        if drop_mode == "inside":
+            if target_resource is EventGroup:
+                target_container = _group_children_array(target_resource as EventGroup)
+                insertion_index = target_container.size()
+            elif target_resource is EventRow:
+                target_container = (target_resource as EventRow).sub_events
+                insertion_index = target_container.size()
+        else:
+            var target_location: Dictionary = _find_resource_location(target_resource)
+            if target_location.is_empty():
+                return false
+            target_container = target_location.get("container", [])
+            insertion_index = int(target_location.get("index", 0))
+            if drop_mode == "after":
+                insertion_index += 1
+        for offset in range(source_resources.size()):
+            target_container.insert(insertion_index + offset, source_resources[offset])
         return true
     )
     if moved:
         _mark_dirty("Moved row via drag and drop.")
+
+func _on_viewport_ace_drop_requested(
+    source_entries: Array,
+    target_row: EventRowData,
+    target_lane: String,
+    target_ace_index: int,
+    insert_mode: String
+) -> void:
+    if target_row == null or not ACE_DRAG_KINDS.has(target_lane):
+        return
+    var target_event: EventRow = target_row.source_resource as EventRow
+    if target_event == null:
+        return
+    var normalized_entries: Array = _normalize_ace_drag_entries(source_entries, target_lane)
+    if normalized_entries.is_empty():
+        return
+    var moving_resources: Array = []
+    for entry in normalized_entries:
+        moving_resources.append(entry.get("resource"))
+    var target_anchor: Resource = _resolve_event_ace_resource(target_event, target_lane, target_ace_index)
+    if target_anchor != null and moving_resources.has(target_anchor):
+        target_anchor = null
+    var moved: bool = _perform_undoable_sheet_edit("Drag ACE", func() -> bool:
+        var removal_groups: Dictionary = {}
+        for entry in normalized_entries:
+            var source_event: EventRow = entry.get("event_row")
+            var source_indices: Array = removal_groups.get(source_event, []).duplicate()
+            source_indices.append(int(entry.get("ace_index", -1)))
+            removal_groups[source_event] = source_indices
+        for source_event in removal_groups.keys():
+            var indices: Array = removal_groups.get(source_event, []).duplicate()
+            indices.sort()
+            indices.reverse()
+            var source_array: Array = _event_ace_array(source_event, target_lane)
+            for source_index in indices:
+                if source_index >= 0 and source_index < source_array.size():
+                    source_array.remove_at(source_index)
+        var target_array: Array = _event_ace_array(target_event, target_lane)
+        var insertion_index: int = target_array.size()
+        if target_anchor != null:
+            var anchor_index: int = target_array.find(target_anchor)
+            if anchor_index >= 0:
+                insertion_index = anchor_index + (1 if insert_mode == "after" else 0)
+        for offset in range(moving_resources.size()):
+            target_array.insert(insertion_index + offset, moving_resources[offset])
+        return true
+    )
+    if moved:
+        _mark_dirty("Moved ACE via drag and drop.")
+
+func _normalize_ace_drag_entries(source_entries: Array, lane: String) -> Array:
+    var normalized: Array = []
+    for entry in source_entries:
+        if not (entry is Dictionary):
+            continue
+        var entry_dict: Dictionary = entry
+        var source_event: EventRow = entry_dict.get("source_resource", null) as EventRow
+        var kind: String = str(entry_dict.get("kind", ""))
+        var ace_index: int = int(entry_dict.get("ace_index", -1))
+        if source_event == null or kind != lane or ace_index < 0:
+            continue
+        var ace_resource: Resource = _resolve_event_ace_resource(source_event, kind, ace_index)
+        if ace_resource == null:
+            continue
+        normalized.append({
+            "event_row": source_event,
+            "kind": kind,
+            "ace_index": ace_index,
+            "resource": ace_resource
+        })
+    return normalized
+
+func _event_ace_array(event_row: EventRow, lane: String) -> Array:
+    if lane == "condition":
+        return event_row.conditions
+    return event_row.actions
+
+func _resolve_event_ace_resource(event_row: EventRow, lane: String, ace_index: int) -> Resource:
+    if event_row == null or ace_index < 0:
+        return null
+    var ace_array: Array = _event_ace_array(event_row, lane)
+    if ace_index < ace_array.size() and ace_array[ace_index] is Resource:
+        return ace_array[ace_index]
+    return null
 
 func _on_ace_preview_requested(source_label: String, definitions: Array[ACEDefinition]) -> void:
     _preview_title.text = "Dropped ACE Preview — %s (%d)" % [source_label, definitions.size()]
@@ -844,9 +956,8 @@ func _show_popup_menu(menu: PopupMenu, global_position: Vector2) -> void:
     if menu == null:
         return
     _configure_context_menu(menu)
-    menu.position = Vector2i(global_position)
     menu.reset_size()
-    menu.popup()
+    menu.popup(Rect2i(Vector2i(global_position), Vector2i.ONE))
 
 func _configure_context_menu(menu: PopupMenu) -> void:
     if menu == _condition_context_menu:
