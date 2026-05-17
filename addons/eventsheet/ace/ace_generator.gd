@@ -109,7 +109,7 @@ func _build_property_definitions(provider_id: String, property_name: String, pro
         "display_template": display_name
     }
     # Exported properties are editor-exposed: their value can be overridden in the inspector.
-    expression_definition.editor_exposed = bool(overrides.get("editor_exposed", true))
+    expression_definition.editor_exposed = bool(overrides.get("editor_exposed", _property_is_exposable(property_type)))
     expression_definition.property_hint = _infer_property_hint(property_type, overrides)
     expression_definition.hint_string = _string_override(overrides, "hint_string", "")
     expression_definition.widget_hint = _string_override(overrides, "widget_hint", "")
@@ -267,6 +267,9 @@ func _method_is_exposable(ace_type: int, return_type: int, params: Array) -> boo
         if ptype not in PRIMITIVE_TYPES:
             return false
     return true
+
+func _property_is_exposable(property_type: int) -> bool:
+    return property_type in PRIMITIVE_TYPES
 
 ## Infer a PropertyHint for the given Variant type.
 ## Callers can pass a "property_hint" override in the overrides dict
