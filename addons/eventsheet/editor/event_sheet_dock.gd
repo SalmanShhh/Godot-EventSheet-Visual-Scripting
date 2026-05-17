@@ -24,7 +24,7 @@ var _param_resolver: ParamDefaultResolver = ParamDefaultResolver.new()
 var _exposed_node: EventSheetExposedNode = EventSheetExposedNode.new()
 var _ace_sources: Array[Object] = []
 var _clipboard: Dictionary = {}
-var _undo_redo: UndoRedo = UndoRedo.new()
+var _undo_redo_adapter: EventSheetUndoRedoAdapter = EventSheetUndoRedoAdapter.new()
 
 # ── Extracted sub-components ─────────────────────────────────────────────────
 var _ace_picker: ACEPickerDialog = ACEPickerDialog.new()
@@ -32,6 +32,8 @@ var _ace_params: ACEParamsDialog = ACEParamsDialog.new()
 var _variable_dlg: VariableDialog = VariableDialog.new()
 
 func _init() -> void:
+    if not _undo_redo_adapter.has_manager():
+        _undo_redo_adapter.set_manager(UndoRedo.new())
     _build_ui()
 
 func _ready() -> void:
@@ -89,12 +91,12 @@ func get_editor_param_store() -> EditorParamStore:
 func get_exposed_node() -> EventSheetExposedNode:
     return _exposed_node
 
-func set_undo_redo_manager(undo_redo: UndoRedo) -> void:
+func set_undo_redo_manager(undo_redo: Variant) -> void:
     if undo_redo == null:
         return
-    _undo_redo = undo_redo
+    _undo_redo_adapter.set_manager(undo_redo)
     if _exposed_node != null:
-        _exposed_node.set_undo_redo(_undo_redo)
+        _exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
 
 func set_auto_ace_sources(sources: Array[Object]) -> void:
     _release_ace_sources()
@@ -209,7 +211,7 @@ func _build_ui() -> void:
     _exposed_node.name = "EventSheetExposedParams"
     add_child(_exposed_node)
     _exposed_node.setup(_ace_registry, _editor_param_store, _current_sheet, _param_resolver)
-    _exposed_node.set_undo_redo(_undo_redo)
+    _exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
 
 func _add_toolbar_button(text: String, callable: Callable) -> void:
     var button: Button = Button.new()
@@ -796,20 +798,20 @@ func _refresh_exposed_node() -> void:
     if _exposed_node == null:
         return
     _exposed_node.setup(_ace_registry, _editor_param_store, _current_sheet, _param_resolver)
-    _exposed_node.set_undo_redo(_undo_redo)
+    _exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
     _exposed_node.on_registry_refreshed()
 
 func _on_undo_requested() -> void:
-    if _undo_redo == null or not _undo_redo.has_undo():
+    if not _undo_redo_adapter.has_undo():
         _set_status("Nothing to undo.", true)
         return
-    _undo_redo.undo()
+    _undo_redo_adapter.undo()
 
 func _on_redo_requested() -> void:
-    if _undo_redo == null or not _undo_redo.has_redo():
+    if not _undo_redo_adapter.has_redo():
         _set_status("Nothing to redo.", true)
         return
-    _undo_redo.redo()
+    _undo_redo_adapter.redo()
 
 func _capture_sheet_snapshot() -> EventSheetResource:
     if _current_sheet == null:
@@ -835,18 +837,17 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> b
     var after: EventSheetResource = _capture_sheet_snapshot()
     if before == null or after == null:
         return false
-    if _undo_redo == null:
+    if not _undo_redo_adapter.has_manager():
         _refresh_after_edit()
         return true
-    _undo_redo.create_action(action_name)
-    _undo_redo.add_do_method(self, "_restore_sheet_snapshot", after)
-    _undo_redo.add_undo_method(self, "_restore_sheet_snapshot", before)
-    _undo_redo.commit_action()
+    _undo_redo_adapter.create_action(action_name)
+    _undo_redo_adapter.add_do_method(self, "_restore_sheet_snapshot", [after])
+    _undo_redo_adapter.add_undo_method(self, "_restore_sheet_snapshot", [before])
+    _undo_redo_adapter.commit_action()
     return true
 
 func _clear_undo_history() -> void:
-    if _undo_redo != null and _undo_redo.has_method("clear_history"):
-        _undo_redo.clear_history()
+    _undo_redo_adapter.clear_history()
 
 func _resource_contains_descendant(source: Resource, candidate: Resource) -> bool:
     if source == null or candidate == null:

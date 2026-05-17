@@ -108,6 +108,9 @@ func _refresh_tree() -> void:
 		var item: TreeItem = _tree.create_item(category_nodes[category])
 		item.set_text(0, "%s — %s" % [definition.provider_id, definition.display_name])
 		item.set_text(1, category)
+		if not definition.description.is_empty():
+			item.set_tooltip_text(0, definition.description)
+			item.set_tooltip_text(1, definition.description)
 		item.set_metadata(0, definition)
 
 func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:

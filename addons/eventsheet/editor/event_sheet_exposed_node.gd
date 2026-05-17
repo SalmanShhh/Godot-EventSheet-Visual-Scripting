@@ -19,7 +19,7 @@ signal param_changed(provider_id: String, ace_id: String, param_id: String, valu
 var _registry: EventSheetACERegistry = null
 var _param_store: EditorParamStore = null
 var _resolver: ParamDefaultResolver = null
-var _undo_redo: UndoRedo = null
+var _undo_redo_adapter: EventSheetUndoRedoAdapter = EventSheetUndoRedoAdapter.new()
 var _sheet: EventSheetResource = null
 var _provider_filter: Dictionary = {}
 var _connected_store: EditorParamStore = null
@@ -139,15 +139,15 @@ func _set(property: StringName, value: Variant) -> bool:
 	var previous_value: Variant = _param_store.get_param(provider_id, ace_id, param_id, null)
 	if has_previous and previous_value == value:
 		return true
-	if _undo_redo != null:
+	if _undo_redo_adapter.has_manager():
 		var action_label: String = "Set EventSheet param %s/%s/%s" % [provider_id, ace_id, param_id]
-		_undo_redo.create_action(action_label)
-		_undo_redo.add_do_method(self, "_set_store_param", provider_id, ace_id, param_id, value)
+		_undo_redo_adapter.create_action(action_label)
+		_undo_redo_adapter.add_do_method(self, "_set_store_param", [provider_id, ace_id, param_id, value])
 		if has_previous:
-			_undo_redo.add_undo_method(self, "_set_store_param", provider_id, ace_id, param_id, previous_value)
+			_undo_redo_adapter.add_undo_method(self, "_set_store_param", [provider_id, ace_id, param_id, previous_value])
 		else:
-			_undo_redo.add_undo_method(self, "_clear_store_param", provider_id, ace_id, param_id)
-		_undo_redo.commit_action()
+			_undo_redo_adapter.add_undo_method(self, "_clear_store_param", [provider_id, ace_id, param_id])
+		_undo_redo_adapter.commit_action()
 	else:
 		_set_store_param(provider_id, ace_id, param_id, value)
 	param_changed.emit(
@@ -163,8 +163,11 @@ func on_registry_refreshed() -> void:
 	_rebuild_prop_map()
 	notify_property_list_changed()
 
-func set_undo_redo(undo_redo: UndoRedo) -> void:
-	_undo_redo = undo_redo
+func set_undo_redo_manager(undo_redo: Variant) -> void:
+	_undo_redo_adapter.set_manager(undo_redo)
+
+func set_undo_redo(undo_redo: Variant) -> void:
+	set_undo_redo_manager(undo_redo)
 
 func set_context_sheet(sheet: EventSheetResource) -> void:
 	_sheet = sheet

@@ -7,12 +7,70 @@ class_name EditorParamExposureTest
 
 const SAMPLE_SCRIPT := preload("res://tests/fixtures/auto_ace_sample.gd")
 
+class FakeEditorUndoRedoManager:
+	extends RefCounted
+
+	var _pending_do: Array[Callable] = []
+	var _pending_undo: Array[Callable] = []
+	var _undo_stack: Array[Dictionary] = []
+	var _redo_stack: Array[Dictionary] = []
+
+	func create_action(_name: String) -> void:
+		_pending_do.clear()
+		_pending_undo.clear()
+
+	func add_do_method(target: Object, method_name: String, arg1 := null, arg2 := null, arg3 := null, arg4 := null) -> void:
+		var args: Array = [arg1, arg2, arg3, arg4]
+		_pending_do.append(func() -> void: target.callv(method_name, _trim_null_args(args)))
+
+	func add_undo_method(target: Object, method_name: String, arg1 := null, arg2 := null, arg3 := null, arg4 := null) -> void:
+		var args: Array = [arg1, arg2, arg3, arg4]
+		_pending_undo.append(func() -> void: target.callv(method_name, _trim_null_args(args)))
+
+	func commit_action() -> void:
+		for action in _pending_do:
+			action.call()
+		_undo_stack.append({"do": _pending_do.duplicate(), "undo": _pending_undo.duplicate()})
+		_pending_do.clear()
+		_pending_undo.clear()
+		_redo_stack.clear()
+
+	func has_undo() -> bool:
+		return not _undo_stack.is_empty()
+
+	func has_redo() -> bool:
+		return not _redo_stack.is_empty()
+
+	func undo() -> void:
+		if _undo_stack.is_empty():
+			return
+		var action: Dictionary = _undo_stack.pop_back()
+		for undo_action in action.get("undo", []):
+			(undo_action as Callable).call()
+		_redo_stack.append(action)
+
+	func redo() -> void:
+		if _redo_stack.is_empty():
+			return
+		var action: Dictionary = _redo_stack.pop_back()
+		for do_action in action.get("do", []):
+			(do_action as Callable).call()
+		_undo_stack.append(action)
+
+	static func _trim_null_args(args: Array) -> Array:
+		var output: Array = args.duplicate()
+		while not output.is_empty() and output[output.size() - 1] == null:
+			output.pop_back()
+		return output
+
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _test_editor_param_store() and all_passed
+	all_passed = _test_editor_param_store_round_trip() and all_passed
 	all_passed = _test_ace_definition_exposure_fields() and all_passed
 	all_passed = _test_param_default_resolver() and all_passed
 	all_passed = _test_ace_generator_exposure_inference() and all_passed
+	all_passed = _test_c3_metadata_contract() and all_passed
 	all_passed = _test_exposed_node_scope_and_undo() and all_passed
 	return all_passed
 
@@ -46,6 +104,24 @@ static func _test_editor_param_store() -> bool:
 
 	passed = _check("get_param returns default when missing", store.get_param("P", "A", "z", -1), -1) and passed
 
+	return passed
+
+static func _test_editor_param_store_round_trip() -> bool:
+	var passed: bool = true
+	var store := EditorParamStore.new()
+	store.set_param("P", "A", "zero", 0)
+	store.set_param("P", "A", "empty", "")
+	store.set_param("P", "A", "flag", false)
+	var path: String = "user://editor_param_store_roundtrip.tres"
+	var save_err: Error = ResourceSaver.save(store, path)
+	passed = _check("store round-trip save succeeds", save_err, OK) and passed
+	var loaded: Resource = ResourceLoader.load(path)
+	passed = _check("store round-trip loads resource", loaded is EditorParamStore, true) and passed
+	if loaded is EditorParamStore:
+		var loaded_store: EditorParamStore = loaded as EditorParamStore
+		passed = _check("store round-trip keeps zero", loaded_store.get_param("P", "A", "zero"), 0) and passed
+		passed = _check("store round-trip keeps empty string", loaded_store.get_param("P", "A", "empty"), "") and passed
+		passed = _check("store round-trip keeps false", loaded_store.get_param("P", "A", "flag"), false) and passed
 	return passed
 
 # ── ACEDefinition exposure fields ─────────────────────────────────────────────
@@ -152,6 +228,23 @@ static func _test_ace_generator_exposure_inference() -> bool:
 	sample.free()
 	return passed
 
+static func _test_c3_metadata_contract() -> bool:
+	var passed: bool = true
+	var sample: Node = SAMPLE_SCRIPT.new()
+	var registry := EventSheetACERegistry.new()
+	registry.refresh_from_sources([sample], false)
+	var signal_def: ACEDefinition = registry.find_definition("AutoACESample", "signal:died")
+	passed = _check("signal id uses stable serialized prefix", signal_def != null and signal_def.id.begins_with("signal:"), true) and passed
+	var trigger_state_model: String = str(signal_def.metadata.get("trigger_state_model", "")) if signal_def != null else ""
+	passed = _check("signal metadata carries trigger state model", trigger_state_model, "captured_context") and passed
+	passed = _check("signal definitions include description", signal_def != null and not signal_def.description.is_empty(), true) and passed
+	var method_def: ACEDefinition = registry.find_definition("AutoACESample", "method:take_damage")
+	var first_param: Dictionary = method_def.parameters[0] if method_def != null and not method_def.parameters.is_empty() else {}
+	passed = _check("method param keeps stable id field", str(first_param.get("id", "")), "amount") and passed
+	passed = _check("method param carries options metadata array", first_param.has("options"), true) and passed
+	sample.free()
+	return passed
+
 static func _test_exposed_node_scope_and_undo() -> bool:
 	var passed: bool = true
 	var sample: Node = SAMPLE_SCRIPT.new()
@@ -184,6 +277,12 @@ static func _test_exposed_node_scope_and_undo() -> bool:
 		passed = _check("store updated from exposed property", store.override_count() > 0, true) and passed
 		undo_redo.undo()
 		passed = _check("undo clears property override", store.override_count(), 0) and passed
+		var editor_undo := FakeEditorUndoRedoManager.new()
+		exposed.set_undo_redo_manager(editor_undo)
+		passed = _check("setting exposed property succeeds with editor undo manager", exposed._set(first_property, 17), true) and passed
+		passed = _check("store updated with editor undo manager", store.override_count() > 0, true) and passed
+		editor_undo.undo()
+		passed = _check("editor undo manager clears property override", store.override_count(), 0) and passed
 	sample.free()
 	return passed
 

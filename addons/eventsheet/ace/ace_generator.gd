@@ -79,7 +79,9 @@ func _build_signal_definition(provider_id: String, signal_name: String, signal_i
         "semantic_source": "reflection",
         "source_kind": "signal",
         "source_name": signal_name,
-        "display_template": definition.display_name
+        "display_template": definition.display_name,
+        "trigger_state_model": "captured_context",
+        "trigger_context_params": definition.parameters.duplicate(true)
     }
     # Signals are triggers, not directly editor-exposed as inspector parameters.
     definition.editor_exposed = false
@@ -212,11 +214,13 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
         output.append({
             "id": argument_name,
             "display_name": str(parameter_override.get("display_name", _analyzer.build_property_display_name(argument_name))),
+            "description": str(parameter_override.get("description", "")),
             "type": param_type,
             "default_value": parameter_override.get("default_value", _default_value_for_type(param_type)),
             "property_hint": int(parameter_override.get("property_hint", PROPERTY_HINT_NONE)),
             "hint_string": str(parameter_override.get("hint_string", "")),
-            "widget_hint": str(parameter_override.get("widget_hint", ""))
+            "widget_hint": str(parameter_override.get("widget_hint", "")),
+            "options": _normalize_param_options(parameter_override.get("options", []))
         })
     return output
 
@@ -290,3 +294,28 @@ func _infer_property_hint(value_type: int, overrides: Dictionary) -> int:
 func _string_override(overrides: Dictionary, key: String, default_value: String) -> String:
     var resolved: String = str(overrides.get(key, ""))
     return resolved if not resolved.is_empty() else default_value
+
+func _normalize_param_options(raw_options: Variant) -> Array:
+    var output: Array = []
+    if not (raw_options is Array):
+        return output
+    for option_entry in raw_options:
+        if option_entry is Dictionary:
+            var option_dict: Dictionary = option_entry as Dictionary
+            var option_key: String = str(option_dict.get("key", ""))
+            if option_key.is_empty():
+                option_key = str(option_dict.get("value", ""))
+            if option_key.is_empty():
+                option_key = str(option_dict.get("label", ""))
+            if option_key.is_empty():
+                continue
+            output.append({
+                "key": option_key,
+                "label": str(option_dict.get("label", option_key))
+            })
+            continue
+        var scalar: String = str(option_entry)
+        if scalar.is_empty():
+            continue
+        output.append({"key": scalar, "label": scalar})
+    return output

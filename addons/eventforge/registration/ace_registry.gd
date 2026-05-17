@@ -123,6 +123,7 @@ static func _normalize_params(raw_params: Variant) -> Array[ACEParam]:
 		param.description = final_desc
 		param.desc = final_desc
 		param.type_name = str(data.get("type_name", data.get("typeName", data.get("type", "String"))))
+		param.type = _variant_type_from_name(param.type_name)
 		param.default_value = data.get("default_value", data.get("defaultValue", data.get("initial_value", data.get("initialValue", ""))))
 		param.initial_value = data.get("initial_value", data.get("initialValue", param.default_value))
 		param.initialValue = param.initial_value
@@ -168,3 +169,28 @@ static func _apply_param_aliases(param: ACEParam) -> void:
 	var resolved_initial: Variant = param.get_initial_value()
 	param.initial_value = resolved_initial
 	param.initialValue = resolved_initial
+	if param.type == TYPE_STRING and not param.type_name.is_empty():
+		param.type = _variant_type_from_name(param.type_name)
+
+static func _variant_type_from_name(type_name: String) -> int:
+	match type_name.to_lower():
+		"bool", "boolean":
+			return TYPE_BOOL
+		"int", "integer":
+			return TYPE_INT
+		"float", "double":
+			return TYPE_FLOAT
+		"string":
+			return TYPE_STRING
+		"nodepath", "node_path":
+			return TYPE_NODE_PATH
+		"vector2":
+			return TYPE_VECTOR2
+		"vector3":
+			return TYPE_VECTOR3
+		"color":
+			return TYPE_COLOR
+		"variant":
+			return TYPE_NIL
+		_:
+			return TYPE_STRING

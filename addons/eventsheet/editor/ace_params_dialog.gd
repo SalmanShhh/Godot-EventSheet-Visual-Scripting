@@ -57,6 +57,9 @@ func open(definition: ACEDefinition, context: Dictionary) -> void:
 		var label: Label = Label.new()
 		var key: String = str(param_dict.get("id", ""))
 		label.text = str(param_dict.get("display_name", key))
+		var description: String = str(param_dict.get("description", ""))
+		if not description.is_empty():
+			label.tooltip_text = description
 		label.custom_minimum_size = Vector2(160.0, 0.0)
 		row.add_child(label)
 		var field: Control = _create_field(param_dict)
@@ -71,6 +74,26 @@ func open(definition: ACEDefinition, context: Dictionary) -> void:
 func _create_field(param_dict: Dictionary) -> Control:
 	var field_type: int = int(param_dict.get("type", TYPE_NIL))
 	var default_value: Variant = param_dict.get("default_value", "")
+	var options: Array = param_dict.get("options", [])
+	if options is Array and not options.is_empty():
+		var dropdown: OptionButton = OptionButton.new()
+		for option_entry in options:
+			var option_key: String = ""
+			var option_label: String = ""
+			if option_entry is Dictionary:
+				option_key = str((option_entry as Dictionary).get("key", ""))
+				option_label = str((option_entry as Dictionary).get("label", option_key))
+			else:
+				option_key = str(option_entry)
+				option_label = option_key
+			if option_key.is_empty():
+				continue
+			dropdown.add_item(option_label)
+			var index: int = dropdown.item_count - 1
+			dropdown.set_item_metadata(index, option_key)
+			if option_key == str(default_value):
+				dropdown.select(index)
+		return dropdown
 	if field_type == TYPE_BOOL:
 		var check: CheckBox = CheckBox.new()
 		check.button_pressed = _parse_bool(default_value)
@@ -90,6 +113,15 @@ func _create_field(param_dict: Dictionary) -> Control:
 func _extract_value(field: Control) -> Variant:
 	if field is CheckBox:
 		return (field as CheckBox).button_pressed
+	if field is OptionButton:
+		var option_button: OptionButton = field as OptionButton
+		var selected_index: int = option_button.selected
+		if selected_index < 0:
+			return ""
+		var metadata: Variant = option_button.get_item_metadata(selected_index)
+		if metadata != null:
+			return metadata
+		return option_button.get_item_text(selected_index)
 	if field is SpinBox:
 		var spin: SpinBox = field as SpinBox
 		if is_equal_approx(spin.step, 1.0):
