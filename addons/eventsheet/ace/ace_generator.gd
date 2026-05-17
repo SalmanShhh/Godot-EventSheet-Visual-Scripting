@@ -78,6 +78,8 @@ func _build_signal_definition(provider_id: String, signal_name: String, signal_i
         "source_name": signal_name,
         "display_template": definition.display_name
     }
+    # Signals are triggers, not directly editor-exposed as inspector parameters.
+    definition.editor_exposed = false
     return definition
 
 func _build_property_definitions(provider_id: String, property_name: String, property_info: Dictionary, overrides: Dictionary) -> Array[ACEDefinition]:
@@ -103,6 +105,10 @@ func _build_property_definitions(provider_id: String, property_name: String, pro
         "source_name": property_name,
         "display_template": display_name
     }
+    # Exported properties are editor-exposed: their value can be overridden in the inspector.
+    expression_definition.editor_exposed = true
+    expression_definition.property_hint = _infer_property_hint(property_type, overrides)
+    expression_definition.hint_string = _string_override(overrides, "hint_string", "")
     output.append(expression_definition)
 
     var set_definition := _build_property_action_definition(provider_id, property_name, display_name, category, "set", "Set %s" % display_name, TYPE_NIL)
@@ -166,6 +172,8 @@ func _build_method_definition(provider_id: String, method_name: String, method_i
         "source_name": method_name,
         "display_template": _build_method_display_template(display_name, parameter_definitions)
     }
+    # Methods with primitive params (non-signal, non-hidden) can be editor-exposed.
+    definition.editor_exposed = _method_is_exposable(ace_type, return_type, parameter_definitions)
     return definition
 
 func _resolve_method_ace_type(return_type: int, overrides: Dictionary) -> int:
@@ -226,6 +234,35 @@ func _icon_for_ace_type(ace_type: int) -> String:
             return "trigger"
         _:
             return "action"
+
+## Returns true when a method ACE is eligible for editor parameter exposure.
+## Conditions and actions with all-primitive parameters are exposable.
+## Expressions whose return type is non-primitive are not.
+func _method_is_exposable(ace_type: int, return_type: int, params: Array) -> bool:
+    if ace_type == ACEDefinition.ACEType.TRIGGER:
+        return false
+    for param in params:
+        if not (param is Dictionary):
+            return false
+        var ptype: int = int((param as Dictionary).get("type", TYPE_NIL))
+        if ptype not in [TYPE_NIL, TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING]:
+            return false
+    return true
+
+## Infer a basic PropertyHint for the given Variant type.
+func _infer_property_hint(value_type: int, overrides: Dictionary) -> int:
+    var hint_override: int = int(overrides.get("property_hint", -1))
+    if hint_override >= 0:
+        return hint_override
+    match value_type:
+        TYPE_INT:
+            return PROPERTY_HINT_NONE
+        TYPE_FLOAT:
+            return PROPERTY_HINT_NONE
+        TYPE_STRING:
+            return PROPERTY_HINT_NONE
+        _:
+            return PROPERTY_HINT_NONE
 
 func _string_override(overrides: Dictionary, key: String, default_value: String) -> String:
     var resolved: String = str(overrides.get(key, ""))

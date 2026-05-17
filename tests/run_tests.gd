@@ -11,6 +11,7 @@ const AutoACESystemTestScript := preload("res://tests/auto_ace_system_test.gd")
 const EventSheetEditorTestScript := preload("res://tests/event_sheet_editor_test.gd")
 const PluginWorkspaceTestScript := preload("res://tests/plugin_workspace_test.gd")
 const WorkspaceShellTestScript := preload("res://tests/workspace_shell_test.gd")
+const EditorParamExposureTestScript := preload("res://tests/editor_param_exposure_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
 func _init() -> void:
@@ -22,6 +23,7 @@ func _init() -> void:
     passed = EventSheetEditorTestScript.run() and passed
     passed = PluginWorkspaceTestScript.run() and passed
     passed = WorkspaceShellTestScript.run() and passed
+    passed = EditorParamExposureTestScript.run() and passed
     if passed:
         print("All tests passed.")
         quit(0)

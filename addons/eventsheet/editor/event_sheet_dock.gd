@@ -22,33 +22,22 @@ var _ace_registry: EventSheetACERegistry = EventSheetACERegistry.new()
 var _ace_sources: Array[Object] = []
 var _clipboard: Dictionary = {}
 
-var _ace_picker_window: Window = null
-var _ace_picker_search: LineEdit = null
-var _ace_picker_tree: Tree = null
-var _ace_picker_hint: Label = null
-var _ace_picker_context: Dictionary = {}
-
-var _ace_params_dialog: ConfirmationDialog = null
-var _ace_params_form: VBoxContainer = null
-var _ace_params_fields: Dictionary = {}
-var _ace_params_definition: ACEDefinition = null
-var _ace_params_context: Dictionary = {}
-
-var _variable_dialog: ConfirmationDialog = null
-var _variable_scope_label: Label = null
-var _variable_name_edit: LineEdit = null
-var _variable_type_option: OptionButton = null
-var _variable_default_edit: LineEdit = null
-var _variable_scope: String = "global"
+# ── Extracted sub-components ─────────────────────────────────────────────────
+var _ace_picker: ACEPickerDialog = ACEPickerDialog.new()
+var _ace_params: ACEParamsDialog = ACEParamsDialog.new()
+var _variable_dlg: VariableDialog = VariableDialog.new()
 
 func _init() -> void:
     _build_ui()
 
 func _ready() -> void:
     _build_ui()
-    _build_ace_picker_window()
-    _build_ace_params_dialog()
-    _build_variable_dialog()
+    _ace_picker.init_dialog(self, _ace_registry)
+    _ace_picker.ace_selected.connect(_on_ace_picker_selected)
+    _ace_params.init_dialog(self)
+    _ace_params.params_confirmed.connect(_on_ace_params_confirmed)
+    _variable_dlg.init_dialog(self)
+    _variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
     _refresh_ace_registry()
     if _current_sheet == null:
         _current_sheet = _build_demo_sheet()
@@ -291,22 +280,22 @@ func _save_sheet_to_path(path: String) -> void:
 func _on_add_event_requested() -> void:
     if not _ensure_sheet_for_editing():
         return
-    _open_ace_picker("new_event", false)
+    _ace_picker.open("new_event", false, _viewport.get_selected_context().get("source_resource", null))
 
 func _on_add_signal_event_requested() -> void:
     if not _ensure_sheet_for_editing():
         return
-    _open_ace_picker("new_event", true)
+    _ace_picker.open("new_event", true, _viewport.get_selected_context().get("source_resource", null))
 
 func _on_add_condition_requested() -> void:
     if not _ensure_selected_event():
         return
-    _open_ace_picker("append_condition", false)
+    _ace_picker.open("append_condition", false, _viewport.get_selected_context().get("source_resource", null))
 
 func _on_add_action_requested() -> void:
     if not _ensure_selected_event():
         return
-    _open_ace_picker("append_action", false)
+    _ace_picker.open("append_action", false, _viewport.get_selected_context().get("source_resource", null))
 
 func _on_copy_requested() -> void:
     var context: Dictionary = _viewport.get_selected_context()
@@ -366,12 +355,12 @@ func _on_paste_requested() -> void:
 func _on_add_global_variable_requested() -> void:
     if not _ensure_sheet_for_editing():
         return
-    _open_variable_dialog("global")
+    _variable_dlg.open("global")
 
 func _on_add_local_variable_requested() -> void:
     if not _ensure_selected_event():
         return
-    _open_variable_dialog("local")
+    _variable_dlg.open("local")
 
 func _ensure_sheet_for_editing() -> bool:
     if _current_sheet != null:
@@ -388,198 +377,18 @@ func _ensure_selected_event() -> bool:
     _set_status("Select an event row first.", true)
     return false
 
-func _build_ace_picker_window() -> void:
-    if _ace_picker_window != null:
-        return
-    _ace_picker_window = Window.new()
-    _ace_picker_window.title = "Select ACE"
-    _ace_picker_window.visible = false
-    _ace_picker_window.min_size = Vector2i(640, 420)
-    add_child(_ace_picker_window)
+# ── ACE picker signal handler ────────────────────────────────────────────────
 
-    var content: VBoxContainer = VBoxContainer.new()
-    content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    content.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _ace_picker_window.add_child(content)
-
-    _ace_picker_search = LineEdit.new()
-    _ace_picker_search.placeholder_text = "Search actions, conditions, triggers..."
-    _ace_picker_search.text_changed.connect(func(_text: String) -> void: _refresh_ace_picker_tree())
-    content.add_child(_ace_picker_search)
-
-    _ace_picker_hint = Label.new()
-    _ace_picker_hint.text = ""
-    content.add_child(_ace_picker_hint)
-
-    _ace_picker_tree = Tree.new()
-    _ace_picker_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _ace_picker_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _ace_picker_tree.columns = 2
-    _ace_picker_tree.set_column_title(0, "ACE")
-    _ace_picker_tree.set_column_title(1, "Category")
-    _ace_picker_tree.set_column_titles_visible(true)
-    _ace_picker_tree.item_activated.connect(_on_ace_picker_item_activated)
-    content.add_child(_ace_picker_tree)
-
-func _open_ace_picker(mode: String, signals_only: bool) -> void:
-    if _ace_picker_window == null:
-        _build_ace_picker_window()
-    _ace_picker_context = {
-        "mode": mode,
-        "signals_only": signals_only,
-        "selected_resource": _viewport.get_selected_context().get("source_resource", null)
-    }
-    _ace_picker_search.text = ""
-    _ace_picker_hint.text = _build_picker_hint(mode, signals_only)
-    _refresh_ace_picker_tree()
-    _ace_picker_window.popup_centered(Vector2i(720, 520))
-
-func _build_picker_hint(mode: String, signals_only: bool) -> String:
-    if signals_only:
-        return "Select a signal trigger ACE to create a signal event."
-    match mode:
-        "append_condition":
-            return "Select a condition or trigger ACE to append to the selected event."
-        "append_action":
-            return "Select an action ACE to append to the selected event."
-        _:
-            return "Select an ACE to create a new event."
-
-func _refresh_ace_picker_tree() -> void:
-    if _ace_picker_tree == null:
-        return
-    _ace_picker_tree.clear()
-    var root: TreeItem = _ace_picker_tree.create_item()
-    var query: String = _ace_picker_search.text
-    var mode: String = str(_ace_picker_context.get("mode", "new_event"))
-    var signals_only: bool = bool(_ace_picker_context.get("signals_only", false))
-    var definitions: Array[ACEDefinition] = _ace_registry.search(query)
-    var category_nodes: Dictionary = {}
-    for definition in definitions:
-        if not _is_definition_allowed_for_mode(definition, mode, signals_only):
-            continue
-        var category: String = definition.category
-        if category.is_empty():
-            category = "General"
-        if not category_nodes.has(category):
-            var category_item: TreeItem = _ace_picker_tree.create_item(root)
-            category_item.set_text(0, category)
-            category_nodes[category] = category_item
-        var item: TreeItem = _ace_picker_tree.create_item(category_nodes[category])
-        item.set_text(0, "%s — %s" % [definition.provider_id, definition.display_name])
-        item.set_text(1, category)
-        item.set_metadata(0, definition)
-
-func _is_definition_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:
-    if definition == null:
-        return false
-    if signals_only:
-        return definition.ace_type == ACEDefinition.ACEType.TRIGGER and definition.category.to_lower().contains("signal")
-    match mode:
-        "append_condition":
-            return definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]
-        "append_action":
-            return definition.ace_type == ACEDefinition.ACEType.ACTION
-        _:
-            return definition.ace_type in [ACEDefinition.ACEType.TRIGGER, ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.ACTION]
-
-func _on_ace_picker_item_activated() -> void:
-    var item: TreeItem = _ace_picker_tree.get_selected()
-    if item == null:
-        return
-    var definition: ACEDefinition = item.get_metadata(0)
-    if definition == null:
-        return
+func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> void:
     if definition.parameters.is_empty():
-        _apply_ace_definition(definition, {}, _ace_picker_context)
-        _ace_picker_window.hide()
+        _apply_ace_definition(definition, {}, context)
         return
-    _ace_picker_window.hide()
-    _open_ace_params_dialog(definition, _ace_picker_context)
+    _ace_params.open(definition, context)
 
-func _build_ace_params_dialog() -> void:
-    if _ace_params_dialog != null:
-        return
-    _ace_params_dialog = ConfirmationDialog.new()
-    _ace_params_dialog.title = "ACE Parameters"
-    _ace_params_dialog.visible = false
-    _ace_params_dialog.confirmed.connect(_on_ace_params_confirmed)
-    add_child(_ace_params_dialog)
+# ── ACE params dialog signal handler ────────────────────────────────────────
 
-    var scroll: ScrollContainer = ScrollContainer.new()
-    scroll.custom_minimum_size = Vector2(520.0, 260.0)
-    scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _ace_params_dialog.add_child(scroll)
-
-    _ace_params_form = VBoxContainer.new()
-    _ace_params_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    scroll.add_child(_ace_params_form)
-
-func _open_ace_params_dialog(definition: ACEDefinition, context: Dictionary) -> void:
-    _ace_params_definition = definition
-    _ace_params_context = context.duplicate(true)
-    _ace_params_fields.clear()
-    for child in _ace_params_form.get_children():
-        _ace_params_form.remove_child(child)
-        child.queue_free()
-    for parameter in definition.parameters:
-        if not (parameter is Dictionary):
-            continue
-        var param_dict: Dictionary = parameter
-        var row: HBoxContainer = HBoxContainer.new()
-        var label: Label = Label.new()
-        var key: String = str(param_dict.get("id", ""))
-        label.text = str(param_dict.get("display_name", key))
-        label.custom_minimum_size = Vector2(160.0, 0.0)
-        row.add_child(label)
-        var field: Control = _create_param_field(param_dict)
-        field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-        row.add_child(field)
-        _ace_params_form.add_child(row)
-        _ace_params_fields[key] = field
-    _ace_params_dialog.title = "%s Parameters" % definition.display_name
-    _ace_params_dialog.popup_centered(Vector2i(560, 360))
-
-func _create_param_field(param_dict: Dictionary) -> Control:
-    var field_type: int = int(param_dict.get("type", TYPE_NIL))
-    var default_value: Variant = param_dict.get("default_value", "")
-    if field_type == TYPE_BOOL:
-        var check: CheckBox = CheckBox.new()
-        check.button_pressed = _parse_bool_value(default_value)
-        return check
-    if field_type in [TYPE_INT, TYPE_FLOAT]:
-        var spin: SpinBox = SpinBox.new()
-        spin.step = 1.0 if field_type == TYPE_INT else 0.1
-        spin.allow_greater = true
-        spin.allow_lesser = true
-        spin.value = float(default_value)
-        return spin
-    var edit: LineEdit = LineEdit.new()
-    edit.text = str(default_value)
-    return edit
-
-func _on_ace_params_confirmed() -> void:
-    if _ace_params_definition == null:
-        return
-    var values: Dictionary = {}
-    for key in _ace_params_fields.keys():
-        values[str(key)] = _extract_field_value(_ace_params_fields[key])
-    _apply_ace_definition(_ace_params_definition, values, _ace_params_context)
-    _ace_params_definition = null
-    _ace_params_context.clear()
-
-func _extract_field_value(field: Control) -> Variant:
-    if field is CheckBox:
-        return (field as CheckBox).button_pressed
-    if field is SpinBox:
-        var spin: SpinBox = field as SpinBox
-        if is_equal_approx(spin.step, 1.0):
-            return int(spin.value)
-        return spin.value
-    if field is LineEdit:
-        return (field as LineEdit).text
-    return ""
+func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
+    _apply_ace_definition(definition, values, context)
 
 func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, context: Dictionary) -> void:
     if definition == null:
@@ -711,106 +520,31 @@ func _ace_type_label(ace_type: int) -> String:
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
     _refresh_variable_panel()
 
-func _build_variable_dialog() -> void:
-    if _variable_dialog != null:
-        return
-    _variable_dialog = ConfirmationDialog.new()
-    _variable_dialog.title = "Create Variable"
-    _variable_dialog.visible = false
-    _variable_dialog.confirmed.connect(_on_variable_dialog_confirmed)
-    add_child(_variable_dialog)
+# ── Variable dialog signal handler ────────────────────────────────────────────
 
-    var form: VBoxContainer = VBoxContainer.new()
-    form.custom_minimum_size = Vector2(420.0, 180.0)
-    _variable_dialog.add_child(form)
-
-    _variable_scope_label = Label.new()
-    form.add_child(_variable_scope_label)
-
-    var name_row: HBoxContainer = HBoxContainer.new()
-    var name_label: Label = Label.new()
-    name_label.text = "Name"
-    name_label.custom_minimum_size = Vector2(120.0, 0.0)
-    name_row.add_child(name_label)
-    _variable_name_edit = LineEdit.new()
-    _variable_name_edit.placeholder_text = "health"
-    _variable_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    name_row.add_child(_variable_name_edit)
-    form.add_child(name_row)
-
-    var type_row: HBoxContainer = HBoxContainer.new()
-    var type_label: Label = Label.new()
-    type_label.text = "Type"
-    type_label.custom_minimum_size = Vector2(120.0, 0.0)
-    type_row.add_child(type_label)
-    _variable_type_option = OptionButton.new()
-    for option in ["int", "float", "bool", "String", "Variant"]:
-        _variable_type_option.add_item(option)
-    _variable_type_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    type_row.add_child(_variable_type_option)
-    form.add_child(type_row)
-
-    var default_row: HBoxContainer = HBoxContainer.new()
-    var default_label: Label = Label.new()
-    default_label.text = "Default"
-    default_label.custom_minimum_size = Vector2(120.0, 0.0)
-    default_row.add_child(default_label)
-    _variable_default_edit = LineEdit.new()
-    _variable_default_edit.placeholder_text = "0"
-    _variable_default_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    default_row.add_child(_variable_default_edit)
-    form.add_child(default_row)
-
-func _open_variable_dialog(scope: String) -> void:
-    if _variable_dialog == null:
-        _build_variable_dialog()
-    _variable_scope = scope
-    _variable_scope_label.text = "Scope: %s" % scope.capitalize()
-    _variable_name_edit.text = ""
-    _variable_default_edit.text = ""
-    _variable_type_option.selected = 0
-    _variable_dialog.popup_centered(Vector2i(440, 220))
-
-func _on_variable_dialog_confirmed() -> void:
-    var name: String = _variable_name_edit.text.strip_edges()
-    if name.is_empty():
+func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_value: Variant, scope: String) -> void:
+    if var_name.is_empty():
         _set_status("Variable name is required.", true)
         return
-    var type_name: String = _variable_type_option.get_item_text(_variable_type_option.selected)
-    var default_value: Variant = _parse_variable_default(type_name, _variable_default_edit.text)
-    if _variable_scope == "global":
-        _current_sheet.variables[name] = {
+    if scope == "global":
+        _current_sheet.variables[var_name] = {
             "type": type_name,
             "default": default_value
         }
-        _mark_dirty("Added global variable %s." % name)
+        _mark_dirty("Added global variable %s." % var_name)
     else:
         var selected: Resource = _viewport.get_selected_context().get("source_resource", null)
         if not (selected is EventRow):
             _set_status("Select an event row for local variable creation.", true)
             return
         var local_var: LocalVariable = LocalVariable.new()
-        local_var.name = name
+        local_var.name = var_name
         local_var.type_name = type_name
         local_var.type = _type_from_name(type_name)
         local_var.default_value = default_value
         (selected as EventRow).local_variables.append(local_var)
-        _mark_dirty("Added local variable %s." % name)
+        _mark_dirty("Added local variable %s." % var_name)
     _refresh_after_edit()
-
-func _parse_variable_default(type_name: String, raw: String) -> Variant:
-    var value: String = raw.strip_edges()
-    match type_name:
-        "int":
-            return int(value) if not value.is_empty() else 0
-        "float":
-            return float(value) if not value.is_empty() else 0.0
-        "bool":
-            return _parse_bool_value(value)
-        "String":
-            return value
-        _:
-            return value
 
 func _type_from_name(type_name: String) -> int:
     match type_name:
@@ -825,8 +559,6 @@ func _type_from_name(type_name: String) -> int:
         _:
             return TYPE_NIL
 
-func _parse_bool_value(value: Variant) -> bool:
-    return str(value).to_lower() in ["true", "1", "yes"]
 
 func _refresh_variable_panel() -> void:
     if _global_var_list == null or _local_var_list == null:
@@ -873,6 +605,7 @@ func _refresh_ace_registry() -> void:
     _ace_registry.refresh_from_sources(sources, true)
     if _viewport != null:
         _viewport.set_ace_registry(_ace_registry)
+    _ace_picker.set_registry(_ace_registry)
 
 func _build_default_ace_sources() -> Array[Object]:
     var demo_script: Script = load("res://addons/eventsheet/runtime/demo_gameplay_actor.gd")
