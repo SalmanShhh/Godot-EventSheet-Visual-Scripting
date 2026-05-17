@@ -2,7 +2,7 @@
 
 ## Open
 
-Open the repository root project for normal editing, or temporarily rename `demo/demo_project.godot` back to `demo/project.godot` if you need to import the demo as a standalone Godot project.
+Open the repository root project for normal editing, or temporarily rename `demo/demo_project.godot` to `demo/project.godot` if you need to import the demo as a standalone Godot project. Rename it back afterwards so the root project does not start warning about a nested `project.godot` again.
 
 ## Compile manually
 
