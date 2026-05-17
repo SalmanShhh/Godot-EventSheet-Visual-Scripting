@@ -162,7 +162,8 @@ static func _to_code_literal(value: Variant) -> String:
 			return "true" if bool(value) else "false"
 		TYPE_FLOAT:
 			var float_text: String = str(float(value))
-			if float_text.find(".") == -1 and float_text.find("e") == -1 and float_text.find("E") == -1:
+			var normalized_float_text: String = float_text.to_lower()
+			if float_text.find(".") == -1 and normalized_float_text.find("e") == -1:
 				float_text += ".0"
 			return float_text
 		TYPE_NIL:
