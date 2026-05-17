@@ -118,7 +118,7 @@ func _draw() -> void:
         return
     var font: Font = _get_font()
     var font_size: int = _get_font_size()
-    for index: int in range(visible_range.x, visible_range.y + 1):
+    for index in range(visible_range.x, visible_range.y + 1):
         var row_info: Dictionary = _flat_rows[index]
         var row_data: EventRowData = row_info.get("row")
         if row_data == null:
@@ -461,7 +461,7 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
     var selected_row: EventRowData = _row_at(_selected_row_index)
     if selected_row != null:
         _focused_lane = _resolve_lane_for_row(selected_row, span_index)
-    for index: int in range(_flat_rows.size()):
+    for index in range(_flat_rows.size()):
         var row_data: EventRowData = _flat_rows[index].get("row")
         if row_data == null:
             continue
@@ -472,7 +472,7 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
 func _set_hover_state(row_index: int, span_index: int) -> void:
     _hovered_row_index = row_index
     _hovered_span_index = span_index
-    for index: int in range(_flat_rows.size()):
+    for index in range(_flat_rows.size()):
         var row_data: EventRowData = _flat_rows[index].get("row")
         if row_data == null:
             continue
@@ -507,7 +507,7 @@ func _begin_edit(row_index: int, span_index: int) -> void:
     queue_redraw()
 
 func _find_first_editable_span(row_data: EventRowData) -> int:
-    for index: int in range(row_data.spans.size()):
+    for index in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[index]
         if span == null or not (span.metadata is Dictionary):
             continue
@@ -567,7 +567,7 @@ func _hit_test(position: Vector2) -> Dictionary:
     if fold_rect.size != Vector2.ZERO and fold_rect.has_point(position):
         result["fold"] = true
         return result
-    for span_index: int in range(row_data.spans.size()):
+    for span_index in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span != null and span.hoverable and span.rect.has_point(position):
             result["span_index"] = span_index
