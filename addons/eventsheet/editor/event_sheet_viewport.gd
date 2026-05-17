@@ -448,7 +448,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
     return spans
 
 func _append_condition_prefix_spans(spans: Array[SemanticSpan], event_row: EventRow, condition: ACECondition, condition_index: int) -> void:
-    if event_row == null or condition == null:
+    if event_row == null:
         return
     if event_row.condition_mode == EventRow.ConditionMode.OR and event_row.conditions.size() > 1:
         var or_meta: Dictionary = BADGE_OR_METADATA.duplicate(true)
