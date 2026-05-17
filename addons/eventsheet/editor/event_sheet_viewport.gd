@@ -28,6 +28,10 @@ var _drag_target_index: int = -1
 var _last_scroll: int = -1
 var _fold_state: Dictionary = {}
 var _debug_rows: Dictionary = {}
+var _breakpoint_rows: Dictionary = {}
+var _row_disabled_state: Dictionary = {}
+var _focused_lane: String = "condition"
+var _selection_anchor_index: int = -1
 
 func _init() -> void:
     _configure_viewport()
@@ -69,6 +73,14 @@ func get_selected_row_index() -> int:
 
 func get_flat_rows() -> Array[Dictionary]:
     return _flat_rows.duplicate(true)
+
+func get_editor_state_snapshot() -> Dictionary:
+    return {
+        "focused_lane": _focused_lane,
+        "selection_anchor_index": _selection_anchor_index,
+        "breakpoint_row_count": _breakpoint_rows.size(),
+        "disabled_row_count": _row_disabled_state.size()
+    }
 
 func get_visible_row_range() -> Vector2i:
     if _flat_rows.is_empty():
@@ -139,6 +151,10 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
     var span_index: int = int(hit.get("span_index", -1))
     if event.pressed:
         grab_focus()
+        if bool(hit.get("gutter", false)):
+            _toggle_breakpoint(row_index)
+            _select_row(row_index, span_index)
+            return
         _select_row(row_index, span_index)
         if bool(hit.get("fold", false)):
             _toggle_row_fold(row_index)
@@ -182,6 +198,9 @@ func _handle_key(event: InputEventKey) -> void:
         if right_row != null and not right_row.children.is_empty() and right_row.folded:
             _toggle_row_fold(_selected_row_index)
             accept_event()
+    elif event.keycode == KEY_B:
+        _toggle_breakpoint(_selected_row_index)
+        accept_event()
     elif event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_F2]:
         _begin_edit(_selected_row_index, _selected_span_index)
         accept_event()
@@ -223,11 +242,20 @@ func _handle_editing_key(event: InputEventKey) -> void:
 func _refresh_rows() -> void:
     _root_rows = _build_rows_from_sheet(_sheet)
     _flat_rows.clear()
-    for row_data: EventRowData in _root_rows:
+    for row_data in _root_rows:
         _flatten_row(row_data, null)
+    for index in range(_flat_rows.size()):
+        var line_row: EventRowData = _flat_rows[index].get("row")
+        if line_row == null:
+            continue
+        line_row.line_number = index + 1
+        if _breakpoint_rows.has(line_row.row_uid):
+            line_row.breakpoint_enabled = bool(_breakpoint_rows[line_row.row_uid])
+        if _row_disabled_state.has(line_row.row_uid):
+            line_row.disabled = bool(_row_disabled_state[line_row.row_uid])
     if _selected_row_index >= _flat_rows.size():
         _selected_row_index = _flat_rows.size() - 1
-    for index: int in range(_flat_rows.size()):
+    for index in range(_flat_rows.size()):
         var row_data_state: EventRowData = _flat_rows[index].get("row")
         if row_data_state == null:
             continue
@@ -241,7 +269,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
     var root_rows: Array[EventRowData] = []
     if sheet == null:
         return root_rows
-    for entry: Resource in sheet.events:
+    for entry in sheet.events:
         var row_data: EventRowData = _build_row_from_resource(entry, 0)
         if row_data != null:
             root_rows.append(row_data)
@@ -266,11 +294,13 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
     row_data.row_uid = group.group_uid if not group.group_uid.is_empty() else "group_%s" % indent
     row_data.folded = bool(_fold_state.get(row_data.row_uid, group.is_collapsed()))
     row_data.debug_state = str(_debug_rows.get(row_data.row_uid, ""))
+    row_data.disabled = not group.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
+    row_data.breakpoint_enabled = bool(_breakpoint_rows.get(row_data.row_uid, false))
     row_data.spans = [
         _make_span("group", SemanticSpan.SpanType.KEYWORD, {"editable": false}),
         _make_span(_group_name(group), SemanticSpan.SpanType.OBJECT, {"editable": true, "edit_kind": "group_name"})
     ]
-    for child: Resource in _group_children(group):
+    for child in _group_children(group):
         var child_row: EventRowData = _build_row_from_resource(child, indent + 1)
         if child_row != null:
             row_data.children.append(child_row)
@@ -284,6 +314,8 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
     row_data.row_uid = "comment_%s_%d" % [str(comment_row.get_instance_id()), indent]
     row_data.folded = false
     row_data.debug_state = str(_debug_rows.get(row_data.row_uid, ""))
+    row_data.disabled = not comment_row.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
+    row_data.breakpoint_enabled = bool(_breakpoint_rows.get(row_data.row_uid, false))
     row_data.spans = [
         _make_span("//", SemanticSpan.SpanType.KEYWORD, {"editable": false}),
         _make_span(comment_row.text if not comment_row.text.is_empty() else "Comment", SemanticSpan.SpanType.COMMENT, {"editable": true, "edit_kind": "comment_text"})
@@ -298,8 +330,10 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
     row_data.row_uid = event_row.event_uid if not event_row.event_uid.is_empty() else "event_%s_%d" % [str(event_row.get_instance_id()), indent]
     row_data.folded = bool(_fold_state.get(row_data.row_uid, false))
     row_data.debug_state = str(_debug_rows.get(row_data.row_uid, ""))
+    row_data.disabled = not event_row.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
+    row_data.breakpoint_enabled = bool(_breakpoint_rows.get(row_data.row_uid, false))
     row_data.spans = _build_event_spans(event_row)
-    for child: Resource in event_row.sub_events:
+    for child in event_row.sub_events:
         var child_row: EventRowData = _build_row_from_resource(child, indent + 1)
         if child_row != null:
             row_data.children.append(child_row)
@@ -308,42 +342,42 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
     var spans: Array[SemanticSpan] = []
     if event_row.trigger != null:
-        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD))
-        spans.append(_make_span(_format_condition_descriptor(event_row.trigger), SemanticSpan.SpanType.CONDITION))
+        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, {"lane": "condition"}))
+        spans.append(_make_span(_format_condition_descriptor(event_row.trigger), SemanticSpan.SpanType.CONDITION, {"lane": "condition"}))
     elif not event_row.trigger_id.is_empty():
-        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD))
-        spans.append(_make_span(event_row.trigger_id, SemanticSpan.SpanType.CONDITION))
+        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, {"lane": "condition"}))
+        spans.append(_make_span(event_row.trigger_id, SemanticSpan.SpanType.CONDITION, {"lane": "condition"}))
     if not event_row.conditions.is_empty():
         if not spans.is_empty():
-            spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD))
-        for condition_index: int in range(event_row.conditions.size()):
+            spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, {"lane": "condition"}))
+        for condition_index in range(event_row.conditions.size()):
             var condition: ACECondition = event_row.conditions[condition_index]
             if condition == null:
                 continue
             if condition_index > 0:
-                spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD))
-            spans.append(_make_span(_format_condition_descriptor(condition), SemanticSpan.SpanType.CONDITION))
+                spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, {"lane": "condition"}))
+            spans.append(_make_span(_format_condition_descriptor(condition), SemanticSpan.SpanType.CONDITION, {"lane": "condition"}))
     if spans.is_empty():
-        spans.append(_make_span("when", SemanticSpan.SpanType.KEYWORD))
-        spans.append(_make_span("Always", SemanticSpan.SpanType.CONDITION))
+        spans.append(_make_span("when", SemanticSpan.SpanType.KEYWORD, {"lane": "condition"}))
+        spans.append(_make_span("Always", SemanticSpan.SpanType.CONDITION, {"lane": "condition"}))
     if not event_row.actions.is_empty():
-        spans.append(_make_span("→", SemanticSpan.SpanType.OPERATOR, {"hoverable": false}))
-        for action_index: int in range(event_row.actions.size()):
+        spans.append(_make_span("→", SemanticSpan.SpanType.OPERATOR, {"hoverable": false, "lane": "action"}))
+        for action_index in range(event_row.actions.size()):
             var action_resource: Resource = event_row.actions[action_index]
             if action_resource is ACEAction:
                 if action_index > 0:
-                    spans.append(_make_span(";", SemanticSpan.SpanType.OPERATOR, {"hoverable": false}))
-                spans.append(_make_span(_format_action_descriptor(action_resource as ACEAction), SemanticSpan.SpanType.ACTION))
+                    spans.append(_make_span(";", SemanticSpan.SpanType.OPERATOR, {"hoverable": false, "lane": "action"}))
+                spans.append(_make_span(_format_action_descriptor(action_resource as ACEAction), SemanticSpan.SpanType.ACTION, {"lane": "action"}))
     if not event_row.comment.is_empty():
-        spans.append(_make_span("//", SemanticSpan.SpanType.KEYWORD, {"hoverable": false}))
-        spans.append(_make_span(event_row.comment, SemanticSpan.SpanType.COMMENT, {"editable": true, "edit_kind": "event_comment"}))
+        spans.append(_make_span("//", SemanticSpan.SpanType.KEYWORD, {"hoverable": false, "lane": "action"}))
+        spans.append(_make_span(event_row.comment, SemanticSpan.SpanType.COMMENT, {"editable": true, "edit_kind": "event_comment", "lane": "action"}))
     return spans
 
 func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
     _flat_rows.append({"row": row_data, "parent": parent_row})
     if row_data.folded:
         return
-    for child: EventRowData in row_data.children:
+    for child in row_data.children:
         _flatten_row(child, row_data)
 
 func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: int) -> Dictionary:
@@ -355,14 +389,29 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         return _layout_cache.get_layout(key)
     var row_top: float = float(index * ROW_HEIGHT)
     var row_rect := Rect2(0.0, row_top, width, ROW_HEIGHT)
+    var gutter_rect := Rect2(0.0, row_top, EventSheetPalette.GUTTER_WIDTH, ROW_HEIGHT)
     var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * INDENT_WIDTH)
     var fold_rect: Rect2 = Rect2(x - 14.0, row_top + 6.0, 12.0, 16.0) if not row_data.children.is_empty() else Rect2()
     var icon_rect := Rect2(x + 2.0, row_top + 9.0, EventSheetPalette.ICON_SIZE, EventSheetPalette.ICON_SIZE)
     x += 18.0
-    for span_index: int in range(row_data.spans.size()):
+    var condition_lane_rect := Rect2()
+    var action_lane_rect := Rect2()
+    var lane_divider_rect := Rect2()
+    var lane_divider_x: float = -1.0
+    if row_data.row_type == EventRowData.RowType.EVENT:
+        var content_left: float = EventSheetPalette.GUTTER_WIDTH
+        var content_width: float = max(width - content_left, 120.0)
+        lane_divider_x = content_left + max(160.0, floor(content_width * EventSheetPalette.CONDITIONS_LANE_RATIO))
+        condition_lane_rect = Rect2(content_left, row_top, max(lane_divider_x - content_left, 1.0), ROW_HEIGHT)
+        lane_divider_rect = Rect2(lane_divider_x, row_top, EventSheetPalette.LANE_DIVIDER_WIDTH, ROW_HEIGHT)
+        action_lane_rect = Rect2(lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH, row_top, max(width - lane_divider_x - EventSheetPalette.LANE_DIVIDER_WIDTH, 1.0), ROW_HEIGHT)
+    for span_index in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null:
             continue
+        var span_lane: String = _resolve_span_lane(span)
+        if lane_divider_x > 0.0 and span_lane == "action":
+            x = max(x, lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH + 8.0)
         var measured_text: String = _editing_buffer if index == _editing_row_index and span_index == _editing_span_index else span.text
         var span_width: float = font.get_string_size(measured_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
         span.rect = Rect2(x, row_top + 4.0, span_width + 2.0, ROW_HEIGHT - 8.0)
@@ -372,11 +421,19 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         drag_rect = Rect2(0.0, row_rect.position.y - 1.0, width, 2.0)
     var layout := {
         "row_rect": row_rect,
+        "gutter_rect": gutter_rect,
         "fold_rect": fold_rect,
         "icon_rect": icon_rect,
+        "condition_lane_rect": condition_lane_rect,
+        "action_lane_rect": action_lane_rect,
+        "lane_divider_rect": lane_divider_rect,
+        "lane_divider_x": lane_divider_x,
         "alternating": index % 2 == 1,
         "debug_text": row_data.debug_state,
         "drag_rect": drag_rect,
+        "line_number": row_data.line_number,
+        "breakpoint_enabled": row_data.breakpoint_enabled,
+        "disabled": row_data.disabled,
         "editing_span_index": _editing_span_index if index == _editing_row_index else -1,
         "editing_buffer": _editing_buffer if index == _editing_row_index else "",
         "editing_caret": _editing_caret if index == _editing_row_index else -1
@@ -400,12 +457,16 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
         return
     _selected_row_index = clampi(row_index, 0, _flat_rows.size() - 1)
     _selected_span_index = span_index
+    _selection_anchor_index = _selected_row_index
+    var selected_row: EventRowData = _row_at(_selected_row_index)
+    if selected_row != null:
+        _focused_lane = _resolve_lane_for_row(selected_row, span_index)
     for index: int in range(_flat_rows.size()):
         var row_data: EventRowData = _flat_rows[index].get("row")
         if row_data == null:
             continue
         row_data.selected = index == _selected_row_index
-    selection_changed.emit(_row_at(_selected_row_index))
+    selection_changed.emit(selected_row)
     queue_redraw()
 
 func _set_hover_state(row_index: int, span_index: int) -> void:
@@ -510,7 +571,14 @@ func _hit_test(position: Vector2) -> Dictionary:
         var span: SemanticSpan = row_data.spans[span_index]
         if span != null and span.hoverable and span.rect.has_point(position):
             result["span_index"] = span_index
+            result["lane"] = _resolve_span_lane(span)
             return result
+    var divider_x: float = float(layout.get("lane_divider_x", -1.0))
+    if divider_x > 0.0:
+        result["lane"] = "action" if position.x >= divider_x else "condition"
+    var gutter_rect: Rect2 = layout.get("gutter_rect", Rect2())
+    if gutter_rect.size != Vector2.ZERO and gutter_rect.has_point(position):
+        result["gutter"] = true
     return result
 
 func _row_at(index: int) -> EventRowData:
@@ -557,6 +625,40 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
     span.metadata = metadata.duplicate(true)
     span.hoverable = bool(span.metadata.get("hoverable", true))
     return span
+
+func _resolve_span_lane(span: SemanticSpan) -> String:
+    if span == null or not (span.metadata is Dictionary):
+        return "condition"
+    return str((span.metadata as Dictionary).get("lane", "condition"))
+
+func _resolve_lane_for_row(row_data: EventRowData, span_index: int) -> String:
+    if row_data == null:
+        return "condition"
+    if row_data.row_type != EventRowData.RowType.EVENT:
+        return "condition"
+    if span_index >= 0 and span_index < row_data.spans.size():
+        return _resolve_span_lane(row_data.spans[span_index])
+    return _focused_lane
+
+func _toggle_breakpoint(row_index: int) -> void:
+    var row_data: EventRowData = _row_at(row_index)
+    if row_data == null:
+        return
+    row_data.breakpoint_enabled = not row_data.breakpoint_enabled
+    if row_data.breakpoint_enabled:
+        _breakpoint_rows[row_data.row_uid] = true
+    else:
+        _breakpoint_rows.erase(row_data.row_uid)
+    queue_redraw()
+
+func set_row_disabled(row_uid: String, disabled: bool) -> void:
+    if row_uid.is_empty():
+        return
+    if disabled:
+        _row_disabled_state[row_uid] = true
+    else:
+        _row_disabled_state.erase(row_uid)
+    _refresh_rows()
 
 func _configure_viewport() -> void:
     focus_mode = Control.FOCUS_ALL

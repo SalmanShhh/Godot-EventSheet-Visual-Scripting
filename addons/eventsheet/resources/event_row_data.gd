@@ -19,3 +19,6 @@ var children: Array[EventRowData] = []
 var source_resource: Resource = null
 var row_uid: String = ""
 var debug_state: String = ""
+var line_number: int = 0
+var breakpoint_enabled: bool = false
+var disabled: bool = false

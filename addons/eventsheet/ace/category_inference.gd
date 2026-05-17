@@ -19,12 +19,12 @@ static func infer_category(symbol_name: String, ace_type: int, return_type: int 
     if ace_type == ACEDefinition.ACEType.TRIGGER:
         return "Signals"
     var haystack: String = symbol_name.to_lower()
-    for parameter_type: Variant in parameter_types:
+    for parameter_type in parameter_types:
         haystack += " " + str(parameter_type).to_lower()
     if return_type == TYPE_BOOL:
         haystack += " bool"
-    for category_name: String in CATEGORY_KEYWORDS.keys():
-        for keyword: String in CATEGORY_KEYWORDS[category_name]:
+    for category_name in CATEGORY_KEYWORDS.keys():
+        for keyword in CATEGORY_KEYWORDS[category_name]:
             if haystack.find(keyword) != -1:
                 return category_name
     return "Gameplay"

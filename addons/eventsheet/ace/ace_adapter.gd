@@ -36,7 +36,7 @@ static func _map_ace_type(ace_type: int) -> int:
 
 static func _map_params(params: Array[ACEParam]) -> Array:
     var output: Array = []
-    for param: ACEParam in params:
+    for param in params:
         if param == null:
             continue
         var key: String = param.id if not param.id.is_empty() else param.name

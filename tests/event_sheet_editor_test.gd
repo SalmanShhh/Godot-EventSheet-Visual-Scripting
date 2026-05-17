@@ -55,6 +55,9 @@ static func run() -> bool:
     all_passed = _check("group row tagged correctly", group_row.row_type, EventRowData.RowType.GROUP) and all_passed
     all_passed = _check("event row inherits indent", event_row_data.indent, 1) and all_passed
     all_passed = _check("event row action span exists", _row_contains_text(event_row_data, "Queue free"), true) and all_passed
+    all_passed = _check("event row includes lane metadata spans", _row_has_lane(event_row_data, "condition") and _row_has_lane(event_row_data, "action"), true) and all_passed
+    var layout: Dictionary = dock_viewport._get_or_build_row_layout(2, 640.0, dock_viewport._get_font(), dock_viewport._get_font_size())
+    all_passed = _check("event row layout contains lane divider scaffold", float(layout.get("lane_divider_x", -1.0)) > 0.0, true) and all_passed
 
     dock_viewport._toggle_row_fold(1)
     all_passed = _check("folding hides child rows", dock_viewport.get_total_row_count(), 2) and all_passed
@@ -63,6 +66,25 @@ static func run() -> bool:
 
     dock_viewport._select_row(2)
     all_passed = _check("selection tracks row index", dock_viewport.get_selected_row_index(), 2) and all_passed
+    var editor_state: Dictionary = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("selection stores anchor for range scaffolding", editor_state.get("selection_anchor_index", -1), 2) and all_passed
+
+    dock_viewport.custom_minimum_size = Vector2(640.0, 1200.0)
+    dock_viewport.size = Vector2(640.0, 1200.0)
+    var scroll_shell: ScrollContainer = dock.find_child("EventSheetScroll", true, false)
+    if scroll_shell != null:
+        scroll_shell.size = Vector2(640.0, 56.0)
+        scroll_shell.scroll_vertical = 56
+    var visible_range: Vector2i = dock_viewport.get_visible_row_range()
+    all_passed = _check("visible range starts from scrolled row", visible_range.x, 2) and all_passed
+
+    dock_viewport._toggle_breakpoint(2)
+    var row_after_breakpoint: EventRowData = dock_viewport.get_flat_rows()[2].get("row")
+    all_passed = _check("breakpoint toggles on selected row", row_after_breakpoint.breakpoint_enabled, true) and all_passed
+
+    dock_viewport.set_row_disabled(event_row_data.row_uid, true)
+    var row_after_disable: EventRowData = dock_viewport.get_flat_rows()[2].get("row")
+    all_passed = _check("row disabled scaffold persists by uid", row_after_disable.disabled, true) and all_passed
 
     var editable_comment: EventRowData = flat_rows[0].get("row")
     dock_viewport._begin_edit(0, 1)
@@ -83,6 +105,14 @@ static func _rows_contain_text(rows: Array[Dictionary], expected_text: String) -
     for row_entry: Dictionary in rows:
         var row_data: EventRowData = row_entry.get("row")
         if row_data != null and _row_contains_text(row_data, expected_text):
+            return true
+    return false
+
+static func _row_has_lane(row_data: EventRowData, expected_lane: String) -> bool:
+    for span in row_data.spans:
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        if str((span.metadata as Dictionary).get("lane", "")) == expected_lane:
             return true
     return false
 

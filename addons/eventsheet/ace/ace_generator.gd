@@ -29,7 +29,7 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
     var property_overrides: Dictionary = source_metadata.get("properties", {})
     var method_overrides: Dictionary = source_metadata.get("methods", {})
 
-    for signal_info: Dictionary in target.get_signal_list():
+    for signal_info in target.get_signal_list():
         var signal_name: String = str(signal_info.get("name", ""))
         if signal_name.is_empty() or (script != null and not signal_overrides.has(signal_name)):
             continue
@@ -38,7 +38,7 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
             continue
         output.append(_build_signal_definition(provider_id, signal_name, signal_info, overrides))
 
-    for property_info: Dictionary in target.get_property_list():
+    for property_info in target.get_property_list():
         var property_name: String = str(property_info.get("name", ""))
         if property_name.is_empty() or (script != null and not property_overrides.has(property_name)):
             continue
@@ -49,7 +49,7 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
             continue
         output.append_array(_build_property_definitions(provider_id, property_name, property_info, property_overrides_entry))
 
-    for method_info: Dictionary in target.get_method_list():
+    for method_info in target.get_method_list():
         var method_name: String = str(method_info.get("name", ""))
         if method_name.is_empty() or method_name.begins_with("_") or COMMON_METHOD_IGNORE.has(method_name):
             continue
@@ -141,7 +141,7 @@ func _build_property_action_definition(provider_id: String, property_name: Strin
 func _build_method_definition(provider_id: String, method_name: String, method_info: Dictionary, overrides: Dictionary) -> ACEDefinition:
     var parameter_definitions: Array = _build_parameter_definitions(method_info.get("args", []))
     var parameter_types: Array = []
-    for parameter_definition: Dictionary in parameter_definitions:
+    for parameter_definition in parameter_definitions:
         parameter_types.append(parameter_definition.get("type", TYPE_NIL))
     var return_info: Variant = method_info.get("return", {})
     var return_type: int = TYPE_NIL
@@ -182,7 +182,7 @@ func _build_parameter_definitions(raw_args: Variant) -> Array:
     var output: Array = []
     if not (raw_args is Array):
         return output
-    for argument_info: Variant in raw_args:
+    for argument_info in raw_args:
         if not (argument_info is Dictionary):
             continue
         var argument_dict: Dictionary = argument_info
@@ -201,7 +201,7 @@ func _build_method_display_template(display_name: String, parameters: Array) -> 
     if parameters.is_empty():
         return display_name
     var parts: Array[String] = [display_name]
-    for parameter_definition: Dictionary in parameters:
+    for parameter_definition in parameters:
         parts.append("{%s}" % str(parameter_definition.get("id", "value")))
     return " ".join(parts)
 

@@ -163,7 +163,7 @@ func _notification(what: int) -> void:
         _release_ace_sources()
 
 func _release_ace_sources() -> void:
-    for source_object: Object in _ace_sources:
+    for source_object in _ace_sources:
         if source_object is Node:
             (source_object as Node).free()
     _ace_sources.clear()

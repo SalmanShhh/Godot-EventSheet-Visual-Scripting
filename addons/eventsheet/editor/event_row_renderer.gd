@@ -17,16 +17,30 @@ const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
 
 func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int) -> void:
     var row_rect: Rect2 = layout.get("row_rect", Rect2())
+    var gutter_rect: Rect2 = layout.get("gutter_rect", Rect2())
     var fold_rect: Rect2 = layout.get("fold_rect", Rect2())
     var icon_rect: Rect2 = layout.get("icon_rect", Rect2())
     var drag_rect: Rect2 = layout.get("drag_rect", Rect2())
+    var condition_lane_rect: Rect2 = layout.get("condition_lane_rect", Rect2())
+    var action_lane_rect: Rect2 = layout.get("action_lane_rect", Rect2())
+    var lane_divider_rect: Rect2 = layout.get("lane_divider_rect", Rect2())
     var alternating: bool = bool(layout.get("alternating", false))
     var debug_text: String = str(layout.get("debug_text", ""))
     var editing_span_index: int = int(layout.get("editing_span_index", -1))
     var editing_buffer: String = str(layout.get("editing_buffer", ""))
     var editing_caret: int = int(layout.get("editing_caret", -1))
+    var line_number: int = int(layout.get("line_number", 0))
+    var breakpoint_enabled: bool = bool(layout.get("breakpoint_enabled", false))
+    var disabled: bool = bool(layout.get("disabled", false))
 
+    _draw_gutter(control, gutter_rect, line_number, breakpoint_enabled, font, font_size)
     control.draw_rect(row_rect, BG_1 if alternating else BG_0, true)
+    if condition_lane_rect.size != Vector2.ZERO:
+        control.draw_rect(condition_lane_rect, EventSheetPalette.COLOR_LANE_CONDITIONS, true)
+    if action_lane_rect.size != Vector2.ZERO:
+        control.draw_rect(action_lane_rect, EventSheetPalette.COLOR_LANE_ACTIONS, true)
+    if lane_divider_rect.size != Vector2.ZERO:
+        control.draw_rect(lane_divider_rect, EventSheetPalette.COLOR_LANE_DIVIDER, true)
     _draw_indent_guides(control, row_rect, row_data.indent)
     if row_data.selected:
         control.draw_rect(row_rect, EventSheetPalette.COLOR_SELECTION, true)
@@ -37,8 +51,23 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret)
     if drag_rect.size != Vector2.ZERO:
         control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
+    if disabled:
+        control.draw_rect(row_rect, EventSheetPalette.COLOR_DISABLED, true)
     if not debug_text.is_empty():
         _draw_debug_overlay(control, row_rect, font, font_size, debug_text)
+
+func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, font: Font, font_size: int) -> void:
+    if gutter_rect.size == Vector2.ZERO:
+        return
+    control.draw_rect(gutter_rect, EventSheetPalette.COLOR_GUTTER_BG, true)
+    control.draw_rect(Rect2(gutter_rect.end.x - 1.0, gutter_rect.position.y, 1.0, gutter_rect.size.y), EventSheetPalette.COLOR_GUTTER_RAIL, true)
+    if line_number > 0:
+        var text: String = str(line_number)
+        var baseline_y: float = gutter_rect.position.y + (gutter_rect.size.y * 0.5) + ((font_size - 1) * 0.35)
+        control.draw_string(font, Vector2(gutter_rect.position.x + 4.0, baseline_y), text, HORIZONTAL_ALIGNMENT_LEFT, gutter_rect.size.x - 8.0, font_size - 1, EventSheetPalette.COLOR_GUTTER_TEXT)
+    if breakpoint_enabled:
+        var center: Vector2 = Vector2(gutter_rect.position.x + 7.0, gutter_rect.get_center().y)
+        control.draw_circle(center, 3.5, EventSheetPalette.COLOR_BREAKPOINT)
 
 func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int) -> void:
     for level: int in range(depth):

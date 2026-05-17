@@ -14,7 +14,7 @@ func parse_source_metadata(script: Script) -> Dictionary:
     var source: String = FileAccess.get_file_as_string(script.resource_path)
     var pending_directives: Array[String] = []
     var pending_export: bool = false
-    for raw_line: String in source.split("\n"):
+    for raw_line in source.split("\n"):
         var stripped: String = raw_line.strip_edges()
         if stripped.is_empty():
             continue
@@ -91,7 +91,7 @@ func _build_overrides(directives: Array[String], exported: bool = false) -> Dict
         "icon": "",
         "forced_ace_type": -1
     }
-    for directive_text: String in directives:
+    for directive_text in directives:
         var directive: String = directive_text.strip_edges()
         if directive.begins_with("@ace_hidden"):
             overrides["hidden"] = true
@@ -142,7 +142,7 @@ func _parse_var_name(line: String) -> String:
     if var_index == -1:
         return ""
     var rest: String = line.substr(var_index + 4).strip_edges()
-    for separator: String in [":", "=", " "]:
+    for separator in [":", "=", " "]:
         var separator_index: int = rest.find(separator)
         if separator_index != -1:
             rest = rest.substr(0, separator_index)
@@ -153,7 +153,7 @@ func _humanize_identifier(text: String) -> String:
     if text.is_empty():
         return ""
     var builder: String = ""
-    for index: int in range(text.length()):
+    for index in range(text.length()):
         var current: String = text.substr(index, 1)
         var previous: String = text.substr(index - 1, 1) if index > 0 else ""
         if current == "_":
@@ -163,7 +163,7 @@ func _humanize_identifier(text: String) -> String:
             builder += " "
         builder += current
     var words: PackedStringArray = builder.split(" ", false)
-    for word_index: int in range(words.size()):
+    for word_index in range(words.size()):
         var word: String = words[word_index].strip_edges()
         if word.is_empty():
             continue
