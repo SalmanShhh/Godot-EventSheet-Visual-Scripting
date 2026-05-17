@@ -43,6 +43,9 @@ const BADGE_TRIGGER_METADATA := {
     "badge_bg": EventSheetPalette.COLOR_TRIGGER_ARROW_BG,
     "badge_fg": EventSheetPalette.COLOR_TRIGGER_ARROW_FG
 }
+const BADGE_EXTRA_WIDTH := 12.0
+const CHIP_EXTRA_WIDTH := 16.0
+const CHIP_GAP := 8.0
 const ACE_DRAG_KINDS := ["condition", "action"]
 const DROP_ZONE_INSIDE_TOP := 0.33
 const DROP_ZONE_INSIDE_BOTTOM := 0.67
@@ -713,14 +716,16 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         var display_text: String = _editing_buffer if index == _editing_row_index and span_index == _editing_span_index else span.text
         var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
         if bool(metadata.get("badge", false)):
-            span_width += 12.0
+            span_width += BADGE_EXTRA_WIDTH
         elif bool(metadata.get("chip", false)):
-            span_width += 16.0
+            span_width += CHIP_EXTRA_WIDTH
         if lane_divider_x > 0.0 and span_lane != "action":
             var max_condition_right: float = lane_divider_x - EventSheetPalette.ACTION_LANE_PADDING
             span_width = max(min(span_width, max_condition_right - x), 10.0)
         span.rect = Rect2(x, row_top + 3.0, span_width + 2.0, ROW_HEIGHT - 6.0)
-        x += span.rect.size.x + (8.0 if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP)
+        x += span.rect.size.x + (
+            CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP
+        )
     var drag_rect := Rect2()
     if _drag_row_index >= 0 and _drag_target_index == index:
         match _drag_target_mode:
@@ -1027,7 +1032,16 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
         return "before"
     var row_top: float = float(row_index * ROW_HEIGHT)
     var relative_y: float = clampf(position.y - row_top, 0.0, float(ROW_HEIGHT))
-    if row_data.row_type in [EventRowData.RowType.EVENT, EventRowData.RowType.GROUP] and relative_y >= float(ROW_HEIGHT) * DROP_ZONE_INSIDE_TOP and relative_y <= float(ROW_HEIGHT) * DROP_ZONE_INSIDE_BOTTOM:
+    var inside_zone_top: float = float(ROW_HEIGHT) * DROP_ZONE_INSIDE_TOP
+    var inside_zone_bottom: float = float(ROW_HEIGHT) * DROP_ZONE_INSIDE_BOTTOM
+    var supports_inside_drop: bool = row_data.row_type in [
+        EventRowData.RowType.EVENT,
+        EventRowData.RowType.GROUP
+    ]
+    var is_in_inside_zone: bool = (
+        relative_y >= inside_zone_top and relative_y <= inside_zone_bottom
+    )
+    if supports_inside_drop and is_in_inside_zone:
         return "inside"
     return "after" if relative_y > float(ROW_HEIGHT) * DROP_ZONE_AFTER_THRESHOLD else "before"
 

@@ -16,6 +16,7 @@ const COLOR_TRIGGER = EventSheetPalette.COLOR_TRIGGER
 const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
 const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
+const BADGE_FONT_SIZE_DELTA := 1
 
 func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int) -> void:
     var row_rect: Rect2 = layout.get("row_rect", Rect2())
@@ -183,10 +184,23 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
     style.set_content_margin_all(0)
     control.draw_style_box(style, badge_rect)
     var text: String = span.text
-    var text_size: Vector2 = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1)
+    var text_size: Vector2 = font.get_string_size(
+        text,
+        HORIZONTAL_ALIGNMENT_LEFT,
+        -1.0,
+        font_size - BADGE_FONT_SIZE_DELTA
+    )
     var text_x: float = badge_rect.position.x + max((badge_rect.size.x - text_size.x) * 0.5, 3.0)
-    var baseline_y: float = badge_rect.position.y + (badge_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
-    control.draw_string(font, Vector2(text_x, baseline_y), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1, badge_fg)
+    var baseline_y: float = badge_rect.position.y + (badge_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - BADGE_FONT_SIZE_DELTA) * FONT_BASELINE_OFFSET_RATIO)
+    control.draw_string(
+        font,
+        Vector2(text_x, baseline_y),
+        text,
+        HORIZONTAL_ALIGNMENT_LEFT,
+        -1.0,
+        font_size - BADGE_FONT_SIZE_DELTA,
+        badge_fg
+    )
 
 func _draw_debug_overlay(control: Control, row_rect: Rect2, font: Font, font_size: int, debug_text: String) -> void:
     var badge_width: float = font.get_string_size(debug_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1).x + 10.0
