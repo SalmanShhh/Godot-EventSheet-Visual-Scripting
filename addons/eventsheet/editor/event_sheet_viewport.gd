@@ -405,7 +405,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     if row_data.row_type == EventRowData.RowType.EVENT:
         var content_left: float = EventSheetPalette.GUTTER_WIDTH
         var content_width: float = max(width - content_left, 120.0)
-        lane_divider_x = content_left + max(EventSheetPalette.MIN_CONDITIONS_LANE_WIDTH, floor(content_width * EventSheetPalette.CONDITIONS_LANE_RATIO))
+        lane_divider_x = content_left + max(EventSheetPalette.MIN_CONDITIONS_LANE_WIDTH, floor(content_width * EventSheetPalette.CONDITION_LANE_RATIO))
         condition_lane_rect = Rect2(content_left, row_top, max(lane_divider_x - content_left, 1.0), ROW_HEIGHT)
         lane_divider_rect = Rect2(lane_divider_x, row_top, EventSheetPalette.LANE_DIVIDER_WIDTH, ROW_HEIGHT)
         action_lane_rect = Rect2(lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH, row_top, max(width - lane_divider_x - EventSheetPalette.LANE_DIVIDER_WIDTH, 1.0), ROW_HEIGHT)
