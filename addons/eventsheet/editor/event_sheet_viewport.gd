@@ -14,6 +14,9 @@ const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
 const FONT_SIZE := EventSheetPalette.FONT_SIZE
 const CONDITION_KEYWORD_METADATA := {"lane": "condition", "hoverable": false}
+const DROP_ZONE_INSIDE_TOP := 0.33
+const DROP_ZONE_INSIDE_BOTTOM := 0.67
+const DROP_ZONE_AFTER_THRESHOLD := 0.5
 
 var _renderer: EventRowRenderer = EventRowRenderer.new()
 var _layout_cache: RowLayoutCache = RowLayoutCache.new()
@@ -750,9 +753,9 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
         return "before"
     var row_top: float = float(row_index * ROW_HEIGHT)
     var relative_y: float = clampf(position.y - row_top, 0.0, float(ROW_HEIGHT))
-    if row_data.row_type in [EventRowData.RowType.EVENT, EventRowData.RowType.GROUP] and relative_y >= float(ROW_HEIGHT) * 0.33 and relative_y <= float(ROW_HEIGHT) * 0.67:
+    if row_data.row_type in [EventRowData.RowType.EVENT, EventRowData.RowType.GROUP] and relative_y >= float(ROW_HEIGHT) * DROP_ZONE_INSIDE_TOP and relative_y <= float(ROW_HEIGHT) * DROP_ZONE_INSIDE_BOTTOM:
         return "inside"
-    return "after" if relative_y > float(ROW_HEIGHT) * 0.5 else "before"
+    return "after" if relative_y > float(ROW_HEIGHT) * DROP_ZONE_AFTER_THRESHOLD else "before"
 
 func _get_selected_span_count() -> int:
     var total: int = 0

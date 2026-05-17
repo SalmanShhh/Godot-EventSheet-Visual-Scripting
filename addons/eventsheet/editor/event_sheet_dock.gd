@@ -3,6 +3,7 @@ class_name EventSheetDock
 extends Control
 
 const EVENT_SHEET_FILTERS: Array[String] = ["*.tres ; EventSheetResource", "*.res ; EventSheetResource"]
+const VARIABLE_USAGE_MAX_DEPTH := 8
 
 var _toolbar: HBoxContainer = null
 var _status_label: Label = null
@@ -1079,18 +1080,20 @@ func _ace_entry_uses_variable(entry: Resource, var_name: String) -> bool:
     if entry == null:
         return false
     if entry is ACECondition:
-        return _dictionary_uses_variable((entry as ACECondition).params if not (entry as ACECondition).params.is_empty() else (entry as ACECondition).parameters, var_name)
+        return _dictionary_uses_variable((entry as ACECondition).params if not (entry as ACECondition).params.is_empty() else (entry as ACECondition).parameters, var_name, 0)
     if entry is ACEAction:
-        return _dictionary_uses_variable((entry as ACEAction).params if not (entry as ACEAction).params.is_empty() else (entry as ACEAction).parameters, var_name)
+        return _dictionary_uses_variable((entry as ACEAction).params if not (entry as ACEAction).params.is_empty() else (entry as ACEAction).parameters, var_name, 0)
     return false
 
-func _dictionary_uses_variable(values: Dictionary, var_name: String) -> bool:
+func _dictionary_uses_variable(values: Dictionary, var_name: String, depth: int) -> bool:
+    if depth >= VARIABLE_USAGE_MAX_DEPTH:
+        return false
     for value in values.values():
-        if value is Dictionary and _dictionary_uses_variable(value as Dictionary, var_name):
+        if value is Dictionary and _dictionary_uses_variable(value as Dictionary, var_name, depth + 1):
             return true
         if value is Array:
             for nested_value in value:
-                if nested_value is Dictionary and _dictionary_uses_variable(nested_value as Dictionary, var_name):
+                if nested_value is Dictionary and _dictionary_uses_variable(nested_value as Dictionary, var_name, depth + 1):
                     return true
                 if nested_value == var_name:
                     return true
