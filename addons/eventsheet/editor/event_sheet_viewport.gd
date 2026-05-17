@@ -35,6 +35,7 @@ var _breakpoint_rows: Dictionary = {}
 var _row_disabled_state: Dictionary = {}
 var _focused_lane: String = "condition"
 var _selection_anchor_index: int = -1
+var _external_span_edit_handler_enabled: bool = false
 
 func _init() -> void:
     _configure_viewport()
@@ -111,6 +112,9 @@ func get_editor_state_snapshot() -> Dictionary:
 func get_row_layout_for_test(row_index: int, width: float = -1.0) -> Dictionary:
     var resolved_width: float = width if width > 0.0 else max(max(size.x, _get_scroll_width()), 640.0)
     return _get_or_build_row_layout(row_index, resolved_width, _get_font(), _get_font_size())
+
+func set_external_span_edit_handler_enabled(enabled: bool) -> void:
+    _external_span_edit_handler_enabled = enabled
 
 func get_visible_row_range() -> Vector2i:
     if _flat_rows.is_empty():
@@ -558,10 +562,10 @@ func _commit_edit() -> void:
 	span.text = _editing_buffer
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 	var edit_kind: String = str(metadata.get("edit_kind", ""))
-	if span_edit_requested.get_connections().is_empty():
-		_apply_span_edit(row_data, span, _editing_buffer)
-	else:
-		span_edit_requested.emit(row_data, edit_kind, previous_value, _editing_buffer)
+    if _external_span_edit_handler_enabled:
+        span_edit_requested.emit(row_data, edit_kind, previous_value, _editing_buffer)
+    else:
+        _apply_span_edit(row_data, span, _editing_buffer)
 	_editing_row_index = -1
 	_editing_span_index = -1
 	_editing_buffer = ""

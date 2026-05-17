@@ -162,6 +162,7 @@ func _build_ui() -> void:
     _viewport.row_drop_requested.connect(_on_row_drop_requested)
     _viewport.ace_preview_requested.connect(_on_ace_preview_requested)
     _viewport.span_edit_requested.connect(_on_viewport_span_edit_requested)
+    _viewport.set_external_span_edit_handler_enabled(true)
 
     _side_panel = VBoxContainer.new()
     _side_panel.name = "EventSheetSidePanel"

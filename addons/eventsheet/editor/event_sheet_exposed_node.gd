@@ -40,7 +40,10 @@ func setup(registry: EventSheetACERegistry, param_store: EditorParamStore,
 	_param_store = param_store
 	_connected_store = param_store
 	_sheet = sheet
-	_resolver = resolver if resolver != null else ParamDefaultResolver.new()
+	if resolver != null:
+		_resolver = resolver
+	elif _resolver == null:
+		_resolver = ParamDefaultResolver.new()
 	_resolver.set_param_store(_param_store)
 	if _param_store != null and not _param_store.override_changed.is_connected(_on_store_changed):
 		_param_store.override_changed.connect(_on_store_changed)
