@@ -953,6 +953,7 @@ func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_
     var selected: Resource = context.get("selected_resource", _viewport.get_selected_context().get("source_resource", null))
     var original_name: String = str(context.get("original_name", ""))
     var editing: bool = bool(context.get("editing", false))
+    var action_verb: String = "Updated" if editing else "Added"
     var message := {"text": ""}
     var added: bool = _perform_undoable_sheet_edit("Create Variable", func() -> bool:
         if scope == "global":
@@ -962,7 +963,7 @@ func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_
                 "type": type_name,
                 "default": default_value
             }
-            message["text"] = "%s global variable %s." % ["Updated" if editing else "Added", var_name]
+            message["text"] = "%s global variable %s." % [action_verb, var_name]
             return true
         if not (selected is EventRow):
             return false
@@ -978,7 +979,7 @@ func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_
         local_var.type_name = type_name
         local_var.type = _type_from_name(type_name)
         local_var.default_value = default_value
-        message["text"] = "%s local variable %s." % ["Updated" if editing else "Added", var_name]
+        message["text"] = "%s local variable %s." % [action_verb, var_name]
         return true
     )
     if not added and scope != "global":

@@ -757,8 +757,7 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
 func _get_selected_span_count() -> int:
     var total: int = 0
     for indices in _selected_span_indices.values():
-        if indices is Array:
-            total += (indices as Array).size()
+        total += (indices as Array).size()
     return total
 
 func _row_at(index: int) -> EventRowData:
