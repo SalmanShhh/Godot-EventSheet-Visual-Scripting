@@ -14,6 +14,8 @@ const COLOR_OBJECT = EventSheetPalette.COLOR_OBJECT
 const COLOR_ACTION = EventSheetPalette.COLOR_ACTION
 const COLOR_TRIGGER = EventSheetPalette.COLOR_TRIGGER
 const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
+const ROW_VERTICAL_CENTER_RATIO := 0.5
+const FONT_BASELINE_OFFSET_RATIO := 0.35
 
 func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int) -> void:
     var row_rect: Rect2 = layout.get("row_rect", Rect2())
@@ -63,7 +65,7 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
     control.draw_rect(Rect2(gutter_rect.end.x - 1.0, gutter_rect.position.y, 1.0, gutter_rect.size.y), EventSheetPalette.COLOR_GUTTER_RAIL, true)
     if line_number > 0:
         var text: String = str(line_number)
-        var baseline_y: float = gutter_rect.position.y + (gutter_rect.size.y * 0.5) + ((font_size - 1) * 0.35)
+        var baseline_y: float = gutter_rect.position.y + (gutter_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
         control.draw_string(font, Vector2(gutter_rect.position.x + 4.0, baseline_y), text, HORIZONTAL_ALIGNMENT_LEFT, gutter_rect.size.x - 8.0, font_size - 1, EventSheetPalette.COLOR_GUTTER_TEXT)
     if breakpoint_enabled:
         var center: Vector2 = Vector2(gutter_rect.position.x + 7.0, gutter_rect.get_center().y)
@@ -128,7 +130,7 @@ func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size
             continue
         var color: Color = _get_span_color(span.type)
         var draw_text: String = editing_buffer if span_index == editing_span_index else span.text
-        var baseline_y: float = span.rect.position.y + (span.rect.size.y * 0.5) + (font_size * 0.35)
+        var baseline_y: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) + (font_size * FONT_BASELINE_OFFSET_RATIO)
         control.draw_string(font, Vector2(span.rect.position.x, baseline_y), draw_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)
         if span_index == editing_span_index:
             var prefix: String = draw_text.substr(0, clamp(editing_caret, 0, draw_text.length()))
@@ -147,7 +149,7 @@ func _draw_debug_overlay(control: Control, row_rect: Rect2, font: Font, font_siz
     var badge_rect := Rect2(row_rect.end.x - badge_width - 8.0, row_rect.position.y + 5.0, badge_width, row_rect.size.y - 10.0)
     control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 4.0, row_rect.size.y), EventSheetPalette.COLOR_DEBUG, true)
     control.draw_rect(badge_rect, EventSheetPalette.COLOR_DEBUG, true)
-    var baseline_y: float = badge_rect.position.y + (badge_rect.size.y * 0.5) + ((font_size - 1) * 0.35)
+    var baseline_y: float = badge_rect.position.y + (badge_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
     control.draw_string(font, Vector2(badge_rect.position.x + 5.0, baseline_y), debug_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1, EventSheetPalette.COLOR_DEBUG_TEXT)
 
 func _get_span_color(span_type: int) -> Color:
