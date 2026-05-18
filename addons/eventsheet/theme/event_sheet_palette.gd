@@ -54,3 +54,6 @@ const COLOR_CONST_BADGE_FG = Color("#eafde5")
 
 static func clamp_font_size(value: int) -> int:
 	return max(value, MIN_FONT_SIZE)
+
+static func resolve_font_size(base_size: int, delta: int = 0, offset: int = 0) -> int:
+	return clamp_font_size(base_size + delta + offset)
