@@ -1735,9 +1735,8 @@ func _begin_edit(row_index: int, span_index: int) -> void:
     queue_redraw()
 
 func begin_edit_selected() -> bool:
-    var editing_before: int = _editing_row_index
     _begin_edit(_selected_row_index, _selected_span_index)
-    return _editing_row_index >= 0 and _editing_row_index != editing_before
+    return _editing_row_index >= 0
 
 func get_editing_context_for_test() -> Dictionary:
     return {

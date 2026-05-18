@@ -607,7 +607,8 @@ static func run() -> bool:
     var row_after_disable: EventRowData = dock_viewport.get_flat_rows()[2].get("row")
     all_passed = _check("row disabled scaffold persists by uid", row_after_disable.disabled, true) and all_passed
 
-    dock_viewport._begin_edit(0, 0)
+    var inline_edit_comment_row: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
+    dock_viewport._begin_edit(0, dock_viewport._find_first_editable_span(inline_edit_comment_row))
     dock_viewport._editing_buffer = "Changed note"
     dock_viewport._commit_edit()
     all_passed = _check("inline edit updates comment resource", ((dock.get_current_sheet().events[0] as CommentRow).text), "Changed note") and all_passed
