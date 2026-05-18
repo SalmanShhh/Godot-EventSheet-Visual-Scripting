@@ -2,6 +2,8 @@
 class_name ViewportDragPreviewHelper
 extends RefCounted
 
+const PLACEHOLDER_FALLBACK_WIDTH_RATIO := 0.34
+
 static func build_ace_drag_preview_rect(
     row_data: EventRowData,
     lane: String,
@@ -110,7 +112,7 @@ static func build_ace_drag_visuals(
                 target_span = row_data.spans[target_span_index]
         var placeholder_height: float = max(min(line_height - 8.0, lane_rect.size.y - 8.0), 10.0)
         var placeholder_width: float = clampf(
-            target_span.rect.size.x if target_span != null else lane_rect.size.x * 0.34,
+            target_span.rect.size.x if target_span != null else lane_rect.size.x * PLACEHOLDER_FALLBACK_WIDTH_RATIO,
             72.0,
             max(lane_rect.size.x - 10.0, 72.0)
         )

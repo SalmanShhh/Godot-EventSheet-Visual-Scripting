@@ -17,6 +17,9 @@ const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
 const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
 const BADGE_FONT_SIZE_DELTA := 1
+const SUBTREE_SELECTION_ALPHA_FACTOR := 0.55
+const DRAG_HIGHLIGHT_CONDITION := Color(0.43, 0.70, 1.0, 0.96)
+const DRAG_HIGHLIGHT_ACTION := Color(0.44, 0.84, 0.74, 0.96)
 
 func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
     var row_rect: Rect2 = layout.get("row_rect", Rect2())
@@ -103,7 +106,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     if row_selection_role != "none":
         var selection_overlay: Color = selection_fill
         if row_selection_role == "event_subtree":
-            selection_overlay.a *= 0.55
+            selection_overlay.a *= SUBTREE_SELECTION_ALPHA_FACTOR
             control.draw_rect(row_rect, selection_overlay, true)
             var subtree_outline: Color = selection_fill.lightened(0.18)
             subtree_outline.a = max(subtree_outline.a, 0.86)
@@ -123,9 +126,9 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     _draw_icon(control, icon_rect, row_data)
     if ace_drag_target_block_rect.size != Vector2.ZERO:
         var target_border: Color = (
-            Color(0.44, 0.84, 0.74, 0.96)
+            DRAG_HIGHLIGHT_ACTION
             if ace_drag_lane == "action"
-            else Color(0.43, 0.70, 1.0, 0.96)
+            else DRAG_HIGHLIGHT_CONDITION
         )
         var target_fill: Color = target_border
         target_fill.a = 0.13
@@ -148,9 +151,9 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     )
     if ace_drag_placeholder_rect.size != Vector2.ZERO:
         var placeholder_border: Color = (
-            Color(0.44, 0.84, 0.74, 0.98)
+            DRAG_HIGHLIGHT_ACTION
             if ace_drag_lane == "action"
-            else Color(0.43, 0.70, 1.0, 0.98)
+            else DRAG_HIGHLIGHT_CONDITION
         )
         var placeholder_fill: Color = placeholder_border
         placeholder_fill.a = 0.25
