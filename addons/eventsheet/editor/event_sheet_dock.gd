@@ -79,10 +79,7 @@ func _ready() -> void:
     _refresh_ace_registry()
     if _current_sheet == null:
         _current_sheet = _build_demo_sheet()
-        _viewport.set_debug_overlay_states({
-            "demo_overlap": "hit",
-            "demo_attack": "step"
-        })
+        _viewport.set_debug_overlay_states({})
     setup(_current_sheet)
 
 func setup(sheet: EventSheetResource = null) -> void:
@@ -90,10 +87,7 @@ func setup(sheet: EventSheetResource = null) -> void:
     if sheet == null:
         _current_sheet = _build_demo_sheet()
         _current_sheet_path = ""
-        _viewport.set_debug_overlay_states({
-            "demo_overlap": "hit",
-            "demo_attack": "step"
-        })
+        _viewport.set_debug_overlay_states({})
         _set_status("Loaded demo EventSheet.")
     else:
         _current_sheet = sheet

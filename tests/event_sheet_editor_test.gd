@@ -107,6 +107,7 @@ static func run() -> bool:
     all_passed = _check("demo rows render auto ace trigger text", _rows_contain_text(demo_rows, "On Died"), true) and all_passed
     all_passed = _check("demo rows render trigger arrow badge", _rows_contain_text(demo_rows, "➜"), true) and all_passed
     all_passed = _check("demo rows render auto ace action text", _rows_contain_text(demo_rows, "Take Damage 10"), true) and all_passed
+    all_passed = _check("demo rows do not expose debug overlay badges by default", _rows_have_debug_state(demo_rows), false) and all_passed
 
     var sheet := EventSheetResource.new()
     var group := EventGroup.new()
@@ -138,11 +139,23 @@ static func run() -> bool:
     all_passed = _check("event row includes lane metadata spans", _row_has_lane(event_row_data, "condition") and _row_has_lane(event_row_data, "action"), true) and all_passed
     var layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
     all_passed = _check("event row layout contains lane divider scaffold", float(layout.get("lane_divider_x", -1.0)) > 0.0, true) and all_passed
+    var condition_span_index: int = _find_span_index_by_kind(event_row_data, "condition")
     var action_span_index: int = _find_span_index_by_kind(event_row_data, "action")
     var add_action_span_index: int = _find_span_index_by_kind(event_row_data, "add_action")
     all_passed = _check(
-        "inline add action affordance sits below authored actions",
-        add_action_span_index >= 0 and action_span_index >= 0 and event_row_data.spans[add_action_span_index].rect.position.y > event_row_data.spans[action_span_index].rect.position.y,
+        "conditions remain in the left lane while actions stay in the right lane",
+        condition_span_index >= 0
+            and action_span_index >= 0
+            and event_row_data.spans[condition_span_index].rect.end.x <= float(layout.get("lane_divider_x", -1.0))
+            and event_row_data.spans[action_span_index].rect.position.x >= float(layout.get("lane_divider_x", -1.0)),
+        true
+    ) and all_passed
+    all_passed = _check(
+        "inline add action affordance stays on the action row after authored actions",
+        add_action_span_index >= 0
+            and action_span_index >= 0
+            and is_equal_approx(event_row_data.spans[add_action_span_index].rect.position.y, event_row_data.spans[action_span_index].rect.position.y)
+            and event_row_data.spans[add_action_span_index].rect.position.x > event_row_data.spans[action_span_index].rect.position.x,
         true
     ) and all_passed
 
@@ -175,8 +188,10 @@ static func run() -> bool:
     var first_condition_index: int = _find_span_index_by_kind(or_row_data, "condition")
     var second_condition_index: int = _find_nth_span_index_by_kind(or_row_data, "condition", 1)
     all_passed = _check(
-        "stacked conditions place later conditions on lower lines",
-        second_condition_index >= 0 and or_row_data.spans[second_condition_index].rect.position.y > or_row_data.spans[first_condition_index].rect.position.y,
+        "later conditions stay aligned on the same horizontal row",
+        second_condition_index >= 0
+            and is_equal_approx(or_row_data.spans[second_condition_index].rect.position.y, or_row_data.spans[first_condition_index].rect.position.y)
+            and or_row_data.spans[second_condition_index].rect.position.x > or_row_data.spans[first_condition_index].rect.position.x,
         true
     ) and all_passed
     var second_condition_center: Vector2 = or_row_data.spans[second_condition_index].rect.get_center()
@@ -221,8 +236,9 @@ static func run() -> bool:
         1
     ) and all_passed
     all_passed = _check(
-        "trigger-type condition stays above regular conditions",
-        trigger_condition_row.spans[rendered_trigger_index].rect.position.y < trigger_condition_row.spans[rendered_condition_index].rect.position.y,
+        "trigger-type condition stays before regular conditions on the same row",
+        is_equal_approx(trigger_condition_row.spans[rendered_trigger_index].rect.position.y, trigger_condition_row.spans[rendered_condition_index].rect.position.y)
+            and trigger_condition_row.spans[rendered_trigger_index].rect.position.x < trigger_condition_row.spans[rendered_condition_index].rect.position.x,
         true
     ) and all_passed
 
@@ -555,12 +571,12 @@ static func run() -> bool:
             "lane": "condition",
             "span_metadata": first_target_condition_span.metadata
         },
-        first_target_condition_span.rect.get_center() + Vector2(0.0, first_target_condition_span.rect.size.y * 0.35)
+        first_target_condition_span.rect.get_center() + Vector2(first_target_condition_span.rect.size.x * 0.35, 0.0)
     )
     var drag_preview_layout: Dictionary = dock_viewport.get_row_layout_for_test(1, 640.0)
     var ace_drag_rect: Rect2 = drag_preview_layout.get("ace_drag_rect", Rect2())
-    all_passed = _check("ace drag target uses vertical stacked insertion after cursor midpoint", dock_viewport._drag_ace_insert_mode, "after") and all_passed
-    all_passed = _check("ace drag preview renders as a thin placement line", ace_drag_rect.size.y <= 4.0, true) and all_passed
+    all_passed = _check("ace drag target uses horizontal insertion after cursor midpoint", dock_viewport._drag_ace_insert_mode, "after") and all_passed
+    all_passed = _check("ace drag preview renders as a thin vertical placement line", ace_drag_rect.size.x <= 4.0, true) and all_passed
     dock_viewport._clear_ace_drag()
     dock._on_viewport_ace_drop_requested(
         [{"source_resource": ace_drag_source, "kind": "condition", "ace_index": 0}],
@@ -820,6 +836,13 @@ static func _rows_contain_text(rows: Array[Dictionary], expected_text: String) -
     for row_entry: Dictionary in rows:
         var row_data: EventRowData = row_entry.get("row")
         if row_data != null and _row_contains_text(row_data, expected_text):
+            return true
+    return false
+
+static func _rows_have_debug_state(rows: Array[Dictionary]) -> bool:
+    for row_entry: Dictionary in rows:
+        var row_data: EventRowData = row_entry.get("row")
+        if row_data != null and not row_data.debug_state.is_empty():
             return true
     return false
 

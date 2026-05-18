@@ -539,7 +539,7 @@ func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
         if span_index >= 0 and span_index < row_data.spans.size():
             var span_rect: Rect2 = row_data.spans[span_index].rect
             _drag_ace_insert_mode = (
-                "after" if position.y >= span_rect.get_center().y else "before"
+                "after" if position.x >= span_rect.get_center().x else "before"
             )
     elif kind == "trigger" and drag_lane == "condition":
         _drag_ace_target_ace_index = 0
@@ -824,7 +824,6 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 }
             )
         )
-        condition_line_index += 1
     elif not event_row.trigger_id.is_empty():
         var trigger_id_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
         trigger_id_badge_meta["line_index"] = condition_line_index
@@ -843,7 +842,6 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 }
             )
         )
-        condition_line_index += 1
     elif inline_trigger_condition_index >= 0 and inline_trigger_condition_index < event_row.conditions.size():
         var inline_trigger: ACECondition = event_row.conditions[inline_trigger_condition_index]
         var inline_trigger_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
@@ -864,7 +862,6 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 }
             )
         )
-        condition_line_index += 1
     if not event_row.conditions.is_empty():
         var displayed_condition_indices: Array[int] = []
         for condition_index in range(event_row.conditions.size()):
@@ -899,7 +896,6 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     }
                 )
             )
-            condition_line_index += 1
     if spans.is_empty():
         spans.append(
             _make_span(
@@ -925,7 +921,6 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                         }
                     )
                 )
-                action_line_index += 1
     spans.append(
         _make_span(
             "+ Add",
@@ -938,7 +933,6 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
             }
         )
     )
-    action_line_index += 1
     if not event_row.comment.is_empty():
         spans.append(
             _make_span(
@@ -949,7 +943,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     "edit_kind": "event_comment",
                     "lane": "action",
                     "chip": true,
-                    "line_index": action_line_index
+                    "line_index": action_line_index + 1
                 }
             )
         )
@@ -1449,7 +1443,7 @@ func _resolve_lane_drop_target(row_data: EventRowData, lane: String, position: V
         if span == null:
             continue
         var ace_index: int = int((span.metadata as Dictionary).get("ace_index", -1))
-        if position.y <= span.rect.get_center().y:
+        if position.x <= span.rect.get_center().x:
             return {"ace_index": ace_index, "insert_mode": "before"}
     var last_span: SemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
     var last_ace_index: int = int((last_span.metadata as Dictionary).get("ace_index", -1))
@@ -1617,31 +1611,48 @@ func _build_ace_drag_preview_rect(
     var lane_rect: Rect2 = action_lane_rect if lane == "action" else condition_lane_rect
     if lane_rect.size == Vector2.ZERO:
         return Rect2()
-    var preview_width: float = min(max(lane_rect.size.x * 0.22, 28.0), 84.0)
-    var preview_x: float = lane_rect.position.x + 8.0
-    if lane == "action":
-        preview_x = lane_rect.end.x - preview_width - 8.0
+    var preview_height: float = max(min(ROW_HEIGHT - 8.0, lane_rect.size.y - 8.0), 10.0)
+    var preview_y: float = lane_rect.position.y + 4.0
     var ace_span_kind: String = "action" if lane == "action" else "condition"
     var ace_span_indices: Array[int] = _get_lane_ace_span_indices(row_data, ace_span_kind)
     if ace_index >= 0:
         var target_span_index: int = _find_ace_span_index(row_data, ace_span_kind, ace_index)
         if target_span_index >= 0 and target_span_index < row_data.spans.size():
             var target_span: SemanticSpan = row_data.spans[target_span_index]
-            var preview_y: float = (
-                target_span.rect.end.y - 1.5
+            var preview_x: float = (
+                target_span.rect.end.x + (CHIP_GAP * 0.5)
                 if insert_mode == "after"
-                else target_span.rect.position.y - 1.5
+                else target_span.rect.position.x - (CHIP_GAP * 0.5)
             )
-            return Rect2(preview_x, preview_y, preview_width, 3.0)
+            preview_x = clampf(preview_x, lane_rect.position.x + 4.0, lane_rect.end.x - 4.0)
+            preview_y = target_span.rect.position.y + 2.0
+            preview_height = max(target_span.rect.size.y - 4.0, 10.0)
+            return Rect2(preview_x - 1.5, preview_y, 3.0, preview_height)
     if not ace_span_indices.is_empty():
         var edge_span: SemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
-        return Rect2(preview_x, edge_span.rect.end.y - 1.5, preview_width, 3.0)
+        var edge_preview_x: float = clampf(
+            edge_span.rect.end.x + (CHIP_GAP * 0.5),
+            lane_rect.position.x + 4.0,
+            lane_rect.end.x - 4.0
+        )
+        return Rect2(edge_preview_x - 1.5, edge_span.rect.position.y + 2.0, 3.0, max(edge_span.rect.size.y - 4.0, 10.0))
     if lane == "condition":
         var trigger_span_index: int = _find_ace_span_index(row_data, "trigger", 0)
         if trigger_span_index >= 0 and trigger_span_index < row_data.spans.size():
             var trigger_span: SemanticSpan = row_data.spans[trigger_span_index]
-            return Rect2(preview_x, trigger_span.rect.end.y - 1.5, preview_width, 3.0)
-    return Rect2(preview_x, lane_rect.position.y + 6.0, preview_width, 3.0)
+            var trigger_preview_x: float = clampf(
+                trigger_span.rect.end.x + (CHIP_GAP * 0.5),
+                lane_rect.position.x + 4.0,
+                lane_rect.end.x - 4.0
+            )
+            return Rect2(trigger_preview_x - 1.5, trigger_span.rect.position.y + 2.0, 3.0, max(trigger_span.rect.size.y - 4.0, 10.0))
+    var empty_preview_x: float = (
+        lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING
+        if lane == "action"
+        else lane_rect.position.x + EventSheetPalette.ROW_HORIZONTAL_PADDING
+    )
+    empty_preview_x = clampf(empty_preview_x, lane_rect.position.x + 4.0, lane_rect.end.x - 4.0)
+    return Rect2(empty_preview_x - 1.5, preview_y, 3.0, preview_height)
 
 func _build_drag_feedback_rect(
     preview_rect: Rect2,
