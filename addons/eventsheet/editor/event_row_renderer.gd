@@ -164,11 +164,13 @@ func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size
         var draw_text: String = editing_buffer if span_index == editing_span_index else span.text
         var baseline_y: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) + (font_size * FONT_BASELINE_OFFSET_RATIO)
         var text_x: float = span.rect.position.x + (8.0 if bool(metadata.get("chip", false)) else 0.0)
-        control.draw_string(font, Vector2(text_x, baseline_y), draw_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)
+        var right_padding: float = 8.0 if bool(metadata.get("chip", false)) else 2.0
+        var text_width: float = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
+        control.draw_string(font, Vector2(text_x, baseline_y), draw_text, HORIZONTAL_ALIGNMENT_LEFT, text_width, font_size, color)
         if span_index == editing_span_index:
             var prefix: String = draw_text.substr(0, clamp(editing_caret, 0, draw_text.length()))
             var prefix_width: float = font.get_string_size(prefix, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-            var caret_x: float = text_x + prefix_width + 1.0
+            var caret_x: float = min(text_x + prefix_width + 1.0, span.rect.end.x - right_padding)
             control.draw_line(
                 Vector2(caret_x, span.rect.position.y + 5.0),
                 Vector2(caret_x, span.rect.end.y - 5.0),

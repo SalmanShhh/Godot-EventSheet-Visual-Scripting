@@ -976,6 +976,44 @@ func _append_condition_prefix_spans(
         negated_meta["badge_style"] = "negated"
         spans.append(_make_span("✕", SemanticSpan.SpanType.KEYWORD, negated_meta))
 
+func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, font_size: int) -> float:
+    if span == null:
+        return 0.0
+    var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+    var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+    if bool(metadata.get("badge", false)):
+        span_width += BADGE_EXTRA_WIDTH
+    elif bool(metadata.get("chip", false)):
+        span_width += CHIP_EXTRA_WIDTH
+    return span_width
+
+func _build_action_line_reservations(
+    row_data: EventRowData,
+    action_lane_rect: Rect2,
+    font: Font,
+    font_size: int
+) -> Dictionary:
+    var reservations: Dictionary = {}
+    if action_lane_rect.size == Vector2.ZERO or row_data == null:
+        return reservations
+    for span_index in range(row_data.spans.size()):
+        var span: SemanticSpan = row_data.spans[span_index]
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        var metadata: Dictionary = span.metadata as Dictionary
+        if _resolve_span_lane(span) != "action" or not bool(metadata.get("align_right", false)):
+            continue
+        var display_text: String = span.text
+        var span_width: float = _measure_span_width(span, display_text, font, font_size)
+        var span_x: float = max(
+            action_lane_rect.position.x + EventSheetPalette.ACTION_LANE_PADDING,
+            action_lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING - span_width - 2.0
+        )
+        var line_index: int = int(metadata.get("line_index", 0))
+        var current_start: float = float(reservations.get(line_index, action_lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING))
+        reservations[line_index] = min(current_start, span_x)
+    return reservations
+
 func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
     _flat_rows.append({"row": row_data, "parent": parent_row})
     if row_data.folded:
@@ -1002,6 +1040,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     var action_lane_rect := Rect2()
     var lane_divider_rect := Rect2()
     var lane_divider_x: float = -1.0
+    var row_right_limit: float = width - EventSheetPalette.ROW_HORIZONTAL_PADDING
     if row_data.row_type == EventRowData.RowType.EVENT:
         var content_left: float = EventSheetPalette.GUTTER_WIDTH
         var content_width: float = max(width - content_left, 120.0)
@@ -1016,6 +1055,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         else x
     )
     var action_line_x: Dictionary = {}
+    var action_line_reservations: Dictionary = _build_action_line_reservations(row_data, action_lane_rect, font, font_size)
     for span_index in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null:
@@ -1040,19 +1080,26 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             span_x = float(condition_line_x[line_index])
             span_y = row_top + float(line_index * ROW_HEIGHT) + 3.0
         var display_text: String = _editing_buffer if index == _editing_row_index and span_index == _editing_span_index else span.text
-        var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-        if bool(metadata.get("badge", false)):
-            span_width += BADGE_EXTRA_WIDTH
-        elif bool(metadata.get("chip", false)):
-            span_width += CHIP_EXTRA_WIDTH
+        var span_width: float = _measure_span_width(span, display_text, font, font_size)
         if lane_divider_x > 0.0 and span_lane != "action":
             var max_condition_right: float = lane_divider_x - EventSheetPalette.ACTION_LANE_PADDING
             span_width = max(min(span_width, max_condition_right - span_x), 10.0)
-        elif span_lane == "action" and bool(metadata.get("align_right", false)) and action_lane_rect.size.x > 0.0:
-            span_x = max(
-                action_lane_rect.position.x + EventSheetPalette.ACTION_LANE_PADDING,
-                action_lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING - span_width - 2.0
+        elif span_lane == "action" and action_lane_rect.size.x > 0.0:
+            var reserved_start: float = float(
+                action_line_reservations.get(
+                    int(metadata.get("line_index", 0)),
+                    action_lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING
+                )
             )
+            if bool(metadata.get("align_right", false)):
+                span_x = max(
+                    action_lane_rect.position.x + EventSheetPalette.ACTION_LANE_PADDING,
+                    action_lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING - span_width - 2.0
+                )
+            else:
+                span_width = max(min(span_width, reserved_start - EventSheetPalette.SPAN_GAP - span_x), 1.0)
+        else:
+            span_width = max(min(span_width, row_right_limit - span_x), 1.0)
         span.rect = Rect2(span_x, span_y, span_width + 2.0, ROW_HEIGHT - 6.0)
         var next_x: float = span.rect.size.x + (
             CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP

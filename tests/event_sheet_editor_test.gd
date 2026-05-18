@@ -159,6 +159,53 @@ static func run() -> bool:
         true
     ) and all_passed
 
+    var overlap_sheet := EventSheetResource.new()
+    var overlap_comment := CommentRow.new()
+    overlap_comment.text = "A very long comment row that should stay inside the visible row bounds instead of drawing over neighboring content in the event sheet."
+    var overlap_event := EventRow.new()
+    var overlap_condition := ACECondition.new()
+    overlap_condition.provider_id = "Missing"
+    overlap_condition.ace_id = "Condition text that is intentionally long so it must stay inside the condition lane"
+    overlap_event.conditions = [overlap_condition]
+    var overlap_action := ACEAction.new()
+    overlap_action.provider_id = "Missing"
+    overlap_action.ace_id = "Action text that is intentionally long so it must not overlap the add action control"
+    overlap_event.actions = [overlap_action]
+    overlap_event.comment = "A very long event comment that should remain inside the action lane instead of painting across the viewport."
+    overlap_sheet.events = [overlap_comment, overlap_event]
+    dock.setup(overlap_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var overlap_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var overlap_comment_row: EventRowData = overlap_rows[0].get("row")
+    var overlap_event_row: EventRowData = overlap_rows[1].get("row")
+    var overlap_comment_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    var overlap_event_layout: Dictionary = dock_viewport.get_row_layout_for_test(1, 640.0)
+    var overlap_row_rect: Rect2 = overlap_comment_layout.get("row_rect", Rect2())
+    var overlap_action_lane_rect: Rect2 = overlap_event_layout.get("action_lane_rect", Rect2())
+    var overlap_comment_span_index: int = _find_span_index_by_text(overlap_comment_row, overlap_comment.text)
+    var overlap_event_action_index: int = _find_span_index_by_kind(overlap_event_row, "action")
+    var overlap_event_add_index: int = _find_span_index_by_kind(overlap_event_row, "add_action")
+    var overlap_event_comment_index: int = _find_span_index_by_text(overlap_event_row, overlap_event.comment)
+    all_passed = _check(
+        "long comment rows stay inside the row width",
+        overlap_comment_span_index >= 0
+            and overlap_comment_row.spans[overlap_comment_span_index].rect.end.x <= overlap_row_rect.end.x - EventSheetPalette.ROW_HORIZONTAL_PADDING,
+        true
+    ) and all_passed
+    all_passed = _check(
+        "long action text stays before the add action affordance",
+        overlap_event_action_index >= 0
+            and overlap_event_add_index >= 0
+            and overlap_event_row.spans[overlap_event_action_index].rect.end.x < overlap_event_row.spans[overlap_event_add_index].rect.position.x,
+        true
+    ) and all_passed
+    all_passed = _check(
+        "long event comments stay inside the action lane",
+        overlap_event_comment_index >= 0
+            and overlap_event_row.spans[overlap_event_comment_index].rect.end.x <= overlap_action_lane_rect.end.x,
+        true
+    ) and all_passed
+
     var or_sheet := EventSheetResource.new()
     var or_event := EventRow.new()
     or_event.trigger_provider_id = "Core"
