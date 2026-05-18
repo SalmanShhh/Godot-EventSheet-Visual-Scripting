@@ -131,13 +131,17 @@ static func run() -> bool:
     dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
     all_passed = _check("sheet renders flattened rows", dock_viewport.get_total_row_count(), 3) and all_passed
     var flat_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var comment_row_data: EventRowData = flat_rows[0].get("row")
     var group_row: EventRowData = flat_rows[1].get("row")
     var event_row_data: EventRowData = flat_rows[2].get("row")
+    all_passed = _check("comment rows render a single editable label span", comment_row_data.spans.size(), 1) and all_passed
+    all_passed = _check("group rows render a single editable label span", group_row.spans.size(), 1) and all_passed
     all_passed = _check("group row tagged correctly", group_row.row_type, EventRowData.RowType.GROUP) and all_passed
     all_passed = _check("event row inherits indent", event_row_data.indent, 1) and all_passed
     all_passed = _check("event row action span exists", _row_contains_text(event_row_data, "Queue free"), true) and all_passed
     all_passed = _check("event row includes lane metadata spans", _row_has_lane(event_row_data, "condition") and _row_has_lane(event_row_data, "action"), true) and all_passed
     var layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
+    var condition_lane_rect: Rect2 = layout.get("condition_lane_rect", Rect2())
     all_passed = _check("event row layout contains lane divider scaffold", float(layout.get("lane_divider_x", -1.0)) > 0.0, true) and all_passed
     var condition_span_index: int = _find_span_index_by_kind(event_row_data, "condition")
     var action_span_index: int = _find_span_index_by_kind(event_row_data, "action")
@@ -148,6 +152,15 @@ static func run() -> bool:
             and action_span_index >= 0
             and event_row_data.spans[condition_span_index].rect.end.x <= float(layout.get("lane_divider_x", -1.0))
             and event_row_data.spans[action_span_index].rect.position.x >= float(layout.get("lane_divider_x", -1.0)),
+        true
+    ) and all_passed
+    all_passed = _check(
+        "conditions start from the condition track padding",
+        condition_span_index >= 0
+            and is_equal_approx(
+                event_row_data.spans[condition_span_index].rect.position.x,
+                condition_lane_rect.position.x + EventSheetPalette.CONDITION_LANE_PADDING
+            ),
         true
     ) and all_passed
     all_passed = _check(

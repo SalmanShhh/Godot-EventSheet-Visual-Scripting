@@ -703,7 +703,6 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
     row_data.disabled = not group.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
     row_data.breakpoint_enabled = bool(_breakpoint_rows.get(row_data.row_uid, false))
     row_data.spans = [
-        _make_span("group", SemanticSpan.SpanType.KEYWORD, {"editable": false}),
         _make_span(_group_name(group), SemanticSpan.SpanType.OBJECT, {"editable": true, "edit_kind": "group_name"})
     ]
     for child in _group_children(group):
@@ -723,7 +722,6 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
     row_data.disabled = not comment_row.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
     row_data.breakpoint_enabled = bool(_breakpoint_rows.get(row_data.row_uid, false))
     row_data.spans = [
-        _make_span("//", SemanticSpan.SpanType.KEYWORD, {"editable": false}),
         _make_span(comment_row.text if not comment_row.text.is_empty() else "Comment", SemanticSpan.SpanType.COMMENT, {"editable": true, "edit_kind": "comment_text"})
     ]
     return row_data
@@ -1014,6 +1012,15 @@ func _build_action_line_reservations(
         reservations[line_index] = min(current_start, span_x)
     return reservations
 
+func _get_condition_track_start(
+    row_data: EventRowData,
+    default_x: float,
+    condition_lane_rect: Rect2
+) -> float:
+    if row_data == null or row_data.row_type != EventRowData.RowType.EVENT or condition_lane_rect.size.x <= 0.0:
+        return default_x
+    return max(default_x, condition_lane_rect.position.x + EventSheetPalette.CONDITION_LANE_PADDING)
+
 func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
     _flat_rows.append({"row": row_data, "parent": parent_row})
     if row_data.folded:
@@ -1045,9 +1052,10 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         var content_left: float = EventSheetPalette.GUTTER_WIDTH
         var content_width: float = max(width - content_left, 120.0)
         lane_divider_x = content_left + max(EventSheetPalette.MIN_CONDITIONS_LANE_WIDTH, floor(content_width * EventSheetPalette.CONDITION_LANE_RATIO))
-        condition_lane_rect = Rect2(content_left, row_top, max(lane_divider_x - content_left, 1.0), row_height)
+        condition_lane_rect = Rect2(x, row_top, max(lane_divider_x - x, 1.0), row_height)
         lane_divider_rect = Rect2(lane_divider_x, row_top, EventSheetPalette.LANE_DIVIDER_WIDTH, row_height)
         action_lane_rect = Rect2(lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH, row_top, max(width - lane_divider_x - EventSheetPalette.LANE_DIVIDER_WIDTH, 1.0), row_height)
+    var condition_x: float = _get_condition_track_start(row_data, x, condition_lane_rect)
     var condition_line_x: Dictionary = {}
     var action_x: float = (
         lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH + EventSheetPalette.ACTION_LANE_PADDING
@@ -1076,7 +1084,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         elif lane_divider_x > 0.0:
             var line_index: int = int(metadata.get("line_index", 0))
             if not condition_line_x.has(line_index):
-                condition_line_x[line_index] = x
+                condition_line_x[line_index] = condition_x
             span_x = float(condition_line_x[line_index])
             span_y = row_top + float(line_index * ROW_HEIGHT) + 3.0
         var display_text: String = _editing_buffer if index == _editing_row_index and span_index == _editing_span_index else span.text
@@ -1181,7 +1189,15 @@ func _draw_empty_state(width: float) -> void:
     var font_size: int = _get_font_size()
     var text: String = "No rows. Select an EventSheet resource or use the dock's demo sheet."
     var text_size: Vector2 = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size)
-    draw_string(font, Vector2(16.0, 40.0 + text_size.y), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, EventSheetPalette.TEXT_MUTED)
+    draw_string(
+        font,
+        Vector2(16.0, 40.0 + text_size.y),
+        text,
+        HORIZONTAL_ALIGNMENT_LEFT,
+        max(width - 32.0, 1.0),
+        font_size,
+        EventSheetPalette.TEXT_MUTED
+    )
 
 func _update_canvas_min_size() -> void:
     var zoom: float = max(_zoom_factor, 0.001)
