@@ -566,7 +566,7 @@ func _complete_box_selection() -> void:
     if not _box_select_active:
         return
     var selection_rect: Rect2 = Rect2(_box_select_start, Vector2.ZERO).expand(_box_select_current)
-    if selection_rect.size.length() <= MIN_BOX_SELECT_DISTANCE:
+    if selection_rect.size.length_squared() <= MIN_BOX_SELECT_DISTANCE * MIN_BOX_SELECT_DISTANCE:
         _box_select_active = false
         _box_select_additive = false
         queue_redraw()
@@ -580,7 +580,7 @@ func _draw_box_selection_overlay() -> void:
     if not _box_select_active:
         return
     var selection_rect: Rect2 = Rect2(_box_select_start, Vector2.ZERO).expand(_box_select_current)
-    if selection_rect.size.length() <= MIN_BOX_SELECT_DISTANCE:
+    if selection_rect.size.length_squared() <= MIN_BOX_SELECT_DISTANCE * MIN_BOX_SELECT_DISTANCE:
         return
     draw_rect(selection_rect, Color(0.36, 0.60, 0.92, 0.22), true)
     draw_rect(selection_rect, Color(0.55, 0.75, 0.98, 0.9), false, 1.0)

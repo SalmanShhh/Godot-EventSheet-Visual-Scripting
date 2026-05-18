@@ -167,15 +167,19 @@ func load_theme_style_from_path(path: String) -> bool:
 
 func reload_active_theme() -> bool:
     if _current_sheet == null:
+        _set_status("Reload theme failed: no sheet loaded.", true)
         return false
     var active_style: EventSheetEditorStyle = _current_sheet.editor_style
     if active_style == null:
+        _set_status("Reload theme failed: no active style.", true)
         return false
     var style_path: String = active_style.resource_path
     if style_path.is_empty():
+        _set_status("Reload theme failed: active style is unsaved.", true)
         return false
     var reloaded: Resource = ResourceLoader.load(style_path, "", ResourceLoader.CACHE_MODE_REPLACE)
     if not (reloaded is EventSheetEditorStyle):
+        _set_status("Reload theme failed: could not load resource.", true)
         return false
     _current_sheet.editor_style = reloaded as EventSheetEditorStyle
     _refresh_after_edit()
