@@ -440,11 +440,11 @@ static func run() -> bool:
     all_passed = _check("hovering a condition tracks only the hovered entry span", parity_event_layout.get("hovered_span_index", -1), parity_condition_index) and all_passed
     var parity_body_click := InputEventMouseButton.new()
     parity_body_click.pressed = true
-        parity_body_click.button_index = MOUSE_BUTTON_LEFT
-        parity_body_click.position = Vector2(
-            parity_action_lane_rect.position.x + ACTION_LANE_CLICK_OFFSET,
-            parity_event_row.spans[parity_condition_index].rect.get_center().y
-        )
+    parity_body_click.button_index = MOUSE_BUTTON_LEFT
+    parity_body_click.position = Vector2(
+        parity_action_lane_rect.position.x + ACTION_LANE_CLICK_OFFSET,
+        parity_event_row.spans[parity_condition_index].rect.get_center().y
+    )
     dock_viewport._handle_mouse_button(parity_body_click)
     parity_context = dock_viewport.get_selected_context()
     editor_state = dock_viewport.get_editor_state_snapshot()
