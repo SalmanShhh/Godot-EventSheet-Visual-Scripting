@@ -952,6 +952,161 @@ static func run() -> bool:
     all_passed = _check("ace drag-in preview opens popup window", dock._preview_window.visible, true) and all_passed
     all_passed = _check("ace drag-in preview list gets populated", dock._preview_list.item_count > 0, true) and all_passed
 
+    # ── Group fold safety: folding must not destroy child resources ───────────
+    var fold_safety_sheet := EventSheetResource.new()
+    var fold_safety_group := EventGroup.new()
+    fold_safety_group.name = "SafeGroup"
+    fold_safety_group.group_name = fold_safety_group.name
+    var fold_child_a := EventRow.new()
+    fold_child_a.comment = "child-a"
+    var fold_child_b := EventRow.new()
+    fold_child_b.comment = "child-b"
+    fold_safety_group.events = [fold_child_a, fold_child_b]
+    fold_safety_sheet.events = [fold_safety_group]
+    dock.setup(fold_safety_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var rows_before_fold: int = dock_viewport.get_total_row_count()
+    dock_viewport._toggle_row_fold(0)
+    all_passed = _check("fold hides group children from flat row list", dock_viewport.get_total_row_count(), 1) and all_passed
+    all_passed = _check("folding does not remove child resources from group", (dock.get_current_sheet().events[0] as EventGroup).events.size(), 2) and all_passed
+    dock_viewport._toggle_row_fold(0)
+    all_passed = _check("unfold restores all child rows", dock_viewport.get_total_row_count(), rows_before_fold) and all_passed
+    all_passed = _check("unfold preserves child resource order", ((dock.get_current_sheet().events[0] as EventGroup).events[0] as EventRow).comment, "child-a") and all_passed
+    all_passed = _check("unfold preserves second child resource", ((dock.get_current_sheet().events[0] as EventGroup).events[1] as EventRow).comment, "child-b") and all_passed
+
+    # Multiple fold/unfold cycles must not mutate child data.
+    dock_viewport._toggle_row_fold(0)
+    dock_viewport._toggle_row_fold(0)
+    dock_viewport._toggle_row_fold(0)
+    dock_viewport._toggle_row_fold(0)
+    all_passed = _check("repeated fold/unfold cycles preserve child resource count", (dock.get_current_sheet().events[0] as EventGroup).events.size(), 2) and all_passed
+
+    # ── Group rename dialog flow (signal pathway) ─────────────────────────────
+    var rename_sheet := EventSheetResource.new()
+    var rename_group := EventGroup.new()
+    rename_group.name = "OldName"
+    rename_group.group_name = rename_group.name
+    rename_sheet.events = [rename_group]
+    dock.setup(rename_sheet)
+    dock._on_viewport_span_edit_requested(
+        dock.get_viewport_control().get_flat_rows()[0].get("row"),
+        "group_name",
+        "OldName",
+        "NewName"
+    )
+    all_passed = _check("group rename via span edit updates group name", (dock.get_current_sheet().events[0] as EventGroup).name, "NewName") and all_passed
+    all_passed = _check("group rename via span edit updates group_name field", (dock.get_current_sheet().events[0] as EventGroup).group_name, "NewName") and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("group rename is undoable", (dock.get_current_sheet().events[0] as EventGroup).name, "OldName") and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("group rename is redoable", (dock.get_current_sheet().events[0] as EventGroup).name, "NewName") and all_passed
+
+    # group_rename_requested signal is emitted on double-click on a group row
+    var rename_signal_received: Array = []
+    dock_viewport = dock.get_viewport_control()
+    var rename_signal_conn: Callable = func(rd: EventRowData, cn: String) -> void:
+        rename_signal_received.append({"row_data": rd, "current_name": cn})
+    dock_viewport.group_rename_requested.connect(rename_signal_conn)
+    var group_row_data: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
+    if group_row_data != null and group_row_data.source_resource is EventGroup:
+        dock_viewport.group_rename_requested.emit(group_row_data, "NewName")
+    all_passed = _check("group_rename_requested signal carries current group name", rename_signal_received.size() > 0 and rename_signal_received[0].get("current_name", "") == "NewName", true) and all_passed
+    dock_viewport.group_rename_requested.disconnect(rename_signal_conn)
+
+    # ── Variable double-click emits variable_edit_requested signal ─────────────
+    var var_edit_sheet := EventSheetResource.new()
+    var_edit_sheet.variables["score"] = {"type": "int", "default": 42, "const": false}
+    var var_edit_event := EventRow.new()
+    var var_edit_local := LocalVariable.new()
+    var_edit_local.name = "speed"
+    var_edit_local.type_name = "float"
+    var_edit_local.default_value = 5.0
+    var_edit_event.local_variables = [var_edit_local]
+    var_edit_sheet.events = [var_edit_event]
+    dock.setup(var_edit_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport._select_row(0)
+    var var_edit_signals: Array = []
+    var var_edit_conn: Callable = func(rd: EventRowData, meta: Dictionary) -> void:
+        var_edit_signals.append({"row_data": rd, "meta": meta})
+    dock_viewport.variable_edit_requested.connect(var_edit_conn)
+    var all_flat_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    for row_entry in all_flat_rows:
+        var candidate: EventRowData = row_entry.get("row")
+        if candidate != null and candidate.row_type == EventRowData.RowType.SECTION:
+            dock_viewport.variable_edit_requested.emit(candidate, dock_viewport._extract_variable_meta(candidate))
+            break
+    all_passed = _check("variable_edit_requested signal emitted on variable row", var_edit_signals.size() > 0, true) and all_passed
+    all_passed = _check("variable_edit_requested carries variable_scope meta", not str(var_edit_signals[0].get("meta", {}).get("variable_scope", "")).is_empty(), true) and all_passed
+    all_passed = _check("variable_edit_requested carries variable_name meta", not str(var_edit_signals[0].get("meta", {}).get("variable_name", "")).is_empty(), true) and all_passed
+    dock_viewport.variable_edit_requested.disconnect(var_edit_conn)
+
+    # ── Variable drag/drop: local variable intra-scope reorder ────────────────
+    var var_drag_sheet := EventSheetResource.new()
+    var var_drag_event := EventRow.new()
+    var var_drag_event_uid: String = "drag_test_event"
+    var_drag_event.event_uid = var_drag_event_uid
+    var var_a := LocalVariable.new()
+    var_a.name = "alpha"
+    var_a.type_name = "int"
+    var_a.default_value = 1
+    var var_b := LocalVariable.new()
+    var_b.name = "beta"
+    var_b.type_name = "int"
+    var_b.default_value = 2
+    var_drag_event.local_variables = [var_a, var_b]
+    var_drag_sheet.events = [var_drag_event]
+    dock.setup(var_drag_sheet)
+    var reorder_result: bool = dock._reorder_local_variable(var_drag_event, 0, 1, "after")
+    all_passed = _check("local variable reorder returns true on success", reorder_result, true) and all_passed
+    all_passed = _check("local variable reorder changes position of moved var", (var_drag_event.local_variables[1] as LocalVariable).name, "alpha") and all_passed
+    all_passed = _check("local variable reorder first position is now second var", (var_drag_event.local_variables[0] as LocalVariable).name, "beta") and all_passed
+
+    # Variable drag/drop via signal path
+    dock.setup(var_drag_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport._select_row(0)
+    var var_drop_sheet2 := EventSheetResource.new()
+    var var_drop_event2 := EventRow.new()
+    var_drop_event2.event_uid = "drop_test_event"
+    var var_c := LocalVariable.new()
+    var_c.name = "cee"
+    var_c.type_name = "bool"
+    var_c.default_value = false
+    var var_d := LocalVariable.new()
+    var_d.name = "dee"
+    var_d.type_name = "bool"
+    var_d.default_value = true
+    var_drop_event2.local_variables = [var_c, var_d]
+    var_drop_sheet2.events = [var_drop_event2]
+    dock.setup(var_drop_sheet2)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport._select_row(0)
+    var var_drop_performed: bool = _perform_undoable_sheet_edit_passthrough(dock, "Reorder Local Variable", func() -> bool:
+        return dock._reorder_local_variable(var_drop_event2, 0, 1, "after")
+    )
+    all_passed = _check("undoable local variable reorder succeeds", var_drop_performed, true) and all_passed
+    all_passed = _check("undoable reorder changes order", (var_drop_event2.local_variables[1] as LocalVariable).name, "cee") and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo local variable reorder restores original order", (var_drop_event2.local_variables[0] as LocalVariable).name, "cee") and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo local variable reorder reapplies order change", (var_drop_event2.local_variables[1] as LocalVariable).name, "cee") and all_passed
+
+    # ── EventSheetUIConfig: basic structure validation ─────────────────────────
+    var ui_config := EventSheetUIConfig.new()
+    all_passed = _check("ui config has default row height", ui_config.row_height, 28) and all_passed
+    all_passed = _check("ui config has default font size", ui_config.font_size, 13) and all_passed
+    all_passed = _check("ui config has group bg color", ui_config.group_bg_color is Color, true) and all_passed
+    all_passed = _check("ui config has group accent color", ui_config.group_accent_color is Color, true) and all_passed
+    all_passed = _check("ui config has selection color", ui_config.selection_color is Color, true) and all_passed
+    all_passed = _check("ui config has lane conditions color", ui_config.lane_conditions_color is Color, true) and all_passed
+    ui_config.group_accent_color = Color(1.0, 0.0, 0.5)
+    var config_renderer := EventRowRenderer.new()
+    config_renderer.set_ui_config(ui_config)
+    all_passed = _check("renderer accepts ui config override", config_renderer._ui_config == ui_config, true) and all_passed
+    dock.apply_ui_config(ui_config)
+    all_passed = _check("dock apply_ui_config passes config to renderer", dock.get_viewport_control()._renderer._ui_config == ui_config, true) and all_passed
+
     editor.free()
     return all_passed
 
@@ -1050,6 +1205,10 @@ static func _count_span_text(row_data: EventRowData, expected_text: String) -> i
         if span != null and span.text == expected_text:
             total += 1
     return total
+
+## Helper: wraps a callable in an undoable edit on the given dock for testing.
+static func _perform_undoable_sheet_edit_passthrough(dock: EventSheetDock, action_name: String, operation: Callable) -> bool:
+    return dock._perform_undoable_sheet_edit(action_name, operation)
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
     if actual == expected:
