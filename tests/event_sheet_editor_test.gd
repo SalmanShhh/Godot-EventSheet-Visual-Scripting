@@ -518,6 +518,7 @@ static func run() -> bool:
         width_scroll_shell.size = Vector2(1180.0, 640.0)
     dock_viewport._process(0.0)
     all_passed = _check("viewport canvas expands to available width", dock_viewport.custom_minimum_size.x >= 1180.0, true) and all_passed
+    all_passed = _check("viewport control grows to fill available width", dock_viewport.size.x >= 1180.0, true) and all_passed
 
     # Clicking event lanes opens the ACE picker in the matching mode.
     dock.setup(copy_sheet)

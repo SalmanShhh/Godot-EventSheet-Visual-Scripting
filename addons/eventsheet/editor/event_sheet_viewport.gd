@@ -951,10 +951,14 @@ func _update_canvas_min_size() -> void:
     if not _row_metrics.is_empty():
         var last_metric: Dictionary = _row_metrics[_row_metrics.size() - 1]
         total_height = float(last_metric.get("top", 0.0)) + float(last_metric.get("height", ROW_HEIGHT))
-    custom_minimum_size = Vector2(
+    var target_size: Vector2 = Vector2(
         canvas_width,
         max(total_height * zoom, 240.0)
     )
+    custom_minimum_size = target_size
+    minimum_size_changed()
+    if size != target_size:
+        size = target_size
 
 func _apply_zoom_delta(delta: float, anchor_position: Vector2) -> void:
     var scroll: ScrollContainer = _get_scroll_container()
