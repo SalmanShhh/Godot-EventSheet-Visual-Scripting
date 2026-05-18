@@ -47,6 +47,9 @@ const BADGE_EXTRA_WIDTH := 12.0
 const CHIP_EXTRA_WIDTH := 16.0
 const CHIP_GAP := 8.0
 const ACE_DRAG_KINDS := ["condition", "action"]
+const MIN_ZOOM_FACTOR := 0.6
+const MAX_ZOOM_FACTOR := 1.8
+const ZOOM_STEP := 0.1
 const DROP_ZONE_INSIDE_TOP := 0.33
 const DROP_ZONE_INSIDE_BOTTOM := 0.67
 const DROP_ZONE_AFTER_THRESHOLD := 0.5
@@ -84,6 +87,7 @@ var _row_disabled_state: Dictionary = {}
 var _focused_lane: String = "condition"
 var _selection_anchor_index: int = -1
 var _external_span_edit_handler_enabled: bool = false
+var _zoom_factor: float = 1.0
 
 func _init() -> void:
     _configure_viewport()
@@ -149,6 +153,14 @@ func get_selected_context() -> Dictionary:
         "span_metadata": span.metadata if span != null and span.metadata is Dictionary else {}
     }
 
+func get_selected_rows() -> Array[EventRowData]:
+    var rows: Array[EventRowData] = []
+    for index in _get_selected_row_indices():
+        var row_data: EventRowData = _row_at(index)
+        if row_data != null:
+            rows.append(row_data)
+    return rows
+
 func get_selected_ace_entries() -> Array:
     var entries: Array = []
     for index in range(_flat_rows.size()):
@@ -179,22 +191,63 @@ func get_editor_state_snapshot() -> Dictionary:
         "breakpoint_row_count": _breakpoint_rows.size(),
         "disabled_row_count": _row_disabled_state.size(),
         "selected_row_count": _selected_row_uids.size(),
-        "selected_span_count": _get_selected_span_count()
+        "selected_span_count": _get_selected_span_count(),
+        "zoom_factor": _zoom_factor
     }
 
 func get_row_layout_for_test(row_index: int, width: float = -1.0) -> Dictionary:
-    var resolved_width: float = width if width > 0.0 else max(max(size.x, _get_scroll_width()), 640.0)
+    var resolved_width: float = (
+        width if width > 0.0 else _get_logical_canvas_width()
+    )
     return _get_or_build_row_layout(row_index, resolved_width, _get_font(), _get_font_size())
 
 func set_external_span_edit_handler_enabled(enabled: bool) -> void:
     _external_span_edit_handler_enabled = enabled
 
+func clear_selection() -> void:
+    _clear_selection()
+
+func get_zoom_factor() -> float:
+    return _zoom_factor
+
+func can_zoom_in() -> bool:
+    return _zoom_factor < MAX_ZOOM_FACTOR
+
+func can_zoom_out() -> bool:
+    return _zoom_factor > MIN_ZOOM_FACTOR
+
+func set_zoom_factor(value: float) -> void:
+    var clamped_value: float = clampf(value, MIN_ZOOM_FACTOR, MAX_ZOOM_FACTOR)
+    if is_equal_approx(_zoom_factor, clamped_value):
+        return
+    _zoom_factor = clamped_value
+    _update_canvas_min_size()
+    queue_redraw()
+
+func zoom_in(anchor_position: Vector2 = Vector2(-1.0, -1.0)) -> void:
+    _apply_zoom_delta(ZOOM_STEP, anchor_position)
+
+func zoom_out(anchor_position: Vector2 = Vector2(-1.0, -1.0)) -> void:
+    _apply_zoom_delta(-ZOOM_STEP, anchor_position)
+
+func toggle_row_fold_by_uid(row_uid: String) -> bool:
+    if row_uid.is_empty():
+        return false
+    for index in range(_flat_rows.size()):
+        var row_data: EventRowData = _row_at(index)
+        if row_data != null and row_data.row_uid == row_uid:
+            _toggle_row_fold(index)
+            return true
+    return false
+
 func get_visible_row_range() -> Vector2i:
     if _flat_rows.is_empty():
         return Vector2i(-1, -1)
-    var viewport_height: float = max(_get_viewport_height(), float(ROW_HEIGHT))
-    var start_index: int = clampi(int(floor(float(_get_scroll_offset()) / float(ROW_HEIGHT))), 0, _flat_rows.size() - 1)
-    var end_index: int = clampi(int(ceil((float(_get_scroll_offset()) + viewport_height) / float(ROW_HEIGHT))), start_index, _flat_rows.size() - 1)
+    var zoom: float = max(_zoom_factor, 0.001)
+    var viewport_height: float = max(_get_viewport_height() / zoom, float(ROW_HEIGHT))
+    var scroll_offset: float = float(_get_scroll_offset()) / zoom
+    var start_index: int = clampi(int(floor(scroll_offset / float(ROW_HEIGHT))), 0, _flat_rows.size() - 1)
+    var end_index: int = clampi(int(ceil((scroll_offset + viewport_height) / float(ROW_HEIGHT))), start_index, _flat_rows.size() - 1)
     return Vector2i(start_index, end_index)
 
 func ensure_selection_visible() -> void:
@@ -203,8 +256,8 @@ func ensure_selection_visible() -> void:
     var scroll: ScrollContainer = _get_scroll_container()
     if scroll == null:
         return
-    var row_top: int = _selected_row_index * ROW_HEIGHT
-    var row_bottom: int = row_top + ROW_HEIGHT
+    var row_top: int = int(round(float(_selected_row_index * ROW_HEIGHT) * _zoom_factor))
+    var row_bottom: int = int(round(float((_selected_row_index + 1) * ROW_HEIGHT) * _zoom_factor))
     if row_top < scroll.scroll_vertical:
         scroll.scroll_vertical = row_top
     elif row_bottom > scroll.scroll_vertical + int(_get_viewport_height()):
@@ -216,9 +269,11 @@ func _notification(what: int) -> void:
         queue_redraw()
 
 func _draw() -> void:
-    var width: float = max(max(size.x, _get_scroll_width()), 640.0)
+    var zoom: float = max(_zoom_factor, 0.001)
+    var width: float = _get_logical_canvas_width()
     _layout_cache.reset(width)
     if _flat_rows.is_empty():
+        draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
         _draw_empty_state(width)
         return
     var visible_range: Vector2i = get_visible_row_range()
@@ -226,6 +281,7 @@ func _draw() -> void:
         return
     var font: Font = _get_font()
     var font_size: int = _get_font_size()
+    draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
     for index in range(visible_range.x, visible_range.y + 1):
         var row_info: Dictionary = _flat_rows[index]
         var row_data: EventRowData = row_info.get("row")
@@ -245,17 +301,28 @@ func _gui_input(event: InputEvent) -> void:
         _handle_key(event as InputEventKey)
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
-    var hit: Dictionary = _hit_test(event.position)
+    var local_position: Vector2 = _to_logical_position(event.position)
+    var hit: Dictionary = _hit_test(local_position)
     _set_hover_state(int(hit.get("row_index", -1)), int(hit.get("span_index", -1)))
     if not _drag_ace_entries.is_empty():
-        _update_ace_drag_target(hit, event.position)
+        _update_ace_drag_target(hit, local_position)
     elif _drag_row_index >= 0:
         _drag_target_index = int(hit.get("row_index", -1))
-        _drag_target_mode = _resolve_drop_mode(hit, event.position)
+        _drag_target_mode = _resolve_drop_mode(hit, local_position)
         queue_redraw()
 
 func _handle_mouse_button(event: InputEventMouseButton) -> void:
-    var hit: Dictionary = _hit_test(event.position)
+    if event.pressed and (event.ctrl_pressed or event.meta_pressed):
+        if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+            zoom_in(event.position)
+            accept_event()
+            return
+        if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+            zoom_out(event.position)
+            accept_event()
+            return
+    var local_position: Vector2 = _to_logical_position(event.position)
+    var hit: Dictionary = _hit_test(local_position)
     var row_index: int = int(hit.get("row_index", -1))
     var span_index: int = int(hit.get("span_index", -1))
     if event.button_index == MOUSE_BUTTON_RIGHT:
@@ -778,7 +845,11 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     return layout
 
 func _draw_empty_state(width: float) -> void:
-    draw_rect(Rect2(Vector2.ZERO, Vector2(width, max(size.y, 240.0))), EventSheetPalette.BG_0, true)
+    draw_rect(
+        Rect2(Vector2.ZERO, Vector2(width, max(size.y / max(_zoom_factor, 0.001), 240.0))),
+        EventSheetPalette.BG_0,
+        true
+    )
     var font: Font = _get_font()
     var font_size: int = _get_font_size()
     var text: String = "No rows. Select an EventSheet resource or use the dock's demo sheet."
@@ -786,8 +857,31 @@ func _draw_empty_state(width: float) -> void:
     draw_string(font, Vector2(16.0, 40.0 + text_size.y), text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, EventSheetPalette.TEXT_MUTED)
 
 func _update_canvas_min_size() -> void:
-    var canvas_width: float = max(max(size.x, _get_scroll_width()), 640.0)
-    custom_minimum_size = Vector2(canvas_width, max(float(_flat_rows.size() * ROW_HEIGHT), 240.0))
+    var zoom: float = max(_zoom_factor, 0.001)
+    var canvas_width: float = max(_get_scroll_width(), 640.0 * zoom)
+    custom_minimum_size = Vector2(
+        canvas_width,
+        max(float(_flat_rows.size() * ROW_HEIGHT) * zoom, 240.0)
+    )
+
+func _apply_zoom_delta(delta: float, anchor_position: Vector2) -> void:
+    var scroll: ScrollContainer = _get_scroll_container()
+    var old_zoom: float = _zoom_factor
+    set_zoom_factor(_zoom_factor + delta)
+    if scroll == null or is_equal_approx(old_zoom, _zoom_factor):
+        return
+    if anchor_position.x < 0.0 or anchor_position.y < 0.0:
+        return
+    var logical_anchor_x: float = (float(scroll.scroll_horizontal) + anchor_position.x) / old_zoom
+    var logical_anchor_y: float = (float(scroll.scroll_vertical) + anchor_position.y) / old_zoom
+    scroll.scroll_horizontal = max(int(round(logical_anchor_x * _zoom_factor - anchor_position.x)), 0)
+    scroll.scroll_vertical = max(int(round(logical_anchor_y * _zoom_factor - anchor_position.y)), 0)
+
+func _to_logical_position(position: Vector2) -> Vector2:
+    return position / max(_zoom_factor, 0.001)
+
+func _get_logical_canvas_width() -> float:
+    return max(max(size.x, _get_scroll_width()), 640.0) / max(_zoom_factor, 0.001)
 
 func _select_row(row_index: int, span_index: int = -1) -> void:
     if _flat_rows.is_empty():
@@ -977,7 +1071,12 @@ func _hit_test(position: Vector2) -> Dictionary:
     var row_index: int = int(floor(position.y / float(ROW_HEIGHT)))
     if row_index < 0 or row_index >= _flat_rows.size():
         return {}
-    var layout: Dictionary = _get_or_build_row_layout(row_index, max(max(size.x, _get_scroll_width()), 640.0), _get_font(), _get_font_size())
+    var layout: Dictionary = _get_or_build_row_layout(
+        row_index,
+        _get_logical_canvas_width(),
+        _get_font(),
+        _get_font_size()
+    )
     var row_data: EventRowData = _row_at(row_index)
     if row_data == null:
         return {}

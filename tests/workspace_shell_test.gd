@@ -23,6 +23,8 @@ static func run() -> bool:
     all_passed = _check("viewport supports ace edit API", viewport != null and viewport.has_signal("ace_edit_requested"), true) and all_passed
     all_passed = _check("viewport supports context menu API", viewport != null and viewport.has_signal("context_menu_requested"), true) and all_passed
     all_passed = _check("viewport exposes editor state scaffold", viewport != null and viewport.has_method("get_editor_state_snapshot"), true) and all_passed
+    all_passed = _check("viewport exposes zoom getter", viewport != null and viewport.has_method("get_zoom_factor"), true) and all_passed
+    all_passed = _check("viewport exposes zoom controls", viewport != null and viewport.has_method("zoom_in") and viewport.has_method("zoom_out"), true) and all_passed
     all_passed = _check("viewport exposes disabled row scaffold", viewport != null and viewport.has_method("set_row_disabled"), true) and all_passed
     editor.set_size(Vector2(1200.0, 720.0))
     editor._sync_workspace_layout()

@@ -21,6 +21,7 @@ const ROW_MENU_COPY := 5
 const ROW_MENU_PASTE := 6
 const ROW_MENU_DELETE := 7
 const ROW_MENU_TOGGLE_CONDITION_BLOCK := 8
+const ROW_MENU_TOGGLE_GROUP_FOLD := 9
 const ACE_DRAG_KINDS := ["condition", "action"]
 const SIDE_PANEL_MIN_WIDTH := 160.0
 const SIDE_PANEL_MAX_WIDTH := 220.0
@@ -164,6 +165,9 @@ func _build_ui() -> void:
     _add_toolbar_button("Undo", _on_undo_requested)
     _add_toolbar_button("Redo", _on_redo_requested)
     _add_toolbar_separator()
+    _add_toolbar_button("Zoom -", _on_zoom_out_requested)
+    _add_toolbar_button("Zoom +", _on_zoom_in_requested)
+    _add_toolbar_separator()
     _add_toolbar_button("Add Global Var", _on_add_global_variable_requested)
     _add_toolbar_button("Add Local Var", _on_add_local_variable_requested)
 
@@ -177,7 +181,7 @@ func _build_ui() -> void:
     _scroll.name = "EventSheetScroll"
     _scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    _scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
     _scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
     _split.add_child(_scroll)
 
@@ -297,6 +301,7 @@ func _build_context_menus() -> void:
     _row_context_menu = PopupMenu.new()
     _row_context_menu.add_item("Add Sub-Event", ROW_MENU_ADD_SUB_EVENT)
     _row_context_menu.add_item("Convert to OR Block", ROW_MENU_TOGGLE_CONDITION_BLOCK)
+    _row_context_menu.add_item("Close Group", ROW_MENU_TOGGLE_GROUP_FOLD)
     _row_context_menu.add_item("Add Event Below", ROW_MENU_ADD_EVENT_BELOW)
     _row_context_menu.add_item("Add Group Below", ROW_MENU_ADD_GROUP_BELOW)
     _row_context_menu.add_item("Add Comment Below", ROW_MENU_ADD_COMMENT_BELOW)
@@ -351,6 +356,15 @@ func _unhandled_key_input(event: InputEvent) -> void:
         elif key_event.keycode == KEY_O:
             _on_open_requested()
             accept_event()
+        elif key_event.keycode in [KEY_EQUAL, KEY_PLUS, KEY_KP_ADD]:
+            _on_zoom_in_requested()
+            accept_event()
+        elif key_event.keycode in [KEY_MINUS, KEY_KP_SUBTRACT]:
+            _on_zoom_out_requested()
+            accept_event()
+    elif key_event.keycode in [KEY_DELETE, KEY_BACKSPACE]:
+        _delete_selected_rows()
+        accept_event()
 
 ## Closes the ACE picker when the user clicks anywhere outside the popup rect.
 func _gui_input(event: InputEvent) -> void:
@@ -466,6 +480,18 @@ func _on_add_action_requested() -> void:
     if not _ensure_selected_event():
         return
     _ace_picker.open("append_action", false, _viewport.get_selected_context().get("source_resource", null))
+
+func _on_zoom_in_requested() -> void:
+    if _viewport == null:
+        return
+    _viewport.zoom_in()
+    _set_status("Zoom: %d%%" % int(round(_viewport.get_zoom_factor() * 100.0)))
+
+func _on_zoom_out_requested() -> void:
+    if _viewport == null:
+        return
+    _viewport.zoom_out()
+    _set_status("Zoom: %d%%" % int(round(_viewport.get_zoom_factor() * 100.0)))
 
 func _on_copy_requested() -> void:
     var context: Dictionary = _viewport.get_selected_context()
@@ -967,13 +993,29 @@ func _configure_context_menu(menu: PopupMenu) -> void:
     elif menu == _row_context_menu:
         var toggle_index: int = menu.get_item_index(ROW_MENU_TOGGLE_CONDITION_BLOCK)
         if toggle_index >= 0:
-            var context_event: EventRow = null
-            if _context_row != null and _context_row.source_resource is EventRow:
-                context_event = _context_row.source_resource as EventRow
-            var is_event_row: bool = context_event != null
-            menu.set_item_disabled(toggle_index, not is_event_row)
-            if is_event_row:
-                menu.set_item_text(toggle_index, "Convert to AND Block" if _event_row_uses_or_mode(context_event) else "Convert to OR Block")
+            var selected_events: Array[EventRow] = _get_selected_event_rows_from_context()
+            var has_events: bool = not selected_events.is_empty()
+            menu.set_item_disabled(toggle_index, not has_events)
+            if has_events:
+                menu.set_item_text(
+                    toggle_index,
+                    (
+                        "Convert to AND Block"
+                        if _event_rows_use_or_mode(selected_events)
+                        else "Convert to OR Block"
+                    )
+                )
+        var group_toggle_index: int = menu.get_item_index(ROW_MENU_TOGGLE_GROUP_FOLD)
+        if group_toggle_index >= 0:
+            var context_group: EventGroup = null
+            if _context_row != null and _context_row.source_resource is EventGroup:
+                context_group = _context_row.source_resource as EventGroup
+            menu.set_item_disabled(group_toggle_index, context_group == null)
+            if context_group != null:
+                menu.set_item_text(
+                    group_toggle_index,
+                    "Open Group" if context_group.is_collapsed() else "Close Group"
+                )
 
 func _on_condition_context_menu_id_pressed(id: int) -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
@@ -1029,9 +1071,11 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
         ROW_MENU_PASTE:
             _on_paste_requested()
         ROW_MENU_DELETE:
-            _delete_context_row()
+            _delete_selected_rows()
         ROW_MENU_TOGGLE_CONDITION_BLOCK:
             _toggle_context_condition_block()
+        ROW_MENU_TOGGLE_GROUP_FOLD:
+            _toggle_context_group_fold()
 
 func _delete_context_ace() -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
@@ -1079,15 +1123,29 @@ func _toggle_context_condition_inversion() -> void:
         _mark_dirty("Updated condition inversion.")
 
 func _toggle_context_condition_block() -> void:
-    if _context_row == null or not (_context_row.source_resource is EventRow):
+    var selected_events: Array[EventRow] = _get_selected_event_rows_from_context()
+    if selected_events.is_empty():
         return
-    var event_row: EventRow = _context_row.source_resource as EventRow
+    var target_mode: int = (
+        EventRow.ConditionMode.AND
+        if _event_rows_use_or_mode(selected_events)
+        else EventRow.ConditionMode.OR
+    )
     var toggled: bool = _perform_undoable_sheet_edit("Toggle Condition Block", func() -> bool:
-        event_row.condition_mode = EventRow.ConditionMode.AND if _event_row_uses_or_mode(event_row) else EventRow.ConditionMode.OR
+        for event_row in selected_events:
+            event_row.condition_mode = target_mode
         return true
     )
     if toggled:
         _mark_dirty("Updated condition block.")
+
+func _toggle_context_group_fold() -> void:
+    if _context_row == null or not (_context_row.source_resource is EventGroup):
+        return
+    var context_group: EventGroup = _context_row.source_resource as EventGroup
+    context_group.set_collapsed_state(not context_group.is_collapsed())
+    _viewport.toggle_row_fold_by_uid(_context_row.row_uid)
+    _mark_dirty("Updated group fold state.")
 
 func _delete_context_row() -> void:
     if _context_row == null or _context_row.source_resource == null:
@@ -1105,6 +1163,49 @@ func _delete_context_row() -> void:
         return true
     )
     if deleted:
+        _mark_dirty("Deleted row.")
+
+func _delete_selected_rows() -> void:
+    var selected_rows: Array[EventRowData] = _get_selected_rows_from_context()
+    if selected_rows.is_empty():
+        _delete_context_row()
+        return
+    var resources_to_delete: Array[Resource] = []
+    for row_data in selected_rows:
+        var source_resource: Resource = row_data.source_resource if row_data != null else null
+        if source_resource == null:
+            continue
+        var covered_by_parent: bool = false
+        for existing_resource in resources_to_delete:
+            if _resource_contains_descendant(existing_resource, source_resource):
+                covered_by_parent = true
+                break
+        if covered_by_parent:
+            continue
+        var filtered_resources: Array[Resource] = []
+        for existing_resource in resources_to_delete:
+            if not _resource_contains_descendant(source_resource, existing_resource):
+                filtered_resources.append(existing_resource)
+        resources_to_delete = filtered_resources
+        resources_to_delete.append(source_resource)
+    if resources_to_delete.is_empty():
+        return
+    var deleted: bool = _perform_undoable_sheet_edit("Delete Row", func() -> bool:
+        resources_to_delete.sort_custom(func(a: Resource, b: Resource) -> bool:
+            return _resource_sort_key(a) > _resource_sort_key(b)
+        )
+        for resource_entry in resources_to_delete:
+            var location: Dictionary = _find_resource_location(resource_entry)
+            if location.is_empty():
+                continue
+            var container: Array = location.get("container", [])
+            var index: int = int(location.get("index", -1))
+            if index >= 0 and index < container.size():
+                container.remove_at(index)
+        return true
+    )
+    if deleted:
+        _viewport.clear_selection()
         _mark_dirty("Deleted row.")
 
 func _insert_child_event_for_context_row() -> void:
@@ -1298,6 +1399,49 @@ func _event_row_uses_variable(event_row: EventRow, var_name: String) -> bool:
 
 func _event_row_uses_or_mode(event_row: EventRow) -> bool:
     return event_row != null and event_row.condition_mode == EventRow.ConditionMode.OR
+
+func _event_rows_use_or_mode(event_rows: Array[EventRow]) -> bool:
+    if event_rows.is_empty():
+        return false
+    for event_row in event_rows:
+        if not _event_row_uses_or_mode(event_row):
+            return false
+    return true
+
+func _get_selected_rows_from_context() -> Array[EventRowData]:
+    if _viewport == null:
+        return []
+    var selected_rows: Array[EventRowData] = _viewport.get_selected_rows()
+    if selected_rows.is_empty():
+        if _context_row != null:
+            return [_context_row]
+        return []
+    if _context_row == null:
+        return selected_rows
+    for row_data in selected_rows:
+        if row_data.row_uid == _context_row.row_uid:
+            return selected_rows
+    return [_context_row]
+
+func _get_selected_event_rows_from_context() -> Array[EventRow]:
+    var event_rows: Array[EventRow] = []
+    for row_data in _get_selected_rows_from_context():
+        if row_data != null and row_data.source_resource is EventRow:
+            event_rows.append(row_data.source_resource as EventRow)
+    return event_rows
+
+func _resource_sort_key(resource_entry: Resource) -> int:
+    return _find_row_index_for_resource(resource_entry)
+
+func _find_row_index_for_resource(resource_entry: Resource) -> int:
+    if _viewport == null or resource_entry == null:
+        return -1
+    var flat_rows: Array[Dictionary] = _viewport.get_flat_rows()
+    for index in range(flat_rows.size()):
+        var row_data: EventRowData = flat_rows[index].get("row")
+        if row_data != null and row_data.source_resource == resource_entry:
+            return index
+    return -1
 
 func _context_condition_is_negated() -> bool:
     if _context_row == null or not (_context_row.source_resource is EventRow):

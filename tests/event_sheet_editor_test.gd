@@ -199,6 +199,44 @@ static func run() -> bool:
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("ctrl click toggles selected span off", editor_state.get("selected_span_count", 0), 0) and all_passed
 
+    var multi_block_sheet := EventSheetResource.new()
+    var multi_event_a := EventRow.new()
+    var multi_event_a_condition := ACECondition.new()
+    multi_event_a_condition.provider_id = "Core"
+    multi_event_a_condition.ace_id = "Always"
+    multi_event_a.conditions = [multi_event_a_condition]
+    var multi_event_b := EventRow.new()
+    var multi_event_b_condition := ACECondition.new()
+    multi_event_b_condition.provider_id = "Core"
+    multi_event_b_condition.ace_id = "OnReady"
+    multi_event_b.conditions = [multi_event_b_condition]
+    multi_block_sheet.events = [multi_event_a, multi_event_b]
+    dock.setup(multi_block_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var multi_block_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock_viewport._select_from_click(0, -1, false)
+    dock_viewport._select_from_click(1, -1, true)
+    dock._context_row = multi_block_rows[1].get("row")
+    dock._context_hit = {"span_metadata": {}, "span_index": -1}
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_CONDITION_BLOCK)
+    all_passed = _check(
+        "multi-selection converts selected events to or block",
+        [
+            (dock.get_current_sheet().events[0] as EventRow).condition_mode,
+            (dock.get_current_sheet().events[1] as EventRow).condition_mode
+        ],
+        [EventRow.ConditionMode.OR, EventRow.ConditionMode.OR]
+    ) and all_passed
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_CONDITION_BLOCK)
+    all_passed = _check(
+        "multi-selection converts selected events back to and block",
+        [
+            (dock.get_current_sheet().events[0] as EventRow).condition_mode,
+            (dock.get_current_sheet().events[1] as EventRow).condition_mode
+        ],
+        [EventRow.ConditionMode.AND, EventRow.ConditionMode.AND]
+    ) and all_passed
+
     dock_viewport.custom_minimum_size = Vector2(640.0, 1200.0)
     dock_viewport.size = Vector2(640.0, 1200.0)
     var scroll_shell: ScrollContainer = dock.find_child("EventSheetScroll", true, false)
@@ -277,6 +315,25 @@ static func run() -> bool:
     dock._on_row_drop_requested(dock_viewport.get_flat_rows()[1].get("row"), dock_viewport.get_flat_rows()[0].get("row"), "after")
     all_passed = _check("drag-drop can move event back out of group", ((dock.get_current_sheet().events[1] as EventRow).comment), "root") and all_passed
 
+    var group_drag_sheet := EventSheetResource.new()
+    var outer_group := EventGroup.new()
+    outer_group.name = "Outer"
+    outer_group.group_name = outer_group.name
+    var inner_group := EventGroup.new()
+    inner_group.name = "Inner"
+    inner_group.group_name = inner_group.name
+    group_drag_sheet.events = [outer_group, inner_group]
+    dock.setup(group_drag_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var group_drag_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._on_row_drop_requested(group_drag_rows[0].get("row"), group_drag_rows[1].get("row"), "inside")
+    all_passed = _check("drag-drop can move group into group", dock.get_current_sheet().events.size(), 1) and all_passed
+    all_passed = _check(
+        "drag-drop nests moved group inside target group",
+        (((dock.get_current_sheet().events[0] as EventGroup).events[0]) as EventGroup).group_name,
+        "Outer"
+    ) and all_passed
+
     # Copy/paste event row.
     dock_viewport._select_row(0)
     dock._on_copy_requested()
@@ -341,6 +398,63 @@ static func run() -> bool:
         (dock.get_current_sheet().events[0] as EventRow).conditions.size(),
         1
     ) and all_passed
+
+    var group_fold_sheet := EventSheetResource.new()
+    var fold_group := EventGroup.new()
+    fold_group.name = "Foldable"
+    fold_group.group_name = fold_group.name
+    var fold_child := EventRow.new()
+    fold_child.comment = "child"
+    fold_group.events = [fold_child]
+    group_fold_sheet.events = [fold_group]
+    dock.setup(group_fold_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var fold_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._context_row = fold_rows[0].get("row")
+    dock._context_hit = {"span_metadata": {}, "span_index": -1}
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_GROUP_FOLD)
+    all_passed = _check("group row menu can collapse group", (dock.get_current_sheet().events[0] as EventGroup).is_collapsed(), true) and all_passed
+    all_passed = _check("collapsed group hides child rows after menu action", dock_viewport.get_total_row_count(), 1) and all_passed
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_GROUP_FOLD)
+    all_passed = _check("group row menu can expand group", (dock.get_current_sheet().events[0] as EventGroup).is_collapsed(), false) and all_passed
+    all_passed = _check("expanded group restores child rows after menu action", dock_viewport.get_total_row_count(), 2) and all_passed
+
+    var delete_group_sheet := EventSheetResource.new()
+    var delete_group := EventGroup.new()
+    delete_group.name = "Delete Me"
+    delete_group.group_name = delete_group.name
+    var delete_event := EventRow.new()
+    delete_event.comment = "Remain"
+    delete_group_sheet.events = [delete_group, delete_event]
+    dock.setup(delete_group_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport._select_row(0)
+    var delete_key := InputEventKey.new()
+    delete_key.pressed = true
+    delete_key.keycode = KEY_DELETE
+    dock._unhandled_key_input(delete_key)
+    all_passed = _check("delete key removes selected group", dock.get_current_sheet().events.size(), 1) and all_passed
+    all_passed = _check(
+        "delete key keeps remaining non-selected row",
+        ((dock.get_current_sheet().events[0]) as EventRow).comment,
+        "Remain"
+    ) and all_passed
+
+    var zoom_sheet := EventSheetResource.new()
+    zoom_sheet.events = [EventRow.new()]
+    dock.setup(zoom_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport.size = Vector2(640.0, 320.0)
+    var zoom_before: float = dock_viewport.get_zoom_factor()
+    var zoom_event := InputEventMouseButton.new()
+    zoom_event.pressed = true
+    zoom_event.ctrl_pressed = true
+    zoom_event.button_index = MOUSE_BUTTON_WHEEL_UP
+    zoom_event.position = Vector2(80.0, 40.0)
+    dock_viewport._handle_mouse_button(zoom_event)
+    all_passed = _check("ctrl wheel zoom increases viewport zoom factor", dock_viewport.get_zoom_factor() > zoom_before, true) and all_passed
+    dock._on_zoom_out_requested()
+    all_passed = _check("toolbar zoom out returns viewport toward default zoom", is_equal_approx(dock_viewport.get_zoom_factor(), 1.0), true) and all_passed
 
     # Global and local variable creation workflow.
     dock.setup(copy_sheet)
