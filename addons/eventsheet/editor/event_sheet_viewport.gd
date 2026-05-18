@@ -958,7 +958,7 @@ func _update_canvas_min_size() -> void:
     custom_minimum_size = target_size
     minimum_size_changed()
     if size != target_size:
-        size = target_size
+        set_size(target_size)
 
 func _apply_zoom_delta(delta: float, anchor_position: Vector2) -> void:
     var scroll: ScrollContainer = _get_scroll_container()
