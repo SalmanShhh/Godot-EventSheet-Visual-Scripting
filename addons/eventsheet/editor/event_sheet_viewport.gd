@@ -2074,7 +2074,7 @@ func _rebuild_effective_row_selection() -> void:
     _sync_row_selection_flags()
 
 func _filter_selection_dictionary(selection_dict: Dictionary, valid_row_uids: Dictionary) -> void:
-    for row_uid in selection_dict.keys():
+    for row_uid in selection_dict:
         if valid_row_uids.has(str(row_uid)):
             continue
         selection_dict.erase(row_uid)
