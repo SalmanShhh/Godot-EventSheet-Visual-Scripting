@@ -1657,16 +1657,17 @@ func _reorder_local_variable(event_row: EventRow, source_index: int, target_inde
         return false
     var moved_var: LocalVariable = event_row.local_variables[source_index]
     event_row.local_variables.remove_at(source_index)
-    # When moving upward the target index is still correct after removal; when moving
-    # downward the old slot disappears first, so the insertion point must shift back by one.
-    # Drops "after" the target then advance one extra slot from that normalized position.
-    var insert_at: int = target_index if source_index > target_index else target_index - 1
-    if drop_mode == "after":
-        insert_at = mini(insert_at + 1, event_row.local_variables.size())
-    else:
-        insert_at = maxi(insert_at, 0)
+    var insert_at: int = _calculate_reorder_insert_index(source_index, target_index, drop_mode, event_row.local_variables.size())
     event_row.local_variables.insert(insert_at, moved_var)
     return true
+
+func _calculate_reorder_insert_index(source_index: int, target_index: int, drop_mode: String, current_size: int) -> int:
+    # Removing the source entry first means downward moves land one slot earlier in the
+    # shortened array, while upward moves can still use the raw target index directly.
+    var insert_at: int = target_index if source_index > target_index else target_index - 1
+    if drop_mode == "after":
+        return mini(insert_at + 1, current_size)
+    return maxi(insert_at, 0)
 
 func apply_ui_config(config: EventSheetUIConfig) -> void:
     _ui_config = config
