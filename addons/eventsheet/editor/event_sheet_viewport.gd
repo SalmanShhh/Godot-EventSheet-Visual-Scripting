@@ -60,6 +60,7 @@ var _ace_registry: EventSheetACERegistry = EventSheetACERegistry.new()
 var _sheet: EventSheetResource = null
 var _root_rows: Array[EventRowData] = []
 var _flat_rows: Array[Dictionary] = []
+var _row_metrics: Array[Dictionary] = []
 var _selected_row_index: int = -1
 var _selected_span_index: int = -1
 var _selected_row_uids: Dictionary = {}
@@ -80,6 +81,7 @@ var _drag_ace_target_lane: String = ""
 var _drag_ace_target_ace_index: int = -1
 var _drag_ace_insert_mode: String = "append"
 var _last_scroll: int = -1
+var _last_scroll_size: Vector2 = Vector2.ZERO
 var _fold_state: Dictionary = {}
 var _debug_rows: Dictionary = {}
 var _breakpoint_rows: Dictionary = {}
@@ -101,6 +103,11 @@ func _process(_delta: float) -> void:
     var scroll_value: int = _get_scroll_offset()
     if scroll_value != _last_scroll:
         _last_scroll = scroll_value
+        queue_redraw()
+    var scroll: ScrollContainer = _get_scroll_container()
+    if scroll != null and scroll.size != _last_scroll_size:
+        _last_scroll_size = scroll.size
+        _update_canvas_min_size()
         queue_redraw()
 
 func set_sheet(sheet: EventSheetResource) -> void:
@@ -246,8 +253,14 @@ func get_visible_row_range() -> Vector2i:
     var zoom: float = max(_zoom_factor, 0.001)
     var viewport_height: float = max(_get_viewport_height() / zoom, float(ROW_HEIGHT))
     var scroll_offset: float = float(_get_scroll_offset()) / zoom
-    var start_index: int = clampi(int(floor(scroll_offset / float(ROW_HEIGHT))), 0, _flat_rows.size() - 1)
-    var end_index: int = clampi(int(ceil((scroll_offset + viewport_height) / float(ROW_HEIGHT))), start_index, _flat_rows.size() - 1)
+    var start_index: int = _find_row_index_at_y(scroll_offset)
+    var end_index: int = _find_row_index_at_y(scroll_offset + viewport_height)
+    if start_index < 0:
+        start_index = 0
+    if end_index < 0:
+        end_index = _flat_rows.size() - 1
+    if end_index < start_index:
+        end_index = start_index
     return Vector2i(start_index, end_index)
 
 func ensure_selection_visible() -> void:
@@ -256,8 +269,8 @@ func ensure_selection_visible() -> void:
     var scroll: ScrollContainer = _get_scroll_container()
     if scroll == null:
         return
-    var row_top: int = int(round(float(_selected_row_index * ROW_HEIGHT) * _zoom_factor))
-    var row_bottom: int = int(round(float((_selected_row_index + 1) * ROW_HEIGHT) * _zoom_factor))
+    var row_top: int = int(round(_get_row_top(_selected_row_index) * _zoom_factor))
+    var row_bottom: int = int(round((_get_row_top(_selected_row_index) + _get_row_height(_selected_row_index)) * _zoom_factor))
     if row_top < scroll.scroll_vertical:
         scroll.scroll_vertical = row_top
     elif row_bottom > scroll.scroll_vertical + int(_get_viewport_height()):
@@ -333,7 +346,11 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
             _select_from_click(row_index, span_index, false)
             var row_data: EventRowData = _row_at(row_index)
             if row_data != null:
-                context_menu_requested.emit(row_data, hit.duplicate(true), get_global_mouse_position())
+                context_menu_requested.emit(
+                    row_data,
+                    hit.duplicate(true),
+                    DisplayServer.mouse_get_position()
+                )
                 accept_event()
         return
     if event.button_index != MOUSE_BUTTON_LEFT:
@@ -556,6 +573,7 @@ func _refresh_rows() -> void:
     _flat_rows.clear()
     for row_data in _root_rows:
         _flatten_row(row_data, null)
+    _rebuild_row_metrics()
     for index in range(_flat_rows.size()):
         var line_row: EventRowData = _flat_rows[index].get("row")
         if line_row == null:
@@ -653,36 +671,68 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 
 func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
     var spans: Array[SemanticSpan] = []
+    var condition_line_index: int = 0
     if event_row.trigger != null:
-        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
-        spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, BADGE_TRIGGER_METADATA))
+        var trigger_meta: Dictionary = CONDITION_KEYWORD_METADATA.duplicate(true)
+        trigger_meta["line_index"] = condition_line_index
+        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, trigger_meta))
+        var trigger_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
+        trigger_badge_meta["line_index"] = condition_line_index
+        spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, trigger_badge_meta))
         spans.append(
             _make_span(
                 _format_condition_descriptor(event_row.trigger),
                 SemanticSpan.SpanType.CONDITION,
-                {"lane": "condition", "kind": "trigger", "ace_index": 0, "chip": true}
+                {
+                    "lane": "condition",
+                    "kind": "trigger",
+                    "ace_index": 0,
+                    "chip": true,
+                    "line_index": condition_line_index
+                }
             )
         )
+        condition_line_index += 1
     elif not event_row.trigger_id.is_empty():
-        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
-        spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, BADGE_TRIGGER_METADATA))
+        var trigger_id_meta: Dictionary = CONDITION_KEYWORD_METADATA.duplicate(true)
+        trigger_id_meta["line_index"] = condition_line_index
+        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, trigger_id_meta))
+        var trigger_id_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
+        trigger_id_badge_meta["line_index"] = condition_line_index
+        spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, trigger_id_badge_meta))
         spans.append(
             _make_span(
                 event_row.trigger_id,
                 SemanticSpan.SpanType.CONDITION,
-                {"lane": "condition", "kind": "trigger", "ace_index": 0, "chip": true}
+                {
+                    "lane": "condition",
+                    "kind": "trigger",
+                    "ace_index": 0,
+                    "chip": true,
+                    "line_index": condition_line_index
+                }
             )
         )
+        condition_line_index += 1
     if not event_row.conditions.is_empty():
-        if not spans.is_empty():
-            spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
         for condition_index in range(event_row.conditions.size()):
             var condition: ACECondition = event_row.conditions[condition_index]
             if condition == null:
                 continue
-            if condition_index > 0:
-                spans.append(_make_span("or" if event_row.condition_mode == EventRow.ConditionMode.OR else "and", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
-            _append_condition_prefix_spans(spans, event_row, condition, condition_index)
+            var line_index: int = condition_line_index
+            var join_meta: Dictionary = CONDITION_KEYWORD_METADATA.duplicate(true)
+            join_meta["line_index"] = line_index
+            if condition_index == 0 and not spans.is_empty():
+                spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, join_meta))
+            elif condition_index > 0:
+                spans.append(
+                    _make_span(
+                        "or" if event_row.condition_mode == EventRow.ConditionMode.OR else "and",
+                        SemanticSpan.SpanType.KEYWORD,
+                        join_meta
+                    )
+                )
+            _append_condition_prefix_spans(spans, event_row, condition, condition_index, line_index)
             spans.append(
                 _make_span(
                     _format_condition_descriptor(condition),
@@ -691,13 +741,23 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                         "lane": "condition",
                         "kind": "condition",
                         "ace_index": condition_index,
-                        "chip": true
+                        "chip": true,
+                        "line_index": line_index
                     }
                 )
             )
+            condition_line_index += 1
     if spans.is_empty():
-        spans.append(_make_span("when", SemanticSpan.SpanType.KEYWORD, CONDITION_KEYWORD_METADATA))
-        spans.append(_make_span("Always", SemanticSpan.SpanType.CONDITION, {"lane": "condition", "kind": "condition", "ace_index": -1}))
+        var empty_keyword_meta: Dictionary = CONDITION_KEYWORD_METADATA.duplicate(true)
+        empty_keyword_meta["line_index"] = 0
+        spans.append(_make_span("when", SemanticSpan.SpanType.KEYWORD, empty_keyword_meta))
+        spans.append(
+            _make_span(
+                "Always",
+                SemanticSpan.SpanType.CONDITION,
+                {"lane": "condition", "kind": "condition", "ace_index": -1, "line_index": 0}
+            )
+        )
     if not event_row.actions.is_empty():
         spans.append(_make_span("→", SemanticSpan.SpanType.OPERATOR, {"hoverable": false, "lane": "action"}))
         for action_index in range(event_row.actions.size()):
@@ -728,16 +788,24 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
         )
     return spans
 
-func _append_condition_prefix_spans(spans: Array[SemanticSpan], event_row: EventRow, condition: ACECondition, condition_index: int) -> void:
+func _append_condition_prefix_spans(
+    spans: Array[SemanticSpan],
+    event_row: EventRow,
+    condition: ACECondition,
+    condition_index: int,
+    line_index: int
+) -> void:
     if event_row == null:
         return
     if event_row.condition_mode == EventRow.ConditionMode.OR and event_row.conditions.size() > 1:
         var or_meta: Dictionary = BADGE_OR_METADATA.duplicate(true)
         or_meta["condition_index"] = condition_index
+        or_meta["line_index"] = line_index
         spans.append(_make_span("OR", SemanticSpan.SpanType.KEYWORD, or_meta))
     if condition.negated:
         var negated_meta: Dictionary = BADGE_NEGATED_METADATA.duplicate(true)
         negated_meta["condition_index"] = condition_index
+        negated_meta["line_index"] = line_index
         spans.append(_make_span("✕", SemanticSpan.SpanType.KEYWORD, negated_meta))
 
 func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
@@ -754,9 +822,10 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     var key: String = "%s:%d:%d:%d" % [row_data.row_uid, index, int(width), _drag_target_index]
     if _layout_cache.has(key):
         return _layout_cache.get_layout(key)
-    var row_top: float = float(index * ROW_HEIGHT)
-    var row_rect := Rect2(0.0, row_top, width, ROW_HEIGHT)
-    var gutter_rect := Rect2(0.0, row_top, EventSheetPalette.GUTTER_WIDTH, ROW_HEIGHT)
+    var row_top: float = _get_row_top(index)
+    var row_height: float = _get_row_height(index)
+    var row_rect := Rect2(0.0, row_top, width, row_height)
+    var gutter_rect := Rect2(0.0, row_top, EventSheetPalette.GUTTER_WIDTH, row_height)
     var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * INDENT_WIDTH)
     var fold_rect: Rect2 = Rect2(x - 14.0, row_top + 6.0, 12.0, 16.0) if not row_data.children.is_empty() else Rect2()
     var icon_rect := Rect2(x + 2.0, row_top + 9.0, EventSheetPalette.ICON_SIZE, EventSheetPalette.ICON_SIZE)
@@ -769,17 +838,31 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         var content_left: float = EventSheetPalette.GUTTER_WIDTH
         var content_width: float = max(width - content_left, 120.0)
         lane_divider_x = content_left + max(EventSheetPalette.MIN_CONDITIONS_LANE_WIDTH, floor(content_width * EventSheetPalette.CONDITION_LANE_RATIO))
-        condition_lane_rect = Rect2(content_left, row_top, max(lane_divider_x - content_left, 1.0), ROW_HEIGHT)
-        lane_divider_rect = Rect2(lane_divider_x, row_top, EventSheetPalette.LANE_DIVIDER_WIDTH, ROW_HEIGHT)
-        action_lane_rect = Rect2(lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH, row_top, max(width - lane_divider_x - EventSheetPalette.LANE_DIVIDER_WIDTH, 1.0), ROW_HEIGHT)
+        condition_lane_rect = Rect2(content_left, row_top, max(lane_divider_x - content_left, 1.0), row_height)
+        lane_divider_rect = Rect2(lane_divider_x, row_top, EventSheetPalette.LANE_DIVIDER_WIDTH, row_height)
+        action_lane_rect = Rect2(lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH, row_top, max(width - lane_divider_x - EventSheetPalette.LANE_DIVIDER_WIDTH, 1.0), row_height)
+    var condition_line_x: Dictionary = {}
+    var action_x: float = (
+        lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH + EventSheetPalette.ACTION_LANE_PADDING
+        if lane_divider_x > 0.0
+        else x
+    )
     for span_index in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null:
             continue
         var span_lane: String = _resolve_span_lane(span)
         var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
-        if lane_divider_x > 0.0 and span_lane == "action":
-            x = max(x, lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH + EventSheetPalette.ACTION_LANE_PADDING)
+        var span_x: float = x
+        var span_y: float = row_top + 3.0
+        if span_lane == "action":
+            span_x = action_x
+        elif lane_divider_x > 0.0:
+            var line_index: int = int(metadata.get("line_index", 0))
+            if not condition_line_x.has(line_index):
+                condition_line_x[line_index] = x
+            span_x = float(condition_line_x[line_index])
+            span_y = row_top + float(line_index * ROW_HEIGHT) + 3.0
         var display_text: String = _editing_buffer if index == _editing_row_index and span_index == _editing_span_index else span.text
         var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
         if bool(metadata.get("badge", false)):
@@ -788,11 +871,15 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             span_width += CHIP_EXTRA_WIDTH
         if lane_divider_x > 0.0 and span_lane != "action":
             var max_condition_right: float = lane_divider_x - EventSheetPalette.ACTION_LANE_PADDING
-            span_width = max(min(span_width, max_condition_right - x), 10.0)
-        span.rect = Rect2(x, row_top + 3.0, span_width + 2.0, ROW_HEIGHT - 6.0)
-        x += span.rect.size.x + (
+            span_width = max(min(span_width, max_condition_right - span_x), 10.0)
+        span.rect = Rect2(span_x, span_y, span_width + 2.0, ROW_HEIGHT - 6.0)
+        var next_x: float = span.rect.size.x + (
             CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP
         )
+        if span_lane == "action":
+            action_x = span.rect.end.x + next_x
+        else:
+            condition_line_x[int(metadata.get("line_index", 0))] = span.rect.end.x + next_x
     var drag_rect := Rect2()
     if _drag_row_index >= 0 and _drag_target_index == index:
         match _drag_target_mode:
@@ -820,6 +907,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             )
     var layout := {
         "row_rect": row_rect,
+        "row_height": row_height,
         "gutter_rect": gutter_rect,
         "fold_rect": fold_rect,
         "icon_rect": icon_rect,
@@ -859,9 +947,13 @@ func _draw_empty_state(width: float) -> void:
 func _update_canvas_min_size() -> void:
     var zoom: float = max(_zoom_factor, 0.001)
     var canvas_width: float = max(_get_scroll_width(), 640.0 * zoom)
+    var total_height: float = 0.0
+    if not _row_metrics.is_empty():
+        var last_metric: Dictionary = _row_metrics[_row_metrics.size() - 1]
+        total_height = float(last_metric.get("top", 0.0)) + float(last_metric.get("height", ROW_HEIGHT))
     custom_minimum_size = Vector2(
         canvas_width,
-        max(float(_flat_rows.size() * ROW_HEIGHT) * zoom, 240.0)
+        max(total_height * zoom, 240.0)
     )
 
 func _apply_zoom_delta(delta: float, anchor_position: Vector2) -> void:
@@ -1068,7 +1160,7 @@ func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String)
                 (row_data.source_resource as EventRow).comment = value
 
 func _hit_test(position: Vector2) -> Dictionary:
-    var row_index: int = int(floor(position.y / float(ROW_HEIGHT)))
+    var row_index: int = _find_row_index_at_y(position.y)
     if row_index < 0 or row_index >= _flat_rows.size():
         return {}
     var layout: Dictionary = _get_or_build_row_layout(
@@ -1129,10 +1221,11 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
     var row_data: EventRowData = _row_at(row_index)
     if row_data == null:
         return "before"
-    var row_top: float = float(row_index * ROW_HEIGHT)
-    var relative_y: float = clampf(position.y - row_top, 0.0, float(ROW_HEIGHT))
-    var inside_zone_top: float = float(ROW_HEIGHT) * DROP_ZONE_INSIDE_TOP
-    var inside_zone_bottom: float = float(ROW_HEIGHT) * DROP_ZONE_INSIDE_BOTTOM
+    var row_top: float = _get_row_top(row_index)
+    var row_height: float = _get_row_height(row_index)
+    var relative_y: float = clampf(position.y - row_top, 0.0, row_height)
+    var inside_zone_top: float = row_height * DROP_ZONE_INSIDE_TOP
+    var inside_zone_bottom: float = row_height * DROP_ZONE_INSIDE_BOTTOM
     var supports_inside_drop: bool = row_data.row_type in [
         EventRowData.RowType.EVENT,
         EventRowData.RowType.GROUP
@@ -1142,7 +1235,49 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
     )
     if supports_inside_drop and is_in_inside_zone:
         return "inside"
-    return "after" if relative_y > float(ROW_HEIGHT) * DROP_ZONE_AFTER_THRESHOLD else "before"
+    return "after" if relative_y > row_height * DROP_ZONE_AFTER_THRESHOLD else "before"
+
+func _rebuild_row_metrics() -> void:
+    _row_metrics.clear()
+    var top: float = 0.0
+    for index in range(_flat_rows.size()):
+        var height: float = _resolve_row_height(_row_at(index))
+        _row_metrics.append({"top": top, "height": height})
+        top += height
+
+func _resolve_row_height(row_data: EventRowData) -> float:
+    if row_data == null:
+        return float(ROW_HEIGHT)
+    if row_data.row_type != EventRowData.RowType.EVENT:
+        return float(ROW_HEIGHT)
+    var max_line_index: int = 0
+    for span in row_data.spans:
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        var metadata: Dictionary = span.metadata as Dictionary
+        if _resolve_span_lane(span) == "condition":
+            max_line_index = maxi(max_line_index, int(metadata.get("line_index", 0)))
+    return float((max_line_index + 1) * ROW_HEIGHT)
+
+func _get_row_top(index: int) -> float:
+    if index < 0 or index >= _row_metrics.size():
+        return float(index * ROW_HEIGHT)
+    return float(_row_metrics[index].get("top", float(index * ROW_HEIGHT)))
+
+func _get_row_height(index: int) -> float:
+    if index < 0 or index >= _row_metrics.size():
+        return float(ROW_HEIGHT)
+    return float(_row_metrics[index].get("height", ROW_HEIGHT))
+
+func _find_row_index_at_y(y: float) -> int:
+    if _row_metrics.is_empty():
+        return -1
+    for index in range(_row_metrics.size()):
+        var top: float = float(_row_metrics[index].get("top", 0.0))
+        var height: float = float(_row_metrics[index].get("height", ROW_HEIGHT))
+        if y >= top and y < top + height:
+            return index
+    return -1
 
 func _get_selected_span_count() -> int:
     var total: int = 0

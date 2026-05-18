@@ -164,12 +164,28 @@ static func run() -> bool:
     all_passed = _check("negated condition adds red x badge text", _count_span_text(or_row_data, "✕"), 1) and all_passed
     all_passed = _check("or badge appears before first condition span", _find_span_index_by_text(or_row_data, "OR"), _find_span_index_by_kind(or_row_data, "condition") - 1) and all_passed
     all_passed = _check("or badge appears before second condition span", _find_last_span_index_by_text(or_row_data, "OR"), _find_last_span_index_by_kind(or_row_data, "condition") - 1) and all_passed
+    dock_viewport.get_row_layout_for_test(0, 640.0)
+    var first_condition_index: int = _find_span_index_by_kind(or_row_data, "condition")
+    var second_condition_index: int = _find_nth_span_index_by_kind(or_row_data, "condition", 1)
+    all_passed = _check(
+        "stacked conditions place later conditions on lower lines",
+        second_condition_index >= 0 and or_row_data.spans[second_condition_index].rect.position.y > or_row_data.spans[first_condition_index].rect.position.y,
+        true
+    ) and all_passed
+    var second_condition_center: Vector2 = or_row_data.spans[second_condition_index].rect.get_center()
+    var second_condition_hit: Dictionary = dock_viewport._hit_test(second_condition_center)
+    all_passed = _check("hit testing selects individual stacked condition", second_condition_hit.get("span_index", -1), second_condition_index) and all_passed
+    dock_viewport._select_from_click(0, second_condition_index, false)
+    var condition_selection_state: Dictionary = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("single condition click tracks span selection", condition_selection_state.get("selected_span_count", 0), 1) and all_passed
     dock._context_row = or_row_data
     dock._context_hit = {"span_metadata": {"kind": "condition", "ace_index": 1}, "span_index": _find_last_span_index_by_kind(or_row_data, "condition")}
     dock._on_condition_context_menu_id_pressed(4)
     all_passed = _check("condition context menu toggles inversion", ((dock.get_current_sheet().events[0] as EventRow).conditions[1] as ACECondition).negated, false) and all_passed
     dock._context_row = or_row_data
     dock._context_hit = {"span_metadata": {}, "span_index": -1}
+    dock._show_popup_menu(dock._row_context_menu, Vector2(320.0, 240.0))
+    all_passed = _check("row context menu opens at requested cursor position", dock._row_context_menu.position, Vector2i(320, 240)) and all_passed
     dock._on_row_context_menu_id_pressed(8)
     all_passed = _check("row context menu toggles or block to and block", ((dock.get_current_sheet().events[0] as EventRow).condition_mode), EventRow.ConditionMode.AND) and all_passed
     all_passed = _check("or block toggle is second row menu item", dock._row_context_menu.get_item_id(1), EventSheetDock.ROW_MENU_TOGGLE_CONDITION_BLOCK) and all_passed
@@ -496,8 +512,11 @@ static func run() -> bool:
     all_passed = _check("create local variable without events creates host event", dock.get_current_sheet().events.size(), 1) and all_passed
     all_passed = _check("create local variable without events stores on created host event", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
 
-    dock_viewport.set_size(Vector2(1180.0, 640.0))
-    dock_viewport.set_sheet(dock.get_current_sheet())
+    dock_viewport.set_size(Vector2(640.0, 640.0))
+    var width_scroll_shell: ScrollContainer = dock.find_child("EventSheetScroll", true, false)
+    if width_scroll_shell != null:
+        width_scroll_shell.size = Vector2(1180.0, 640.0)
+    dock_viewport._process(0.0)
     all_passed = _check("viewport canvas expands to available width", dock_viewport.custom_minimum_size.x >= 1180.0, true) and all_passed
 
     # Clicking event lanes opens the ACE picker in the matching mode.
@@ -619,6 +638,25 @@ static func _find_last_span_index_by_kind(row_data: EventRowData, expected_kind:
             continue
         if str((span.metadata as Dictionary).get("kind", "")) == expected_kind:
             return index
+    return -1
+
+static func _find_nth_span_index_by_kind(
+    row_data: EventRowData,
+    expected_kind: String,
+    occurrence: int
+) -> int:
+    if row_data == null or occurrence < 0:
+        return -1
+    var current_occurrence: int = 0
+    for index in range(row_data.spans.size()):
+        var span: SemanticSpan = row_data.spans[index]
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        if str((span.metadata as Dictionary).get("kind", "")) != expected_kind:
+            continue
+        if current_occurrence == occurrence:
+            return index
+        current_occurrence += 1
     return -1
 
 static func _find_span_index_by_text(row_data: EventRowData, expected_text: String) -> int:

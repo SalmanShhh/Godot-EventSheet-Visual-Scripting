@@ -38,6 +38,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     var line_number: int = int(layout.get("line_number", 0))
     var breakpoint_enabled: bool = bool(layout.get("breakpoint_enabled", false))
     var disabled: bool = bool(layout.get("disabled", false))
+    var has_span_selection: bool = not selected_span_indices.is_empty()
 
     _draw_gutter(control, gutter_rect, line_number, breakpoint_enabled, font, font_size)
     control.draw_rect(row_rect, BG_1 if alternating else BG_0, true)
@@ -48,7 +49,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     if lane_divider_rect.size != Vector2.ZERO:
         control.draw_rect(lane_divider_rect, EventSheetPalette.COLOR_LANE_DIVIDER, true)
     _draw_indent_guides(control, row_rect, row_data.indent)
-    if row_data.selected:
+    if row_data.selected and not has_span_selection:
         control.draw_rect(row_rect, EventSheetPalette.COLOR_SELECTION, true)
     if row_data.hovered:
         control.draw_rect(row_rect, EventSheetPalette.COLOR_HOVER, true)
