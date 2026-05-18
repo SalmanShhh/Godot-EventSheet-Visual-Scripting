@@ -1749,7 +1749,7 @@ func begin_edit_selected() -> bool:
     var metadata: Dictionary = span.metadata if span != null and span.metadata is Dictionary else {}
     if not bool(metadata.get("editable", false)):
         return false
-    _begin_edit(_selected_row_index, _selected_span_index)
+    _begin_edit(_selected_row_index, resolved_span_index)
     return _editing_row_index == _selected_row_index and _editing_span_index == resolved_span_index
 
 func get_editing_context_for_test() -> Dictionary:
