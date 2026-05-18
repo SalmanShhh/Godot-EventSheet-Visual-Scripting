@@ -48,10 +48,22 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
         if editor_style != null
         else null
     )
+    var selection_fill: Color = (
+        event_style.selection_fill_color
+        if event_style != null
+        else EventSheetPalette.COLOR_SELECTION
+    )
+    var hover_fill: Color = (
+        event_style.hover_fill_color
+        if event_style != null
+        else EventSheetPalette.COLOR_HOVER
+    )
 
     _draw_gutter(control, gutter_rect, line_number, breakpoint_enabled, font, font_size)
     if row_data.row_type == EventRowData.RowType.GROUP:
-        _draw_group_row_chrome(control, row_rect, fold_rect, alternating)
+        _draw_group_row_chrome(control, row_rect, fold_rect, alternating, event_style)
+    elif row_data.row_type == EventRowData.RowType.COMMENT and event_style != null:
+        control.draw_rect(row_rect, event_style.comment_row_background_color, true)
     elif row_data.row_type == EventRowData.RowType.EVENT and event_style != null:
         control.draw_rect(
             row_rect,
@@ -79,18 +91,18 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
             true
         )
     if row_data.row_type == EventRowData.RowType.EVENT and event_style != null:
-        var block_border: Color = event_style.lane_divider_color.lightened(0.15)
+        var block_border: Color = event_style.row_border_color
         block_border.a = 0.66
         control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, row_rect.size.x, 1.0), block_border, true)
         control.draw_rect(Rect2(row_rect.position.x, row_rect.end.y - 1.0, row_rect.size.x, 1.0), block_border, true)
     _draw_indent_guides(control, row_rect, row_data.indent)
     if row_data.selected and not has_span_selection:
-        control.draw_rect(row_rect, EventSheetPalette.COLOR_SELECTION, true)
+        control.draw_rect(row_rect, selection_fill, true)
     if row_data.hovered:
-        control.draw_rect(row_rect, EventSheetPalette.COLOR_HOVER, true)
+        control.draw_rect(row_rect, hover_fill, true)
     _draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
     _draw_icon(control, icon_rect, row_data)
-    _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index)
+    _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index, event_style, selection_fill, hover_fill)
     if drag_rect.size != Vector2.ZERO:
         control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
     if ace_drag_rect.size != Vector2.ZERO:
@@ -159,14 +171,18 @@ func _draw_fold_arrow(control: Control, fold_rect: Rect2, folded: bool, visible:
             true
         )
 
-func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2, alternating: bool) -> void:
+func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2, alternating: bool, event_style: EventSheetEventStyle = null) -> void:
     var bg: Color = EventSheetPalette.COLOR_GROUP_BG_ALT if alternating else EventSheetPalette.COLOR_GROUP_BG
+    if event_style != null:
+        bg = event_style.group_background_alt_color if alternating else event_style.group_background_color
+    var accent: Color = event_style.group_accent_color if event_style != null else EventSheetPalette.COLOR_GROUP_ACCENT
+    var fold_bg: Color = event_style.group_fold_background_color if event_style != null else EventSheetPalette.COLOR_GROUP_FOLD_BG
     control.draw_rect(row_rect, bg, true)
-    control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), EventSheetPalette.COLOR_GROUP_ACCENT, true)
-    control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, row_rect.size.x, 1.0), EventSheetPalette.COLOR_GROUP_ACCENT.darkened(0.28), true)
-    control.draw_rect(Rect2(row_rect.position.x, row_rect.end.y - 1.0, row_rect.size.x, 1.0), EventSheetPalette.COLOR_GROUP_ACCENT.darkened(0.38), true)
+    control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), accent, true)
+    control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, row_rect.size.x, 1.0), accent.darkened(0.28), true)
+    control.draw_rect(Rect2(row_rect.position.x, row_rect.end.y - 1.0, row_rect.size.x, 1.0), accent.darkened(0.38), true)
     if fold_rect.size != Vector2.ZERO:
-        control.draw_rect(fold_rect.grow(1.0), EventSheetPalette.COLOR_GROUP_FOLD_BG, true)
+        control.draw_rect(fold_rect.grow(1.0), fold_bg, true)
 
 func _draw_icon(control: Control, icon_rect: Rect2, row_data: EventRowData) -> void:
     if icon_rect.size == Vector2.ZERO:
@@ -181,7 +197,20 @@ func _draw_icon(control: Control, icon_rect: Rect2, row_data: EventRowData) -> v
             color = TEXT_MUTED
     control.draw_rect(icon_rect, color, true)
 
-func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size: int, editing_span_index: int, editing_buffer: String, editing_caret: int, selected_span_indices: Array, hovered_span_index: int) -> void:
+func _draw_spans(
+    control: Control,
+    row_data: EventRowData,
+    font: Font,
+    font_size: int,
+    editing_span_index: int,
+    editing_buffer: String,
+    editing_caret: int,
+    selected_span_indices: Array,
+    hovered_span_index: int,
+    event_style: EventSheetEventStyle = null,
+    selection_fill: Color = EventSheetPalette.COLOR_SELECTION,
+    hover_fill: Color = EventSheetPalette.COLOR_HOVER
+) -> void:
     for span_index: int in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null:
@@ -190,22 +219,22 @@ func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size
         if bool(metadata.get("chip", false)):
             _draw_chip_span(control, span, metadata)
         if selected_span_indices.has(span_index):
-            var selected_bg: Color = EventSheetPalette.COLOR_SELECTION
+            var selected_bg: Color = selection_fill
             selected_bg.a = 0.72
             control.draw_rect(span.rect.grow(2.0), selected_bg, true)
         elif span_index == hovered_span_index:
             if bool(metadata.get("chip", false)):
                 _draw_chip_hover_span(control, span, metadata)
             else:
-                var hover_bg: Color = EventSheetPalette.COLOR_HOVER
+                var hover_bg: Color = hover_fill
                 hover_bg.a = 0.6
                 control.draw_rect(span.rect.grow(1.0), hover_bg, true)
         if bool(metadata.get("badge", false)):
             _draw_badge_span(control, span, font, font_size, metadata)
             continue
-        var color: Color = metadata.get("text_color", _get_span_color(span.type))
+        var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style))
         if row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false)):
-            color = EventSheetPalette.COLOR_GROUP_TITLE
+            color = event_style.group_title_color if event_style != null else EventSheetPalette.COLOR_GROUP_TITLE
         var draw_text: String = editing_buffer if span_index == editing_span_index else span.text
         var draw_font_size: int = EventSheetPalette.resolve_font_size(
             font_size,
@@ -328,7 +357,7 @@ func _draw_debug_overlay(control: Control, row_rect: Rect2, font: Font, font_siz
     var baseline_y: float = badge_rect.position.y + (badge_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
     control.draw_string(font, Vector2(badge_rect.position.x + 5.0, baseline_y), debug_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1, EventSheetPalette.COLOR_DEBUG_TEXT)
 
-func _get_span_color(span_type: int) -> Color:
+func _get_span_color(span_type: int, event_style: EventSheetEventStyle = null) -> Color:
     match span_type:
         SemanticSpan.SpanType.OBJECT:
             return COLOR_OBJECT
@@ -345,6 +374,6 @@ func _get_span_color(span_type: int) -> Color:
         SemanticSpan.SpanType.EXPRESSION:
             return TEXT_PRIMARY
         SemanticSpan.SpanType.COMMENT:
-            return EventSheetPalette.COLOR_COMMENT
+            return event_style.comment_text_color if event_style != null else EventSheetPalette.COLOR_COMMENT
         _:
             return TEXT_PRIMARY

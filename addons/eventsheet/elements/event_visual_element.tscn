@@ -83,7 +83,7 @@ offset_top = 11.0
 offset_right = 266.0
 offset_bottom = 29.0
 theme_override_colors/font_color = Color(0.78, 0.88, 1, 1)
-text = "Condition lane visual preview"
+text = "Condition name → description/value role"
 clip_text = true
 
 [node name="PreviewActionText" type="Label" parent="."]
@@ -93,5 +93,5 @@ offset_top = 11.0
 offset_right = 530.0
 offset_bottom = 29.0
 theme_override_colors/font_color = Color(0.68, 0.92, 0.78, 1)
-text = "Action lane visual preview"
+text = "Action name → description/value role"
 clip_text = true

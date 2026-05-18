@@ -22,6 +22,7 @@ const ROW_MENU_PASTE := 6
 const ROW_MENU_DELETE := 7
 const ROW_MENU_TOGGLE_CONDITION_BLOCK := 8
 const ROW_MENU_TOGGLE_GROUP_FOLD := 9
+const ROW_MENU_ADD_SUB_CONDITION := 10
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -391,6 +392,7 @@ func _build_context_menus() -> void:
     _row_context_menu = PopupMenu.new()
     _row_context_menu.add_item("Add Sub-Event", ROW_MENU_ADD_SUB_EVENT)
     _row_context_menu.add_item("Convert to OR Block", ROW_MENU_TOGGLE_CONDITION_BLOCK)
+    _row_context_menu.add_item("Add Sub-Condition", ROW_MENU_ADD_SUB_CONDITION)
     _row_context_menu.add_item("Close Group", ROW_MENU_TOGGLE_GROUP_FOLD)
     _row_context_menu.add_item("Add Event Below", ROW_MENU_ADD_EVENT_BELOW)
     _row_context_menu.add_item("Add Group Below", ROW_MENU_ADD_GROUP_BELOW)
@@ -470,6 +472,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
     elif key_event.keycode in [KEY_DELETE, KEY_BACKSPACE]:
         _delete_selected_content()
         accept_event()
+    elif key_event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_F2]:
+        if _viewport != null and _viewport.begin_edit_selected():
+            accept_event()
 
 ## Closes the ACE picker when the user clicks anywhere outside the popup rect.
 func _gui_input(event: InputEvent) -> void:
@@ -777,6 +782,16 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
                 _insert_row_below_selection(condition_event)
                 message["text"] = "Added event."
                 return true
+            "new_sub_condition_event":
+                if selected_resource is EventRow:
+                    var child_condition_event: EventRow = EventRow.new()
+                    if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
+                        child_condition_event.trigger = _create_condition_from_definition(definition, params)
+                    else:
+                        child_condition_event.conditions.append(_create_condition_from_definition(definition, params))
+                    (selected_resource as EventRow).sub_events.append(child_condition_event)
+                    message["text"] = "Added sub-condition."
+                    return true
             "append_condition":
                 if selected_resource is EventRow:
                     var target_event: EventRow = selected_resource as EventRow
@@ -1267,6 +1282,10 @@ func _configure_context_menu(menu: PopupMenu) -> void:
                         else "Convert to OR Block"
                     )
                 )
+        var sub_condition_index: int = menu.get_item_index(ROW_MENU_ADD_SUB_CONDITION)
+        if sub_condition_index >= 0:
+            var context_event: EventRow = _context_row.source_resource as EventRow if _context_row != null else null
+            menu.set_item_disabled(sub_condition_index, context_event == null)
         var group_toggle_index: int = menu.get_item_index(ROW_MENU_TOGGLE_GROUP_FOLD)
         if group_toggle_index >= 0:
             var context_group: EventGroup = null
@@ -1359,6 +1378,8 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
             _toggle_context_condition_block()
         ROW_MENU_TOGGLE_GROUP_FOLD:
             _toggle_context_group_fold()
+        ROW_MENU_ADD_SUB_CONDITION:
+            _open_sub_condition_picker_for_context_row()
 
 func _on_variable_context_menu_id_pressed(id: int) -> void:
     if _context_variable.is_empty():
@@ -1563,6 +1584,11 @@ func _insert_child_event_for_context_row() -> void:
     )
     if changed:
         _mark_dirty("Added sub-event.")
+
+func _open_sub_condition_picker_for_context_row() -> void:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        return
+    _ace_picker.open("new_sub_condition_event", false, _context_row.source_resource)
 
 func _insert_context_row_below(resource_entry: Resource, message: String) -> void:
     if resource_entry == null or _context_row == null:

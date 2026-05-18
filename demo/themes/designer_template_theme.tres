@@ -6,6 +6,13 @@
 
 [sub_resource type="Resource" id="Resource_event"]
 script = ExtResource("2_event_style")
+sheet_background_color = Color(0.12, 0.13, 0.16, 1)
+row_background_color = Color(0.12, 0.13, 0.16, 1)
+row_background_alt_color = Color(0.15, 0.16, 0.20, 1)
+row_border_color = Color(0.34, 0.40, 0.49, 0.78)
+condition_lane_color = Color(0.30, 0.56, 0.82, 0.14)
+action_lane_color = Color(0.25, 0.66, 0.56, 0.10)
+lane_divider_color = Color(0.36, 0.42, 0.52, 0.72)
 condition_lane_ratio = 0.40
 minimum_conditions_lane_width = 210
 condition_lane_padding = 8
@@ -13,6 +20,17 @@ condition_badge_column_width = 28
 action_lane_padding = 8
 lane_divider_width = 2
 minimum_row_height = 30
+group_background_color = Color(0.18, 0.19, 0.30, 1)
+group_background_alt_color = Color(0.21, 0.22, 0.35, 1)
+group_accent_color = Color(0.54, 0.48, 0.90, 1)
+group_title_color = Color(0.95, 0.93, 1, 1)
+group_badge_background_color = Color(0.34, 0.30, 0.70, 1)
+group_badge_foreground_color = Color(0.96, 0.95, 1, 1)
+group_fold_background_color = Color(0.54, 0.48, 0.90, 0.20)
+comment_row_background_color = Color(0.14, 0.15, 0.18, 1)
+comment_text_color = Color(0.72, 0.76, 0.82, 1)
+selection_fill_color = Color(0.36, 0.51, 0.79, 0.22)
+hover_fill_color = Color(1, 1, 1, 0.05)
 
 [sub_resource type="Resource" id="Resource_condition"]
 script = ExtResource("3_element_style")

@@ -11,6 +11,7 @@ const EXAMPLE_THEME_PATHS := [
 	"res://demo/themes/soft_light_theme.tres",
 	"res://demo/themes/designer_template_theme.tres"
 ]
+const DESIGNER_THEME_MANIFEST_PATH := "res://demo/themes/designer_template_theme_manifest.cfg"
 
 static func run() -> bool:
 	var passed: bool = true
@@ -18,6 +19,10 @@ static func run() -> bool:
 	passed = _check("style creates event style resource", style.event_style != null, true) and passed
 	passed = _check("style creates condition style resource", style.condition_style != null, true) and passed
 	passed = _check("style creates action style resource", style.action_style != null, true) and passed
+	passed = _check("style exposes sheet background token", style.event_style.sheet_background_color.a > 0.0, true) and passed
+	passed = _check("style exposes group badge token", style.event_style.group_badge_background_color.a > 0.0, true) and passed
+	passed = _check("style exposes comment token", style.event_style.comment_text_color.a > 0.0, true) and passed
+	passed = _check("style exposes interaction token", style.event_style.selection_fill_color.a > 0.0, true) and passed
 	passed = _check("style exposes event visual scene template", style.event_visual_scene != null, true) and passed
 	passed = _check("style exposes condition visual scene template", style.condition_visual_scene != null, true) and passed
 	passed = _check("style exposes action visual scene template", style.action_visual_scene != null, true) and passed
@@ -30,13 +35,28 @@ static func run() -> bool:
 		true
 	) and passed
 	passed = _check(
+		"event template exposes designer usage hint",
+		event_template != null and str(event_template.get("designer_usage_hint")).contains("EventSheet block shell"),
+		true
+	) and passed
+	passed = _check(
 		"condition visual scene builds condition style",
 		condition_template != null and condition_template.has_method("build_element_style") and (condition_template.call("build_element_style") is EventSheetElementStyle),
 		true
 	) and passed
 	passed = _check(
+		"condition template exposes designer usage hint",
+		condition_template != null and str(condition_template.get("designer_usage_hint")).contains("designer-friendly template"),
+		true
+	) and passed
+	passed = _check(
 		"action visual scene builds action style",
 		action_template != null and action_template.has_method("build_element_style") and (action_template.call("build_element_style") is EventSheetElementStyle),
+		true
+	) and passed
+	passed = _check(
+		"action template exposes designer usage hint",
+		action_template != null and str(action_template.get("designer_usage_hint")).contains("designer-friendly template"),
 		true
 	) and passed
 	if event_template != null:
@@ -51,6 +71,8 @@ static func run() -> bool:
 	style.event_style.action_lane_padding = 14
 	style.event_style.lane_divider_width = 4
 	style.event_style.minimum_conditions_lane_width = 220
+	style.event_style.sheet_background_color = Color(0.09, 0.10, 0.12, 1.0)
+	style.event_style.group_badge_background_color = Color(0.40, 0.25, 0.85, 1.0)
 	style.condition_style.font_size_delta = 3
 	style.condition_style.horizontal_padding = 14
 	style.condition_style.vertical_padding = 4
@@ -68,6 +90,8 @@ static func run() -> bool:
 	if loaded_style is EventSheetEditorStyle:
 		var cast_style: EventSheetEditorStyle = loaded_style as EventSheetEditorStyle
 		passed = _check("style round-trip keeps event row height", cast_style.event_style.minimum_row_height, 40) and passed
+		passed = _check("style round-trip keeps sheet background token", cast_style.event_style.sheet_background_color, Color(0.09, 0.10, 0.12, 1.0)) and passed
+		passed = _check("style round-trip keeps group badge token", cast_style.event_style.group_badge_background_color, Color(0.40, 0.25, 0.85, 1.0)) and passed
 		passed = _check("style round-trip keeps condition padding", cast_style.condition_style.horizontal_padding, 14) and passed
 		passed = _check("style round-trip keeps action gap", cast_style.action_style.gap_after, 12) and passed
 
@@ -217,6 +241,14 @@ static func run() -> bool:
 		passed = _check("example theme file exists: %s" % theme_path.get_file(), FileAccess.file_exists(theme_path), true) and passed
 		var example_theme: Resource = ResourceLoader.load(theme_path)
 		passed = _check("example theme loads as EventSheetEditorStyle: %s" % theme_path.get_file(), example_theme is EventSheetEditorStyle, true) and passed
+		if example_theme is EventSheetEditorStyle:
+			var themed_event_style: EventSheetEventStyle = (example_theme as EventSheetEditorStyle).get_event_style()
+			passed = _check("example theme exposes structural tokens: %s" % theme_path.get_file(), themed_event_style.sheet_background_color.a > 0.0 and themed_event_style.selection_fill_color.a > 0.0, true) and passed
+	passed = _check("designer theme manifest exists", FileAccess.file_exists(DESIGNER_THEME_MANIFEST_PATH), true) and passed
+	if FileAccess.file_exists(DESIGNER_THEME_MANIFEST_PATH):
+		var manifest_text: String = FileAccess.get_file_as_string(DESIGNER_THEME_MANIFEST_PATH)
+		passed = _check("designer theme manifest references style resource", manifest_text.contains("designer_template_theme.tres"), true) and passed
+		passed = _check("designer theme manifest lists tokens section", manifest_text.contains("[tokens]"), true) and passed
 
 	dock.free()
 	return passed

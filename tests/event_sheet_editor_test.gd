@@ -392,6 +392,113 @@ static func run() -> bool:
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("ctrl click toggles selected span off", editor_state.get("selected_span_count", 0), 0) and all_passed
 
+    var parity_sheet := EventSheetResource.new()
+    var parity_comment := CommentRow.new()
+    parity_comment.text = "Rewrite me"
+    var parity_group := EventGroup.new()
+    parity_group.name = "Rename Me"
+    parity_group.group_name = parity_group.name
+    var parity_event := EventRow.new()
+    var parity_condition_a := ACECondition.new()
+    parity_condition_a.provider_id = "Core"
+    parity_condition_a.ace_id = "Always"
+    var parity_condition_b := ACECondition.new()
+    parity_condition_b.provider_id = "Core"
+    parity_condition_b.ace_id = "OnReady"
+    var parity_action := ACEAction.new()
+    parity_action.provider_id = "Core"
+    parity_action.ace_id = "QueueFree"
+    parity_event.conditions = [parity_condition_a, parity_condition_b]
+    parity_event.actions = [parity_action]
+    parity_sheet.events = [parity_comment, parity_group, parity_event]
+    dock.setup(parity_sheet)
+    dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
+    dock_viewport = dock.get_viewport_control()
+    var parity_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var parity_event_row: EventRowData = parity_rows[2].get("row")
+    var parity_event_layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
+    var parity_action_lane_rect: Rect2 = parity_event_layout.get("action_lane_rect", Rect2())
+    var parity_group_row_rect: Rect2 = dock_viewport.get_row_layout_for_test(1, 640.0).get("row_rect", Rect2())
+    var parity_comment_row_rect: Rect2 = dock_viewport.get_row_layout_for_test(0, 640.0).get("row_rect", Rect2())
+    var parity_condition_index: int = _find_last_span_index_by_kind(parity_event_row, "condition")
+    var parity_condition_click := InputEventMouseButton.new()
+    parity_condition_click.pressed = true
+    parity_condition_click.button_index = MOUSE_BUTTON_LEFT
+    parity_condition_click.position = parity_event_row.spans[parity_condition_index].rect.get_center()
+    dock_viewport._handle_mouse_button(parity_condition_click)
+    var parity_context: Dictionary = dock_viewport.get_selected_context()
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("left-click condition selects individual condition span", parity_context.get("span_metadata", {}).get("kind", ""), "condition") and all_passed
+    all_passed = _check("left-click condition keeps span selection count at one", editor_state.get("selected_span_count", 0), 1) and all_passed
+    var parity_body_click := InputEventMouseButton.new()
+    parity_body_click.pressed = true
+    parity_body_click.button_index = MOUSE_BUTTON_LEFT
+    parity_body_click.position = Vector2(
+        parity_action_lane_rect.position.x + 18.0,
+        parity_event_row.spans[parity_condition_index].rect.get_center().y
+    )
+    dock_viewport._handle_mouse_button(parity_body_click)
+    parity_context = dock_viewport.get_selected_context()
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("left-click event block body selects whole event block", parity_context.get("source_resource", null) == parity_event and parity_context.get("span", null) == null, true) and all_passed
+    all_passed = _check("event block body selection clears span selection", editor_state.get("selected_span_count", 0), 0) and all_passed
+    var parity_group_click := InputEventMouseButton.new()
+    parity_group_click.pressed = true
+    parity_group_click.button_index = MOUSE_BUTTON_LEFT
+    parity_group_click.position = parity_group_row_rect.get_center()
+    dock_viewport._handle_mouse_button(parity_group_click)
+    parity_context = dock_viewport.get_selected_context()
+    all_passed = _check("left-click group selects group row", parity_context.get("source_resource", null) is EventGroup, true) and all_passed
+    var parity_comment_click := InputEventMouseButton.new()
+    parity_comment_click.pressed = true
+    parity_comment_click.button_index = MOUSE_BUTTON_LEFT
+    parity_comment_click.position = parity_comment_row_rect.get_center()
+    dock_viewport._handle_mouse_button(parity_comment_click)
+    parity_context = dock_viewport.get_selected_context()
+    all_passed = _check("left-click comment selects comment row", parity_context.get("source_resource", null) is CommentRow, true) and all_passed
+    var rename_key := InputEventKey.new()
+    rename_key.pressed = true
+    rename_key.keycode = KEY_ENTER
+    dock_viewport._select_row(1)
+    dock._unhandled_key_input(rename_key)
+    var editing_context: Dictionary = dock_viewport.get_editing_context_for_test()
+    all_passed = _check("enter on selected group opens rename behavior", editing_context.get("row_index", -1), 1) and all_passed
+    all_passed = _check("group rename starts with current group name", editing_context.get("buffer", ""), "Rename Me") and all_passed
+    dock_viewport._cancel_edit()
+    dock_viewport._select_row(0)
+    dock._unhandled_key_input(rename_key)
+    editing_context = dock_viewport.get_editing_context_for_test()
+    all_passed = _check("enter on selected comment opens rewrite behavior", editing_context.get("row_index", -1), 0) and all_passed
+    dock_viewport._editing_buffer = "Rewritten once"
+    dock_viewport._commit_edit()
+    dock_viewport._select_row(0)
+    dock._unhandled_key_input(rename_key)
+    dock_viewport._editing_buffer = "Rewritten twice"
+    dock_viewport._commit_edit()
+    all_passed = _check("comment rewrite flow can edit an existing comment multiple times", ((dock.get_current_sheet().events[0]) as CommentRow).text, "Rewritten twice") and all_passed
+
+    var sub_condition_sheet := EventSheetResource.new()
+    var parent_event := EventRow.new()
+    sub_condition_sheet.events = [parent_event]
+    dock.setup(sub_condition_sheet)
+    dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
+    dock_viewport = dock.get_viewport_control()
+    dock._context_row = dock_viewport.get_flat_rows()[0].get("row")
+    dock._context_hit = {"span_metadata": {}, "span_index": -1}
+    dock._configure_context_menu(dock._row_context_menu)
+    var sub_condition_menu_index: int = dock._row_context_menu.get_item_index(EventSheetDock.ROW_MENU_ADD_SUB_CONDITION)
+    all_passed = _check("row context menu exposes add sub-condition entry for events", sub_condition_menu_index >= 0 and not dock._row_context_menu.is_item_disabled(sub_condition_menu_index), true) and all_passed
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_ADD_SUB_CONDITION)
+    all_passed = _check("right-click add sub-condition routes through ace picker", dock._ace_picker._context.get("mode", ""), "new_sub_condition_event") and all_passed
+    var sub_condition_definition: ACEDefinition = dock._find_definition("Core", "Always")
+    dock._apply_ace_definition(sub_condition_definition, {}, dock._ace_picker._context)
+    all_passed = _check("add sub-condition appends a child event", parent_event.sub_events.size(), 1) and all_passed
+    all_passed = _check("sub-condition child event stores condition entry", (parent_event.sub_events[0] as EventRow).conditions.size(), 1) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo removes added sub-condition child event", parent_event.sub_events.size(), 0) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo restores added sub-condition child event", parent_event.sub_events.size(), 1) and all_passed
+
     var delete_sheet := EventSheetResource.new()
     var delete_event := EventRow.new()
     var delete_condition_a := ACECondition.new()
@@ -500,7 +607,7 @@ static func run() -> bool:
     var row_after_disable: EventRowData = dock_viewport.get_flat_rows()[2].get("row")
     all_passed = _check("row disabled scaffold persists by uid", row_after_disable.disabled, true) and all_passed
 
-    dock_viewport._begin_edit(0, 1)
+    dock_viewport._begin_edit(0, 0)
     dock_viewport._editing_buffer = "Changed note"
     dock_viewport._commit_edit()
     all_passed = _check("inline edit updates comment resource", ((dock.get_current_sheet().events[0] as CommentRow).text), "Changed note") and all_passed

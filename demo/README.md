@@ -27,5 +27,8 @@ Bundled example themes live in `res://demo/themes/`:
 - `high_contrast_theme.tres`
 - `soft_light_theme.tres`
 - `designer_template_theme.tres`
+- `designer_template_theme_manifest.cfg`
 
 Load them from the EventSheet dock with **Load Theme**.
+
+The manifest file is a token/package template for designers who want a Construct-style installable theme workflow.

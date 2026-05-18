@@ -35,6 +35,8 @@ Designer workflow:
 The custom-rendered viewport keeps the existing performant row renderer, but it now resolves its
 Event/Condition/Action look from these Godot-editable visual scene templates (hybrid scene-driven styling).
 
+For the Construct-inspired token mapping and designer package workflow, see `docs/EVENTSHEET_THEME_TOKEN_SPEC.md` and `demo/themes/designer_template_theme_manifest.cfg`.
+
 ## Current status
 
 | Area | Status |

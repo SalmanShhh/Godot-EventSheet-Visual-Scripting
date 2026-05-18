@@ -411,9 +411,15 @@ func _notification(what: int) -> void:
 func _draw() -> void:
     var zoom: float = max(_zoom_factor, 0.001)
     var width: float = _get_logical_canvas_width()
+    var background_color: Color = _get_event_style().sheet_background_color
     _layout_cache.reset(width)
+    draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
+    draw_rect(
+        Rect2(Vector2.ZERO, Vector2(width, max(size.y / zoom, 240.0))),
+        background_color,
+        true
+    )
     if _flat_rows.is_empty():
-        draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
         _draw_empty_state(width)
         return
     var visible_range: Vector2i = get_visible_row_range()
@@ -421,7 +427,6 @@ func _draw() -> void:
         return
     var font: Font = _get_font()
     var font_size: int = _get_font_size()
-    draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
     for index in range(visible_range.x, visible_range.y + 1):
         var row_info: Dictionary = _flat_rows[index]
         var row_data: EventRowData = row_info.get("row")
@@ -586,8 +591,11 @@ func _draw_box_selection_overlay() -> void:
     var selection_rect: Rect2 = Rect2(_box_select_start, Vector2.ZERO).expand(_box_select_current)
     if selection_rect.size.length_squared() <= MIN_BOX_SELECT_DISTANCE_SQ:
         return
-    draw_rect(selection_rect, Color(0.36, 0.60, 0.92, 0.22), true)
-    draw_rect(selection_rect, Color(0.55, 0.75, 0.98, 0.9), false, 1.0)
+    var selection_fill: Color = _get_event_style().selection_fill_color
+    var selection_outline: Color = selection_fill.lightened(0.22)
+    selection_outline.a = max(selection_fill.a, 0.9)
+    draw_rect(selection_rect, selection_fill, true)
+    draw_rect(selection_rect, selection_outline, false, 1.0)
 
 func _apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
     if not additive:
@@ -902,6 +910,7 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
     return null
 
 func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
+    var event_style: EventSheetEventStyle = _get_event_style()
     var row_data := EventRowData.new()
     row_data.indent = indent
     row_data.row_type = EventRowData.RowType.GROUP
@@ -919,15 +928,20 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
                 "editable": false,
                 "badge": true,
                 "badge_style": "group",
-                "badge_bg": EventSheetPalette.COLOR_GROUP_BADGE_BG,
-                "badge_fg": EventSheetPalette.COLOR_GROUP_BADGE_FG,
+                "badge_bg": event_style.group_badge_background_color,
+                "badge_fg": event_style.group_badge_foreground_color,
                 "group_badge": true
             }
         ),
         _make_span(
             _group_name(group),
             SemanticSpan.SpanType.OBJECT,
-            {"editable": true, "edit_kind": "group_name", "group_title": true}
+            {
+                "editable": true,
+                "edit_kind": "group_name",
+                "group_title": true,
+                "text_color": event_style.group_title_color
+            }
         )
     ]
     for child in _group_children(group):
@@ -937,6 +951,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
     return row_data
 
 func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
+    var event_style: EventSheetEventStyle = _get_event_style()
     var row_data := EventRowData.new()
     row_data.indent = indent
     row_data.row_type = EventRowData.RowType.COMMENT
@@ -947,7 +962,15 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
     row_data.disabled = not comment_row.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
     row_data.breakpoint_enabled = bool(_breakpoint_rows.get(row_data.row_uid, false))
     row_data.spans = [
-        _make_span(comment_row.text if not comment_row.text.is_empty() else "Comment", SemanticSpan.SpanType.COMMENT, {"editable": true, "edit_kind": "comment_text"})
+        _make_span(
+            comment_row.text if not comment_row.text.is_empty() else "Comment",
+            SemanticSpan.SpanType.COMMENT,
+            {
+                "editable": true,
+                "edit_kind": "comment_text",
+                "text_color": event_style.comment_text_color
+            }
+        )
     ]
     return row_data
 
@@ -1532,11 +1555,6 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     return layout
 
 func _draw_empty_state(width: float) -> void:
-    draw_rect(
-        Rect2(Vector2.ZERO, Vector2(width, max(size.y / max(_zoom_factor, 0.001), 240.0))),
-        EventSheetPalette.BG_0,
-        true
-    )
     var font: Font = _get_font()
     var font_size: int = _get_font_size()
     var text: String = "No rows. Select an EventSheet resource or use the dock's demo sheet."
@@ -1715,6 +1733,18 @@ func _begin_edit(row_index: int, span_index: int) -> void:
     _editing_buffer = span.text
     _editing_caret = _editing_buffer.length()
     queue_redraw()
+
+func begin_edit_selected() -> bool:
+    var editing_before: int = _editing_row_index
+    _begin_edit(_selected_row_index, _selected_span_index)
+    return _editing_row_index >= 0 and _editing_row_index != editing_before
+
+func get_editing_context_for_test() -> Dictionary:
+    return {
+        "row_index": _editing_row_index,
+        "span_index": _editing_span_index,
+        "buffer": _editing_buffer
+    }
 
 func _find_first_editable_span(row_data: EventRowData) -> int:
     for index in range(row_data.spans.size()):

@@ -2,6 +2,11 @@
 class_name EventSheetChipElementTemplate
 extends Button
 
+@export_group("Designer Guide")
+@export_multiline var designer_usage_hint: String = "Use this scene as the designer-friendly template for one Construct-style lane entry. The button chrome maps to the name cell, while the text preview stands in for the readable description/value content shown in the stacked EventSheet lane."
+@export_multiline var lane_role_hint: String = "Condition templates usually represent badge + name/description cells inside the left lane. Action templates represent the name/description cells in the right lane. Duplicate this scene when you want a new shipped theme starting point."
+
+@export_group("Token Controls")
 @export var horizontal_padding: int = 8
 @export var vertical_padding: int = 2
 @export var gap_after: int = 8

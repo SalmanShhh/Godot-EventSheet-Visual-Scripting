@@ -58,3 +58,9 @@ Token sizing/spacing lives in `EventSheetElementStyle`:
 - Layout + hit targets: `res://addons/eventsheet/editor/event_sheet_viewport.gd`
 - Row rendering/chrome: `res://addons/eventsheet/editor/event_row_renderer.gd`
 - Theme resources: `res://addons/eventsheet/theme/*.gd`
+
+
+## Theme token cross-reference
+
+For the full Construct-inspired token list, see `res://docs/EVENTSHEET_THEME_TOKEN_SPEC.md`.
+Structural layout tuning still lives primarily in `EventSheetEventStyle`, while entry visuals live in `EventSheetElementStyle`.

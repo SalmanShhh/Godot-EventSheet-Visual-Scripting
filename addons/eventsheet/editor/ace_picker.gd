@@ -59,7 +59,7 @@ func set_registry(registry: EventSheetACERegistry) -> void:
 	_registry = registry
 
 ## Open the picker for the given mode.
-## mode: "new_event" | "new_condition_event" | "append_condition" | "append_action"
+## mode: "new_event" | "new_condition_event" | "new_sub_condition_event" | "append_condition" | "append_action"
 ##       | "replace_condition" | "replace_action" | "replace_trigger"
 ## signals_only: restrict results to signal triggers
 ## selected_resource: the currently selected EventRow (for context passing)
@@ -87,6 +87,8 @@ func _build_hint_text(mode: String, signals_only: bool) -> String:
 	match mode:
 		"new_condition_event":
 			return "Select a condition or trigger ACE to create a new event."
+		"new_sub_condition_event":
+			return "Select a condition or trigger ACE to create a nested sub-condition event."
 		"append_condition":
 			return "Select a condition or trigger ACE to append to the selected event."
 		"append_action":
@@ -139,6 +141,8 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 		return definition.ace_type == ACEDefinition.ACEType.TRIGGER and is_signal
 	match mode:
 		"new_condition_event":
+			return definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]
+		"new_sub_condition_event":
 			return definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]
 		"append_condition":
 			return definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]

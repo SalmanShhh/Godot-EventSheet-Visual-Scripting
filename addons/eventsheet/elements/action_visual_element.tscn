@@ -37,5 +37,5 @@ grow_vertical = 2
 theme_override_colors/font_color = Color(0.68, 0.92, 0.78, 1)
 theme_override_styles/normal = SubResource("1")
 theme_override_styles/hover = SubResource("2")
-text = "Action visual chip template"
+text = "Action name → readable description/value"
 script = ExtResource("1")
