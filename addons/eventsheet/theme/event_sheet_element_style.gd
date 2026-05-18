@@ -10,6 +10,8 @@ const MIN_LINE_HEIGHT_EXTRA := 10
 @export var chip_hover_color: Color = Color(1.0, 1.0, 1.0, 0.14)
 @export var badge_background_color: Color = EventSheetPalette.COLOR_LANE_DIVIDER
 @export var badge_foreground_color: Color = EventSheetPalette.TEXT_PRIMARY
+# Negative deltas are intentional so a style asset can subtly soften chip text
+# while EventSheetPalette.clamp_font_size() still guards readability.
 @export_range(-2, 12, 1) var font_size_delta: int = 0
 @export_range(0, 24, 1) var horizontal_padding: int = 8
 @export_range(0, 16, 1) var vertical_padding: int = 2

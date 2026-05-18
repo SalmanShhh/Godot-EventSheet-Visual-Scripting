@@ -205,7 +205,7 @@ func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size
         var draw_font_size: int = font_size + int(metadata.get("font_size_delta", 0))
         if row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false)):
             draw_font_size += 1
-        draw_font_size = max(draw_font_size, EventSheetPalette.MIN_FONT_SIZE)
+        draw_font_size = EventSheetPalette.clamp_font_size(draw_font_size)
         var baseline_y: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) + (draw_font_size * FONT_BASELINE_OFFSET_RATIO)
         var text_padding: float = float(metadata.get("padding_x", 0.0)) if bool(metadata.get("chip", false)) else 0.0
         var text_x: float = span.rect.position.x + text_padding
@@ -280,7 +280,7 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
     var badge_bg: Color = metadata.get("badge_bg", EventSheetPalette.COLOR_LANE_DIVIDER)
     var badge_fg: Color = metadata.get("badge_fg", TEXT_PRIMARY)
     var badge_style: String = str(metadata.get("badge_style", ""))
-    var badge_font_size: int = max(font_size + int(metadata.get("font_size_delta", 0)) - BADGE_FONT_SIZE_DELTA, EventSheetPalette.MIN_FONT_SIZE)
+    var badge_font_size: int = EventSheetPalette.clamp_font_size(font_size + int(metadata.get("font_size_delta", 0)) - BADGE_FONT_SIZE_DELTA)
     if badge_style in ["trigger", "negated"]:
         var radius: float = min(badge_rect.size.x, badge_rect.size.y) * 0.45
         control.draw_circle(badge_rect.get_center(), radius, badge_bg)

@@ -1149,8 +1149,9 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
     if span == null:
         return 0.0
     var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
-    var draw_font_size: int = max(font_size + int(metadata.get("font_size_delta", 0)), EventSheetPalette.MIN_FONT_SIZE)
+    var font_size_delta: int = int(metadata.get("font_size_delta", 0))
     var horizontal_padding: float = float(metadata.get("padding_x", 0.0))
+    var draw_font_size: int = EventSheetPalette.clamp_font_size(font_size + font_size_delta)
     var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
     if bool(metadata.get("badge", false)):
         span_width += max(float(metadata.get("badge_extra_width", BADGE_EXTRA_WIDTH)), 0.0)
