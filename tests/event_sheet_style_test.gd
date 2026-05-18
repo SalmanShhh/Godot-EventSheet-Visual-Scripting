@@ -197,7 +197,8 @@ static func run() -> bool:
 		Color(1.0, 0.42, 0.42, 1.0)
 	) and passed
 	custom_theme.action_style.text_color = Color(0.35, 1.0, 0.50, 1.0)
-	ResourceSaver.save(custom_theme, custom_theme_path)
+	var custom_theme_resaved: Error = ResourceSaver.save(custom_theme, custom_theme_path)
+	passed = _check("custom theme re-save succeeds", custom_theme_resaved, OK) and passed
 	passed = _check("dock reloads active theme file", dock.reload_active_theme(), true) and passed
 	passed = _check(
 		"reloaded theme picks updated action text color",

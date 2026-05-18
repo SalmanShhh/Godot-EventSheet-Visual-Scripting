@@ -58,6 +58,7 @@ const DROP_ZONE_INSIDE_TOP := 0.33
 const DROP_ZONE_INSIDE_BOTTOM := 0.67
 const DROP_ZONE_AFTER_THRESHOLD := 0.5
 const MIN_BOX_SELECT_DISTANCE := 1.0
+const MIN_BOX_SELECT_DISTANCE_SQ := MIN_BOX_SELECT_DISTANCE * MIN_BOX_SELECT_DISTANCE
 
 var _renderer: EventRowRenderer = EventRowRenderer.new()
 var _layout_cache: RowLayoutCache = RowLayoutCache.new()
@@ -566,7 +567,7 @@ func _complete_box_selection() -> void:
     if not _box_select_active:
         return
     var selection_rect: Rect2 = Rect2(_box_select_start, Vector2.ZERO).expand(_box_select_current)
-    if selection_rect.size.length_squared() <= MIN_BOX_SELECT_DISTANCE * MIN_BOX_SELECT_DISTANCE:
+    if selection_rect.size.length_squared() <= MIN_BOX_SELECT_DISTANCE_SQ:
         _box_select_active = false
         _box_select_additive = false
         queue_redraw()
@@ -580,7 +581,7 @@ func _draw_box_selection_overlay() -> void:
     if not _box_select_active:
         return
     var selection_rect: Rect2 = Rect2(_box_select_start, Vector2.ZERO).expand(_box_select_current)
-    if selection_rect.size.length_squared() <= MIN_BOX_SELECT_DISTANCE * MIN_BOX_SELECT_DISTANCE:
+    if selection_rect.size.length_squared() <= MIN_BOX_SELECT_DISTANCE_SQ:
         return
     draw_rect(selection_rect, Color(0.36, 0.60, 0.92, 0.22), true)
     draw_rect(selection_rect, Color(0.55, 0.75, 0.98, 0.9), false, 1.0)
