@@ -1735,8 +1735,22 @@ func _begin_edit(row_index: int, span_index: int) -> void:
     queue_redraw()
 
 func begin_edit_selected() -> bool:
+    if _selected_row_index < 0:
+        return false
+    var row_data: EventRowData = _row_at(_selected_row_index)
+    if row_data == null:
+        return false
+    var resolved_span_index: int = _selected_span_index
+    if resolved_span_index < 0:
+        resolved_span_index = _find_first_editable_span(row_data)
+    if resolved_span_index < 0 or resolved_span_index >= row_data.spans.size():
+        return false
+    var span: SemanticSpan = row_data.spans[resolved_span_index]
+    var metadata: Dictionary = span.metadata if span != null and span.metadata is Dictionary else {}
+    if not bool(metadata.get("editable", false)):
+        return false
     _begin_edit(_selected_row_index, _selected_span_index)
-    return _editing_row_index >= 0
+    return _editing_row_index == _selected_row_index and _editing_span_index == resolved_span_index
 
 func get_editing_context_for_test() -> Dictionary:
     return {
