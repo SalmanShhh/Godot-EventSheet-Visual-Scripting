@@ -5,6 +5,7 @@ extends RefCounted
 const ROW_HEIGHT := 28
 const INDENT_WIDTH := 18
 const FONT_SIZE := 13
+const MIN_FONT_SIZE := 8
 const GUTTER_WIDTH := 20
 const ICON_SIZE := 10
 const ROW_HORIZONTAL_PADDING := 10.0
