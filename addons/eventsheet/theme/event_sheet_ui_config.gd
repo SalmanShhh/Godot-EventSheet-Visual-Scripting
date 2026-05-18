@@ -2,7 +2,7 @@
 ##
 ## Create an instance of this resource (File > New Resource > EventSheetUIConfig)
 ## and assign it via EventSheetDock.apply_ui_config() or the editor plugin to
-## override the default EventSheet colour palette and sizing constants.
+## override the default EventSheet color palette and sizing constants.
 ##
 ## Example:
 ##   var config := EventSheetUIConfig.new()
@@ -13,13 +13,13 @@
 class_name EventSheetUIConfig
 extends Resource
 
-## Background colour for even-depth group rows.
+## Background color for even-depth group rows.
 @export var group_bg_color: Color = Color("#222139")
-## Background colour for odd-depth (alternating) group rows.
+## Background color for odd-depth (alternating) group rows.
 @export var group_bg_alt_color: Color = Color("#262444")
-## Accent stripe / border colour used on the left edge of group rows.
+## Accent stripe / border color used on the left edge of group rows.
 @export var group_accent_color: Color = Color("#8c78ff")
-## Title text colour for group row labels.
+## Title text color for group row labels.
 @export var group_title_color: Color = Color("#f2ecff")
 ## Background tint for the fold-arrow hit area inside a group row.
 @export var group_fold_bg_color: Color = Color(0.55, 0.48, 0.94, 0.20)
@@ -28,19 +28,19 @@ extends Resource
 @export var lane_conditions_color: Color = Color(0.30, 0.56, 0.82, 0.08)
 ## Tint applied to the action (right) lane background.
 @export var lane_actions_color: Color = Color(0.25, 0.66, 0.56, 0.06)
-## Colour of the thin vertical divider line between condition and action lanes.
+## Color of the thin vertical divider line between condition and action lanes.
 @export var lane_divider_color: Color = Color("#2f3641")
 
-## Row selection highlight colour (should have low alpha).
+## Row selection highlight color (should have low alpha).
 @export var selection_color: Color = Color(0.36, 0.51, 0.79, 0.22)
-## Row hover highlight colour (should have very low alpha).
+## Row hover highlight color (should have very low alpha).
 @export var hover_color: Color = Color(1.0, 1.0, 1.0, 0.045)
 
-## Primary text colour used for most row labels.
+## Primary text color used for most row labels.
 @export var text_primary_color: Color = Color("#d7dae0")
-## Secondary / dimmed text colour.
+## Secondary / dimmed text color.
 @export var text_secondary_color: Color = Color("#9aa1ad")
-## Muted text colour (line numbers, separators, etc.).
+## Muted text color (line numbers, separators, etc.).
 @export var text_muted_color: Color = Color("#6f7580")
 
 ## Base row height in logical pixels.

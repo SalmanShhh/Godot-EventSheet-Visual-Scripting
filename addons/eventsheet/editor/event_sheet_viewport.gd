@@ -411,16 +411,16 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
             if _maybe_request_ace_edit(hit, row_index):
                 accept_event()
                 return
-            var dbl_row_data: EventRowData = _row_at(row_index)
-            if dbl_row_data != null and dbl_row_data.row_type == EventRowData.RowType.GROUP:
-                if dbl_row_data.source_resource is EventGroup:
-                    group_rename_requested.emit(dbl_row_data, _group_name(dbl_row_data.source_resource as EventGroup))
+            var double_clicked_row_data: EventRowData = _row_at(row_index)
+            if double_clicked_row_data != null and double_clicked_row_data.row_type == EventRowData.RowType.GROUP:
+                if double_clicked_row_data.source_resource is EventGroup:
+                    group_rename_requested.emit(double_clicked_row_data, _group_name(double_clicked_row_data.source_resource as EventGroup))
                     accept_event()
                     return
-            if dbl_row_data != null and dbl_row_data.row_type == EventRowData.RowType.SECTION:
-                var var_meta: Dictionary = _extract_variable_meta(dbl_row_data)
+            if double_clicked_row_data != null and double_clicked_row_data.row_type == EventRowData.RowType.SECTION:
+                var var_meta: Dictionary = _extract_variable_meta(double_clicked_row_data)
                 if not var_meta.is_empty():
-                    variable_edit_requested.emit(dbl_row_data, var_meta)
+                    variable_edit_requested.emit(double_clicked_row_data, var_meta)
                     accept_event()
                     return
             _begin_edit(row_index, span_index)
