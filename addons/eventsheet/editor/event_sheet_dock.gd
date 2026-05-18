@@ -197,6 +197,9 @@ func _build_ui() -> void:
     _viewport.ace_drop_requested.connect(_on_viewport_ace_drop_requested)
     _viewport.drag_status_requested.connect(_on_viewport_drag_status_requested)
     _viewport.context_menu_requested.connect(_on_viewport_context_menu_requested)
+    _viewport.group_rename_requested.connect(_on_viewport_group_rename_requested)
+    _viewport.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
+    _viewport.variable_drop_requested.connect(_on_variable_drop_requested)
     _viewport.set_external_span_edit_handler_enabled(true)
 
     _status_label = Label.new()
@@ -1421,6 +1424,137 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
     )
     if updated:
         _mark_dirty("Updated row text.")
+
+func _on_viewport_group_rename_requested(row_data: EventRowData, current_name: String) -> void:
+    if row_data == null or not (row_data.source_resource is EventGroup):
+        return
+    var dialog: ConfirmationDialog = ConfirmationDialog.new()
+    dialog.title = "Rename Group"
+    var content: VBoxContainer = VBoxContainer.new()
+    content.custom_minimum_size = Vector2(360.0, 56.0)
+    dialog.add_child(content)
+    var name_edit: LineEdit = LineEdit.new()
+    name_edit.text = current_name
+    name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    content.add_child(name_edit)
+    var captured_row: EventRowData = row_data
+    var captured_name: String = current_name
+    dialog.confirmed.connect(func() -> void:
+        var new_name: String = name_edit.text.strip_edges()
+        if not new_name.is_empty() and new_name != captured_name:
+            _on_viewport_span_edit_requested(captured_row, "group_name", captured_name, new_name)
+        dialog.queue_free()
+    )
+    dialog.canceled.connect(func() -> void: dialog.queue_free())
+    dialog.close_requested.connect(func() -> void: dialog.queue_free())
+    add_child(dialog)
+    dialog.popup_centered(Vector2i(380, 110))
+    name_edit.grab_focus()
+    name_edit.select_all()
+
+func _on_viewport_variable_edit_requested(row_data: EventRowData, variable_meta: Dictionary) -> void:
+    if row_data == null or variable_meta.is_empty():
+        return
+    _context_row = row_data
+    _context_hit = {"span_metadata": variable_meta, "span_index": -1}
+    _context_variable = _context_variable_entry_from_metadata(row_data, variable_meta)
+    if _context_variable.is_empty():
+        _set_status("Could not resolve variable for editing.", true)
+        return
+    _edit_context_variable()
+
+func _on_variable_drop_requested(
+    source_row: EventRowData,
+    target_row: EventRowData,
+    drop_mode: String,
+    source_meta: Dictionary,
+    target_meta: Dictionary,
+    copy_mode: bool
+) -> void:
+    if source_meta.is_empty() or _current_sheet == null:
+        return
+    var source_scope: String = str(source_meta.get("variable_scope", ""))
+    var source_name: String = str(source_meta.get("variable_name", ""))
+    if source_scope.is_empty() or source_name.is_empty():
+        return
+    var target_scope: String = str(target_meta.get("variable_scope", ""))
+    if source_scope == "local" and target_scope == "local":
+        var source_event: EventRow = source_row.source_resource as EventRow if source_row != null else null
+        var target_event: EventRow = target_row.source_resource as EventRow if target_row != null else null
+        if source_event != null and source_event == target_event:
+            var moved: bool = _perform_undoable_sheet_edit("Reorder Local Variable", func() -> bool:
+                return _reorder_local_variable(
+                    source_event,
+                    int(source_meta.get("variable_index", -1)),
+                    int(target_meta.get("variable_index", -1)),
+                    drop_mode
+                )
+            )
+            if moved:
+                _mark_dirty("Reordered local variable.")
+            return
+        if source_event != null and target_event != null and source_event != target_event:
+            var source_var_index: int = int(source_meta.get("variable_index", -1))
+            var moved_across: bool = _perform_undoable_sheet_edit("Move Local Variable to Event", func() -> bool:
+                if source_var_index < 0 or source_var_index >= source_event.local_variables.size():
+                    return false
+                var local_var: LocalVariable = source_event.local_variables[source_var_index]
+                if local_var == null:
+                    return false
+                if _resolve_local_variable(target_event, local_var.name) != null:
+                    _set_status("Target event already has a local variable named %s." % local_var.name, true)
+                    return false
+                source_event.local_variables.remove_at(source_var_index)
+                target_event.local_variables.append(local_var)
+                return true
+            )
+            if moved_across:
+                _mark_dirty("Moved local variable to different event.")
+            return
+    if source_scope == "local" and (target_scope == "global" or target_scope.is_empty()):
+        var context_entry: Dictionary = _context_variable_entry_from_metadata(source_row, source_meta)
+        if context_entry.is_empty():
+            return
+        _context_variable = context_entry
+        _convert_context_variable_scope()
+        return
+    if source_scope == "global" and target_scope == "local":
+        var context_entry: Dictionary = _context_variable_entry_from_metadata(source_row, source_meta)
+        if context_entry.is_empty():
+            return
+        var target_event: EventRow = target_row.source_resource as EventRow if target_row != null else null
+        if target_event == null:
+            return
+        _convert_variable_scope(context_entry, "local", target_event.event_uid)
+        return
+    if source_scope == "global" and (target_scope.is_empty() or target_scope == "global"):
+        if target_row != null and target_row.source_resource is EventRow:
+            var context_entry: Dictionary = _context_variable_entry_from_metadata(source_row, source_meta)
+            if context_entry.is_empty():
+                return
+            _convert_variable_scope(context_entry, "local", (target_row.source_resource as EventRow).event_uid)
+
+func _reorder_local_variable(event_row: EventRow, source_index: int, target_index: int, drop_mode: String) -> bool:
+    if event_row == null:
+        return false
+    var count: int = event_row.local_variables.size()
+    if source_index < 0 or source_index >= count or target_index < 0 or target_index >= count:
+        return false
+    if source_index == target_index:
+        return false
+    var moved_var: LocalVariable = event_row.local_variables[source_index]
+    event_row.local_variables.remove_at(source_index)
+    var insert_at: int = target_index if source_index > target_index else target_index - 1
+    if drop_mode == "after":
+        insert_at = mini(insert_at + 1, event_row.local_variables.size())
+    else:
+        insert_at = maxi(insert_at, 0)
+    event_row.local_variables.insert(insert_at, moved_var)
+    return true
+
+func apply_ui_config(config: EventSheetUIConfig) -> void:
+    if _viewport != null:
+        _viewport.set_ui_config(config)
 
 # ── Variable dialog signal handler ────────────────────────────────────────────
 

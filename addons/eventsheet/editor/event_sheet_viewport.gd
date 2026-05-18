@@ -19,6 +19,9 @@ signal ace_drop_requested(
 )
 signal context_menu_requested(row_data: EventRowData, hit: Dictionary, global_position: Vector2)
 signal drag_status_requested(message: String, is_error: bool)
+signal group_rename_requested(row_data: EventRowData, current_name: String)
+signal variable_edit_requested(row_data: EventRowData, variable_meta: Dictionary)
+signal variable_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String, source_meta: Dictionary, target_meta: Dictionary, copy_mode: bool)
 
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
@@ -408,6 +411,18 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
             if _maybe_request_ace_edit(hit, row_index):
                 accept_event()
                 return
+            var dbl_row_data: EventRowData = _row_at(row_index)
+            if dbl_row_data != null and dbl_row_data.row_type == EventRowData.RowType.GROUP:
+                if dbl_row_data.source_resource is EventGroup:
+                    group_rename_requested.emit(dbl_row_data, _group_name(dbl_row_data.source_resource as EventGroup))
+                    accept_event()
+                    return
+            if dbl_row_data != null and dbl_row_data.row_type == EventRowData.RowType.SECTION:
+                var var_meta: Dictionary = _extract_variable_meta(dbl_row_data)
+                if not var_meta.is_empty():
+                    variable_edit_requested.emit(dbl_row_data, var_meta)
+                    accept_event()
+                    return
             _begin_edit(row_index, span_index)
             return
         _drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
@@ -425,6 +440,15 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
     if _drag_row_index >= 0 and _drag_target_index >= 0 and not _drag_row_indices.has(_drag_target_index):
         var target_row: EventRowData = _row_at(_drag_target_index)
         if target_row != null:
+            var primary_source_row: EventRowData = _row_at(_drag_row_index)
+            if _drag_row_indices.size() == 1 and primary_source_row != null and primary_source_row.row_type == EventRowData.RowType.SECTION:
+                var source_meta: Dictionary = _extract_variable_meta(primary_source_row)
+                if not source_meta.is_empty():
+                    var target_meta: Dictionary = _extract_variable_meta(target_row)
+                    variable_drop_requested.emit(primary_source_row, target_row, _drag_target_mode, source_meta, target_meta, _drag_row_copy_mode)
+                    _clear_row_drag()
+                    queue_redraw()
+                    return
             if _drag_row_indices.size() > 1:
                 var dragged_rows: Array = []
                 for source_index in _drag_row_indices:
@@ -1897,6 +1921,21 @@ func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []
         if _is_trigger_condition(condition as ACECondition):
             return true
     return false
+
+func _extract_variable_meta(row_data: EventRowData) -> Dictionary:
+    if row_data == null or row_data.row_type != EventRowData.RowType.SECTION:
+        return {}
+    for span in row_data.spans:
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        var meta: Dictionary = span.metadata as Dictionary
+        if str(meta.get("kind", "")) == "variable":
+            return meta.duplicate(true)
+    return {}
+
+func set_ui_config(config: EventSheetUIConfig) -> void:
+    _renderer.set_ui_config(config)
+    queue_redraw()
 
 func _format_action_descriptor(action: ACEAction) -> String:
     var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
