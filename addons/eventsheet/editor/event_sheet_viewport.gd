@@ -61,6 +61,10 @@ const MIN_BOX_SELECT_DISTANCE := 1.0
 const MIN_BOX_SELECT_DISTANCE_SQ := MIN_BOX_SELECT_DISTANCE * MIN_BOX_SELECT_DISTANCE
 const COMMENT_DEFAULT_LINE_INDEX := 1
 const MIN_SPAN_WIDTH := 10.0
+const ACTION_INSERT_PREVIEW_EDGE_OFFSET := 2.0
+const ACTION_INSERT_PREVIEW_MARGIN := 8.0
+const ACTION_INSERT_PREVIEW_MIN_WIDTH := 8.0
+const ACTION_INSERT_PREVIEW_THICKNESS := 3.0
 
 var _renderer: EventRowRenderer = EventRowRenderer.new()
 var _layout_cache: RowLayoutCache = RowLayoutCache.new()
@@ -2271,19 +2275,23 @@ func _build_ace_drag_preview_rect(
             if target_span_index >= 0 and target_span_index < row_data.spans.size():
                 var target_span: SemanticSpan = row_data.spans[target_span_index]
                 line_y = (
-                    target_span.rect.end.y + 2.0
+                    target_span.rect.end.y + ACTION_INSERT_PREVIEW_EDGE_OFFSET
                     if insert_mode == "after"
-                    else target_span.rect.position.y - 2.0
+                    else target_span.rect.position.y - ACTION_INSERT_PREVIEW_EDGE_OFFSET
                 )
         elif not ace_span_indices.is_empty():
             var edge_span: SemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
-            line_y = edge_span.rect.end.y + 2.0
-        line_y = clampf(line_y, lane_rect.position.y + 3.0, lane_rect.end.y - 5.0)
-        return Rect2(
-            lane_rect.position.x + 8.0,
+            line_y = edge_span.rect.end.y + ACTION_INSERT_PREVIEW_EDGE_OFFSET
+        line_y = clampf(
             line_y,
-            max(lane_rect.size.x - 16.0, 8.0),
-            3.0
+            lane_rect.position.y + ACTION_INSERT_PREVIEW_THICKNESS,
+            lane_rect.end.y - (ACTION_INSERT_PREVIEW_THICKNESS + ACTION_INSERT_PREVIEW_EDGE_OFFSET)
+        )
+        return Rect2(
+            lane_rect.position.x + ACTION_INSERT_PREVIEW_MARGIN,
+            line_y,
+            max(lane_rect.size.x - (ACTION_INSERT_PREVIEW_MARGIN * 2.0), ACTION_INSERT_PREVIEW_MIN_WIDTH),
+            ACTION_INSERT_PREVIEW_THICKNESS
         )
     if ace_index >= 0:
         var target_span_index: int = _find_ace_span_index(row_data, ace_span_kind, ace_index)

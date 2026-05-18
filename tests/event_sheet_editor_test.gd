@@ -3,6 +3,8 @@
 extends RefCounted
 class_name EventSheetEditorTest
 
+const ACTION_LANE_CLICK_OFFSET := 18.0
+
 class FakeEditorUndoRedoManager:
     extends RefCounted
 
@@ -438,11 +440,11 @@ static func run() -> bool:
     all_passed = _check("hovering a condition tracks only the hovered entry span", parity_event_layout.get("hovered_span_index", -1), parity_condition_index) and all_passed
     var parity_body_click := InputEventMouseButton.new()
     parity_body_click.pressed = true
-    parity_body_click.button_index = MOUSE_BUTTON_LEFT
-    parity_body_click.position = Vector2(
-        parity_action_lane_rect.position.x + 18.0,
-        parity_event_row.spans[parity_condition_index].rect.get_center().y
-    )
+        parity_body_click.button_index = MOUSE_BUTTON_LEFT
+        parity_body_click.position = Vector2(
+            parity_action_lane_rect.position.x + ACTION_LANE_CLICK_OFFSET,
+            parity_event_row.spans[parity_condition_index].rect.get_center().y
+        )
     dock_viewport._handle_mouse_button(parity_body_click)
     parity_context = dock_viewport.get_selected_context()
     editor_state = dock_viewport.get_editor_state_snapshot()
@@ -500,7 +502,7 @@ static func run() -> bool:
     var grouped_parent_click := InputEventMouseButton.new()
     grouped_parent_click.pressed = true
     grouped_parent_click.button_index = MOUSE_BUTTON_LEFT
-    grouped_parent_click.position = Vector2(grouped_parent_action_lane_rect.position.x + 18.0, grouped_parent_rect.get_center().y)
+    grouped_parent_click.position = Vector2(grouped_parent_action_lane_rect.position.x + ACTION_LANE_CLICK_OFFSET, grouped_parent_rect.get_center().y)
     dock_viewport._handle_mouse_button(grouped_parent_click)
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("event block selection includes sub-events", editor_state.get("selected_row_count", 0), 3) and all_passed
@@ -508,7 +510,7 @@ static func run() -> bool:
     grouped_child_toggle.pressed = true
     grouped_child_toggle.button_index = MOUSE_BUTTON_LEFT
     grouped_child_toggle.ctrl_pressed = true
-    grouped_child_toggle.position = Vector2(grouped_child_action_lane_rect.position.x + 18.0, grouped_child_rect.get_center().y)
+    grouped_child_toggle.position = Vector2(grouped_child_action_lane_rect.position.x + ACTION_LANE_CLICK_OFFSET, grouped_child_rect.get_center().y)
     dock_viewport._handle_mouse_button(grouped_child_toggle)
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("ctrl click can deselect one grouped child row", editor_state.get("selected_row_count", 0), 2) and all_passed
