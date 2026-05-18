@@ -112,7 +112,4 @@ func _build_element_style_from_scene(scene: PackedScene) -> EventSheetElementSty
 func _instantiate_visual_template(scene: PackedScene) -> Node:
 	if scene == null:
 		return null
-	var instance: Variant = scene.instantiate()
-	if instance is Node:
-		return instance as Node
-	return null
+	return scene.instantiate()

@@ -35,5 +35,7 @@ func _color_rect_color(node_name: String) -> Color:
 func _label_font_color(node_name: String) -> Color:
 	var node: Node = find_child(node_name, true, false)
 	if node is Label:
-		return (node as Label).get_theme_color("font_color")
+		var label: Label = node as Label
+		if label.has_theme_color("font_color", "Label"):
+			return label.get_theme_color("font_color", "Label")
 	return EventSheetPalette.TEXT_PRIMARY

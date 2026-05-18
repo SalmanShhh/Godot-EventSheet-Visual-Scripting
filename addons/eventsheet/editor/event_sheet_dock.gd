@@ -2168,9 +2168,7 @@ func _refresh_title_strip() -> void:
 static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String) -> String:
     if sheet == null:
         return "No Sheet Loaded"
-    var resolved_path: String = explicit_path
-    if resolved_path.is_empty():
-        resolved_path = sheet.resource_path
+    var resolved_path: String = _resolve_sheet_path(sheet, explicit_path)
     if resolved_path.is_empty():
         return "Untitled EventSheet"
     return resolved_path.get_file().get_basename()
@@ -2178,12 +2176,17 @@ static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String
 static func _format_sheet_path_hint(sheet: EventSheetResource, explicit_path: String) -> String:
     if sheet == null:
         return "Open or create a sheet to begin"
-    var resolved_path: String = explicit_path
-    if resolved_path.is_empty():
-        resolved_path = sheet.resource_path
+    var resolved_path: String = _resolve_sheet_path(sheet, explicit_path)
     if resolved_path.is_empty():
         return "Unsaved (in-memory)"
     return resolved_path
+
+static func _resolve_sheet_path(sheet: EventSheetResource, explicit_path: String) -> String:
+    if sheet == null:
+        return explicit_path
+    if not explicit_path.is_empty():
+        return explicit_path
+    return sheet.resource_path
 
 func _refresh_ace_registry() -> void:
     if _ace_registry == null:
