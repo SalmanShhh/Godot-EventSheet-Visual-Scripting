@@ -363,6 +363,19 @@ static func run() -> bool:
     dock._on_redo_requested()
     all_passed = _check("redo reapplies drag-drop reorder", ((dock.get_current_sheet().events[0] as EventRow).comment), "B") and all_passed
 
+    var copy_row_sheet := EventSheetResource.new()
+    var copy_row_comment := CommentRow.new()
+    copy_row_comment.text = "Copy me"
+    var copy_row_target := EventRow.new()
+    copy_row_target.comment = "Target"
+    copy_row_sheet.events = [copy_row_comment, copy_row_target]
+    dock.setup(copy_row_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var copy_row_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._on_row_drop_requested(copy_row_rows[0].get("row"), copy_row_rows[1].get("row"), "after", true)
+    all_passed = _check("ctrl drag-copy keeps original comment row", ((dock.get_current_sheet().events[0]) as CommentRow).text, "Copy me") and all_passed
+    all_passed = _check("ctrl drag-copy inserts duplicated comment row", ((dock.get_current_sheet().events[2]) as CommentRow).text, "Copy me") and all_passed
+
     var multi_move_sheet := EventSheetResource.new()
     var multi_comment_a := CommentRow.new()
     multi_comment_a.text = "First"
@@ -451,6 +464,67 @@ static func run() -> bool:
     dock._on_paste_requested()
     all_passed = _check("copy paste action appends action", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), 2) and all_passed
 
+    var ace_copy_sheet := EventSheetResource.new()
+    var ace_copy_source := EventRow.new()
+    var ace_copy_condition_a := ACECondition.new()
+    ace_copy_condition_a.provider_id = "Core"
+    ace_copy_condition_a.ace_id = "Always"
+    var ace_copy_condition_b := ACECondition.new()
+    ace_copy_condition_b.provider_id = "Core"
+    ace_copy_condition_b.ace_id = "IsInstanceValid"
+    ace_copy_source.conditions = [ace_copy_condition_a, ace_copy_condition_b]
+    var ace_copy_source_action := ACEAction.new()
+    ace_copy_source_action.provider_id = "Core"
+    ace_copy_source_action.ace_id = "QueueFree"
+    ace_copy_source.actions = [ace_copy_source_action]
+    var ace_copy_target := EventRow.new()
+    var ace_copy_target_condition := ACECondition.new()
+    ace_copy_target_condition.provider_id = "Core"
+    ace_copy_target_condition.ace_id = "Always"
+    ace_copy_target.conditions = [ace_copy_target_condition]
+    var ace_copy_target_action := ACEAction.new()
+    ace_copy_target_action.provider_id = "Core"
+    ace_copy_target_action.ace_id = "SetVar"
+    ace_copy_target.actions = [ace_copy_target_action]
+    ace_copy_sheet.events = [ace_copy_source, ace_copy_target]
+    dock.setup(ace_copy_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var ace_copy_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._on_viewport_ace_drop_requested(
+        [
+            {"source_resource": ace_copy_source, "kind": "condition", "ace_index": 0},
+            {"source_resource": ace_copy_source, "kind": "condition", "ace_index": 1}
+        ],
+        ace_copy_rows[1].get("row"),
+        "condition",
+        0,
+        "before",
+        true
+    )
+    all_passed = _check("ctrl drag-copy keeps original source conditions", ace_copy_source.conditions.size(), 2) and all_passed
+    all_passed = _check(
+        "ctrl drag-copy duplicates multiple conditions in order",
+        [
+            ((dock.get_current_sheet().events[1] as EventRow).conditions[0] as ACECondition).ace_id,
+            ((dock.get_current_sheet().events[1] as EventRow).conditions[1] as ACECondition).ace_id
+        ],
+        ["Always", "IsInstanceValid"]
+    ) and all_passed
+    dock._on_viewport_ace_drop_requested(
+        [{"source_resource": ace_copy_source, "kind": "action", "ace_index": 0}],
+        ace_copy_rows[1].get("row"),
+        "action",
+        0,
+        "before",
+        true
+    )
+    all_passed = _check("ctrl drag-copy keeps original source action", ace_copy_source.actions.size(), 1) and all_passed
+    all_passed = _check(
+        "ctrl drag-copy duplicates action into target event",
+        ((dock.get_current_sheet().events[1] as EventRow).actions[0] as ACEAction).ace_id,
+        "QueueFree"
+    ) and all_passed
+
     var ace_drag_sheet := EventSheetResource.new()
     var ace_drag_source := EventRow.new()
     var ace_drag_condition_a := ACECondition.new()
@@ -505,6 +579,43 @@ static func run() -> bool:
         (dock.get_current_sheet().events[0] as EventRow).conditions.size(),
         1
     ) and all_passed
+
+    var invalid_trigger_sheet := EventSheetResource.new()
+    var invalid_trigger_source := EventRow.new()
+    var moved_trigger := ACECondition.new()
+    moved_trigger.provider_id = "Core"
+    moved_trigger.ace_id = "OnReady"
+    invalid_trigger_source.trigger = moved_trigger
+    var invalid_trigger_target := EventRow.new()
+    var existing_trigger := ACECondition.new()
+    existing_trigger.provider_id = "Core"
+    existing_trigger.ace_id = "OnProcess"
+    invalid_trigger_target.trigger = existing_trigger
+    invalid_trigger_sheet.events = [invalid_trigger_source, invalid_trigger_target]
+    dock.setup(invalid_trigger_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var invalid_trigger_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var invalid_trigger_row_data: EventRowData = invalid_trigger_rows[1].get("row")
+    dock_viewport.get_row_layout_for_test(1, 640.0)
+    var invalid_trigger_span_index: int = _find_span_index_by_kind(invalid_trigger_row_data, "trigger")
+    var invalid_trigger_span: SemanticSpan = invalid_trigger_row_data.spans[invalid_trigger_span_index]
+    dock_viewport._drag_ace_entries = [dock_viewport._build_ace_drag_entry(invalid_trigger_rows[0].get("row"), "trigger", 0)]
+    dock_viewport._update_ace_drag_target(
+        {
+            "row_index": 1,
+            "span_index": invalid_trigger_span_index,
+            "lane": "condition",
+            "span_metadata": invalid_trigger_span.metadata
+        },
+        invalid_trigger_span.rect.get_center()
+    )
+    all_passed = _check("invalid trigger drag shows tooltip text", dock_viewport._drag_feedback_text, "This event already has a trigger.") and all_passed
+    all_passed = _check("invalid trigger drag marks target as invalid", dock_viewport._drag_ace_drop_valid, false) and all_passed
+    dock_viewport._complete_ace_drag()
+    dock_viewport._clear_ace_drag()
+    all_passed = _check("invalid trigger drag keeps source trigger in place", (dock.get_current_sheet().events[0] as EventRow).trigger != null, true) and all_passed
+    all_passed = _check("invalid trigger drag keeps target trigger in place", ((dock.get_current_sheet().events[1] as EventRow).trigger as ACECondition).ace_id, "OnProcess") and all_passed
+    all_passed = _check("invalid trigger drag updates status label", dock._status_label.text, "This event already has a trigger.") and all_passed
 
     var group_fold_sheet := EventSheetResource.new()
     var fold_group := EventGroup.new()

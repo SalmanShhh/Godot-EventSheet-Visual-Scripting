@@ -3,8 +3,8 @@ class_name EventSheetViewport
 extends Control
 
 signal selection_changed(row_data: EventRowData)
-signal row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String)
-signal rows_drop_requested(source_rows: Array, target_row: EventRowData, drop_mode: String)
+signal row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String, copy_mode: bool)
+signal rows_drop_requested(source_rows: Array, target_row: EventRowData, drop_mode: String, copy_mode: bool)
 signal ace_preview_requested(source_label: String, definitions: Array[ACEDefinition])
 signal ace_picker_requested(row_data: EventRowData, lane: String)
 signal span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String)
@@ -14,9 +14,11 @@ signal ace_drop_requested(
     target_row: EventRowData,
     target_lane: String,
     target_ace_index: int,
-    insert_mode: String
+    insert_mode: String,
+    copy_mode: bool
 )
 signal context_menu_requested(row_data: EventRowData, hit: Dictionary, global_position: Vector2)
+signal drag_status_requested(message: String, is_error: bool)
 
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
@@ -46,7 +48,7 @@ const BADGE_TRIGGER_METADATA := {
 const BADGE_EXTRA_WIDTH := 12.0
 const CHIP_EXTRA_WIDTH := 16.0
 const CHIP_GAP := 8.0
-const ACE_DRAG_KINDS := ["condition", "action"]
+const ACE_DRAG_KINDS := ["trigger", "condition", "action"]
 const MIN_ZOOM_FACTOR := 0.6
 const MAX_ZOOM_FACTOR := 1.8
 const ZOOM_STEP := 0.1
@@ -75,11 +77,16 @@ var _drag_row_index: int = -1
 var _drag_row_indices: Array[int] = []
 var _drag_target_index: int = -1
 var _drag_target_mode: String = "before"
+var _drag_row_copy_mode: bool = false
 var _drag_ace_entries: Array = []
 var _drag_ace_target_row_index: int = -1
 var _drag_ace_target_lane: String = ""
 var _drag_ace_target_ace_index: int = -1
 var _drag_ace_insert_mode: String = "append"
+var _drag_ace_copy_mode: bool = false
+var _drag_ace_drop_valid: bool = true
+var _drag_feedback_text: String = ""
+var _drag_feedback_is_error: bool = false
 var _last_scroll: int = -1
 var _last_scroll_size: Vector2 = Vector2.ZERO
 var _fold_state: Dictionary = {}
@@ -345,8 +352,10 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
     var hit: Dictionary = _hit_test(local_position)
     _set_hover_state(int(hit.get("row_index", -1)), int(hit.get("span_index", -1)))
     if not _drag_ace_entries.is_empty():
+        _drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
         _update_ace_drag_target(hit, local_position)
     elif _drag_row_index >= 0:
+        _drag_row_copy_mode = event.ctrl_pressed or event.meta_pressed
         _drag_target_index = int(hit.get("row_index", -1))
         _drag_target_mode = _resolve_drop_mode(hit, local_position)
         queue_redraw()
@@ -401,11 +410,15 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
                 return
             _begin_edit(row_index, span_index)
             return
+        _drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
+        _drag_row_copy_mode = event.ctrl_pressed or event.meta_pressed
         if _maybe_begin_ace_drag(hit, row_index):
             return
         _begin_row_drag(row_index)
         return
-    if _complete_ace_drag():
+    if not _drag_ace_entries.is_empty():
+        _drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
+        _complete_ace_drag()
         _clear_ace_drag()
         queue_redraw()
         return
@@ -419,11 +432,11 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
                     if source_row != null:
                         dragged_rows.append(source_row)
                 if not dragged_rows.is_empty():
-                    rows_drop_requested.emit(dragged_rows, target_row, _drag_target_mode)
+                    rows_drop_requested.emit(dragged_rows, target_row, _drag_target_mode, _drag_row_copy_mode)
             else:
                 var source_row: EventRowData = _row_at(_drag_row_index)
                 if source_row != null:
-                    row_drop_requested.emit(source_row, target_row, _drag_target_mode)
+                    row_drop_requested.emit(source_row, target_row, _drag_target_mode, _drag_row_copy_mode)
     _clear_row_drag()
     queue_redraw()
 
@@ -445,6 +458,7 @@ func _clear_row_drag() -> void:
     _drag_row_indices.clear()
     _drag_target_index = -1
     _drag_target_mode = "before"
+    _drag_row_copy_mode = false
 
 func _maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
     if row_index < 0:
@@ -456,7 +470,7 @@ func _maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
         return false
     var metadata: Dictionary = hit.get("span_metadata", {})
     var kind: String = str(metadata.get("kind", ""))
-    if not ACE_DRAG_KINDS.has(kind):
+    if not ["trigger", "condition", "action"].has(kind):
         _clear_ace_drag()
         return false
     var span_index: int = int(hit.get("span_index", -1))
@@ -472,6 +486,8 @@ func _maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
     _drag_ace_target_lane = ""
     _drag_ace_target_ace_index = -1
     _drag_ace_insert_mode = "append"
+    _drag_ace_drop_valid = true
+    _clear_drag_feedback()
     _clear_row_drag()
     return true
 
@@ -481,12 +497,22 @@ func _clear_ace_drag() -> void:
     _drag_ace_target_lane = ""
     _drag_ace_target_ace_index = -1
     _drag_ace_insert_mode = "append"
+    _drag_ace_copy_mode = false
+    _drag_ace_drop_valid = true
+    _clear_drag_feedback()
+
+func _clear_drag_feedback() -> void:
+    _drag_feedback_text = ""
+    _drag_feedback_is_error = false
+    tooltip_text = ""
 
 func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
     _drag_ace_target_row_index = -1
     _drag_ace_target_lane = ""
     _drag_ace_target_ace_index = -1
     _drag_ace_insert_mode = "append"
+    _drag_ace_drop_valid = true
+    _clear_drag_feedback()
     if _drag_ace_entries.is_empty():
         return
     var row_index: int = int(hit.get("row_index", -1))
@@ -498,8 +524,9 @@ func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
         queue_redraw()
         return
     var drag_kind: String = str(_drag_ace_entries[0].get("kind", ""))
-    var lane: String = str(hit.get("lane", drag_kind))
-    if lane != drag_kind:
+    var drag_lane: String = "action" if drag_kind == "action" else "condition"
+    var lane: String = str(hit.get("lane", drag_lane))
+    if lane != drag_lane:
         queue_redraw()
         return
     var metadata: Dictionary = hit.get("span_metadata", {})
@@ -514,29 +541,40 @@ func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
             _drag_ace_insert_mode = (
                 "after" if position.y >= span_rect.get_center().y else "before"
             )
-    elif kind == "trigger" and drag_kind == "condition":
+    elif kind == "trigger" and drag_lane == "condition":
         _drag_ace_target_ace_index = 0
         _drag_ace_insert_mode = "before"
     else:
         var fallback_target: Dictionary = _resolve_lane_drop_target(row_data, lane, position)
         _drag_ace_target_ace_index = int(fallback_target.get("ace_index", -1))
         _drag_ace_insert_mode = str(fallback_target.get("insert_mode", "append"))
+    var validation: Dictionary = _validate_ace_drag_target(row_data, lane)
+    _drag_ace_drop_valid = bool(validation.get("valid", true))
+    if not _drag_ace_drop_valid:
+        _drag_feedback_text = str(validation.get("message", "This drop target is not valid."))
+        _drag_feedback_is_error = true
+        tooltip_text = _drag_feedback_text
     queue_redraw()
 
 func _complete_ace_drag() -> bool:
     if _drag_ace_entries.is_empty():
         return false
     if _drag_ace_target_row_index < 0:
-        return false
+        return true
+    if not _drag_ace_drop_valid:
+        if not _drag_feedback_text.is_empty():
+            drag_status_requested.emit(_drag_feedback_text, true)
+        return true
     var target_row: EventRowData = _row_at(_drag_ace_target_row_index)
     if target_row == null:
-        return false
+        return true
     ace_drop_requested.emit(
         _drag_ace_entries.duplicate(),
         target_row,
         _drag_ace_target_lane,
         _drag_ace_target_ace_index,
-        _drag_ace_insert_mode
+        _drag_ace_insert_mode,
+        _drag_ace_copy_mode
     )
     return true
 
@@ -1049,6 +1087,18 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             condition_lane_rect,
             action_lane_rect
         )
+    var drag_feedback_rect := Rect2()
+    if not _drag_feedback_text.is_empty() and _drag_ace_target_row_index == index:
+        var feedback_lane_rect: Rect2 = (
+            action_lane_rect if _drag_ace_target_lane == "action" else condition_lane_rect
+        )
+        drag_feedback_rect = _build_drag_feedback_rect(
+            ace_drag_rect,
+            feedback_lane_rect,
+            _drag_feedback_text,
+            font,
+            font_size
+        )
     var layout := {
         "row_rect": row_rect,
         "row_height": row_height,
@@ -1063,6 +1113,10 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         "debug_text": row_data.debug_state,
         "drag_rect": drag_rect,
         "ace_drag_rect": ace_drag_rect,
+        "ace_drag_error": not _drag_ace_drop_valid and _drag_ace_target_row_index == index,
+        "drag_feedback_rect": drag_feedback_rect,
+        "drag_feedback_text": _drag_feedback_text if _drag_ace_target_row_index == index else "",
+        "drag_feedback_error": _drag_feedback_is_error and _drag_ace_target_row_index == index,
         "line_number": row_data.line_number,
         "breakpoint_enabled": row_data.breakpoint_enabled,
         "disabled": row_data.disabled,
@@ -1401,6 +1455,36 @@ func _resolve_lane_drop_target(row_data: EventRowData, lane: String, position: V
     var last_ace_index: int = int((last_span.metadata as Dictionary).get("ace_index", -1))
     return {"ace_index": last_ace_index, "insert_mode": "after"}
 
+func _validate_ace_drag_target(row_data: EventRowData, lane: String) -> Dictionary:
+    if row_data == null or lane != "condition":
+        return {"valid": true}
+    var target_event: EventRow = row_data.source_resource as EventRow
+    if target_event == null:
+        return {"valid": true}
+    var trigger_entry_count: int = 0
+    var excluded_resources: Array = []
+    for entry in _drag_ace_entries:
+        if not _entry_is_trigger_like(entry):
+            continue
+        trigger_entry_count += 1
+        if not _drag_ace_copy_mode:
+            var ace_resource: Resource = entry.get("ace_resource", null) as Resource
+            if ace_resource != null:
+                excluded_resources.append(ace_resource)
+    if trigger_entry_count <= 0:
+        return {"valid": true}
+    if trigger_entry_count > 1:
+        return {
+            "valid": false,
+            "message": "Events can only have one trigger."
+        }
+    if _event_has_trigger_like(target_event, excluded_resources):
+        return {
+            "valid": false,
+            "message": "This event already has a trigger."
+        }
+    return {"valid": true}
+
 func _rebuild_row_metrics() -> void:
     _row_metrics.clear()
     var top: float = 0.0
@@ -1464,14 +1548,17 @@ func _get_draggable_ace_entries(
 ) -> Array:
     var selected_entries: Array = get_selected_ace_entries()
     if not selected_entries.is_empty():
-        var selected_kind: String = str(selected_entries[0].get("kind", ""))
-        if selected_kind == kind:
-            for entry in selected_entries:
+        var matching_entries: Array = []
+        for entry in selected_entries:
+            if str(entry.get("kind", "")) == kind:
+                matching_entries.append(entry)
+        if not matching_entries.is_empty():
+            for entry in matching_entries:
                 if (
                     entry.get("row_uid", "") == row_data.row_uid
                     and int(entry.get("ace_index", -1)) == ace_index
                 ):
-                    return selected_entries
+                    return matching_entries
     return [_build_ace_drag_entry(row_data, kind, ace_index)]
 
 func _build_ace_drag_entry(row_data: EventRowData, kind: String, ace_index: int) -> Dictionary:
@@ -1492,6 +1579,8 @@ func _resolve_ace_resource(source_resource: Resource, kind: String, ace_index: i
         return null
     var event_row: EventRow = source_resource as EventRow
     match kind:
+        "trigger":
+            return event_row.trigger
         "condition":
             if ace_index < event_row.conditions.size():
                 return event_row.conditions[ace_index]
@@ -1556,6 +1645,36 @@ func _build_ace_drag_preview_rect(
             return Rect2(preview_x, trigger_span.rect.end.y - 1.5, preview_width, 3.0)
     return Rect2(preview_x, lane_rect.position.y + 6.0, preview_width, 3.0)
 
+func _build_drag_feedback_rect(
+    preview_rect: Rect2,
+    lane_rect: Rect2,
+    message: String,
+    font: Font,
+    font_size: int
+) -> Rect2:
+    if lane_rect.size == Vector2.ZERO or message.is_empty():
+        return Rect2()
+    var text_size: Vector2 = font.get_string_size(
+        message,
+        HORIZONTAL_ALIGNMENT_LEFT,
+        -1.0,
+        max(font_size - 1, 10)
+    )
+    var bubble_size: Vector2 = Vector2(text_size.x + 16.0, text_size.y + 10.0)
+    var bubble_x: float = preview_rect.position.x if preview_rect.size != Vector2.ZERO else lane_rect.position.x + 8.0
+    bubble_x = clampf(
+        bubble_x,
+        lane_rect.position.x + 6.0,
+        max(lane_rect.end.x - bubble_size.x - 6.0, lane_rect.position.x + 6.0)
+    )
+    var bubble_y: float = (
+        preview_rect.position.y - bubble_size.y - 6.0
+        if preview_rect.size != Vector2.ZERO
+        else lane_rect.position.y + 6.0
+    )
+    bubble_y = max(bubble_y, lane_rect.position.y + 4.0)
+    return Rect2(Vector2(bubble_x, bubble_y), bubble_size)
+
 func _find_ace_span_index(row_data: EventRowData, kind: String, ace_index: int) -> int:
     if row_data == null:
         return -1
@@ -1615,6 +1734,28 @@ func _is_trigger_condition(condition: ACECondition) -> bool:
         return generated_definition.ace_type == ACEDefinition.ACEType.TRIGGER
     var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
     return descriptor != null and descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER
+
+func _entry_is_trigger_like(entry: Dictionary) -> bool:
+    if str(entry.get("kind", "")) == "trigger":
+        return true
+    var ace_resource: Resource = entry.get("ace_resource", null) as Resource
+    return ace_resource is ACECondition and _is_trigger_condition(ace_resource as ACECondition)
+
+func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []) -> bool:
+    if event_row == null:
+        return false
+    if event_row.trigger != null and not excluded_resources.has(event_row.trigger):
+        return true
+    if not event_row.trigger_id.is_empty():
+        return true
+    for condition in event_row.conditions:
+        if not (condition is ACECondition):
+            continue
+        if excluded_resources.has(condition):
+            continue
+        if _is_trigger_condition(condition as ACECondition):
+            return true
+    return false
 
 func _format_action_descriptor(action: ACEAction) -> String:
     var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters

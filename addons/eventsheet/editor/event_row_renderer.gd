@@ -25,6 +25,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     var icon_rect: Rect2 = layout.get("icon_rect", Rect2())
     var drag_rect: Rect2 = layout.get("drag_rect", Rect2())
     var ace_drag_rect: Rect2 = layout.get("ace_drag_rect", Rect2())
+    var ace_drag_error: bool = bool(layout.get("ace_drag_error", false))
+    var drag_feedback_rect: Rect2 = layout.get("drag_feedback_rect", Rect2())
+    var drag_feedback_text: String = str(layout.get("drag_feedback_text", ""))
+    var drag_feedback_error: bool = bool(layout.get("drag_feedback_error", false))
     var condition_lane_rect: Rect2 = layout.get("condition_lane_rect", Rect2())
     var action_lane_rect: Rect2 = layout.get("action_lane_rect", Rect2())
     var lane_divider_rect: Rect2 = layout.get("lane_divider_rect", Rect2())
@@ -61,10 +65,12 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     if ace_drag_rect.size != Vector2.ZERO:
         control.draw_rect(
             ace_drag_rect,
-            EventSheetPalette.COLOR_DRAG_LINE,
+            EventSheetPalette.COLOR_BREAKPOINT if ace_drag_error else EventSheetPalette.COLOR_DRAG_LINE,
             ace_drag_rect.size.y <= 4.0,
             2.0
         )
+    if drag_feedback_rect.size != Vector2.ZERO and not drag_feedback_text.is_empty():
+        _draw_drag_feedback(control, drag_feedback_rect, drag_feedback_text, font, font_size, drag_feedback_error)
     if disabled:
         control.draw_rect(row_rect, EventSheetPalette.COLOR_DISABLED, true)
     if not debug_text.is_empty():
@@ -180,6 +186,39 @@ func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary)
     style.set_content_margin_all(0)
     control.draw_style_box(style, span.rect)
 
+func _draw_drag_feedback(
+    control: Control,
+    rect: Rect2,
+    text: String,
+    font: Font,
+    font_size: int,
+    is_error: bool
+) -> void:
+    var style: StyleBoxFlat = StyleBoxFlat.new()
+    style.bg_color = (
+        Color(0.45, 0.14, 0.17, 0.96)
+        if is_error
+        else Color(0.17, 0.21, 0.28, 0.96)
+    )
+    style.border_color = (
+        EventSheetPalette.COLOR_BREAKPOINT
+        if is_error
+        else EventSheetPalette.COLOR_DRAG_LINE
+    )
+    style.set_border_width_all(1)
+    style.set_corner_radius_all(5)
+    style.set_content_margin_all(0)
+    control.draw_style_box(style, rect)
+    var baseline_y: float = rect.position.y + (rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 2) * FONT_BASELINE_OFFSET_RATIO)
+    control.draw_string(
+        font,
+        Vector2(rect.position.x + 8.0, baseline_y),
+        text,
+        HORIZONTAL_ALIGNMENT_LEFT,
+        rect.size.x - 16.0,
+        max(font_size - 1, 10),
+        Color(1.0, 1.0, 1.0, 0.96)
+    )
 func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_size: int, metadata: Dictionary) -> void:
     var badge_rect: Rect2 = span.rect
     var badge_bg: Color = metadata.get("badge_bg", EventSheetPalette.COLOR_LANE_DIVIDER)
