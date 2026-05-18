@@ -479,6 +479,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
     elif key_event.keycode in [KEY_DELETE, KEY_BACKSPACE]:
         _delete_selected_content()
         accept_event()
+    elif key_event.keycode == KEY_Q:
+        _insert_comment_from_shortcut_context()
+        accept_event()
     elif key_event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_F2]:
         if _viewport != null and _viewport.begin_edit_selected():
             accept_event()
@@ -1486,6 +1489,27 @@ func _context_ace_is_disabled() -> bool:
     return false
 
 func _toggle_context_ace_enabled() -> void:
+    var selected_targets: Array[Dictionary] = _collect_selected_condition_action_targets()
+    if not selected_targets.is_empty():
+        var all_disabled: bool = true
+        for target in selected_targets:
+            if _is_target_ace_enabled(target):
+                all_disabled = false
+                break
+        var enable_targets: bool = all_disabled
+        var selected_changed: bool = _perform_undoable_sheet_edit("Toggle ACE Enabled", func() -> bool:
+            var changed_any: bool = false
+            for target in selected_targets:
+                changed_any = _set_target_ace_enabled(target, enable_targets) or changed_any
+            return changed_any
+        )
+        if selected_changed:
+            _mark_dirty(
+                "Enabled selected ACE entries."
+                if enable_targets
+                else "Disabled selected ACE entries."
+            )
+        return
     if _context_row == null or not (_context_row.source_resource is EventRow):
         return
     var event_row: EventRow = _context_row.source_resource as EventRow
@@ -1511,6 +1535,62 @@ func _toggle_context_ace_enabled() -> void:
     )
     if changed:
         _mark_dirty("Updated ACE enabled state.")
+
+func _collect_selected_condition_action_targets() -> Array[Dictionary]:
+    var targets: Array[Dictionary] = []
+    if _viewport == null:
+        return targets
+    var seen: Dictionary = {}
+    for target in _viewport.get_selected_span_targets():
+        if not (target is Dictionary):
+            continue
+        var target_dict: Dictionary = target as Dictionary
+        var kind: String = str(target_dict.get("kind", ""))
+        if kind not in ["condition", "action"]:
+            continue
+        var event_row: EventRow = target_dict.get("source_resource", null) as EventRow
+        var ace_index: int = int(target_dict.get("ace_index", -1))
+        var row_uid: String = str(target_dict.get("row_uid", ""))
+        if event_row == null or ace_index < 0 or row_uid.is_empty():
+            continue
+        var key: String = "%s:%s:%d" % [row_uid, kind, ace_index]
+        if seen.has(key):
+            continue
+        seen[key] = true
+        targets.append(target_dict)
+    return targets
+
+func _is_target_ace_enabled(target: Dictionary) -> bool:
+    var event_row: EventRow = target.get("source_resource", null) as EventRow
+    if event_row == null:
+        return false
+    var kind: String = str(target.get("kind", ""))
+    var ace_index: int = int(target.get("ace_index", -1))
+    match kind:
+        "condition":
+            if ace_index >= 0 and ace_index < event_row.conditions.size():
+                return event_row.conditions[ace_index].enabled
+        "action":
+            if ace_index >= 0 and ace_index < event_row.actions.size() and event_row.actions[ace_index] is ACEAction:
+                return ((event_row.actions[ace_index]) as ACEAction).enabled
+    return false
+
+func _set_target_ace_enabled(target: Dictionary, enabled: bool) -> bool:
+    var event_row: EventRow = target.get("source_resource", null) as EventRow
+    if event_row == null:
+        return false
+    var kind: String = str(target.get("kind", ""))
+    var ace_index: int = int(target.get("ace_index", -1))
+    match kind:
+        "condition":
+            if ace_index >= 0 and ace_index < event_row.conditions.size():
+                event_row.conditions[ace_index].enabled = enabled
+                return true
+        "action":
+            if ace_index >= 0 and ace_index < event_row.actions.size() and event_row.actions[ace_index] is ACEAction:
+                ((event_row.actions[ace_index]) as ACEAction).enabled = enabled
+                return true
+    return false
 
 func _context_row_is_disabled() -> bool:
     if _context_row == null or _context_row.source_resource == null:
@@ -1706,6 +1786,26 @@ func _insert_context_row_below(resource_entry: Resource, message: String) -> voi
     )
     if changed:
         _mark_dirty(message)
+
+func _insert_comment_from_shortcut_context() -> void:
+    if _current_sheet == null:
+        return
+    var comment_row: CommentRow = CommentRow.new()
+    comment_row.text = "Comment"
+    var selected_resource: Resource = (
+        _viewport.get_selected_context().get("source_resource", null)
+        if _viewport != null
+        else null
+    )
+    var changed: bool = _perform_undoable_sheet_edit("Add Comment", func() -> bool:
+        if selected_resource != null:
+            _insert_row_below_selection(comment_row, selected_resource)
+        else:
+            _current_sheet.events.append(comment_row)
+        return true
+    )
+    if changed:
+        _mark_dirty("Added comment.")
 
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
     _refresh_variable_panel()

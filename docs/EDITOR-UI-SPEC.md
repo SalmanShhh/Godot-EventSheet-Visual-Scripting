@@ -99,6 +99,7 @@ It intentionally avoids describing unbuilt behavior as complete.
   - Comments are visually distinctive through amber background color, not through a lane split.
 - Comment rows support direct inline text editing, with inspector text editing kept in sync.
 - Condition/action entries support drag-and-drop reordering and cross-event moves (via `EntryTokenButton`).
+- Condition/action drag previews use a lane-width insertion band plus lane highlight to keep destination intent readable.
 - Comment rows support drag-and-drop relocation above/below event rows and relative to other comment rows.
 - Row-level insertion controls are intentionally de-emphasized at rest and become full-emphasis on row hover/selection.
 - When deleting a focused condition/action, inspector selection falls back to the owning event view.
@@ -146,6 +147,8 @@ It intentionally avoids describing unbuilt behavior as complete.
   - `Escape` → clear current selection (show empty inspector)
   - `Enter` / `KP Enter` → edit current selection (open params dialog for condition/action, add-condition picker for event, or focus inline text edit for comment)
   - `↑` / `↓` → navigate selection up or down through the visual row order (works for EventRowUI, GroupRowUI, and CommentRowUI; blocked when a LineEdit/TextEdit/SpinBox has focus)
+- Multi-selection supports `Shift` anchored range selection for rows and same-row ACE spans, and `Ctrl/Cmd` additive toggles.
+- Multi-selected condition/action entries can be enabled or disabled together via the ACE toggle flow.
 - **Dirty state tracking**: `EventSheetEditor._is_dirty` is set on every mutation (add/edit/delete events, conditions, actions, variables, groups, condition inversion) and cleared on sheet load or successful save.
 - Document header (`SheetDocumentHeader`) inside the canvas shows:
   - The sheet file name (or "Untitled Sheet" / "No Sheet Loaded") as the document title

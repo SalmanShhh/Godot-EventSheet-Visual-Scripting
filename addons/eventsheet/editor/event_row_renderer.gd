@@ -17,6 +17,7 @@ const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
 const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
 const BADGE_FONT_SIZE_DELTA := 1
+const ELLIPSIS := "…"
 
 func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
     var row_rect: Rect2 = layout.get("row_rect", Rect2())
@@ -25,6 +26,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     var icon_rect: Rect2 = layout.get("icon_rect", Rect2())
     var drag_rect: Rect2 = layout.get("drag_rect", Rect2())
     var ace_drag_rect: Rect2 = layout.get("ace_drag_rect", Rect2())
+    var ace_drag_target_rect: Rect2 = layout.get("ace_drag_target_rect", Rect2())
     var ace_drag_error: bool = bool(layout.get("ace_drag_error", false))
     var drag_feedback_rect: Rect2 = layout.get("drag_feedback_rect", Rect2())
     var drag_feedback_text: String = str(layout.get("drag_feedback_text", ""))
@@ -107,6 +109,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index, event_style, selection_fill, hover_fill)
     if drag_rect.size != Vector2.ZERO:
         control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
+    if ace_drag_target_rect.size != Vector2.ZERO:
+        var drag_target_fill: Color = EventSheetPalette.COLOR_DRAG_LINE
+        drag_target_fill.a = 0.14 if not ace_drag_error else 0.2
+        control.draw_rect(ace_drag_target_rect, drag_target_fill, true)
     if ace_drag_rect.size != Vector2.ZERO:
         control.draw_rect(
             ace_drag_rect,
@@ -224,6 +230,9 @@ func _draw_spans(
             var selected_bg: Color = selection_fill
             selected_bg.a = 0.72
             control.draw_rect(span.rect.grow(2.0), selected_bg, true)
+            var selected_outline: Color = selection_fill.lightened(0.25)
+            selected_outline.a = 0.95
+            control.draw_rect(span.rect.grow(2.0), selected_outline, false, 1.0)
         elif span_index == hovered_span_index:
             if bool(metadata.get("chip", false)):
                 _draw_chip_hover_span(control, span, metadata)
@@ -252,6 +261,8 @@ func _draw_spans(
         var text_x: float = span.rect.position.x + text_padding
         var right_padding: float = text_padding if bool(metadata.get("chip", false)) else 2.0
         var text_width: float = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
+        if span_index != editing_span_index:
+            draw_text = _fit_text_to_width(draw_text, font, draw_font_size, text_width)
         control.draw_string(font, Vector2(text_x, baseline_y), draw_text, HORIZONTAL_ALIGNMENT_LEFT, text_width, draw_font_size, color)
         if not ace_enabled:
             var strike_y: float = span.rect.get_center().y
@@ -273,6 +284,22 @@ func _draw_spans(
                 1.0,
                 true
             )
+
+func _fit_text_to_width(text: String, font: Font, font_size: int, max_width: float) -> String:
+    if text.is_empty() or max_width <= 1.0:
+        return ""
+    if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x <= max_width:
+        return text
+    var ellipsis_width: float = font.get_string_size(ELLIPSIS, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+    if ellipsis_width > max_width:
+        return ""
+    var truncated: String = text
+    while not truncated.is_empty():
+        truncated = truncated.substr(0, truncated.length() - 1)
+        var candidate: String = "%s%s" % [truncated, ELLIPSIS]
+        if font.get_string_size(candidate, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x <= max_width:
+            return candidate
+    return ELLIPSIS
 
 func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary) -> void:
     var style: StyleBoxFlat = StyleBoxFlat.new()

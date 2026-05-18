@@ -526,7 +526,9 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
             _select_from_click(row_index, span_index, false)
             _toggle_row_fold(row_index)
             return
-        _select_from_click(row_index, span_index, event.ctrl_pressed or event.meta_pressed)
+        var toggle_selection: bool = event.ctrl_pressed or event.meta_pressed
+        var range_selection: bool = event.shift_pressed and not toggle_selection
+        _select_from_click(row_index, span_index, toggle_selection, range_selection)
         if event.double_click:
             if _maybe_request_ace_edit(hit, row_index):
                 accept_event()
@@ -758,7 +760,7 @@ func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
         if span_index >= 0 and span_index < row_data.spans.size():
             var span_rect: Rect2 = row_data.spans[span_index].rect
             _drag_ace_insert_mode = (
-                "after" if position.x >= span_rect.get_center().x else "before"
+                "after" if position.y >= span_rect.get_center().y else "before"
             )
     elif kind == "trigger" and drag_lane == "condition":
         _drag_ace_target_ace_index = 0
@@ -773,6 +775,9 @@ func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
         _drag_feedback_text = str(validation.get("message", "This drop target is not valid."))
         _drag_feedback_is_error = true
         tooltip_text = _drag_feedback_text
+    else:
+        _drag_feedback_text = _describe_drag_target_feedback(drag_kind, _drag_ace_insert_mode)
+        _drag_feedback_is_error = false
     queue_redraw()
 
 func _complete_ace_drag() -> bool:
@@ -1538,6 +1543,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             _:
                 drag_rect = Rect2(0.0, row_rect.position.y - 1.0, width, 2.0)
     var ace_drag_rect := Rect2()
+    var ace_drag_target_rect := Rect2()
     if not _drag_ace_entries.is_empty() and _drag_ace_target_row_index == index:
         ace_drag_rect = _build_ace_drag_preview_rect(
             row_data,
@@ -1547,6 +1553,13 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             condition_lane_rect,
             action_lane_rect
         )
+        ace_drag_target_rect = (
+            action_lane_rect
+            if _drag_ace_target_lane == "action"
+            else condition_lane_rect
+        )
+        if ace_drag_target_rect.size != Vector2.ZERO:
+            ace_drag_target_rect = ace_drag_target_rect.grow(-2.0)
     var drag_feedback_rect := Rect2()
     if not _drag_feedback_text.is_empty() and _drag_ace_target_row_index == index:
         var feedback_lane_rect: Rect2 = (
@@ -1573,6 +1586,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         "debug_text": row_data.debug_state,
         "drag_rect": drag_rect,
         "ace_drag_rect": ace_drag_rect,
+        "ace_drag_target_rect": ace_drag_target_rect,
         "ace_drag_error": not _drag_ace_drop_valid and _drag_ace_target_row_index == index,
         "drag_feedback_rect": drag_feedback_rect,
         "drag_feedback_text": _drag_feedback_text if _drag_ace_target_row_index == index else "",
@@ -1662,10 +1676,13 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
     selection_changed.emit(selected_row)
     queue_redraw()
 
-func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
+func _select_from_click(row_index: int, span_index: int, toggle: bool, range_select: bool = false) -> void:
     if row_index < 0:
         if not toggle:
             _clear_selection()
+        return
+    if range_select and _selection_anchor_index >= 0:
+        _select_range_from_anchor(row_index, span_index)
         return
     if not toggle:
         _select_row(row_index, span_index)
@@ -1901,7 +1918,7 @@ func _resolve_lane_drop_target(row_data: EventRowData, lane: String, position: V
         if span == null:
             continue
         var ace_index: int = int((span.metadata as Dictionary).get("ace_index", -1))
-        if position.x <= span.rect.get_center().x:
+        if position.y <= span.rect.get_center().y:
             return {"ace_index": ace_index, "insert_mode": "before"}
     var last_span: SemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
     var last_ace_index: int = int((last_span.metadata as Dictionary).get("ace_index", -1))
@@ -1990,6 +2007,49 @@ func _get_selected_row_indices() -> Array[int]:
             indices.append(index)
     return indices
 
+func _select_range_from_anchor(row_index: int, span_index: int) -> void:
+    var anchor_index: int = clampi(_selection_anchor_index, 0, _flat_rows.size() - 1)
+    if span_index >= 0 and anchor_index == row_index and _selected_span_index >= 0:
+        var row_data: EventRowData = _row_at(row_index)
+        if row_data != null:
+            var min_span: int = mini(_selected_span_index, span_index)
+            var max_span: int = maxi(_selected_span_index, span_index)
+            var selected_indices: Array = []
+            for candidate_index in range(min_span, max_span + 1):
+                if candidate_index < 0 or candidate_index >= row_data.spans.size():
+                    continue
+                var candidate_span: SemanticSpan = row_data.spans[candidate_index]
+                var metadata: Dictionary = candidate_span.metadata if candidate_span != null and candidate_span.metadata is Dictionary else {}
+                var kind: String = str(metadata.get("kind", ""))
+                if kind in ACE_DRAG_KINDS:
+                    selected_indices.append(candidate_index)
+            if not selected_indices.is_empty():
+                _selected_row_uids.clear()
+                _selected_span_indices.clear()
+                _selected_row_uids[row_data.row_uid] = true
+                _selected_span_indices[row_data.row_uid] = selected_indices
+                _selected_row_index = row_index
+                _selected_span_index = span_index
+                _focused_lane = _resolve_lane_for_row(row_data, span_index)
+                _sync_row_selection_flags()
+                selection_changed.emit(_row_at(_selected_row_index))
+                queue_redraw()
+                return
+    _selected_row_uids.clear()
+    _selected_span_indices.clear()
+    var range_start: int = mini(anchor_index, row_index)
+    var range_end: int = maxi(anchor_index, row_index)
+    for index in range(range_start, range_end + 1):
+        var range_row: EventRowData = _row_at(index)
+        if range_row == null:
+            continue
+        _selected_row_uids[range_row.row_uid] = true
+    _selected_row_index = row_index
+    _selected_span_index = -1
+    _sync_row_selection_flags()
+    selection_changed.emit(_row_at(_selected_row_index))
+    queue_redraw()
+
 func _collect_descendant_row_uids(row_data: EventRowData) -> Array:
     var uids: Array = []
     if row_data == null:
@@ -2003,6 +2063,23 @@ func _collect_descendant_row_uids(row_data: EventRowData) -> Array:
         for grand_child in child.children:
             stack.append(grand_child)
     return uids
+
+func _describe_drag_target_feedback(drag_kind: String, insert_mode: String) -> String:
+    var noun: String = "entry"
+    match drag_kind:
+        "trigger":
+            noun = "trigger"
+        "condition":
+            noun = "condition"
+        "action":
+            noun = "action"
+    match insert_mode:
+        "before":
+            return "Insert %s before target" % noun
+        "after":
+            return "Insert %s after target" % noun
+        _:
+            return "Append %s" % noun
 
 func _get_draggable_ace_entries(
     row_data: EventRowData,

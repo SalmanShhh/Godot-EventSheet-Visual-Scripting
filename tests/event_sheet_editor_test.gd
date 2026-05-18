@@ -159,10 +159,16 @@ static func run() -> bool:
     var comment_row_data: EventRowData = flat_rows[0].get("row")
     var group_row: EventRowData = flat_rows[1].get("row")
     var event_row_data: EventRowData = flat_rows[2].get("row")
+    dock_viewport.get_row_layout_for_test(1, 640.0)
     all_passed = _check("comment rows render a single editable label span", comment_row_data.spans.size(), 1) and all_passed
     all_passed = _check("group rows render badge and editable title spans", group_row.spans.size() >= 2, true) and all_passed
     all_passed = _check("group row tagged correctly", group_row.row_type, EventRowData.RowType.GROUP) and all_passed
     all_passed = _check("group row includes explicit group badge text", _row_contains_text(group_row, "Group"), true) and all_passed
+    all_passed = _check(
+        "group badge and title spans do not overlap",
+        group_row.spans.size() >= 2 and group_row.spans[0].rect.end.x <= group_row.spans[1].rect.position.x,
+        true
+    ) and all_passed
     all_passed = _check("event row inherits indent", event_row_data.indent, 1) and all_passed
     all_passed = _check("event row action span exists", _row_contains_text(event_row_data, "Queue free"), true) and all_passed
     all_passed = _check("event row includes lane metadata spans", _row_has_lane(event_row_data, "condition") and _row_has_lane(event_row_data, "action"), true) and all_passed
@@ -426,6 +432,10 @@ static func run() -> bool:
     dock_viewport._select_from_click(2, _find_span_index_by_kind(event_rows_for_selection[2].get("row"), "condition"), true)
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("ctrl click toggles selected span off", editor_state.get("selected_span_count", 0), 0) and all_passed
+    dock_viewport._select_from_click(0, -1, false)
+    dock_viewport._select_from_click(2, -1, false, true)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("shift click selects anchored row range", editor_state.get("selected_row_count", 0), 3) and all_passed
 
     var parity_sheet := EventSheetResource.new()
     var parity_comment := CommentRow.new()
@@ -531,6 +541,21 @@ static func run() -> bool:
     dock_viewport._select_from_click(1, -1, true)
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("ctrl click can unselect a selected sub-event row", editor_state.get("selected_row_count", 0), 2) and all_passed
+    var grouped_selection_sheet := EventSheetResource.new()
+    var grouped_parent := EventGroup.new()
+    grouped_parent.name = "Selection Group"
+    grouped_parent.group_name = grouped_parent.name
+    var grouped_event_a := EventRow.new()
+    grouped_event_a.comment = "A"
+    var grouped_event_b := EventRow.new()
+    grouped_event_b.comment = "B"
+    grouped_parent.events = [grouped_event_a, grouped_event_b]
+    grouped_selection_sheet.events = [grouped_parent]
+    dock.setup(grouped_selection_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport._select_from_click(0, -1, false)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("group row selection includes contained events", editor_state.get("selected_row_count", 0), 3) and all_passed
 
     var sub_condition_sheet := EventSheetResource.new()
     var parent_event := EventRow.new()
@@ -602,8 +627,20 @@ static func run() -> bool:
     dock_viewport._select_from_click(0, _find_last_span_index_by_kind(delete_row_data, "action"), true)
     dock._unhandled_key_input(span_delete_key)
     all_passed = _check("delete key removes multi-selected action spans", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), 0) and all_passed
+    var add_comment_key := InputEventKey.new()
+    add_comment_key.pressed = true
+    add_comment_key.keycode = KEY_Q
+    dock._unhandled_key_input(add_comment_key)
+    all_passed = _check(
+        "Q shortcut creates a comment row below selection context",
+        dock.get_current_sheet().events[1] is CommentRow,
+        true
+    ) and all_passed
     dock_viewport = dock.get_viewport_control()
     dock_viewport._select_row(1)
+    dock._unhandled_key_input(span_delete_key)
+    all_passed = _check("delete key removes selected inserted comment rows", dock.get_current_sheet().events.size(), 2) and all_passed
+    dock_viewport._select_row(0)
     dock._unhandled_key_input(span_delete_key)
     all_passed = _check("delete key still removes selected event rows", dock.get_current_sheet().events.size(), 1) and all_passed
 
@@ -643,6 +680,32 @@ static func run() -> bool:
             (dock.get_current_sheet().events[1] as EventRow).condition_mode
         ],
         [EventRow.ConditionMode.AND, EventRow.ConditionMode.AND]
+    ) and all_passed
+    dock_viewport = dock.get_viewport_control()
+    multi_block_rows = dock_viewport.get_flat_rows()
+    var multi_condition_a_index: int = _find_span_index_by_kind(multi_block_rows[0].get("row"), "condition")
+    var multi_condition_b_index: int = _find_span_index_by_kind(multi_block_rows[1].get("row"), "condition")
+    dock_viewport._select_from_click(0, multi_condition_a_index, false)
+    dock_viewport._select_from_click(1, multi_condition_b_index, true)
+    dock._context_row = multi_block_rows[1].get("row")
+    dock._context_hit = {"span_metadata": {"kind": "condition", "ace_index": 0}, "span_index": multi_condition_b_index}
+    dock._toggle_context_ace_enabled()
+    all_passed = _check(
+        "multi-selected conditions can be disabled together",
+        [
+            ((dock.get_current_sheet().events[0] as EventRow).conditions[0] as ACECondition).enabled,
+            ((dock.get_current_sheet().events[1] as EventRow).conditions[0] as ACECondition).enabled
+        ],
+        [false, false]
+    ) and all_passed
+    dock._toggle_context_ace_enabled()
+    all_passed = _check(
+        "multi-selected conditions can be re-enabled together",
+        [
+            ((dock.get_current_sheet().events[0] as EventRow).conditions[0] as ACECondition).enabled,
+            ((dock.get_current_sheet().events[1] as EventRow).conditions[0] as ACECondition).enabled
+        ],
+        [true, true]
     ) and all_passed
 
     dock_viewport.custom_minimum_size = Vector2(640.0, 1200.0)
@@ -882,7 +945,11 @@ static func run() -> bool:
     var drag_preview_layout: Dictionary = dock_viewport.get_row_layout_for_test(1, 640.0)
     var ace_drag_rect: Rect2 = drag_preview_layout.get("ace_drag_rect", Rect2())
     all_passed = _check("ace drag target uses horizontal insertion after cursor midpoint", dock_viewport._drag_ace_insert_mode, "after") and all_passed
-    all_passed = _check("ace drag preview renders as a thin vertical placement line", ace_drag_rect.size.x <= 4.0, true) and all_passed
+    all_passed = _check(
+        "ace drag preview renders as a horizontal insertion band",
+        ace_drag_rect.size.y <= 4.0 and ace_drag_rect.size.x > 12.0,
+        true
+    ) and all_passed
     var ace_drag_source_action := ACEAction.new()
     ace_drag_source_action.provider_id = "Core"
     ace_drag_source_action.ace_id = "QueueFree"
@@ -910,7 +977,11 @@ static func run() -> bool:
     )
     drag_preview_layout = dock_viewport.get_row_layout_for_test(1, 640.0)
     ace_drag_rect = drag_preview_layout.get("ace_drag_rect", Rect2())
-    all_passed = _check("action drag preview also renders as a thin vertical placement line", ace_drag_rect.size.x <= 4.0, true) and all_passed
+    all_passed = _check(
+        "action drag preview also renders as a horizontal insertion band",
+        ace_drag_rect.size.y <= 4.0 and ace_drag_rect.size.x > 12.0,
+        true
+    ) and all_passed
     dock_viewport._clear_ace_drag()
     dock._on_viewport_ace_drop_requested(
         [{"source_resource": ace_drag_source, "kind": "condition", "ace_index": 0}],
@@ -1146,6 +1217,23 @@ static func run() -> bool:
     all_passed = _check("global variables render in the sheet rows", _rows_contain_text(dock_viewport.get_flat_rows(), "ammo"), true) and all_passed
     all_passed = _check("local variables render in the sheet rows", _rows_contain_text(dock_viewport.get_flat_rows(), "cooldown"), true) and all_passed
     all_passed = _check("const badge renders in variable rows", _rows_contain_text(dock_viewport.get_flat_rows(), "const"), true) and all_passed
+    var variable_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    for variable_row_index in range(variable_rows.size()):
+        var candidate_row: EventRowData = variable_rows[variable_row_index].get("row")
+        if candidate_row == null or candidate_row.row_type != EventRowData.RowType.SECTION:
+            continue
+        dock_viewport.get_row_layout_for_test(variable_row_index, 640.0)
+        var variable_spans_non_overlapping: bool = true
+        for span_index in range(candidate_row.spans.size() - 1):
+            var current_span: SemanticSpan = candidate_row.spans[span_index]
+            var next_span: SemanticSpan = candidate_row.spans[span_index + 1]
+            if current_span == null or next_span == null:
+                continue
+            if current_span.rect.end.x > next_span.rect.position.x:
+                variable_spans_non_overlapping = false
+                break
+        all_passed = _check("variable labels and values stay non-overlapping", variable_spans_non_overlapping, true) and all_passed
+        break
     dock._context_variable = {"scope": "global", "name": "ammo", "type": "int", "is_constant": true, "supports_const": true}
     dock._toggle_context_variable_constant()
     all_passed = _check("context toggle can unset global const flag", dock.get_current_sheet().variables["ammo"].get("const", true), false) and all_passed

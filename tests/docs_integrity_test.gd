@@ -38,6 +38,13 @@ const REQUIRED_DOCS := {
 		"Partial",
 		"Missing"
 	],
+	"res://docs/EVENTSHEET_C3_UI_UX_TRANSLATION_SPEC.md": [
+		"# EventSheet C3 UI/UX Translation Spec",
+		"Selection model translation",
+		"Drag/drop translation",
+		"Keyboard shortcut translation",
+		"Godot-specific deviations"
+	],
 	"res://docs/EVENTSHEET_AUTO_ACE_ALIGNMENT_STATUS.md": [
 		"# Auto-ACE Alignment Status",
 		"Implemented",
