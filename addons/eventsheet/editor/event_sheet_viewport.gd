@@ -59,6 +59,7 @@ const DROP_ZONE_INSIDE_BOTTOM := 0.67
 const DROP_ZONE_AFTER_THRESHOLD := 0.5
 const MIN_BOX_SELECT_DISTANCE := 1.0
 const MIN_BOX_SELECT_DISTANCE_SQ := MIN_BOX_SELECT_DISTANCE * MIN_BOX_SELECT_DISTANCE
+const MIN_COMMENT_LINE_INDEX := 1
 
 var _renderer: EventRowRenderer = EventRowRenderer.new()
 var _layout_cache: RowLayoutCache = RowLayoutCache.new()
@@ -1218,6 +1219,8 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     )
                 )
                 action_line_index += 1
+    # Keep +Add anchored to the latest authored action line (or line 0 when empty)
+    # so it remains visually tied to the current action stack.
     var add_action_line_index: int = max(action_line_index - 1, 0)
     spans.append(
         _make_span(
@@ -1234,7 +1237,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
         )
     )
     if not event_row.comment.is_empty():
-        var comment_line_index: int = max(action_line_index, 1)
+        var comment_line_index: int = max(action_line_index, MIN_COMMENT_LINE_INDEX)
         spans.append(
             _make_span(
                 event_row.comment,
@@ -1412,6 +1415,8 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
                 span_x = float(condition_badge_line_x[line_index])
             else:
                 if not condition_line_x.has(line_index):
+                    # If badges were drawn first on this line, start the condition text
+                    # after the rightmost badge; otherwise use the default badge-column offset.
                     condition_line_x[line_index] = float(
                         condition_badge_line_x.get(line_index, condition_content_x)
                     )
