@@ -4,12 +4,12 @@ extends RefCounted
 class_name DemoResourceReferenceTest
 
 const DEMO_SHEET_PATH := "res://demo/sheets/player.tres"
-const FORBIDDEN_PATH_FRAGMENT := "res://../addons/"
+const INVALID_PARENT_DIR_PATH := "res://../addons/"
 
 static func run() -> bool:
 	var passed: bool = true
 	var source: String = FileAccess.get_file_as_string(DEMO_SHEET_PATH)
-	passed = _check("demo sheet no longer serializes parent-directory addon paths", source.contains(FORBIDDEN_PATH_FRAGMENT), false) and passed
+	passed = _check("demo sheet no longer serializes parent-directory addon paths", source.contains(INVALID_PARENT_DIR_PATH), false) and passed
 
 	var sheet: EventSheetResource = load(DEMO_SHEET_PATH) as EventSheetResource
 	passed = _check("demo sheet loads as EventSheetResource", sheet is EventSheetResource, true) and passed

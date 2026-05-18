@@ -2,6 +2,8 @@
 class_name EventSheetElementStyle
 extends Resource
 
+const MIN_LINE_HEIGHT_EXTRA := 10
+
 @export var text_color: Color = EventSheetPalette.TEXT_PRIMARY
 @export var chip_background_color: Color = Color(1.0, 1.0, 1.0, 0.08)
 @export var chip_border_color: Color = Color(1.0, 1.0, 1.0, 0.18)
@@ -18,5 +20,5 @@ extends Resource
 func resolve_line_height(base_font_size: int, base_row_height: int) -> float:
 	return max(
 		float(base_row_height),
-		float(base_font_size + font_size_delta + (vertical_padding * 2) + 10)
+		float(base_font_size + font_size_delta + (vertical_padding * 2) + MIN_LINE_HEIGHT_EXTRA)
 	)

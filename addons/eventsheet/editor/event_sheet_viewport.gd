@@ -49,6 +49,7 @@ const BADGE_EXTRA_WIDTH := 12.0
 const CHIP_EXTRA_WIDTH := 16.0
 const CHIP_GAP := 8.0
 const ACE_DRAG_KINDS := ["trigger", "condition", "action"]
+const MIN_FONT_SIZE := 8
 const MIN_ZOOM_FACTOR := 0.6
 const MAX_ZOOM_FACTOR := 1.8
 const ZOOM_STEP := 0.1
@@ -1149,7 +1150,7 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
     if span == null:
         return 0.0
     var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
-    var draw_font_size: int = max(font_size + int(metadata.get("font_size_delta", 0)), 8)
+    var draw_font_size: int = max(font_size + int(metadata.get("font_size_delta", 0)), MIN_FONT_SIZE)
     var horizontal_padding: float = float(metadata.get("padding_x", 0.0))
     var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
     if bool(metadata.get("badge", false)):
