@@ -38,11 +38,11 @@ The current EventSheet editor pass is intended to be **usable for real project a
 
 Create a new **`EventSheetUIConfig`** resource in Godot, edit its exported colors/chip/badge settings, and then either:
 
-1. save it to `res://addons/eventsheet/theme/event_sheet_editor_style.tres` for automatic loading, or
+1. save it to `res://addons/eventsheet/theme/event_sheet_ui_config.tres` for automatic loading, or
 2. apply it manually from a tool/editor script with:
 
 ```gdscript
-var config := load("res://path/to/event_sheet_editor_style.tres") as EventSheetUIConfig
+var config := load("res://path/to/event_sheet_ui_config.tres") as EventSheetUIConfig
 var dock := EventSheetDock.new()
 dock.apply_ui_config(config)
 ```

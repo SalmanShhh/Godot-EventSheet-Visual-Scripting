@@ -1075,7 +1075,7 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
     var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
     var measured_font_size: int = font_size
     if bool(metadata.get("group_title", false)):
-        measured_font_size += 1
+        measured_font_size += EventSheetPalette.GROUP_TITLE_FONT_SIZE_DELTA
     var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, measured_font_size).x
     if bool(metadata.get("badge", false)):
         span_width += BADGE_EXTRA_WIDTH
@@ -1103,7 +1103,7 @@ func _measure_span_reservation_width(span: SemanticSpan, display_text: String, f
         SemanticSpan.SpanType.EXPRESSION,
         SemanticSpan.SpanType.COMMENT
     ]:
-        var min_width: float = 28.0
+        var min_width: float = EventSheetPalette.MIN_CLIPPABLE_SPAN_WIDTH
         if bool(metadata.get("chip", false)):
             min_width += CHIP_EXTRA_WIDTH
         return min(full_width, min_width)
@@ -1272,10 +1272,21 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
                     action_lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING - span_width - 2.0
                 )
             else:
-                span_width = max(min(span_width, reserved_start - EventSheetPalette.SPAN_GAP - trailing_width - current_gap - span_x), 1.0)
+                span_width = max(
+                    min(span_width, reserved_start - EventSheetPalette.SPAN_GAP - trailing_width - current_gap - span_x),
+                    EventSheetPalette.MIN_SPAN_RECT_WIDTH
+                )
         else:
-            span_width = max(min(span_width, row_right_limit - trailing_width - current_gap - span_x), 1.0)
-        span.rect = Rect2(span_x, span_y, max(span_width, 1.0), _get_row_base_height() - 6.0)
+            span_width = max(
+                min(span_width, row_right_limit - trailing_width - current_gap - span_x),
+                EventSheetPalette.MIN_SPAN_RECT_WIDTH
+            )
+        span.rect = Rect2(
+            span_x,
+            span_y,
+            max(span_width, EventSheetPalette.MIN_SPAN_RECT_WIDTH),
+            _get_row_base_height() - EventSheetPalette.SPAN_VERTICAL_INSET
+        )
         # Store absolute X for the next span start on this line.
         var next_span_start_x: float = span.rect.end.x + _get_span_gap(metadata, trailing_width > 0.0)
         if span_lane == "action":

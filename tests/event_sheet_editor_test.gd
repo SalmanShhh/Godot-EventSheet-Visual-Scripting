@@ -1004,8 +1004,8 @@ static func run() -> bool:
     # group_rename_requested signal is emitted on double-click on a group row
     var rename_signal_received: Array = []
     dock_viewport = dock.get_viewport_control()
-    var rename_signal_conn: Callable = func(rd: EventRowData, cn: String) -> void:
-        rename_signal_received.append({"row_data": rd, "current_name": cn})
+    var rename_signal_conn: Callable = func(row_data: EventRowData, current_name: String) -> void:
+        rename_signal_received.append({"row_data": row_data, "current_name": current_name})
     dock_viewport.group_rename_requested.connect(rename_signal_conn)
     var group_row_data: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
     if group_row_data != null and group_row_data.source_resource is EventGroup:
@@ -1027,8 +1027,8 @@ static func run() -> bool:
     dock_viewport = dock.get_viewport_control()
     dock_viewport._select_row(0)
     var var_edit_signals: Array = []
-    var var_edit_conn: Callable = func(rd: EventRowData, meta: Dictionary) -> void:
-        var_edit_signals.append({"row_data": rd, "meta": meta})
+    var var_edit_conn: Callable = func(row_data: EventRowData, variable_meta: Dictionary) -> void:
+        var_edit_signals.append({"row_data": row_data, "meta": variable_meta})
     dock_viewport.variable_edit_requested.connect(var_edit_conn)
     var all_flat_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     for row_entry in all_flat_rows:
