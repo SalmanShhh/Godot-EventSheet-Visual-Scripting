@@ -703,7 +703,23 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
     row_data.disabled = not group.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
     row_data.breakpoint_enabled = bool(_breakpoint_rows.get(row_data.row_uid, false))
     row_data.spans = [
-        _make_span(_group_name(group), SemanticSpan.SpanType.OBJECT, {"editable": true, "edit_kind": "group_name"})
+        _make_span(
+            "Group",
+            SemanticSpan.SpanType.KEYWORD,
+            {
+                "editable": false,
+                "badge": true,
+                "badge_style": "group",
+                "badge_bg": EventSheetPalette.COLOR_GROUP_BADGE_BG,
+                "badge_fg": EventSheetPalette.COLOR_GROUP_BADGE_FG,
+                "group_badge": true
+            }
+        ),
+        _make_span(
+            _group_name(group),
+            SemanticSpan.SpanType.OBJECT,
+            {"editable": true, "edit_kind": "group_name", "group_title": true}
+        )
     ]
     for child in _group_children(group):
         var child_row: EventRowData = _build_row_from_resource(child, indent + 1)
@@ -759,7 +775,10 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
                 str(var_name),
                 str(descriptor.get("type", "Variant")),
                 descriptor.get("default", null),
-                0
+                0,
+                {
+                    "is_constant": bool(descriptor.get("const", descriptor.get("is_constant", false)))
+                }
             )
         )
     return rows
@@ -778,25 +797,76 @@ func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[Event
                 descriptor.name,
                 descriptor.type_name,
                 descriptor.default_value,
-                indent
+                indent,
+                {
+                    "is_constant": descriptor.is_constant,
+                    "owner_event": event_row,
+                    "variable_index": rows.size()
+                }
             )
         )
     return rows
 
-func _build_variable_row(scope_label: String, var_name: String, type_name: String, default_value: Variant, indent: int) -> EventRowData:
+func _build_variable_row(
+    scope_label: String,
+    var_name: String,
+    type_name: String,
+    default_value: Variant,
+    indent: int,
+    options: Dictionary = {}
+) -> EventRowData:
     var row_data := EventRowData.new()
+    var owner_event: EventRow = options.get("owner_event", null)
+    var variable_index: int = int(options.get("variable_index", -1))
+    var is_constant: bool = bool(options.get("is_constant", false))
     row_data.indent = indent
     row_data.row_type = EventRowData.RowType.SECTION
-    row_data.row_uid = "variable_%s_%s_%d" % [scope_label, var_name, indent]
+    row_data.source_resource = owner_event if scope_label == "local" else _sheet
+    row_data.row_uid = (
+        "variable_local_%s_%d"
+        % [owner_event.event_uid if owner_event != null else "none", variable_index]
+        if scope_label == "local"
+        else "variable_global_%s" % var_name
+    )
     row_data.folded = false
+    var variable_meta := {
+        "kind": "variable",
+        "variable_scope": scope_label,
+        "variable_name": var_name,
+        "variable_index": variable_index,
+        "is_constant": is_constant
+    }
     row_data.spans = [
-        _make_span(scope_label, SemanticSpan.SpanType.KEYWORD, {"editable": false}),
-        _make_span(var_name if not var_name.is_empty() else "(unnamed)", SemanticSpan.SpanType.OBJECT, {"editable": false}),
-        _make_span(":", SemanticSpan.SpanType.OPERATOR, {"editable": false}),
-        _make_span(type_name if not type_name.is_empty() else "Variant", SemanticSpan.SpanType.VALUE, {"editable": false}),
-        _make_span("=", SemanticSpan.SpanType.OPERATOR, {"editable": false}),
-        _make_span(_format_variable_value(default_value), SemanticSpan.SpanType.VALUE, {"editable": false})
+        _make_span(scope_label, SemanticSpan.SpanType.KEYWORD, variable_meta.merged({"editable": false, "chip": true}, true)),
+        _make_span(var_name if not var_name.is_empty() else "(unnamed)", SemanticSpan.SpanType.OBJECT, variable_meta.merged({"editable": false}, true)),
+        _make_span(":", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)),
+        _make_span(type_name if not type_name.is_empty() else "Variant", SemanticSpan.SpanType.VALUE, variable_meta.merged({"editable": false}, true))
     ]
+    if is_constant:
+        row_data.spans.append(
+            _make_span(
+                "const",
+                SemanticSpan.SpanType.KEYWORD,
+                variable_meta.merged(
+                    {
+                        "editable": false,
+                        "badge": true,
+                        "badge_style": "const",
+                        "badge_bg": EventSheetPalette.COLOR_CONST_BADGE_BG,
+                        "badge_fg": EventSheetPalette.COLOR_CONST_BADGE_FG
+                    },
+                    true
+                )
+            )
+        )
+    row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)))
+    row_data.spans.append(
+        _make_span(
+            _format_variable_value(default_value),
+            SemanticSpan.SpanType.VALUE,
+            variable_meta.merged({"editable": false}, true)
+        )
+    )
     return row_data
 
 func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
@@ -1109,9 +1179,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         else:
             span_width = max(min(span_width, row_right_limit - span_x), 1.0)
         span.rect = Rect2(span_x, span_y, span_width + 2.0, ROW_HEIGHT - 6.0)
-        var next_x: float = span.rect.size.x + (
-            CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP
-        )
+        var next_x: float = CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP
         if span_lane == "action":
             if not bool(metadata.get("align_right", false)):
                 action_line_x[int(metadata.get("line_index", 0))] = span.rect.end.x + next_x

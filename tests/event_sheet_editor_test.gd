@@ -135,8 +135,9 @@ static func run() -> bool:
     var group_row: EventRowData = flat_rows[1].get("row")
     var event_row_data: EventRowData = flat_rows[2].get("row")
     all_passed = _check("comment rows render a single editable label span", comment_row_data.spans.size(), 1) and all_passed
-    all_passed = _check("group rows render a single editable label span", group_row.spans.size(), 1) and all_passed
+    all_passed = _check("group rows render badge and editable title spans", group_row.spans.size() >= 2, true) and all_passed
     all_passed = _check("group row tagged correctly", group_row.row_type, EventRowData.RowType.GROUP) and all_passed
+    all_passed = _check("group row includes explicit group badge text", _row_contains_text(group_row, "Group"), true) and all_passed
     all_passed = _check("event row inherits indent", event_row_data.indent, 1) and all_passed
     all_passed = _check("event row action span exists", _row_contains_text(event_row_data, "Queue free"), true) and all_passed
     all_passed = _check("event row includes lane metadata spans", _row_has_lane(event_row_data, "condition") and _row_has_lane(event_row_data, "action"), true) and all_passed
@@ -169,6 +170,13 @@ static func run() -> bool:
             and action_span_index >= 0
             and is_equal_approx(event_row_data.spans[add_action_span_index].rect.position.y, event_row_data.spans[action_span_index].rect.position.y)
             and event_row_data.spans[add_action_span_index].rect.position.x > event_row_data.spans[action_span_index].rect.position.x,
+        true
+    ) and all_passed
+    all_passed = _check(
+        "action lane spacing keeps adjacent spans tightly aligned",
+        action_span_index >= 0
+            and add_action_span_index >= 0
+            and event_row_data.spans[add_action_span_index].rect.position.x - event_row_data.spans[action_span_index].rect.end.x < 80.0,
         true
     ) and all_passed
 
@@ -754,6 +762,7 @@ static func run() -> bool:
     dock.setup(copy_sheet)
     dock._on_variable_dialog_confirmed("ammo", "int", 12, "global")
     all_passed = _check("create global variable stores sheet variable", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
+    all_passed = _check("create global variable stores const=false by default", dock.get_current_sheet().variables["ammo"].get("const", false), false) and all_passed
     dock._on_undo_requested()
     all_passed = _check("undo removes global variable creation", dock.get_current_sheet().variables.has("ammo"), false) and all_passed
     dock._on_redo_requested()
@@ -772,11 +781,66 @@ static func run() -> bool:
     all_passed = _check("redo restores local variable creation", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
     dock._on_global_variable_activated(0)
     all_passed = _check("editing global variable in use locks type selector", dock._variable_dlg._type_option.disabled, true) and all_passed
-    dock._on_variable_dialog_confirmed("ammo", "int", 99, "global", {"editing": true, "original_name": "ammo"})
+    dock._on_variable_dialog_confirmed("ammo", "int", 99, "global", {"editing": true, "original_name": "ammo"}, true)
     all_passed = _check("editing global variable updates default", dock.get_current_sheet().variables["ammo"].get("default", 0), 99) and all_passed
+    all_passed = _check("editing global variable can set const flag", dock.get_current_sheet().variables["ammo"].get("const", false), true) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo restores previous global const state", dock.get_current_sheet().variables["ammo"].get("const", false), false) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo reapplies global const state", dock.get_current_sheet().variables["ammo"].get("const", false), true) and all_passed
     dock_viewport = dock.get_viewport_control()
     all_passed = _check("global variables render in the sheet rows", _rows_contain_text(dock_viewport.get_flat_rows(), "ammo"), true) and all_passed
     all_passed = _check("local variables render in the sheet rows", _rows_contain_text(dock_viewport.get_flat_rows(), "cooldown"), true) and all_passed
+    all_passed = _check("const badge renders in variable rows", _rows_contain_text(dock_viewport.get_flat_rows(), "const"), true) and all_passed
+    dock._context_variable = {"scope": "global", "name": "ammo", "type": "int", "is_constant": true, "supports_const": true}
+    dock._toggle_context_variable_constant()
+    all_passed = _check("context toggle can unset global const flag", dock.get_current_sheet().variables["ammo"].get("const", true), false) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo restores const toggle action", dock.get_current_sheet().variables["ammo"].get("const", false), true) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo reapplies const toggle action", dock.get_current_sheet().variables["ammo"].get("const", true), false) and all_passed
+    dock._context_variable = {"scope": "global", "name": "ammo", "type": "int", "is_constant": false, "supports_const": true}
+    dock._toggle_context_variable_constant()
+    all_passed = _check("context toggle can set global const flag again", dock.get_current_sheet().variables["ammo"].get("const", false), true) and all_passed
+
+    var conversion_event_uid: String = (dock.get_current_sheet().events[0] as EventRow).event_uid
+    var global_entry := {
+        "scope": "global",
+        "name": "ammo",
+        "type": "int",
+        "default": 99,
+        "is_constant": true
+    }
+    var converted_to_local: bool = dock._convert_variable_scope(global_entry, "local", conversion_event_uid)
+    all_passed = _check("global to local conversion succeeds", converted_to_local, true) and all_passed
+    all_passed = _check("global to local conversion removes global variable", dock.get_current_sheet().variables.has("ammo"), false) and all_passed
+    all_passed = _check("global to local conversion preserves type", ((dock.get_current_sheet().events[0] as EventRow).local_variables[1] as LocalVariable).type_name, "int") and all_passed
+    all_passed = _check("global to local conversion preserves default value", ((dock.get_current_sheet().events[0] as EventRow).local_variables[1] as LocalVariable).default_value, 99) and all_passed
+    all_passed = _check("global to local conversion preserves const flag", ((dock.get_current_sheet().events[0] as EventRow).local_variables[1] as LocalVariable).is_constant, true) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo restores global variable after conversion", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo reapplies global to local conversion", dock.get_current_sheet().variables.has("ammo"), false) and all_passed
+
+    var local_to_global_entry := {
+        "scope": "local",
+        "name": "ammo",
+        "type": "int",
+        "default": 99,
+        "is_constant": true,
+        "event_row": dock.get_current_sheet().events[0],
+        "index": 1
+    }
+    var converted_to_global: bool = dock._convert_variable_scope(local_to_global_entry, "global")
+    all_passed = _check("local to global conversion succeeds", converted_to_global, true) and all_passed
+    all_passed = _check("local to global conversion restores global variable", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
+    all_passed = _check("local to global conversion preserves type", dock.get_current_sheet().variables["ammo"].get("type", ""), "int") and all_passed
+    all_passed = _check("local to global conversion preserves default value", dock.get_current_sheet().variables["ammo"].get("default", null), 99) and all_passed
+    all_passed = _check("local to global conversion preserves const flag", dock.get_current_sheet().variables["ammo"].get("const", false), true) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo restores local variable after local->global conversion", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 2) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo reapplies local->global conversion", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
 
     var unselected_local_sheet := EventSheetResource.new()
     unselected_local_sheet.events = [EventRow.new()]
@@ -867,6 +931,7 @@ static func run() -> bool:
     if exists_after_save:
         dock._load_sheet_from_path(temp_path)
         all_passed = _check("open workflow loads EventSheet resource", dock.get_current_sheet() is EventSheetResource, true) and all_passed
+        all_passed = _check("save/load keeps global const flag", bool(dock.get_current_sheet().variables.get("ammo", {}).get("const", false)), true) and all_passed
     all_passed = _check("save normalization adds default filename", dock._normalize_sheet_save_path("res://"), "res://event_sheet.tres") and all_passed
     all_passed = _check("save normalization appends tres extension", dock._normalize_sheet_save_path("res://sheets/editor_sheet"), "res://sheets/editor_sheet.tres") and all_passed
 

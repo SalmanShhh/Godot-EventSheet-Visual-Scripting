@@ -45,7 +45,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     var has_span_selection: bool = not selected_span_indices.is_empty()
 
     _draw_gutter(control, gutter_rect, line_number, breakpoint_enabled, font, font_size)
-    control.draw_rect(row_rect, BG_1 if alternating else BG_0, true)
+    if row_data.row_type == EventRowData.RowType.GROUP:
+        _draw_group_row_chrome(control, row_rect, fold_rect, alternating)
+    else:
+        control.draw_rect(row_rect, BG_1 if alternating else BG_0, true)
     if condition_lane_rect.size != Vector2.ZERO:
         control.draw_rect(condition_lane_rect, EventSheetPalette.COLOR_LANE_CONDITIONS, true)
     if action_lane_rect.size != Vector2.ZERO:
@@ -128,6 +131,15 @@ func _draw_fold_arrow(control: Control, fold_rect: Rect2, folded: bool, visible:
             true
         )
 
+func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2, alternating: bool) -> void:
+    var bg: Color = EventSheetPalette.COLOR_GROUP_BG_ALT if alternating else EventSheetPalette.COLOR_GROUP_BG
+    control.draw_rect(row_rect, bg, true)
+    control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), EventSheetPalette.COLOR_GROUP_ACCENT, true)
+    control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, row_rect.size.x, 1.0), EventSheetPalette.COLOR_GROUP_ACCENT.darkened(0.28), true)
+    control.draw_rect(Rect2(row_rect.position.x, row_rect.end.y - 1.0, row_rect.size.x, 1.0), EventSheetPalette.COLOR_GROUP_ACCENT.darkened(0.38), true)
+    if fold_rect.size != Vector2.ZERO:
+        control.draw_rect(fold_rect.grow(1.0), EventSheetPalette.COLOR_GROUP_FOLD_BG, true)
+
 func _draw_icon(control: Control, icon_rect: Rect2, row_data: EventRowData) -> void:
     if icon_rect.size == Vector2.ZERO:
         return
@@ -161,12 +173,15 @@ func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size
             _draw_badge_span(control, span, font, font_size, metadata)
             continue
         var color: Color = _get_span_color(span.type)
+        if row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false)):
+            color = EventSheetPalette.COLOR_GROUP_TITLE
         var draw_text: String = editing_buffer if span_index == editing_span_index else span.text
-        var baseline_y: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) + (font_size * FONT_BASELINE_OFFSET_RATIO)
+        var draw_font_size: int = font_size + 1 if row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false)) else font_size
+        var baseline_y: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) + (draw_font_size * FONT_BASELINE_OFFSET_RATIO)
         var text_x: float = span.rect.position.x + (8.0 if bool(metadata.get("chip", false)) else 0.0)
         var right_padding: float = 8.0 if bool(metadata.get("chip", false)) else 2.0
         var text_width: float = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
-        control.draw_string(font, Vector2(text_x, baseline_y), draw_text, HORIZONTAL_ALIGNMENT_LEFT, text_width, font_size, color)
+        control.draw_string(font, Vector2(text_x, baseline_y), draw_text, HORIZONTAL_ALIGNMENT_LEFT, text_width, draw_font_size, color)
         if span_index == editing_span_index:
             var prefix: String = draw_text.substr(0, clamp(editing_caret, 0, draw_text.length()))
             var prefix_width: float = font.get_string_size(prefix, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x

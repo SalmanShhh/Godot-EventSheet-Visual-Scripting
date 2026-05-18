@@ -22,6 +22,9 @@ const ROW_MENU_PASTE := 6
 const ROW_MENU_DELETE := 7
 const ROW_MENU_TOGGLE_CONDITION_BLOCK := 8
 const ROW_MENU_TOGGLE_GROUP_FOLD := 9
+const VARIABLE_MENU_EDIT := 1
+const VARIABLE_MENU_CONVERT_SCOPE := 2
+const VARIABLE_MENU_TOGGLE_CONST := 3
 const ACE_DRAG_KINDS := ["condition", "action"]
 const SIDE_PANEL_MIN_WIDTH := 160.0
 const SIDE_PANEL_MAX_WIDTH := 220.0
@@ -57,8 +60,10 @@ var _variable_dlg: VariableDialog = VariableDialog.new()
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
+var _variable_context_menu: PopupMenu = null
 var _context_row: EventRowData = null
 var _context_hit: Dictionary = {}
+var _context_variable: Dictionary = {}
 var _global_variable_entries: Array[Dictionary] = []
 var _local_variable_entries: Array[Dictionary] = []
 
@@ -279,6 +284,13 @@ func _build_context_menus() -> void:
     _row_context_menu.add_theme_font_size_override("font_size", 14)
     _row_context_menu.id_pressed.connect(_on_row_context_menu_id_pressed)
     add_child(_row_context_menu)
+
+    _variable_context_menu = PopupMenu.new()
+    _variable_context_menu.add_item("Edit Variable", VARIABLE_MENU_EDIT)
+    _variable_context_menu.add_item("Convert Scope", VARIABLE_MENU_CONVERT_SCOPE)
+    _variable_context_menu.add_item("Toggle Constant", VARIABLE_MENU_TOGGLE_CONST)
+    _variable_context_menu.id_pressed.connect(_on_variable_context_menu_id_pressed)
+    add_child(_variable_context_menu)
 
 func _add_toolbar_button(text: String, callable: Callable) -> void:
     var button: Button = Button.new()
@@ -1029,9 +1041,15 @@ func _on_viewport_drag_status_requested(message: String, is_error: bool) -> void
 func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary, global_position: Vector2) -> void:
     _context_row = row_data
     _context_hit = hit.duplicate(true)
+    _context_variable = {}
     if row_data == null:
         return
     var metadata: Dictionary = hit.get("span_metadata", {})
+    if str(metadata.get("kind", "")) == "variable":
+        _context_variable = _context_variable_entry_from_metadata(row_data, metadata)
+        if not _context_variable.is_empty():
+            _show_popup_menu(_variable_context_menu, global_position)
+            return
     var kind: String = str(metadata.get("kind", ""))
     if kind in ["condition", "trigger"]:
         _show_popup_menu(_condition_context_menu, global_position)
@@ -1078,6 +1096,27 @@ func _configure_context_menu(menu: PopupMenu) -> void:
                 menu.set_item_text(
                     group_toggle_index,
                     "Open Group" if context_group.is_collapsed() else "Close Group"
+                )
+    elif menu == _variable_context_menu:
+        var has_variable: bool = not _context_variable.is_empty()
+        var convert_index: int = menu.get_item_index(VARIABLE_MENU_CONVERT_SCOPE)
+        if convert_index >= 0:
+            menu.set_item_disabled(convert_index, not has_variable)
+            if has_variable:
+                var scope_label: String = str(_context_variable.get("scope", "global"))
+                menu.set_item_text(
+                    convert_index,
+                    "Convert to Global" if scope_label == "local" else "Convert to Local"
+                )
+        var const_index: int = menu.get_item_index(VARIABLE_MENU_TOGGLE_CONST)
+        if const_index >= 0:
+            var supports_const: bool = has_variable and bool(_context_variable.get("supports_const", false))
+            menu.set_item_disabled(const_index, not supports_const)
+            if has_variable:
+                var is_constant: bool = bool(_context_variable.get("is_constant", false))
+                menu.set_item_text(
+                    const_index,
+                    "Unset Constant" if is_constant else "Set Constant"
                 )
 
 func _on_condition_context_menu_id_pressed(id: int) -> void:
@@ -1139,6 +1178,17 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
             _toggle_context_condition_block()
         ROW_MENU_TOGGLE_GROUP_FOLD:
             _toggle_context_group_fold()
+
+func _on_variable_context_menu_id_pressed(id: int) -> void:
+    if _context_variable.is_empty():
+        return
+    match id:
+        VARIABLE_MENU_EDIT:
+            _edit_context_variable()
+        VARIABLE_MENU_CONVERT_SCOPE:
+            _convert_context_variable_scope()
+        VARIABLE_MENU_TOGGLE_CONST:
+            _toggle_context_variable_constant()
 
 func _delete_context_ace() -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
@@ -1374,7 +1424,14 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 
 # ── Variable dialog signal handler ────────────────────────────────────────────
 
-func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary = {}) -> void:
+func _on_variable_dialog_confirmed(
+    var_name: String,
+    type_name: String,
+    default_value: Variant,
+    scope: String,
+    context: Dictionary = {},
+    is_constant: bool = false
+) -> void:
     if var_name.is_empty():
         _set_status("Variable name is required.", true)
         return
@@ -1383,13 +1440,16 @@ func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_
     var editing: bool = bool(context.get("editing", false))
     var action_verb: String = "Updated" if editing else "Added"
     var message := {"text": ""}
+    var supports_const: bool = _variable_type_supports_const(type_name)
+    var resolved_constant: bool = is_constant and supports_const
     var added: bool = _perform_undoable_sheet_edit("Create Variable", func() -> bool:
         if scope == "global":
             if editing and not original_name.is_empty() and original_name != var_name:
                 _current_sheet.variables.erase(original_name)
             _current_sheet.variables[var_name] = {
                 "type": type_name,
-                "default": default_value
+                "default": default_value,
+                "const": resolved_constant
             }
             message["text"] = "%s global variable %s." % [action_verb, var_name]
             return true
@@ -1414,6 +1474,7 @@ func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_
         local_var.type_name = type_name
         local_var.type = _type_from_name(type_name)
         local_var.default_value = default_value
+        local_var.is_constant = resolved_constant
         message["text"] = "%s local variable %s." % [action_verb, var_name]
         return true
     )
@@ -1424,6 +1485,276 @@ func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_
         _mark_dirty(str(message.get("text", "Saved variable.")))
         if scope == "local" and not (selected is EventRow):
             _select_first_event_row()
+
+func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dictionary) -> Dictionary:
+    if row_data == null or metadata.is_empty() or _current_sheet == null:
+        return {}
+    var var_name: String = str(metadata.get("variable_name", ""))
+    var scope: String = str(metadata.get("variable_scope", "global"))
+    if var_name.is_empty():
+        return {}
+    var type_name: String = "Variant"
+    var default_value: Variant = null
+    var is_constant: bool = false
+    var index: int = int(metadata.get("variable_index", -1))
+    var owner_event: EventRow = null
+    if scope == "local":
+        if row_data.source_resource is EventRow:
+            owner_event = row_data.source_resource as EventRow
+        if owner_event == null and _viewport != null:
+            var selected_resource: Resource = _viewport.get_selected_context().get("source_resource", null)
+            if selected_resource is EventRow:
+                owner_event = selected_resource as EventRow
+        if owner_event == null:
+            return {}
+        var local_var: LocalVariable = _resolve_local_variable(owner_event, var_name, index)
+        if local_var == null:
+            return {}
+        type_name = local_var.type_name
+        default_value = local_var.default_value
+        is_constant = local_var.is_constant
+        index = owner_event.local_variables.find(local_var)
+    else:
+        var descriptor: Dictionary = _current_sheet.variables.get(var_name, {})
+        if descriptor.is_empty():
+            return {}
+        type_name = str(descriptor.get("type", "Variant"))
+        default_value = descriptor.get("default", null)
+        is_constant = bool(descriptor.get("const", descriptor.get("is_constant", false)))
+    return {
+        "scope": scope,
+        "name": var_name,
+        "type": type_name,
+        "default": default_value,
+        "is_constant": is_constant,
+        "supports_const": _variable_type_supports_const(type_name),
+        "event_row": owner_event,
+        "index": index
+    }
+
+func _resolve_local_variable(event_row: EventRow, var_name: String, index: int = -1) -> LocalVariable:
+    if event_row == null:
+        return null
+    if index >= 0 and index < event_row.local_variables.size():
+        var indexed: LocalVariable = event_row.local_variables[index]
+        if indexed != null and indexed.name == var_name:
+            return indexed
+    for local_var in event_row.local_variables:
+        if local_var is LocalVariable and (local_var as LocalVariable).name == var_name:
+            return local_var as LocalVariable
+    return null
+
+func _edit_context_variable() -> void:
+    if _context_variable.is_empty():
+        return
+    var scope: String = str(_context_variable.get("scope", "global"))
+    if scope == "local":
+        var owner_event: EventRow = _context_variable.get("event_row", null)
+        if owner_event == null:
+            _set_status("Select the owning event before editing this local variable.", true)
+            return
+        _variable_dlg.open_for_edit(
+            "local",
+            {
+                "editing": true,
+                "original_name": str(_context_variable.get("name", "")),
+                "variable_index": int(_context_variable.get("index", -1)),
+                "selected_resource": owner_event
+            },
+            str(_context_variable.get("name", "")),
+            str(_context_variable.get("type", "Variant")),
+            _context_variable.get("default", null),
+            _is_local_variable_in_use(str(_context_variable.get("name", "")), owner_event),
+            "Edit Variable",
+            bool(_context_variable.get("is_constant", false))
+        )
+        return
+    var global_name: String = str(_context_variable.get("name", ""))
+    _variable_dlg.open_for_edit(
+        "global",
+        {"editing": true, "original_name": global_name},
+        global_name,
+        str(_context_variable.get("type", "Variant")),
+        _context_variable.get("default", null),
+        _is_global_variable_in_use(global_name),
+        "Edit Variable",
+        bool(_context_variable.get("is_constant", false))
+    )
+
+func _convert_context_variable_scope() -> void:
+    if _context_variable.is_empty():
+        return
+    var scope: String = str(_context_variable.get("scope", "global"))
+    if scope == "global":
+        _prompt_convert_global_variable_to_local(_context_variable)
+        return
+    var converted: bool = _convert_variable_scope(_context_variable, "global")
+    if not converted:
+        _set_status("Could not convert variable to global scope.", true)
+
+func _toggle_context_variable_constant() -> void:
+    if _context_variable.is_empty():
+        return
+    if not bool(_context_variable.get("supports_const", false)):
+        _set_status("Const is unavailable for this variable type.", true)
+        return
+    var scope: String = str(_context_variable.get("scope", "global"))
+    var var_name: String = str(_context_variable.get("name", ""))
+    var new_constant: bool = not bool(_context_variable.get("is_constant", false))
+    var changed: bool = _perform_undoable_sheet_edit("Toggle Variable Constant", func() -> bool:
+        if scope == "global":
+            var descriptor: Dictionary = _current_sheet.variables.get(var_name, {})
+            if descriptor.is_empty():
+                return false
+            descriptor["const"] = new_constant
+            _current_sheet.variables[var_name] = descriptor
+            return true
+        var owner_event: EventRow = _context_variable.get("event_row", null)
+        var local_var: LocalVariable = _resolve_local_variable(owner_event, var_name, int(_context_variable.get("index", -1)))
+        if local_var == null:
+            return false
+        local_var.is_constant = new_constant
+        return true
+    )
+    if changed:
+        _mark_dirty("%s variable %s as constant." % ["Marked" if new_constant else "Unmarked", var_name])
+        _context_variable["is_constant"] = new_constant
+
+func _prompt_convert_global_variable_to_local(entry: Dictionary) -> void:
+    if _current_sheet == null:
+        return
+    var options: Array[Dictionary] = _collect_event_row_options()
+    if options.is_empty():
+        _set_status("Add an event row first, then convert this variable to local.", true)
+        return
+    var dialog: ConfirmationDialog = ConfirmationDialog.new()
+    dialog.title = "Convert Global Variable to Local"
+    var content: VBoxContainer = VBoxContainer.new()
+    content.custom_minimum_size = Vector2(420.0, 120.0)
+    dialog.add_child(content)
+    var summary: Label = Label.new()
+    summary.text = "Select the target event for local variable %s." % str(entry.get("name", ""))
+    summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    content.add_child(summary)
+    var picker: OptionButton = OptionButton.new()
+    picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    for option in options:
+        picker.add_item(str(option.get("label", "")))
+        picker.set_item_metadata(picker.item_count - 1, str(option.get("uid", "")))
+    content.add_child(picker)
+    dialog.confirmed.connect(func() -> void:
+        var selected_uid: String = str(picker.get_item_metadata(picker.selected))
+        var converted: bool = _convert_variable_scope(entry, "local", selected_uid)
+        if not converted:
+            _set_status("Could not convert variable to local scope.", true)
+        dialog.queue_free()
+    )
+    dialog.canceled.connect(func() -> void: dialog.queue_free())
+    dialog.close_requested.connect(func() -> void: dialog.queue_free())
+    add_child(dialog)
+    dialog.popup_centered(Vector2i(460, 180))
+
+func _collect_event_row_options() -> Array[Dictionary]:
+    var options: Array[Dictionary] = []
+    if _current_sheet == null:
+        return options
+    var event_rows: Array[EventRow] = []
+    _collect_event_rows_recursive(_current_sheet.events, event_rows)
+    for event_row in event_rows:
+        options.append(
+            {
+                "uid": event_row.event_uid,
+                "label": _format_event_target_label(event_row)
+            }
+        )
+    return options
+
+func _collect_event_rows_recursive(resources: Array, output: Array[EventRow]) -> void:
+    for resource_entry in resources:
+        if resource_entry is EventRow:
+            output.append(resource_entry as EventRow)
+            _collect_event_rows_recursive((resource_entry as EventRow).sub_events, output)
+        elif resource_entry is EventGroup:
+            _collect_event_rows_recursive(_group_children_array(resource_entry as EventGroup), output)
+
+func _format_event_target_label(event_row: EventRow) -> String:
+    if event_row == null:
+        return "(invalid event)"
+    var label: String = "Event %s" % event_row.event_uid
+    if not event_row.comment.is_empty():
+        label += " — %s" % event_row.comment
+    elif not event_row.trigger_id.is_empty():
+        label += " — %s" % event_row.trigger_id
+    elif event_row.trigger != null and not event_row.trigger.ace_id.is_empty():
+        label += " — %s" % event_row.trigger.ace_id
+    return label
+
+func _find_event_row_by_uid(event_uid: String) -> EventRow:
+    if _current_sheet == null or event_uid.is_empty():
+        return null
+    var event_rows: Array[EventRow] = []
+    _collect_event_rows_recursive(_current_sheet.events, event_rows)
+    for event_row in event_rows:
+        if event_row.event_uid == event_uid:
+            return event_row
+    return null
+
+func _convert_variable_scope(entry: Dictionary, target_scope: String, target_event_uid: String = "") -> bool:
+    if _current_sheet == null or entry.is_empty():
+        return false
+    var source_scope: String = str(entry.get("scope", "global"))
+    var var_name: String = str(entry.get("name", ""))
+    var type_name: String = str(entry.get("type", "Variant"))
+    var default_value: Variant = entry.get("default", null)
+    var is_constant: bool = bool(entry.get("is_constant", false))
+    if source_scope == target_scope:
+        return false
+    var converted: bool = _perform_undoable_sheet_edit("Convert Variable Scope", func() -> bool:
+        if source_scope == "global" and target_scope == "local":
+            var descriptor: Dictionary = _current_sheet.variables.get(var_name, {})
+            if descriptor.is_empty():
+                _set_status("Global variable %s no longer exists." % var_name, true)
+                return false
+            var target_event: EventRow = _find_event_row_by_uid(target_event_uid)
+            if target_event == null:
+                _set_status("Select a target event for local conversion.", true)
+                return false
+            if _resolve_local_variable(target_event, var_name) != null:
+                _set_status("Target event already has a local variable named %s." % var_name, true)
+                return false
+            var local_var: LocalVariable = LocalVariable.new()
+            local_var.name = var_name
+            local_var.type_name = type_name
+            local_var.type = _type_from_name(type_name)
+            local_var.default_value = default_value
+            local_var.is_constant = is_constant and _variable_type_supports_const(type_name)
+            target_event.local_variables.append(local_var)
+            _current_sheet.variables.erase(var_name)
+            return true
+        if source_scope == "local" and target_scope == "global":
+            var owner_event: EventRow = entry.get("event_row", null)
+            var local_var: LocalVariable = _resolve_local_variable(owner_event, var_name, int(entry.get("index", -1)))
+            if local_var == null:
+                _set_status("Local variable %s no longer exists." % var_name, true)
+                return false
+            if _current_sheet.variables.has(var_name):
+                _set_status("A global variable named %s already exists." % var_name, true)
+                return false
+            _current_sheet.variables[var_name] = {
+                "type": local_var.type_name,
+                "default": local_var.default_value,
+                "const": local_var.is_constant and _variable_type_supports_const(local_var.type_name)
+            }
+            owner_event.local_variables.remove_at(owner_event.local_variables.find(local_var))
+            return true
+        return false
+    )
+    if converted:
+        _mark_dirty("Converted variable %s to %s scope." % [var_name, target_scope])
+    return converted
+
+func _variable_type_supports_const(type_name: String) -> bool:
+    return type_name != "Variant"
 
 func _type_from_name(type_name: String) -> int:
     match type_name:
@@ -1450,7 +1781,8 @@ func _on_global_variable_activated(index: int) -> void:
         str(entry.get("type", "Variant")),
         entry.get("default", ""),
         _is_global_variable_in_use(var_name),
-        "Edit Variable"
+        "Edit Variable",
+        bool(entry.get("const", false))
     )
 
 func _on_local_variable_activated(index: int) -> void:
@@ -1471,7 +1803,8 @@ func _on_local_variable_activated(index: int) -> void:
         str(entry.get("type", "Variant")),
         entry.get("default", ""),
         _is_local_variable_in_use(var_name, selected_resource),
-        "Edit Variable"
+        "Edit Variable",
+        bool(entry.get("const", false))
     )
 
 func _is_global_variable_in_use(var_name: String) -> bool:
@@ -1664,12 +1997,22 @@ func _refresh_variable_panel() -> void:
         names.sort()
         for var_name in names:
             var descriptor: Dictionary = _current_sheet.variables.get(var_name, {})
+            var is_constant: bool = bool(descriptor.get("const", descriptor.get("is_constant", false)))
             if _global_var_list != null:
-                _global_var_list.add_item("%s : %s = %s" % [var_name, str(descriptor.get("type", "Variant")), str(descriptor.get("default", ""))])
+                _global_var_list.add_item(
+                    "%s%s : %s = %s"
+                    % [
+                        "const " if is_constant else "",
+                        var_name,
+                        str(descriptor.get("type", "Variant")),
+                        str(descriptor.get("default", ""))
+                    ]
+                )
             _global_variable_entries.append({
                 "name": var_name,
                 "type": str(descriptor.get("type", "Variant")),
-                "default": descriptor.get("default", "")
+                "default": descriptor.get("default", ""),
+                "const": is_constant
             })
     var selected_resource: Resource = _viewport.get_selected_context().get("source_resource", null)
     if selected_resource is EventRow:
@@ -1678,12 +2021,21 @@ func _refresh_variable_panel() -> void:
             if local_var == null:
                 continue
             if _local_var_list != null:
-                _local_var_list.add_item("%s : %s = %s" % [local_var.name, local_var.type_name, str(local_var.default_value)])
+                _local_var_list.add_item(
+                    "%s%s : %s = %s"
+                    % [
+                        "const " if local_var.is_constant else "",
+                        local_var.name,
+                        local_var.type_name,
+                        str(local_var.default_value)
+                    ]
+                )
             _local_variable_entries.append({
                 "index": index,
                 "name": local_var.name,
                 "type": local_var.type_name,
                 "default": local_var.default_value,
+                "const": local_var.is_constant,
                 "selected_resource": selected_resource
             })
 
