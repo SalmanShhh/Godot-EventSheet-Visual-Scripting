@@ -1594,7 +1594,7 @@ func _ace_entry_uses_variable(entry: Resource, var_name: String) -> bool:
     return false
 
 func _dictionary_uses_variable(values: Dictionary, var_name: String, depth: int) -> bool:
-    if depth >= VARIABLE_USAGE_MAX_DEPTH or values.is_empty() or var_name.is_empty():
+    if depth >= VARIABLE_USAGE_MAX_DEPTH or var_name.is_empty() or values.is_empty():
         return false
     for value in values.values():
         if value is Dictionary and _dictionary_uses_variable(value as Dictionary, var_name, depth + 1):

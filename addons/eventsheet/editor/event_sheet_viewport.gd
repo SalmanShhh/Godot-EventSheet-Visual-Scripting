@@ -1494,9 +1494,7 @@ func _rebuild_row_metrics() -> void:
         top += height
 
 func _resolve_row_height(row_data: EventRowData) -> float:
-    if row_data == null:
-        return float(ROW_HEIGHT)
-    if row_data.row_type != EventRowData.RowType.EVENT:
+    if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
         return float(ROW_HEIGHT)
     var max_line_index: int = 0
     for span in row_data.spans:
