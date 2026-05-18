@@ -59,7 +59,12 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     if drag_rect.size != Vector2.ZERO:
         control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
     if ace_drag_rect.size != Vector2.ZERO:
-        control.draw_rect(ace_drag_rect, EventSheetPalette.COLOR_DRAG_LINE, false, 2.0)
+        control.draw_rect(
+            ace_drag_rect,
+            EventSheetPalette.COLOR_DRAG_LINE,
+            ace_drag_rect.size.y <= 4.0,
+            2.0
+        )
     if disabled:
         control.draw_rect(row_rect, EventSheetPalette.COLOR_DISABLED, true)
     if not debug_text.is_empty():

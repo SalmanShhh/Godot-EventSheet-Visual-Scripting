@@ -512,11 +512,15 @@ func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
         if span_index >= 0 and span_index < row_data.spans.size():
             var span_rect: Rect2 = row_data.spans[span_index].rect
             _drag_ace_insert_mode = (
-                "after" if position.x >= span_rect.get_center().x else "before"
+                "after" if position.y >= span_rect.get_center().y else "before"
             )
     elif kind == "trigger" and drag_kind == "condition":
         _drag_ace_target_ace_index = 0
         _drag_ace_insert_mode = "before"
+    else:
+        var fallback_target: Dictionary = _resolve_lane_drop_target(row_data, lane, position)
+        _drag_ace_target_ace_index = int(fallback_target.get("ace_index", -1))
+        _drag_ace_insert_mode = str(fallback_target.get("insert_mode", "append"))
     queue_redraw()
 
 func _complete_ace_drag() -> bool:
@@ -763,6 +767,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
     var spans: Array[SemanticSpan] = []
     var condition_line_index: int = 0
     var action_line_index: int = 0
+    var inline_trigger_condition_index: int = _find_inline_trigger_condition_index(event_row)
     if event_row.trigger != null:
         var trigger_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
         trigger_badge_meta["line_index"] = condition_line_index
@@ -801,13 +806,48 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
             )
         )
         condition_line_index += 1
+    elif inline_trigger_condition_index >= 0 and inline_trigger_condition_index < event_row.conditions.size():
+        var inline_trigger: ACECondition = event_row.conditions[inline_trigger_condition_index]
+        var inline_trigger_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
+        inline_trigger_badge_meta["line_index"] = condition_line_index
+        inline_trigger_badge_meta["badge_style"] = "trigger"
+        spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, inline_trigger_badge_meta))
+        spans.append(
+            _make_span(
+                _format_condition_descriptor(inline_trigger),
+                SemanticSpan.SpanType.CONDITION,
+                {
+                    "lane": "condition",
+                    "kind": "condition",
+                    "ace_index": inline_trigger_condition_index,
+                    "chip": true,
+                    "line_index": condition_line_index,
+                    "rendered_as_trigger": true
+                }
+            )
+        )
+        condition_line_index += 1
     if not event_row.conditions.is_empty():
+        var displayed_condition_indices: Array[int] = []
         for condition_index in range(event_row.conditions.size()):
+            if condition_index == inline_trigger_condition_index:
+                continue
+            displayed_condition_indices.append(condition_index)
+        for display_index in range(displayed_condition_indices.size()):
+            var condition_index: int = displayed_condition_indices[display_index]
             var condition: ACECondition = event_row.conditions[condition_index]
             if condition == null:
                 continue
             var line_index: int = condition_line_index
-            _append_condition_prefix_spans(spans, event_row, condition, condition_index, line_index)
+            _append_condition_prefix_spans(
+                spans,
+                event_row,
+                condition,
+                condition_index,
+                line_index,
+                display_index,
+                displayed_condition_indices.size()
+            )
             spans.append(
                 _make_span(
                     _format_condition_descriptor(condition),
@@ -882,11 +922,16 @@ func _append_condition_prefix_spans(
     event_row: EventRow,
     condition: ACECondition,
     condition_index: int,
-    line_index: int
+    line_index: int,
+    _display_index: int,
+    displayed_condition_count: int
 ) -> void:
     if event_row == null:
         return
-    if event_row.condition_mode == EventRow.ConditionMode.OR and event_row.conditions.size() > 1:
+    if (
+        event_row.condition_mode == EventRow.ConditionMode.OR
+        and displayed_condition_count > 1
+    ):
         var or_meta: Dictionary = BADGE_OR_METADATA.duplicate(true)
         or_meta["condition_index"] = condition_index
         or_meta["line_index"] = line_index
@@ -996,20 +1041,14 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
                 drag_rect = Rect2(0.0, row_rect.position.y - 1.0, width, 2.0)
     var ace_drag_rect := Rect2()
     if not _drag_ace_entries.is_empty() and _drag_ace_target_row_index == index:
-        if _drag_ace_target_ace_index >= 0:
-            var target_span_index: int = _find_ace_span_index(
-                row_data,
-                _drag_ace_target_lane,
-                _drag_ace_target_ace_index
-            )
-            if target_span_index >= 0 and target_span_index < row_data.spans.size():
-                ace_drag_rect = row_data.spans[target_span_index].rect.grow(3.0)
-        if ace_drag_rect.size == Vector2.ZERO:
-            ace_drag_rect = (
-                action_lane_rect.grow(-2.0)
-                if _drag_ace_target_lane == "action"
-                else condition_lane_rect.grow(-2.0)
-            )
+        ace_drag_rect = _build_ace_drag_preview_rect(
+            row_data,
+            _drag_ace_target_lane,
+            _drag_ace_target_ace_index,
+            _drag_ace_insert_mode,
+            condition_lane_rect,
+            action_lane_rect
+        )
     var layout := {
         "row_rect": row_rect,
         "row_height": row_height,
@@ -1346,6 +1385,22 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
         return "inside"
     return "after" if relative_y > row_height * DROP_ZONE_AFTER_THRESHOLD else "before"
 
+func _resolve_lane_drop_target(row_data: EventRowData, lane: String, position: Vector2) -> Dictionary:
+    var target_kind: String = "action" if lane == "action" else "condition"
+    var ace_span_indices: Array[int] = _get_lane_ace_span_indices(row_data, target_kind)
+    if ace_span_indices.is_empty():
+        return {"ace_index": -1, "insert_mode": "append"}
+    for span_index in ace_span_indices:
+        var span: SemanticSpan = row_data.spans[span_index]
+        if span == null:
+            continue
+        var ace_index: int = int((span.metadata as Dictionary).get("ace_index", -1))
+        if position.y <= span.rect.get_center().y:
+            return {"ace_index": ace_index, "insert_mode": "before"}
+    var last_span: SemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
+    var last_ace_index: int = int((last_span.metadata as Dictionary).get("ace_index", -1))
+    return {"ace_index": last_ace_index, "insert_mode": "after"}
+
 func _rebuild_row_metrics() -> void:
     _row_metrics.clear()
     var top: float = 0.0
@@ -1448,6 +1503,59 @@ func _resolve_ace_resource(source_resource: Resource, kind: String, ace_index: i
 func _find_condition_span_index(row_data: EventRowData, ace_index: int) -> int:
     return _find_ace_span_index(row_data, "condition", ace_index)
 
+func _get_lane_ace_span_indices(row_data: EventRowData, kind: String) -> Array[int]:
+    var span_indices: Array[int] = []
+    if row_data == null:
+        return span_indices
+    for span_index in range(row_data.spans.size()):
+        var span: SemanticSpan = row_data.spans[span_index]
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        var metadata: Dictionary = span.metadata as Dictionary
+        if str(metadata.get("kind", "")) != kind:
+            continue
+        if int(metadata.get("ace_index", -1)) < 0:
+            continue
+        span_indices.append(span_index)
+    return span_indices
+
+func _build_ace_drag_preview_rect(
+    row_data: EventRowData,
+    lane: String,
+    ace_index: int,
+    insert_mode: String,
+    condition_lane_rect: Rect2,
+    action_lane_rect: Rect2
+) -> Rect2:
+    var lane_rect: Rect2 = action_lane_rect if lane == "action" else condition_lane_rect
+    if lane_rect.size == Vector2.ZERO:
+        return Rect2()
+    var preview_width: float = min(max(lane_rect.size.x * 0.22, 28.0), 84.0)
+    var preview_x: float = lane_rect.position.x + 8.0
+    if lane == "action":
+        preview_x = lane_rect.end.x - preview_width - 8.0
+    var ace_span_kind: String = "action" if lane == "action" else "condition"
+    var ace_span_indices: Array[int] = _get_lane_ace_span_indices(row_data, ace_span_kind)
+    if ace_index >= 0:
+        var target_span_index: int = _find_ace_span_index(row_data, ace_span_kind, ace_index)
+        if target_span_index >= 0 and target_span_index < row_data.spans.size():
+            var target_span: SemanticSpan = row_data.spans[target_span_index]
+            var preview_y: float = (
+                target_span.rect.end.y - 1.5
+                if insert_mode == "after"
+                else target_span.rect.position.y - 1.5
+            )
+            return Rect2(preview_x, preview_y, preview_width, 3.0)
+    if not ace_span_indices.is_empty():
+        var edge_span: SemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
+        return Rect2(preview_x, edge_span.rect.end.y - 1.5, preview_width, 3.0)
+    if lane == "condition":
+        var trigger_span_index: int = _find_ace_span_index(row_data, "trigger", 0)
+        if trigger_span_index >= 0 and trigger_span_index < row_data.spans.size():
+            var trigger_span: SemanticSpan = row_data.spans[trigger_span_index]
+            return Rect2(preview_x, trigger_span.rect.end.y - 1.5, preview_width, 3.0)
+    return Rect2(preview_x, lane_rect.position.y + 6.0, preview_width, 3.0)
+
 func _find_ace_span_index(row_data: EventRowData, kind: String, ace_index: int) -> int:
     if row_data == null:
         return -1
@@ -1489,6 +1597,24 @@ func _format_condition_descriptor(condition: ACECondition) -> String:
     if descriptor == null:
         return condition.ace_id
     return descriptor.format_display(params_dict)
+
+func _find_inline_trigger_condition_index(event_row: EventRow) -> int:
+    if event_row == null or event_row.trigger != null or not event_row.trigger_id.is_empty():
+        return -1
+    for condition_index in range(event_row.conditions.size()):
+        var condition: ACECondition = event_row.conditions[condition_index]
+        if _is_trigger_condition(condition):
+            return condition_index
+    return -1
+
+func _is_trigger_condition(condition: ACECondition) -> bool:
+    if condition == null:
+        return false
+    var generated_definition: ACEDefinition = _find_definition(condition.provider_id, condition.ace_id)
+    if generated_definition != null:
+        return generated_definition.ace_type == ACEDefinition.ACEType.TRIGGER
+    var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
+    return descriptor != null and descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER
 
 func _format_action_descriptor(action: ACEAction) -> String:
     var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters

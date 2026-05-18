@@ -199,6 +199,33 @@ static func run() -> bool:
     var compile_result: Dictionary = SheetCompiler.compile(dock.get_current_sheet(), "user://event_sheet_or_block_test.gd")
     all_passed = _check("compiler uses and join after row conversion", str(compile_result.get("output", "")).contains(" and "), true) and all_passed
 
+    var trigger_condition_sheet := EventSheetResource.new()
+    var trigger_condition_event := EventRow.new()
+    var regular_condition := ACECondition.new()
+    regular_condition.provider_id = "Core"
+    regular_condition.ace_id = "Always"
+    var misplaced_trigger_condition := ACECondition.new()
+    misplaced_trigger_condition.provider_id = "Core"
+    misplaced_trigger_condition.ace_id = "OnReady"
+    trigger_condition_event.conditions = [regular_condition, misplaced_trigger_condition]
+    trigger_condition_sheet.events = [trigger_condition_event]
+    dock.setup(trigger_condition_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var trigger_condition_row: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
+    dock_viewport.get_row_layout_for_test(0, 640.0)
+    var rendered_trigger_index: int = _find_span_index_by_kind(trigger_condition_row, "condition")
+    var rendered_condition_index: int = _find_last_span_index_by_kind(trigger_condition_row, "condition")
+    all_passed = _check(
+        "trigger-type condition renders first in event block",
+        int((trigger_condition_row.spans[rendered_trigger_index].metadata as Dictionary).get("ace_index", -1)),
+        1
+    ) and all_passed
+    all_passed = _check(
+        "trigger-type condition stays above regular conditions",
+        trigger_condition_row.spans[rendered_trigger_index].rect.position.y < trigger_condition_row.spans[rendered_condition_index].rect.position.y,
+        true
+    ) and all_passed
+
     dock_viewport._toggle_row_fold(1)
     all_passed = _check("folding hides child rows", dock_viewport.get_total_row_count(), 2) and all_passed
     dock_viewport._toggle_row_fold(1)
@@ -442,6 +469,25 @@ static func run() -> bool:
     dock.setup(ace_drag_sheet)
     dock_viewport = dock.get_viewport_control()
     var ace_drag_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var drag_target_row_data: EventRowData = ace_drag_rows[1].get("row")
+    dock_viewport.get_row_layout_for_test(1, 640.0)
+    var first_target_condition_index: int = _find_span_index_by_kind(drag_target_row_data, "condition")
+    var first_target_condition_span: SemanticSpan = drag_target_row_data.spans[first_target_condition_index]
+    dock_viewport._drag_ace_entries = [dock_viewport._build_ace_drag_entry(ace_drag_rows[0].get("row"), "condition", 0)]
+    dock_viewport._update_ace_drag_target(
+        {
+            "row_index": 1,
+            "span_index": first_target_condition_index,
+            "lane": "condition",
+            "span_metadata": first_target_condition_span.metadata
+        },
+        first_target_condition_span.rect.get_center() + Vector2(0.0, first_target_condition_span.rect.size.y * 0.35)
+    )
+    var drag_preview_layout: Dictionary = dock_viewport.get_row_layout_for_test(1, 640.0)
+    var ace_drag_rect: Rect2 = drag_preview_layout.get("ace_drag_rect", Rect2())
+    all_passed = _check("ace drag target uses vertical stacked insertion after cursor midpoint", dock_viewport._drag_ace_insert_mode, "after") and all_passed
+    all_passed = _check("ace drag preview renders as a thin placement line", ace_drag_rect.size.y <= 4.0, true) and all_passed
+    dock_viewport._clear_ace_drag()
     dock._on_viewport_ace_drop_requested(
         [{"source_resource": ace_drag_source, "kind": "condition", "ace_index": 0}],
         ace_drag_rows[1].get("row"),
