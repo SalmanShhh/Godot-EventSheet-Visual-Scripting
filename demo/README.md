@@ -30,5 +30,8 @@ Bundled example themes live in `res://demo/themes/`:
 - `designer_template_theme_manifest.cfg`
 
 Load them from the EventSheet dock with **Load Theme**.
+Each bundled theme now serializes its linked Event/Condition/Action visual template scenes,
+so it can be reopened in Godot and used with the **Rebuild Theme** workflow without first
+reassigning the template scene references.
 
 The manifest file is a token/package template for designers who want a Construct-style installable theme workflow.

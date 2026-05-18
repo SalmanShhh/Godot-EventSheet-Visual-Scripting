@@ -40,6 +40,10 @@ These themes are bundled in `res://demo/themes/`:
 - `designer_template_theme.tres` — neutral starting point meant to be duplicated
 - `designer_template_theme_manifest.cfg` — token/package template for designer installs
 
+Each bundled `.tres` now stores its linked Event/Condition/Action visual template scenes,
+so designers can open an example theme directly and use **Rebuild Theme** without first
+repairing the scene references.
+
 ## Custom theme import/install
 
 - Copy a custom `EventSheetEditorStyle` `.tres` into the project.

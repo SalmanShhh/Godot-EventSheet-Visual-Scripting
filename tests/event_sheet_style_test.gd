@@ -254,8 +254,12 @@ static func run() -> bool:
 		var example_theme: Resource = ResourceLoader.load(theme_path)
 		passed = _check("example theme loads as EventSheetEditorStyle: %s" % theme_path.get_file(), example_theme is EventSheetEditorStyle, true) and passed
 		if example_theme is EventSheetEditorStyle:
-			var themed_event_style: EventSheetEventStyle = (example_theme as EventSheetEditorStyle).get_event_style()
+			var example_editor_style: EventSheetEditorStyle = example_theme as EventSheetEditorStyle
+			var themed_event_style: EventSheetEventStyle = example_editor_style.get_event_style()
 			passed = _check("example theme exposes structural tokens: %s" % theme_path.get_file(), themed_event_style.sheet_background_color.a > 0.0 and themed_event_style.selection_fill_color.a > 0.0, true) and passed
+			passed = _check("example theme links event visual template: %s" % theme_path.get_file(), example_editor_style.event_visual_scene != null, true) and passed
+			passed = _check("example theme links condition visual template: %s" % theme_path.get_file(), example_editor_style.condition_visual_scene != null, true) and passed
+			passed = _check("example theme links action visual template: %s" % theme_path.get_file(), example_editor_style.action_visual_scene != null, true) and passed
 	passed = _check("designer theme manifest exists", FileAccess.file_exists(DESIGNER_THEME_MANIFEST_PATH), true) and passed
 	if FileAccess.file_exists(DESIGNER_THEME_MANIFEST_PATH):
 		var manifest_text: String = FileAccess.get_file_as_string(DESIGNER_THEME_MANIFEST_PATH)

@@ -1,8 +1,11 @@
-[gd_resource type="Resource" script_class="EventSheetEditorStyle" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="EventSheetEditorStyle" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_editor_style.gd" id="1_editor_style"]
 [ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_event_style.gd" id="2_event_style"]
 [ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_element_style.gd" id="3_element_style"]
+[ext_resource type="PackedScene" path="res://addons/eventsheet/elements/event_visual_element.tscn" id="4_event_visual"]
+[ext_resource type="PackedScene" path="res://addons/eventsheet/elements/condition_visual_element.tscn" id="5_condition_visual"]
+[ext_resource type="PackedScene" path="res://addons/eventsheet/elements/action_visual_element.tscn" id="6_action_visual"]
 
 [sub_resource type="Resource" id="Resource_event"]
 script = ExtResource("2_event_style")
@@ -67,3 +70,6 @@ script = ExtResource("1_editor_style")
 event_style = SubResource("Resource_event")
 condition_style = SubResource("Resource_condition")
 action_style = SubResource("Resource_action")
+event_visual_scene = ExtResource("4_event_visual")
+condition_visual_scene = ExtResource("5_condition_visual")
+action_visual_scene = ExtResource("6_action_visual")
