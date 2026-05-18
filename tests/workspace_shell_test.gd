@@ -7,9 +7,11 @@ class_name WorkspaceShellTest
 static func run() -> bool:
     var all_passed: bool = true
     var editor: EventSheetEditor = EventSheetEditor.new()
+    var workspace_root: Node = editor.find_child("EventSheetWorkspaceRoot", true, false)
     var scroll: Node = editor.find_child("EventSheetScroll", true, false)
     var viewport: Node = editor.find_child("EventSheetViewport", true, false)
     var preview_window: Node = editor.find_child("ACEPreviewWindow", true, false)
+    all_passed = _check("workspace root exists", workspace_root is VBoxContainer, true) and all_passed
     all_passed = _check("workspace uses scroll container root", scroll is ScrollContainer, true) and all_passed
     all_passed = _check("workspace uses custom viewport renderer", viewport is EventSheetViewport, true) and all_passed
     all_passed = _check("scroll has exactly one child", scroll != null and scroll.get_child_count() == 1, true) and all_passed
@@ -25,6 +27,13 @@ static func run() -> bool:
     all_passed = _check("viewport exposes zoom controls", viewport != null and viewport.has_method("zoom_in") and viewport.has_method("zoom_out"), true) and all_passed
     all_passed = _check("viewport exposes disabled row scaffold", viewport != null and viewport.has_method("set_row_disabled"), true) and all_passed
     editor.set_size(Vector2(1200.0, 720.0))
+    all_passed = _check(
+        "workspace root is anchored to fill editor",
+        workspace_root != null
+            and is_equal_approx((workspace_root as Control).anchor_right, 1.0)
+            and is_equal_approx((workspace_root as Control).anchor_bottom, 1.0),
+        true
+    ) and all_passed
     all_passed = _check(
         "scroll fills editor workspace width",
         scroll != null and scroll.size_flags_horizontal == Control.SIZE_EXPAND_FILL,

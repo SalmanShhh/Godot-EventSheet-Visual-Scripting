@@ -143,6 +143,7 @@ func _build_ui() -> void:
 
     var root: VBoxContainer = VBoxContainer.new()
     root.name = "EventSheetWorkspaceRoot"
+    root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     root.size_flags_vertical = Control.SIZE_EXPAND_FILL
     add_child(root)
