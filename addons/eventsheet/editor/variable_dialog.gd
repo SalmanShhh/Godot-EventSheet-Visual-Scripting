@@ -146,6 +146,8 @@ func _on_confirmed() -> void:
 		return
 	var type_name: String = _type_option.get_item_text(_type_option.selected)
 	var default_value: Variant = _parse_default(type_name, _default_edit.text)
+	# Keep this defensive check in case stale UI state emits a checked const flag
+	# for a type that does not support const.
 	var is_constant: bool = _const_check.button_pressed and _supports_constant(type_name)
 	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant)
 

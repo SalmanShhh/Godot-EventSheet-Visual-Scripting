@@ -762,7 +762,11 @@ static func run() -> bool:
     dock.setup(copy_sheet)
     dock._on_variable_dialog_confirmed("ammo", "int", 12, "global")
     all_passed = _check("create global variable stores sheet variable", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
-    all_passed = _check("create global variable stores const=false by default", dock.get_current_sheet().variables["ammo"].get("const", false), false) and all_passed
+    all_passed = _check(
+        "create global variable stores const=false by default with persisted key",
+        dock.get_current_sheet().variables["ammo"].has("const") and dock.get_current_sheet().variables["ammo"]["const"] == false,
+        true
+    ) and all_passed
     dock._on_undo_requested()
     all_passed = _check("undo removes global variable creation", dock.get_current_sheet().variables.has("ammo"), false) and all_passed
     dock._on_redo_requested()

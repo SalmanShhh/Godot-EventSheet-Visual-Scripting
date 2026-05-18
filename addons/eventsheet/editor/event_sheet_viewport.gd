@@ -1179,12 +1179,13 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         else:
             span_width = max(min(span_width, row_right_limit - span_x), 1.0)
         span.rect = Rect2(span_x, span_y, span_width + 2.0, ROW_HEIGHT - 6.0)
-        var next_x: float = CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP
+        # Store absolute X for the next span start on this line.
+        var next_span_start_x: float = span.rect.end.x + (CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP)
         if span_lane == "action":
             if not bool(metadata.get("align_right", false)):
-                action_line_x[int(metadata.get("line_index", 0))] = span.rect.end.x + next_x
+                action_line_x[int(metadata.get("line_index", 0))] = next_span_start_x
         else:
-            condition_line_x[int(metadata.get("line_index", 0))] = span.rect.end.x + next_x
+            condition_line_x[int(metadata.get("line_index", 0))] = next_span_start_x
     var drag_rect := Rect2()
     if _drag_row_index >= 0 and _drag_target_index == index:
         match _drag_target_mode:

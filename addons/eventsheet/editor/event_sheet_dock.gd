@@ -1727,7 +1727,7 @@ func _convert_variable_scope(entry: Dictionary, target_scope: String, target_eve
             local_var.type_name = type_name
             local_var.type = _type_from_name(type_name)
             local_var.default_value = default_value
-            local_var.is_constant = is_constant and _variable_type_supports_const(type_name)
+            local_var.is_constant = is_constant
             target_event.local_variables.append(local_var)
             _current_sheet.variables.erase(var_name)
             return true
@@ -1743,7 +1743,7 @@ func _convert_variable_scope(entry: Dictionary, target_scope: String, target_eve
             _current_sheet.variables[var_name] = {
                 "type": local_var.type_name,
                 "default": local_var.default_value,
-                "const": local_var.is_constant and _variable_type_supports_const(local_var.type_name)
+                "const": local_var.is_constant
             }
             owner_event.local_variables.remove_at(owner_event.local_variables.find(local_var))
             return true
@@ -1779,7 +1779,7 @@ func _on_global_variable_activated(index: int) -> void:
         {"editing": true, "original_name": var_name},
         var_name,
         str(entry.get("type", "Variant")),
-        entry.get("default", ""),
+        entry.get("default", null),
         _is_global_variable_in_use(var_name),
         "Edit Variable",
         bool(entry.get("const", false))
@@ -1801,7 +1801,7 @@ func _on_local_variable_activated(index: int) -> void:
         },
         var_name,
         str(entry.get("type", "Variant")),
-        entry.get("default", ""),
+        entry.get("default", null),
         _is_local_variable_in_use(var_name, selected_resource),
         "Edit Variable",
         bool(entry.get("const", false))
