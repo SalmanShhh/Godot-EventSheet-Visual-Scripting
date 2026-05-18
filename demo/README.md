@@ -18,3 +18,14 @@ print(result)
 
 Compare generated output to `demo/sheets/player_generated.gd`.
 The `tests/compile_demo_test.gd` script performs this check automatically.
+
+## Example EventSheet themes
+
+Bundled example themes live in `res://demo/themes/`:
+
+- `construct3_stacked_theme.tres`
+- `high_contrast_theme.tres`
+- `soft_light_theme.tres`
+- `designer_template_theme.tres`
+
+Load them from the EventSheet dock with **Load Theme**.

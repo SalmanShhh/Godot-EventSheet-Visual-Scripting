@@ -5,6 +5,12 @@ class_name EventSheetStyleTest
 
 const TEST_LONG_CONDITION_PROVIDER := "TestLongCondition"
 const TEST_LONG_ACTION_PROVIDER := "TestLongAction"
+const EXAMPLE_THEME_PATHS := [
+	"res://demo/themes/construct3_stacked_theme.tres",
+	"res://demo/themes/high_contrast_theme.tres",
+	"res://demo/themes/soft_light_theme.tres",
+	"res://demo/themes/designer_template_theme.tres"
+]
 
 static func run() -> bool:
 	var passed: bool = true
@@ -207,6 +213,10 @@ static func run() -> bool:
 	) and passed
 	passed = _check("dock can switch back to default theme", dock.use_default_theme(), true) and passed
 	passed = _check("default theme clears per-sheet style override", dock.get_current_sheet().editor_style == null, true) and passed
+	for theme_path in EXAMPLE_THEME_PATHS:
+		passed = _check("example theme file exists: %s" % theme_path.get_file(), FileAccess.file_exists(theme_path), true) and passed
+		var example_theme: Resource = ResourceLoader.load(theme_path)
+		passed = _check("example theme loads as EventSheetEditorStyle: %s" % theme_path.get_file(), example_theme is EventSheetEditorStyle, true) and passed
 
 	dock.free()
 	return passed

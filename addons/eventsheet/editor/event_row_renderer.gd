@@ -78,6 +78,11 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
             event_style.lane_divider_color if event_style != null else EventSheetPalette.COLOR_LANE_DIVIDER,
             true
         )
+    if row_data.row_type == EventRowData.RowType.EVENT and event_style != null:
+        var block_border: Color = event_style.lane_divider_color.lightened(0.15)
+        block_border.a = 0.66
+        control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, row_rect.size.x, 1.0), block_border, true)
+        control.draw_rect(Rect2(row_rect.position.x, row_rect.end.y - 1.0, row_rect.size.x, 1.0), block_border, true)
     _draw_indent_guides(control, row_rect, row_data.indent)
     if row_data.selected and not has_span_selection:
         control.draw_rect(row_rect, EventSheetPalette.COLOR_SELECTION, true)

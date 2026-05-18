@@ -310,10 +310,11 @@ func _build_layout_style_signature(font_size: int) -> String:
     var event_style: EventSheetEventStyle = _get_event_style()
     var condition_style: EventSheetElementStyle = _get_condition_style()
     var action_style: EventSheetElementStyle = _get_action_style()
-    return "%d:%d:%d:%d:%d:%d:%d:%d:%d:%d" % [
+    return "%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d" % [
         int(round(_get_event_line_height(font_size))),
         event_style.minimum_conditions_lane_width,
         event_style.condition_lane_padding,
+        event_style.condition_badge_column_width,
         event_style.action_lane_padding,
         event_style.lane_divider_width,
         int(round(event_style.condition_lane_ratio * 100.0)),
@@ -1104,6 +1105,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 }.merged(condition_style_meta, true)
             )
         )
+        condition_line_index += 1
     elif not event_row.trigger_id.is_empty():
         var trigger_id_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
         trigger_id_badge_meta["badge_bg"] = event_style.trigger_badge_background_color
@@ -1125,6 +1127,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 }.merged(condition_style_meta, true)
             )
         )
+        condition_line_index += 1
     elif inline_trigger_condition_index >= 0 and inline_trigger_condition_index < event_row.conditions.size():
         var inline_trigger: ACECondition = event_row.conditions[inline_trigger_condition_index]
         var inline_trigger_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
@@ -1148,6 +1151,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 }.merged(condition_style_meta, true)
             )
         )
+        condition_line_index += 1
     if not event_row.conditions.is_empty():
         var displayed_condition_indices: Array[int] = []
         for condition_index in range(event_row.conditions.size()):
@@ -1182,6 +1186,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     }.merged(condition_style_meta, true)
                 )
             )
+            condition_line_index += 1
     if spans.is_empty():
         spans.append(
             _make_span(
@@ -1212,6 +1217,8 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                         }.merged(action_style_meta, true)
                     )
                 )
+                action_line_index += 1
+    var add_action_line_index: int = max(action_line_index - 1, 0)
     spans.append(
         _make_span(
             "+ Add",
@@ -1220,13 +1227,14 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 "lane": "action",
                 "kind": "add_action",
                 "align_right": true,
-                "line_index": action_line_index,
+                "line_index": add_action_line_index,
                 "text_color": action_style_meta.get("text_color", EventSheetPalette.COLOR_ACTION),
                 "font_size_delta": action_style_meta.get("font_size_delta", 0)
             }
         )
     )
     if not event_row.comment.is_empty():
+        var comment_line_index: int = max(action_line_index, 1)
         spans.append(
             _make_span(
                 event_row.comment,
@@ -1236,7 +1244,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     "edit_kind": "event_comment",
                     "lane": "action",
                     "chip": true,
-                    "line_index": action_line_index + 1
+                    "line_index": comment_line_index
                 }.merged(action_style_meta, true)
             )
         )
@@ -1254,6 +1262,13 @@ func _append_condition_prefix_spans(
     if event_row == null:
         return
     var condition_style_meta: Dictionary = _build_element_style_metadata(_get_condition_style())
+    if condition.negated:
+        var negated_meta: Dictionary = BADGE_NEGATED_METADATA.duplicate(true)
+        negated_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", BADGE_EXTRA_WIDTH)
+        negated_meta["condition_index"] = condition_index
+        negated_meta["line_index"] = line_index
+        negated_meta["badge_style"] = "negated"
+        spans.append(_make_span("✕", SemanticSpan.SpanType.KEYWORD, negated_meta))
     if (
         event_row.condition_mode == EventRow.ConditionMode.OR
         and displayed_condition_count > 1
@@ -1266,13 +1281,6 @@ func _append_condition_prefix_spans(
         or_meta["line_index"] = line_index
         or_meta["badge_style"] = "or"
         spans.append(_make_span("OR", SemanticSpan.SpanType.KEYWORD, or_meta))
-    if condition.negated:
-        var negated_meta: Dictionary = BADGE_NEGATED_METADATA.duplicate(true)
-        negated_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", BADGE_EXTRA_WIDTH)
-        negated_meta["condition_index"] = condition_index
-        negated_meta["line_index"] = line_index
-        negated_meta["badge_style"] = "negated"
-        spans.append(_make_span("✕", SemanticSpan.SpanType.KEYWORD, negated_meta))
 
 func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, font_size: int) -> float:
     if span == null:
@@ -1365,7 +1373,11 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         lane_divider_rect = Rect2(lane_divider_x, row_top, float(event_style.lane_divider_width), row_height)
         action_lane_rect = Rect2(lane_divider_x + float(event_style.lane_divider_width), row_top, max(width - lane_divider_x - float(event_style.lane_divider_width), 1.0), row_height)
     var condition_x: float = _get_condition_track_start(row_data, x, condition_lane_rect)
+    var condition_badge_column_width: float = max(float(event_style.condition_badge_column_width), 0.0)
+    var condition_badge_column_gap: float = EventSheetPalette.SPAN_GAP if condition_badge_column_width > 0.0 else 0.0
+    var condition_content_x: float = condition_x + condition_badge_column_width + condition_badge_column_gap
     var condition_line_x: Dictionary = {}
+    var condition_badge_line_x: Dictionary = {}
     var action_x: float = (
         lane_divider_x + float(event_style.lane_divider_width) + float(event_style.action_lane_padding)
         if lane_divider_x > 0.0
@@ -1392,15 +1404,29 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
                 span_x = float(action_line_x[action_line_index])
         elif lane_divider_x > 0.0:
             var line_index: int = int(metadata.get("line_index", 0))
-            if not condition_line_x.has(line_index):
-                condition_line_x[line_index] = condition_x
-            span_x = float(condition_line_x[line_index])
+            if bool(metadata.get("badge", false)):
+                if not condition_badge_line_x.has(line_index):
+                    condition_badge_line_x[line_index] = condition_x
+                span_x = float(condition_badge_line_x[line_index])
+            else:
+                if not condition_line_x.has(line_index):
+                    condition_line_x[line_index] = max(
+                        condition_content_x,
+                        float(condition_badge_line_x.get(line_index, condition_content_x))
+                    )
+                span_x = float(condition_line_x[line_index])
             span_y = row_top + float(line_index) * line_height + 3.0
         var display_text: String = _editing_buffer if index == _editing_row_index and span_index == _editing_span_index else span.text
         var span_width: float = _measure_span_width(span, display_text, font, font_size)
         if lane_divider_x > 0.0 and span_lane != "action":
             var max_condition_right: float = lane_divider_x - float(event_style.condition_lane_padding)
-            span_width = max(min(span_width, max_condition_right - span_x), 10.0)
+            if bool(metadata.get("badge", false)):
+                var badge_width: float = condition_badge_column_width if condition_badge_column_width > 0.0 else span_width
+                span_width = max(min(badge_width, max_condition_right - span_x), 10.0)
+            elif str(metadata.get("kind", "")) in ["condition", "trigger"]:
+                span_width = max(max_condition_right - span_x, 10.0)
+            else:
+                span_width = max(min(span_width, max_condition_right - span_x), 10.0)
         elif span_lane == "action" and action_lane_rect.size.x > 0.0:
             var reserved_start: float = float(
                 action_line_reservations.get(
@@ -1414,7 +1440,11 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
                     action_lane_rect.end.x - float(event_style.action_lane_padding) - span_width - 2.0
                 )
             else:
-                span_width = max(min(span_width, reserved_start - max(_get_span_gap(span), EventSheetPalette.SPAN_GAP) - span_x), 1.0)
+                var max_action_width: float = reserved_start - max(_get_span_gap(span), EventSheetPalette.SPAN_GAP) - span_x
+                if str(metadata.get("kind", "")) == "action":
+                    span_width = max(max_action_width, 1.0)
+                else:
+                    span_width = max(min(span_width, max_action_width), 1.0)
         else:
             span_width = max(min(span_width, row_right_limit - span_x), 1.0)
         span.rect = Rect2(span_x, span_y, span_width + 2.0, line_height - 6.0)
@@ -1424,7 +1454,11 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             if not bool(metadata.get("align_right", false)):
                 action_line_x[int(metadata.get("line_index", 0))] = next_span_start_x
         else:
-            condition_line_x[int(metadata.get("line_index", 0))] = next_span_start_x
+            var condition_line_index: int = int(metadata.get("line_index", 0))
+            if bool(metadata.get("badge", false)):
+                condition_badge_line_x[condition_line_index] = next_span_start_x
+            else:
+                condition_line_x[condition_line_index] = next_span_start_x
     var drag_rect := Rect2()
     if _drag_row_index >= 0 and _drag_target_index == index:
         match _drag_target_mode:

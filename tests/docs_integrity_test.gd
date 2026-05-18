@@ -7,8 +7,16 @@ const REQUIRED_DOCS := {
 	"res://docs/EVENTSHEET_THEME_EDITABILITY.md": [
 		"# EventSheet Theme + Editability Guide",
 		"Switching themes",
+		"Bundled example themes",
 		"Custom theme import/install",
-		"Hot-reload behavior"
+		"Hot-reload behavior",
+		"CSS-like template path"
+	],
+	"res://docs/EVENTSHEET_ALIGNMENT_GUIDE.md": [
+		"# EventSheet Layout + Alignment Guide",
+		"Layout model",
+		"Key alignment settings",
+		"Construct 3-like tuning recipe"
 	],
 	"res://docs/EVENTSHEET_EDITOR_PROGRESS_REPORT.md": [
 		"# EventSheet Editor Progress Report",

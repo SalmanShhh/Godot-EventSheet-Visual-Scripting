@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="EventSheetEditorStyle" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_editor_style.gd" id="1_editor_style"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_event_style.gd" id="2_event_style"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_element_style.gd" id="3_element_style"]
+
+[sub_resource type="Resource" id="Resource_event"]
+script = ExtResource("2_event_style")
+condition_lane_ratio = 0.42
+minimum_conditions_lane_width = 240
+condition_lane_padding = 10
+condition_badge_column_width = 28
+action_lane_padding = 10
+minimum_row_height = 30
+
+[sub_resource type="Resource" id="Resource_condition"]
+script = ExtResource("3_element_style")
+chip_background_color = Color(0.30, 0.56, 0.82, 0.10)
+chip_border_color = Color(0.40, 0.67, 0.92, 0.34)
+chip_hover_color = Color(0.36, 0.60, 0.92, 0.22)
+horizontal_padding = 8
+vertical_padding = 2
+gap_after = 6
+badge_extra_width = 10
+
+[sub_resource type="Resource" id="Resource_action"]
+script = ExtResource("3_element_style")
+text_color = Color(0.73, 0.95, 0.80, 1)
+chip_background_color = Color(0.22, 0.62, 0.52, 0.10)
+chip_border_color = Color(0.40, 0.78, 0.64, 0.30)
+chip_hover_color = Color(0.28, 0.72, 0.58, 0.20)
+horizontal_padding = 8
+vertical_padding = 2
+gap_after = 6
+
+[resource]
+script = ExtResource("1_editor_style")
+event_style = SubResource("Resource_event")
+condition_style = SubResource("Resource_condition")
+action_style = SubResource("Resource_action")

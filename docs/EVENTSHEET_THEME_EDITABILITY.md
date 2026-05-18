@@ -26,6 +26,15 @@ This editor uses Godot-native resources/scenes (not CSS) so designers can edit v
   - **Default Theme**: clear per-sheet override and use built-in defaults.
   - **Reload Theme**: reload the active style from disk.
 
+### Bundled example themes
+
+These themes are bundled in `res://demo/themes/`:
+
+- `construct3_stacked_theme.tres` (recommended baseline for C3-like stacked readability)
+- `high_contrast_theme.tres`
+- `soft_light_theme.tres`
+- `designer_template_theme.tres` (starting template designers can duplicate)
+
 ## Custom theme import/install
 
 - Copy a custom `EventSheetEditorStyle` `.tres` into the project (for example under `res://demo/themes/` or `res://addons/eventsheet/theme/`).
@@ -37,6 +46,12 @@ This editor uses Godot-native resources/scenes (not CSS) so designers can edit v
 - When the active style resource changes in-editor, the dock refreshes the viewport.
 - `Reload Theme` forces a reload from disk for external file edits.
 
+## Alignment controls
+
+For alignment and stacked-lane tuning details, see:
+
+- `res://docs/EVENTSHEET_ALIGNMENT_GUIDE.md`
+
 ## Why no CSS file
 
 Godot’s practical equivalent is Resource + Scene authoring:
@@ -46,3 +61,12 @@ Godot’s practical equivalent is Resource + Scene authoring:
 - editor/runtime resource loading and switching
 
 This preserves the user intent of designer-friendly theming while staying native to Godot tooling.
+
+## CSS-like template path (designer-facing)
+
+True CSS is not a practical native runtime format for this Godot editor pass.  
+The closest practical equivalent is a loadable, tokenized theme resource template:
+
+- `res://demo/themes/designer_template_theme.tres`
+
+Designers can duplicate this file and edit values in the Inspector (or as text) similarly to editing CSS tokens.

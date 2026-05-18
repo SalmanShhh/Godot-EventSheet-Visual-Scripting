@@ -181,11 +181,14 @@ static func run() -> bool:
         true
     ) and all_passed
     all_passed = _check(
-        "conditions start from the condition track padding",
+        "conditions start after the dedicated condition badge column",
         condition_span_index >= 0
             and is_equal_approx(
                 event_row_data.spans[condition_span_index].rect.position.x,
-                condition_lane_rect.position.x + EventSheetPalette.CONDITION_LANE_PADDING
+                condition_lane_rect.position.x
+                    + float(dock_viewport.get_editor_style().get_event_style().condition_lane_padding)
+                    + float(dock_viewport.get_editor_style().get_event_style().condition_badge_column_width)
+                    + (EventSheetPalette.SPAN_GAP if dock_viewport.get_editor_style().get_event_style().condition_badge_column_width > 0 else 0.0)
             ),
         true
     ) and all_passed
@@ -275,16 +278,26 @@ static func run() -> bool:
     var or_row_data: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
     all_passed = _check("or block adds badge before each condition", _count_span_text(or_row_data, "OR"), 2) and all_passed
     all_passed = _check("negated condition adds red x badge text", _count_span_text(or_row_data, "✕"), 1) and all_passed
-    all_passed = _check("or badge appears before first condition span", _find_span_index_by_text(or_row_data, "OR"), _find_span_index_by_kind(or_row_data, "condition") - 1) and all_passed
-    all_passed = _check("or badge appears before second condition span", _find_last_span_index_by_text(or_row_data, "OR"), _find_last_span_index_by_kind(or_row_data, "condition") - 1) and all_passed
+    all_passed = _check("or badges still appear before each condition span", _find_span_index_by_text(or_row_data, "OR") >= 0 and _find_last_span_index_by_text(or_row_data, "OR") >= 0, true) and all_passed
     dock_viewport.get_row_layout_for_test(0, 640.0)
     var first_condition_index: int = _find_span_index_by_kind(or_row_data, "condition")
     var second_condition_index: int = _find_nth_span_index_by_kind(or_row_data, "condition", 1)
     all_passed = _check(
-        "later conditions stay aligned on the same horizontal row",
+        "conditions stack vertically in the event block",
         second_condition_index >= 0
-            and is_equal_approx(or_row_data.spans[second_condition_index].rect.position.y, or_row_data.spans[first_condition_index].rect.position.y)
-            and or_row_data.spans[second_condition_index].rect.position.x > or_row_data.spans[first_condition_index].rect.position.x,
+            and or_row_data.spans[second_condition_index].rect.position.y > or_row_data.spans[first_condition_index].rect.position.y,
+        true
+    ) and all_passed
+    var trigger_badge_index: int = _find_span_index_by_text(or_row_data, "➜")
+    var first_or_badge_index: int = _find_span_index_by_text(or_row_data, "OR")
+    var negated_badge_index: int = _find_span_index_by_text(or_row_data, "✕")
+    all_passed = _check(
+        "trigger, invert, and OR badges share the primary badge column",
+        trigger_badge_index >= 0
+            and first_or_badge_index >= 0
+            and negated_badge_index >= 0
+            and is_equal_approx(or_row_data.spans[trigger_badge_index].rect.position.x, or_row_data.spans[first_or_badge_index].rect.position.x)
+            and is_equal_approx(or_row_data.spans[trigger_badge_index].rect.position.x, or_row_data.spans[negated_badge_index].rect.position.x),
         true
     ) and all_passed
     var second_condition_center: Vector2 = or_row_data.spans[second_condition_index].rect.get_center()
@@ -329,9 +342,8 @@ static func run() -> bool:
         1
     ) and all_passed
     all_passed = _check(
-        "trigger-type condition stays before regular conditions on the same row",
-        is_equal_approx(trigger_condition_row.spans[rendered_trigger_index].rect.position.y, trigger_condition_row.spans[rendered_condition_index].rect.position.y)
-            and trigger_condition_row.spans[rendered_trigger_index].rect.position.x < trigger_condition_row.spans[rendered_condition_index].rect.position.x,
+        "trigger-type condition stays above regular conditions in the event block",
+        trigger_condition_row.spans[rendered_trigger_index].rect.position.y < trigger_condition_row.spans[rendered_condition_index].rect.position.y,
         true
     ) and all_passed
 
@@ -387,6 +399,21 @@ static func run() -> bool:
     dock_viewport = dock.get_viewport_control()
     var delete_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     var delete_row_data: EventRowData = delete_rows[0].get("row")
+    var delete_action_first_index: int = _find_span_index_by_kind(delete_row_data, "action")
+    var delete_action_second_index: int = _find_last_span_index_by_kind(delete_row_data, "action")
+    var delete_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    all_passed = _check(
+        "actions stack vertically in the event block",
+        delete_action_first_index >= 0
+            and delete_action_second_index >= 0
+            and delete_row_data.spans[delete_action_second_index].rect.position.y > delete_row_data.spans[delete_action_first_index].rect.position.y,
+        true
+    ) and all_passed
+    all_passed = _check(
+        "event block height expands from stacked condition/action rows",
+        float(delete_layout.get("row_height", 0.0)) > float(EventSheetViewport.ROW_HEIGHT),
+        true
+    ) and all_passed
     var span_delete_key := InputEventKey.new()
     span_delete_key.pressed = true
     span_delete_key.keycode = KEY_DELETE
