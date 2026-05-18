@@ -68,6 +68,7 @@ var _undo_redo_adapter: EventSheetUndoRedoAdapter = EventSheetUndoRedoAdapter.ne
 # ── Extracted sub-components ─────────────────────────────────────────────────
 var _ace_picker: ACEPickerDialog = ACEPickerDialog.new()
 var _ace_params: ACEParamsDialog = ACEParamsDialog.new()
+var _expression_editor: ExpressionEditorDialog = ExpressionEditorDialog.new()
 var _variable_dlg: VariableDialog = VariableDialog.new()
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
@@ -92,7 +93,8 @@ func _ready() -> void:
     _param_resolver.set_param_store(_editor_param_store)
     _ace_picker.init_dialog(self, _ace_registry)
     _ace_picker.ace_selected.connect(_on_ace_picker_selected)
-    _ace_params.init_dialog(self)
+    _expression_editor.init_dialog(self)
+    _ace_params.init_dialog(self, _expression_editor)
     _ace_params.params_confirmed.connect(_on_ace_params_confirmed)
     _variable_dlg.init_dialog(self)
     _variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
@@ -740,7 +742,7 @@ func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> 
         _apply_ace_definition(definition, {}, context)
         return
     var initial_values: Dictionary = context.get("existing_params", {})
-    _ace_params.open_with_values(definition, context, initial_values)
+    _ace_params.open_with_values(definition, context, initial_values, _get_sheet_variable_names())
 
 func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> void:
     if row_data == null or not (row_data.source_resource is EventRow):
@@ -765,7 +767,7 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
     if definition.parameters.is_empty():
         _ace_picker.open(str(edit_context.get("mode", "")), false, event_row, edit_context)
         return
-    _ace_params.open_with_values(definition, edit_context, edit_context.get("existing_params", {}))
+    _ace_params.open_with_values(definition, edit_context, edit_context.get("existing_params", {}), _get_sheet_variable_names())
 
 # ── ACE params dialog signal handler ────────────────────────────────────────
 
@@ -2363,6 +2365,26 @@ func _find_first_event_row_resource() -> EventRow:
         if row_data != null and row_data.source_resource is EventRow:
             return row_data.source_resource as EventRow
     return null
+
+## Returns all variable names visible in the current sheet (global + local from selection).
+## Used to populate the expression editor's variable browser.
+func _get_sheet_variable_names() -> Array:
+    var names: Array = []
+    if _current_sheet != null:
+        var global_keys: Array = _current_sheet.variables.keys()
+        global_keys.sort()
+        for var_name in global_keys:
+            names.append(str(var_name))
+    var selected_resource: Resource = (
+        _viewport.get_selected_context().get("source_resource", null)
+        if _viewport != null
+        else null
+    )
+    if selected_resource is EventRow:
+        for local_var: Variant in (selected_resource as EventRow).local_variables:
+            if local_var is LocalVariable and not (local_var as LocalVariable).name.is_empty():
+                names.append((local_var as LocalVariable).name)
+    return names
 
 func _select_first_event_row() -> void:
     if _viewport == null:

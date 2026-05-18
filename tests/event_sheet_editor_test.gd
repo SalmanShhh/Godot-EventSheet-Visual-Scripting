@@ -1307,6 +1307,64 @@ static func run() -> bool:
     all_passed = _check("ace drag-in preview opens popup window", dock._preview_window.visible, true) and all_passed
     all_passed = _check("ace drag-in preview list gets populated", dock._preview_list.item_count > 0, true) and all_passed
 
+    # ── Drag source kind tracking ─────────────────────────────────────────────
+    # Verifies that starting a row drag records the correct source kind so the
+    # drag badge overlay can show "Event", "Group", "Comment", or "Row".
+    var drag_kind_sheet := EventSheetResource.new()
+    var drag_event_row := EventRow.new()
+    drag_event_row.event_uid = "drag_event_uid"
+    var drag_group_row := EventGroup.new()
+    drag_group_row.group_uid = "drag_group_uid"
+    var drag_comment_row := CommentRow.new()
+    drag_comment_row.text = "drag comment"
+    drag_kind_sheet.events = [drag_event_row, drag_group_row, drag_comment_row]
+    dock.setup(drag_kind_sheet)
+    var drag_kind_viewport: EventSheetViewport = dock._viewport
+    var drag_kind_rows: Array[Dictionary] = drag_kind_viewport.get_flat_rows()
+    all_passed = _check("drag kind sheet has 3 rows", drag_kind_rows.size(), 3) and all_passed
+    # Simulate beginning a row drag on each row type by calling the internal method.
+    drag_kind_viewport._begin_row_drag(0)
+    all_passed = _check("event row drag source kind is event", drag_kind_viewport._drag_row_source_kind, "event") and all_passed
+    drag_kind_viewport._clear_row_drag()
+    drag_kind_viewport._begin_row_drag(1)
+    all_passed = _check("group row drag source kind is group", drag_kind_viewport._drag_row_source_kind, "group") and all_passed
+    drag_kind_viewport._clear_row_drag()
+    drag_kind_viewport._begin_row_drag(2)
+    all_passed = _check("comment row drag source kind is comment", drag_kind_viewport._drag_row_source_kind, "comment") and all_passed
+    drag_kind_viewport._clear_row_drag()
+    all_passed = _check("clear row drag resets source kind", drag_kind_viewport._drag_row_source_kind, "") and all_passed
+
+    # ── Global variable @export badge ─────────────────────────────────────────
+    # Verifies that global variables render an "@export" badge span so designers
+    # can see at a glance that the variable is exposed to the Godot Inspector.
+    var exposed_sheet := EventSheetResource.new()
+    exposed_sheet.variables["lives"] = {"type": "int", "default": 3, "const": false, "exposed": true}
+    exposed_sheet.variables["hidden_var"] = {"type": "float", "default": 0.0, "const": false, "exposed": false}
+    dock.setup(exposed_sheet)
+    var exposed_rows: Array[Dictionary] = dock._viewport.get_flat_rows()
+    var lives_row_data: EventRowData = null
+    var hidden_row_data: EventRowData = null
+    for row_entry: Dictionary in exposed_rows:
+        var rd: EventRowData = row_entry.get("row")
+        if rd == null:
+            continue
+        if _row_contains_text(rd, "lives"):
+            lives_row_data = rd
+        elif _row_contains_text(rd, "hidden_var"):
+            hidden_row_data = rd
+    all_passed = _check("exposed global variable row exists", lives_row_data != null, true) and all_passed
+    if lives_row_data != null:
+        all_passed = _check("exposed global variable has @export badge", _row_contains_text(lives_row_data, "@export"), true) and all_passed
+    all_passed = _check("non-exposed global variable row exists", hidden_row_data != null, true) and all_passed
+    if hidden_row_data != null:
+        all_passed = _check("non-exposed global variable has no @export badge", _row_contains_text(hidden_row_data, "@export"), false) and all_passed
+
+    # ── Expression editor dialog availability ─────────────────────────────────
+    # Verifies that the dock creates and exposes the ExpressionEditorDialog so
+    # ACEParamsDialog can open it for expression-type parameters.
+    all_passed = _check("dock has expression editor instance", dock._expression_editor != null, true) and all_passed
+    all_passed = _check("ace params dialog has expression editor wired", dock._ace_params._expression_editor != null, true) and all_passed
+
     editor.free()
     return all_passed
 

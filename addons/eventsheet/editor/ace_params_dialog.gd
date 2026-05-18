@@ -1,6 +1,9 @@
 # EventSheet — ACE Parameters dialog component
 # Builds a dynamic form from ACEDefinition.parameters metadata and emits
 # params_confirmed when the user confirms.
+#
+# Expression parameters (descriptor has "expression": true or type TYPE_EXPRESSION)
+# open the ExpressionEditorDialog instead of a plain text field.
 @tool
 class_name ACEParamsDialog
 extends RefCounted
@@ -10,16 +13,32 @@ extends RefCounted
 ## context is the same dictionary passed to open().
 signal params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary)
 
+## Sentinel used to identify expression-type parameters that need the expression editor.
+const TYPE_EXPRESSION := 9900
+
 var _dialog: ConfirmationDialog = null
 var _form: VBoxContainer = null
 var _hint: Label = null
 var _fields: Dictionary = {}
 var _definition: ACEDefinition = null
 var _context: Dictionary = {}
+## ExpressionEditorDialog instance; shared and re-used across params in the same form.
+var _expression_editor: ExpressionEditorDialog = null
+## Tracks which parameter keys are expression-type for special extraction handling.
+var _expression_param_keys: Dictionary = {}
+## Available variable names passed in from the sheet context for the expression editor.
+var _available_variable_names: Array = []
 
 ## Initialise and attach the dialog to parent_node.
 ## Must be called before open().
-func init_dialog(parent_node: Node) -> void:
+## expression_editor is optional; if provided, expression-type params use it instead of LineEdit.
+func init_dialog(parent_node: Node, expression_editor: ExpressionEditorDialog = null) -> void:
+	_expression_editor = expression_editor
+	if _expression_editor != null and not _expression_editor.expression_confirmed.is_connected(_on_expression_editor_confirmed):
+		_expression_editor.expression_confirmed.connect(_on_expression_editor_confirmed)
+	_init_dialog_internal(parent_node)
+
+func _init_dialog_internal(parent_node: Node) -> void:
 	if _dialog != null:
 		return
 	_dialog = ConfirmationDialog.new()
@@ -48,15 +67,18 @@ func init_dialog(parent_node: Node) -> void:
 
 ## Open the parameter form for the given ACEDefinition.
 ## context is an opaque dictionary forwarded in the params_confirmed signal.
-func open(definition: ACEDefinition, context: Dictionary) -> void:
-	open_with_values(definition, context, {})
+## variable_names provides available sheet variables for expression editor panels.
+func open(definition: ACEDefinition, context: Dictionary, variable_names: Array = []) -> void:
+	open_with_values(definition, context, {}, variable_names)
 
-func open_with_values(definition: ACEDefinition, context: Dictionary, initial_values: Dictionary) -> void:
+func open_with_values(definition: ACEDefinition, context: Dictionary, initial_values: Dictionary, variable_names: Array = []) -> void:
 	if _dialog == null:
 		push_error("ACEParamsDialog.open() called before init_dialog().")
 		return
 	_definition = definition
 	_context = context.duplicate(true)
+	_available_variable_names = variable_names.duplicate()
+	_expression_param_keys.clear()
 	_fields.clear()
 	for child in _form.get_children():
 		_form.remove_child(child)
@@ -78,11 +100,33 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 			label.tooltip_text = description
 		label.custom_minimum_size = Vector2(160.0, 0.0)
 		row.add_child(label)
-		var field: Control = _create_field(param_dict, initial_values)
-		field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(field)
-		_form.add_child(row)
-		_fields[key] = field
+		# Expression-type params get a special "Edit Expression" button that opens
+		# the ExpressionEditorDialog, with the current value displayed as read-only.
+		if _is_expression_param(param_dict):
+			_expression_param_keys[key] = true
+			var expr_row: HBoxContainer = row
+			var initial_expr: String = str(initial_values.get(key, param_dict.get("default_value", "")))
+			var expr_preview: LineEdit = LineEdit.new()
+			expr_preview.text = initial_expr
+			expr_preview.placeholder_text = "expression…"
+			expr_preview.editable = true
+			expr_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var edit_btn: Button = Button.new()
+			edit_btn.text = "…"
+			edit_btn.tooltip_text = "Open expression editor"
+			edit_btn.pressed.connect(func() -> void:
+				_open_expression_editor_for(key, expr_preview.text, str(label.text))
+			)
+			expr_row.add_child(expr_preview)
+			expr_row.add_child(edit_btn)
+			_form.add_child(expr_row)
+			_fields[key] = expr_preview
+		else:
+			var field: Control = _create_field(param_dict, initial_values)
+			field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(field)
+			_form.add_child(row)
+			_fields[key] = field
 	_dialog.title = "%s Parameters%s" % [
 		definition.display_name,
 		" (Edit)" if _is_reedit_flow() else ""
@@ -196,6 +240,32 @@ func _focus_first_field() -> void:
 		if field != null and field.visible:
 			field.grab_focus()
 			return
+
+## Returns true when a parameter descriptor marks this as an expression type.
+## Checks for "expression": true or a TYPE_EXPRESSION sentinel type.
+static func _is_expression_param(param_dict: Dictionary) -> bool:
+	if bool(param_dict.get("expression", false)):
+		return true
+	return int(param_dict.get("type", TYPE_NIL)) == TYPE_EXPRESSION
+
+## Opens the ExpressionEditorDialog for a specific expression-type parameter.
+func _open_expression_editor_for(param_key: String, current_value: String, display_name: String) -> void:
+	if _expression_editor == null:
+		# Fallback: just allow editing in the LineEdit directly.
+		return
+	_expression_editor.open(
+		param_key,
+		current_value,
+		display_name,
+		_available_variable_names,
+		_context.duplicate(true)
+	)
+
+## Callback when the ExpressionEditorDialog confirms a value.
+## Updates the preview LineEdit in the params form with the confirmed expression.
+func _on_expression_editor_confirmed(param_key: String, value: String, _expr_context: Dictionary) -> void:
+	if _fields.has(param_key) and _fields[param_key] is LineEdit:
+		(_fields[param_key] as LineEdit).text = value
 
 static func _parse_bool(value: Variant) -> bool:
 	return str(value).to_lower() in ["true", "1", "yes"]

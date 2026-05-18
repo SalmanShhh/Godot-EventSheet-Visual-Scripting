@@ -52,6 +52,9 @@ const COLOR_GROUP_BADGE_FG = Color("#f4f0ff")
 const COLOR_GROUP_FOLD_BG = Color(0.55, 0.48, 0.94, 0.20)
 const COLOR_CONST_BADGE_BG = Color("#3e5c34")
 const COLOR_CONST_BADGE_FG = Color("#eafde5")
+## Badge color for global variables that are exposed to the Godot Inspector (@export).
+const COLOR_EXPOSED_BADGE_BG = Color("#1e4568")
+const COLOR_EXPOSED_BADGE_FG = Color("#c8e6ff")
 
 static func clamp_font_size(value: int) -> int:
 	return max(value, MIN_FONT_SIZE)

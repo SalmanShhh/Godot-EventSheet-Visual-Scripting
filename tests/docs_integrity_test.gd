@@ -80,6 +80,31 @@ const REQUIRED_DOCS := {
 		"[package]",
 		"[tokens]",
 		"[designer_notes]"
+	],
+	"res://docs/EVENTSHEET_C3_UI_UX_TRANSLATION_SPEC.md": [
+		"# EventSheet C3-to-Godot UI/UX Translation Spec",
+		"Top-Level Event Creation Flow",
+		"Condition / Action Editing Flow",
+		"Drag/Drop Semantics",
+		"Event vs Sub-Event Mental Model",
+		"Group Behavior",
+		"Else / ElseIf / Or Block Flow",
+		"Selection Behavior",
+		"Enable / Disable Semantics",
+		"Expression Editing Flow",
+		"Variable Semantics",
+		"Where Godot Intentionally Differs from C3",
+		"Interaction Model Summary"
+	],
+	"res://docs/EVENTSHEET_COMPILER_ALIGNMENT_NOTES.md": [
+		"# EventSheet Compiler Alignment Notes",
+		"Resource / Data Model Alignment",
+		"ACE Resource Contracts",
+		"Trigger vs Condition Distinction",
+		"Else / ElseIf Chain Semantics",
+		"Variable Compilation",
+		"Phase Status",
+		"Expression Parameters"
 	]
 }
 

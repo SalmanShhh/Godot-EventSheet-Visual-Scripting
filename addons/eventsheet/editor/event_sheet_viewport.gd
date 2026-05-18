@@ -88,6 +88,9 @@ var _drag_row_indices: Array[int] = []
 var _drag_target_index: int = -1
 var _drag_target_mode: String = "before"
 var _drag_row_copy_mode: bool = false
+## Kind of the row currently being dragged: "event", "group", "comment", or "".
+## Used to render a source-type indicator badge during drag.
+var _drag_row_source_kind: String = ""
 var _drag_ace_entries: Array = []
 var _drag_ace_target_row_index: int = -1
 var _drag_ace_target_lane: String = ""
@@ -95,8 +98,12 @@ var _drag_ace_target_ace_index: int = -1
 var _drag_ace_insert_mode: String = "append"
 var _drag_ace_copy_mode: bool = false
 var _drag_ace_drop_valid: bool = true
+## Kind of ACE being dragged: "condition", "action", "trigger", or "".
+var _drag_ace_source_kind: String = ""
 var _drag_feedback_text: String = ""
 var _drag_feedback_is_error: bool = false
+## Current logical mouse position; updated on motion for drawing the drag badge.
+var _drag_cursor_position: Vector2 = Vector2.ZERO
 var _last_scroll: int = -1
 var _last_scroll_size: Vector2 = Vector2.ZERO
 var _fold_state: Dictionary = {}
@@ -438,6 +445,7 @@ func _draw() -> void:
         var layout: Dictionary = _get_or_build_row_layout(index, width, font, font_size)
         _renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
     _draw_box_selection_overlay()
+    _draw_drag_source_badge(font, font_size)
 
 func _gui_input(event: InputEvent) -> void:
     if event is InputEventMouseMotion:
@@ -451,6 +459,7 @@ func _gui_input(event: InputEvent) -> void:
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
     var local_position: Vector2 = _to_logical_position(event.position)
+    _drag_cursor_position = local_position
     if _box_select_active:
         _box_select_current = local_position
         queue_redraw()
@@ -671,6 +680,20 @@ func _begin_row_drag(row_index: int) -> void:
     _drag_row_index = row_index
     _drag_target_index = -1
     _drag_target_mode = "before"
+    # Determine drag source kind for visual indicator.
+    var row_data: EventRowData = _row_at(row_index)
+    if row_data != null:
+        match row_data.row_type:
+            EventRowData.RowType.EVENT:
+                _drag_row_source_kind = "event"
+            EventRowData.RowType.GROUP:
+                _drag_row_source_kind = "group"
+            EventRowData.RowType.COMMENT:
+                _drag_row_source_kind = "comment"
+            _:
+                _drag_row_source_kind = ""
+    else:
+        _drag_row_source_kind = ""
 
 func _clear_row_drag() -> void:
     _drag_row_index = -1
@@ -678,6 +701,7 @@ func _clear_row_drag() -> void:
     _drag_target_index = -1
     _drag_target_mode = "before"
     _drag_row_copy_mode = false
+    _drag_row_source_kind = ""
 
 func _maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
     if row_index < 0:
@@ -701,6 +725,7 @@ func _maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
     if _drag_ace_entries.is_empty():
         _clear_ace_drag()
         return false
+    _drag_ace_source_kind = kind
     _drag_ace_target_row_index = -1
     _drag_ace_target_lane = ""
     _drag_ace_target_ace_index = -1
@@ -712,6 +737,7 @@ func _maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
 
 func _clear_ace_drag() -> void:
     _drag_ace_entries.clear()
+    _drag_ace_source_kind = ""
     _drag_ace_target_row_index = -1
     _drag_ace_target_lane = ""
     _drag_ace_target_ace_index = -1
@@ -1004,6 +1030,9 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
     names.sort()
     for var_name in names:
         var descriptor: Dictionary = sheet.variables.get(var_name, {})
+        # Global variables are exposed to the Godot Inspector by default (not private).
+        # "exposed" can be explicitly set to false to suppress this.
+        var is_exposed: bool = bool(descriptor.get("exposed", true))
         rows.append(
             _build_variable_row(
                 "global",
@@ -1012,7 +1041,8 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
                 descriptor.get("default", null),
                 0,
                 {
-                    "is_constant": bool(descriptor.get("const", descriptor.get("is_constant", false)))
+                    "is_constant": bool(descriptor.get("const", descriptor.get("is_constant", false))),
+                    "is_exposed": is_exposed
                 }
             )
         )
@@ -1054,6 +1084,8 @@ func _build_variable_row(
     var owner_event: EventRow = options.get("owner_event", null)
     var variable_index: int = int(options.get("variable_index", -1))
     var is_constant: bool = bool(options.get("is_constant", false))
+    # Global variables are exposed to inspector unless explicitly marked otherwise.
+    var is_exposed: bool = bool(options.get("is_exposed", scope_label == "global"))
     row_data.indent = indent
     row_data.row_type = EventRowData.RowType.SECTION
     row_data.source_resource = owner_event if scope_label == "local" else _sheet
@@ -1069,7 +1101,8 @@ func _build_variable_row(
         "variable_scope": scope_label,
         "variable_name": var_name,
         "variable_index": variable_index,
-        "is_constant": is_constant
+        "is_constant": is_constant,
+        "is_exposed": is_exposed
     }
     row_data.spans = [
         _make_span(scope_label, SemanticSpan.SpanType.KEYWORD, variable_meta.merged({"editable": false, "chip": true}, true)),
@@ -1089,6 +1122,26 @@ func _build_variable_row(
                         "badge_style": "const",
                         "badge_bg": EventSheetPalette.COLOR_CONST_BADGE_BG,
                         "badge_fg": EventSheetPalette.COLOR_CONST_BADGE_FG
+                    },
+                    true
+                )
+            )
+        )
+    # Show "exposed" badge on global variables: they are script-facing exported properties,
+    # not private fields. The badge is only shown for global scope since local variables are
+    # always private to the event's execution.
+    if scope_label == "global" and is_exposed:
+        row_data.spans.append(
+            _make_span(
+                "@export",
+                SemanticSpan.SpanType.KEYWORD,
+                variable_meta.merged(
+                    {
+                        "editable": false,
+                        "badge": true,
+                        "badge_style": "or",
+                        "badge_bg": EventSheetPalette.COLOR_EXPOSED_BADGE_BG,
+                        "badge_fg": EventSheetPalette.COLOR_EXPOSED_BADGE_FG
                     },
                     true
                 )
@@ -1603,6 +1656,71 @@ func _draw_empty_state(width: float) -> void:
         max(width - 32.0, 1.0),
         font_size,
         EventSheetPalette.TEXT_MUTED
+    )
+
+## Draw a floating badge near the cursor showing what type of thing is being dragged.
+## This makes it visually unambiguous whether the user is dragging an event, group,
+## condition, action, or comment.
+func _draw_drag_source_badge(font: Font, font_size: int) -> void:
+    var label: String = ""
+    var badge_color: Color = Color(0.25, 0.35, 0.52, 0.95)
+    var text_color: Color = Color(1.0, 1.0, 1.0, 0.95)
+    if not _drag_ace_entries.is_empty():
+        match _drag_ace_source_kind:
+            "condition":
+                label = "Condition"
+                badge_color = Color(0.22, 0.40, 0.62, 0.95)
+            "trigger":
+                label = "Trigger"
+                badge_color = Color(0.42, 0.28, 0.60, 0.95)
+            "action":
+                label = "Action"
+                badge_color = Color(0.22, 0.50, 0.36, 0.95)
+            _:
+                label = "ACE"
+        if _drag_ace_copy_mode:
+            label = label + " (copy)"
+    elif _drag_row_index >= 0:
+        match _drag_row_source_kind:
+            "event":
+                label = "Event"
+                badge_color = Color(0.25, 0.35, 0.52, 0.95)
+            "group":
+                label = "Group"
+                badge_color = Color(0.42, 0.34, 0.18, 0.95)
+            "comment":
+                label = "Comment"
+                badge_color = Color(0.30, 0.30, 0.35, 0.95)
+            _:
+                label = "Row"
+        if _drag_row_indices.size() > 1:
+            label = label + " ×%d" % _drag_row_indices.size()
+        if _drag_row_copy_mode:
+            label = label + " (copy)"
+    if label.is_empty():
+        return
+    var badge_font_size: int = max(font_size - 2, 10)
+    var text_size: Vector2 = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, badge_font_size)
+    var badge_width: float = text_size.x + 16.0
+    var badge_height: float = float(badge_font_size) + 10.0
+    # Offset badge slightly below and to the right of cursor, within canvas bounds.
+    var badge_x: float = clampf(_drag_cursor_position.x + 12.0, 0.0, _get_logical_canvas_width() - badge_width - 4.0)
+    var badge_y: float = clampf(_drag_cursor_position.y + 12.0, 0.0, max(size.y / max(_zoom_factor, 0.001), badge_height) - badge_height - 4.0)
+    var badge_rect := Rect2(badge_x, badge_y, badge_width, badge_height)
+    var style: StyleBoxFlat = StyleBoxFlat.new()
+    style.bg_color = badge_color
+    style.set_corner_radius_all(4)
+    style.set_content_margin_all(0)
+    draw_style_box(style, badge_rect)
+    var baseline_y: float = badge_rect.position.y + (badge_rect.size.y * 0.5) + (badge_font_size * 0.35)
+    draw_string(
+        font,
+        Vector2(badge_rect.position.x + 8.0, baseline_y),
+        label,
+        HORIZONTAL_ALIGNMENT_LEFT,
+        badge_width - 16.0,
+        badge_font_size,
+        text_color
     )
 
 func _update_canvas_min_size() -> void:

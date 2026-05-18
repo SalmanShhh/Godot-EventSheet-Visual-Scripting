@@ -106,7 +106,20 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     _draw_icon(control, icon_rect, row_data)
     _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index, event_style, selection_fill, hover_fill)
     if drag_rect.size != Vector2.ZERO:
-        control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
+        # Different visual treatment per drop mode:
+        # - before/after (thin horizontal line): bright blue insertion line
+        # - inside (sub-event zone): rounded fill + border to indicate nesting
+        var drag_mode: String = str(layout.get("drag_mode", ""))
+        if drag_mode == "inside":
+            var inside_style: StyleBoxFlat = StyleBoxFlat.new()
+            inside_style.bg_color = Color(0.22, 0.52, 0.88, 0.18)
+            inside_style.border_color = EventSheetPalette.COLOR_DRAG_LINE
+            inside_style.set_border_width_all(2)
+            inside_style.set_corner_radius_all(4)
+            inside_style.set_content_margin_all(0)
+            control.draw_style_box(inside_style, drag_rect)
+        else:
+            control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
     if ace_drag_rect.size != Vector2.ZERO:
         control.draw_rect(
             ace_drag_rect,

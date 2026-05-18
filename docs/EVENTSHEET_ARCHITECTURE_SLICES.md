@@ -33,6 +33,16 @@ This document tracks the broad architecture/spec-alignment PR in explicit slices
   - condition/trigger/action-level enabled toggle via context menus
   - disabled ACE spans render dimmed + struck-through
 - Global variables are now persisted as exposed/script-facing by default (`exposed = true` in global descriptors).
+- **Drag/drop source kind clarity:**
+  - A floating badge near the cursor now shows "Event", "Group", "Condition", "Action", or "Comment" while dragging so the user always knows what they are moving.
+  - Row drag source kind tracked in `_drag_row_source_kind`.
+  - ACE drag source kind tracked in `_drag_ace_source_kind`.
+- **Drop zone visual distinction:**
+  - `before`/`after` drop modes render as a thin bright-blue horizontal line (unchanged).
+  - `inside` drop mode now renders as a rounded rect fill with a blue border to clearly indicate sub-event insertion rather than sibling insertion.
+- **Global variable `@export` badge:**
+  - Global variable rows now show an `@export` badge to communicate that the variable is exposed to the Godot Inspector.
+  - `exposed` flag in variable descriptor defaults to `true`; set to `false` to suppress.
 
 ### Scaffolded / partial
 - Else/ElseIf authoring UX is still metadata-driven (resource/state + rendering), not a full dedicated creation flow.
@@ -47,12 +57,19 @@ This document tracks the broad architecture/spec-alignment PR in explicit slices
 - Parameter dialog now carries structured flow hints by mode.
 - Replace/edit flows show explicit re-edit cue in dialog title and hint text.
 - First parameter field receives focus on open.
+- **Expression Editor Dialog (`ExpressionEditorDialog`):**
+  - Standalone dialog with expression text input, variable browser, and clear button.
+  - Opened automatically from `ACEParamsDialog` when a parameter has `"expression": true` in its descriptor.
+  - `ACEParamsDialog.init_dialog()` now accepts an optional `ExpressionEditorDialog` reference.
+  - Expression-type params render a `LineEdit` preview + `…` button in the params form.
+  - Variable browser shows global + local sheet variables and inserts name at cursor on double-click.
+  - Wired in `EventSheetDock._ready()` and `_get_sheet_variable_names()` added to supply variables.
 
 ### Scaffolded / partial
-- Expression editor remains integrated as an expression-entry path in parameter flows, but not yet a standalone full-screen expression workbench.
+- Expression editor is integrated as an expression-entry path in parameter flows, but not yet a standalone full-screen expression workbench.
 
 ### Deferred
-- Advanced expression authoring features (history snippets, validation previews, rich syntax editing).
+- Advanced expression authoring features (history snippets, validation previews, rich syntax editing, autocomplete).
 
 ## Slice 4 — Spec alignment (phases 1–5)
 
@@ -63,11 +80,20 @@ Status summary:
   - Global variable exposure semantics are now explicit in saved descriptors.
 - **Phase 2 (editor panel/row rendering/undo-redo):** **Implemented + extended**
   - Viewport interaction extraction, selection model improvements, row/ACE enabled toggles, and renderer updates are wired into existing undoable workflows.
-- **Phase 3 (picker/params/expression):** **Partial**
+  - Drag/drop visual clarity improvements (source badge, inside-drop indicator).
+- **Phase 3 (picker/params/expression):** **Partial → extended**
   - Params dialog gained stronger flow awareness and re-edit cues.
-  - Picker/params workflows remain central; expression tooling still partially scaffolded.
+  - Expression editor dialog added and wired into params dialog.
+  - Picker/params workflows remain central; full expression tooling still scaffolded.
 - **Phase 4 (runtime execution engine):** **Deferred**
   - Runtime/compiler changes were intentionally limited in this push.
 - **Phase 5 (optimization/virtualization/extensions):** **Partial**
   - Existing custom-rendered viewport architecture remains and is further modularized.
   - Full virtualization/extension API expansion is still deferred.
+
+## Slice 5 — Documentation
+
+### Implemented
+- `docs/EVENTSHEET_C3_UI_UX_TRANSLATION_SPEC.md` — C3-to-Godot 1:1 UX bridge document covering all interaction flows, divergences, and the interaction model summary.
+- `docs/EVENTSHEET_COMPILER_ALIGNMENT_NOTES.md` — Compiler spec alignment reference explaining resource contracts, ACE semantics, Else/ElseIf chain semantics, variable compilation, and what remains for compiler work.
+- `tests/docs_integrity_test.gd` updated with markers for both new docs.
