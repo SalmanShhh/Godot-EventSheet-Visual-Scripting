@@ -1384,7 +1384,8 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     var condition_badge_column_gap: float = EventSheetPalette.SPAN_GAP if condition_badge_column_width > 0.0 else 0.0
     var condition_text_start_x: float = condition_x + condition_badge_column_width + condition_badge_column_gap
     var condition_line_x: Dictionary = {}
-    var condition_badge_line_x: Dictionary = {}
+    # Tracks the next available X in the badge area for each condition line.
+    var condition_badge_next_x: Dictionary = {}
     var action_x: float = (
         lane_divider_x + float(event_style.lane_divider_width) + float(event_style.action_lane_padding)
         if lane_divider_x > 0.0
@@ -1412,15 +1413,15 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         elif lane_divider_x > 0.0:
             var line_index: int = int(metadata.get("line_index", 0))
             if bool(metadata.get("badge", false)):
-                if not condition_badge_line_x.has(line_index):
-                    condition_badge_line_x[line_index] = condition_x
-                span_x = float(condition_badge_line_x[line_index])
+                if not condition_badge_next_x.has(line_index):
+                    condition_badge_next_x[line_index] = condition_x
+                span_x = float(condition_badge_next_x[line_index])
             else:
                 if not condition_line_x.has(line_index):
                     # If badges were drawn first on this line, start the condition text
                     # after the rightmost badge; otherwise use the default badge-column offset.
                     condition_line_x[line_index] = float(
-                        condition_badge_line_x.get(line_index, condition_text_start_x)
+                        condition_badge_next_x.get(line_index, condition_text_start_x)
                     )
                 span_x = float(condition_line_x[line_index])
             span_y = row_top + float(line_index) * line_height + 3.0
@@ -1459,12 +1460,13 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         # Store absolute X for the next span start on this line.
         var next_span_start_x: float = span.rect.end.x + _get_span_gap(span)
         if span_lane == "action":
+            var action_line_index_next: int = int(metadata.get("line_index", 0))
             if not bool(metadata.get("align_right", false)):
-                action_line_x[int(metadata.get("line_index", 0))] = next_span_start_x
+                action_line_x[action_line_index_next] = next_span_start_x
         else:
             var condition_line_index: int = int(metadata.get("line_index", 0))
             if bool(metadata.get("badge", false)):
-                condition_badge_line_x[condition_line_index] = next_span_start_x
+                condition_badge_next_x[condition_line_index] = next_span_start_x
             else:
                 condition_line_x[condition_line_index] = next_span_start_x
     var drag_rect := Rect2()
