@@ -26,9 +26,11 @@ static func run() -> bool:
 	passed = _check("style exposes event visual scene template", style.event_visual_scene != null, true) and passed
 	passed = _check("style exposes condition visual scene template", style.condition_visual_scene != null, true) and passed
 	passed = _check("style exposes action visual scene template", style.action_visual_scene != null, true) and passed
+	passed = _check("style exposes dedicated theme layout visual scene", style.theme_layout_visual_scene != null, true) and passed
 	var event_template: Node = style.event_visual_scene.instantiate() if style.event_visual_scene != null else null
 	var condition_template: Node = style.condition_visual_scene.instantiate() if style.condition_visual_scene != null else null
 	var action_template: Node = style.action_visual_scene.instantiate() if style.action_visual_scene != null else null
+	var layout_template: Node = style.theme_layout_visual_scene.instantiate() if style.theme_layout_visual_scene != null else null
 	passed = _check(
 		"event visual scene builds event style",
 		event_template != null and event_template.has_method("build_event_style") and (event_template.call("build_event_style") is EventSheetEventStyle),
@@ -59,12 +61,61 @@ static func run() -> bool:
 		action_template != null and str(action_template.get("designer_usage_hint")).contains("designer-friendly template"),
 		true
 	) and passed
+	passed = _check(
+		"theme layout scene builds editor style parts",
+		layout_template != null and layout_template.has_method("build_editor_style_parts"),
+		true
+	) and passed
+	passed = _check(
+		"theme layout template exposes designer usage hint",
+		layout_template != null and str(layout_template.get("designer_usage_hint")).contains("full visual EventSheet layout workflow"),
+		true
+	) and passed
+	var visual_layout_style := EventSheetEditorStyle.new()
+	if layout_template != null:
+		layout_template.set("condition_badge_column_width", 42)
+		layout_template.set("condition_lane_padding", 17)
+		layout_template.set("action_lane_padding", 13)
+		layout_template.set("condition_horizontal_padding", 12)
+		layout_template.set("action_horizontal_padding", 11)
+		var shell_node: Node = layout_template.find_child("EventBlockShell", true, false)
+		if shell_node is ColorRect:
+			(shell_node as ColorRect).color = Color(0.22, 0.23, 0.31, 1.0)
+		var packed_layout := PackedScene.new()
+		var packed_layout_err: Error = packed_layout.pack(layout_template)
+		passed = _check("theme layout scene packs for visual workflow", packed_layout_err, OK) and passed
+		if packed_layout_err == OK:
+			visual_layout_style.use_visual_layout_scene = true
+			visual_layout_style.theme_layout_visual_scene = packed_layout
+			visual_layout_style.ensure_defaults()
+			passed = _check(
+				"visual layout scene updates event shell token",
+				visual_layout_style.event_style.row_background_color,
+				Color(0.22, 0.23, 0.31, 1.0)
+			) and passed
+			passed = _check(
+				"visual layout scene updates badge column width token",
+				visual_layout_style.event_style.condition_badge_column_width,
+				42
+			) and passed
+			passed = _check(
+				"visual layout scene updates lane padding tokens",
+				visual_layout_style.event_style.condition_lane_padding == 17 and visual_layout_style.event_style.action_lane_padding == 13,
+				true
+			) and passed
+			passed = _check(
+				"visual layout scene updates chip spacing tokens",
+				visual_layout_style.condition_style.horizontal_padding == 12 and visual_layout_style.action_style.horizontal_padding == 11,
+				true
+			) and passed
 	if event_template != null:
 		event_template.free()
 	if condition_template != null:
 		condition_template.free()
 	if action_template != null:
 		action_template.free()
+	if layout_template != null:
+		layout_template.free()
 
 	style.event_style.minimum_row_height = 40
 	style.event_style.condition_lane_padding = 18
@@ -248,6 +299,7 @@ static func run() -> bool:
 	if FileAccess.file_exists(DESIGNER_THEME_MANIFEST_PATH):
 		var manifest_text: String = FileAccess.get_file_as_string(DESIGNER_THEME_MANIFEST_PATH)
 		passed = _check("designer theme manifest references style resource", manifest_text.contains("designer_template_theme.tres"), true) and passed
+		passed = _check("designer theme manifest references theme layout scene", manifest_text.contains("theme_layout_visual_editor.tscn"), true) and passed
 		passed = _check("designer theme manifest lists tokens section", manifest_text.contains("[tokens]"), true) and passed
 
 	dock.free()

@@ -1,0 +1,263 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://addons/eventsheet/elements/event_sheet_theme_layout_template.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="1"]
+bg_color = Color(0.3, 0.56, 0.82, 0.16)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.67, 0.92, 0.42)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="2"]
+bg_color = Color(0.36, 0.6, 0.92, 0.24)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.67, 0.92, 0.5)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="3"]
+bg_color = Color(0.25, 0.66, 0.56, 0.14)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.78, 0.64, 0.38)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="4"]
+bg_color = Color(0.28, 0.72, 0.58, 0.22)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.78, 0.64, 0.46)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="ThemeLayoutVisualEditor" type="Control"]
+custom_minimum_size = Vector2(920, 420)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="SheetBackground" type="ColorRect" parent="."]
+editor_description = "Whole EventSheet canvas background."
+layout_mode = 0
+offset_right = 920.0
+offset_bottom = 420.0
+color = Color(0.1, 0.11, 0.14, 1)
+
+[node name="EventBlockShell" type="ColorRect" parent="."]
+editor_description = "Main event block shell/background."
+layout_mode = 0
+offset_left = 28.0
+offset_top = 38.0
+offset_right = 892.0
+offset_bottom = 156.0
+color = Color(0.12, 0.13, 0.17, 1)
+
+[node name="EventBlockShellAlt" type="ColorRect" parent="."]
+editor_description = "Alternate event shell background swatch used on alternating rows."
+layout_mode = 0
+offset_left = 28.0
+offset_top = 162.0
+offset_right = 892.0
+offset_bottom = 216.0
+color = Color(0.16, 0.17, 0.21, 1)
+
+[node name="EventBlockBorder" type="ColorRect" parent="."]
+editor_description = "Top/bottom border color swatch for event shell separation."
+layout_mode = 0
+offset_left = 28.0
+offset_top = 34.0
+offset_right = 892.0
+offset_bottom = 37.0
+color = Color(0.34, 0.40, 0.49, 0.82)
+
+[node name="ConditionLane" type="ColorRect" parent="."]
+editor_description = "Condition lane background (left lane)."
+layout_mode = 0
+offset_left = 60.0
+offset_top = 50.0
+offset_right = 500.0
+offset_bottom = 144.0
+color = Color(0.30, 0.56, 0.82, 0.14)
+
+[node name="BadgeColumn" type="ColorRect" parent="."]
+editor_description = "Condition badge column swatch. Use exported width token for sizing."
+layout_mode = 0
+offset_left = 72.0
+offset_top = 62.0
+offset_right = 100.0
+offset_bottom = 134.0
+color = Color(0.41, 0.51, 0.76, 0.95)
+
+[node name="BadgeGlyph" type="ColorRect" parent="."]
+editor_description = "Badge glyph/text color swatch used for trigger/OR/invert badge foreground."
+layout_mode = 0
+offset_left = 82.0
+offset_top = 72.0
+offset_right = 90.0
+offset_bottom = 80.0
+color = Color(1, 1, 1, 1)
+
+[node name="LaneDivider" type="ColorRect" parent="."]
+editor_description = "Divider color between condition and action lanes."
+layout_mode = 0
+offset_left = 500.0
+offset_top = 50.0
+offset_right = 504.0
+offset_bottom = 144.0
+color = Color(0.36, 0.42, 0.52, 0.72)
+
+[node name="ActionLane" type="ColorRect" parent="."]
+editor_description = "Action lane background (right lane)."
+layout_mode = 0
+offset_left = 504.0
+offset_top = 50.0
+offset_right = 880.0
+offset_bottom = 144.0
+color = Color(0.25, 0.66, 0.56, 0.10)
+
+[node name="ConditionEntryPreview" type="Button" parent="."]
+editor_description = "Condition chip preview. Normal/Hover styleboxes map to condition entry token colors."
+layout_mode = 0
+offset_left = 106.0
+offset_top = 70.0
+offset_right = 470.0
+offset_bottom = 104.0
+theme_override_colors/font_color = Color(0.78, 0.88, 1, 1)
+theme_override_styles/normal = SubResource("1")
+theme_override_styles/hover = SubResource("2")
+text = "Condition name -> description/value preview"
+
+[node name="ActionEntryPreview" type="Button" parent="."]
+editor_description = "Action chip preview. Normal/Hover styleboxes map to action entry token colors."
+layout_mode = 0
+offset_left = 526.0
+offset_top = 70.0
+offset_right = 860.0
+offset_bottom = 104.0
+theme_override_colors/font_color = Color(0.68, 0.92, 0.78, 1)
+theme_override_styles/normal = SubResource("3")
+theme_override_styles/hover = SubResource("4")
+text = "Action name -> description/value preview"
+
+[node name="GroupBlock" type="ColorRect" parent="."]
+editor_description = "Group row background swatch."
+layout_mode = 0
+offset_left = 28.0
+offset_top = 236.0
+offset_right = 460.0
+offset_bottom = 288.0
+color = Color(0.18, 0.19, 0.30, 1)
+
+[node name="GroupBlockAlt" type="ColorRect" parent="."]
+editor_description = "Alternate group row background swatch."
+layout_mode = 0
+offset_left = 28.0
+offset_top = 292.0
+offset_right = 460.0
+offset_bottom = 332.0
+color = Color(0.21, 0.22, 0.35, 1)
+
+[node name="GroupAccent" type="ColorRect" parent="."]
+editor_description = "Group accent rail/separator color swatch."
+layout_mode = 0
+offset_left = 34.0
+offset_top = 244.0
+offset_right = 42.0
+offset_bottom = 324.0
+color = Color(0.54, 0.48, 0.90, 1)
+
+[node name="GroupTitleSwatch" type="ColorRect" parent="."]
+editor_description = "Group title text color swatch."
+layout_mode = 0
+offset_left = 56.0
+offset_top = 250.0
+offset_right = 86.0
+offset_bottom = 264.0
+color = Color(0.95, 0.93, 1, 1)
+
+[node name="GroupBadge" type="ColorRect" parent="."]
+editor_description = "Group badge background color swatch."
+layout_mode = 0
+offset_left = 100.0
+offset_top = 248.0
+offset_right = 170.0
+offset_bottom = 270.0
+color = Color(0.34, 0.30, 0.70, 1)
+
+[node name="GroupBadgeText" type="ColorRect" parent="."]
+editor_description = "Group badge text color swatch."
+layout_mode = 0
+offset_left = 176.0
+offset_top = 254.0
+offset_right = 194.0
+offset_bottom = 266.0
+color = Color(0.96, 0.95, 1, 1)
+
+[node name="GroupFoldButton" type="ColorRect" parent="."]
+editor_description = "Group fold button background color swatch."
+layout_mode = 0
+offset_left = 206.0
+offset_top = 248.0
+offset_right = 234.0
+offset_bottom = 270.0
+color = Color(0.54, 0.48, 0.90, 0.20)
+
+[node name="CommentBlock" type="ColorRect" parent="."]
+editor_description = "Standalone comment row background swatch."
+layout_mode = 0
+offset_left = 478.0
+offset_top = 236.0
+offset_right = 892.0
+offset_bottom = 272.0
+color = Color(0.14, 0.15, 0.18, 1)
+
+[node name="CommentTextSwatch" type="ColorRect" parent="."]
+editor_description = "Comment text color swatch."
+layout_mode = 0
+offset_left = 490.0
+offset_top = 246.0
+offset_right = 520.0
+offset_bottom = 258.0
+color = Color(0.72, 0.76, 0.82, 1)
+
+[node name="HoverFillPreview" type="ColorRect" parent="."]
+editor_description = "Row hover overlay color swatch."
+layout_mode = 0
+offset_left = 478.0
+offset_top = 282.0
+offset_right = 892.0
+offset_bottom = 316.0
+color = Color(1, 1, 1, 0.05)
+
+[node name="SelectionFillPreview" type="ColorRect" parent="."]
+editor_description = "Row/selection overlay color swatch."
+layout_mode = 0
+offset_left = 478.0
+offset_top = 322.0
+offset_right = 892.0
+offset_bottom = 356.0
+color = Color(0.36, 0.51, 0.79, 0.22)

@@ -26,9 +26,10 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin that provides a Construct-sty
 - `EventSheetEditorStyle` is the installable theme resource.
 - `EventSheetEventStyle` now covers structural tokens: sheet background, event block shell, lane colors, group/comment chrome, and interaction fills.
 - `EventSheetElementStyle` covers condition/action entry tokens.
+- `theme_layout_visual_editor.tscn` is the dedicated visual layout/theme authoring surface for designers.
 - Designers can work in two modes:
-  - edit `.tres` token resources directly
-  - edit the preview scenes in `addons/eventsheet/elements/` and point a style resource at them
+  - edit `theme_layout_visual_editor.tscn` first for visual shell + alignment tuning
+  - edit `.tres` token resources directly for fine-grained numeric/token adjustments
 - Theme docs:
   - `docs/EVENTSHEET_THEME_EDITABILITY.md`
   - `docs/EVENTSHEET_THEME_TOKEN_SPEC.md`

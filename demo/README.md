@@ -31,4 +31,6 @@ Bundled example themes live in `res://demo/themes/`:
 
 Load them from the EventSheet dock with **Load Theme**.
 
+Designer-first workflow: open `res://addons/eventsheet/elements/theme_layout_visual_editor.tscn`, tune layout/colors visually, save, then use **Reload Theme** on the dock.
+
 The manifest file is a token/package template for designers who want a Construct-style installable theme workflow.

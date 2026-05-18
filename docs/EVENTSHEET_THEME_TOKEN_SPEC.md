@@ -8,7 +8,7 @@ Construct-style CSS selectors map to Godot EventSheet tokens in three layers:
 
 1. `EventSheetEventStyle` for shared sheet/block/lane/group/comment/interaction tokens
 2. `EventSheetElementStyle` for condition/action chip tokens
-3. Scene previews (`event_visual_element.tscn`, `condition_visual_element.tscn`, `action_visual_element.tscn`) for designer-facing template editing
+3. A dedicated layout scene (`theme_layout_visual_editor.tscn`) plus element scenes (`event_visual_element.tscn`, `condition_visual_element.tscn`, `action_visual_element.tscn`) for designer-facing visual editing
 
 ## Token groups
 
@@ -85,6 +85,7 @@ Construct CSS often separates a name cell from a description/value cell. The cur
 
 Use these scenes when a designer wants to edit the preview directly in Godot:
 
+- `res://addons/eventsheet/elements/theme_layout_visual_editor.tscn` (open first for full shell/alignment tuning)
 - `res://addons/eventsheet/elements/event_visual_element.tscn`
 - `res://addons/eventsheet/elements/condition_visual_element.tscn`
 - `res://addons/eventsheet/elements/action_visual_element.tscn`
@@ -93,6 +94,7 @@ Use these scenes when a designer wants to edit the preview directly in Godot:
 
 Use `EventSheetEditorStyle` when a designer wants installable, duplicable token packages:
 
+- `use_visual_layout_scene` + `theme_layout_visual_scene` = regenerate style tokens from the dedicated visual layout scene
 - `event_style` = structural tokens
 - `condition_style` = condition entry tokens
 - `action_style` = action entry tokens

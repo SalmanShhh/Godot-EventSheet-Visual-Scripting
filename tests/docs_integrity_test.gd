@@ -65,6 +65,13 @@ const REQUIRED_DOCS := {
 		"Usage",
 		"Designer notes"
 	],
+	"res://docs/elements/THEME_LAYOUT_VISUAL_EDITOR.md": [
+		"# Theme Layout Visual Editor",
+		"What this element is",
+		"Visual controls",
+		"Usage",
+		"Designer notes"
+	],
 	"res://AGENTS.md": [
 		"# AGENTS.md",
 		"Repo overview",
@@ -78,6 +85,7 @@ const REQUIRED_DOCS := {
 	"res://demo/themes/designer_template_theme_manifest.cfg": [
 		"Construct-inspired EventSheet theme package template",
 		"[package]",
+		"theme_layout_scene",
 		"[tokens]",
 		"[designer_notes]"
 	]
