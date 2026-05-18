@@ -12,6 +12,33 @@ static func run() -> bool:
 	passed = _check("style creates event style resource", style.event_style != null, true) and passed
 	passed = _check("style creates condition style resource", style.condition_style != null, true) and passed
 	passed = _check("style creates action style resource", style.action_style != null, true) and passed
+	passed = _check("style exposes event visual scene template", style.event_visual_scene != null, true) and passed
+	passed = _check("style exposes condition visual scene template", style.condition_visual_scene != null, true) and passed
+	passed = _check("style exposes action visual scene template", style.action_visual_scene != null, true) and passed
+	var event_template: Node = style.event_visual_scene.instantiate() if style.event_visual_scene != null else null
+	var condition_template: Node = style.condition_visual_scene.instantiate() if style.condition_visual_scene != null else null
+	var action_template: Node = style.action_visual_scene.instantiate() if style.action_visual_scene != null else null
+	passed = _check(
+		"event visual scene builds event style",
+		event_template != null and event_template.has_method("build_event_style") and (event_template.call("build_event_style") is EventSheetEventStyle),
+		true
+	) and passed
+	passed = _check(
+		"condition visual scene builds condition style",
+		condition_template != null and condition_template.has_method("build_element_style") and (condition_template.call("build_element_style") is EventSheetElementStyle),
+		true
+	) and passed
+	passed = _check(
+		"action visual scene builds action style",
+		action_template != null and action_template.has_method("build_element_style") and (action_template.call("build_element_style") is EventSheetElementStyle),
+		true
+	) and passed
+	if event_template != null:
+		event_template.free()
+	if condition_template != null:
+		condition_template.free()
+	if action_template != null:
+		action_template.free()
 
 	style.event_style.minimum_row_height = 40
 	style.event_style.condition_lane_padding = 18

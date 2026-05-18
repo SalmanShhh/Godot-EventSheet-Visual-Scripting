@@ -22,6 +22,8 @@ static func run() -> bool:
     all_passed = _check("viewport supports ace drop API", viewport != null and viewport.has_signal("ace_drop_requested"), true) and all_passed
     all_passed = _check("viewport supports ace edit API", viewport != null and viewport.has_signal("ace_edit_requested"), true) and all_passed
     all_passed = _check("viewport supports context menu API", viewport != null and viewport.has_signal("context_menu_requested"), true) and all_passed
+    all_passed = _check("viewport supports empty-space context menu API", viewport != null and viewport.has_signal("empty_space_context_menu_requested"), true) and all_passed
+    all_passed = _check("viewport supports empty-space double-click API", viewport != null and viewport.has_signal("empty_space_double_clicked"), true) and all_passed
     all_passed = _check("viewport exposes editor state scaffold", viewport != null and viewport.has_method("get_editor_state_snapshot"), true) and all_passed
     all_passed = _check("viewport exposes zoom getter", viewport != null and viewport.has_method("get_zoom_factor"), true) and all_passed
     all_passed = _check("viewport exposes zoom controls", viewport != null and viewport.has_method("zoom_in") and viewport.has_method("zoom_out"), true) and all_passed

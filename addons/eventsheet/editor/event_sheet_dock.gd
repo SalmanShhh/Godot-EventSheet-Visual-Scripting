@@ -25,12 +25,19 @@ const ROW_MENU_TOGGLE_GROUP_FOLD := 9
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
+const EMPTY_MENU_NEW_EVENT := 1
+const EMPTY_MENU_NEW_CONDITION := 2
+const EMPTY_MENU_ADD_VARIABLE := 3
 const ACE_DRAG_KINDS := ["condition", "action"]
 const SIDE_PANEL_MIN_WIDTH := 160.0
 const SIDE_PANEL_MAX_WIDTH := 220.0
 const SIDE_PANEL_WIDTH_RATIO := 0.18
 
 var _toolbar: HBoxContainer = null
+var _title_strip: HBoxContainer = null
+var _title_tab_label: Label = null
+var _title_path_label: Label = null
+var _title_dirty_dot: Label = null
 var _status_label: Label = null
 var _split: HSplitContainer = null
 var _scroll: ScrollContainer = null
@@ -61,6 +68,7 @@ var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
 var _variable_context_menu: PopupMenu = null
+var _empty_space_context_menu: PopupMenu = null
 var _context_row: EventRowData = null
 var _context_hit: Dictionary = {}
 var _context_variable: Dictionary = {}
@@ -103,6 +111,7 @@ func setup(sheet: EventSheetResource = null) -> void:
     _clear_undo_history()
     _refresh_ace_registry()
     _viewport.set_sheet(_current_sheet)
+    _refresh_title_strip()
     _refresh_exposed_node()
     _refresh_variable_panel()
 
@@ -172,6 +181,39 @@ func _build_ui() -> void:
     _add_toolbar_button("Add Global Var", _on_add_global_variable_requested)
     _add_toolbar_button("Add Local Var", _on_add_local_variable_requested)
 
+    _title_strip = HBoxContainer.new()
+    _title_strip.name = "EventSheetTitleStrip"
+    _title_strip.add_theme_constant_override("separation", 8)
+    root.add_child(_title_strip)
+
+    var title_tab_shell: PanelContainer = PanelContainer.new()
+    title_tab_shell.name = "EventSheetTitleTab"
+    _title_strip.add_child(title_tab_shell)
+
+    var title_tab_content: HBoxContainer = HBoxContainer.new()
+    title_tab_content.add_theme_constant_override("separation", 4)
+    title_tab_shell.add_child(title_tab_content)
+
+    _title_tab_label = Label.new()
+    _title_tab_label.name = "EventSheetTitleTabLabel"
+    _title_tab_label.text = "No Sheet Loaded"
+    title_tab_content.add_child(_title_tab_label)
+
+    _title_dirty_dot = Label.new()
+    _title_dirty_dot.name = "EventSheetTitleDirtyDot"
+    _title_dirty_dot.text = "●"
+    _title_dirty_dot.modulate = Color(0.99, 0.78, 0.30, 1.0)
+    _title_dirty_dot.visible = false
+    title_tab_content.add_child(_title_dirty_dot)
+
+    _title_path_label = Label.new()
+    _title_path_label.name = "EventSheetTitlePath"
+    _title_path_label.modulate = Color(0.72, 0.76, 0.84, 1.0)
+    _title_path_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _title_path_label.clip_text = true
+    _title_path_label.text = "Open or create a sheet to begin"
+    _title_strip.add_child(_title_path_label)
+
     _scroll = ScrollContainer.new()
     _scroll.name = "EventSheetScroll"
     _scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -197,6 +239,8 @@ func _build_ui() -> void:
     _viewport.ace_drop_requested.connect(_on_viewport_ace_drop_requested)
     _viewport.drag_status_requested.connect(_on_viewport_drag_status_requested)
     _viewport.context_menu_requested.connect(_on_viewport_context_menu_requested)
+    _viewport.empty_space_double_clicked.connect(_on_viewport_empty_space_double_clicked)
+    _viewport.empty_space_context_menu_requested.connect(_on_viewport_empty_space_context_menu_requested)
     _viewport.set_external_span_edit_handler_enabled(true)
 
     _status_label = Label.new()
@@ -292,6 +336,14 @@ func _build_context_menus() -> void:
     _variable_context_menu.id_pressed.connect(_on_variable_context_menu_id_pressed)
     add_child(_variable_context_menu)
 
+    _empty_space_context_menu = PopupMenu.new()
+    _empty_space_context_menu.name = "EventSheetEmptySpaceContextMenu"
+    _empty_space_context_menu.add_item("New Event", EMPTY_MENU_NEW_EVENT)
+    _empty_space_context_menu.add_item("New Condition", EMPTY_MENU_NEW_CONDITION)
+    _empty_space_context_menu.add_item("Add New Variable", EMPTY_MENU_ADD_VARIABLE)
+    _empty_space_context_menu.id_pressed.connect(_on_empty_space_context_menu_id_pressed)
+    add_child(_empty_space_context_menu)
+
 func _add_toolbar_button(text: String, callable: Callable) -> void:
     var button: Button = Button.new()
     button.text = text
@@ -382,6 +434,7 @@ func _load_sheet_from_path(path: String) -> void:
         setup(loaded as EventSheetResource)
         _current_sheet_path = resolved_path
         _dirty = false
+        _refresh_title_strip()
         _clear_undo_history()
         return
     _set_status("Open failed: %s is not an EventSheetResource." % resolved_path.get_file(), true)
@@ -399,6 +452,7 @@ func _on_save_requested() -> void:
         _current_sheet.take_over_path(save_path)
         _current_sheet_path = save_path
         _dirty = false
+        _refresh_title_strip()
         _set_status("Saved: %s" % save_path.get_file())
     else:
         _set_status("Save failed (error %d)." % err, true)
@@ -431,6 +485,7 @@ func _save_sheet_to_path(path: String) -> void:
         _current_sheet.take_over_path(resolved_path)
         _current_sheet_path = resolved_path
         _dirty = false
+        _refresh_title_strip()
         _set_status("Saved as: %s" % resolved_path.get_file())
     else:
         _set_status("Save failed (error %d)." % err, true)
@@ -1058,6 +1113,33 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
         _show_popup_menu(_action_context_menu, global_position)
         return
     _show_popup_menu(_row_context_menu, global_position)
+
+func _on_viewport_empty_space_double_clicked(_global_position: Vector2) -> void:
+    if not _ensure_sheet_for_editing():
+        return
+    var created: bool = _perform_undoable_sheet_edit("Add Event", func() -> bool:
+        _current_sheet.events.append(EventRow.new())
+        return true
+    )
+    if created:
+        _mark_dirty("Added event.")
+
+func _on_viewport_empty_space_context_menu_requested(global_position: Vector2) -> void:
+    _context_row = null
+    _context_hit = {}
+    _context_variable = {}
+    _show_popup_menu(_empty_space_context_menu, global_position)
+
+func _on_empty_space_context_menu_id_pressed(id: int) -> void:
+    match id:
+        EMPTY_MENU_NEW_EVENT:
+            _on_viewport_empty_space_double_clicked(Vector2.ZERO)
+        EMPTY_MENU_NEW_CONDITION:
+            if _viewport != null:
+                _viewport.clear_selection()
+            _on_add_condition_requested()
+        EMPTY_MENU_ADD_VARIABLE:
+            _on_add_global_variable_requested()
 
 func _show_popup_menu(menu: PopupMenu, global_position: Vector2) -> void:
     if menu == null:
@@ -2067,6 +2149,7 @@ func _refresh_after_edit() -> void:
 
 func _mark_dirty(message: String) -> void:
     _dirty = true
+    _refresh_title_strip()
     _set_status("%s%s" % [message, " *" if _dirty else ""])
 
 func _set_status(text: String, is_error: bool = false) -> void:
@@ -2074,6 +2157,33 @@ func _set_status(text: String, is_error: bool = false) -> void:
         return
     _status_label.text = text
     _status_label.modulate = Color(1.0, 0.48, 0.48) if is_error else Color(1.0, 1.0, 1.0)
+
+func _refresh_title_strip() -> void:
+    if _title_tab_label == null or _title_path_label == null or _title_dirty_dot == null:
+        return
+    _title_tab_label.text = _format_sheet_title(_current_sheet, _current_sheet_path)
+    _title_path_label.text = _format_sheet_path_hint(_current_sheet, _current_sheet_path)
+    _title_dirty_dot.visible = _dirty and _current_sheet != null
+
+static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String = "") -> String:
+    if sheet == null:
+        return "No Sheet Loaded"
+    var resolved_path: String = explicit_path
+    if resolved_path.is_empty():
+        resolved_path = sheet.resource_path
+    if resolved_path.is_empty():
+        return "Untitled EventSheet"
+    return resolved_path.get_file().get_basename()
+
+static func _format_sheet_path_hint(sheet: EventSheetResource, explicit_path: String = "") -> String:
+    if sheet == null:
+        return "Open or create a sheet to begin"
+    var resolved_path: String = explicit_path
+    if resolved_path.is_empty():
+        resolved_path = sheet.resource_path
+    if resolved_path.is_empty():
+        return "Unsaved (in-memory)"
+    return resolved_path
 
 func _refresh_ace_registry() -> void:
     if _ace_registry == null:

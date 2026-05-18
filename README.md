@@ -16,18 +16,24 @@ EventForge is a Construct-style event sheet plugin for Godot 4.x. Event sheets c
 3. Run the compiler script path used in tests (`tests/compile_demo_test.gd`) or call `SheetCompiler.compile(...)` manually.
 4. Verify output matches `demo/sheets/player_generated.gd`.
 
-## Editing EventSheet editor styles in Godot
+## Editing EventSheet editor visuals in Godot
 
-`EventSheetResource` now exposes an `editor_style` Resource slot for structured editor styling.
+`EventSheetResource` exposes an `editor_style` slot, and `EventSheetEditorStyle` now includes
+scene-based visual templates for Event, Condition, and Action elements:
 
-1. Select an EventSheet resource in Godot.
-2. In the Inspector, create or assign an `EventSheetEditorStyle` resource to `editor_style`.
-3. Edit the nested `event_style`, `condition_style`, and `action_style` resources to tune:
-   - event-row backgrounds, lane padding, divider width, and trigger badge colours
-   - condition chip colors, padding, font-size delta, and spacing
-   - action chip colors, padding, font-size delta, and spacing
+- `event_visual_scene` → `addons/eventsheet/elements/event_visual_element.tscn`
+- `condition_visual_scene` → `addons/eventsheet/elements/condition_visual_element.tscn`
+- `action_visual_scene` → `addons/eventsheet/elements/action_visual_element.tscn`
 
-The custom-rendered EventSheet viewport reads this resource directly, so style assets can be reused across sheets while keeping sensible defaults when `editor_style` is left empty.
+Designer workflow:
+
+1. Select an EventSheet resource.
+2. Assign/create an `EventSheetEditorStyle` in `editor_style`.
+3. Open one of the visual template `.tscn` files above and edit it visually in Godot (colors, styleboxes, chip look, lane previews).
+4. Save the template scene (or duplicate it and point the style resource to your custom scene).
+
+The custom-rendered viewport keeps the existing performant row renderer, but it now resolves its
+Event/Condition/Action look from these Godot-editable visual scene templates (hybrid scene-driven styling).
 
 ## Current status
 

@@ -98,8 +98,18 @@ static func run() -> bool:
     var dock_viewport: EventSheetViewport = dock.get_viewport_control()
     var ace_registry: EventSheetACERegistry = dock.get_ace_registry()
     var toolbar: Node = dock.find_child("EventSheetToolbar", true, false)
+    var title_strip: Node = dock.find_child("EventSheetTitleStrip", true, false)
+    var title_tab_label: Label = dock.find_child("EventSheetTitleTabLabel", true, false) as Label
+    var title_path_label: Label = dock.find_child("EventSheetTitlePath", true, false) as Label
+    var title_dirty_dot: Label = dock.find_child("EventSheetTitleDirtyDot", true, false) as Label
     all_passed = _check("demo sheet populates rows", dock_viewport.get_total_row_count() > 0, true) and all_passed
     all_passed = _check("workflow toolbar is present", toolbar is HBoxContainer, true) and all_passed
+    all_passed = _check("title strip is present", title_strip is HBoxContainer, true) and all_passed
+    all_passed = _check("title tab label is present", title_tab_label is Label, true) and all_passed
+    all_passed = _check("title path label is present", title_path_label is Label, true) and all_passed
+    all_passed = _check("title dirty indicator is present", title_dirty_dot is Label, true) and all_passed
+    all_passed = _check("demo sheet title label defaults to untitled", title_tab_label.text, "Untitled EventSheet") and all_passed
+    all_passed = _check("demo sheet path hint defaults to unsaved", title_path_label.text, "Unsaved (in-memory)") and all_passed
     var demo_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     var first_demo_row: EventRowData = demo_rows[0].get("row")
     all_passed = _check("demo sheet exposes semantic spans", first_demo_row.spans.size() > 0, true) and all_passed
@@ -108,6 +118,8 @@ static func run() -> bool:
     all_passed = _check("demo rows render trigger arrow badge", _rows_contain_text(demo_rows, "➜"), true) and all_passed
     all_passed = _check("demo rows render auto ace action text", _rows_contain_text(demo_rows, "Take Damage 10"), true) and all_passed
     all_passed = _check("demo rows do not expose debug overlay badges by default", _rows_have_debug_state(demo_rows), false) and all_passed
+    all_passed = _check("title formatter returns no-sheet fallback", EventSheetDock._format_sheet_title(null), "No Sheet Loaded") and all_passed
+    all_passed = _check("path formatter returns no-sheet fallback", EventSheetDock._format_sheet_path_hint(null), "Open or create a sheet to begin") and all_passed
 
     var sheet := EventSheetResource.new()
     var group := EventGroup.new()
@@ -128,6 +140,20 @@ static func run() -> bool:
     group.events.append(event_row)
     sheet.events = [comment, group]
     dock.setup(sheet)
+    dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
+    sheet.take_over_path("res://demo/sheets/test_title_sheet.tres")
+    dock.setup(sheet)
+    title_tab_label = dock.find_child("EventSheetTitleTabLabel", true, false) as Label
+    title_path_label = dock.find_child("EventSheetTitlePath", true, false) as Label
+    title_dirty_dot = dock.find_child("EventSheetTitleDirtyDot", true, false) as Label
+    all_passed = _check("switching sheets updates title tab text", title_tab_label.text, "test_title_sheet") and all_passed
+    all_passed = _check("switching sheets updates title path hint", title_path_label.text, "res://demo/sheets/test_title_sheet.tres") and all_passed
+    dock._mark_dirty("Changed title state")
+    all_passed = _check("dirty edit shows title dirty indicator", title_dirty_dot.visible, true) and all_passed
+    dock._save_sheet_to_path("user://event_sheet_editor_title_roundtrip.tres")
+    all_passed = _check("saving sheet hides dirty indicator", title_dirty_dot.visible, false) and all_passed
+    all_passed = _check("saving sheet updates title tab text", title_tab_label.text, "event_sheet_editor_title_roundtrip") and all_passed
+    all_passed = _check("saving sheet updates title path hint", title_path_label.text, "user://event_sheet_editor_title_roundtrip.tres") and all_passed
     dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
     all_passed = _check("sheet renders flattened rows", dock_viewport.get_total_row_count(), 3) and all_passed
     var flat_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
@@ -757,6 +783,54 @@ static func run() -> bool:
     all_passed = _check("ctrl wheel zoom increases viewport zoom factor", dock_viewport.get_zoom_factor() > zoom_before, true) and all_passed
     dock._on_zoom_out_requested()
     all_passed = _check("toolbar zoom out returns viewport toward default zoom", is_equal_approx(dock_viewport.get_zoom_factor(), 1.0), true) and all_passed
+
+    var empty_space_sheet := EventSheetResource.new()
+    empty_space_sheet.events = [EventRow.new()]
+    dock.setup(empty_space_sheet)
+    dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
+    dock_viewport = dock.get_viewport_control()
+    var row_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    var row_rect: Rect2 = row_layout.get("row_rect", Rect2())
+    var row_double_click := InputEventMouseButton.new()
+    row_double_click.pressed = true
+    row_double_click.button_index = MOUSE_BUTTON_LEFT
+    row_double_click.double_click = true
+    row_double_click.position = row_rect.get_center()
+    dock_viewport._handle_mouse_button(row_double_click)
+    all_passed = _check("double-clicking an existing row does not append events", dock.get_current_sheet().events.size(), 1) and all_passed
+    var empty_double_click := InputEventMouseButton.new()
+    empty_double_click.pressed = true
+    empty_double_click.button_index = MOUSE_BUTTON_LEFT
+    empty_double_click.double_click = true
+    empty_double_click.position = Vector2(64.0, row_rect.end.y + 120.0)
+    dock_viewport._handle_mouse_button(empty_double_click)
+    all_passed = _check("double-clicking empty space appends a new event", dock.get_current_sheet().events.size(), 2) and all_passed
+    all_passed = _check("empty-space double-click inserts EventRow", dock.get_current_sheet().events[1] is EventRow, true) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo removes empty-space double-click insertion", dock.get_current_sheet().events.size(), 1) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo restores empty-space double-click insertion", dock.get_current_sheet().events.size(), 2) and all_passed
+    var empty_menu_click := InputEventMouseButton.new()
+    empty_menu_click.pressed = true
+    empty_menu_click.button_index = MOUSE_BUTTON_RIGHT
+    empty_menu_click.position = Vector2(80.0, row_rect.end.y + 140.0)
+    dock_viewport._handle_mouse_button(empty_menu_click)
+    all_passed = _check("right-clicking empty space opens empty context menu", dock._empty_space_context_menu.visible, true) and all_passed
+    all_passed = _check("empty context menu first item is new event", dock._empty_space_context_menu.get_item_text(0), "New Event") and all_passed
+    all_passed = _check("empty context menu second item is new condition", dock._empty_space_context_menu.get_item_text(1), "New Condition") and all_passed
+    all_passed = _check("empty context menu third item is add variable", dock._empty_space_context_menu.get_item_text(2), "Add New Variable") and all_passed
+    dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_NEW_EVENT)
+    all_passed = _check("empty context menu new event action inserts event", dock.get_current_sheet().events.size(), 3) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo reverts empty context menu new event action", dock.get_current_sheet().events.size(), 2) and all_passed
+    dock_viewport.clear_selection()
+    dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_NEW_CONDITION)
+    all_passed = _check("empty context menu new condition routes through ace picker", dock._ace_picker._context.get("mode", ""), "new_condition_event") and all_passed
+    dock._ace_picker._window.hide()
+    dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_ADD_VARIABLE)
+    all_passed = _check("empty context menu add variable opens variable dialog", dock._variable_dlg._dialog.visible, true) and all_passed
+    all_passed = _check("empty context menu add variable defaults to global scope", dock._variable_dlg._scope, "global") and all_passed
+    dock._variable_dlg._dialog.hide()
 
     # Global and local variable creation workflow.
     dock.setup(copy_sheet)
