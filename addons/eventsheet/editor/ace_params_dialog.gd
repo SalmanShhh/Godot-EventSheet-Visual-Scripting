@@ -10,6 +10,8 @@ extends RefCounted
 ## context is the same dictionary passed to open().
 signal params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary)
 
+const REEDIT_HINT_TEXT := " Existing values were loaded so designers can re-edit without re-entering parameters."
+
 var _dialog: ConfirmationDialog = null
 var _form: VBoxContainer = null
 var _fields: Dictionary = {}
@@ -193,5 +195,5 @@ func _build_context_hint(definition: ACEDefinition, context: Dictionary, initial
 			mode_label = "Add nested event"
 		_:
 			mode_label = "Add"
-	var reedit_hint: String = " Existing values were loaded so designers can re-edit without re-entering parameters." if is_reedit else ""
+	var reedit_hint: String = REEDIT_HINT_TEXT if is_reedit else ""
 	return "%s %s parameters.%s" % [mode_label, definition.display_name, reedit_hint]

@@ -64,6 +64,7 @@ const MODE_CONFIGS := {
 		"allowed_types": [ACEDefinition.ACEType.ACTION]
 	}
 }
+const KEYBOARD_HINT_TEXT := "Use ↑/↓ to change the current ACE and Enter to confirm."
 
 var _window: Window = null
 var _search: LineEdit = null
@@ -114,7 +115,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 
 	_description = Label.new()
 	_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_description.text = "Use ↑/↓ to change the current ACE and Enter to confirm."
+	_description.text = KEYBOARD_HINT_TEXT
 	content.add_child(_description)
 
 ## Update the registry used for searching (e.g. after a hot-reload).
@@ -189,7 +190,7 @@ func _refresh_tree() -> void:
 
 	if first_match != null:
 		first_match.select(0)
-		_on_item_selected()
+		_update_selected_item_description(first_match)
 	else:
 		_description.text = "No ACE matches the current filters."
 
@@ -212,12 +213,15 @@ func _on_item_selected() -> void:
 	if _tree == null:
 		return
 	var item: TreeItem = _tree.get_selected()
+	_update_selected_item_description(item)
+
+func _update_selected_item_description(item: TreeItem) -> void:
 	if item == null:
-		_description.text = "Use ↑/↓ to change the current ACE and Enter to confirm."
+		_description.text = KEYBOARD_HINT_TEXT
 		return
 	var definition: ACEDefinition = item.get_metadata(0)
 	if definition == null:
-		_description.text = "Use ↑/↓ to change the current ACE and Enter to confirm."
+		_description.text = KEYBOARD_HINT_TEXT
 		return
 	var description: String = definition.description if not definition.description.is_empty() else definition.format_display()
 	_description.text = "%s\n\nEnter confirms the current ACE." % description

@@ -761,14 +761,7 @@ func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
         var span_index: int = int(hit.get("span_index", -1))
         if span_index >= 0 and span_index < row_data.spans.size():
             var span_rect: Rect2 = row_data.spans[span_index].rect
-            if drag_lane == "action":
-                _drag_ace_insert_mode = (
-                    "after" if position.y >= span_rect.get_center().y else "before"
-                )
-            else:
-                _drag_ace_insert_mode = (
-                    "after" if position.x >= span_rect.get_center().x else "before"
-                )
+            _drag_ace_insert_mode = _resolve_ace_insert_mode(drag_lane, position, span_rect)
     elif kind == "trigger" and drag_lane == "condition":
         _drag_ace_target_ace_index = 0
         _drag_ace_insert_mode = "before"
@@ -2231,6 +2224,11 @@ func _resolve_ace_resource(source_resource: Resource, kind: String, ace_index: i
 
 func _find_condition_span_index(row_data: EventRowData, ace_index: int) -> int:
     return _find_ace_span_index(row_data, "condition", ace_index)
+
+func _resolve_ace_insert_mode(lane: String, position: Vector2, span_rect: Rect2) -> String:
+    if lane == "action":
+        return "after" if position.y >= span_rect.get_center().y else "before"
+    return "after" if position.x >= span_rect.get_center().x else "before"
 
 func _get_lane_ace_span_indices(row_data: EventRowData, kind: String) -> Array[int]:
     var span_indices: Array[int] = []
