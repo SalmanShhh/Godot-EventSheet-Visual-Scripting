@@ -25,6 +25,7 @@ const ROW_MENU_TOGGLE_GROUP_FOLD := 9
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
+const THEME_FILTERS: Array[String] = ["*.tres ; EventSheetEditorStyle", "*.res ; EventSheetEditorStyle"]
 const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
 const EMPTY_MENU_ADD_VARIABLE := 3
@@ -69,11 +70,13 @@ var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
 var _variable_context_menu: PopupMenu = null
 var _empty_space_context_menu: PopupMenu = null
+var _theme_file_dialog: FileDialog = null
 var _context_row: EventRowData = null
 var _context_hit: Dictionary = {}
 var _context_variable: Dictionary = {}
 var _global_variable_entries: Array[Dictionary] = []
 var _local_variable_entries: Array[Dictionary] = []
+var _active_theme_style: EventSheetEditorStyle = null
 
 func _init() -> void:
     if not _undo_redo_adapter.has_manager():
@@ -111,6 +114,7 @@ func setup(sheet: EventSheetResource = null) -> void:
     _clear_undo_history()
     _refresh_ace_registry()
     _viewport.set_sheet(_current_sheet)
+    _sync_active_theme_binding()
     _refresh_title_strip()
     _refresh_exposed_node()
     _refresh_variable_panel()
@@ -129,6 +133,53 @@ func get_editor_param_store() -> EditorParamStore:
 
 func get_exposed_node() -> EventSheetExposedNode:
     return _exposed_node
+
+func use_default_theme() -> bool:
+    if _current_sheet == null or _current_sheet.editor_style == null:
+        return false
+    var changed: bool = _perform_undoable_sheet_edit("Set Default Theme", func() -> bool:
+        _current_sheet.editor_style = null
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+    return changed
+
+func load_theme_style_from_path(path: String) -> bool:
+    if _current_sheet == null:
+        return false
+    var resolved_path: String = path.strip_edges()
+    if resolved_path.is_empty():
+        _set_status("Theme load failed: no file selected.", true)
+        return false
+    var loaded: Resource = ResourceLoader.load(resolved_path)
+    if not (loaded is EventSheetEditorStyle):
+        _set_status("Theme load failed: %s is not an EventSheetEditorStyle." % resolved_path.get_file(), true)
+        return false
+    var changed: bool = _perform_undoable_sheet_edit("Set Theme", func() -> bool:
+        _current_sheet.editor_style = loaded as EventSheetEditorStyle
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Applied theme: %s." % resolved_path.get_file())
+    return changed
+
+func reload_active_theme() -> bool:
+    if _current_sheet == null:
+        return false
+    var active_style: EventSheetEditorStyle = _current_sheet.editor_style
+    if active_style == null:
+        return false
+    var style_path: String = active_style.resource_path
+    if style_path.is_empty():
+        return false
+    var reloaded: Resource = ResourceLoader.load(style_path, "", ResourceLoader.CACHE_MODE_REPLACE)
+    if not (reloaded is EventSheetEditorStyle):
+        return false
+    _current_sheet.editor_style = reloaded as EventSheetEditorStyle
+    _refresh_after_edit()
+    return true
 
 func set_undo_redo_manager(undo_redo: Variant) -> void:
     if undo_redo == null:
@@ -180,6 +231,10 @@ func _build_ui() -> void:
     _add_toolbar_separator()
     _add_toolbar_button("Add Global Var", _on_add_global_variable_requested)
     _add_toolbar_button("Add Local Var", _on_add_local_variable_requested)
+    _add_toolbar_separator()
+    _add_toolbar_button("Default Theme", _on_set_default_theme_requested)
+    _add_toolbar_button("Load Theme", _on_load_theme_requested)
+    _add_toolbar_button("Reload Theme", _on_reload_theme_requested)
 
     _title_strip = HBoxContainer.new()
     _title_strip.name = "EventSheetTitleStrip"
@@ -254,9 +309,13 @@ func _build_ui() -> void:
     _exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
     _build_context_menus()
     _build_preview_window()
+    _build_theme_file_dialog()
 
 func _notification(what: int) -> void:
     if what == NOTIFICATION_PREDELETE:
+        if _active_theme_style != null and _active_theme_style.changed.is_connected(_on_active_theme_style_changed):
+            _active_theme_style.changed.disconnect(_on_active_theme_style_changed)
+        _active_theme_style = null
         _release_ace_sources()
 
 func _build_preview_window() -> void:
@@ -289,6 +348,18 @@ func _build_preview_window() -> void:
     _preview_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _preview_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
     content.add_child(_preview_list)
+
+func _build_theme_file_dialog() -> void:
+    if _theme_file_dialog != null:
+        return
+    _theme_file_dialog = FileDialog.new()
+    _theme_file_dialog.name = "EventSheetThemeFileDialog"
+    _theme_file_dialog.title = "Load EventSheet Theme"
+    _theme_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+    _theme_file_dialog.access = FileDialog.ACCESS_RESOURCES
+    _theme_file_dialog.filters = PackedStringArray(THEME_FILTERS)
+    _theme_file_dialog.file_selected.connect(_on_theme_file_selected)
+    add_child(_theme_file_dialog)
 
 func _build_context_menus() -> void:
     if _condition_context_menu != null:
@@ -423,6 +494,30 @@ func _on_open_requested() -> void:
     dialog.canceled.connect(func() -> void: dialog.queue_free())
     add_child(dialog)
     dialog.popup_centered(Vector2i(860, 580))
+
+func _on_load_theme_requested() -> void:
+    if _theme_file_dialog == null:
+        _build_theme_file_dialog()
+    if _theme_file_dialog == null:
+        _set_status("Theme picker unavailable.", true)
+        return
+    _theme_file_dialog.current_dir = _suggest_sheet_directory()
+    _theme_file_dialog.popup_centered(Vector2i(760, 520))
+
+func _on_theme_file_selected(path: String) -> void:
+    load_theme_style_from_path(path)
+
+func _on_set_default_theme_requested() -> void:
+    if use_default_theme():
+        _mark_dirty("Applied default theme.")
+    else:
+        _set_status("Default theme already active.", true)
+
+func _on_reload_theme_requested() -> void:
+    if reload_active_theme():
+        _set_status("Reloaded active theme.")
+    else:
+        _set_status("Reload theme failed: no active style resource path.", true)
 
 func _load_sheet_from_path(path: String) -> void:
     var resolved_path: String = path.strip_edges()
@@ -2144,8 +2239,29 @@ func _refresh_after_edit() -> void:
     if _viewport == null:
         return
     _viewport.set_sheet(_current_sheet)
+    _sync_active_theme_binding()
     _refresh_exposed_node()
     _refresh_variable_panel()
+
+func _sync_active_theme_binding() -> void:
+    var next_style: EventSheetEditorStyle = (
+        _current_sheet.editor_style
+        if _current_sheet != null and _current_sheet.editor_style != null
+        else null
+    )
+    if _active_theme_style == next_style:
+        return
+    if _active_theme_style != null and _active_theme_style.changed.is_connected(_on_active_theme_style_changed):
+        _active_theme_style.changed.disconnect(_on_active_theme_style_changed)
+    _active_theme_style = next_style
+    if _active_theme_style != null and not _active_theme_style.changed.is_connected(_on_active_theme_style_changed):
+        _active_theme_style.changed.connect(_on_active_theme_style_changed)
+
+func _on_active_theme_style_changed() -> void:
+    if _viewport == null or _current_sheet == null:
+        return
+    _viewport.set_sheet(_current_sheet)
+    _set_status("Theme change detected and reloaded.")
 
 func _mark_dirty(message: String) -> void:
     _dirty = true

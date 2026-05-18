@@ -184,6 +184,28 @@ static func run() -> bool:
 			and event_row.spans[add_action_index].rect.end.x <= action_lane_rect.end.x,
 		true
 	) and passed
+	var custom_theme_path: String = "user://event_sheet_custom_theme.tres"
+	var custom_theme := EventSheetEditorStyle.new()
+	custom_theme.action_style.text_color = Color(1.0, 0.42, 0.42, 1.0)
+	var custom_theme_saved: Error = ResourceSaver.save(custom_theme, custom_theme_path)
+	passed = _check("custom theme save succeeds", custom_theme_saved, OK) and passed
+	passed = _check("dock loads custom theme style", dock.load_theme_style_from_path(custom_theme_path), true) and passed
+	passed = _check("dock applies loaded custom theme to current sheet", dock.get_current_sheet().editor_style != null, true) and passed
+	passed = _check(
+		"loaded custom theme changes action text color",
+		dock.get_current_sheet().editor_style.get_action_style().text_color,
+		Color(1.0, 0.42, 0.42, 1.0)
+	) and passed
+	custom_theme.action_style.text_color = Color(0.35, 1.0, 0.50, 1.0)
+	ResourceSaver.save(custom_theme, custom_theme_path)
+	passed = _check("dock reloads active theme file", dock.reload_active_theme(), true) and passed
+	passed = _check(
+		"reloaded theme picks updated action text color",
+		dock.get_current_sheet().editor_style.get_action_style().text_color,
+		Color(0.35, 1.0, 0.50, 1.0)
+	) and passed
+	passed = _check("dock can switch back to default theme", dock.use_default_theme(), true) and passed
+	passed = _check("default theme clears per-sheet style override", dock.get_current_sheet().editor_style == null, true) and passed
 
 	dock.free()
 	return passed

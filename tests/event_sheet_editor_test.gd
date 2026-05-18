@@ -354,6 +354,14 @@ static func run() -> bool:
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("ctrl selection tracks multiple rows", editor_state.get("selected_row_count", 0), 2) and all_passed
     all_passed = _check("ctrl selection tracks span highlight count", editor_state.get("selected_span_count", 0), 1) and all_passed
+    var selected_row_layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
+    var right_click_selected := InputEventMouseButton.new()
+    right_click_selected.pressed = true
+    right_click_selected.button_index = MOUSE_BUTTON_RIGHT
+    right_click_selected.position = selected_row_layout.get("row_rect", Rect2()).get_center()
+    dock_viewport._handle_mouse_button(right_click_selected)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("right-click on selected row preserves multi-selection", editor_state.get("selected_row_count", 0), 2) and all_passed
     dock_viewport._select_from_click(2, _find_span_index_by_kind(event_rows_for_selection[2].get("row"), "condition"), true)
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("ctrl click toggles selected span off", editor_state.get("selected_span_count", 0), 0) and all_passed
@@ -830,6 +838,42 @@ static func run() -> bool:
     all_passed = _check("empty context menu add variable opens variable dialog", dock._variable_dlg._dialog.visible, true) and all_passed
     all_passed = _check("empty context menu add variable defaults to global scope", dock._variable_dlg._scope, "global") and all_passed
     dock._variable_dlg._dialog.hide()
+    var box_sheet := EventSheetResource.new()
+    var box_event_a := EventRow.new()
+    box_event_a.conditions = [ACECondition.new()]
+    (box_event_a.conditions[0] as ACECondition).provider_id = "Core"
+    (box_event_a.conditions[0] as ACECondition).ace_id = "Always"
+    box_event_a.actions = [ACEAction.new()]
+    (box_event_a.actions[0] as ACEAction).provider_id = "Core"
+    (box_event_a.actions[0] as ACEAction).ace_id = "QueueFree"
+    var box_event_b := EventRow.new()
+    box_event_b.conditions = [ACECondition.new()]
+    (box_event_b.conditions[0] as ACECondition).provider_id = "Core"
+    (box_event_b.conditions[0] as ACECondition).ace_id = "OnReady"
+    box_event_b.actions = [ACEAction.new()]
+    (box_event_b.actions[0] as ACEAction).provider_id = "Core"
+    (box_event_b.actions[0] as ACEAction).ace_id = "QueueFree"
+    box_sheet.events = [box_event_a, box_event_b]
+    dock.setup(box_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var box_row_a_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    var box_row_b_layout: Dictionary = dock_viewport.get_row_layout_for_test(1, 640.0)
+    var box_press := InputEventMouseButton.new()
+    box_press.pressed = true
+    box_press.button_index = MOUSE_BUTTON_LEFT
+    box_press.position = Vector2(16.0, box_row_a_layout.get("row_rect", Rect2()).position.y - 4.0)
+    dock_viewport._handle_mouse_button(box_press)
+    var box_drag := InputEventMouseMotion.new()
+    box_drag.position = box_row_b_layout.get("row_rect", Rect2()).end + Vector2(-10.0, -6.0)
+    dock_viewport._handle_mouse_motion(box_drag)
+    var box_release := InputEventMouseButton.new()
+    box_release.pressed = false
+    box_release.button_index = MOUSE_BUTTON_LEFT
+    box_release.position = box_drag.position
+    dock_viewport._handle_mouse_button(box_release)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("box-select can multi-select event rows", editor_state.get("selected_row_count", 0) >= 2, true) and all_passed
+    all_passed = _check("box-select can include condition/action spans", editor_state.get("selected_span_count", 0) > 0, true) and all_passed
 
     # Global and local variable creation workflow.
     dock.setup(copy_sheet)
@@ -941,6 +985,7 @@ static func run() -> bool:
     dock_viewport._process(0.0)
     all_passed = _check("viewport canvas expands to available width", dock_viewport.custom_minimum_size.x >= 1180.0, true) and all_passed
     all_passed = _check("viewport control grows to fill available width", dock_viewport.size.x >= 1180.0, true) and all_passed
+    all_passed = _check("viewport control also grows to fill available height for true empty-canvas clicks", dock_viewport.size.y >= 640.0, true) and all_passed
 
     # Clicking event lanes opens the ACE picker in the matching mode.
     dock.setup(copy_sheet)

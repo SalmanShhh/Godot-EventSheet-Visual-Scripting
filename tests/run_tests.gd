@@ -14,6 +14,7 @@ const EventSheetStyleTestScript := preload("res://tests/event_sheet_style_test.g
 const PluginWorkspaceTestScript := preload("res://tests/plugin_workspace_test.gd")
 const WorkspaceShellTestScript := preload("res://tests/workspace_shell_test.gd")
 const EditorParamExposureTestScript := preload("res://tests/editor_param_exposure_test.gd")
+const DocsIntegrityTestScript := preload("res://tests/docs_integrity_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
 func _init() -> void:
@@ -28,6 +29,7 @@ func _init() -> void:
     passed = PluginWorkspaceTestScript.run() and passed
     passed = WorkspaceShellTestScript.run() and passed
     passed = EditorParamExposureTestScript.run() and passed
+    passed = DocsIntegrityTestScript.run() and passed
     if passed:
         print("All tests passed.")
         quit(0)

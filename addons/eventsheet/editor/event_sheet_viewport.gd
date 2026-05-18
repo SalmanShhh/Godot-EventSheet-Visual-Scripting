@@ -101,6 +101,10 @@ var _selection_anchor_index: int = -1
 var _external_span_edit_handler_enabled: bool = false
 var _zoom_factor: float = 1.0
 var _layout_style_signature: String = ""
+var _box_select_active: bool = false
+var _box_select_additive: bool = false
+var _box_select_start: Vector2 = Vector2.ZERO
+var _box_select_current: Vector2 = Vector2.ZERO
 
 func _init() -> void:
     _configure_viewport()
@@ -420,6 +424,7 @@ func _draw() -> void:
             continue
         var layout: Dictionary = _get_or_build_row_layout(index, width, font, font_size)
         _renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
+    _draw_box_selection_overlay()
 
 func _gui_input(event: InputEvent) -> void:
     if event is InputEventMouseMotion:
@@ -433,6 +438,10 @@ func _gui_input(event: InputEvent) -> void:
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
     var local_position: Vector2 = _to_logical_position(event.position)
+    if _box_select_active:
+        _box_select_current = local_position
+        queue_redraw()
+        return
     var hit: Dictionary = _hit_test(local_position)
     _set_hover_state(int(hit.get("row_index", -1)), int(hit.get("span_index", -1)))
     if not _drag_ace_entries.is_empty():
@@ -455,6 +464,11 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
             accept_event()
             return
     var local_position: Vector2 = _to_logical_position(event.position)
+    if event.button_index == MOUSE_BUTTON_LEFT and not event.pressed and _box_select_active:
+        _box_select_current = local_position
+        _complete_box_selection()
+        accept_event()
+        return
     var hit: Dictionary = _hit_test(local_position)
     var row_index: int = int(hit.get("row_index", -1))
     var span_index: int = int(hit.get("span_index", -1))
@@ -463,7 +477,8 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
             return
         grab_focus()
         if row_index >= 0:
-            _select_from_click(row_index, span_index, false)
+            if not _is_selection_hit(row_index, span_index):
+                _select_from_click(row_index, span_index, false)
             var row_data: EventRowData = _row_at(row_index)
             if row_data != null:
                 context_menu_requested.emit(
@@ -481,10 +496,12 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
     if event.pressed:
         grab_focus()
         if row_index < 0:
-            _select_from_click(row_index, span_index, false)
             if event.double_click:
                 empty_space_double_clicked.emit()
                 accept_event()
+                return
+            _begin_box_selection(local_position, event.ctrl_pressed or event.meta_pressed)
+            accept_event()
             return
         var row_data: EventRowData = _row_at(row_index)
         var metadata: Dictionary = hit.get("span_metadata", {})
@@ -532,6 +549,99 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
                     row_drop_requested.emit(source_row, target_row, _drag_target_mode, _drag_row_copy_mode)
     _clear_row_drag()
     queue_redraw()
+
+func _begin_box_selection(position: Vector2, additive: bool) -> void:
+    _clear_row_drag()
+    _clear_ace_drag()
+    _box_select_active = true
+    _box_select_additive = additive
+    _box_select_start = position
+    _box_select_current = position
+    if not additive:
+        _clear_selection()
+    queue_redraw()
+
+func _complete_box_selection() -> void:
+    if not _box_select_active:
+        return
+    var selection_rect: Rect2 = Rect2(_box_select_start, Vector2.ZERO).expand(_box_select_current)
+    if selection_rect.size.length() <= 1.0:
+        _box_select_active = false
+        _box_select_additive = false
+        queue_redraw()
+        return
+    _apply_box_selection(selection_rect, _box_select_additive)
+    _box_select_active = false
+    _box_select_additive = false
+    queue_redraw()
+
+func _draw_box_selection_overlay() -> void:
+    if not _box_select_active:
+        return
+    var selection_rect: Rect2 = Rect2(_box_select_start, Vector2.ZERO).expand(_box_select_current)
+    if selection_rect.size.length() <= 1.0:
+        return
+    draw_rect(selection_rect, Color(0.36, 0.60, 0.92, 0.22), true)
+    draw_rect(selection_rect, Color(0.55, 0.75, 0.98, 0.9), false, 1.0)
+
+func _apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
+    if not additive:
+        _selected_row_uids.clear()
+        _selected_span_indices.clear()
+        _selected_row_index = -1
+        _selected_span_index = -1
+    var selected_any: bool = false
+    for row_index in range(_flat_rows.size()):
+        var row_data: EventRowData = _row_at(row_index)
+        if row_data == null:
+            continue
+        var layout: Dictionary = _get_or_build_row_layout(
+            row_index,
+            _get_logical_canvas_width(),
+            _get_font(),
+            _get_font_size()
+        )
+        var row_rect: Rect2 = layout.get("row_rect", Rect2())
+        if not row_rect.intersects(selection_rect):
+            continue
+        _selected_row_uids[row_data.row_uid] = true
+        _selected_row_index = row_index
+        _selected_span_index = -1
+        selected_any = true
+        for span_index in range(row_data.spans.size()):
+            var span: SemanticSpan = row_data.spans[span_index]
+            if span == null or not span.rect.intersects(selection_rect):
+                continue
+            var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+            var kind: String = str(metadata.get("kind", ""))
+            if kind not in ["trigger", "condition", "action"]:
+                continue
+            var span_indices: Array = _selected_span_indices.get(row_data.row_uid, [])
+            if not span_indices.has(span_index):
+                span_indices.append(span_index)
+                _selected_span_indices[row_data.row_uid] = span_indices
+            _selected_row_index = row_index
+            _selected_span_index = span_index
+            _focused_lane = _resolve_lane_for_row(row_data, span_index)
+            selected_any = true
+    if selected_any:
+        _selection_anchor_index = _selected_row_index
+    _sync_row_selection_flags()
+    selection_changed.emit(_row_at(_selected_row_index))
+
+func _is_selection_hit(row_index: int, span_index: int) -> bool:
+    var row_data: EventRowData = _row_at(row_index)
+    if row_data == null:
+        return false
+    var row_uid: String = row_data.row_uid
+    if not _selected_row_uids.has(row_uid):
+        return false
+    if span_index < 0:
+        return true
+    var span_indices: Array = _selected_span_indices.get(row_uid, [])
+    if span_indices.is_empty():
+        return true
+    return span_indices.has(span_index)
 
 func _begin_row_drag(row_index: int) -> void:
     if row_index < 0:
@@ -1404,7 +1514,7 @@ func _update_canvas_min_size() -> void:
         total_height = float(last_metric.get("top", 0.0)) + float(last_metric.get("height", ROW_HEIGHT))
     var target_size: Vector2 = Vector2(
         canvas_width,
-        max(total_height * zoom, 240.0)
+        max(total_height * zoom, max(_get_viewport_height(), 240.0))
     )
     custom_minimum_size = target_size
     update_minimum_size()
