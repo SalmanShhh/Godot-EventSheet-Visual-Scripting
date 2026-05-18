@@ -1262,6 +1262,8 @@ func _append_condition_prefix_spans(
     if event_row == null:
         return
     var condition_style_meta: Dictionary = _build_element_style_metadata(_get_condition_style())
+    # Keep the primary badge column stable for trigger/invert/OR by rendering
+    # negation first when both badges are present on the same condition line.
     if condition.negated:
         var negated_meta: Dictionary = BADGE_NEGATED_METADATA.duplicate(true)
         negated_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", BADGE_EXTRA_WIDTH)
@@ -1410,9 +1412,8 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
                 span_x = float(condition_badge_line_x[line_index])
             else:
                 if not condition_line_x.has(line_index):
-                    condition_line_x[line_index] = max(
-                        condition_content_x,
-                        float(condition_badge_line_x.get(line_index, condition_content_x))
+                    condition_line_x[line_index] = float(
+                        condition_badge_line_x.get(line_index, condition_content_x)
                     )
                 span_x = float(condition_line_x[line_index])
             span_y = row_top + float(line_index) * line_height + 3.0
