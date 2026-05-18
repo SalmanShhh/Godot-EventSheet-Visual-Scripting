@@ -98,6 +98,7 @@ var _focused_lane: String = "condition"
 var _selection_anchor_index: int = -1
 var _external_span_edit_handler_enabled: bool = false
 var _zoom_factor: float = 1.0
+var _layout_style_signature: String = ""
 
 func _init() -> void:
     _configure_viewport()
@@ -121,6 +122,7 @@ func _process(_delta: float) -> void:
 func set_sheet(sheet: EventSheetResource) -> void:
     _sheet = sheet
     _editor_style = _resolve_editor_style(sheet)
+    _update_layout_style_signature(_get_font_size())
     _refresh_rows()
 
 func set_ace_registry(ace_registry: EventSheetACERegistry) -> void:
@@ -296,7 +298,7 @@ func _get_span_gap(span: SemanticSpan) -> float:
     var fallback_gap: float = CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP
     return max(float(metadata.get("gap_after", fallback_gap)), 0.0)
 
-func _get_layout_style_signature(font_size: int) -> String:
+func _build_layout_style_signature(font_size: int) -> String:
     var event_style: EventSheetEventStyle = _get_event_style()
     var condition_style: EventSheetElementStyle = _get_condition_style()
     var action_style: EventSheetElementStyle = _get_action_style()
@@ -312,6 +314,9 @@ func _get_layout_style_signature(font_size: int) -> String:
         action_style.horizontal_padding,
         action_style.gap_after
     ]
+
+func _update_layout_style_signature(font_size: int) -> void:
+    _layout_style_signature = _build_layout_style_signature(font_size)
 
 func get_row_layout_for_test(row_index: int, width: float = -1.0) -> Dictionary:
     var resolved_width: float = (
@@ -722,6 +727,7 @@ func _handle_editing_key(event: InputEventKey) -> void:
 
 func _refresh_rows() -> void:
     _root_rows = _build_rows_from_sheet(_sheet)
+    _update_layout_style_signature(_get_font_size())
     _flat_rows.clear()
     for row_data in _root_rows:
         _flatten_row(row_data, null)
@@ -1210,7 +1216,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         return {}
     var event_style: EventSheetEventStyle = _get_event_style()
     var line_height: float = _get_event_line_height(font_size)
-    var key: String = "%s:%d:%d:%d:%s" % [row_data.row_uid, index, int(width), _drag_target_index, _get_layout_style_signature(font_size)]
+    var key: String = "%s:%d:%d:%d:%s" % [row_data.row_uid, index, int(width), _drag_target_index, _layout_style_signature]
     if _layout_cache.has(key):
         return _layout_cache.get_layout(key)
     var row_top: float = _get_row_top(index)

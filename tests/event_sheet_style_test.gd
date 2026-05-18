@@ -55,10 +55,10 @@ static func run() -> bool:
 	styled_event.event_uid = "styled_event"
 	styled_event.trigger = _make_condition("Core", "OnReady", {})
 	styled_event.conditions = [
-		_make_condition("Missing", "Condition text that is intentionally long so custom padding and font size must still stay inside the condition lane", {})
+		_make_condition("LongText", "Condition text that is intentionally long so custom padding and font size must still stay inside the condition lane", {})
 	]
 	styled_event.actions = [
-		_make_action("Missing", "Action text that is intentionally long so the styled chip must still stay before the add action affordance", {})
+		_make_action("LongText", "Action text that is intentionally long so the styled chip must still stay before the add action affordance", {})
 	]
 	styled_event.comment = "Styled action comment should remain inside the action lane."
 	var local_variable := LocalVariable.new()
