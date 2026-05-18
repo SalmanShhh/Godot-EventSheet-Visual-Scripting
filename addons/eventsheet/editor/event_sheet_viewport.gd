@@ -60,6 +60,7 @@ const DROP_ZONE_AFTER_THRESHOLD := 0.5
 const MIN_BOX_SELECT_DISTANCE := 1.0
 const MIN_BOX_SELECT_DISTANCE_SQ := MIN_BOX_SELECT_DISTANCE * MIN_BOX_SELECT_DISTANCE
 const MIN_COMMENT_LINE_INDEX := 1
+const MIN_SPAN_WIDTH := 10.0
 
 var _renderer: EventRowRenderer = EventRowRenderer.new()
 var _layout_cache: RowLayoutCache = RowLayoutCache.new()
@@ -1266,7 +1267,8 @@ func _append_condition_prefix_spans(
         return
     var condition_style_meta: Dictionary = _build_element_style_metadata(_get_condition_style())
     # Keep the primary badge column stable for trigger/invert/OR by rendering
-    # negation first when both badges are present on the same condition line.
+    # negation first. When a line has both badges, ✕ is placed in column 1
+    # and OR follows in column 2.
     if condition.negated:
         var negated_meta: Dictionary = BADGE_NEGATED_METADATA.duplicate(true)
         negated_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", BADGE_EXTRA_WIDTH)
@@ -1428,11 +1430,11 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             var max_condition_right: float = lane_divider_x - float(event_style.condition_lane_padding)
             if bool(metadata.get("badge", false)):
                 var badge_width: float = condition_badge_column_width if condition_badge_column_width > 0.0 else span_width
-                span_width = max(min(badge_width, max_condition_right - span_x), 10.0)
+                span_width = max(min(badge_width, max_condition_right - span_x), MIN_SPAN_WIDTH)
             elif str(metadata.get("kind", "")) in ["condition", "trigger"]:
-                span_width = max(max_condition_right - span_x, 10.0)
+                span_width = max(max_condition_right - span_x, MIN_SPAN_WIDTH)
             else:
-                span_width = max(min(span_width, max_condition_right - span_x), 10.0)
+                span_width = max(min(span_width, max_condition_right - span_x), MIN_SPAN_WIDTH)
         elif span_lane == "action" and action_lane_rect.size.x > 0.0:
             var reserved_start: float = float(
                 action_line_reservations.get(

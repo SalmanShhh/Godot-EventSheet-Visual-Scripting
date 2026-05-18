@@ -278,19 +278,19 @@ static func run() -> bool:
     var or_row_data: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
     all_passed = _check("or block adds badge before each condition", _count_span_text(or_row_data, "OR"), 2) and all_passed
     all_passed = _check("negated condition adds red x badge text", _count_span_text(or_row_data, "✕"), 1) and all_passed
-    var condition_line_indices: Array[int] = []
-    var or_badge_line_indices: Array[int] = []
+    var condition_lines: Array[int] = []
+    var or_badge_lines: Array[int] = []
     for span in or_row_data.spans:
         if span == null or not (span.metadata is Dictionary):
             continue
         var metadata: Dictionary = span.metadata as Dictionary
         if str(metadata.get("kind", "")) == "condition":
-            condition_line_indices.append(int(metadata.get("line_index", -1)))
+            condition_lines.append(int(metadata.get("line_index", -1)))
         if span.text == "OR":
-            or_badge_line_indices.append(int(metadata.get("line_index", -1)))
+            or_badge_lines.append(int(metadata.get("line_index", -1)))
     all_passed = _check(
         "or badges share the same stacked line indices as conditions",
-        or_badge_line_indices.size() == condition_line_indices.size() and or_badge_line_indices == condition_line_indices,
+        or_badge_lines.size() == condition_lines.size() and or_badge_lines == condition_lines,
         true
     ) and all_passed
     dock_viewport.get_row_layout_for_test(0, 640.0)

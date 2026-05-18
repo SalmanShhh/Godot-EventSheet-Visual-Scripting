@@ -17,6 +17,8 @@ This guide explains how EventSheet row alignment is computed and how to tune it 
 |        | [badge col][condition row 3........]  |                                |
 ```
 
+`+` indicates the inline **+ Add** affordance in the action lane.
+
 ## Key alignment settings
 
 Primary tuning lives in `EventSheetEventStyle`:
