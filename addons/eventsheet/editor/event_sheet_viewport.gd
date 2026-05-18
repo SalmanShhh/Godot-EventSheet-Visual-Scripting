@@ -2224,6 +2224,8 @@ func _find_condition_span_index(row_data: EventRowData, ace_index: int) -> int:
     return _find_ace_span_index(row_data, "condition", ace_index)
 
 func _resolve_ace_insert_mode(lane: String, position: Vector2, span_rect: Rect2) -> String:
+    # Condition chips read left-to-right, so their insertion midpoint is horizontal.
+    # Actions stack top-to-bottom, so their insertion midpoint follows the Y axis.
     if lane == "action":
         return "after" if position.y >= span_rect.get_center().y else "before"
     return "after" if position.x >= span_rect.get_center().x else "before"

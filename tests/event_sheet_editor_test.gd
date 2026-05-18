@@ -425,7 +425,9 @@ static func run() -> bool:
     parity_condition_click.pressed = true
     parity_condition_click.button_index = MOUSE_BUTTON_LEFT
     parity_condition_click.position = parity_event_row.spans[parity_condition_index].rect.get_center()
-    dock_viewport._handle_mouse_motion(InputEventMouseMotion.new())
+    var parity_hover_motion := InputEventMouseMotion.new()
+    parity_hover_motion.position = parity_condition_click.position
+    dock_viewport._handle_mouse_motion(parity_hover_motion)
     dock_viewport._set_hover_state(2, parity_condition_index)
     dock_viewport._handle_mouse_button(parity_condition_click)
     var parity_context: Dictionary = dock_viewport.get_selected_context()
