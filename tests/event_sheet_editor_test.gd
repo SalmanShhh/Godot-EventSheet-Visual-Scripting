@@ -641,9 +641,9 @@ static func run() -> bool:
     var delete_group := EventGroup.new()
     delete_group.name = "Delete Me"
     delete_group.group_name = delete_group.name
-    var delete_event := EventRow.new()
-    delete_event.comment = "Remain"
-    delete_group_sheet.events = [delete_group, delete_event]
+    var remaining_event := EventRow.new()
+    remaining_event.comment = "Remain"
+    delete_group_sheet.events = [delete_group, remaining_event]
     dock.setup(delete_group_sheet)
     dock_viewport = dock.get_viewport_control()
     dock_viewport._select_row(0)

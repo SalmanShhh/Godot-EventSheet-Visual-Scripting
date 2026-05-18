@@ -1154,7 +1154,7 @@ func _update_canvas_min_size() -> void:
         max(total_height * zoom, 240.0)
     )
     custom_minimum_size = target_size
-    minimum_size_changed()
+    update_minimum_size()
     if size != target_size:
         set_size(target_size)
 
