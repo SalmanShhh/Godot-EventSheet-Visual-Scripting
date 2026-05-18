@@ -25,7 +25,6 @@ static func run() -> bool:
     all_passed = _check("viewport exposes zoom controls", viewport != null and viewport.has_method("zoom_in") and viewport.has_method("zoom_out"), true) and all_passed
     all_passed = _check("viewport exposes disabled row scaffold", viewport != null and viewport.has_method("set_row_disabled"), true) and all_passed
     editor.set_size(Vector2(1200.0, 720.0))
-    editor._sync_workspace_layout()
     all_passed = _check(
         "scroll fills editor workspace width",
         scroll != null and scroll.size_flags_horizontal == Control.SIZE_EXPAND_FILL,

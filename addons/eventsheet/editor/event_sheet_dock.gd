@@ -209,16 +209,10 @@ func _build_ui() -> void:
     _exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
     _build_context_menus()
     _build_preview_window()
-    call_deferred("_sync_workspace_layout")
 
 func _notification(what: int) -> void:
-    if what == NOTIFICATION_RESIZED:
-        call_deferred("_sync_workspace_layout")
-    elif what == NOTIFICATION_PREDELETE:
+    if what == NOTIFICATION_PREDELETE:
         _release_ace_sources()
-
-func _sync_workspace_layout() -> void:
-    return
 
 func _build_preview_window() -> void:
     if _preview_window != null:

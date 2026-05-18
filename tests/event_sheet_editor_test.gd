@@ -243,21 +243,21 @@ static func run() -> bool:
     dock_viewport = dock.get_viewport_control()
     var delete_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     var delete_row_data: EventRowData = delete_rows[0].get("row")
-    var delete_key := InputEventKey.new()
-    delete_key.pressed = true
-    delete_key.keycode = KEY_DELETE
+    var span_delete_key := InputEventKey.new()
+    span_delete_key.pressed = true
+    span_delete_key.keycode = KEY_DELETE
     dock_viewport._select_from_click(0, _find_span_index_by_kind(delete_row_data, "condition"), false)
-    dock._unhandled_key_input(delete_key)
+    dock._unhandled_key_input(span_delete_key)
     all_passed = _check("delete key removes selected condition span", ((dock.get_current_sheet().events[0] as EventRow).conditions.size()), 1) and all_passed
     dock_viewport = dock.get_viewport_control()
     delete_row_data = dock_viewport.get_flat_rows()[0].get("row")
     dock_viewport._select_from_click(0, _find_span_index_by_kind(delete_row_data, "action"), false)
     dock_viewport._select_from_click(0, _find_last_span_index_by_kind(delete_row_data, "action"), true)
-    dock._unhandled_key_input(delete_key)
+    dock._unhandled_key_input(span_delete_key)
     all_passed = _check("delete key removes multi-selected action spans", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), 0) and all_passed
     dock_viewport = dock.get_viewport_control()
     dock_viewport._select_row(1)
-    dock._unhandled_key_input(delete_key)
+    dock._unhandled_key_input(span_delete_key)
     all_passed = _check("delete key still removes selected event rows", dock.get_current_sheet().events.size(), 1) and all_passed
 
     var multi_block_sheet := EventSheetResource.new()
