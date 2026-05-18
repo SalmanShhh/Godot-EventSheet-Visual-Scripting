@@ -25,6 +25,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     var icon_rect: Rect2 = layout.get("icon_rect", Rect2())
     var drag_rect: Rect2 = layout.get("drag_rect", Rect2())
     var ace_drag_rect: Rect2 = layout.get("ace_drag_rect", Rect2())
+    var ace_drag_placeholder_rect: Rect2 = layout.get("ace_drag_placeholder_rect", Rect2())
+    var ace_drag_target_block_rect: Rect2 = layout.get("ace_drag_target_block_rect", Rect2())
+    var ace_drag_lane: String = str(layout.get("ace_drag_lane", ""))
+    var ace_drag_source_span_indices: Array = layout.get("ace_drag_source_span_indices", [])
     var ace_drag_error: bool = bool(layout.get("ace_drag_error", false))
     var drag_feedback_rect: Rect2 = layout.get("drag_feedback_rect", Rect2())
     var drag_feedback_text: String = str(layout.get("drag_feedback_text", ""))
@@ -39,6 +43,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     var editing_caret: int = int(layout.get("editing_caret", -1))
     var selected_span_indices: Array = layout.get("selected_span_indices", [])
     var hovered_span_index: int = int(layout.get("hovered_span_index", -1))
+    var row_selection_role: String = str(layout.get("row_selection_role", "none"))
     var line_number: int = int(layout.get("line_number", 0))
     var breakpoint_enabled: bool = bool(layout.get("breakpoint_enabled", false))
     var disabled: bool = bool(layout.get("disabled", false))
@@ -95,8 +100,20 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
         control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, row_rect.size.x, 1.0), block_border, true)
         control.draw_rect(Rect2(row_rect.position.x, row_rect.end.y - 1.0, row_rect.size.x, 1.0), block_border, true)
     _draw_indent_guides(control, row_rect, row_data.indent)
-    if row_data.selected and not has_span_selection:
-        control.draw_rect(row_rect, selection_fill, true)
+    if row_selection_role != "none":
+        var selection_overlay: Color = selection_fill
+        if row_selection_role == "event_subtree":
+            selection_overlay.a *= 0.55
+            control.draw_rect(row_rect, selection_overlay, true)
+            var subtree_outline: Color = selection_fill.lightened(0.18)
+            subtree_outline.a = max(subtree_outline.a, 0.86)
+            control.draw_rect(row_rect.grow(-2.0), subtree_outline, false, 1.5)
+        else:
+            control.draw_rect(row_rect, selection_overlay, true)
+            if row_selection_role == "event_primary":
+                var event_outline: Color = selection_fill.lightened(0.34)
+                event_outline.a = max(event_outline.a, 0.94)
+                control.draw_rect(row_rect.grow(-1.0), event_outline, false, 2.0)
     var hover_row_fill: bool = row_data.hovered
     if row_data.row_type == EventRowData.RowType.EVENT and hovered_span_index >= 0:
         hover_row_fill = false
@@ -104,7 +121,41 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
         control.draw_rect(row_rect, hover_fill, true)
     _draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
     _draw_icon(control, icon_rect, row_data)
-    _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index, event_style, selection_fill, hover_fill)
+    if ace_drag_target_block_rect.size != Vector2.ZERO:
+        var target_border: Color = (
+            Color(0.44, 0.84, 0.74, 0.96)
+            if ace_drag_lane == "action"
+            else Color(0.43, 0.70, 1.0, 0.96)
+        )
+        var target_fill: Color = target_border
+        target_fill.a = 0.13
+        control.draw_rect(ace_drag_target_block_rect, target_fill, true)
+        control.draw_rect(ace_drag_target_block_rect, target_border, false, 2.0)
+    _draw_spans(
+        control,
+        row_data,
+        font,
+        font_size,
+        editing_span_index,
+        editing_buffer,
+        editing_caret,
+        selected_span_indices,
+        hovered_span_index,
+        event_style,
+        selection_fill,
+        hover_fill,
+        ace_drag_source_span_indices
+    )
+    if ace_drag_placeholder_rect.size != Vector2.ZERO:
+        var placeholder_border: Color = (
+            Color(0.44, 0.84, 0.74, 0.98)
+            if ace_drag_lane == "action"
+            else Color(0.43, 0.70, 1.0, 0.98)
+        )
+        var placeholder_fill: Color = placeholder_border
+        placeholder_fill.a = 0.25
+        control.draw_rect(ace_drag_placeholder_rect, placeholder_fill, true)
+        control.draw_rect(ace_drag_placeholder_rect, placeholder_border, false, 2.0)
     if drag_rect.size != Vector2.ZERO:
         control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
     if ace_drag_rect.size != Vector2.ZERO:
@@ -211,19 +262,34 @@ func _draw_spans(
     hovered_span_index: int,
     event_style: EventSheetEventStyle = null,
     selection_fill: Color = EventSheetPalette.COLOR_SELECTION,
-    hover_fill: Color = EventSheetPalette.COLOR_HOVER
+    hover_fill: Color = EventSheetPalette.COLOR_HOVER,
+    drag_source_span_indices: Array = []
 ) -> void:
     for span_index: int in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null:
             continue
         var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+        if drag_source_span_indices.has(span_index):
+            var drag_source_fill: Color = Color(1.0, 0.98, 0.70, 0.24)
+            var drag_source_outline: Color = Color(1.0, 0.90, 0.46, 0.92)
+            control.draw_rect(span.rect.grow(2.0), drag_source_fill, true)
+            control.draw_rect(span.rect.grow(2.0), drag_source_outline, false, 2.0)
         if bool(metadata.get("chip", false)):
             _draw_chip_span(control, span, metadata)
         if selected_span_indices.has(span_index):
             var selected_bg: Color = selection_fill
             selected_bg.a = 0.72
             control.draw_rect(span.rect.grow(2.0), selected_bg, true)
+            var selected_outline: Color = selection_fill.lightened(0.30)
+            var selected_kind: String = str(metadata.get("kind", ""))
+            if selected_kind in ["condition", "trigger"]:
+                selected_outline = Color(0.46, 0.72, 1.0, 0.97)
+            elif selected_kind == "action":
+                selected_outline = Color(0.44, 0.84, 0.74, 0.97)
+            else:
+                selected_outline.a = max(selected_outline.a, 0.92)
+            control.draw_rect(span.rect.grow(2.0), selected_outline, false, 2.0)
         elif span_index == hovered_span_index:
             if bool(metadata.get("chip", false)):
                 _draw_chip_hover_span(control, span, metadata)

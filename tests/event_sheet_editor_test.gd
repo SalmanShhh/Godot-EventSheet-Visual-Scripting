@@ -463,8 +463,10 @@ static func run() -> bool:
     dock_viewport._handle_mouse_button(parity_condition_click)
     var parity_context: Dictionary = dock_viewport.get_selected_context()
     editor_state = dock_viewport.get_editor_state_snapshot()
+    var parity_condition_layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
     all_passed = _check("left-click condition selects individual condition span", parity_context.get("span_metadata", {}).get("kind", ""), "condition") and all_passed
     all_passed = _check("left-click condition keeps span selection count at one", editor_state.get("selected_span_count", 0), 1) and all_passed
+    all_passed = _check("condition-span selection does not switch event-block role", parity_condition_layout.get("row_selection_role", ""), "none") and all_passed
     var parity_body_click := InputEventMouseButton.new()
     parity_body_click.pressed = true
     parity_body_click.button_index = MOUSE_BUTTON_LEFT
@@ -475,8 +477,10 @@ static func run() -> bool:
     dock_viewport._handle_mouse_button(parity_body_click)
     parity_context = dock_viewport.get_selected_context()
     editor_state = dock_viewport.get_editor_state_snapshot()
+    var parity_event_selection_layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
     all_passed = _check("left-click event block body selects whole event block", parity_context.get("source_resource", null) == parity_event and parity_context.get("span", null) == null, true) and all_passed
     all_passed = _check("event block body selection clears span selection", editor_state.get("selected_span_count", 0), 0) and all_passed
+    all_passed = _check("event block selection has dedicated event-selection role", parity_event_selection_layout.get("row_selection_role", ""), "event_primary") and all_passed
     var parity_group_click := InputEventMouseButton.new()
     parity_group_click.pressed = true
     parity_group_click.button_index = MOUSE_BUTTON_LEFT
@@ -527,7 +531,13 @@ static func run() -> bool:
     var subtree_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     dock_viewport._select_from_click(0, -1, false)
     editor_state = dock_viewport.get_editor_state_snapshot()
+    var subtree_parent_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    var subtree_child_layout: Dictionary = dock_viewport.get_row_layout_for_test(1, 640.0)
+    var subtree_grandchild_layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
     all_passed = _check("event block selection includes descendant sub-events", editor_state.get("selected_row_count", 0), 3) and all_passed
+    all_passed = _check("subtree selection marks parent as primary event selection", subtree_parent_layout.get("row_selection_role", ""), "event_primary") and all_passed
+    all_passed = _check("subtree selection marks child as subtree selection", subtree_child_layout.get("row_selection_role", ""), "event_subtree") and all_passed
+    all_passed = _check("subtree selection marks grandchild as subtree selection", subtree_grandchild_layout.get("row_selection_role", ""), "event_subtree") and all_passed
     dock_viewport._select_from_click(1, -1, true)
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("ctrl click can unselect a selected sub-event row", editor_state.get("selected_row_count", 0), 2) and all_passed
@@ -881,8 +891,16 @@ static func run() -> bool:
     )
     var drag_preview_layout: Dictionary = dock_viewport.get_row_layout_for_test(1, 640.0)
     var ace_drag_rect: Rect2 = drag_preview_layout.get("ace_drag_rect", Rect2())
+    var condition_placeholder_rect: Rect2 = drag_preview_layout.get("ace_drag_placeholder_rect", Rect2())
+    var condition_target_block_rect: Rect2 = drag_preview_layout.get("ace_drag_target_block_rect", Rect2())
+    var condition_source_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    var condition_source_span_indices: Array = condition_source_layout.get("ace_drag_source_span_indices", [])
+    var condition_source_span_index: int = _find_span_index_by_kind(ace_drag_rows[0].get("row"), "condition")
     all_passed = _check("ace drag target uses horizontal insertion after cursor midpoint", dock_viewport._drag_ace_insert_mode, "after") and all_passed
-    all_passed = _check("ace drag preview renders as a thin vertical placement line", ace_drag_rect.size.x <= 4.0, true) and all_passed
+    all_passed = _check("ace drag preview keeps insertion line marker", ace_drag_rect.size.x <= 4.0 and ace_drag_rect.size.y > 0.0, true) and all_passed
+    all_passed = _check("condition drag preview shows placeholder chip slot", condition_placeholder_rect.size.x > 40.0 and condition_placeholder_rect.size.y > 8.0, true) and all_passed
+    all_passed = _check("condition drag preview highlights destination event block", condition_target_block_rect.size.x > 0.0 and condition_target_block_rect.size.y > 0.0, true) and all_passed
+    all_passed = _check("condition drag highlights source condition chip only", condition_source_span_indices.has(condition_source_span_index), true) and all_passed
     var ace_drag_source_action := ACEAction.new()
     ace_drag_source_action.provider_id = "Core"
     ace_drag_source_action.ace_id = "QueueFree"
@@ -910,7 +928,15 @@ static func run() -> bool:
     )
     drag_preview_layout = dock_viewport.get_row_layout_for_test(1, 640.0)
     ace_drag_rect = drag_preview_layout.get("ace_drag_rect", Rect2())
-    all_passed = _check("action drag preview also renders as a thin vertical placement line", ace_drag_rect.size.x <= 4.0, true) and all_passed
+    var action_placeholder_rect: Rect2 = drag_preview_layout.get("ace_drag_placeholder_rect", Rect2())
+    var action_target_block_rect: Rect2 = drag_preview_layout.get("ace_drag_target_block_rect", Rect2())
+    var action_source_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    var action_source_span_indices: Array = action_source_layout.get("ace_drag_source_span_indices", [])
+    var action_source_span_index: int = _find_span_index_by_kind(ace_drag_rows[0].get("row"), "action")
+    all_passed = _check("action drag preview keeps insertion line marker", ace_drag_rect.size.x <= 4.0 and ace_drag_rect.size.y > 0.0, true) and all_passed
+    all_passed = _check("action drag preview shows placeholder chip slot", action_placeholder_rect.size.x > 40.0 and action_placeholder_rect.size.y > 8.0, true) and all_passed
+    all_passed = _check("action drag preview highlights destination event block", action_target_block_rect.size.x > 0.0 and action_target_block_rect.size.y > 0.0, true) and all_passed
+    all_passed = _check("action drag highlights source action chip only", action_source_span_indices.has(action_source_span_index), true) and all_passed
     dock_viewport._clear_ace_drag()
     dock._on_viewport_ace_drop_requested(
         [{"source_resource": ace_drag_source, "kind": "condition", "ace_index": 0}],

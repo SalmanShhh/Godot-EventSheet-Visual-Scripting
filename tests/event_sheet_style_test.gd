@@ -235,6 +235,18 @@ static func run() -> bool:
 		dock.get_current_sheet().editor_style.get_action_style().text_color,
 		Color(0.35, 1.0, 0.50, 1.0)
 	) and passed
+	var rebuilt_theme_style: EventSheetEditorStyle = dock.get_current_sheet().editor_style
+	var rebuilt_default_action_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+	if rebuilt_theme_style != null:
+		rebuilt_theme_style.rebuild_from_visual_templates()
+		rebuilt_default_action_color = rebuilt_theme_style.get_action_style().text_color
+		rebuilt_theme_style.get_action_style().text_color = Color(0.96, 0.20, 0.22, 1.0)
+	passed = _check("dock rebuilds active theme from linked visual templates", dock.rebuild_active_theme_from_visuals(false), true) and passed
+	passed = _check(
+		"rebuild theme restores action token from visual template",
+		dock.get_current_sheet().editor_style.get_action_style().text_color,
+		rebuilt_default_action_color
+	) and passed
 	passed = _check("dock can switch back to default theme", dock.use_default_theme(), true) and passed
 	passed = _check("default theme clears per-sheet style override", dock.get_current_sheet().editor_style == null, true) and passed
 	for theme_path in EXAMPLE_THEME_PATHS:

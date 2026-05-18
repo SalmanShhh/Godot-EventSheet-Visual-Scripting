@@ -373,6 +373,15 @@ inside the Construct 3-style sheet established by Phase 8.
   `CommentRowUI` now produce a styled `PanelContainer` drag preview instead of a plain
   `Label`.  Condition previews use the blue lane palette; action previews use the teal
   lane palette; comment previews use the amber banner palette.
+- **Viewport ACE drag previews** now pair insertion lines with stronger destination cues:
+  - event-block target highlight
+  - destination placeholder chip slot
+  - source chip emphasis only on the dragged condition/action entries
+
+#### Selection emphasis
+- Event-block selection uses a distinct event-block visual role.
+- Subtree selection uses a secondary subtree role so descendants remain visibly related to the selected parent event.
+- Condition/action selection keeps focus on the selected chip(s) with stronger entry-level outlines instead of row-level-only emphasis.
 
 #### Toolbar shortcut hints
 - The shortcuts hint strip in the toolbar now also shows:

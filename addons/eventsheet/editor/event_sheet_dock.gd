@@ -189,6 +189,25 @@ func reload_active_theme() -> bool:
     _refresh_after_edit()
     return true
 
+func rebuild_active_theme_from_visuals(save_to_disk: bool = true) -> bool:
+    if _current_sheet == null:
+        _set_status("Rebuild theme failed: no sheet loaded.", true)
+        return false
+    var active_style: EventSheetEditorStyle = _current_sheet.editor_style
+    if active_style == null:
+        _set_status("Rebuild theme failed: no active style.", true)
+        return false
+    if not active_style.rebuild_from_visual_templates():
+        _set_status("Rebuild theme failed: visual templates unavailable.", true)
+        return false
+    if save_to_disk and not active_style.resource_path.is_empty():
+        var save_err: Error = ResourceSaver.save(active_style, active_style.resource_path)
+        if save_err != OK:
+            _set_status("Rebuild theme failed: save error %d." % save_err, true)
+            return false
+    _refresh_after_edit()
+    return true
+
 func set_undo_redo_manager(undo_redo: Variant) -> void:
     if undo_redo == null:
         return
@@ -243,6 +262,7 @@ func _build_ui() -> void:
     _add_toolbar_button("Default Theme", _on_set_default_theme_requested)
     _add_toolbar_button("Load Theme", _on_load_theme_requested)
     _add_toolbar_button("Reload Theme", _on_reload_theme_requested)
+    _add_toolbar_button("Rebuild Theme", _on_rebuild_theme_requested)
 
     _title_strip = HBoxContainer.new()
     _title_strip.name = "EventSheetTitleStrip"
@@ -534,6 +554,12 @@ func _on_reload_theme_requested() -> void:
         _set_status("Reloaded active theme.")
     else:
         _set_status("Reload theme failed: no active style resource path.", true)
+
+func _on_rebuild_theme_requested() -> void:
+    if rebuild_active_theme_from_visuals():
+        _set_status("Rebuilt theme tokens from visual templates.")
+    else:
+        _set_status("Rebuild theme failed: active style is required.", true)
 
 func _load_sheet_from_path(path: String) -> void:
     var resolved_path: String = path.strip_edges()

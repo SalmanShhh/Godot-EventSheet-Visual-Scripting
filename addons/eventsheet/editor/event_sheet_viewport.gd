@@ -1538,15 +1538,31 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             _:
                 drag_rect = Rect2(0.0, row_rect.position.y - 1.0, width, 2.0)
     var ace_drag_rect := Rect2()
+    var ace_drag_placeholder_rect := Rect2()
+    var ace_drag_target_block_rect := Rect2()
+    var ace_drag_source_span_indices: Array[int] = []
+    if not _drag_ace_entries.is_empty():
+        ace_drag_source_span_indices = _get_drag_source_span_indices(row_data)
     if not _drag_ace_entries.is_empty() and _drag_ace_target_row_index == index:
-        ace_drag_rect = _build_ace_drag_preview_rect(
+        var drag_visuals: Dictionary = _build_ace_drag_visuals(
             row_data,
             _drag_ace_target_lane,
             _drag_ace_target_ace_index,
             _drag_ace_insert_mode,
             condition_lane_rect,
-            action_lane_rect
+            action_lane_rect,
+            row_rect
         )
+        ace_drag_rect = drag_visuals.get("insertion_rect", Rect2())
+        ace_drag_placeholder_rect = drag_visuals.get("placeholder_rect", Rect2())
+        ace_drag_target_block_rect = drag_visuals.get("target_block_rect", Rect2())
+    var row_selected_span_indices: Array = _selected_span_indices.get(row_data.row_uid, []).duplicate()
+    var row_selection_role: String = "none"
+    if row_data.selected and row_selected_span_indices.is_empty():
+        if row_data.row_type == EventRowData.RowType.EVENT and _selected_span_index < 0:
+            row_selection_role = "event_primary" if index == _selected_row_index else "event_subtree"
+        else:
+            row_selection_role = "row"
     var drag_feedback_rect := Rect2()
     if not _drag_feedback_text.is_empty() and _drag_ace_target_row_index == index:
         var feedback_lane_rect: Rect2 = (
@@ -1573,6 +1589,10 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         "debug_text": row_data.debug_state,
         "drag_rect": drag_rect,
         "ace_drag_rect": ace_drag_rect,
+        "ace_drag_placeholder_rect": ace_drag_placeholder_rect,
+        "ace_drag_target_block_rect": ace_drag_target_block_rect,
+        "ace_drag_lane": _drag_ace_target_lane if _drag_ace_target_row_index == index else "",
+        "ace_drag_source_span_indices": ace_drag_source_span_indices.duplicate(),
         "ace_drag_error": not _drag_ace_drop_valid and _drag_ace_target_row_index == index,
         "drag_feedback_rect": drag_feedback_rect,
         "drag_feedback_text": _drag_feedback_text if _drag_ace_target_row_index == index else "",
@@ -1583,7 +1603,8 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         "editing_span_index": _editing_span_index if index == _editing_row_index else -1,
         "editing_buffer": _editing_buffer if index == _editing_row_index else "",
         "editing_caret": _editing_caret if index == _editing_row_index else -1,
-        "selected_span_indices": _selected_span_indices.get(row_data.row_uid, []).duplicate(),
+        "selected_span_indices": row_selected_span_indices,
+        "row_selection_role": row_selection_role,
         "hovered_span_index": _hovered_span_index if index == _hovered_row_index else -1,
         "drag_mode": _drag_target_mode if _drag_target_index == index else ""
     }
@@ -1990,6 +2011,20 @@ func _get_selected_row_indices() -> Array[int]:
             indices.append(index)
     return indices
 
+func _get_drag_source_span_indices(row_data: EventRowData) -> Array[int]:
+    var span_indices: Array[int] = []
+    if row_data == null or _drag_ace_entries.is_empty():
+        return span_indices
+    for entry in _drag_ace_entries:
+        if str(entry.get("row_uid", "")) != row_data.row_uid:
+            continue
+        var kind: String = str(entry.get("kind", ""))
+        var ace_index: int = int(entry.get("ace_index", -1))
+        var span_index: int = _find_ace_span_index(row_data, kind, ace_index)
+        if span_index >= 0 and not span_indices.has(span_index):
+            span_indices.append(span_index)
+    return span_indices
+
 func _collect_descendant_row_uids(row_data: EventRowData) -> Array:
     var uids: Array = []
     if row_data == null:
@@ -2087,6 +2122,31 @@ func _build_ace_drag_preview_rect(
         insert_mode,
         condition_lane_rect,
         action_lane_rect,
+        _get_event_line_height(_get_font_size()),
+        float(_get_event_style().action_lane_padding),
+        float(_get_event_style().condition_lane_padding),
+        _find_ace_span_index,
+        _get_lane_ace_span_indices,
+        _get_span_gap
+    )
+
+func _build_ace_drag_visuals(
+    row_data: EventRowData,
+    lane: String,
+    ace_index: int,
+    insert_mode: String,
+    condition_lane_rect: Rect2,
+    action_lane_rect: Rect2,
+    row_rect: Rect2
+) -> Dictionary:
+    return _drag_preview_helper.build_ace_drag_visuals(
+        row_data,
+        lane,
+        ace_index,
+        insert_mode,
+        condition_lane_rect,
+        action_lane_rect,
+        row_rect,
         _get_event_line_height(_get_font_size()),
         float(_get_event_style().action_lane_padding),
         float(_get_event_style().condition_lane_padding),

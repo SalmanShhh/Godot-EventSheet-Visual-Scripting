@@ -89,6 +89,25 @@ func get_action_style() -> EventSheetElementStyle:
 	ensure_defaults()
 	return action_style
 
+func rebuild_from_visual_templates() -> bool:
+	ensure_defaults()
+	var rebuilt_any: bool = false
+	var rebuilt_event_style: EventSheetEventStyle = _build_event_style_from_scene(event_visual_scene)
+	if rebuilt_event_style != null:
+		event_style = rebuilt_event_style
+		rebuilt_any = true
+	var rebuilt_condition_style: EventSheetElementStyle = _build_element_style_from_scene(condition_visual_scene)
+	if rebuilt_condition_style != null:
+		condition_style = rebuilt_condition_style
+		rebuilt_any = true
+	var rebuilt_action_style: EventSheetElementStyle = _build_element_style_from_scene(action_visual_scene)
+	if rebuilt_action_style != null:
+		action_style = rebuilt_action_style
+		rebuilt_any = true
+	if rebuilt_any:
+		emit_changed()
+	return rebuilt_any
+
 func _build_event_style_from_scene(scene: PackedScene) -> EventSheetEventStyle:
 	var template: Node = _instantiate_visual_template(scene)
 	if template == null:

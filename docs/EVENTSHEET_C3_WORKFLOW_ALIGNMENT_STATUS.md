@@ -11,7 +11,7 @@ This status maps current editor behavior to the project’s Construct-style even
 - Multi-row selection and copy/paste/reorder workflows exist.
 - Event block body selection now includes its descendant sub-events.
 - Condition/action span hover and selection emphasize the span itself (without full-row hover fill).
-- Drag previews for both condition and action ACE moves use snap-style insertion lines.
+- Drag previews for condition/action ACE moves now show three cues together: source-chip emphasis, event-block target highlighting, and a placeholder chip slot at the landing point.
 - Else / ElseIf markers are represented in the condition lane.
 
 ## Partial
@@ -20,6 +20,7 @@ This status maps current editor behavior to the project’s Construct-style even
 - Mixed-structure copy/paste (events + groups + comments in every combination) is functional in common paths, not fully exhaustive.
 - Theme switching exists, but not yet as a full preset browser UX.
 - Else/ElseIf authoring flows are represented in data/rendering but not yet fully guided through dedicated UX steps.
+- Theme workflow now supports both disk reload and visual-template rebuild from the dock toolbar, but still lacks a richer preset browser/package manager UX.
 - ACE enabled/disabled controls exist in editor UX; runtime semantics are still being expanded.
 
 ## Missing

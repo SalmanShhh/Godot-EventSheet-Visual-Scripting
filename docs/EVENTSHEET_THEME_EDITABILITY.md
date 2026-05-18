@@ -28,6 +28,7 @@ This editor uses Godot-native resources/scenes instead of runtime CSS. The goal 
   - **Load Theme**: pick an `EventSheetEditorStyle` resource.
   - **Default Theme**: clear the per-sheet override and use built-in defaults.
   - **Reload Theme**: reload the active style from disk.
+  - **Rebuild Theme**: regenerate `event_style` / `condition_style` / `action_style` from the linked visual `.tscn` templates and refresh the active sheet.
 
 ### Bundled example themes
 
@@ -50,6 +51,7 @@ These themes are bundled in `res://demo/themes/`:
 
 - When the active style resource changes in-editor, the dock refreshes the viewport.
 - **Reload Theme** forces a disk reload for external edits.
+- **Rebuild Theme** is the practical post-`.tscn` workflow: update template scenes, then rebuild tokens without leaving the sheet editor.
 - This is the closest practical equivalent to reloading a CSS theme file while staying fully native to Godot resources.
 
 ## Theme token spec

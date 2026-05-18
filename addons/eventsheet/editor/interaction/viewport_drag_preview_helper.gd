@@ -69,3 +69,74 @@ static func build_ace_drag_preview_rect(
     )
     empty_preview_x = clampf(empty_preview_x, lane_rect.position.x + 4.0, lane_rect.end.x - 4.0)
     return Rect2(empty_preview_x - 1.5, preview_y, 3.0, preview_height)
+
+static func build_ace_drag_visuals(
+    row_data: EventRowData,
+    lane: String,
+    ace_index: int,
+    insert_mode: String,
+    condition_lane_rect: Rect2,
+    action_lane_rect: Rect2,
+    row_rect: Rect2,
+    line_height: float,
+    action_padding: float,
+    condition_padding: float,
+    find_ace_span_index: Callable,
+    get_lane_ace_span_indices: Callable,
+    get_span_gap: Callable
+) -> Dictionary:
+    var insertion_rect: Rect2 = build_ace_drag_preview_rect(
+        row_data,
+        lane,
+        ace_index,
+        insert_mode,
+        condition_lane_rect,
+        action_lane_rect,
+        line_height,
+        action_padding,
+        condition_padding,
+        find_ace_span_index,
+        get_lane_ace_span_indices,
+        get_span_gap
+    )
+    var lane_rect: Rect2 = action_lane_rect if lane == "action" else condition_lane_rect
+    var placeholder_rect: Rect2 = Rect2()
+    if lane_rect.size != Vector2.ZERO:
+        var ace_span_kind: String = "action" if lane == "action" else "condition"
+        var target_span: SemanticSpan = null
+        if ace_index >= 0:
+            var target_span_index: int = int(find_ace_span_index.call(row_data, ace_span_kind, ace_index))
+            if target_span_index >= 0 and target_span_index < row_data.spans.size():
+                target_span = row_data.spans[target_span_index]
+        var placeholder_height: float = max(min(line_height - 8.0, lane_rect.size.y - 8.0), 10.0)
+        var placeholder_width: float = clampf(
+            target_span.rect.size.x if target_span != null else lane_rect.size.x * 0.34,
+            72.0,
+            max(lane_rect.size.x - 10.0, 72.0)
+        )
+        var placeholder_center_x: float = (
+            insertion_rect.position.x + (insertion_rect.size.x * 0.5)
+            if insertion_rect.size != Vector2.ZERO
+            else lane_rect.position.x + (lane_rect.size.x * 0.5)
+        )
+        var placeholder_x: float = clampf(
+            placeholder_center_x - (placeholder_width * 0.5),
+            lane_rect.position.x + 4.0,
+            lane_rect.end.x - placeholder_width - 4.0
+        )
+        var placeholder_y: float = (
+            target_span.rect.position.y + 2.0
+            if target_span != null
+            else insertion_rect.position.y
+        )
+        placeholder_y = clampf(
+            placeholder_y,
+            lane_rect.position.y + 2.0,
+            lane_rect.end.y - placeholder_height - 2.0
+        )
+        placeholder_rect = Rect2(placeholder_x, placeholder_y, placeholder_width, placeholder_height)
+    return {
+        "insertion_rect": insertion_rect,
+        "placeholder_rect": placeholder_rect,
+        "target_block_rect": row_rect.grow(-2.0) if row_rect.size != Vector2.ZERO else Rect2()
+    }
