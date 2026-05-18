@@ -79,6 +79,9 @@ class FakeEditorUndoRedoManager:
             output.pop_back()
         return output
 
+const SPAN_OVERLAP_EPSILON := 0.25
+const SPAN_BOUNDS_EPSILON := 0.5
+
 ## Runs EventSheetEditor architecture tests.
 static func run() -> bool:
     var all_passed: bool = true
@@ -1288,7 +1291,7 @@ static func _line_spans_do_not_overlap(row_data: EventRowData, lane: String = ""
         var previous_end: float = -INF
         for rect in rects:
             var span_rect: Rect2 = rect as Rect2
-            if span_rect.position.x + 0.25 < previous_end:
+            if span_rect.position.x + SPAN_OVERLAP_EPSILON < previous_end:
                 return false
             previous_end = max(previous_end, span_rect.end.x)
     return true
@@ -1299,7 +1302,7 @@ static func _spans_fit_within_rect(row_data: EventRowData, rect: Rect2) -> bool:
     for span in row_data.spans:
         if span == null:
             continue
-        if span.rect.end.x > rect.end.x - EventSheetPalette.ROW_HORIZONTAL_PADDING + 0.5:
+        if span.rect.end.x > rect.end.x - EventSheetPalette.ROW_HORIZONTAL_PADDING + SPAN_BOUNDS_EPSILON:
             return false
     return true
 
@@ -1312,7 +1315,7 @@ static func _lane_spans_fit_before_x(row_data: EventRowData, lane: String, x_lim
         var metadata: Dictionary = span.metadata as Dictionary
         if str(metadata.get("lane", "condition")) != lane:
             continue
-        if span.rect.end.x > x_limit - EventSheetPalette.ACTION_LANE_PADDING + 0.5:
+        if span.rect.end.x > x_limit - EventSheetPalette.ACTION_LANE_PADDING + SPAN_BOUNDS_EPSILON:
             return false
     return true
 

@@ -198,10 +198,9 @@ func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size
         if row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false)):
             color = group_title_color
         var draw_text: String = editing_buffer if span_index == editing_span_index else span.text
-        var draw_font_size: int = (
-            font_size + EventSheetPalette.GROUP_TITLE_FONT_SIZE_DELTA
-            if row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false))
-            else font_size
+        var draw_font_size: int = EventSheetPalette.get_group_title_font_size(
+            font_size,
+            row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false))
         )
         var baseline_y: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) + (draw_font_size * FONT_BASELINE_OFFSET_RATIO)
         var text_x: float = span.rect.position.x + (8.0 if bool(metadata.get("chip", false)) else 0.0)

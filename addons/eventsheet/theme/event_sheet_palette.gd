@@ -54,3 +54,6 @@ const COLOR_GROUP_BADGE_FG = Color("#f4f0ff")
 const COLOR_GROUP_FOLD_BG = Color(0.55, 0.48, 0.94, 0.20)
 const COLOR_CONST_BADGE_BG = Color("#3e5c34")
 const COLOR_CONST_BADGE_FG = Color("#eafde5")
+
+static func get_group_title_font_size(base_font_size: int, is_group_title: bool) -> int:
+    return base_font_size + GROUP_TITLE_FONT_SIZE_DELTA if is_group_title else base_font_size

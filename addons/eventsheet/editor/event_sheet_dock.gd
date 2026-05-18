@@ -763,9 +763,9 @@ func _duplicate_row_resources_for_insert(resources: Array) -> Array[Resource]:
     var duplicates: Array[Resource] = []
     for resource in resources:
         if resource is Resource:
-            var duplicate_row: Resource = _duplicate_row_resource_for_insert(resource as Resource)
-            if duplicate_row != null:
-                duplicates.append(duplicate_row)
+            var duplicate_resource: Resource = _duplicate_row_resource_for_insert(resource as Resource)
+            if duplicate_resource != null:
+                duplicates.append(duplicate_resource)
     return duplicates
 
 func _duplicate_row_resource_for_insert(resource: Resource) -> Resource:
@@ -1657,6 +1657,8 @@ func _reorder_local_variable(event_row: EventRow, source_index: int, target_inde
         return false
     var moved_var: LocalVariable = event_row.local_variables[source_index]
     event_row.local_variables.remove_at(source_index)
+    # When moving downward the old slot disappears before insertion, so the raw target index
+    # must be shifted back by one. Drops "after" the target then advance one extra slot.
     var insert_at: int = target_index if source_index > target_index else target_index - 1
     if drop_mode == "after":
         insert_at = mini(insert_at + 1, event_row.local_variables.size())

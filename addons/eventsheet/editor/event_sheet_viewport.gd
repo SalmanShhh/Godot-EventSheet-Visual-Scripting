@@ -1073,9 +1073,10 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
     if span == null:
         return 0.0
     var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
-    var measured_font_size: int = font_size
-    if bool(metadata.get("group_title", false)):
-        measured_font_size += EventSheetPalette.GROUP_TITLE_FONT_SIZE_DELTA
+    var measured_font_size: int = EventSheetPalette.get_group_title_font_size(
+        font_size,
+        bool(metadata.get("group_title", false))
+    )
     var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, measured_font_size).x
     if bool(metadata.get("badge", false)):
         span_width += BADGE_EXTRA_WIDTH
@@ -1254,10 +1255,10 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             span_y = row_top + float(content_line_index * _get_row_base_height()) + 3.0
         var display_text: String = _editing_buffer if index == _editing_row_index and span_index == _editing_span_index else span.text
         var span_width: float = _measure_span_width(span, display_text, font, font_size)
-        var trailing_width: float = float(line_suffix_reservations.get(span_index, 0.0))
-        var current_gap: float = _get_span_gap(metadata, trailing_width > 0.0)
+        var reserved_suffix_width: float = float(line_suffix_reservations.get(span_index, 0.0))
+        var current_gap: float = _get_span_gap(metadata, reserved_suffix_width > 0.0)
         if lane_divider_x > 0.0 and span_lane != "action":
-            var max_condition_right: float = lane_divider_x - EventSheetPalette.ACTION_LANE_PADDING - trailing_width - current_gap
+            var max_condition_right: float = lane_divider_x - EventSheetPalette.ACTION_LANE_PADDING - reserved_suffix_width - current_gap
             span_width = max(min(span_width, max_condition_right - span_x), 10.0)
         elif span_lane == "action" and action_lane_rect.size.x > 0.0:
             var reserved_start: float = float(
@@ -1273,12 +1274,12 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
                 )
             else:
                 span_width = max(
-                    min(span_width, reserved_start - EventSheetPalette.SPAN_GAP - trailing_width - current_gap - span_x),
+                    min(span_width, reserved_start - EventSheetPalette.SPAN_GAP - reserved_suffix_width - current_gap - span_x),
                     EventSheetPalette.MIN_SPAN_RECT_WIDTH
                 )
         else:
             span_width = max(
-                min(span_width, row_right_limit - trailing_width - current_gap - span_x),
+                min(span_width, row_right_limit - reserved_suffix_width - current_gap - span_x),
                 EventSheetPalette.MIN_SPAN_RECT_WIDTH
             )
         span.rect = Rect2(
@@ -1288,7 +1289,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             _get_row_base_height() - EventSheetPalette.SPAN_VERTICAL_INSET
         )
         # Store absolute X for the next span start on this line.
-        var next_span_start_x: float = span.rect.end.x + _get_span_gap(metadata, trailing_width > 0.0)
+        var next_span_start_x: float = span.rect.end.x + _get_span_gap(metadata, reserved_suffix_width > 0.0)
         if span_lane == "action":
             if not bool(metadata.get("align_right", false)):
                 action_line_x[int(metadata.get("line_index", 0))] = next_span_start_x
