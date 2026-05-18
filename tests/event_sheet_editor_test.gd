@@ -1109,6 +1109,7 @@ static func run() -> bool:
     ui_config.action_text_color = Color(0.8, 0.4, 0.2)
     ui_config.action_chip_border_color = Color(0.2, 0.9, 0.5)
     ui_config.trigger_badge_bg_color = Color(0.5, 0.1, 0.8)
+    ui_config.font_size = 17
     var config_renderer := EventRowRenderer.new()
     config_renderer.set_ui_config(ui_config)
     all_passed = _check("renderer accepts ui config override", config_renderer._ui_config == ui_config, true) and all_passed
@@ -1117,6 +1118,7 @@ static func run() -> bool:
     all_passed = _check("renderer uses ui config for trigger badge bg", config_renderer._resolve_badge_colors({"badge_style": "trigger"}).get("bg"), ui_config.trigger_badge_bg_color) and all_passed
     dock.apply_ui_config(ui_config)
     all_passed = _check("dock apply_ui_config passes config to renderer", dock.get_viewport_control()._renderer._ui_config == ui_config, true) and all_passed
+    all_passed = _check("viewport uses ui config font size override", dock.get_viewport_control()._get_font_size(), 17) and all_passed
 
     # ── Layout regression coverage: group/variable/badge-chip overlap ──────────
     var overlap_fix_sheet := EventSheetResource.new()
@@ -1291,7 +1293,7 @@ static func _line_spans_do_not_overlap(row_data: EventRowData, lane: String = ""
         var previous_end: float = -INF
         for rect in rects:
             var span_rect: Rect2 = rect as Rect2
-            if span_rect.position.x + SPAN_OVERLAP_EPSILON < previous_end:
+            if span_rect.position.x < previous_end - SPAN_OVERLAP_EPSILON:
                 return false
             previous_end = max(previous_end, span_rect.end.x)
     return true

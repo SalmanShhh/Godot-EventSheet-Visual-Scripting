@@ -1657,8 +1657,9 @@ func _reorder_local_variable(event_row: EventRow, source_index: int, target_inde
         return false
     var moved_var: LocalVariable = event_row.local_variables[source_index]
     event_row.local_variables.remove_at(source_index)
-    # When moving downward the old slot disappears before insertion, so the raw target index
-    # must be shifted back by one. Drops "after" the target then advance one extra slot.
+    # When moving upward the target index is still correct after removal; when moving
+    # downward the old slot disappears first, so the insertion point must shift back by one.
+    # Drops "after" the target then advance one extra slot from that normalized position.
     var insert_at: int = target_index if source_index > target_index else target_index - 1
     if drop_mode == "after":
         insert_at = mini(insert_at + 1, event_row.local_variables.size())
