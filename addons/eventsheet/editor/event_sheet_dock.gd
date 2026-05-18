@@ -9,10 +9,12 @@ const CONDITION_MENU_ADD := 2
 const CONDITION_MENU_REPLACE := 3
 const CONDITION_MENU_INVERT := 4
 const CONDITION_MENU_DELETE := 5
+const CONDITION_MENU_TOGGLE_ENABLED := 6
 const ACTION_MENU_EDIT := 1
 const ACTION_MENU_ADD := 2
 const ACTION_MENU_REPLACE := 3
 const ACTION_MENU_DELETE := 4
+const ACTION_MENU_TOGGLE_ENABLED := 5
 const ROW_MENU_ADD_SUB_EVENT := 1
 const ROW_MENU_ADD_EVENT_BELOW := 2
 const ROW_MENU_ADD_GROUP_BELOW := 3
@@ -23,6 +25,7 @@ const ROW_MENU_DELETE := 7
 const ROW_MENU_TOGGLE_CONDITION_BLOCK := 8
 const ROW_MENU_TOGGLE_GROUP_FOLD := 9
 const ROW_MENU_ADD_SUB_CONDITION := 10
+const ROW_MENU_TOGGLE_ENABLED := 11
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -375,6 +378,7 @@ func _build_context_menus() -> void:
     _condition_context_menu.add_item("Replace Condition", CONDITION_MENU_REPLACE)
     _condition_context_menu.add_separator()
     _condition_context_menu.add_item("Invert Condition", CONDITION_MENU_INVERT)
+    _condition_context_menu.add_item("Disable Condition", CONDITION_MENU_TOGGLE_ENABLED)
     _condition_context_menu.add_separator()
     _condition_context_menu.add_item("Delete Condition", CONDITION_MENU_DELETE)
     _condition_context_menu.id_pressed.connect(_on_condition_context_menu_id_pressed)
@@ -385,6 +389,7 @@ func _build_context_menus() -> void:
     _action_context_menu.add_item("Add Action", ACTION_MENU_ADD)
     _action_context_menu.add_item("Replace Action", ACTION_MENU_REPLACE)
     _action_context_menu.add_separator()
+    _action_context_menu.add_item("Disable Action", ACTION_MENU_TOGGLE_ENABLED)
     _action_context_menu.add_item("Delete Action", ACTION_MENU_DELETE)
     _action_context_menu.id_pressed.connect(_on_action_context_menu_id_pressed)
     add_child(_action_context_menu)
@@ -397,6 +402,8 @@ func _build_context_menus() -> void:
     _row_context_menu.add_item("Add Event Below", ROW_MENU_ADD_EVENT_BELOW)
     _row_context_menu.add_item("Add Group Below", ROW_MENU_ADD_GROUP_BELOW)
     _row_context_menu.add_item("Add Comment Below", ROW_MENU_ADD_COMMENT_BELOW)
+    _row_context_menu.add_separator()
+    _row_context_menu.add_item("Disable Row", ROW_MENU_TOGGLE_ENABLED)
     _row_context_menu.add_separator()
     _row_context_menu.add_item("Copy", ROW_MENU_COPY)
     _row_context_menu.add_item("Paste", ROW_MENU_PASTE)
@@ -1267,6 +1274,12 @@ func _configure_context_menu(menu: PopupMenu) -> void:
         var invert_index: int = menu.get_item_index(CONDITION_MENU_INVERT)
         if invert_index >= 0:
             menu.set_item_text(invert_index, "Remove Inversion" if _context_condition_is_negated() else "Invert Condition")
+        var condition_toggle_index: int = menu.get_item_index(CONDITION_MENU_TOGGLE_ENABLED)
+        if condition_toggle_index >= 0:
+            menu.set_item_text(
+                condition_toggle_index,
+                "Enable Condition" if _context_ace_is_disabled() else "Disable Condition"
+            )
     elif menu == _row_context_menu:
         var toggle_index: int = menu.get_item_index(ROW_MENU_TOGGLE_CONDITION_BLOCK)
         if toggle_index >= 0:
@@ -1297,6 +1310,12 @@ func _configure_context_menu(menu: PopupMenu) -> void:
                     group_toggle_index,
                     "Open Group" if context_group.is_collapsed() else "Close Group"
                 )
+        var row_toggle_index: int = menu.get_item_index(ROW_MENU_TOGGLE_ENABLED)
+        if row_toggle_index >= 0:
+            menu.set_item_text(
+                row_toggle_index,
+                "Enable Row" if _context_row_is_disabled() else "Disable Row"
+            )
     elif menu == _variable_context_menu:
         var has_variable: bool = not _context_variable.is_empty()
         var convert_index: int = menu.get_item_index(VARIABLE_MENU_CONVERT_SCOPE)
@@ -1318,6 +1337,13 @@ func _configure_context_menu(menu: PopupMenu) -> void:
                     const_index,
                     "Unset Constant" if is_constant else "Set Constant"
                 )
+    elif menu == _action_context_menu:
+        var action_toggle_index: int = menu.get_item_index(ACTION_MENU_TOGGLE_ENABLED)
+        if action_toggle_index >= 0:
+            menu.set_item_text(
+                action_toggle_index,
+                "Enable Action" if _context_ace_is_disabled() else "Disable Action"
+            )
 
 func _on_condition_context_menu_id_pressed(id: int) -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
@@ -1333,6 +1359,8 @@ func _on_condition_context_menu_id_pressed(id: int) -> void:
                 _ace_picker.open(str(replace_context.get("mode", "replace_condition")), false, _context_row.source_resource, replace_context)
         CONDITION_MENU_INVERT:
             _toggle_context_condition_inversion()
+        CONDITION_MENU_TOGGLE_ENABLED:
+            _toggle_context_ace_enabled()
         CONDITION_MENU_DELETE:
             _delete_context_ace()
 
@@ -1348,6 +1376,8 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
             var replace_context: Dictionary = _build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
             if not replace_context.is_empty():
                 _ace_picker.open("replace_action", false, _context_row.source_resource, replace_context)
+        ACTION_MENU_TOGGLE_ENABLED:
+            _toggle_context_ace_enabled()
         ACTION_MENU_DELETE:
             _delete_context_ace()
 
@@ -1380,6 +1410,8 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
             _toggle_context_group_fold()
         ROW_MENU_ADD_SUB_CONDITION:
             _open_sub_condition_picker_for_context_row()
+        ROW_MENU_TOGGLE_ENABLED:
+            _toggle_context_row_enabled()
 
 func _on_variable_context_menu_id_pressed(id: int) -> void:
     if _context_variable.is_empty():
@@ -1436,6 +1468,81 @@ func _toggle_context_condition_inversion() -> void:
     )
     if toggled:
         _mark_dirty("Updated condition inversion.")
+
+func _context_ace_is_disabled() -> bool:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        return false
+    var event_row: EventRow = _context_row.source_resource as EventRow
+    var metadata: Dictionary = _context_hit.get("span_metadata", {})
+    var kind: String = str(metadata.get("kind", ""))
+    var ace_index: int = int(metadata.get("ace_index", -1))
+    match kind:
+        "trigger":
+            return event_row.trigger != null and not event_row.trigger.enabled
+        "condition":
+            return ace_index >= 0 and ace_index < event_row.conditions.size() and not event_row.conditions[ace_index].enabled
+        "action":
+            return ace_index >= 0 and ace_index < event_row.actions.size() and event_row.actions[ace_index] is ACEAction and not ((event_row.actions[ace_index] as ACEAction).enabled)
+    return false
+
+func _toggle_context_ace_enabled() -> void:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        return
+    var event_row: EventRow = _context_row.source_resource as EventRow
+    var metadata: Dictionary = _context_hit.get("span_metadata", {})
+    var kind: String = str(metadata.get("kind", ""))
+    var ace_index: int = int(metadata.get("ace_index", -1))
+    var changed: bool = _perform_undoable_sheet_edit("Toggle ACE Enabled", func() -> bool:
+        match kind:
+            "trigger":
+                if event_row.trigger != null:
+                    event_row.trigger.enabled = not event_row.trigger.enabled
+                    return true
+            "condition":
+                if ace_index >= 0 and ace_index < event_row.conditions.size():
+                    event_row.conditions[ace_index].enabled = not event_row.conditions[ace_index].enabled
+                    return true
+            "action":
+                if ace_index >= 0 and ace_index < event_row.actions.size() and event_row.actions[ace_index] is ACEAction:
+                    var target_action: ACEAction = event_row.actions[ace_index] as ACEAction
+                    target_action.enabled = not target_action.enabled
+                    return true
+        return false
+    )
+    if changed:
+        _mark_dirty("Updated ACE enabled state.")
+
+func _context_row_is_disabled() -> bool:
+    if _context_row == null or _context_row.source_resource == null:
+        return false
+    if _context_row.source_resource is EventRow:
+        return not (_context_row.source_resource as EventRow).enabled
+    if _context_row.source_resource is EventGroup:
+        return not (_context_row.source_resource as EventGroup).enabled
+    if _context_row.source_resource is CommentRow:
+        return not (_context_row.source_resource as CommentRow).enabled
+    return false
+
+func _toggle_context_row_enabled() -> void:
+    if _context_row == null or _context_row.source_resource == null:
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Toggle Row Enabled", func() -> bool:
+        if _context_row.source_resource is EventRow:
+            var event_row: EventRow = _context_row.source_resource as EventRow
+            event_row.enabled = not event_row.enabled
+            return true
+        if _context_row.source_resource is EventGroup:
+            var group: EventGroup = _context_row.source_resource as EventGroup
+            group.enabled = not group.enabled
+            return true
+        if _context_row.source_resource is CommentRow:
+            var comment_row: CommentRow = _context_row.source_resource as CommentRow
+            comment_row.enabled = not comment_row.enabled
+            return true
+        return false
+    )
+    if changed:
+        _mark_dirty("Updated row enabled state.")
 
 func _toggle_context_condition_block() -> void:
     var selected_events: Array[EventRow] = _get_selected_event_rows_from_context()
@@ -1656,7 +1763,8 @@ func _on_variable_dialog_confirmed(
             _current_sheet.variables[var_name] = {
                 "type": type_name,
                 "default": default_value,
-                "const": resolved_constant
+                "const": resolved_constant,
+                "exposed": true
             }
             message["text"] = "%s global variable %s." % [action_verb, var_name]
             return true
@@ -1950,7 +2058,8 @@ func _convert_variable_scope(entry: Dictionary, target_scope: String, target_eve
             _current_sheet.variables[var_name] = {
                 "type": local_var.type_name,
                 "default": local_var.default_value,
-                "const": local_var.is_constant
+                "const": local_var.is_constant,
+                "exposed": true
             }
             owner_event.local_variables.remove_at(owner_event.local_variables.find(local_var))
             return true

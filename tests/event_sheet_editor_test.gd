@@ -324,12 +324,20 @@ static func run() -> bool:
     dock._context_hit = {"span_metadata": {"kind": "condition", "ace_index": 1}, "span_index": _find_last_span_index_by_kind(or_row_data, "condition")}
     dock._on_condition_context_menu_id_pressed(4)
     all_passed = _check("condition context menu toggles inversion", ((dock.get_current_sheet().events[0] as EventRow).conditions[1] as ACECondition).negated, false) and all_passed
+    dock._on_condition_context_menu_id_pressed(EventSheetDock.CONDITION_MENU_TOGGLE_ENABLED)
+    all_passed = _check("condition context menu toggles enabled state", ((dock.get_current_sheet().events[0] as EventRow).conditions[1] as ACECondition).enabled, false) and all_passed
     dock._context_row = or_row_data
     dock._context_hit = {"span_metadata": {}, "span_index": -1}
     dock._show_popup_menu(dock._row_context_menu, Vector2(320.0, 240.0))
     all_passed = _check("row context menu opens at requested cursor position", dock._row_context_menu.position, Vector2i(320, 240)) and all_passed
     dock._on_row_context_menu_id_pressed(8)
     all_passed = _check("row context menu toggles or block to and block", ((dock.get_current_sheet().events[0] as EventRow).condition_mode), EventRow.ConditionMode.AND) and all_passed
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_ENABLED)
+    all_passed = _check("row context menu toggles event enabled state", ((dock.get_current_sheet().events[0] as EventRow).enabled), false) and all_passed
+    dock._context_row = dock_viewport.get_flat_rows()[0].get("row")
+    dock._context_hit = {"span_metadata": {"kind": "action", "ace_index": 0}, "span_index": _find_span_index_by_kind(dock_viewport.get_flat_rows()[0].get("row"), "action")}
+    dock._on_action_context_menu_id_pressed(EventSheetDock.ACTION_MENU_TOGGLE_ENABLED)
+    all_passed = _check("action context menu toggles enabled state", (((dock.get_current_sheet().events[0] as EventRow).actions[0]) as ACEAction).enabled, false) and all_passed
     all_passed = _check("or block toggle is second row menu item", dock._row_context_menu.get_item_id(1), EventSheetDock.ROW_MENU_TOGGLE_CONDITION_BLOCK) and all_passed
     var compile_result: Dictionary = SheetCompiler.compile(dock.get_current_sheet(), "user://event_sheet_or_block_test.gd")
     all_passed = _check("compiler uses and join after row conversion", str(compile_result.get("output", "")).contains(" and "), true) and all_passed
@@ -360,6 +368,33 @@ static func run() -> bool:
         trigger_condition_row.spans[rendered_trigger_index].rect.position.y < trigger_condition_row.spans[rendered_condition_index].rect.position.y,
         true
     ) and all_passed
+
+    var empty_condition_sheet := EventSheetResource.new()
+    var empty_condition_event := EventRow.new()
+    empty_condition_event.actions = [ACEAction.new()]
+    (empty_condition_event.actions[0] as ACEAction).provider_id = "Core"
+    (empty_condition_event.actions[0] as ACEAction).ace_id = "QueueFree"
+    empty_condition_sheet.events = [empty_condition_event]
+    dock.setup(empty_condition_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var empty_condition_row: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
+    all_passed = _check("events without authored conditions render Every Tick fallback text", _row_contains_text(empty_condition_row, "Every Tick"), true) and all_passed
+
+    var else_mode_sheet := EventSheetResource.new()
+    var else_event := EventRow.new()
+    else_event.else_mode = EventRow.ElseMode.ELSE
+    var elif_event := EventRow.new()
+    elif_event.else_mode = EventRow.ElseMode.ELIF
+    var elif_condition := ACECondition.new()
+    elif_condition.provider_id = "Core"
+    elif_condition.ace_id = "Always"
+    elif_event.conditions = [elif_condition]
+    else_mode_sheet.events = [else_event, elif_event]
+    dock.setup(else_mode_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var else_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    all_passed = _check("else rows render explicit Else marker", _row_contains_text(else_rows[0].get("row"), "Else"), true) and all_passed
+    all_passed = _check("elseif rows render explicit Else If marker", _row_contains_text(else_rows[1].get("row"), "Else If"), true) and all_passed
 
     dock_viewport._toggle_row_fold(1)
     all_passed = _check("folding hides child rows", dock_viewport.get_total_row_count(), 2) and all_passed
@@ -476,6 +511,26 @@ static func run() -> bool:
     dock_viewport._editing_buffer = "Rewritten twice"
     dock_viewport._commit_edit()
     all_passed = _check("comment rewrite flow can edit an existing comment multiple times", ((dock.get_current_sheet().events[0]) as CommentRow).text, "Rewritten twice") and all_passed
+
+    var subtree_sheet := EventSheetResource.new()
+    var subtree_parent := EventRow.new()
+    subtree_parent.comment = "parent"
+    var subtree_child := EventRow.new()
+    subtree_child.comment = "child"
+    var subtree_grandchild := EventRow.new()
+    subtree_grandchild.comment = "grandchild"
+    subtree_child.sub_events = [subtree_grandchild]
+    subtree_parent.sub_events = [subtree_child]
+    subtree_sheet.events = [subtree_parent]
+    dock.setup(subtree_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var subtree_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock_viewport._select_from_click(0, -1, false)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("event block selection includes descendant sub-events", editor_state.get("selected_row_count", 0), 3) and all_passed
+    dock_viewport._select_from_click(1, -1, true)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("ctrl click can unselect a selected sub-event row", editor_state.get("selected_row_count", 0), 2) and all_passed
 
     var sub_condition_sheet := EventSheetResource.new()
     var parent_event := EventRow.new()
@@ -828,6 +883,34 @@ static func run() -> bool:
     var ace_drag_rect: Rect2 = drag_preview_layout.get("ace_drag_rect", Rect2())
     all_passed = _check("ace drag target uses horizontal insertion after cursor midpoint", dock_viewport._drag_ace_insert_mode, "after") and all_passed
     all_passed = _check("ace drag preview renders as a thin vertical placement line", ace_drag_rect.size.x <= 4.0, true) and all_passed
+    var ace_drag_source_action := ACEAction.new()
+    ace_drag_source_action.provider_id = "Core"
+    ace_drag_source_action.ace_id = "QueueFree"
+    ace_drag_source.actions = [ace_drag_source_action]
+    var ace_drag_target_action := ACEAction.new()
+    ace_drag_target_action.provider_id = "Core"
+    ace_drag_target_action.ace_id = "SetVar"
+    ace_drag_target.actions = [ace_drag_target_action]
+    dock.setup(ace_drag_sheet)
+    dock_viewport = dock.get_viewport_control()
+    ace_drag_rows = dock_viewport.get_flat_rows()
+    drag_target_row_data = ace_drag_rows[1].get("row")
+    dock_viewport.get_row_layout_for_test(1, 640.0)
+    var first_target_action_index: int = _find_span_index_by_kind(drag_target_row_data, "action")
+    var first_target_action_span: SemanticSpan = drag_target_row_data.spans[first_target_action_index]
+    dock_viewport._drag_ace_entries = [dock_viewport._build_ace_drag_entry(ace_drag_rows[0].get("row"), "action", 0)]
+    dock_viewport._update_ace_drag_target(
+        {
+            "row_index": 1,
+            "span_index": first_target_action_index,
+            "lane": "action",
+            "span_metadata": first_target_action_span.metadata
+        },
+        first_target_action_span.rect.get_center() + Vector2(first_target_action_span.rect.size.x * 0.35, 0.0)
+    )
+    drag_preview_layout = dock_viewport.get_row_layout_for_test(1, 640.0)
+    ace_drag_rect = drag_preview_layout.get("ace_drag_rect", Rect2())
+    all_passed = _check("action drag preview also renders as a thin vertical placement line", ace_drag_rect.size.x <= 4.0, true) and all_passed
     dock_viewport._clear_ace_drag()
     dock._on_viewport_ace_drop_requested(
         [{"source_resource": ace_drag_source, "kind": "condition", "ace_index": 0}],
@@ -1181,6 +1264,10 @@ static func run() -> bool:
         all_passed = _check("ace apply appends action", ((dock.get_current_sheet().events[0] as EventRow).actions.size()) >= 2, true) and all_passed
         dock._on_ace_picker_selected(action_definition, {"mode": "replace_action", "selected_resource": dock.get_current_sheet().events[0], "ace_index": 0, "existing_params": {"var_name": "ammo", "value": "12"}})
         all_passed = _check("editing ace with params opens param dialog", dock._ace_params._dialog.visible, true) and all_passed
+        all_passed = _check("params dialog adds edit cue in title for replace flows", dock._ace_params._dialog.title.contains("(Edit)"), true) and all_passed
+        all_passed = _check("params dialog exposes flow-aware hint text", dock._ace_params._hint.text.contains("Re-editing"), true) and all_passed
+        dock._ace_params._focus_first_field()
+        all_passed = _check("params dialog focuses first field on open", dock._ace_params._fields.size() > 0 and ((dock._ace_params._fields.values()[0] as Control).has_focus()), true) and all_passed
     if new_condition_definition != null:
         dock.setup(EventSheetResource.new())
         dock._apply_ace_definition(new_condition_definition, {}, {"mode": "new_condition_event", "selected_resource": null})

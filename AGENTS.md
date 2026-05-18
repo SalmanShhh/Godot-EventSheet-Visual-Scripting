@@ -42,6 +42,7 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin that provides a Construct-sty
 - `docs/EVENTSHEET_THEME_EDITABILITY.md` — designer-facing theme workflow
 - `docs/EVENTSHEET_THEME_TOKEN_SPEC.md` — Construct-inspired token naming/mapping
 - `docs/EVENTSHEET_ALIGNMENT_GUIDE.md` — stacked layout tuning
+- `docs/EVENTSHEET_ARCHITECTURE_SLICES.md` — slice-by-slice completion/scaffold/defer tracker
 - `docs/elements/*.md` — template scene guidance
 
 ## Current known gaps

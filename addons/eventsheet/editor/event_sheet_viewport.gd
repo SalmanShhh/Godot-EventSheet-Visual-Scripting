@@ -64,6 +64,9 @@ const MIN_SPAN_WIDTH := 10.0
 
 var _renderer: EventRowRenderer = EventRowRenderer.new()
 var _layout_cache: RowLayoutCache = RowLayoutCache.new()
+var _selection_helper: ViewportSelectionHelper = ViewportSelectionHelper.new()
+var _hit_test_helper: ViewportHitTestHelper = ViewportHitTestHelper.new()
+var _drag_preview_helper: ViewportDragPreviewHelper = ViewportDragPreviewHelper.new()
 var _ace_registry: EventSheetACERegistry = EventSheetACERegistry.new()
 var _sheet: EventSheetResource = null
 var _editor_style: EventSheetEditorStyle = EventSheetEditorStyle.new()
@@ -1109,6 +1112,35 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
     var event_style: EventSheetEventStyle = _get_event_style()
     var condition_style_meta: Dictionary = _build_element_style_metadata(_get_condition_style())
     var action_style_meta: Dictionary = _build_element_style_metadata(_get_action_style())
+    if event_row.else_mode == EventRow.ElseMode.ELSE:
+        spans.append(
+            _make_span(
+                "Else",
+                SemanticSpan.SpanType.KEYWORD,
+                {
+                    "lane": "condition",
+                    "kind": "else_keyword",
+                    "badge": true,
+                    "hoverable": false,
+                    "line_index": condition_line_index
+                }.merged(condition_style_meta, true)
+            )
+        )
+        condition_line_index += 1
+    elif event_row.else_mode == EventRow.ElseMode.ELIF:
+        spans.append(
+            _make_span(
+                "Else If",
+                SemanticSpan.SpanType.KEYWORD,
+                {
+                    "lane": "condition",
+                    "kind": "else_keyword",
+                    "badge": true,
+                    "hoverable": false,
+                    "line_index": condition_line_index
+                }.merged(condition_style_meta, true)
+            )
+        )
     if event_row.trigger != null:
         var trigger_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
         trigger_badge_meta["badge_bg"] = event_style.trigger_badge_background_color
@@ -1125,6 +1157,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     "lane": "condition",
                     "kind": "trigger",
                     "ace_index": 0,
+                    "ace_enabled": event_row.trigger.enabled,
                     "chip": true,
                     "line_index": condition_line_index
                 }.merged(condition_style_meta, true)
@@ -1170,6 +1203,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     "lane": "condition",
                     "kind": "condition",
                     "ace_index": inline_trigger_condition_index,
+                    "ace_enabled": inline_trigger.enabled,
                     "chip": true,
                     "line_index": condition_line_index,
                     "rendered_as_trigger": true
@@ -1206,16 +1240,17 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                         "lane": "condition",
                         "kind": "condition",
                         "ace_index": condition_index,
+                        "ace_enabled": condition.enabled,
                         "chip": true,
                         "line_index": line_index
                     }.merged(condition_style_meta, true)
                 )
             )
             condition_line_index += 1
-    if spans.is_empty():
+    if spans.is_empty() and event_row.else_mode != EventRow.ElseMode.ELSE:
         spans.append(
             _make_span(
-                "Always",
+                "Every Tick",
                 SemanticSpan.SpanType.CONDITION,
                 {
                     "lane": "condition",
@@ -1237,6 +1272,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                             "lane": "action",
                             "kind": "action",
                             "ace_index": action_index,
+                            "ace_enabled": (action_resource as ACEAction).enabled,
                             "chip": true,
                             "line_index": action_line_index
                         }.merged(action_style_meta, true)
@@ -1605,29 +1641,24 @@ func _get_logical_canvas_width() -> float:
     return max(max(size.x, _get_scroll_width()), 640.0) / max(_zoom_factor, 0.001)
 
 func _select_row(row_index: int, span_index: int = -1) -> void:
-    if _flat_rows.is_empty():
-        _selected_row_uids.clear()
-        _selected_span_indices.clear()
-        _selected_row_index = -1
-        _selected_span_index = -1
-        queue_redraw()
-        return
-    _selected_row_index = clampi(row_index, 0, _flat_rows.size() - 1)
-    _selected_span_index = span_index
-    _selection_anchor_index = _selected_row_index
+    # Selection state is delegated so event-body selection can include descendant
+    # rows without duplicating toggle/anchor bookkeeping in multiple call sites.
+    var selection_state: Dictionary = _selection_helper.build_single_selection(
+        _flat_rows,
+        row_index,
+        span_index,
+        _focused_lane,
+        _collect_descendant_row_uids,
+        _resolve_lane_for_row
+    )
+    _selected_row_uids = selection_state.get("selected_row_uids", {}).duplicate(true)
+    _selected_span_indices = selection_state.get("selected_span_indices", {}).duplicate(true)
+    _selected_row_index = int(selection_state.get("selected_row_index", -1))
+    _selected_span_index = int(selection_state.get("selected_span_index", -1))
+    _selection_anchor_index = int(selection_state.get("selection_anchor_index", -1))
+    _focused_lane = str(selection_state.get("focused_lane", _focused_lane))
     var selected_row: EventRowData = _row_at(_selected_row_index)
-    _selected_row_uids.clear()
-    _selected_span_indices.clear()
-    if selected_row != null:
-        _selected_row_uids[selected_row.row_uid] = true
-        if span_index >= 0:
-            _selected_span_indices[selected_row.row_uid] = [span_index]
-        _focused_lane = _resolve_lane_for_row(selected_row, span_index)
-    for index in range(_flat_rows.size()):
-        var row_data: EventRowData = _flat_rows[index].get("row")
-        if row_data == null:
-            continue
-        row_data.selected = _selected_row_uids.has(row_data.row_uid)
+    _selection_helper.sync_row_selection_flags(_flat_rows, _selected_row_uids)
     selection_changed.emit(selected_row)
     queue_redraw()
 
@@ -1691,20 +1722,12 @@ func _clear_selection() -> void:
     queue_redraw()
 
 func _sync_row_selection_flags() -> void:
-    for entry in _flat_rows:
-        var row_data: EventRowData = entry.get("row")
-        if row_data == null:
-            continue
-        row_data.selected = _selected_row_uids.has(row_data.row_uid)
+    _selection_helper.sync_row_selection_flags(_flat_rows, _selected_row_uids)
 
 func _set_hover_state(row_index: int, span_index: int) -> void:
     _hovered_row_index = row_index
     _hovered_span_index = span_index
-    for index in range(_flat_rows.size()):
-        var row_data: EventRowData = _flat_rows[index].get("row")
-        if row_data == null:
-            continue
-        row_data.hovered = index == _hovered_row_index
+    _selection_helper.apply_hover_state(_flat_rows, _hovered_row_index)
     queue_redraw()
 
 func _toggle_row_fold(row_index: int) -> void:
@@ -1824,37 +1847,14 @@ func _hit_test(position: Vector2) -> Dictionary:
         _get_font_size()
     )
     var row_data: EventRowData = _row_at(row_index)
-    if row_data == null:
-        return {}
-    var result := {"row_index": row_index, "span_index": -1, "fold": false}
-    var fold_rect: Rect2 = layout.get("fold_rect", Rect2())
-    if fold_rect.size != Vector2.ZERO and fold_rect.has_point(position):
-        result["fold"] = true
-        return result
-    for span_index in range(row_data.spans.size()):
-        var span: SemanticSpan = row_data.spans[span_index]
-        if span == null or not span.rect.has_point(position):
-            continue
-        if span.hoverable:
-            result["span_index"] = span_index
-            result["lane"] = _resolve_span_lane(span)
-            result["span_metadata"] = span.metadata if span.metadata is Dictionary else {}
-            return result
-        if span.metadata is Dictionary and (span.metadata as Dictionary).has("condition_index"):
-            var condition_span_index: int = _find_condition_span_index(row_data, int((span.metadata as Dictionary).get("condition_index", -1)))
-            if condition_span_index >= 0:
-                var condition_span: SemanticSpan = row_data.spans[condition_span_index]
-                result["span_index"] = condition_span_index
-                result["lane"] = _resolve_span_lane(condition_span)
-                result["span_metadata"] = condition_span.metadata if condition_span.metadata is Dictionary else {}
-                return result
-    var divider_x: float = float(layout.get("lane_divider_x", -1.0))
-    if divider_x > 0.0:
-        result["lane"] = "action" if position.x >= divider_x else "condition"
-    var gutter_rect: Rect2 = layout.get("gutter_rect", Rect2())
-    if gutter_rect.size != Vector2.ZERO and gutter_rect.has_point(position):
-        result["gutter"] = true
-    return result
+    return _hit_test_helper.hit_test_row(
+        position,
+        row_index,
+        layout,
+        row_data,
+        _resolve_span_lane,
+        _find_condition_span_index
+    )
 
 func _maybe_request_ace_edit(hit: Dictionary, row_index: int) -> bool:
     var row_data: EventRowData = _row_at(row_index)
@@ -1990,6 +1990,20 @@ func _get_selected_row_indices() -> Array[int]:
             indices.append(index)
     return indices
 
+func _collect_descendant_row_uids(row_data: EventRowData) -> Array:
+    var uids: Array = []
+    if row_data == null:
+        return uids
+    var stack: Array = row_data.children.duplicate()
+    while not stack.is_empty():
+        var child: EventRowData = stack.pop_back() as EventRowData
+        if child == null:
+            continue
+        uids.append(child.row_uid)
+        for grand_child in child.children:
+            stack.append(grand_child)
+    return uids
+
 func _get_draggable_ace_entries(
     row_data: EventRowData,
     kind: String,
@@ -2066,51 +2080,20 @@ func _build_ace_drag_preview_rect(
     condition_lane_rect: Rect2,
     action_lane_rect: Rect2
 ) -> Rect2:
-    var lane_rect: Rect2 = action_lane_rect if lane == "action" else condition_lane_rect
-    if lane_rect.size == Vector2.ZERO:
-        return Rect2()
-    var preview_height: float = max(min(_get_event_line_height(_get_font_size()) - 8.0, lane_rect.size.y - 8.0), 10.0)
-    var preview_y: float = lane_rect.position.y + 4.0
-    var ace_span_kind: String = "action" if lane == "action" else "condition"
-    var ace_span_indices: Array[int] = _get_lane_ace_span_indices(row_data, ace_span_kind)
-    if ace_index >= 0:
-        var target_span_index: int = _find_ace_span_index(row_data, ace_span_kind, ace_index)
-        if target_span_index >= 0 and target_span_index < row_data.spans.size():
-            var target_span: SemanticSpan = row_data.spans[target_span_index]
-            var preview_x: float = (
-                target_span.rect.end.x + (_get_span_gap(target_span) * 0.5)
-                if insert_mode == "after"
-                else target_span.rect.position.x - (_get_span_gap(target_span) * 0.5)
-            )
-            preview_x = clampf(preview_x, lane_rect.position.x + 4.0, lane_rect.end.x - 4.0)
-            preview_y = target_span.rect.position.y + 2.0
-            preview_height = max(target_span.rect.size.y - 4.0, 10.0)
-            return Rect2(preview_x - 1.5, preview_y, 3.0, preview_height)
-    if not ace_span_indices.is_empty():
-        var edge_span: SemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
-        var edge_preview_x: float = clampf(
-            edge_span.rect.end.x + (_get_span_gap(edge_span) * 0.5),
-            lane_rect.position.x + 4.0,
-            lane_rect.end.x - 4.0
-        )
-        return Rect2(edge_preview_x - 1.5, edge_span.rect.position.y + 2.0, 3.0, max(edge_span.rect.size.y - 4.0, 10.0))
-    if lane == "condition":
-        var trigger_span_index: int = _find_ace_span_index(row_data, "trigger", 0)
-        if trigger_span_index >= 0 and trigger_span_index < row_data.spans.size():
-            var trigger_span: SemanticSpan = row_data.spans[trigger_span_index]
-            var trigger_preview_x: float = clampf(
-                trigger_span.rect.end.x + (_get_span_gap(trigger_span) * 0.5),
-                lane_rect.position.x + 4.0,
-                lane_rect.end.x - 4.0
-            )
-            return Rect2(trigger_preview_x - 1.5, trigger_span.rect.position.y + 2.0, 3.0, max(trigger_span.rect.size.y - 4.0, 10.0))
-    var empty_preview_x: float = (
-        lane_rect.end.x - float(_get_event_style().action_lane_padding)
-        if lane == "action"
-        else lane_rect.position.x + float(_get_event_style().condition_lane_padding)
+    return _drag_preview_helper.build_ace_drag_preview_rect(
+        row_data,
+        lane,
+        ace_index,
+        insert_mode,
+        condition_lane_rect,
+        action_lane_rect,
+        _get_event_line_height(_get_font_size()),
+        float(_get_event_style().action_lane_padding),
+        float(_get_event_style().condition_lane_padding),
+        _find_ace_span_index,
+        _get_lane_ace_span_indices,
+        _get_span_gap
     )
-    empty_preview_x = clampf(empty_preview_x, lane_rect.position.x + 4.0, lane_rect.end.x - 4.0)
-    return Rect2(empty_preview_x - 1.5, preview_y, 3.0, preview_height)
 
 func _build_drag_feedback_rect(
     preview_rect: Rect2,

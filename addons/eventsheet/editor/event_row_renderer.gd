@@ -97,7 +97,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     _draw_indent_guides(control, row_rect, row_data.indent)
     if row_data.selected and not has_span_selection:
         control.draw_rect(row_rect, selection_fill, true)
-    if row_data.hovered:
+    var hover_row_fill: bool = row_data.hovered
+    if row_data.row_type == EventRowData.RowType.EVENT and hovered_span_index >= 0:
+        hover_row_fill = false
+    if hover_row_fill:
         control.draw_rect(row_rect, hover_fill, true)
     _draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
     _draw_icon(control, icon_rect, row_data)
@@ -232,6 +235,9 @@ func _draw_spans(
             _draw_badge_span(control, span, font, font_size, metadata)
             continue
         var color: Color = metadata.get("text_color", _get_span_color(span.type, event_style))
+        var ace_enabled: bool = bool(metadata.get("ace_enabled", true))
+        if not ace_enabled:
+            color = color.lerp(TEXT_MUTED, 0.6)
         if row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false)):
             color = event_style.group_title_color if event_style != null else EventSheetPalette.COLOR_GROUP_TITLE
         var draw_text: String = editing_buffer if span_index == editing_span_index else span.text
@@ -247,6 +253,15 @@ func _draw_spans(
         var right_padding: float = text_padding if bool(metadata.get("chip", false)) else 2.0
         var text_width: float = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
         control.draw_string(font, Vector2(text_x, baseline_y), draw_text, HORIZONTAL_ALIGNMENT_LEFT, text_width, draw_font_size, color)
+        if not ace_enabled:
+            var strike_y: float = span.rect.get_center().y
+            control.draw_line(
+                Vector2(span.rect.position.x, strike_y),
+                Vector2(span.rect.end.x, strike_y),
+                color,
+                1.0,
+                true
+            )
         if span_index == editing_span_index:
             var prefix: String = draw_text.substr(0, clamp(editing_caret, 0, draw_text.length()))
             var prefix_width: float = font.get_string_size(prefix, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x

@@ -2,24 +2,28 @@
 
 ## Completed in this branch
 
-- Empty-canvas right-click bug fixed by ensuring viewport canvas height tracks scroll viewport height.
-- Empty-space context menu remains available with: **New Event**, **New Condition**, **Add New Variable**.
-- Empty-space double-click continues to add a new event row.
-- Right-click on already selected rows now preserves multi-selection.
-- Drag-box selection added from empty canvas area to select multiple rows and condition/action spans.
-- Theme workflow expanded with toolbar actions: **Load Theme**, **Default Theme**, **Reload Theme**.
-- Theme hot-reload path supported through style-change refresh and explicit reload.
-- Added docs integrity regression test for required `/docs` artifacts.
+- Interaction architecture extraction started:
+  - `ViewportSelectionHelper` for selection/hover state bookkeeping
+  - `ViewportHitTestHelper` for row/span hit resolution
+  - `ViewportDragPreviewHelper` for ACE drag snap-preview geometry
+- Event body selection now selects the full event subtree (event + sub-events), with Ctrl/Cmd row toggles supporting per-sub-event unselect.
+- Condition/action hover emphasis now avoids full event-row hover fill when hovering a condition/action span.
+- Empty-condition fallback text now reads `Every Tick` instead of `Always`.
+- Else / ElseIf markers now render from `EventRow.else_mode`.
+- Enable/disable controls now exist across row + ACE contexts (row toggle and condition/action/trigger toggles).
+- Global variable writes now persist an explicit exposed/script-facing flag (`exposed = true`).
+- Params dialog now includes mode-aware hints, edit-flow cue text, and first-field focus behavior.
 
 ## Gaps / partial
 
-- Box selection currently starts from empty canvas; row-start drag still prioritizes row drag/reorder.
-- Theme packs are file-based resources; no in-editor theme marketplace/installer UI yet.
-- Multi-selection copy/paste remains row/ACE-focused and does not yet include every future structure permutation.
+- Box selection and drag-target orchestration still live in `event_sheet_viewport.gd` (helper extraction is partial, not complete).
+- Else/ElseIf currently aligns rendering + schema usage but still lacks a dedicated guided authoring flow.
+- Condition/action enable state is represented in editor UX and resources, but full runtime behavior parity is still partial.
+- Expression editing remains integrated into parameter flows, not a dedicated advanced expression editor surface.
 
 ## Next steps
 
-1. Extend box selection gestures (range modifiers and row-origin marquee behavior).
-2. Add explicit theme profile list/dropdown with per-project presets.
-3. Expand copy/paste semantics for broader mixed selections (group/comment/event combinations with richer conflict handling).
-4. Add screenshot-based visual regression checks when CI environment can run Godot UI tests.
+1. Continue extraction of drag target validation and box-selection controllers from viewport monolith.
+2. Add explicit Else/ElseIf creation/edit affordances in picker/row context workflows.
+3. Expand runtime/compiler handling for ACE enabled/disabled and else-mode execution semantics.
+4. Expand expression tooling beyond inline insertion (validation, snippets, richer authoring UX).

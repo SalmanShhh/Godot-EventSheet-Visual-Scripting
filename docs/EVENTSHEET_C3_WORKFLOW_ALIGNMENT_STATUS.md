@@ -9,12 +9,18 @@ This status maps current editor behavior to the project’s Construct-style even
 - Empty-space context menu exposes creation actions.
 - Event rows support condition/action lane composition and contextual ACE editing.
 - Multi-row selection and copy/paste/reorder workflows exist.
+- Event block body selection now includes its descendant sub-events.
+- Condition/action span hover and selection emphasize the span itself (without full-row hover fill).
+- Drag previews for both condition and action ACE moves use snap-style insertion lines.
+- Else / ElseIf markers are represented in the condition lane.
 
 ## Partial
 
 - Marquee/box selection now works from empty canvas, but interaction depth still trails mature C3 ergonomics.
 - Mixed-structure copy/paste (events + groups + comments in every combination) is functional in common paths, not fully exhaustive.
 - Theme switching exists, but not yet as a full preset browser UX.
+- Else/ElseIf authoring flows are represented in data/rendering but not yet fully guided through dedicated UX steps.
+- ACE enabled/disabled controls exist in editor UX; runtime semantics are still being expanded.
 
 ## Missing
 

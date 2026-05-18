@@ -12,6 +12,7 @@ signal params_confirmed(definition: ACEDefinition, values: Dictionary, context: 
 
 var _dialog: ConfirmationDialog = null
 var _form: VBoxContainer = null
+var _hint: Label = null
 var _fields: Dictionary = {}
 var _definition: ACEDefinition = null
 var _context: Dictionary = {}
@@ -39,6 +40,10 @@ func init_dialog(parent_node: Node) -> void:
 	_form = VBoxContainer.new()
 	_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_form.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_hint = Label.new()
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint.modulate = Color(0.80, 0.85, 0.95, 0.95)
+	_form.add_child(_hint)
 	scroll.add_child(_form)
 
 ## Open the parameter form for the given ACEDefinition.
@@ -56,6 +61,10 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 	for child in _form.get_children():
 		_form.remove_child(child)
 		child.queue_free()
+	_hint = Label.new()
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint.modulate = Color(0.80, 0.85, 0.95, 0.95)
+	_form.add_child(_hint)
 	for parameter: Variant in definition.parameters:
 		if not (parameter is Dictionary):
 			continue
@@ -74,8 +83,13 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 		row.add_child(field)
 		_form.add_child(row)
 		_fields[key] = field
-	_dialog.title = "%s Parameters" % definition.display_name
+	_dialog.title = "%s Parameters%s" % [
+		definition.display_name,
+		" (Edit)" if _is_reedit_flow() else ""
+	]
+	_hint.text = _build_hint_text()
 	_dialog.popup_centered(Vector2i(560, 360))
+	call_deferred("_focus_first_field")
 
 func _close() -> void:
 	if _dialog != null:
@@ -152,6 +166,36 @@ func _on_confirmed() -> void:
 	params_confirmed.emit(_definition, values, _context.duplicate(true))
 	_definition = null
 	_context.clear()
+
+func _is_reedit_flow() -> bool:
+	var mode: String = str(_context.get("mode", ""))
+	return mode.begins_with("replace")
+
+func _build_hint_text() -> String:
+	var mode: String = str(_context.get("mode", ""))
+	var base: String = "Fill in parameters, then press OK to apply."
+	match mode:
+		"append_condition":
+			base = "Adding a condition to the selected event."
+		"append_action":
+			base = "Adding an action to the selected event."
+		"new_sub_condition_event":
+			base = "Creating a nested sub-condition event."
+		"replace_condition", "replace_trigger", "replace_action":
+			base = "Re-editing an existing ACE entry."
+		"new_event", "new_condition_event":
+			base = "Creating a new event from this ACE."
+	return "%s %s" % [
+		base,
+		"Existing values were loaded for quick re-editing." if _is_reedit_flow() else ""
+	]
+
+func _focus_first_field() -> void:
+	for key in _fields.keys():
+		var field: Control = _fields[key] as Control
+		if field != null and field.visible:
+			field.grab_focus()
+			return
 
 static func _parse_bool(value: Variant) -> bool:
 	return str(value).to_lower() in ["true", "1", "yes"]
