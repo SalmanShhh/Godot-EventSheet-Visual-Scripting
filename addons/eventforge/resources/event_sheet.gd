@@ -10,3 +10,4 @@ class_name EventSheetResource
 @export var variables: Dictionary = {}
 @export var includes: Array[NodePath] = []
 @export var functions: Array[Resource] = []
+@export var editor_style: EventSheetEditorStyle = null

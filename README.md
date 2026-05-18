@@ -16,6 +16,19 @@ EventForge is a Construct-style event sheet plugin for Godot 4.x. Event sheets c
 3. Run the compiler script path used in tests (`tests/compile_demo_test.gd`) or call `SheetCompiler.compile(...)` manually.
 4. Verify output matches `demo/sheets/player_generated.gd`.
 
+## Editing EventSheet editor styles in Godot
+
+`EventSheetResource` now exposes an `editor_style` Resource slot for structured editor styling.
+
+1. Select an EventSheet resource in Godot.
+2. In the Inspector, create or assign an `EventSheetEditorStyle` resource to `editor_style`.
+3. Edit the nested `event_style`, `condition_style`, and `action_style` resources to tune:
+   - event-row backgrounds, lane padding, divider width, and trigger badge colours
+   - condition chip colors, padding, font-size delta, and spacing
+   - action chip colors, padding, font-size delta, and spacing
+
+The custom-rendered EventSheet viewport reads this resource directly, so style assets can be reused across sheets while keeping sensible defaults when `editor_style` is left empty.
+
 ## Current status
 
 | Area | Status |

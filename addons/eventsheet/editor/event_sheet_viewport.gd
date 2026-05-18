@@ -60,6 +60,7 @@ var _renderer: EventRowRenderer = EventRowRenderer.new()
 var _layout_cache: RowLayoutCache = RowLayoutCache.new()
 var _ace_registry: EventSheetACERegistry = EventSheetACERegistry.new()
 var _sheet: EventSheetResource = null
+var _editor_style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 var _root_rows: Array[EventRowData] = []
 var _flat_rows: Array[Dictionary] = []
 var _row_metrics: Array[Dictionary] = []
@@ -119,6 +120,7 @@ func _process(_delta: float) -> void:
 
 func set_sheet(sheet: EventSheetResource) -> void:
     _sheet = sheet
+    _editor_style = _resolve_editor_style(sheet)
     _refresh_rows()
 
 func set_ace_registry(ace_registry: EventSheetACERegistry) -> void:
@@ -236,6 +238,81 @@ func get_editor_state_snapshot() -> Dictionary:
         "zoom_factor": _zoom_factor
     }
 
+func get_editor_style() -> EventSheetEditorStyle:
+    return _editor_style
+
+func _resolve_editor_style(sheet: EventSheetResource) -> EventSheetEditorStyle:
+    if sheet != null and sheet.editor_style is EventSheetEditorStyle:
+        var configured_style: EventSheetEditorStyle = sheet.editor_style as EventSheetEditorStyle
+        configured_style.ensure_defaults()
+        return configured_style
+    var fallback_style := EventSheetEditorStyle.new()
+    fallback_style.ensure_defaults()
+    return fallback_style
+
+func _get_event_style() -> EventSheetEventStyle:
+    if _editor_style == null:
+        _editor_style = EventSheetEditorStyle.new()
+    return _editor_style.get_event_style()
+
+func _get_condition_style() -> EventSheetElementStyle:
+    if _editor_style == null:
+        _editor_style = EventSheetEditorStyle.new()
+    return _editor_style.get_condition_style()
+
+func _get_action_style() -> EventSheetElementStyle:
+    if _editor_style == null:
+        _editor_style = EventSheetEditorStyle.new()
+    return _editor_style.get_action_style()
+
+func _get_event_line_height(base_font_size: int = FONT_SIZE) -> float:
+    var event_style: EventSheetEventStyle = _get_event_style()
+    var condition_height: float = _get_condition_style().resolve_line_height(base_font_size, event_style.minimum_row_height)
+    var action_height: float = _get_action_style().resolve_line_height(base_font_size, event_style.minimum_row_height)
+    return max(float(event_style.minimum_row_height), max(condition_height, action_height))
+
+func _build_element_style_metadata(style: EventSheetElementStyle) -> Dictionary:
+    if style == null:
+        return {}
+    return {
+        "text_color": style.text_color,
+        "chip_bg": style.chip_background_color,
+        "chip_border": style.chip_border_color,
+        "chip_hover_bg": style.chip_hover_color,
+        "font_size_delta": style.font_size_delta,
+        "padding_x": style.horizontal_padding,
+        "padding_y": style.vertical_padding,
+        "gap_after": style.gap_after,
+        "corner_radius": style.corner_radius,
+        "badge_bg": style.badge_background_color,
+        "badge_fg": style.badge_foreground_color,
+        "badge_extra_width": style.badge_extra_width
+    }
+
+func _get_span_gap(span: SemanticSpan) -> float:
+    if span == null or not (span.metadata is Dictionary):
+        return EventSheetPalette.SPAN_GAP
+    var metadata: Dictionary = span.metadata as Dictionary
+    var fallback_gap: float = CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP
+    return max(float(metadata.get("gap_after", fallback_gap)), 0.0)
+
+func _get_layout_style_signature(font_size: int) -> String:
+    var event_style: EventSheetEventStyle = _get_event_style()
+    var condition_style: EventSheetElementStyle = _get_condition_style()
+    var action_style: EventSheetElementStyle = _get_action_style()
+    return "%d:%d:%d:%d:%d:%d:%d:%d:%d:%d" % [
+        int(round(_get_event_line_height(font_size))),
+        event_style.minimum_conditions_lane_width,
+        event_style.condition_lane_padding,
+        event_style.action_lane_padding,
+        event_style.lane_divider_width,
+        int(round(event_style.condition_lane_ratio * 100.0)),
+        condition_style.horizontal_padding,
+        condition_style.gap_after,
+        action_style.horizontal_padding,
+        action_style.gap_after
+    ]
+
 func get_row_layout_for_test(row_index: int, width: float = -1.0) -> Dictionary:
     var resolved_width: float = (
         width if width > 0.0 else _get_logical_canvas_width()
@@ -285,7 +362,7 @@ func get_visible_row_range() -> Vector2i:
     if _flat_rows.is_empty():
         return Vector2i(-1, -1)
     var zoom: float = max(_zoom_factor, 0.001)
-    var viewport_height: float = max(_get_viewport_height() / zoom, float(ROW_HEIGHT))
+    var viewport_height: float = max(_get_viewport_height() / zoom, _get_event_line_height(_get_font_size()))
     var scroll_offset: float = float(_get_scroll_offset()) / zoom
     var start_index: int = _find_row_index_at_y(scroll_offset)
     var end_index: int = _find_row_index_at_y(scroll_offset + viewport_height)
@@ -335,7 +412,7 @@ func _draw() -> void:
         if row_data == null:
             continue
         var layout: Dictionary = _get_or_build_row_layout(index, width, font, font_size)
-        _renderer.draw_row(self, layout, row_data, font, font_size)
+        _renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
 
 func _gui_input(event: InputEvent) -> void:
     if event is InputEventMouseMotion:
@@ -874,8 +951,14 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
     var condition_line_index: int = 0
     var action_line_index: int = 0
     var inline_trigger_condition_index: int = _find_inline_trigger_condition_index(event_row)
+    var event_style: EventSheetEventStyle = _get_event_style()
+    var condition_style_meta: Dictionary = _build_element_style_metadata(_get_condition_style())
+    var action_style_meta: Dictionary = _build_element_style_metadata(_get_action_style())
     if event_row.trigger != null:
         var trigger_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
+        trigger_badge_meta["badge_bg"] = event_style.trigger_badge_background_color
+        trigger_badge_meta["badge_fg"] = event_style.trigger_badge_foreground_color
+        trigger_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", BADGE_EXTRA_WIDTH)
         trigger_badge_meta["line_index"] = condition_line_index
         trigger_badge_meta["badge_style"] = "trigger"
         spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, trigger_badge_meta))
@@ -889,11 +972,14 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     "ace_index": 0,
                     "chip": true,
                     "line_index": condition_line_index
-                }
+                }.merged(condition_style_meta, true)
             )
         )
     elif not event_row.trigger_id.is_empty():
         var trigger_id_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
+        trigger_id_badge_meta["badge_bg"] = event_style.trigger_badge_background_color
+        trigger_id_badge_meta["badge_fg"] = event_style.trigger_badge_foreground_color
+        trigger_id_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", BADGE_EXTRA_WIDTH)
         trigger_id_badge_meta["line_index"] = condition_line_index
         trigger_id_badge_meta["badge_style"] = "trigger"
         spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, trigger_id_badge_meta))
@@ -907,12 +993,15 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     "ace_index": 0,
                     "chip": true,
                     "line_index": condition_line_index
-                }
+                }.merged(condition_style_meta, true)
             )
         )
     elif inline_trigger_condition_index >= 0 and inline_trigger_condition_index < event_row.conditions.size():
         var inline_trigger: ACECondition = event_row.conditions[inline_trigger_condition_index]
         var inline_trigger_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
+        inline_trigger_badge_meta["badge_bg"] = event_style.trigger_badge_background_color
+        inline_trigger_badge_meta["badge_fg"] = event_style.trigger_badge_foreground_color
+        inline_trigger_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", BADGE_EXTRA_WIDTH)
         inline_trigger_badge_meta["line_index"] = condition_line_index
         inline_trigger_badge_meta["badge_style"] = "trigger"
         spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, inline_trigger_badge_meta))
@@ -927,7 +1016,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     "chip": true,
                     "line_index": condition_line_index,
                     "rendered_as_trigger": true
-                }
+                }.merged(condition_style_meta, true)
             )
         )
     if not event_row.conditions.is_empty():
@@ -961,7 +1050,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                         "ace_index": condition_index,
                         "chip": true,
                         "line_index": line_index
-                    }
+                    }.merged(condition_style_meta, true)
                 )
             )
     if spans.is_empty():
@@ -969,7 +1058,12 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
             _make_span(
                 "Always",
                 SemanticSpan.SpanType.CONDITION,
-                {"lane": "condition", "kind": "condition", "ace_index": -1, "line_index": 0}
+                {
+                    "lane": "condition",
+                    "kind": "condition",
+                    "ace_index": -1,
+                    "line_index": 0
+                }.merged(condition_style_meta, true)
             )
         )
     if not event_row.actions.is_empty():
@@ -986,7 +1080,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                             "ace_index": action_index,
                             "chip": true,
                             "line_index": action_line_index
-                        }
+                        }.merged(action_style_meta, true)
                     )
                 )
     spans.append(
@@ -997,7 +1091,9 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 "lane": "action",
                 "kind": "add_action",
                 "align_right": true,
-                "line_index": action_line_index
+                "line_index": action_line_index,
+                "text_color": action_style_meta.get("text_color", EventSheetPalette.COLOR_ACTION),
+                "font_size_delta": action_style_meta.get("font_size_delta", 0)
             }
         )
     )
@@ -1012,7 +1108,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     "lane": "action",
                     "chip": true,
                     "line_index": action_line_index + 1
-                }
+                }.merged(action_style_meta, true)
             )
         )
     return spans
@@ -1028,17 +1124,22 @@ func _append_condition_prefix_spans(
 ) -> void:
     if event_row == null:
         return
+    var condition_style_meta: Dictionary = _build_element_style_metadata(_get_condition_style())
     if (
         event_row.condition_mode == EventRow.ConditionMode.OR
         and displayed_condition_count > 1
     ):
         var or_meta: Dictionary = BADGE_OR_METADATA.duplicate(true)
+        or_meta["badge_bg"] = condition_style_meta.get("badge_bg", BADGE_OR_METADATA.get("badge_bg"))
+        or_meta["badge_fg"] = condition_style_meta.get("badge_fg", BADGE_OR_METADATA.get("badge_fg"))
+        or_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", BADGE_EXTRA_WIDTH)
         or_meta["condition_index"] = condition_index
         or_meta["line_index"] = line_index
         or_meta["badge_style"] = "or"
         spans.append(_make_span("OR", SemanticSpan.SpanType.KEYWORD, or_meta))
     if condition.negated:
         var negated_meta: Dictionary = BADGE_NEGATED_METADATA.duplicate(true)
+        negated_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", BADGE_EXTRA_WIDTH)
         negated_meta["condition_index"] = condition_index
         negated_meta["line_index"] = line_index
         negated_meta["badge_style"] = "negated"
@@ -1048,11 +1149,14 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
     if span == null:
         return 0.0
     var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
-    var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+    var draw_font_size: int = max(font_size + int(metadata.get("font_size_delta", 0)), 8)
+    var horizontal_padding: float = float(metadata.get("padding_x", 0.0))
+    var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
     if bool(metadata.get("badge", false)):
-        span_width += BADGE_EXTRA_WIDTH
+        span_width += max(float(metadata.get("badge_extra_width", BADGE_EXTRA_WIDTH)), 0.0)
+        span_width += horizontal_padding * 2.0
     elif bool(metadata.get("chip", false)):
-        span_width += CHIP_EXTRA_WIDTH
+        span_width += max(horizontal_padding * 2.0, CHIP_EXTRA_WIDTH)
     return span_width
 
 func _build_action_line_reservations(
@@ -1064,6 +1168,7 @@ func _build_action_line_reservations(
     var reservations: Dictionary = {}
     if action_lane_rect.size == Vector2.ZERO or row_data == null:
         return reservations
+    var action_lane_padding: float = float(_get_event_style().action_lane_padding)
     for span_index in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null or not (span.metadata is Dictionary):
@@ -1074,11 +1179,11 @@ func _build_action_line_reservations(
         var display_text: String = span.text
         var span_width: float = _measure_span_width(span, display_text, font, font_size)
         var span_x: float = max(
-            action_lane_rect.position.x + EventSheetPalette.ACTION_LANE_PADDING,
-            action_lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING - span_width - 2.0
+            action_lane_rect.position.x + action_lane_padding,
+            action_lane_rect.end.x - action_lane_padding - span_width - 2.0
         )
         var line_index: int = int(metadata.get("line_index", 0))
-        var current_start: float = float(reservations.get(line_index, action_lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING))
+        var current_start: float = float(reservations.get(line_index, action_lane_rect.end.x - action_lane_padding))
         reservations[line_index] = min(current_start, span_x)
     return reservations
 
@@ -1089,7 +1194,7 @@ func _get_condition_track_start(
 ) -> float:
     if row_data == null or row_data.row_type != EventRowData.RowType.EVENT or condition_lane_rect.size.x <= 0.0:
         return default_x
-    return max(default_x, condition_lane_rect.position.x + EventSheetPalette.CONDITION_LANE_PADDING)
+    return max(default_x, condition_lane_rect.position.x + float(_get_event_style().condition_lane_padding))
 
 func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
     _flat_rows.append({"row": row_data, "parent": parent_row})
@@ -1102,7 +1207,9 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     var row_data: EventRowData = _row_at(index)
     if row_data == null:
         return {}
-    var key: String = "%s:%d:%d:%d" % [row_data.row_uid, index, int(width), _drag_target_index]
+    var event_style: EventSheetEventStyle = _get_event_style()
+    var line_height: float = _get_event_line_height(font_size)
+    var key: String = "%s:%d:%d:%d:%s" % [row_data.row_uid, index, int(width), _drag_target_index, _get_layout_style_signature(font_size)]
     if _layout_cache.has(key):
         return _layout_cache.get_layout(key)
     var row_top: float = _get_row_top(index)
@@ -1121,14 +1228,14 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     if row_data.row_type == EventRowData.RowType.EVENT:
         var content_left: float = EventSheetPalette.GUTTER_WIDTH
         var content_width: float = max(width - content_left, 120.0)
-        lane_divider_x = content_left + max(EventSheetPalette.MIN_CONDITIONS_LANE_WIDTH, floor(content_width * EventSheetPalette.CONDITION_LANE_RATIO))
+        lane_divider_x = content_left + max(float(event_style.minimum_conditions_lane_width), floor(content_width * event_style.condition_lane_ratio))
         condition_lane_rect = Rect2(x, row_top, max(lane_divider_x - x, 1.0), row_height)
-        lane_divider_rect = Rect2(lane_divider_x, row_top, EventSheetPalette.LANE_DIVIDER_WIDTH, row_height)
-        action_lane_rect = Rect2(lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH, row_top, max(width - lane_divider_x - EventSheetPalette.LANE_DIVIDER_WIDTH, 1.0), row_height)
+        lane_divider_rect = Rect2(lane_divider_x, row_top, float(event_style.lane_divider_width), row_height)
+        action_lane_rect = Rect2(lane_divider_x + float(event_style.lane_divider_width), row_top, max(width - lane_divider_x - float(event_style.lane_divider_width), 1.0), row_height)
     var condition_x: float = _get_condition_track_start(row_data, x, condition_lane_rect)
     var condition_line_x: Dictionary = {}
     var action_x: float = (
-        lane_divider_x + EventSheetPalette.LANE_DIVIDER_WIDTH + EventSheetPalette.ACTION_LANE_PADDING
+        lane_divider_x + float(event_style.lane_divider_width) + float(event_style.action_lane_padding)
         if lane_divider_x > 0.0
         else x
     )
@@ -1144,9 +1251,9 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         var span_y: float = row_top + 3.0
         if span_lane == "action":
             var action_line_index: int = int(metadata.get("line_index", 0))
-            span_y = row_top + float(action_line_index * ROW_HEIGHT) + 3.0
+            span_y = row_top + float(action_line_index) * line_height + 3.0
             if bool(metadata.get("align_right", false)) and action_lane_rect.size.x > 0.0:
-                span_x = action_lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING
+                span_x = action_lane_rect.end.x - float(event_style.action_lane_padding)
             else:
                 if not action_line_x.has(action_line_index):
                     action_line_x[action_line_index] = action_x
@@ -1156,31 +1263,31 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             if not condition_line_x.has(line_index):
                 condition_line_x[line_index] = condition_x
             span_x = float(condition_line_x[line_index])
-            span_y = row_top + float(line_index * ROW_HEIGHT) + 3.0
+            span_y = row_top + float(line_index) * line_height + 3.0
         var display_text: String = _editing_buffer if index == _editing_row_index and span_index == _editing_span_index else span.text
         var span_width: float = _measure_span_width(span, display_text, font, font_size)
         if lane_divider_x > 0.0 and span_lane != "action":
-            var max_condition_right: float = lane_divider_x - EventSheetPalette.ACTION_LANE_PADDING
+            var max_condition_right: float = lane_divider_x - float(event_style.condition_lane_padding)
             span_width = max(min(span_width, max_condition_right - span_x), 10.0)
         elif span_lane == "action" and action_lane_rect.size.x > 0.0:
             var reserved_start: float = float(
                 action_line_reservations.get(
                     int(metadata.get("line_index", 0)),
-                    action_lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING
+                    action_lane_rect.end.x - float(event_style.action_lane_padding)
                 )
             )
             if bool(metadata.get("align_right", false)):
                 span_x = max(
-                    action_lane_rect.position.x + EventSheetPalette.ACTION_LANE_PADDING,
-                    action_lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING - span_width - 2.0
+                    action_lane_rect.position.x + float(event_style.action_lane_padding),
+                    action_lane_rect.end.x - float(event_style.action_lane_padding) - span_width - 2.0
                 )
             else:
-                span_width = max(min(span_width, reserved_start - EventSheetPalette.SPAN_GAP - span_x), 1.0)
+                span_width = max(min(span_width, reserved_start - max(_get_span_gap(span), EventSheetPalette.SPAN_GAP) - span_x), 1.0)
         else:
             span_width = max(min(span_width, row_right_limit - span_x), 1.0)
-        span.rect = Rect2(span_x, span_y, span_width + 2.0, ROW_HEIGHT - 6.0)
+        span.rect = Rect2(span_x, span_y, span_width + 2.0, line_height - 6.0)
         # Store absolute X for the next span start on this line.
-        var next_span_start_x: float = span.rect.end.x + (CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP)
+        var next_span_start_x: float = span.rect.end.x + _get_span_gap(span)
         if span_lane == "action":
             if not bool(metadata.get("align_right", false)):
                 action_line_x[int(metadata.get("line_index", 0))] = next_span_start_x
@@ -1628,7 +1735,7 @@ func _resolve_row_height(row_data: EventRowData) -> float:
             continue
         var metadata: Dictionary = span.metadata as Dictionary
         max_line_index = maxi(max_line_index, int(metadata.get("line_index", 0)))
-    return float((max_line_index + 1) * ROW_HEIGHT)
+    return float((max_line_index + 1) * _get_event_line_height(_get_font_size()))
 
 func _get_row_top(index: int) -> float:
     if index < 0 or index >= _row_metrics.size():
@@ -1743,7 +1850,7 @@ func _build_ace_drag_preview_rect(
     var lane_rect: Rect2 = action_lane_rect if lane == "action" else condition_lane_rect
     if lane_rect.size == Vector2.ZERO:
         return Rect2()
-    var preview_height: float = max(min(ROW_HEIGHT - 8.0, lane_rect.size.y - 8.0), 10.0)
+    var preview_height: float = max(min(_get_event_line_height(_get_font_size()) - 8.0, lane_rect.size.y - 8.0), 10.0)
     var preview_y: float = lane_rect.position.y + 4.0
     var ace_span_kind: String = "action" if lane == "action" else "condition"
     var ace_span_indices: Array[int] = _get_lane_ace_span_indices(row_data, ace_span_kind)
@@ -1752,9 +1859,9 @@ func _build_ace_drag_preview_rect(
         if target_span_index >= 0 and target_span_index < row_data.spans.size():
             var target_span: SemanticSpan = row_data.spans[target_span_index]
             var preview_x: float = (
-                target_span.rect.end.x + (CHIP_GAP * 0.5)
+                target_span.rect.end.x + (_get_span_gap(target_span) * 0.5)
                 if insert_mode == "after"
-                else target_span.rect.position.x - (CHIP_GAP * 0.5)
+                else target_span.rect.position.x - (_get_span_gap(target_span) * 0.5)
             )
             preview_x = clampf(preview_x, lane_rect.position.x + 4.0, lane_rect.end.x - 4.0)
             preview_y = target_span.rect.position.y + 2.0
@@ -1763,7 +1870,7 @@ func _build_ace_drag_preview_rect(
     if not ace_span_indices.is_empty():
         var edge_span: SemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
         var edge_preview_x: float = clampf(
-            edge_span.rect.end.x + (CHIP_GAP * 0.5),
+            edge_span.rect.end.x + (_get_span_gap(edge_span) * 0.5),
             lane_rect.position.x + 4.0,
             lane_rect.end.x - 4.0
         )
@@ -1773,15 +1880,15 @@ func _build_ace_drag_preview_rect(
         if trigger_span_index >= 0 and trigger_span_index < row_data.spans.size():
             var trigger_span: SemanticSpan = row_data.spans[trigger_span_index]
             var trigger_preview_x: float = clampf(
-                trigger_span.rect.end.x + (CHIP_GAP * 0.5),
+                trigger_span.rect.end.x + (_get_span_gap(trigger_span) * 0.5),
                 lane_rect.position.x + 4.0,
                 lane_rect.end.x - 4.0
             )
             return Rect2(trigger_preview_x - 1.5, trigger_span.rect.position.y + 2.0, 3.0, max(trigger_span.rect.size.y - 4.0, 10.0))
     var empty_preview_x: float = (
-        lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING
+        lane_rect.end.x - float(_get_event_style().action_lane_padding)
         if lane == "action"
-        else lane_rect.position.x + EventSheetPalette.ROW_HORIZONTAL_PADDING
+        else lane_rect.position.x + float(_get_event_style().condition_lane_padding)
     )
     empty_preview_x = clampf(empty_preview_x, lane_rect.position.x + 4.0, lane_rect.end.x - 4.0)
     return Rect2(empty_preview_x - 1.5, preview_y, 3.0, preview_height)

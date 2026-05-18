@@ -18,7 +18,7 @@ const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
 const BADGE_FONT_SIZE_DELTA := 1
 
-func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int) -> void:
+func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
     var row_rect: Rect2 = layout.get("row_rect", Rect2())
     var gutter_rect: Rect2 = layout.get("gutter_rect", Rect2())
     var fold_rect: Rect2 = layout.get("fold_rect", Rect2())
@@ -43,18 +43,41 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     var breakpoint_enabled: bool = bool(layout.get("breakpoint_enabled", false))
     var disabled: bool = bool(layout.get("disabled", false))
     var has_span_selection: bool = not selected_span_indices.is_empty()
+    var event_style: EventSheetEventStyle = (
+        editor_style.get_event_style()
+        if editor_style != null
+        else null
+    )
 
     _draw_gutter(control, gutter_rect, line_number, breakpoint_enabled, font, font_size)
     if row_data.row_type == EventRowData.RowType.GROUP:
         _draw_group_row_chrome(control, row_rect, fold_rect, alternating)
+    elif row_data.row_type == EventRowData.RowType.EVENT and event_style != null:
+        control.draw_rect(
+            row_rect,
+            event_style.row_background_alt_color if alternating else event_style.row_background_color,
+            true
+        )
     else:
         control.draw_rect(row_rect, BG_1 if alternating else BG_0, true)
     if condition_lane_rect.size != Vector2.ZERO:
-        control.draw_rect(condition_lane_rect, EventSheetPalette.COLOR_LANE_CONDITIONS, true)
+        control.draw_rect(
+            condition_lane_rect,
+            event_style.condition_lane_color if event_style != null else EventSheetPalette.COLOR_LANE_CONDITIONS,
+            true
+        )
     if action_lane_rect.size != Vector2.ZERO:
-        control.draw_rect(action_lane_rect, EventSheetPalette.COLOR_LANE_ACTIONS, true)
+        control.draw_rect(
+            action_lane_rect,
+            event_style.action_lane_color if event_style != null else EventSheetPalette.COLOR_LANE_ACTIONS,
+            true
+        )
     if lane_divider_rect.size != Vector2.ZERO:
-        control.draw_rect(lane_divider_rect, EventSheetPalette.COLOR_LANE_DIVIDER, true)
+        control.draw_rect(
+            lane_divider_rect,
+            event_style.lane_divider_color if event_style != null else EventSheetPalette.COLOR_LANE_DIVIDER,
+            true
+        )
     _draw_indent_guides(control, row_rect, row_data.indent)
     if row_data.selected and not has_span_selection:
         control.draw_rect(row_rect, EventSheetPalette.COLOR_SELECTION, true)
@@ -166,25 +189,32 @@ func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size
             selected_bg.a = 0.72
             control.draw_rect(span.rect.grow(2.0), selected_bg, true)
         elif span_index == hovered_span_index:
-            var hover_bg: Color = EventSheetPalette.COLOR_HOVER
-            hover_bg.a = 0.6
-            control.draw_rect(span.rect.grow(1.0), hover_bg, true)
+            if bool(metadata.get("chip", false)):
+                _draw_chip_hover_span(control, span, metadata)
+            else:
+                var hover_bg: Color = EventSheetPalette.COLOR_HOVER
+                hover_bg.a = 0.6
+                control.draw_rect(span.rect.grow(1.0), hover_bg, true)
         if bool(metadata.get("badge", false)):
             _draw_badge_span(control, span, font, font_size, metadata)
             continue
-        var color: Color = _get_span_color(span.type)
+        var color: Color = metadata.get("text_color", _get_span_color(span.type))
         if row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false)):
             color = EventSheetPalette.COLOR_GROUP_TITLE
         var draw_text: String = editing_buffer if span_index == editing_span_index else span.text
-        var draw_font_size: int = font_size + 1 if row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false)) else font_size
+        var draw_font_size: int = font_size + int(metadata.get("font_size_delta", 0))
+        if row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false)):
+            draw_font_size += 1
+        draw_font_size = max(draw_font_size, 8)
         var baseline_y: float = span.rect.position.y + (span.rect.size.y * ROW_VERTICAL_CENTER_RATIO) + (draw_font_size * FONT_BASELINE_OFFSET_RATIO)
-        var text_x: float = span.rect.position.x + (8.0 if bool(metadata.get("chip", false)) else 0.0)
-        var right_padding: float = 8.0 if bool(metadata.get("chip", false)) else 2.0
+        var text_padding: float = float(metadata.get("padding_x", 0.0)) if bool(metadata.get("chip", false)) else 0.0
+        var text_x: float = span.rect.position.x + text_padding
+        var right_padding: float = text_padding if bool(metadata.get("chip", false)) else 2.0
         var text_width: float = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
         control.draw_string(font, Vector2(text_x, baseline_y), draw_text, HORIZONTAL_ALIGNMENT_LEFT, text_width, draw_font_size, color)
         if span_index == editing_span_index:
             var prefix: String = draw_text.substr(0, clamp(editing_caret, 0, draw_text.length()))
-            var prefix_width: float = font.get_string_size(prefix, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+            var prefix_width: float = font.get_string_size(prefix, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
             var caret_x: float = min(text_x + prefix_width + 1.0, span.rect.end.x - right_padding)
             control.draw_line(
                 Vector2(caret_x, span.rect.position.y + 5.0),
@@ -199,7 +229,16 @@ func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary)
     style.bg_color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.05))
     style.border_color = metadata.get("chip_border", Color(1.0, 1.0, 1.0, 0.14))
     style.set_border_width_all(1)
-    style.set_corner_radius_all(5)
+    style.set_corner_radius_all(int(metadata.get("corner_radius", 5)))
+    style.set_content_margin_all(0)
+    control.draw_style_box(style, span.rect)
+
+func _draw_chip_hover_span(control: Control, span: SemanticSpan, metadata: Dictionary) -> void:
+    var style: StyleBoxFlat = StyleBoxFlat.new()
+    style.bg_color = metadata.get("chip_hover_bg", EventSheetPalette.COLOR_HOVER)
+    style.border_color = metadata.get("chip_border", Color(1.0, 1.0, 1.0, 0.14))
+    style.set_border_width_all(1)
+    style.set_corner_radius_all(int(metadata.get("corner_radius", 5)))
     style.set_content_margin_all(0)
     control.draw_style_box(style, span.rect)
 
@@ -241,13 +280,14 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
     var badge_bg: Color = metadata.get("badge_bg", EventSheetPalette.COLOR_LANE_DIVIDER)
     var badge_fg: Color = metadata.get("badge_fg", TEXT_PRIMARY)
     var badge_style: String = str(metadata.get("badge_style", ""))
+    var badge_font_size: int = max(font_size + int(metadata.get("font_size_delta", 0)) - BADGE_FONT_SIZE_DELTA, 8)
     if badge_style in ["trigger", "negated"]:
         var radius: float = min(badge_rect.size.x, badge_rect.size.y) * 0.45
         control.draw_circle(badge_rect.get_center(), radius, badge_bg)
     else:
         var style: StyleBoxFlat = StyleBoxFlat.new()
         style.bg_color = badge_bg
-        style.set_corner_radius_all(4)
+        style.set_corner_radius_all(int(metadata.get("corner_radius", 4)))
         style.set_content_margin_all(0)
         control.draw_style_box(style, badge_rect)
     var text: String = span.text
@@ -255,17 +295,17 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
         text,
         HORIZONTAL_ALIGNMENT_LEFT,
         -1.0,
-        font_size - BADGE_FONT_SIZE_DELTA
+        badge_font_size
     )
     var text_x: float = badge_rect.position.x + max((badge_rect.size.x - text_size.x) * 0.5, 3.0)
-    var baseline_y: float = badge_rect.position.y + (badge_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - BADGE_FONT_SIZE_DELTA) * FONT_BASELINE_OFFSET_RATIO)
+    var baseline_y: float = badge_rect.position.y + (badge_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + (badge_font_size * FONT_BASELINE_OFFSET_RATIO)
     control.draw_string(
         font,
         Vector2(text_x, baseline_y),
         text,
         HORIZONTAL_ALIGNMENT_LEFT,
         -1.0,
-        font_size - BADGE_FONT_SIZE_DELTA,
+        badge_font_size,
         badge_fg
     )
 
