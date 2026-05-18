@@ -148,7 +148,8 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary) -> Contro
 func _extract_value(field: Control) -> Variant:
 	return _extract_value_with_spec(field, {})
 
-func _extract_value_with_spec(field: Control, _param_dict: Dictionary) -> Variant:
+func _extract_value_with_spec(field: Control, param_spec: Dictionary) -> Variant:
+	_ = param_spec
 	if field is CheckBox:
 		return (field as CheckBox).button_pressed
 	if field is OptionButton:

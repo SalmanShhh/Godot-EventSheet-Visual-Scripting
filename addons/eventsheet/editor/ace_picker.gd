@@ -164,12 +164,12 @@ func _refresh_tree() -> void:
 	var query: String = _search.text
 	var mode: String = str(_context.get("mode", "new_event"))
 	var signals_only: bool = bool(_context.get("signals_only", false))
-	var mode_config: Dictionary = _get_mode_config(mode)
+	var picker_mode_config: Dictionary = _get_mode_config(mode)
 	var definitions: Array[ACEDefinition] = _registry.search(query)
 	var category_nodes: Dictionary = {}
 	var first_match: TreeItem = null
 	for definition: ACEDefinition in definitions:
-		if not _is_allowed_for_mode(definition, signals_only, mode_config):
+		if not _is_allowed_for_mode(definition, signals_only, picker_mode_config):
 			continue
 		var category: String = definition.category
 		if category.is_empty():
@@ -194,7 +194,7 @@ func _refresh_tree() -> void:
 	else:
 		_description.text = "No ACE matches the current filters."
 
-func _is_allowed_for_mode(definition: ACEDefinition, signals_only: bool, mode_config: Dictionary) -> bool:
+func _is_allowed_for_mode(definition: ACEDefinition, signals_only: bool, picker_mode_config: Dictionary) -> bool:
 	if definition == null:
 		return false
 	if signals_only:
@@ -203,7 +203,7 @@ func _is_allowed_for_mode(definition: ACEDefinition, signals_only: bool, mode_co
 		var source_kind: String = str(definition.metadata.get("source_kind", ""))
 		var is_signal: bool = source_kind == "signal" or (source_kind.is_empty() and definition.category.to_lower().contains("signal"))
 		return definition.ace_type == ACEDefinition.ACEType.TRIGGER and is_signal
-	var allowed_types: Array = mode_config.get("allowed_types", MODE_CONFIGS["new_event"].get("allowed_types", []))
+	var allowed_types: Array = picker_mode_config.get("allowed_types", MODE_CONFIGS["new_event"].get("allowed_types", []))
 	return allowed_types.has(definition.ace_type)
 
 func _get_mode_config(mode: String) -> Dictionary:
