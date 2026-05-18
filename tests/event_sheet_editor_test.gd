@@ -425,11 +425,15 @@ static func run() -> bool:
     parity_condition_click.pressed = true
     parity_condition_click.button_index = MOUSE_BUTTON_LEFT
     parity_condition_click.position = parity_event_row.spans[parity_condition_index].rect.get_center()
+    dock_viewport._handle_mouse_motion(InputEventMouseMotion.new())
+    dock_viewport._set_hover_state(2, parity_condition_index)
     dock_viewport._handle_mouse_button(parity_condition_click)
     var parity_context: Dictionary = dock_viewport.get_selected_context()
     editor_state = dock_viewport.get_editor_state_snapshot()
+    parity_event_layout = dock_viewport.get_row_layout_for_test(2, 640.0)
     all_passed = _check("left-click condition selects individual condition span", parity_context.get("span_metadata", {}).get("kind", ""), "condition") and all_passed
     all_passed = _check("left-click condition keeps span selection count at one", editor_state.get("selected_span_count", 0), 1) and all_passed
+    all_passed = _check("hovering a condition tracks only the hovered entry span", parity_event_layout.get("hovered_span_index", -1), parity_condition_index) and all_passed
     var parity_body_click := InputEventMouseButton.new()
     parity_body_click.pressed = true
     parity_body_click.button_index = MOUSE_BUTTON_LEFT
@@ -476,6 +480,47 @@ static func run() -> bool:
     dock_viewport._editing_buffer = "Rewritten twice"
     dock_viewport._commit_edit()
     all_passed = _check("comment rewrite flow can edit an existing comment multiple times", ((dock.get_current_sheet().events[0]) as CommentRow).text, "Rewritten twice") and all_passed
+
+    var grouped_selection_sheet := EventSheetResource.new()
+    var grouped_parent := EventRow.new()
+    var grouped_child_a := EventRow.new()
+    var grouped_child_b := EventRow.new()
+    grouped_parent.sub_events = [grouped_child_a, grouped_child_b]
+    grouped_selection_sheet.events = [grouped_parent]
+    dock.setup(grouped_selection_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var grouped_parent_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    var grouped_parent_rect: Rect2 = grouped_parent_layout.get("row_rect", Rect2())
+    var grouped_parent_action_lane_rect: Rect2 = grouped_parent_layout.get("action_lane_rect", Rect2())
+    var grouped_child_layout: Dictionary = dock_viewport.get_row_layout_for_test(1, 640.0)
+    var grouped_child_rect: Rect2 = grouped_child_layout.get("row_rect", Rect2())
+    var grouped_child_action_lane_rect: Rect2 = grouped_child_layout.get("action_lane_rect", Rect2())
+    var grouped_parent_click := InputEventMouseButton.new()
+    grouped_parent_click.pressed = true
+    grouped_parent_click.button_index = MOUSE_BUTTON_LEFT
+    grouped_parent_click.position = Vector2(grouped_parent_action_lane_rect.position.x + 18.0, grouped_parent_rect.get_center().y)
+    dock_viewport._handle_mouse_button(grouped_parent_click)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("event block selection includes sub-events", editor_state.get("selected_row_count", 0), 3) and all_passed
+    var grouped_child_toggle := InputEventMouseButton.new()
+    grouped_child_toggle.pressed = true
+    grouped_child_toggle.button_index = MOUSE_BUTTON_LEFT
+    grouped_child_toggle.ctrl_pressed = true
+    grouped_child_toggle.position = Vector2(grouped_child_action_lane_rect.position.x + 18.0, grouped_child_rect.get_center().y)
+    dock_viewport._handle_mouse_button(grouped_child_toggle)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("ctrl click can deselect one grouped child row", editor_state.get("selected_row_count", 0), 2) and all_passed
+    all_passed = _check("grouped selection keeps parent event selected after child deselection", dock_viewport.get_selected_context().get("source_resource", null) == grouped_parent, true) and all_passed
+    dock_viewport._handle_mouse_button(grouped_child_toggle)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("ctrl click can reselect a deselected grouped child row", editor_state.get("selected_row_count", 0), 3) and all_passed
+
+    var empty_condition_sheet := EventSheetResource.new()
+    empty_condition_sheet.events = [EventRow.new()]
+    dock.setup(empty_condition_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var empty_condition_row: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
+    all_passed = _check("empty-condition events render Every Tick wording", empty_condition_row.spans[0].text, "Every Tick") and all_passed
 
     var sub_condition_sheet := EventSheetResource.new()
     var parent_event := EventRow.new()
@@ -805,7 +850,15 @@ static func run() -> bool:
     var ace_drag_target_condition := ACECondition.new()
     ace_drag_target_condition.provider_id = "Core"
     ace_drag_target_condition.ace_id = "IsInstanceValid"
+    var ace_drag_source_action := ACEAction.new()
+    ace_drag_source_action.provider_id = "Core"
+    ace_drag_source_action.ace_id = "QueueFree"
+    var ace_drag_target_action := ACEAction.new()
+    ace_drag_target_action.provider_id = "Core"
+    ace_drag_target_action.ace_id = "SetVariable"
     ace_drag_target.conditions = [ace_drag_target_condition]
+    ace_drag_source.actions = [ace_drag_source_action]
+    ace_drag_target.actions = [ace_drag_target_action]
     ace_drag_sheet.events = [ace_drag_source, ace_drag_target]
     dock.setup(ace_drag_sheet)
     dock_viewport = dock.get_viewport_control()
@@ -828,6 +881,23 @@ static func run() -> bool:
     var ace_drag_rect: Rect2 = drag_preview_layout.get("ace_drag_rect", Rect2())
     all_passed = _check("ace drag target uses horizontal insertion after cursor midpoint", dock_viewport._drag_ace_insert_mode, "after") and all_passed
     all_passed = _check("ace drag preview renders as a thin vertical placement line", ace_drag_rect.size.x <= 4.0, true) and all_passed
+    dock_viewport._clear_ace_drag()
+    var target_action_index: int = _find_span_index_by_kind(drag_target_row_data, "action")
+    var target_action_span: SemanticSpan = drag_target_row_data.spans[target_action_index]
+    dock_viewport._drag_ace_entries = [dock_viewport._build_ace_drag_entry(ace_drag_rows[0].get("row"), "action", 0)]
+    dock_viewport._update_ace_drag_target(
+        {
+            "row_index": 1,
+            "span_index": target_action_index,
+            "lane": "action",
+            "span_metadata": target_action_span.metadata
+        },
+        target_action_span.rect.get_center() + Vector2(0.0, target_action_span.rect.size.y * 0.35)
+    )
+    drag_preview_layout = dock_viewport.get_row_layout_for_test(1, 640.0)
+    ace_drag_rect = drag_preview_layout.get("ace_drag_rect", Rect2())
+    all_passed = _check("action drag target uses vertical insertion after cursor midpoint", dock_viewport._drag_ace_insert_mode, "after") and all_passed
+    all_passed = _check("action drag preview renders as a horizontal insertion band", ace_drag_rect.size.y <= 4.0 and ace_drag_rect.size.x > 40.0, true) and all_passed
     dock_viewport._clear_ace_drag()
     dock._on_viewport_ace_drop_requested(
         [{"source_resource": ace_drag_source, "kind": "condition", "ace_index": 0}],
@@ -1154,6 +1224,7 @@ static func run() -> bool:
     dock._on_viewport_ace_picker_requested(clickable_row, "action")
     all_passed = _check("action lane click opens ace picker", dock._ace_picker._window.visible, true) and all_passed
     all_passed = _check("action lane click uses append action mode", dock._ace_picker._context.get("mode", ""), "append_action") and all_passed
+    all_passed = _check("ace picker title reflects action append flow", dock._ace_picker._window.title, "Add Action") and all_passed
     dock._ace_picker._window.close_requested.emit()
     all_passed = _check("ace picker close button hides window", dock._ace_picker._window.visible, false) and all_passed
 
@@ -1181,6 +1252,7 @@ static func run() -> bool:
         all_passed = _check("ace apply appends action", ((dock.get_current_sheet().events[0] as EventRow).actions.size()) >= 2, true) and all_passed
         dock._on_ace_picker_selected(action_definition, {"mode": "replace_action", "selected_resource": dock.get_current_sheet().events[0], "ace_index": 0, "existing_params": {"var_name": "ammo", "value": "12"}})
         all_passed = _check("editing ace with params opens param dialog", dock._ace_params._dialog.visible, true) and all_passed
+        all_passed = _check("param dialog hint explains re-editing flow", dock._ace_params._hint_label.text.contains("re-edit"), true) and all_passed
     if new_condition_definition != null:
         dock.setup(EventSheetResource.new())
         dock._apply_ace_definition(new_condition_definition, {}, {"mode": "new_condition_event", "selected_resource": null})

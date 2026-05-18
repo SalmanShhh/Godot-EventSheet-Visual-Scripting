@@ -9,10 +9,67 @@ extends RefCounted
 ## context is the same dictionary passed to open().
 signal ace_selected(definition: ACEDefinition, context: Dictionary)
 
+const MODE_CONFIGS := {
+	"new_event": {
+		"title": "Add Event",
+		"hint": "Select an ACE to create a new event.",
+		"allowed_types": [
+			ACEDefinition.ACEType.TRIGGER,
+			ACEDefinition.ACEType.CONDITION,
+			ACEDefinition.ACEType.ACTION
+		]
+	},
+	"new_condition_event": {
+		"title": "Add Event",
+		"hint": "Select a condition or trigger ACE to create a new event.",
+		"allowed_types": [
+			ACEDefinition.ACEType.CONDITION,
+			ACEDefinition.ACEType.TRIGGER
+		]
+	},
+	"new_sub_condition_event": {
+		"title": "Add Sub-Condition",
+		"hint": "Select a condition or trigger ACE to create a nested sub-condition event.",
+		"allowed_types": [
+			ACEDefinition.ACEType.CONDITION,
+			ACEDefinition.ACEType.TRIGGER
+		]
+	},
+	"append_condition": {
+		"title": "Add Condition",
+		"hint": "Select a condition or trigger ACE to append to the selected event.",
+		"allowed_types": [
+			ACEDefinition.ACEType.CONDITION,
+			ACEDefinition.ACEType.TRIGGER
+		]
+	},
+	"append_action": {
+		"title": "Add Action",
+		"hint": "Select an action ACE to append to the selected event.",
+		"allowed_types": [ACEDefinition.ACEType.ACTION]
+	},
+	"replace_condition": {
+		"title": "Replace Condition",
+		"hint": "Select a condition ACE to replace the current condition.",
+		"allowed_types": [ACEDefinition.ACEType.CONDITION]
+	},
+	"replace_trigger": {
+		"title": "Replace Trigger",
+		"hint": "Select a trigger ACE to replace the current trigger.",
+		"allowed_types": [ACEDefinition.ACEType.TRIGGER]
+	},
+	"replace_action": {
+		"title": "Replace Action",
+		"hint": "Select an action ACE to replace the current action.",
+		"allowed_types": [ACEDefinition.ACEType.ACTION]
+	}
+}
+
 var _window: Window = null
 var _search: LineEdit = null
 var _tree: Tree = null
 var _hint: Label = null
+var _description: Label = null
 var _context: Dictionary = {}
 var _registry: EventSheetACERegistry = null
 
@@ -52,7 +109,13 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_tree.set_column_title(1, "Category")
 	_tree.set_column_titles_visible(true)
 	_tree.item_activated.connect(_on_item_activated)
+	_tree.item_selected.connect(_on_item_selected)
 	content.add_child(_tree)
+
+	_description = Label.new()
+	_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_description.text = "Use ↑/↓ to change the current ACE and Enter to confirm."
+	content.add_child(_description)
 
 ## Update the registry used for searching (e.g. after a hot-reload).
 func set_registry(registry: EventSheetACERegistry) -> void:
@@ -75,6 +138,7 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	for key in extra_context.keys():
 		_context[key] = extra_context[key]
 	_search.text = ""
+	_window.title = _picker_title_for_mode(mode, signals_only)
 	_hint.text = _build_hint_text(mode, signals_only)
 	_refresh_tree()
 	_window.popup_centered(Vector2i(720, 520))
@@ -84,23 +148,12 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 func _build_hint_text(mode: String, signals_only: bool) -> String:
 	if signals_only:
 		return "Select a signal trigger ACE to create a signal event."
-	match mode:
-		"new_condition_event":
-			return "Select a condition or trigger ACE to create a new event."
-		"new_sub_condition_event":
-			return "Select a condition or trigger ACE to create a nested sub-condition event."
-		"append_condition":
-			return "Select a condition or trigger ACE to append to the selected event."
-		"append_action":
-			return "Select an action ACE to append to the selected event."
-		"replace_condition":
-			return "Select a condition ACE to replace the current condition."
-		"replace_trigger":
-			return "Select a trigger ACE to replace the current trigger."
-		"replace_action":
-			return "Select an action ACE to replace the current action."
-		_:
-			return "Select an ACE to create a new event."
+	return str(_get_mode_config(mode).get("hint", MODE_CONFIGS["new_event"].get("hint", "")))
+
+func _picker_title_for_mode(mode: String, signals_only: bool) -> String:
+	if signals_only:
+		return "Add Signal Event"
+	return str(_get_mode_config(mode).get("title", MODE_CONFIGS["new_event"].get("title", "Select ACE")))
 
 func _refresh_tree() -> void:
 	if _tree == null or _registry == null:
@@ -110,10 +163,12 @@ func _refresh_tree() -> void:
 	var query: String = _search.text
 	var mode: String = str(_context.get("mode", "new_event"))
 	var signals_only: bool = bool(_context.get("signals_only", false))
+	var mode_config: Dictionary = _get_mode_config(mode)
 	var definitions: Array[ACEDefinition] = _registry.search(query)
 	var category_nodes: Dictionary = {}
+	var first_match: TreeItem = null
 	for definition: ACEDefinition in definitions:
-		if not _is_allowed_for_mode(definition, mode, signals_only):
+		if not _is_allowed_for_mode(definition, signals_only, mode_config):
 			continue
 		var category: String = definition.category
 		if category.is_empty():
@@ -129,8 +184,16 @@ func _refresh_tree() -> void:
 			item.set_tooltip_text(0, definition.description)
 			item.set_tooltip_text(1, definition.description)
 		item.set_metadata(0, definition)
+		if first_match == null:
+			first_match = item
 
-func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:
+	if first_match != null:
+		first_match.select(0)
+		_on_item_selected()
+	else:
+		_description.text = "No ACE matches the current filters."
+
+func _is_allowed_for_mode(definition: ACEDefinition, signals_only: bool, mode_config: Dictionary) -> bool:
 	if definition == null:
 		return false
 	if signals_only:
@@ -139,23 +202,25 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 		var source_kind: String = str(definition.metadata.get("source_kind", ""))
 		var is_signal: bool = source_kind == "signal" or (source_kind.is_empty() and definition.category.to_lower().contains("signal"))
 		return definition.ace_type == ACEDefinition.ACEType.TRIGGER and is_signal
-	match mode:
-		"new_condition_event":
-			return definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]
-		"new_sub_condition_event":
-			return definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]
-		"append_condition":
-			return definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]
-		"append_action":
-			return definition.ace_type == ACEDefinition.ACEType.ACTION
-		"replace_condition":
-			return definition.ace_type == ACEDefinition.ACEType.CONDITION
-		"replace_trigger":
-			return definition.ace_type == ACEDefinition.ACEType.TRIGGER
-		"replace_action":
-			return definition.ace_type == ACEDefinition.ACEType.ACTION
-		_:
-			return definition.ace_type in [ACEDefinition.ACEType.TRIGGER, ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.ACTION]
+	var allowed_types: Array = mode_config.get("allowed_types", MODE_CONFIGS["new_event"].get("allowed_types", []))
+	return allowed_types.has(definition.ace_type)
+
+func _get_mode_config(mode: String) -> Dictionary:
+	return MODE_CONFIGS.get(mode, MODE_CONFIGS["new_event"]).duplicate(true)
+
+func _on_item_selected() -> void:
+	if _tree == null:
+		return
+	var item: TreeItem = _tree.get_selected()
+	if item == null:
+		_description.text = "Use ↑/↓ to change the current ACE and Enter to confirm."
+		return
+	var definition: ACEDefinition = item.get_metadata(0)
+	if definition == null:
+		_description.text = "Use ↑/↓ to change the current ACE and Enter to confirm."
+		return
+	var description: String = definition.description if not definition.description.is_empty() else definition.format_display()
+	_description.text = "%s\n\nEnter confirms the current ACE." % description
 
 func _on_item_activated() -> void:
 	var item: TreeItem = _tree.get_selected()

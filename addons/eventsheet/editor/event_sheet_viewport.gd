@@ -72,8 +72,11 @@ var _flat_rows: Array[Dictionary] = []
 var _row_metrics: Array[Dictionary] = []
 var _selected_row_index: int = -1
 var _selected_span_index: int = -1
+var _direct_selected_row_uids: Dictionary = {}
 var _selected_row_uids: Dictionary = {}
 var _selected_span_indices: Dictionary = {}
+var _selected_event_block_root_uids: Dictionary = {}
+var _event_block_deselected_row_uids: Dictionary = {}
 var _hovered_row_index: int = -1
 var _hovered_span_index: int = -1
 var _editing_row_index: int = -1
@@ -599,8 +602,10 @@ func _draw_box_selection_overlay() -> void:
 
 func _apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
     if not additive:
-        _selected_row_uids.clear()
+        _direct_selected_row_uids.clear()
         _selected_span_indices.clear()
+        _selected_event_block_root_uids.clear()
+        _event_block_deselected_row_uids.clear()
         _selected_row_index = -1
         _selected_span_index = -1
     var selected_any: bool = false
@@ -617,7 +622,7 @@ func _apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
         var row_rect: Rect2 = layout.get("row_rect", Rect2())
         if not row_rect.intersects(selection_rect):
             continue
-        _selected_row_uids[row_data.row_uid] = true
+        _direct_selected_row_uids[row_data.row_uid] = true
         _selected_row_index = row_index
         _selected_span_index = -1
         selected_any = true
@@ -639,7 +644,7 @@ func _apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
             selected_any = true
     if selected_any:
         _selection_anchor_index = _selected_row_index
-    _sync_row_selection_flags()
+    _rebuild_effective_row_selection()
     selection_changed.emit(_row_at(_selected_row_index))
 
 func _is_selection_hit(row_index: int, span_index: int) -> bool:
@@ -675,6 +680,7 @@ func _clear_row_drag() -> void:
     _drag_target_index = -1
     _drag_target_mode = "before"
     _drag_row_copy_mode = false
+    _layout_cache.clear()
 
 func _maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
     if row_index < 0:
@@ -716,6 +722,7 @@ func _clear_ace_drag() -> void:
     _drag_ace_copy_mode = false
     _drag_ace_drop_valid = true
     _clear_drag_feedback()
+    _layout_cache.clear()
 
 func _clear_drag_feedback() -> void:
     _drag_feedback_text = ""
@@ -754,9 +761,14 @@ func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
         var span_index: int = int(hit.get("span_index", -1))
         if span_index >= 0 and span_index < row_data.spans.size():
             var span_rect: Rect2 = row_data.spans[span_index].rect
-            _drag_ace_insert_mode = (
-                "after" if position.x >= span_rect.get_center().x else "before"
-            )
+            if drag_lane == "action":
+                _drag_ace_insert_mode = (
+                    "after" if position.y >= span_rect.get_center().y else "before"
+                )
+            else:
+                _drag_ace_insert_mode = (
+                    "after" if position.x >= span_rect.get_center().x else "before"
+                )
     elif kind == "trigger" and drag_lane == "condition":
         _drag_ace_target_ace_index = 0
         _drag_ace_insert_mode = "before"
@@ -770,6 +782,7 @@ func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
         _drag_feedback_text = str(validation.get("message", "This drop target is not valid."))
         _drag_feedback_is_error = true
         tooltip_text = _drag_feedback_text
+    _layout_cache.clear()
     queue_redraw()
 
 func _complete_ace_drag() -> bool:
@@ -877,11 +890,11 @@ func _refresh_rows() -> void:
             line_row.disabled = bool(_row_disabled_state[line_row.row_uid])
     if _selected_row_index >= _flat_rows.size():
         _selected_row_index = _flat_rows.size() - 1
+    _rebuild_effective_row_selection()
     for index in range(_flat_rows.size()):
         var row_data_state: EventRowData = _flat_rows[index].get("row")
         if row_data_state == null:
             continue
-        row_data_state.selected = _selected_row_uids.has(row_data_state.row_uid)
         row_data_state.hovered = index == _hovered_row_index
     _update_canvas_min_size()
     _layout_cache.clear()
@@ -1215,7 +1228,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
     if spans.is_empty():
         spans.append(
             _make_span(
-                "Always",
+                "Every Tick",
                 SemanticSpan.SpanType.CONDITION,
                 {
                     "lane": "condition",
@@ -1606,6 +1619,9 @@ func _get_logical_canvas_width() -> float:
 
 func _select_row(row_index: int, span_index: int = -1) -> void:
     if _flat_rows.is_empty():
+        _direct_selected_row_uids.clear()
+        _selected_event_block_root_uids.clear()
+        _event_block_deselected_row_uids.clear()
         _selected_row_uids.clear()
         _selected_span_indices.clear()
         _selected_row_index = -1
@@ -1616,18 +1632,18 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
     _selected_span_index = span_index
     _selection_anchor_index = _selected_row_index
     var selected_row: EventRowData = _row_at(_selected_row_index)
-    _selected_row_uids.clear()
+    _direct_selected_row_uids.clear()
     _selected_span_indices.clear()
+    _selected_event_block_root_uids.clear()
+    _event_block_deselected_row_uids.clear()
     if selected_row != null:
-        _selected_row_uids[selected_row.row_uid] = true
+        _direct_selected_row_uids[selected_row.row_uid] = true
+        if _should_select_event_block(selected_row, span_index):
+            _selected_event_block_root_uids[selected_row.row_uid] = true
         if span_index >= 0:
             _selected_span_indices[selected_row.row_uid] = [span_index]
         _focused_lane = _resolve_lane_for_row(selected_row, span_index)
-    for index in range(_flat_rows.size()):
-        var row_data: EventRowData = _flat_rows[index].get("row")
-        if row_data == null:
-            continue
-        row_data.selected = _selected_row_uids.has(row_data.row_uid)
+    _rebuild_effective_row_selection()
     selection_changed.emit(selected_row)
     queue_redraw()
 
@@ -1643,6 +1659,10 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
     if row_data == null:
         return
     var row_uid: String = row_data.row_uid
+    var grouped_root_uids: Array[String] = _find_grouped_root_uids_for_row(row_index)
+    var grouped_root_uid: String = row_uid if grouped_root_uids.has(row_uid) else (
+        grouped_root_uids[0] if not grouped_root_uids.is_empty() else ""
+    )
     var changed: bool = false
     if span_index >= 0:
         var indices: Array = _selected_span_indices.get(row_uid, []).duplicate()
@@ -1658,34 +1678,70 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
                 _selected_span_index = -1
         else:
             _selected_span_indices[row_uid] = indices
-            _selected_row_uids[row_uid] = true
+            _direct_selected_row_uids[row_uid] = true
+            _event_block_deselected_row_uids.erase(row_uid)
             _selected_row_index = row_index
             _selected_span_index = span_index
             changed = true
     else:
-        if _selected_row_uids.has(row_uid) and not _selected_span_indices.has(row_uid):
-            _selected_row_uids.erase(row_uid)
-            if _selected_row_index == row_index:
-                _selected_row_index = -1
+        if not grouped_root_uid.is_empty() and row_uid != grouped_root_uid:
+            if _event_block_deselected_row_uids.has(row_uid):
+                _event_block_deselected_row_uids.erase(row_uid)
+                changed = true
+            elif _selected_row_uids.has(row_uid):
+                _event_block_deselected_row_uids[row_uid] = true
+                _direct_selected_row_uids.erase(row_uid)
+                changed = true
+            if changed:
+                _selected_row_index = _find_row_index_by_uid(grouped_root_uid)
                 _selected_span_index = -1
+        elif _should_select_event_block(row_data, span_index):
+            if _selected_event_block_root_uids.has(row_uid):
+                _selected_event_block_root_uids.erase(row_uid)
+                _direct_selected_row_uids.erase(row_uid)
+                _clear_grouped_event_block_exclusions(row_uid)
+                if _selected_row_index == row_index:
+                    _selected_row_index = -1
+                    _selected_span_index = -1
+                changed = true
+            else:
+                _direct_selected_row_uids[row_uid] = true
+                _selected_event_block_root_uids[row_uid] = true
+                _clear_grouped_event_block_exclusions(row_uid)
+                _selected_row_index = row_index
+                _selected_span_index = -1
+                changed = true
         else:
-            _selected_row_uids[row_uid] = true
-            _selected_row_index = row_index
-            _selected_span_index = -1
-            changed = true
+            if _selected_row_uids.has(row_uid) and not _selected_span_indices.has(row_uid):
+                _direct_selected_row_uids.erase(row_uid)
+                if _selected_row_index == row_index:
+                    _selected_row_index = -1
+                    _selected_span_index = -1
+                changed = true
+            else:
+                _direct_selected_row_uids[row_uid] = true
+                _event_block_deselected_row_uids.erase(row_uid)
+                _selected_row_index = row_index
+                _selected_span_index = -1
+                changed = true
     if changed:
         _selection_anchor_index = row_index
         _focused_lane = _resolve_lane_for_row(row_data, span_index)
-    _sync_row_selection_flags()
+    _rebuild_effective_row_selection()
+    _ensure_primary_selection_still_valid()
     selection_changed.emit(_row_at(_selected_row_index))
     queue_redraw()
 
 func _clear_selection() -> void:
+    _direct_selected_row_uids.clear()
+    _selected_event_block_root_uids.clear()
+    _event_block_deselected_row_uids.clear()
     _selected_row_uids.clear()
     _selected_span_indices.clear()
     _selected_row_index = -1
     _selected_span_index = -1
     _selection_anchor_index = -1
+    _layout_cache.clear()
     _sync_row_selection_flags()
     selection_changed.emit(null)
     queue_redraw()
@@ -1699,12 +1755,13 @@ func _sync_row_selection_flags() -> void:
 
 func _set_hover_state(row_index: int, span_index: int) -> void:
     _hovered_row_index = row_index
-    _hovered_span_index = span_index
+    _hovered_span_index = _resolve_entry_hover_span_index(row_index, span_index)
     for index in range(_flat_rows.size()):
         var row_data: EventRowData = _flat_rows[index].get("row")
         if row_data == null:
             continue
         row_data.hovered = index == _hovered_row_index
+    _layout_cache.clear()
     queue_redraw()
 
 func _toggle_row_fold(row_index: int) -> void:
@@ -1990,6 +2047,139 @@ func _get_selected_row_indices() -> Array[int]:
             indices.append(index)
     return indices
 
+func _rebuild_effective_row_selection() -> void:
+    # Direct selections remain explicit, while event-block roots fan out to their
+    # visible sub-event descendants. Child exclusions let Ctrl/Cmd clicks peel a
+    # single row back out of the grouped highlight without losing the parent block.
+    var valid_row_uids: Dictionary = {}
+    for entry in _flat_rows:
+        var row_data: EventRowData = entry.get("row")
+        if row_data != null:
+            valid_row_uids[row_data.row_uid] = true
+    _filter_selection_dictionary(_direct_selected_row_uids, valid_row_uids)
+    _filter_selection_dictionary(_selected_event_block_root_uids, valid_row_uids)
+    _filter_selection_dictionary(_event_block_deselected_row_uids, valid_row_uids)
+    _selected_row_uids.clear()
+    for row_uid in _direct_selected_row_uids.keys():
+        _selected_row_uids[row_uid] = true
+    for root_uid in _selected_event_block_root_uids.keys():
+        var root_index: int = _find_row_index_by_uid(str(root_uid))
+        if root_index < 0:
+            continue
+        for block_index in _get_event_block_row_indices(root_index):
+            var block_row: EventRowData = _row_at(block_index)
+            if block_row == null:
+                continue
+            if _event_block_deselected_row_uids.has(block_row.row_uid):
+                continue
+            _selected_row_uids[block_row.row_uid] = true
+    _layout_cache.clear()
+    _sync_row_selection_flags()
+
+func _filter_selection_dictionary(selection_dict: Dictionary, valid_row_uids: Dictionary) -> void:
+    for row_uid in selection_dict.keys():
+        if valid_row_uids.has(str(row_uid)):
+            continue
+        selection_dict.erase(row_uid)
+
+func _should_select_event_block(row_data: EventRowData, span_index: int) -> bool:
+    return (
+        row_data != null
+        and row_data.row_type == EventRowData.RowType.EVENT
+        and span_index < 0
+    )
+
+func _find_row_index_by_uid(row_uid: String) -> int:
+    for index in range(_flat_rows.size()):
+        var row_data: EventRowData = _row_at(index)
+        if row_data != null and row_data.row_uid == row_uid:
+            return index
+    return -1
+
+func _get_event_block_row_indices(root_row_index: int) -> Array[int]:
+    var block_indices: Array[int] = []
+    var root_row: EventRowData = _row_at(root_row_index)
+    if root_row == null:
+        return block_indices
+    block_indices.append(root_row_index)
+    for index in range(root_row_index + 1, _flat_rows.size()):
+        if not _row_is_descendant_of(index, root_row_index):
+            continue
+        var child_row: EventRowData = _row_at(index)
+        if child_row == null or child_row.row_type == EventRowData.RowType.SECTION:
+            continue
+        block_indices.append(index)
+    return block_indices
+
+func _row_is_descendant_of(row_index: int, ancestor_index: int) -> bool:
+    if row_index <= ancestor_index or row_index >= _flat_rows.size():
+        return false
+    var ancestor_row: EventRowData = _row_at(ancestor_index)
+    if ancestor_row == null:
+        return false
+    var parent_row: EventRowData = _flat_rows[row_index].get("parent")
+    while parent_row != null:
+        if parent_row == ancestor_row:
+            return true
+        parent_row = _find_parent_row(parent_row)
+    return false
+
+func _find_parent_row(row_data: EventRowData) -> EventRowData:
+    if row_data == null:
+        return null
+    for entry in _flat_rows:
+        var child_row: EventRowData = entry.get("row")
+        if child_row == row_data:
+            return entry.get("parent")
+    return null
+
+func _find_grouped_root_uids_for_row(row_index: int) -> Array[String]:
+    var root_uids: Array[String] = []
+    for root_uid in _selected_event_block_root_uids.keys():
+        var root_index: int = _find_row_index_by_uid(str(root_uid))
+        if root_index < 0:
+            continue
+        if row_index == root_index or _row_is_descendant_of(row_index, root_index):
+            root_uids.append(str(root_uid))
+    return root_uids
+
+func _clear_grouped_event_block_exclusions(root_uid: String) -> void:
+    var root_index: int = _find_row_index_by_uid(root_uid)
+    if root_index < 0:
+        return
+    for block_index in _get_event_block_row_indices(root_index):
+        var block_row: EventRowData = _row_at(block_index)
+        if block_row != null:
+            _event_block_deselected_row_uids.erase(block_row.row_uid)
+
+func _ensure_primary_selection_still_valid() -> void:
+    if _selected_row_index >= 0:
+        var selected_row: EventRowData = _row_at(_selected_row_index)
+        if selected_row != null and _selected_row_uids.has(selected_row.row_uid):
+            return
+    _selected_row_index = -1
+    _selected_span_index = -1
+    for index in range(_flat_rows.size()):
+        var row_data: EventRowData = _row_at(index)
+        if row_data != null and _selected_row_uids.has(row_data.row_uid):
+            _selected_row_index = index
+            return
+
+func _resolve_entry_hover_span_index(row_index: int, span_index: int) -> int:
+    var row_data: EventRowData = _row_at(row_index)
+    if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
+        return -1
+    var span: SemanticSpan = row_data.spans[span_index]
+    if span == null:
+        return -1
+    var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+    if (
+        row_data.row_type == EventRowData.RowType.EVENT
+        and str(metadata.get("kind", "")) in ["trigger", "condition", "action"]
+    ):
+        return span_index
+    return -1
+
 func _get_draggable_ace_entries(
     row_data: EventRowData,
     kind: String,
@@ -2073,6 +2263,30 @@ func _build_ace_drag_preview_rect(
     var preview_y: float = lane_rect.position.y + 4.0
     var ace_span_kind: String = "action" if lane == "action" else "condition"
     var ace_span_indices: Array[int] = _get_lane_ace_span_indices(row_data, ace_span_kind)
+    if lane == "action":
+        # Actions stack vertically, so the most readable insertion cue is a
+        # horizontal band between action rows rather than the thin vertical line
+        # used for inline condition chips.
+        var line_y: float = lane_rect.position.y + 3.0
+        if ace_index >= 0:
+            var target_span_index: int = _find_ace_span_index(row_data, ace_span_kind, ace_index)
+            if target_span_index >= 0 and target_span_index < row_data.spans.size():
+                var target_span: SemanticSpan = row_data.spans[target_span_index]
+                line_y = (
+                    target_span.rect.end.y + 2.0
+                    if insert_mode == "after"
+                    else target_span.rect.position.y - 2.0
+                )
+        elif not ace_span_indices.is_empty():
+            var edge_span: SemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
+            line_y = edge_span.rect.end.y + 2.0
+        line_y = clampf(line_y, lane_rect.position.y + 3.0, lane_rect.end.y - 5.0)
+        return Rect2(
+            lane_rect.position.x + 8.0,
+            line_y,
+            max(lane_rect.size.x - 16.0, 8.0),
+            3.0
+        )
     if ace_index >= 0:
         var target_span_index: int = _find_ace_span_index(row_data, ace_span_kind, ace_index)
         if target_span_index >= 0 and target_span_index < row_data.spans.size():

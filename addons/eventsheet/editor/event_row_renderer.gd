@@ -43,6 +43,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     var breakpoint_enabled: bool = bool(layout.get("breakpoint_enabled", false))
     var disabled: bool = bool(layout.get("disabled", false))
     var has_span_selection: bool = not selected_span_indices.is_empty()
+    var has_entry_hover: bool = row_data.row_type == EventRowData.RowType.EVENT and hovered_span_index >= 0
     var event_style: EventSheetEventStyle = (
         editor_style.get_event_style()
         if editor_style != null
@@ -97,7 +98,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     _draw_indent_guides(control, row_rect, row_data.indent)
     if row_data.selected and not has_span_selection:
         control.draw_rect(row_rect, selection_fill, true)
-    if row_data.hovered:
+    if row_data.hovered and not has_entry_hover:
         control.draw_rect(row_rect, hover_fill, true)
     _draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
     _draw_icon(control, icon_rect, row_data)

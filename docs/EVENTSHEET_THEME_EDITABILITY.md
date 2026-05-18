@@ -18,9 +18,18 @@ This editor uses Godot-native resources/scenes instead of runtime CSS. The goal 
 1. Duplicate `res://demo/themes/designer_template_theme.tres`.
 2. Optionally duplicate `res://demo/themes/designer_template_theme_manifest.cfg` so the package keeps its token notes.
 3. Edit the `.tres` resource in the Inspector for structural tokens such as sheet background, group/comment styling, and hover/selection fills.
-4. Open one of the element `.tscn` files in Godot when you want a more visual preview for lane and chip styling.
+4. Open one of the element `.tscn` files in Godot when you want a more visual preview for lane and chip styling:
+   - `res://addons/eventsheet/elements/event_visual_element.tscn` for overall event shell spacing and lane alignment
+   - `res://addons/eventsheet/elements/condition_visual_element.tscn` for condition chip layout/alignment
+   - `res://addons/eventsheet/elements/action_visual_element.tscn` for action chip layout/alignment
 5. Save the scene/resource.
 6. Assign the style to `EventSheetResource.editor_style` or load it through the dock toolbar.
+
+### Visual alignment workflow
+
+- Use the `.tscn` scenes when a designer wants to tweak padding, spacing, badge placement, and chip alignment visually instead of editing raw text resources.
+- Use the paired `.tres` style resource when you want to tune exported tokens such as colors, lane widths, divider widths, or hover/selection fills in the Inspector.
+- Reload the theme from the EventSheet dock after saving if the sheet is already open.
 
 ## Switching themes
 

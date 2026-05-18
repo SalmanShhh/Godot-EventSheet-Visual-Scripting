@@ -13,8 +13,10 @@ signal params_confirmed(definition: ACEDefinition, values: Dictionary, context: 
 var _dialog: ConfirmationDialog = null
 var _form: VBoxContainer = null
 var _fields: Dictionary = {}
+var _field_specs: Dictionary = {}
 var _definition: ACEDefinition = null
 var _context: Dictionary = {}
+var _hint_label: Label = null
 
 ## Initialise and attach the dialog to parent_node.
 ## Must be called before open().
@@ -29,12 +31,22 @@ func init_dialog(parent_node: Node) -> void:
 	_dialog.canceled.connect(_close)
 	parent_node.add_child(_dialog)
 
+	var content: VBoxContainer = VBoxContainer.new()
+	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_dialog.add_child(content)
+
+	_hint_label = Label.new()
+	_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(_hint_label)
+
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scroll.custom_minimum_size = Vector2(520.0, 260.0)
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_dialog.add_child(scroll)
+	content.add_child(scroll)
 
 	_form = VBoxContainer.new()
 	_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -53,9 +65,11 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 	_definition = definition
 	_context = context.duplicate(true)
 	_fields.clear()
+	_field_specs.clear()
 	for child in _form.get_children():
 		_form.remove_child(child)
 		child.queue_free()
+	var first_field: Control = null
 	for parameter: Variant in definition.parameters:
 		if not (parameter is Dictionary):
 			continue
@@ -74,8 +88,15 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 		row.add_child(field)
 		_form.add_child(row)
 		_fields[key] = field
+		_field_specs[key] = param_dict.duplicate(true)
+		if first_field == null:
+			first_field = field
 	_dialog.title = "%s Parameters" % definition.display_name
+	if _hint_label != null:
+		_hint_label.text = _build_context_hint(definition, context, initial_values)
 	_dialog.popup_centered(Vector2i(560, 360))
+	if first_field != null:
+		first_field.grab_focus()
 
 func _close() -> void:
 	if _dialog != null:
@@ -123,6 +144,9 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary) -> Contro
 
 ## Extract the typed value from a field widget.
 func _extract_value(field: Control) -> Variant:
+	return _extract_value_with_spec(field, {})
+
+func _extract_value_with_spec(field: Control, _param_dict: Dictionary) -> Variant:
 	if field is CheckBox:
 		return (field as CheckBox).button_pressed
 	if field is OptionButton:
@@ -148,10 +172,26 @@ func _on_confirmed() -> void:
 		return
 	var values: Dictionary = {}
 	for key: Variant in _fields.keys():
-		values[str(key)] = _extract_value(_fields[key])
+		var param_dict: Dictionary = _field_specs.get(key, {})
+		values[str(key)] = _extract_value_with_spec(_fields[key], param_dict)
 	params_confirmed.emit(_definition, values, _context.duplicate(true))
 	_definition = null
+	_field_specs.clear()
 	_context.clear()
 
 static func _parse_bool(value: Variant) -> bool:
 	return str(value).to_lower() in ["true", "1", "yes"]
+
+func _build_context_hint(definition: ACEDefinition, context: Dictionary, initial_values: Dictionary) -> String:
+	var mode: String = str(context.get("mode", "new_event"))
+	var is_reedit: bool = not initial_values.is_empty()
+	var mode_label: String = "Add"
+	match mode:
+		"replace_condition", "replace_trigger", "replace_action":
+			mode_label = "Update"
+		"new_sub_condition_event":
+			mode_label = "Add nested event"
+		_:
+			mode_label = "Add"
+	var reedit_hint: String = " Existing values were loaded so designers can re-edit without re-entering parameters." if is_reedit else ""
+	return "%s %s parameters.%s" % [mode_label, definition.display_name, reedit_hint]
