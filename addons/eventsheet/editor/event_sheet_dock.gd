@@ -26,6 +26,7 @@ const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
 const ACE_DRAG_KINDS := ["condition", "action"]
+const DEFAULT_UI_CONFIG_RESOURCE_PATH := "res://addons/eventsheet/theme/event_sheet_editor_style.tres"
 const SIDE_PANEL_MIN_WIDTH := 160.0
 const SIDE_PANEL_MAX_WIDTH := 220.0
 const SIDE_PANEL_WIDTH_RATIO := 0.18
@@ -66,6 +67,7 @@ var _context_hit: Dictionary = {}
 var _context_variable: Dictionary = {}
 var _global_variable_entries: Array[Dictionary] = []
 var _local_variable_entries: Array[Dictionary] = []
+var _ui_config: EventSheetUIConfig = null
 
 func _init() -> void:
     if not _undo_redo_adapter.has_manager():
@@ -89,6 +91,7 @@ func _ready() -> void:
 
 func setup(sheet: EventSheetResource = null) -> void:
     _build_ui()
+    _apply_saved_ui_config_if_available()
     if sheet == null:
         _current_sheet = _build_demo_sheet()
         _current_sheet_path = ""
@@ -477,6 +480,11 @@ func _on_zoom_out_requested() -> void:
 func _on_copy_requested() -> void:
     var context: Dictionary = _viewport.get_selected_context()
     var selected_resource: Resource = context.get("source_resource", null)
+    var selected_row_resources: Array[Resource] = _get_selected_row_resources_for_clipboard()
+    if selected_row_resources.size() > 1:
+        _clipboard = {"type": "rows", "payload": selected_row_resources.duplicate()}
+        _set_status("Copied %d rows." % selected_row_resources.size())
+        return
     if selected_resource == null:
         _set_status("Nothing selected to copy.", true)
         return
@@ -497,7 +505,13 @@ func _on_copy_requested() -> void:
             _clipboard = {"type": "trigger", "payload": event_row.trigger.duplicate(true)}
             _set_status("Copied trigger.")
             return
-    _clipboard = {"type": "row", "payload": selected_resource.duplicate(true)}
+    if selected_row_resources.size() == 1:
+        _clipboard = {"type": "row", "payload": selected_row_resources[0].duplicate(true)}
+    elif _is_copyable_row_resource(selected_resource):
+        _clipboard = {"type": "row", "payload": selected_resource.duplicate(true)}
+    else:
+        _set_status("Nothing selected to copy.", true)
+        return
     _set_status("Copied row.")
 
 func _on_paste_requested() -> void:
@@ -515,8 +529,16 @@ func _on_paste_requested() -> void:
         match clip_type:
             "row":
                 if payload is Resource:
-                    _insert_row_below_selection((payload as Resource).duplicate(true))
+                    _insert_row_below_selection(_duplicate_row_resource_for_insert(payload as Resource))
                     result["label"] = "Pasted row."
+                    return true
+            "rows":
+                if payload is Array:
+                    var rows: Array[Resource] = _duplicate_row_resources_for_insert(payload as Array)
+                    if rows.is_empty():
+                        return false
+                    _insert_rows_below_selection(rows)
+                    result["label"] = "Pasted %d rows." % rows.size()
                     return true
             "condition":
                 if selected_resource is EventRow and payload is ACECondition:
@@ -695,16 +717,80 @@ func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionar
     return _param_resolver.resolve_all(definition, row_params if row_params != null else {})
 
 func _insert_row_below_selection(row_resource: Resource, explicit_selected_resource: Resource = null) -> void:
-    if _current_sheet == null or row_resource == null:
+    _insert_rows_below_selection([row_resource], explicit_selected_resource)
+
+func _insert_rows_below_selection(row_resources: Array[Resource], explicit_selected_resource: Resource = null) -> void:
+    if _current_sheet == null or row_resources.is_empty():
         return
     var selected_resource: Resource = explicit_selected_resource if explicit_selected_resource != null else _viewport.get_selected_context().get("source_resource", null)
     if selected_resource == null:
-        _current_sheet.events.append(row_resource)
+        for row_resource in row_resources:
+            if row_resource != null:
+                _current_sheet.events.append(row_resource)
         return
     var location: Dictionary = _find_resource_location(selected_resource)
     var container: Array = location.get("container", _current_sheet.events)
     var index: int = int(location.get("index", container.size() - 1))
-    container.insert(index + 1, row_resource)
+    for offset in range(row_resources.size()):
+        var row_resource: Resource = row_resources[offset]
+        if row_resource != null:
+            container.insert(index + 1 + offset, row_resource)
+
+func _is_copyable_row_resource(resource: Resource) -> bool:
+    return resource is EventRow or resource is EventGroup or resource is CommentRow
+
+func _get_selected_row_resources_for_clipboard() -> Array[Resource]:
+    if _viewport == null:
+        return []
+    var resources: Array[Resource] = []
+    for row_data in _viewport.get_selected_rows():
+        if row_data == null:
+            continue
+        var resource: Resource = row_data.source_resource
+        if not _is_copyable_row_resource(resource):
+            continue
+        var has_selected_ancestor: bool = false
+        for existing in resources:
+            if _resource_contains_descendant(existing, resource):
+                has_selected_ancestor = true
+                break
+        if has_selected_ancestor or resources.has(resource):
+            continue
+        resources.append(resource)
+    return resources
+
+func _duplicate_row_resources_for_insert(resources: Array) -> Array[Resource]:
+    var duplicates: Array[Resource] = []
+    for resource in resources:
+        if resource is Resource:
+            var duplicate_row: Resource = _duplicate_row_resource_for_insert(resource as Resource)
+            if duplicate_row != null:
+                duplicates.append(duplicate_row)
+    return duplicates
+
+func _duplicate_row_resource_for_insert(resource: Resource) -> Resource:
+    if resource == null:
+        return null
+    var duplicate_row: Resource = resource.duplicate(true)
+    _refresh_resource_uids(duplicate_row)
+    return duplicate_row
+
+func _refresh_resource_uids(resource: Resource) -> void:
+    if resource == null:
+        return
+    if resource is EventRow:
+        var event_row: EventRow = resource as EventRow
+        event_row.event_uid = EventRow._generate_short_uid()
+        for child in event_row.sub_events:
+            if child is Resource:
+                _refresh_resource_uids(child as Resource)
+        return
+    if resource is EventGroup:
+        var group: EventGroup = resource as EventGroup
+        group.group_uid = EventGroup._generate_short_uid()
+        for child in _group_children_array(group):
+            if child is Resource:
+                _refresh_resource_uids(child as Resource)
 
 ## Returns the best available EventSheet file name suggestion for save dialogs.
 func _suggest_sheet_filename() -> String:
@@ -813,7 +899,7 @@ func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String,
         var inserted_resources: Array[Resource] = []
         if copy_mode:
             for source_resource in source_resources:
-                inserted_resources.append(source_resource.duplicate(true))
+                inserted_resources.append(_duplicate_row_resource_for_insert(source_resource))
         else:
             inserted_resources = source_resources
             for source_resource in source_resources:
@@ -1091,14 +1177,15 @@ func _configure_context_menu(menu: PopupMenu) -> void:
                 )
         var group_toggle_index: int = menu.get_item_index(ROW_MENU_TOGGLE_GROUP_FOLD)
         if group_toggle_index >= 0:
-            var context_group: EventGroup = null
-            if _context_row != null and _context_row.source_resource is EventGroup:
-                context_group = _context_row.source_resource as EventGroup
-            menu.set_item_disabled(group_toggle_index, context_group == null)
-            if context_group != null:
+            var fold_context: Dictionary = _get_foldable_context_entry()
+            menu.set_item_disabled(group_toggle_index, fold_context.is_empty())
+            if not fold_context.is_empty():
+                var fold_label: String = str(fold_context.get("label", "Row"))
                 menu.set_item_text(
                     group_toggle_index,
-                    "Open Group" if context_group.is_collapsed() else "Close Group"
+                    ("Open %s" % fold_label)
+                        if bool(fold_context.get("folded", false))
+                        else ("Close %s" % fold_label)
                 )
     elif menu == _variable_context_menu:
         var has_variable: bool = not _context_variable.is_empty()
@@ -1180,7 +1267,7 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
         ROW_MENU_TOGGLE_CONDITION_BLOCK:
             _toggle_context_condition_block()
         ROW_MENU_TOGGLE_GROUP_FOLD:
-            _toggle_context_group_fold()
+            _toggle_context_row_fold()
 
 func _on_variable_context_menu_id_pressed(id: int) -> void:
     if _context_variable.is_empty():
@@ -1255,13 +1342,39 @@ func _toggle_context_condition_block() -> void:
     if toggled:
         _mark_dirty("Updated condition block.")
 
-func _toggle_context_group_fold() -> void:
-    if _context_row == null or not (_context_row.source_resource is EventGroup):
+func _toggle_context_row_fold() -> void:
+    var fold_context: Dictionary = _get_foldable_context_entry()
+    if fold_context.is_empty():
         return
-    var context_group: EventGroup = _context_row.source_resource as EventGroup
-    context_group.set_collapsed_state(not context_group.is_collapsed())
-    _viewport.toggle_row_fold_by_uid(_context_row.row_uid)
-    _mark_dirty("Updated group fold state.")
+    var updated: bool = _viewport.toggle_row_fold_by_uid(str(fold_context.get("row_uid", "")))
+    if not updated:
+        return
+    if fold_context.get("resource", null) is EventGroup:
+        var context_group: EventGroup = fold_context.get("resource", null) as EventGroup
+        context_group.set_collapsed_state(not context_group.is_collapsed())
+        _mark_dirty("Updated group fold state.")
+    else:
+        _mark_dirty("Updated sub-event fold state.")
+
+func _get_foldable_context_entry() -> Dictionary:
+    if _context_row == null:
+        return {}
+    if _context_row.source_resource is EventGroup:
+        var context_group: EventGroup = _context_row.source_resource as EventGroup
+        return {
+            "resource": context_group,
+            "row_uid": _context_row.row_uid,
+            "folded": context_group.is_collapsed(),
+            "label": "Group"
+        }
+    if _context_row.source_resource is EventRow and not (_context_row.source_resource as EventRow).sub_events.is_empty():
+        return {
+            "resource": _context_row.source_resource,
+            "row_uid": _context_row.row_uid,
+            "folded": bool(_context_row.folded),
+            "label": "Sub-events"
+        }
+    return {}
 
 func _delete_context_row() -> void:
     if _context_row == null or _context_row.source_resource == null:
@@ -1553,8 +1666,16 @@ func _reorder_local_variable(event_row: EventRow, source_index: int, target_inde
     return true
 
 func apply_ui_config(config: EventSheetUIConfig) -> void:
+    _ui_config = config
     if _viewport != null:
         _viewport.set_ui_config(config)
+
+func _apply_saved_ui_config_if_available() -> void:
+    if _ui_config != null or not ResourceLoader.exists(DEFAULT_UI_CONFIG_RESOURCE_PATH):
+        return
+    var loaded: Resource = ResourceLoader.load(DEFAULT_UI_CONFIG_RESOURCE_PATH)
+    if loaded is EventSheetUIConfig:
+        apply_ui_config(loaded as EventSheetUIConfig)
 
 # ── Variable dialog signal handler ────────────────────────────────────────────
 

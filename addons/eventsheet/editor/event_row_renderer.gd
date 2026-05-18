@@ -54,12 +54,14 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     var lane_conditions_color: Color = _ui_config.lane_conditions_color if _ui_config != null else EventSheetPalette.COLOR_LANE_CONDITIONS
     var lane_actions_color: Color = _ui_config.lane_actions_color if _ui_config != null else EventSheetPalette.COLOR_LANE_ACTIONS
     var lane_divider_color: Color = _ui_config.lane_divider_color if _ui_config != null else EventSheetPalette.COLOR_LANE_DIVIDER
+    var row_bg_color: Color = _ui_config.row_bg_color if _ui_config != null else BG_0
+    var row_bg_alt_color: Color = _ui_config.row_bg_alt_color if _ui_config != null else BG_1
 
     _draw_gutter(control, gutter_rect, line_number, breakpoint_enabled, font, font_size)
     if row_data.row_type == EventRowData.RowType.GROUP:
         _draw_group_row_chrome(control, row_rect, fold_rect, alternating)
     else:
-        control.draw_rect(row_rect, BG_1 if alternating else BG_0, true)
+        control.draw_rect(row_rect, row_bg_alt_color if alternating else row_bg_color, true)
     if condition_lane_rect.size != Vector2.ZERO:
         control.draw_rect(condition_lane_rect, lane_conditions_color, true)
     if action_lane_rect.size != Vector2.ZERO:
@@ -216,8 +218,9 @@ func _draw_spans(control: Control, row_data: EventRowData, font: Font, font_size
 
 func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary) -> void:
     var style: StyleBoxFlat = StyleBoxFlat.new()
-    style.bg_color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.05))
-    style.border_color = metadata.get("chip_border", Color(1.0, 1.0, 1.0, 0.14))
+    var colors: Dictionary = _resolve_chip_colors(metadata)
+    style.bg_color = colors.get("bg", Color(1.0, 1.0, 1.0, 0.05))
+    style.border_color = colors.get("border", Color(1.0, 1.0, 1.0, 0.14))
     style.set_border_width_all(1)
     style.set_corner_radius_all(5)
     style.set_content_margin_all(0)
@@ -258,8 +261,9 @@ func _draw_drag_feedback(
     )
 func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_size: int, metadata: Dictionary) -> void:
     var badge_rect: Rect2 = span.rect
-    var badge_bg: Color = metadata.get("badge_bg", EventSheetPalette.COLOR_LANE_DIVIDER)
-    var badge_fg: Color = metadata.get("badge_fg", TEXT_PRIMARY)
+    var badge_colors: Dictionary = _resolve_badge_colors(metadata)
+    var badge_bg: Color = badge_colors.get("bg", EventSheetPalette.COLOR_LANE_DIVIDER)
+    var badge_fg: Color = badge_colors.get("fg", TEXT_PRIMARY)
     var badge_style: String = str(metadata.get("badge_style", ""))
     if badge_style in ["trigger", "negated"]:
         var radius: float = min(badge_rect.size.x, badge_rect.size.y) * 0.45
@@ -300,20 +304,77 @@ func _draw_debug_overlay(control: Control, row_rect: Rect2, font: Font, font_siz
 func _get_span_color(span_type: int) -> Color:
     match span_type:
         SemanticSpan.SpanType.OBJECT:
-            return COLOR_OBJECT
+            return _ui_config.object_text_color if _ui_config != null else COLOR_OBJECT
         SemanticSpan.SpanType.CONDITION:
-            return TEXT_PRIMARY
+            return _ui_config.condition_text_color if _ui_config != null else TEXT_PRIMARY
         SemanticSpan.SpanType.ACTION:
-            return COLOR_ACTION
+            return _ui_config.action_text_color if _ui_config != null else COLOR_ACTION
         SemanticSpan.SpanType.VALUE:
-            return COLOR_VALUE
+            return _ui_config.value_text_color if _ui_config != null else COLOR_VALUE
         SemanticSpan.SpanType.OPERATOR:
-            return TEXT_SECONDARY
+            return _ui_config.text_secondary_color if _ui_config != null else TEXT_SECONDARY
         SemanticSpan.SpanType.KEYWORD:
-            return TEXT_MUTED
+            return _ui_config.text_muted_color if _ui_config != null else TEXT_MUTED
         SemanticSpan.SpanType.EXPRESSION:
-            return TEXT_PRIMARY
+            return _ui_config.text_primary_color if _ui_config != null else TEXT_PRIMARY
         SemanticSpan.SpanType.COMMENT:
-            return EventSheetPalette.COLOR_COMMENT
+            return _ui_config.comment_text_color if _ui_config != null else EventSheetPalette.COLOR_COMMENT
         _:
-            return TEXT_PRIMARY
+            return _ui_config.text_primary_color if _ui_config != null else TEXT_PRIMARY
+
+func _resolve_chip_colors(metadata: Dictionary) -> Dictionary:
+    if _ui_config == null:
+        return {
+            "bg": metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.05)),
+            "border": metadata.get("chip_border", Color(1.0, 1.0, 1.0, 0.14))
+        }
+    var kind: String = str(metadata.get("kind", ""))
+    var lane: String = str(metadata.get("lane", ""))
+    if kind == "variable":
+        return {
+            "bg": _ui_config.variable_chip_bg_color,
+            "border": _ui_config.variable_chip_border_color
+        }
+    if lane == "action":
+        return {
+            "bg": _ui_config.action_chip_bg_color,
+            "border": _ui_config.action_chip_border_color
+        }
+    if lane == "condition":
+        return {
+            "bg": _ui_config.condition_chip_bg_color,
+            "border": _ui_config.condition_chip_border_color
+        }
+    if bool(metadata.get("group_title", false)):
+        return {
+            "bg": _ui_config.group_bg_alt_color if bool(metadata.get("chip_alt", false)) else _ui_config.group_bg_color,
+            "border": _ui_config.group_accent_color
+        }
+    return {
+        "bg": _ui_config.comment_chip_bg_color,
+        "border": _ui_config.comment_chip_border_color
+    }
+
+func _resolve_badge_colors(metadata: Dictionary) -> Dictionary:
+    if _ui_config == null:
+        return {
+            "bg": metadata.get("badge_bg", EventSheetPalette.COLOR_LANE_DIVIDER),
+            "fg": metadata.get("badge_fg", TEXT_PRIMARY)
+        }
+    var style: String = str(metadata.get("badge_style", ""))
+    match style:
+        "group":
+            return {"bg": _ui_config.group_badge_bg_color, "fg": _ui_config.group_badge_fg_color}
+        "const":
+            return {"bg": _ui_config.const_badge_bg_color, "fg": _ui_config.const_badge_fg_color}
+        "trigger":
+            return {"bg": _ui_config.trigger_badge_bg_color, "fg": _ui_config.trigger_badge_fg_color}
+        "or":
+            return {"bg": _ui_config.or_badge_bg_color, "fg": _ui_config.or_badge_fg_color}
+        "negated":
+            return {"bg": _ui_config.negated_badge_bg_color, "fg": _ui_config.negated_badge_fg_color}
+        _:
+            return {
+                "bg": metadata.get("badge_bg", EventSheetPalette.COLOR_LANE_DIVIDER),
+                "fg": metadata.get("badge_fg", _ui_config.text_primary_color)
+            }

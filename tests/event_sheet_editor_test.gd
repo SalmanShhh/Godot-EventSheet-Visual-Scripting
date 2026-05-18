@@ -1100,12 +1100,149 @@ static func run() -> bool:
     all_passed = _check("ui config has group accent color", ui_config.group_accent_color is Color, true) and all_passed
     all_passed = _check("ui config has selection color", ui_config.selection_color is Color, true) and all_passed
     all_passed = _check("ui config has lane conditions color", ui_config.lane_conditions_color is Color, true) and all_passed
+    all_passed = _check("ui config exposes action chip border color", ui_config.action_chip_border_color is Color, true) and all_passed
+    all_passed = _check("ui config exposes trigger badge bg color", ui_config.trigger_badge_bg_color is Color, true) and all_passed
     ui_config.group_accent_color = Color(1.0, 0.0, 0.5)
+    ui_config.action_text_color = Color(0.8, 0.4, 0.2)
+    ui_config.action_chip_border_color = Color(0.2, 0.9, 0.5)
+    ui_config.trigger_badge_bg_color = Color(0.5, 0.1, 0.8)
     var config_renderer := EventRowRenderer.new()
     config_renderer.set_ui_config(ui_config)
     all_passed = _check("renderer accepts ui config override", config_renderer._ui_config == ui_config, true) and all_passed
+    all_passed = _check("renderer uses ui config for action text color", config_renderer._get_span_color(SemanticSpan.SpanType.ACTION), ui_config.action_text_color) and all_passed
+    all_passed = _check("renderer uses ui config for action chip border", config_renderer._resolve_chip_colors({"lane": "action"}).get("border"), ui_config.action_chip_border_color) and all_passed
+    all_passed = _check("renderer uses ui config for trigger badge bg", config_renderer._resolve_badge_colors({"badge_style": "trigger"}).get("bg"), ui_config.trigger_badge_bg_color) and all_passed
     dock.apply_ui_config(ui_config)
     all_passed = _check("dock apply_ui_config passes config to renderer", dock.get_viewport_control()._renderer._ui_config == ui_config, true) and all_passed
+
+    # ── Layout regression coverage: group/variable/badge-chip overlap ──────────
+    var overlap_fix_sheet := EventSheetResource.new()
+    overlap_fix_sheet.variables["score_with_a_name_that_should_clip_before_colliding_with_type_and_const_badges"] = {
+        "type": "VeryLongCustomNumberTypeName",
+        "default": "A default value that also needs clipping",
+        "const": true
+    }
+    var overlap_fix_group := EventGroup.new()
+    overlap_fix_group.name = "A group name that should stay readable without overlapping the group badge or running outside the row"
+    overlap_fix_group.group_name = overlap_fix_group.name
+    var overlap_fix_event := EventRow.new()
+    overlap_fix_event.condition_mode = EventRow.ConditionMode.OR
+    var overlap_fix_condition_a := ACECondition.new()
+    overlap_fix_condition_a.provider_id = "Missing"
+    overlap_fix_condition_a.ace_id = "A condition title that should leave room for later OR badges and chips"
+    var overlap_fix_condition_b := ACECondition.new()
+    overlap_fix_condition_b.provider_id = "Missing"
+    overlap_fix_condition_b.ace_id = "Follow-up condition"
+    overlap_fix_condition_b.negated = true
+    overlap_fix_event.conditions = [overlap_fix_condition_a, overlap_fix_condition_b]
+    var overlap_fix_action := ACEAction.new()
+    overlap_fix_action.provider_id = "Missing"
+    overlap_fix_action.ace_id = "Action with a title that must stay before add action"
+    overlap_fix_event.actions = [overlap_fix_action]
+    overlap_fix_sheet.events = [overlap_fix_group, overlap_fix_event]
+    dock.setup(overlap_fix_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var overlap_fix_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var overlap_fix_variable_row: EventRowData = overlap_fix_rows[0].get("row")
+    var overlap_fix_group_row: EventRowData = overlap_fix_rows[1].get("row")
+    var overlap_fix_event_row: EventRowData = overlap_fix_rows[2].get("row")
+    var overlap_fix_variable_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    var overlap_fix_group_layout: Dictionary = dock_viewport.get_row_layout_for_test(1, 640.0)
+    var overlap_fix_event_layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
+    all_passed = _check("variable row spans stay ordered without overlap", _line_spans_do_not_overlap(overlap_fix_variable_row), true) and all_passed
+    all_passed = _check("variable row spans stay inside row width", _spans_fit_within_rect(overlap_fix_variable_row, overlap_fix_variable_layout.get("row_rect", Rect2())), true) and all_passed
+    all_passed = _check("group row spans stay ordered without overlap", _line_spans_do_not_overlap(overlap_fix_group_row), true) and all_passed
+    all_passed = _check("group row spans stay inside row width", _spans_fit_within_rect(overlap_fix_group_row, overlap_fix_group_layout.get("row_rect", Rect2())), true) and all_passed
+    all_passed = _check("mixed badge chip condition spans stay ordered", _line_spans_do_not_overlap(overlap_fix_event_row, "condition"), true) and all_passed
+    all_passed = _check(
+        "condition lane spans stay before divider after overlap fix",
+        _lane_spans_fit_before_x(overlap_fix_event_row, "condition", float(overlap_fix_event_layout.get("lane_divider_x", 0.0))),
+        true
+    ) and all_passed
+
+    # ── Group copy/paste preserves structure and supports multi-selection ──────
+    var group_copy_sheet := EventSheetResource.new()
+    var group_copy_a := EventGroup.new()
+    group_copy_a.name = "Enemies"
+    group_copy_a.group_name = group_copy_a.name
+    var group_copy_a_event := EventRow.new()
+    group_copy_a_event.comment = "spawn enemies"
+    var group_copy_a_child := EventRow.new()
+    group_copy_a_child.comment = "nested rule"
+    group_copy_a_event.sub_events = [group_copy_a_child]
+    group_copy_a.events = [group_copy_a_event]
+    var group_copy_b := EventGroup.new()
+    group_copy_b.name = "Loot"
+    group_copy_b.group_name = group_copy_b.name
+    var group_copy_b_event := EventRow.new()
+    group_copy_b_event.comment = "drop item"
+    group_copy_b.events = [group_copy_b_event]
+    group_copy_sheet.events = [group_copy_a, group_copy_b]
+    dock.setup(group_copy_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport._select_row(0)
+    dock._on_copy_requested()
+    dock._on_paste_requested()
+    all_passed = _check("single group paste duplicates structural unit", dock.get_current_sheet().events.size(), 3) and all_passed
+    var pasted_group: EventGroup = dock.get_current_sheet().events[1] as EventGroup
+    all_passed = _check("single group paste preserves child row count", pasted_group.events.size(), 1) and all_passed
+    all_passed = _check("single group paste preserves nested sub-event count", (((pasted_group.events[0]) as EventRow).sub_events.size()), 1) and all_passed
+    all_passed = _check("single group paste assigns fresh group uid", pasted_group.group_uid == group_copy_a.group_uid, false) and all_passed
+    all_passed = _check("single group paste assigns fresh child event uid", (((pasted_group.events[0]) as EventRow).event_uid == group_copy_a_event.event_uid), false) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo removes pasted group", dock.get_current_sheet().events.size(), 2) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo restores pasted group", dock.get_current_sheet().events.size(), 3) and all_passed
+
+    dock.setup(group_copy_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport._select_from_click(0, -1, false)
+    dock_viewport._select_from_click(1, -1, true)
+    dock._on_copy_requested()
+    dock._on_paste_requested()
+    all_passed = _check("multi-group paste appends both copied groups", dock.get_current_sheet().events.size(), 4) and all_passed
+    all_passed = _check(
+        "multi-group paste preserves selection order",
+        [
+            ((dock.get_current_sheet().events[2]) as EventGroup).group_name,
+            ((dock.get_current_sheet().events[3]) as EventGroup).group_name
+        ],
+        ["Enemies", "Loot"]
+    ) and all_passed
+    all_passed = _check(
+        "multi-group paste preserves copied child resources",
+        [
+            (((dock.get_current_sheet().events[2] as EventGroup).events[0]) as EventRow).comment,
+            (((dock.get_current_sheet().events[3] as EventGroup).events[0]) as EventRow).comment
+        ],
+        ["spawn enemies", "drop item"]
+    ) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo removes pasted multi-group selection", dock.get_current_sheet().events.size(), 2) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo restores pasted multi-group selection", dock.get_current_sheet().events.size(), 4) and all_passed
+
+    # ── Event rows with sub-events fold non-destructively like groups ─────────
+    var event_fold_sheet := EventSheetResource.new()
+    var parent_event := EventRow.new()
+    parent_event.comment = "parent"
+    var child_sub_event := EventRow.new()
+    child_sub_event.comment = "child"
+    parent_event.sub_events = [child_sub_event]
+    event_fold_sheet.events = [parent_event]
+    dock.setup(event_fold_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var event_fold_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._context_row = event_fold_rows[0].get("row")
+    dock._context_hit = {"span_metadata": {}, "span_index": -1}
+    all_passed = _check("event with sub-events exposes fold rect", dock_viewport.get_row_layout_for_test(0, 640.0).get("fold_rect", Rect2()).size != Vector2.ZERO, true) and all_passed
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_GROUP_FOLD)
+    all_passed = _check("event fold hides sub-event rows", dock_viewport.get_total_row_count(), 1) and all_passed
+    all_passed = _check("event fold keeps sub-event array intact", parent_event.sub_events.size(), 1) and all_passed
+    all_passed = _check("event fold keeps original child resource", parent_event.sub_events[0] == child_sub_event, true) and all_passed
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_GROUP_FOLD)
+    all_passed = _check("event unfold restores sub-event rows", dock_viewport.get_total_row_count(), 2) and all_passed
+    all_passed = _check("event unfold restores same child resource", parent_event.sub_events[0] == child_sub_event, true) and all_passed
 
     editor.free()
     return all_passed
@@ -1129,6 +1266,55 @@ static func _rows_have_debug_state(rows: Array[Dictionary]) -> bool:
         if row_data != null and not row_data.debug_state.is_empty():
             return true
     return false
+
+static func _line_spans_do_not_overlap(row_data: EventRowData, lane: String = "") -> bool:
+    var spans_by_line: Dictionary = {}
+    for span in row_data.spans:
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        var metadata: Dictionary = span.metadata as Dictionary
+        var span_lane: String = str(metadata.get("lane", "condition"))
+        if not lane.is_empty() and span_lane != lane:
+            continue
+        var line_index: int = int(metadata.get("line_index", 0))
+        if not spans_by_line.has(line_index):
+            spans_by_line[line_index] = []
+        spans_by_line[line_index].append(span.rect)
+    for line_index in spans_by_line.keys():
+        var rects: Array = spans_by_line[line_index]
+        rects.sort_custom(func(a: Rect2, b: Rect2) -> bool:
+            return a.position.x < b.position.x
+        )
+        var previous_end: float = -INF
+        for rect in rects:
+            var span_rect: Rect2 = rect as Rect2
+            if span_rect.position.x + 0.25 < previous_end:
+                return false
+            previous_end = max(previous_end, span_rect.end.x)
+    return true
+
+static func _spans_fit_within_rect(row_data: EventRowData, rect: Rect2) -> bool:
+    if rect.size == Vector2.ZERO:
+        return false
+    for span in row_data.spans:
+        if span == null:
+            continue
+        if span.rect.end.x > rect.end.x - EventSheetPalette.ROW_HORIZONTAL_PADDING + 0.5:
+            return false
+    return true
+
+static func _lane_spans_fit_before_x(row_data: EventRowData, lane: String, x_limit: float) -> bool:
+    if x_limit <= 0.0:
+        return false
+    for span in row_data.spans:
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        var metadata: Dictionary = span.metadata as Dictionary
+        if str(metadata.get("lane", "condition")) != lane:
+            continue
+        if span.rect.end.x > x_limit - EventSheetPalette.ACTION_LANE_PADDING + 0.5:
+            return false
+    return true
 
 static func _row_has_lane(row_data: EventRowData, expected_lane: String) -> bool:
     for span in row_data.spans:
