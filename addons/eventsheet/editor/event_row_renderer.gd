@@ -20,6 +20,10 @@ const BADGE_FONT_SIZE_DELTA := 1
 const SUBTREE_SELECTION_ALPHA_FACTOR := 0.55
 const DRAG_HIGHLIGHT_CONDITION := Color(0.43, 0.70, 1.0, 0.96)
 const DRAG_HIGHLIGHT_ACTION := Color(0.44, 0.84, 0.74, 0.96)
+const DRAG_SOURCE_HIGHLIGHT_FILL := Color(1.0, 0.98, 0.70, 0.24)
+const DRAG_SOURCE_HIGHLIGHT_BORDER := Color(1.0, 0.90, 0.46, 0.92)
+const SPAN_SELECTION_OUTLINE_CONDITION := Color(0.46, 0.72, 1.0, 0.97)
+const SPAN_SELECTION_OUTLINE_ACTION := Color(0.44, 0.84, 0.74, 0.97)
 
 func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
     var row_rect: Rect2 = layout.get("row_rect", Rect2())
@@ -274,10 +278,8 @@ func _draw_spans(
             continue
         var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
         if drag_source_span_indices.has(span_index):
-            var drag_source_fill: Color = Color(1.0, 0.98, 0.70, 0.24)
-            var drag_source_outline: Color = Color(1.0, 0.90, 0.46, 0.92)
-            control.draw_rect(span.rect.grow(2.0), drag_source_fill, true)
-            control.draw_rect(span.rect.grow(2.0), drag_source_outline, false, 2.0)
+            control.draw_rect(span.rect.grow(2.0), DRAG_SOURCE_HIGHLIGHT_FILL, true)
+            control.draw_rect(span.rect.grow(2.0), DRAG_SOURCE_HIGHLIGHT_BORDER, false, 2.0)
         if bool(metadata.get("chip", false)):
             _draw_chip_span(control, span, metadata)
         if selected_span_indices.has(span_index):
@@ -287,9 +289,9 @@ func _draw_spans(
             var selected_outline: Color = selection_fill.lightened(0.30)
             var selected_kind: String = str(metadata.get("kind", ""))
             if selected_kind in ["condition", "trigger"]:
-                selected_outline = Color(0.46, 0.72, 1.0, 0.97)
+                selected_outline = SPAN_SELECTION_OUTLINE_CONDITION
             elif selected_kind == "action":
-                selected_outline = Color(0.44, 0.84, 0.74, 0.97)
+                selected_outline = SPAN_SELECTION_OUTLINE_ACTION
             else:
                 selected_outline.a = max(selected_outline.a, 0.92)
             control.draw_rect(span.rect.grow(2.0), selected_outline, false, 2.0)

@@ -110,9 +110,10 @@ static func build_ace_drag_visuals(
             var target_span_index: int = int(find_ace_span_index.call(row_data, ace_span_kind, ace_index))
             if target_span_index >= 0 and target_span_index < row_data.spans.size():
                 target_span = row_data.spans[target_span_index]
+        var target_span_width: float = target_span.rect.size.x if target_span != null else lane_rect.size.x * PLACEHOLDER_FALLBACK_WIDTH_RATIO
         var placeholder_height: float = max(min(line_height - 8.0, lane_rect.size.y - 8.0), 10.0)
         var placeholder_width: float = clampf(
-            target_span.rect.size.x if target_span != null else lane_rect.size.x * PLACEHOLDER_FALLBACK_WIDTH_RATIO,
+            target_span_width,
             72.0,
             max(lane_rect.size.x - 10.0, 72.0)
         )
@@ -126,11 +127,8 @@ static func build_ace_drag_visuals(
             lane_rect.position.x + 4.0,
             lane_rect.end.x - placeholder_width - 4.0
         )
-        var placeholder_y: float = (
-            target_span.rect.position.y + 2.0
-            if target_span != null
-            else insertion_rect.position.y
-        )
+        var target_span_y: float = target_span.rect.position.y + 2.0 if target_span != null else insertion_rect.position.y
+        var placeholder_y: float = target_span_y
         placeholder_y = clampf(
             placeholder_y,
             lane_rect.position.y + 2.0,
