@@ -118,8 +118,8 @@ static func run() -> bool:
     all_passed = _check("demo rows render trigger arrow badge", _rows_contain_text(demo_rows, "➜"), true) and all_passed
     all_passed = _check("demo rows render auto ace action text", _rows_contain_text(demo_rows, "Take Damage 10"), true) and all_passed
     all_passed = _check("demo rows do not expose debug overlay badges by default", _rows_have_debug_state(demo_rows), false) and all_passed
-    all_passed = _check("title formatter returns no-sheet fallback", EventSheetDock._format_sheet_title(null), "No Sheet Loaded") and all_passed
-    all_passed = _check("path formatter returns no-sheet fallback", EventSheetDock._format_sheet_path_hint(null), "Open or create a sheet to begin") and all_passed
+    all_passed = _check("title formatter returns no-sheet fallback", EventSheetDock._format_sheet_title(null, ""), "No Sheet Loaded") and all_passed
+    all_passed = _check("path formatter returns no-sheet fallback", EventSheetDock._format_sheet_path_hint(null, ""), "Open or create a sheet to begin") and all_passed
 
     var sheet := EventSheetResource.new()
     var group := EventGroup.new()
@@ -140,7 +140,6 @@ static func run() -> bool:
     group.events.append(event_row)
     sheet.events = [comment, group]
     dock.setup(sheet)
-    dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
     sheet.take_over_path("res://demo/sheets/test_title_sheet.tres")
     dock.setup(sheet)
     title_tab_label = dock.find_child("EventSheetTitleTabLabel", true, false) as Label

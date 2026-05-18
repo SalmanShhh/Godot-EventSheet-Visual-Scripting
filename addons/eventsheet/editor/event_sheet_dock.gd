@@ -1114,7 +1114,7 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
         return
     _show_popup_menu(_row_context_menu, global_position)
 
-func _on_viewport_empty_space_double_clicked(_global_position: Vector2) -> void:
+func _on_viewport_empty_space_double_clicked() -> void:
     if not _ensure_sheet_for_editing():
         return
     var created: bool = _perform_undoable_sheet_edit("Add Event", func() -> bool:
@@ -1133,7 +1133,7 @@ func _on_viewport_empty_space_context_menu_requested(global_position: Vector2) -
 func _on_empty_space_context_menu_id_pressed(id: int) -> void:
     match id:
         EMPTY_MENU_NEW_EVENT:
-            _on_viewport_empty_space_double_clicked(Vector2.ZERO)
+            _on_viewport_empty_space_double_clicked()
         EMPTY_MENU_NEW_CONDITION:
             if _viewport != null:
                 _viewport.clear_selection()
@@ -2165,7 +2165,7 @@ func _refresh_title_strip() -> void:
     _title_path_label.text = _format_sheet_path_hint(_current_sheet, _current_sheet_path)
     _title_dirty_dot.visible = _dirty and _current_sheet != null
 
-static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String = "") -> String:
+static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String) -> String:
     if sheet == null:
         return "No Sheet Loaded"
     var resolved_path: String = explicit_path
@@ -2175,7 +2175,7 @@ static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String
         return "Untitled EventSheet"
     return resolved_path.get_file().get_basename()
 
-static func _format_sheet_path_hint(sheet: EventSheetResource, explicit_path: String = "") -> String:
+static func _format_sheet_path_hint(sheet: EventSheetResource, explicit_path: String) -> String:
     if sheet == null:
         return "Open or create a sheet to begin"
     var resolved_path: String = explicit_path

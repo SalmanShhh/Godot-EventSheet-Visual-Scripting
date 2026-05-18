@@ -19,7 +19,7 @@ signal ace_drop_requested(
 )
 signal context_menu_requested(row_data: EventRowData, hit: Dictionary, global_position: Vector2)
 signal empty_space_context_menu_requested(global_position: Vector2)
-signal empty_space_double_clicked(global_position: Vector2)
+signal empty_space_double_clicked
 signal drag_status_requested(message: String, is_error: bool)
 
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
@@ -483,7 +483,7 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
         if row_index < 0:
             _select_from_click(row_index, span_index, false)
             if event.double_click:
-                empty_space_double_clicked.emit(DisplayServer.mouse_get_position())
+                empty_space_double_clicked.emit()
                 accept_event()
             return
         var row_data: EventRowData = _row_at(row_index)
