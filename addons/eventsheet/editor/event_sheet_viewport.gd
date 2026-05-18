@@ -2163,8 +2163,6 @@ func _resolve_entry_hover_span_index(row_index: int, span_index: int) -> int:
     if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
         return -1
     var span: SemanticSpan = row_data.spans[span_index]
-    if span == null:
-        return -1
     var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
     if (
         row_data.row_type == EventRowData.RowType.EVENT
