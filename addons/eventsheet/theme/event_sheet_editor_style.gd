@@ -72,7 +72,7 @@ func ensure_defaults() -> void:
 			var rebuilt_action_style: EventSheetElementStyle = _build_element_style_from_scene(action_visual_scene)
 			if rebuilt_action_style != null:
 				action_style = rebuilt_action_style
-	if not use_visual_layout_scene:
+	if not use_visual_layout_scene and (_last_use_visual_layout_scene or _last_theme_layout_visual_scene != theme_layout_visual_scene):
 		_last_use_visual_layout_scene = use_visual_layout_scene
 		_last_theme_layout_visual_scene = theme_layout_visual_scene
 	if event_style == null:

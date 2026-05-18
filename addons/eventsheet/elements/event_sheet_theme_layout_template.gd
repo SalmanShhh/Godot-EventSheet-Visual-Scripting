@@ -103,6 +103,7 @@ font_size_delta: int
 var style := EventSheetElementStyle.new()
 var button: Button = _button_node(node_name)
 if button == null:
+push_warning("Theme layout visual editor missing expected preview button: %s" % node_name)
 return style
 var normal_box: StyleBoxFlat = _resolve_flat_stylebox(button, "normal")
 var hover_box: StyleBoxFlat = _resolve_flat_stylebox(button, "hover")
