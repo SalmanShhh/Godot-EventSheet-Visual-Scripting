@@ -1216,6 +1216,8 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         return {}
     var event_style: EventSheetEventStyle = _get_event_style()
     var line_height: float = _get_event_line_height(font_size)
+    # Cache key components: row uid, visible row index, canvas width, active drag
+    # target index, and the current layout style signature.
     var key: String = "%s:%d:%d:%d:%s" % [row_data.row_uid, index, int(width), _drag_target_index, _layout_style_signature]
     if _layout_cache.has(key):
         return _layout_cache.get_layout(key)

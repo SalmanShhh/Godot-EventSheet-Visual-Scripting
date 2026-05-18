@@ -3,6 +3,9 @@
 extends RefCounted
 class_name EventSheetStyleTest
 
+const TEST_LONG_CONDITION_PROVIDER := "TestLongCondition"
+const TEST_LONG_ACTION_PROVIDER := "TestLongAction"
+
 static func run() -> bool:
 	var passed: bool = true
 	var style := EventSheetEditorStyle.new()
@@ -55,10 +58,10 @@ static func run() -> bool:
 	styled_event.event_uid = "styled_event"
 	styled_event.trigger = _make_condition("Core", "OnReady", {})
 	styled_event.conditions = [
-		_make_condition("TestLongCondition", "Condition text that is intentionally long so custom padding and font size must still stay inside the condition lane", {})
+		_make_condition(TEST_LONG_CONDITION_PROVIDER, "Condition text that is intentionally long so custom padding and font size must still stay inside the condition lane", {})
 	]
 	styled_event.actions = [
-		_make_action("TestLongAction", "Action text that is intentionally long so the styled chip must still stay before the add action affordance", {})
+		_make_action(TEST_LONG_ACTION_PROVIDER, "Action text that is intentionally long so the styled chip must still stay before the add action affordance", {})
 	]
 	styled_event.comment = "Styled action comment should remain inside the action lane."
 	var local_variable := LocalVariable.new()

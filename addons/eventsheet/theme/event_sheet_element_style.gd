@@ -13,7 +13,7 @@ const MIN_LINE_HEIGHT_EXTRA := 10
 # Negative deltas are intentional so a style asset can reduce chip text size for
 # tighter visual hierarchy/density, while EventSheetPalette.clamp_font_size()
 # still enforces a readable floor.
-@export_range(-2, 12, 1) var font_size_delta: int = 0
+@export_range(-2, 12, 1) var font_size_delta: int = 0 # Negative values intentionally support denser chip styles.
 @export_range(0, 24, 1) var horizontal_padding: int = 8
 @export_range(0, 16, 1) var vertical_padding: int = 2
 @export_range(0, 24, 1) var gap_after: int = 8
