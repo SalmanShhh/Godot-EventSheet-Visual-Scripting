@@ -138,6 +138,13 @@ static func run() -> bool:
     all_passed = _check("event row includes lane metadata spans", _row_has_lane(event_row_data, "condition") and _row_has_lane(event_row_data, "action"), true) and all_passed
     var layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
     all_passed = _check("event row layout contains lane divider scaffold", float(layout.get("lane_divider_x", -1.0)) > 0.0, true) and all_passed
+    var action_span_index: int = _find_span_index_by_kind(event_row_data, "action")
+    var add_action_span_index: int = _find_span_index_by_kind(event_row_data, "add_action")
+    all_passed = _check(
+        "inline add action affordance sits below authored actions",
+        add_action_span_index >= 0 and action_span_index >= 0 and event_row_data.spans[add_action_span_index].rect.position.y > event_row_data.spans[action_span_index].rect.position.y,
+        true
+    ) and all_passed
 
     var or_sheet := EventSheetResource.new()
     var or_event := EventRow.new()
@@ -214,6 +221,44 @@ static func run() -> bool:
     dock_viewport._select_from_click(2, _find_span_index_by_kind(event_rows_for_selection[2].get("row"), "condition"), true)
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("ctrl click toggles selected span off", editor_state.get("selected_span_count", 0), 0) and all_passed
+
+    var delete_sheet := EventSheetResource.new()
+    var delete_event := EventRow.new()
+    var delete_condition_a := ACECondition.new()
+    delete_condition_a.provider_id = "Core"
+    delete_condition_a.ace_id = "Always"
+    var delete_condition_b := ACECondition.new()
+    delete_condition_b.provider_id = "Core"
+    delete_condition_b.ace_id = "Always"
+    var delete_action_a := ACEAction.new()
+    delete_action_a.provider_id = "Core"
+    delete_action_a.ace_id = "QueueFree"
+    var delete_action_b := ACEAction.new()
+    delete_action_b.provider_id = "Core"
+    delete_action_b.ace_id = "QueueFree"
+    delete_event.conditions = [delete_condition_a, delete_condition_b]
+    delete_event.actions = [delete_action_a, delete_action_b]
+    delete_sheet.events = [delete_event, EventRow.new()]
+    dock.setup(delete_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var delete_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var delete_row_data: EventRowData = delete_rows[0].get("row")
+    var delete_key := InputEventKey.new()
+    delete_key.pressed = true
+    delete_key.keycode = KEY_DELETE
+    dock_viewport._select_from_click(0, _find_span_index_by_kind(delete_row_data, "condition"), false)
+    dock._unhandled_key_input(delete_key)
+    all_passed = _check("delete key removes selected condition span", ((dock.get_current_sheet().events[0] as EventRow).conditions.size()), 1) and all_passed
+    dock_viewport = dock.get_viewport_control()
+    delete_row_data = dock_viewport.get_flat_rows()[0].get("row")
+    dock_viewport._select_from_click(0, _find_span_index_by_kind(delete_row_data, "action"), false)
+    dock_viewport._select_from_click(0, _find_last_span_index_by_kind(delete_row_data, "action"), true)
+    dock._unhandled_key_input(delete_key)
+    all_passed = _check("delete key removes multi-selected action spans", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), 0) and all_passed
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport._select_row(1)
+    dock._unhandled_key_input(delete_key)
+    all_passed = _check("delete key still removes selected event rows", dock.get_current_sheet().events.size(), 1) and all_passed
 
     var multi_block_sheet := EventSheetResource.new()
     var multi_event_a := EventRow.new()
@@ -496,6 +541,9 @@ static func run() -> bool:
     all_passed = _check("editing global variable in use locks type selector", dock._variable_dlg._type_option.disabled, true) and all_passed
     dock._on_variable_dialog_confirmed("ammo", "int", 99, "global", {"editing": true, "original_name": "ammo"})
     all_passed = _check("editing global variable updates default", dock.get_current_sheet().variables["ammo"].get("default", 0), 99) and all_passed
+    dock_viewport = dock.get_viewport_control()
+    all_passed = _check("global variables render in the sheet rows", _rows_contain_text(dock_viewport.get_flat_rows(), "ammo"), true) and all_passed
+    all_passed = _check("local variables render in the sheet rows", _rows_contain_text(dock_viewport.get_flat_rows(), "cooldown"), true) and all_passed
 
     var unselected_local_sheet := EventSheetResource.new()
     unselected_local_sheet.events = [EventRow.new()]
@@ -522,7 +570,13 @@ static func run() -> bool:
 
     # Clicking event lanes opens the ACE picker in the matching mode.
     dock.setup(copy_sheet)
-    var clickable_row: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
+    dock_viewport = dock.get_viewport_control()
+    var clickable_row: EventRowData = null
+    for row_entry in dock_viewport.get_flat_rows():
+        var candidate: EventRowData = row_entry.get("row")
+        if candidate != null and candidate.source_resource is EventRow:
+            clickable_row = candidate
+            break
     dock._ace_picker._window.hide()
     dock._on_viewport_ace_picker_requested(clickable_row, "condition")
     all_passed = _check("condition lane click opens ace picker", dock._ace_picker._window.visible, true) and all_passed
@@ -583,7 +637,7 @@ static func run() -> bool:
     all_passed = _check("save normalization adds default filename", dock._normalize_sheet_save_path("res://"), "res://event_sheet.tres") and all_passed
     all_passed = _check("save normalization appends tres extension", dock._normalize_sheet_save_path("res://sheets/editor_sheet"), "res://sheets/editor_sheet.tres") and all_passed
 
-    # Drag-drop ACE preview updates side panel list.
+    # Drag-drop ACE preview opens popup window content.
     var preview_defs: Array[ACEDefinition] = []
     var on_signal_def: ACEDefinition = ACEDefinition.new()
     on_signal_def.provider_id = "Core"
@@ -593,6 +647,7 @@ static func run() -> bool:
     on_signal_def.ace_type = ACEDefinition.ACEType.TRIGGER
     preview_defs.append(on_signal_def)
     dock._on_ace_preview_requested("DemoNode", preview_defs)
+    all_passed = _check("ace drag-in preview opens popup window", dock._preview_window.visible, true) and all_passed
     all_passed = _check("ace drag-in preview list gets populated", dock._preview_list.item_count > 0, true) and all_passed
 
     editor.free()

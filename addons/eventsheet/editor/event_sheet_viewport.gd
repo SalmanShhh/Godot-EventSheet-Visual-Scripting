@@ -191,6 +191,33 @@ func get_selected_ace_entries() -> Array:
             entries.append(_build_ace_drag_entry(row_data, kind, ace_index))
     return entries
 
+func get_selected_span_targets() -> Array:
+    var targets: Array = []
+    for index in range(_flat_rows.size()):
+        var row_data: EventRowData = _row_at(index)
+        if row_data == null:
+            continue
+        var row_uid: String = row_data.row_uid
+        var selected_indices: Array = _selected_span_indices.get(row_uid, []).duplicate()
+        selected_indices.sort()
+        for span_index in selected_indices:
+            if span_index < 0 or span_index >= row_data.spans.size():
+                continue
+            var span: SemanticSpan = row_data.spans[span_index]
+            if span == null or not (span.metadata is Dictionary):
+                continue
+            var metadata: Dictionary = span.metadata as Dictionary
+            var kind: String = str(metadata.get("kind", ""))
+            if not ["trigger", "condition", "action"].has(kind):
+                continue
+            targets.append({
+                "row_uid": row_uid,
+                "kind": kind,
+                "ace_index": int(metadata.get("ace_index", -1)),
+                "source_resource": row_data.source_resource
+            })
+    return targets
+
 func get_editor_state_snapshot() -> Dictionary:
     return {
         "focused_lane": _focused_lane,
@@ -357,6 +384,12 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
         return
     if event.pressed:
         grab_focus()
+        var row_data: EventRowData = _row_at(row_index)
+        var metadata: Dictionary = hit.get("span_metadata", {})
+        if row_data != null and str(metadata.get("kind", "")) == "add_action":
+            ace_picker_requested.emit(row_data, "action")
+            accept_event()
+            return
         if bool(hit.get("fold", false)):
             _select_from_click(row_index, span_index, false)
             _toggle_row_fold(row_index)
@@ -599,6 +632,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
     var root_rows: Array[EventRowData] = []
     if sheet == null:
         return root_rows
+    root_rows.append_array(_build_global_variable_rows(sheet))
     for entry in sheet.events:
         var row_data: EventRowData = _build_row_from_resource(entry, 0)
         if row_data != null:
@@ -663,21 +697,76 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
     row_data.disabled = not event_row.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
     row_data.breakpoint_enabled = bool(_breakpoint_rows.get(row_data.row_uid, false))
     row_data.spans = _build_event_spans(event_row)
+    for local_variable_row in _build_local_variable_rows(event_row, indent + 1):
+        row_data.children.append(local_variable_row)
     for child in event_row.sub_events:
         var child_row: EventRowData = _build_row_from_resource(child, indent + 1)
         if child_row != null:
             row_data.children.append(child_row)
     return row_data
 
+func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowData]:
+    var rows: Array[EventRowData] = []
+    if sheet == null:
+        return rows
+    var names: Array = sheet.variables.keys()
+    names.sort()
+    for var_name in names:
+        var descriptor: Dictionary = sheet.variables.get(var_name, {})
+        rows.append(
+            _build_variable_row(
+                "global",
+                str(var_name),
+                str(descriptor.get("type", "Variant")),
+                descriptor.get("default", null),
+                0
+            )
+        )
+    return rows
+
+func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[EventRowData]:
+    var rows: Array[EventRowData] = []
+    if event_row == null:
+        return rows
+    for local_variable in event_row.local_variables:
+        if not (local_variable is LocalVariable):
+            continue
+        var descriptor: LocalVariable = local_variable as LocalVariable
+        rows.append(
+            _build_variable_row(
+                "local",
+                descriptor.name,
+                descriptor.type_name,
+                descriptor.default_value,
+                indent
+            )
+        )
+    return rows
+
+func _build_variable_row(scope_label: String, var_name: String, type_name: String, default_value: Variant, indent: int) -> EventRowData:
+    var row_data := EventRowData.new()
+    row_data.indent = indent
+    row_data.row_type = EventRowData.RowType.SECTION
+    row_data.row_uid = "variable_%s_%s_%d" % [scope_label, var_name, indent]
+    row_data.folded = false
+    row_data.spans = [
+        _make_span(scope_label, SemanticSpan.SpanType.KEYWORD, {"editable": false}),
+        _make_span(var_name if not var_name.is_empty() else "(unnamed)", SemanticSpan.SpanType.OBJECT, {"editable": false}),
+        _make_span(":", SemanticSpan.SpanType.OPERATOR, {"editable": false}),
+        _make_span(type_name if not type_name.is_empty() else "Variant", SemanticSpan.SpanType.VALUE, {"editable": false}),
+        _make_span("=", SemanticSpan.SpanType.OPERATOR, {"editable": false}),
+        _make_span(_format_variable_value(default_value), SemanticSpan.SpanType.VALUE, {"editable": false})
+    ]
+    return row_data
+
 func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
     var spans: Array[SemanticSpan] = []
     var condition_line_index: int = 0
+    var action_line_index: int = 0
     if event_row.trigger != null:
-        var trigger_meta: Dictionary = CONDITION_KEYWORD_METADATA.duplicate(true)
-        trigger_meta["line_index"] = condition_line_index
-        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, trigger_meta))
         var trigger_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
         trigger_badge_meta["line_index"] = condition_line_index
+        trigger_badge_meta["badge_style"] = "trigger"
         spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, trigger_badge_meta))
         spans.append(
             _make_span(
@@ -694,11 +783,9 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
         )
         condition_line_index += 1
     elif not event_row.trigger_id.is_empty():
-        var trigger_id_meta: Dictionary = CONDITION_KEYWORD_METADATA.duplicate(true)
-        trigger_id_meta["line_index"] = condition_line_index
-        spans.append(_make_span("on", SemanticSpan.SpanType.KEYWORD, trigger_id_meta))
         var trigger_id_badge_meta: Dictionary = BADGE_TRIGGER_METADATA.duplicate(true)
         trigger_id_badge_meta["line_index"] = condition_line_index
+        trigger_id_badge_meta["badge_style"] = "trigger"
         spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, trigger_id_badge_meta))
         spans.append(
             _make_span(
@@ -720,18 +807,6 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
             if condition == null:
                 continue
             var line_index: int = condition_line_index
-            var join_meta: Dictionary = CONDITION_KEYWORD_METADATA.duplicate(true)
-            join_meta["line_index"] = line_index
-            if condition_index == 0 and not spans.is_empty():
-                spans.append(_make_span("and", SemanticSpan.SpanType.KEYWORD, join_meta))
-            elif condition_index > 0:
-                spans.append(
-                    _make_span(
-                        "or" if event_row.condition_mode == EventRow.ConditionMode.OR else "and",
-                        SemanticSpan.SpanType.KEYWORD,
-                        join_meta
-                    )
-                )
             _append_condition_prefix_spans(spans, event_row, condition, condition_index, line_index)
             spans.append(
                 _make_span(
@@ -748,9 +823,6 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
             )
             condition_line_index += 1
     if spans.is_empty():
-        var empty_keyword_meta: Dictionary = CONDITION_KEYWORD_METADATA.duplicate(true)
-        empty_keyword_meta["line_index"] = 0
-        spans.append(_make_span("when", SemanticSpan.SpanType.KEYWORD, empty_keyword_meta))
         spans.append(
             _make_span(
                 "Always",
@@ -759,12 +831,9 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
             )
         )
     if not event_row.actions.is_empty():
-        spans.append(_make_span("→", SemanticSpan.SpanType.OPERATOR, {"hoverable": false, "lane": "action"}))
         for action_index in range(event_row.actions.size()):
             var action_resource: Resource = event_row.actions[action_index]
             if action_resource is ACEAction:
-                if action_index > 0:
-                    spans.append(_make_span(";", SemanticSpan.SpanType.OPERATOR, {"hoverable": false, "lane": "action"}))
                 spans.append(
                     _make_span(
                         _format_action_descriptor(action_resource as ACEAction),
@@ -773,17 +842,37 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                             "lane": "action",
                             "kind": "action",
                             "ace_index": action_index,
-                            "chip": true
+                            "chip": true,
+                            "line_index": action_line_index
                         }
                     )
                 )
+                action_line_index += 1
+    spans.append(
+        _make_span(
+            "+ Add",
+            SemanticSpan.SpanType.ACTION,
+            {
+                "lane": "action",
+                "kind": "add_action",
+                "align_right": true,
+                "line_index": action_line_index
+            }
+        )
+    )
+    action_line_index += 1
     if not event_row.comment.is_empty():
-        spans.append(_make_span("//", SemanticSpan.SpanType.KEYWORD, {"hoverable": false, "lane": "action"}))
         spans.append(
             _make_span(
                 event_row.comment,
                 SemanticSpan.SpanType.COMMENT,
-                {"editable": true, "edit_kind": "event_comment", "lane": "action", "chip": true}
+                {
+                    "editable": true,
+                    "edit_kind": "event_comment",
+                    "lane": "action",
+                    "chip": true,
+                    "line_index": action_line_index
+                }
             )
         )
     return spans
@@ -801,11 +890,13 @@ func _append_condition_prefix_spans(
         var or_meta: Dictionary = BADGE_OR_METADATA.duplicate(true)
         or_meta["condition_index"] = condition_index
         or_meta["line_index"] = line_index
+        or_meta["badge_style"] = "or"
         spans.append(_make_span("OR", SemanticSpan.SpanType.KEYWORD, or_meta))
     if condition.negated:
         var negated_meta: Dictionary = BADGE_NEGATED_METADATA.duplicate(true)
         negated_meta["condition_index"] = condition_index
         negated_meta["line_index"] = line_index
+        negated_meta["badge_style"] = "negated"
         spans.append(_make_span("✕", SemanticSpan.SpanType.KEYWORD, negated_meta))
 
 func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
@@ -847,6 +938,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         if lane_divider_x > 0.0
         else x
     )
+    var action_line_x: Dictionary = {}
     for span_index in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null:
@@ -856,7 +948,14 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         var span_x: float = x
         var span_y: float = row_top + 3.0
         if span_lane == "action":
-            span_x = action_x
+            var action_line_index: int = int(metadata.get("line_index", 0))
+            span_y = row_top + float(action_line_index * ROW_HEIGHT) + 3.0
+            if bool(metadata.get("align_right", false)) and action_lane_rect.size.x > 0.0:
+                span_x = action_lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING
+            else:
+                if not action_line_x.has(action_line_index):
+                    action_line_x[action_line_index] = action_x
+                span_x = float(action_line_x[action_line_index])
         elif lane_divider_x > 0.0:
             var line_index: int = int(metadata.get("line_index", 0))
             if not condition_line_x.has(line_index):
@@ -872,12 +971,18 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         if lane_divider_x > 0.0 and span_lane != "action":
             var max_condition_right: float = lane_divider_x - EventSheetPalette.ACTION_LANE_PADDING
             span_width = max(min(span_width, max_condition_right - span_x), 10.0)
+        elif span_lane == "action" and bool(metadata.get("align_right", false)) and action_lane_rect.size.x > 0.0:
+            span_x = max(
+                action_lane_rect.position.x + EventSheetPalette.ACTION_LANE_PADDING,
+                action_lane_rect.end.x - EventSheetPalette.ACTION_LANE_PADDING - span_width - 2.0
+            )
         span.rect = Rect2(span_x, span_y, span_width + 2.0, ROW_HEIGHT - 6.0)
         var next_x: float = span.rect.size.x + (
             CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP
         )
         if span_lane == "action":
-            action_x = span.rect.end.x + next_x
+            if not bool(metadata.get("align_right", false)):
+                action_line_x[int(metadata.get("line_index", 0))] = span.rect.end.x + next_x
         else:
             condition_line_x[int(metadata.get("line_index", 0))] = span.rect.end.x + next_x
     var drag_rect := Rect2()
@@ -1259,8 +1364,7 @@ func _resolve_row_height(row_data: EventRowData) -> float:
         if span == null or not (span.metadata is Dictionary):
             continue
         var metadata: Dictionary = span.metadata as Dictionary
-        if _resolve_span_lane(span) == "condition":
-            max_line_index = maxi(max_line_index, int(metadata.get("line_index", 0)))
+        max_line_index = maxi(max_line_index, int(metadata.get("line_index", 0)))
     return float((max_line_index + 1) * ROW_HEIGHT)
 
 func _get_row_top(index: int) -> float:
@@ -1395,6 +1499,13 @@ func _format_action_descriptor(action: ACEAction) -> String:
     if descriptor == null:
         return action.ace_id
     return descriptor.format_display(params_dict)
+
+func _format_variable_value(value: Variant) -> String:
+    if value == null:
+        return "null"
+    if value is String:
+        return '"%s"' % str(value)
+    return str(value)
 
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
     var span := SemanticSpan.new()

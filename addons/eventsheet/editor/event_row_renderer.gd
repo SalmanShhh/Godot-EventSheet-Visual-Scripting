@@ -179,11 +179,16 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
     var badge_rect: Rect2 = span.rect
     var badge_bg: Color = metadata.get("badge_bg", EventSheetPalette.COLOR_LANE_DIVIDER)
     var badge_fg: Color = metadata.get("badge_fg", TEXT_PRIMARY)
-    var style: StyleBoxFlat = StyleBoxFlat.new()
-    style.bg_color = badge_bg
-    style.set_corner_radius_all(4)
-    style.set_content_margin_all(0)
-    control.draw_style_box(style, badge_rect)
+    var badge_style: String = str(metadata.get("badge_style", ""))
+    if badge_style in ["trigger", "negated"]:
+        var radius: float = min(badge_rect.size.x, badge_rect.size.y) * 0.45
+        control.draw_circle(badge_rect.get_center(), radius, badge_bg)
+    else:
+        var style: StyleBoxFlat = StyleBoxFlat.new()
+        style.bg_color = badge_bg
+        style.set_corner_radius_all(4)
+        style.set_content_margin_all(0)
+        control.draw_style_box(style, badge_rect)
     var text: String = span.text
     var text_size: Vector2 = font.get_string_size(
         text,

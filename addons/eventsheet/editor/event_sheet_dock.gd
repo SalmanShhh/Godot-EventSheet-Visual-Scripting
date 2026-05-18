@@ -33,6 +33,7 @@ var _split: HSplitContainer = null
 var _scroll: ScrollContainer = null
 var _viewport: EventSheetViewport = null
 var _side_panel: VBoxContainer = null
+var _preview_window: Window = null
 var _preview_title: Label = null
 var _preview_list: ItemList = null
 var _global_var_list: ItemList = null
@@ -171,19 +172,13 @@ func _build_ui() -> void:
     _add_toolbar_button("Add Global Var", _on_add_global_variable_requested)
     _add_toolbar_button("Add Local Var", _on_add_local_variable_requested)
 
-    _split = HSplitContainer.new()
-    _split.name = "EventSheetWorkspaceSplit"
-    _split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _split.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    root.add_child(_split)
-
     _scroll = ScrollContainer.new()
     _scroll.name = "EventSheetScroll"
     _scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
     _scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-    _split.add_child(_scroll)
+    root.add_child(_scroll)
 
     _viewport = EventSheetViewport.new()
     _viewport.name = "EventSheetViewport"
@@ -203,51 +198,6 @@ func _build_ui() -> void:
     _viewport.context_menu_requested.connect(_on_viewport_context_menu_requested)
     _viewport.set_external_span_edit_handler_enabled(true)
 
-    _side_panel = VBoxContainer.new()
-    _side_panel.name = "EventSheetSidePanel"
-    _side_panel.custom_minimum_size = Vector2(SIDE_PANEL_MIN_WIDTH, 0.0)
-    _side_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _split.add_child(_side_panel)
-
-    _preview_title = Label.new()
-    _preview_title.name = "ACEPreviewTitle"
-    _preview_title.text = "Dropped ACE Preview"
-    _side_panel.add_child(_preview_title)
-
-    _preview_list = ItemList.new()
-    _preview_list.name = "ACEPreviewList"
-    _preview_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _preview_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _preview_list.size_flags_stretch_ratio = 1.15
-    _preview_list.custom_minimum_size = Vector2(140.0, 120.0)
-    _side_panel.add_child(_preview_list)
-
-    var globals_label: Label = Label.new()
-    globals_label.text = "Global Variables"
-    _side_panel.add_child(globals_label)
-
-    _global_var_list = ItemList.new()
-    _global_var_list.name = "GlobalVariableList"
-    _global_var_list.custom_minimum_size = Vector2(140.0, 96.0)
-    _global_var_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _global_var_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _global_var_list.size_flags_stretch_ratio = 0.55
-    _global_var_list.item_activated.connect(_on_global_variable_activated)
-    _side_panel.add_child(_global_var_list)
-
-    var locals_label: Label = Label.new()
-    locals_label.text = "Local Variables (selected event)"
-    _side_panel.add_child(locals_label)
-
-    _local_var_list = ItemList.new()
-    _local_var_list.name = "LocalVariableList"
-    _local_var_list.custom_minimum_size = Vector2(140.0, 96.0)
-    _local_var_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _local_var_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _local_var_list.size_flags_stretch_ratio = 0.55
-    _local_var_list.item_activated.connect(_on_local_variable_activated)
-    _side_panel.add_child(_local_var_list)
-
     _status_label = Label.new()
     _status_label.name = "EventSheetStatus"
     _status_label.text = "Ready"
@@ -258,6 +208,7 @@ func _build_ui() -> void:
     _exposed_node.setup(_ace_registry, _editor_param_store, _current_sheet, _param_resolver)
     _exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
     _build_context_menus()
+    _build_preview_window()
     call_deferred("_sync_workspace_layout")
 
 func _notification(what: int) -> void:
@@ -267,13 +218,38 @@ func _notification(what: int) -> void:
         _release_ace_sources()
 
 func _sync_workspace_layout() -> void:
-    if _split == null:
+    return
+
+func _build_preview_window() -> void:
+    if _preview_window != null:
         return
-    var total_width: float = size.x
-    if total_width <= 0.0:
-        return
-    var side_panel_width: float = clampf(total_width * SIDE_PANEL_WIDTH_RATIO, SIDE_PANEL_MIN_WIDTH, SIDE_PANEL_MAX_WIDTH)
-    _split.split_offset = int(max(total_width - side_panel_width, 0.0))
+    _preview_window = Window.new()
+    _preview_window.name = "ACEPreviewWindow"
+    _preview_window.title = "Dropped ACE Preview"
+    _preview_window.visible = false
+    _preview_window.min_size = Vector2i(480, 280)
+    _preview_window.close_requested.connect(func() -> void:
+        if _preview_window != null:
+            _preview_window.hide()
+    )
+    add_child(_preview_window)
+
+    var content: VBoxContainer = VBoxContainer.new()
+    content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _preview_window.add_child(content)
+
+    _preview_title = Label.new()
+    _preview_title.name = "ACEPreviewTitle"
+    _preview_title.text = "Dropped ACE Preview"
+    content.add_child(_preview_title)
+
+    _preview_list = ItemList.new()
+    _preview_list.name = "ACEPreviewList"
+    _preview_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _preview_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    content.add_child(_preview_list)
 
 func _build_context_menus() -> void:
     if _condition_context_menu != null:
@@ -363,7 +339,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
             _on_zoom_out_requested()
             accept_event()
     elif key_event.keycode in [KEY_DELETE, KEY_BACKSPACE]:
-        _delete_selected_rows()
+        _delete_selected_content()
         accept_event()
 
 ## Closes the ACE picker when the user clicks anywhere outside the popup rect.
@@ -945,12 +921,16 @@ func _resolve_event_ace_resource(event_row: EventRow, lane: String, ace_index: i
     return null
 
 func _on_ace_preview_requested(source_label: String, definitions: Array[ACEDefinition]) -> void:
+    if _preview_window == null or _preview_list == null:
+        return
+    _preview_window.title = "Dropped ACE Preview — %s (%d)" % [source_label, definitions.size()]
     _preview_title.text = "Dropped ACE Preview — %s (%d)" % [source_label, definitions.size()]
     _preview_list.clear()
     for definition in definitions:
         _preview_list.add_item("[%s] %s" % [_ace_type_label(definition.ace_type), definition.format_display()])
     if definitions.is_empty():
         _preview_list.add_item("No ACE definitions were generated from this drop payload.")
+    _preview_window.popup_centered(Vector2i(560, 320))
 
 func _ace_type_label(ace_type: int) -> String:
     match ace_type:
@@ -1164,6 +1144,58 @@ func _delete_context_row() -> void:
     )
     if deleted:
         _mark_dirty("Deleted row.")
+
+func _delete_selected_content() -> void:
+    if _delete_selected_spans():
+        return
+    _delete_selected_rows()
+
+func _delete_selected_spans() -> bool:
+    if _viewport == null:
+        return false
+    var selected_targets: Array = _viewport.get_selected_span_targets()
+    if selected_targets.is_empty():
+        return false
+    var deleted: bool = _perform_undoable_sheet_edit("Delete ACE", func() -> bool:
+        var targets_by_row: Dictionary = {}
+        for target in selected_targets:
+            if not (target is Dictionary):
+                continue
+            var target_dict: Dictionary = target as Dictionary
+            var row_uid: String = str(target_dict.get("row_uid", ""))
+            if row_uid.is_empty():
+                continue
+            if not targets_by_row.has(row_uid):
+                targets_by_row[row_uid] = []
+            (targets_by_row[row_uid] as Array).append(target_dict)
+        for row_targets in targets_by_row.values():
+            var targets_for_row: Array = row_targets as Array
+            targets_for_row.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+                return int(a.get("ace_index", -1)) > int(b.get("ace_index", -1))
+            )
+            for target_dict in targets_for_row:
+                var event_row: EventRow = target_dict.get("source_resource", null) as EventRow
+                if event_row == null:
+                    continue
+                var kind: String = str(target_dict.get("kind", ""))
+                var ace_index: int = int(target_dict.get("ace_index", -1))
+                match kind:
+                    "trigger":
+                        if event_row.trigger != null:
+                            event_row.trigger = null
+                    "condition":
+                        if ace_index >= 0 and ace_index < event_row.conditions.size():
+                            event_row.conditions.remove_at(ace_index)
+                    "action":
+                        if ace_index >= 0 and ace_index < event_row.actions.size():
+                            event_row.actions.remove_at(ace_index)
+        return true
+    )
+    if not deleted:
+        return false
+    _viewport.clear_selection()
+    _mark_dirty("Deleted ACE.")
+    return true
 
 func _delete_selected_rows() -> void:
     var selected_rows: Array[EventRowData] = _get_selected_rows_from_context()
@@ -1538,18 +1570,19 @@ func _find_definition(provider_id: String, ace_id: String) -> ACEDefinition:
 
 
 func _refresh_variable_panel() -> void:
-    if _global_var_list == null or _local_var_list == null:
-        return
-    _global_var_list.clear()
-    _local_var_list.clear()
     _global_variable_entries.clear()
     _local_variable_entries.clear()
+    if _global_var_list != null:
+        _global_var_list.clear()
+    if _local_var_list != null:
+        _local_var_list.clear()
     if _current_sheet != null:
         var names: Array = _current_sheet.variables.keys()
         names.sort()
         for var_name in names:
             var descriptor: Dictionary = _current_sheet.variables.get(var_name, {})
-            _global_var_list.add_item("%s : %s = %s" % [var_name, str(descriptor.get("type", "Variant")), str(descriptor.get("default", ""))])
+            if _global_var_list != null:
+                _global_var_list.add_item("%s : %s = %s" % [var_name, str(descriptor.get("type", "Variant")), str(descriptor.get("default", ""))])
             _global_variable_entries.append({
                 "name": var_name,
                 "type": str(descriptor.get("type", "Variant")),
@@ -1561,7 +1594,8 @@ func _refresh_variable_panel() -> void:
             var local_var: LocalVariable = (selected_resource as EventRow).local_variables[index]
             if local_var == null:
                 continue
-            _local_var_list.add_item("%s : %s = %s" % [local_var.name, local_var.type_name, str(local_var.default_value)])
+            if _local_var_list != null:
+                _local_var_list.add_item("%s : %s = %s" % [local_var.name, local_var.type_name, str(local_var.default_value)])
             _local_variable_entries.append({
                 "index": index,
                 "name": local_var.name,
