@@ -1088,6 +1088,27 @@ func _get_span_gap(metadata: Dictionary, has_following_span: bool) -> float:
         return 0.0
     return CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP
 
+func _measure_span_reservation_width(span: SemanticSpan, display_text: String, font: Font, font_size: int) -> float:
+    var full_width: float = _measure_span_width(span, display_text, font, font_size)
+    if span == null:
+        return full_width
+    var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+    if bool(metadata.get("badge", false)) or bool(metadata.get("keep_full_width", false)):
+        return full_width
+    if span.type in [
+        SemanticSpan.SpanType.OBJECT,
+        SemanticSpan.SpanType.CONDITION,
+        SemanticSpan.SpanType.ACTION,
+        SemanticSpan.SpanType.VALUE,
+        SemanticSpan.SpanType.EXPRESSION,
+        SemanticSpan.SpanType.COMMENT
+    ]:
+        var min_width: float = 28.0
+        if bool(metadata.get("chip", false)):
+            min_width += CHIP_EXTRA_WIDTH
+        return min(full_width, min_width)
+    return full_width
+
 func _build_line_suffix_reservations(row_data: EventRowData, font: Font, font_size: int) -> Dictionary:
     var grouped_indices: Dictionary = {}
     for span_index in range(row_data.spans.size()):
@@ -1117,7 +1138,7 @@ func _build_line_suffix_reservations(row_data: EventRowData, font: Font, font_si
                 if _editing_row_index >= 0 and _row_at(_editing_row_index) == row_data and span_index == _editing_span_index
                 else span.text
             )
-            var span_width: float = _measure_span_width(span, display_text, font, font_size)
+            var span_width: float = _measure_span_reservation_width(span, display_text, font, font_size)
             var has_following_span: bool = reservations[span_index] > 0.0
             running_after_width += span_width + _get_span_gap(metadata, has_following_span)
     return reservations
@@ -1225,6 +1246,12 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
                 condition_line_x[line_index] = condition_x
             span_x = float(condition_line_x[line_index])
             span_y = row_top + float(line_index * _get_row_base_height()) + 3.0
+        else:
+            var content_line_index: int = int(metadata.get("line_index", 0))
+            if not condition_line_x.has(content_line_index):
+                condition_line_x[content_line_index] = x
+            span_x = float(condition_line_x[content_line_index])
+            span_y = row_top + float(content_line_index * _get_row_base_height()) + 3.0
         var display_text: String = _editing_buffer if index == _editing_row_index and span_index == _editing_span_index else span.text
         var span_width: float = _measure_span_width(span, display_text, font, font_size)
         var trailing_width: float = float(line_suffix_reservations.get(span_index, 0.0))

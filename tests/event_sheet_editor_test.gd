@@ -1197,7 +1197,7 @@ static func run() -> bool:
     dock.setup(group_copy_sheet)
     dock_viewport = dock.get_viewport_control()
     dock_viewport._select_from_click(0, -1, false)
-    dock_viewport._select_from_click(1, -1, true)
+    dock_viewport._select_from_click(2, -1, true)
     dock._on_copy_requested()
     dock._on_paste_requested()
     all_passed = _check("multi-group paste appends both copied groups", dock.get_current_sheet().events.size(), 4) and all_passed
