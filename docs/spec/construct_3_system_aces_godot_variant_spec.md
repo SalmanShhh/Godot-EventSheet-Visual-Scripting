@@ -176,7 +176,7 @@ phase is out of scope until the compiler pipeline is implemented.
 
 ## Notes for Future Implementors
 
-- Keep provider ID exactly `"system"` — the ACE picker sorts providers alphabetically and `"system"` will appear near the bottom; consider adding a `priority: int` field to `ACEDefinition` so it can be pinned to the top.
+- Keep provider ID exactly `"system"` — the ACE picker sorts providers alphabetically and `"system"` will appear near the end of the list; consider adding a `priority: int` field to `ACEDefinition` so it can be pinned to the top.
 - The `variable(name)` expression should resolve against the sheet's variable store at runtime, not the GDScript local scope.
 - Input conditions should be pure reads from Godot's `Input` singleton, with no frame-level buffering unless the sheet runner exposes that abstraction.
 - For the `wait` action, the sheet runner must be coroutine-aware; a simple `while` loop interpreter cannot support it without `await`.

@@ -18,7 +18,12 @@ const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
 const BADGE_FONT_SIZE_DELTA := 1
 
-# Chip interaction state colours
+# Chip interaction state colours.
+# These are renderer-level defaults for the selected/drag-source chip states.
+# EventSheetEventStyle does not yet expose chip-interaction tokens, so we use
+# fixed values here to ensure reliable visibility regardless of the active theme.
+# When chip interaction tokens are added to EventSheetEventStyle these constants
+# should be replaced with the corresponding theme lookups.
 const CHIP_SELECTED_BG := Color(0.36, 0.51, 0.79, 0.55)
 const CHIP_SELECTED_BORDER := Color(0.56, 0.74, 1.0, 0.95)
 const CHIP_DRAG_SOURCE_BG := Color(1.0, 1.0, 1.0, 0.03)
