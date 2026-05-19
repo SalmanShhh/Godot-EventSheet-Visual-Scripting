@@ -18,6 +18,9 @@ const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
 const BADGE_FONT_SIZE_DELTA := 1
 const ELLIPSIS := "…"
+const DRAG_TARGET_FILL_ALPHA_NORMAL := 0.14
+const DRAG_TARGET_FILL_ALPHA_ERROR := 0.2
+const SELECTION_OUTLINE_LIGHTEN_FACTOR := 0.25
 
 func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
     var row_rect: Rect2 = layout.get("row_rect", Rect2())
@@ -111,7 +114,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
         control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
     if ace_drag_target_rect.size != Vector2.ZERO:
         var drag_target_fill: Color = EventSheetPalette.COLOR_DRAG_LINE
-        drag_target_fill.a = 0.14 if not ace_drag_error else 0.2
+        drag_target_fill.a = DRAG_TARGET_FILL_ALPHA_NORMAL if not ace_drag_error else DRAG_TARGET_FILL_ALPHA_ERROR
         control.draw_rect(ace_drag_target_rect, drag_target_fill, true)
     if ace_drag_rect.size != Vector2.ZERO:
         control.draw_rect(
@@ -227,10 +230,10 @@ func _draw_spans(
         if bool(metadata.get("chip", false)):
             _draw_chip_span(control, span, metadata)
         if selected_span_indices.has(span_index):
-            var selected_bg: Color = selection_fill
-            selected_bg.a = 0.72
-            control.draw_rect(span.rect.grow(2.0), selected_bg, true)
-            var selected_outline: Color = selection_fill.lightened(0.25)
+            var selected_background: Color = selection_fill
+            selected_background.a = 0.72
+            control.draw_rect(span.rect.grow(2.0), selected_background, true)
+            var selected_outline: Color = selection_fill.lightened(SELECTION_OUTLINE_LIGHTEN_FACTOR)
             selected_outline.a = 0.95
             control.draw_rect(span.rect.grow(2.0), selected_outline, false, 1.0)
         elif span_index == hovered_span_index:
