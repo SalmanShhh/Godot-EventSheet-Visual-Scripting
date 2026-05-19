@@ -18,6 +18,12 @@ const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
 const BADGE_FONT_SIZE_DELTA := 1
 
+# Chip interaction state colours
+const CHIP_SELECTED_BG := Color(0.36, 0.51, 0.79, 0.55)
+const CHIP_SELECTED_BORDER := Color(0.56, 0.74, 1.0, 0.95)
+const CHIP_DRAG_SOURCE_BG := Color(1.0, 1.0, 1.0, 0.03)
+const CHIP_DRAG_SOURCE_BORDER := Color(0.56, 0.74, 1.0, 0.45)
+
 func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
     var row_rect: Rect2 = layout.get("row_rect", Rect2())
     var gutter_rect: Rect2 = layout.get("gutter_rect", Rect2())
@@ -104,16 +110,14 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
         control.draw_rect(row_rect, hover_fill, true)
     _draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
     _draw_icon(control, icon_rect, row_data)
-    _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index, event_style, selection_fill, hover_fill)
+    var drag_source_span_indices: Array = layout.get("drag_source_span_indices", [])
+    _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index, event_style, selection_fill, hover_fill, drag_source_span_indices)
     if drag_rect.size != Vector2.ZERO:
         control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
     if ace_drag_rect.size != Vector2.ZERO:
-        control.draw_rect(
-            ace_drag_rect,
-            EventSheetPalette.COLOR_BREAKPOINT if ace_drag_error else EventSheetPalette.COLOR_DRAG_LINE,
-            ace_drag_rect.size.y <= 4.0,
-            2.0
-        )
+        var drag_color: Color = EventSheetPalette.COLOR_BREAKPOINT if ace_drag_error else EventSheetPalette.COLOR_DRAG_LINE
+        # Always fill the insertion-cursor rect so it is clearly visible.
+        control.draw_rect(ace_drag_rect, drag_color, true)
     if drag_feedback_rect.size != Vector2.ZERO and not drag_feedback_text.is_empty():
         _draw_drag_feedback(control, drag_feedback_rect, drag_feedback_text, font, font_size, drag_feedback_error)
     if disabled:
@@ -211,26 +215,36 @@ func _draw_spans(
     hovered_span_index: int,
     event_style: EventSheetEventStyle = null,
     selection_fill: Color = EventSheetPalette.COLOR_SELECTION,
-    hover_fill: Color = EventSheetPalette.COLOR_HOVER
+    hover_fill: Color = EventSheetPalette.COLOR_HOVER,
+    drag_source_span_indices: Array = []
 ) -> void:
     for span_index: int in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null:
             continue
         var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
-        if bool(metadata.get("chip", false)):
-            _draw_chip_span(control, span, metadata)
-        if selected_span_indices.has(span_index):
+        var is_chip: bool = bool(metadata.get("chip", false))
+        var is_selected: bool = selected_span_indices.has(span_index)
+        var is_hovered: bool = span_index == hovered_span_index
+        var is_drag_source: bool = drag_source_span_indices.has(span_index)
+        # Draw the chip/span background for the current interaction state.
+        if is_chip:
+            if is_selected:
+                _draw_chip_selected_span(control, span, metadata, selection_fill)
+            elif is_drag_source:
+                _draw_chip_drag_source_span(control, span, metadata)
+            elif is_hovered:
+                _draw_chip_hover_span(control, span, metadata)
+            else:
+                _draw_chip_span(control, span, metadata)
+        elif is_selected:
             var selected_bg: Color = selection_fill
             selected_bg.a = 0.72
             control.draw_rect(span.rect.grow(2.0), selected_bg, true)
-        elif span_index == hovered_span_index:
-            if bool(metadata.get("chip", false)):
-                _draw_chip_hover_span(control, span, metadata)
-            else:
-                var hover_bg: Color = hover_fill
-                hover_bg.a = 0.6
-                control.draw_rect(span.rect.grow(1.0), hover_bg, true)
+        elif is_hovered:
+            var hover_bg: Color = hover_fill
+            hover_bg.a = 0.6
+            control.draw_rect(span.rect.grow(1.0), hover_bg, true)
         if bool(metadata.get("badge", false)):
             _draw_badge_span(control, span, font, font_size, metadata)
             continue
@@ -287,6 +301,29 @@ func _draw_chip_hover_span(control: Control, span: SemanticSpan, metadata: Dicti
     var style: StyleBoxFlat = StyleBoxFlat.new()
     style.bg_color = metadata.get("chip_hover_bg", EventSheetPalette.COLOR_HOVER)
     style.border_color = metadata.get("chip_border", Color(1.0, 1.0, 1.0, 0.14))
+    style.set_border_width_all(1)
+    style.set_corner_radius_all(int(metadata.get("corner_radius", 5)))
+    style.set_content_margin_all(0)
+    control.draw_style_box(style, span.rect)
+
+## Draws a chip in its selected state — bright border and solid fill so the
+## selection is unmistakable in both single and multi-select scenarios.
+func _draw_chip_selected_span(control: Control, span: SemanticSpan, metadata: Dictionary, selection_fill: Color) -> void:
+    var style: StyleBoxFlat = StyleBoxFlat.new()
+    style.bg_color = Color(CHIP_SELECTED_BG.r, CHIP_SELECTED_BG.g, CHIP_SELECTED_BG.b, selection_fill.a * 2.5)
+    style.bg_color.a = clampf(style.bg_color.a, 0.45, 0.72)
+    style.border_color = CHIP_SELECTED_BORDER
+    style.set_border_width_all(2)
+    style.set_corner_radius_all(int(metadata.get("corner_radius", 5)))
+    style.set_content_margin_all(0)
+    control.draw_style_box(style, span.rect.grow(1.0))
+
+## Draws a chip that is currently being dragged — dimmed appearance so the
+## user knows this item is "in flight" and not in its original position.
+func _draw_chip_drag_source_span(control: Control, span: SemanticSpan, metadata: Dictionary) -> void:
+    var style: StyleBoxFlat = StyleBoxFlat.new()
+    style.bg_color = CHIP_DRAG_SOURCE_BG
+    style.border_color = CHIP_DRAG_SOURCE_BORDER
     style.set_border_width_all(1)
     style.set_corner_radius_all(int(metadata.get("corner_radius", 5)))
     style.set_content_margin_all(0)

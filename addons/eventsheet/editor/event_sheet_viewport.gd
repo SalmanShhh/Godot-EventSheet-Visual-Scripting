@@ -1484,6 +1484,18 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
                     )
                 span_x = float(condition_line_x[line_index])
             span_y = row_top + float(line_index) * line_height + 3.0
+        else:
+            # Non-EVENT rows (GROUP, COMMENT, SECTION) also need per-line position
+            # tracking so consecutive spans don't stack on top of each other.
+            var line_index: int = int(metadata.get("line_index", 0))
+            if bool(metadata.get("badge", false)):
+                if not condition_badge_next_x.has(line_index):
+                    condition_badge_next_x[line_index] = x
+                span_x = float(condition_badge_next_x[line_index])
+            else:
+                if not condition_line_x.has(line_index):
+                    condition_line_x[line_index] = float(condition_badge_next_x.get(line_index, x))
+                span_x = float(condition_line_x[line_index])
         var display_text: String = _editing_buffer if index == _editing_row_index and span_index == _editing_span_index else span.text
         var span_width: float = _measure_span_width(span, display_text, font, font_size)
         if lane_divider_x > 0.0 and span_lane != "action":
@@ -1585,7 +1597,10 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         "editing_caret": _editing_caret if index == _editing_row_index else -1,
         "selected_span_indices": _selected_span_indices.get(row_data.row_uid, []).duplicate(),
         "hovered_span_index": _hovered_span_index if index == _hovered_row_index else -1,
-        "drag_mode": _drag_target_mode if _drag_target_index == index else ""
+        "drag_mode": _drag_target_mode if _drag_target_index == index else "",
+        # Indices of spans that are the source of the current ACE drag so the
+        # renderer can dim/highlight them to communicate "in flight" state.
+        "drag_source_span_indices": _get_drag_source_span_indices_for_row(row_data)
     }
     _layout_cache.store(key, layout)
     return layout
@@ -2037,6 +2052,23 @@ func _build_ace_drag_entry(row_data: EventRowData, kind: String, ace_index: int)
             ace_index
         )
     }
+
+## Returns the span indices for any ACE entries currently being dragged that
+## originate from the given row. Used by the renderer to apply drag-source
+## styling so the user can see which chips are "in flight".
+func _get_drag_source_span_indices_for_row(row_data: EventRowData) -> Array:
+    var result: Array = []
+    if row_data == null or _drag_ace_entries.is_empty():
+        return result
+    for entry in _drag_ace_entries:
+        if str(entry.get("row_uid", "")) != row_data.row_uid:
+            continue
+        var kind: String = str(entry.get("kind", ""))
+        var ace_index: int = int(entry.get("ace_index", -1))
+        var span_index: int = _find_ace_span_index(row_data, kind, ace_index)
+        if span_index >= 0:
+            result.append(span_index)
+    return result
 
 func _resolve_ace_resource(source_resource: Resource, kind: String, ace_index: int) -> Resource:
     if not (source_resource is EventRow) or ace_index < 0:

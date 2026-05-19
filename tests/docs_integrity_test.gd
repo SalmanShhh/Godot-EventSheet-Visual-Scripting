@@ -80,6 +80,15 @@ const REQUIRED_DOCS := {
 		"[package]",
 		"[tokens]",
 		"[designer_notes]"
+	],
+	"res://docs/spec/construct_3_system_aces_godot_variant_spec.md": [
+		"# Construct 3 System ACEs",
+		"Provider ID",
+		"Actions",
+		"Conditions",
+		"Expressions",
+		"Implementation Plan",
+		"Differences from Construct 3"
 	]
 }
 

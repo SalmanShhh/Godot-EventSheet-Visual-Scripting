@@ -1307,6 +1307,139 @@ static func run() -> bool:
     all_passed = _check("ace drag-in preview opens popup window", dock._preview_window.visible, true) and all_passed
     all_passed = _check("ace drag-in preview list gets populated", dock._preview_list.item_count > 0, true) and all_passed
 
+    # Q key inserts a comment below the current selection.
+    var q_sheet := EventSheetResource.new()
+    var q_event := EventRow.new()
+    q_sheet.events = [q_event]
+    dock.setup(q_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport._select_row(0)
+    var q_key_event := InputEventKey.new()
+    q_key_event.pressed = true
+    q_key_event.keycode = KEY_Q
+    dock._unhandled_key_input(q_key_event)
+    all_passed = _check("Q key inserts a comment row", dock.get_current_sheet().events.size(), 2) and all_passed
+    all_passed = _check("Q key inserts a CommentRow type", dock.get_current_sheet().events[1] is CommentRow, true) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo removes Q-key comment insertion", dock.get_current_sheet().events.size(), 1) and all_passed
+
+    # E key toggles ACE enabled/disabled on selected chip spans.
+    var e_sheet := EventSheetResource.new()
+    var e_event := EventRow.new()
+    var e_condition := ACECondition.new()
+    e_condition.provider_id = "Core"
+    e_condition.ace_id = "Always"
+    e_condition.enabled = true
+    e_event.conditions = [e_condition]
+    e_sheet.events = [e_event]
+    dock.setup(e_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport.size = Vector2(640.0, 320.0)
+    var e_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var e_row_data: EventRowData = e_rows[0].get("row")
+    dock_viewport.get_row_layout_for_test(0, 640.0)
+    var e_condition_span_index: int = _find_span_index_by_kind(e_row_data, "condition")
+    dock_viewport._select_from_click(0, e_condition_span_index, false)
+    var e_key_event := InputEventKey.new()
+    e_key_event.pressed = true
+    e_key_event.keycode = KEY_E
+    dock._unhandled_key_input(e_key_event)
+    all_passed = _check("E key disables selected condition chip", (dock.get_current_sheet().events[0] as EventRow).conditions[0].enabled, false) and all_passed
+    dock._unhandled_key_input(e_key_event)
+    all_passed = _check("E key re-enables disabled condition chip", (dock.get_current_sheet().events[0] as EventRow).conditions[0].enabled, true) and all_passed
+
+    # Group click selection should include all child rows.
+    var group_select_sheet := EventSheetResource.new()
+    var gs_group := EventGroup.new()
+    gs_group.name = "SelectMe"
+    gs_group.group_name = gs_group.name
+    var gs_child_a := EventRow.new()
+    var gs_child_b := EventRow.new()
+    gs_group.events = [gs_child_a, gs_child_b]
+    group_select_sheet.events = [gs_group]
+    dock.setup(group_select_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var gs_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    # Click on the group row without selecting a specific span.
+    dock_viewport._select_from_click(0, -1, false)
+    var gs_editor_state: Dictionary = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("clicking group row selects the group itself", gs_editor_state.get("selected_row_count", 0) >= 1, true) and all_passed
+    all_passed = _check("clicking group row also selects child events", gs_editor_state.get("selected_row_count", 0) >= 3, true) and all_passed
+
+    # Non-EVENT rows must not overlap spans (variable / group text layout fix).
+    var overlap_sheet := EventSheetResource.new()
+    var overlap_group := EventGroup.new()
+    overlap_group.name = "GroupOverlapTest"
+    overlap_group.group_name = overlap_group.name
+    overlap_sheet.events = [overlap_group]
+    dock.setup(overlap_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport.size = Vector2(640.0, 320.0)
+    var overlap_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var overlap_row_data: EventRowData = overlap_rows[0].get("row")
+    dock_viewport.get_row_layout_for_test(0, 640.0)
+    # If more than one span exists, the second span must start to the right of the first.
+    var group_spans_non_overlapping: bool = true
+    if overlap_row_data.spans.size() >= 2:
+        var first_span: SemanticSpan = overlap_row_data.spans[0]
+        var second_span: SemanticSpan = overlap_row_data.spans[1]
+        if first_span != null and second_span != null and first_span.rect.size.x > 0.0 and second_span.rect.size.x > 0.0:
+            group_spans_non_overlapping = second_span.rect.position.x >= first_span.rect.end.x - 2.0
+    all_passed = _check("group row spans do not overlap each other", group_spans_non_overlapping, true) and all_passed
+
+    # ACE drag source span indices are populated during an active ACE drag.
+    var drag_source_sheet := EventSheetResource.new()
+    var drag_source_event := EventRow.new()
+    var drag_source_condition := ACECondition.new()
+    drag_source_condition.provider_id = "Core"
+    drag_source_condition.ace_id = "Always"
+    drag_source_event.conditions = [drag_source_condition]
+    drag_source_sheet.events = [drag_source_event]
+    dock.setup(drag_source_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport.size = Vector2(640.0, 320.0)
+    var ds_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var ds_row_data: EventRowData = ds_rows[0].get("row")
+    dock_viewport.get_row_layout_for_test(0, 640.0)
+    var ds_condition_span_index: int = _find_span_index_by_kind(ds_row_data, "condition")
+    dock_viewport._drag_ace_entries = [
+        dock_viewport._build_ace_drag_entry(ds_row_data, "condition", 0)
+    ]
+    var ds_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    var ds_source_indices: Array = ds_layout.get("drag_source_span_indices", [])
+    all_passed = _check("active ACE drag populates drag_source_span_indices", ds_source_indices.has(ds_condition_span_index), true) and all_passed
+    dock_viewport._clear_ace_drag()
+    var ds_clear_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    all_passed = _check("cleared ACE drag empties drag_source_span_indices", ds_clear_layout.get("drag_source_span_indices", []).is_empty(), true) and all_passed
+
+    # Drag preview rect is always filled (snap-preview visibility fix).
+    var snap_sheet := EventSheetResource.new()
+    var snap_event_a := EventRow.new()
+    var snap_cond_a := ACECondition.new()
+    snap_cond_a.provider_id = "Core"
+    snap_cond_a.ace_id = "Always"
+    snap_event_a.conditions = [snap_cond_a]
+    var snap_event_b := EventRow.new()
+    snap_sheet.events = [snap_event_a, snap_event_b]
+    dock.setup(snap_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport.size = Vector2(640.0, 320.0)
+    var snap_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var snap_row_a: EventRowData = snap_rows[0].get("row")
+    dock_viewport.get_row_layout_for_test(0, 640.0)
+    var snap_condition_span: int = _find_span_index_by_kind(snap_row_a, "condition")
+    dock_viewport._drag_ace_entries = [dock_viewport._build_ace_drag_entry(snap_row_a, "condition", 0)]
+    var snap_target_row: EventRowData = snap_rows[1].get("row")
+    dock_viewport.get_row_layout_for_test(1, 640.0)
+    dock_viewport._update_ace_drag_target(
+        {"row_index": 1, "span_index": -1, "lane": "condition", "span_metadata": {}},
+        Vector2(80.0, dock_viewport._get_row_top(1) + 14.0)
+    )
+    var snap_layout: Dictionary = dock_viewport.get_row_layout_for_test(1, 640.0)
+    var snap_drag_rect: Rect2 = snap_layout.get("ace_drag_rect", Rect2())
+    all_passed = _check("ACE drag preview rect is non-empty when hovering target row", snap_drag_rect.size != Vector2.ZERO, true) and all_passed
+    dock_viewport._clear_ace_drag()
+
     editor.free()
     return all_passed
 

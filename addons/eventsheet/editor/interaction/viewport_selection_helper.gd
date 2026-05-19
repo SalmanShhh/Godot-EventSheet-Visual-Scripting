@@ -33,7 +33,7 @@ static func build_single_selection(
         selected_row_uids[row_data.row_uid] = true
         if span_index >= 0:
             selected_span_indices[row_data.row_uid] = [span_index]
-        elif row_data.row_type == EventRowData.RowType.EVENT:
+        elif row_data.row_type in [EventRowData.RowType.EVENT, EventRowData.RowType.GROUP]:
             var descendant_uids: Array = include_descendants.call(row_data)
             for descendant_uid in descendant_uids:
                 selected_row_uids[str(descendant_uid)] = true

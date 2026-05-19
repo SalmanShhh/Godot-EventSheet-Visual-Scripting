@@ -482,6 +482,12 @@ func _unhandled_key_input(event: InputEvent) -> void:
     elif key_event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_F2]:
         if _viewport != null and _viewport.begin_edit_selected():
             accept_event()
+    elif key_event.keycode == KEY_Q:
+        _insert_comment_below_selection()
+        accept_event()
+    elif key_event.keycode == KEY_E:
+        _toggle_selected_aces_enabled()
+        accept_event()
 
 ## Closes the ACE picker when the user clicks anywhere outside the popup rect.
 func _gui_input(event: InputEvent) -> void:
@@ -1706,6 +1712,60 @@ func _insert_context_row_below(resource_entry: Resource, message: String) -> voi
     )
     if changed:
         _mark_dirty(message)
+
+## Inserts a new CommentRow below the currently selected row (or appends at
+## sheet root when nothing is selected). Triggered by the Q key.
+func _insert_comment_below_selection() -> void:
+    if _current_sheet == null:
+        return
+    var comment: CommentRow = CommentRow.new()
+    comment.text = "Comment"
+    var changed: bool = _perform_undoable_sheet_edit("Insert Comment", func() -> bool:
+        _insert_row_below_selection(comment)
+        return true
+    )
+    if changed:
+        _mark_dirty("Added comment.")
+
+## Toggles the enabled/disabled state of every selected ACE chip. Acts on the
+## single-selection context when nothing is multi-selected. Triggered by the E
+## key — equivalent to "commenting out" selected conditions/actions.
+func _toggle_selected_aces_enabled() -> void:
+    if _viewport == null:
+        return
+    var selected_targets: Array = _viewport.get_selected_span_targets()
+    if selected_targets.is_empty():
+        _toggle_context_ace_enabled()
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Toggle ACE Enabled", func() -> bool:
+        var any_changed: bool = false
+        for target in selected_targets:
+            if not (target is Dictionary):
+                continue
+            var target_dict: Dictionary = target as Dictionary
+            var event_row: EventRow = target_dict.get("source_resource", null) as EventRow
+            if event_row == null:
+                continue
+            var kind: String = str(target_dict.get("kind", ""))
+            var ace_index: int = int(target_dict.get("ace_index", -1))
+            match kind:
+                "trigger":
+                    if event_row.trigger != null:
+                        event_row.trigger.enabled = not event_row.trigger.enabled
+                        any_changed = true
+                "condition":
+                    if ace_index >= 0 and ace_index < event_row.conditions.size():
+                        event_row.conditions[ace_index].enabled = not event_row.conditions[ace_index].enabled
+                        any_changed = true
+                "action":
+                    if ace_index >= 0 and ace_index < event_row.actions.size() and event_row.actions[ace_index] is ACEAction:
+                        var target_action: ACEAction = event_row.actions[ace_index] as ACEAction
+                        target_action.enabled = not target_action.enabled
+                        any_changed = true
+        return any_changed
+    )
+    if changed:
+        _mark_dirty("Toggled ACE enabled state.")
 
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
     _refresh_variable_panel()
