@@ -93,6 +93,11 @@ const COND_ENTRY_SELECTED_BG: Color = Color(0.20, 0.32, 0.58, 0.72)
 const COND_ENTRY_SELECTED_BORDER: Color = Color(0.48, 0.68, 1.00, 0.98)
 const ACTION_ENTRY_SELECTED_BG: Color = Color(0.12, 0.30, 0.26, 0.72)
 const ACTION_ENTRY_SELECTED_BORDER: Color = Color(0.34, 0.78, 0.60, 0.98)
+## Entry hover fill — applied both when creating and when reverting to unselected state.
+const COND_ENTRY_HOVER_BG: Color = Color(0.22, 0.30, 0.46, 0.52)
+const COND_ENTRY_HOVER_BORDER: Color = Color(0.46, 0.62, 1.00, 0.55)
+const ACTION_ENTRY_HOVER_BG: Color = Color(0.16, 0.26, 0.24, 0.52)
+const ACTION_ENTRY_HOVER_BORDER: Color = Color(0.30, 0.66, 0.52, 0.55)
 ## Drop / drag-preview colours
 const DROP_HIGHLIGHT_COLOR: Color = Color(0.38, 0.60, 1.00, 0.15)
 const CONDITION_PREVIEW_BG_COLOR: Color = Color(0.14, 0.18, 0.28, 0.96)
@@ -450,7 +455,10 @@ func _apply_entry_selected_style(btn: EntryTokenButton, selected: bool) -> void:
 		normal_style.set_content_margin(SIDE_BOTTOM, 1)
 		btn.add_theme_stylebox_override("normal", normal_style)
 		var hover_style: StyleBoxFlat = normal_style.duplicate()
-		hover_style.bg_color = Color(0.22, 0.30, 0.46, 0.42) if btn.is_condition else Color(0.16, 0.26, 0.24, 0.42)
+		hover_style.bg_color = COND_ENTRY_HOVER_BG if btn.is_condition else ACTION_ENTRY_HOVER_BG
+		hover_style.border_color = COND_ENTRY_HOVER_BORDER if btn.is_condition else ACTION_ENTRY_HOVER_BORDER
+		hover_style.set_border_width_all(0)
+		hover_style.border_width_left = 2
 		btn.add_theme_stylebox_override("hover", hover_style)
 		btn.add_theme_stylebox_override("pressed", hover_style)
 		var font_color: Color = Color(0.76, 0.88, 1.00) if btn.is_condition else Color(0.68, 0.92, 0.78)
@@ -682,8 +690,8 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> EntryTo
 	btn.add_theme_stylebox_override("normal", normal_style)
 
 	var hover_style: StyleBoxFlat = normal_style.duplicate()
-	hover_style.bg_color = Color(0.22, 0.30, 0.46, 0.52) if is_condition else Color(0.16, 0.26, 0.24, 0.52)
-	hover_style.border_color = Color(0.46, 0.62, 1.00, 0.55) if is_condition else Color(0.30, 0.66, 0.52, 0.55)
+	hover_style.bg_color = COND_ENTRY_HOVER_BG if is_condition else ACTION_ENTRY_HOVER_BG
+	hover_style.border_color = COND_ENTRY_HOVER_BORDER if is_condition else ACTION_ENTRY_HOVER_BORDER
 	hover_style.set_border_width_all(0)
 	hover_style.border_width_left = 2
 	btn.add_theme_stylebox_override("hover", hover_style)
