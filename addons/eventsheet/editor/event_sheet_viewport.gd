@@ -1075,16 +1075,7 @@ func _build_variable_row(
         "variable_index": variable_index,
         "is_constant": is_constant
     }
-    var scope_badge_bg: Color = (
-        EventSheetPalette.COLOR_SCOPE_LOCAL_BADGE_BG
-        if scope_label == "local"
-        else EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_BG
-    )
-    var scope_badge_fg: Color = (
-        EventSheetPalette.COLOR_SCOPE_LOCAL_BADGE_FG
-        if scope_label == "local"
-        else EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_FG
-    )
+    var scope_badge_colors: Dictionary = _get_scope_badge_colors(scope_label)
     row_data.spans = [
         _make_span(
             scope_label,
@@ -1094,8 +1085,8 @@ func _build_variable_row(
                     "editable": false,
                     "badge": true,
                     "badge_style": "scope",
-                    "badge_bg": scope_badge_bg,
-                    "badge_fg": scope_badge_fg
+                    "badge_bg": scope_badge_colors.get("bg", EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_BG),
+                    "badge_fg": scope_badge_colors.get("fg", EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_FG)
                 },
                 true
             )
@@ -2271,6 +2262,17 @@ func _format_variable_value(value: Variant) -> String:
     if value is String:
         return '"%s"' % str(value)
     return str(value)
+
+func _get_scope_badge_colors(scope_label: String) -> Dictionary:
+    if scope_label == "local":
+        return {
+            "bg": EventSheetPalette.COLOR_SCOPE_LOCAL_BADGE_BG,
+            "fg": EventSheetPalette.COLOR_SCOPE_LOCAL_BADGE_FG
+        }
+    return {
+        "bg": EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_BG,
+        "fg": EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_FG
+    }
 
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
     var span := SemanticSpan.new()

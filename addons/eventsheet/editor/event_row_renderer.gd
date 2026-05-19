@@ -121,18 +121,14 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     if row_data.selected and not has_span_selection:
         control.draw_rect(row_rect, selection_fill, true)
         if row_data.row_type != EventRowData.RowType.EVENT:
-            var selection_outline: Color = selection_fill.lightened(SELECTION_OUTLINE_LIGHTEN)
-            selection_outline.a = SELECTION_OUTLINE_ALPHA
-            control.draw_rect(row_rect.grow(-0.5), selection_outline, false, 1.0)
+            _draw_row_outline(control, row_rect, selection_fill, SELECTION_OUTLINE_LIGHTEN, SELECTION_OUTLINE_ALPHA)
     var hover_row_fill: bool = row_data.hovered
     if row_data.row_type == EventRowData.RowType.EVENT and hovered_span_index >= 0:
         hover_row_fill = false
     if hover_row_fill:
         control.draw_rect(row_rect, hover_fill, true)
         if row_data.row_type != EventRowData.RowType.EVENT:
-            var hover_outline: Color = hover_fill.lightened(HOVER_OUTLINE_LIGHTEN)
-            hover_outline.a = HOVER_OUTLINE_ALPHA
-            control.draw_rect(row_rect.grow(-0.5), hover_outline, false, 1.0)
+            _draw_row_outline(control, row_rect, hover_fill, HOVER_OUTLINE_LIGHTEN, HOVER_OUTLINE_ALPHA)
     _draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
     _draw_icon(control, icon_rect, row_data)
     _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill)
@@ -203,6 +199,11 @@ func _draw_fold_arrow(control: Control, fold_rect: Rect2, folded: bool, visible:
             1.5,
             true
         )
+
+func _draw_row_outline(control: Control, row_rect: Rect2, base_color: Color, lighten: float, alpha: float) -> void:
+    var outline: Color = base_color.lightened(lighten)
+    outline.a = alpha
+    control.draw_rect(row_rect.grow(-0.5), outline, false, 1.0)
 
 func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2, alternating: bool, event_style: EventSheetEventStyle = null) -> void:
     var bg: Color = EventSheetPalette.COLOR_GROUP_BG_ALT if alternating else EventSheetPalette.COLOR_GROUP_BG
