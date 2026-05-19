@@ -17,6 +17,11 @@ const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
 const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
 const BADGE_FONT_SIZE_DELTA := 1
+const BADGE_MIN_HORIZONTAL_PADDING := 1.0
+const SELECTION_OUTLINE_LIGHTEN := 0.28
+const SELECTION_OUTLINE_ALPHA := 0.92
+const HOVER_OUTLINE_LIGHTEN := 0.35
+const HOVER_OUTLINE_ALPHA := 0.84
 const CHIP_HOVER_ACCENT_BLEND := 0.18
 const CHIP_HOVER_MIN_ALPHA := 0.24
 const CHIP_HOVER_BORDER_BLEND := 0.45
@@ -26,6 +31,14 @@ const CHIP_SELECT_ALPHA_MULTI := 0.34
 const CHIP_SELECT_ALPHA_SINGLE := 0.3
 const CHIP_SELECT_BORDER_LIGHTEN := 0.25
 const CHIP_SELECT_BORDER_ALPHA := 0.96
+const CHIP_SELECT_INDICATOR_OFFSET := 2.0
+const CHIP_SELECT_INDICATOR_WIDTH := 3.0
+const CHIP_SELECT_INDICATOR_MARGIN := 4.0
+const CHIP_SELECT_INDICATOR_MIN_HEIGHT := 2.0
+const SPAN_SELECT_OUTLINE_LIGHTEN := 0.3
+const SPAN_SELECT_OUTLINE_ALPHA := 0.95
+const SPAN_HOVER_OUTLINE_LIGHTEN := 0.28
+const SPAN_HOVER_OUTLINE_ALPHA := 0.82
 
 func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
     var row_rect: Rect2 = layout.get("row_rect", Rect2())
@@ -108,8 +121,8 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     if row_data.selected and not has_span_selection:
         control.draw_rect(row_rect, selection_fill, true)
         if row_data.row_type != EventRowData.RowType.EVENT:
-            var selection_outline: Color = selection_fill.lightened(0.28)
-            selection_outline.a = 0.92
+            var selection_outline: Color = selection_fill.lightened(SELECTION_OUTLINE_LIGHTEN)
+            selection_outline.a = SELECTION_OUTLINE_ALPHA
             control.draw_rect(row_rect.grow(-0.5), selection_outline, false, 1.0)
     var hover_row_fill: bool = row_data.hovered
     if row_data.row_type == EventRowData.RowType.EVENT and hovered_span_index >= 0:
@@ -117,8 +130,8 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     if hover_row_fill:
         control.draw_rect(row_rect, hover_fill, true)
         if row_data.row_type != EventRowData.RowType.EVENT:
-            var hover_outline: Color = hover_fill.lightened(0.35)
-            hover_outline.a = 0.84
+            var hover_outline: Color = hover_fill.lightened(HOVER_OUTLINE_LIGHTEN)
+            hover_outline.a = HOVER_OUTLINE_ALPHA
             control.draw_rect(row_rect.grow(-0.5), hover_outline, false, 1.0)
     _draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
     _draw_icon(control, icon_rect, row_data)
@@ -246,8 +259,8 @@ func _draw_spans(
                 var selected_bg: Color = selection_fill
                 selected_bg.a = 0.72
                 control.draw_rect(span.rect.grow(2.0), selected_bg, true)
-                var selected_outline: Color = selection_fill.lightened(0.3)
-                selected_outline.a = 0.95
+                var selected_outline: Color = selection_fill.lightened(SPAN_SELECT_OUTLINE_LIGHTEN)
+                selected_outline.a = SPAN_SELECT_OUTLINE_ALPHA
                 control.draw_rect(span.rect.grow(2.0), selected_outline, false, 1.0)
         elif span_index == hovered_span_index:
             if bool(metadata.get("chip", false)):
@@ -256,8 +269,8 @@ func _draw_spans(
                 var hover_bg: Color = hover_fill
                 hover_bg.a = 0.34
                 control.draw_rect(span.rect.grow(1.0), hover_bg, true)
-                var hover_outline: Color = hover_fill.lightened(0.28)
-                hover_outline.a = 0.82
+                var hover_outline: Color = hover_fill.lightened(SPAN_HOVER_OUTLINE_LIGHTEN)
+                hover_outline.a = SPAN_HOVER_OUTLINE_ALPHA
                 control.draw_rect(span.rect.grow(1.0), hover_outline, false, 1.0)
         if bool(metadata.get("badge", false)):
             _draw_badge_span(control, span, font, font_size, metadata)
@@ -343,7 +356,12 @@ func _draw_chip_selected_span(
     control.draw_style_box(style, target_rect)
     if multi_select:
         control.draw_rect(
-            Rect2(target_rect.position.x + 2.0, target_rect.position.y + 2.0, 3.0, max(target_rect.size.y - 4.0, 2.0)),
+            Rect2(
+                target_rect.position.x + CHIP_SELECT_INDICATOR_OFFSET,
+                target_rect.position.y + CHIP_SELECT_INDICATOR_OFFSET,
+                CHIP_SELECT_INDICATOR_WIDTH,
+                max(target_rect.size.y - CHIP_SELECT_INDICATOR_MARGIN, CHIP_SELECT_INDICATOR_MIN_HEIGHT)
+            ),
             style.border_color,
             true
         )
@@ -407,7 +425,7 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
         -1.0,
         badge_font_size
     )
-    var text_x: float = badge_rect.position.x + max((badge_rect.size.x - text_size.x) * 0.5, 1.0)
+    var text_x: float = badge_rect.position.x + max((badge_rect.size.x - text_size.x) * 0.5, BADGE_MIN_HORIZONTAL_PADDING)
     var text_height: float = max(font.get_height(badge_font_size), text_size.y)
     var baseline_y: float = badge_rect.position.y + ((badge_rect.size.y - text_height) * 0.5) + font.get_ascent(badge_font_size)
     control.draw_string(
