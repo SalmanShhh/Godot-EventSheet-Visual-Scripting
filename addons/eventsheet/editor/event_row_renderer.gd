@@ -426,12 +426,12 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
         -1.0,
         badge_font_size
     )
-    var text_x: float = badge_rect.position.x + max((badge_rect.size.x - text_size.x) * 0.5, BADGE_MIN_HORIZONTAL_PADDING)
-    var text_height: float = max(font.get_height(badge_font_size), text_size.y)
-    var baseline_y: float = badge_rect.position.y + ((badge_rect.size.y - text_height) * 0.5) + font.get_ascent(badge_font_size)
+    var text_baseline_x: float = badge_rect.position.x + max((badge_rect.size.x - text_size.x) * 0.5, BADGE_MIN_HORIZONTAL_PADDING)
+    var effective_text_height: float = max(font.get_height(badge_font_size), text_size.y)
+    var baseline_y: float = badge_rect.position.y + ((badge_rect.size.y - effective_text_height) * 0.5) + font.get_ascent(badge_font_size)
     control.draw_string(
         font,
-        Vector2(text_x, baseline_y),
+        Vector2(text_baseline_x, baseline_y),
         text,
         HORIZONTAL_ALIGNMENT_LEFT,
         -1.0,
