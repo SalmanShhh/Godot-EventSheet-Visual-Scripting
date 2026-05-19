@@ -17,6 +17,15 @@ const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
 const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
 const BADGE_FONT_SIZE_DELTA := 1
+const CHIP_HOVER_ACCENT_BLEND := 0.18
+const CHIP_HOVER_MIN_ALPHA := 0.24
+const CHIP_HOVER_BORDER_BLEND := 0.45
+const CHIP_HOVER_BORDER_ALPHA := 0.9
+const CHIP_SELECT_ACCENT_BLEND := 0.18
+const CHIP_SELECT_ALPHA_MULTI := 0.34
+const CHIP_SELECT_ALPHA_SINGLE := 0.3
+const CHIP_SELECT_BORDER_LIGHTEN := 0.25
+const CHIP_SELECT_BORDER_ALPHA := 0.96
 
 func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
     var row_rect: Rect2 = layout.get("row_rect", Rect2())
@@ -305,10 +314,10 @@ func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary)
 func _draw_chip_hover_span(control: Control, span: SemanticSpan, metadata: Dictionary) -> void:
     var style: StyleBoxFlat = StyleBoxFlat.new()
     var accent: Color = metadata.get("text_color", TEXT_PRIMARY)
-    style.bg_color = metadata.get("chip_hover_bg", EventSheetPalette.COLOR_HOVER).lerp(accent, 0.18)
-    style.bg_color.a = max(style.bg_color.a, 0.24)
-    style.border_color = metadata.get("chip_border", accent).lerp(accent.lightened(0.18), 0.45)
-    style.border_color.a = max(style.border_color.a, 0.9)
+    style.bg_color = metadata.get("chip_hover_bg", EventSheetPalette.COLOR_HOVER).lerp(accent, CHIP_HOVER_ACCENT_BLEND)
+    style.bg_color.a = max(style.bg_color.a, CHIP_HOVER_MIN_ALPHA)
+    style.border_color = metadata.get("chip_border", accent).lerp(accent.lightened(CHIP_HOVER_ACCENT_BLEND), CHIP_HOVER_BORDER_BLEND)
+    style.border_color.a = max(style.border_color.a, CHIP_HOVER_BORDER_ALPHA)
     style.set_border_width_all(2)
     style.set_corner_radius_all(int(metadata.get("corner_radius", 5)))
     style.set_content_margin_all(0)
@@ -323,10 +332,10 @@ func _draw_chip_selected_span(
 ) -> void:
     var style: StyleBoxFlat = StyleBoxFlat.new()
     var accent: Color = metadata.get("text_color", TEXT_PRIMARY)
-    style.bg_color = selection_fill.lerp(accent, 0.18)
-    style.bg_color.a = max(style.bg_color.a, 0.34 if multi_select else 0.3)
-    style.border_color = accent.lightened(0.25)
-    style.border_color.a = 0.96
+    style.bg_color = selection_fill.lerp(accent, CHIP_SELECT_ACCENT_BLEND)
+    style.bg_color.a = max(style.bg_color.a, CHIP_SELECT_ALPHA_MULTI if multi_select else CHIP_SELECT_ALPHA_SINGLE)
+    style.border_color = accent.lightened(CHIP_SELECT_BORDER_LIGHTEN)
+    style.border_color.a = CHIP_SELECT_BORDER_ALPHA
     style.set_border_width_all(2 if multi_select else 1)
     style.set_corner_radius_all(int(metadata.get("corner_radius", 5)))
     style.set_content_margin_all(0)
