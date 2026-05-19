@@ -80,6 +80,21 @@ const REQUIRED_DOCS := {
 		"[package]",
 		"[tokens]",
 		"[designer_notes]"
+	],
+	"res://docs/spec/construct_3_system_aces_godot_variant_spec.md": [
+		"# Construct 3 System ACEs",
+		"System Conditions",
+		"System Actions",
+		"System Expressions",
+		"Implementation Priority"
+	],
+	"res://docs/spec/gdevelop_c3_eventsheet_uiux_spec.md": [
+		"# GDevelop / Construct 3 EventSheet UI/UX Spec",
+		"Row / Lane / Block Architecture",
+		"Hover Affordances",
+		"Selection Visual Design",
+		"Group Block Visual Language",
+		"Variable Row Visual Language"
 	]
 }
 

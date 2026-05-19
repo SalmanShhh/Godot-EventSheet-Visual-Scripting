@@ -44,6 +44,8 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin that provides a Construct-sty
 - `docs/EVENTSHEET_ALIGNMENT_GUIDE.md` — stacked layout tuning
 - `docs/EVENTSHEET_ARCHITECTURE_SLICES.md` — slice-by-slice completion/scaffold/defer tracker
 - `docs/elements/*.md` — template scene guidance
+- `docs/spec/construct_3_system_aces_godot_variant_spec.md` — Construct 3-style System ACE vocabulary (conditions, actions, expressions) for Godot; implementation priority guide
+- `docs/spec/gdevelop_c3_eventsheet_uiux_spec.md` — GDevelop/C3 row-lane-block interaction model; hover, selection, drag, group, and variable row design spec
 
 ## Current known gaps
 
@@ -51,6 +53,7 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin that provides a Construct-sty
 - The theme package manifest is documentation/template only; it is not auto-imported yet.
 - Full runtime/compiler expansion is intentionally out of scope for this PR line.
 - UI screenshots still require a Godot runtime; this sandbox may only be able to do syntax-level validation.
+- `EventRowUI` full-width list entry model exists in `addons/eventforge/editor/` but is not yet wired into the main `EventSheetDock`/`EventSheetViewport` pipeline; the viewport chip model is the live path.
 
 ## Guidance for future LLM-assisted work
 
@@ -59,3 +62,5 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin that provides a Construct-sty
 - When adding interactions, preserve undo/redo and keep right-click selection preservation intact.
 - When adding theme features, update both docs and bundled example themes together.
 - Add focused tests in `tests/event_sheet_editor_test.gd`, `tests/event_sheet_style_test.gd`, and `tests/docs_integrity_test.gd` when changing editor behavior, theme assets, or documentation contracts.
+- Use `docs/spec/construct_3_system_aces_godot_variant_spec.md` as the definitive vocabulary reference when implementing or extending System ACEs.
+- Use `docs/spec/gdevelop_c3_eventsheet_uiux_spec.md` as the target interaction model when tuning hover/selection/drag/group/variable UX.

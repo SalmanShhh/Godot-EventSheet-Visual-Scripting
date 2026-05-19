@@ -7,7 +7,7 @@ const MIN_LINE_HEIGHT_EXTRA := 10
 @export var text_color: Color = EventSheetPalette.TEXT_PRIMARY
 @export var chip_background_color: Color = Color(1.0, 1.0, 1.0, 0.08)
 @export var chip_border_color: Color = Color(1.0, 1.0, 1.0, 0.18)
-@export var chip_hover_color: Color = Color(1.0, 1.0, 1.0, 0.14)
+@export var chip_hover_color: Color = Color(1.0, 1.0, 1.0, 0.28)
 @export var badge_background_color: Color = EventSheetPalette.COLOR_LANE_DIVIDER
 @export var badge_foreground_color: Color = EventSheetPalette.TEXT_PRIMARY
 # Negative deltas are intentional so a style asset can reduce chip text size for

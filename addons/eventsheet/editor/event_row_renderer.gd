@@ -22,15 +22,15 @@ const SELECTION_OUTLINE_LIGHTEN := 0.28
 const SELECTION_OUTLINE_ALPHA := 0.92
 const HOVER_OUTLINE_LIGHTEN := 0.35
 const HOVER_OUTLINE_ALPHA := 0.84
-const CHIP_HOVER_ACCENT_BLEND := 0.18
-const CHIP_HOVER_MIN_ALPHA := 0.24
-const CHIP_HOVER_BORDER_BLEND := 0.45
-const CHIP_HOVER_BORDER_ALPHA := 0.9
-const CHIP_SELECT_ACCENT_BLEND := 0.18
-const CHIP_SELECT_ALPHA_MULTI := 0.34
-const CHIP_SELECT_ALPHA_SINGLE := 0.3
-const CHIP_SELECT_BORDER_LIGHTEN := 0.25
-const CHIP_SELECT_BORDER_ALPHA := 0.96
+const CHIP_HOVER_ACCENT_BLEND := 0.22
+const CHIP_HOVER_MIN_ALPHA := 0.42
+const CHIP_HOVER_BORDER_BLEND := 0.55
+const CHIP_HOVER_BORDER_ALPHA := 0.96
+const CHIP_SELECT_ACCENT_BLEND := 0.22
+const CHIP_SELECT_ALPHA_MULTI := 0.62
+const CHIP_SELECT_ALPHA_SINGLE := 0.55
+const CHIP_SELECT_BORDER_LIGHTEN := 0.32
+const CHIP_SELECT_BORDER_ALPHA := 0.98
 const CHIP_SELECT_INDICATOR_OFFSET := 2.0
 const CHIP_SELECT_INDICATOR_WIDTH := 3.0
 const CHIP_SELECT_INDICATOR_MARGIN := 4.0
@@ -268,11 +268,11 @@ func _draw_spans(
                 _draw_chip_hover_span(control, span, metadata)
             else:
                 var hover_bg: Color = hover_fill
-                hover_bg.a = 0.34
+                hover_bg.a = 0.46
                 control.draw_rect(span.rect.grow(1.0), hover_bg, true)
                 var hover_outline: Color = hover_fill.lightened(SPAN_HOVER_OUTLINE_LIGHTEN)
                 hover_outline.a = SPAN_HOVER_OUTLINE_ALPHA
-                control.draw_rect(span.rect.grow(1.0), hover_outline, false, 1.0)
+                control.draw_rect(span.rect.grow(1.0), hover_outline, false, 1.5)
         if bool(metadata.get("badge", false)):
             _draw_badge_span(control, span, font, font_size, metadata)
             continue

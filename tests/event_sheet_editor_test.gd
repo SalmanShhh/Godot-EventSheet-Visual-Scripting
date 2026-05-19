@@ -549,6 +549,11 @@ static func run() -> bool:
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("group selection includes descendant events for copy-ready blocks", editor_state.get("selected_row_count", 0), 3) and all_passed
     all_passed = _check("group selection context remains the group row", dock_viewport.get_selected_context().get("source_resource", null) is EventGroup, true) and all_passed
+    # Clicking a group's badge span (span_index >= 0) should also include all descendants.
+    dock_viewport._select_from_click(0, 0, false)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("group span-click also includes descendant events", editor_state.get("selected_row_count", 0), 3) and all_passed
+    all_passed = _check("group span-click does not store per-span selection indices", editor_state.get("selected_span_count", 0), 0) and all_passed
 
     var sub_condition_sheet := EventSheetResource.new()
     var parent_event := EventRow.new()

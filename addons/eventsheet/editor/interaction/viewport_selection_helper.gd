@@ -31,9 +31,10 @@ static func build_single_selection(
     var row_data: EventRowData = flat_rows[selected_row_index].get("row")
     if row_data != null:
         selected_row_uids[row_data.row_uid] = true
-        if span_index >= 0:
+        var is_group: bool = row_data.row_type == EventRowData.RowType.GROUP
+        if span_index >= 0 and not is_group:
             selected_span_indices[row_data.row_uid] = [span_index]
-        elif not row_data.children.is_empty():
+        if not row_data.children.is_empty() and (span_index < 0 or is_group):
             var descendant_uids: Array = include_descendants.call(row_data)
             for descendant_uid in descendant_uids:
                 selected_row_uids[str(descendant_uid)] = true

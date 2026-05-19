@@ -6,8 +6,10 @@ class_name VariableRowUI
 
 const EDIT_VARIABLE_TOOLTIP_PREFIX: String = "Edit variable"
 
-## Emitted when this variable row is clicked for focused editing.
+## Emitted when this variable row requests to be edited (single click or double-click).
 signal variable_selected(row: VariableRowUI)
+## Emitted when this variable row is double-clicked for immediate edit launch.
+signal variable_edit_requested(row: VariableRowUI)
 ## Emitted when the delete button is pressed on this variable row.
 signal variable_delete_requested(row: VariableRowUI)
 
@@ -46,6 +48,7 @@ func _build_ui() -> void:
 	badge.text = "Global"
 	badge.add_theme_color_override("font_color", Color(0.90, 0.96, 1.0))
 	badge.add_theme_font_size_override("font_size", 10)
+	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	badge_panel.add_child(badge)
 	hbox.add_child(badge_panel)
 
@@ -170,7 +173,10 @@ func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
-			variable_selected.emit(self)
+			if mb.double_click:
+				variable_edit_requested.emit(self)
+			else:
+				variable_selected.emit(self)
 
 func _on_mouse_entered() -> void:
 	_hovered = true

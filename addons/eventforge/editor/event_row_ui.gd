@@ -53,6 +53,10 @@ var _context_action_index: int = -1
 var _depth: int = 0
 var _selected: bool = false
 var _hovered: bool = false
+## Index of the currently selected condition entry (-1 = none).
+var _selected_condition_index: int = -1
+## Index of the currently selected action entry (-1 = none).
+var _selected_action_index: int = -1
 var _insert_above_btn: Button = null
 var _insert_below_btn: Button = null
 ## Drop-hover highlight overlay — semi-transparent tint added as top-most child so
@@ -84,6 +88,11 @@ const COND_LANE_RATIO: float = 1.0
 const ACTION_LANE_RATIO: float = 1.85
 const ENTRY_TOOLTIP_TEXT: String = "Left-click to edit · Right-click for options"
 const INSERT_CONTROL_DIM_ALPHA: float = 0.46
+## Selected entry style — strong fill so the selected condition/action is unmistakable.
+const COND_ENTRY_SELECTED_BG: Color = Color(0.20, 0.32, 0.58, 0.72)
+const COND_ENTRY_SELECTED_BORDER: Color = Color(0.48, 0.68, 1.00, 0.98)
+const ACTION_ENTRY_SELECTED_BG: Color = Color(0.12, 0.30, 0.26, 0.72)
+const ACTION_ENTRY_SELECTED_BORDER: Color = Color(0.34, 0.78, 0.60, 0.98)
 ## Drop / drag-preview colours
 const DROP_HIGHLIGHT_COLOR: Color = Color(0.38, 0.60, 1.00, 0.15)
 const CONDITION_PREVIEW_BG_COLOR: Color = Color(0.14, 0.18, 0.28, 0.96)
@@ -374,6 +383,79 @@ func set_selected(selected: bool) -> void:
 	_apply_row_style()
 	_apply_affordance_state()
 
+## Highlights the condition entry at the given index as selected (-1 to clear).
+func set_selected_condition(index: int) -> void:
+	if _selected_condition_index == index:
+		return
+	_selected_condition_index = index
+	_apply_condition_entry_selection()
+
+## Highlights the action entry at the given index as selected (-1 to clear).
+func set_selected_action(index: int) -> void:
+	if _selected_action_index == index:
+		return
+	_selected_action_index = index
+	_apply_action_entry_selection()
+
+## Clears any condition/action entry-level selection.
+func clear_entry_selection() -> void:
+	_selected_condition_index = -1
+	_selected_action_index = -1
+	_apply_condition_entry_selection()
+	_apply_action_entry_selection()
+
+func _apply_condition_entry_selection() -> void:
+	if _conditions_container == null:
+		return
+	for i: int in range(_conditions_container.get_child_count()):
+		var child: Node = _conditions_container.get_child(i)
+		if child is EntryTokenButton:
+			_apply_entry_selected_style(child as EntryTokenButton, i == _selected_condition_index)
+
+func _apply_action_entry_selection() -> void:
+	if _actions_container == null:
+		return
+	for i: int in range(_actions_container.get_child_count()):
+		var child: Node = _actions_container.get_child(i)
+		if child is EntryTokenButton:
+			_apply_entry_selected_style(child as EntryTokenButton, i == _selected_action_index)
+
+func _apply_entry_selected_style(btn: EntryTokenButton, selected: bool) -> void:
+	if selected:
+		var sel_style: StyleBoxFlat = StyleBoxFlat.new()
+		var sel_bg: Color = COND_ENTRY_SELECTED_BG if btn.is_condition else ACTION_ENTRY_SELECTED_BG
+		var sel_border: Color = COND_ENTRY_SELECTED_BORDER if btn.is_condition else ACTION_ENTRY_SELECTED_BORDER
+		sel_style.bg_color = sel_bg
+		sel_style.border_color = sel_border
+		sel_style.set_border_width_all(1)
+		sel_style.border_width_left = 3
+		sel_style.set_corner_radius_all(0)
+		sel_style.set_content_margin(SIDE_LEFT, 7)
+		sel_style.set_content_margin(SIDE_RIGHT, 4)
+		sel_style.set_content_margin(SIDE_TOP, 1)
+		sel_style.set_content_margin(SIDE_BOTTOM, 1)
+		btn.add_theme_stylebox_override("normal", sel_style)
+		btn.add_theme_stylebox_override("hover", sel_style)
+		btn.add_theme_stylebox_override("pressed", sel_style)
+		btn.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.98))
+	else:
+		# Re-apply default transparent style so the button reverts cleanly.
+		var normal_style: StyleBoxFlat = StyleBoxFlat.new()
+		normal_style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+		normal_style.set_border_width_all(0)
+		normal_style.set_corner_radius_all(0)
+		normal_style.set_content_margin(SIDE_LEFT, 7)
+		normal_style.set_content_margin(SIDE_RIGHT, 4)
+		normal_style.set_content_margin(SIDE_TOP, 1)
+		normal_style.set_content_margin(SIDE_BOTTOM, 1)
+		btn.add_theme_stylebox_override("normal", normal_style)
+		var hover_style: StyleBoxFlat = normal_style.duplicate()
+		hover_style.bg_color = Color(0.22, 0.30, 0.46, 0.42) if btn.is_condition else Color(0.16, 0.26, 0.24, 0.42)
+		btn.add_theme_stylebox_override("hover", hover_style)
+		btn.add_theme_stylebox_override("pressed", hover_style)
+		var font_color: Color = Color(0.76, 0.88, 1.00) if btn.is_condition else Color(0.68, 0.92, 0.78)
+		btn.add_theme_color_override("font_color", font_color)
+
 func _apply_row_style() -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	if _selected:
@@ -542,6 +624,8 @@ func _refresh_conditions() -> void:
 	for i: int in range(event_row.conditions.size()):
 		var condition: ACECondition = event_row.conditions[i]
 		_conditions_container.add_child(_make_entry_button(format_condition_summary(condition), i, true))
+	# Re-apply entry-level selection after rebuild.
+	_apply_condition_entry_selection()
 
 func _refresh_actions() -> void:
 	if _actions_container == null:
@@ -558,6 +642,8 @@ func _refresh_actions() -> void:
 		if action == null:
 			continue
 		_actions_container.add_child(_make_entry_button(format_action_summary(action), i, false))
+	# Re-apply entry-level selection after rebuild.
+	_apply_action_entry_selection()
 
 func _make_placeholder_token(text: String, is_condition: bool) -> Label:
 	var label: Label = Label.new()
@@ -596,7 +682,10 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> EntryTo
 	btn.add_theme_stylebox_override("normal", normal_style)
 
 	var hover_style: StyleBoxFlat = normal_style.duplicate()
-	hover_style.bg_color = Color(0.22, 0.30, 0.46, 0.38) if is_condition else Color(0.16, 0.26, 0.24, 0.38)
+	hover_style.bg_color = Color(0.22, 0.30, 0.46, 0.52) if is_condition else Color(0.16, 0.26, 0.24, 0.52)
+	hover_style.border_color = Color(0.46, 0.62, 1.00, 0.55) if is_condition else Color(0.30, 0.66, 0.52, 0.55)
+	hover_style.set_border_width_all(0)
+	hover_style.border_width_left = 2
 	btn.add_theme_stylebox_override("hover", hover_style)
 	btn.add_theme_stylebox_override("pressed", hover_style)
 	var focus_style: StyleBoxFlat = normal_style.duplicate()
@@ -604,11 +693,17 @@ func _make_entry_button(text: String, index: int, is_condition: bool) -> EntryTo
 
 	if is_condition:
 		btn.tooltip_text = ENTRY_TOOLTIP_TEXT
-		btn.connect("pressed", func() -> void: condition_selected.emit(self, index))
+		btn.connect("pressed", func() -> void:
+			set_selected_condition(index)
+			condition_selected.emit(self, index)
+		)
 		btn.connect("gui_input", func(event: InputEvent) -> void: _on_condition_entry_gui_input(event, index))
 	else:
 		btn.tooltip_text = ENTRY_TOOLTIP_TEXT
-		btn.connect("pressed", func() -> void: action_selected.emit(self, index))
+		btn.connect("pressed", func() -> void:
+			set_selected_action(index)
+			action_selected.emit(self, index)
+		)
 		btn.connect("gui_input", func(event: InputEvent) -> void: _on_action_entry_gui_input(event, index))
 	return btn
 
