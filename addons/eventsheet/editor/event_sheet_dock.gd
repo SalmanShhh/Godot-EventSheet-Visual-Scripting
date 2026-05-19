@@ -299,6 +299,7 @@ func _build_ui() -> void:
     _viewport.ace_picker_requested.connect(_on_viewport_ace_picker_requested)
     _viewport.span_edit_requested.connect(_on_viewport_span_edit_requested)
     _viewport.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
+    _viewport.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
     _viewport.ace_drop_requested.connect(_on_viewport_ace_drop_requested)
     _viewport.drag_status_requested.connect(_on_viewport_drag_status_requested)
     _viewport.context_menu_requested.connect(_on_viewport_context_menu_requested)
@@ -766,6 +767,13 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
         _ace_picker.open(str(edit_context.get("mode", "")), false, event_row, edit_context)
         return
     _ace_params.open_with_values(definition, edit_context, edit_context.get("existing_params", {}))
+
+func _on_viewport_variable_edit_requested(row_data: EventRowData, metadata: Dictionary) -> void:
+    _context_variable = _context_variable_entry_from_metadata(row_data, metadata)
+    if _context_variable.is_empty():
+        _set_status("Select a valid variable before editing.", true)
+        return
+    _edit_context_variable()
 
 # ── ACE params dialog signal handler ────────────────────────────────────────
 

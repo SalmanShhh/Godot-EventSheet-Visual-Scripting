@@ -21,6 +21,7 @@ signal context_menu_requested(row_data: EventRowData, hit: Dictionary, global_po
 signal empty_space_context_menu_requested(global_position: Vector2)
 signal empty_space_double_clicked
 signal drag_status_requested(message: String, is_error: bool)
+signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
 
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
@@ -529,6 +530,9 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
         _select_from_click(row_index, span_index, event.ctrl_pressed or event.meta_pressed)
         if event.double_click:
             if _maybe_request_ace_edit(hit, row_index):
+                accept_event()
+                return
+            if _maybe_request_variable_edit(hit, row_index):
                 accept_event()
                 return
             _begin_edit(row_index, span_index)
@@ -1071,8 +1075,22 @@ func _build_variable_row(
         "variable_index": variable_index,
         "is_constant": is_constant
     }
+    var scope_badge_colors: Dictionary = _get_scope_badge_colors(scope_label)
     row_data.spans = [
-        _make_span(scope_label, SemanticSpan.SpanType.KEYWORD, variable_meta.merged({"editable": false, "chip": true}, true)),
+        _make_span(
+            scope_label,
+            SemanticSpan.SpanType.KEYWORD,
+            variable_meta.merged(
+                {
+                    "editable": false,
+                    "badge": true,
+                    "badge_style": "scope",
+                    "badge_bg": scope_badge_colors.get("bg", EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_BG),
+                    "badge_fg": scope_badge_colors.get("fg", EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_FG)
+                },
+                true
+            )
+        ),
         _make_span(var_name if not var_name.is_empty() else "(unnamed)", SemanticSpan.SpanType.OBJECT, variable_meta.merged({"editable": false}, true)),
         _make_span(":", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)),
         _make_span(type_name if not type_name.is_empty() else "Variant", SemanticSpan.SpanType.VALUE, variable_meta.merged({"editable": false}, true))
@@ -1583,6 +1601,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         "editing_span_index": _editing_span_index if index == _editing_row_index else -1,
         "editing_buffer": _editing_buffer if index == _editing_row_index else "",
         "editing_caret": _editing_caret if index == _editing_row_index else -1,
+        "total_selected_spans": _get_selected_span_count(),
         "selected_span_indices": _selected_span_indices.get(row_data.row_uid, []).duplicate(),
         "hovered_span_index": _hovered_span_index if index == _hovered_row_index else -1,
         "drag_mode": _drag_target_mode if _drag_target_index == index else ""
@@ -1701,6 +1720,9 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
                 _selected_span_index = -1
         else:
             _selected_row_uids[row_uid] = true
+            if not row_data.children.is_empty():
+                for descendant_uid in _collect_descendant_row_uids(row_data):
+                    _selected_row_uids[str(descendant_uid)] = true
             _selected_row_index = row_index
             _selected_span_index = -1
             changed = true
@@ -1869,6 +1891,23 @@ func _maybe_request_ace_edit(hit: Dictionary, row_index: int) -> bool:
             ace_edit_requested.emit(row_data, span_index, metadata.duplicate(true))
             return true
     return false
+
+func _maybe_request_variable_edit(hit: Dictionary, row_index: int) -> bool:
+    var row_data: EventRowData = _row_at(row_index)
+    if row_data == null or row_data.row_type != EventRowData.RowType.SECTION:
+        return false
+    var metadata: Dictionary = {}
+    var span_index: int = int(hit.get("span_index", -1))
+    if span_index >= 0 and span_index < row_data.spans.size():
+        var span: SemanticSpan = row_data.spans[span_index]
+        if span != null and span.metadata is Dictionary:
+            metadata = (span.metadata as Dictionary).duplicate(true)
+    if str(metadata.get("kind", "")) != "variable":
+        metadata = _get_variable_metadata_for_row(row_data)
+    if str(metadata.get("kind", "")) != "variable":
+        return false
+    variable_edit_requested.emit(row_data, metadata)
+    return true
 
 func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
     var row_index: int = int(hit.get("row_index", -1))
@@ -2224,6 +2263,17 @@ func _format_variable_value(value: Variant) -> String:
         return '"%s"' % str(value)
     return str(value)
 
+func _get_scope_badge_colors(scope_label: String) -> Dictionary:
+    if scope_label == "local":
+        return {
+            "bg": EventSheetPalette.COLOR_SCOPE_LOCAL_BADGE_BG,
+            "fg": EventSheetPalette.COLOR_SCOPE_LOCAL_BADGE_FG
+        }
+    return {
+        "bg": EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_BG,
+        "fg": EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_FG
+    }
+
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
     var span := SemanticSpan.new()
     span.text = text
@@ -2231,6 +2281,17 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
     span.metadata = metadata.duplicate(true)
     span.hoverable = bool(span.metadata.get("hoverable", true))
     return span
+
+func _get_variable_metadata_for_row(row_data: EventRowData) -> Dictionary:
+    if row_data == null:
+        return {}
+    for span in row_data.spans:
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        var metadata: Dictionary = span.metadata as Dictionary
+        if str(metadata.get("kind", "")) == "variable":
+            return metadata.duplicate(true)
+    return {}
 
 func _resolve_span_lane(span: SemanticSpan) -> String:
     if span == null or not (span.metadata is Dictionary):
