@@ -262,7 +262,8 @@ func _draw_spans(
         var right_padding: float = text_padding if bool(metadata.get("chip", false)) else 2.0
         var text_width: float = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
         if span_index != editing_span_index:
-            draw_text = _fit_text_to_width(draw_text, font, draw_font_size, text_width)
+            if font.get_string_size(draw_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x > text_width:
+                draw_text = _fit_text_to_width(draw_text, font, draw_font_size, text_width)
         control.draw_string(font, Vector2(text_x, baseline_y), draw_text, HORIZONTAL_ALIGNMENT_LEFT, text_width, draw_font_size, color)
         if not ace_enabled:
             var strike_y: float = span.rect.get_center().y
@@ -288,17 +289,36 @@ func _draw_spans(
 func _fit_text_to_width(text: String, font: Font, font_size: int, max_width: float) -> String:
     if text.is_empty() or max_width <= 1.0:
         return ""
-    if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x <= max_width:
-        return text
     var ellipsis_width: float = font.get_string_size(ELLIPSIS, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
     if ellipsis_width > max_width:
         return ""
-    var truncated: String = text
-    while not truncated.is_empty():
-        truncated = truncated.substr(0, truncated.length() - 1)
-        var candidate: String = "%s%s" % [truncated, ELLIPSIS]
-        if font.get_string_size(candidate, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x <= max_width:
-            return candidate
+    var low: int = 0
+    var high: int = text.length()
+    var best_length: int = 0
+    while low <= high:
+        var mid: int = int((low + high) / 2)
+        var candidate: String = "%s%s" % [text.substr(0, mid), ELLIPSIS]
+        var candidate_width: float = font.get_string_size(
+            candidate,
+            HORIZONTAL_ALIGNMENT_LEFT,
+            -1.0,
+            font_size
+        ).x
+        if candidate_width <= max_width:
+            best_length = mid
+            low = mid + 1
+        else:
+            high = mid - 1
+    if best_length <= 0:
+        return ELLIPSIS
+    var fitted: String = "%s%s" % [text.substr(0, best_length), ELLIPSIS]
+    if font.get_string_size(fitted, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x <= max_width:
+        return fitted
+    while best_length > 0:
+        best_length -= 1
+        fitted = "%s%s" % [text.substr(0, best_length), ELLIPSIS]
+        if font.get_string_size(fitted, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x <= max_width:
+            return fitted
     return ELLIPSIS
 
 func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary) -> void:
