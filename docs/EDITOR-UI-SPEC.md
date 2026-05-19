@@ -72,6 +72,7 @@ It intentionally avoids describing unbuilt behavior as complete.
   - Header row: spacer (expands) · `+Add` action button.
   - `VBoxContainer` of action entries, one per line — **C3-style vertical list**, not horizontal token chips.
 - Each condition/action entry is a full-width flat `Button` (left-aligned text, transparent background, subtle hover tint) that spans the entire column — no chip borders, no chip backgrounds. This matches Construct 3's text-based row grammar.
+- Hover and selection cues stay subtle but unmistakable: the targeted condition/action/comment span receives its own lane-aware emphasis so the user can tell which ACE line is clickable without relying only on row-level selection.
 - The 2 px `LANE_DIVIDER_COLOR` `ColorRect` between lanes provides a clear, stable vertical boundary that creates the horizontal eventsheet rhythm.
 - Condition entries use blue-tinted text; action entries use teal/green-tinted text — clearly distinct from each other.
 - Entry text color uses C3-style column affinity: blue for conditions (cold/left), teal for actions (warm/right).
@@ -110,8 +111,10 @@ It intentionally avoids describing unbuilt behavior as complete.
   - Group name label (expands).
   - Event count label (e.g. `(2)`).
   - `+↑` / `+↓` / `✎` / `×` controls.
-  - Groups are visually distinctive through purple/indigo background color.
+- Groups are visually distinctive through purple/indigo background color.
+- Selecting a group is treated as selecting the copy/paste block: the group header plus every contained event and nested sub-event highlight together.
 - Variable rows remain compact in-canvas, with rich hover tooltips that include type/default and optional variable descriptions.
+- Variable scope labels render as centered badges, and double-clicking a variable row opens the variable edit flow directly.
 
 ### 2.4 Editor shell and document framing
 

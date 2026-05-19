@@ -532,6 +532,24 @@ static func run() -> bool:
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("ctrl click can unselect a selected sub-event row", editor_state.get("selected_row_count", 0), 2) and all_passed
 
+    var group_block_sheet := EventSheetResource.new()
+    var group_block := EventGroup.new()
+    group_block.name = "Folder"
+    group_block.group_name = group_block.name
+    var grouped_event := EventRow.new()
+    grouped_event.comment = "grouped"
+    var grouped_sub_event := EventRow.new()
+    grouped_sub_event.comment = "nested"
+    grouped_event.sub_events = [grouped_sub_event]
+    group_block.events = [grouped_event]
+    group_block_sheet.events = [group_block]
+    dock.setup(group_block_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport._select_from_click(0, -1, false)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("group selection includes descendant events for copy-ready blocks", editor_state.get("selected_row_count", 0), 3) and all_passed
+    all_passed = _check("group selection context remains the group row", dock_viewport.get_selected_context().get("source_resource", null) is EventGroup, true) and all_passed
+
     var sub_condition_sheet := EventSheetResource.new()
     var parent_event := EventRow.new()
     sub_condition_sheet.events = [parent_event]
@@ -1108,6 +1126,40 @@ static func run() -> bool:
     all_passed = _check("box-select can multi-select event rows", editor_state.get("selected_row_count", 0) >= 2, true) and all_passed
     all_passed = _check("box-select can include condition/action spans", editor_state.get("selected_span_count", 0) > 0, true) and all_passed
 
+    var hover_sheet := EventSheetResource.new()
+    var hover_comment := CommentRow.new()
+    hover_comment.text = "Hover note"
+    var hover_event := EventRow.new()
+    var hover_condition := ACECondition.new()
+    hover_condition.provider_id = "Core"
+    hover_condition.ace_id = "Always"
+    var hover_action := ACEAction.new()
+    hover_action.provider_id = "Core"
+    hover_action.ace_id = "QueueFree"
+    hover_event.conditions = [hover_condition]
+    hover_event.actions = [hover_action]
+    hover_event.comment = "Inline hover"
+    hover_sheet.events = [hover_comment, hover_event]
+    dock.setup(hover_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var hover_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var hover_event_row: EventRowData = hover_rows[1].get("row")
+    var hover_condition_index: int = _find_span_index_by_kind(hover_event_row, "condition")
+    var hover_action_index: int = _find_span_index_by_kind(hover_event_row, "action")
+    var hover_comment_row: EventRowData = hover_rows[0].get("row")
+    var hover_condition_motion := InputEventMouseMotion.new()
+    hover_condition_motion.position = hover_event_row.spans[hover_condition_index].rect.get_center()
+    dock_viewport._handle_mouse_motion(hover_condition_motion)
+    all_passed = _check("hovering condition targets the individual condition span", dock_viewport.get_row_layout_for_test(1, 640.0).get("hovered_span_index", -1), hover_condition_index) and all_passed
+    var hover_action_motion := InputEventMouseMotion.new()
+    hover_action_motion.position = hover_event_row.spans[hover_action_index].rect.get_center()
+    dock_viewport._handle_mouse_motion(hover_action_motion)
+    all_passed = _check("hovering action targets the individual action span", dock_viewport.get_row_layout_for_test(1, 640.0).get("hovered_span_index", -1), hover_action_index) and all_passed
+    var hover_comment_motion := InputEventMouseMotion.new()
+    hover_comment_motion.position = hover_comment_row.spans[0].rect.get_center()
+    dock_viewport._handle_mouse_motion(hover_comment_motion)
+    all_passed = _check("hovering comment targets the individual comment span", dock_viewport.get_row_layout_for_test(0, 640.0).get("hovered_span_index", -1), 0) and all_passed
+
     # Global and local variable creation workflow.
     dock.setup(copy_sheet)
     dock._on_variable_dialog_confirmed("ammo", "int", 12, "global")
@@ -1146,6 +1198,21 @@ static func run() -> bool:
     all_passed = _check("global variables render in the sheet rows", _rows_contain_text(dock_viewport.get_flat_rows(), "ammo"), true) and all_passed
     all_passed = _check("local variables render in the sheet rows", _rows_contain_text(dock_viewport.get_flat_rows(), "cooldown"), true) and all_passed
     all_passed = _check("const badge renders in variable rows", _rows_contain_text(dock_viewport.get_flat_rows(), "const"), true) and all_passed
+    var variable_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var global_variable_row: EventRowData = variable_rows[0].get("row")
+    all_passed = _check("variable scope label uses centered badge metadata", bool((global_variable_row.spans[0].metadata as Dictionary).get("badge", false)), true) and all_passed
+    var variable_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    all_passed = _check("variable badge and name do not overlap", global_variable_row.spans[0].rect.end.x < global_variable_row.spans[1].rect.position.x, true) and all_passed
+    var variable_double_click := InputEventMouseButton.new()
+    variable_double_click.pressed = true
+    variable_double_click.button_index = MOUSE_BUTTON_LEFT
+    variable_double_click.double_click = true
+    variable_double_click.position = variable_layout.get("row_rect", Rect2()).get_center()
+    dock_viewport._handle_mouse_button(variable_double_click)
+    all_passed = _check("double-clicking a variable row opens the edit dialog", dock._variable_dlg._dialog.visible, true) and all_passed
+    all_passed = _check("variable double-click keeps scope for editing", dock._variable_dlg._scope, "global") and all_passed
+    all_passed = _check("variable double-click populates current variable name", dock._variable_dlg.get_last_name_text(), "ammo") and all_passed
+    dock._variable_dlg._dialog.hide()
     dock._context_variable = {"scope": "global", "name": "ammo", "type": "int", "is_constant": true, "supports_const": true}
     dock._toggle_context_variable_constant()
     all_passed = _check("context toggle can unset global const flag", dock.get_current_sheet().variables["ammo"].get("const", true), false) and all_passed
