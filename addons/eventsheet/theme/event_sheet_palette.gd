@@ -56,10 +56,6 @@ const COLOR_SCOPE_GLOBAL_BADGE_BG = Color("#355f8f")
 const COLOR_SCOPE_GLOBAL_BADGE_FG = Color("#eef6ff")
 const COLOR_SCOPE_LOCAL_BADGE_BG = Color("#5d4a92")
 const COLOR_SCOPE_LOCAL_BADGE_FG = Color("#f3eeff")
-const COLOR_SCOPE_GLOBAL_BADGE_BG = Color("#355f8f")
-const COLOR_SCOPE_GLOBAL_BADGE_FG = Color("#eef6ff")
-const COLOR_SCOPE_LOCAL_BADGE_BG = Color("#5d4a92")
-const COLOR_SCOPE_LOCAL_BADGE_FG = Color("#f3eeff")
 
 static func clamp_font_size(value: int) -> int:
 	return max(value, MIN_FONT_SIZE)
