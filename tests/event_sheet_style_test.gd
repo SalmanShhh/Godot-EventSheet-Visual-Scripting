@@ -9,7 +9,13 @@ const EXAMPLE_THEME_PATHS := [
 	"res://demo/themes/construct3_stacked_theme.tres",
 	"res://demo/themes/high_contrast_theme.tres",
 	"res://demo/themes/soft_light_theme.tres",
-	"res://demo/themes/designer_template_theme.tres"
+	"res://demo/themes/designer_template_theme.tres",
+	"res://demo/themes/dracula_theme.tres",
+	"res://demo/themes/nord_theme.tres",
+	"res://demo/themes/gruvbox_dark_theme.tres",
+	"res://demo/themes/monokai_theme.tres",
+	"res://demo/themes/solarized_light_theme.tres",
+	"res://demo/themes/catppuccin_mocha_theme.tres"
 ]
 const DESIGNER_THEME_MANIFEST_PATH := "res://demo/themes/designer_template_theme_manifest.cfg"
 

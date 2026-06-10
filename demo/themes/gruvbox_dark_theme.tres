@@ -1,0 +1,62 @@
+[gd_resource type="Resource" script_class="EventSheetEditorStyle" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_element_style.gd" id="1_4hvdo"]
+[ext_resource type="PackedScene" path="res://addons/eventsheet/elements/action_visual_element.tscn" id="2_livu5"]
+[ext_resource type="PackedScene" path="res://addons/eventsheet/elements/condition_visual_element.tscn" id="3_jogx0"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_event_style.gd" id="4_of6op"]
+[ext_resource type="PackedScene" path="res://addons/eventsheet/elements/event_visual_element.tscn" id="5_favht"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_editor_style.gd" id="6_ntrcq"]
+
+[sub_resource type="Resource" id="Resource_ms4tn"]
+script = ExtResource("1_4hvdo")
+text_color = Color(0.72156864, 0.73333335, 0.14901961, 1)
+chip_background_color = Color(0.72156864, 0.73333335, 0.14901961, 0.08)
+chip_border_color = Color(0.72156864, 0.73333335, 0.14901961, 0.2)
+chip_hover_color = Color(0.72156864, 0.73333335, 0.14901961, 0.3)
+badge_background_color = Color(0.23529412, 0.21960784, 0.21176471, 1)
+badge_foreground_color = Color(0.72156864, 0.73333335, 0.14901961, 1)
+
+[sub_resource type="Resource" id="Resource_q7num"]
+script = ExtResource("1_4hvdo")
+text_color = Color(0.5137255, 0.64705884, 0.59607846, 1)
+chip_background_color = Color(0.5137255, 0.64705884, 0.59607846, 0.08)
+chip_border_color = Color(0.5137255, 0.64705884, 0.59607846, 0.2)
+chip_hover_color = Color(0.5137255, 0.64705884, 0.59607846, 0.3)
+badge_background_color = Color(0.23529412, 0.21960784, 0.21176471, 1)
+badge_foreground_color = Color(0.5137255, 0.64705884, 0.59607846, 1)
+
+[sub_resource type="Resource" id="Resource_shvuw"]
+script = ExtResource("4_of6op")
+sheet_background_color = Color(0.15686275, 0.15686275, 0.15686275, 1)
+row_background_color = Color(0.15686275, 0.15686275, 0.15686275, 1)
+row_background_alt_color = Color(0.18039216, 0.17254902, 0.16470589, 1)
+row_border_color = Color(0.11372549, 0.1254902, 0.12941177, 1)
+condition_lane_color = Color(0.1747059, 0.18137255, 0.17882353, 1)
+action_lane_color = Color(0.17945099, 0.17992157, 0.15654902, 1)
+lane_divider_color = Color(0.11372549, 0.1254902, 0.12941177, 1)
+trigger_badge_background_color = Color(0.99607843, 0.5019608, 0.09803922, 1)
+trigger_badge_foreground_color = Color(0.15686275, 0.15686275, 0.15686275, 1)
+group_background_color = Color(0.24078432, 0.19137256, 0.1509804, 1)
+group_background_alt_color = Color(0.29113728, 0.21207844, 0.14745098, 1)
+group_accent_color = Color(0.99607843, 0.5019608, 0.09803922, 1)
+group_title_color = Color(0.9970588, 0.6264706, 0.32352942, 1)
+group_badge_background_color = Color(0.99607843, 0.5019608, 0.09803922, 1)
+group_badge_foreground_color = Color(0.15686275, 0.15686275, 0.15686275, 1)
+group_fold_background_color = Color(0.23529412, 0.21960784, 0.21176471, 1)
+comment_row_background_color = Color(0.20627451, 0.19192158, 0.1585098, 1)
+comment_text_color = Color(0.57254905, 0.5137255, 0.45490196, 1)
+selection_fill_color = Color(0.99607843, 0.5019608, 0.09803922, 0.25)
+hover_fill_color = Color(0.99607843, 0.5019608, 0.09803922, 0.1)
+column_header_background_color = Color(0.23529412, 0.21960784, 0.21176471, 1)
+column_header_conditions_color = Color(0.5137255, 0.64705884, 0.59607846, 1)
+column_header_actions_color = Color(0.72156864, 0.73333335, 0.14901961, 1)
+object_label_color = Color(0.98039216, 0.7411765, 0.18431373, 1)
+value_highlight_color = Color(0.5137255, 0.64705884, 0.59607846, 1)
+cell_hover_color = Color(0.92156863, 0.85882354, 0.69803923, 0.12)
+behavior_accent_color = Color(0.99607843, 0.5019608, 0.09803922, 1)
+
+[resource]
+script = ExtResource("6_ntrcq")
+event_style = SubResource("Resource_shvuw")
+condition_style = SubResource("Resource_q7num")
+action_style = SubResource("Resource_ms4tn")
