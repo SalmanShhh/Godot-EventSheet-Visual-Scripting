@@ -1,5 +1,11 @@
 # EventSheet Editor Progress Report
 
+> **Historical snapshot** (early overhaul branch). Class names like `EventRowUI` /
+> `VariableRowUI` refer to the since-removed widget prototype — that behavior now lives in
+> the virtualized viewport/renderer. For current, maintained status see `CHANGELOG.md`
+> (per-phase) and the specs (`EDITOR-UI-SPEC.md`, `GDSCRIPT-PAIRING-SPEC.md`). Kept for
+> the rationale it records (contrast values, selection rules).
+
 ## Completed in this branch
 
 - Interaction architecture extraction started:

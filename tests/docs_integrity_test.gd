@@ -81,6 +81,13 @@ const REQUIRED_DOCS := {
 		"[tokens]",
 		"[designer_notes]"
 	],
+	"res://docs/GDSCRIPT-PAIRING-SPEC.md": [
+		"# GDScript Pairing Spec",
+		"Principles",
+		"Implemented pairing features",
+		"Planned",
+		"Testing"
+	],
 	"res://docs/spec/construct_3_system_aces_godot_variant_spec.md": [
 		"# Construct 3 System ACEs",
 		"System Conditions",

@@ -26,3 +26,5 @@ __pycache__/
 
 # Godot script UID sidecars
 *.uid
+_preview.png
+_preview.png.import

@@ -4,17 +4,37 @@
 extends RefCounted
 class_name ACERegistry
 
-## Returns built-in descriptors.
+# Built-in descriptors are constant, so they are normalized once and cached.
+# This avoids rebuilding + re-normalizing the entire builtin set on every
+# get_all_descriptors()/find_descriptor() call (a hot path when rendering large
+# sheets that reference fallback/unknown ACEs).
+static var _builtin_cache: Array[ACEDescriptor] = []
+static var _builtin_index: Dictionary = {}
+
+## Builds the builtin descriptor cache + lookup index once.
+static func _ensure_builtin_cache() -> void:
+	if not _builtin_cache.is_empty():
+		return
+	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		var normalized: ACEDescriptor = _normalize_descriptor(descriptor)
+		if normalized != null:
+			_builtin_cache.append(normalized)
+			_builtin_index["%s::%s" % [normalized.provider_id, normalized.ace_id]] = normalized
+
+## Clears the builtin cache (call if the builtin set ever changes at runtime).
+static func clear_cache() -> void:
+	_builtin_cache.clear()
+	_builtin_index.clear()
+
+## Returns built-in descriptors (cached).
 static func get_builtin_descriptors() -> Array[ACEDescriptor]:
-	return EventForgeBuiltinACEs.get_descriptors()
+	_ensure_builtin_cache()
+	return _builtin_cache.duplicate()
 
 ## Returns all descriptors from built-in and runtime providers.
 static func get_all_descriptors() -> Array[ACEDescriptor]:
-	var output: Array[ACEDescriptor] = []
-	for descriptor: ACEDescriptor in get_builtin_descriptors():
-		var normalized_builtin: ACEDescriptor = _normalize_descriptor(descriptor)
-		if normalized_builtin != null:
-			output.append(normalized_builtin)
+	_ensure_builtin_cache()
+	var output: Array[ACEDescriptor] = _builtin_cache.duplicate()
 
 	var bridge: Node = _get_bridge()
 	if bridge != null and bridge.has_method("get_all_descriptors"):
@@ -36,11 +56,17 @@ static func get_provider_descriptors(provider_id: String) -> Array[ACEDescriptor
 
 ## Finds a descriptor by provider and ACE ID.
 static func find_descriptor(provider_id: String, ace_id: String) -> ACEDescriptor:
-	for descriptor: ACEDescriptor in get_all_descriptors():
-		if descriptor.provider_id != provider_id:
-			continue
-		if descriptor.ace_id == ace_id:
-			return descriptor
+	_ensure_builtin_cache()
+	var builtin: ACEDescriptor = _builtin_index.get("%s::%s" % [provider_id, ace_id], null)
+	if builtin != null:
+		return builtin
+
+	var bridge: Node = _get_bridge()
+	if bridge != null and bridge.has_method("get_all_descriptors"):
+		for entry: Variant in bridge.call("get_all_descriptors"):
+			var descriptor: ACEDescriptor = _normalize_descriptor(entry)
+			if descriptor != null and descriptor.provider_id == provider_id and descriptor.ace_id == ace_id:
+				return descriptor
 	return null
 
 ## Public adapter for converting custom metadata dictionaries to ACEDescriptor.

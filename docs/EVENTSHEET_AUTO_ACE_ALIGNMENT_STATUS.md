@@ -1,22 +1,36 @@
 # Auto-ACE Alignment Status
 
-This tracks how the current EventSheet editor integrates with Auto-ACE goals.
+> Updated 2026-06. The detailed design lives in `docs/GDSCRIPT-PAIRING-SPEC.md`
+> ("Zero-config addons", "Expose-as-ACE sheet functions", "Instance-backed ACEs").
+
+This tracks the Auto-ACE goal: gameplay vocabulary appears in the picker automatically,
+from code, with zero manifests.
 
 ## Implemented
 
-- Editor consumes ACE metadata from registry-driven sources.
-- ACE picker/search and parameter workflows are integrated into row authoring.
-- Condition/action editing interactions are bound to span metadata and per-row context.
-- Drag-drop and context menu flows operate on ACE structures.
+- **Zero-config addons**: any script in `res://eventsheet_addons/` becomes a provider —
+  `class_name` is the provider name, the top `##` comment its description, and `@ace_*`
+  annotations (`name`/`category`/`description`/`icon`/`display_template`/
+  `codegen_template`/`param_hint`/`hidden`) shape everything else. Annotated signals
+  become triggers (and compile to real `_ready` connections).
+- **Code registration**: `EventForgeBridge.register_script_as_provider(path)` lets other
+  plugins/tools add providers without touching the folder.
+- **Template-less methods still compile**: instance-backed ACEs synthesize a direct call
+  through an owned provider instance (`__eventsheet_provider_<Class>.method(...)`) — no
+  silent no-ops, and no EventForge classes in the output (parity contract).
+- **Sheets feed the vocabulary back**: behavior/custom-node sheets with `expose_as_ace`
+  functions compile WITH `@ace_*` annotations, so compiled sheets are themselves
+  providers (the sheet → script → addon loop), icons included.
+- Reflection + annotation overrides, category inference, node-type grouping, picker and
+  row-cell icons, codegen tooltips, and baked templates (applied ACEs compile standalone,
+  e.g. inside shared snippets).
 
 ## Partial
 
-- Reflection and category quality depend on available sources and current heuristics.
-- Hot-reload for ACE/theme data exists in practical form but still needs deeper UX affordances.
-- Documentation and semantic grouping are present, but not yet fully automated.
+- Registry refresh covers practical hot-reload; an automatic file watcher with instant
+  refresh remains a nicety.
 
 ## Missing
 
-- End-to-end automatic adapter generation parity for all desired gameplay vocabularies.
-- Complete semantic categorization confidence pipeline from the architecture docs.
-- Full “large-project scale” validation and benchmarked UX guarantees.
+- Expression autocomplete in ƒx fields (live compile-check validation exists; completion
+  popups are planned polish).

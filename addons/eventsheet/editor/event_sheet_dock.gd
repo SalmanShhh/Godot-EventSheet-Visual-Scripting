@@ -2,7 +2,7 @@
 class_name EventSheetDock
 extends Control
 
-const EVENT_SHEET_FILTERS: Array[String] = ["*.tres ; EventSheetResource", "*.res ; EventSheetResource"]
+const EVENT_SHEET_FILTERS: Array[String] = ["*.tres ; EventSheetResource", "*.res ; EventSheetResource", "*.gd ; GDScript (open as EventSheet)"]
 const VARIABLE_USAGE_MAX_DEPTH := 8
 const CONDITION_MENU_EDIT := 1
 const CONDITION_MENU_ADD := 2
@@ -26,6 +26,13 @@ const ROW_MENU_TOGGLE_CONDITION_BLOCK := 8
 const ROW_MENU_TOGGLE_GROUP_FOLD := 9
 const ROW_MENU_ADD_SUB_CONDITION := 10
 const ROW_MENU_TOGGLE_ENABLED := 11
+const ROW_MENU_ADD_VARIABLE_BELOW := 12
+const ROW_MENU_ADD_COMMENT_SUB_EVENT := 13
+const ROW_MENU_ADD_GDSCRIPT_BELOW := 14
+const ROW_MENU_ADD_GDSCRIPT_ACTION := 15
+const ROW_MENU_EDIT_COMMENT := 16
+const ROW_MENU_ATTACH_COMMENT := 17
+const ACTION_MENU_DETACH_COMMENT := 6
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -44,8 +51,14 @@ var _title_tab_label: Label = null
 var _title_path_label: Label = null
 var _title_dirty_dot: Label = null
 var _status_label: Label = null
+var _theme_picker: OptionButton = null
+var _provider_dialog: Window = null
+var _provider_list: ItemList = null
+var _provider_file_dialog: FileDialog = null
 var _split: HSplitContainer = null
 var _scroll: ScrollContainer = null
+var _column_header: SheetColumnHeader = null
+var _identity_banner: SheetIdentityBanner = null
 var _viewport: EventSheetViewport = null
 var _side_panel: VBoxContainer = null
 var _preview_window: Window = null
@@ -54,14 +67,21 @@ var _preview_list: ItemList = null
 var _global_var_list: ItemList = null
 var _local_var_list: ItemList = null
 
-var _current_sheet: EventSheetResource = null
-var _current_sheet_path: String = ""
-var _dirty: bool = false
+var _current_sheet: EventSheetResource = null  # the ACTIVE tab's sheet
+var _current_sheet_path: String = ""           # the ACTIVE tab's path
+var _dirty: bool = false                        # the ACTIVE tab's dirty flag
+# Open sheet tabs. Each entry: {sheet: EventSheetResource, path: String, dirty: bool}.
+# The active tab's live state mirrors _current_sheet/_current_sheet_path/_dirty.
+var _open_tabs: Array[Dictionary] = []
+var _active_tab_index: int = -1
+var _tab_bar: TabBar = null
+var _suppress_tab_signal: bool = false
 var _ace_registry: EventSheetACERegistry = EventSheetACERegistry.new()
 var _editor_param_store: EditorParamStore = EditorParamStore.new()
 var _param_resolver: ParamDefaultResolver = ParamDefaultResolver.new()
 var _exposed_node: EventSheetExposedNode = EventSheetExposedNode.new()
-var _ace_sources: Array[Object] = []
+var _ace_sources: Array[Object] = []  # instances we created (sheet providers / demo); freed on refresh
+var _manual_ace_sources: Array[Object] = []  # externally supplied (caller-owned, not freed)
 var _clipboard: Dictionary = {}
 var _undo_redo_adapter: EventSheetUndoRedoAdapter = EventSheetUndoRedoAdapter.new()
 
@@ -92,8 +112,10 @@ func _ready() -> void:
     _param_resolver.set_param_store(_editor_param_store)
     _ace_picker.init_dialog(self, _ace_registry)
     _ace_picker.ace_selected.connect(_on_ace_picker_selected)
-    _ace_params.init_dialog(self)
+    _ace_params.init_dialog(self, _ace_registry, _collect_sheet_variable_names)
+    _ace_params.set_lint_context_provider(func() -> EventSheetResource: return _current_sheet)
     _ace_params.params_confirmed.connect(_on_ace_params_confirmed)
+    _ace_params.back_requested.connect(_on_ace_params_back_requested)
     _variable_dlg.init_dialog(self)
     _variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
     _refresh_ace_registry()
@@ -104,24 +126,114 @@ func _ready() -> void:
 
 func setup(sheet: EventSheetResource = null) -> void:
     _build_ui()
-    if sheet == null:
-        _current_sheet = _build_demo_sheet()
-        _current_sheet_path = ""
-        _viewport.set_debug_overlay_states({})
-        _set_status("Loaded demo EventSheet.")
-    else:
-        _current_sheet = sheet
-        _current_sheet_path = sheet.resource_path
-        _viewport.set_debug_overlay_states({})
-        _set_status("Loaded: %s" % (_current_sheet_path.get_file() if not _current_sheet_path.is_empty() else "(unsaved EventSheet)"))
-    _dirty = false
+    var target_sheet: EventSheetResource = sheet if sheet != null else _build_demo_sheet()
+    var target_path: String = sheet.resource_path if sheet != null else ""
+    _open_sheet_in_tab(target_sheet, target_path)
+
+## Opens a sheet in a tab — activating its existing tab if already open, else adding one.
+func _open_sheet_in_tab(sheet: EventSheetResource, path: String) -> void:
+    for i in range(_open_tabs.size()):
+        if _open_tabs[i].get("sheet") == sheet:
+            _activate_tab(i)
+            return
+    _sync_active_tab_state()
+    _open_tabs.append({"sheet": sheet, "path": path, "dirty": false})
+    _activate_tab(_open_tabs.size() - 1)
+
+## Makes the tab at index active, loading its sheet into the shared viewport.
+func _activate_tab(index: int) -> void:
+    if index < 0 or index >= _open_tabs.size():
+        return
+    if index != _active_tab_index:
+        _sync_active_tab_state()
+    _active_tab_index = index
+    var tab: Dictionary = _open_tabs[index]
+    _current_sheet = tab.get("sheet")
+    _current_sheet_path = str(tab.get("path", ""))
+    _dirty = bool(tab.get("dirty", false))
+    _viewport.set_debug_overlay_states({})
     _clear_undo_history()
     _refresh_ace_registry()
     _viewport.set_sheet(_current_sheet)
     _sync_active_theme_binding()
     _refresh_title_strip()
+    _refresh_theme_picker_selection()
     _refresh_exposed_node()
     _refresh_variable_panel()
+    _refresh_tab_bar()
+    var label: String = _current_sheet_path.get_file() if not _current_sheet_path.is_empty() else "(unsaved EventSheet)"
+    _set_status("Loaded: %s" % label)
+
+## Persists the live active-tab state (_current_sheet/path/dirty) back into _open_tabs.
+func _sync_active_tab_state() -> void:
+    if _active_tab_index < 0 or _active_tab_index >= _open_tabs.size():
+        return
+    _open_tabs[_active_tab_index] = {"sheet": _current_sheet, "path": _current_sheet_path, "dirty": _dirty}
+
+## Closes the tab at index, activating a neighbour (or a fresh demo sheet when none remain).
+func _close_tab(index: int) -> void:
+    if index < 0 or index >= _open_tabs.size():
+        return
+    _open_tabs.remove_at(index)
+    _active_tab_index = -1
+    if _open_tabs.is_empty():
+        setup(null)
+        return
+    _activate_tab(mini(index, _open_tabs.size() - 1))
+
+func _refresh_tab_bar() -> void:
+    if _tab_bar == null:
+        return
+    _suppress_tab_signal = true
+    _tab_bar.clear_tabs()
+    for tab: Dictionary in _open_tabs:
+        _tab_bar.add_tab(_format_tab_title(tab.get("sheet"), str(tab.get("path", "")), bool(tab.get("dirty", false))))
+    if _active_tab_index >= 0 and _active_tab_index < _tab_bar.get_tab_count():
+        _tab_bar.current_tab = _active_tab_index
+    _tab_bar.visible = _open_tabs.size() >= 1
+    _suppress_tab_signal = false
+
+func _update_active_tab_title() -> void:
+    if _tab_bar == null or _active_tab_index < 0 or _active_tab_index >= _tab_bar.get_tab_count():
+        return
+    _suppress_tab_signal = true
+    _tab_bar.set_tab_title(_active_tab_index, _format_tab_title(_current_sheet, _current_sheet_path, _dirty))
+    _suppress_tab_signal = false
+
+func _format_tab_title(sheet: EventSheetResource, path: String, dirty: bool) -> String:
+    var title: String = _format_sheet_title(sheet, path)
+    # Sheet-type badges: ⚙ behavior, ◆ custom node (C3 users expect typed tabs).
+    if sheet != null and sheet.behavior_mode:
+        title = "⚙ " + title
+    elif sheet != null and not sheet.custom_class_name.strip_edges().is_empty():
+        title = "◆ " + title
+    return ("● " + title) if dirty else title
+
+func _on_tab_selected(index: int) -> void:
+    if not _suppress_tab_signal:
+        _activate_tab(index)
+
+func _on_tab_close_pressed(index: int) -> void:
+    if not _suppress_tab_signal:
+        _close_tab(index)
+
+## Number of open sheet tabs.
+func get_open_tab_count() -> int:
+    return _open_tabs.size()
+
+## Index of the active tab (-1 when none).
+func get_active_tab_index() -> int:
+    return _active_tab_index
+
+## Activates a tab by index (public entry point for tab navigation).
+func activate_tab(index: int) -> void:
+    _activate_tab(index)
+
+## Whether the tab at index has unsaved changes.
+func is_tab_dirty(index: int) -> bool:
+    if index < 0 or index >= _open_tabs.size():
+        return false
+    return bool(_open_tabs[index].get("dirty", false))
 
 func get_viewport_control() -> EventSheetViewport:
     return _viewport
@@ -197,9 +309,136 @@ func set_undo_redo_manager(undo_redo: Variant) -> void:
         _exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
 
 func set_auto_ace_sources(sources: Array[Object]) -> void:
-    _release_ace_sources()
-    _ace_sources = sources.duplicate()
+    _manual_ace_sources = sources.duplicate()
     _refresh_ace_registry()
+
+## Registers a GDScript file as a custom-ACE provider on the current sheet. Its annotated
+## methods/signals/exported properties then appear in the ACE picker.
+func add_ace_provider_script(path: String) -> bool:
+    if not _ensure_sheet_for_editing():
+        return false
+    var clean_path: String = path.strip_edges()
+    if clean_path.is_empty() or _current_sheet.ace_provider_scripts.has(clean_path):
+        return false
+    var probe: Object = _instantiate_provider_script(clean_path)
+    if probe == null:
+        _set_status("Not a usable ACE provider script: %s" % clean_path.get_file(), true)
+        return false
+    if probe is Node:
+        (probe as Node).free()
+    var changed: bool = _perform_undoable_sheet_edit("Add ACE Provider", func() -> bool:
+        _current_sheet.ace_provider_scripts.append(clean_path)
+        return true
+    )
+    if changed:
+        _refresh_ace_registry()
+        _refresh_provider_list()
+        _mark_dirty("Added ACE provider: %s" % clean_path.get_file())
+    return changed
+
+## Removes a registered custom-ACE provider script from the current sheet.
+func remove_ace_provider_script(path: String) -> bool:
+    if not _ensure_sheet_for_editing():
+        return false
+    if not _current_sheet.ace_provider_scripts.has(path):
+        return false
+    var changed: bool = _perform_undoable_sheet_edit("Remove ACE Provider", func() -> bool:
+        _current_sheet.ace_provider_scripts.erase(path)
+        return true
+    )
+    if changed:
+        _refresh_ace_registry()
+        _refresh_provider_list()
+        _mark_dirty("Removed ACE provider: %s" % path.get_file())
+    return changed
+
+func get_ace_provider_scripts() -> PackedStringArray:
+    var output: PackedStringArray = PackedStringArray()
+    if _current_sheet == null:
+        return output
+    for path: Variant in _current_sheet.ace_provider_scripts:
+        output.append(str(path))
+    return output
+
+func _on_manage_ace_providers_requested() -> void:
+    if not _ensure_sheet_for_editing():
+        return
+    _build_provider_dialog()
+    _refresh_provider_list()
+    _provider_dialog.popup_centered(Vector2i(560, 420))
+
+func _build_provider_dialog() -> void:
+    if _provider_dialog != null:
+        return
+    _provider_dialog = Window.new()
+    _provider_dialog.title = "Custom ACE Providers"
+    _provider_dialog.visible = false
+    _provider_dialog.min_size = Vector2i(460, 320)
+    _provider_dialog.close_requested.connect(func() -> void: _provider_dialog.hide())
+    add_child(_provider_dialog)
+
+    var margin: MarginContainer = MarginContainer.new()
+    margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    margin.add_theme_constant_override("margin_left", 10)
+    margin.add_theme_constant_override("margin_right", 10)
+    margin.add_theme_constant_override("margin_top", 10)
+    margin.add_theme_constant_override("margin_bottom", 10)
+    _provider_dialog.add_child(margin)
+
+    var content: VBoxContainer = VBoxContainer.new()
+    content.add_theme_constant_override("separation", 8)
+    margin.add_child(content)
+
+    var hint: Label = Label.new()
+    hint.text = "Register GDScript files whose methods, signals and exported variables become custom ACEs.\nZero-config alternative: drop scripts into res://eventsheet_addons/ and they register project-wide automatically."
+    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    content.add_child(hint)
+
+    _provider_list = ItemList.new()
+    _provider_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _provider_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    content.add_child(_provider_list)
+
+    var buttons: HBoxContainer = HBoxContainer.new()
+    buttons.add_theme_constant_override("separation", 6)
+    content.add_child(buttons)
+    var add_button: Button = Button.new()
+    add_button.text = "Add…"
+    add_button.pressed.connect(_on_provider_add_pressed)
+    buttons.add_child(add_button)
+    var remove_button: Button = Button.new()
+    remove_button.text = "Remove Selected"
+    remove_button.pressed.connect(_on_provider_remove_pressed)
+    buttons.add_child(remove_button)
+
+    _provider_file_dialog = FileDialog.new()
+    _provider_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+    _provider_file_dialog.access = FileDialog.ACCESS_RESOURCES
+    _provider_file_dialog.filters = PackedStringArray(["*.gd ; GDScript"])
+    _provider_file_dialog.file_selected.connect(_on_provider_file_selected)
+    _provider_dialog.add_child(_provider_file_dialog)
+
+func _refresh_provider_list() -> void:
+    if _provider_list == null:
+        return
+    _provider_list.clear()
+    for path in get_ace_provider_scripts():
+        _provider_list.add_item(path)
+
+func _on_provider_add_pressed() -> void:
+    if _provider_file_dialog != null:
+        _provider_file_dialog.popup_centered(Vector2i(720, 520))
+
+func _on_provider_file_selected(path: String) -> void:
+    add_ace_provider_script(path)
+
+func _on_provider_remove_pressed() -> void:
+    if _provider_list == null:
+        return
+    var selected: PackedInt32Array = _provider_list.get_selected_items()
+    if selected.is_empty():
+        return
+    remove_ace_provider_script(_provider_list.get_item_text(selected[0]))
 
 func _build_ui() -> void:
     if _toolbar != null:
@@ -240,9 +479,31 @@ func _build_ui() -> void:
     _add_toolbar_button("Add Global Var", _on_add_global_variable_requested)
     _add_toolbar_button("Add Local Var", _on_add_local_variable_requested)
     _add_toolbar_separator()
-    _add_toolbar_button("Default Theme", _on_set_default_theme_requested)
-    _add_toolbar_button("Load Theme", _on_load_theme_requested)
+    var theme_label: Label = Label.new()
+    theme_label.text = "Theme:"
+    _toolbar.add_child(theme_label)
+    _theme_picker = OptionButton.new()
+    _theme_picker.name = "EventSheetThemePicker"
+    _theme_picker.tooltip_text = "Switch the editor theme for this sheet"
+    _theme_picker.item_selected.connect(_on_theme_preset_selected)
+    _toolbar.add_child(_theme_picker)
+    _populate_theme_picker()
+    _add_toolbar_button("Load Theme…", _on_load_theme_requested)
     _add_toolbar_button("Reload Theme", _on_reload_theme_requested)
+    _add_toolbar_separator()
+    _add_toolbar_button("ACE Providers…", _on_manage_ace_providers_requested)
+    _add_toolbar_button("GDScript", _toggle_code_panel)
+    _add_toolbar_button("Sheet Type…", _open_sheet_type_dialog)
+    _add_toolbar_button("Theme Editor…", _open_theme_editor)
+
+    _tab_bar = TabBar.new()
+    _tab_bar.name = "EventSheetTabBar"
+    _tab_bar.clip_tabs = true
+    _tab_bar.tab_close_display_policy = TabBar.CLOSE_BUTTON_SHOW_ALWAYS
+    _tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _tab_bar.tab_selected.connect(_on_tab_selected)
+    _tab_bar.tab_close_pressed.connect(_on_tab_close_pressed)
+    root.add_child(_tab_bar)
 
     _title_strip = HBoxContainer.new()
     _title_strip.name = "EventSheetTitleStrip"
@@ -277,6 +538,15 @@ func _build_ui() -> void:
     _title_path_label.text = "Open or create a sheet to begin"
     _title_strip.add_child(_title_path_label)
 
+    # Pinned Conditions/Actions column header, above the scrolling sheet (bound to the
+    # viewport once it exists). Kept outside the scroll so the scroll still has a single child.
+    _identity_banner = SheetIdentityBanner.new()
+    root.add_child(_identity_banner)
+    _identity_banner.edit_requested.connect(_open_sheet_type_dialog)
+
+    _column_header = SheetColumnHeader.new()
+    root.add_child(_column_header)
+
     _scroll = ScrollContainer.new()
     _scroll.name = "EventSheetScroll"
     _scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -291,6 +561,8 @@ func _build_ui() -> void:
     _viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _viewport.set_ace_registry(_ace_registry)
     _scroll.add_child(_viewport)
+    _column_header.setup(_viewport)
+    _identity_banner.setup(_viewport)
 
     _viewport.selection_changed.connect(_on_viewport_selection_changed)
     _viewport.row_drop_requested.connect(_on_row_drop_requested)
@@ -300,8 +572,12 @@ func _build_ui() -> void:
     _viewport.span_edit_requested.connect(_on_viewport_span_edit_requested)
     _viewport.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
     _viewport.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
+    _viewport.comment_edit_requested.connect(_open_comment_dialog)
     _viewport.ace_drop_requested.connect(_on_viewport_ace_drop_requested)
     _viewport.drag_status_requested.connect(_on_viewport_drag_status_requested)
+    _viewport.lane_ratio_changed.connect(_on_viewport_lane_ratio_changed)
+    _viewport.add_event_requested.connect(_on_viewport_add_event_requested)
+    _viewport.raw_code_edit_requested.connect(_on_viewport_raw_code_edit_requested)
     _viewport.context_menu_requested.connect(_on_viewport_context_menu_requested)
     _viewport.empty_space_double_clicked.connect(_on_viewport_empty_space_double_clicked)
     _viewport.empty_space_context_menu_requested.connect(_on_viewport_empty_space_context_menu_requested)
@@ -391,18 +667,26 @@ func _build_context_menus() -> void:
     _action_context_menu.add_item("Replace Action", ACTION_MENU_REPLACE)
     _action_context_menu.add_separator()
     _action_context_menu.add_item("Disable Action", ACTION_MENU_TOGGLE_ENABLED)
+    _action_context_menu.add_item("Detach Comment To Row", ACTION_MENU_DETACH_COMMENT)
     _action_context_menu.add_item("Delete Action", ACTION_MENU_DELETE)
     _action_context_menu.id_pressed.connect(_on_action_context_menu_id_pressed)
     add_child(_action_context_menu)
 
     _row_context_menu = PopupMenu.new()
     _row_context_menu.add_item("Add Sub-Event", ROW_MENU_ADD_SUB_EVENT)
+    _row_context_menu.add_item("Add Comment Sub-Event", ROW_MENU_ADD_COMMENT_SUB_EVENT)
     _row_context_menu.add_item("Convert to OR Block", ROW_MENU_TOGGLE_CONDITION_BLOCK)
     _row_context_menu.add_item("Add Sub-Condition", ROW_MENU_ADD_SUB_CONDITION)
     _row_context_menu.add_item("Close Group", ROW_MENU_TOGGLE_GROUP_FOLD)
     _row_context_menu.add_item("Add Event Below", ROW_MENU_ADD_EVENT_BELOW)
     _row_context_menu.add_item("Add Group Below", ROW_MENU_ADD_GROUP_BELOW)
     _row_context_menu.add_item("Add Comment Below", ROW_MENU_ADD_COMMENT_BELOW)
+    _row_context_menu.add_item("Add Variable Below", ROW_MENU_ADD_VARIABLE_BELOW)
+    _row_context_menu.add_item("Add GDScript Block Below", ROW_MENU_ADD_GDSCRIPT_BELOW)
+    _row_context_menu.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
+    _row_context_menu.add_separator()
+    _row_context_menu.add_item("Edit Comment…", ROW_MENU_EDIT_COMMENT)
+    _row_context_menu.add_item("Attach Comment To Event Above", ROW_MENU_ATTACH_COMMENT)
     _row_context_menu.add_separator()
     _row_context_menu.add_item("Disable Row", ROW_MENU_TOGGLE_ENABLED)
     _row_context_menu.add_separator()
@@ -449,17 +733,44 @@ func _unhandled_key_input(event: InputEvent) -> void:
         _ace_picker.close()
         accept_event()
         return
+    # Structural/letter shortcuts are suppressed while typing in a text field so authoring
+    # keys never fire mid-edit (text fields already consume their own text shortcuts).
+    var typing: bool = _text_field_has_focus()
+    var shift: bool = key_event.shift_pressed
     if key_event.ctrl_pressed or key_event.meta_pressed:
-        if key_event.keycode == KEY_C:
+        if key_event.keycode == KEY_C and shift:
+            if not typing:
+                _on_add_condition_requested()
+                accept_event()
+        elif key_event.keycode == KEY_C:
             _on_copy_requested()
             accept_event()
+        elif key_event.keycode == KEY_V and shift:
+            if not typing:
+                _on_add_global_variable_requested()
+                accept_event()
         elif key_event.keycode == KEY_V:
             _on_paste_requested()
+            accept_event()
+        elif key_event.keycode == KEY_A and shift:
+            if not typing:
+                _on_add_action_requested()
+                accept_event()
+        elif key_event.keycode == KEY_S and shift:
+            _on_save_as_requested()
             accept_event()
         elif key_event.keycode == KEY_S:
             _on_save_requested()
             accept_event()
-        elif key_event.keycode == KEY_Z and key_event.shift_pressed:
+        elif key_event.keycode == KEY_E:
+            if not typing:
+                _on_add_event_requested()
+                accept_event()
+        elif key_event.keycode == KEY_D:
+            if not typing:
+                _on_duplicate_requested()
+                accept_event()
+        elif key_event.keycode == KEY_Z and shift:
             _on_redo_requested()
             accept_event()
         elif key_event.keycode == KEY_Z:
@@ -477,12 +788,45 @@ func _unhandled_key_input(event: InputEvent) -> void:
         elif key_event.keycode in [KEY_MINUS, KEY_KP_SUBTRACT]:
             _on_zoom_out_requested()
             accept_event()
+        return
+    if typing:
+        return
+    if key_event.keycode == KEY_Q:
+        _on_add_comment_requested()
+        accept_event()
+    elif key_event.keycode == KEY_G:
+        _on_add_group_requested()
+        accept_event()
+    elif key_event.keycode == KEY_X:
+        # Toggle enabled/disabled for the whole current selection (conditions, actions,
+        # events, groups, comments) — single or multi-select.
+        _toggle_selected_enabled()
+        accept_event()
+    elif key_event.keycode == KEY_TAB and shift:
+        # Outdent (un-nest); only consume Tab when the move actually applies so normal
+        # focus traversal still works when there is nothing to outdent.
+        if _outdent_selected_event():
+            accept_event()
+    elif key_event.keycode == KEY_TAB:
+        if _indent_selected_event():
+            accept_event()
+    elif key_event.keycode == KEY_BACKTAB:
+        if _outdent_selected_event():
+            accept_event()
     elif key_event.keycode in [KEY_DELETE, KEY_BACKSPACE]:
         _delete_selected_content()
         accept_event()
     elif key_event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_F2]:
         if _viewport != null and _viewport.begin_edit_selected():
             accept_event()
+
+## True when a text-input control owns keyboard focus (so authoring shortcuts are paused).
+func _text_field_has_focus() -> bool:
+    var view: Viewport = get_viewport()
+    if view == null:
+        return false
+    var focus_owner: Control = view.gui_get_focus_owner()
+    return focus_owner is LineEdit or focus_owner is TextEdit or focus_owner is SpinBox
 
 ## Closes the ACE picker when the user clicks anywhere outside the popup rect.
 func _gui_input(event: InputEvent) -> void:
@@ -536,10 +880,65 @@ func _on_reload_theme_requested() -> void:
     else:
         _set_status("Reload theme failed: no active style resource path.", true)
 
+## Populates the toolbar theme switcher with "Default" plus the discovered bundled themes.
+func _populate_theme_picker() -> void:
+    if _theme_picker == null:
+        return
+    _theme_picker.clear()
+    _theme_picker.add_item("Default")
+    _theme_picker.set_item_metadata(0, "")
+    for preset: Dictionary in EventSheetThemePresets.list_presets():
+        _theme_picker.add_item(str(preset.get("name", "Theme")))
+        _theme_picker.set_item_metadata(_theme_picker.item_count - 1, str(preset.get("path", "")))
+    _refresh_theme_picker_selection()
+
+## Selects the switcher entry matching the current sheet's active theme (Default if none).
+func _refresh_theme_picker_selection() -> void:
+    if _theme_picker == null:
+        return
+    var active_path: String = ""
+    if _current_sheet != null and _current_sheet.editor_style != null:
+        active_path = _current_sheet.editor_style.resource_path
+    var target_index: int = 0
+    for i in range(_theme_picker.item_count):
+        if str(_theme_picker.get_item_metadata(i)) == active_path:
+            target_index = i
+            break
+    _theme_picker.selected = target_index
+
+## Applies the chosen theme preset (or the built-in default) to the current sheet.
+func _on_theme_preset_selected(index: int) -> void:
+    if _theme_picker == null:
+        return
+    var path: String = str(_theme_picker.get_item_metadata(index))
+    if path.is_empty():
+        _on_set_default_theme_requested()
+    else:
+        load_theme_style_from_path(path)
+    _refresh_theme_picker_selection()
+
 func _load_sheet_from_path(path: String) -> void:
     var resolved_path: String = path.strip_edges()
     if resolved_path.is_empty():
         _set_status("Open failed: no file selected.", true)
+        return
+    # GDScript-backed sheets: any .gd opens losslessly (lifted rows + verbatim blocks); the
+    # file stays the single source of truth and Save compiles back to it.
+    if resolved_path.get_extension() == "gd":
+        var imported: EventSheetResource = GDScriptImporter.new().import_external(resolved_path)
+        if imported == null:
+            _set_status("Open failed: could not read %s." % resolved_path.get_file(), true)
+            return
+        setup(imported)
+        _current_sheet_path = resolved_path
+        _dirty = false
+        _refresh_title_strip()
+        _clear_undo_history()
+        var lifted_count: int = 0
+        for entry in imported.events:
+            if entry is LocalVariable:
+                lifted_count += 1
+        _set_status("Opened GDScript as sheet: %d variable(s) lifted, file remains the source of truth." % lifted_count)
         return
     var loaded: Resource = ResourceLoader.load(resolved_path)
     if loaded is EventSheetResource:
@@ -554,6 +953,17 @@ func _load_sheet_from_path(path: String) -> void:
 func _on_save_requested() -> void:
     if _current_sheet == null:
         _set_status("Nothing to save.", true)
+        return
+    # GDScript-backed sheets save by compiling back to their .gd source (order-preserving;
+    # an untouched sheet reproduces the file byte-identically).
+    if not _current_sheet.external_source_path.is_empty():
+        var compile_result: Dictionary = SheetCompiler.compile(_current_sheet, _current_sheet.external_source_path)
+        if bool(compile_result.get("success", false)):
+            _dirty = false
+            _refresh_title_strip()
+            _set_status("Saved GDScript: %s" % _current_sheet.external_source_path.get_file())
+        else:
+            _set_status("Save failed: %s" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
         return
     if _current_sheet_path.is_empty() and _current_sheet.resource_path.is_empty():
         _on_save_as_requested()
@@ -592,6 +1002,10 @@ func _save_sheet_to_path(path: String) -> void:
         _set_status("Nothing to save.", true)
         return
     var resolved_path: String = _normalize_sheet_save_path(path)
+    # Save As .tres converts a GDScript-backed sheet into a normal sheet: the .gd stops
+    # being the source of truth (it is left untouched on disk).
+    if not _current_sheet.external_source_path.is_empty():
+        _current_sheet.external_source_path = ""
     var err: Error = ResourceSaver.save(_current_sheet, resolved_path)
     if err == OK:
         _current_sheet.take_over_path(resolved_path)
@@ -625,6 +1039,55 @@ func _on_add_action_requested() -> void:
     if not _ensure_selected_event():
         return
     _ace_picker.open("append_action", false, _viewport.get_selected_context().get("source_resource", null))
+
+func _on_add_comment_requested() -> void:
+    if not _ensure_sheet_for_editing():
+        return
+    var comment: CommentRow = CommentRow.new()
+    comment.text = "Comment"
+    var changed: bool = _perform_undoable_sheet_edit("Add Comment", func() -> bool:
+        _insert_row_below_selection(comment)
+        return true
+    )
+    if changed:
+        _mark_dirty("Added comment.")
+
+func _on_add_group_requested() -> void:
+    if not _ensure_sheet_for_editing():
+        return
+    var group: EventGroup = EventGroup.new()
+    group.name = "Group"
+    group.group_name = group.name
+    var changed: bool = _perform_undoable_sheet_edit("Add Group", func() -> bool:
+        _insert_row_below_selection(group)
+        return true
+    )
+    if changed:
+        _mark_dirty("Added group.")
+
+func _on_duplicate_requested() -> void:
+    if not _ensure_sheet_for_editing():
+        return
+    var selected_resource: Resource = _viewport.get_selected_context().get("source_resource", null)
+    if not (selected_resource is EventRow):
+        _set_status("Select an event row to duplicate.", true)
+        return
+    var clone: EventRow = (selected_resource as EventRow).duplicate(true)
+    _assign_fresh_event_uids(clone)
+    var changed: bool = _perform_undoable_sheet_edit("Duplicate Event", func() -> bool:
+        _insert_row_below_selection(clone, selected_resource)
+        return true
+    )
+    if changed:
+        _mark_dirty("Duplicated event.")
+
+## Recursively assigns fresh event UIDs to a cloned event row and its sub-events so the
+## duplicate does not share selection/fold identity with the source.
+func _assign_fresh_event_uids(row: EventRow) -> void:
+    row.event_uid = EventRow._generate_short_uid()
+    for sub_event in row.sub_events:
+        if sub_event is EventRow:
+            _assign_fresh_event_uids(sub_event as EventRow)
 
 func _on_zoom_in_requested() -> void:
     if _viewport == null:
@@ -661,10 +1124,44 @@ func _on_copy_requested() -> void:
             _clipboard = {"type": "trigger", "payload": event_row.trigger.duplicate(true)}
             _set_status("Copied trigger.")
             return
+    # Row copies are written in two forms: the internal clipboard (rich, same-session
+    # pastes) and a portable text snippet on the SYSTEM clipboard, so rows can be shared
+    # across projects, editor instances, and forum/Discord posts (see EventSheetSnippet).
+    var top_level: Array = _top_level_selected_resources()
+    if top_level.is_empty():
+        top_level = [selected_resource]
+    DisplayServer.clipboard_set(EventSheetSnippet.serialize_rows(top_level, _current_sheet))
     _clipboard = {"type": "row", "payload": selected_resource.duplicate(true)}
-    _set_status("Copied row.")
+    _set_status("Copied %d row(s) — shareable snippet placed on the clipboard." % top_level.size())
+
+## Top-most selected row resources: children of a selected ancestor are skipped because
+## they already travel inside their parent's serialized form.
+func _top_level_selected_resources() -> Array:
+    var resources: Array = []
+    for row_data in _get_selected_rows_from_context():
+        if row_data == null or row_data.source_resource == null:
+            continue
+        if not resources.has(row_data.source_resource):
+            resources.append(row_data.source_resource)
+    var top_level: Array = []
+    for resource in resources:
+        var has_selected_ancestor: bool = false
+        for other in resources:
+            if other != resource and _resource_contains_descendant(other, resource):
+                has_selected_ancestor = true
+                break
+        if not has_selected_ancestor:
+            top_level.append(resource)
+    return top_level
 
 func _on_paste_requested() -> void:
+    # Paste priority: portable snippets (in-app copies refresh them too) → raw GDScript
+    # copied from anywhere (auto-converted to events/rows) → the internal clipboard for
+    # same-session rich pastes.
+    if _paste_snippet_text(DisplayServer.clipboard_get()):
+        return
+    if _paste_gdscript_text(DisplayServer.clipboard_get()):
+        return
     if _clipboard.is_empty():
         _set_status("Clipboard is empty.", true)
         return
@@ -704,6 +1201,44 @@ func _on_paste_requested() -> void:
     else:
         _mark_dirty(str(result.get("label", "Pasted.")))
 
+## Pastes a shareable snippet from text (see EventSheetSnippet). Returns false when the
+## text is not a snippet so the caller falls back to the internal clipboard. Pasted events
+## get fresh UIDs; sheet variables the snippet references are created when missing (never
+## overwritten), so the pasted rows compile immediately.
+func _paste_snippet_text(text: String) -> bool:
+    if not EventSheetSnippet.is_snippet_text(text):
+        return false
+    if not _ensure_sheet_for_editing():
+        return true
+    var snippet: Dictionary = EventSheetSnippet.deserialize(text)
+    var rows: Array = snippet.get("rows", [])
+    if rows.is_empty():
+        _set_status("Clipboard snippet is empty or invalid.", true)
+        return true
+    # Dictionary so the undoable lambda can mutate it (GDScript lambdas capture by value).
+    var counters: Dictionary = {"variables_created": 0}
+    var required_variables: Dictionary = snippet.get("required_variables", {})
+    var changed: bool = _perform_undoable_sheet_edit("Paste Snippet", func() -> bool:
+        for variable_name in required_variables.keys():
+            if not _current_sheet.variables.has(variable_name):
+                _current_sheet.variables[variable_name] = required_variables[variable_name]
+                counters["variables_created"] = int(counters["variables_created"]) + 1
+        var anchor: Resource = _viewport.get_selected_context().get("source_resource", null)
+        for row in rows:
+            if row is EventRow:
+                _assign_fresh_event_uids(row as EventRow)
+            _insert_row_below_selection(row, anchor)
+            anchor = row  # keeps pasted rows in their original order, each after the last
+        return true
+    )
+    if changed:
+        var provider_names: PackedStringArray = PackedStringArray()
+        for provider in snippet.get("providers", []):
+            provider_names.append(str(provider))
+        var provider_note: String = "" if provider_names.is_empty() else " Uses providers: %s." % ", ".join(provider_names)
+        _mark_dirty("Pasted snippet: %d row(s), %d variable(s) created.%s" % [rows.size(), int(counters["variables_created"]), provider_note])
+    return true
+
 func _on_add_global_variable_requested() -> void:
     if not _ensure_sheet_for_editing():
         return
@@ -718,6 +1253,34 @@ func _on_add_local_variable_requested() -> void:
         _select_first_event_row()
         context["selected_resource"] = target_event
     _variable_dlg.open_for_edit("local", context, "", "int", "", false, "Create Variable")
+
+## Appends an in-flow GDScript block to the right-clicked event's actions (C3-style inline
+## scripting: statements emitted inside the event body).
+func _add_gdscript_action_to_context_row() -> void:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        _set_status("Add a GDScript action from an event row.", true)
+        return
+    var target_event: EventRow = _context_row.source_resource as EventRow
+    var changed: bool = _perform_undoable_sheet_edit("Add GDScript Action", func() -> bool:
+        var inline_raw: RawCodeRow = RawCodeRow.new()
+        inline_raw.code = "pass"
+        target_event.actions.append(inline_raw)
+        return true
+    )
+    if changed:
+        _mark_dirty("Added GDScript action.")
+
+## Opens the variable dialog to add a tree-placed variable directly below the right-clicked
+## row (so variables can sit between/above/under events like comments do).
+func _add_tree_variable_below_context_row() -> void:
+    if not _ensure_sheet_for_editing():
+        return
+    if _context_row == null or _context_row.source_resource == null:
+        _set_status("Select a row to add a variable below.", true)
+        return
+    _variable_dlg.open_for_edit(
+        "tree", {"insert_below": _context_row.source_resource}, "", "int", "0", false, "Add Variable", false, false
+    )
 
 func _ensure_sheet_for_editing() -> bool:
     if _current_sheet != null:
@@ -741,7 +1304,25 @@ func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> 
         _apply_ace_definition(definition, {}, context)
         return
     var initial_values: Dictionary = context.get("existing_params", {})
+    context["from_picker"] = true
     _ace_params.open_with_values(definition, context, initial_values)
+
+## Re-opens the ACE picker when the params dialog requests Back.
+func _on_ace_params_back_requested(_definition: ACEDefinition, context: Dictionary) -> void:
+    var mode: String = str(context.get("mode", "new_event"))
+    var signals_only: bool = bool(context.get("signals_only", false))
+    var selected_resource: Resource = context.get("selected_resource", null)
+    _ace_picker.open(mode, signals_only, selected_resource, context)
+
+## Returns the sheet's variable names for variable-reference parameter dropdowns.
+func _collect_sheet_variable_names() -> PackedStringArray:
+    var names: PackedStringArray = PackedStringArray()
+    if _current_sheet == null:
+        return names
+    for key: Variant in _current_sheet.variables.keys():
+        names.append(str(key))
+    names.sort()
+    return names
 
 func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> void:
     if row_data == null or not (row_data.source_resource is EventRow):
@@ -756,6 +1337,12 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
     if row_data == null or not (row_data.source_resource is EventRow):
         return
     var event_row: EventRow = row_data.source_resource as EventRow
+    # Action-cell comments edit in the comment dialog, not the ACE editor.
+    if bool(metadata.get("action_comment", false)):
+        var comment_index: int = int(metadata.get("ace_index", -1))
+        if comment_index >= 0 and comment_index < event_row.actions.size() and event_row.actions[comment_index] is CommentRow:
+            _open_comment_dialog(event_row.actions[comment_index])
+            return
     var edit_context: Dictionary = _build_ace_edit_context(event_row, span_index, metadata)
     if edit_context.is_empty():
         return
@@ -792,9 +1379,16 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
                 var condition_event: EventRow = EventRow.new()
                 if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
                     condition_event.trigger = _create_condition_from_definition(definition, params)
+                    _bake_trigger_signature(condition_event, definition)
                 else:
                     condition_event.conditions.append(_create_condition_from_definition(definition, params))
-                _insert_row_below_selection(condition_event)
+                var insert_into: Variant = context.get("insert_into", null)
+                if insert_into is EventGroup:
+                    _group_children_array(insert_into as EventGroup).append(condition_event)
+                elif insert_into is EventSheetResource:
+                    (insert_into as EventSheetResource).events.append(condition_event)
+                else:
+                    _insert_row_below_selection(condition_event)
                 message["text"] = "Added event."
                 return true
             "new_sub_condition_event":
@@ -802,6 +1396,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
                     var child_condition_event: EventRow = EventRow.new()
                     if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
                         child_condition_event.trigger = _create_condition_from_definition(definition, params)
+                        _bake_trigger_signature(child_condition_event, definition)
                     else:
                         child_condition_event.conditions.append(_create_condition_from_definition(definition, params))
                     (selected_resource as EventRow).sub_events.append(child_condition_event)
@@ -811,8 +1406,12 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
                 if selected_resource is EventRow:
                     var target_event: EventRow = selected_resource as EventRow
                     var condition_entry: ACECondition = _create_condition_from_definition(definition, params)
-                    if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
+                    # Only use the trigger slot when the event has no trigger yet; otherwise
+                    # append as a normal condition so an existing trigger (e.g. "Every tick")
+                    # is never overwritten by adding a condition.
+                    if definition.ace_type == ACEDefinition.ACEType.TRIGGER and target_event.trigger == null and target_event.trigger_id.is_empty():
                         target_event.trigger = condition_entry
+                        _bake_trigger_signature(target_event, definition)
                     else:
                         target_event.conditions.append(condition_entry)
                     message["text"] = "Added condition."
@@ -826,6 +1425,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
             "replace_trigger":
                 if selected_resource is EventRow:
                     (selected_resource as EventRow).trigger = _create_condition_from_definition(definition, params)
+                    _bake_trigger_signature(selected_resource as EventRow, definition)
                     message["text"] = "Updated trigger."
                     return true
             "replace_condition":
@@ -846,6 +1446,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
                 var event_row: EventRow = EventRow.new()
                 if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
                     event_row.trigger = _create_condition_from_definition(definition, params)
+                    _bake_trigger_signature(event_row, definition)
                 elif definition.ace_type == ACEDefinition.ACEType.CONDITION:
                     event_row.conditions.append(_create_condition_from_definition(definition, params))
                 elif definition.ace_type == ACEDefinition.ACEType.ACTION:
@@ -858,11 +1459,34 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
     if changed:
         _mark_dirty(str(message.get("text", "Applied ACE.")))
 
+## Bakes a trigger definition's identity + argument signature onto the event row, so the
+## compiler can group it, generate a connectable handler (`func _on_<signal>(args)`), and
+## emit the `_ready` connection — all without registry access at compile time. Fixes the
+## gap where picker-created trigger events never set trigger_id and silently skipped
+## compilation. Mirrors codegen_template baking on conditions/actions.
+func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> void:
+    if event_row == null or definition == null or definition.ace_type != ACEDefinition.ACEType.TRIGGER:
+        return
+    event_row.trigger_provider_id = definition.provider_id
+    event_row.trigger_id = definition.id
+    var parts: PackedStringArray = PackedStringArray()
+    for parameter in definition.parameters:
+        if not (parameter is Dictionary):
+            continue
+        var param_id: String = str((parameter as Dictionary).get("id", ""))
+        if param_id.is_empty():
+            continue
+        var param_type: int = int((parameter as Dictionary).get("type", TYPE_NIL))
+        parts.append(param_id if param_type == TYPE_NIL else "%s: %s" % [param_id, type_string(param_type)])
+    event_row.trigger_args = ", ".join(parts)
+
 func _create_condition_from_definition(definition: ACEDefinition, params: Dictionary) -> ACECondition:
     var condition: ACECondition = ACECondition.new()
     condition.provider_id = definition.provider_id
     condition.ace_id = definition.id
     condition.params = _resolve_definition_params(definition, params)
+    # Bake the custom/addon codegen template so the ACE compiles standalone.
+    condition.codegen_template = _baked_template_for(definition)
     return condition
 
 func _create_action_from_definition(definition: ACEDefinition, params: Dictionary) -> ACEAction:
@@ -870,7 +1494,31 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
     action.provider_id = definition.provider_id
     action.ace_id = definition.id
     action.params = _resolve_definition_params(definition, params)
+    # Bake the custom/addon codegen template so the ACE compiles standalone.
+    action.codegen_template = _baked_template_for(definition)
     return action
+
+## The codegen template baked onto applied ACEs. Explicit @ace_codegen_template wins; addon
+## METHODS without one become **instance-backed**: the call targets a per-provider member
+## (`__eventsheet_provider_<Class>.method({args})`) that the compiler declares as a plain
+## owned instance of the addon class — so template-less addon ACEs compile and run in
+## exported games with zero EventForge dependency (the addon script ships like any class).
+func _baked_template_for(definition: ACEDefinition) -> String:
+    var explicit: String = str(definition.metadata.get("codegen_template", ""))
+    if not explicit.strip_edges().is_empty():
+        return explicit
+    if str(definition.metadata.get("semantic_source", "")) != "reflection":
+        return ""
+    if str(definition.metadata.get("source_kind", "")) != "method":
+        return ""
+    var method_name: String = str(definition.metadata.get("source_name", ""))
+    if method_name.is_empty() or definition.provider_id.is_empty():
+        return ""
+    var argument_tokens: PackedStringArray = PackedStringArray()
+    for parameter in definition.parameters:
+        if parameter is Dictionary and not str((parameter as Dictionary).get("id", "")).is_empty():
+            argument_tokens.append("{%s}" % str((parameter as Dictionary).get("id", "")))
+    return "__eventsheet_provider_%s.%s(%s)" % [definition.provider_id, method_name, ", ".join(argument_tokens)]
 
 func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionary) -> Dictionary:
     return _param_resolver.resolve_all(definition, row_params if row_params != null else {})
@@ -1222,6 +1870,579 @@ func _ace_type_label(ace_type: int) -> String:
 func _on_viewport_drag_status_requested(message: String, is_error: bool) -> void:
     _set_status(message, is_error)
 
+var _raw_code_dialog: ConfirmationDialog = null
+var _raw_code_edit: CodeEdit = null
+var _raw_code_target: RawCodeRow = null
+var _raw_code_in_flow: bool = false
+var _raw_code_hint: Label = null
+var _raw_code_lint_label: Label = null
+
+# ── GDScript provenance panel ────────────────────────────────────────────────
+# Read-only side panel showing the generated GDScript; selecting a sheet row highlights the
+# exact lines it compiles to (sheet → code provenance, via the compiler's source_map).
+var _code_edit: CodeEdit = null
+var _code_source_map: Array = []
+var _code_panel_highlight: Vector2i = Vector2i(-1, -1)
+const CODE_PANEL_HIGHLIGHT_COLOR := Color(0.35, 0.55, 0.95, 0.18)
+
+func _toggle_code_panel() -> void:
+    _ensure_code_panel()
+    _side_panel.visible = not _side_panel.visible
+    _split.dragger_visibility = (
+        SplitContainer.DRAGGER_VISIBLE if _side_panel.visible else SplitContainer.DRAGGER_HIDDEN_COLLAPSED
+    )
+    if _side_panel.visible:
+        _refresh_code_panel()
+
+func is_code_panel_visible() -> bool:
+    return _side_panel != null and _side_panel.visible
+
+## Builds the panel lazily on first toggle: wraps the sheet scroll in an HSplitContainer
+## (so the default tree stays untouched until the user asks for the panel) and adds the
+## code view on the right.
+func _ensure_code_panel() -> void:
+    if _split != null:
+        return
+    var scroll_parent: Node = _scroll.get_parent()
+    var scroll_index: int = _scroll.get_index()
+    _split = HSplitContainer.new()
+    _split.name = "EventSheetCodeSplit"
+    _split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    scroll_parent.remove_child(_scroll)
+    scroll_parent.add_child(_split)
+    scroll_parent.move_child(_split, scroll_index)
+    _split.add_child(_scroll)
+    _side_panel = VBoxContainer.new()
+    _side_panel.name = "GeneratedGDScriptPanel"
+    _side_panel.custom_minimum_size = Vector2(360.0, 0.0)
+    _side_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _side_panel.visible = false
+    var header: HBoxContainer = HBoxContainer.new()
+    var title: Label = Label.new()
+    title.text = "Generated GDScript"
+    title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    header.add_child(title)
+    var copy_button: Button = Button.new()
+    copy_button.text = "Copy"
+    copy_button.tooltip_text = "Copy the generated script to the clipboard"
+    copy_button.pressed.connect(func() -> void:
+        if _code_edit != null:
+            DisplayServer.clipboard_set(_code_edit.text)
+    )
+    header.add_child(copy_button)
+    var close_button: Button = Button.new()
+    close_button.text = "✕"
+    close_button.tooltip_text = "Close the GDScript panel"
+    close_button.pressed.connect(_toggle_code_panel)
+    header.add_child(close_button)
+    _side_panel.add_child(header)
+    _code_edit = CodeEdit.new()
+    _code_edit.editable = false
+    _code_edit.gutters_draw_line_numbers = true
+    _code_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _code_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    # GDScriptSyntaxHighlighter is editor-only; headless test runs skip it.
+    if Engine.is_editor_hint() and ClassDB.class_exists("GDScriptSyntaxHighlighter"):
+        _code_edit.syntax_highlighter = ClassDB.instantiate("GDScriptSyntaxHighlighter")
+    _code_edit.gui_input.connect(_on_code_panel_gui_input)
+    _side_panel.add_child(_code_edit)
+    _split.add_child(_side_panel)
+    _split.split_offset = int(size.x * 0.6) if size.x > 0.0 else 600
+
+## Recompiles the current sheet into the panel (text + source map) and re-highlights.
+func _refresh_code_panel() -> void:
+    if _code_edit == null or _side_panel == null or not _side_panel.visible:
+        return
+    if _current_sheet == null:
+        _code_edit.text = ""
+        _code_source_map = []
+        _code_panel_highlight = Vector2i(-1, -1)
+        return
+    var compile_result: Dictionary = SheetCompiler.compile(_current_sheet, "user://eventforge_code_panel_preview.gd")
+    _code_edit.text = str(compile_result.get("output", ""))
+    _code_source_map = compile_result.get("source_map", [])
+    _code_panel_highlight = Vector2i(-1, -1)
+    _update_code_panel_highlight()
+
+## Highlights the generated lines for the currently selected sheet row and scrolls to them.
+func _update_code_panel_highlight() -> void:
+    if _code_edit == null or _side_panel == null or not _side_panel.visible:
+        return
+    if _code_panel_highlight.x >= 0:
+        for line in range(_code_panel_highlight.x, _code_panel_highlight.y + 1):
+            if line < _code_edit.get_line_count():
+                _code_edit.set_line_background_color(line, Color(0, 0, 0, 0))
+    _code_panel_highlight = Vector2i(-1, -1)
+    var selected: Resource = _viewport.get_selected_context().get("source_resource", null) if _viewport != null else null
+    if selected == null:
+        return
+    var uid: String = str(selected.get_instance_id())
+    for entry: Variant in _code_source_map:
+        if not (entry is Dictionary) or str((entry as Dictionary).get("uid", "")) != uid:
+            continue
+        var start_line: int = int((entry as Dictionary).get("start", 0)) - 1
+        var end_line: int = mini(int((entry as Dictionary).get("end", 0)) - 1, _code_edit.get_line_count() - 1)
+        if start_line < 0 or end_line < start_line:
+            continue
+        for line in range(start_line, end_line + 1):
+            _code_edit.set_line_background_color(line, CODE_PANEL_HIGHLIGHT_COLOR)
+        _code_edit.set_caret_line(start_line)
+        _code_panel_highlight = Vector2i(start_line, end_line)
+        return
+
+## Reverse provenance: clicking a line of generated code selects the sheet row that
+## produced it. Reacts only to mouse releases (never caret moves), so the forward
+## direction — selection setting the caret in _update_code_panel_highlight — cannot loop.
+func _on_code_panel_gui_input(event: InputEvent) -> void:
+    if not (event is InputEventMouseButton):
+        return
+    var mouse: InputEventMouseButton = event as InputEventMouseButton
+    if mouse.button_index != MOUSE_BUTTON_LEFT or mouse.pressed:
+        return
+    # The click already moved the caret; source maps are 1-based.
+    _select_sheet_row_for_code_line(_code_edit.get_caret_line() + 1)
+
+## Picks the most specific source-map entry containing the line (smallest range wins, so
+## in-flow blocks beat their event and events beat their trigger function), then walks
+## outward until something selects — inner entries may reference resources without rows of
+## their own (e.g. an in-flow block inside an event's actions).
+func _select_sheet_row_for_code_line(line: int) -> void:
+    if _viewport == null:
+        return
+    var containing: Array = []
+    for entry: Variant in _code_source_map:
+        if not (entry is Dictionary):
+            continue
+        var start: int = int((entry as Dictionary).get("start", 0))
+        var end: int = int((entry as Dictionary).get("end", 0))
+        if line >= start and line <= end:
+            containing.append(entry)
+    containing.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+        return (int(a.get("end", 0)) - int(a.get("start", 0))) < (int(b.get("end", 0)) - int(b.get("start", 0)))
+    )
+    for entry: Variant in containing:
+        var resource: Resource = instance_from_id(int(str((entry as Dictionary).get("uid", "0")))) as Resource
+        if resource != null and _viewport.select_resource(resource):
+            _update_code_panel_highlight()
+            return
+
+## Double-clicking a GDScript block opens a CodeEdit dialog with compile-check linting and
+## sheet-symbol completion. in_flow blocks live inside an event's actions (statements);
+## class-level blocks are tree rows (helper functions, @onready vars, signals…).
+func _on_viewport_raw_code_edit_requested(raw_resource: Resource, in_flow: bool) -> void:
+    var raw_row: RawCodeRow = raw_resource as RawCodeRow
+    if raw_row == null:
+        return
+    _ensure_raw_code_dialog()
+    _raw_code_target = raw_row
+    _raw_code_in_flow = in_flow
+    _raw_code_hint.text = (
+        "Statements emitted inside this event's body (after its conditions)."
+        if in_flow
+        else "Plain GDScript, emitted verbatim at class level (helper functions, @onready vars, signals…)."
+    )
+    _raw_code_edit.text = raw_row.code
+    _validate_raw_code()
+    _raw_code_dialog.popup_centered(Vector2i(680, 460))
+    _raw_code_edit.grab_focus()
+
+func _ensure_raw_code_dialog() -> void:
+    if _raw_code_dialog != null:
+        return
+    _raw_code_dialog = ConfirmationDialog.new()
+    _raw_code_dialog.title = "Edit GDScript Block"
+    var layout_box: VBoxContainer = VBoxContainer.new()
+    layout_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _raw_code_hint = Label.new()
+    _raw_code_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    layout_box.add_child(_raw_code_hint)
+    _raw_code_edit = CodeEdit.new()
+    _raw_code_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _raw_code_edit.custom_minimum_size = Vector2(620.0, 330.0)
+    _raw_code_edit.gutters_draw_line_numbers = true
+    _raw_code_edit.indent_use_spaces = false
+    # GDScriptSyntaxHighlighter is editor-only; headless test runs skip it.
+    if Engine.is_editor_hint() and ClassDB.class_exists("GDScriptSyntaxHighlighter"):
+        _raw_code_edit.syntax_highlighter = ClassDB.instantiate("GDScriptSyntaxHighlighter")
+    _raw_code_edit.code_completion_enabled = true
+    _raw_code_edit.text_changed.connect(_validate_raw_code)
+    _raw_code_edit.code_completion_requested.connect(_populate_raw_code_completion)
+    layout_box.add_child(_raw_code_edit)
+    _raw_code_lint_label = Label.new()
+    _raw_code_lint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    layout_box.add_child(_raw_code_lint_label)
+    _raw_code_dialog.add_child(layout_box)
+    _raw_code_dialog.confirmed.connect(_on_raw_code_dialog_confirmed)
+    add_child(_raw_code_dialog)
+
+## Compile-checks the dialog's code against the sheet context (host class + sheet symbols).
+func _validate_raw_code() -> void:
+    if _raw_code_edit == null or _raw_code_lint_label == null:
+        return
+    var lint_result: Dictionary = EventSheetGDScriptLint.lint(_raw_code_edit.text, _raw_code_in_flow, _current_sheet)
+    if bool(lint_result.get("ok", true)):
+        _raw_code_lint_label.text = "✓ Compiles"
+        _raw_code_lint_label.add_theme_color_override("font_color", Color(0.55, 0.85, 0.6))
+    else:
+        _raw_code_lint_label.text = "✗ %s" % str(lint_result.get("error", "Does not compile."))
+        _raw_code_lint_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
+
+## Supplies sheet variables/functions and host-class members as completion candidates.
+func _populate_raw_code_completion() -> void:
+    if _raw_code_edit == null:
+        return
+    for candidate: Dictionary in EventSheetGDScriptLint.completion_candidates(_current_sheet):
+        var label: String = str(candidate.get("label", ""))
+        _raw_code_edit.add_code_completion_option(int(candidate.get("kind", CodeEdit.KIND_PLAIN_TEXT)), label, label)
+    _raw_code_edit.update_code_completion_options(true)
+
+func _on_raw_code_dialog_confirmed() -> void:
+    if _raw_code_target == null:
+        return
+    var target: RawCodeRow = _raw_code_target
+    _raw_code_target = null
+    var new_code: String = _raw_code_edit.text
+    var changed: bool = _perform_undoable_sheet_edit("Edit GDScript Block", func() -> bool:
+        if target.code == new_code:
+            return false
+        target.code = new_code
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Updated GDScript block.")
+
+# ── Paste GDScript as events ─────────────────────────────────────────────────
+
+## Returns true when the clipboard text reads like GDScript (conservative: a paste that is
+## not code must fall through to the internal clipboard untouched).
+static func _looks_like_gdscript(text: String) -> bool:
+    var code_line: RegEx = RegEx.new()
+    if code_line.compile("(?m)^(func |var |@export|@onready|signal |extends |class_name |if .*:|for .*:|while .*:|match .*:)") != OK:
+        return false
+    return code_line.search(text) != null
+
+## Pastes raw GDScript copied from anywhere, converted through the same pipeline that
+## opens .gd files as sheets: the lossless rule keeps every line (unrecognized code stays
+## verbatim GDScript block rows), declarations verify-lift to variable rows, and trigger
+## functions ACE-lift into real events when the round-trip verifies. Returns false for
+## non-code clipboards so the regular paste paths continue.
+func _paste_gdscript_text(text: String) -> bool:
+    if text.strip_edges().is_empty() or EventSheetSnippet.is_snippet_text(text):
+        return false
+    if not _looks_like_gdscript(text):
+        return false
+    if not _ensure_sheet_for_editing():
+        return false
+    var imported: EventSheetResource = GDScriptImporter.new().import_external_source(text)
+    if imported.events.is_empty():
+        return false
+    var rows: Array = imported.events.duplicate()
+    var lifted_events: int = 0
+    var context: Dictionary = _viewport.get_selected_context()
+    var anchor: Resource = context.get("source_resource", null)
+    var changed: bool = _perform_undoable_sheet_edit("Paste GDScript", func() -> bool:
+        var insert_after: Resource = anchor
+        for row: Variant in rows:
+            if row is EventRow:
+                _assign_fresh_event_uids(row)
+            _insert_row_below_selection(row, insert_after)
+            insert_after = row
+        return true
+    )
+    if not changed:
+        return false
+    for row: Variant in rows:
+        if row is EventRow:
+            lifted_events += 1
+    _refresh_after_edit()
+    if lifted_events > 0:
+        _mark_dirty("Pasted GDScript: %d row(s), %d event(s) auto-converted." % [rows.size(), lifted_events])
+    else:
+        _mark_dirty("Pasted GDScript as %d block row(s) — no trigger functions to convert." % rows.size())
+    return true
+
+# ── Visual theme editor ───────────────────────────────────────────────────────
+var _theme_editor: EventSheetThemeEditor = null
+
+func _open_theme_editor() -> void:
+    if _theme_editor == null:
+        _theme_editor = EventSheetThemeEditor.new()
+    _theme_editor.open(self, _active_theme_style)
+
+## Called by the theme editor's "Apply To Current Sheet": assigns the working style to the
+## active sheet undoably and repaints.
+func apply_theme_style(style: EventSheetEditorStyle) -> void:
+    if _current_sheet == null or style == null:
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Apply Theme", func() -> bool:
+        _current_sheet.editor_style = style
+        return true
+    )
+    if changed:
+        _active_theme_style = style
+        _refresh_after_edit()
+        _refresh_theme_picker_selection()
+        _mark_dirty("Theme applied from the theme editor.")
+
+# ── Comment dialog (multiline text + per-comment color) ─────────────────────
+var _comment_dialog: ConfirmationDialog = null
+var _comment_text_edit: TextEdit = null
+var _comment_color_button: ColorPickerButton = null
+var _comment_dialog_target: CommentRow = null
+
+## Dialog editor for comments: multiline comment rows, action-cell comments, and the row
+## context menu's "Edit Comment…". Single-line comment rows keep inline editing.
+func _open_comment_dialog(comment_resource: Resource) -> void:
+    var comment_row: CommentRow = comment_resource as CommentRow
+    if comment_row == null:
+        return
+    _ensure_comment_dialog()
+    _comment_dialog_target = comment_row
+    _comment_text_edit.text = comment_row.text
+    _comment_color_button.color = comment_row.custom_color
+    _comment_dialog.popup_centered(Vector2i(560, 320))
+    _comment_text_edit.grab_focus()
+
+func _ensure_comment_dialog() -> void:
+    if _comment_dialog != null:
+        return
+    _comment_dialog = ConfirmationDialog.new()
+    _comment_dialog.title = "Edit Comment"
+    var form: VBoxContainer = VBoxContainer.new()
+    form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _comment_text_edit = TextEdit.new()
+    _comment_text_edit.custom_minimum_size = Vector2(520.0, 200.0)
+    _comment_text_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _comment_text_edit.placeholder_text = "Comment text (multiline supported)"
+    form.add_child(_comment_text_edit)
+    var color_row: HBoxContainer = HBoxContainer.new()
+    var color_label: Label = Label.new()
+    color_label.text = "Background color (alpha 0 = theme default)"
+    color_row.add_child(color_label)
+    _comment_color_button = ColorPickerButton.new()
+    _comment_color_button.custom_minimum_size = Vector2(64.0, 0.0)
+    _comment_color_button.color = Color(0, 0, 0, 0)
+    color_row.add_child(_comment_color_button)
+    form.add_child(color_row)
+    _comment_dialog.add_child(form)
+    _comment_dialog.confirmed.connect(_on_comment_dialog_confirmed)
+    add_child(_comment_dialog)
+
+func _on_comment_dialog_confirmed() -> void:
+    if _comment_dialog_target == null:
+        return
+    var target: CommentRow = _comment_dialog_target
+    var new_text: String = _comment_text_edit.text
+    var new_color: Color = _comment_color_button.color
+    var changed: bool = _perform_undoable_sheet_edit("Edit Comment", func() -> bool:
+        target.text = new_text
+        target.custom_color = new_color
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Comment updated.")
+
+# ── Comment ↔ action-cell conversion ─────────────────────────────────────────
+
+## Finds the array + index holding `target` among sheet rows (recursing into groups and
+## sub-events). Returns {} when not found.
+func _locate_row_container(rows: Array, target: Resource) -> Dictionary:
+    for index in range(rows.size()):
+        var row: Variant = rows[index]
+        if row == target:
+            return {"container": rows, "index": index}
+        if row is EventRow:
+            var found: Dictionary = _locate_row_container((row as EventRow).sub_events, target)
+            if not found.is_empty():
+                return found
+        elif row is EventGroup:
+            var group_children: Array = _group_children_array(row as EventGroup)
+            var found_in_group: Dictionary = _locate_row_container(group_children, target)
+            if not found_in_group.is_empty():
+                return found_in_group
+    return {}
+
+## Finds the EventRow whose actions contain `target` (action-cell comments/blocks).
+func _locate_owning_event(rows: Array, target: Resource) -> EventRow:
+    for row: Variant in rows:
+        if row is EventRow:
+            if (row as EventRow).actions.has(target):
+                return row as EventRow
+            var nested: EventRow = _locate_owning_event((row as EventRow).sub_events, target)
+            if nested != null:
+                return nested
+        elif row is EventGroup:
+            var found: EventRow = _locate_owning_event(_group_children_array(row as EventGroup), target)
+            if found != null:
+                return found
+    return null
+
+## Comment row → action-cell comment of the nearest EventRow ABOVE it (C3's "comment in
+## the actions"). The reverse of _detach_comment_to_row.
+func _attach_comment_to_event_above(comment_row: CommentRow) -> void:
+    if _current_sheet == null or comment_row == null:
+        return
+    var location: Dictionary = _locate_row_container(_current_sheet.events, comment_row)
+    if location.is_empty():
+        _set_status("Comment not found in the sheet.", true)
+        return
+    var container: Array = location.get("container")
+    var target_event: EventRow = null
+    for index in range(int(location.get("index")) - 1, -1, -1):
+        if container[index] is EventRow:
+            target_event = container[index] as EventRow
+            break
+    if target_event == null:
+        _set_status("No event above this comment to attach to.", true)
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Attach Comment To Event", func() -> bool:
+        container.erase(comment_row)
+        target_event.actions.append(comment_row)
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Comment attached to the event above (action note).")
+
+## Action-cell comment → standalone comment row directly below its event.
+func _detach_comment_to_row(comment_row: CommentRow) -> void:
+    if _current_sheet == null or comment_row == null:
+        return
+    var owner_event: EventRow = _locate_owning_event(_current_sheet.events, comment_row)
+    if owner_event == null:
+        _set_status("This comment is not inside an event.", true)
+        return
+    var owner_location: Dictionary = _locate_row_container(_current_sheet.events, owner_event)
+    if owner_location.is_empty():
+        _set_status("Owning event not found in the sheet.", true)
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Detach Comment", func() -> bool:
+        owner_event.actions.erase(comment_row)
+        var container: Array = owner_location.get("container")
+        container.insert(int(owner_location.get("index")) + 1, comment_row)
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Comment detached to its own row.")
+
+# ── Sheet Type dialog (Event Sheet / Custom Node / Behavior) ────────────────
+# Discoverable alternative to the Inspector fields: matches C3's "Add behavior" mental
+# model while writing the same sheet properties Godot users see in the Inspector.
+var _sheet_type_dialog: ConfirmationDialog = null
+var _sheet_type_option: OptionButton = null
+var _sheet_type_name_edit: LineEdit = null
+var _sheet_type_icon_edit: LineEdit = null
+var _sheet_type_host_edit: LineEdit = null
+
+func _open_sheet_type_dialog() -> void:
+    if not _ensure_sheet_for_editing():
+        return
+    _ensure_sheet_type_dialog()
+    if _current_sheet.behavior_mode:
+        _sheet_type_option.select(2)
+    elif not _current_sheet.custom_class_name.strip_edges().is_empty():
+        _sheet_type_option.select(1)
+    else:
+        _sheet_type_option.select(0)
+    _sheet_type_name_edit.text = _current_sheet.custom_class_name
+    _sheet_type_icon_edit.text = _current_sheet.custom_class_icon
+    _sheet_type_host_edit.text = _current_sheet.host_class
+    _sheet_type_dialog.popup_centered(Vector2i(460, 260))
+
+func _ensure_sheet_type_dialog() -> void:
+    if _sheet_type_dialog != null:
+        return
+    _sheet_type_dialog = ConfirmationDialog.new()
+    _sheet_type_dialog.title = "Sheet Type"
+    var form: VBoxContainer = VBoxContainer.new()
+    form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _sheet_type_option = OptionButton.new()
+    _sheet_type_option.add_item("Event Sheet")           # plain: compiles onto the host node
+    _sheet_type_option.add_item("Custom Node")           # class_name + @icon → Create Node dialog
+    _sheet_type_option.add_item("Behavior (acts on parent)")  # Node component with `host`
+    form.add_child(_sheet_type_option)
+    _sheet_type_name_edit = _add_sheet_type_field(form, "Class name", "PatrolBehavior")
+    _sheet_type_icon_edit = _add_sheet_type_field(form, "Icon (res://…)", "res://icons/patrol.svg")
+    _sheet_type_host_edit = _add_sheet_type_field(form, "Host / base class", "CharacterBody2D")
+    var hint: Label = Label.new()
+    hint.text = "Custom nodes appear in Godot's Create Node dialog with their icon.\nBehaviors attach as child nodes and act on their parent via the typed `host` accessor."
+    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    form.add_child(hint)
+    _sheet_type_dialog.add_child(form)
+    _sheet_type_dialog.confirmed.connect(_on_sheet_type_confirmed)
+    add_child(_sheet_type_dialog)
+
+func _add_sheet_type_field(form: VBoxContainer, label_text: String, placeholder: String) -> LineEdit:
+    var row: HBoxContainer = HBoxContainer.new()
+    var label: Label = Label.new()
+    label.text = label_text
+    label.custom_minimum_size = Vector2(130.0, 0.0)
+    row.add_child(label)
+    var edit: LineEdit = LineEdit.new()
+    edit.placeholder_text = placeholder
+    edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    row.add_child(edit)
+    form.add_child(row)
+    return edit
+
+func _on_sheet_type_confirmed() -> void:
+    _apply_sheet_type_settings(
+        _sheet_type_option.selected,
+        _sheet_type_name_edit.text,
+        _sheet_type_icon_edit.text,
+        _sheet_type_host_edit.text
+    )
+
+## Applies the chosen sheet type (0 = plain, 1 = custom node, 2 = behavior) undoably and
+## refreshes every identity surface (banner, tab badge, header, lint context).
+func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String) -> void:
+    if _current_sheet == null:
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Set Sheet Type", func() -> bool:
+        _current_sheet.behavior_mode = type_index == 2
+        _current_sheet.custom_class_name = class_name_text.strip_edges() if type_index != 0 else ""
+        _current_sheet.custom_class_icon = icon_path.strip_edges() if type_index != 0 else ""
+        if not host_class_text.strip_edges().is_empty():
+            _current_sheet.host_class = host_class_text.strip_edges()
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _refresh_title_strip()
+        _refresh_tab_bar()
+        _mark_dirty("Sheet type updated.")
+
+## Footer "Add event…" rows: opens the event picker; the new event is appended into the
+## clicked footer's owner (a group, or the sheet end).
+func _on_viewport_add_event_requested(owner_resource: Resource) -> void:
+    if not _ensure_sheet_for_editing():
+        return
+    _ace_picker.open(
+        "new_condition_event",
+        false,
+        null,
+        {"mode": "new_condition_event", "insert_into": owner_resource}
+    )
+
+## Persists a lane-divider resize. A default-themed sheet is promoted to a concrete editor
+## style so the ratio saves with the sheet; an already-styled sheet is edited in place.
+func _on_viewport_lane_ratio_changed(ratio: float) -> void:
+    if _current_sheet == null:
+        return
+    if _current_sheet.editor_style == null:
+        var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
+        style.ensure_defaults()
+        style.get_event_style().condition_lane_ratio = ratio
+        _current_sheet.editor_style = style
+        _viewport.apply_editor_style(style)
+    else:
+        _current_sheet.editor_style.get_event_style().condition_lane_ratio = ratio
+    _mark_dirty("Resized conditions/actions lane to %d%%." % int(round(ratio * 100.0)))
+
 func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary, global_position: Vector2) -> void:
     _context_row = row_data
     _context_hit = hit.duplicate(true)
@@ -1386,6 +2607,13 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
                 _ace_picker.open("replace_action", false, _context_row.source_resource, replace_context)
         ACTION_MENU_TOGGLE_ENABLED:
             _toggle_context_ace_enabled()
+        ACTION_MENU_DETACH_COMMENT:
+            var detach_index: int = int(_context_hit.get("ace_index", -1))
+            var context_event: EventRow = _context_row.source_resource as EventRow
+            if context_event != null and detach_index >= 0 and detach_index < context_event.actions.size() and context_event.actions[detach_index] is CommentRow:
+                _detach_comment_to_row(context_event.actions[detach_index] as CommentRow)
+            else:
+                _set_status("Right-click an action-cell comment to detach it.", true)
         ACTION_MENU_DELETE:
             _delete_context_ace()
 
@@ -1395,6 +2623,8 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
     match id:
         ROW_MENU_ADD_SUB_EVENT:
             _insert_child_event_for_context_row()
+        ROW_MENU_ADD_COMMENT_SUB_EVENT:
+            _insert_child_comment_for_context_row()
         ROW_MENU_ADD_EVENT_BELOW:
             _insert_context_row_below(EventRow.new(), "Added event.")
         ROW_MENU_ADD_GROUP_BELOW:
@@ -1406,6 +2636,14 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
             var comment: CommentRow = CommentRow.new()
             comment.text = "Comment"
             _insert_context_row_below(comment, "Added comment.")
+        ROW_MENU_ADD_VARIABLE_BELOW:
+            _add_tree_variable_below_context_row()
+        ROW_MENU_ADD_GDSCRIPT_BELOW:
+            var raw_block: RawCodeRow = RawCodeRow.new()
+            raw_block.code = "# GDScript — emitted verbatim at class level"
+            _insert_context_row_below(raw_block, "Added GDScript block.")
+        ROW_MENU_ADD_GDSCRIPT_ACTION:
+            _add_gdscript_action_to_context_row()
         ROW_MENU_COPY:
             _on_copy_requested()
         ROW_MENU_PASTE:
@@ -1420,6 +2658,16 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
             _open_sub_condition_picker_for_context_row()
         ROW_MENU_TOGGLE_ENABLED:
             _toggle_context_row_enabled()
+        ROW_MENU_EDIT_COMMENT:
+            if _context_row.source_resource is CommentRow:
+                _open_comment_dialog(_context_row.source_resource)
+            else:
+                _set_status("Select a comment row to edit it.", true)
+        ROW_MENU_ATTACH_COMMENT:
+            if _context_row.source_resource is CommentRow:
+                _attach_comment_to_event_above(_context_row.source_resource as CommentRow)
+            else:
+                _set_status("Only comment rows can attach to an event.", true)
 
 func _on_variable_context_menu_id_pressed(id: int) -> void:
     if _context_variable.is_empty():
@@ -1519,6 +2767,103 @@ func _toggle_context_ace_enabled() -> void:
     )
     if changed:
         _mark_dirty("Updated ACE enabled state.")
+
+## Disables (or re-enables) everything currently selected at once: individual conditions /
+## actions when ACE spans are selected, otherwise the selected rows (events/groups/comments).
+## If anything in the selection is enabled it disables the whole lot; otherwise it enables it.
+func _toggle_selected_enabled() -> void:
+    if _viewport == null:
+        return
+    var span_targets: Array = _viewport.get_selected_span_targets()
+    var row_targets: Array[EventRowData] = []
+    if span_targets.is_empty():
+        row_targets = _get_selected_rows_from_context()
+    if span_targets.is_empty() and row_targets.is_empty():
+        return
+    var any_enabled: bool = false
+    for target in span_targets:
+        if _ace_target_enabled(target):
+            any_enabled = true
+            break
+    if not any_enabled:
+        for row_data in row_targets:
+            if _row_data_resource_enabled(row_data):
+                any_enabled = true
+                break
+    var new_enabled: bool = not any_enabled
+    var changed: bool = _perform_undoable_sheet_edit("Toggle Enabled", func() -> bool:
+        var did_change: bool = false
+        for target in span_targets:
+            if _set_ace_target_enabled(target, new_enabled):
+                did_change = true
+        for row_data in row_targets:
+            if _set_row_data_resource_enabled(row_data, new_enabled):
+                did_change = true
+        return did_change
+    )
+    if changed:
+        _mark_dirty("%s selection." % ("Enabled" if new_enabled else "Disabled"))
+
+func _ace_target_enabled(target: Dictionary) -> bool:
+    var event_row: EventRow = target.get("source_resource", null) as EventRow
+    if event_row == null:
+        return true
+    var ace_index: int = int(target.get("ace_index", -1))
+    match str(target.get("kind", "")):
+        "trigger":
+            return event_row.trigger == null or event_row.trigger.enabled
+        "condition":
+            return ace_index < 0 or ace_index >= event_row.conditions.size() or event_row.conditions[ace_index].enabled
+        "action":
+            return ace_index < 0 or ace_index >= event_row.actions.size() or not (event_row.actions[ace_index] is ACEAction) or (event_row.actions[ace_index] as ACEAction).enabled
+    return true
+
+func _set_ace_target_enabled(target: Dictionary, enabled: bool) -> bool:
+    var event_row: EventRow = target.get("source_resource", null) as EventRow
+    if event_row == null:
+        return false
+    var ace_index: int = int(target.get("ace_index", -1))
+    match str(target.get("kind", "")):
+        "trigger":
+            if event_row.trigger != null:
+                event_row.trigger.enabled = enabled
+                return true
+        "condition":
+            if ace_index >= 0 and ace_index < event_row.conditions.size():
+                event_row.conditions[ace_index].enabled = enabled
+                return true
+        "action":
+            if ace_index >= 0 and ace_index < event_row.actions.size() and event_row.actions[ace_index] is ACEAction:
+                (event_row.actions[ace_index] as ACEAction).enabled = enabled
+                return true
+    return false
+
+func _row_data_resource_enabled(row_data: EventRowData) -> bool:
+    if row_data == null or row_data.source_resource == null:
+        return true
+    var resource: Resource = row_data.source_resource
+    if resource is EventRow:
+        return (resource as EventRow).enabled
+    if resource is EventGroup:
+        return (resource as EventGroup).enabled
+    if resource is CommentRow:
+        return (resource as CommentRow).enabled
+    return true
+
+func _set_row_data_resource_enabled(row_data: EventRowData, enabled: bool) -> bool:
+    if row_data == null or row_data.source_resource == null:
+        return false
+    var resource: Resource = row_data.source_resource
+    if resource is EventRow:
+        (resource as EventRow).enabled = enabled
+        return true
+    if resource is EventGroup:
+        (resource as EventGroup).enabled = enabled
+        return true
+    if resource is CommentRow:
+        (resource as CommentRow).enabled = enabled
+        return true
+    return false
 
 func _context_row_is_disabled() -> bool:
     if _context_row == null or _context_row.source_resource == null:
@@ -1700,10 +3045,109 @@ func _insert_child_event_for_context_row() -> void:
     if changed:
         _mark_dirty("Added sub-event.")
 
+## Nests a comment inside the right-clicked event (as a sub-event), so it can describe the
+## events beneath it. Comments are the one non-event row allowed as a sub-event.
+func _insert_child_comment_for_context_row() -> void:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        _set_status("Add a comment sub-event from an event row.", true)
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Add Comment Sub-Event", func() -> bool:
+        var comment: CommentRow = CommentRow.new()
+        comment.text = "Comment"
+        (_context_row.source_resource as EventRow).sub_events.append(comment)
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Added comment sub-event.")
+
 func _open_sub_condition_picker_for_context_row() -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
         return
     _ace_picker.open("new_sub_condition_event", false, _context_row.source_resource)
+
+## The currently selected EventRow resource, or null when the selection is not an event.
+func _selected_event_resource() -> EventRow:
+    if _viewport == null:
+        return null
+    var resource: Variant = _viewport.get_selected_context().get("source_resource", null)
+    return resource as EventRow if resource is EventRow else null
+
+## Nests the selected event under the event directly above it (its preceding sibling),
+## moving it into that event's sub_events. Returns true when the move happened.
+func _indent_selected_event() -> bool:
+    if not _ensure_sheet_for_editing():
+        return false
+    var target: EventRow = _selected_event_resource()
+    if target == null:
+        return false
+    var location: Dictionary = _find_resource_location(target)
+    var container: Array = location.get("container", [])
+    var index: int = int(location.get("index", -1))
+    if index <= 0:
+        _set_status("Nothing above to nest this event under.", true)
+        return false
+    var previous: Variant = container[index - 1]
+    if not (previous is EventRow):
+        _set_status("Events can only be nested under another event.", true)
+        return false
+    var changed: bool = _perform_undoable_sheet_edit("Indent Event", func() -> bool:
+        container.remove_at(index)
+        (previous as EventRow).sub_events.append(target)
+        return true
+    )
+    if changed:
+        _mark_dirty("Nested event under the one above.")
+    return changed
+
+## Un-nests the selected sub-event, moving it out to its parent's container just after the
+## parent. Returns true when the move happened.
+func _outdent_selected_event() -> bool:
+    if not _ensure_sheet_for_editing():
+        return false
+    var target: EventRow = _selected_event_resource()
+    if target == null:
+        return false
+    var parent_info: Dictionary = _find_parent_event(target)
+    var parent: Variant = parent_info.get("parent", null)
+    if not bool(parent_info.get("found", false)) or not (parent is EventRow):
+        _set_status("Event is already at the top level.", true)
+        return false
+    var parent_event: EventRow = parent as EventRow
+    var parent_location: Dictionary = _find_resource_location(parent_event)
+    var parent_container: Array = parent_location.get("container", [])
+    var parent_index: int = int(parent_location.get("index", -1))
+    if parent_index < 0:
+        return false
+    var changed: bool = _perform_undoable_sheet_edit("Outdent Event", func() -> bool:
+        parent_event.sub_events.erase(target)
+        parent_container.insert(parent_index + 1, target)
+        return true
+    )
+    if changed:
+        _mark_dirty("Un-nested event to the parent level.")
+    return changed
+
+## Finds the EventRow whose sub_events directly contains target.
+## Returns {found: bool, parent: EventRow|null} (parent is null at root/group level).
+func _find_parent_event(target: Resource) -> Dictionary:
+    if _current_sheet == null:
+        return {"found": false, "parent": null}
+    return _find_parent_event_recursive(target, _current_sheet.events, null)
+
+func _find_parent_event_recursive(target: Resource, container: Array, parent: EventRow) -> Dictionary:
+    for entry in container:
+        if entry == target:
+            return {"found": true, "parent": parent}
+        if entry is EventGroup:
+            var grouped: Dictionary = _find_parent_event_recursive(target, _group_children_array(entry as EventGroup), null)
+            if bool(grouped.get("found", false)):
+                return grouped
+        elif entry is EventRow:
+            var nested: Dictionary = _find_parent_event_recursive(target, (entry as EventRow).sub_events, entry as EventRow)
+            if bool(nested.get("found", false)):
+                return nested
+    return {"found": false, "parent": null}
 
 func _insert_context_row_below(resource_entry: Resource, message: String) -> void:
     if resource_entry == null or _context_row == null:
@@ -1717,6 +3161,7 @@ func _insert_context_row_below(resource_entry: Resource, message: String) -> voi
 
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
     _refresh_variable_panel()
+    _update_code_panel_highlight()
 
 func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String) -> void:
     if row_data == null or row_data.source_resource == null:
@@ -1752,7 +3197,8 @@ func _on_variable_dialog_confirmed(
     default_value: Variant,
     scope: String,
     context: Dictionary = {},
-    is_constant: bool = false
+    is_constant: bool = false,
+    exported: bool = true
 ) -> void:
     if var_name.is_empty():
         _set_status("Variable name is required.", true)
@@ -1765,6 +3211,33 @@ func _on_variable_dialog_confirmed(
     var supports_const: bool = _variable_type_supports_const(type_name)
     var resolved_constant: bool = is_constant and supports_const
     var added: bool = _perform_undoable_sheet_edit("Create Variable", func() -> bool:
+        if scope == "tree":
+            var editing_resource: Variant = context.get("variable_resource", null)
+            if editing and editing_resource is LocalVariable:
+                var existing: LocalVariable = editing_resource as LocalVariable
+                existing.name = var_name
+                existing.type_name = type_name
+                existing.default_value = default_value
+                existing.is_constant = resolved_constant
+                existing.exported = exported
+                message["text"] = "Updated variable %s." % var_name
+                return true
+            var tree_var: LocalVariable = LocalVariable.new()
+            tree_var.name = var_name
+            tree_var.type_name = type_name
+            tree_var.default_value = default_value
+            tree_var.is_constant = resolved_constant
+            tree_var.exported = exported
+            var anchor: Variant = context.get("insert_below", null)
+            if anchor is Resource:
+                var location: Dictionary = _find_resource_location(anchor as Resource)
+                var container: Array = location.get("container", _current_sheet.events)
+                var anchor_index: int = int(location.get("index", container.size() - 1))
+                container.insert(anchor_index + 1, tree_var)
+            else:
+                _current_sheet.events.append(tree_var)
+            message["text"] = "Added variable %s." % var_name
+            return true
         if scope == "global":
             if editing and not original_name.is_empty() and original_name != var_name:
                 _current_sheet.variables.erase(original_name)
@@ -1772,9 +3245,10 @@ func _on_variable_dialog_confirmed(
                 "type": type_name,
                 "default": default_value,
                 "const": resolved_constant,
-                "exposed": true
+                "exported": exported,
+                "exposed": exported
             }
-            message["text"] = "%s global variable %s." % [action_verb, var_name]
+            message["text"] = "%s %s variable %s." % [action_verb, "global" if exported else "private", var_name]
             return true
         var target_event: EventRow = null
         if selected is EventRow:
@@ -1816,6 +3290,19 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
     var scope: String = str(metadata.get("variable_scope", "global"))
     if var_name.is_empty():
         return {}
+    if scope == "tree":
+        var tree_var: LocalVariable = row_data.source_resource as LocalVariable
+        if tree_var == null:
+            return {}
+        return {
+            "name": tree_var.name,
+            "scope": "tree",
+            "type": tree_var.type_name,
+            "default": tree_var.default_value,
+            "is_constant": tree_var.is_constant,
+            "exported": tree_var.exported,
+            "resource": tree_var
+        }
     var type_name: String = "Variant"
     var default_value: Variant = null
     var is_constant: bool = false
@@ -1871,6 +3358,23 @@ func _edit_context_variable() -> void:
     if _context_variable.is_empty():
         return
     var scope: String = str(_context_variable.get("scope", "global"))
+    if scope == "tree":
+        var tree_var: LocalVariable = _context_variable.get("resource", null)
+        if tree_var == null:
+            _set_status("Could not resolve the variable to edit.", true)
+            return
+        _variable_dlg.open_for_edit(
+            "tree",
+            {"editing": true, "variable_resource": tree_var},
+            tree_var.name,
+            tree_var.type_name,
+            tree_var.default_value,
+            false,
+            "Edit Variable",
+            tree_var.is_constant,
+            tree_var.exported
+        )
+        return
     if scope == "local":
         var owner_event: EventRow = _context_variable.get("event_row", null)
         if owner_event == null:
@@ -1901,7 +3405,8 @@ func _edit_context_variable() -> void:
         _context_variable.get("default", null),
         _is_global_variable_in_use(global_name),
         "Edit Variable",
-        bool(_context_variable.get("is_constant", false))
+        bool(_context_variable.get("is_constant", false)),
+        bool(_context_variable.get("exported", _context_variable.get("exposed", true)))
     )
 
 func _convert_context_variable_scope() -> void:
@@ -2106,7 +3611,8 @@ func _on_global_variable_activated(index: int) -> void:
         entry.get("default", null),
         _is_global_variable_in_use(var_name),
         "Edit Variable",
-        bool(entry.get("const", false))
+        bool(entry.get("const", false)),
+        bool(entry.get("exported", entry.get("exposed", true)))
     )
 
 func _on_local_variable_activated(index: int) -> void:
@@ -2389,6 +3895,7 @@ func _refresh_after_edit() -> void:
     _sync_active_theme_binding()
     _refresh_exposed_node()
     _refresh_variable_panel()
+    _refresh_code_panel()
 
 func _sync_active_theme_binding() -> void:
     var next_style: EventSheetEditorStyle = (
@@ -2422,11 +3929,16 @@ func _set_status(text: String, is_error: bool = false) -> void:
     _status_label.modulate = Color(1.0, 0.48, 0.48) if is_error else Color(1.0, 1.0, 1.0)
 
 func _refresh_title_strip() -> void:
+    # Keep the active tab's persisted state and tab title in sync with the live state.
+    _sync_active_tab_state()
+    _update_active_tab_title()
     if _title_tab_label == null or _title_path_label == null or _title_dirty_dot == null:
         return
     _title_tab_label.text = _format_sheet_title(_current_sheet, _current_sheet_path)
     _title_path_label.text = _format_sheet_path_hint(_current_sheet, _current_sheet_path)
     _title_dirty_dot.visible = _dirty and _current_sheet != null
+    if _identity_banner != null:
+        _identity_banner.update_from_sheet(_current_sheet)
 
 static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String) -> String:
     if sheet == null:
@@ -2454,16 +3966,69 @@ static func _resolve_sheet_path(sheet: EventSheetResource, explicit_path: String
 func _refresh_ace_registry() -> void:
     if _ace_registry == null:
         _ace_registry = EventSheetACERegistry.new()
-    var sources: Array[Object] = _ace_sources.duplicate()
-    if sources.is_empty():
-        _release_ace_sources()
-        sources = _build_default_ace_sources()
-        _ace_sources = sources.duplicate()
-    _ace_registry.refresh_from_sources(sources, true)
+    _release_ace_sources()
+    var owned_sources: Array[Object] = _build_sheet_ace_sources()
+    var combined_sources: Array[Object] = owned_sources.duplicate()
+    combined_sources.append_array(_manual_ace_sources)
+    if combined_sources.is_empty():
+        owned_sources = _build_default_ace_sources()
+        combined_sources = owned_sources.duplicate()
+    # Zero-config addons: scripts under res://eventsheet_addons/ register project-wide
+    # automatically — purely additive (they never displace the default vocabulary or the
+    # sheet's own providers; deduped against the sheet's provider list).
+    var addon_sources: Array[Object] = _build_addon_ace_sources()
+    owned_sources.append_array(addon_sources)
+    combined_sources.append_array(addon_sources)
+    _ace_sources = owned_sources
+    _ace_registry.refresh_from_sources(combined_sources, true)
     if _viewport != null:
         _viewport.set_ace_registry(_ace_registry)
     _ace_picker.set_registry(_ace_registry)
     _refresh_exposed_node()
+
+## Instantiates the current sheet's registered provider scripts into reflectable sources.
+func _build_sheet_ace_sources() -> Array[Object]:
+    var sources: Array[Object] = []
+    if _current_sheet == null:
+        return sources
+    for path: Variant in _current_sheet.ace_provider_scripts:
+        var instance: Object = _instantiate_provider_script(str(path))
+        if instance != null:
+            sources.append(instance)
+    return sources
+
+## Instantiates every scanned zero-config addon script (res://eventsheet_addons/), skipping
+## paths the sheet already registers explicitly.
+func _build_addon_ace_sources() -> Array[Object]:
+    var sources: Array[Object] = []
+    var sheet_paths: Array = _current_sheet.ace_provider_scripts if _current_sheet != null else []
+    # Folder scan + code-registered providers (EventForgeBridge.register_script_as_provider
+    # lets other plugins/tools extend the vocabulary without touching eventsheet_addons/).
+    var provider_paths: Array[String] = EventSheetAddonScanner.list_addon_scripts()
+    for registered_path: String in EventForgeBridgeRuntime.get_registered_provider_scripts():
+        if not provider_paths.has(registered_path):
+            provider_paths.append(registered_path)
+    for path: String in provider_paths:
+        if sheet_paths.has(path):
+            continue
+        var instance: Object = _instantiate_provider_script(path)
+        if instance != null:
+            sources.append(instance)
+    return sources
+
+## Loads and instantiates a provider script (Node/Resource/RefCounted) for reflection.
+## Returns null when the path is not an instantiable script.
+func _instantiate_provider_script(path: String) -> Object:
+    if path.strip_edges().is_empty() or not ResourceLoader.exists(path):
+        return null
+    var resource: Resource = load(path)
+    if not (resource is Script):
+        return null
+    var script: Script = resource as Script
+    if not script.can_instantiate():
+        return null
+    var instance: Variant = script.new()
+    return instance if instance is Object else null
 
 func _build_default_ace_sources() -> Array[Object]:
     var demo_script: Script = load("res://addons/eventsheet/runtime/demo_gameplay_actor.gd")
@@ -2533,11 +4098,15 @@ func _make_action(provider_id: String, ace_id: String, params: Dictionary) -> AC
     return action
 
 func _get_demo_provider_id() -> String:
+    # The built-in demo sheet pairs with the bundled demo gameplay actor. Resolve it BY
+    # NAME: "first reflected provider" broke once addons became additive (order varies),
+    # and the registry may not be refreshed yet when the demo builds — the literal
+    # fallback is the actor's class_name, which is what reflection registers it under.
     if _ace_registry != null:
-        var reflected_providers: PackedStringArray = _ace_registry.get_reflected_provider_ids()
-        if not reflected_providers.is_empty():
-            return reflected_providers[0]
-    return "Core"
+        for provider_id: String in _ace_registry.get_reflected_provider_ids():
+            if provider_id.contains("DemoGameplayActor"):
+                return provider_id
+    return "EventSheetDemoGameplayActor"
 
 func _release_ace_sources() -> void:
     for source_object in _ace_sources:

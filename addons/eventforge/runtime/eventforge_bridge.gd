@@ -48,6 +48,29 @@ func get_descriptors_by_type(ace_type: int) -> Array:
 			output.append(descriptor)
 	return output
 
-## Registers a script provider path (Phase 3 placeholder).
+# Script paths registered as ACE providers from code (other plugins, tool scripts, tests).
+# Static so registration works with or without the autoload instance; the editor dock
+# merges these with the res://eventsheet_addons/ scan. NOTE: this is an EDITOR vocabulary
+# API — exported games never need the bridge, because generated code is plain GDScript
+# (instance-backed addon ACEs own a direct instance of the addon class).
+static var _registered_provider_scripts: PackedStringArray = PackedStringArray()
+
+## Registers a GDScript file as an ACE provider, exactly as if it lived in
+## res://eventsheet_addons/ (class_name = provider name, @ace_* annotations honored).
 func register_script_as_provider(script_path: String) -> void:
-	push_warning("[EventForgeBridge] register_script_as_provider not yet implemented (Phase 3): %s" % script_path)
+	register_provider_script(script_path)
+	emit_signal("providers_changed")
+
+static func register_provider_script(script_path: String) -> void:
+	var resolved: String = script_path.strip_edges()
+	if resolved.is_empty() or _registered_provider_scripts.has(resolved):
+		return
+	_registered_provider_scripts.append(resolved)
+
+static func unregister_provider_script(script_path: String) -> void:
+	var index: int = _registered_provider_scripts.find(script_path.strip_edges())
+	if index >= 0:
+		_registered_provider_scripts.remove_at(index)
+
+static func get_registered_provider_scripts() -> PackedStringArray:
+	return _registered_provider_scripts.duplicate()

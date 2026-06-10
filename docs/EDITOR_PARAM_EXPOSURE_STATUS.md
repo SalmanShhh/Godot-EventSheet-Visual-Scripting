@@ -1,5 +1,9 @@
 # EventSheet Editor Parameter Exposure Status
 
+> Reviewed 2026-06: the checklist below remains accurate. The two unchecked items
+> (per-`widget_hint` inspector widgets, advanced per-row override UI) are still open,
+> post-1.0 polish.
+
 This checklist tracks the current branch against the provided **EventSheet Editor Param Exposure Spec**.
 
 - [x] Dynamic inspector properties continue to use `_get_property_list()` / `_get()` / `_set()` (`EventSheetExposedNode`)

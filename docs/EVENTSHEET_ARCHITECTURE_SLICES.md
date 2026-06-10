@@ -2,6 +2,17 @@
 
 This document tracks the broad architecture/spec-alignment PR in explicit slices and calls out what is fully implemented, scaffolded, or deferred.
 
+## Slice 0 — Architecture consolidation (current overhaul)
+
+The editor now has a **single** architecture: the custom-rendered, virtualized viewport
+(`EventSheetDock` → `EventSheetViewport` → `EventRowRenderer`), chosen because it can show
+and operate on tens of thousands of events/ACEs without killing editor performance. The
+parallel Control-widget prototypes (`EventRowUI`, `GroupRowUI`, `CommentRowUI`,
+`VariableRowUI`, `SheetToolbar`, and stub files) were **removed**; per-row widgets cannot
+scale to large sheets. The reusable lower layers (resources/data model, ACE registry +
+reflection custom-ACE engine, compiler, runtime bridge, importer, theme resources) are
+unchanged and shared by the viewport.
+
 ## Slice 1 — Editor architecture extraction
 
 ### Implemented
@@ -34,9 +45,12 @@ This document tracks the broad architecture/spec-alignment PR in explicit slices
   - disabled ACE spans render dimmed + struck-through
 - Global variables are now persisted as exposed/script-facing by default (`exposed = true` in global descriptors).
 
+### Since implemented (formerly partial here)
+- **Else/Else-If now compile** to `elif`/`else` chains (sub-event compilation phase), and
+  disabled rows/ACEs are skipped by codegen — enable-state semantics are real.
+
 ### Scaffolded / partial
 - Else/ElseIf authoring UX is still metadata-driven (resource/state + rendering), not a full dedicated creation flow.
-- Condition/action enable-state execution semantics in runtime/compiler are not fully expanded yet.
 
 ### Deferred
 - Full C3 parity for all advanced block-selection permutations and keyboard selection ranges.
@@ -66,8 +80,12 @@ Status summary:
 - **Phase 3 (picker/params/expression):** **Partial**
   - Params dialog gained stronger flow awareness and re-edit cues.
   - Picker/params workflows remain central; expression tooling still partially scaffolded.
-- **Phase 4 (runtime execution engine):** **Deferred**
-  - Runtime/compiler changes were intentionally limited in this push.
-- **Phase 5 (optimization/virtualization/extensions):** **Partial**
-  - Existing custom-rendered viewport architecture remains and is further modularized.
-  - Full virtualization/extension API expansion is still deferred.
+- **Phase 4 (compiler/runtime semantics):** **Implemented** (post-push)
+  - Sub-events, Else/Else-If chains, signal-trigger connections (validated), behaviors as
+    Node components, instance-backed addon ACEs, source maps — see `CHANGELOG.md` and
+    `GDSCRIPT-PAIRING-SPEC.md`. No runtime engine exists by design: output is plain
+    GDScript with a guarded performance-parity contract.
+- **Phase 5 (optimization/virtualization/extensions):** **Implemented in the parts that matter**
+  - Virtualized viewport held through every feature; extension APIs landed as zero-config
+    addons, `EventForgeBridge.register_script_as_provider`, expose-as-ACE sheet functions,
+    and the theme token system.

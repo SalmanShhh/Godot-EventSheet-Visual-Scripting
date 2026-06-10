@@ -62,7 +62,22 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
         if bool(method_entry_overrides.get("hidden", false)):
             continue
         output.append(_build_method_definition(provider_id, method_name, method_info, method_entry_overrides))
+    # Provider description derives from the script's top doc comment (zero-config addons).
+    var class_description: String = str(source_metadata.get("class_description", ""))
+    if not class_description.is_empty():
+        for definition in output:
+            definition.metadata["provider_description"] = class_description
     return output
+
+## Applies the @ace_display_template / @ace_codegen_template overrides onto a definition's
+## metadata (the picker/rows read display_template; codegen + tooltips read codegen_template).
+static func _apply_template_overrides(definition: ACEDefinition, overrides: Dictionary) -> void:
+    var display_template: String = str(overrides.get("display_template", ""))
+    if not display_template.is_empty():
+        definition.metadata["display_template"] = display_template
+    var codegen_template: String = str(overrides.get("codegen_template", ""))
+    if not codegen_template.is_empty():
+        definition.metadata["codegen_template"] = codegen_template
 
 func _build_signal_definition(provider_id: String, signal_name: String, signal_info: Dictionary, overrides: Dictionary) -> ACEDefinition:
     var definition := ACEDefinition.new()
@@ -85,6 +100,7 @@ func _build_signal_definition(provider_id: String, signal_name: String, signal_i
     }
     # Signals are triggers, not directly editor-exposed as inspector parameters.
     definition.editor_exposed = false
+    _apply_template_overrides(definition, overrides)
     return definition
 
 func _build_property_definitions(provider_id: String, property_name: String, property_info: Dictionary, overrides: Dictionary) -> Array[ACEDefinition]:
@@ -116,6 +132,7 @@ func _build_property_definitions(provider_id: String, property_name: String, pro
     expression_definition.hint_string = _string_override(overrides, "hint_string", "")
     expression_definition.widget_hint = _string_override(overrides, "widget_hint", "")
     expression_definition.category_override = _string_override(overrides, "category_override", "")
+    _apply_template_overrides(expression_definition, overrides)
     output.append(expression_definition)
 
     var set_definition := _build_property_action_definition(provider_id, property_name, display_name, category, "set", "Set %s" % display_name, TYPE_NIL)
@@ -185,6 +202,7 @@ func _build_method_definition(provider_id: String, method_name: String, method_i
     definition.hint_string = _string_override(overrides, "hint_string", "")
     definition.widget_hint = _string_override(overrides, "widget_hint", "")
     definition.category_override = _string_override(overrides, "category_override", "")
+    _apply_template_overrides(definition, overrides)
     return definition
 
 func _resolve_method_ace_type(return_type: int, overrides: Dictionary) -> int:
@@ -202,6 +220,7 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
     if not (raw_args is Array):
         return output
     var param_overrides: Dictionary = overrides.get("params", {})
+    var param_hints: Dictionary = overrides.get("param_hints", {})
     for argument_info in raw_args:
         if not (argument_info is Dictionary):
             continue
@@ -210,6 +229,9 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
         if argument_name.is_empty():
             continue
         var parameter_override: Dictionary = param_overrides.get(argument_name, {})
+        if param_hints.has(argument_name) and not parameter_override.has("hint"):
+            parameter_override = parameter_override.duplicate()
+            parameter_override["hint"] = str(param_hints[argument_name])
         var param_type: int = int(parameter_override.get("type", argument_dict.get("type", TYPE_NIL)))
         output.append({
             "id": argument_name,
@@ -218,6 +240,7 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
             "type": param_type,
             "default_value": parameter_override.get("default_value", _default_value_for_type(param_type)),
             "property_hint": int(parameter_override.get("property_hint", PROPERTY_HINT_NONE)),
+            "hint": str(parameter_override.get("hint", "")),
             "hint_string": str(parameter_override.get("hint_string", "")),
             "widget_hint": str(parameter_override.get("widget_hint", "")),
             "options": _normalize_options_to_key_label(parameter_override.get("options", []))

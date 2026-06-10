@@ -2,8 +2,20 @@
 
 ## 1. Overview
 
-This document captures the **currently implemented** EventForge editor UX and the immediate refinement direction.
-It intentionally avoids describing unbuilt behavior as complete.
+This document captures the EventForge editor UX and the immediate refinement direction.
+
+**Canonical architecture.** The editor is a single **custom-rendered, virtualized
+viewport** (`EventSheetDock` → `EventSheetViewport` → `EventRowRenderer`). It paints only
+the rows in the current visible range, so a sheet with tens of thousands of events/ACEs
+stays fluid. There are **no per-row Control widgets**; every row is drawn by the renderer.
+
+Earlier iterations prototyped a parallel Control-widget editor (`EventRowUI`, `GroupRowUI`,
+`CommentRowUI`, …). Those prototypes were **removed** — they could not scale to large
+sheets. Where this document still uses `*RowUI` names (e.g. in §2.13), they refer to the
+corresponding **behavior now owned by the renderer/viewport**, not to widget classes. Some
+of the UX below originated in those prototypes and is being (re)realized in the viewport as
+part of the current overhaul; treat such items as the **target** behavior for the
+virtualized editor.
 
 ## 2. Current implemented UX
 
@@ -289,8 +301,8 @@ Construct 3-style event sheet surface, guided by `c3-eventsheet-spec.md` and
 - **Enabled/disabled visual state**: when `event_group.enabled == false`:
   - A `_disabled_badge` Label ("Disabled", red-tinted) is shown.
   - The entire row is dimmed to **55 % opacity** — matching the C3 port guide's
-    "Disabled groups are rendered at 40% opacity" guidance, adjusted to 55% for
-    dark-theme readability.
+	"Disabled groups are rendered at 40% opacity" guidance, adjusted to 55% for
+	dark-theme readability.
 - When `enabled == true`, the badge is hidden and opacity is 100 %.
 - Group rows now expose an inline enable/disable `CheckBox` (left of the group name)
   that toggles `event_group.enabled` directly in-row and immediately refreshes the
@@ -310,9 +322,9 @@ Construct 3-style event sheet surface, guided by `c3-eventsheet-spec.md` and
   throughout for maintainability.
 - Comment banners now support style-aware and `color_tag`-aware palettes:
   - `color_tag` values (e.g. `blue`, `green`, `red`, `orange`, `grey`) map to distinct
-    section colours
+	section colours
   - fallback mapping from `CommentStyle` (`NOTE`, `TODO`, `WARNING`, `SECTION`) maps to
-    corresponding palettes
+	corresponding palettes
   - default remains warm yellow/amber
 - Content margins simplified: no left margin in PanelContainer (accent handled by
   ColorRect), 3 px top/bottom, 4 px right.
@@ -383,17 +395,145 @@ inside the Construct 3-style sheet established by Phase 8.
 
 ## 3. Still planned (not implemented yet)
 
-- Multiple EventSheet tabs (Phase 2.4)
-- Group-local variables and nested group bodies (Phase 2.5)
-- Sheet functions / local subsheets (Phase 3)
-- Scripted ACE providers (Phase 4)
-- Scripted structural blocks (Phase 5)
-- Full importer / round-trip pipeline (Phase 6)
+All previously planned roadmap items have landed (multi-tab, sub-events, sheet functions,
+scripted ACE providers, GDScript blocks, structural importer round-trip). Remaining:
+
+- Object icons per ACE origin (Godot class icons / provider icons)
+- ACE-level importer body parsing (generated `if` chains → conditions/actions)
+- Pick-filter compilation (the one remaining event-flow TODO; sub-events, else/elif,
+  nested comments/variables/blocks all compile as of the sub-event compilation phase)
+- Multiline inline comment editing; per-comment text/background colors (C3 parity)
+- Behavior packs: bundled ACE provider scripts mirroring common C3 behaviors
+- Shareable snippets: row copy also writes a versioned portable text form to the system
+  clipboard (paste across projects/forums; fresh UIDs; auto-creates missing referenced
+  variables) — see GDSCRIPT-PAIRING-SPEC "Shareable snippets"
+- Eventsheet-authored Behaviors: behavior sheets compile to attachable Node component
+  scripts with a `host` accessor, @export params, and auto-`@ace_*` annotations on exposed
+  functions — see GDSCRIPT-PAIRING-SPEC "Eventsheet-authored Behaviors"
+- **Sheet-type identity UX (custom nodes / behaviors)** — dual-audience cues (Godot:
+  "custom node with an icon"; C3: "behavior attached to an object"):
+  - Tab badge + icon per sheet type (behavior tint; custom-node icon), and a slim **header
+    banner** inside the sheet: `⚙ [icon] PatrolBehavior — Behavior · acts on host:
+    CharacterBody2D` / `[icon] PatrollingGuard — Custom Node · extends CharacterBody2D`;
+    the banner doubles as the click target to edit name/icon/host.
+  - A **"Sheet Type" toolbar control** (Event Sheet / Custom Node / Behavior) opening a
+    small name+icon+host dialog — the Inspector fields stay the data layer, but the
+	visible control matches C3's "Add behavior" discoverability.
+  - **One icon set once, shown everywhere**: `custom_class_icon` flows to the Create Node
+	dialog/scene tree (@icon — done), the ACE picker when the behavior's ACEs publish
+    (its @ace_icon defaults to the behavior icon), and row cells once row icons land.
+    Bundled fallback glyphs (gear-node for behaviors, sheet-node for custom nodes) so the
+    types are distinct even without custom art.
+  - **Behavior-aware vocabulary**: host-targeting ACEs label as "Host" with the host
+	class's icon; column header reads `Conditions — host: <class>`; empty-state hint
+	explains the host model.
+  - **Color language**: new `behavior_accent_color` theme token (soft purple default)
+	tinting banner + tab badge; themable like all tokens.
+- **Visual theme editor (designer-facing)**: a live theme-editing dialog — real sheet
+  preview (the actual viewport rendering a representative sample sheet, with toggles to
+  preview hover/selection/disabled states) beside grouped token controls (per the token
+  spec's groups: shell, lanes, cells, semantic colors, group/comment, header,
+  interaction). Edits apply instantly (theme apply is a cheap redraw); works on a
+  duplicate until saved; saves as a named `.tres` preset (theme name/author/description
+  metadata fields) into the scanned themes folder so it appears in the switcher and is
+  shareable as a single file. Considerations: token grouping/search for the ~30+ tokens;
+  contrast/readability warnings (text-vs-background luminance) for accessibility; "start
+  from" pickers (current theme / Godot-native / any preset); no JSON anywhere.
+- **Export integrity hook**: an `EditorExportPlugin` that re-compiles every sheet at export
+  time (failing the export on compile errors), so exported games can never ship a stale
+  generated script. Note the architecture guarantee this protects: sheets compile to plain
+  GDScript with zero plugin dependencies — exported games contain only the generated `.gd`
+  files (no runtime interpreter, no addon requirement), and sheet `.tres` sources can be
+  excluded from exports entirely.
+- ACE addon runtime bridge: `EventForgeBridge.register_script_as_provider` so addon ACEs
+  needing runtime support work in exported games. (The zero-config addon system itself is
+  **implemented**: scripts in `res://eventsheet_addons/` register project-wide
+  automatically, metadata derived from the script — `class_name`, top doc comment,
+  `@ace_*` annotations incl. `@ace_display_template` / `@ace_codegen_template` /
+  `@ace_param_hint`; baked codegen templates make addon ACEs compile. See
+  `docs/GDSCRIPT-PAIRING-SPEC.md` and the shipped `eventsheet_addons/demo_health_addon.gd`.)
+  Behavior packs ship as plain script folders in this format.
+- **GDScript inside the event flow (C3 inline scripting)**: GDScript blocks placeable as
+  actions / inside an event's flow, compiled indented into the generated trigger body
+  (class-level blocks already exist). Editing keeps script-editor affordances:
+  GDScriptSyntaxHighlighter highlighting, **compile-check linting** (scratch
+  `GDScript.reload()` flags parse errors on the block), and CodeEdit completion fed with
+  sheet variables/functions and host-node members. Full ScriptEditor-grade analysis is
+  not plugin-accessible in Godot today; this is the documented approximation.
 
 ## 4. Implementation anchors
 
-- Main editor: `addons/eventforge/editor/event_sheet_editor.gd`
-- Event row inline clauses/menus: `addons/eventforge/editor/event_row_ui.gd`
-- Group groundwork row: `addons/eventforge/editor/group_row_ui.gd`
+All UX in this document lives in the virtualized viewport stack — there are no per-row
+Control widgets.
 
-Current selection state is tracked by entry kind (`event`, `condition`, `action`, `variable`, `group`) plus row/index references in `EventSheetEditor`.
+- Plugin entry / main screen: `addons/eventforge/editor/event_sheet_editor.gd`
+  (thin subclass of `EventSheetDock`)
+- Editor orchestrator (toolbar, picker/params dialogs, ACE registry, theme load/reload,
+  undo/redo, ACE apply flows): `addons/eventsheet/editor/event_sheet_dock.gd`
+- Virtualized layout + interaction (visible-range culling, hit-testing, selection, hover,
+  drag/drop, zoom, keyboard nav, inline edit): `addons/eventsheet/editor/event_sheet_viewport.gd`
+- Row painting from `EventRowData` + `SemanticSpan` + theme tokens:
+  `addons/eventsheet/editor/event_row_renderer.gd`
+- ACE picker / params dialogs: `addons/eventsheet/editor/ace_picker.gd`,
+  `addons/eventsheet/editor/ace_params_dialog.gd`
+- ACE registry (built-ins + reflection-based custom ACEs): `addons/eventsheet/ace/*`
+  bridging `addons/eventforge/registration/*` + `ACEDescriptor`
+- Theme tokens: `addons/eventsheet/theme/*`
+- Variable row text formatting: `addons/eventsheet/editor/variable_row_format.gd`
+
+Current selection state is tracked by entry kind (`event`, `condition`, `action`,
+`variable`, `group`) plus row/index references in the viewport/dock.
+
+## 5. Interaction contract
+
+The behavioral guarantees the editor maintains (each is regression-tested headlessly):
+
+- **Click targets**: the whole condition/action cell (including padding and the gaps
+  between cells) selects that ACE; clicking the gutter/indent margin selects the whole
+  event block; footer "Add event…" rows only ever open the picker (no selection, menu,
+  or drag).
+- **Hover**: the individual condition/action cell under the cursor tints
+  (`cell_hover_color`); whole-row hover applies only to single-cell rows
+  (group/comment/variable). Hovering an ACE shows a tooltip with the GDScript it
+  compiles to.
+- **Selection**: selected cells use the accent fill + left accent bar; selecting a
+  sub-event never selects its parent; selecting a parent cascades to its children.
+  Interaction state (selection/hover/drag) is never served stale from the layout cache.
+- **Drag**: vertical position decides before/after; drop lines draw with arrowheads at
+  both ends; an "inside" (nest) drop indents the line to the child level; a ~0.66-alpha
+  ghost label follows the cursor; Ctrl during drop copies.
+- **Editing**: double-click edits comments/group names anywhere on the row (falls back
+  to the first editable span); Enter commits, Esc cancels; GDScript blocks open a
+  CodeEdit dialog; variables open the variable dialog.
+- **Keyboard**: Q comment, G group, X toggle-disable selection, Ctrl+D duplicate,
+  Tab/Shift+Tab nest/un-nest, Delete/Backspace delete, Enter/F2 edit, Ctrl+C/V copy/paste,
+  Ctrl+Z/Y undo/redo, Ctrl±/wheel zoom (text re-rasterizes crisply per zoom).
+- **Lane resize**: the conditions/actions divider drag-resizes (20–80%), persists on the
+  sheet's editor style, and the pinned column header tracks it.
+
+## 6. C3 parity matrix
+
+| C3 behavior | Status | Notes |
+|---|---|---|
+| Object label before each ACE | Matched | "System" / node class, `object_label_color` |
+| Contiguous condition cell block | Matched | full-line cells, 1px hairline |
+| Parameter values emphasized | Matched | numbers/strings/bools via `value_highlight_color` |
+| Red ✗ inverted-condition marker | Matched | `invert_marker_color`, C3 `--invert-icon-color` |
+| "Add action" affordance | Matched | muted, own line below actions |
+| "Add event…" footers (sheet + group) | Matched | per-group footer indented, always last |
+| Insert marker with arrowheads | Matched | row + ACE drop lines |
+| Drag ghost (~0.66 opacity) | Matched | label follows cursor |
+| Event number gutter + breakpoint/bookmark | Matched (numbers, breakpoints) | bookmarks not yet |
+| Inline code blocks | Adapted | GDScript blocks compile at class level (C3: inline JS in event flow) |
+| Expressions | **Intentionally different** | plain GDScript, no proprietary expression language |
+| Behaviors | Adapted | custom ACE provider scripts instead |
+| Object icons per ACE | Missing | planned |
+| Per-comment custom colors | Missing | planned |
+| Sheet includes | Missing | candidate feature |
+
+## 7. GDScript pairing
+
+The sheet is a bridge to GDScript, not a wall beside it. The pairing features (codegen
+tooltips, GDScript blocks, GDScript-as-expressions, C3 search synonyms, importer
+round-trip, planned provenance panel) are specified in
+`docs/GDSCRIPT-PAIRING-SPEC.md`.

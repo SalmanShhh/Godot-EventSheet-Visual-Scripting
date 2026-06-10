@@ -38,7 +38,8 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin that provides a Construct-sty
 
 - `README.md` — install + high-level workflow
 - `docs/SPEC.md` — broader architecture/spec context
-- `docs/EDITOR-UI-SPEC.md` — editor UX details
+- `docs/EDITOR-UI-SPEC.md` — editor UX details, interaction contract, C3 parity matrix
+- `docs/GDSCRIPT-PAIRING-SPEC.md` — how the sheet pairs with GDScript (blocks, codegen tooltips, expressions, C3 synonyms, importer round-trip)
 - `docs/EVENTSHEET_THEME_EDITABILITY.md` — designer-facing theme workflow
 - `docs/EVENTSHEET_THEME_TOKEN_SPEC.md` — Construct-inspired token naming/mapping
 - `docs/EVENTSHEET_ALIGNMENT_GUIDE.md` — stacked layout tuning
@@ -53,7 +54,7 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin that provides a Construct-sty
 - The theme package manifest is documentation/template only; it is not auto-imported yet.
 - Full runtime/compiler expansion is intentionally out of scope for this PR line.
 - UI screenshots still require a Godot runtime; this sandbox may only be able to do syntax-level validation.
-- `EventRowUI` full-width list entry model exists in `addons/eventforge/editor/` but is not yet wired into the main `EventSheetDock`/`EventSheetViewport` pipeline; the viewport chip model is the live path.
+- The parallel Control-widget editor prototypes (`EventRowUI`, `GroupRowUI`, `CommentRowUI`, `VariableRowUI`, `SheetToolbar`, and assorted stubs) were **removed** — they could not scale to large sheets. The custom-rendered virtualized viewport (`EventSheetDock`/`EventSheetViewport`/`EventRowRenderer`) is the sole editor architecture. Variable-row text formatting that the removed widget owned now lives in `addons/eventsheet/editor/variable_row_format.gd` (`VariableRowFormat`).
 
 ## Guidance for future LLM-assisted work
 

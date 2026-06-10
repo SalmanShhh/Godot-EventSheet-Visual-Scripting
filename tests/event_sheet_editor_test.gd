@@ -154,7 +154,8 @@ static func run() -> bool:
     all_passed = _check("saving sheet updates title tab text", title_tab_label.text, "event_sheet_editor_title_roundtrip") and all_passed
     all_passed = _check("saving sheet updates title path hint", title_path_label.text, "user://event_sheet_editor_title_roundtrip.tres") and all_passed
     dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
-    all_passed = _check("sheet renders flattened rows", dock_viewport.get_total_row_count(), 3) and all_passed
+    # comment + group + its event, plus the group's "Add event…" footer and the sheet-end one.
+    all_passed = _check("sheet renders flattened rows", dock_viewport.get_total_row_count(), 5) and all_passed
     var flat_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     var comment_row_data: EventRowData = flat_rows[0].get("row")
     var group_row: EventRowData = flat_rows[1].get("row")
@@ -193,18 +194,17 @@ static func run() -> bool:
         true
     ) and all_passed
     all_passed = _check(
-        "inline add action affordance stays on the action row after authored actions",
+        "add action affordance sits on its own line below the actions (C3-style)",
         add_action_span_index >= 0
             and action_span_index >= 0
-            and is_equal_approx(event_row_data.spans[add_action_span_index].rect.position.y, event_row_data.spans[action_span_index].rect.position.y)
-            and event_row_data.spans[add_action_span_index].rect.position.x > event_row_data.spans[action_span_index].rect.position.x,
+            and event_row_data.spans[add_action_span_index].rect.position.y > event_row_data.spans[action_span_index].rect.position.y,
         true
     ) and all_passed
     all_passed = _check(
-        "action lane spacing keeps adjacent spans tightly aligned",
+        "add action affordance is left-aligned with the action lane",
         action_span_index >= 0
             and add_action_span_index >= 0
-            and event_row_data.spans[add_action_span_index].rect.position.x - event_row_data.spans[action_span_index].rect.end.x < 80.0,
+            and absf(event_row_data.spans[add_action_span_index].rect.position.x - event_row_data.spans[action_span_index].rect.position.x) < 4.0,
         true
     ) and all_passed
 
@@ -242,10 +242,10 @@ static func run() -> bool:
         true
     ) and all_passed
     all_passed = _check(
-        "long action text stays before the add action affordance",
+        "long action text stays above the add action affordance line",
         overlap_event_action_index >= 0
             and overlap_event_add_index >= 0
-            and overlap_event_row.spans[overlap_event_action_index].rect.end.x < overlap_event_row.spans[overlap_event_add_index].rect.position.x,
+            and overlap_event_row.spans[overlap_event_add_index].rect.position.y > overlap_event_row.spans[overlap_event_action_index].rect.position.y,
         true
     ) and all_passed
     all_passed = _check(
@@ -324,6 +324,13 @@ static func run() -> bool:
     dock._context_hit = {"span_metadata": {"kind": "condition", "ace_index": 1}, "span_index": _find_last_span_index_by_kind(or_row_data, "condition")}
     dock._on_condition_context_menu_id_pressed(4)
     all_passed = _check("condition context menu toggles inversion", ((dock.get_current_sheet().events[0] as EventRow).conditions[1] as ACECondition).negated, false) and all_passed
+    # The undoable edit above commits via snapshot-restore, which can replace the sheet's
+    # row resources — re-acquire the live row before the next context action, exactly as a
+    # real right-click would (the old row_data points at a pre-restore resource).
+    or_row_data = dock_viewport.get_flat_rows()[0].get("row")
+    dock_viewport._ensure_event_spans(or_row_data)
+    dock._context_row = or_row_data
+    dock._context_hit = {"span_metadata": {"kind": "condition", "ace_index": 1}, "span_index": _find_last_span_index_by_kind(or_row_data, "condition")}
     dock._on_condition_context_menu_id_pressed(EventSheetDock.CONDITION_MENU_TOGGLE_ENABLED)
     all_passed = _check("condition context menu toggles enabled state", ((dock.get_current_sheet().events[0] as EventRow).conditions[1] as ACECondition).enabled, false) and all_passed
     dock._context_row = or_row_data

@@ -207,10 +207,10 @@ static func run() -> bool:
 		true
 	) and passed
 	passed = _check(
-		"styled action span stays before add action affordance",
+		"add action affordance sits below the actions inside the action lane",
 		action_index >= 0
 			and add_action_index >= 0
-			and event_row.spans[action_index].rect.end.x < event_row.spans[add_action_index].rect.position.x
+			and event_row.spans[add_action_index].rect.position.y > event_row.spans[action_index].rect.position.y
 			and event_row.spans[add_action_index].rect.end.x <= action_lane_rect.end.x,
 		true
 	) and passed

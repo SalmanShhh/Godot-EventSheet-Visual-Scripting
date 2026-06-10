@@ -16,6 +16,10 @@ const COLOR_TRIGGER = EventSheetPalette.COLOR_TRIGGER
 const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
 const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
+# Object icon drawn before the object label in ACE cells (C3 grammar). The advance must
+# stay in sync with _measure_span_width in the viewport or hit-testing drifts.
+const OBJECT_ICON_SIZE := 14.0
+const OBJECT_ICON_ADVANCE := 18.0
 const BADGE_FONT_SIZE_DELTA := 1
 const BADGE_MIN_HORIZONTAL_PADDING := 1.0
 const SELECTION_OUTLINE_LIGHTEN := 0.28
@@ -39,6 +43,85 @@ const SPAN_SELECT_OUTLINE_LIGHTEN := 0.3
 const SPAN_SELECT_OUTLINE_ALPHA := 0.95
 const SPAN_HOVER_OUTLINE_LIGHTEN := 0.28
 const SPAN_HOVER_OUTLINE_ALPHA := 0.82
+
+## C3-style insert marker: arrowheads at both ends of a thin drop line so the insert point
+## reads instantly (mirrors Construct 3's tree-insert-mark).
+func _draw_insert_marker_arrows(control: Control, line_rect: Rect2, color: Color) -> void:
+    var mid_y: float = line_rect.get_center().y
+    var arrow: float = 5.0
+    control.draw_colored_polygon(PackedVector2Array([
+        Vector2(line_rect.position.x, mid_y - arrow),
+        Vector2(line_rect.position.x + arrow, mid_y),
+        Vector2(line_rect.position.x, mid_y + arrow)
+    ]), color)
+    control.draw_colored_polygon(PackedVector2Array([
+        Vector2(line_rect.end.x, mid_y - arrow),
+        Vector2(line_rect.end.x - arrow, mid_y),
+        Vector2(line_rect.end.x, mid_y + arrow)
+    ]), color)
+
+## Draws ACE text with its parameter values highlighted (C3-style): plain segments use the
+## base colour, value segments (numbers / quoted strings / booleans, precomputed at span
+## build) use the value colour. Segments advance by measured logical width and stop at the
+## clip width.
+func _draw_text_with_values(
+    control: Control,
+    baseline: Vector2,
+    text: String,
+    value_ranges: Array,
+    max_width: float,
+    font: Font,
+    font_size: int,
+    base_color: Color,
+    value_color: Color = COLOR_VALUE
+) -> void:
+    var cursor: int = 0
+    var x: float = baseline.x
+    var limit: float = baseline.x + max_width
+    for range_entry in value_ranges:
+        if not (range_entry is Array) or (range_entry as Array).size() < 2:
+            continue
+        var start: int = int(range_entry[0])
+        var length: int = int(range_entry[1])
+        if start < cursor or start >= text.length():
+            continue
+        var plain: String = text.substr(cursor, start - cursor)
+        if not plain.is_empty() and x < limit:
+            _draw_text(control, Vector2(x, baseline.y), plain, limit - x, font, font_size, base_color)
+            x += font.get_string_size(plain, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+        var value_text: String = text.substr(start, length)
+        if not value_text.is_empty() and x < limit:
+            _draw_text(control, Vector2(x, baseline.y), value_text, limit - x, font, font_size, value_color)
+            x += font.get_string_size(value_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+        cursor = start + length
+        if x >= limit:
+            return
+    var tail: String = text.substr(cursor)
+    if not tail.is_empty() and x < limit:
+        _draw_text(control, Vector2(x, baseline.y), tail, limit - x, font, font_size, base_color)
+
+## Draws text crisply under the viewport's zoom: the canvas transform scales geometry, but
+## glyphs scaled that way blur (zoom in) or alias (zoom out). This rasterizes the text at its
+## final physical pixel size in identity space instead, then restores the zoom transform.
+func _draw_text(
+    control: Control,
+    baseline: Vector2,
+    text: String,
+    max_width: float,
+    font: Font,
+    font_size: int,
+    color: Color
+) -> void:
+    var zoom: float = control.get_zoom_factor() if control.has_method("get_zoom_factor") else 1.0
+    if is_equal_approx(zoom, 1.0):
+        control.draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size, color)
+        return
+    var physical_size: int = maxi(int(round(font_size * zoom)), 6)
+    # Small slack so hinting differences at the rounded physical size don't clip the last glyph.
+    var physical_width: float = max_width * zoom + 4.0 if max_width > 0.0 else max_width
+    control.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+    control.draw_string(font, baseline * zoom, text, HORIZONTAL_ALIGNMENT_LEFT, physical_width, physical_size, color)
+    control.draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
 
 func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
     var row_rect: Rect2 = layout.get("row_rect", Rect2())
@@ -86,7 +169,9 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     if row_data.row_type == EventRowData.RowType.GROUP:
         _draw_group_row_chrome(control, row_rect, fold_rect, alternating, event_style)
     elif row_data.row_type == EventRowData.RowType.COMMENT and event_style != null:
-        control.draw_rect(row_rect, event_style.comment_row_background_color, true)
+        # Per-comment colors (C3 parity): the row's custom tint wins over the theme token.
+        var comment_bg: Color = row_data.custom_color if row_data.custom_color.a > 0.01 else event_style.comment_row_background_color
+        control.draw_rect(row_rect, comment_bg, true)
     elif row_data.row_type == EventRowData.RowType.EVENT and event_style != null:
         control.draw_rect(
             row_rect,
@@ -122,25 +207,24 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
         control.draw_rect(row_rect, selection_fill, true)
         if row_data.row_type != EventRowData.RowType.EVENT:
             _draw_row_outline(control, row_rect, selection_fill, SELECTION_OUTLINE_LIGHTEN, SELECTION_OUTLINE_ALPHA)
-    var hover_row_fill: bool = row_data.hovered
-    if row_data.row_type == EventRowData.RowType.EVENT and hovered_span_index >= 0:
-        hover_row_fill = false
-    if hover_row_fill:
+    # Hover feedback: individual conditions/actions highlight per-cell (drawn in _draw_spans).
+    # Whole-row hover is only for single-cell rows (group/comment/variable); on a multi-cell
+    # event it lights up the entire block and reads as "selected", which is confusing.
+    if row_data.hovered and row_data.row_type != EventRowData.RowType.EVENT:
         control.draw_rect(row_rect, hover_fill, true)
-        if row_data.row_type != EventRowData.RowType.EVENT:
-            _draw_row_outline(control, row_rect, hover_fill, HOVER_OUTLINE_LIGHTEN, HOVER_OUTLINE_ALPHA)
+        _draw_row_outline(control, row_rect, hover_fill, HOVER_OUTLINE_LIGHTEN, HOVER_OUTLINE_ALPHA)
     _draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
     _draw_icon(control, icon_rect, row_data)
     _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill)
     if drag_rect.size != Vector2.ZERO:
         control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
+        if drag_rect.size.y <= 4.0:
+            _draw_insert_marker_arrows(control, drag_rect, EventSheetPalette.COLOR_DRAG_LINE)
     if ace_drag_rect.size != Vector2.ZERO:
-        control.draw_rect(
-            ace_drag_rect,
-            EventSheetPalette.COLOR_BREAKPOINT if ace_drag_error else EventSheetPalette.COLOR_DRAG_LINE,
-            ace_drag_rect.size.y <= 4.0,
-            2.0
-        )
+        var ace_drag_color: Color = EventSheetPalette.COLOR_BREAKPOINT if ace_drag_error else EventSheetPalette.COLOR_DRAG_LINE
+        control.draw_rect(ace_drag_rect, ace_drag_color, ace_drag_rect.size.y <= 4.0, 2.0)
+        if ace_drag_rect.size.y <= 4.0:
+            _draw_insert_marker_arrows(control, ace_drag_rect, ace_drag_color)
     if drag_feedback_rect.size != Vector2.ZERO and not drag_feedback_text.is_empty():
         _draw_drag_feedback(control, drag_feedback_rect, drag_feedback_text, font, font_size, drag_feedback_error)
     if disabled:
@@ -156,7 +240,7 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
     if line_number > 0:
         var text: String = str(line_number)
         var baseline_y: float = gutter_rect.position.y + (gutter_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
-        control.draw_string(font, Vector2(gutter_rect.position.x + 4.0, baseline_y), text, HORIZONTAL_ALIGNMENT_LEFT, gutter_rect.size.x - 8.0, font_size - 1, EventSheetPalette.COLOR_GUTTER_TEXT)
+        _draw_text(control, Vector2(gutter_rect.position.x + 4.0, baseline_y), text, gutter_rect.size.x - 8.0, font, font_size - 1, EventSheetPalette.COLOR_GUTTER_TEXT)
     if breakpoint_enabled:
         var center: Vector2 = Vector2(gutter_rect.position.x + 7.0, gutter_rect.get_center().y)
         control.draw_circle(center, 3.5, EventSheetPalette.COLOR_BREAKPOINT)
@@ -265,7 +349,7 @@ func _draw_spans(
                 control.draw_rect(span.rect.grow(2.0), selected_outline, false, 1.0)
         elif span_index == hovered_span_index:
             if bool(metadata.get("chip", false)):
-                _draw_chip_hover_span(control, span, metadata)
+                _draw_cell_hover(control, span.rect, event_style.cell_hover_color if event_style != null else Color(1.0, 1.0, 1.0, 0.14))
             else:
                 var hover_bg: Color = hover_fill
                 hover_bg.a = 0.46
@@ -294,8 +378,30 @@ func _draw_spans(
         var text_x: float = span.rect.position.x + text_padding
         var right_padding: float = text_padding if bool(metadata.get("chip", false)) else 2.0
         var text_width: float = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
-        control.draw_string(font, Vector2(text_x, baseline_y), draw_text, HORIZONTAL_ALIGNMENT_LEFT, text_width, draw_font_size, color)
-        if not ace_enabled:
+        # Construct 3-style object icon + label drawn before the ACE text
+        # (e.g. "[icon] System  Is on floor").
+        var object_icon: Variant = metadata.get("object_icon")
+        if object_icon is Texture2D:
+            var icon_y: float = span.rect.position.y + (span.rect.size.y - OBJECT_ICON_SIZE) * 0.5
+            control.draw_texture_rect(object_icon as Texture2D, Rect2(text_x, icon_y, OBJECT_ICON_SIZE, OBJECT_ICON_SIZE), false)
+            text_x += OBJECT_ICON_ADVANCE
+            text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
+        var object_label: String = str(metadata.get("object_label", ""))
+        if not object_label.is_empty():
+            var object_color: Color = event_style.object_label_color if event_style != null else COLOR_OBJECT
+            _draw_text(control, Vector2(text_x, baseline_y), object_label, text_width, font, draw_font_size, object_color)
+            var label_advance: float = font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+            text_x += label_advance
+            text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
+        var value_ranges: Array = metadata.get("value_ranges", []) if span_index != editing_span_index else []
+        if value_ranges.is_empty():
+            _draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, font, draw_font_size, color)
+        else:
+            var value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
+            _draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, value_color)
+        # Strike through the text when the ACE is disabled OR its whole row (event/group/
+        # comment) is disabled, so "commented out" reads clearly like in code.
+        if not ace_enabled or (row_data != null and row_data.disabled):
             var strike_y: float = span.rect.get_center().y
             control.draw_line(
                 Vector2(span.rect.position.x, strike_y),
@@ -317,25 +423,14 @@ func _draw_spans(
             )
 
 func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary) -> void:
-    var style: StyleBoxFlat = StyleBoxFlat.new()
-    style.bg_color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.05))
-    style.border_color = metadata.get("chip_border", Color(1.0, 1.0, 1.0, 0.14))
-    style.set_border_width_all(1)
-    style.set_corner_radius_all(int(metadata.get("corner_radius", 5)))
-    style.set_content_margin_all(0)
-    control.draw_style_box(style, span.rect)
+    # Flat C3/GDevelop-style cell: a subtle rectangular fill, no border or rounded corners.
+    var bg: Color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.035))
+    control.draw_rect(span.rect, bg, true)
 
-func _draw_chip_hover_span(control: Control, span: SemanticSpan, metadata: Dictionary) -> void:
-    var style: StyleBoxFlat = StyleBoxFlat.new()
-    var accent: Color = metadata.get("text_color", TEXT_PRIMARY)
-    style.bg_color = metadata.get("chip_hover_bg", EventSheetPalette.COLOR_HOVER).lerp(accent, CHIP_HOVER_ACCENT_BLEND)
-    style.bg_color.a = max(style.bg_color.a, CHIP_HOVER_MIN_ALPHA)
-    style.border_color = metadata.get("chip_border", accent).lerp(accent.lightened(CHIP_HOVER_ACCENT_BLEND), CHIP_HOVER_BORDER_BLEND)
-    style.border_color.a = max(style.border_color.a, CHIP_HOVER_BORDER_ALPHA)
-    style.set_border_width_all(2)
-    style.set_corner_radius_all(int(metadata.get("corner_radius", 5)))
-    style.set_content_margin_all(0)
-    control.draw_style_box(style, span.rect.grow(1.0))
+## Flat, clearly-visible hover for a single condition/action cell: a neutral light tint over
+## just that cell (distinct from the accent-coloured selection), so it reads as "this cell".
+func _draw_cell_hover(control: Control, rect: Rect2, tint: Color) -> void:
+    control.draw_rect(rect, tint, true)
 
 func _draw_chip_selected_span(
     control: Control,
@@ -344,28 +439,11 @@ func _draw_chip_selected_span(
     selection_fill: Color,
     multi_select: bool
 ) -> void:
-    var style: StyleBoxFlat = StyleBoxFlat.new()
+    # Flat selected cell: a stronger accent-tinted fill plus a left accent bar (C3 cue).
     var accent: Color = metadata.get("text_color", TEXT_PRIMARY)
-    style.bg_color = selection_fill.lerp(accent, CHIP_SELECT_ACCENT_BLEND)
-    style.bg_color.a = max(style.bg_color.a, CHIP_SELECT_ALPHA_MULTI if multi_select else CHIP_SELECT_ALPHA_SINGLE)
-    style.border_color = accent.lightened(CHIP_SELECT_BORDER_LIGHTEN)
-    style.border_color.a = CHIP_SELECT_BORDER_ALPHA
-    style.set_border_width_all(2 if multi_select else 1)
-    style.set_corner_radius_all(int(metadata.get("corner_radius", 5)))
-    style.set_content_margin_all(0)
-    var target_rect: Rect2 = span.rect.grow(1.5 if multi_select else 1.0)
-    control.draw_style_box(style, target_rect)
-    if multi_select:
-        control.draw_rect(
-            Rect2(
-                target_rect.position.x + CHIP_SELECT_INDICATOR_OFFSET,
-                target_rect.position.y + CHIP_SELECT_INDICATOR_OFFSET,
-                CHIP_SELECT_INDICATOR_WIDTH,
-                max(target_rect.size.y - CHIP_SELECT_INDICATOR_MARGIN, CHIP_SELECT_INDICATOR_MIN_HEIGHT)
-            ),
-            style.border_color,
-            true
-        )
+    var fill: Color = Color(accent.r, accent.g, accent.b, 0.16 if multi_select else 0.22)
+    control.draw_rect(span.rect, fill, true)
+    control.draw_rect(Rect2(span.rect.position.x, span.rect.position.y, 2.0, span.rect.size.y), accent, true)
 
 func _draw_drag_feedback(
     control: Control,
@@ -391,12 +469,12 @@ func _draw_drag_feedback(
     style.set_content_margin_all(0)
     control.draw_style_box(style, rect)
     var baseline_y: float = rect.position.y + (rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 2) * FONT_BASELINE_OFFSET_RATIO)
-    control.draw_string(
-        font,
+    _draw_text(
+        control,
         Vector2(rect.position.x + 8.0, baseline_y),
         text,
-        HORIZONTAL_ALIGNMENT_LEFT,
         rect.size.x - 16.0,
+        font,
         max(font_size - 1, 10),
         Color(1.0, 1.0, 1.0, 0.96)
     )
@@ -429,12 +507,12 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
     var text_baseline_x: float = badge_rect.position.x + max((badge_rect.size.x - text_size.x) * 0.5, BADGE_MIN_HORIZONTAL_PADDING)
     var effective_text_height: float = max(font.get_height(badge_font_size), text_size.y)
     var baseline_y: float = badge_rect.position.y + ((badge_rect.size.y - effective_text_height) * 0.5) + font.get_ascent(badge_font_size)
-    control.draw_string(
-        font,
+    _draw_text(
+        control,
         Vector2(text_baseline_x, baseline_y),
         text,
-        HORIZONTAL_ALIGNMENT_LEFT,
         -1.0,
+        font,
         badge_font_size,
         badge_fg
     )
@@ -445,7 +523,7 @@ func _draw_debug_overlay(control: Control, row_rect: Rect2, font: Font, font_siz
     control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 4.0, row_rect.size.y), EventSheetPalette.COLOR_DEBUG, true)
     control.draw_rect(badge_rect, EventSheetPalette.COLOR_DEBUG, true)
     var baseline_y: float = badge_rect.position.y + (badge_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
-    control.draw_string(font, Vector2(badge_rect.position.x + 5.0, baseline_y), debug_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1, EventSheetPalette.COLOR_DEBUG_TEXT)
+    _draw_text(control, Vector2(badge_rect.position.x + 5.0, baseline_y), debug_text, -1.0, font, font_size - 1, EventSheetPalette.COLOR_DEBUG_TEXT)
 
 func _get_span_color(span_type: int, event_style: EventSheetEventStyle = null) -> Color:
     match span_type:

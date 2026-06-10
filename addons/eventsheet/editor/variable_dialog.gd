@@ -6,8 +6,9 @@ class_name VariableDialog
 extends RefCounted
 
 ## Emitted when the user confirms variable creation or editing.
-## scope is "global" or "local".
-signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary, is_constant: bool)
+## scope is "global" or "local". exported = accessible outside the generated script
+## (@export var) vs. private (var).
+signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary, is_constant: bool, exported: bool)
 
 var _dialog: ConfirmationDialog = null
 var _scope_label: Label = null
@@ -15,6 +16,7 @@ var _name_edit: LineEdit = null
 var _type_option: OptionButton = null
 var _default_edit: LineEdit = null
 var _const_check: CheckBox = null
+var _exported_check: CheckBox = null
 var _const_help: Label = null
 var _type_help: Label = null
 var _scope: String = "global"
@@ -90,6 +92,17 @@ func init_dialog(parent_node: Node) -> void:
 	const_row.add_child(_const_check)
 	form.add_child(const_row)
 
+	var access_row: HBoxContainer = HBoxContainer.new()
+	var access_label: Label = Label.new()
+	access_label.text = "Access"
+	access_label.custom_minimum_size = Vector2(120.0, 0.0)
+	access_row.add_child(access_label)
+	_exported_check = CheckBox.new()
+	_exported_check.text = "Global (@export — usable outside the script)"
+	_exported_check.tooltip_text = "On: emitted as @export var (other scripts / the inspector can read it).\nOff: emitted as a plain var, private to this event sheet's script."
+	access_row.add_child(_exported_check)
+	form.add_child(access_row)
+
 	_const_help = Label.new()
 	_const_help.visible = false
 	_const_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
@@ -102,7 +115,7 @@ func init_dialog(parent_node: Node) -> void:
 
 ## Open the dialog for the given scope ("global" or "local").
 func open(scope: String) -> void:
-	open_for_edit(scope, {}, "", "int", "", false, "Create Variable", false)
+	open_for_edit(scope, {}, "", "int", "", false, "Create Variable", false, scope == "global")
 
 func open_for_edit(
 	scope: String,
@@ -112,7 +125,8 @@ func open_for_edit(
 	default_value: Variant = "",
 	lock_type: bool = false,
 	title: String = "Edit Variable",
-	is_constant: bool = false
+	is_constant: bool = false,
+	exported: bool = true
 ) -> void:
 	if _dialog == null:
 		push_error("VariableDialog.open() called before init_dialog().")
@@ -130,6 +144,16 @@ func open_for_edit(
 			break
 	_type_option.select(selected_index)
 	_const_check.button_pressed = is_constant
+	# Local variables are inherently private to the script body, so the export toggle only
+	# applies to global (sheet-level) variables.
+	var is_local: bool = scope == "local"
+	_exported_check.button_pressed = exported and not is_local
+	_exported_check.disabled = is_local
+	_exported_check.tooltip_text = (
+		"Local variables are always private to the script."
+		if is_local
+		else "On: emitted as @export var (readable outside the script).\nOff: a plain private var."
+	)
 	_refresh_const_ui()
 	_type_option.disabled = lock_type
 	_type_help.visible = lock_type
@@ -149,7 +173,8 @@ func _on_confirmed() -> void:
 	# Keep this defensive check in case stale UI state emits a checked const flag
 	# for a type that does not support const.
 	var is_constant: bool = _const_check.button_pressed and _supports_constant(type_name)
-	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant)
+	var exported: bool = _exported_check.button_pressed and _scope == "global"
+	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported)
 
 ## Returns the trimmed text from the name field.
 func get_last_name_text() -> String:

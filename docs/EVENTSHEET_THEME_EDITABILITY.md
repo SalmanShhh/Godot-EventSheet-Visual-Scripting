@@ -1,6 +1,21 @@
 # EventSheet Theme + Editability Guide
 
+> Updated 2026-06. Token reference: `docs/EVENTSHEET_THEME_TOKEN_SPEC.md`. A designer
+> friendly **visual theme editor** (live preview + grouped token controls) is the final
+> planned 1.0 phase.
+
 This editor uses Godot-native resources/scenes instead of runtime CSS. The goal is still the same as a Construct-style theme.css workflow: designers can duplicate a theme package, tune tokens, reload the editor, and keep shipping reusable presets.
+
+Current additions on top of the model below:
+
+- A **toolbar theme switcher** lists "Default" plus the bundled presets — no file dialog
+  needed for the common case.
+- The built-in default is **Godot-adaptive** (`EventSheetGodotTheme.adapt_to_editor`):
+  with no theme assigned, the sheet derives its colors from your editor theme so it looks
+  native in any Godot skin.
+- Newer semantic tokens include `object_label_color`, `value_highlight_color`,
+  `cell_hover_color`, `invert_marker_color`, and `behavior_accent_color` (the ⚙ behavior
+  banner/tab accent).
 
 ## Core model
 

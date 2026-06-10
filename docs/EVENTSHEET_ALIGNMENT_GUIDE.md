@@ -53,6 +53,16 @@ Token sizing/spacing lives in `EventSheetElementStyle`:
 4. Keep `minimum_conditions_lane_width` high enough (200+ for long ACE labels).
 5. Adjust lane ratio last for your project’s condition/action text balance.
 
+## Newer alignment facts (2026-06)
+
+- The **lane divider is drag-resizable** in the editor; `condition_lane_ratio` remains the
+  saved default.
+- ACE cells may draw an **object icon** before the object label; the icon advance is the
+  renderer's `OBJECT_ICON_ADVANCE` (18 px) and is included in span measurement, so icons
+  never skew hit-testing or stack alignment.
+- Sibling event blocks are separated by the viewport's `EVENT_BLOCK_GAP`; sub-events sit
+  tighter to their parent than unrelated siblings (C3 rhythm).
+
 ## Where this is implemented
 
 - Layout + hit targets: `res://addons/eventsheet/editor/event_sheet_viewport.gd`

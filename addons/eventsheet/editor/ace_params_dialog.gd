@@ -1,25 +1,55 @@
 # EventSheet — ACE Parameters dialog component
-# Builds a dynamic form from ACEDefinition.parameters metadata and emits
-# params_confirmed when the user confirms.
+# Builds a dynamic form from ACEDefinition.parameters metadata and emits params_confirmed
+# when the user confirms. Supports:
+#  - left-label / right-control rows with the parameter description rendered below,
+#  - variable-reference params (hint == "variable_reference"): a dropdown of the sheet's
+#    variables; when none exist the dialog blocks apply and tells the user to add one,
+#  - expression params (hint == "expression"): an inline "fx" button opening an Insert
+#    Expression picker (EXPRESSION ACE definitions) whose code template is inserted,
+#  - a "Back" button (when opened from the picker) that returns to the picker.
 @tool
 class_name ACEParamsDialog
 extends RefCounted
 
 ## Emitted when the user confirms the parameter form.
 ## values is a Dictionary of { param_id -> typed_value }.
-## context is the same dictionary passed to open().
 signal params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary)
+## Emitted when the user presses Back to return to the picker.
+signal back_requested(definition: ACEDefinition, context: Dictionary)
+
+const VARIABLE_REFERENCE_HINT := "variable_reference"
+const EXPRESSION_HINT := "expression"
+const NO_VARIABLES_PLACEHOLDER := "No variables available"
+const BACK_ACTION := "back"
 
 var _dialog: ConfirmationDialog = null
 var _form: VBoxContainer = null
 var _hint: Label = null
 var _fields: Dictionary = {}
+var _field_hints: Dictionary = {}
 var _definition: ACEDefinition = null
 var _context: Dictionary = {}
+var _registry: EventSheetACERegistry = null
+var _variable_names_provider: Callable = Callable()
+var _variable_names: PackedStringArray = PackedStringArray()
+var _apply_blocked: bool = false
+var _back_button: Button = null
 
-## Initialise and attach the dialog to parent_node.
-## Must be called before open().
-func init_dialog(parent_node: Node) -> void:
+# Sheet-context source for live ƒx validation (set by the dock; returns the active sheet).
+var _lint_context_provider: Callable = Callable()
+
+# Insert Expression picker (lazy).
+var _expression_window: Window = null
+var _expression_tree: Tree = null
+var _expression_search: LineEdit = null
+var _expression_target_key: String = ""
+
+## Initialise and attach the dialog to parent_node. Must be called before open().
+## registry powers the Insert Expression picker; variable_names_provider returns the
+## current sheet variable names (Callable -> PackedStringArray/Array).
+func init_dialog(parent_node: Node, registry: EventSheetACERegistry = null, variable_names_provider: Callable = Callable()) -> void:
+	_registry = registry
+	_variable_names_provider = variable_names_provider
 	if _dialog != null:
 		return
 	_dialog = ConfirmationDialog.new()
@@ -28,6 +58,8 @@ func init_dialog(parent_node: Node) -> void:
 	_dialog.confirmed.connect(_on_confirmed)
 	_dialog.close_requested.connect(_close)
 	_dialog.canceled.connect(_close)
+	_back_button = _dialog.add_button("◀ Back", true, BACK_ACTION)
+	_dialog.custom_action.connect(_on_custom_action)
 	parent_node.add_child(_dialog)
 
 	var scroll: ScrollContainer = ScrollContainer.new()
@@ -40,14 +72,13 @@ func init_dialog(parent_node: Node) -> void:
 	_form = VBoxContainer.new()
 	_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_form.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_hint = Label.new()
-	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_hint.modulate = Color(0.80, 0.85, 0.95, 0.95)
-	_form.add_child(_hint)
+	_form.add_theme_constant_override("separation", 4)
 	scroll.add_child(_form)
 
+func set_registry(registry: EventSheetACERegistry) -> void:
+	_registry = registry
+
 ## Open the parameter form for the given ACEDefinition.
-## context is an opaque dictionary forwarded in the params_confirmed signal.
 func open(definition: ACEDefinition, context: Dictionary) -> void:
 	open_with_values(definition, context, {})
 
@@ -57,72 +88,83 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 		return
 	_definition = definition
 	_context = context.duplicate(true)
+	_variable_names = _resolve_variable_names()
+	_build_form(definition, initial_values)
+	_dialog.title = "%s Parameters%s" % [
+		definition.display_name,
+		" (Edit)" if _is_reedit_flow() else ""
+	]
+	_dialog.get_ok_button().disabled = _apply_blocked
+	# Back only makes sense when this dialog was opened from the picker flow.
+	_set_back_visible(_came_from_picker())
+	_dialog.popup_centered(Vector2i(560, 380))
+	_dialog.call_deferred("grab_focus")
+	call_deferred("_focus_first_field")
+
+## Rebuilds the parameter rows. Separated from open() so it can be exercised without
+## popping the window (which requires a display server).
+func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 	_fields.clear()
+	_field_hints.clear()
+	_apply_blocked = false
 	for child in _form.get_children():
 		_form.remove_child(child)
 		child.queue_free()
 	_hint = Label.new()
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_hint.modulate = Color(0.80, 0.85, 0.95, 0.95)
+	_hint.add_theme_color_override("font_color", Color(0.80, 0.85, 0.95, 0.95))
 	_form.add_child(_hint)
+
 	for parameter: Variant in definition.parameters:
 		if not (parameter is Dictionary):
 			continue
-		var param_dict: Dictionary = parameter as Dictionary
-		var row: HBoxContainer = HBoxContainer.new()
-		var label: Label = Label.new()
-		var key: String = str(param_dict.get("id", ""))
-		label.text = str(param_dict.get("display_name", key))
-		var description: String = str(param_dict.get("description", ""))
-		if not description.is_empty():
-			label.tooltip_text = description
-		label.custom_minimum_size = Vector2(160.0, 0.0)
-		row.add_child(label)
-		var field: Control = _create_field(param_dict, initial_values)
-		field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(field)
-		_form.add_child(row)
-		_fields[key] = field
-	_dialog.title = "%s Parameters%s" % [
-		definition.display_name,
-		" (Edit)" if _is_reedit_flow() else ""
-	]
+		_add_param_row(parameter as Dictionary, initial_values)
+
 	_hint.text = _build_hint_text()
-	_dialog.popup_centered(Vector2i(560, 360))
-	call_deferred("_focus_first_field")
 
-func _close() -> void:
-	if _dialog != null:
-		_dialog.hide()
-
-## Build a typed input widget for one parameter entry.
-func _create_field(param_dict: Dictionary, initial_values: Dictionary) -> Control:
-	var field_type: int = int(param_dict.get("type", TYPE_NIL))
+func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	var key: String = str(param_dict.get("id", ""))
+	var hint: String = str(param_dict.get("hint", ""))
+	_field_hints[key] = hint
+
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var label: Label = Label.new()
+	label.text = str(param_dict.get("display_name", key))
+	label.custom_minimum_size = Vector2(160.0, 0.0)
+	row.add_child(label)
+	var field: Control = _create_field(param_dict, initial_values, key, hint)
+	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(field)
+	_form.add_child(row)
+
+	# Parameter description rendered below its control.
+	var description: String = str(param_dict.get("description", ""))
+	if not description.is_empty():
+		var description_label: Label = Label.new()
+		description_label.text = description
+		description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		description_label.add_theme_font_size_override("font_size", 11)
+		description_label.add_theme_color_override("font_color", Color(0.66, 0.70, 0.78, 0.9))
+		_form.add_child(description_label)
+
+## Build a typed input widget for one parameter entry. The value-extraction node is
+## registered in _fields[key]; the returned Control is what gets added to the row.
+func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: String, hint: String) -> Control:
+	var field_type: int = int(param_dict.get("type", TYPE_NIL))
 	var default_value: Variant = initial_values.get(key, param_dict.get("default_value", ""))
 	var options: Array = param_dict.get("options", [])
+
+	if hint == VARIABLE_REFERENCE_HINT:
+		return _create_variable_reference_field(key, default_value)
+	if hint == EXPRESSION_HINT:
+		return _create_expression_field(key, default_value)
 	if options is Array and not options.is_empty():
-		var dropdown: OptionButton = OptionButton.new()
-		for option_entry in options:
-			var option_key: String = ""
-			var option_label: String = ""
-			if option_entry is Dictionary:
-				option_key = str((option_entry as Dictionary).get("key", ""))
-				option_label = str((option_entry as Dictionary).get("label", option_key))
-			else:
-				option_key = str(option_entry)
-				option_label = option_key
-			if option_key.is_empty():
-				continue
-			dropdown.add_item(option_label)
-			var index: int = dropdown.item_count - 1
-			dropdown.set_item_metadata(index, option_key)
-			if option_key == str(default_value):
-				dropdown.select(index)
-		return dropdown
+		return _create_options_field(key, options, default_value)
 	if field_type == TYPE_BOOL:
 		var check: CheckBox = CheckBox.new()
 		check.button_pressed = _parse_bool(default_value)
+		_fields[key] = check
 		return check
 	if field_type in [TYPE_INT, TYPE_FLOAT]:
 		var spin: SpinBox = SpinBox.new()
@@ -130,12 +172,96 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary) -> Contro
 		spin.allow_greater = true
 		spin.allow_lesser = true
 		spin.value = float(default_value)
+		_fields[key] = spin
 		return spin
 	var edit: LineEdit = LineEdit.new()
 	edit.text = str(default_value)
+	_fields[key] = edit
 	return edit
 
-## Extract the typed value from a field widget.
+func _create_options_field(key: String, options: Array, default_value: Variant) -> OptionButton:
+	var dropdown: OptionButton = OptionButton.new()
+	for option_entry in options:
+		var option_key: String = ""
+		var option_label: String = ""
+		if option_entry is Dictionary:
+			option_key = str((option_entry as Dictionary).get("key", ""))
+			option_label = str((option_entry as Dictionary).get("label", option_key))
+		else:
+			option_key = str(option_entry)
+			option_label = option_key
+		if option_key.is_empty():
+			continue
+		dropdown.add_item(option_label)
+		var index: int = dropdown.item_count - 1
+		dropdown.set_item_metadata(index, option_key)
+		if option_key == str(default_value):
+			dropdown.select(index)
+	_fields[key] = dropdown
+	return dropdown
+
+func _create_variable_reference_field(key: String, default_value: Variant) -> Control:
+	if _variable_names.is_empty():
+		# No variables exist: surface a disabled placeholder and block apply.
+		_apply_blocked = true
+		var placeholder: LineEdit = LineEdit.new()
+		placeholder.text = NO_VARIABLES_PLACEHOLDER
+		placeholder.editable = false
+		_fields[key] = placeholder
+		return placeholder
+	var dropdown: OptionButton = OptionButton.new()
+	for variable_name in _variable_names:
+		dropdown.add_item(variable_name)
+		var index: int = dropdown.item_count - 1
+		dropdown.set_item_metadata(index, variable_name)
+		if variable_name == str(default_value):
+			dropdown.select(index)
+	if dropdown.selected < 0 and dropdown.item_count > 0:
+		dropdown.select(0)
+	_fields[key] = dropdown
+	return dropdown
+
+func _create_expression_field(key: String, default_value: Variant) -> Control:
+	var container: HBoxContainer = HBoxContainer.new()
+	container.add_theme_constant_override("separation", 4)
+	var edit: LineEdit = LineEdit.new()
+	edit.text = str(default_value)
+	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Expressions are plain GDScript — say so explicitly so C3 users learn there is no
+	# separate expression language to memorize.
+	edit.placeholder_text = "GDScript expression (e.g. health + 10)"
+	edit.tooltip_text = "Plain GDScript — anything valid in an expression works here."
+	edit.text_changed.connect(func(_text: String) -> void: _validate_expression_field(edit))
+	_validate_expression_field(edit)
+	container.add_child(edit)
+	var fx_button: Button = Button.new()
+	fx_button.text = "ƒx"
+	fx_button.tooltip_text = "Insert a GDScript expression"
+	fx_button.pressed.connect(_open_expression_picker.bind(key))
+	container.add_child(fx_button)
+	_fields[key] = edit
+	return container
+
+## Live expression validation: compile-checks the field against the sheet context
+## (variables, host members) and tints the text red when it would not compile. The lint
+## context provider is optional — without it the field stays unvalidated.
+func _validate_expression_field(edit: LineEdit) -> void:
+	if not _lint_context_provider.is_valid():
+		return
+	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
+	var lint_result: Dictionary = EventSheetGDScriptLint.lint_expression(edit.text, sheet)
+	if bool(lint_result.get("ok", true)):
+		edit.remove_theme_color_override("font_color")
+		edit.tooltip_text = "Plain GDScript — anything valid in an expression works here."
+	else:
+		edit.add_theme_color_override("font_color", Color(0.96, 0.45, 0.45))
+		edit.tooltip_text = "✗ Not a valid GDScript expression for this sheet."
+
+## Wires the sheet-context source for expression validation (returns EventSheetResource).
+func set_lint_context_provider(provider: Callable) -> void:
+	_lint_context_provider = provider
+
+## Extract the typed value from a registered field node.
 func _extract_value(field: Control) -> Variant:
 	if field is CheckBox:
 		return (field as CheckBox).button_pressed
@@ -158,7 +284,7 @@ func _extract_value(field: Control) -> Variant:
 	return ""
 
 func _on_confirmed() -> void:
-	if _definition == null:
+	if _definition == null or _apply_blocked:
 		return
 	var values: Dictionary = {}
 	for key: Variant in _fields.keys():
@@ -167,11 +293,152 @@ func _on_confirmed() -> void:
 	_definition = null
 	_context.clear()
 
+func _on_custom_action(action: StringName) -> void:
+	if str(action) != BACK_ACTION:
+		return
+	var definition: ACEDefinition = _definition
+	var context: Dictionary = _context.duplicate(true)
+	_close()
+	back_requested.emit(definition, context)
+
+func _set_back_visible(visible: bool) -> void:
+	if _back_button != null:
+		_back_button.visible = visible
+
+# ── Insert Expression picker ────────────────────────────────────────────────
+
+func _open_expression_picker(target_key: String) -> void:
+	_expression_target_key = target_key
+	_ensure_expression_window()
+	_refresh_expression_tree()
+	_expression_window.popup_centered(Vector2i(560, 460))
+	_expression_search.grab_focus()
+
+func _ensure_expression_window() -> void:
+	if _expression_window != null:
+		return
+	_expression_window = Window.new()
+	_expression_window.title = "Insert Expression"
+	_expression_window.visible = false
+	_expression_window.min_size = Vector2i(480, 360)
+	_expression_window.close_requested.connect(func() -> void: _expression_window.hide())
+	_dialog.add_child(_expression_window)
+
+	var margin: MarginContainer = MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	_expression_window.add_child(margin)
+
+	var content: VBoxContainer = VBoxContainer.new()
+	content.add_theme_constant_override("separation", 6)
+	margin.add_child(content)
+
+	_expression_search = LineEdit.new()
+	_expression_search.placeholder_text = "Search expressions..."
+	_expression_search.clear_button_enabled = true
+	_expression_search.text_changed.connect(func(_text: String) -> void: _refresh_expression_tree())
+	content.add_child(_expression_search)
+
+	_expression_tree = Tree.new()
+	_expression_tree.hide_root = true
+	_expression_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_expression_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_expression_tree.item_activated.connect(_on_expression_activated)
+	content.add_child(_expression_tree)
+
+func _refresh_expression_tree() -> void:
+	if _expression_tree == null or _registry == null:
+		return
+	_expression_tree.clear()
+	var root: TreeItem = _expression_tree.create_item()
+	var query: String = _expression_search.text.strip_edges()
+	var group_nodes: Dictionary = {}
+	for definition: ACEDefinition in _registry.search(query):
+		if definition.ace_type != ACEDefinition.ACEType.EXPRESSION:
+			continue
+		var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()
+		var group_key: String = node_type if not node_type.is_empty() else (definition.category if not definition.category.is_empty() else "General")
+		if not group_nodes.has(group_key):
+			var group_item: TreeItem = _expression_tree.create_item(root)
+			group_item.set_text(0, group_key)
+			group_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NODE_TYPE if not node_type.is_empty() else ACEPickerDialog.GROUP_COLOR_NEUTRAL)
+			group_item.set_selectable(0, false)
+			group_nodes[group_key] = group_item
+		var item: TreeItem = _expression_tree.create_item(group_nodes[group_key])
+		item.set_text(0, definition.display_name)
+		item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
+		if not definition.description.is_empty():
+			item.set_tooltip_text(0, definition.description)
+		item.set_metadata(0, definition)
+
+func _on_expression_activated() -> void:
+	var item: TreeItem = _expression_tree.get_selected()
+	if item == null:
+		return
+	var definition: ACEDefinition = item.get_metadata(0)
+	if definition == null:
+		return
+	var target: Control = _fields.get(_expression_target_key, null)
+	if target is LineEdit:
+		var line_edit: LineEdit = target as LineEdit
+		line_edit.text = _expression_template(definition)
+		line_edit.grab_focus()
+		line_edit.caret_column = line_edit.text.length()
+	_expression_window.hide()
+
+## Returns the code template inserted for an expression definition (with default params).
+func _expression_template(definition: ACEDefinition) -> String:
+	var template: String = str(definition.metadata.get("codegen_template", ""))
+	if template.is_empty():
+		var display: String = definition.format_display({})
+		return display if not display.is_empty() else definition.display_name
+	# Substitute default parameter values into the codegen template placeholders.
+	for index in range(definition.parameters.size()):
+		var parameter: Variant = definition.parameters[index]
+		if not (parameter is Dictionary):
+			continue
+		var param_dict: Dictionary = parameter as Dictionary
+		var param_key: String = str(param_dict.get("id", ""))
+		if param_key.is_empty():
+			continue
+		var param_value: String = str(param_dict.get("default_value", param_dict.get("default", "")))
+		template = template.replace("{%d}" % index, param_value)
+		template = template.replace("{%s}" % param_key, param_value)
+	return template
+
+# ── Helpers ─────────────────────────────────────────────────────────────────
+
+func _resolve_variable_names() -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	if not _variable_names_provider.is_valid():
+		return names
+	var result: Variant = _variable_names_provider.call()
+	if result is PackedStringArray:
+		return result
+	if result is Array:
+		for entry in result:
+			names.append(str(entry))
+	return names
+
+func _came_from_picker() -> bool:
+	# The dock sets from_picker when this dialog is opened from a picker selection;
+	# direct row edits (double-click an ACE) open it without a picker to return to.
+	return bool(_context.get("from_picker", false))
+
+func _close() -> void:
+	if _dialog != null:
+		_dialog.hide()
+
 func _is_reedit_flow() -> bool:
 	var mode: String = str(_context.get("mode", ""))
 	return mode.begins_with("replace")
 
 func _build_hint_text() -> String:
+	if _apply_blocked:
+		return "This ACE references a sheet variable, but none exist yet. Add a variable to the sheet first, then add this ACE."
 	var mode: String = str(_context.get("mode", ""))
 	var base: String = "Fill in parameters, then press OK to apply."
 	match mode:
@@ -193,7 +460,7 @@ func _build_hint_text() -> String:
 func _focus_first_field() -> void:
 	for key in _fields.keys():
 		var field: Control = _fields[key] as Control
-		if field != null and field.visible:
+		if field != null and field.visible and not (field is LineEdit and not (field as LineEdit).editable):
 			field.grab_focus()
 			return
 

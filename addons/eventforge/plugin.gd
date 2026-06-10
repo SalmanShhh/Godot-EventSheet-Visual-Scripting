@@ -10,6 +10,7 @@ const EVENT_SHEET_EDITOR_PATH: String = "res://addons/eventforge/editor/event_sh
 const MAIN_SCREEN_ROOT_NAME: String = "EventSheetWorkspace"
 
 var _event_sheet_editor: Control = null
+var _export_integrity_plugin: EditorExportPlugin = null
 var _ace_param_inspector_plugin: ACEParamInspectorPlugin = null
 
 ## Returns the display name of the plugin.
@@ -51,6 +52,10 @@ static func is_event_sheet_resource(object: Object) -> bool:
 ## Registers plugin services when the plugin is enabled.
 func _enter_tree() -> void:
 	add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)
+	# Export integrity: recompile every sheet when an export starts so stale generated
+	# scripts can never ship (see export_integrity_plugin.gd).
+	_export_integrity_plugin = EventSheetExportIntegrityPlugin.new()
+	add_export_plugin(_export_integrity_plugin)
 	var editor_script: Script = load(EVENT_SHEET_EDITOR_PATH)
 	if editor_script == null:
 		push_warning("[EventForge] Failed to load EventSheetEditor script at %s. Verify the file exists and contains valid GDScript." % EVENT_SHEET_EDITOR_PATH)
@@ -82,12 +87,15 @@ func _enter_tree() -> void:
 				(editor_candidate as Node).queue_free()
 			# Non-Node objects here are RefCounted and released automatically.
 	if _event_sheet_editor != null:
-		print("[EventForge] v0.1.0 loaded")
+		print("[Godot EventSheets] plugin loaded")
 	else:
-		print("[EventForge] v0.1.0 loaded (editor panel unavailable)")
+		print("[Godot EventSheets] plugin loaded (editor panel unavailable)")
 
 ## Unregisters plugin services when the plugin is disabled.
 func _exit_tree() -> void:
+	if _export_integrity_plugin != null:
+		remove_export_plugin(_export_integrity_plugin)
+		_export_integrity_plugin = null
 	if _ace_param_inspector_plugin != null:
 		remove_inspector_plugin(_ace_param_inspector_plugin)
 		_ace_param_inspector_plugin = null
@@ -97,4 +105,4 @@ func _exit_tree() -> void:
 		_event_sheet_editor.queue_free()
 		_event_sheet_editor = null
 	remove_autoload_singleton(BRIDGE_NAME)
-	print("[EventForge] unloaded")
+	print("[Godot EventSheets] unloaded")

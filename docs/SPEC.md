@@ -1,37 +1,50 @@
 # EventForge Specification (Consolidated)
 
+> Updated 2026-06. The authoritative per-feature specs are
+> `docs/EDITOR-UI-SPEC.md` (editor UX), `docs/GDSCRIPT-PAIRING-SPEC.md` (compiler,
+> GDScript pairing, addons, behaviors), and `docs/EVENTSHEET_THEME_TOKEN_SPEC.md`
+> (theming). This file is the architectural overview that ties them together.
+
 ## 1. Scope
 
-EventForge provides Construct-style event sheet authoring for Godot and compiles sheet resources to deterministic GDScript.
+EventForge provides Construct-style event sheet authoring for Godot and compiles sheet
+resources to deterministic, plain GDScript with **performance parity to hand-written
+code** (GDSCRIPT-PAIRING-SPEC, Principles #5 — guarded by `tests/codegen_parity_test.gd`).
 
-## 2. Current implemented architecture
+## 2. Architecture
 
 ### 2.1 Resource/data model (source of truth)
 
-The canonical model is resource-driven (`EventSheetResource` and row/ACE resources under `addons/eventforge/resources/`).
+The canonical model is resource-driven (`EventSheetResource` and row/ACE resources under
+`addons/eventforge/resources/`). UI edits this model directly; save/load and compile
+operate on the same resource graph. Sheets may also be **GDScript-backed**
+(`external_source_path`): the `.gd` file is the source of truth and saving compiles back
+to it byte-faithfully.
 
-- UI edits this model directly.
-- Save/load and compile operate on the same resource graph.
+### 2.2 Editor layer
 
-### 2.2 Editor layer (active, implemented)
+The editor lives under **`addons/eventsheet/`** (the earlier per-row widget prototype in
+`addons/eventforge/editor/` was removed — it could not scale):
 
-The editor under `addons/eventforge/editor/` is no longer a placeholder.
-
-Implemented foundation includes:
-- sheet canvas + inspector workflow
-- ACE picker and param dialogs
-- variable-aware param input handling
-- event/condition/action delete flows
-- event lane rendering with limited sub-event indentation groundwork
+- `editor/` — `EventSheetDock` (orchestration: toolbar, dialogs, undo/redo, clipboard,
+  multi-tab), `EventSheetViewport` (**custom-rendered, virtualized canvas** — only visible
+  rows draw; this is the architecture that holds at tens of thousands of rows),
+  `EventRowRenderer` (token-aware row painting), pickers and dialogs.
+- `ace/` — the custom-ACE engine: registry, reflection generator, semantic analyzer
+  (`@ace_*` annotations), addon scanner (`res://eventsheet_addons/`), GDScript lint.
+- `theme/` — token resources, bundled presets, the Godot-adaptive default style.
 
 ### 2.3 Compiler/runtime boundary
 
 - **Editor/UI responsibility:** author and mutate sheet resources.
-- **Compiler/runtime responsibility:** consume those resources and emit/execute generated behavior.
+- **Compiler responsibility:** emit plain GDScript from those resources.
+- **Runtime responsibility:** none — generated scripts reference no EventForge classes;
+  exported games run without the plugin. Addon ACEs compile to direct calls (baked
+  templates or instance-backed provider members); behaviors compile to plain Node
+  component scripts. `EventForgeBridge` is an *editor vocabulary* API
+  (`register_script_as_provider`), never a per-frame runtime dependency.
 
-This boundary is intentional: UI polish can evolve without changing compiler contracts, and compiler expansion can proceed against a stable resource model.
-
-## 3. Current compiler contract
+## 3. Compiler contract
 
 ```gdscript
 SheetCompiler.compile(sheet: EventSheetResource, output_path: String) -> Dictionary
@@ -42,73 +55,54 @@ Return dictionary keys:
 - `errors: Array[String]`
 - `warnings: Array[String]`
 - `output: String`
+- `source_map: Array` — `{uid, start, end, kind}` per emitted row (1-based inclusive
+  lines), powering two-way provenance in the editor.
 
-Generated files include a stable header and use `\n` line endings.
+Generated files include a stable header (suppressed for GDScript-backed sheets) and use
+`\n` line endings.
 
-## 4. Next planned phase: translation/compiler matrix
+### 3.1 Translation matrix (implemented)
 
-Next phase focus is specification-first compiler expansion from current sheet concepts to generated GDScript.
+- Triggers → lifecycle hooks (`_ready`/`_process`/`_physics_process`) or **signal
+  handlers with emitted `_ready` connections** (self signals compile-time validated;
+  other nodes via `trigger_source_path`; custom `signal:<name>` triggers with baked
+  argument signatures).
+- Condition chains → boolean `if` expressions (AND/OR joins, `not (...)` negation).
+- Actions → ordered direct statements (descriptor templates, baked addon templates, or
+  instance-backed provider-member calls); `await` only when flagged.
+- Sub-events → nested blocks under the parent's conditions; Else/Else-If → `elif`/`else`
+  chains; empty blocks → `pass` (output always parses).
+- Comments → `#` lines; in-flow variables → function locals; GDScript blocks → verbatim
+  (class-level and in-flow).
+- Sheet variables → typed `@export`/`var` declarations; functions → typed methods,
+  optionally published as ACEs (`expose_as_ace` → emitted `@ace_*` annotations).
+- Still deferred: pick filters.
 
-### 4.1 Translation matrix (planned deliverable)
+The reverse direction also exists: the importer's **ACE-level lifter** reverses these
+templates back into events (verified byte-identical or reverted).
 
-Define and maintain a matrix mapping event-sheet constructs to emitted script patterns, including at minimum:
-
-- run contexts/triggers → lifecycle hooks / signal wiring / guard structures
-- condition chains (AND subset first) → boolean guard emission
-- action rows → ordered action statement emission
-- variable references/defaults → typed value conversion and fallback handling
-- nested row groundwork → explicit "supported vs deferred" translation behavior
-
-### 4.2 Expression conversion and mapping rules (planned deliverable)
-
-Specify deterministic conversion rules for ACE params/expressions into GDScript-safe values:
-
-- numeric/bool/string coercion rules
-- identifier and variable reference resolution order
-- operator mapping expectations (including compare/operator enums)
-- quoting/escaping rules for emitted literals
-- validation/error behavior for unsupported or malformed expressions
-
-### 4.3 Practical outputs expected from this phase
-
-- a documented translation matrix in specs
-- compiler-side implementation coverage for the mapped subset
-- fixture-style tests that lock expected output for mapped constructs
-- explicit warnings/errors for constructs still outside the mapped subset
-
-## 5. Explicitly out of scope for this phase
-
-- drag/drop sorting/reordering UX
-- full sub-event authoring UX (move/reparent/advanced nesting tools)
-- complete round-trip importer fidelity
-
-These remain planned tracks and should not be implied as complete by compiler-matrix work.
-
-## 6. Directory layout (current)
-
-`addons/eventforge/` contains:
-
-- `editor/` active editor implementation
-- `compiler/` code generation entry path plus expanding translation modules
-- `resources/` event sheet/resource model
-- `registration/` built-ins and descriptor lookup helpers
-- `runtime/` runtime bridge autoload
-- `importer/` importer groundwork
-- `binding/` binding groundwork
-
-## 7. ACE metadata normalization
+## 4. ACE metadata normalization
 
 ACE descriptors can be provided as `ACEDescriptor` resources or dictionary metadata.
-Dictionary metadata accepts snake_case and Construct-style camelCase aliases (for example `list_name/listName`, `display_text/displayText`, `description/desc`, and param default/name aliases).
+Dictionary metadata accepts snake_case and Construct-style camelCase aliases (for example
+`list_name/listName`, `display_text/displayText`, `description/desc`, and param
+default/name aliases).
 
-The `node_type`/`nodeType` field associates an ACE with a specific Godot class (e.g. `"CharacterBody2D"`, `"Area2D"`, `"Node2D"`, `"Timer"`, `"AnimationPlayer"`, `"RigidBody2D"`).  When set, the ACE picker groups the entry under that class name instead of using `category`.  This enables the node-type grouping introduced in issue #54.
+The `node_type`/`nodeType` field associates an ACE with a Godot class; the picker groups
+the entry under that class (with its class icon) instead of `category`. Built-in Core
+ACEs with a `node_type` pre-register named picker groups. The picker filters live (name,
+description, node type, C3 synonym aliases), colours items by ACE type, prefixes tooltips
+with `[Type]`, and shows per-ACE icons (`@ace_icon` → class icon → member glyph).
 
-Built-in Core ACEs that carry a `node_type` are pre-registered into named picker groups so their class section is always visible in the "Add Event" picker, even before runtime descriptors are scanned.
+Normalized metadata is used consistently by picker display, param initialization, codegen
+tooltips, and row rendering (object icon + label).
 
-The ACE picker supports live text filtering: typing in the search box narrows visible entries by matching against list name, description, and node type.  Pre-declared empty group headers are hidden when a filter is active.
+## 5. Directory layout (current)
 
-Each picker item is coloured by ACE type (trigger = soft green, condition = soft blue, action = soft teal) and item tooltips are prefixed with the ACE type label (e.g. `[Condition]`).
-
-Normalized metadata is used consistently by picker display and ACE param initialization.
-
-Expression ACEs (`ace_type = EXPRESSION`) are surfaced through an expression insertion popup used by ACE params with `hint = "expression"`.  The popup uses the same node-type/category/provider grouping rules as the main picker so expression discovery is namespace/node grouped in a consistent way.
+- `addons/eventforge/` — `compiler/`, `resources/`, `registration/`, `runtime/`
+  (bridge autoload), `importer/` (structural import, external sheets, ACE lifter),
+  `binding/`.
+- `addons/eventsheet/` — `editor/`, `ace/`, `theme/`, `elements/`, `icons/`.
+- `eventsheet_addons/` — zero-config ACE addons + sample behavior packs
+  (PlatformerMovement, EightDirectionMovement).
+- `tests/` — `run_tests.gd` (full) and `run_perf.gd` (headless-safe gate, used by CI).

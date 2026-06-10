@@ -5,6 +5,7 @@ extends RefCounted
 func parse_source_metadata(script: Script) -> Dictionary:
     var metadata := {
         "class_name": "",
+        "class_description": "",
         "signals": {},
         "methods": {},
         "properties": {}
@@ -18,8 +19,19 @@ func parse_source_metadata(script: Script) -> Dictionary:
         var stripped: String = raw_line.strip_edges()
         if stripped.is_empty():
             continue
-        if stripped.begins_with("class_name "):
-            metadata["class_name"] = stripped.trim_prefix("class_name ").strip_edges()
+        if stripped.begins_with("class_name ") or stripped.begins_with("extends "):
+            # Leading `##` doc lines become the provider's description (zero-config addon
+            # metadata: everything derives from the script itself, no manifest).
+            if str(metadata["class_description"]).is_empty():
+                var doc_lines: Array[String] = []
+                for pending in pending_directives:
+                    if not pending.begins_with("@ace_"):
+                        doc_lines.append(pending)
+                metadata["class_description"] = " ".join(doc_lines).strip_edges()
+            pending_directives.clear()
+            pending_export = false
+            if stripped.begins_with("class_name "):
+                metadata["class_name"] = stripped.trim_prefix("class_name ").strip_edges()
             continue
         if stripped.begins_with("##"):
             pending_directives.append(stripped.trim_prefix("##").strip_edges())
@@ -111,6 +123,18 @@ func _build_overrides(directives: Array[String], exported: bool = false) -> Dict
             overrides["forced_ace_type"] = ACEDefinition.ACEType.EXPRESSION
         elif directive.begins_with("@ace_trigger"):
             overrides["forced_ace_type"] = ACEDefinition.ACEType.TRIGGER
+        elif directive.begins_with("@ace_display_template"):
+            overrides["display_template"] = _extract_annotation_value(directive)
+        elif directive.begins_with("@ace_codegen_template"):
+            overrides["codegen_template"] = _extract_annotation_value(directive)
+        elif directive.begins_with("@ace_param_hint"):
+            # `@ace_param_hint(amount expression)` → param "amount" gets hint "expression"
+            # (drives the params dialog: expression ƒx field, variable_reference dropdown…).
+            var hint_parts: PackedStringArray = _extract_annotation_value(directive).split(" ", false)
+            if hint_parts.size() >= 2:
+                var param_hints: Dictionary = overrides.get("param_hints", {})
+                param_hints[hint_parts[0].strip_edges().trim_suffix(",")] = hint_parts[1].strip_edges()
+                overrides["param_hints"] = param_hints
     return overrides
 
 func _extract_annotation_value(text: String) -> String:

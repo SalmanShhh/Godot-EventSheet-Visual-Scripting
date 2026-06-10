@@ -44,8 +44,27 @@ static func hit_test_row(
                 )
                 return result
     var divider_x: float = float(layout.get("lane_divider_x", -1.0))
+    var lane_content_left: float = float(layout.get("gutter_rect", Rect2()).end.x)
     if divider_x > 0.0:
         result["lane"] = "action" if position.x >= divider_x else "condition"
+        # Full-line fallback: a click on a condition/action line, to the right of the text or in
+        # the small gaps between cells, still selects that ACE — but only inside a lane. Clicking
+        # the gutter / indent margin (left of the lanes) falls through to whole-event selection.
+        if position.x >= lane_content_left:
+            var wanted_lane: String = str(result.get("lane", "condition"))
+            for line_span_index in range(row_data.spans.size()):
+                var line_span: SemanticSpan = row_data.spans[line_span_index]
+                if line_span == null or not line_span.hoverable:
+                    continue
+                var line_meta: Dictionary = line_span.metadata if line_span.metadata is Dictionary else {}
+                if str(line_meta.get("kind", "")) not in ["condition", "trigger", "action"]:
+                    continue
+                if str(resolve_span_lane.call(line_span)) != wanted_lane:
+                    continue
+                if position.y >= line_span.rect.position.y - 4.0 and position.y <= line_span.rect.end.y + 4.0:
+                    result["span_index"] = line_span_index
+                    result["span_metadata"] = line_meta
+                    return result
     var gutter_rect: Rect2 = layout.get("gutter_rect", Rect2())
     if gutter_rect.size != Vector2.ZERO and gutter_rect.has_point(position):
         result["gutter"] = true

@@ -9,6 +9,11 @@ static func generate_action(action: ACEAction) -> String:
 	if action == null or not action.enabled:
 		return ""
 
+	# A baked template (custom/addon ACEs) wins over the descriptor registry, so reflection
+	# ACEs with @ace_codegen_template compile even though they have no ACEDescriptor.
+	if not action.codegen_template.strip_edges().is_empty():
+		return _apply_template(action.codegen_template, _get_params(action))
+
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(action.provider_id, action.ace_id)
 	if descriptor == null:
 		return ""

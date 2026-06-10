@@ -22,6 +22,17 @@ signal empty_space_context_menu_requested(global_position: Vector2)
 signal empty_space_double_clicked
 signal drag_status_requested(message: String, is_error: bool)
 signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
+## Emitted when a comment needs the dialog editor (multiline comment rows and action-cell
+## comments; single-line comment rows keep fast inline editing).
+signal comment_edit_requested(comment_row: Resource)
+## Emitted when the user finishes dragging the conditions/actions lane divider.
+signal lane_ratio_changed(ratio: float)
+## Emitted when a footer "Add event…" row is clicked. owner_resource is the EventGroup the
+## event should be appended into, or the EventSheetResource for the sheet-end footer.
+signal add_event_requested(owner_resource: Resource)
+## Emitted when a GDScript block is double-clicked for editing. in_flow is true for blocks
+## living inside an event's actions (statements), false for class-level tree blocks.
+signal raw_code_edit_requested(raw_row: Resource, in_flow: bool)
 
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH
@@ -62,6 +73,10 @@ const MIN_BOX_SELECT_DISTANCE := 1.0
 const MIN_BOX_SELECT_DISTANCE_SQ := MIN_BOX_SELECT_DISTANCE * MIN_BOX_SELECT_DISTANCE
 const COMMENT_DEFAULT_LINE_INDEX := 1
 const MIN_SPAN_WIDTH := 10.0
+## Sheets with at most this many rows build all event spans up front (matching the
+## original non-virtualized behavior exactly). Larger sheets keep spans lazy — built
+## on demand during layout/hit/selection — so they load fast regardless of size.
+const EAGER_SPAN_LIMIT := 1500
 
 var _renderer: EventRowRenderer = EventRowRenderer.new()
 var _layout_cache: RowLayoutCache = RowLayoutCache.new()
@@ -109,6 +124,14 @@ var _selection_anchor_index: int = -1
 var _external_span_edit_handler_enabled: bool = false
 var _zoom_factor: float = 1.0
 var _layout_style_signature: String = ""
+var _dragging_lane_divider: bool = false
+const LANE_DIVIDER_GRAB_TOLERANCE := 5.0
+## C3-style drag ghost: a faint label of the dragged content following the cursor.
+var _drag_ghost_label: String = ""
+var _drag_pointer_position: Vector2 = Vector2.ZERO
+## Vertical gap inserted before an event/group that starts a new sibling block (indent <=
+## previous), so sub-events read as tightly grouped under their parent.
+const EVENT_BLOCK_GAP := 7.0
 var _box_select_active: bool = false
 var _box_select_additive: bool = false
 var _box_select_start: Vector2 = Vector2.ZERO
@@ -144,6 +167,7 @@ func set_ace_registry(ace_registry: EventSheetACERegistry) -> void:
         _ace_registry = EventSheetACERegistry.new()
     else:
         _ace_registry = ace_registry
+    _ace_icon_cache.clear()  # icons derive from definitions; a new registry invalidates them
     _refresh_rows()
 
 func get_ace_registry() -> EventSheetACERegistry:
@@ -155,6 +179,30 @@ func set_debug_overlay_states(states: Dictionary) -> void:
 
 func get_total_row_count() -> int:
     return _flat_rows.size()
+
+## Returns the x of the condition/action lane divider for a canvas of the given logical
+## width. Shared by row layout and the pinned column header so they stay aligned.
+func get_lane_divider_x(width: float) -> float:
+    var event_style: EventSheetEventStyle = _get_event_style()
+    var content_left: float = EventSheetPalette.GUTTER_WIDTH
+    var content_width: float = max(width - content_left, 120.0)
+    return content_left + max(
+        float(event_style.minimum_conditions_lane_width),
+        floor(content_width * event_style.condition_lane_ratio)
+    )
+
+## Logical (unzoomed) width of the sheet canvas.
+func get_canvas_logical_width() -> float:
+    return _get_logical_canvas_width()
+
+## Current horizontal scroll offset of the hosting scroll container.
+func get_horizontal_scroll() -> int:
+    var scroll: ScrollContainer = _get_scroll_container()
+    return scroll.scroll_horizontal if scroll != null else 0
+
+## Active event style tokens (for surfaces outside the renderer, e.g. the column header).
+func get_event_style() -> EventSheetEventStyle:
+    return _get_event_style()
 
 func get_selected_row_index() -> int:
     return _selected_row_index
@@ -264,7 +312,9 @@ func _resolve_editor_style(sheet: EventSheetResource) -> EventSheetEditorStyle:
         return configured_style
     var fallback_style := EventSheetEditorStyle.new()
     fallback_style.ensure_defaults()
-    return fallback_style
+    # Default-themed sheets adopt the running editor's colors so they look native to Godot
+    # (no-op outside the editor, keeping tests deterministic).
+    return EventSheetGodotTheme.adapt_to_editor(fallback_style)
 
 func _get_event_style() -> EventSheetEventStyle:
     if _editor_style == null:
@@ -280,6 +330,39 @@ func _get_action_style() -> EventSheetElementStyle:
     if _editor_style == null:
         _editor_style = EventSheetEditorStyle.new()
     return _editor_style.get_action_style()
+
+func _has_event_rows() -> bool:
+    for entry in _flat_rows:
+        var row_data: EventRowData = entry.get("row")
+        if row_data != null and row_data.row_type == EventRowData.RowType.EVENT:
+            return true
+    return false
+
+## True when a logical-space point sits over the draggable conditions/actions lane divider.
+func _is_near_lane_divider(local_position: Vector2) -> bool:
+    if not _has_event_rows():
+        return false
+    return absf(local_position.x - get_lane_divider_x(_get_logical_canvas_width())) <= LANE_DIVIDER_GRAB_TOLERANCE
+
+## Live-resizes the conditions/actions split from a logical X (during a divider drag).
+func _set_lane_ratio_from_x(local_x: float) -> void:
+    var content_left: float = EventSheetPalette.GUTTER_WIDTH
+    var content_width: float = max(_get_logical_canvas_width() - content_left, 120.0)
+    _get_event_style().condition_lane_ratio = clampf((local_x - content_left) / content_width, 0.2, 0.8)
+    _update_layout_style_signature(_get_font_size())
+    _layout_cache.clear()
+    queue_redraw()
+
+## Swaps the active editor style and repaints without rebuilding the row list (cheap). Used
+## when the dock promotes a default-themed sheet to a concrete style after a divider drag.
+func apply_editor_style(style: EventSheetEditorStyle) -> void:
+    if style == null:
+        return
+    style.ensure_defaults()
+    _editor_style = style
+    _update_layout_style_signature(_get_font_size())
+    _layout_cache.clear()
+    queue_redraw()
 
 func _get_event_line_height(base_font_size: int = FONT_SIZE) -> float:
     var event_style: EventSheetEventStyle = _get_event_style()
@@ -394,6 +477,22 @@ func get_visible_row_range() -> Vector2i:
         end_index = start_index
     return Vector2i(start_index, end_index)
 
+## Selects (and scrolls to) the row backed by the given resource. Used by reverse
+## provenance — clicking generated code in the GDScript panel selects its sheet row.
+## Returns false when the resource has no row of its own (e.g. an ACE resource inside an
+## event); callers fall back to the enclosing row's resource.
+func select_resource(resource: Resource) -> bool:
+    if resource == null:
+        return false
+    for index in range(_flat_rows.size()):
+        var row_data: EventRowData = _flat_rows[index].get("row")
+        if row_data != null and row_data.source_resource == resource:
+            _select_row(index, -1)
+            ensure_selection_visible()
+            queue_redraw()
+            return true
+    return false
+
 func ensure_selection_visible() -> void:
     if _selected_row_index < 0:
         return
@@ -439,6 +538,34 @@ func _draw() -> void:
         var layout: Dictionary = _get_or_build_row_layout(index, width, font, font_size)
         _renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
     _draw_box_selection_overlay()
+    _draw_drag_ghost(font, font_size)
+
+## C3-style drag ghost: a faint (~0.66 opacity) label of the dragged content following the
+## cursor while an ACE/row drag has an active target (i.e. after actual mouse motion).
+func _draw_drag_ghost(font: Font, font_size: int) -> void:
+    if _drag_ghost_label.is_empty():
+        return
+    var ace_dragging: bool = not _drag_ace_entries.is_empty() and _drag_ace_target_row_index >= 0
+    var row_dragging: bool = _drag_row_index >= 0 and _drag_target_index >= 0
+    if not ace_dragging and not row_dragging:
+        return
+    var ghost_font_size: int = maxi(font_size - 1, 10)
+    var text_width: float = font.get_string_size(_drag_ghost_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, ghost_font_size).x
+    var ghost_rect := Rect2(
+        _drag_pointer_position + Vector2(14.0, 10.0),
+        Vector2(min(text_width, 280.0) + 14.0, font.get_height(ghost_font_size) + 6.0)
+    )
+    draw_rect(ghost_rect, Color(0.12, 0.14, 0.18, 0.62), true)
+    draw_rect(ghost_rect, Color(1.0, 1.0, 1.0, 0.18), false, 1.0)
+    draw_string(
+        font,
+        Vector2(ghost_rect.position.x + 7.0, ghost_rect.position.y + 3.0 + font.get_ascent(ghost_font_size)),
+        _drag_ghost_label,
+        HORIZONTAL_ALIGNMENT_LEFT,
+        ghost_rect.size.x - 14.0,
+        ghost_font_size,
+        Color(1.0, 1.0, 1.0, 0.66)
+    )
 
 func _gui_input(event: InputEvent) -> void:
     if event is InputEventMouseMotion:
@@ -452,12 +579,18 @@ func _gui_input(event: InputEvent) -> void:
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
     var local_position: Vector2 = _to_logical_position(event.position)
+    if _dragging_lane_divider:
+        _set_lane_ratio_from_x(local_position.x)
+        return
     if _box_select_active:
         _box_select_current = local_position
         queue_redraw()
         return
     var hit: Dictionary = _hit_test(local_position)
     _set_hover_state(int(hit.get("row_index", -1)), int(hit.get("span_index", -1)))
+    # Show a horizontal-resize cursor over the draggable lane divider.
+    mouse_default_cursor_shape = Control.CURSOR_HSIZE if _is_near_lane_divider(local_position) else Control.CURSOR_ARROW
+    _drag_pointer_position = local_position
     if not _drag_ace_entries.is_empty():
         _drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
         _update_ace_drag_target(hit, local_position)
@@ -490,6 +623,10 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
         if not event.pressed:
             return
         grab_focus()
+        # Footer "Add event…" rows are pure affordances — no context menu / selection.
+        if _row_is_add_event_footer(_row_at(row_index)):
+            accept_event()
+            return
         if row_index >= 0:
             if not _is_selection_hit(row_index, span_index):
                 _select_from_click(row_index, span_index, false)
@@ -509,6 +646,10 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
         return
     if event.pressed:
         grab_focus()
+        if _is_near_lane_divider(local_position):
+            _dragging_lane_divider = true
+            accept_event()
+            return
         if row_index < 0:
             if event.double_click:
                 empty_space_double_clicked.emit()
@@ -523,25 +664,63 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
             ace_picker_requested.emit(row_data, "action")
             accept_event()
             return
+        if row_data != null and str(metadata.get("kind", "")) == "add_event":
+            add_event_requested.emit(metadata.get("add_event_owner", null))
+            accept_event()
+            return
         if bool(hit.get("fold", false)):
             _select_from_click(row_index, span_index, false)
             _toggle_row_fold(row_index)
             return
         _select_from_click(row_index, span_index, event.ctrl_pressed or event.meta_pressed)
         if event.double_click:
+            # In-flow GDScript blocks (actions) open the code dialog, not the ACE editor.
+            var double_click_meta: Dictionary = hit.get("span_metadata", {})
+            if bool(double_click_meta.get("raw_action", false)) and row_data != null and row_data.source_resource is EventRow:
+                var inline_raw: Resource = _resolve_ace_resource(row_data.source_resource, "action", int(double_click_meta.get("ace_index", -1)))
+                if inline_raw is RawCodeRow:
+                    raw_code_edit_requested.emit(inline_raw, true)
+                    accept_event()
+                    return
+            # Action-cell comments open the comment dialog (text + color).
+            if bool(double_click_meta.get("action_comment", false)) and row_data != null and row_data.source_resource is EventRow:
+                var inline_comment: Resource = _resolve_ace_resource(row_data.source_resource, "action", int(double_click_meta.get("ace_index", -1)))
+                if inline_comment is CommentRow:
+                    comment_edit_requested.emit(inline_comment)
+                    accept_event()
+                    return
+            # Multiline comment rows edit in the dialog (per-line inline editing would
+            # replace the whole text with one line — data loss).
+            if row_data != null and row_data.source_resource is CommentRow and (row_data.source_resource as CommentRow).text.contains("\n"):
+                comment_edit_requested.emit(row_data.source_resource)
+                accept_event()
+                return
             if _maybe_request_ace_edit(hit, row_index):
                 accept_event()
                 return
             if _maybe_request_variable_edit(hit, row_index):
                 accept_event()
                 return
+            if row_data != null and row_data.source_resource is RawCodeRow:
+                raw_code_edit_requested.emit(row_data.source_resource, false)
+                accept_event()
+                return
             _begin_edit(row_index, span_index)
+            accept_event()
             return
         _drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
         _drag_row_copy_mode = event.ctrl_pressed or event.meta_pressed
         if _maybe_begin_ace_drag(hit, row_index):
+            # Accept so this control keeps receiving motion/release for the drag.
+            accept_event()
             return
         _begin_row_drag(row_index)
+        accept_event()
+        return
+    if _dragging_lane_divider:
+        _dragging_lane_divider = false
+        lane_ratio_changed.emit(_get_event_style().condition_lane_ratio)
+        accept_event()
         return
     if not _drag_ace_entries.is_empty():
         _drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
@@ -611,9 +790,20 @@ func _apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
         _selected_row_index = -1
         _selected_span_index = -1
     var selected_any: bool = false
+    var sel_top: float = minf(selection_rect.position.y, selection_rect.end.y)
+    var sel_bottom: float = maxf(selection_rect.position.y, selection_rect.end.y)
     for row_index in range(_flat_rows.size()):
         var row_data: EventRowData = _row_at(row_index)
         if row_data == null:
+            continue
+        # Footer "Add event…" affordances are never part of a selection.
+        if _row_is_add_event_footer(row_data):
+            continue
+        # Skip rows whose vertical extent does not overlap the selection box using the
+        # cheap precomputed metrics, so a box drag never builds layout/spans for the
+        # whole sheet (only for rows the box actually touches).
+        var row_top: float = _get_row_top(row_index)
+        if row_top + _get_row_height(row_index) < sel_top or row_top > sel_bottom:
             continue
         var layout: Dictionary = _get_or_build_row_layout(
             row_index,
@@ -675,6 +865,23 @@ func _begin_row_drag(row_index: int) -> void:
     _drag_row_index = row_index
     _drag_target_index = -1
     _drag_target_mode = "before"
+    _drag_ghost_label = (
+        "%d rows" % _drag_row_indices.size()
+        if _drag_row_indices.size() > 1
+        else _row_ghost_label(_row_at(row_index))
+    )
+
+## First meaningful text on a row, used as the drag-ghost label.
+func _row_ghost_label(row_data: EventRowData) -> String:
+    if row_data == null:
+        return "Row"
+    for span in row_data.spans:
+        if span == null or span.text.strip_edges().is_empty():
+            continue
+        if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("badge", false)):
+            continue
+        return span.text
+    return "Row"
 
 func _clear_row_drag() -> void:
     _drag_row_index = -1
@@ -682,6 +889,7 @@ func _clear_row_drag() -> void:
     _drag_target_index = -1
     _drag_target_mode = "before"
     _drag_row_copy_mode = false
+    _drag_ghost_label = ""
 
 func _maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
     if row_index < 0:
@@ -712,6 +920,13 @@ func _maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
     _drag_ace_drop_valid = true
     _clear_drag_feedback()
     _clear_row_drag()
+    # Ghost label set after _clear_row_drag(), which resets it.
+    if _drag_ace_entries.size() > 1:
+        _drag_ghost_label = "%d selected" % _drag_ace_entries.size()
+    elif span_index >= 0 and span_index < row_data.spans.size() and row_data.spans[span_index] != null:
+        _drag_ghost_label = row_data.spans[span_index].text
+    else:
+        _drag_ghost_label = kind.capitalize()
     return true
 
 func _clear_ace_drag() -> void:
@@ -722,6 +937,7 @@ func _clear_ace_drag() -> void:
     _drag_ace_insert_mode = "append"
     _drag_ace_copy_mode = false
     _drag_ace_drop_valid = true
+    _drag_ghost_label = ""
     _clear_drag_feedback()
 
 func _clear_drag_feedback() -> void:
@@ -761,8 +977,10 @@ func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
         var span_index: int = int(hit.get("span_index", -1))
         if span_index >= 0 and span_index < row_data.spans.size():
             var span_rect: Rect2 = row_data.spans[span_index].rect
+            # Conditions/actions stack vertically, so before/after is decided by the vertical
+            # position over the target cell, not the horizontal one.
             _drag_ace_insert_mode = (
-                "after" if position.x >= span_rect.get_center().x else "before"
+                "after" if position.y >= span_rect.get_center().y else "before"
             )
     elif kind == "trigger" and drag_lane == "condition":
         _drag_ace_target_ace_index = 0
@@ -872,6 +1090,11 @@ func _refresh_rows() -> void:
     _flat_rows.clear()
     for row_data in _root_rows:
         _flatten_row(row_data, null)
+    # Small/medium sheets build all spans up front (before metrics) so behavior is
+    # byte-identical to the non-virtualized path. Large sheets keep spans lazy.
+    if _flat_rows.size() <= EAGER_SPAN_LIMIT:
+        for entry in _flat_rows:
+            _ensure_event_spans(entry.get("row"))
     _rebuild_row_metrics()
     for index in range(_flat_rows.size()):
         var line_row: EventRowData = _flat_rows[index].get("row")
@@ -903,7 +1126,36 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
         var row_data: EventRowData = _build_row_from_resource(entry, 0)
         if row_data != null:
             root_rows.append(row_data)
+    # C3-style trailing "Add event…" footer at the end of the sheet.
+    root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
     return root_rows
+
+## A clickable footer row that appends a new event into owner_resource (a group or the
+## sheet). source_resource stays null on purpose so selection/delete/drag paths (which act on
+## the source resource) treat it as inert; the owner travels in span metadata instead.
+func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: String) -> EventRowData:
+    var row_data := EventRowData.new()
+    row_data.indent = indent
+    row_data.row_type = EventRowData.RowType.SECTION
+    row_data.source_resource = null
+    row_data.row_uid = "add_event_footer_%d" % (owner_resource.get_instance_id() if owner_resource != null else 0)
+    row_data.folded = false
+    row_data.spans = [
+        _make_span(
+            label,
+            SemanticSpan.SpanType.COMMENT,
+            {
+                "kind": "add_event",
+                "editable": false,
+                "add_event_owner": owner_resource,
+                "text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.8)
+            }
+        )
+    ]
+    return row_data
+
+func _row_is_add_event_footer(row_data: EventRowData) -> bool:
+    return row_data != null and row_data.row_uid.begins_with("add_event_footer_")
 
 func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
     if entry == null:
@@ -912,9 +1164,65 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
         return _build_group_row(entry as EventGroup, indent)
     if entry is CommentRow:
         return _build_comment_row(entry as CommentRow, indent)
+    if entry is LocalVariable:
+        return _build_tree_variable_row(entry as LocalVariable, indent)
+    if entry is RawCodeRow:
+        return _build_raw_code_row(entry as RawCodeRow, indent)
     if entry is EventRow:
         return _build_event_row(entry as EventRow, indent)
     return null
+
+## A GDScript block row: verbatim code shown line-by-line, edited via the dock's code dialog
+## (double-click), compiled at class level. The C3-style "inline code" escape hatch.
+func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
+    var row_data := EventRowData.new()
+    row_data.indent = indent
+    row_data.row_type = EventRowData.RowType.SECTION
+    row_data.source_resource = raw_row
+    row_data.row_uid = "raw_code_%d" % raw_row.get_instance_id()
+    row_data.disabled = not raw_row.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
+    var code_lines: PackedStringArray = raw_row.code.split("\n")
+    row_data.line_count = maxi(code_lines.size(), 1)
+    var spans: Array[SemanticSpan] = []
+    spans.append(_make_span("GDScript", SemanticSpan.SpanType.KEYWORD, {
+        "editable": false,
+        "badge": true,
+        "badge_style": "scope",
+        "badge_bg": Color(0.23, 0.28, 0.38, 0.95),
+        "badge_fg": Color(0.78, 0.86, 1.0, 1.0),
+        "kind": "raw_code",
+        "line_index": 0
+    }))
+    for line_index in range(code_lines.size()):
+        spans.append(_make_span(
+            code_lines[line_index] if not code_lines[line_index].is_empty() else " ",
+            SemanticSpan.SpanType.VALUE,
+            {
+                "editable": false,
+                "kind": "raw_code",
+                "line_index": line_index,
+                "text_color": EventSheetPalette.TEXT_PRIMARY
+            }
+        ))
+    row_data.spans = spans
+    return row_data
+
+## Builds a row for a variable placed directly in the event tree (movable like an event).
+func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowData:
+    return _build_variable_row(
+        "tree",
+        variable.name,
+        variable.type_name,
+        variable.default_value,
+        indent,
+        {
+            "is_constant": variable.is_constant,
+            "exported": variable.exported,
+            "source_resource": variable,
+            "row_uid": "variable_tree_%d" % variable.get_instance_id(),
+            "badge_label": "global" if variable.exported else "local"
+        }
+    )
 
 func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
     var event_style: EventSheetEventStyle = _get_event_style()
@@ -955,6 +1263,10 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
         var child_row: EventRowData = _build_row_from_resource(child, indent + 1)
         if child_row != null:
             row_data.children.append(child_row)
+    # C3-style per-group footer: always the group's last child, one level deeper.
+    row_data.children.append(
+        _build_add_event_footer_row(group, indent + 1, "+ Add event to '%s'…" % _group_name(group))
+    )
     return row_data
 
 func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
@@ -968,17 +1280,26 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
     row_data.debug_state = str(_debug_rows.get(row_data.row_uid, ""))
     row_data.disabled = not comment_row.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
     row_data.breakpoint_enabled = bool(_breakpoint_rows.get(row_data.row_uid, false))
-    row_data.spans = [
-        _make_span(
-            comment_row.text if not comment_row.text.is_empty() else "Comment",
-            SemanticSpan.SpanType.COMMENT,
-            {
-                "editable": true,
-                "edit_kind": "comment_text",
-                "text_color": event_style.comment_text_color
-            }
+    row_data.custom_color = comment_row.custom_color
+    # Multiline comments render one span per text line (same per-line model as GDScript
+    # blocks); the row height follows line_count.
+    var comment_lines: PackedStringArray = comment_row.text.split("\n") if not comment_row.text.is_empty() else PackedStringArray(["Comment"])
+    row_data.line_count = comment_lines.size()
+    var comment_spans: Array[SemanticSpan] = []
+    for line_index in range(comment_lines.size()):
+        comment_spans.append(
+            _make_span(
+                comment_lines[line_index],
+                SemanticSpan.SpanType.COMMENT,
+                {
+                    "editable": true,
+                    "edit_kind": "comment_text",
+                    "line_index": line_index,
+                    "text_color": event_style.comment_text_color
+                }
+            )
         )
-    ]
+    row_data.spans = comment_spans
     return row_data
 
 func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
@@ -991,7 +1312,11 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
     row_data.debug_state = str(_debug_rows.get(row_data.row_uid, ""))
     row_data.disabled = not event_row.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
     row_data.breakpoint_enabled = bool(_breakpoint_rows.get(row_data.row_uid, false))
-    row_data.spans = _build_event_spans(event_row)
+    # Event-row spans are the expensive part of building a sheet, so they are built
+    # lazily via _ensure_event_spans() only when a row is laid out/hit-tested. The
+    # line count (which drives row height/metrics) is computed cheaply up front so
+    # the whole sheet can be flattened and measured without building any spans.
+    row_data.line_count = _count_event_lines(event_row)
     for local_variable_row in _build_local_variable_rows(event_row, indent + 1):
         row_data.children.append(local_variable_row)
     for child in event_row.sub_events:
@@ -1060,13 +1385,14 @@ func _build_variable_row(
     var is_constant: bool = bool(options.get("is_constant", false))
     row_data.indent = indent
     row_data.row_type = EventRowData.RowType.SECTION
-    row_data.source_resource = owner_event if scope_label == "local" else _sheet
-    row_data.row_uid = (
+    var default_source: Resource = owner_event if scope_label == "local" else _sheet
+    row_data.source_resource = options.get("source_resource", default_source)
+    row_data.row_uid = str(options.get("row_uid", (
         "variable_local_%s_%d"
         % [owner_event.event_uid if owner_event != null else "none", variable_index]
         if scope_label == "local"
         else "variable_global_%s" % var_name
-    )
+    )))
     row_data.folded = false
     var variable_meta := {
         "kind": "variable",
@@ -1075,10 +1401,11 @@ func _build_variable_row(
         "variable_index": variable_index,
         "is_constant": is_constant
     }
-    var scope_badge_colors: Dictionary = _get_scope_badge_colors(scope_label)
+    var badge_label: String = str(options.get("badge_label", scope_label))
+    var scope_badge_colors: Dictionary = _get_scope_badge_colors(badge_label)
     row_data.spans = [
         _make_span(
-            scope_label,
+            badge_label,
             SemanticSpan.SpanType.KEYWORD,
             variable_meta.merged(
                 {
@@ -1177,7 +1504,9 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     "ace_index": 0,
                     "ace_enabled": event_row.trigger.enabled,
                     "chip": true,
-                    "line_index": condition_line_index
+                    "line_index": condition_line_index,
+                    "object_label": _object_label_for(event_row.trigger.provider_id, event_row.trigger.ace_id),
+                    "object_icon": _object_icon_for(event_row.trigger.provider_id, event_row.trigger.ace_id)
                 }.merged(condition_style_meta, true)
             )
         )
@@ -1199,7 +1528,9 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     "kind": "trigger",
                     "ace_index": 0,
                     "chip": true,
-                    "line_index": condition_line_index
+                    "line_index": condition_line_index,
+                    "object_label": _object_label_for(event_row.trigger_provider_id, event_row.trigger_id),
+                    "object_icon": _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)
                 }.merged(condition_style_meta, true)
             )
         )
@@ -1224,7 +1555,9 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     "ace_enabled": inline_trigger.enabled,
                     "chip": true,
                     "line_index": condition_line_index,
-                    "rendered_as_trigger": true
+                    "rendered_as_trigger": true,
+                    "object_label": _object_label_for(inline_trigger.provider_id, inline_trigger.ace_id),
+                    "object_icon": _object_icon_for(inline_trigger.provider_id, inline_trigger.ace_id)
                 }.merged(condition_style_meta, true)
             )
         )
@@ -1260,12 +1593,16 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                         "ace_index": condition_index,
                         "ace_enabled": condition.enabled,
                         "chip": true,
-                        "line_index": line_index
+                        "line_index": line_index,
+                        "object_label": _object_label_for(condition.provider_id, condition.ace_id),
+                        "object_icon": _object_icon_for(condition.provider_id, condition.ace_id)
                     }.merged(condition_style_meta, true)
                 )
             )
             condition_line_index += 1
     if spans.is_empty() and event_row.else_mode != EventRow.ElseMode.ELSE:
+        # An event with no conditions reads as "every tick"; render it as a real cell (not bare
+        # text) so the condition lane still shows a clear, clickable empty event block.
         spans.append(
             _make_span(
                 "Every Tick",
@@ -1274,6 +1611,8 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     "lane": "condition",
                     "kind": "condition",
                     "ace_index": -1,
+                    "chip": true,
+                    "placeholder": true,
                     "line_index": 0
                 }.merged(condition_style_meta, true)
             )
@@ -1292,28 +1631,65 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                             "ace_index": action_index,
                             "ace_enabled": (action_resource as ACEAction).enabled,
                             "chip": true,
-                            "line_index": action_line_index
+                            "line_index": action_line_index,
+                            "object_label": _object_label_for((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id),
+                            "object_icon": _object_icon_for((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id)
                         }.merged(action_style_meta, true)
                     )
                 )
                 action_line_index += 1
-    # Keep +Add anchored to the latest authored action line (or line 0 when empty)
-    # so it remains visually tied to the current action stack.
-    var add_action_line_index: int = max(action_line_index - 1, 0)
-    spans.append(
-        _make_span(
-            "+ Add",
-            SemanticSpan.SpanType.ACTION,
-            {
-                "lane": "action",
-                "kind": "add_action",
-                "align_right": true,
-                "line_index": add_action_line_index,
-                "text_color": action_style_meta.get("text_color", EventSheetPalette.COLOR_ACTION),
-                "font_size_delta": action_style_meta.get("font_size_delta", 0)
-            }
-        )
-    )
+            elif action_resource is RawCodeRow:
+                # In-flow GDScript block: one action-lane cell per code line. All lines share
+                # the block's ace_index, so click/drag/delete treat the block as one action.
+                var inline_raw: RawCodeRow = action_resource as RawCodeRow
+                var inline_lines: PackedStringArray = inline_raw.code.split("\n")
+                for inline_line_index in range(maxi(inline_lines.size(), 1)):
+                    var inline_text: String = inline_lines[inline_line_index] if inline_line_index < inline_lines.size() else " "
+                    spans.append(
+                        _make_span(
+                            inline_text if not inline_text.is_empty() else " ",
+                            SemanticSpan.SpanType.VALUE,
+                            {
+                                "lane": "action",
+                                "kind": "action",
+                                "ace_index": action_index,
+                                "ace_enabled": inline_raw.enabled,
+                                "chip": true,
+                                "raw_action": true,
+                                "line_index": action_line_index,
+                                "object_label": "GDScript" if inline_line_index == 0 else ""
+                            }.merged(action_style_meta, true)
+                        )
+                    )
+                    action_line_index += 1
+            elif action_resource is CommentRow:
+                # Action-cell comment (C3 parity: comments can live inside an event's
+                # action flow; convertible back to a standalone comment row). One
+                # comment-styled cell per text line, sharing the ace_index.
+                var action_comment: CommentRow = action_resource as CommentRow
+                var action_comment_lines: PackedStringArray = action_comment.text.split("\n") if not action_comment.text.is_empty() else PackedStringArray(["Comment"])
+                for comment_line in action_comment_lines:
+                    spans.append(
+                        _make_span(
+                            "# " + comment_line,
+                            SemanticSpan.SpanType.COMMENT,
+                            {
+                                "lane": "action",
+                                "kind": "action",
+                                "ace_index": action_index,
+                                "ace_enabled": action_comment.enabled,
+                                "chip": true,
+                                "action_comment": true,
+                                "line_index": action_line_index,
+                                "text_color": _get_event_style().comment_text_color
+                            }
+                        )
+                    )
+                    action_line_index += 1
+    # The event comment (if any) sits below the actions; "+ Add" sits at the bottom of the
+    # action lane, LEFT-aligned so it always stays visible. It used to be pinned to the lane's
+    # far-right edge, which scrolled off-screen unless the editor window was very wide.
+    var add_action_line_index: int = action_line_index
     if not event_row.comment.is_empty():
         var comment_line_index: int = max(action_line_index, COMMENT_DEFAULT_LINE_INDEX)
         spans.append(
@@ -1329,7 +1705,79 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 }.merged(action_style_meta, true)
             )
         )
+        add_action_line_index = comment_line_index + 1
+    # C3-style faint "Add action" affordance on its own line below the actions.
+    var add_action_color: Color = action_style_meta.get("text_color", EventSheetPalette.COLOR_ACTION)
+    add_action_color.a *= 0.55
+    spans.append(
+        _make_span(
+            "+ Add action",
+            SemanticSpan.SpanType.ACTION,
+            {
+                "lane": "action",
+                "kind": "add_action",
+                "line_index": add_action_line_index,
+                "text_color": add_action_color,
+                "font_size_delta": action_style_meta.get("font_size_delta", 0)
+            }
+        )
+    )
     return spans
+
+## Cheaply computes how many stacked lines an event row occupies, mirroring the
+## line-index accounting in _build_event_spans() WITHOUT building any spans. This lets
+## the whole sheet be measured (row heights/metrics) without the expensive span pass.
+## Invariant (covered by event_lazy_spans_test): equals max span line_index + 1.
+func _count_event_lines(event_row: EventRow) -> int:
+    if event_row == null:
+        return 1
+    # Condition lane.
+    var condition_lines: int = 0
+    if event_row.else_mode == EventRow.ElseMode.ELSE:
+        condition_lines += 1
+    var inline_trigger_index: int = _find_inline_trigger_condition_index(event_row)
+    var has_trigger: bool = (
+        event_row.trigger != null
+        or not event_row.trigger_id.is_empty()
+        or (inline_trigger_index >= 0 and inline_trigger_index < event_row.conditions.size())
+    )
+    if has_trigger:
+        condition_lines += 1
+    for condition_index in range(event_row.conditions.size()):
+        if condition_index == inline_trigger_index:
+            continue
+        if event_row.conditions[condition_index] == null:
+            continue
+        condition_lines += 1
+    var max_condition_line: int = maxi(condition_lines - 1, 0)
+    # Action lane: "+ Add" sits on its own line below the actions (and below the event comment
+    # when present), so the lane spans action_count (+ comment) + 1 lines. In-flow GDScript
+    # blocks occupy one line per code line.
+    var action_count: int = 0
+    for action_resource in event_row.actions:
+        if action_resource is ACEAction:
+            action_count += 1
+        elif action_resource is RawCodeRow:
+            action_count += maxi((action_resource as RawCodeRow).code.split("\n").size(), 1)
+        elif action_resource is CommentRow:
+            action_count += maxi((action_resource as CommentRow).text.split("\n").size(), 1)
+    var max_action_line: int = action_count
+    if not event_row.comment.is_empty():
+        max_action_line = maxi(action_count, COMMENT_DEFAULT_LINE_INDEX) + 1
+    return maxi(max_condition_line, max_action_line) + 1
+
+## Builds an event row's spans on demand. Event-row spans are deferred (see
+## _build_event_row) so large sheets load fast; this is called from the row layout
+## choke point and selection paths before any span data is read. Idempotent: built
+## spans are never empty (a "+ Add" span is always present), so is_empty() reliably
+## means "not yet built".
+func _ensure_event_spans(row_data: EventRowData) -> void:
+    if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
+        return
+    if not row_data.spans.is_empty():
+        return
+    if row_data.source_resource is EventRow:
+        row_data.spans = _build_event_spans(row_data.source_resource as EventRow)
 
 func _append_condition_prefix_spans(
     spans: Array[SemanticSpan],
@@ -1352,6 +1800,10 @@ func _append_condition_prefix_spans(
         negated_meta["condition_index"] = condition_index
         negated_meta["line_index"] = line_index
         negated_meta["badge_style"] = "negated"
+        # C3-style inverted-condition marker: a bare red ✗ (C3's --invert-icon-color),
+        # no circle behind it. Themable via EventSheetEventStyle.invert_marker_color.
+        negated_meta["badge_bg"] = Color(0.0, 0.0, 0.0, 0.0)
+        negated_meta["badge_fg"] = _get_event_style().invert_marker_color
         spans.append(_make_span("✕", SemanticSpan.SpanType.KEYWORD, negated_meta))
     if (
         event_row.condition_mode == EventRow.ConditionMode.OR
@@ -1373,7 +1825,16 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
     var font_size_delta: int = int(metadata.get("font_size_delta", 0))
     var horizontal_padding: float = float(metadata.get("padding_x", 0.0))
     var draw_font_size: int = EventSheetPalette.resolve_font_size(font_size, font_size_delta)
+    if bool(metadata.get("group_title", false)):
+        # Group titles are drawn one size larger by the renderer; match it so the measured
+        # box is wide enough and the name is not clipped.
+        draw_font_size = EventSheetPalette.resolve_font_size(draw_font_size, 0, 1)
     var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+    var object_label: String = str(metadata.get("object_label", ""))
+    if not object_label.is_empty():
+        span_width += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+    if metadata.get("object_icon") is Texture2D:
+        span_width += EventRowRenderer.OBJECT_ICON_ADVANCE
     if bool(metadata.get("badge", false)):
         span_width += max(float(metadata.get("badge_extra_width", BADGE_EXTRA_WIDTH)), 0.0)
         span_width += horizontal_padding * 2.0
@@ -1429,13 +1890,29 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     var row_data: EventRowData = _row_at(index)
     if row_data == null:
         return {}
+    # Build this row's spans on demand. This is the single choke point for both
+    # drawing (_draw) and hit-testing (_hit_test), so any laid-out/interacted row
+    # always has its spans before they are read downstream.
+    _ensure_event_spans(row_data)
     var event_style: EventSheetEventStyle = _get_event_style()
     var line_height: float = _get_event_line_height(font_size)
     # Cache key components: row uid, visible row index, canvas width, active drag
     # target index, and the current layout style signature.
-    var key: String = "%s:%d:%d:%d:%s" % [row_data.row_uid, index, int(width), _drag_target_index, _layout_style_signature]
+    # Drag state is part of the key so the drop preview (row reorder + ACE drop line) updates
+    # as the drag target moves; it is constant when idle, so no churn outside a drag.
+    var drag_signature: String = "%d:%s:%d:%s:%d:%s" % [
+        _drag_target_index, _drag_target_mode,
+        _drag_ace_target_row_index, _drag_ace_target_lane, _drag_ace_target_ace_index, _drag_ace_insert_mode
+    ]
+    var key: String = "%s:%d:%d:%s:%s" % [row_data.row_uid, index, int(width), drag_signature, _layout_style_signature]
     if _layout_cache.has(key):
-        return _layout_cache.get_layout(key)
+        var cached_layout: Dictionary = _layout_cache.get_layout(key)
+        # Selection/hover are NOT part of the cache key (geometry is unchanged by them), so they
+        # must be refreshed on every read — otherwise a click/hover reads stale state and the
+        # whole event highlights instead of the clicked cell, and hover never appears.
+        cached_layout["selected_span_indices"] = _selected_span_indices.get(row_data.row_uid, []).duplicate()
+        cached_layout["hovered_span_index"] = _hovered_span_index if index == _hovered_row_index else -1
+        return cached_layout
     var row_top: float = _get_row_top(index)
     var row_height: float = _get_row_height(index)
     var row_rect := Rect2(0.0, row_top, width, row_height)
@@ -1450,9 +1927,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     var lane_divider_x: float = -1.0
     var row_right_limit: float = width - EventSheetPalette.ROW_HORIZONTAL_PADDING
     if row_data.row_type == EventRowData.RowType.EVENT:
-        var content_left: float = EventSheetPalette.GUTTER_WIDTH
-        var content_width: float = max(width - content_left, 120.0)
-        lane_divider_x = content_left + max(float(event_style.minimum_conditions_lane_width), floor(content_width * event_style.condition_lane_ratio))
+        lane_divider_x = get_lane_divider_x(width)
         condition_lane_rect = Rect2(x, row_top, max(lane_divider_x - x, 1.0), row_height)
         lane_divider_rect = Rect2(lane_divider_x, row_top, float(event_style.lane_divider_width), row_height)
         action_lane_rect = Rect2(lane_divider_x + float(event_style.lane_divider_width), row_top, max(width - lane_divider_x - float(event_style.lane_divider_width), 1.0), row_height)
@@ -1470,6 +1945,16 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     )
     var action_line_x: Dictionary = {}
     var action_line_reservations: Dictionary = _build_action_line_reservations(row_data, action_lane_rect, font, font_size)
+    # Running X per line for non-event rows (group / variable / comment / GDScript block),
+    # which lay out left-to-right; multi-line rows stack by span line_index.
+    var non_event_origin_x: float = x
+    # Indent comment text to line up with where an event's condition text begins (past the
+    # trigger/badge column), so comments align with the event blocks they annotate.
+    if row_data.row_type == EventRowData.RowType.COMMENT:
+        var comment_badge_column: float = max(float(event_style.condition_badge_column_width), 0.0)
+        if comment_badge_column > 0.0:
+            non_event_origin_x += comment_badge_column + EventSheetPalette.SPAN_GAP
+    var non_event_line_x: Dictionary = {}
     for span_index in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null:
@@ -1478,7 +1963,14 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
         var span_x: float = x
         var span_y: float = row_top + 3.0
-        if span_lane == "action":
+        if lane_divider_x <= 0.0:
+            # Non-event rows (group / variable / comment / GDScript block) flow their spans
+            # left-to-right per line; without this every span stayed at the same X and
+            # overlapped. Multi-line rows stack via span line_index.
+            var flow_line: int = int(metadata.get("line_index", 0))
+            span_y = row_top + float(flow_line) * line_height + 3.0
+            span_x = float(non_event_line_x.get(flow_line, non_event_origin_x))
+        elif span_lane == "action":
             var action_line_index: int = int(metadata.get("line_index", 0))
             span_y = row_top + float(action_line_index) * line_height + 3.0
             if bool(metadata.get("align_right", false)) and action_lane_rect.size.x > 0.0:
@@ -1532,11 +2024,21 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
                 else:
                     span_width = max(min(span_width, max_action_width), 1.0)
         else:
-            span_width = max(min(span_width, row_right_limit - span_x), 1.0)
-        span.rect = Rect2(span_x, span_y, span_width + 2.0, line_height - 6.0)
+            # -2.0 accounts for the +2.0 the rect adds below, so non-event spans (comments,
+            # variables, blocks) never bleed past the row's right padding.
+            span_width = max(min(span_width, row_right_limit - span_x - 2.0), 1.0)
+        # C3-style contiguous cells: chip cells (conditions/actions/comments) fill their full
+        # line minus a 1px hairline, so stacked cells read as one solid block. Badges and
+        # plain text keep the original vertical inset.
+        if bool(metadata.get("chip", false)):
+            span.rect = Rect2(span_x, span_y - 2.5, span_width + 2.0, line_height - 1.0)
+        else:
+            span.rect = Rect2(span_x, span_y, span_width + 2.0, line_height - 6.0)
         # Store absolute X for the next span start on this line.
         var next_span_start_x: float = span.rect.end.x + _get_span_gap(span)
-        if span_lane == "action":
+        if lane_divider_x <= 0.0:
+            non_event_line_x[int(metadata.get("line_index", 0))] = next_span_start_x
+        elif span_lane == "action":
             var action_line_index_next: int = int(metadata.get("line_index", 0))
             if not bool(metadata.get("align_right", false)):
                 action_line_x[action_line_index_next] = next_span_start_x
@@ -1552,7 +2054,10 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             "after":
                 drag_rect = Rect2(0.0, row_rect.end.y - 1.0, width, 2.0)
             "inside":
-                drag_rect = row_rect.grow(-2.0)
+                # Indent the drop line to the child level so it clearly reads as "nest this
+                # as a sub-event of the target", not just "drop after".
+                var child_indent_x: float = EventSheetPalette.GUTTER_WIDTH + float((row_data.indent + 1) * INDENT_WIDTH) + EventSheetPalette.ROW_HORIZONTAL_PADDING
+                drag_rect = Rect2(child_indent_x, row_rect.end.y - 2.0, max(width - child_indent_x, 1.0), 3.0)
             _:
                 drag_rect = Rect2(0.0, row_rect.position.y - 1.0, width, 2.0)
     var ace_drag_rect := Rect2()
@@ -1609,10 +2114,19 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     _layout_cache.store(key, layout)
     return layout
 
+## Identity context for the pinned column header: behavior sheets show their host class so
+## it is always visible what the conditions/actions act on.
+func get_host_context_label() -> String:
+    if _sheet != null and _sheet.behavior_mode:
+        return " — host: %s" % _sheet.host_class
+    return ""
+
 func _draw_empty_state(width: float) -> void:
     var font: Font = _get_font()
     var font_size: int = _get_font_size()
     var text: String = "No rows. Select an EventSheet resource or use the dock's demo sheet."
+    if _sheet != null and _sheet.behavior_mode:
+        text = "This behavior runs on its parent node (host: %s). Add events — actions can use the typed `host` accessor." % _sheet.host_class
     var text_size: Vector2 = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size)
     draw_string(
         font,
@@ -1677,6 +2191,9 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
     _selection_anchor_index = int(selection_state.get("selection_anchor_index", -1))
     _focused_lane = str(selection_state.get("focused_lane", _focused_lane))
     var selected_row: EventRowData = _row_at(_selected_row_index)
+    # Keyboard/programmatic selection can target a row that has not been drawn yet,
+    # so ensure its spans before selection consumers read them.
+    _ensure_event_spans(selected_row)
     _selection_helper.sync_row_selection_flags(_flat_rows, _selected_row_uids)
     selection_changed.emit(selected_row)
     queue_redraw()
@@ -1692,6 +2209,7 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
     var row_data: EventRowData = _row_at(row_index)
     if row_data == null:
         return
+    _ensure_event_spans(row_data)
     var row_uid: String = row_data.row_uid
     var changed: bool = false
     if span_index >= 0:
@@ -1765,7 +2283,10 @@ func _begin_edit(row_index: int, span_index: int) -> void:
     if row_data == null:
         return
     var resolved_span_index: int = span_index
-    if resolved_span_index < 0:
+    # Fall back to the row's first editable span whenever the clicked span isn't editable, so
+    # double-clicking anywhere on a comment / group row (its badge, icon, or padding) still
+    # edits the text, not just a pixel-perfect hit on the label.
+    if resolved_span_index < 0 or resolved_span_index >= row_data.spans.size() or not _span_is_editable(row_data, resolved_span_index):
         resolved_span_index = _find_first_editable_span(row_data)
     if resolved_span_index < 0 or resolved_span_index >= row_data.spans.size():
         return
@@ -1813,6 +2334,14 @@ func _find_first_editable_span(row_data: EventRowData) -> int:
             return index
     return -1
 
+func _span_is_editable(row_data: EventRowData, span_index: int) -> bool:
+    if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
+        return false
+    var span: SemanticSpan = row_data.spans[span_index]
+    if span == null or not (span.metadata is Dictionary):
+        return false
+    return bool((span.metadata as Dictionary).get("editable", false))
+
 func _commit_edit() -> void:
     var row_data: EventRowData = _row_at(_editing_row_index)
     if row_data == null or _editing_span_index < 0 or _editing_span_index >= row_data.spans.size():
@@ -1857,6 +2386,49 @@ func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String)
         "event_comment":
             if row_data.source_resource is EventRow:
                 (row_data.source_resource as EventRow).comment = value
+
+## Hovering a condition/action/trigger shows the GDScript it compiles to (the codegen
+## template with the ACE's parameter values substituted) — the sheet continuously teaches
+## the GDScript mapping. Falls back to tooltip_text (drag feedback) otherwise.
+func _get_tooltip(at_position: Vector2) -> String:
+    var hit: Dictionary = _hit_test(_to_logical_position(at_position))
+    var metadata: Dictionary = hit.get("span_metadata", {}) if hit.get("span_metadata", {}) is Dictionary else {}
+    var kind: String = str(metadata.get("kind", ""))
+    if kind in ["condition", "trigger", "action"]:
+        var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+        if row_data != null and row_data.source_resource is EventRow:
+            var ace_resource: Resource = _resolve_ace_resource(row_data.source_resource, kind, int(metadata.get("ace_index", -1)))
+            var code: String = ""
+            if ace_resource is ACECondition:
+                var condition: ACECondition = ace_resource as ACECondition
+                code = _codegen_preview_for(condition.provider_id, condition.ace_id, condition.params if not condition.params.is_empty() else condition.parameters)
+            elif ace_resource is ACEAction:
+                var action: ACEAction = ace_resource as ACEAction
+                code = _codegen_preview_for(action.provider_id, action.ace_id, action.params if not action.params.is_empty() else action.parameters)
+            if not code.strip_edges().is_empty():
+                return "GDScript:\n%s" % code
+    return tooltip_text
+
+## The GDScript snippet an ACE compiles to: its codegen template with parameter values
+## substituted (definition metadata first, then the base descriptor registry).
+func _codegen_preview_for(provider_id: String, ace_id: String, params: Dictionary) -> String:
+    var template: String = ""
+    var definition: ACEDefinition = _find_definition(provider_id, ace_id)
+    if definition != null:
+        template = str(definition.metadata.get("codegen_template", ""))
+    if template.strip_edges().is_empty():
+        var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
+        if descriptor != null:
+            template = descriptor.codegen_template
+    return fill_codegen_template(template, params)
+
+static func fill_codegen_template(template: String, params: Dictionary) -> String:
+    if template.strip_edges().is_empty():
+        return ""
+    var filled: String = template
+    for key in params.keys():
+        filled = filled.replace("{%s}" % str(key), str(params[key]))
+    return filled
 
 func _hit_test(position: Vector2) -> Dictionary:
     var row_index: int = _find_row_index_at_y(position.y)
@@ -1979,21 +2551,44 @@ func _validate_ace_drag_target(row_data: EventRowData, lane: String) -> Dictiona
 func _rebuild_row_metrics() -> void:
     _row_metrics.clear()
     var top: float = 0.0
+    var previous_indent: int = -1
     for index in range(_flat_rows.size()):
-        var height: float = _resolve_row_height(_row_at(index))
+        var row_data: EventRowData = _row_at(index)
+        # Separate sibling/parent-level event blocks with a small gap, but keep a parent and
+        # its sub-events (a deeper indent) tight together so the nesting reads clearly.
+        if (
+            index > 0
+            and row_data != null
+            and row_data.indent <= previous_indent
+            and (row_data.row_type == EventRowData.RowType.EVENT or row_data.row_type == EventRowData.RowType.GROUP)
+        ):
+            top += EVENT_BLOCK_GAP
+        var height: float = _resolve_row_height(row_data)
         _row_metrics.append({"top": top, "height": height})
         top += height
+        if row_data != null:
+            previous_indent = row_data.indent
 
 func _resolve_row_height(row_data: EventRowData) -> float:
-    if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
+    if row_data == null:
         return float(ROW_HEIGHT)
+    if row_data.row_type != EventRowData.RowType.EVENT:
+        # Multi-line non-event rows (GDScript blocks) expand by their precomputed line count.
+        if row_data.line_count > 1:
+            return float(row_data.line_count) * _get_event_line_height(_get_font_size())
+        return float(ROW_HEIGHT)
+    var line_height: float = _get_event_line_height(_get_font_size())
+    # When spans are still lazy (not yet built), use the precomputed line count so
+    # metrics never trigger span building. Once built, the spans are authoritative.
+    if row_data.spans.is_empty():
+        return float(maxi(row_data.line_count, 1)) * line_height
     var max_line_index: int = 0
     for span in row_data.spans:
         if span == null or not (span.metadata is Dictionary):
             continue
         var metadata: Dictionary = span.metadata as Dictionary
         max_line_index = maxi(max_line_index, int(metadata.get("line_index", 0)))
-    return float((max_line_index + 1) * _get_event_line_height(_get_font_size()))
+    return float((max_line_index + 1) * line_height)
 
 func _get_row_top(index: int) -> float:
     if index < 0 or index >= _row_metrics.size():
@@ -2196,6 +2791,18 @@ func _group_name(group: EventGroup) -> String:
         return group.group_name
     return "Group"
 
+## Construct 3-style object label shown before each condition/action (e.g. "System",
+## "Sprite", "CharacterBody2D"). Core ACEs read as "System"; node-typed ACEs use the class.
+func _object_label_for(provider_id: String, ace_id: String) -> String:
+    var definition: ACEDefinition = _find_definition(provider_id, ace_id)
+    if definition != null:
+        var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()
+        if not node_type.is_empty():
+            return node_type
+    if provider_id.is_empty() or provider_id == "Core":
+        return "System"
+    return provider_id
+
 func _format_condition_descriptor(condition: ACECondition) -> String:
     var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
     var generated_definition: ACEDefinition = _find_definition(condition.provider_id, condition.ace_id)
@@ -2274,12 +2881,31 @@ func _get_scope_badge_colors(scope_label: String) -> Dictionary:
         "fg": EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_FG
     }
 
+static var _value_regex: RegEx = null
+
+## Ranges ([start, length]) of parameter-like values (numbers, quoted strings, booleans)
+## inside ACE display text, so the renderer can highlight them C3-style.
+static func _value_ranges_for(text: String) -> Array:
+    if _value_regex == null:
+        _value_regex = RegEx.new()
+        _value_regex.compile("\"[^\"]*\"|\\b-?\\d+(?:\\.\\d+)?\\b|\\b(?:true|false|True|False)\\b")
+    var ranges: Array = []
+    for regex_match in _value_regex.search_all(text):
+        ranges.append([regex_match.get_start(), regex_match.get_end() - regex_match.get_start()])
+    return ranges
+
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
     var span := SemanticSpan.new()
     span.text = text
     span.type = span_type
     span.metadata = metadata.duplicate(true)
     span.hoverable = bool(span.metadata.get("hoverable", true))
+    # Precompute value-highlight ranges for condition/trigger/action text (single choke point;
+    # build-time only, so the draw path stays cheap).
+    if str(span.metadata.get("kind", "")) in ["condition", "trigger", "action"] and not text.is_empty():
+        var ranges: Array = _value_ranges_for(text)
+        if not ranges.is_empty():
+            span.metadata["value_ranges"] = ranges
     return span
 
 func _get_variable_metadata_for_row(row_data: EventRowData) -> Dictionary:
@@ -2338,6 +2964,28 @@ func _find_definition(provider_id: String, ace_id: String) -> ACEDefinition:
     if _ace_registry == null:
         return null
     return _ace_registry.find_definition(provider_id, ace_id)
+
+# Cache: "provider::ace" → Texture2D or null. Spans are rebuilt often; icon resolution
+# (registry lookup + editor-theme/texture fetch) must not run per rebuild per span.
+var _ace_icon_cache: Dictionary = {}
+
+## Icon shown before an ACE's object label in row cells (C3 shows the object's icon next
+## to its name everywhere). Resolution order matches the picker; Core/System falls back to
+## the editor's Tools glyph. Null (headless / nothing matches) keeps the text-only look.
+func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
+    var cache_key: String = "%s::%s" % [provider_id, ace_id]
+    if _ace_icon_cache.has(cache_key):
+        return _ace_icon_cache[cache_key]
+    var definition: ACEDefinition = _find_definition(provider_id, ace_id)
+    if definition == null and not (provider_id.is_empty() or provider_id == "Core"):
+        # Not cached: the registry refreshes in place (addons may not be loaded yet when
+        # the first spans build), so a miss now can become a hit on the next rebuild.
+        return null
+    var icon: Texture2D = ACEPickerDialog.resolve_definition_icon(definition)
+    if icon == null and (provider_id.is_empty() or provider_id == "Core"):
+        icon = ACEPickerDialog.editor_icon("Tools")
+    _ace_icon_cache[cache_key] = icon
+    return icon
 
 func _get_font() -> Font:
     var font: Font = get_theme_default_font()
