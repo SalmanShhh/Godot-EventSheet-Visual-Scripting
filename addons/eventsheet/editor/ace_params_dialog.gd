@@ -157,6 +157,8 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 
 	if hint == VARIABLE_REFERENCE_HINT or hint.begins_with(VARIABLE_REFERENCE_HINT + ":"):
 		return _create_variable_reference_field(key, default_value, hint)
+	if hint == "signal_reference":
+		return _create_signal_reference_field(key, default_value)
 	if hint == EXPRESSION_HINT:
 		return _create_expression_field(key, default_value)
 	if options is Array and not options.is_empty():
@@ -243,6 +245,55 @@ func _variable_matches_type(variable_name: String, required: String) -> bool:
 	if type_name.is_empty() or type_name == "Variant":
 		return true
 	return type_name.begins_with(required)
+
+## C3-style object-signal picker: a dropdown of the host class's signals plus signals
+## declared in the sheet's GDScript blocks (raw names — OnSignal connects them directly).
+## The current value is always offered (custom names persist).
+func _create_signal_reference_field(key: String, default_value: Variant) -> Control:
+	var options: Array[String] = _signal_options()
+	var current: String = str(default_value).strip_edges()
+	if not current.is_empty() and not options.has(current):
+		options.insert(0, current)
+	if options.is_empty():
+		var fallback: LineEdit = LineEdit.new()
+		fallback.text = current
+		fallback.placeholder_text = "signal name"
+		_fields[key] = fallback
+		return fallback
+	var dropdown: OptionButton = OptionButton.new()
+	for signal_name in options:
+		dropdown.add_item(signal_name)
+		var index: int = dropdown.item_count - 1
+		dropdown.set_item_metadata(index, signal_name)
+		if signal_name == current:
+			dropdown.select(index)
+	if dropdown.selected < 0 and dropdown.item_count > 0:
+		dropdown.select(0)
+	_fields[key] = dropdown
+	return dropdown
+
+## Host-class signals (ClassDB) + `signal x` declarations in the sheet's class-level
+## GDScript blocks, sorted and deduplicated.
+func _signal_options() -> Array[String]:
+	var names: Array[String] = []
+	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
+	if sheet == null:
+		return names
+	for entry in sheet.events:
+		if entry is RawCodeRow:
+			for line in (entry as RawCodeRow).code.split("\n"):
+				if line.begins_with("signal "):
+					var declared: String = line.trim_prefix("signal ").strip_edges()
+					declared = declared.get_slice("(", 0).strip_edges()
+					if not declared.is_empty() and not names.has(declared):
+						names.append(declared)
+	if ClassDB.class_exists(sheet.host_class):
+		for signal_info in ClassDB.class_get_signal_list(sheet.host_class):
+			var signal_name: String = str(signal_info.get("name", ""))
+			if not signal_name.is_empty() and not names.has(signal_name):
+				names.append(signal_name)
+	names.sort()
+	return names
 
 func _create_expression_field(key: String, default_value: Variant) -> Control:
 	var container: HBoxContainer = HBoxContainer.new()

@@ -60,7 +60,8 @@ static func run() -> bool:
 	input_event.actions.append(quit_action)
 	sheet.events.append(input_event)
 	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_input.gd").get("output", ""))
-	all_passed = _check("input condition compiles", output.contains("if Input.is_action_just_pressed(\"ui_accept\"):"), true) and all_passed
+	all_passed = _check("input condition compiles with a StringName literal (hidden optimization)",
+		output.contains("if Input.is_action_just_pressed(&\"ui_accept\"):"), true) and all_passed
 	all_passed = _check("wait compiles to await", output.contains("await get_tree().create_timer(0.5).timeout"), true) and all_passed
 	all_passed = _check("axis expression compiles", output.contains("Input.get_axis(\"ui_left\", \"ui_right\") * 200.0"), true) and all_passed
 	all_passed = _check("OnInput compiles to the lifecycle handler", output.contains("func _input(event: InputEvent) -> void:"), true) and all_passed

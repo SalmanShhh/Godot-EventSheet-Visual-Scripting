@@ -93,6 +93,10 @@ static func dot_completion_candidates(token: String, sheet: EventSheetResource) 
 					var method_name: String = str(method_info.get("name", ""))
 					if not method_name.is_empty() and not method_name.begins_with("_"):
 						_add_candidate(candidates, seen, CodeEdit.KIND_FUNCTION, method_name)
+				for signal_info in script.get_script_signal_list():
+					var script_signal: String = str(signal_info.get("name", ""))
+					if not script_signal.is_empty():
+						_add_candidate(candidates, seen, CodeEdit.KIND_SIGNAL, script_signal)
 				for property_info in script.get_script_property_list():
 					var property_name: String = str(property_info.get("name", ""))
 					if not property_name.is_empty() and not property_name.begins_with("_") and not property_name.ends_with(".gd"):
@@ -160,6 +164,10 @@ static func _add_class_members(candidates: Array[Dictionary], seen: Dictionary, 
 		var method_name: String = str(method_info.get("name", ""))
 		if not method_name.is_empty() and not method_name.begins_with("_"):
 			_add_candidate(candidates, seen, CodeEdit.KIND_FUNCTION, method_name)
+	for signal_info in ClassDB.class_get_signal_list(member_class):
+		var signal_name: String = str(signal_info.get("name", ""))
+		if not signal_name.is_empty():
+			_add_candidate(candidates, seen, CodeEdit.KIND_SIGNAL, signal_name)
 
 ## Completion candidates for the block editor: sheet variables, sheet functions, and the
 ## host class's properties/methods. [{kind: CodeEdit.CodeCompletionKind, label: String}]

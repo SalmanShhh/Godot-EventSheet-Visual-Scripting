@@ -23,7 +23,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		ACEDescriptor.ACEType.TRIGGER,
 		"",
 		"",
-		[_make_param("signal_name", "String", "eventforge_signal", "Signal Name", "Signal to listen for.")],
+		[_make_param("signal_name", "String", "eventforge_signal", "Signal Name", "Signal to listen for.", "signal_reference")],
 		"Signals / Scene / Input",
 		"On signal {signal_name}"
 	))
@@ -32,14 +32,18 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(_make_descriptor("Core", "OnTimeout", "On Timeout", ACEDescriptor.ACEType.TRIGGER, "", "timeout", [], "Signals / Scene / Input", "On timeout", "Timer"))
 	descriptors.append(_make_descriptor("Core", "OnAnimationFinished", "On Animation Finished", ACEDescriptor.ACEType.TRIGGER, "", "animation_finished", [_make_param("anim_name", "String", "", "Animation", "Name of the animation that finished.")], "Signals / Scene / Input", "On animation finished {anim_name}", "AnimationPlayer"))
 
+	# HIDDEN-OPTIMIZATION RULE: templates may use expert idioms a beginner wouldn't type
+	# (&"name" StringName literals below skip the per-call String->StringName hash in hot
+	# loops) — the picker shows friendly labels, the generated code stays readable, and
+	# user fx/blocks are NEVER rewritten. See GDSCRIPT-PAIRING-SPEC "Hidden optimization".
 	# Input (action names come from the project's InputMap + the ui_* defaults)
-	descriptors.append(_make_descriptor("Core", "IsActionPressed", "Is Action Pressed", ACEDescriptor.ACEType.CONDITION, "Input.is_action_pressed({action})", "", [_make_param("action", "String", _default_input_action(), "Action", "Input action (from the InputMap).", "", _input_action_options())], "Input", "{action} is pressed"))
-	descriptors.append(_make_descriptor("Core", "IsActionJustPressed", "On Action Just Pressed", ACEDescriptor.ACEType.CONDITION, "Input.is_action_just_pressed({action})", "", [_make_param("action", "String", _default_input_action(), "Action", "Input action (from the InputMap).", "", _input_action_options())], "Input", "{action} just pressed"))
-	descriptors.append(_make_descriptor("Core", "IsActionJustReleased", "On Action Just Released", ACEDescriptor.ACEType.CONDITION, "Input.is_action_just_released({action})", "", [_make_param("action", "String", _default_input_action(), "Action", "Input action (from the InputMap).", "", _input_action_options())], "Input", "{action} just released"))
+	descriptors.append(_make_descriptor("Core", "IsActionPressed", "Is Action Pressed", ACEDescriptor.ACEType.CONDITION, "Input.is_action_pressed(&{action})", "", [_make_param("action", "String", _default_input_action(), "Action", "Input action (from the InputMap).", "", _input_action_options())], "Input", "{action} is pressed"))
+	descriptors.append(_make_descriptor("Core", "IsActionJustPressed", "On Action Just Pressed", ACEDescriptor.ACEType.CONDITION, "Input.is_action_just_pressed(&{action})", "", [_make_param("action", "String", _default_input_action(), "Action", "Input action (from the InputMap).", "", _input_action_options())], "Input", "{action} just pressed"))
+	descriptors.append(_make_descriptor("Core", "IsActionJustReleased", "On Action Just Released", ACEDescriptor.ACEType.CONDITION, "Input.is_action_just_released(&{action})", "", [_make_param("action", "String", _default_input_action(), "Action", "Input action (from the InputMap).", "", _input_action_options())], "Input", "{action} just released"))
 	# Conditions
 	descriptors.append(_make_descriptor("Core", "Always", "Always", ACEDescriptor.ACEType.CONDITION, "true", "", [], "General Conditions", "Always"))
 	descriptors.append(_make_descriptor("Core", "IsOnFloor", "Is On Floor", ACEDescriptor.ACEType.CONDITION, "is_on_floor()", "", [], "General Conditions", "Is on floor", "CharacterBody2D"))
-	descriptors.append(_make_descriptor("Core", "HasGroupMember", "Has Group Member", ACEDescriptor.ACEType.CONDITION, "is_in_group({group})", "", [_make_param("group", "String", "", "Group", "Group name to test.")], "General Conditions", "In group {group}"))
+	descriptors.append(_make_descriptor("Core", "HasGroupMember", "Has Group Member", ACEDescriptor.ACEType.CONDITION, "is_in_group(&{group})", "", [_make_param("group", "String", "", "Group", "Group name to test.")], "General Conditions", "In group {group}"))
 	descriptors.append(_make_descriptor("Core", "CompareVar", "Compare Variable", ACEDescriptor.ACEType.CONDITION, "{var_name} {op} {value}", "", [_make_param("var_name", "String", "var", "Variable", "Variable name to compare.", "variable_reference"), _make_param("op", "String", "==", "Operator", "Comparison operator.", "", COMPARISON_OPERATORS), _make_param("value", "String", "0", "Value", "Comparison value.", "expression")], "Variables", "{var_name} {op} {value}"))
 	descriptors.append(_make_descriptor("Core", "IsTimerStopped", "Is Timer Stopped", ACEDescriptor.ACEType.CONDITION, "is_stopped()", "", [], "General Conditions", "Is timer stopped", "Timer"))
 	descriptors.append(_make_descriptor("Core", "IsAnimationPlaying", "Is Animation Playing", ACEDescriptor.ACEType.CONDITION, "is_playing()", "", [], "General Conditions", "Is animation playing", "AnimationPlayer"))
@@ -50,7 +54,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(_make_descriptor("Core", "PrintLog", "Print Log", ACEDescriptor.ACEType.ACTION, "print({message})", "", [_make_param("message", "String", "\"TODO\"", "Message", "Message to print.")], "General Actions", "Print {message}"))
 	descriptors.append(_make_descriptor("Core", "QueueFree", "Queue Free", ACEDescriptor.ACEType.ACTION, "queue_free()", "", [], "General Actions", "Queue free"))
 	descriptors.append(_make_descriptor("Core", "CallFunction", "Call Function", ACEDescriptor.ACEType.ACTION, "{function_name}({args})", "", [_make_param("function_name", "String", "", "Function", "Name of the sheet function to call."), _make_param("args", "String", "", "Arguments", "Comma-separated argument expressions.")], "Functions", "Call {function_name}({args})"))
-	descriptors.append(_make_descriptor("Core", "EmitSignal", "Emit Signal", ACEDescriptor.ACEType.ACTION, "emit_signal({signal_name}{, args})", "", [_make_param("signal_name", "String", "signal", "Signal Name", "Signal to emit."), _make_param("args", "String", "", "Arguments", "Optional signal arguments.")], "Signals / Scene / Input", "Emit signal {signal_name}"))
+	descriptors.append(_make_descriptor("Core", "EmitSignal", "Emit Signal", ACEDescriptor.ACEType.ACTION, "emit_signal(&\"{signal_name}\"{, args})", "", [_make_param("signal_name", "String", "signal", "Signal Name", "Signal to emit.", "signal_reference"), _make_param("args", "String", "", "Arguments", "Optional signal arguments.")], "Signals / Scene / Input", "Emit signal {signal_name}"))
 	# Node2D actions
 	descriptors.append(_make_descriptor("Core", "SetPosition2D", "Set Position", ACEDescriptor.ACEType.ACTION, "position = {pos}", "", [_make_param("pos", "String", "Vector2(0, 0)", "Position", "Target position as a Vector2 expression.", "expression")], "General Actions", "Set position to {pos}", "Node2D"))
 	descriptors.append(_make_descriptor("Core", "SetRotationDeg", "Set Rotation (Degrees)", ACEDescriptor.ACEType.ACTION, "rotation_degrees = {degrees}", "", [_make_param("degrees", "String", "0.0", "Degrees", "Rotation angle in degrees.", "expression")], "General Actions", "Set rotation to {degrees}°", "Node2D"))
@@ -63,7 +67,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(_make_descriptor("Core", "StartTimer", "Start Timer", ACEDescriptor.ACEType.ACTION, "start({time})", "", [_make_param("time", "String", "-1", "Duration", "Duration in seconds (-1 uses the Timer's wait_time).", "expression")], "General Actions", "Start timer ({time}s)", "Timer"))
 	descriptors.append(_make_descriptor("Core", "StopTimer", "Stop Timer", ACEDescriptor.ACEType.ACTION, "stop()", "", [], "General Actions", "Stop timer", "Timer"))
 	# AnimationPlayer actions
-	descriptors.append(_make_descriptor("Core", "PlayAnimation", "Play Animation", ACEDescriptor.ACEType.ACTION, "play({anim_name})", "", [_make_param("anim_name", "String", "\"idle\"", "Animation", "Name of the animation to play.")], "General Actions", "Play animation {anim_name}", "AnimationPlayer"))
+	descriptors.append(_make_descriptor("Core", "PlayAnimation", "Play Animation", ACEDescriptor.ACEType.ACTION, "play(&{anim_name})", "", [_make_param("anim_name", "String", "\"idle\"", "Animation", "Name of the animation to play.")], "General Actions", "Play animation {anim_name}", "AnimationPlayer"))
 	descriptors.append(_make_descriptor("Core", "StopAnimation", "Stop Animation", ACEDescriptor.ACEType.ACTION, "stop()", "", [], "General Actions", "Stop animation", "AnimationPlayer"))
 
 	# ── Collections (rich variables): curated Dictionary / Array / JSON vocabulary ──
@@ -106,8 +110,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(_make_descriptor("Core", "Wait", "Wait", ACEDescriptor.ACEType.ACTION, "await get_tree().create_timer({seconds}).timeout", "", [_make_param("seconds", "String", "1.0", "Seconds", "How long to wait before the next action runs.", "expression")], "Time", "Wait {seconds} s"))
 	descriptors.append(_make_descriptor("Core", "AwaitSignal", "Wait For Signal", ACEDescriptor.ACEType.ACTION, "await {signal_expression}", "", [_make_param("signal_expression", "String", "get_tree().process_frame", "Signal", "Signal to wait for (e.g. $Timer.timeout).", "expression")], "Time", "Wait for {signal_expression}"))
 	# Input expressions
-	descriptors.append(_make_descriptor("Core", "GetActionStrength", "Action Strength", ACEDescriptor.ACEType.EXPRESSION, "Input.get_action_strength({action})", "", [_make_param("action", "String", _default_input_action(), "Action", "Input action (analog strength 0..1).", "", _input_action_options())], "Input", "strength of {action}"))
-	descriptors.append(_make_descriptor("Core", "GetInputAxis", "Input Axis", ACEDescriptor.ACEType.EXPRESSION, "Input.get_axis({negative}, {positive})", "", [_make_param("negative", "String", "\"ui_left\"", "Negative", "Action for the negative direction.", "", _input_action_options()), _make_param("positive", "String", "\"ui_right\"", "Positive", "Action for the positive direction.", "", _input_action_options())], "Input", "axis {negative}/{positive}"))
+	descriptors.append(_make_descriptor("Core", "GetActionStrength", "Action Strength", ACEDescriptor.ACEType.EXPRESSION, "Input.get_action_strength(&{action})", "", [_make_param("action", "String", _default_input_action(), "Action", "Input action (analog strength 0..1).", "", _input_action_options())], "Input", "strength of {action}"))
+	descriptors.append(_make_descriptor("Core", "GetInputAxis", "Input Axis", ACEDescriptor.ACEType.EXPRESSION, "Input.get_axis(&{negative}, &{positive})", "", [_make_param("negative", "String", "\"ui_left\"", "Negative", "Action for the negative direction.", "", _input_action_options()), _make_param("positive", "String", "\"ui_right\"", "Positive", "Action for the positive direction.", "", _input_action_options())], "Input", "axis {negative}/{positive}"))
 	# Expressions
 	descriptors.append(_make_descriptor("Core", "GetVar", "Get Variable", ACEDescriptor.ACEType.EXPRESSION, "{var_name}", "", [_make_param("var_name", "String", "var", "Variable", "Variable to read.", "variable_reference")], "Variables", "{var_name}"))
 	descriptors.append(_make_descriptor("Core", "GetDelta", "Get Delta", ACEDescriptor.ACEType.EXPRESSION, "delta", "", [], "General Expressions", "delta"))

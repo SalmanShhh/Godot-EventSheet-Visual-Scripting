@@ -124,6 +124,19 @@ positionally. Ceiling note: Godot does not expose its real completion engine
 full-fidelity IntelliSense always exists one panel away because the generated script is
 plain GDScript.
 
+### Hidden optimization (ACEs emit expert idioms)
+
+Because the sheet shows friendly labels — not the code — ACE templates are free to emit
+*faster* GDScript than a beginner would type, as long as it stays readable: `&"name"`
+StringName literals for hot-path APIs (input polling, `is_in_group`, `play`) skip the
+per-call String→StringName hash; triggers sharing a lifecycle merge into ONE handler;
+signal connections hoist into a single `_ready`; instance-backed addon providers declare
+one member instead of constructing per call. The boundaries: **user ƒx expressions and
+GDScript blocks are never rewritten** (verbatim always), optimizations apply only to
+template-driven emission, and external GDScript-backed sheets stay byte-exact. Old
+generated files using the previous idiom simply keep those lines as blocks when re-opened
+(the lossless rule) — nothing breaks.
+
 ### MCP server (AI tooling)
 
 A pure-GDScript MCP server (`addons/eventsheet/mcp/`) exposes sheets to AI assistants

@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Hidden codegen optimization + signal autocomplete (C3 object-signal parity)
+- **ACEs now emit expert idioms behind the scenes** (new spec rule, "Hidden
+  optimization"): hot-path builtin templates use `&"name"` **StringName literals**
+  (input polling, `is_in_group`, `play`), skipping the per-call String→StringName hash
+  in per-frame code. The picker shows the same friendly labels; user ƒx expressions and
+  GDScript blocks are **never** rewritten; existing sheets keep their baked templates.
+  EmitSignal's template also got fixed to emit a valid `emit_signal(&"name")`.
+- **Signal autocomplete everywhere** (like C3's object signals/tags):
+  - Dot-completion now offers **signals** alongside methods/properties — typed
+	variables (`zone.` → `body_entered`), behavior `host.`, and `$GlobalClass.`
+	including script-declared signals (`$PlatformerMovement.` → `jumped`).
+  - Signal params (On Signal, Emit Signal) render as a **dropdown** of the host
+	class's signals plus signals declared in the sheet's GDScript blocks — pick,
+	don't type. Custom values persist as the first option.
+- Covered by `tests/signal_autocomplete_test.gd` (8 assertions) + updated input tests.
+
 ### Godot-feel batch: find-in-sheet, script-editor shortcuts, editor-theme inheritance
 - **Ctrl+F find bar**: script-editor-style find-in-sheet (matches visible row text AND
   GDScript block code, case-insensitive); Enter/F3 next, Shift+F3 previous, Esc closes,
