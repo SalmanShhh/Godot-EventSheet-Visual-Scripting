@@ -291,6 +291,24 @@ conditions/actions) is planned.
   editor-embedded WebSocket variant later for live, undoable edits. Local-only by default;
   tool schemas versioned like the snippet format. Note: GDScript-backed sheets already give
   AI tools an unstructured path today (any `.gd` an AI edits opens as a sheet).
+- **First-class rich variables (Dictionary / Array / JSON / Enums)** — user-confirmed
+  direction. Key insight: unlike C3 (where these are capability-providing addons), GDScript
+  already HAS all of it and ƒx fields are GDScript — so this is vocabulary + UX, not
+  capability. Design decisions: the curated ACE set (~10 dict, ~12 array, ~5 JSON ops)
+  lives in the **builtin Core descriptors** (always present + reverse-liftable by the ACE
+  lifter), grouped as "Variables: Dictionary/Array/JSON"; codegen stays direct
+  (`{var}[{key}] = {value}`, `{var}.append({value})`, `JSON.stringify({var})`) so the
+  parity contract holds; typed collections use Godot's `Array[T]`/`Dictionary[K,V]` type
+  strings; structured defaults edit as GDScript literals with the existing live ƒx
+  validation (v1) before any per-element editor (v2); **EnumRow** is the one new row kind
+  (name + members → class `enum`, canonical emission for verify-lift, members feed
+  dot-context completion, exported enum variables get free Inspector dropdowns) and needs
+  a snippet-whitelist extension (v2 marker, graceful v1 fallback); variable-reference
+  params become type-aware (array ACEs offer only Array variables). **XML is explicitly
+  out of first-class scope** (Godot has only a pull-parser, no writer/XPath) — ConfigFile
+  ACEs are the Godot-native equivalent; XML at most as an optional addon pack. Phasing:
+  enums → collection variable UX → curated ACE set + migration-guide rows → optional
+  ConfigFile/XML pack.
 - **More behavior packs**: tweens and beyond (platformer, 8-direction, timer, flash, and
   state machine ship today — see Implemented).
 - **C3 migration guide**: implemented — `docs/C3-MIGRATION-GUIDE.md` (concept map + System
