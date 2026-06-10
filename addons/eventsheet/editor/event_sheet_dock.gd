@@ -588,6 +588,8 @@ func _build_ui() -> void:
 
     _viewport.selection_changed.connect(_on_viewport_selection_changed)
     _viewport.selection_changed.connect(func(row_data: EventRowData) -> void:
+        if _mirroring_selection:
+            return  # a mirrored selection must not steal the active view
         _active_viewport_ref = _viewport
         _mirror_selection(_viewport, row_data)
     )
@@ -2637,6 +2639,8 @@ func _toggle_split_view() -> void:
 ## selection-driven toolbar ops route through _active_view().
 func _connect_view_signals(view: EventSheetViewport) -> void:
     view.selection_changed.connect(func(row_data: EventRowData) -> void:
+        if _mirroring_selection:
+            return  # a mirrored selection must not steal the active view
         _active_viewport_ref = view
         _mirror_selection(view, row_data)
         _on_viewport_selection_changed(row_data)
@@ -2667,13 +2671,17 @@ func _open_row_in_split(row_data: EventRowData) -> void:
         _toggle_split_view()
     if _split_viewport == null:
         return
-    for index in range(_split_viewport.get_flat_rows().size()):
-        var split_row: EventRowData = _split_viewport.get_flat_rows()[index].get("row")
-        if split_row != null and split_row.source_resource == row_data.source_resource:
-            _split_viewport._select_row(index, -1)
-            _split_viewport.ensure_selection_visible()
-            _split_viewport.queue_redraw()
-            return
+    for attempt in range(2):
+        for index in range(_split_viewport.get_flat_rows().size()):
+            var split_row: EventRowData = _split_viewport.get_flat_rows()[index].get("row")
+            if split_row != null and split_row.source_resource == row_data.source_resource:
+                _split_viewport._select_row(index, -1)
+                _split_viewport.ensure_selection_visible()
+                _split_viewport.queue_redraw()
+                return
+        # Not in the flat list — it's inside a folded group: unfold the split and retry.
+        _split_viewport._fold_state.clear()
+        _split_viewport.set_sheet(_current_sheet)
 
 # ── Multi-view P2: detached window (a pane on another monitor) ────────────────────────
 var _detached_window: Window = null
@@ -2713,7 +2721,8 @@ func _toggle_detached_view() -> void:
 func _close_detached_view() -> void:
     if _detached_window == null:
         return
-    _active_viewport_ref = null
+    if _active_viewport_ref == _detached_viewport:
+        _active_viewport_ref = null
     _detached_window.queue_free()
     _detached_window = null
     _detached_viewport = null
@@ -2749,7 +2758,8 @@ func _mirror_selection(from_view: EventSheetViewport, row_data: EventRowData) ->
 func _close_split_view() -> void:
     if _split_container == null:
         return
-    _active_viewport_ref = null
+    if _active_viewport_ref == _split_viewport:
+        _active_viewport_ref = null
     var slot: Node = _split_container.get_parent()
     var slot_index: int = _split_container.get_index()
     _split_container.remove_child(_scroll)
@@ -2853,11 +2863,14 @@ func _on_find_text_changed(text: String) -> void:
     _find_step(1)
 
 func _find_step(direction: int) -> void:
+    # Flat indices go stale after any edit, so matches recompute on every step.
+    if _find_edit == null or _viewport == null or _find_edit.text.strip_edges().is_empty():
+        return
+    _find_matches = _viewport.search_rows(_find_edit.text)
     if _find_matches.is_empty():
-        if _find_edit != null and not _find_edit.text.strip_edges().is_empty():
-            _find_matches = _viewport.search_rows(_find_edit.text) if _viewport != null else []
-        if _find_matches.is_empty():
-            return
+        if _find_count_label != null:
+            _find_count_label.text = "no matches"
+        return
     _find_cursor = wrapi(_find_cursor + direction, 0, _find_matches.size())
     _find_count_label.text = "%d of %d" % [_find_cursor + 1, _find_matches.size()]
     if _viewport != null:

@@ -280,7 +280,9 @@ func _load_sheet(path: String) -> EventSheetResource:
 		return null
 	if path.ends_with(".gd"):
 		return GDScriptImporter.new().import_external(path)
-	return load(path) as EventSheetResource
+	# CACHE_MODE_IGNORE: the server is long-lived — a cached resource would silently
+	# serve stale sheets after the user edits them in the editor.
+	return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
 
 ## The ACE registry, bootstrapped exactly like the editor (builtins + zero-config addons).
 func _ensure_registry() -> void:

@@ -100,6 +100,10 @@ static func run() -> bool:
 		split.get_selected_context().get("source_resource", null), sheet.events[2]) and all_passed
 	all_passed = _check("linked panes mirror selection to the detached pane",
 		detached.get_selected_context().get("source_resource", null), sheet.events[2]) and all_passed
+	# Regression (silent bug): the mirrored panes' selection_changed must NOT steal the
+	# active view from the pane the user actually clicked.
+	all_passed = _check("mirroring never steals the active view",
+		editor._active_view() == primary, true) and all_passed
 	editor._toggle_linked_views()
 	primary._select_row(0, -1)
 	primary.selection_changed.emit(primary.get_flat_rows()[0].get("row"))

@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Silent-bug sweep (five fixes)
+- **Linked panes stole the active view**: mirroring a selection re-emitted
+  `selection_changed` in the mirrored panes, silently rerouting Ctrl+/, copy/paste and
+  every selection-driven op to the wrong pane. Mirrored selections are now inert
+  (regression-asserted).
+- **Find-step used stale indices**: matches captured at typing time pointed at the wrong
+  rows after any edit — F3 now recomputes matches on every step.
+- **Closing one secondary pane reset the active view** even when the *other* pane was
+  active; the reset is now conditional.
+- **"Open in Split" silently did nothing** for rows inside folded groups in the split
+  pane — it now unfolds and retries.
+- **MCP server served stale sheets**: the long-lived server read `.tres` files through
+  Godot's resource cache; reads now bypass the cache (`CACHE_MODE_IGNORE`).
+- Known limitation surfaced by the sweep (deferred, by design of the flat-row model):
+  Ctrl+F doesn't match rows hidden inside folded groups.
+
 ### Starter 3D vocabulary
 - **14 native 3D ACEs** under their node-type groups: **Node3D** (Set Position/Rotation/
   Scale, Move By, Look At, position expression), **CharacterBody3D** (Is On Floor,

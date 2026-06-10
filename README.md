@@ -58,7 +58,7 @@ Conditions                        | Actions
 - **Some C3 plugins intentionally have no equivalent** (Multiplayer, Drawing Canvas,
   XML): the migration guide points to the native Godot feature instead — that honesty
   keeps the project maintainable.
-- **Young project.** The test suite is large (940+ assertions, CI-gated) but real-world
+- **Young project.** The test suite is large (nearly 1,000 assertions, CI-gated) but real-world
   mileage is still accumulating; expect rough edges and report them.
 
 ## Feature tour
@@ -116,7 +116,7 @@ Conditions                        | Actions
 
 - **Version**: **`v0.3.0`** — multi-view (split/detached/linked panes) and experimental
   tool sheets, on top of 0.2.0's thirty-five features. See [CHANGELOG.md](CHANGELOG.md).
-- **Quality**: 940+ test assertions, all green, CI-gated on every push (any `[FAIL]`
+- **Quality**: nearly 1,000 test assertions, all green, CI-gated on every push (any `[FAIL]`
   fails the build); byte-exact golden round-trips guard the lossless rules.
 - **Compatibility covenant**: generated code never depends on the plugin; templates bake
   at apply (updates never rewrite your sheets); upgrades can never corrupt a file.
