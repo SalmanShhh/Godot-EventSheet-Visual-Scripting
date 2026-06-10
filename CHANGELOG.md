@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-10
+
+The multi-view release: the same sheet in split panes, detached OS windows, and linked
+follow-selection views — all full editors over one source of truth — plus experimental
+tool sheets (`@tool` + EditorScript with the On Editor Run trigger: editor tooling
+authored as events). Details below (newest first).
+
 ### Tool sheets (Phase D — EXPERIMENTAL): build editor tooling from events
 - **`@tool` sheets**: a Sheet Type checkbox emits `@tool` ahead of
   `class_name`/`extends`, so sheet-built nodes and behaviors run inside the editor.

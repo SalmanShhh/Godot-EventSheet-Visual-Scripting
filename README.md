@@ -113,8 +113,8 @@ Conditions                        | Actions
 
 ## Current status
 
-- **Version**: **`v0.2.0`** — thirty-five features over `v0.1.0`. See
-  [CHANGELOG.md](CHANGELOG.md) for the full ledger.
+- **Version**: **`v0.3.0`** — multi-view (split/detached/linked panes) and experimental
+  tool sheets, on top of 0.2.0's thirty-five features. See [CHANGELOG.md](CHANGELOG.md).
 - **Quality**: 940+ test assertions, all green, CI-gated on every push (any `[FAIL]`
   fails the build); byte-exact golden round-trips guard the lossless rules.
 - **Compatibility covenant**: generated code never depends on the plugin; templates bake
