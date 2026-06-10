@@ -185,7 +185,23 @@ const C3_SEARCH_SYNONYMS := {
 	"is overlapping": "overlap",
 	"set position": "position",
 	"compare variable": "variable",
-	"wait": "timer"
+	"wait": "timer",
+	"go to layout": "scene",
+	"goto layout": "scene",
+	"restart layout": "restart",
+	"choose": "choose",
+	"pick random": "random",
+	"set text": "text",
+	"play sound": "play",
+	"play audio": "play",
+	"flash": "flash",
+	"fade": "tween",
+	"animate": "tween",
+	"pathfinding": "path",
+	"find path": "path",
+	"set invisible": "hide",
+	"set visible": "show",
+	"set opacity": "tint"
 }
 
 static func _c3_synonym_queries(query: String) -> Array[String]:

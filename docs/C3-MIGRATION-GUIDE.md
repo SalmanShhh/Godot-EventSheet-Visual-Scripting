@@ -63,6 +63,32 @@ synonym aliases, so type what you know and the Godot equivalent surfaces.
 Everything in these groups compiles to a single direct GDScript line (the tooltip shows
 it), and anything not covered is one ƒx expression away.
 
+## Behaviors & plugins → the three lanes
+
+**Lane 1 — Godot already owns it** (the picker wraps the native feature):
+
+| Construct 3 | Godot EventSheets |
+| --- | --- |
+| Tween behavior | **Tween Property** action (Godot's `create_tween`; all the ease names map to `Tween.TRANS_*` + `EASE_*`) |
+| Go to layout / restart layout | **Go To Scene / Restart Scene** (Scene group; also Quit, Pause, Spawn Scene Instance) |
+| Audio | **AudioStreamPlayer** group (Play/Stop Sound, Set Volume dB, Is Playing) |
+| Sprite animations | **AnimatedSprite2D** group (Play/Stop Animation, Set Frame, Set Mirrored) |
+| Pathfinding behavior | **NavigationAgent2D** group (Find Path To, Has Arrived, Next Path Position) |
+| Text object | **Label** group (Set/Append/Get Text) |
+| Scroll To behavior | **Camera2D** group (Make Current, Set Zoom/Offset) |
+| Set visible/invisible, opacity | **CanvasItem** group (Show, Hide, Set Color Tint, Is Visible) |
+| System: `random()`, `choose()`, `clamp()`, `lerp()`, `distance()`, `angle()` | **Math & Random** expressions (Choose is literally `[…].pick_random()`) |
+| Solid / Jump-thru behaviors | Godot collision layers + one-way collision shapes (scene setup, not events) |
+| Physics behavior | RigidBody2D + the existing impulse/velocity ACEs |
+
+**Lane 2 — portable behaviors** ship as event-sheet packs (Platformer, 8-Direction, Timer,
+Flash, State Machine today; Sine, Orbit, Bullet, Move To, Follow, Drag & Drop, Car, Tile
+Movement, Line of Sight planned).
+
+**Lane 3 — use the Godot feature directly**: Multiplayer (high-level multiplayer API),
+Drawing Canvas (`_draw`), 3D plugins (Godot 3D), Binary Data (`PackedByteArray`),
+i18n (Godot translations).
+
 ## Habits that transfer directly
 
 - Double-click empty space to add an event; right-click for context actions.

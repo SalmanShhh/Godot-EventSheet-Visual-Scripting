@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Native-node ACE providers (C3 coverage, Phase A)
+- **38 new builtin ACEs wrapping native Godot features** — lane 1 of the C3 coverage
+  program (the engine maintains the implementation; we maintain vocabulary):
+  - **Tween Property** (Godot `create_tween` with transition/ease dropdowns — the C3
+	Tween behavior's job, natively),
+  - **Scene** group (Go To Scene, Restart Scene, Quit, Set Paused, Spawn Scene
+	Instance, Is Paused — C3's layout actions),
+  - **AudioStreamPlayer**, **AnimatedSprite2D**, **Camera2D**, **Label**,
+	**NavigationAgent2D** (C3 Pathfinding), and **CanvasItem** visibility/tint groups,
+  - **Math & Random** expressions: Random, Random Integer, **Choose** (C3's `choose()`
+    as `[…].pick_random()`), Clamp, Lerp, Distance To, Angle Toward.
+- **C3 search synonyms** for the new vocabulary ("go to layout" → scene, "choose",
+  "play sound", "set text", "fade"/"animate" → tween, "find path"…), and the migration
+  guide gains the full **three-lane behavior/plugin mapping table**.
+- Covered by `tests/native_node_aces_test.gd` (18 assertions).
+
 ### Iconic theme presets (Dracula and friends)
 - Six new bundled themes built from the palettes people already live in: **Dracula,
   Nord, Gruvbox Dark, Monokai, Solarized Light, and Catppuccin Mocha** — every token
