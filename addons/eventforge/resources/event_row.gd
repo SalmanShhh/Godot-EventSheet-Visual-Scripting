@@ -10,6 +10,11 @@ enum ElseMode {
 	ELIF
 }
 
+enum ConditionMode {
+	AND,
+	OR
+}
+
 static var _uid_counter: int = 0
 
 @export var enabled: bool = true
@@ -17,9 +22,17 @@ static var _uid_counter: int = 0
 @export var trigger_provider_id: String = ""
 @export var trigger_id: String = ""
 @export var trigger_params: Dictionary = {}
+## For signal-backed triggers: the node whose signal fires this event, relative to the
+## generated script's owner ("" = self). Lets sheets react to OTHER nodes' signals (child
+## behaviors, timers…) — the compiler emits the `_ready` connection.
+@export var trigger_source_path: String = ""
+## Baked argument signature for custom signal triggers (e.g. "amount: int"), captured from
+## the ACE definition at apply time so the compiler can generate a connectable handler
+## without registry access (mirrors codegen_template baking on conditions/actions).
+@export var trigger_args: String = ""
 @export var trigger: ACECondition = null
 @export var conditions: Array[ACECondition] = []
-@export var condition_mode: int = 0
+@export var condition_mode: int = ConditionMode.AND
 @export var actions: Array[Resource] = []
 @export var sub_events: Array[Resource] = []
 @export var else_mode: ElseMode = ElseMode.NONE

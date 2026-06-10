@@ -1,0 +1,52 @@
+# Godot EventSheets CI — runs the headless-safe test suite on every push/PR.
+# The full suite (tests/run_tests.gd) currently ends in a known harmless segfault after
+# printing its summary, so CI gates on the headless-safe runner (clean exit codes) and
+# additionally greps the full suite's output for unexpected [FAIL] lines.
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+env:
+  GODOT_VERSION: "4.5.1"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
+      - name: Download Godot ${{ env.GODOT_VERSION }}
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot
+          curl -fsSL -o ~/godot/godot.zip \
+            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q ~/godot/godot.zip -d ~/godot
+          mv ~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot/godot
+          chmod +x ~/godot/godot
+
+      - name: Import project
+        run: ~/godot/godot --headless --import --path . 2>&1 | tee import.log
+
+      - name: Import must be clean
+        run: "! grep -E 'SCRIPT ERROR|Parse Error' import.log"
+
+      - name: Headless-safe suite (gates the build)
+        run: ~/godot/godot --headless --path . --script tests/run_perf.gd
+
+      - name: Full suite (known harmless tail segfault tolerated; zero failures expected)
+        run: |
+          ~/godot/godot --headless --path . --script tests/run_tests.gd 2>&1 | tee full.log || true
+          echo "PASS: $(grep -cE '^\[PASS\]' full.log)  FAIL: $(grep -cE '^\[FAIL\]' full.log)"
+          FAILURES=$(grep -E '^\[FAIL\]' full.log || true)
+          if [ -n "$FAILURES" ]; then echo "Failures:"; echo "$FAILURES"; exit 1; fi

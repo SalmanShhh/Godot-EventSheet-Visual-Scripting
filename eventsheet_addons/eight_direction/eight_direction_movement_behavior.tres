@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_foqll"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_qu4da"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_rbere"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_f7t38"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_fy8ao"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_0yw3h"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_hsu0o"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_1h4jf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_a5hw0"]
+
+[sub_resource type="Resource" id="Resource_mcrq6"]
+script = ExtResource("1_foqll")
+text = "Top-down 8-direction movement: attach under a CharacterBody2D; moves with the ui_* input actions."
+
+[sub_resource type="Resource" id="Resource_cd6x4"]
+script = ExtResource("2_qu4da")
+code = "if host == null:
+	return
+var input_vector := Input.get_vector(\"ui_left\", \"ui_right\", \"ui_up\", \"ui_down\")
+host.velocity = input_vector * move_speed
+host.move_and_slide()"
+
+[sub_resource type="Resource" id="Resource_hnixl"]
+script = ExtResource("6_0yw3h")
+trigger_provider_id = "Core"
+trigger_id = "OnPhysicsProcess"
+actions = Array[Resource]([SubResource("Resource_cd6x4")])
+event_uid = "254817"
+
+[sub_resource type="Resource" id="Resource_w741j"]
+script = ExtResource("2_qu4da")
+code = "move_speed = speed"
+
+[sub_resource type="Resource" id="Resource_bc0au"]
+script = ExtResource("7_hsu0o")
+id = "speed"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_qp3ot"]
+script = ExtResource("8_1h4jf")
+function_name = "set_move_speed"
+description = "Changes the movement speed."
+expose_as_ace = true
+ace_display_name = "Set Move Speed"
+ace_category = "Eight Direction"
+params = Array[ExtResource("7_hsu0o")]([SubResource("Resource_bc0au")])
+events = Array[Resource]([SubResource("Resource_w741j")])
+
+[resource]
+script = ExtResource("9_a5hw0")
+host_class = "CharacterBody2D"
+behavior_mode = true
+custom_class_name = "EightDirectionMovement"
+events = Array[Resource]([SubResource("Resource_mcrq6"), SubResource("Resource_hnixl")])
+variables = {
+"move_speed": {
+"default": 200.0,
+"exported": true,
+"type": "float"
+}
+}
+functions = Array[Resource]([SubResource("Resource_qp3ot")])

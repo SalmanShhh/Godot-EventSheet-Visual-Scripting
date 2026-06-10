@@ -1,0 +1,100 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_efx4g"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_7fivs"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_7ojdv"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_vta8r"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_60b5s"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_wybey"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_852lf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_x0bpu"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_4680w"]
+
+[sub_resource type="Resource" id="Resource_wlsfs"]
+script = ExtResource("1_efx4g")
+text = "Platformer movement behavior: attach under a CharacterBody2D. Move with ui_left/ui_right; call Jump from any sheet."
+
+[sub_resource type="Resource" id="Resource_b2uae"]
+script = ExtResource("2_7fivs")
+code = "## @ace_trigger
+## @ace_name(\"On Jumped\")
+## @ace_category(\"Platformer\")
+signal jumped"
+
+[sub_resource type="Resource" id="Resource_3d0wo"]
+script = ExtResource("2_7fivs")
+code = "if host == null:
+	return
+var direction := Input.get_axis(\"ui_left\", \"ui_right\")
+host.velocity.x = direction * move_speed
+if not host.is_on_floor():
+	host.velocity.y += gravity * delta
+host.move_and_slide()"
+
+[sub_resource type="Resource" id="Resource_4dex6"]
+script = ExtResource("6_wybey")
+trigger_provider_id = "Core"
+trigger_id = "OnPhysicsProcess"
+actions = Array[Resource]([SubResource("Resource_3d0wo")])
+event_uid = "66813a"
+
+[sub_resource type="Resource" id="Resource_dop18"]
+script = ExtResource("2_7fivs")
+code = "if host != null and host.is_on_floor():
+	host.velocity.y = jump_velocity
+	jumped.emit()"
+
+[sub_resource type="Resource" id="Resource_ktl15"]
+script = ExtResource("8_x0bpu")
+function_name = "jump"
+description = "Makes the host jump when it is on the floor."
+expose_as_ace = true
+ace_display_name = "Jump"
+ace_category = "Platformer"
+events = Array[Resource]([SubResource("Resource_dop18")])
+
+[sub_resource type="Resource" id="Resource_f35s6"]
+script = ExtResource("2_7fivs")
+code = "move_speed = speed"
+
+[sub_resource type="Resource" id="Resource_7agrn"]
+script = ExtResource("7_852lf")
+id = "speed"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_0mmu2"]
+script = ExtResource("8_x0bpu")
+function_name = "set_move_speed"
+description = "Changes the horizontal move speed."
+expose_as_ace = true
+ace_display_name = "Set Move Speed"
+ace_category = "Platformer"
+params = Array[ExtResource("7_852lf")]([SubResource("Resource_7agrn")])
+events = Array[Resource]([SubResource("Resource_f35s6")])
+
+[resource]
+script = ExtResource("9_4680w")
+host_class = "CharacterBody2D"
+behavior_mode = true
+custom_class_name = "PlatformerMovement"
+events = Array[Resource]([SubResource("Resource_wlsfs"), SubResource("Resource_b2uae"), SubResource("Resource_4dex6")])
+variables = {
+"gravity": {
+"default": 980.0,
+"exported": true,
+"type": "float"
+},
+"jump_velocity": {
+"default": -400.0,
+"exported": true,
+"type": "float"
+},
+"move_speed": {
+"default": 200.0,
+"exported": true,
+"type": "float"
+}
+}
+functions = Array[Resource]([SubResource("Resource_ktl15"), SubResource("Resource_0mmu2")])

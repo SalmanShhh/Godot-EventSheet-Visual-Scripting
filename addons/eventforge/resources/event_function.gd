@@ -7,6 +7,13 @@ class_name EventFunction
 @export var enabled: bool = true
 @export var function_name: String = ""
 @export var description: String = ""
+## When true, the generated function carries `@ace_*` annotations, so dropping the compiled
+## script into res://eventsheet_addons/ publishes this function as an ACE in every sheet —
+## the sheet → script → addon loop that makes behaviors/custom nodes extend the vocabulary.
+@export var expose_as_ace: bool = false
+## Optional ACE presentation when exposed (fall back to a humanized function name).
+@export var ace_display_name: String = ""
+@export var ace_category: String = ""
 @export var params: Array[ACEParam] = []
 @export var parameters: Array[String] = [] # Backwards-compatible alias.
 @export var return_type: int = TYPE_NIL

@@ -1,0 +1,8 @@
+; Engine configuration file.
+; Demo project metadata kept out of the default editor scan to avoid nested-project warnings.
+
+config_version=5
+
+[application]
+config/name="EventForge Demo"
+run/main_scene="res://scenes/player.tscn"

@@ -1,1430 +1,1495 @@
-# EventForge — EventSheetEditor helper behavior tests
+# EventForge — restarted event sheet viewport architecture tests
 @tool
 extends RefCounted
 class_name EventSheetEditorTest
 
-## Runs EventSheetEditor helper tests.
+class FakeEditorUndoRedoManager:
+    extends RefCounted
+
+    var _pending_do: Array[Callable] = []
+    var _pending_undo: Array[Callable] = []
+    var _undo_stack: Array[Dictionary] = []
+    var _redo_stack: Array[Dictionary] = []
+
+    func create_action(_name: String) -> void:
+        _pending_do.clear()
+        _pending_undo.clear()
+
+    func add_do_method(
+        target: Object,
+        method_name: String,
+        arg1: Variant = null,
+        arg2: Variant = null,
+        arg3: Variant = null,
+        arg4: Variant = null
+    ) -> void:
+        var args: Array = [arg1, arg2, arg3, arg4]
+        _pending_do.append(func() -> void: target.callv(method_name, _trim_null_args(args)))
+
+    func add_undo_method(
+        target: Object,
+        method_name: String,
+        arg1: Variant = null,
+        arg2: Variant = null,
+        arg3: Variant = null,
+        arg4: Variant = null
+    ) -> void:
+        var args: Array = [arg1, arg2, arg3, arg4]
+        _pending_undo.append(func() -> void: target.callv(method_name, _trim_null_args(args)))
+
+    func commit_action() -> void:
+        for action in _pending_do:
+            action.call()
+        _undo_stack.append({"do": _pending_do.duplicate(), "undo": _pending_undo.duplicate()})
+        _pending_do.clear()
+        _pending_undo.clear()
+        _redo_stack.clear()
+
+    func has_undo() -> bool:
+        return not _undo_stack.is_empty()
+
+    func has_redo() -> bool:
+        return not _redo_stack.is_empty()
+
+    func undo() -> void:
+        if _undo_stack.is_empty():
+            return
+        var action: Dictionary = _undo_stack.pop_back()
+        for undo_action in action.get("undo", []):
+            (undo_action as Callable).call()
+        _redo_stack.append(action)
+
+    func redo() -> void:
+        if _redo_stack.is_empty():
+            return
+        var action: Dictionary = _redo_stack.pop_back()
+        for do_action in action.get("do", []):
+            (do_action as Callable).call()
+        _undo_stack.append(action)
+
+    func clear_history() -> void:
+        _pending_do.clear()
+        _pending_undo.clear()
+        _undo_stack.clear()
+        _redo_stack.clear()
+
+    static func _trim_null_args(args: Array) -> Array:
+        var output: Array = args.duplicate()
+        while not output.is_empty() and output[output.size() - 1] == null:
+            output.pop_back()
+        return output
+
+## Runs EventSheetEditor architecture tests.
 static func run() -> bool:
-	var all_passed: bool = true
-	var editor: EventSheetEditor = EventSheetEditor.new()
-	var lane_row: EventRowUI = EventRowUI.new()
-	lane_row.event_row = EventRow.new()
-	lane_row.refresh()
-	all_passed = _check("event row no IF label", _contains_label_text(lane_row, "IF"), false) and all_passed
-	all_passed = _check("event row no THEN label", _contains_label_text(lane_row, "THEN"), false) and all_passed
-	all_passed = _check("event row no lane marker dots", _contains_label_text(lane_row, "●"), false) and all_passed
-	all_passed = _check("event row no Conditions label", _contains_label_text(lane_row, "Conditions"), false) and all_passed
-	all_passed = _check("event row no Actions label", _contains_label_text(lane_row, "Actions"), false) and all_passed
-	all_passed = _check("toolbar meta no sheet", SheetToolbar.format_document_meta(null), "No sheet loaded") and all_passed
-	all_passed = _check("toolbar selection none", SheetToolbar.format_selection_meta("none"), "No selection") and all_passed
-	all_passed = _check("toolbar selection event", SheetToolbar.format_selection_meta("event"), "Selection: Event") and all_passed
-	all_passed = _check("toolbar selection comment", SheetToolbar.format_selection_meta("comment"), "Selection: Comment") and all_passed
-	var toolbar_ui: SheetToolbar = SheetToolbar.new()
-	all_passed = _check("toolbar contains shortcuts hint label", _contains_label_text(toolbar_ui, SheetToolbar.shortcut_hint_text()), true) and all_passed
-	all_passed = _check("toolbar shortcuts hint hidden without sheet", toolbar_ui._shortcuts_hint_label.visible, false) and all_passed
-	toolbar_ui.set_sheet_loaded(true)
-	all_passed = _check("toolbar shortcuts hint visible with loaded sheet", toolbar_ui._shortcuts_hint_label.visible, true) and all_passed
-	all_passed = _check("toolbar add event tooltip includes shortcut", toolbar_ui._add_event_btn.tooltip_text.find("Ctrl+E") != -1, true) and all_passed
-	all_passed = _check("toolbar add variable tooltip includes shortcut", toolbar_ui._add_var_btn.tooltip_text.find("Ctrl+Shift+V") != -1, true) and all_passed
-	all_passed = _check("toolbar shortcuts hint includes quick comment", SheetToolbar.shortcut_hint_text().find("Q Comment") != -1, true) and all_passed
-	all_passed = _check("toolbar shortcuts hint includes copy event", SheetToolbar.shortcut_hint_text().find("Ctrl+C Copy Event") != -1, true) and all_passed
-	all_passed = _check("toolbar shortcuts hint includes paste event", SheetToolbar.shortcut_hint_text().find("Ctrl+V Paste Event") != -1, true) and all_passed
-	var toolbar_sheet: EventSheetResource = EventSheetResource.new()
-	toolbar_sheet.variables["health"] = {"type": "int", "default": 100}
-	toolbar_sheet.events.append(EventRow.new())
-	all_passed = _check("toolbar meta loaded sheet", SheetToolbar.format_document_meta(toolbar_sheet), "1 globals · 1 root rows") and all_passed
-	toolbar_sheet = null
-	toolbar_ui.free()
-
-	all_passed = _check("parse int", editor._parse_variable_initial_value("42", "int"), 42) and all_passed
-	all_passed = _check("parse float", editor._parse_variable_initial_value("3.5", "float"), 3.5) and all_passed
-	all_passed = _check("parse bool true", editor._parse_variable_initial_value("true", "bool"), true) and all_passed
-	all_passed = _check("parse bool false", editor._parse_variable_initial_value("no", "bool"), false) and all_passed
-	all_passed = _check("parse string", editor._parse_variable_initial_value("Player", "String"), "Player") and all_passed
-	all_passed = _check("parse variant empty -> null", editor._parse_variable_initial_value(" ", "Variant"), null) and all_passed
-
-	# LineEdit fallback still works for int params (backwards compatibility).
-	var int_param: ACEParam = ACEParam.new()
-	int_param.type_name = "int"
-	var int_input: LineEdit = LineEdit.new()
-	int_input.text = "13"
-	all_passed = _check("ace param int input", editor._extract_ace_param_input_value(int_param, int_input), 13) and all_passed
-	int_input.text = "abc"
-	all_passed = _check("ace param int invalid input", editor._extract_ace_param_input_value(int_param, int_input), 0) and all_passed
-	int_input.text = ""
-	all_passed = _check("ace param int empty input", editor._extract_ace_param_input_value(int_param, int_input), 0) and all_passed
-
-	# SpinBox controls for int and float params.
-	var spin_int_param: ACEParam = ACEParam.new()
-	spin_int_param.type_name = "int"
-	var spin_int: SpinBox = SpinBox.new()
-	spin_int.value = 7.0
-	all_passed = _check("ace param int spinbox", editor._extract_ace_param_input_value(spin_int_param, spin_int), 7) and all_passed
-
-	var spin_float_param: ACEParam = ACEParam.new()
-	spin_float_param.type_name = "float"
-	var spin_float: SpinBox = SpinBox.new()
-	spin_float.value = 3.14
-	all_passed = _check("ace param float spinbox", editor._extract_ace_param_input_value(spin_float_param, spin_float), 3.14) and all_passed
-
-	var bool_param: ACEParam = ACEParam.new()
-	bool_param.type_name = "boolean"
-	var bool_input: OptionButton = OptionButton.new()
-	bool_input.add_item("False")
-	bool_input.add_item("True")
-	bool_input.select(1)
-	all_passed = _check("ace param bool input", editor._extract_ace_param_input_value(bool_param, bool_input), true) and all_passed
-	bool_input.select(0)
-	all_passed = _check("ace param bool false input", editor._extract_ace_param_input_value(bool_param, bool_input), false) and all_passed
-
-	# Variable name list from sheet.
-	var sheet: EventSheetResource = EventSheetResource.new()
-	sheet.variables["health"] = {"type": "int", "default": 100}
-	sheet.variables["speed"] = {"type": "float", "default": 5.0}
-	editor.current_sheet = sheet
-	var var_names: Array[String] = editor._get_available_variable_names()
-	all_passed = _check("variable names sorted count", var_names.size(), 2) and all_passed
-	all_passed = _check("variable names first sorted", var_names[0], "health") and all_passed
-	all_passed = _check("variable names second sorted", var_names[1], "speed") and all_passed
-
-	# Variable dropdown reflects current sheet variables.
-	var var_dropdown: OptionButton = editor._create_variable_dropdown("speed")
-	all_passed = _check("variable dropdown item count", var_dropdown.item_count, 2) and all_passed
-	all_passed = _check("variable dropdown selects existing", var_dropdown.get_item_text(var_dropdown.selected), "speed") and all_passed
-
-	# Variable dropdown empty-state is explicit and non-selectable.
-	editor.current_sheet = EventSheetResource.new()
-	var empty_var_dropdown: OptionButton = editor._create_variable_dropdown("")
-	all_passed = _check("variable dropdown empty item count", empty_var_dropdown.item_count, 1) and all_passed
-	all_passed = _check("variable dropdown empty text", empty_var_dropdown.get_item_text(0), EventSheetEditor.NO_VARIABLES_AVAILABLE_TEXT) and all_passed
-	all_passed = _check("variable dropdown empty item disabled", empty_var_dropdown.is_item_disabled(0), true) and all_passed
-	all_passed = _check("variable dropdown empty control disabled", empty_var_dropdown.disabled, true) and all_passed
-
-	var var_param: ACEParam = ACEParam.new()
-	var_param.hint = "variable_reference"
-	all_passed = _check("variable dropdown empty extracts blank", editor._extract_ace_param_input_value(var_param, empty_var_dropdown), "") and all_passed
-	editor._ace_params_fields = {
-		"var_name": {
-			"param": var_param,
-			"input": empty_var_dropdown
-		}
-	}
-	all_passed = _check("variable dropdown empty blocks apply", editor._has_missing_variable_reference_selection(), true) and all_passed
-
-	editor.current_sheet = sheet
-	var valid_var_dropdown: OptionButton = editor._create_variable_dropdown("health")
-	editor._ace_params_fields = {
-		"var_name": {
-			"param": var_param,
-			"input": valid_var_dropdown
-		}
-	}
-	all_passed = _check("valid variable selection allows apply", editor._has_missing_variable_reference_selection(), false) and all_passed
-
-	# Operator params with options render as dropdowns.
-	var op_param: ACEParam = ACEParam.new()
-	op_param.type_name = "String"
-	op_param.options = ["==", "!=", "<", "<=", ">", ">="]
-	var op_input: Control = editor._create_ace_param_input(op_param, ">=")
-	all_passed = _check("operator options use dropdown control", op_input is OptionButton, true) and all_passed
-	if op_input is OptionButton:
-		var op_dropdown: OptionButton = op_input as OptionButton
-		all_passed = _check("operator dropdown item count", op_dropdown.item_count, 6) and all_passed
-		all_passed = _check("operator dropdown selected value", op_dropdown.get_item_text(op_dropdown.selected), ">=") and all_passed
-
-	var expr_param: ACEParam = ACEParam.new()
-	expr_param.type_name = "String"
-	expr_param.hint = "expression"
-	var expr_input: Control = editor._create_ace_param_input(expr_param, "value")
-	all_passed = _check("expression param uses line edit input", expr_input is LineEdit, true) and all_passed
-	all_passed = _check("expression hint enables picker button", editor._param_supports_expression_picker(expr_param, expr_input), true) and all_passed
-	var get_var_expression_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "GetVar")
-	all_passed = _check("get var expression descriptor exists", get_var_expression_desc != null, true) and all_passed
-	if get_var_expression_desc != null:
-		all_passed = _check("expression snippet applies defaults", editor._build_expression_snippet(get_var_expression_desc, {"var_name": "health"}), "health") and all_passed
-		all_passed = _check("expression snippet keeps unresolved token when value missing", editor._build_expression_snippet(get_var_expression_desc, {}), "{var_name}") and all_passed
-	all_passed = _check("expression separator omitted after open paren", editor._should_insert_expression_separator("(", "delta"), false) and all_passed
-	all_passed = _check("expression separator used for bare identifiers", editor._should_insert_expression_separator("health", "delta"), true) and all_passed
-
-	var compare_var: ACEDescriptor = ACERegistry.find_descriptor("Core", "CompareVar")
-	all_passed = _check("compare var descriptor exists", compare_var != null, true) and all_passed
-	# CompareVar params: [0]=var_name, [1]=op, [2]=value.
-	if compare_var != null and compare_var.params.size() > 2:
-		all_passed = _check("compare var op options count", compare_var.params[1].options.size(), 6) and all_passed
-		all_passed = _check("compare var value marked expression", compare_var.params[2].hint, "expression") and all_passed
-
-	var group_default: EventGroup = EventGroup.new()
-	all_passed = _check("group default expanded", editor._is_group_collapsed(group_default), false) and all_passed
-
-	var group_collapsed: EventGroup = EventGroup.new()
-	group_collapsed.collapsed = true
-	all_passed = _check("group collapsed flag", editor._is_group_collapsed(group_collapsed), true) and all_passed
-
-	var group_legacy: EventGroup = EventGroup.new()
-	group_legacy.collapsed = false
-	group_legacy.expanded = false
-	all_passed = _check("group legacy expanded=false", editor._is_group_collapsed(group_legacy), true) and all_passed
-
-	# Event row sub-events are rendered as additional indented rows.
-	editor._build_layout()
-	var sub_event_sheet: EventSheetResource = EventSheetResource.new()
-	var parent_row: EventRow = EventRow.new()
-	var child_row: EventRow = EventRow.new()
-	parent_row.sub_events.append(child_row)
-	sub_event_sheet.events.append(parent_row)
-	editor.current_sheet = sub_event_sheet
-	editor.refresh_canvas()
-	all_passed = _check("document header rendered", _count_nodes_named(editor, "SheetDocumentHeader") >= 1, true) and all_passed
-	all_passed = _check("globals section shell rendered", _count_nodes_named(editor, "SheetSectionGlobals") >= 1, true) and all_passed
-	all_passed = _check("events section shell rendered", _count_nodes_named(editor, "SheetSectionEvents") >= 1, true) and all_passed
-	all_passed = _check("sub events render nested rows", _count_event_row_nodes(editor), 2) and all_passed
-	all_passed = _check("sheet gutter wrappers rendered", _count_nodes_named(editor, "SheetGutter") >= 2, true) and all_passed
-
-	# Cycle safety: child referencing parent should still render each row once.
-	child_row.sub_events.append(parent_row)
-	editor.refresh_canvas()
-	all_passed = _check("sub events cycle guard prevents duplicate rendering", _count_event_row_nodes(editor), 2) and all_passed
-
-	# ACE params dialog back button is created and visible state reflects from_picker.
-	all_passed = _check("ace params back button created", editor._ace_params_back_button != null, true) and all_passed
-	if editor._ace_params_back_button != null:
-		editor._ace_params_from_picker = false
-		editor._ace_params_back_button.visible = false
-		all_passed = _check("back button hidden for edit flow", editor._ace_params_back_button.visible, false) and all_passed
-		editor._ace_params_from_picker = true
-		editor._ace_params_back_button.visible = true
-		all_passed = _check("back button visible for picker flow", editor._ace_params_back_button.visible, true) and all_passed
-
-	# ACE picker popup is created as a Window (movable and titled).
-	all_passed = _check("ace picker popup created", editor._ace_picker_popup != null, true) and all_passed
-	if editor._ace_picker_popup != null:
-		all_passed = _check("ace picker popup is window", editor._ace_picker_popup is Window, true) and all_passed
-		all_passed = _check("ace picker popup starts hidden", editor._ace_picker_popup.visible, false) and all_passed
-
-	# Zero-param ACE applies once and clears picker/params state after apply.
-	var zero_param_sheet: EventSheetResource = EventSheetResource.new()
-	editor.current_sheet = zero_param_sheet
-	editor.refresh_canvas()
-	editor._ace_picker_mode = "append_condition"
-	var zero_param_row: EventRow = EventRow.new()
-	zero_param_sheet.events.append(zero_param_row)
-	var zero_param_row_ui: EventRowUI = EventRowUI.new()
-	zero_param_row_ui.event_row = zero_param_row
-	editor._ace_picker_target_row = zero_param_row_ui
-	editor._ace_picker_target_condition_index = -1
-	var always_descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "Always")
-	if always_descriptor != null:
-		all_passed = _check("always descriptor has no params", always_descriptor.params.is_empty(), true) and all_passed
-		editor._open_ace_params_dialog_for_picker_selection(always_descriptor)
-		all_passed = _check("zero-param apply clears picker mode", editor._ace_picker_mode, "") and all_passed
-		all_passed = _check("zero-param apply clears picker target row", editor._ace_picker_target_row == null, true) and all_passed
-		all_passed = _check("zero-param apply clears params descriptor", editor._ace_params_descriptor == null, true) and all_passed
-		all_passed = _check("zero-param condition added once", zero_param_row.conditions.size(), 1) and all_passed
-
-	# Delete event removes it from the sheet and refreshes.
-	var delete_sheet: EventSheetResource = EventSheetResource.new()
-	editor.current_sheet = delete_sheet
-	var del_event: EventRow = EventRow.new()
-	delete_sheet.events.append(del_event)
-	var del_uid: String = del_event.event_uid
-	editor._delete_event_by_uid(del_uid)
-	all_passed = _check("delete event removes from sheet", delete_sheet.events.size(), 0) and all_passed
-	all_passed = _check("delete event resets selection kind", editor._selected_entry_kind, "none") and all_passed
-	all_passed = _check("delete event refresh removes row ui", editor._find_event_row_ui_by_uid(editor._canvas_vbox, del_uid) == null, true) and all_passed
-
-	# Row-level insertion affordances insert relative to nested and group rows.
-	var nested_insert_sheet: EventSheetResource = EventSheetResource.new()
-	var parent_insert_event: EventRow = EventRow.new()
-	var child_insert_event: EventRow = EventRow.new()
-	parent_insert_event.sub_events.append(child_insert_event)
-	nested_insert_sheet.events.append(parent_insert_event)
-	editor.current_sheet = nested_insert_sheet
-	editor.refresh_canvas()
-	var child_insert_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, child_insert_event.event_uid)
-	if child_insert_row_ui != null:
-		editor._on_event_insert_above_requested(child_insert_row_ui)
-		all_passed = _check("insert above nested row adds sibling in parent sub-events", parent_insert_event.sub_events.size(), 2) and all_passed
-		var inserted_nested: Variant = parent_insert_event.sub_events[0]
-		all_passed = _check("insert above nested row places new row before target", inserted_nested is EventRow and (inserted_nested as EventRow).event_uid != child_insert_event.event_uid, true) and all_passed
-		all_passed = _check("insert above nested row keeps target shifted to next index", parent_insert_event.sub_events[1] == child_insert_event, true) and all_passed
-
-	var group_insert_sheet: EventSheetResource = EventSheetResource.new()
-	var group_insert: EventGroup = EventGroup.new()
-	group_insert.events.append(EventRow.new())
-	group_insert_sheet.events.append(group_insert)
-	editor.current_sheet = group_insert_sheet
-	editor.refresh_canvas()
-	var group_insert_row_ui: GroupRowUI = editor._find_group_row_ui_by_uid(editor._canvas_vbox, group_insert.group_uid)
-	if group_insert_row_ui != null:
-		editor._on_group_insert_below_requested(group_insert_row_ui)
-		all_passed = _check("insert below group row adds sibling event in root list", group_insert_sheet.events.size(), 2) and all_passed
-		all_passed = _check("insert below group row inserts event resource", group_insert_sheet.events[1] is EventRow, true) and all_passed
-		editor._on_group_enabled_toggled(group_insert_row_ui, false)
-		all_passed = _check("group enabled toggle handler disables group", group_insert.enabled, false) and all_passed
-		all_passed = _check("group enabled toggle updates status message", editor._status_label.text, "Group disabled") and all_passed
-
-	# Inline comment rows render in-flow and support structural relative insertion.
-	var comment_sheet: EventSheetResource = EventSheetResource.new()
-	var first_comment: CommentRow = CommentRow.new()
-	first_comment.text = "Before spawn"
-	var comment_event: EventRow = EventRow.new()
-	comment_sheet.events.append(first_comment)
-	comment_sheet.events.append(comment_event)
-	editor.current_sheet = comment_sheet
-	editor.refresh_canvas()
-	all_passed = _check("comment rows render inline in events section", _count_comment_row_nodes(editor), 1) and all_passed
-	var comment_row_ui: CommentRowUI = editor._find_comment_row_ui_by_resource(editor._canvas_vbox, first_comment)
-	all_passed = _check("comment row ui exists for comment resource", comment_row_ui != null, true) and all_passed
-	if comment_row_ui != null:
-		all_passed = _check("comment row lane divider present", _has_color_rect_min_width(comment_row_ui, 2), true) and all_passed
-		var comment_insert_above_btn: Button = _find_button_with_tooltip(comment_row_ui, "Insert comment above this row")
-		var comment_focus_btn: Button = _find_button_with_tooltip(comment_row_ui, "Focus comment text")
-		all_passed = _check("comment row insertion button above visible", comment_insert_above_btn != null, true) and all_passed
-		all_passed = _check("comment row insertion button below visible", _find_button_with_tooltip(comment_row_ui, "Insert comment below this row") != null, true) and all_passed
-		all_passed = _check("comment row focus button visible", comment_focus_btn != null, true) and all_passed
-		all_passed = _check("comment row has inline text edit", _find_line_edit_with_tooltip(comment_row_ui, "Edit inline comment text") != null, true) and all_passed
-		comment_row_ui._on_comment_text_changed("Before spawn refined")
-		all_passed = _check("inline comment edit updates resource text", first_comment.text, "Before spawn refined") and all_passed
-		comment_row_ui._on_comment_text_submitted("Before spawn refined")
-		all_passed = _check("comment submit updates status message", editor._status_label.text, "Comment updated") and all_passed
-		if comment_insert_above_btn != null:
-			all_passed = _check("comment row insertion affordance dimmed at rest", comment_insert_above_btn.modulate.a < 1.0, true) and all_passed
-		if comment_focus_btn != null:
-			all_passed = _check("comment row focus affordance dimmed at rest", comment_focus_btn.modulate.a < 1.0, true) and all_passed
-		if comment_insert_above_btn != null:
-			comment_row_ui._on_mouse_entered()
-			all_passed = _check("comment row insertion affordance brightens on hover", is_equal_approx(comment_insert_above_btn.modulate.a, 1.0), true) and all_passed
-		if comment_focus_btn != null:
-			all_passed = _check("comment row focus affordance brightens on hover", is_equal_approx(comment_focus_btn.modulate.a, 1.0), true) and all_passed
-		editor._on_comment_insert_below_requested(comment_row_ui)
-		all_passed = _check("insert below comment row adds sibling comment", comment_sheet.events.size(), 3) and all_passed
-		all_passed = _check("insert below comment row inserts comment resource", comment_sheet.events[1] is CommentRow, true) and all_passed
-		var inserted_comment: CommentRow = comment_sheet.events[1] as CommentRow
-		var inserted_comment_ui: CommentRowUI = editor._find_comment_row_ui_by_resource(editor._canvas_vbox, inserted_comment)
-		if inserted_comment_ui != null:
-			editor._on_comment_selected(inserted_comment_ui)
-			all_passed = _check("comment selection updates kind", editor._selected_entry_kind, "comment") and all_passed
-			editor._on_comment_delete_requested(inserted_comment_ui)
-			all_passed = _check("delete comment row removes from sheet", comment_sheet.events.size(), 2) and all_passed
-
-	# Comment style/color_tag should alter banner accent palette for sectioning.
-	var styled_comment: CommentRow = CommentRow.new()
-	styled_comment.text = "Blue section"
-	styled_comment.color_tag = "blue"
-	var styled_comment_row: CommentRowUI = CommentRowUI.new()
-	styled_comment_row.comment_row = styled_comment
-	styled_comment_row.refresh()
-	var styled_accent: ColorRect = _find_first_color_rect(styled_comment_row)
-	all_passed = _check("comment color_tag blue updates accent color", styled_accent != null and styled_accent.color.b > styled_accent.color.r, true) and all_passed
-
-	# Drag move: conditions and actions can move/reorder across events.
-	var drag_sheet: EventSheetResource = EventSheetResource.new()
-	var drag_source_event: EventRow = EventRow.new()
-	var drag_target_event: EventRow = EventRow.new()
-	var drag_cond_a: ACECondition = ACECondition.new()
-	drag_cond_a.ace_id = "Always"
-	var drag_cond_b: ACECondition = ACECondition.new()
-	drag_cond_b.ace_id = "CompareVar"
-	drag_source_event.conditions.append(drag_cond_a)
-	drag_source_event.conditions.append(drag_cond_b)
-	var drag_action: ACEAction = ACEAction.new()
-	drag_action.ace_id = "QueueFree"
-	drag_source_event.actions.append(drag_action)
-	drag_sheet.events.append(drag_source_event)
-	drag_sheet.events.append(drag_target_event)
-	editor.current_sheet = drag_sheet
-	editor.refresh_canvas()
-	var drag_source_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, drag_source_event.event_uid)
-	var drag_target_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, drag_target_event.event_uid)
-	if drag_source_row_ui != null and drag_target_row_ui != null:
-		editor._on_condition_move_requested(drag_source_event.event_uid, 0, drag_target_row_ui, -1)
-		all_passed = _check("drag move condition removes from source", drag_source_event.conditions.size(), 1) and all_passed
-		all_passed = _check("drag move condition appends to target", drag_target_event.conditions.size(), 1) and all_passed
-		editor._on_action_move_requested(drag_source_event.event_uid, 0, drag_target_row_ui, 0)
-		all_passed = _check("drag move action removes from source", drag_source_event.actions.size(), 0) and all_passed
-		all_passed = _check("drag move action inserts in target", drag_target_event.actions.size(), 1) and all_passed
-		editor._on_condition_move_requested(drag_source_event.event_uid, 0, drag_source_row_ui, 1)
-		all_passed = _check("drag reorder condition keeps count", drag_source_event.conditions.size(), 1) and all_passed
-
-	var drag_reorder_sheet: EventSheetResource = EventSheetResource.new()
-	var drag_reorder_event: EventRow = EventRow.new()
-	var drag_reorder_first: ACECondition = ACECondition.new()
-	drag_reorder_first.ace_id = "Always"
-	var drag_reorder_second: ACECondition = ACECondition.new()
-	drag_reorder_second.ace_id = "CompareVar"
-	drag_reorder_event.conditions.append(drag_reorder_first)
-	drag_reorder_event.conditions.append(drag_reorder_second)
-	drag_reorder_sheet.events.append(drag_reorder_event)
-	editor.current_sheet = drag_reorder_sheet
-	editor.refresh_canvas()
-	var drag_reorder_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, drag_reorder_event.event_uid)
-	if drag_reorder_row_ui != null:
-		editor._on_condition_move_requested(drag_reorder_event.event_uid, 0, drag_reorder_row_ui, 2)
-		all_passed = _check("drag reorder condition moves original second to front", drag_reorder_event.conditions[0] == drag_reorder_second, true) and all_passed
-
-	# Drag move: comments can move relative to events and other comments.
-	var drag_comment_sheet: EventSheetResource = EventSheetResource.new()
-	var drag_comment_a: CommentRow = CommentRow.new()
-	drag_comment_a.text = "A"
-	var drag_comment_b: CommentRow = CommentRow.new()
-	drag_comment_b.text = "B"
-	var drag_comment_event: EventRow = EventRow.new()
-	drag_comment_sheet.events.append(drag_comment_a)
-	drag_comment_sheet.events.append(drag_comment_event)
-	drag_comment_sheet.events.append(drag_comment_b)
-	editor.current_sheet = drag_comment_sheet
-	editor.refresh_canvas()
-	var drag_comment_event_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, drag_comment_event.event_uid)
-	var drag_comment_b_ui: CommentRowUI = editor._find_comment_row_ui_by_resource(editor._canvas_vbox, drag_comment_b)
-	if drag_comment_event_ui != null:
-		editor._on_comment_drop_on_event_requested(drag_comment_event_ui, drag_comment_a, true)
-		all_passed = _check("drag comment below event places comment after event", drag_comment_sheet.events[0] == drag_comment_event and drag_comment_sheet.events[1] == drag_comment_a, true) and all_passed
-	if drag_comment_b_ui != null:
-		editor._on_comment_drop_on_comment_requested(drag_comment_b_ui, drag_comment_a, false)
-		all_passed = _check("drag comment above comment reorders comments", drag_comment_sheet.events[1] == drag_comment_a, true) and all_passed
-
-	# Workflow: shortcut action dispatch opens add-condition picker for selected event.
-	var shortcut_sheet: EventSheetResource = EventSheetResource.new()
-	var shortcut_event: EventRow = EventRow.new()
-	shortcut_sheet.events.append(shortcut_event)
-	editor.current_sheet = shortcut_sheet
-	editor.refresh_canvas()
-	var shortcut_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, shortcut_event.event_uid)
-	if shortcut_row_ui != null:
-		editor._on_event_selected(shortcut_row_ui)
-		all_passed = _check("shortcut add condition handled", editor._handle_workflow_shortcut("add_condition"), true) and all_passed
-		all_passed = _check("shortcut add condition opens picker mode", editor._ace_picker_mode, "append_condition") and all_passed
-		all_passed = _check("shortcut add condition targets selected row", editor._ace_picker_target_row == shortcut_row_ui, true) and all_passed
-		if editor._ace_picker_popup != null:
-			editor._ace_picker_popup.hide()
-		var add_event_key: InputEventKey = InputEventKey.new()
-		add_event_key.pressed = true
-		add_event_key.ctrl_pressed = true
-		add_event_key.keycode = KEY_E
-		editor._unhandled_key_input(add_event_key)
-		all_passed = _check("keyboard Ctrl+E opens add event picker", editor._ace_picker_mode, "new_event") and all_passed
-		if editor._ace_picker_popup != null:
-			editor._ace_picker_popup.hide()
-		var add_comment_key: InputEventKey = InputEventKey.new()
-		add_comment_key.pressed = true
-		add_comment_key.keycode = KEY_Q
-		editor._unhandled_key_input(add_comment_key)
-		all_passed = _check("keyboard Q inserts comment near selected event", shortcut_sheet.events[1] is CommentRow, true) and all_passed
-
-	# Workflow: _on_add_group_requested adds an EventGroup to the sheet.
-	var group_add_sheet: EventSheetResource = EventSheetResource.new()
-	var group_add_event: EventRow = EventRow.new()
-	group_add_sheet.events.append(group_add_event)
-	editor.current_sheet = group_add_sheet
-	editor.refresh_canvas()
-	var group_add_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, group_add_event.event_uid)
-	if group_add_row_ui != null:
-		editor._on_event_selected(group_add_row_ui)
-	editor._on_add_group_requested()
-	all_passed = _check("add group appends EventGroup to sheet", group_add_sheet.events.size(), 2) and all_passed
-	all_passed = _check("add group inserts EventGroup resource", group_add_sheet.events[1] is EventGroup, true) and all_passed
-
-	# Workflow: add-event picker reflects relative insertion target and inserts below selection.
-	var relative_add_sheet: EventSheetResource = EventSheetResource.new()
-	var relative_anchor_event: EventRow = EventRow.new()
-	var relative_tail_event: EventRow = EventRow.new()
-	relative_add_sheet.events.append(relative_anchor_event)
-	relative_add_sheet.events.append(relative_tail_event)
-	editor.current_sheet = relative_add_sheet
-	editor.refresh_canvas()
-	var relative_anchor_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, relative_anchor_event.event_uid)
-	if relative_anchor_row_ui != null:
-		editor._on_event_selected(relative_anchor_row_ui)
-		editor._on_add_event_requested()
-		all_passed = _check("add event picker shows relative insertion hint", editor._ace_picker_description != null and editor._ace_picker_description.text.find("below the selected event") != -1, true) and all_passed
-		var always_new_event_descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "Always")
-		if always_new_event_descriptor != null:
-			editor._open_ace_params_dialog_for_picker_selection(always_new_event_descriptor)
-			all_passed = _check("relative add event increases sheet row count", relative_add_sheet.events.size(), 3) and all_passed
-			all_passed = _check("relative add event inserts below selected event", relative_add_sheet.events[1] is EventRow and relative_add_sheet.events[1] != relative_tail_event, true) and all_passed
-			all_passed = _check("relative add event keeps prior trailing event after inserted row", relative_add_sheet.events[2] == relative_tail_event, true) and all_passed
-			all_passed = _check("relative add event status includes target placement", editor._status_label.text.find("below selected event") != -1, true) and all_passed
-
-	# Workflow: copy/paste event preserves sub-events.
-	var copy_sheet: EventSheetResource = EventSheetResource.new()
-	var copy_parent: EventRow = EventRow.new()
-	var copy_child: EventRow = EventRow.new()
-	var copy_grandchild: EventRow = EventRow.new()
-	copy_child.sub_events.append(copy_grandchild)
-	copy_parent.sub_events.append(copy_child)
-	copy_sheet.events.append(copy_parent)
-	editor.current_sheet = copy_sheet
-	editor.refresh_canvas()
-	var copy_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, copy_parent.event_uid)
-	if copy_row_ui != null:
-		editor._on_event_selected(copy_row_ui)
-		all_passed = _check("copy shortcut handles selected event", editor._handle_workflow_shortcut("copy_event"), true) and all_passed
-		all_passed = _check("paste shortcut handles copied event", editor._handle_workflow_shortcut("paste_event"), true) and all_passed
-		all_passed = _check("paste adds root event copy", copy_sheet.events.size(), 2) and all_passed
-		var pasted_event: EventRow = copy_sheet.events[1] as EventRow
-		all_passed = _check("pasted event exists", pasted_event != null, true) and all_passed
-		if pasted_event != null:
-			all_passed = _check("pasted event gets new uid", pasted_event.event_uid == copy_parent.event_uid, false) and all_passed
-			all_passed = _check("pasted event preserves child hierarchy", pasted_event.sub_events.size(), 1) and all_passed
-			var pasted_child: EventRow = pasted_event.sub_events[0] as EventRow
-			all_passed = _check("pasted child is event row", pasted_child != null, true) and all_passed
-			if pasted_child != null:
-				all_passed = _check("pasted child preserves nested sub-events", pasted_child.sub_events.size(), 1) and all_passed
-
-	# Workflow: Ctrl+D duplicates the selected event and inserts it after the source.
-	var dup_sheet: EventSheetResource = EventSheetResource.new()
-	var dup_event_a: EventRow = EventRow.new()
-	var dup_action: ACEAction = ACEAction.new()
-	dup_action.ace_id = "QueueFree"
-	dup_event_a.actions.append(dup_action)
-	var dup_event_b: EventRow = EventRow.new()
-	dup_sheet.events.append(dup_event_a)
-	dup_sheet.events.append(dup_event_b)
-	editor.current_sheet = dup_sheet
-	editor.refresh_canvas()
-	var dup_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, dup_event_a.event_uid)
-	if dup_row_ui != null:
-		editor._on_event_selected(dup_row_ui)
-		var dup_key: InputEventKey = InputEventKey.new()
-		dup_key.pressed = true
-		dup_key.ctrl_pressed = true
-		dup_key.keycode = KEY_D
-		editor._unhandled_key_input(dup_key)
-		all_passed = _check("Ctrl+D inserts duplicate after source event", dup_sheet.events.size(), 3) and all_passed
-		var dup_clone: EventRow = dup_sheet.events[1] as EventRow
-		all_passed = _check("duplicate is inserted at index 1", dup_clone != null, true) and all_passed
-		if dup_clone != null:
-			all_passed = _check("duplicate gets new uid", dup_clone.event_uid != dup_event_a.event_uid, true) and all_passed
-			all_passed = _check("duplicate preserves actions", dup_clone.actions.size(), 1) and all_passed
-
-	# Workflow: G shortcut adds a new EventGroup to the sheet.
-	var g_sheet: EventSheetResource = EventSheetResource.new()
-	var g_event: EventRow = EventRow.new()
-	g_sheet.events.append(g_event)
-	editor.current_sheet = g_sheet
-	editor.refresh_canvas()
-	var g_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, g_event.event_uid)
-	if g_row_ui != null:
-		editor._on_event_selected(g_row_ui)
-	var g_key: InputEventKey = InputEventKey.new()
-	g_key.pressed = true
-	g_key.keycode = KEY_G
-	editor._unhandled_key_input(g_key)
-	all_passed = _check("keyboard G adds EventGroup to sheet", g_sheet.events[1] is EventGroup, true) and all_passed
-
-	# Workflow: Escape shortcut clears selection and shows empty inspector.
-	var esc_sheet: EventSheetResource = EventSheetResource.new()
-	var esc_event: EventRow = EventRow.new()
-	esc_sheet.events.append(esc_event)
-	editor.current_sheet = esc_sheet
-	editor.refresh_canvas()
-	var esc_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, esc_event.event_uid)
-	if esc_row_ui != null:
-		editor._on_event_selected(esc_row_ui)
-		all_passed = _check("before Escape selection kind is event", editor._selected_entry_kind, "event") and all_passed
-		var esc_key: InputEventKey = InputEventKey.new()
-		esc_key.pressed = true
-		esc_key.keycode = KEY_ESCAPE
-		editor._unhandled_key_input(esc_key)
-		all_passed = _check("Escape resets selection kind to none", editor._selected_entry_kind, "none") and all_passed
-
-	# Workflow: Up/Down arrow keys navigate between rows.
-	var nav_sheet: EventSheetResource = EventSheetResource.new()
-	var nav_event_a: EventRow = EventRow.new()
-	var nav_event_b: EventRow = EventRow.new()
-	nav_sheet.events.append(nav_event_a)
-	nav_sheet.events.append(nav_event_b)
-	editor.current_sheet = nav_sheet
-	editor.refresh_canvas()
-	var nav_row_a: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, nav_event_a.event_uid)
-	var nav_row_b: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, nav_event_b.event_uid)
-	if nav_row_a != null and nav_row_b != null:
-		editor._on_event_selected(nav_row_a)
-		all_passed = _check("nav: starts on first event row", editor._selected_row == nav_row_a, true) and all_passed
-		all_passed = _check("navigate_down returns true", editor._handle_workflow_shortcut("navigate_down"), true) and all_passed
-		all_passed = _check("navigate_down selects second row", editor._selected_row == nav_row_b, true) and all_passed
-		all_passed = _check("navigate_up returns true", editor._handle_workflow_shortcut("navigate_up"), true) and all_passed
-		all_passed = _check("navigate_up returns to first row", editor._selected_row == nav_row_a, true) and all_passed
-		all_passed = _check("navigate_up at top returns false", editor._handle_workflow_shortcut("navigate_up"), false) and all_passed
-
-	# Workflow: _collect_selectable_rows_in_order returns rows in visual order.
-	var coll_sheet: EventSheetResource = EventSheetResource.new()
-	var coll_event: EventRow = EventRow.new()
-	var coll_comment: CommentRow = CommentRow.new()
-	coll_comment.text = "Section"
-	coll_sheet.events.append(coll_event)
-	coll_sheet.events.append(coll_comment)
-	editor.current_sheet = coll_sheet
-	editor.refresh_canvas()
-	var coll_rows: Array = []
-	editor._collect_selectable_rows_in_order(editor._canvas_vbox, coll_rows)
-	all_passed = _check("collect selectable rows finds event and comment", coll_rows.size() >= 2, true) and all_passed
-	all_passed = _check("first collected row is EventRowUI", coll_rows[0] is EventRowUI, true) and all_passed
-	all_passed = _check("second collected row is CommentRowUI", coll_rows[1] is CommentRowUI, true) and all_passed
-
-	# Workflow: CommentRowUI.grab_text_focus() method exists and can be called.
-	var grab_comment: CommentRow = CommentRow.new()
-	grab_comment.text = "Grab test"
-	var grab_comment_ui: CommentRowUI = CommentRowUI.new()
-	grab_comment_ui.comment_row = grab_comment
-	grab_comment_ui.refresh()
-	# Should not crash even without a tree/viewport context.
-	grab_comment_ui.grab_text_focus()
-	all_passed = _check("CommentRowUI.grab_text_focus does not crash", true, true) and all_passed
-
-	# Workflow: EventRowUI drop highlight rect exists after build.
-	var drop_row: EventRowUI = EventRowUI.new()
-	drop_row.event_row = EventRow.new()
-	drop_row.refresh()
-	all_passed = _check("EventRowUI has drop highlight rect", drop_row._drop_highlight_rect != null, true) and all_passed
-	all_passed = _check("EventRowUI drop highlight starts transparent", drop_row._drop_highlight_rect != null and is_equal_approx(drop_row._drop_highlight_rect.color.a, 0.0), true) and all_passed
-	drop_row._set_drop_hovered(true)
-	all_passed = _check("EventRowUI drop highlight visible on hover", drop_row._drop_highlight_rect != null and drop_row._drop_highlight_rect.color.a > 0.0, true) and all_passed
-	drop_row._set_drop_hovered(false)
-	all_passed = _check("EventRowUI drop highlight cleared after hover", drop_row._drop_highlight_rect != null and is_equal_approx(drop_row._drop_highlight_rect.color.a, 0.0), true) and all_passed
-
-	# Workflow: CommentRowUI drop indicator rect exists and responds to _set_drop_indicator.
-	var drop_cmt: CommentRowUI = CommentRowUI.new()
-	drop_cmt.comment_row = CommentRow.new()
-	drop_cmt.refresh()
-	all_passed = _check("CommentRowUI has drop highlight rect", drop_cmt._drop_highlight_rect != null, true) and all_passed
-	all_passed = _check("CommentRowUI drop highlight starts transparent", drop_cmt._drop_highlight_rect != null and is_equal_approx(drop_cmt._drop_highlight_rect.color.a, 0.0), true) and all_passed
-	drop_cmt._set_drop_indicator(0.2)
-	all_passed = _check("CommentRowUI drop indicator makes tint visible", drop_cmt._drop_highlight_rect != null and drop_cmt._drop_highlight_rect.color.a > 0.0, true) and all_passed
-	drop_cmt._clear_drop_indicator()
-	all_passed = _check("CommentRowUI drop indicator cleared", drop_cmt._drop_highlight_rect != null and is_equal_approx(drop_cmt._drop_highlight_rect.color.a, 0.0), true) and all_passed
-	var shortcut_del_sheet: EventSheetResource = EventSheetResource.new()
-	var shortcut_del_event: EventRow = EventRow.new()
-	var shortcut_del_action: ACEAction = ACEAction.new()
-	shortcut_del_action.ace_id = "QueueFree"
-	shortcut_del_event.actions.append(shortcut_del_action)
-	shortcut_del_sheet.events.append(shortcut_del_event)
-	editor.current_sheet = shortcut_del_sheet
-	editor.refresh_canvas()
-	var shortcut_del_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, shortcut_del_event.event_uid)
-	if shortcut_del_row_ui != null:
-		editor._selected_row = shortcut_del_row_ui
-		editor._selected_entry_kind = "action"
-		editor._selected_index = 0
-		all_passed = _check("shortcut delete selected action handled", editor._handle_workflow_shortcut("delete_selection"), true) and all_passed
-		all_passed = _check("shortcut delete selected action removes action", shortcut_del_event.actions.size(), 0) and all_passed
-		shortcut_del_event.actions.append(shortcut_del_action)
-		editor._selected_row = shortcut_del_row_ui
-		editor._selected_entry_kind = "action"
-		editor._selected_index = 0
-		var delete_key: InputEventKey = InputEventKey.new()
-		delete_key.pressed = true
-		delete_key.keycode = KEY_DELETE
-		editor._unhandled_key_input(delete_key)
-		all_passed = _check("keyboard Delete removes selected action", shortcut_del_event.actions.size(), 0) and all_passed
-
-	# Delete condition removes it from the event row.
-	var del_cond_sheet: EventSheetResource = EventSheetResource.new()
-	var del_cond_event: EventRow = EventRow.new()
-	var del_cond: ACECondition = ACECondition.new()
-	del_cond.ace_id = "Always"
-	del_cond_event.conditions.append(del_cond)
-	del_cond_sheet.events.append(del_cond_event)
-	editor.current_sheet = del_cond_sheet
-	editor.refresh_canvas()
-	var del_cond_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, del_cond_event.event_uid)
-	if del_cond_row_ui != null:
-		editor._selected_row = del_cond_row_ui
-		editor._selected_entry_kind = "condition"
-		editor._selected_index = 0
-		editor._on_condition_delete_requested(del_cond_row_ui, 0)
-		all_passed = _check("delete condition removes from event", del_cond_event.conditions.size(), 0) and all_passed
-		all_passed = _check("delete condition keeps sane selection kind", editor._selected_entry_kind, "event") and all_passed
-		all_passed = _check("delete condition resets selected index", editor._selected_index, -1) and all_passed
-
-	# Deleting an earlier condition keeps selected condition index in sync.
-	var shift_cond_event: EventRow = EventRow.new()
-	var shift_cond_a: ACECondition = ACECondition.new()
-	shift_cond_a.ace_id = "Always"
-	var shift_cond_b: ACECondition = ACECondition.new()
-	shift_cond_b.ace_id = "Always"
-	shift_cond_event.conditions.append(shift_cond_a)
-	shift_cond_event.conditions.append(shift_cond_b)
-	var shift_cond_sheet: EventSheetResource = EventSheetResource.new()
-	shift_cond_sheet.events.append(shift_cond_event)
-	editor.current_sheet = shift_cond_sheet
-	editor.refresh_canvas()
-	var shift_cond_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, shift_cond_event.event_uid)
-	if shift_cond_row_ui != null:
-		editor._selected_row = shift_cond_row_ui
-		editor._selected_entry_kind = "condition"
-		editor._selected_index = 1
-		editor._on_condition_delete_requested(shift_cond_row_ui, 0)
-		all_passed = _check("delete earlier condition keeps condition selection kind", editor._selected_entry_kind, "condition") and all_passed
-		all_passed = _check("delete earlier condition shifts selected index", editor._selected_index, 0) and all_passed
-
-	# Delete action removes it from the event row.
-	var del_act_event: EventRow = EventRow.new()
-	var del_action: ACEAction = ACEAction.new()
-	del_action.ace_id = "QueueFree"
-	del_act_event.actions.append(del_action)
-	del_cond_sheet.events.append(del_act_event)
-	editor.refresh_canvas()
-	var del_act_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, del_act_event.event_uid)
-	if del_act_row_ui != null:
-		editor._selected_row = del_act_row_ui
-		editor._selected_entry_kind = "action"
-		editor._selected_index = 0
-		editor._on_action_delete_requested(del_act_row_ui, 0)
-		all_passed = _check("delete action removes from event", del_act_event.actions.size(), 0) and all_passed
-		all_passed = _check("delete action keeps sane selection kind", editor._selected_entry_kind, "event") and all_passed
-		all_passed = _check("delete action resets selected index", editor._selected_index, -1) and all_passed
-
-	# Deleting an earlier action keeps selected action index in sync.
-	var shift_act_event: EventRow = EventRow.new()
-	var shift_act_a: ACEAction = ACEAction.new()
-	shift_act_a.ace_id = "QueueFree"
-	var shift_act_b: ACEAction = ACEAction.new()
-	shift_act_b.ace_id = "QueueFree"
-	shift_act_event.actions.append(shift_act_a)
-	shift_act_event.actions.append(shift_act_b)
-	var shift_act_sheet: EventSheetResource = EventSheetResource.new()
-	shift_act_sheet.events.append(shift_act_event)
-	editor.current_sheet = shift_act_sheet
-	editor.refresh_canvas()
-	var shift_act_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, shift_act_event.event_uid)
-	if shift_act_row_ui != null:
-		editor._selected_row = shift_act_row_ui
-		editor._selected_entry_kind = "action"
-		editor._selected_index = 1
-		editor._on_action_delete_requested(shift_act_row_ui, 0)
-		all_passed = _check("delete earlier action keeps action selection kind", editor._selected_entry_kind, "action") and all_passed
-		all_passed = _check("delete earlier action shifts selected index", editor._selected_index, 0) and all_passed
-
-	# Deleting an action in another row keeps selected variable inspector/context intact.
-	var cross_row_sheet: EventSheetResource = EventSheetResource.new()
-	cross_row_sheet.variables["score"] = {"type": "int", "default": 0}
-	var cross_row_event: EventRow = EventRow.new()
-	var cross_row_action: ACEAction = ACEAction.new()
-	cross_row_action.ace_id = "QueueFree"
-	cross_row_event.actions.append(cross_row_action)
-	cross_row_sheet.events.append(cross_row_event)
-	editor.current_sheet = cross_row_sheet
-	editor.refresh_canvas()
-	var cross_row_var_ui: VariableRowUI = editor._find_variable_row_ui_by_name(editor._canvas_vbox, "score")
-	var cross_row_event_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, cross_row_event.event_uid)
-	if cross_row_var_ui != null and cross_row_event_ui != null:
-		editor._suppress_variable_popup_on_select = true
-		editor._on_variable_selected(cross_row_var_ui)
-		editor._suppress_variable_popup_on_select = false
-		editor._on_action_delete_requested(cross_row_event_ui, 0)
-		all_passed = _check("cross-row delete keeps variable selection kind", editor._selected_entry_kind, "variable") and all_passed
-		all_passed = _check("cross-row delete keeps variable inspector heading", _contains_label_text(editor._inspector_vbox, "Variable"), true) and all_passed
-		all_passed = _check("cross-row delete does not switch inspector to event", _contains_label_text(editor._inspector_vbox, "Event"), false) and all_passed
-
-	# Phase 4: inspector content wrapped in card shells.
-	var inspector_sheet: EventSheetResource = EventSheetResource.new()
-	var inspector_event: EventRow = EventRow.new()
-	inspector_sheet.events.append(inspector_event)
-	editor.current_sheet = inspector_sheet
-	editor.refresh_canvas()
-	var inspector_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, inspector_event.event_uid)
-	if inspector_row_ui != null:
-		editor._rebuild_inspector_event(inspector_row_ui)
-		all_passed = _check("inspector event uses card shell", _count_panel_containers(editor._inspector_vbox) >= 1, true) and all_passed
-
-	var inspector_var_sheet: EventSheetResource = EventSheetResource.new()
-	inspector_var_sheet.variables["score"] = {"type": "int", "default": 0}
-	editor.current_sheet = inspector_var_sheet
-	editor.refresh_canvas()
-	var inspector_var_ui: VariableRowUI = editor._find_variable_row_ui_by_name(editor._canvas_vbox, "score")
-	if inspector_var_ui != null:
-		editor._rebuild_inspector_variable(inspector_var_ui)
-		all_passed = _check("inspector variable uses card shell", _count_panel_containers(editor._inspector_vbox) >= 1, true) and all_passed
-
-	# Phase 4: group row shows event count.
-	var count_group: EventGroup = EventGroup.new()
-	count_group.events.append(EventRow.new())
-	count_group.events.append(EventRow.new())
-	var count_group_row: GroupRowUI = GroupRowUI.new()
-	count_group_row.event_group = count_group
-	count_group_row.refresh()
-	all_passed = _check("group row shows event count", _contains_label_text(count_group_row, "(2)"), true) and all_passed
-	all_passed = _check("group row lane divider present", _has_color_rect_min_width(count_group_row, 2), true) and all_passed
-	var group_insert_above_btn: Button = _find_button_with_tooltip(count_group_row, "Insert event above this group")
-	all_passed = _check("group row insertion button above visible", group_insert_above_btn != null, true) and all_passed
-	all_passed = _check("group row insertion button below visible", _find_button_with_tooltip(count_group_row, "Insert event below this group") != null, true) and all_passed
-	if group_insert_above_btn != null:
-		all_passed = _check("group row insertion affordance dimmed at rest", group_insert_above_btn.modulate.a < 1.0, true) and all_passed
-		count_group_row._on_mouse_entered()
-		all_passed = _check("group row insertion affordance brightens on hover", is_equal_approx(group_insert_above_btn.modulate.a, 1.0), true) and all_passed
-
-	var empty_group: EventGroup = EventGroup.new()
-	var empty_group_row: GroupRowUI = GroupRowUI.new()
-	empty_group_row.event_group = empty_group
-	empty_group_row.refresh()
-	all_passed = _check("group row count hidden when empty", not _contains_label_text(empty_group_row, "(0)"), true) and all_passed
-	all_passed = _check("group row count label empty string when no events", empty_group_row._count_label.text, "") and all_passed
-
-	# Group collapsed count label should communicate hidden children.
-	count_group.set_collapsed_state(true)
-	count_group_row.refresh()
-	all_passed = _check("group row collapsed count indicates hidden", count_group_row._count_label.text.find("hidden") != -1, true) and all_passed
-
-	# Inline enabled toggle updates event_group.enabled and disabled badge state.
-	count_group_row._on_enabled_toggled(false)
-	all_passed = _check("group enabled toggle updates resource", count_group.enabled, false) and all_passed
-	all_passed = _check("group enabled toggle shows disabled badge", count_group_row._disabled_badge.visible, true) and all_passed
-	count_group_row._on_enabled_toggled(true)
-	all_passed = _check("group enabled toggle re-enables resource", count_group.enabled, true) and all_passed
-
-	# C3-style: group row shows disabled badge and dims when enabled=false.
-	var disabled_group: EventGroup = EventGroup.new()
-	disabled_group.group_name = "Paused State"
-	disabled_group.enabled = false
-	var disabled_group_row: GroupRowUI = GroupRowUI.new()
-	disabled_group_row.event_group = disabled_group
-	disabled_group_row.refresh()
-	all_passed = _check("disabled group row has disabled badge", disabled_group_row._disabled_badge != null and disabled_group_row._disabled_badge.visible, true) and all_passed
-	all_passed = _check("disabled group row is dimmed", disabled_group_row.modulate.a < 1.0, true) and all_passed
-
-	var enabled_group: EventGroup = EventGroup.new()
-	enabled_group.enabled = true
-	var enabled_group_row: GroupRowUI = GroupRowUI.new()
-	enabled_group_row.event_group = enabled_group
-	enabled_group_row.refresh()
-	all_passed = _check("enabled group row has no disabled badge", enabled_group_row._disabled_badge == null or not enabled_group_row._disabled_badge.visible, true) and all_passed
-	all_passed = _check("enabled group row is fully opaque", is_equal_approx(enabled_group_row.modulate.a, 1.0), true) and all_passed
-
-	# Phase 4: toolbar sheet name formatting.
-	var untitled_sheet: EventSheetResource = EventSheetResource.new()
-	all_passed = _check("toolbar sheet name untitled", SheetToolbar._format_sheet_name(untitled_sheet), "Untitled Sheet") and all_passed
-	all_passed = _check("toolbar sheet name null", SheetToolbar._format_sheet_name(null), "") and all_passed
-	all_passed = _check("editor doc title null", EventSheetEditor._format_document_title(null), "No Sheet Loaded") and all_passed
-	all_passed = _check("editor doc title unsaved", EventSheetEditor._format_document_title(untitled_sheet), "Untitled Sheet") and all_passed
-	all_passed = _check("editor doc path null", EventSheetEditor._format_document_path_hint(null), "Open or create a sheet to begin") and all_passed
-	all_passed = _check("editor doc path unsaved", EventSheetEditor._format_document_path_hint(untitled_sheet), "Unsaved (in-memory)") and all_passed
-	untitled_sheet.take_over_path("res://demo/event_sheet_editor_test_sheet.tres")
-	all_passed = _check("editor doc title saved", EventSheetEditor._format_document_title(untitled_sheet), "event_sheet_editor_test_sheet") and all_passed
-	all_passed = _check("editor doc path saved", EventSheetEditor._format_document_path_hint(untitled_sheet), "res://demo/event_sheet_editor_test_sheet.tres") and all_passed
-
-	# Phase 4: section empty states use PanelContainer cards.
-	var empty_section_sheet: EventSheetResource = EventSheetResource.new()
-	editor.current_sheet = empty_section_sheet
-	editor.refresh_canvas()
-	var globals_section: Node = _find_node_named(editor, "SheetSectionGlobals")
-	all_passed = _check("globals empty state is card", globals_section != null and _count_panel_containers(globals_section) >= 1, true) and all_passed
-	var events_section: Node = _find_node_named(editor, "SheetSectionEvents")
-	all_passed = _check("events empty state is card", events_section != null and _count_panel_containers(events_section) >= 1, true) and all_passed
-	all_passed = _check("events section is unframed host", events_section is PanelContainer, false) and all_passed
-	all_passed = _check("events section has anchored add event button", _find_button_with_text(events_section, "Add Event") != null, true) and all_passed
-	all_passed = _check("events section has anchored add comment button", _find_button_with_text(events_section, "Add Comment") != null, true) and all_passed
-	all_passed = _check("events section has anchored add group button", _find_button_with_text(events_section, "Add Group") != null, true) and all_passed
-	all_passed = _check("events section no old + Event header action", _find_button_with_text(events_section, "+ Event") == null, true) and all_passed
-	# C3 style: anchor row is at the BOTTOM, not the top.  No canvas row wraps it so
-	# it does not appear as a SheetLineRow node in the events body.
-	all_passed = _check("events anchor row not a sheet line row", _count_nodes_named(events_section, "SheetLineRow") == 0 or _find_button_with_text(events_section, "Add Event") != null, true) and all_passed
-
-	# Phase 5: section headers use ColorRect accent rail, not a "●" bullet label.
-	all_passed = _check("globals section no bullet label", not _contains_label_text(globals_section, "●"), true) and all_passed
-	all_passed = _check("events section no bullet label", not _contains_label_text(events_section, "●"), true) and all_passed
-	all_passed = _check("globals section has color rect rail", globals_section != null and _count_color_rects(globals_section) >= 1, true) and all_passed
-	all_passed = _check("events section has color rect rail", events_section != null and _count_color_rects(events_section) >= 1, true) and all_passed
-	all_passed = _check("canvas has document strip", _find_node_named(editor, "SheetCanvasDocumentStrip") != null, true) and all_passed
-	all_passed = _check("canvas has resource tab shell", _find_node_named(editor, "SheetCanvasResourceTab") != null, true) and all_passed
-	# C3 style: SheetColumnHeader bar is part of the events section.
-	all_passed = _check("events section has C3-style column header", _find_node_named(events_section, "SheetColumnHeader") != null, true) and all_passed
-
-	# Phase 5: inspector card has a HSeparator after the heading.
-	var sep_sheet: EventSheetResource = EventSheetResource.new()
-	var sep_event: EventRow = EventRow.new()
-	sep_sheet.events.append(sep_event)
-	editor.current_sheet = sep_sheet
-	editor.refresh_canvas()
-	var sep_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, sep_event.event_uid)
-	if sep_row_ui != null:
-		editor._rebuild_inspector_event(sep_row_ui)
-		all_passed = _check("inspector event card has separator after heading", _count_separators(editor._inspector_vbox) >= 1, true) and all_passed
-
-	# Phase 6: empty inspector state also has a HSeparator after the heading.
-	editor._show_empty_inspector()
-	all_passed = _check("empty inspector has separator after heading", _count_separators(editor._inspector_vbox) >= 1, true) and all_passed
-
-	# Phase 6: inspector card has a left border accent (border_width_left = 3).
-	var card_sheet: EventSheetResource = EventSheetResource.new()
-	var card_event: EventRow = EventRow.new()
-	card_sheet.events.append(card_event)
-	editor.current_sheet = card_sheet
-	editor.refresh_canvas()
-	var card_row_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, card_event.event_uid)
-	if card_row_ui != null:
-		editor._rebuild_inspector_event(card_row_ui)
-		var card_node: PanelContainer = _find_first_panel_container(editor._inspector_vbox)
-		var has_left_accent: bool = false
-		if card_node != null:
-			var sb: StyleBox = card_node.get_theme_stylebox("panel")
-			if sb is StyleBoxFlat:
-				has_left_accent = (sb as StyleBoxFlat).border_width_left == 3
-		all_passed = _check("inspector card has left border accent", has_left_accent, true) and all_passed
-
-	# Stabilization: variable_delete_requested signal exists on VariableRowUI.
-	var signal_var_row: VariableRowUI = VariableRowUI.new()
-	all_passed = _check("variable row has delete signal", signal_var_row.has_signal("variable_delete_requested"), true) and all_passed
-
-	# Stabilization: group_delete_requested signal exists on GroupRowUI.
-	var signal_group_row: GroupRowUI = GroupRowUI.new()
-	all_passed = _check("group row has delete signal", signal_group_row.has_signal("group_delete_requested"), true) and all_passed
-
-	# Stabilization: deleting the selected variable resets selection kind and shows empty inspector.
-	var del_var_sheet: EventSheetResource = EventSheetResource.new()
-	del_var_sheet.variables["lives"] = {"type": "int", "default": 3}
-	editor.current_sheet = del_var_sheet
-	editor.refresh_canvas()
-	var del_var_row_ui: VariableRowUI = editor._find_variable_row_ui_by_name(editor._canvas_vbox, "lives")
-	if del_var_row_ui != null:
-		editor._suppress_variable_popup_on_select = true
-		editor._on_variable_selected(del_var_row_ui)
-		editor._suppress_variable_popup_on_select = false
-		editor._on_variable_delete_requested(del_var_row_ui)
-		all_passed = _check("delete selected variable resets selection kind", editor._selected_entry_kind, "none") and all_passed
-		all_passed = _check("delete selected variable removes from sheet", del_var_sheet.variables.has("lives"), false) and all_passed
-		all_passed = _check("delete selected variable shows empty inspector", not _contains_label_text(editor._inspector_vbox, "Variable"), true) and all_passed
-
-	# Stabilization: deleting a non-selected variable keeps selection kind intact.
-	var del_var2_sheet: EventSheetResource = EventSheetResource.new()
-	del_var2_sheet.variables["hp"] = {"type": "int", "default": 100}
-	del_var2_sheet.variables["mp"] = {"type": "int", "default": 50}
-	var del_var2_event: EventRow = EventRow.new()
-	del_var2_sheet.events.append(del_var2_event)
-	editor.current_sheet = del_var2_sheet
-	editor.refresh_canvas()
-	var del_var2_event_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, del_var2_event.event_uid)
-	var del_var2_mp_ui: VariableRowUI = editor._find_variable_row_ui_by_name(editor._canvas_vbox, "mp")
-	if del_var2_event_ui != null and del_var2_mp_ui != null:
-		editor._on_event_selected(del_var2_event_ui)
-		editor._on_variable_delete_requested(del_var2_mp_ui)
-		all_passed = _check("delete non-selected variable keeps event selection kind", editor._selected_entry_kind, "event") and all_passed
-		all_passed = _check("delete non-selected variable removes from sheet", del_var2_sheet.variables.has("mp"), false) and all_passed
-
-	# Stabilization: deleting the selected group resets selection kind and shows empty inspector.
-	var del_grp_sheet: EventSheetResource = EventSheetResource.new()
-	var del_grp_group: EventGroup = EventGroup.new()
-	del_grp_sheet.events.append(del_grp_group)
-	editor.current_sheet = del_grp_sheet
-	editor.refresh_canvas()
-	var del_grp_uid: String = del_grp_group.group_uid
-	var del_grp_row_ui: GroupRowUI = editor._find_group_row_ui_by_uid(editor._canvas_vbox, del_grp_uid)
-	if del_grp_row_ui != null:
-		editor._on_group_selected(del_grp_row_ui)
-		editor._on_group_delete_requested(del_grp_row_ui)
-		all_passed = _check("delete selected group resets selection kind", editor._selected_entry_kind, "none") and all_passed
-		all_passed = _check("delete selected group removes from sheet", del_grp_sheet.events.size(), 0) and all_passed
-
-	# Stabilization: cross-row condition deletion keeps selected variable inspector intact.
-	var cross_cond_sheet: EventSheetResource = EventSheetResource.new()
-	cross_cond_sheet.variables["coins"] = {"type": "int", "default": 0}
-	var cross_cond_event: EventRow = EventRow.new()
-	var cross_cond: ACECondition = ACECondition.new()
-	cross_cond.ace_id = "Always"
-	cross_cond_event.conditions.append(cross_cond)
-	cross_cond_sheet.events.append(cross_cond_event)
-	editor.current_sheet = cross_cond_sheet
-	editor.refresh_canvas()
-	var cross_cond_var_ui: VariableRowUI = editor._find_variable_row_ui_by_name(editor._canvas_vbox, "coins")
-	var cross_cond_event_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, cross_cond_event.event_uid)
-	if cross_cond_var_ui != null and cross_cond_event_ui != null:
-		editor._suppress_variable_popup_on_select = true
-		editor._on_variable_selected(cross_cond_var_ui)
-		editor._suppress_variable_popup_on_select = false
-		editor._on_condition_delete_requested(cross_cond_event_ui, 0)
-		all_passed = _check("cross-row cond delete keeps variable selection kind", editor._selected_entry_kind, "variable") and all_passed
-		all_passed = _check("cross-row cond delete keeps variable inspector heading", _contains_label_text(editor._inspector_vbox, "Variable"), true) and all_passed
-		all_passed = _check("cross-row cond delete does not switch inspector to event", _contains_label_text(editor._inspector_vbox, "Event"), false) and all_passed
-
-	# Stabilization: condition inversion on non-selected row does not corrupt selection/inspector.
-	var invert_sheet: EventSheetResource = EventSheetResource.new()
-	invert_sheet.variables["power"] = {"type": "int", "default": 5}
-	var invert_event: EventRow = EventRow.new()
-	var invert_cond: ACECondition = ACECondition.new()
-	invert_cond.ace_id = "Always"
-	invert_event.conditions.append(invert_cond)
-	invert_sheet.events.append(invert_event)
-	editor.current_sheet = invert_sheet
-	editor.refresh_canvas()
-	var invert_var_ui: VariableRowUI = editor._find_variable_row_ui_by_name(editor._canvas_vbox, "power")
-	var invert_event_ui: EventRowUI = editor._find_event_row_ui_by_uid(editor._canvas_vbox, invert_event.event_uid)
-	if invert_var_ui != null and invert_event_ui != null:
-		editor._suppress_variable_popup_on_select = true
-		editor._on_variable_selected(invert_var_ui)
-		editor._suppress_variable_popup_on_select = false
-		editor._on_condition_invert_requested(invert_event_ui, 0)
-		all_passed = _check("invert condition keeps variable selection kind", editor._selected_entry_kind, "variable") and all_passed
-		all_passed = _check("invert condition keeps variable inspector heading", _contains_label_text(editor._inspector_vbox, "Variable"), true) and all_passed
-		all_passed = _check("invert condition does not switch inspector to event", _contains_label_text(editor._inspector_vbox, "Event"), false) and all_passed
-
-	# ACE picker grouping: _get_picker_group prioritises node_type over category.
-	var node_type_ace: ACEDescriptor = ACEDescriptor.new()
-	node_type_ace.provider_id = "Core"
-	node_type_ace.ace_type = ACEDescriptor.ACEType.CONDITION
-	node_type_ace.category = "General Conditions"
-	node_type_ace.node_type = "CharacterBody2D"
-	all_passed = _check("picker group uses node_type when set", editor._get_picker_group(node_type_ace), "CharacterBody2D") and all_passed
-
-	var category_ace: ACEDescriptor = ACEDescriptor.new()
-	category_ace.provider_id = "Core"
-	category_ace.ace_type = ACEDescriptor.ACEType.CONDITION
-	category_ace.category = "Variables"
-	category_ace.node_type = ""
-	all_passed = _check("picker group falls back to category", editor._get_picker_group(category_ace), "Variables") and all_passed
-
-	var trigger_ace: ACEDescriptor = ACEDescriptor.new()
-	trigger_ace.provider_id = "Core"
-	trigger_ace.ace_type = ACEDescriptor.ACEType.TRIGGER
-	trigger_ace.node_type = ""
-	all_passed = _check("picker group triggers group when no node_type", editor._get_picker_group(trigger_ace), "Run Context / Triggers") and all_passed
-
-	var trigger_with_node_type: ACEDescriptor = ACEDescriptor.new()
-	trigger_with_node_type.provider_id = "Core"
-	trigger_with_node_type.ace_type = ACEDescriptor.ACEType.TRIGGER
-	trigger_with_node_type.node_type = "Area2D"
-	all_passed = _check("picker group trigger with node_type uses node_type", editor._get_picker_group(trigger_with_node_type), "Area2D") and all_passed
-
-	var runtime_ace: ACEDescriptor = ACEDescriptor.new()
-	runtime_ace.provider_id = "MyPlugin"
-	runtime_ace.ace_type = ACEDescriptor.ACEType.ACTION
-	runtime_ace.node_type = ""
-	all_passed = _check("picker group runtime provider uses provider_id", editor._get_picker_group(runtime_ace), "MyPlugin") and all_passed
-
-	var expression_ace: ACEDescriptor = ACEDescriptor.new()
-	expression_ace.provider_id = "Core"
-	expression_ace.ace_type = ACEDescriptor.ACEType.EXPRESSION
-	expression_ace.category = ""
-	expression_ace.node_type = ""
-	all_passed = _check("picker group expression default category", editor._get_picker_group(expression_ace), "General Expressions") and all_passed
-
-	# _get_picker_group_color: node-type groups get amber; known categories get distinct colours.
-	var amber: Color = EventSheetEditor.ACE_PICKER_NODE_TYPE_GROUP_COLOR
-	all_passed = _check("picker color CharacterBody2D is amber", EventSheetEditor._get_picker_group_color("CharacterBody2D"), amber) and all_passed
-	all_passed = _check("picker color Area2D is amber", EventSheetEditor._get_picker_group_color("Area2D"), amber) and all_passed
-	all_passed = _check("picker color custom class is amber", EventSheetEditor._get_picker_group_color("RigidBody2D"), amber) and all_passed
-	all_passed = _check("picker color Variables is not amber", EventSheetEditor._get_picker_group_color("Variables") != amber, true) and all_passed
-	all_passed = _check("picker color Custom ACEs is not amber", EventSheetEditor._get_picker_group_color("Custom ACEs") != amber, true) and all_passed
-
-	# IsOnFloor built-in maps to CharacterBody2D group; OnBodyEntered to Area2D.
-	var is_on_floor_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "IsOnFloor")
-	if is_on_floor_desc != null:
-		all_passed = _check("IsOnFloor picker group", editor._get_picker_group(is_on_floor_desc), "CharacterBody2D") and all_passed
-
-	var on_body_entered_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "OnBodyEntered")
-	if on_body_entered_desc != null:
-		all_passed = _check("OnBodyEntered picker group", editor._get_picker_group(on_body_entered_desc), "Area2D") and all_passed
-
-	# Expanded built-in ACEs: new node-type tagged descriptors.
-	var on_area_entered_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "OnAreaEntered")
-	if on_area_entered_desc != null:
-		all_passed = _check("OnAreaEntered picker group", editor._get_picker_group(on_area_entered_desc), "Area2D") and all_passed
-
-	var move_and_slide_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "MoveAndSlide")
-	if move_and_slide_desc != null:
-		all_passed = _check("MoveAndSlide picker group", editor._get_picker_group(move_and_slide_desc), "CharacterBody2D") and all_passed
-		all_passed = _check("MoveAndSlide is action", move_and_slide_desc.ace_type, ACEDescriptor.ACEType.ACTION) and all_passed
-
-	var start_timer_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "StartTimer")
-	if start_timer_desc != null:
-		all_passed = _check("StartTimer picker group", editor._get_picker_group(start_timer_desc), "Timer") and all_passed
-		all_passed = _check("StartTimer is action", start_timer_desc.ace_type, ACEDescriptor.ACEType.ACTION) and all_passed
-
-	var is_timer_stopped_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "IsTimerStopped")
-	if is_timer_stopped_desc != null:
-		all_passed = _check("IsTimerStopped picker group", editor._get_picker_group(is_timer_stopped_desc), "Timer") and all_passed
-		all_passed = _check("IsTimerStopped is condition", is_timer_stopped_desc.ace_type, ACEDescriptor.ACEType.CONDITION) and all_passed
-
-	var on_timeout_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "OnTimeout")
-	if on_timeout_desc != null:
-		all_passed = _check("OnTimeout picker group", editor._get_picker_group(on_timeout_desc), "Timer") and all_passed
-
-	var play_animation_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "PlayAnimation")
-	if play_animation_desc != null:
-		all_passed = _check("PlayAnimation picker group", editor._get_picker_group(play_animation_desc), "AnimationPlayer") and all_passed
-
-	var set_position_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "SetPosition2D")
-	if set_position_desc != null:
-		all_passed = _check("SetPosition2D picker group", editor._get_picker_group(set_position_desc), "Node2D") and all_passed
-
-	var apply_impulse_desc: ACEDescriptor = ACERegistry.find_descriptor("Core", "ApplyCentralImpulse")
-	if apply_impulse_desc != null:
-		all_passed = _check("ApplyCentralImpulse picker group", editor._get_picker_group(apply_impulse_desc), "RigidBody2D") and all_passed
-
-	# _get_picker_item_color: verify type-based item colouring.
-	var trigger_sample: ACEDescriptor = ACEDescriptor.new()
-	trigger_sample.ace_type = ACEDescriptor.ACEType.TRIGGER
-	var condition_sample: ACEDescriptor = ACEDescriptor.new()
-	condition_sample.ace_type = ACEDescriptor.ACEType.CONDITION
-	var action_sample: ACEDescriptor = ACEDescriptor.new()
-	action_sample.ace_type = ACEDescriptor.ACEType.ACTION
-	all_passed = _check("picker item color: trigger != condition", EventSheetEditor._get_picker_item_color(trigger_sample) != EventSheetEditor._get_picker_item_color(condition_sample), true) and all_passed
-	all_passed = _check("picker item color: action != condition", EventSheetEditor._get_picker_item_color(action_sample) != EventSheetEditor._get_picker_item_color(condition_sample), true) and all_passed
-	all_passed = _check("picker item color: trigger != action", EventSheetEditor._get_picker_item_color(trigger_sample) != EventSheetEditor._get_picker_item_color(action_sample), true) and all_passed
-
-	# _get_ace_type_label: verify human-readable labels.
-	all_passed = _check("ace type label trigger", EventSheetEditor._get_ace_type_label(ACEDescriptor.ACEType.TRIGGER), "Trigger") and all_passed
-	all_passed = _check("ace type label condition", EventSheetEditor._get_ace_type_label(ACEDescriptor.ACEType.CONDITION), "Condition") and all_passed
-	all_passed = _check("ace type label action", EventSheetEditor._get_ace_type_label(ACEDescriptor.ACEType.ACTION), "Action") and all_passed
-	all_passed = _check("ace type label expression", EventSheetEditor._get_ace_type_label(ACEDescriptor.ACEType.EXPRESSION), "Expression") and all_passed
-
-	# ACE picker search: _populate_ace_picker with filter_text omits non-matching items.
-	# Provide a minimal Tree so _populate_ace_picker can run without the full editor layout.
-	var search_tree: Tree = Tree.new()
-	search_tree.hide_root = true
-	editor._ace_picker_tree = search_tree
-	editor._ace_picker_mode = "new_event"
-	editor._populate_ace_picker(true, true, false, "floor")
-	var floor_root: TreeItem = search_tree.get_root()
-	var found_floor_item: bool = false
-	if floor_root != null:
-		var grp: TreeItem = floor_root.get_first_child()
-		while grp != null:
-			var child: TreeItem = grp.get_first_child()
-			while child != null:
-				if "floor" in child.get_text(0).to_lower():
-					found_floor_item = true
-				child = child.get_next()
-			grp = grp.get_next()
-	all_passed = _check("search filter 'floor' finds Is On Floor", found_floor_item, true) and all_passed
-
-	# Empty search should repopulate all (more than just one group).
-	editor._populate_ace_picker(true, true, true, "")
-	var empty_root: TreeItem = search_tree.get_root()
-	var empty_group_count: int = 0
-	if empty_root != null:
-		var g: TreeItem = empty_root.get_first_child()
-		while g != null:
-			empty_group_count += 1
-			g = g.get_next()
-	all_passed = _check("empty filter shows multiple groups", empty_group_count > 3, true) and all_passed
-
-	# Expression picker: list only expressions and preserve grouped discovery.
-	var expression_tree: Tree = Tree.new()
-	expression_tree.hide_root = true
-	editor._expression_picker_tree = expression_tree
-	editor._expression_picker_description = Label.new()
-	editor._populate_expression_picker("velocity")
-	var expression_root: TreeItem = expression_tree.get_root()
-	var found_velocity_expression: bool = false
-	if expression_root != null:
-		var group: TreeItem = expression_root.get_first_child()
-		while group != null:
-			var expression_item: TreeItem = group.get_first_child()
-			while expression_item != null:
-				var value: Variant = expression_item.get_metadata(0)
-				if value is ACEDescriptor:
-					var descriptor: ACEDescriptor = value as ACEDescriptor
-					if descriptor.ace_type == ACEDescriptor.ACEType.EXPRESSION and "velocity" in descriptor.get_list_name().to_lower():
-						found_velocity_expression = true
-				expression_item = expression_item.get_next()
-			group = group.get_next()
-	all_passed = _check("expression picker search finds velocity expression", found_velocity_expression, true) and all_passed
-
-	# Phase 7: horizontal lane composition — event row has a 2px lane divider ColorRect.
-	var lane_row_2: EventRowUI = EventRowUI.new()
-	lane_row_2.event_row = EventRow.new()
-	lane_row_2.refresh()
-	all_passed = _check("event row lane divider present", _has_color_rect_min_width(lane_row_2, 2), true) and all_passed
-
-	# Phase 7: event row has at least 2 inner PanelContainers (condition lane + action lane).
-	all_passed = _check("event row has lane panels", _count_panel_containers(lane_row_2) >= 2, true) and all_passed
-
-	# Phase 7: outer EventRowUI panel style has zero content margins (lanes flush to border).
-	var lane_row_outer_style: StyleBox = lane_row_2.get_theme_stylebox("panel")
-	var outer_margins_flush: bool = false
-	if lane_row_outer_style is StyleBoxFlat:
-		var sflat: StyleBoxFlat = lane_row_outer_style as StyleBoxFlat
-		outer_margins_flush = (
-			sflat.content_margin_left == 0 and
-			sflat.content_margin_right == 0 and
-			sflat.content_margin_top == 0 and
-			sflat.content_margin_bottom == 0
-		)
-	all_passed = _check("event row outer panel has flush margins for lane layout", outer_margins_flush, true) and all_passed
-
-	# Phase 8: lane rows use denser, cell-like controls while preserving lane composition.
-	var cell_like_event: EventRow = EventRow.new()
-	var cell_like_condition: ACECondition = ACECondition.new()
-	cell_like_condition.ace_id = "Always"
-	cell_like_event.conditions.append(cell_like_condition)
-	var cell_like_action: ACEAction = ACEAction.new()
-	cell_like_action.ace_id = "QueueFree"
-	cell_like_event.actions.append(cell_like_action)
-	var lane_row_3: EventRowUI = EventRowUI.new()
-	lane_row_3.event_row = cell_like_event
-	lane_row_3.refresh()
-
-	var run_btn: Button = _find_button_with_prefix(lane_row_3, EventRowUI.RUN_CONTEXT_SYMBOL + " ")
-	all_passed = _check("run-context button found in condition lane", run_btn != null, true) and all_passed
-	if run_btn != null:
-		var run_style_flat: StyleBoxFlat = _get_flat_stylebox(run_btn, "normal")
-		all_passed = _check("run-context style exists", run_style_flat != null, true) and all_passed
-		if run_style_flat != null:
-			all_passed = _check("run-context uses square cell corners", run_style_flat.corner_radius_top_left, 0) and all_passed
-			all_passed = _check("run-context has visible cell border", run_style_flat.border_width_left, 1) and all_passed
-			all_passed = _check("run-context vertical padding tightened", run_style_flat.content_margin_top, 0) and all_passed
-
-	var condition_btn: Button = _find_button_with_text(lane_row_3, "Always")
-	all_passed = _check("condition token button found", condition_btn != null, true) and all_passed
-	if condition_btn != null:
-		var condition_style: StyleBoxFlat = _get_flat_stylebox(condition_btn, "normal")
-		all_passed = _check("condition token style exists", condition_style != null, true) and all_passed
-		if condition_style != null:
-			all_passed = _check("condition token has lane-accent left border", condition_style.border_width_left, 2) and all_passed
-			all_passed = _check("condition token top padding tightened", condition_style.content_margin_top, 2) and all_passed
-
-	var lane_entry_buttons: Array = _find_buttons_with_tooltip(lane_row_3, EventRowUI.ENTRY_TOOLTIP_TEXT)
-	all_passed = _check("lane entry tokens rendered", lane_entry_buttons.size() >= 2, true) and all_passed
-	var action_btn: Button = lane_entry_buttons[1] as Button if lane_entry_buttons.size() >= 2 else null
-	all_passed = _check("action token button found", action_btn != null, true) and all_passed
-	if action_btn != null:
-		var action_style: StyleBoxFlat = _get_flat_stylebox(action_btn, "normal")
-		all_passed = _check("action token style exists", action_style != null, true) and all_passed
-		if action_style != null:
-			all_passed = _check("action token has lane-accent left border", action_style.border_width_left, 2) and all_passed
-			all_passed = _check("action token top padding tightened", action_style.content_margin_top, 2) and all_passed
-
-	all_passed = _check("action lane add button uses +Add label", _find_button_with_text(lane_row_3, "+Add") != null, true) and all_passed
-	all_passed = _check("action context menu label: edit", _popup_menu_has_item_text(lane_row_3, "Edit Action"), true) and all_passed
-	all_passed = _check("action context menu label: add", _popup_menu_has_item_text(lane_row_3, "Add Action"), true) and all_passed
-	all_passed = _check("action context menu label: replace", _popup_menu_has_item_text(lane_row_3, "Replace Action"), true) and all_passed
-	all_passed = _check("action context menu label: delete", _popup_menu_has_item_text(lane_row_3, "Delete Action"), true) and all_passed
-	all_passed = _check("condition context menu label: edit", _popup_menu_has_item_text(lane_row_3, "Edit Condition"), true) and all_passed
-	all_passed = _check("condition context menu label: add", _popup_menu_has_item_text(lane_row_3, "Add Condition"), true) and all_passed
-	all_passed = _check("condition context menu label: replace", _popup_menu_has_item_text(lane_row_3, "Replace Condition"), true) and all_passed
-	all_passed = _check("condition context menu label: invert", _popup_menu_has_item_text(lane_row_3, "Invert"), true) and all_passed
-	all_passed = _check("condition context menu label: delete", _popup_menu_has_item_text(lane_row_3, "Delete Condition"), true) and all_passed
-	var lane_insert_above_btn: Button = _find_button_with_tooltip(lane_row_3, "Insert event above this row")
-	all_passed = _check("event row insertion button above visible", lane_insert_above_btn != null, true) and all_passed
-	all_passed = _check("event row insertion button below visible", _find_button_with_tooltip(lane_row_3, "Insert event below this row") != null, true) and all_passed
-	if lane_insert_above_btn != null:
-		all_passed = _check("event row insertion affordance dimmed at rest", lane_insert_above_btn.modulate.a < 1.0, true) and all_passed
-		lane_row_3._on_mouse_entered()
-		all_passed = _check("event row insertion affordance brightens on hover", is_equal_approx(lane_insert_above_btn.modulate.a, 1.0), true) and all_passed
-
-	var depth_row_0: EventRowUI = EventRowUI.new()
-	depth_row_0.event_row = EventRow.new()
-	depth_row_0.set_depth(0)
-	depth_row_0.refresh()
-	var depth_row_3: EventRowUI = EventRowUI.new()
-	depth_row_3.event_row = EventRow.new()
-	depth_row_3.set_depth(3)
-	depth_row_3.refresh()
-	var depth_style_0: StyleBoxFlat = _get_flat_stylebox(depth_row_0, "panel")
-	var depth_style_3: StyleBoxFlat = _get_flat_stylebox(depth_row_3, "panel")
-	all_passed = _check("depth row style depth0 exists", depth_style_0 != null, true) and all_passed
-	all_passed = _check("depth row style depth3 exists", depth_style_3 != null, true) and all_passed
-	if depth_style_0 != null and depth_style_3 != null:
-		all_passed = _check("nested depth tint lightens row red channel", depth_style_3.bg_color.r > depth_style_0.bg_color.r, true) and all_passed
-		all_passed = _check("nested depth tint lightens row green channel", depth_style_3.bg_color.g > depth_style_0.bg_color.g, true) and all_passed
-		all_passed = _check("nested depth tint lightens row blue channel", depth_style_3.bg_color.b > depth_style_0.bg_color.b, true) and all_passed
-
-	lane_row_2.free()
-	lane_row_3.free()
-	depth_row_0.free()
-	depth_row_3.free()
-
-	return all_passed
+    var all_passed: bool = true
+    var editor: EventSheetEditor = EventSheetEditor.new()
+    var scroll: Node = editor.find_child("EventSheetScroll", true, false)
+    var viewport: Node = editor.find_child("EventSheetViewport", true, false)
+    all_passed = _check("editor root is scroll container shell", scroll is ScrollContainer, true) and all_passed
+    all_passed = _check("editor viewport exists", viewport is EventSheetViewport, true) and all_passed
+    all_passed = _check("editor keeps required direct hierarchy", scroll != null and scroll.get_child_count() == 1, true) and all_passed
+    all_passed = _check("viewport is custom control without row widgets", viewport != null and viewport.get_child_count() == 0, true) and all_passed
+    all_passed = _check("viewport baseline row height", EventSheetViewport.ROW_HEIGHT, 28) and all_passed
+    all_passed = _check("viewport baseline indent width", EventSheetViewport.INDENT_WIDTH, 18) and all_passed
+    all_passed = _check("viewport baseline font size", EventSheetViewport.FONT_SIZE, 13) and all_passed
+
+    var dock: EventSheetDock = editor as EventSheetDock
+    dock.setup(null)
+    var dock_viewport: EventSheetViewport = dock.get_viewport_control()
+    var ace_registry: EventSheetACERegistry = dock.get_ace_registry()
+    var toolbar: Node = dock.find_child("EventSheetToolbar", true, false)
+    var title_strip: Node = dock.find_child("EventSheetTitleStrip", true, false)
+    var title_tab_label: Label = dock.find_child("EventSheetTitleTabLabel", true, false) as Label
+    var title_path_label: Label = dock.find_child("EventSheetTitlePath", true, false) as Label
+    var title_dirty_dot: Label = dock.find_child("EventSheetTitleDirtyDot", true, false) as Label
+    all_passed = _check("demo sheet populates rows", dock_viewport.get_total_row_count() > 0, true) and all_passed
+    all_passed = _check("workflow toolbar is present", toolbar is HBoxContainer, true) and all_passed
+    all_passed = _check("title strip is present", title_strip is HBoxContainer, true) and all_passed
+    all_passed = _check("title tab label is present", title_tab_label is Label, true) and all_passed
+    all_passed = _check("title path label is present", title_path_label is Label, true) and all_passed
+    all_passed = _check("title dirty indicator is present", title_dirty_dot is Label, true) and all_passed
+    all_passed = _check("demo sheet title label defaults to untitled", title_tab_label.text, "Untitled EventSheet") and all_passed
+    all_passed = _check("demo sheet path hint defaults to unsaved", title_path_label.text, "Unsaved (in-memory)") and all_passed
+    var demo_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var first_demo_row: EventRowData = demo_rows[0].get("row")
+    all_passed = _check("demo sheet exposes semantic spans", first_demo_row.spans.size() > 0, true) and all_passed
+    all_passed = _check("demo flow exposes reflected ace registry", ace_registry.get_reflected_provider_ids().is_empty(), false) and all_passed
+    all_passed = _check("demo rows render auto ace trigger text", _rows_contain_text(demo_rows, "On Died"), true) and all_passed
+    all_passed = _check("demo rows render trigger arrow badge", _rows_contain_text(demo_rows, "➜"), true) and all_passed
+    all_passed = _check("demo rows render auto ace action text", _rows_contain_text(demo_rows, "Take Damage 10"), true) and all_passed
+    all_passed = _check("demo rows do not expose debug overlay badges by default", _rows_have_debug_state(demo_rows), false) and all_passed
+    all_passed = _check("title formatter returns no-sheet fallback", EventSheetDock._format_sheet_title(null, ""), "No Sheet Loaded") and all_passed
+    all_passed = _check("path formatter returns no-sheet fallback", EventSheetDock._format_sheet_path_hint(null, ""), "Open or create a sheet to begin") and all_passed
+
+    var sheet := EventSheetResource.new()
+    var group := EventGroup.new()
+    group.name = "Rules"
+    group.group_name = group.name
+    var comment := CommentRow.new()
+    comment.text = "Inline note"
+    var event_row := EventRow.new()
+    event_row.event_uid = "test_event"
+    var condition := ACECondition.new()
+    condition.provider_id = "Core"
+    condition.ace_id = "Always"
+    event_row.conditions = [condition]
+    var action := ACEAction.new()
+    action.provider_id = "Core"
+    action.ace_id = "QueueFree"
+    event_row.actions = [action]
+    group.events.append(event_row)
+    sheet.events = [comment, group]
+    dock.setup(sheet)
+    sheet.take_over_path("res://demo/sheets/test_title_sheet.tres")
+    dock.setup(sheet)
+    title_tab_label = dock.find_child("EventSheetTitleTabLabel", true, false) as Label
+    title_path_label = dock.find_child("EventSheetTitlePath", true, false) as Label
+    title_dirty_dot = dock.find_child("EventSheetTitleDirtyDot", true, false) as Label
+    all_passed = _check("switching sheets updates title tab text", title_tab_label.text, "test_title_sheet") and all_passed
+    all_passed = _check("switching sheets updates title path hint", title_path_label.text, "res://demo/sheets/test_title_sheet.tres") and all_passed
+    dock._mark_dirty("Changed title state")
+    all_passed = _check("dirty edit shows title dirty indicator", title_dirty_dot.visible, true) and all_passed
+    dock._save_sheet_to_path("user://event_sheet_editor_title_roundtrip.tres")
+    all_passed = _check("saving sheet hides dirty indicator", title_dirty_dot.visible, false) and all_passed
+    all_passed = _check("saving sheet updates title tab text", title_tab_label.text, "event_sheet_editor_title_roundtrip") and all_passed
+    all_passed = _check("saving sheet updates title path hint", title_path_label.text, "user://event_sheet_editor_title_roundtrip.tres") and all_passed
+    dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
+    # comment + group + its event, plus the group's "Add event…" footer and the sheet-end one.
+    all_passed = _check("sheet renders flattened rows", dock_viewport.get_total_row_count(), 5) and all_passed
+    var flat_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var comment_row_data: EventRowData = flat_rows[0].get("row")
+    var group_row: EventRowData = flat_rows[1].get("row")
+    var event_row_data: EventRowData = flat_rows[2].get("row")
+    all_passed = _check("comment rows render a single editable label span", comment_row_data.spans.size(), 1) and all_passed
+    all_passed = _check("group rows render badge and editable title spans", group_row.spans.size() >= 2, true) and all_passed
+    all_passed = _check("group row tagged correctly", group_row.row_type, EventRowData.RowType.GROUP) and all_passed
+    all_passed = _check("group row includes explicit group badge text", _row_contains_text(group_row, "Group"), true) and all_passed
+    all_passed = _check("event row inherits indent", event_row_data.indent, 1) and all_passed
+    all_passed = _check("event row action span exists", _row_contains_text(event_row_data, "Queue free"), true) and all_passed
+    all_passed = _check("event row includes lane metadata spans", _row_has_lane(event_row_data, "condition") and _row_has_lane(event_row_data, "action"), true) and all_passed
+    var layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
+    var condition_lane_rect: Rect2 = layout.get("condition_lane_rect", Rect2())
+    all_passed = _check("event row layout contains lane divider scaffold", float(layout.get("lane_divider_x", -1.0)) > 0.0, true) and all_passed
+    var condition_span_index: int = _find_span_index_by_kind(event_row_data, "condition")
+    var action_span_index: int = _find_span_index_by_kind(event_row_data, "action")
+    var add_action_span_index: int = _find_span_index_by_kind(event_row_data, "add_action")
+    all_passed = _check(
+        "conditions remain in the left lane while actions stay in the right lane",
+        condition_span_index >= 0
+            and action_span_index >= 0
+            and event_row_data.spans[condition_span_index].rect.end.x <= float(layout.get("lane_divider_x", -1.0))
+            and event_row_data.spans[action_span_index].rect.position.x >= float(layout.get("lane_divider_x", -1.0)),
+        true
+    ) and all_passed
+    all_passed = _check(
+        "conditions start after the dedicated condition badge column",
+        condition_span_index >= 0
+            and is_equal_approx(
+                event_row_data.spans[condition_span_index].rect.position.x,
+                condition_lane_rect.position.x
+                    + float(dock_viewport.get_editor_style().get_event_style().condition_lane_padding)
+                    + float(dock_viewport.get_editor_style().get_event_style().condition_badge_column_width)
+                    + (EventSheetPalette.SPAN_GAP if dock_viewport.get_editor_style().get_event_style().condition_badge_column_width > 0 else 0.0)
+            ),
+        true
+    ) and all_passed
+    all_passed = _check(
+        "add action affordance sits on its own line below the actions (C3-style)",
+        add_action_span_index >= 0
+            and action_span_index >= 0
+            and event_row_data.spans[add_action_span_index].rect.position.y > event_row_data.spans[action_span_index].rect.position.y,
+        true
+    ) and all_passed
+    all_passed = _check(
+        "add action affordance is left-aligned with the action lane",
+        action_span_index >= 0
+            and add_action_span_index >= 0
+            and absf(event_row_data.spans[add_action_span_index].rect.position.x - event_row_data.spans[action_span_index].rect.position.x) < 4.0,
+        true
+    ) and all_passed
+
+    var overlap_sheet := EventSheetResource.new()
+    var overlap_comment := CommentRow.new()
+    overlap_comment.text = "A very long comment row that should stay inside the visible row bounds instead of drawing over neighboring content in the event sheet."
+    var overlap_event := EventRow.new()
+    var overlap_condition := ACECondition.new()
+    overlap_condition.provider_id = "Missing"
+    overlap_condition.ace_id = "Condition text that is intentionally long so it must stay inside the condition lane"
+    overlap_event.conditions = [overlap_condition]
+    var overlap_action := ACEAction.new()
+    overlap_action.provider_id = "Missing"
+    overlap_action.ace_id = "Action text that is intentionally long so it must not overlap the add action control"
+    overlap_event.actions = [overlap_action]
+    overlap_event.comment = "A very long event comment that should remain inside the action lane instead of painting across the viewport."
+    overlap_sheet.events = [overlap_comment, overlap_event]
+    dock.setup(overlap_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var overlap_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var overlap_comment_row: EventRowData = overlap_rows[0].get("row")
+    var overlap_event_row: EventRowData = overlap_rows[1].get("row")
+    var overlap_comment_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    var overlap_event_layout: Dictionary = dock_viewport.get_row_layout_for_test(1, 640.0)
+    var overlap_row_rect: Rect2 = overlap_comment_layout.get("row_rect", Rect2())
+    var overlap_action_lane_rect: Rect2 = overlap_event_layout.get("action_lane_rect", Rect2())
+    var overlap_comment_span_index: int = _find_span_index_by_text(overlap_comment_row, overlap_comment.text)
+    var overlap_event_action_index: int = _find_span_index_by_kind(overlap_event_row, "action")
+    var overlap_event_add_index: int = _find_span_index_by_kind(overlap_event_row, "add_action")
+    var overlap_event_comment_index: int = _find_span_index_by_text(overlap_event_row, overlap_event.comment)
+    all_passed = _check(
+        "long comment rows stay inside the row width",
+        overlap_comment_span_index >= 0
+            and overlap_comment_row.spans[overlap_comment_span_index].rect.end.x <= overlap_row_rect.end.x - EventSheetPalette.ROW_HORIZONTAL_PADDING,
+        true
+    ) and all_passed
+    all_passed = _check(
+        "long action text stays above the add action affordance line",
+        overlap_event_action_index >= 0
+            and overlap_event_add_index >= 0
+            and overlap_event_row.spans[overlap_event_add_index].rect.position.y > overlap_event_row.spans[overlap_event_action_index].rect.position.y,
+        true
+    ) and all_passed
+    all_passed = _check(
+        "long event comments stay inside the action lane",
+        overlap_event_comment_index >= 0
+            and overlap_event_row.spans[overlap_event_comment_index].rect.end.x <= overlap_action_lane_rect.end.x,
+        true
+    ) and all_passed
+
+    var or_sheet := EventSheetResource.new()
+    var or_event := EventRow.new()
+    or_event.trigger_provider_id = "Core"
+    or_event.trigger_id = "OnReady"
+    var or_condition_a := ACECondition.new()
+    or_condition_a.provider_id = "Core"
+    or_condition_a.ace_id = "Always"
+    var or_condition_b := ACECondition.new()
+    or_condition_b.provider_id = "Core"
+    or_condition_b.ace_id = "Always"
+    or_condition_b.negated = true
+    or_event.conditions = [or_condition_a, or_condition_b]
+    or_event.condition_mode = EventRow.ConditionMode.OR
+    var or_action := ACEAction.new()
+    or_action.provider_id = "Core"
+    or_action.ace_id = "QueueFree"
+    or_event.actions = [or_action]
+    or_sheet.events = [or_event]
+    dock.setup(or_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var or_row_data: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
+    all_passed = _check("or block adds badge before each condition", _count_span_text(or_row_data, "OR"), 2) and all_passed
+    all_passed = _check("negated condition adds red x badge text", _count_span_text(or_row_data, "✕"), 1) and all_passed
+    var condition_lines: Array[int] = []
+    var or_badge_lines: Array[int] = []
+    for span in or_row_data.spans:
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        var metadata: Dictionary = span.metadata as Dictionary
+        if str(metadata.get("kind", "")) == "condition":
+            condition_lines.append(int(metadata.get("line_index", -1)))
+        if span.text == "OR":
+            or_badge_lines.append(int(metadata.get("line_index", -1)))
+    all_passed = _check(
+        "or badges share the same stacked line indices as conditions",
+        or_badge_lines.size() == condition_lines.size() and or_badge_lines == condition_lines,
+        true
+    ) and all_passed
+    dock_viewport.get_row_layout_for_test(0, 640.0)
+    var first_condition_index: int = _find_span_index_by_kind(or_row_data, "condition")
+    var second_condition_index: int = _find_nth_span_index_by_kind(or_row_data, "condition", 1)
+    all_passed = _check(
+        "conditions stack vertically in the event block",
+        second_condition_index >= 0
+            and or_row_data.spans[second_condition_index].rect.position.y > or_row_data.spans[first_condition_index].rect.position.y,
+        true
+    ) and all_passed
+    var trigger_badge_index: int = _find_span_index_by_text(or_row_data, "➜")
+    var first_or_badge_index: int = _find_span_index_by_text(or_row_data, "OR")
+    var negated_badge_index: int = _find_span_index_by_text(or_row_data, "✕")
+    all_passed = _check(
+        "trigger, invert, and OR badges share the primary badge column",
+        trigger_badge_index >= 0
+            and first_or_badge_index >= 0
+            and negated_badge_index >= 0
+            and is_equal_approx(or_row_data.spans[trigger_badge_index].rect.position.x, or_row_data.spans[first_or_badge_index].rect.position.x)
+            and is_equal_approx(or_row_data.spans[trigger_badge_index].rect.position.x, or_row_data.spans[negated_badge_index].rect.position.x),
+        true
+    ) and all_passed
+    var second_condition_center: Vector2 = or_row_data.spans[second_condition_index].rect.get_center()
+    var second_condition_hit: Dictionary = dock_viewport._hit_test(second_condition_center)
+    all_passed = _check("hit testing selects individual stacked condition", second_condition_hit.get("span_index", -1), second_condition_index) and all_passed
+    dock_viewport._select_from_click(0, second_condition_index, false)
+    var condition_selection_state: Dictionary = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("single condition click tracks span selection", condition_selection_state.get("selected_span_count", 0), 1) and all_passed
+    dock._context_row = or_row_data
+    dock._context_hit = {"span_metadata": {"kind": "condition", "ace_index": 1}, "span_index": _find_last_span_index_by_kind(or_row_data, "condition")}
+    dock._on_condition_context_menu_id_pressed(4)
+    all_passed = _check("condition context menu toggles inversion", ((dock.get_current_sheet().events[0] as EventRow).conditions[1] as ACECondition).negated, false) and all_passed
+    # The undoable edit above commits via snapshot-restore, which can replace the sheet's
+    # row resources — re-acquire the live row before the next context action, exactly as a
+    # real right-click would (the old row_data points at a pre-restore resource).
+    or_row_data = dock_viewport.get_flat_rows()[0].get("row")
+    dock_viewport._ensure_event_spans(or_row_data)
+    dock._context_row = or_row_data
+    dock._context_hit = {"span_metadata": {"kind": "condition", "ace_index": 1}, "span_index": _find_last_span_index_by_kind(or_row_data, "condition")}
+    dock._on_condition_context_menu_id_pressed(EventSheetDock.CONDITION_MENU_TOGGLE_ENABLED)
+    all_passed = _check("condition context menu toggles enabled state", ((dock.get_current_sheet().events[0] as EventRow).conditions[1] as ACECondition).enabled, false) and all_passed
+    dock._context_row = or_row_data
+    dock._context_hit = {"span_metadata": {}, "span_index": -1}
+    dock._show_popup_menu(dock._row_context_menu, Vector2(320.0, 240.0))
+    all_passed = _check("row context menu opens at requested cursor position", dock._row_context_menu.position, Vector2i(320, 240)) and all_passed
+    dock._on_row_context_menu_id_pressed(8)
+    all_passed = _check("row context menu toggles or block to and block", ((dock.get_current_sheet().events[0] as EventRow).condition_mode), EventRow.ConditionMode.AND) and all_passed
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_ENABLED)
+    all_passed = _check("row context menu toggles event enabled state", ((dock.get_current_sheet().events[0] as EventRow).enabled), false) and all_passed
+    dock._context_row = dock_viewport.get_flat_rows()[0].get("row")
+    dock._context_hit = {"span_metadata": {"kind": "action", "ace_index": 0}, "span_index": _find_span_index_by_kind(dock_viewport.get_flat_rows()[0].get("row"), "action")}
+    dock._on_action_context_menu_id_pressed(EventSheetDock.ACTION_MENU_TOGGLE_ENABLED)
+    all_passed = _check("action context menu toggles enabled state", (((dock.get_current_sheet().events[0] as EventRow).actions[0]) as ACEAction).enabled, false) and all_passed
+    all_passed = _check("or block toggle is second row menu item", dock._row_context_menu.get_item_id(1), EventSheetDock.ROW_MENU_TOGGLE_CONDITION_BLOCK) and all_passed
+    var compile_result: Dictionary = SheetCompiler.compile(dock.get_current_sheet(), "user://event_sheet_or_block_test.gd")
+    all_passed = _check("compiler uses and join after row conversion", str(compile_result.get("output", "")).contains(" and "), true) and all_passed
+
+    var trigger_condition_sheet := EventSheetResource.new()
+    var trigger_condition_event := EventRow.new()
+    var regular_condition := ACECondition.new()
+    regular_condition.provider_id = "Core"
+    regular_condition.ace_id = "Always"
+    var misplaced_trigger_condition := ACECondition.new()
+    misplaced_trigger_condition.provider_id = "Core"
+    misplaced_trigger_condition.ace_id = "OnReady"
+    trigger_condition_event.conditions = [regular_condition, misplaced_trigger_condition]
+    trigger_condition_sheet.events = [trigger_condition_event]
+    dock.setup(trigger_condition_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var trigger_condition_row: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
+    dock_viewport.get_row_layout_for_test(0, 640.0)
+    var rendered_trigger_index: int = _find_span_index_by_kind(trigger_condition_row, "condition")
+    var rendered_condition_index: int = _find_last_span_index_by_kind(trigger_condition_row, "condition")
+    all_passed = _check(
+        "trigger-type condition renders first in event block",
+        int((trigger_condition_row.spans[rendered_trigger_index].metadata as Dictionary).get("ace_index", -1)),
+        1
+    ) and all_passed
+    all_passed = _check(
+        "trigger-type condition stays above regular conditions in the event block",
+        trigger_condition_row.spans[rendered_trigger_index].rect.position.y < trigger_condition_row.spans[rendered_condition_index].rect.position.y,
+        true
+    ) and all_passed
+
+    var empty_condition_sheet := EventSheetResource.new()
+    var empty_condition_event := EventRow.new()
+    empty_condition_event.actions = [ACEAction.new()]
+    (empty_condition_event.actions[0] as ACEAction).provider_id = "Core"
+    (empty_condition_event.actions[0] as ACEAction).ace_id = "QueueFree"
+    empty_condition_sheet.events = [empty_condition_event]
+    dock.setup(empty_condition_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var empty_condition_row: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
+    all_passed = _check("events without authored conditions render Every Tick fallback text", _row_contains_text(empty_condition_row, "Every Tick"), true) and all_passed
+
+    var else_mode_sheet := EventSheetResource.new()
+    var else_event := EventRow.new()
+    else_event.else_mode = EventRow.ElseMode.ELSE
+    var elif_event := EventRow.new()
+    elif_event.else_mode = EventRow.ElseMode.ELIF
+    var elif_condition := ACECondition.new()
+    elif_condition.provider_id = "Core"
+    elif_condition.ace_id = "Always"
+    elif_event.conditions = [elif_condition]
+    else_mode_sheet.events = [else_event, elif_event]
+    dock.setup(else_mode_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var else_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    all_passed = _check("else rows render explicit Else marker", _row_contains_text(else_rows[0].get("row"), "Else"), true) and all_passed
+    all_passed = _check("elseif rows render explicit Else If marker", _row_contains_text(else_rows[1].get("row"), "Else If"), true) and all_passed
+
+    dock_viewport._toggle_row_fold(1)
+    all_passed = _check("folding hides child rows", dock_viewport.get_total_row_count(), 2) and all_passed
+    dock_viewport._toggle_row_fold(1)
+    all_passed = _check("unfolding restores child rows", dock_viewport.get_total_row_count(), 3) and all_passed
+
+    dock_viewport._select_row(2)
+    all_passed = _check("selection tracks row index", dock_viewport.get_selected_row_index(), 2) and all_passed
+    var editor_state: Dictionary = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("selection stores anchor for range scaffolding", editor_state.get("selection_anchor_index", -1), 2) and all_passed
+    all_passed = _check("single selection tracks row count", editor_state.get("selected_row_count", 0), 1) and all_passed
+
+    dock.setup(sheet)
+    dock_viewport = dock.get_viewport_control()
+    var event_rows_for_selection: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock_viewport._select_from_click(1, -1, false)
+    dock_viewport._select_from_click(2, _find_span_index_by_kind(event_rows_for_selection[2].get("row"), "condition"), true)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("ctrl selection tracks multiple rows", editor_state.get("selected_row_count", 0), 2) and all_passed
+    all_passed = _check("ctrl selection tracks span highlight count", editor_state.get("selected_span_count", 0), 1) and all_passed
+    var selected_row_layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
+    var right_click_selected := InputEventMouseButton.new()
+    right_click_selected.pressed = true
+    right_click_selected.button_index = MOUSE_BUTTON_RIGHT
+    right_click_selected.position = selected_row_layout.get("row_rect", Rect2()).get_center()
+    dock_viewport._handle_mouse_button(right_click_selected)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("right-click on selected row preserves multi-selection", editor_state.get("selected_row_count", 0), 2) and all_passed
+    dock_viewport._select_from_click(2, _find_span_index_by_kind(event_rows_for_selection[2].get("row"), "condition"), true)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("ctrl click toggles selected span off", editor_state.get("selected_span_count", 0), 0) and all_passed
+
+    var parity_sheet := EventSheetResource.new()
+    var parity_comment := CommentRow.new()
+    parity_comment.text = "Rewrite me"
+    var parity_group := EventGroup.new()
+    parity_group.name = "Rename Me"
+    parity_group.group_name = parity_group.name
+    var parity_event := EventRow.new()
+    var parity_condition_a := ACECondition.new()
+    parity_condition_a.provider_id = "Core"
+    parity_condition_a.ace_id = "Always"
+    var parity_condition_b := ACECondition.new()
+    parity_condition_b.provider_id = "Core"
+    parity_condition_b.ace_id = "OnReady"
+    var parity_action := ACEAction.new()
+    parity_action.provider_id = "Core"
+    parity_action.ace_id = "QueueFree"
+    parity_event.conditions = [parity_condition_a, parity_condition_b]
+    parity_event.actions = [parity_action]
+    parity_sheet.events = [parity_comment, parity_group, parity_event]
+    dock.setup(parity_sheet)
+    dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
+    dock_viewport = dock.get_viewport_control()
+    var parity_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var parity_event_row: EventRowData = parity_rows[2].get("row")
+    var parity_event_layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
+    var parity_action_lane_rect: Rect2 = parity_event_layout.get("action_lane_rect", Rect2())
+    var parity_group_row_rect: Rect2 = dock_viewport.get_row_layout_for_test(1, 640.0).get("row_rect", Rect2())
+    var parity_comment_row_rect: Rect2 = dock_viewport.get_row_layout_for_test(0, 640.0).get("row_rect", Rect2())
+    var parity_condition_index: int = _find_last_span_index_by_kind(parity_event_row, "condition")
+    var parity_condition_click := InputEventMouseButton.new()
+    parity_condition_click.pressed = true
+    parity_condition_click.button_index = MOUSE_BUTTON_LEFT
+    parity_condition_click.position = parity_event_row.spans[parity_condition_index].rect.get_center()
+    dock_viewport._handle_mouse_button(parity_condition_click)
+    var parity_context: Dictionary = dock_viewport.get_selected_context()
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("left-click condition selects individual condition span", parity_context.get("span_metadata", {}).get("kind", ""), "condition") and all_passed
+    all_passed = _check("left-click condition keeps span selection count at one", editor_state.get("selected_span_count", 0), 1) and all_passed
+    var parity_body_click := InputEventMouseButton.new()
+    parity_body_click.pressed = true
+    parity_body_click.button_index = MOUSE_BUTTON_LEFT
+    parity_body_click.position = Vector2(
+        parity_action_lane_rect.position.x + 18.0,
+        parity_event_row.spans[parity_condition_index].rect.get_center().y
+    )
+    dock_viewport._handle_mouse_button(parity_body_click)
+    parity_context = dock_viewport.get_selected_context()
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("left-click event block body selects whole event block", parity_context.get("source_resource", null) == parity_event and parity_context.get("span", null) == null, true) and all_passed
+    all_passed = _check("event block body selection clears span selection", editor_state.get("selected_span_count", 0), 0) and all_passed
+    var parity_group_click := InputEventMouseButton.new()
+    parity_group_click.pressed = true
+    parity_group_click.button_index = MOUSE_BUTTON_LEFT
+    parity_group_click.position = parity_group_row_rect.get_center()
+    dock_viewport._handle_mouse_button(parity_group_click)
+    parity_context = dock_viewport.get_selected_context()
+    all_passed = _check("left-click group selects group row", parity_context.get("source_resource", null) is EventGroup, true) and all_passed
+    var parity_comment_click := InputEventMouseButton.new()
+    parity_comment_click.pressed = true
+    parity_comment_click.button_index = MOUSE_BUTTON_LEFT
+    parity_comment_click.position = parity_comment_row_rect.get_center()
+    dock_viewport._handle_mouse_button(parity_comment_click)
+    parity_context = dock_viewport.get_selected_context()
+    all_passed = _check("left-click comment selects comment row", parity_context.get("source_resource", null) is CommentRow, true) and all_passed
+    var rename_key := InputEventKey.new()
+    rename_key.pressed = true
+    rename_key.keycode = KEY_ENTER
+    dock_viewport._select_row(1)
+    dock._unhandled_key_input(rename_key)
+    var editing_context: Dictionary = dock_viewport.get_editing_context_for_test()
+    all_passed = _check("enter on selected group opens rename behavior", editing_context.get("row_index", -1), 1) and all_passed
+    all_passed = _check("group rename starts with current group name", editing_context.get("buffer", ""), "Rename Me") and all_passed
+    dock_viewport._cancel_edit()
+    dock_viewport._select_row(0)
+    dock._unhandled_key_input(rename_key)
+    editing_context = dock_viewport.get_editing_context_for_test()
+    all_passed = _check("enter on selected comment opens rewrite behavior", editing_context.get("row_index", -1), 0) and all_passed
+    dock_viewport._editing_buffer = "Rewritten once"
+    dock_viewport._commit_edit()
+    dock_viewport._select_row(0)
+    dock._unhandled_key_input(rename_key)
+    dock_viewport._editing_buffer = "Rewritten twice"
+    dock_viewport._commit_edit()
+    all_passed = _check("comment rewrite flow can edit an existing comment multiple times", ((dock.get_current_sheet().events[0]) as CommentRow).text, "Rewritten twice") and all_passed
+
+    var subtree_sheet := EventSheetResource.new()
+    var subtree_parent := EventRow.new()
+    subtree_parent.comment = "parent"
+    var subtree_child := EventRow.new()
+    subtree_child.comment = "child"
+    var subtree_grandchild := EventRow.new()
+    subtree_grandchild.comment = "grandchild"
+    subtree_child.sub_events = [subtree_grandchild]
+    subtree_parent.sub_events = [subtree_child]
+    subtree_sheet.events = [subtree_parent]
+    dock.setup(subtree_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var subtree_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock_viewport._select_from_click(0, -1, false)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("event block selection includes descendant sub-events", editor_state.get("selected_row_count", 0), 3) and all_passed
+    dock_viewport._select_from_click(1, -1, true)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("ctrl click can unselect a selected sub-event row", editor_state.get("selected_row_count", 0), 2) and all_passed
+
+    var group_block_sheet := EventSheetResource.new()
+    var group_block := EventGroup.new()
+    group_block.name = "Folder"
+    group_block.group_name = group_block.name
+    var grouped_event := EventRow.new()
+    grouped_event.comment = "grouped"
+    var grouped_sub_event := EventRow.new()
+    grouped_sub_event.comment = "nested"
+    grouped_event.sub_events = [grouped_sub_event]
+    group_block.events = [grouped_event]
+    group_block_sheet.events = [group_block]
+    dock.setup(group_block_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport._select_from_click(0, -1, false)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("group selection includes descendant events for copy-ready blocks", editor_state.get("selected_row_count", 0), 3) and all_passed
+    all_passed = _check("group selection context remains the group row", dock_viewport.get_selected_context().get("source_resource", null) is EventGroup, true) and all_passed
+    # Clicking a group's badge span (span_index >= 0) should also include all descendants.
+    dock_viewport._select_from_click(0, 0, false)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("group span-click also includes descendant events", editor_state.get("selected_row_count", 0), 3) and all_passed
+    all_passed = _check("group span-click does not store per-span selection indices", editor_state.get("selected_span_count", 0), 0) and all_passed
+
+    var sub_condition_sheet := EventSheetResource.new()
+    var parent_event := EventRow.new()
+    sub_condition_sheet.events = [parent_event]
+    dock.setup(sub_condition_sheet)
+    dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
+    dock_viewport = dock.get_viewport_control()
+    dock._context_row = dock_viewport.get_flat_rows()[0].get("row")
+    dock._context_hit = {"span_metadata": {}, "span_index": -1}
+    dock._configure_context_menu(dock._row_context_menu)
+    var sub_condition_menu_index: int = dock._row_context_menu.get_item_index(EventSheetDock.ROW_MENU_ADD_SUB_CONDITION)
+    all_passed = _check("row context menu exposes add sub-condition entry for events", sub_condition_menu_index >= 0 and not dock._row_context_menu.is_item_disabled(sub_condition_menu_index), true) and all_passed
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_ADD_SUB_CONDITION)
+    all_passed = _check("right-click add sub-condition routes through ace picker", dock._ace_picker._context.get("mode", ""), "new_sub_condition_event") and all_passed
+    var sub_condition_definition: ACEDefinition = dock._find_definition("Core", "Always")
+    dock._apply_ace_definition(sub_condition_definition, {}, dock._ace_picker._context)
+    all_passed = _check("add sub-condition appends a child event", parent_event.sub_events.size(), 1) and all_passed
+    all_passed = _check("sub-condition child event stores condition entry", (parent_event.sub_events[0] as EventRow).conditions.size(), 1) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo removes added sub-condition child event", parent_event.sub_events.size(), 0) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo restores added sub-condition child event", parent_event.sub_events.size(), 1) and all_passed
+
+    var delete_sheet := EventSheetResource.new()
+    var delete_event := EventRow.new()
+    var delete_condition_a := ACECondition.new()
+    delete_condition_a.provider_id = "Core"
+    delete_condition_a.ace_id = "Always"
+    var delete_condition_b := ACECondition.new()
+    delete_condition_b.provider_id = "Core"
+    delete_condition_b.ace_id = "Always"
+    var delete_action_a := ACEAction.new()
+    delete_action_a.provider_id = "Core"
+    delete_action_a.ace_id = "QueueFree"
+    var delete_action_b := ACEAction.new()
+    delete_action_b.provider_id = "Core"
+    delete_action_b.ace_id = "QueueFree"
+    delete_event.conditions = [delete_condition_a, delete_condition_b]
+    delete_event.actions = [delete_action_a, delete_action_b]
+    delete_sheet.events = [delete_event, EventRow.new()]
+    dock.setup(delete_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var delete_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var delete_row_data: EventRowData = delete_rows[0].get("row")
+    var delete_action_first_index: int = _find_span_index_by_kind(delete_row_data, "action")
+    var delete_action_second_index: int = _find_last_span_index_by_kind(delete_row_data, "action")
+    var delete_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    all_passed = _check(
+        "actions stack vertically in the event block",
+        delete_action_first_index >= 0
+            and delete_action_second_index >= 0
+            and delete_row_data.spans[delete_action_second_index].rect.position.y > delete_row_data.spans[delete_action_first_index].rect.position.y,
+        true
+    ) and all_passed
+    all_passed = _check(
+        "event block height expands from stacked condition/action rows",
+        float(delete_layout.get("row_height", 0.0)) > float(EventSheetViewport.ROW_HEIGHT),
+        true
+    ) and all_passed
+    var span_delete_key := InputEventKey.new()
+    span_delete_key.pressed = true
+    span_delete_key.keycode = KEY_DELETE
+    dock_viewport._select_from_click(0, _find_span_index_by_kind(delete_row_data, "condition"), false)
+    dock._unhandled_key_input(span_delete_key)
+    all_passed = _check("delete key removes selected condition span", ((dock.get_current_sheet().events[0] as EventRow).conditions.size()), 1) and all_passed
+    dock_viewport = dock.get_viewport_control()
+    delete_row_data = dock_viewport.get_flat_rows()[0].get("row")
+    dock_viewport._select_from_click(0, _find_span_index_by_kind(delete_row_data, "action"), false)
+    dock_viewport._select_from_click(0, _find_last_span_index_by_kind(delete_row_data, "action"), true)
+    dock._unhandled_key_input(span_delete_key)
+    all_passed = _check("delete key removes multi-selected action spans", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), 0) and all_passed
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport._select_row(1)
+    dock._unhandled_key_input(span_delete_key)
+    all_passed = _check("delete key still removes selected event rows", dock.get_current_sheet().events.size(), 1) and all_passed
+
+    var multi_block_sheet := EventSheetResource.new()
+    var multi_event_a := EventRow.new()
+    var multi_event_a_condition := ACECondition.new()
+    multi_event_a_condition.provider_id = "Core"
+    multi_event_a_condition.ace_id = "Always"
+    multi_event_a.conditions = [multi_event_a_condition]
+    var multi_event_b := EventRow.new()
+    var multi_event_b_condition := ACECondition.new()
+    multi_event_b_condition.provider_id = "Core"
+    multi_event_b_condition.ace_id = "OnReady"
+    multi_event_b.conditions = [multi_event_b_condition]
+    multi_block_sheet.events = [multi_event_a, multi_event_b]
+    dock.setup(multi_block_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var multi_block_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock_viewport._select_from_click(0, -1, false)
+    dock_viewport._select_from_click(1, -1, true)
+    dock._context_row = multi_block_rows[1].get("row")
+    dock._context_hit = {"span_metadata": {}, "span_index": -1}
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_CONDITION_BLOCK)
+    all_passed = _check(
+        "multi-selection converts selected events to or block",
+        [
+            (dock.get_current_sheet().events[0] as EventRow).condition_mode,
+            (dock.get_current_sheet().events[1] as EventRow).condition_mode
+        ],
+        [EventRow.ConditionMode.OR, EventRow.ConditionMode.OR]
+    ) and all_passed
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_CONDITION_BLOCK)
+    all_passed = _check(
+        "multi-selection converts selected events back to and block",
+        [
+            (dock.get_current_sheet().events[0] as EventRow).condition_mode,
+            (dock.get_current_sheet().events[1] as EventRow).condition_mode
+        ],
+        [EventRow.ConditionMode.AND, EventRow.ConditionMode.AND]
+    ) and all_passed
+
+    dock_viewport.custom_minimum_size = Vector2(640.0, 1200.0)
+    dock_viewport.size = Vector2(640.0, 1200.0)
+    var scroll_shell: ScrollContainer = dock.find_child("EventSheetScroll", true, false)
+    if scroll_shell != null:
+        scroll_shell.size = Vector2(640.0, 56.0)
+        scroll_shell.scroll_vertical = 56
+    var visible_range: Vector2i = dock_viewport.get_visible_row_range()
+    all_passed = _check("visible range starts from scrolled row", visible_range.x, 2) and all_passed
+
+    dock_viewport._toggle_breakpoint(2)
+    var row_after_breakpoint: EventRowData = dock_viewport.get_flat_rows()[2].get("row")
+    all_passed = _check("breakpoint toggles on selected row", row_after_breakpoint.breakpoint_enabled, true) and all_passed
+
+    dock_viewport.set_row_disabled(event_row_data.row_uid, true)
+    var row_after_disable: EventRowData = dock_viewport.get_flat_rows()[2].get("row")
+    all_passed = _check("row disabled scaffold persists by uid", row_after_disable.disabled, true) and all_passed
+
+    var inline_edit_row: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
+    var inline_edit_span_index: int = dock_viewport._find_first_editable_span(inline_edit_row)
+    dock_viewport._begin_edit(0, inline_edit_span_index)
+    dock_viewport._editing_buffer = "Changed note"
+    dock_viewport._commit_edit()
+    all_passed = _check("inline edit updates comment resource", ((dock.get_current_sheet().events[0] as CommentRow).text), "Changed note") and all_passed
+
+    # Drag-drop moves rows in underlying model.
+    var move_sheet := EventSheetResource.new()
+    var move_a := EventRow.new()
+    move_a.comment = "A"
+    var move_b := EventRow.new()
+    move_b.comment = "B"
+    move_sheet.events = [move_a, move_b]
+    dock.setup(move_sheet)
+    var move_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._on_row_drop_requested(move_rows[0].get("row"), move_rows[1].get("row"))
+    all_passed = _check("drag-drop reorders rows", ((dock.get_current_sheet().events[0] as EventRow).comment), "B") and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo restores drag-drop reorder", ((dock.get_current_sheet().events[0] as EventRow).comment), "A") and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo reapplies drag-drop reorder", ((dock.get_current_sheet().events[0] as EventRow).comment), "B") and all_passed
+
+    var copy_row_sheet := EventSheetResource.new()
+    var copy_row_comment := CommentRow.new()
+    copy_row_comment.text = "Copy me"
+    var copy_row_target := EventRow.new()
+    copy_row_target.comment = "Target"
+    copy_row_sheet.events = [copy_row_comment, copy_row_target]
+    dock.setup(copy_row_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var copy_row_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._on_row_drop_requested(copy_row_rows[0].get("row"), copy_row_rows[1].get("row"), "after", true)
+    all_passed = _check("ctrl drag-copy keeps original comment row", ((dock.get_current_sheet().events[0]) as CommentRow).text, "Copy me") and all_passed
+    all_passed = _check("ctrl drag-copy inserts duplicated comment row", ((dock.get_current_sheet().events[2]) as CommentRow).text, "Copy me") and all_passed
+
+    var multi_move_sheet := EventSheetResource.new()
+    var multi_comment_a := CommentRow.new()
+    multi_comment_a.text = "First"
+    var multi_comment_b := CommentRow.new()
+    multi_comment_b.text = "Second"
+    var multi_target_event := EventRow.new()
+    multi_target_event.comment = "Target"
+    multi_move_sheet.events = [multi_comment_a, multi_comment_b, multi_target_event]
+    dock.setup(multi_move_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var multi_move_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._on_rows_drop_requested(
+        [multi_move_rows[0].get("row"), multi_move_rows[1].get("row")],
+        multi_move_rows[2].get("row"),
+        "after"
+    )
+    all_passed = _check(
+        "multi-row drag preserves selected row order",
+        [
+            (dock.get_current_sheet().events[1] as CommentRow).text,
+            (dock.get_current_sheet().events[2] as CommentRow).text
+        ],
+        ["First", "Second"]
+    ) and all_passed
+
+    var nested_sheet := EventSheetResource.new()
+    var root_event := EventRow.new()
+    root_event.comment = "root"
+    var nested_group := EventGroup.new()
+    nested_group.name = "Group"
+    nested_group.group_name = nested_group.name
+    nested_sheet.events = [root_event, nested_group]
+    dock.setup(nested_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var nested_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._on_row_drop_requested(nested_rows[0].get("row"), nested_rows[1].get("row"), "inside")
+    all_passed = _check("drag-drop can move event into group", ((dock.get_current_sheet().events[0] as EventGroup).events.size()), 1) and all_passed
+    dock._on_row_drop_requested(dock_viewport.get_flat_rows()[1].get("row"), dock_viewport.get_flat_rows()[0].get("row"), "after")
+    all_passed = _check("drag-drop can move event back out of group", ((dock.get_current_sheet().events[1] as EventRow).comment), "root") and all_passed
+
+    var group_drag_sheet := EventSheetResource.new()
+    var outer_group := EventGroup.new()
+    outer_group.name = "Outer"
+    outer_group.group_name = outer_group.name
+    var inner_group := EventGroup.new()
+    inner_group.name = "Inner"
+    inner_group.group_name = inner_group.name
+    group_drag_sheet.events = [outer_group, inner_group]
+    dock.setup(group_drag_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var group_drag_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._on_row_drop_requested(group_drag_rows[0].get("row"), group_drag_rows[1].get("row"), "inside")
+    all_passed = _check("drag-drop can move group into group", dock.get_current_sheet().events.size(), 1) and all_passed
+    all_passed = _check(
+        "drag-drop nests moved group inside target group",
+        (((dock.get_current_sheet().events[0] as EventGroup).events[0]) as EventGroup).group_name,
+        "Outer"
+    ) and all_passed
+
+    # Copy/paste event row.
+    dock_viewport._select_row(0)
+    dock._on_copy_requested()
+    dock._on_paste_requested()
+    all_passed = _check("copy paste row inserts duplicate", dock.get_current_sheet().events.size(), 3) and all_passed
+
+    # Copy/paste condition and action entries.
+    var copy_sheet := EventSheetResource.new()
+    var copy_event := EventRow.new()
+    var copy_condition := ACECondition.new()
+    copy_condition.provider_id = "Core"
+    copy_condition.ace_id = "Always"
+    copy_event.conditions = [copy_condition]
+    var copy_action := ACEAction.new()
+    copy_action.provider_id = "Core"
+    copy_action.ace_id = "QueueFree"
+    copy_event.actions = [copy_action]
+    copy_sheet.events = [copy_event]
+    dock.setup(copy_sheet)
+    dock_viewport._select_row(0, _find_span_index_by_kind(dock_viewport.get_flat_rows()[0].get("row"), "condition"))
+    dock._on_copy_requested()
+    dock._on_paste_requested()
+    all_passed = _check("copy paste condition appends condition", ((dock.get_current_sheet().events[0] as EventRow).conditions.size()), 2) and all_passed
+    dock.setup(copy_sheet)
+    dock_viewport._select_row(0, _find_span_index_by_kind(dock_viewport.get_flat_rows()[0].get("row"), "action"))
+    dock._on_copy_requested()
+    dock._on_paste_requested()
+    all_passed = _check("copy paste action appends action", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), 2) and all_passed
+
+    var ace_copy_sheet := EventSheetResource.new()
+    var ace_copy_source := EventRow.new()
+    var ace_copy_condition_a := ACECondition.new()
+    ace_copy_condition_a.provider_id = "Core"
+    ace_copy_condition_a.ace_id = "Always"
+    var ace_copy_condition_b := ACECondition.new()
+    ace_copy_condition_b.provider_id = "Core"
+    ace_copy_condition_b.ace_id = "IsInstanceValid"
+    ace_copy_source.conditions = [ace_copy_condition_a, ace_copy_condition_b]
+    var ace_copy_source_action := ACEAction.new()
+    ace_copy_source_action.provider_id = "Core"
+    ace_copy_source_action.ace_id = "QueueFree"
+    ace_copy_source.actions = [ace_copy_source_action]
+    var ace_copy_target := EventRow.new()
+    var ace_copy_target_condition := ACECondition.new()
+    ace_copy_target_condition.provider_id = "Core"
+    ace_copy_target_condition.ace_id = "Always"
+    ace_copy_target.conditions = [ace_copy_target_condition]
+    var ace_copy_target_action := ACEAction.new()
+    ace_copy_target_action.provider_id = "Core"
+    ace_copy_target_action.ace_id = "SetVar"
+    ace_copy_target.actions = [ace_copy_target_action]
+    ace_copy_sheet.events = [ace_copy_source, ace_copy_target]
+    dock.setup(ace_copy_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var ace_copy_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._on_viewport_ace_drop_requested(
+        [
+            {"source_resource": ace_copy_source, "kind": "condition", "ace_index": 0},
+            {"source_resource": ace_copy_source, "kind": "condition", "ace_index": 1}
+        ],
+        ace_copy_rows[1].get("row"),
+        "condition",
+        0,
+        "before",
+        true
+    )
+    all_passed = _check("ctrl drag-copy keeps original source conditions", ace_copy_source.conditions.size(), 2) and all_passed
+    all_passed = _check(
+        "ctrl drag-copy duplicates multiple conditions in order",
+        [
+            ((dock.get_current_sheet().events[1] as EventRow).conditions[0] as ACECondition).ace_id,
+            ((dock.get_current_sheet().events[1] as EventRow).conditions[1] as ACECondition).ace_id
+        ],
+        ["Always", "IsInstanceValid"]
+    ) and all_passed
+    dock._on_viewport_ace_drop_requested(
+        [{"source_resource": ace_copy_source, "kind": "action", "ace_index": 0}],
+        ace_copy_rows[1].get("row"),
+        "action",
+        0,
+        "before",
+        true
+    )
+    all_passed = _check("ctrl drag-copy keeps original source action", ace_copy_source.actions.size(), 1) and all_passed
+    all_passed = _check(
+        "ctrl drag-copy duplicates action into target event",
+        ((dock.get_current_sheet().events[1] as EventRow).actions[0] as ACEAction).ace_id,
+        "QueueFree"
+    ) and all_passed
+
+    var ace_drag_sheet := EventSheetResource.new()
+    var ace_drag_source := EventRow.new()
+    var ace_drag_condition_a := ACECondition.new()
+    ace_drag_condition_a.provider_id = "Core"
+    ace_drag_condition_a.ace_id = "Always"
+    var ace_drag_condition_b := ACECondition.new()
+    ace_drag_condition_b.provider_id = "Core"
+    ace_drag_condition_b.ace_id = "OnReady"
+    ace_drag_source.conditions = [ace_drag_condition_a, ace_drag_condition_b]
+    var ace_drag_target := EventRow.new()
+    var ace_drag_target_condition := ACECondition.new()
+    ace_drag_target_condition.provider_id = "Core"
+    ace_drag_target_condition.ace_id = "IsInstanceValid"
+    ace_drag_target.conditions = [ace_drag_target_condition]
+    ace_drag_sheet.events = [ace_drag_source, ace_drag_target]
+    dock.setup(ace_drag_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var ace_drag_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var drag_target_row_data: EventRowData = ace_drag_rows[1].get("row")
+    dock_viewport.get_row_layout_for_test(1, 640.0)
+    var first_target_condition_index: int = _find_span_index_by_kind(drag_target_row_data, "condition")
+    var first_target_condition_span: SemanticSpan = drag_target_row_data.spans[first_target_condition_index]
+    dock_viewport._drag_ace_entries = [dock_viewport._build_ace_drag_entry(ace_drag_rows[0].get("row"), "condition", 0)]
+    dock_viewport._update_ace_drag_target(
+        {
+            "row_index": 1,
+            "span_index": first_target_condition_index,
+            "lane": "condition",
+            "span_metadata": first_target_condition_span.metadata
+        },
+        first_target_condition_span.rect.get_center() + Vector2(first_target_condition_span.rect.size.x * 0.35, 0.0)
+    )
+    var drag_preview_layout: Dictionary = dock_viewport.get_row_layout_for_test(1, 640.0)
+    var ace_drag_rect: Rect2 = drag_preview_layout.get("ace_drag_rect", Rect2())
+    all_passed = _check("ace drag target uses horizontal insertion after cursor midpoint", dock_viewport._drag_ace_insert_mode, "after") and all_passed
+    all_passed = _check("ace drag preview renders as a thin vertical placement line", ace_drag_rect.size.x <= 4.0, true) and all_passed
+    var ace_drag_source_action := ACEAction.new()
+    ace_drag_source_action.provider_id = "Core"
+    ace_drag_source_action.ace_id = "QueueFree"
+    ace_drag_source.actions = [ace_drag_source_action]
+    var ace_drag_target_action := ACEAction.new()
+    ace_drag_target_action.provider_id = "Core"
+    ace_drag_target_action.ace_id = "SetVar"
+    ace_drag_target.actions = [ace_drag_target_action]
+    dock.setup(ace_drag_sheet)
+    dock_viewport = dock.get_viewport_control()
+    ace_drag_rows = dock_viewport.get_flat_rows()
+    drag_target_row_data = ace_drag_rows[1].get("row")
+    dock_viewport.get_row_layout_for_test(1, 640.0)
+    var first_target_action_index: int = _find_span_index_by_kind(drag_target_row_data, "action")
+    var first_target_action_span: SemanticSpan = drag_target_row_data.spans[first_target_action_index]
+    dock_viewport._drag_ace_entries = [dock_viewport._build_ace_drag_entry(ace_drag_rows[0].get("row"), "action", 0)]
+    dock_viewport._update_ace_drag_target(
+        {
+            "row_index": 1,
+            "span_index": first_target_action_index,
+            "lane": "action",
+            "span_metadata": first_target_action_span.metadata
+        },
+        first_target_action_span.rect.get_center() + Vector2(first_target_action_span.rect.size.x * 0.35, 0.0)
+    )
+    drag_preview_layout = dock_viewport.get_row_layout_for_test(1, 640.0)
+    ace_drag_rect = drag_preview_layout.get("ace_drag_rect", Rect2())
+    all_passed = _check("action drag preview also renders as a thin vertical placement line", ace_drag_rect.size.x <= 4.0, true) and all_passed
+    dock_viewport._clear_ace_drag()
+    dock._on_viewport_ace_drop_requested(
+        [{"source_resource": ace_drag_source, "kind": "condition", "ace_index": 0}],
+        ace_drag_rows[1].get("row"),
+        "condition",
+        0,
+        "before"
+    )
+    all_passed = _check(
+        "ace drag inserts condition into target event",
+        ((dock.get_current_sheet().events[1] as EventRow).conditions[0] as ACECondition).ace_id,
+        "Always"
+    ) and all_passed
+    all_passed = _check(
+        "ace drag removes moved condition from source event",
+        (dock.get_current_sheet().events[0] as EventRow).conditions.size(),
+        1
+    ) and all_passed
+
+    var invalid_trigger_sheet := EventSheetResource.new()
+    var invalid_trigger_source := EventRow.new()
+    var moved_trigger := ACECondition.new()
+    moved_trigger.provider_id = "Core"
+    moved_trigger.ace_id = "OnReady"
+    invalid_trigger_source.trigger = moved_trigger
+    var invalid_trigger_target := EventRow.new()
+    var existing_trigger := ACECondition.new()
+    existing_trigger.provider_id = "Core"
+    existing_trigger.ace_id = "OnProcess"
+    invalid_trigger_target.trigger = existing_trigger
+    invalid_trigger_sheet.events = [invalid_trigger_source, invalid_trigger_target]
+    dock.setup(invalid_trigger_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var invalid_trigger_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var invalid_trigger_row_data: EventRowData = invalid_trigger_rows[1].get("row")
+    dock_viewport.get_row_layout_for_test(1, 640.0)
+    var invalid_trigger_span_index: int = _find_span_index_by_kind(invalid_trigger_row_data, "trigger")
+    var invalid_trigger_span: SemanticSpan = invalid_trigger_row_data.spans[invalid_trigger_span_index]
+    dock_viewport._drag_ace_entries = [dock_viewport._build_ace_drag_entry(invalid_trigger_rows[0].get("row"), "trigger", 0)]
+    dock_viewport._update_ace_drag_target(
+        {
+            "row_index": 1,
+            "span_index": invalid_trigger_span_index,
+            "lane": "condition",
+            "span_metadata": invalid_trigger_span.metadata
+        },
+        invalid_trigger_span.rect.get_center()
+    )
+    all_passed = _check("invalid trigger drag shows tooltip text", dock_viewport._drag_feedback_text, "This event already has a trigger.") and all_passed
+    all_passed = _check("invalid trigger drag marks target as invalid", dock_viewport._drag_ace_drop_valid, false) and all_passed
+    dock_viewport._complete_ace_drag()
+    dock_viewport._clear_ace_drag()
+    all_passed = _check("invalid trigger drag keeps source trigger in place", (dock.get_current_sheet().events[0] as EventRow).trigger != null, true) and all_passed
+    all_passed = _check("invalid trigger drag keeps target trigger in place", ((dock.get_current_sheet().events[1] as EventRow).trigger as ACECondition).ace_id, "OnProcess") and all_passed
+    all_passed = _check("invalid trigger drag updates status label", dock._status_label.text, "This event already has a trigger.") and all_passed
+
+    var group_fold_sheet := EventSheetResource.new()
+    var fold_group := EventGroup.new()
+    fold_group.name = "Foldable"
+    fold_group.group_name = fold_group.name
+    var fold_child := EventRow.new()
+    fold_child.comment = "child"
+    fold_group.events = [fold_child]
+    group_fold_sheet.events = [fold_group]
+    dock.setup(group_fold_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var fold_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    dock._context_row = fold_rows[0].get("row")
+    dock._context_hit = {"span_metadata": {}, "span_index": -1}
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_GROUP_FOLD)
+    all_passed = _check("group row menu can collapse group", (dock.get_current_sheet().events[0] as EventGroup).is_collapsed(), true) and all_passed
+    all_passed = _check("collapsed group hides child rows after menu action", dock_viewport.get_total_row_count(), 1) and all_passed
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_GROUP_FOLD)
+    all_passed = _check("group row menu can expand group", (dock.get_current_sheet().events[0] as EventGroup).is_collapsed(), false) and all_passed
+    all_passed = _check("expanded group restores child rows after menu action", dock_viewport.get_total_row_count(), 2) and all_passed
+
+    var delete_group_sheet := EventSheetResource.new()
+    var delete_group := EventGroup.new()
+    delete_group.name = "Delete Me"
+    delete_group.group_name = delete_group.name
+    var remaining_event := EventRow.new()
+    remaining_event.comment = "Remain"
+    delete_group_sheet.events = [delete_group, remaining_event]
+    dock.setup(delete_group_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport._select_row(0)
+    var delete_key := InputEventKey.new()
+    delete_key.pressed = true
+    delete_key.keycode = KEY_DELETE
+    dock._unhandled_key_input(delete_key)
+    all_passed = _check("delete key removes selected group", dock.get_current_sheet().events.size(), 1) and all_passed
+    all_passed = _check(
+        "delete key keeps remaining non-selected row",
+        ((dock.get_current_sheet().events[0]) as EventRow).comment,
+        "Remain"
+    ) and all_passed
+
+    var zoom_sheet := EventSheetResource.new()
+    zoom_sheet.events = [EventRow.new()]
+    dock.setup(zoom_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock_viewport.size = Vector2(640.0, 320.0)
+    var zoom_before: float = dock_viewport.get_zoom_factor()
+    var zoom_event := InputEventMouseButton.new()
+    zoom_event.pressed = true
+    zoom_event.ctrl_pressed = true
+    zoom_event.button_index = MOUSE_BUTTON_WHEEL_UP
+    zoom_event.position = Vector2(80.0, 40.0)
+    dock_viewport._handle_mouse_button(zoom_event)
+    all_passed = _check("ctrl wheel zoom increases viewport zoom factor", dock_viewport.get_zoom_factor() > zoom_before, true) and all_passed
+    dock._on_zoom_out_requested()
+    all_passed = _check("toolbar zoom out returns viewport toward default zoom", is_equal_approx(dock_viewport.get_zoom_factor(), 1.0), true) and all_passed
+
+    var empty_space_sheet := EventSheetResource.new()
+    empty_space_sheet.events = [EventRow.new()]
+    dock.setup(empty_space_sheet)
+    dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
+    dock_viewport = dock.get_viewport_control()
+    var row_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    var row_rect: Rect2 = row_layout.get("row_rect", Rect2())
+    var row_double_click := InputEventMouseButton.new()
+    row_double_click.pressed = true
+    row_double_click.button_index = MOUSE_BUTTON_LEFT
+    row_double_click.double_click = true
+    row_double_click.position = row_rect.get_center()
+    dock_viewport._handle_mouse_button(row_double_click)
+    all_passed = _check("double-clicking an existing row does not append events", dock.get_current_sheet().events.size(), 1) and all_passed
+    var empty_double_click := InputEventMouseButton.new()
+    empty_double_click.pressed = true
+    empty_double_click.button_index = MOUSE_BUTTON_LEFT
+    empty_double_click.double_click = true
+    empty_double_click.position = Vector2(64.0, row_rect.end.y + 120.0)
+    dock_viewport._handle_mouse_button(empty_double_click)
+    all_passed = _check("double-clicking empty space appends a new event", dock.get_current_sheet().events.size(), 2) and all_passed
+    all_passed = _check("empty-space double-click inserts EventRow", dock.get_current_sheet().events[1] is EventRow, true) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo removes empty-space double-click insertion", dock.get_current_sheet().events.size(), 1) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo restores empty-space double-click insertion", dock.get_current_sheet().events.size(), 2) and all_passed
+    var empty_menu_click := InputEventMouseButton.new()
+    empty_menu_click.pressed = true
+    empty_menu_click.button_index = MOUSE_BUTTON_RIGHT
+    empty_menu_click.position = Vector2(80.0, row_rect.end.y + 140.0)
+    dock_viewport._handle_mouse_button(empty_menu_click)
+    all_passed = _check("right-clicking empty space opens empty context menu", dock._empty_space_context_menu.visible, true) and all_passed
+    all_passed = _check("empty context menu first item is new event", dock._empty_space_context_menu.get_item_text(0), "New Event") and all_passed
+    all_passed = _check("empty context menu second item is new condition", dock._empty_space_context_menu.get_item_text(1), "New Condition") and all_passed
+    all_passed = _check("empty context menu third item is add variable", dock._empty_space_context_menu.get_item_text(2), "Add New Variable") and all_passed
+    dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_NEW_EVENT)
+    all_passed = _check("empty context menu new event action inserts event", dock.get_current_sheet().events.size(), 3) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo reverts empty context menu new event action", dock.get_current_sheet().events.size(), 2) and all_passed
+    dock_viewport.clear_selection()
+    dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_NEW_CONDITION)
+    all_passed = _check("empty context menu new condition routes through ace picker", dock._ace_picker._context.get("mode", ""), "new_condition_event") and all_passed
+    dock._ace_picker._window.hide()
+    dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_ADD_VARIABLE)
+    all_passed = _check("empty context menu add variable opens variable dialog", dock._variable_dlg._dialog.visible, true) and all_passed
+    all_passed = _check("empty context menu add variable defaults to global scope", dock._variable_dlg._scope, "global") and all_passed
+    dock._variable_dlg._dialog.hide()
+    var box_sheet := EventSheetResource.new()
+    var box_event_a := EventRow.new()
+    box_event_a.conditions = [ACECondition.new()]
+    (box_event_a.conditions[0] as ACECondition).provider_id = "Core"
+    (box_event_a.conditions[0] as ACECondition).ace_id = "Always"
+    box_event_a.actions = [ACEAction.new()]
+    (box_event_a.actions[0] as ACEAction).provider_id = "Core"
+    (box_event_a.actions[0] as ACEAction).ace_id = "QueueFree"
+    var box_event_b := EventRow.new()
+    box_event_b.conditions = [ACECondition.new()]
+    (box_event_b.conditions[0] as ACECondition).provider_id = "Core"
+    (box_event_b.conditions[0] as ACECondition).ace_id = "OnReady"
+    box_event_b.actions = [ACEAction.new()]
+    (box_event_b.actions[0] as ACEAction).provider_id = "Core"
+    (box_event_b.actions[0] as ACEAction).ace_id = "QueueFree"
+    box_sheet.events = [box_event_a, box_event_b]
+    dock.setup(box_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var box_row_a_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    var box_row_b_layout: Dictionary = dock_viewport.get_row_layout_for_test(1, 640.0)
+    var box_press := InputEventMouseButton.new()
+    box_press.pressed = true
+    box_press.button_index = MOUSE_BUTTON_LEFT
+    box_press.position = Vector2(16.0, box_row_a_layout.get("row_rect", Rect2()).position.y - 4.0)
+    dock_viewport._handle_mouse_button(box_press)
+    var box_drag := InputEventMouseMotion.new()
+    box_drag.position = box_row_b_layout.get("row_rect", Rect2()).end + Vector2(-10.0, -6.0)
+    dock_viewport._handle_mouse_motion(box_drag)
+    var box_release := InputEventMouseButton.new()
+    box_release.pressed = false
+    box_release.button_index = MOUSE_BUTTON_LEFT
+    box_release.position = box_drag.position
+    dock_viewport._handle_mouse_button(box_release)
+    editor_state = dock_viewport.get_editor_state_snapshot()
+    all_passed = _check("box-select can multi-select event rows", editor_state.get("selected_row_count", 0) >= 2, true) and all_passed
+    all_passed = _check("box-select can include condition/action spans", editor_state.get("selected_span_count", 0) > 0, true) and all_passed
+
+    var hover_sheet := EventSheetResource.new()
+    var hover_comment := CommentRow.new()
+    hover_comment.text = "Hover note"
+    var hover_event := EventRow.new()
+    var hover_condition := ACECondition.new()
+    hover_condition.provider_id = "Core"
+    hover_condition.ace_id = "Always"
+    var hover_action := ACEAction.new()
+    hover_action.provider_id = "Core"
+    hover_action.ace_id = "QueueFree"
+    hover_event.conditions = [hover_condition]
+    hover_event.actions = [hover_action]
+    hover_event.comment = "Inline hover"
+    hover_sheet.events = [hover_comment, hover_event]
+    dock.setup(hover_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var hover_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var hover_event_row: EventRowData = hover_rows[1].get("row")
+    var hover_condition_index: int = _find_span_index_by_kind(hover_event_row, "condition")
+    var hover_action_index: int = _find_span_index_by_kind(hover_event_row, "action")
+    var hover_comment_row: EventRowData = hover_rows[0].get("row")
+    var hover_condition_motion := InputEventMouseMotion.new()
+    hover_condition_motion.position = hover_event_row.spans[hover_condition_index].rect.get_center()
+    dock_viewport._handle_mouse_motion(hover_condition_motion)
+    all_passed = _check("hovering condition targets the individual condition span", dock_viewport.get_row_layout_for_test(1, 640.0).get("hovered_span_index", -1), hover_condition_index) and all_passed
+    var hover_action_motion := InputEventMouseMotion.new()
+    hover_action_motion.position = hover_event_row.spans[hover_action_index].rect.get_center()
+    dock_viewport._handle_mouse_motion(hover_action_motion)
+    all_passed = _check("hovering action targets the individual action span", dock_viewport.get_row_layout_for_test(1, 640.0).get("hovered_span_index", -1), hover_action_index) and all_passed
+    var hover_comment_motion := InputEventMouseMotion.new()
+    hover_comment_motion.position = hover_comment_row.spans[0].rect.get_center()
+    dock_viewport._handle_mouse_motion(hover_comment_motion)
+    all_passed = _check("hovering comment targets the individual comment span", dock_viewport.get_row_layout_for_test(0, 640.0).get("hovered_span_index", -1), 0) and all_passed
+
+    # Global and local variable creation workflow.
+    dock.setup(copy_sheet)
+    dock._on_variable_dialog_confirmed("ammo", "int", 12, "global")
+    all_passed = _check("create global variable stores sheet variable", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
+    all_passed = _check(
+        "create global variable stores const=false by default with persisted key",
+        dock.get_current_sheet().variables["ammo"].has("const") and dock.get_current_sheet().variables["ammo"]["const"] == false,
+        true
+    ) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo removes global variable creation", dock.get_current_sheet().variables.has("ammo"), false) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo restores global variable creation", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
+    var variable_action := ACEAction.new()
+    variable_action.provider_id = "Core"
+    variable_action.ace_id = "SetVar"
+    variable_action.params = {"var_name": "ammo", "value": "3"}
+    ((dock.get_current_sheet().events[0] as EventRow).actions).append(variable_action)
+    dock_viewport._select_row(0)
+    dock._on_variable_dialog_confirmed("cooldown", "float", 0.5, "local")
+    all_passed = _check("create local variable stores on selected event", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo removes local variable creation", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 0) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo restores local variable creation", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
+    dock._on_global_variable_activated(0)
+    all_passed = _check("editing global variable in use locks type selector", dock._variable_dlg._type_option.disabled, true) and all_passed
+    dock._on_variable_dialog_confirmed("ammo", "int", 99, "global", {"editing": true, "original_name": "ammo"}, true)
+    all_passed = _check("editing global variable updates default", dock.get_current_sheet().variables["ammo"].get("default", 0), 99) and all_passed
+    all_passed = _check("editing global variable can set const flag", dock.get_current_sheet().variables["ammo"].get("const", false), true) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo restores previous global const state", dock.get_current_sheet().variables["ammo"].get("const", false), false) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo reapplies global const state", dock.get_current_sheet().variables["ammo"].get("const", false), true) and all_passed
+    dock_viewport = dock.get_viewport_control()
+    all_passed = _check("global variables render in the sheet rows", _rows_contain_text(dock_viewport.get_flat_rows(), "ammo"), true) and all_passed
+    all_passed = _check("local variables render in the sheet rows", _rows_contain_text(dock_viewport.get_flat_rows(), "cooldown"), true) and all_passed
+    all_passed = _check("const badge renders in variable rows", _rows_contain_text(dock_viewport.get_flat_rows(), "const"), true) and all_passed
+    var variable_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var global_variable_row: EventRowData = variable_rows[0].get("row")
+    all_passed = _check("variable scope label uses centered badge metadata", bool((global_variable_row.spans[0].metadata as Dictionary).get("badge", false)), true) and all_passed
+    var variable_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
+    all_passed = _check("variable badge and name do not overlap", global_variable_row.spans[0].rect.end.x < global_variable_row.spans[1].rect.position.x, true) and all_passed
+    var variable_double_click := InputEventMouseButton.new()
+    variable_double_click.pressed = true
+    variable_double_click.button_index = MOUSE_BUTTON_LEFT
+    variable_double_click.double_click = true
+    variable_double_click.position = variable_layout.get("row_rect", Rect2()).get_center()
+    dock_viewport._handle_mouse_button(variable_double_click)
+    all_passed = _check("double-clicking a variable row opens the edit dialog", dock._variable_dlg._dialog.visible, true) and all_passed
+    all_passed = _check("variable double-click keeps scope for editing", dock._variable_dlg._scope, "global") and all_passed
+    all_passed = _check("variable double-click populates current variable name", dock._variable_dlg.get_last_name_text(), "ammo") and all_passed
+    dock._variable_dlg._dialog.hide()
+    dock._context_variable = {"scope": "global", "name": "ammo", "type": "int", "is_constant": true, "supports_const": true}
+    dock._toggle_context_variable_constant()
+    all_passed = _check("context toggle can unset global const flag", dock.get_current_sheet().variables["ammo"].get("const", true), false) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo restores const toggle action", dock.get_current_sheet().variables["ammo"].get("const", false), true) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo reapplies const toggle action", dock.get_current_sheet().variables["ammo"].get("const", true), false) and all_passed
+    dock._context_variable = {"scope": "global", "name": "ammo", "type": "int", "is_constant": false, "supports_const": true}
+    dock._toggle_context_variable_constant()
+    all_passed = _check("context toggle can set global const flag again", dock.get_current_sheet().variables["ammo"].get("const", false), true) and all_passed
+
+    var conversion_event_uid: String = (dock.get_current_sheet().events[0] as EventRow).event_uid
+    var global_entry := {
+        "scope": "global",
+        "name": "ammo",
+        "type": "int",
+        "default": 99,
+        "is_constant": true
+    }
+    var converted_to_local: bool = dock._convert_variable_scope(global_entry, "local", conversion_event_uid)
+    all_passed = _check("global to local conversion succeeds", converted_to_local, true) and all_passed
+    all_passed = _check("global to local conversion removes global variable", dock.get_current_sheet().variables.has("ammo"), false) and all_passed
+    all_passed = _check("global to local conversion preserves type", ((dock.get_current_sheet().events[0] as EventRow).local_variables[1] as LocalVariable).type_name, "int") and all_passed
+    all_passed = _check("global to local conversion preserves default value", ((dock.get_current_sheet().events[0] as EventRow).local_variables[1] as LocalVariable).default_value, 99) and all_passed
+    all_passed = _check("global to local conversion preserves const flag", ((dock.get_current_sheet().events[0] as EventRow).local_variables[1] as LocalVariable).is_constant, true) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo restores global variable after conversion", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo reapplies global to local conversion", dock.get_current_sheet().variables.has("ammo"), false) and all_passed
+
+    var local_to_global_entry := {
+        "scope": "local",
+        "name": "ammo",
+        "type": "int",
+        "default": 99,
+        "is_constant": true,
+        "event_row": dock.get_current_sheet().events[0],
+        "index": 1
+    }
+    var converted_to_global: bool = dock._convert_variable_scope(local_to_global_entry, "global")
+    all_passed = _check("local to global conversion succeeds", converted_to_global, true) and all_passed
+    all_passed = _check("local to global conversion restores global variable", dock.get_current_sheet().variables.has("ammo"), true) and all_passed
+    all_passed = _check("local to global conversion preserves type", dock.get_current_sheet().variables["ammo"].get("type", ""), "int") and all_passed
+    all_passed = _check("local to global conversion preserves default value", dock.get_current_sheet().variables["ammo"].get("default", null), 99) and all_passed
+    all_passed = _check("local to global conversion preserves const flag", dock.get_current_sheet().variables["ammo"].get("const", false), true) and all_passed
+    dock._on_undo_requested()
+    all_passed = _check("undo restores local variable after local->global conversion", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 2) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo reapplies local->global conversion", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
+
+    var unselected_local_sheet := EventSheetResource.new()
+    unselected_local_sheet.events = [EventRow.new()]
+    dock.setup(unselected_local_sheet)
+    dock_viewport._clear_selection()
+    dock._on_variable_dialog_confirmed("speed", "float", 2.5, "local")
+    all_passed = _check("create local variable without selection targets first event", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
+    all_passed = _check("create local variable without selection reselects target event", dock.get_viewport_control().get_selected_context().get("source_resource", null) is EventRow, true) and all_passed
+
+    var empty_local_sheet := EventSheetResource.new()
+    dock.setup(empty_local_sheet)
+    dock_viewport._clear_selection()
+    dock._on_variable_dialog_confirmed("spawned", "bool", true, "local")
+    all_passed = _check("create local variable without events creates host event", dock.get_current_sheet().events.size(), 1) and all_passed
+    all_passed = _check("create local variable without events stores on created host event", ((dock.get_current_sheet().events[0] as EventRow).local_variables.size()), 1) and all_passed
+
+    dock_viewport.set_size(Vector2(640.0, 640.0))
+    var width_scroll_shell: ScrollContainer = dock.find_child("EventSheetScroll", true, false)
+    if width_scroll_shell != null:
+        width_scroll_shell.size = Vector2(1180.0, 640.0)
+    dock_viewport._process(0.0)
+    all_passed = _check("viewport canvas expands to available width", dock_viewport.custom_minimum_size.x >= 1180.0, true) and all_passed
+    all_passed = _check("viewport control grows to fill available width", dock_viewport.size.x >= 1180.0, true) and all_passed
+    all_passed = _check("viewport control also grows to fill available height for true empty-canvas clicks", dock_viewport.size.y >= 640.0, true) and all_passed
+
+    # Clicking event lanes opens the ACE picker in the matching mode.
+    dock.setup(copy_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var clickable_row: EventRowData = null
+    for row_entry in dock_viewport.get_flat_rows():
+        var candidate: EventRowData = row_entry.get("row")
+        if candidate != null and candidate.source_resource is EventRow:
+            clickable_row = candidate
+            break
+    dock._ace_picker._window.hide()
+    dock._on_viewport_ace_picker_requested(clickable_row, "condition")
+    all_passed = _check("condition lane click opens ace picker", dock._ace_picker._window.visible, true) and all_passed
+    all_passed = _check("condition lane click uses append condition mode", dock._ace_picker._context.get("mode", ""), "append_condition") and all_passed
+    dock._ace_picker._window.hide()
+    dock._on_viewport_ace_picker_requested(clickable_row, "action")
+    all_passed = _check("action lane click opens ace picker", dock._ace_picker._window.visible, true) and all_passed
+    all_passed = _check("action lane click uses append action mode", dock._ace_picker._context.get("mode", ""), "append_action") and all_passed
+    dock._ace_picker._window.close_requested.emit()
+    all_passed = _check("ace picker close button hides window", dock._ace_picker._window.visible, false) and all_passed
+
+    # Add Condition opens a new-event picker flow when no event row is selected.
+    dock.setup(EventSheetResource.new())
+    dock._on_add_condition_requested()
+    all_passed = _check("add condition without selection opens ace picker", dock._ace_picker._window.visible, true) and all_passed
+    all_passed = _check("add condition without selection uses new event mode", dock._ace_picker._context.get("mode", ""), "new_condition_event") and all_passed
+
+    # ACE selection and apply workflow.
+    var action_definition: ACEDefinition = null
+    var new_condition_definition: ACEDefinition = null
+    for definition in ace_registry.search("set variable"):
+        if definition.ace_type == ACEDefinition.ACEType.ACTION:
+            action_definition = definition
+            break
+    for definition in ace_registry.search("always"):
+        if definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]:
+            new_condition_definition = definition
+            break
+    all_passed = _check("found action definition with params", action_definition != null and not action_definition.parameters.is_empty(), true) and all_passed
+    if action_definition != null:
+        dock.setup(copy_sheet)
+        dock._on_ace_picker_selected(action_definition, {"mode": "append_action", "selected_resource": dock.get_current_sheet().events[0]})
+        all_passed = _check("ace apply appends action", ((dock.get_current_sheet().events[0] as EventRow).actions.size()) >= 2, true) and all_passed
+        dock._on_ace_picker_selected(action_definition, {"mode": "replace_action", "selected_resource": dock.get_current_sheet().events[0], "ace_index": 0, "existing_params": {"var_name": "ammo", "value": "12"}})
+        all_passed = _check("editing ace with params opens param dialog", dock._ace_params._dialog.visible, true) and all_passed
+        all_passed = _check("params dialog adds edit cue in title for replace flows", dock._ace_params._dialog.title.contains("(Edit)"), true) and all_passed
+        all_passed = _check("params dialog exposes flow-aware hint text", dock._ace_params._hint.text.contains("Re-editing"), true) and all_passed
+        dock._ace_params._focus_first_field()
+        all_passed = _check("params dialog focuses first field on open", dock._ace_params._fields.size() > 0 and ((dock._ace_params._fields.values()[0] as Control).has_focus()), true) and all_passed
+    if new_condition_definition != null:
+        dock.setup(EventSheetResource.new())
+        dock._apply_ace_definition(new_condition_definition, {}, {"mode": "new_condition_event", "selected_resource": null})
+        all_passed = _check("new condition mode creates event row", dock.get_current_sheet().events.size(), 1) and all_passed
+        all_passed = _check("new condition mode creates event with condition or trigger", ((dock.get_current_sheet().events[0] as EventRow).conditions.size()) + (1 if (dock.get_current_sheet().events[0] as EventRow).trigger != null else 0) > 0, true) and all_passed
+
+    # Undo/redo workflow.
+    var undo_before: int = ((dock.get_current_sheet().events[0] as EventRow).actions.size())
+    dock._on_undo_requested()
+    all_passed = _check("undo removes last ace apply", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), undo_before - 1) and all_passed
+    dock._on_redo_requested()
+    all_passed = _check("redo reapplies ace apply", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), undo_before) and all_passed
+
+    # Save and reload EventSheet.
+    var temp_path: String = "user://event_sheet_editor_test.tres"
+    dock.setup(copy_sheet)
+    dock._save_sheet_to_path(temp_path)
+    var exists_after_save: bool = FileAccess.file_exists(temp_path)
+    all_passed = _check("save workflow writes EventSheet resource", exists_after_save, true) and all_passed
+    if exists_after_save:
+        dock._load_sheet_from_path(temp_path)
+        all_passed = _check("open workflow loads EventSheet resource", dock.get_current_sheet() is EventSheetResource, true) and all_passed
+        all_passed = _check("save/load keeps global const flag", bool(dock.get_current_sheet().variables.get("ammo", {}).get("const", false)), true) and all_passed
+    all_passed = _check("save normalization adds default filename", dock._normalize_sheet_save_path("res://"), "res://event_sheet.tres") and all_passed
+    all_passed = _check("save normalization appends tres extension", dock._normalize_sheet_save_path("res://sheets/editor_sheet"), "res://sheets/editor_sheet.tres") and all_passed
+
+    # Drag-drop ACE preview opens popup window content.
+    var preview_defs: Array[ACEDefinition] = []
+    var on_signal_def: ACEDefinition = ACEDefinition.new()
+    on_signal_def.provider_id = "Core"
+    on_signal_def.id = "OnSignal"
+    on_signal_def.display_name = "On Signal"
+    on_signal_def.category = "Signals / Scene / Input"
+    on_signal_def.ace_type = ACEDefinition.ACEType.TRIGGER
+    preview_defs.append(on_signal_def)
+    dock._on_ace_preview_requested("DemoNode", preview_defs)
+    all_passed = _check("ace drag-in preview opens popup window", dock._preview_window.visible, true) and all_passed
+    all_passed = _check("ace drag-in preview list gets populated", dock._preview_list.item_count > 0, true) and all_passed
+
+    editor.free()
+    return all_passed
+
+static func _row_contains_text(row_data: EventRowData, expected_text: String) -> bool:
+    for span: SemanticSpan in row_data.spans:
+        if span != null and span.text == expected_text:
+            return true
+    return false
+
+static func _rows_contain_text(rows: Array[Dictionary], expected_text: String) -> bool:
+    for row_entry: Dictionary in rows:
+        var row_data: EventRowData = row_entry.get("row")
+        if row_data != null and _row_contains_text(row_data, expected_text):
+            return true
+    return false
+
+static func _rows_have_debug_state(rows: Array[Dictionary]) -> bool:
+    for row_entry: Dictionary in rows:
+        var row_data: EventRowData = row_entry.get("row")
+        if row_data != null and not row_data.debug_state.is_empty():
+            return true
+    return false
+
+static func _row_has_lane(row_data: EventRowData, expected_lane: String) -> bool:
+    for span in row_data.spans:
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        if str((span.metadata as Dictionary).get("lane", "")) == expected_lane:
+            return true
+    return false
+
+static func _find_span_index_by_kind(row_data: EventRowData, expected_kind: String) -> int:
+    if row_data == null:
+        return -1
+    for index in range(row_data.spans.size()):
+        var span: SemanticSpan = row_data.spans[index]
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        if str((span.metadata as Dictionary).get("kind", "")) == expected_kind:
+            return index
+    return -1
+
+static func _find_last_span_index_by_kind(row_data: EventRowData, expected_kind: String) -> int:
+    if row_data == null:
+        return -1
+    for index in range(row_data.spans.size() - 1, -1, -1):
+        var span: SemanticSpan = row_data.spans[index]
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        if str((span.metadata as Dictionary).get("kind", "")) == expected_kind:
+            return index
+    return -1
+
+static func _find_nth_span_index_by_kind(
+    row_data: EventRowData,
+    expected_kind: String,
+    occurrence: int
+) -> int:
+    if row_data == null or occurrence < 0:
+        return -1
+    var current_occurrence: int = 0
+    for index in range(row_data.spans.size()):
+        var span: SemanticSpan = row_data.spans[index]
+        if span == null or not (span.metadata is Dictionary):
+            continue
+        if str((span.metadata as Dictionary).get("kind", "")) != expected_kind:
+            continue
+        if current_occurrence == occurrence:
+            return index
+        current_occurrence += 1
+    return -1
+
+static func _find_span_index_by_text(row_data: EventRowData, expected_text: String) -> int:
+    if row_data == null:
+        return -1
+    for index in range(row_data.spans.size()):
+        var span: SemanticSpan = row_data.spans[index]
+        if span != null and span.text == expected_text:
+            return index
+    return -1
+
+static func _find_last_span_index_by_text(row_data: EventRowData, expected_text: String) -> int:
+    if row_data == null:
+        return -1
+    for index in range(row_data.spans.size() - 1, -1, -1):
+        var span: SemanticSpan = row_data.spans[index]
+        if span != null and span.text == expected_text:
+            return index
+    return -1
+
+static func _count_span_text(row_data: EventRowData, expected_text: String) -> int:
+    if row_data == null:
+        return 0
+    var total: int = 0
+    for span: SemanticSpan in row_data.spans:
+        if span != null and span.text == expected_text:
+            total += 1
+    return total
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
-	if actual == expected:
-		print("[PASS] event_sheet_editor_test: %s" % label)
-		return true
-	print("[FAIL] event_sheet_editor_test: %s" % label)
-	print("  expected: %s" % str(expected))
-	print("  actual:   %s" % str(actual))
-	return false
-
-static func _count_event_row_nodes(node: Node) -> int:
-	if node == null:
-		return 0
-	var total: int = 1 if node is EventRowUI else 0
-	for child: Node in node.get_children():
-		total += _count_event_row_nodes(child)
-	return total
-
-static func _count_comment_row_nodes(node: Node) -> int:
-	if node == null:
-		return 0
-	var total: int = 1 if node is CommentRowUI else 0
-	for child: Node in node.get_children():
-		total += _count_comment_row_nodes(child)
-	return total
-
-static func _contains_label_text(node: Node, expected: String) -> bool:
-	if node == null:
-		return false
-	if node is Label:
-		var lbl: Label = node as Label
-		if lbl.text == expected:
-			return true
-	for child: Node in node.get_children():
-		if _contains_label_text(child, expected):
-			return true
-	return false
-
-static func _count_nodes_named(node: Node, expected_name: String) -> int:
-	if node == null:
-		return 0
-	var total: int = 1 if node.name == expected_name else 0
-	for child: Node in node.get_children():
-		total += _count_nodes_named(child, expected_name)
-	return total
-
-static func _count_panel_containers(node: Node) -> int:
-	if node == null:
-		return 0
-	var total: int = 1 if node is PanelContainer else 0
-	for child: Node in node.get_children():
-		total += _count_panel_containers(child)
-	return total
-
-static func _count_color_rects(node: Node) -> int:
-	if node == null:
-		return 0
-	var total: int = 1 if node is ColorRect else 0
-	for child: Node in node.get_children():
-		total += _count_color_rects(child)
-	return total
-
-static func _find_first_color_rect(node: Node) -> ColorRect:
-	if node == null:
-		return null
-	if node is ColorRect:
-		return node as ColorRect
-	for child: Node in node.get_children():
-		var found: ColorRect = _find_first_color_rect(child)
-		if found != null:
-			return found
-	return null
-
-static func _count_separators(node: Node) -> int:
-	if node == null:
-		return 0
-	var total: int = 1 if node is HSeparator else 0
-	for child: Node in node.get_children():
-		total += _count_separators(child)
-	return total
-
-static func _find_first_panel_container(node: Node) -> PanelContainer:
-	if node == null:
-		return null
-	if node is PanelContainer:
-		return node as PanelContainer
-	for child: Node in node.get_children():
-		var found: PanelContainer = _find_first_panel_container(child)
-		if found != null:
-			return found
-	return null
-
-static func _has_color_rect_min_width(node: Node, min_width: int) -> bool:
-	if node == null:
-		return false
-	if node is ColorRect:
-		var cr: ColorRect = node as ColorRect
-		if cr.custom_minimum_size.x >= min_width:
-			return true
-	for child: Node in node.get_children():
-		if _has_color_rect_min_width(child, min_width):
-			return true
-	return false
-
-static func _find_button_with_text(node: Node, expected_text: String) -> Button:
-	if node == null:
-		return null
-	if node is Button:
-		var btn: Button = node as Button
-		if btn.text == expected_text:
-			return btn
-	for child: Node in node.get_children():
-		var found: Button = _find_button_with_text(child, expected_text)
-		if found != null:
-			return found
-	return null
-
-static func _find_button_with_prefix(node: Node, prefix: String) -> Button:
-	if node == null:
-		return null
-	if node is Button:
-		var btn: Button = node as Button
-		if btn.text.begins_with(prefix):
-			return btn
-	for child: Node in node.get_children():
-		var found: Button = _find_button_with_prefix(child, prefix)
-		if found != null:
-			return found
-	return null
-
-static func _find_line_edit_with_tooltip(node: Node, tooltip: String) -> LineEdit:
-	if node == null:
-		return null
-	if node is LineEdit:
-		var line: LineEdit = node as LineEdit
-		if line.tooltip_text == tooltip:
-			return line
-	for child: Node in node.get_children():
-		var found: LineEdit = _find_line_edit_with_tooltip(child, tooltip)
-		if found != null:
-			return found
-	return null
-
-static func _get_flat_stylebox(control: Control, style_name: String) -> StyleBoxFlat:
-	if control == null:
-		return null
-	var style: StyleBox = control.get_theme_stylebox(style_name)
-	if style is StyleBoxFlat:
-		return style as StyleBoxFlat
-	return null
-
-static func _find_buttons_with_tooltip(node: Node, tooltip: String) -> Array:
-	var found: Array = []
-	_collect_buttons_with_tooltip(node, tooltip, found)
-	return found
-
-static func _find_button_with_tooltip(node: Node, tooltip: String) -> Button:
-	var buttons: Array = _find_buttons_with_tooltip(node, tooltip)
-	if buttons.is_empty():
-		return null
-	var first: Variant = buttons[0]
-	if not (first is Button):
-		return null
-	return first as Button
-
-static func _collect_buttons_with_tooltip(node: Node, tooltip: String, out: Array) -> void:
-	if node == null:
-		return
-	if node is Button:
-		var btn: Button = node as Button
-		if btn.tooltip_text == tooltip:
-			out.append(btn)
-	for child: Node in node.get_children():
-		_collect_buttons_with_tooltip(child, tooltip, out)
-
-static func _popup_menu_has_item_text(node: Node, expected_text: String) -> bool:
-	var popup: PopupMenu = _find_popup_with_item_text(node, expected_text)
-	return popup != null
-
-static func _find_popup_with_item_text(node: Node, expected_text: String) -> PopupMenu:
-	if node == null:
-		return null
-	if node is PopupMenu:
-		var popup: PopupMenu = node as PopupMenu
-		for i: int in range(popup.item_count):
-			if popup.get_item_text(i) == expected_text:
-				return popup
-	for child: Node in node.get_children():
-		var found: PopupMenu = _find_popup_with_item_text(child, expected_text)
-		if found != null:
-			return found
-	return null
-
-static func _find_node_named(node: Node, expected_name: String) -> Node:
-	if node == null:
-		return null
-	if node.name == expected_name:
-		return node
-	for child: Node in node.get_children():
-		var found: Node = _find_node_named(child, expected_name)
-		if found != null:
-			return found
-	return null
+    if actual == expected:
+        print("[PASS] event_sheet_editor_test: %s" % label)
+        return true
+    print("[FAIL] event_sheet_editor_test: %s" % label)
+    print("  expected: %s" % str(expected))
+    print("  actual:   %s" % str(actual))
+    return false

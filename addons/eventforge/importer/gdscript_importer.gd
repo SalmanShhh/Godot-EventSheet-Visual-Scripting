@@ -1,8 +1,142 @@
-# EventForge — GDScript importer (stub)
+# EventForge — GDScript importer
+# Parses generated/handwritten GDScript back into an EventSheetResource: the `extends`
+# host class, top-level exported variables, and functions (whose bodies are preserved as
+# RawCodeRow passthrough so they round-trip through the compiler).
+#
+# NOTE: function bodies are NOT yet reverse-mapped into ACE conditions/actions — they are
+# preserved verbatim as raw code. Full ACE-level round-trip is future work.
 @tool
 extends RefCounted
 class_name GDScriptImporter
 
-## TODO Phase 4: implement.
-func import_script(_script_path: String) -> EventSheetResource:
-	return null
+func import_script(script_path: String) -> EventSheetResource:
+	if not FileAccess.file_exists(script_path):
+		return null
+	return import_source(FileAccess.get_file_as_string(script_path))
+
+## ── GDScript-backed sheets (open ANY .gd as a sheet, losslessly) ─────────────
+## Unlike import_source (structural import into a normal sheet), external import keeps the
+## .gd file as the single source of truth. THE LOSSLESS RULE: every line lands in exactly
+## one ordered row — declarations are lifted to first-class rows ONLY when re-emitting them
+## reproduces the original line byte-for-byte (verify-lift); everything else is preserved
+## verbatim as GDScript block rows. Saving an untouched file therefore reproduces it
+## exactly (guarded by golden round-trip tests).
+
+func import_external(script_path: String) -> EventSheetResource:
+	if not FileAccess.file_exists(script_path):
+		return null
+	var sheet: EventSheetResource = import_external_source(FileAccess.get_file_as_string(script_path))
+	sheet.external_source_path = script_path
+	return sheet
+
+func import_external_source(source: String) -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = _parse_host_class(source)
+	var lines: PackedStringArray = source.split("\n")
+	# A trailing "\n" yields one empty trailing element; the compiler re-appends the final
+	# newline, so drop exactly that element to keep round-trips byte-identical.
+	if lines.size() > 0 and lines[lines.size() - 1].is_empty():
+		lines.remove_at(lines.size() - 1)
+	# Lines (blanks/comments/annotations/unliftable code) accumulate here and flush as one
+	# verbatim block row whenever a liftable construct or a function boundary is reached.
+	var pending: PackedStringArray = PackedStringArray()
+	var index: int = 0
+	while index < lines.size():
+		var line: String = lines[index]
+		# Top-level function: emitted as its OWN block row (one row per function gives the
+		# sheet useful granularity and per-function provenance without lossy lifting).
+		if line.begins_with("func "):
+			_flush_pending(pending, sheet)
+			var function_lines: PackedStringArray = PackedStringArray([line])
+			index += 1
+			while index < lines.size():
+				var body_line: String = lines[index]
+				var is_body: bool = body_line.strip_edges().is_empty() or body_line.begins_with("\t") or body_line.begins_with(" ")
+				if not is_body:
+					break
+				function_lines.append(body_line)
+				index += 1
+			# Trailing blank lines belong to whatever follows, not to the function block.
+			while function_lines.size() > 1 and function_lines[function_lines.size() - 1].strip_edges().is_empty():
+				pending.append(function_lines[function_lines.size() - 1])
+				function_lines.remove_at(function_lines.size() - 1)
+			var function_block: RawCodeRow = RawCodeRow.new()
+			function_block.code = "\n".join(function_lines)
+			sheet.events.append(function_block)
+			continue
+		var lifted: LocalVariable = _try_lift_variable(line)
+		if lifted != null:
+			_flush_pending(pending, sheet)
+			sheet.events.append(lifted)
+			index += 1
+			continue
+		pending.append(line)
+		index += 1
+	_flush_pending(pending, sheet)
+	# Tier 2: reverse template matching lifts trailing trigger functions into real events,
+	# verified by a byte-identical recompile and reverted entirely otherwise (the lossless
+	# rule always wins). See EventSheetACELifter.
+	EventSheetACELifter.attempt_lift(sheet, source)
+	return sheet
+
+## Lifts a top-level variable declaration to an ordered tree-variable row, but ONLY when the
+## compiler's canonical emission reproduces the source line exactly (the verify-lift rule);
+## otherwise the line stays verbatim in a block row and nothing is lost.
+func _try_lift_variable(line: String) -> LocalVariable:
+	if not (line.begins_with("var ") or line.begins_with("@export var ")):
+		return null
+	var parsed: Dictionary = VariableParser.new().parse(line)
+	if parsed.size() != 1:
+		return null
+	var variable_name: String = str(parsed.keys()[0])
+	var descriptor: Dictionary = parsed[variable_name]
+	var lifted: LocalVariable = LocalVariable.new()
+	lifted.name = variable_name
+	lifted.type_name = str(descriptor.get("type", "Variant"))
+	lifted.default_value = descriptor.get("default", null)
+	lifted.exported = bool(descriptor.get("exported", false))
+	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+		return null
+	return lifted
+
+func _flush_pending(pending: PackedStringArray, sheet: EventSheetResource) -> void:
+	if pending.is_empty():
+		return
+	var block: RawCodeRow = RawCodeRow.new()
+	block.code = "\n".join(pending)
+	sheet.events.append(block)
+	pending.clear()
+
+func import_source(source: String) -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = _parse_host_class(source)
+	sheet.variables = VariableParser.new().parse(source)
+	for function_data: Variant in FunctionParser.new().parse(source):
+		if not (function_data is Dictionary):
+			continue
+		sheet.functions.append(_build_function(function_data as Dictionary))
+	return sheet
+
+func _parse_host_class(source: String) -> String:
+	for raw_line: String in source.split("\n"):
+		var line: String = raw_line.strip_edges()
+		if line.begins_with("extends "):
+			return line.substr("extends ".length()).strip_edges()
+	return "Node"
+
+func _build_function(function_data: Dictionary) -> EventFunction:
+	var event_function: EventFunction = EventFunction.new()
+	event_function.function_name = str(function_data.get("name", ""))
+	for param_data: Variant in function_data.get("params", []):
+		if not (param_data is Dictionary):
+			continue
+		var param: ACEParam = ACEParam.new()
+		param.id = str((param_data as Dictionary).get("id", ""))
+		param.type_name = str((param_data as Dictionary).get("type", "Variant"))
+		event_function.params.append(param)
+	var body: String = str(function_data.get("body", ""))
+	if not body.strip_edges().is_empty():
+		var raw_row: RawCodeRow = RawCodeRow.new()
+		raw_row.code = body
+		event_function.events.append(raw_row)
+	return event_function

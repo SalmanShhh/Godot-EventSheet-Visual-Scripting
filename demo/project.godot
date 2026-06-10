@@ -1,8 +1,0 @@
-; Engine configuration file.
-; Demo project metadata. The canonical test project is the repository root.
-
-config_version=5
-
-[application]
-config/name="EventForge Demo"
-run/main_scene="res://scenes/player.tscn"
