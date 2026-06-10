@@ -113,8 +113,8 @@ Conditions                        | Actions
 
 ## Current status
 
-- **Version**: `v0.1.0` released; `main` carries ~35 shipped features since (a `v0.2.0`
-  tag is imminent). See [CHANGELOG.md](CHANGELOG.md) for the full ledger.
+- **Version**: **`v0.2.0`** — thirty-five features over `v0.1.0`. See
+  [CHANGELOG.md](CHANGELOG.md) for the full ledger.
 - **Quality**: 940+ test assertions, all green, CI-gated on every push (any `[FAIL]`
   fails the build); byte-exact golden round-trips guard the lossless rules.
 - **Compatibility covenant**: generated code never depends on the plugin; templates bake
@@ -129,7 +129,7 @@ Conditions                        | Actions
 | C3 coverage program (native-node ACEs, all 14 behavior packs, migration guide) | ✅ shipped |
 | Godot-familiarity (find bar, shortcuts, theme inheritance, scene-aware completion, drag-from-docks) | ✅ shipped |
 | MCP server (AI tooling) | ✅ shipped |
-| `v0.2.0` release tag | 🔜 next |
+| `v0.2.0` release | ✅ shipped |
 | Tool sheets (event sheets for editor tooling — experimental, editor-version-coupled) | 🧪 spec'd |
 | Multi-view (same sheet in split panes / detached windows, VSCode-style) | 🗺 spec'd |
 | 3D vocabulary, more packs (tweens+), community feedback rounds | 🗺 planned |

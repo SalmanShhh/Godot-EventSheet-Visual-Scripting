@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-10
+
+Thirty-five features since 0.1.0 — the C3 coverage program (38 native-node ACEs, all 14
+behavior packs with C3-capability parity), first-class rich variables (enums, collections,
+combos, the Dictionary/Array/JSON ACE set), signals/match/input vocabulary, the importer's
+function verify-lift, gutter bookmarks, sheet includes, find-in-sheet + script-editor
+shortcuts, editor-theme inheritance + six iconic theme presets, color params with sheet
+swatches, the MCP server, Export Addon Pack, drag-from-docks, scene-aware completion, and
+the group-compile fix. Highlights below (newest first).
+
 ### Export Addon Pack, Godot-native affordances, README overhaul
 - **Export Addon… (toolbar)**: one click turns the current behavior sheet into a
   published pack folder (`eventsheet_addons/<class_snake>/` — editable `.tres` +
