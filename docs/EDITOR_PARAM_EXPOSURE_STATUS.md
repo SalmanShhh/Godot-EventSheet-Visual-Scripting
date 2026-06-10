@@ -1,8 +1,7 @@
 # EventSheet Editor Parameter Exposure Status
 
-> Reviewed 2026-06: the checklist below remains accurate. The two unchecked items
-> (per-`widget_hint` inspector widgets, advanced per-row override UI) are still open,
-> post-1.0 polish.
+> Reviewed 2026-06: all items below are implemented (the final two landed with the
+> inspector-polish phase — widget_hint editors and the per-row "Selected ACE" section).
 
 This checklist tracks the current branch against the provided **EventSheet Editor Param Exposure Spec**.
 
@@ -17,8 +16,8 @@ This checklist tracks the current branch against the provided **EventSheet Edito
 - [x] Store serialization round-trip is covered by tests (including falsy overrides `0`, `false`, `""`)
 - [x] ACE picker/params surfaces now carry ACE descriptions/tooltips, and combo-like params can persist stable option keys
 - [x] Trigger ACE metadata now explicitly marks a captured-context trigger-state model for runtime/compiler follow-through
-- [ ] Custom inspector widgets per `widget_hint` (current pass keeps default inspector controls)
-- [ ] Advanced per-row scoped override UI beyond the base dynamic property integration
+- [x] Custom inspector widgets per `widget_hint` (slider/range, multiline, expression — defaults otherwise)
+- [x] Per-row scoped UI: the selected condition/trigger/action's params surface as live "Selected ACE" inspector properties (undoable via the dock)
 
 ### C3-guided interpretation used in this pass
 

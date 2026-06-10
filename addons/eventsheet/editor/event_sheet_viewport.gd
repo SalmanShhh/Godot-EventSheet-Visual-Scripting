@@ -237,6 +237,24 @@ func get_selected_context() -> Dictionary:
         "span_metadata": span.metadata if span != null and span.metadata is Dictionary else {}
     }
 
+## The ACE resource backing the selected span (condition/trigger/action), or null —
+## drives the Inspector's per-row "Selected ACE" section.
+func get_selected_ace_resource() -> Resource:
+    var context: Dictionary = get_selected_context()
+    var metadata: Dictionary = context.get("span_metadata", {})
+    var row_resource: Resource = context.get("source_resource", null)
+    if not (row_resource is EventRow):
+        return null
+    match str(metadata.get("kind", "")):
+        "condition":
+            return _resolve_ace_resource(row_resource, "condition", int(metadata.get("ace_index", -1)))
+        "action":
+            var action_resource: Resource = _resolve_ace_resource(row_resource, "action", int(metadata.get("ace_index", -1)))
+            return action_resource if action_resource is ACEAction else null
+        "trigger":
+            return (row_resource as EventRow).trigger
+    return null
+
 func get_selected_rows() -> Array[EventRowData]:
     var rows: Array[EventRowData] = []
     for index in _get_selected_row_indices():

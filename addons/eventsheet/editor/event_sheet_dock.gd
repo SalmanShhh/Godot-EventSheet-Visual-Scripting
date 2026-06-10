@@ -308,6 +308,8 @@ func set_undo_redo_manager(undo_redo: Variant) -> void:
     _undo_redo_adapter.set_manager(undo_redo)
     if _exposed_node != null:
         _exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
+    if not _exposed_node.row_param_changed.is_connected(_on_exposed_row_param_changed):
+        _exposed_node.row_param_changed.connect(_on_exposed_row_param_changed)
 
 func set_auto_ace_sources(sources: Array[Object]) -> void:
     _manual_ace_sources = sources.duplicate()
@@ -2248,6 +2250,23 @@ func apply_theme_style(style: EventSheetEditorStyle) -> void:
         _refresh_theme_picker_selection()
         _mark_dirty("Theme applied from the theme editor.")
 
+# ── Inspector per-row param edits ───────────────────────────────────
+
+## The Inspector's "Selected ACE" section delegates writes here: the dock owns the
+## undoable sheet edit and the viewport refresh.
+func _on_exposed_row_param_changed(target: Resource, param_id: String, value: Variant) -> void:
+    if target == null or param_id.is_empty():
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Edit Param (Inspector)", func() -> bool:
+        var params: Dictionary = target.get("params")
+        params[param_id] = value
+        target.set("params", params)
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Parameter updated from the Inspector.")
+
 # ── Quick-add bar (C3 "type to insert") ──────────────────────────────────────
 var _quick_add_edit: LineEdit = null
 
@@ -3426,6 +3445,8 @@ func _insert_context_row_below(resource_entry: Resource, message: String) -> voi
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
     _refresh_variable_panel()
     _update_code_panel_highlight()
+    if _exposed_node != null and _viewport != null:
+        _exposed_node.set_row_context(_viewport.get_selected_ace_resource())
 
 func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String) -> void:
     if row_data == null or row_data.source_resource == null:

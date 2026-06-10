@@ -15,6 +15,9 @@ extends Node
 
 ## Emitted whenever a param value is changed through the inspector.
 signal param_changed(provider_id: String, ace_id: String, param_id: String, value: Variant)
+## Emitted when a SELECTED-ROW param is edited in the inspector (per-row scope). The dock
+## performs the actual undoable write — this node never mutates sheet resources itself.
+signal row_param_changed(target: Resource, param_id: String, value: Variant)
 
 var _registry: EventSheetACERegistry = null
 var _param_store: EditorParamStore = null
@@ -89,6 +92,17 @@ func _rebuild_prop_map() -> void:
 ## Called by Godot's property system to list exposed properties.
 func _get_property_list() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
+	if not _row_prop_map.is_empty():
+		result.append({"name": "Selected ACE", "type": TYPE_NIL, "usage": PROPERTY_USAGE_CATEGORY})
+		for row_key: String in _row_prop_map.keys():
+			var row_entry: Dictionary = _row_prop_map[row_key]
+			result.append({
+				"name": row_key,
+				"type": int(row_entry.get("type", TYPE_NIL)),
+				"hint": PROPERTY_HINT_NONE,
+				"hint_string": "",
+				"usage": PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_EDITOR
+			})
 	if _prop_map.is_empty():
 		return result
 	var seen_categories: Dictionary = {}
@@ -114,6 +128,10 @@ func _get_property_list() -> Array[Dictionary]:
 ## Called by Godot's property system to get a property value.
 func _get(property: StringName) -> Variant:
 	var key: String = str(property)
+	if _row_prop_map.has(key) and _row_target != null:
+		var row_entry: Dictionary = _row_prop_map[key]
+		var params: Dictionary = _row_target.get("params")
+		return params.get(row_entry.get("param_id"), (row_entry.get("param_meta", {}) as Dictionary).get("default_value"))
 	if not _prop_map.has(key):
 		return null
 	var entry: Dictionary = _prop_map[key]
@@ -127,6 +145,9 @@ func _get(property: StringName) -> Variant:
 ## Called by Godot's property system to set a property value.
 func _set(property: StringName, value: Variant) -> bool:
 	var key: String = str(property)
+	if _row_prop_map.has(key) and _row_target != null:
+		row_param_changed.emit(_row_target, str((_row_prop_map[key] as Dictionary).get("param_id")), value)
+		return true
 	if not _prop_map.has(key):
 		return false
 	var entry: Dictionary = _prop_map[key]
@@ -162,6 +183,53 @@ func _set(property: StringName, value: Variant) -> bool:
 func on_registry_refreshed() -> void:
 	_rebuild_prop_map()
 	notify_property_list_changed()
+
+# ── Per-row scope: the SELECTED condition/trigger/action's params as live properties ──
+const ROW_PROP_PREFIX := "selected_ace/"
+var _row_target: Resource = null
+var _row_prop_map: Dictionary = {}
+
+## Points the "Selected ACE" inspector section at a condition/trigger/action resource
+## (null clears it). Param metadata (types, widget hints) comes from the registry
+## definition when available; otherwise types derive from the current values.
+func set_row_context(target: Resource) -> void:
+	_row_target = target if (target is ACECondition or target is ACEAction) else null
+	_row_prop_map.clear()
+	if _row_target != null:
+		var definition: ACEDefinition = null
+		if _registry != null:
+			definition = _registry.find_definition(_row_target.get("provider_id"), _row_target.get("ace_id"))
+		var params: Dictionary = _row_target.get("params")
+		if definition != null:
+			for parameter: Variant in definition.parameters:
+				if parameter is Dictionary and not str((parameter as Dictionary).get("id", "")).is_empty():
+					var param_id: String = str((parameter as Dictionary).get("id", ""))
+					_row_prop_map[ROW_PROP_PREFIX + param_id] = {
+						"param_id": param_id,
+						"type": int((parameter as Dictionary).get("type", TYPE_NIL)),
+						# @ace_param_hint values ("expression"…) double as widget hints, so
+						# ƒx params get the expression editor in the Inspector too. (An
+						# explicit empty check: get()'s fallback only fires on MISSING keys.)
+						"widget_hint": str((parameter as Dictionary).get("widget_hint", "")) if not str((parameter as Dictionary).get("widget_hint", "")).is_empty() else str((parameter as Dictionary).get("hint", "")),
+						"param_meta": (parameter as Dictionary).duplicate(true)
+					}
+		for param_id: Variant in params.keys():
+			var key: String = ROW_PROP_PREFIX + str(param_id)
+			if not _row_prop_map.has(key):
+				_row_prop_map[key] = {
+					"param_id": str(param_id),
+					"type": typeof(params[param_id]),
+					"widget_hint": "",
+					"param_meta": {}
+				}
+	notify_property_list_changed()
+
+## The prop-map entry behind an inspector property name ({} when unknown). Used by the
+## inspector plugin to pick widget_hint-specific editors.
+func get_property_entry(property_name: String) -> Dictionary:
+	if _row_prop_map.has(property_name):
+		return _row_prop_map[property_name]
+	return _prop_map.get(property_name, {})
 
 func set_undo_redo_manager(undo_redo: Variant) -> void:
 	_undo_redo_adapter.set_manager(undo_redo)

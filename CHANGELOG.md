@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Inspector polish: widget_hint editors + per-row "Selected ACE" properties
+- **widget_hint-specific inspector editors**: exposed ACE params with `widget_hint`
+  (or an `@ace_param_hint`) now render custom controls in Godot's Inspector — `slider`/
+  `range` → HSlider (bounds from `range: "min,max,step"` metadata), `multiline` →
+  TextEdit, `expression` → the ƒx-style line editor. Unknown hints keep Godot's default
+  widgets. (Construction is editor-only; class mapping is headless-tested.)
+- **Per-row "Selected ACE" section**: selecting a condition/trigger/action in the sheet
+  surfaces *that row's* parameters as live Inspector properties. Edits route through the
+  dock's undoable write path (the exposed node never mutates sheet resources itself) and
+  refresh the viewport immediately; deselecting clears the section. This closes the last
+  two open items from the editor param-exposure spec.
+- Covered by `tests/inspector_polish_test.gd` (15 assertions).
+
 ### Gutter bookmarks + compile-time sheet includes
 - **Bookmarks**: Ctrl+M toggles a session bookmark on the selected row (gold pennant in
   the gutter beside the breakpoint dot); **F4 / Shift+F4** cycle forward/backward through

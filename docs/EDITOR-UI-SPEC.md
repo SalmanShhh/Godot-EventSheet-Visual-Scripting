@@ -407,10 +407,10 @@ hook, and the visual theme editor. Authoritative per-feature detail:
 
 Still open (post-1.0 polish):
 
-- Per-`widget_hint` inspector widgets; advanced per-row override UI. (Pick-filter
-  compilation, ƒx autocomplete + dot-context completion, gutter bookmarks, and
-  compile-time sheet includes have since shipped.)
-- Candidate: MCP server for AI tooling (see GDSCRIPT-PAIRING-SPEC "Planned").
+- Candidate: MCP server for AI tooling (see GDSCRIPT-PAIRING-SPEC "Planned"). Everything
+  else from the post-1.0 polish list has shipped (pick filters, ƒx autocomplete +
+  dot-context completion, bookmarks, sheet includes, widget_hint inspector editors, the
+  per-row "Selected ACE" inspector section).
 
 ## 4. Implementation anchors
 
