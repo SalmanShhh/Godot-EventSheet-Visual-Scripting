@@ -278,10 +278,18 @@ conditions/actions) is planned.
 - **GDScript-backed sheets, next tiers**: function rows with canonical-signature
   verify-lift, and comment preservation inside lifted regions. (Tier 1, lifecycle +
   signal-handler ACE lifting, and the changed-on-disk reload prompt are implemented.)
-- **More behavior packs**: timers, tweens, state machines (platformer + 8-direction ship
-  today — see Implemented).
-- **C3 migration guide**: a docs table mapping common C3 events/actions/expressions to
-  their Godot/GDScript equivalents, linked from the picker.
+- **Deeper completion (intellisense upgrades)**: Godot does not expose its real completion
+  engine (`ScriptLanguage::complete_code` / the GDScript LSP) to plugins, so block/ƒx
+  completion is a documented approximation. Realistic upgrades within plugin limits:
+  **dot-context member completion** (after `host.` / a typed sheet variable / a
+  `$BehaviorName.` child, offer that type's members via ClassDB + script class lists),
+  **signature hints** while typing inside a call, and a C3-style **quick-add bar** ("type
+  to insert an ACE", powered by the picker's synonym search). Full-fidelity IntelliSense
+  always exists one panel away by design: the generated script is plain GDScript.
+- **More behavior packs**: tweens and beyond (platformer, 8-direction, timer, flash, and
+  state machine ship today — see Implemented).
+- **C3 migration guide**: implemented — `docs/C3-MIGRATION-GUIDE.md` (concept map + System
+  vocabulary table); future nicety: link it from the picker UI.
 
 ## Testing
 
