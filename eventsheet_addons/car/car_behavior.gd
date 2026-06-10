@@ -15,9 +15,11 @@ func _enter_tree() -> void:
 
 @export var acceleration: float = 300.0
 @export var deceleration: float = 400.0
+@export var drift_recover: float = 0.15
 @export var max_speed: float = 400.0
 var speed: float = 0.0
 @export var steer_degrees: float = 180.0
+@export var turn_while_stopped: bool = false
 
 func _physics_process(delta: float) -> void:
 	if host == null:
@@ -30,8 +32,10 @@ func _physics_process(delta: float) -> void:
 	else:
 		speed = move_toward(speed, 0.0, deceleration * delta)
 	var steer := Input.get_axis(&"ui_left", &"ui_right")
-	host.rotation += deg_to_rad(steer_degrees) * steer * delta * clampf(absf(speed) / max_speed, 0.0, 1.0) * signf(speed)
-	host.velocity = Vector2.from_angle(host.rotation) * speed
+	var steer_scale := 1.0 if (turn_while_stopped and absf(speed) < 1.0) else clampf(absf(speed) / max_speed, 0.0, 1.0) * signf(speed)
+	host.rotation += deg_to_rad(steer_degrees) * steer * delta * steer_scale
+	var heading := Vector2.from_angle(host.rotation) * speed
+	host.velocity = host.velocity.lerp(heading, clampf(drift_recover, 0.01, 1.0))
 	host.move_and_slide()
 
 ## @ace_action
@@ -44,4 +48,4 @@ func stop_car() -> void:
 	if host != null:
 		host.velocity = Vector2.ZERO
 
-# Car behavior (C3-style): accelerate/brake with up/down, steer with left/right (steering scales with speed).
+# Car behavior (C3 parity): accelerate/brake with up/down, steer with left/right. drift_recover blends sliding back toward the heading (1 = grippy, low = drifty); turn_while_stopped allows steering at rest.

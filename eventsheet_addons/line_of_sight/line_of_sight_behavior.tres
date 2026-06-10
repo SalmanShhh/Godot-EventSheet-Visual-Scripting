@@ -10,7 +10,7 @@
 
 [sub_resource type="Resource" id="Resource_mnxbw"]
 script = ExtResource("1_ny82h")
-text = "Line of Sight behavior (C3-style): the Has Line Of Sight To condition raycasts against solids within range."
+text = "Line of Sight behavior (C3 parity): raycast LOS with range and an optional cone of view (degrees; 360 = all around). Conditions: Has Line Of Sight To, Has LOS Between positions."
 
 [sub_resource type="Resource" id="Resource_yeela"]
 script = ExtResource("2_0y3wa")
@@ -21,7 +21,20 @@ code = "## @ace_condition
 func has_los_to(point: Vector2) -> bool:
 	if host == null or host.global_position.distance_to(point) > sight_range:
 		return false
-	var query := PhysicsRayQueryParameters2D.create(host.global_position, point)
+	if cone_of_view_degrees < 360.0:
+		var to_target := (point - host.global_position).angle()
+		if absf(angle_difference(host.rotation, to_target)) > deg_to_rad(cone_of_view_degrees) * 0.5:
+			return false
+	return has_los_between(host.global_position, point)
+
+## @ace_condition
+## @ace_name(\"Has LOS Between\")
+## @ace_category(\"Line Of Sight\")
+## @ace_codegen_template(\"$LOSBehavior.has_los_between({from_point}, {to_point})\")
+func has_los_between(from_point: Vector2, to_point: Vector2) -> bool:
+	if host == null:
+		return false
+	var query := PhysicsRayQueryParameters2D.create(from_point, to_point)
 	query.collision_mask = collision_mask
 	return host.get_world_2d().direct_space_state.intersect_ray(query).is_empty()"
 
@@ -34,7 +47,7 @@ script = ExtResource("6_wmmtp")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_ljcjg")])
-event_uid = "47f8de"
+event_uid = "9a8bc2"
 
 [resource]
 script = ExtResource("7_vegns")
@@ -47,6 +60,11 @@ variables = {
 "default": 1,
 "exported": true,
 "type": "int"
+},
+"cone_of_view_degrees": {
+"default": 360.0,
+"exported": true,
+"type": "float"
 },
 "sight_range": {
 "default": 400.0,

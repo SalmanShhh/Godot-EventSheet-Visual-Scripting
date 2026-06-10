@@ -13,16 +13,33 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("FollowBehavior behavior requires a Node2D parent.")
 
+var clock: float = 0.0
+@export var delay: float = 0.4
 @export var follow_speed: float = 5.0
 @export var following: bool = true
+var history: Array = []
 @export var min_distance: float = 0.0
+@export_enum("smooth", "delayed") var mode: String = "smooth"
 @export var target_path: String = ""
 
 func _process(delta: float) -> void:
-	if not following or host == null or target_path == "":
+	if host == null or target_path == "":
 		return
 	var target := host.get_node_or_null(NodePath(target_path))
 	if not (target is Node2D):
+		return
+	clock += delta
+	history.append([clock, target.position])
+	while history.size() > 2 and float(history[0][0]) < clock - delay - 1.0:
+		history.pop_front()
+	if not following:
+		return
+	if mode == "delayed":
+		var sample_time := clock - delay
+		for entry: Array in history:
+			if float(entry[0]) >= sample_time:
+				host.position = entry[1]
+				break
 		return
 	if host.position.distance_to(target.position) <= min_distance:
 		return
@@ -36,6 +53,7 @@ func _process(delta: float) -> void:
 func start_following(path: String) -> void:
 	target_path = path
 	following = true
+	history = []
 
 ## @ace_action
 ## @ace_name("Stop Following")
@@ -45,4 +63,4 @@ func start_following(path: String) -> void:
 func stop_following() -> void:
 	following = false
 
-# Follow behavior (C3-style): smoothly trails another node (set the target path).
+# Follow behavior (C3 parity): trails another node. mode smooth = lerp chase; mode delayed = replay the target's position history after a delay (C3's Follow).

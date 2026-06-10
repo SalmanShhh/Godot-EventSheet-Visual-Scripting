@@ -40,7 +40,7 @@ static func run() -> bool:
 
 	# The shipped Sine pack showcases the combo (movement dropdown in the Inspector).
 	all_passed = _check("sine pack movement is a combo",
-		FileAccess.get_file_as_string("res://eventsheet_addons/sine/sine_behavior.gd").contains("@export_enum(\"horizontal\", \"vertical\", \"angle\") var movement"), true) and all_passed
+		FileAccess.get_file_as_string("res://eventsheet_addons/sine/sine_behavior.gd").contains(") var movement: String ="), true) and all_passed
 
 	# @ace_param_options annotation -> addon param dropdowns.
 	var analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()

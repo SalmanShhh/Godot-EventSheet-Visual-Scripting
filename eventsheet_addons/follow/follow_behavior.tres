@@ -12,14 +12,27 @@
 
 [sub_resource type="Resource" id="Resource_ycohw"]
 script = ExtResource("1_3pe77")
-text = "Follow behavior (C3-style): smoothly trails another node (set the target path)."
+text = "Follow behavior (C3 parity): trails another node. mode smooth = lerp chase; mode delayed = replay the target's position history after a delay (C3's Follow)."
 
 [sub_resource type="Resource" id="Resource_bov8v"]
 script = ExtResource("2_me8t3")
-code = "if not following or host == null or target_path == \"\":
+code = "if host == null or target_path == \"\":
 	return
 var target := host.get_node_or_null(NodePath(target_path))
 if not (target is Node2D):
+	return
+clock += delta
+history.append([clock, target.position])
+while history.size() > 2 and float(history[0][0]) < clock - delay - 1.0:
+	history.pop_front()
+if not following:
+	return
+if mode == \"delayed\":
+	var sample_time := clock - delay
+	for entry: Array in history:
+		if float(entry[0]) >= sample_time:
+			host.position = entry[1]
+			break
 	return
 if host.position.distance_to(target.position) <= min_distance:
 	return
@@ -30,12 +43,13 @@ script = ExtResource("6_jjqsf")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_bov8v")])
-event_uid = "a1ab5b"
+event_uid = "44622b"
 
 [sub_resource type="Resource" id="Resource_na37c"]
 script = ExtResource("2_me8t3")
 code = "target_path = path
-following = true"
+following = true
+history = []"
 
 [sub_resource type="Resource" id="Resource_5y2vt"]
 script = ExtResource("7_l3qb0")
@@ -73,6 +87,16 @@ behavior_mode = true
 custom_class_name = "FollowBehavior"
 events = Array[Resource]([SubResource("Resource_ycohw"), SubResource("Resource_c7vdw")])
 variables = {
+"clock": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"delay": {
+"default": 0.4,
+"exported": true,
+"type": "float"
+},
 "follow_speed": {
 "default": 5.0,
 "exported": true,
@@ -83,10 +107,21 @@ variables = {
 "exported": true,
 "type": "bool"
 },
+"history": {
+"default": [],
+"exported": false,
+"type": "Array"
+},
 "min_distance": {
 "default": 0.0,
 "exported": true,
 "type": "float"
+},
+"mode": {
+"default": "smooth",
+"exported": true,
+"options": ["smooth", "delayed"],
+"type": "String"
 },
 "target_path": {
 "default": "",

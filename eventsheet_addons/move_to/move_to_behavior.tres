@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EventSheetResource" load_steps=20 format=3]
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=24 format=3]
 
 [ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_gfj36"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_q7uqc"]
@@ -12,7 +12,7 @@
 
 [sub_resource type="Resource" id="Resource_1q018"]
 script = ExtResource("1_gfj36")
-text = "Move To behavior (C3-style): glides the host to a target position and fires On Arrived."
+text = "Move To behavior (C3 parity): glides through a waypoint queue (Move To Position replaces it, Add Waypoint appends) and fires On Arrived at the final stop. rotate_toward_motion faces the travel direction."
 
 [sub_resource type="Resource" id="Resource_k6qdc"]
 script = ExtResource("2_q7uqc")
@@ -23,25 +23,29 @@ signal arrived"
 
 [sub_resource type="Resource" id="Resource_f2y24"]
 script = ExtResource("2_q7uqc")
-code = "if not moving or host == null:
+code = "if not moving or host == null or waypoints.is_empty():
 	return
-var target := Vector2(target_x, target_y)
+var target: Vector2 = waypoints[0]
+var previous := host.position
 host.position = host.position.move_toward(target, max_speed * delta)
+if rotate_toward_motion and host.position != previous:
+	host.rotation = (host.position - previous).angle()
 if host.position.distance_to(target) < 0.5:
-	moving = false
-	arrived.emit()"
+	waypoints.pop_front()
+	if waypoints.is_empty():
+		moving = false
+		arrived.emit()"
 
 [sub_resource type="Resource" id="Resource_2d2na"]
 script = ExtResource("6_2l66c")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_f2y24")])
-event_uid = "021295"
+event_uid = "cde256"
 
 [sub_resource type="Resource" id="Resource_kd6xl"]
 script = ExtResource("2_q7uqc")
-code = "target_x = x
-target_y = y
+code = "waypoints = [Vector2(x, y)]
 moving = true"
 
 [sub_resource type="Resource" id="Resource_8bsqb"]
@@ -61,7 +65,7 @@ initialValue = null
 [sub_resource type="Resource" id="Resource_g487a"]
 script = ExtResource("8_28rk4")
 function_name = "move_to_position"
-description = "Starts gliding toward the point."
+description = "Replaces the queue and glides toward the point."
 expose_as_ace = true
 ace_display_name = "Move To Position"
 ace_category = "Move To"
@@ -70,16 +74,46 @@ events = Array[Resource]([SubResource("Resource_kd6xl")])
 
 [sub_resource type="Resource" id="Resource_g7ol3"]
 script = ExtResource("2_q7uqc")
-code = "moving = false"
+code = "waypoints.append(Vector2(x, y))
+moving = true"
 
 [sub_resource type="Resource" id="Resource_fsq1l"]
+script = ExtResource("7_xp0oq")
+id = "x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_78tkt"]
+script = ExtResource("7_xp0oq")
+id = "y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_458qb"]
+script = ExtResource("8_28rk4")
+function_name = "add_waypoint"
+description = "Appends a stop to the queue (C3 waypoints)."
+expose_as_ace = true
+ace_display_name = "Add Waypoint"
+ace_category = "Move To"
+params = Array[ExtResource("7_xp0oq")]([SubResource("Resource_fsq1l"), SubResource("Resource_78tkt")])
+events = Array[Resource]([SubResource("Resource_g7ol3")])
+
+[sub_resource type="Resource" id="Resource_m8xdk"]
+script = ExtResource("2_q7uqc")
+code = "moving = false
+waypoints = []"
+
+[sub_resource type="Resource" id="Resource_ov0s6"]
 script = ExtResource("8_28rk4")
 function_name = "stop_moving"
-description = "Stops without firing On Arrived."
+description = "Clears the queue without firing On Arrived."
 expose_as_ace = true
 ace_display_name = "Stop Moving"
 ace_category = "Move To"
-events = Array[Resource]([SubResource("Resource_g7ol3")])
+events = Array[Resource]([SubResource("Resource_m8xdk")])
 
 [resource]
 script = ExtResource("9_14g6j")
@@ -98,15 +132,15 @@ variables = {
 "exported": false,
 "type": "bool"
 },
-"target_x": {
-"default": 0.0,
-"exported": false,
-"type": "float"
+"rotate_toward_motion": {
+"default": false,
+"exported": true,
+"type": "bool"
 },
-"target_y": {
-"default": 0.0,
+"waypoints": {
+"default": [],
 "exported": false,
-"type": "float"
+"type": "Array"
 }
 }
-functions = Array[Resource]([SubResource("Resource_g487a"), SubResource("Resource_fsq1l")])
+functions = Array[Resource]([SubResource("Resource_g487a"), SubResource("Resource_458qb"), SubResource("Resource_ov0s6")])

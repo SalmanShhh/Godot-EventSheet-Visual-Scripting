@@ -12,7 +12,7 @@
 
 [sub_resource type="Resource" id="Resource_p2muo"]
 script = ExtResource("1_bxshy")
-text = "Drag & Drop behavior (C3-style): grab the host with the mouse within the grab radius; fires On Drag Start and On Dropped."
+text = "Drag & Drop behavior (C3 parity): grab within the radius; axes locks dragging to one axis (both, horizontal, vertical). Fires On Drag Start / On Dropped."
 
 [sub_resource type="Resource" id="Resource_u540h"]
 script = ExtResource("2_bvvcx")
@@ -34,9 +34,16 @@ if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 	var mouse := host.get_global_mouse_position()
 	if not dragging and mouse.distance_to(host.global_position) <= grab_radius:
 		dragging = true
+		grab_x = host.global_position.x
+		grab_y = host.global_position.y
 		drag_started.emit()
 	if dragging:
-		host.global_position = mouse
+		var destination := mouse
+		if axes == \"horizontal\":
+			destination.y = grab_y
+		elif axes == \"vertical\":
+			destination.x = grab_x
+		host.global_position = destination
 elif dragging:
 	dragging = false
 	dropped.emit()"
@@ -46,7 +53,7 @@ script = ExtResource("6_b7r38")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_q2el6")])
-event_uid = "da95c4"
+event_uid = "f66b1d"
 
 [sub_resource type="Resource" id="Resource_swrhc"]
 script = ExtResource("2_bvvcx")
@@ -70,6 +77,12 @@ behavior_mode = true
 custom_class_name = "DragDropBehavior"
 events = Array[Resource]([SubResource("Resource_p2muo"), SubResource("Resource_u540h"), SubResource("Resource_0clv1")])
 variables = {
+"axes": {
+"default": "both",
+"exported": true,
+"options": ["both", "horizontal", "vertical"],
+"type": "String"
+},
 "dragging": {
 "default": false,
 "exported": false,
@@ -78,6 +91,16 @@ variables = {
 "grab_radius": {
 "default": 48.0,
 "exported": true,
+"type": "float"
+},
+"grab_x": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"grab_y": {
+"default": 0.0,
+"exported": false,
 "type": "float"
 }
 }

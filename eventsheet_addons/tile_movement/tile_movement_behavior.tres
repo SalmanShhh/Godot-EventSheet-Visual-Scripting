@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EventSheetResource" load_steps=18 format=3]
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_vgvrg"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_8yhrj"]
@@ -12,7 +12,7 @@
 
 [sub_resource type="Resource" id="Resource_0b1ao"]
 script = ExtResource("1_vgvrg")
-text = "Tile Movement behavior (C3-style): grid-locked stepping with the arrow keys; fires On Step Finished per tile."
+text = "Tile Movement behavior (C3 parity): grid-locked stepping (arrow keys or Simulate Step); grid-space helpers convert between tiles and pixels. Fires On Step Finished per tile."
 
 [sub_resource type="Resource" id="Resource_gl44j"]
 script = ExtResource("2_8yhrj")
@@ -22,6 +22,16 @@ code = "## @ace_trigger
 signal step_finished"
 
 [sub_resource type="Resource" id="Resource_s6njm"]
+script = ExtResource("2_8yhrj")
+code = "## @ace_hidden
+func to_grid(pixel: Vector2) -> Vector2i:
+	return Vector2i(roundi(pixel.x / tile_size), roundi(pixel.y / tile_size))
+
+## @ace_hidden
+func from_grid(tile: Vector2i) -> Vector2:
+	return Vector2(tile) * tile_size"
+
+[sub_resource type="Resource" id="Resource_svak1"]
 script = ExtResource("2_8yhrj")
 code = "if host == null:
 	return
@@ -34,7 +44,11 @@ if moving:
 	else:
 		host.position = Vector2(from_x, from_y).lerp(Vector2(to_x, to_y), progress)
 	return
-var step := Vector2(Input.get_axis(&\"ui_left\", &\"ui_right\"), Input.get_axis(&\"ui_up\", &\"ui_down\"))
+var step := Vector2(pending_x, pending_y)
+pending_x = 0.0
+pending_y = 0.0
+if step == Vector2.ZERO and default_controls:
+	step = Vector2(Input.get_axis(&\"ui_left\", &\"ui_right\"), Input.get_axis(&\"ui_up\", &\"ui_down\"))
 if step.x != 0.0:
 	step.y = 0.0
 if step != Vector2.ZERO:
@@ -45,50 +59,82 @@ if step != Vector2.ZERO:
 	progress = 0.0
 	moving = true"
 
-[sub_resource type="Resource" id="Resource_svak1"]
+[sub_resource type="Resource" id="Resource_6dtgv"]
 script = ExtResource("6_g35kp")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_s6njm")])
-event_uid = "ecdb20"
+actions = Array[Resource]([SubResource("Resource_svak1")])
+event_uid = "0474b7"
 
-[sub_resource type="Resource" id="Resource_6dtgv"]
+[sub_resource type="Resource" id="Resource_joxbd"]
+script = ExtResource("2_8yhrj")
+code = "if direction == \"left\":
+	pending_x = -1.0
+elif direction == \"right\":
+	pending_x = 1.0
+elif direction == \"up\":
+	pending_y = -1.0
+elif direction == \"down\":
+	pending_y = 1.0"
+
+[sub_resource type="Resource" id="Resource_u0ahq"]
+script = ExtResource("7_f5eri")
+id = "direction"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_bxm2s"]
+script = ExtResource("8_g5l8f")
+function_name = "simulate_step"
+description = "Steps one tile in a direction: left, right, up or down (C3 simulate control)."
+expose_as_ace = true
+ace_display_name = "Simulate Step"
+ace_category = "Tile Movement"
+params = Array[ExtResource("7_f5eri")]([SubResource("Resource_u0ahq")])
+events = Array[Resource]([SubResource("Resource_joxbd")])
+
+[sub_resource type="Resource" id="Resource_n1dyx"]
 script = ExtResource("2_8yhrj")
 code = "if host != null:
 	host.position = Vector2(tile_x, tile_y) * tile_size
 moving = false"
 
-[sub_resource type="Resource" id="Resource_joxbd"]
+[sub_resource type="Resource" id="Resource_6q6ui"]
 script = ExtResource("7_f5eri")
 id = "tile_x"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_u0ahq"]
+[sub_resource type="Resource" id="Resource_ikoe6"]
 script = ExtResource("7_f5eri")
 id = "tile_y"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_bxm2s"]
+[sub_resource type="Resource" id="Resource_xrmfr"]
 script = ExtResource("8_g5l8f")
 function_name = "teleport_to_tile"
 description = "Snaps to a tile coordinate instantly."
 expose_as_ace = true
 ace_display_name = "Teleport To Tile"
 ace_category = "Tile Movement"
-params = Array[ExtResource("7_f5eri")]([SubResource("Resource_joxbd"), SubResource("Resource_u0ahq")])
-events = Array[Resource]([SubResource("Resource_6dtgv")])
+params = Array[ExtResource("7_f5eri")]([SubResource("Resource_6q6ui"), SubResource("Resource_ikoe6")])
+events = Array[Resource]([SubResource("Resource_n1dyx")])
 
 [resource]
 script = ExtResource("9_63fav")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "TileMovementBehavior"
-events = Array[Resource]([SubResource("Resource_0b1ao"), SubResource("Resource_gl44j"), SubResource("Resource_svak1")])
+events = Array[Resource]([SubResource("Resource_0b1ao"), SubResource("Resource_gl44j"), SubResource("Resource_s6njm"), SubResource("Resource_6dtgv")])
 variables = {
+"default_controls": {
+"default": true,
+"exported": true,
+"type": "bool"
+},
 "from_x": {
 "default": 0.0,
 "exported": false,
@@ -108,6 +154,16 @@ variables = {
 "default": false,
 "exported": false,
 "type": "bool"
+},
+"pending_x": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"pending_y": {
+"default": 0.0,
+"exported": false,
+"type": "float"
 },
 "progress": {
 "default": 0.0,
@@ -130,4 +186,4 @@ variables = {
 "type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_bxm2s")])
+functions = Array[Resource]([SubResource("Resource_bxm2s"), SubResource("Resource_xrmfr")])

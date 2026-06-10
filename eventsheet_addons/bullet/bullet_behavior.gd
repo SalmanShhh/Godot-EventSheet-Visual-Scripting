@@ -15,6 +15,8 @@ func _enter_tree() -> void:
 
 @export var acceleration: float = 0.0
 @export var align_rotation: bool = true
+var distance_travelled: float = 0.0
+@export var enabled_movement: bool = true
 @export var gravity: float = 0.0
 var launched: bool = false
 @export var speed: float = 300.0
@@ -22,7 +24,7 @@ var vel_x: float = 0.0
 var vel_y: float = 0.0
 
 func _process(delta: float) -> void:
-	if host == null:
+	if host == null or not enabled_movement:
 		return
 	if not launched:
 		vel_x = cos(host.rotation) * speed
@@ -30,11 +32,13 @@ func _process(delta: float) -> void:
 		launched = true
 	var direction := Vector2(vel_x, vel_y).normalized()
 	vel_x += direction.x * acceleration * delta
-	vel_y += direction.y * acceleration * delta + 0.0
+	vel_y += direction.y * acceleration * delta
 	vel_y += gravity * delta
-	host.position += Vector2(vel_x, vel_y) * delta
-	if align_rotation and (vel_x != 0.0 or vel_y != 0.0):
-		host.rotation = Vector2(vel_x, vel_y).angle()
+	var motion := Vector2(vel_x, vel_y) * delta
+	host.position += motion
+	distance_travelled += motion.length()
+	if align_rotation and motion != Vector2.ZERO:
+		host.rotation = motion.angle()
 
 ## @ace_action
 ## @ace_name("Set Bullet Speed")
@@ -60,4 +64,12 @@ func set_angle_of_motion(degrees: float) -> void:
 	vel_y = sin(deg_to_rad(degrees)) * speed
 	launched = true
 
-# Bullet behavior (C3-style): moves at the host's angle of motion with acceleration and gravity.
+## @ace_action
+## @ace_name("Set Bullet Enabled")
+## @ace_category("Bullet")
+## @ace_description("Pauses or resumes the movement.")
+## @ace_codegen_template("$BulletBehavior.set_bullet_enabled({is_enabled})")
+func set_bullet_enabled(is_enabled: bool) -> void:
+	enabled_movement = is_enabled
+
+# Bullet behavior (C3 parity): angle-of-motion movement with acceleration and gravity; tracks distance travelled (read $BulletBehavior.distance_travelled).

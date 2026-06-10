@@ -12,7 +12,7 @@
 
 [sub_resource type="Resource" id="Resource_1707f"]
 script = ExtResource("1_phgd3")
-text = "Car behavior (C3-style): accelerate/brake with up/down, steer with left/right (steering scales with speed)."
+text = "Car behavior (C3 parity): accelerate/brake with up/down, steer with left/right. drift_recover blends sliding back toward the heading (1 = grippy, low = drifty); turn_while_stopped allows steering at rest."
 
 [sub_resource type="Resource" id="Resource_bb4cx"]
 script = ExtResource("2_cb0ow")
@@ -26,8 +26,10 @@ elif throttle < 0.0:
 else:
 	speed = move_toward(speed, 0.0, deceleration * delta)
 var steer := Input.get_axis(&\"ui_left\", &\"ui_right\")
-host.rotation += deg_to_rad(steer_degrees) * steer * delta * clampf(absf(speed) / max_speed, 0.0, 1.0) * signf(speed)
-host.velocity = Vector2.from_angle(host.rotation) * speed
+var steer_scale := 1.0 if (turn_while_stopped and absf(speed) < 1.0) else clampf(absf(speed) / max_speed, 0.0, 1.0) * signf(speed)
+host.rotation += deg_to_rad(steer_degrees) * steer * delta * steer_scale
+var heading := Vector2.from_angle(host.rotation) * speed
+host.velocity = host.velocity.lerp(heading, clampf(drift_recover, 0.01, 1.0))
 host.move_and_slide()"
 
 [sub_resource type="Resource" id="Resource_pbr7j"]
@@ -35,7 +37,7 @@ script = ExtResource("6_8vblq")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
 actions = Array[Resource]([SubResource("Resource_bb4cx")])
-event_uid = "c4934e"
+event_uid = "547cc3"
 
 [sub_resource type="Resource" id="Resource_8htxg"]
 script = ExtResource("2_cb0ow")
@@ -69,6 +71,11 @@ variables = {
 "exported": true,
 "type": "float"
 },
+"drift_recover": {
+"default": 0.15,
+"exported": true,
+"type": "float"
+},
 "max_speed": {
 "default": 400.0,
 "exported": true,
@@ -83,6 +90,11 @@ variables = {
 "default": 180.0,
 "exported": true,
 "type": "float"
+},
+"turn_while_stopped": {
+"default": false,
+"exported": true,
+"type": "bool"
 }
 }
 functions = Array[Resource]([SubResource("Resource_3ywck")])

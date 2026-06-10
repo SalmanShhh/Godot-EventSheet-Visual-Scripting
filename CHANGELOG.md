@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Behavior packs aligned with their C3 capabilities
+- **Sine**: seven movement types (horizontal, vertical, forwards-backwards, size, angle,
+  opacity, value-only) and **five wave shapes** (sine, triangle, sawtooth,
+  reverse-sawtooth, square) — both Inspector combos — plus phase, Update Initial State
+  (C3's `updateInitialState`), and a readable `wave_value`.
+- **Orbit**: elliptical orbits (primary/secondary radii), offset angle, match-rotation,
+  total-rotation tracking. **Bullet**: distance-travelled tracking + enable toggle.
+- **Move To**: a real **waypoint queue** (Move To Position replaces, Add Waypoint
+  appends; On Arrived fires at the final stop) + rotate-toward-motion.
+- **Follow**: a **delayed mode replaying the target's position history** (C3's
+  delay-based Follow) alongside the smooth-chase mode. **Drag & Drop**: axis locking
+  (both/horizontal/vertical). **Car**: `drift_recover` (low = drifty) and
+  turn-while-stopped.
+- **Tile Movement**: **Simulate Step** (C3 simulate control), a default-controls toggle,
+  and grid-space helpers (`to_grid`/`from_grid`). **Line of Sight**: a **cone of view**
+  and a second condition, *Has LOS Between* arbitrary positions.
+- All regenerated through the pack pipeline (no-drift goldens updated) and guarded by
+  `tests/pack_parity_test.gd` (17 functional assertions on real instantiated behaviors).
+
 ### Combo properties + color params (C3's Combo/Color, the Godot way)
 - **Combo variables**: String variables can declare allowed values ("Options" in the
   variable dialog, comma-separated). Exported combos compile to **`@export_enum`** — a

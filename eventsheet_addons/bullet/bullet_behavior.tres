@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EventSheetResource" load_steps=19 format=3]
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_tbxl6"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_urm38"]
@@ -12,11 +12,11 @@
 
 [sub_resource type="Resource" id="Resource_dbolv"]
 script = ExtResource("1_tbxl6")
-text = "Bullet behavior (C3-style): moves at the host's angle of motion with acceleration and gravity."
+text = "Bullet behavior (C3 parity): angle-of-motion movement with acceleration and gravity; tracks distance travelled (read $BulletBehavior.distance_travelled)."
 
 [sub_resource type="Resource" id="Resource_a26d5"]
 script = ExtResource("2_urm38")
-code = "if host == null:
+code = "if host == null or not enabled_movement:
 	return
 if not launched:
 	vel_x = cos(host.rotation) * speed
@@ -24,18 +24,20 @@ if not launched:
 	launched = true
 var direction := Vector2(vel_x, vel_y).normalized()
 vel_x += direction.x * acceleration * delta
-vel_y += direction.y * acceleration * delta + 0.0
+vel_y += direction.y * acceleration * delta
 vel_y += gravity * delta
-host.position += Vector2(vel_x, vel_y) * delta
-if align_rotation and (vel_x != 0.0 or vel_y != 0.0):
-	host.rotation = Vector2(vel_x, vel_y).angle()"
+var motion := Vector2(vel_x, vel_y) * delta
+host.position += motion
+distance_travelled += motion.length()
+if align_rotation and motion != Vector2.ZERO:
+	host.rotation = motion.angle()"
 
 [sub_resource type="Resource" id="Resource_2c7to"]
 script = ExtResource("6_eoq7w")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_a26d5")])
-event_uid = "d035b0"
+event_uid = "5a86c7"
 
 [sub_resource type="Resource" id="Resource_bw4ti"]
 script = ExtResource("2_urm38")
@@ -87,6 +89,27 @@ ace_category = "Bullet"
 params = Array[ExtResource("7_h0i2u")]([SubResource("Resource_qvkgn")])
 events = Array[Resource]([SubResource("Resource_av21u")])
 
+[sub_resource type="Resource" id="Resource_6l45u"]
+script = ExtResource("2_urm38")
+code = "enabled_movement = is_enabled"
+
+[sub_resource type="Resource" id="Resource_sjods"]
+script = ExtResource("7_h0i2u")
+id = "is_enabled"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_6r2ci"]
+script = ExtResource("8_0amdn")
+function_name = "set_bullet_enabled"
+description = "Pauses or resumes the movement."
+expose_as_ace = true
+ace_display_name = "Set Bullet Enabled"
+ace_category = "Bullet"
+params = Array[ExtResource("7_h0i2u")]([SubResource("Resource_sjods")])
+events = Array[Resource]([SubResource("Resource_6l45u")])
+
 [resource]
 script = ExtResource("9_q1rqs")
 host_class = "Node2D"
@@ -100,6 +123,16 @@ variables = {
 "type": "float"
 },
 "align_rotation": {
+"default": true,
+"exported": true,
+"type": "bool"
+},
+"distance_travelled": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"enabled_movement": {
 "default": true,
 "exported": true,
 "type": "bool"
@@ -130,4 +163,4 @@ variables = {
 "type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_m8wb2"), SubResource("Resource_hud1t")])
+functions = Array[Resource]([SubResource("Resource_m8wb2"), SubResource("Resource_hud1t"), SubResource("Resource_6r2ci")])

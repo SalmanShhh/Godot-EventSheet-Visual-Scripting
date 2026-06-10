@@ -13,10 +13,13 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("TileMovementBehavior behavior requires a Node2D parent.")
 
+@export var default_controls: bool = true
 var from_x: float = 0.0
 var from_y: float = 0.0
 @export var move_time: float = 0.15
 var moving: bool = false
+var pending_x: float = 0.0
+var pending_y: float = 0.0
 var progress: float = 0.0
 @export var tile_size: float = 64.0
 var to_x: float = 0.0
@@ -26,6 +29,14 @@ var to_y: float = 0.0
 ## @ace_name("On Step Finished")
 ## @ace_category("Tile Movement")
 signal step_finished
+
+## @ace_hidden
+func to_grid(pixel: Vector2) -> Vector2i:
+	return Vector2i(roundi(pixel.x / tile_size), roundi(pixel.y / tile_size))
+
+## @ace_hidden
+func from_grid(tile: Vector2i) -> Vector2:
+	return Vector2(tile) * tile_size
 
 func _process(delta: float) -> void:
 	if host == null:
@@ -39,7 +50,11 @@ func _process(delta: float) -> void:
 		else:
 			host.position = Vector2(from_x, from_y).lerp(Vector2(to_x, to_y), progress)
 		return
-	var step := Vector2(Input.get_axis(&"ui_left", &"ui_right"), Input.get_axis(&"ui_up", &"ui_down"))
+	var step := Vector2(pending_x, pending_y)
+	pending_x = 0.0
+	pending_y = 0.0
+	if step == Vector2.ZERO and default_controls:
+		step = Vector2(Input.get_axis(&"ui_left", &"ui_right"), Input.get_axis(&"ui_up", &"ui_down"))
 	if step.x != 0.0:
 		step.y = 0.0
 	if step != Vector2.ZERO:
@@ -51,6 +66,21 @@ func _process(delta: float) -> void:
 		moving = true
 
 ## @ace_action
+## @ace_name("Simulate Step")
+## @ace_category("Tile Movement")
+## @ace_description("Steps one tile in a direction: left, right, up or down (C3 simulate control).")
+## @ace_codegen_template("$TileMovementBehavior.simulate_step({direction})")
+func simulate_step(direction: String) -> void:
+	if direction == "left":
+		pending_x = -1.0
+	elif direction == "right":
+		pending_x = 1.0
+	elif direction == "up":
+		pending_y = -1.0
+	elif direction == "down":
+		pending_y = 1.0
+
+## @ace_action
 ## @ace_name("Teleport To Tile")
 ## @ace_category("Tile Movement")
 ## @ace_description("Snaps to a tile coordinate instantly.")
@@ -60,4 +90,4 @@ func teleport_to_tile(tile_x: float, tile_y: float) -> void:
 		host.position = Vector2(tile_x, tile_y) * tile_size
 	moving = false
 
-# Tile Movement behavior (C3-style): grid-locked stepping with the arrow keys; fires On Step Finished per tile.
+# Tile Movement behavior (C3 parity): grid-locked stepping (arrow keys or Simulate Step); grid-space helpers convert between tiles and pixels. Fires On Step Finished per tile.

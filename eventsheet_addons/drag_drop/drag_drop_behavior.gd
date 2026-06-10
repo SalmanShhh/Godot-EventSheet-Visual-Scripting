@@ -13,8 +13,11 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("DragDropBehavior behavior requires a Node2D parent.")
 
+@export_enum("both", "horizontal", "vertical") var axes: String = "both"
 var dragging: bool = false
 @export var grab_radius: float = 48.0
+var grab_x: float = 0.0
+var grab_y: float = 0.0
 
 ## @ace_trigger
 ## @ace_name("On Drag Start")
@@ -33,9 +36,16 @@ func _process(delta: float) -> void:
 		var mouse := host.get_global_mouse_position()
 		if not dragging and mouse.distance_to(host.global_position) <= grab_radius:
 			dragging = true
+			grab_x = host.global_position.x
+			grab_y = host.global_position.y
 			drag_started.emit()
 		if dragging:
-			host.global_position = mouse
+			var destination := mouse
+			if axes == "horizontal":
+				destination.y = grab_y
+			elif axes == "vertical":
+				destination.x = grab_x
+			host.global_position = destination
 	elif dragging:
 		dragging = false
 		dropped.emit()
@@ -50,4 +60,4 @@ func drop_now() -> void:
 		dragging = false
 		dropped.emit()
 
-# Drag & Drop behavior (C3-style): grab the host with the mouse within the grab radius; fires On Drag Start and On Dropped.
+# Drag & Drop behavior (C3 parity): grab within the radius; axes locks dragging to one axis (both, horizontal, vertical). Fires On Drag Start / On Dropped.

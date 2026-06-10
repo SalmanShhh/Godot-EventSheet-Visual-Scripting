@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EventSheetResource" load_steps=18 format=3]
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=24 format=3]
 
 [ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_4oi2v"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_3x5jo"]
@@ -12,83 +12,167 @@
 
 [sub_resource type="Resource" id="Resource_052by"]
 script = ExtResource("1_4oi2v")
-text = "Sine behavior (C3-style): oscillates the host around its starting position/angle. movement: horizontal, vertical or angle."
+text = "Sine behavior (C3 parity): wave-driven oscillation. movement: horizontal, vertical, forwards-backwards, size, angle, opacity, value-only. wave: sine, triangle, sawtooth, reverse-sawtooth, square. Read the current wave via $SineBehavior.wave_value."
 
 [sub_resource type="Resource" id="Resource_4g6ho"]
+script = ExtResource("2_3x5jo")
+code = "## @ace_hidden
+func _wave(t: float) -> float:
+	var cycle := fposmod(t, 1.0)
+	match wave:
+		\"triangle\":
+			return 1.0 - 4.0 * absf(cycle - 0.5)
+		\"sawtooth\":
+			return 2.0 * cycle - 1.0
+		\"reverse-sawtooth\":
+			return 1.0 - 2.0 * cycle
+		\"square\":
+			return 1.0 if cycle < 0.5 else -1.0
+	return sin(cycle * TAU)"
+
+[sub_resource type="Resource" id="Resource_733ur"]
 script = ExtResource("2_3x5jo")
 code = "if not active or host == null:
 	return
 if not base_captured:
-	base_x = host.position.x
-	base_y = host.position.y
-	base_captured = true
+	update_initial_state()
 time += delta
-var offset := sin(time * TAU / period) * magnitude
+var t := time / maxf(period, 0.001) + phase_degrees / 360.0
+wave_value = _wave(t)
+var offset := wave_value * magnitude
 if movement == \"horizontal\":
 	host.position.x = base_x + offset
 elif movement == \"vertical\":
 	host.position.y = base_y + offset
+elif movement == \"forwards-backwards\":
+	host.position = Vector2(base_x, base_y) + Vector2.from_angle(base_rotation) * offset
+elif movement == \"size\":
+	host.scale = Vector2(base_scale_x, base_scale_y) * (1.0 + wave_value * magnitude * 0.01)
 elif movement == \"angle\":
-	host.rotation = offset * 0.0174533"
+	host.rotation = base_rotation + offset * 0.0174533
+elif movement == \"opacity\":
+	host.modulate.a = clampf(base_alpha + wave_value * magnitude * 0.01, 0.0, 1.0)"
 
-[sub_resource type="Resource" id="Resource_733ur"]
+[sub_resource type="Resource" id="Resource_81y13"]
 script = ExtResource("6_brf4f")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_4g6ho")])
-event_uid = "d3674b"
+actions = Array[Resource]([SubResource("Resource_733ur")])
+event_uid = "b28477"
 
-[sub_resource type="Resource" id="Resource_81y13"]
+[sub_resource type="Resource" id="Resource_1wlap"]
 script = ExtResource("2_3x5jo")
 code = "active = is_active"
 
-[sub_resource type="Resource" id="Resource_1wlap"]
+[sub_resource type="Resource" id="Resource_2rghd"]
 script = ExtResource("7_ma42h")
 id = "is_active"
 type_name = "bool"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_2rghd"]
+[sub_resource type="Resource" id="Resource_1s08y"]
 script = ExtResource("8_wp66b")
 function_name = "set_sine_active"
 description = "Pauses or resumes the oscillation."
 expose_as_ace = true
 ace_display_name = "Set Sine Active"
 ace_category = "Sine"
-params = Array[ExtResource("7_ma42h")]([SubResource("Resource_1wlap")])
-events = Array[Resource]([SubResource("Resource_81y13")])
+params = Array[ExtResource("7_ma42h")]([SubResource("Resource_2rghd")])
+events = Array[Resource]([SubResource("Resource_1wlap")])
 
-[sub_resource type="Resource" id="Resource_1s08y"]
+[sub_resource type="Resource" id="Resource_pkkss"]
+script = ExtResource("2_3x5jo")
+code = "if host == null:
+	return
+base_x = host.position.x
+base_y = host.position.y
+base_rotation = host.rotation
+base_scale_x = host.scale.x
+base_scale_y = host.scale.y
+base_alpha = host.modulate.a
+base_captured = true"
+
+[sub_resource type="Resource" id="Resource_lkxsk"]
+script = ExtResource("8_wp66b")
+function_name = "update_initial_state"
+description = "Re-captures the host's current position/scale/angle/opacity as the wave's base (C3 updateInitialState)."
+expose_as_ace = true
+ace_display_name = "Update Initial State"
+ace_category = "Sine"
+events = Array[Resource]([SubResource("Resource_pkkss")])
+
+[sub_resource type="Resource" id="Resource_dtsks"]
+script = ExtResource("2_3x5jo")
+code = "phase_degrees = degrees"
+
+[sub_resource type="Resource" id="Resource_tj40q"]
+script = ExtResource("7_ma42h")
+id = "degrees"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_bbyxi"]
+script = ExtResource("8_wp66b")
+function_name = "set_sine_phase"
+description = "Phase offset in degrees."
+expose_as_ace = true
+ace_display_name = "Set Phase"
+ace_category = "Sine"
+params = Array[ExtResource("7_ma42h")]([SubResource("Resource_tj40q")])
+events = Array[Resource]([SubResource("Resource_dtsks")])
+
+[sub_resource type="Resource" id="Resource_2adsf"]
 script = ExtResource("2_3x5jo")
 code = "time = 0.0
 base_captured = false"
 
-[sub_resource type="Resource" id="Resource_pkkss"]
+[sub_resource type="Resource" id="Resource_nlxt1"]
 script = ExtResource("8_wp66b")
 function_name = "reset_sine"
-description = "Restarts the wave from the current position."
+description = "Restarts the wave from the current state."
 expose_as_ace = true
 ace_display_name = "Reset Sine"
 ace_category = "Sine"
-events = Array[Resource]([SubResource("Resource_1s08y")])
+events = Array[Resource]([SubResource("Resource_2adsf")])
 
 [resource]
 script = ExtResource("9_lul5e")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "SineBehavior"
-events = Array[Resource]([SubResource("Resource_052by"), SubResource("Resource_733ur")])
+events = Array[Resource]([SubResource("Resource_052by"), SubResource("Resource_4g6ho"), SubResource("Resource_81y13")])
 variables = {
 "active": {
 "default": true,
 "exported": true,
 "type": "bool"
 },
+"base_alpha": {
+"default": 1.0,
+"exported": false,
+"type": "float"
+},
 "base_captured": {
 "default": false,
 "exported": false,
 "type": "bool"
+},
+"base_rotation": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"base_scale_x": {
+"default": 1.0,
+"exported": false,
+"type": "float"
+},
+"base_scale_y": {
+"default": 1.0,
+"exported": false,
+"type": "float"
 },
 "base_x": {
 "default": 0.0,
@@ -108,7 +192,7 @@ variables = {
 "movement": {
 "default": "horizontal",
 "exported": true,
-"options": ["horizontal", "vertical", "angle"],
+"options": ["horizontal", "vertical", "forwards-backwards", "size", "angle", "opacity", "value-only"],
 "type": "String"
 },
 "period": {
@@ -116,10 +200,26 @@ variables = {
 "exported": true,
 "type": "float"
 },
+"phase_degrees": {
+"default": 0.0,
+"exported": true,
+"type": "float"
+},
 "time": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"wave": {
+"default": "sine",
+"exported": true,
+"options": ["sine", "triangle", "sawtooth", "reverse-sawtooth", "square"],
+"type": "String"
+},
+"wave_value": {
 "default": 0.0,
 "exported": false,
 "type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_2rghd"), SubResource("Resource_pkkss")])
+functions = Array[Resource]([SubResource("Resource_1s08y"), SubResource("Resource_lkxsk"), SubResource("Resource_bbyxi"), SubResource("Resource_nlxt1")])

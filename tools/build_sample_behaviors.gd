@@ -315,25 +315,49 @@ func _build_eight_direction() -> bool:
 	return _save_pack(sheet, "res://eventsheet_addons/eight_direction/eight_direction_movement_behavior")
 
 ## Saves the editable sheet (.tres) and the compiled addon script (.gd) side by side.
-## Sine behavior (C3-style)
+## Sine behavior (C3 parity)
 func _build_sine() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "SineBehavior"
 	sheet.variables = {
-		"movement": {"type": "String", "default": "horizontal", "exported": true, "options": ["horizontal", "vertical", "angle"]},
+		"movement": {"type": "String", "default": "horizontal", "exported": true, "options": ["horizontal", "vertical", "forwards-backwards", "size", "angle", "opacity", "value-only"]},
+		"wave": {"type": "String", "default": "sine", "exported": true, "options": ["sine", "triangle", "sawtooth", "reverse-sawtooth", "square"]},
 		"period": {"type": "float", "default": 4.0, "exported": true},
 		"magnitude": {"type": "float", "default": 50.0, "exported": true},
+		"phase_degrees": {"type": "float", "default": 0.0, "exported": true},
 		"active": {"type": "bool", "default": true, "exported": true},
+		"wave_value": {"type": "float", "default": 0.0, "exported": false},
 		"time": {"type": "float", "default": 0.0, "exported": false},
 		"base_x": {"type": "float", "default": 0.0, "exported": false},
 		"base_y": {"type": "float", "default": 0.0, "exported": false},
+		"base_rotation": {"type": "float", "default": 0.0, "exported": false},
+		"base_scale_x": {"type": "float", "default": 1.0, "exported": false},
+		"base_scale_y": {"type": "float", "default": 1.0, "exported": false},
+		"base_alpha": {"type": "float", "default": 1.0, "exported": false},
 		"base_captured": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Sine behavior (C3-style): oscillates the host around its starting position/angle. movement: horizontal, vertical or angle."
+	about.text = "Sine behavior (C3 parity): wave-driven oscillation. movement: horizontal, vertical, forwards-backwards, size, angle, opacity, value-only. wave: sine, triangle, sawtooth, reverse-sawtooth, square. Read the current wave via $SineBehavior.wave_value."
 	sheet.events.append(about)
+	var extra_block_0: RawCodeRow = RawCodeRow.new()
+	extra_block_0.code = "\n".join(PackedStringArray([
+		"## @ace_hidden",
+		"func _wave(t: float) -> float:",
+		"\tvar cycle := fposmod(t, 1.0)",
+		"\tmatch wave:",
+		"\t\t\"triangle\":",
+		"\t\t\treturn 1.0 - 4.0 * absf(cycle - 0.5)",
+		"\t\t\"sawtooth\":",
+		"\t\t\treturn 2.0 * cycle - 1.0",
+		"\t\t\"reverse-sawtooth\":",
+		"\t\t\treturn 1.0 - 2.0 * cycle",
+		"\t\t\"square\":",
+		"\t\t\treturn 1.0 if cycle < 0.5 else -1.0",
+		"\treturn sin(cycle * TAU)"
+	]))
+	sheet.events.append(extra_block_0)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
@@ -342,17 +366,23 @@ func _build_sine() -> bool:
 		"if not active or host == null:",
 		"\treturn",
 		"if not base_captured:",
-		"\tbase_x = host.position.x",
-		"\tbase_y = host.position.y",
-		"\tbase_captured = true",
+		"\tupdate_initial_state()",
 		"time += delta",
-		"var offset := sin(time * TAU / period) * magnitude",
+		"var t := time / maxf(period, 0.001) + phase_degrees / 360.0",
+		"wave_value = _wave(t)",
+		"var offset := wave_value * magnitude",
 		"if movement == \"horizontal\":",
 		"\thost.position.x = base_x + offset",
 		"elif movement == \"vertical\":",
 		"\thost.position.y = base_y + offset",
+		"elif movement == \"forwards-backwards\":",
+		"\thost.position = Vector2(base_x, base_y) + Vector2.from_angle(base_rotation) * offset",
+		"elif movement == \"size\":",
+		"\thost.scale = Vector2(base_scale_x, base_scale_y) * (1.0 + wave_value * magnitude * 0.01)",
 		"elif movement == \"angle\":",
-		"\thost.rotation = offset * 0.0174533"
+		"\thost.rotation = base_rotation + offset * 0.0174533",
+		"elif movement == \"opacity\":",
+		"\thost.modulate.a = clampf(base_alpha + wave_value * magnitude * 0.01, 0.0, 1.0)"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
@@ -374,12 +404,50 @@ func _build_sine() -> bool:
 	set_sine_active_fn.events.append(set_sine_active_fn_body)
 	sheet.functions.append(set_sine_active_fn)
 
+	var update_initial_state_fn: EventFunction = EventFunction.new()
+	update_initial_state_fn.function_name = "update_initial_state"
+	update_initial_state_fn.expose_as_ace = true
+	update_initial_state_fn.ace_display_name = "Update Initial State"
+	update_initial_state_fn.ace_category = "Sine"
+	update_initial_state_fn.description = "Re-captures the host's current position/scale/angle/opacity as the wave's base (C3 updateInitialState)."
+	var update_initial_state_fn_body: RawCodeRow = RawCodeRow.new()
+	update_initial_state_fn_body.code = "\n".join(PackedStringArray([
+		"if host == null:",
+		"\treturn",
+		"base_x = host.position.x",
+		"base_y = host.position.y",
+		"base_rotation = host.rotation",
+		"base_scale_x = host.scale.x",
+		"base_scale_y = host.scale.y",
+		"base_alpha = host.modulate.a",
+		"base_captured = true"
+	]))
+	update_initial_state_fn.events.append(update_initial_state_fn_body)
+	sheet.functions.append(update_initial_state_fn)
+
+	var set_sine_phase_fn: EventFunction = EventFunction.new()
+	set_sine_phase_fn.function_name = "set_sine_phase"
+	set_sine_phase_fn.expose_as_ace = true
+	set_sine_phase_fn.ace_display_name = "Set Phase"
+	set_sine_phase_fn.ace_category = "Sine"
+	set_sine_phase_fn.description = "Phase offset in degrees."
+	var set_sine_phase_fn_degrees: ACEParam = ACEParam.new()
+	set_sine_phase_fn_degrees.id = "degrees"
+	set_sine_phase_fn_degrees.type_name = "float"
+	set_sine_phase_fn.params.append(set_sine_phase_fn_degrees)
+	var set_sine_phase_fn_body: RawCodeRow = RawCodeRow.new()
+	set_sine_phase_fn_body.code = "\n".join(PackedStringArray([
+		"phase_degrees = degrees"
+	]))
+	set_sine_phase_fn.events.append(set_sine_phase_fn_body)
+	sheet.functions.append(set_sine_phase_fn)
+
 	var reset_sine_fn: EventFunction = EventFunction.new()
 	reset_sine_fn.function_name = "reset_sine"
 	reset_sine_fn.expose_as_ace = true
 	reset_sine_fn.ace_display_name = "Reset Sine"
 	reset_sine_fn.ace_category = "Sine"
-	reset_sine_fn.description = "Restarts the wave from the current position."
+	reset_sine_fn.description = "Restarts the wave from the current state."
 	var reset_sine_fn_body: RawCodeRow = RawCodeRow.new()
 	reset_sine_fn_body.code = "\n".join(PackedStringArray([
 		"time = 0.0",
@@ -390,22 +458,26 @@ func _build_sine() -> bool:
 
 	return _save_pack(sheet, "res://eventsheet_addons/sine/sine_behavior")
 
-## Orbit behavior (C3-style)
+## Orbit behavior (C3 parity)
 func _build_orbit() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "OrbitBehavior"
 	sheet.variables = {
-		"radius": {"type": "float", "default": 100.0, "exported": true},
+		"primary_radius": {"type": "float", "default": 100.0, "exported": true},
+		"secondary_radius": {"type": "float", "default": 0.0, "exported": true},
 		"speed_degrees": {"type": "float", "default": 90.0, "exported": true},
+		"offset_angle_degrees": {"type": "float", "default": 0.0, "exported": true},
+		"match_rotation": {"type": "bool", "default": false, "exported": true},
 		"angle": {"type": "float", "default": 0.0, "exported": false},
+		"total_rotation": {"type": "float", "default": 0.0, "exported": false},
 		"center_x": {"type": "float", "default": 0.0, "exported": false},
 		"center_y": {"type": "float", "default": 0.0, "exported": false},
 		"center_captured": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Orbit behavior (C3-style): circles the host around its starting point (or a set center)."
+	about.text = "Orbit behavior (C3 parity): circles or ellipses around a point. secondary_radius 0 = circle; offset_angle tilts the ellipse; match_rotation faces the travel direction."
 	sheet.events.append(about)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
@@ -418,8 +490,15 @@ func _build_orbit() -> bool:
 		"\tcenter_x = host.position.x",
 		"\tcenter_y = host.position.y",
 		"\tcenter_captured = true",
-		"angle += deg_to_rad(speed_degrees) * delta",
-		"host.position = Vector2(center_x, center_y) + Vector2.from_angle(angle) * radius"
+		"var step := deg_to_rad(speed_degrees) * delta",
+		"angle += step",
+		"total_rotation += absf(step)",
+		"var radius_b := secondary_radius if secondary_radius > 0.0 else primary_radius",
+		"var local := Vector2(cos(angle) * primary_radius, sin(angle) * radius_b).rotated(deg_to_rad(offset_angle_degrees))",
+		"var previous := host.position",
+		"host.position = Vector2(center_x, center_y) + local",
+		"if match_rotation and host.position != previous:",
+		"\thost.rotation = (host.position - previous).angle()"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
@@ -464,9 +543,31 @@ func _build_orbit() -> bool:
 	set_orbit_speed_fn.events.append(set_orbit_speed_fn_body)
 	sheet.functions.append(set_orbit_speed_fn)
 
+	var set_orbit_radii_fn: EventFunction = EventFunction.new()
+	set_orbit_radii_fn.function_name = "set_orbit_radii"
+	set_orbit_radii_fn.expose_as_ace = true
+	set_orbit_radii_fn.ace_display_name = "Set Orbit Radii"
+	set_orbit_radii_fn.ace_category = "Orbit"
+	set_orbit_radii_fn.description = "Primary/secondary radii (secondary 0 = circle)."
+	var set_orbit_radii_fn_primary: ACEParam = ACEParam.new()
+	set_orbit_radii_fn_primary.id = "primary"
+	set_orbit_radii_fn_primary.type_name = "float"
+	set_orbit_radii_fn.params.append(set_orbit_radii_fn_primary)
+	var set_orbit_radii_fn_secondary: ACEParam = ACEParam.new()
+	set_orbit_radii_fn_secondary.id = "secondary"
+	set_orbit_radii_fn_secondary.type_name = "float"
+	set_orbit_radii_fn.params.append(set_orbit_radii_fn_secondary)
+	var set_orbit_radii_fn_body: RawCodeRow = RawCodeRow.new()
+	set_orbit_radii_fn_body.code = "\n".join(PackedStringArray([
+		"primary_radius = primary",
+		"secondary_radius = secondary"
+	]))
+	set_orbit_radii_fn.events.append(set_orbit_radii_fn_body)
+	sheet.functions.append(set_orbit_radii_fn)
+
 	return _save_pack(sheet, "res://eventsheet_addons/orbit/orbit_behavior")
 
-## Bullet behavior (C3-style)
+## Bullet behavior (C3 parity)
 func _build_bullet() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -477,19 +578,21 @@ func _build_bullet() -> bool:
 		"acceleration": {"type": "float", "default": 0.0, "exported": true},
 		"gravity": {"type": "float", "default": 0.0, "exported": true},
 		"align_rotation": {"type": "bool", "default": true, "exported": true},
+		"enabled_movement": {"type": "bool", "default": true, "exported": true},
+		"distance_travelled": {"type": "float", "default": 0.0, "exported": false},
 		"vel_x": {"type": "float", "default": 0.0, "exported": false},
 		"vel_y": {"type": "float", "default": 0.0, "exported": false},
 		"launched": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Bullet behavior (C3-style): moves at the host's angle of motion with acceleration and gravity."
+	about.text = "Bullet behavior (C3 parity): angle-of-motion movement with acceleration and gravity; tracks distance travelled (read $BulletBehavior.distance_travelled)."
 	sheet.events.append(about)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
 	var tick_body: RawCodeRow = RawCodeRow.new()
 	tick_body.code = "\n".join(PackedStringArray([
-		"if host == null:",
+		"if host == null or not enabled_movement:",
 		"\treturn",
 		"if not launched:",
 		"\tvel_x = cos(host.rotation) * speed",
@@ -497,11 +600,13 @@ func _build_bullet() -> bool:
 		"\tlaunched = true",
 		"var direction := Vector2(vel_x, vel_y).normalized()",
 		"vel_x += direction.x * acceleration * delta",
-		"vel_y += direction.y * acceleration * delta + 0.0",
+		"vel_y += direction.y * acceleration * delta",
 		"vel_y += gravity * delta",
-		"host.position += Vector2(vel_x, vel_y) * delta",
-		"if align_rotation and (vel_x != 0.0 or vel_y != 0.0):",
-		"\thost.rotation = Vector2(vel_x, vel_y).angle()"
+		"var motion := Vector2(vel_x, vel_y) * delta",
+		"host.position += motion",
+		"distance_travelled += motion.length()",
+		"if align_rotation and motion != Vector2.ZERO:",
+		"\thost.rotation = motion.angle()"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
@@ -548,9 +653,26 @@ func _build_bullet() -> bool:
 	set_angle_of_motion_fn.events.append(set_angle_of_motion_fn_body)
 	sheet.functions.append(set_angle_of_motion_fn)
 
+	var set_bullet_enabled_fn: EventFunction = EventFunction.new()
+	set_bullet_enabled_fn.function_name = "set_bullet_enabled"
+	set_bullet_enabled_fn.expose_as_ace = true
+	set_bullet_enabled_fn.ace_display_name = "Set Bullet Enabled"
+	set_bullet_enabled_fn.ace_category = "Bullet"
+	set_bullet_enabled_fn.description = "Pauses or resumes the movement."
+	var set_bullet_enabled_fn_is_enabled: ACEParam = ACEParam.new()
+	set_bullet_enabled_fn_is_enabled.id = "is_enabled"
+	set_bullet_enabled_fn_is_enabled.type_name = "bool"
+	set_bullet_enabled_fn.params.append(set_bullet_enabled_fn_is_enabled)
+	var set_bullet_enabled_fn_body: RawCodeRow = RawCodeRow.new()
+	set_bullet_enabled_fn_body.code = "\n".join(PackedStringArray([
+		"enabled_movement = is_enabled"
+	]))
+	set_bullet_enabled_fn.events.append(set_bullet_enabled_fn_body)
+	sheet.functions.append(set_bullet_enabled_fn)
+
 	return _save_pack(sheet, "res://eventsheet_addons/bullet/bullet_behavior")
 
-## Move To behavior (C3-style)
+## Move To behavior (C3 parity)
 func _build_move_to() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -558,12 +680,12 @@ func _build_move_to() -> bool:
 	sheet.custom_class_name = "MoveToBehavior"
 	sheet.variables = {
 		"max_speed": {"type": "float", "default": 200.0, "exported": true},
-		"target_x": {"type": "float", "default": 0.0, "exported": false},
-		"target_y": {"type": "float", "default": 0.0, "exported": false},
+		"rotate_toward_motion": {"type": "bool", "default": false, "exported": true},
+		"waypoints": {"type": "Array", "default": [], "exported": false},
 		"moving": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Move To behavior (C3-style): glides the host to a target position and fires On Arrived."
+	about.text = "Move To behavior (C3 parity): glides through a waypoint queue (Move To Position replaces it, Add Waypoint appends) and fires On Arrived at the final stop. rotate_toward_motion faces the travel direction."
 	sheet.events.append(about)
 	var signal_block: RawCodeRow = RawCodeRow.new()
 	signal_block.code = "\n".join(PackedStringArray([
@@ -578,13 +700,18 @@ func _build_move_to() -> bool:
 	tick.trigger_id = "OnProcess"
 	var tick_body: RawCodeRow = RawCodeRow.new()
 	tick_body.code = "\n".join(PackedStringArray([
-		"if not moving or host == null:",
+		"if not moving or host == null or waypoints.is_empty():",
 		"\treturn",
-		"var target := Vector2(target_x, target_y)",
+		"var target: Vector2 = waypoints[0]",
+		"var previous := host.position",
 		"host.position = host.position.move_toward(target, max_speed * delta)",
+		"if rotate_toward_motion and host.position != previous:",
+		"\thost.rotation = (host.position - previous).angle()",
 		"if host.position.distance_to(target) < 0.5:",
-		"\tmoving = false",
-		"\tarrived.emit()"
+		"\twaypoints.pop_front()",
+		"\tif waypoints.is_empty():",
+		"\t\tmoving = false",
+		"\t\tarrived.emit()"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
@@ -594,7 +721,7 @@ func _build_move_to() -> bool:
 	move_to_position_fn.expose_as_ace = true
 	move_to_position_fn.ace_display_name = "Move To Position"
 	move_to_position_fn.ace_category = "Move To"
-	move_to_position_fn.description = "Starts gliding toward the point."
+	move_to_position_fn.description = "Replaces the queue and glides toward the point."
 	var move_to_position_fn_x: ACEParam = ACEParam.new()
 	move_to_position_fn_x.id = "x"
 	move_to_position_fn_x.type_name = "float"
@@ -605,29 +732,51 @@ func _build_move_to() -> bool:
 	move_to_position_fn.params.append(move_to_position_fn_y)
 	var move_to_position_fn_body: RawCodeRow = RawCodeRow.new()
 	move_to_position_fn_body.code = "\n".join(PackedStringArray([
-		"target_x = x",
-		"target_y = y",
+		"waypoints = [Vector2(x, y)]",
 		"moving = true"
 	]))
 	move_to_position_fn.events.append(move_to_position_fn_body)
 	sheet.functions.append(move_to_position_fn)
+
+	var add_waypoint_fn: EventFunction = EventFunction.new()
+	add_waypoint_fn.function_name = "add_waypoint"
+	add_waypoint_fn.expose_as_ace = true
+	add_waypoint_fn.ace_display_name = "Add Waypoint"
+	add_waypoint_fn.ace_category = "Move To"
+	add_waypoint_fn.description = "Appends a stop to the queue (C3 waypoints)."
+	var add_waypoint_fn_x: ACEParam = ACEParam.new()
+	add_waypoint_fn_x.id = "x"
+	add_waypoint_fn_x.type_name = "float"
+	add_waypoint_fn.params.append(add_waypoint_fn_x)
+	var add_waypoint_fn_y: ACEParam = ACEParam.new()
+	add_waypoint_fn_y.id = "y"
+	add_waypoint_fn_y.type_name = "float"
+	add_waypoint_fn.params.append(add_waypoint_fn_y)
+	var add_waypoint_fn_body: RawCodeRow = RawCodeRow.new()
+	add_waypoint_fn_body.code = "\n".join(PackedStringArray([
+		"waypoints.append(Vector2(x, y))",
+		"moving = true"
+	]))
+	add_waypoint_fn.events.append(add_waypoint_fn_body)
+	sheet.functions.append(add_waypoint_fn)
 
 	var stop_moving_fn: EventFunction = EventFunction.new()
 	stop_moving_fn.function_name = "stop_moving"
 	stop_moving_fn.expose_as_ace = true
 	stop_moving_fn.ace_display_name = "Stop Moving"
 	stop_moving_fn.ace_category = "Move To"
-	stop_moving_fn.description = "Stops without firing On Arrived."
+	stop_moving_fn.description = "Clears the queue without firing On Arrived."
 	var stop_moving_fn_body: RawCodeRow = RawCodeRow.new()
 	stop_moving_fn_body.code = "\n".join(PackedStringArray([
-		"moving = false"
+		"moving = false",
+		"waypoints = []"
 	]))
 	stop_moving_fn.events.append(stop_moving_fn_body)
 	sheet.functions.append(stop_moving_fn)
 
 	return _save_pack(sheet, "res://eventsheet_addons/move_to/move_to_behavior")
 
-## Follow behavior (C3-style)
+## Follow behavior (C3 parity)
 func _build_follow() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -635,22 +784,39 @@ func _build_follow() -> bool:
 	sheet.custom_class_name = "FollowBehavior"
 	sheet.variables = {
 		"target_path": {"type": "String", "default": "", "exported": true},
+		"mode": {"type": "String", "default": "smooth", "exported": true, "options": ["smooth", "delayed"]},
 		"follow_speed": {"type": "float", "default": 5.0, "exported": true},
+		"delay": {"type": "float", "default": 0.4, "exported": true},
 		"min_distance": {"type": "float", "default": 0.0, "exported": true},
-		"following": {"type": "bool", "default": true, "exported": true}
+		"following": {"type": "bool", "default": true, "exported": true},
+		"history": {"type": "Array", "default": [], "exported": false},
+		"clock": {"type": "float", "default": 0.0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Follow behavior (C3-style): smoothly trails another node (set the target path)."
+	about.text = "Follow behavior (C3 parity): trails another node. mode smooth = lerp chase; mode delayed = replay the target's position history after a delay (C3's Follow)."
 	sheet.events.append(about)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
 	var tick_body: RawCodeRow = RawCodeRow.new()
 	tick_body.code = "\n".join(PackedStringArray([
-		"if not following or host == null or target_path == \"\":",
+		"if host == null or target_path == \"\":",
 		"\treturn",
 		"var target := host.get_node_or_null(NodePath(target_path))",
 		"if not (target is Node2D):",
+		"\treturn",
+		"clock += delta",
+		"history.append([clock, target.position])",
+		"while history.size() > 2 and float(history[0][0]) < clock - delay - 1.0:",
+		"\thistory.pop_front()",
+		"if not following:",
+		"\treturn",
+		"if mode == \"delayed\":",
+		"\tvar sample_time := clock - delay",
+		"\tfor entry: Array in history:",
+		"\t\tif float(entry[0]) >= sample_time:",
+		"\t\t\thost.position = entry[1]",
+		"\t\t\tbreak",
 		"\treturn",
 		"if host.position.distance_to(target.position) <= min_distance:",
 		"\treturn",
@@ -672,7 +838,8 @@ func _build_follow() -> bool:
 	var start_following_fn_body: RawCodeRow = RawCodeRow.new()
 	start_following_fn_body.code = "\n".join(PackedStringArray([
 		"target_path = path",
-		"following = true"
+		"following = true",
+		"history = []"
 	]))
 	start_following_fn.events.append(start_following_fn_body)
 	sheet.functions.append(start_following_fn)
@@ -692,7 +859,7 @@ func _build_follow() -> bool:
 
 	return _save_pack(sheet, "res://eventsheet_addons/follow/follow_behavior")
 
-## Drag & Drop behavior (C3-style)
+## Drag & Drop behavior (C3 parity)
 func _build_drag_drop() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -700,10 +867,13 @@ func _build_drag_drop() -> bool:
 	sheet.custom_class_name = "DragDropBehavior"
 	sheet.variables = {
 		"grab_radius": {"type": "float", "default": 48.0, "exported": true},
-		"dragging": {"type": "bool", "default": false, "exported": false}
+		"axes": {"type": "String", "default": "both", "exported": true, "options": ["both", "horizontal", "vertical"]},
+		"dragging": {"type": "bool", "default": false, "exported": false},
+		"grab_x": {"type": "float", "default": 0.0, "exported": false},
+		"grab_y": {"type": "float", "default": 0.0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Drag & Drop behavior (C3-style): grab the host with the mouse within the grab radius; fires On Drag Start and On Dropped."
+	about.text = "Drag & Drop behavior (C3 parity): grab within the radius; axes locks dragging to one axis (both, horizontal, vertical). Fires On Drag Start / On Dropped."
 	sheet.events.append(about)
 	var signal_block: RawCodeRow = RawCodeRow.new()
 	signal_block.code = "\n".join(PackedStringArray([
@@ -729,9 +899,16 @@ func _build_drag_drop() -> bool:
 		"\tvar mouse := host.get_global_mouse_position()",
 		"\tif not dragging and mouse.distance_to(host.global_position) <= grab_radius:",
 		"\t\tdragging = true",
+		"\t\tgrab_x = host.global_position.x",
+		"\t\tgrab_y = host.global_position.y",
 		"\t\tdrag_started.emit()",
 		"\tif dragging:",
-		"\t\thost.global_position = mouse",
+		"\t\tvar destination := mouse",
+		"\t\tif axes == \"horizontal\":",
+		"\t\t\tdestination.y = grab_y",
+		"\t\telif axes == \"vertical\":",
+		"\t\t\tdestination.x = grab_x",
+		"\t\thost.global_position = destination",
 		"elif dragging:",
 		"\tdragging = false",
 		"\tdropped.emit()"
@@ -756,7 +933,7 @@ func _build_drag_drop() -> bool:
 
 	return _save_pack(sheet, "res://eventsheet_addons/drag_drop/drag_drop_behavior")
 
-## Car behavior (C3-style)
+## Car behavior (C3 parity)
 func _build_car() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -767,10 +944,12 @@ func _build_car() -> bool:
 		"acceleration": {"type": "float", "default": 300.0, "exported": true},
 		"deceleration": {"type": "float", "default": 400.0, "exported": true},
 		"steer_degrees": {"type": "float", "default": 180.0, "exported": true},
+		"drift_recover": {"type": "float", "default": 0.15, "exported": true},
+		"turn_while_stopped": {"type": "bool", "default": false, "exported": true},
 		"speed": {"type": "float", "default": 0.0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Car behavior (C3-style): accelerate/brake with up/down, steer with left/right (steering scales with speed)."
+	about.text = "Car behavior (C3 parity): accelerate/brake with up/down, steer with left/right. drift_recover blends sliding back toward the heading (1 = grippy, low = drifty); turn_while_stopped allows steering at rest."
 	sheet.events.append(about)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
@@ -787,8 +966,10 @@ func _build_car() -> bool:
 		"else:",
 		"\tspeed = move_toward(speed, 0.0, deceleration * delta)",
 		"var steer := Input.get_axis(&\"ui_left\", &\"ui_right\")",
-		"host.rotation += deg_to_rad(steer_degrees) * steer * delta * clampf(absf(speed) / max_speed, 0.0, 1.0) * signf(speed)",
-		"host.velocity = Vector2.from_angle(host.rotation) * speed",
+		"var steer_scale := 1.0 if (turn_while_stopped and absf(speed) < 1.0) else clampf(absf(speed) / max_speed, 0.0, 1.0) * signf(speed)",
+		"host.rotation += deg_to_rad(steer_degrees) * steer * delta * steer_scale",
+		"var heading := Vector2.from_angle(host.rotation) * speed",
+		"host.velocity = host.velocity.lerp(heading, clampf(drift_recover, 0.01, 1.0))",
 		"host.move_and_slide()"
 	]))
 	tick.actions.append(tick_body)
@@ -811,7 +992,7 @@ func _build_car() -> bool:
 
 	return _save_pack(sheet, "res://eventsheet_addons/car/car_behavior")
 
-## Tile Movement behavior (C3-style)
+## Tile Movement behavior (C3 parity)
 func _build_tile_movement() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -820,15 +1001,18 @@ func _build_tile_movement() -> bool:
 	sheet.variables = {
 		"tile_size": {"type": "float", "default": 64.0, "exported": true},
 		"move_time": {"type": "float", "default": 0.15, "exported": true},
+		"default_controls": {"type": "bool", "default": true, "exported": true},
 		"moving": {"type": "bool", "default": false, "exported": false},
 		"from_x": {"type": "float", "default": 0.0, "exported": false},
 		"from_y": {"type": "float", "default": 0.0, "exported": false},
 		"to_x": {"type": "float", "default": 0.0, "exported": false},
 		"to_y": {"type": "float", "default": 0.0, "exported": false},
-		"progress": {"type": "float", "default": 0.0, "exported": false}
+		"progress": {"type": "float", "default": 0.0, "exported": false},
+		"pending_x": {"type": "float", "default": 0.0, "exported": false},
+		"pending_y": {"type": "float", "default": 0.0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Tile Movement behavior (C3-style): grid-locked stepping with the arrow keys; fires On Step Finished per tile."
+	about.text = "Tile Movement behavior (C3 parity): grid-locked stepping (arrow keys or Simulate Step); grid-space helpers convert between tiles and pixels. Fires On Step Finished per tile."
 	sheet.events.append(about)
 	var signal_block: RawCodeRow = RawCodeRow.new()
 	signal_block.code = "\n".join(PackedStringArray([
@@ -838,6 +1022,17 @@ func _build_tile_movement() -> bool:
 		"signal step_finished"
 	]))
 	sheet.events.append(signal_block)
+	var extra_block_0: RawCodeRow = RawCodeRow.new()
+	extra_block_0.code = "\n".join(PackedStringArray([
+		"## @ace_hidden",
+		"func to_grid(pixel: Vector2) -> Vector2i:",
+		"\treturn Vector2i(roundi(pixel.x / tile_size), roundi(pixel.y / tile_size))",
+		"",
+		"## @ace_hidden",
+		"func from_grid(tile: Vector2i) -> Vector2:",
+		"\treturn Vector2(tile) * tile_size"
+	]))
+	sheet.events.append(extra_block_0)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
@@ -854,7 +1049,11 @@ func _build_tile_movement() -> bool:
 		"\telse:",
 		"\t\thost.position = Vector2(from_x, from_y).lerp(Vector2(to_x, to_y), progress)",
 		"\treturn",
-		"var step := Vector2(Input.get_axis(&\"ui_left\", &\"ui_right\"), Input.get_axis(&\"ui_up\", &\"ui_down\"))",
+		"var step := Vector2(pending_x, pending_y)",
+		"pending_x = 0.0",
+		"pending_y = 0.0",
+		"if step == Vector2.ZERO and default_controls:",
+		"\tstep = Vector2(Input.get_axis(&\"ui_left\", &\"ui_right\"), Input.get_axis(&\"ui_up\", &\"ui_down\"))",
 		"if step.x != 0.0:",
 		"\tstep.y = 0.0",
 		"if step != Vector2.ZERO:",
@@ -867,6 +1066,30 @@ func _build_tile_movement() -> bool:
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
+
+	var simulate_step_fn: EventFunction = EventFunction.new()
+	simulate_step_fn.function_name = "simulate_step"
+	simulate_step_fn.expose_as_ace = true
+	simulate_step_fn.ace_display_name = "Simulate Step"
+	simulate_step_fn.ace_category = "Tile Movement"
+	simulate_step_fn.description = "Steps one tile in a direction: left, right, up or down (C3 simulate control)."
+	var simulate_step_fn_direction: ACEParam = ACEParam.new()
+	simulate_step_fn_direction.id = "direction"
+	simulate_step_fn_direction.type_name = "String"
+	simulate_step_fn.params.append(simulate_step_fn_direction)
+	var simulate_step_fn_body: RawCodeRow = RawCodeRow.new()
+	simulate_step_fn_body.code = "\n".join(PackedStringArray([
+		"if direction == \"left\":",
+		"\tpending_x = -1.0",
+		"elif direction == \"right\":",
+		"\tpending_x = 1.0",
+		"elif direction == \"up\":",
+		"\tpending_y = -1.0",
+		"elif direction == \"down\":",
+		"\tpending_y = 1.0"
+	]))
+	simulate_step_fn.events.append(simulate_step_fn_body)
+	sheet.functions.append(simulate_step_fn)
 
 	var teleport_to_tile_fn: EventFunction = EventFunction.new()
 	teleport_to_tile_fn.function_name = "teleport_to_tile"
@@ -893,7 +1116,7 @@ func _build_tile_movement() -> bool:
 
 	return _save_pack(sheet, "res://eventsheet_addons/tile_movement/tile_movement_behavior")
 
-## Line of Sight behavior (C3-style)
+## Line of Sight behavior (C3 parity)
 func _build_line_of_sight() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -901,10 +1124,11 @@ func _build_line_of_sight() -> bool:
 	sheet.custom_class_name = "LOSBehavior"
 	sheet.variables = {
 		"sight_range": {"type": "float", "default": 400.0, "exported": true},
+		"cone_of_view_degrees": {"type": "float", "default": 360.0, "exported": true},
 		"collision_mask": {"type": "int", "default": 1, "exported": true}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Line of Sight behavior (C3-style): the Has Line Of Sight To condition raycasts against solids within range."
+	about.text = "Line of Sight behavior (C3 parity): raycast LOS with range and an optional cone of view (degrees; 360 = all around). Conditions: Has Line Of Sight To, Has LOS Between positions."
 	sheet.events.append(about)
 	var extra_block_0: RawCodeRow = RawCodeRow.new()
 	extra_block_0.code = "\n".join(PackedStringArray([
@@ -915,7 +1139,20 @@ func _build_line_of_sight() -> bool:
 		"func has_los_to(point: Vector2) -> bool:",
 		"\tif host == null or host.global_position.distance_to(point) > sight_range:",
 		"\t\treturn false",
-		"\tvar query := PhysicsRayQueryParameters2D.create(host.global_position, point)",
+		"\tif cone_of_view_degrees < 360.0:",
+		"\t\tvar to_target := (point - host.global_position).angle()",
+		"\t\tif absf(angle_difference(host.rotation, to_target)) > deg_to_rad(cone_of_view_degrees) * 0.5:",
+		"\t\t\treturn false",
+		"\treturn has_los_between(host.global_position, point)",
+		"",
+		"## @ace_condition",
+		"## @ace_name(\"Has LOS Between\")",
+		"## @ace_category(\"Line Of Sight\")",
+		"## @ace_codegen_template(\"$LOSBehavior.has_los_between({from_point}, {to_point})\")",
+		"func has_los_between(from_point: Vector2, to_point: Vector2) -> bool:",
+		"\tif host == null:",
+		"\t\treturn false",
+		"\tvar query := PhysicsRayQueryParameters2D.create(from_point, to_point)",
 		"\tquery.collision_mask = collision_mask",
 		"\treturn host.get_world_2d().direct_space_state.intersect_ray(query).is_empty()"
 	]))

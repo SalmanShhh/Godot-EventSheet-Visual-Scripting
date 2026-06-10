@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EventSheetResource" load_steps=20 format=3]
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=24 format=3]
 
 [ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_sdrqy"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_lpx84"]
@@ -12,7 +12,7 @@
 
 [sub_resource type="Resource" id="Resource_c3hde"]
 script = ExtResource("1_sdrqy")
-text = "Orbit behavior (C3-style): circles the host around its starting point (or a set center)."
+text = "Orbit behavior (C3 parity): circles or ellipses around a point. secondary_radius 0 = circle; offset_angle tilts the ellipse; match_rotation faces the travel direction."
 
 [sub_resource type="Resource" id="Resource_odtee"]
 script = ExtResource("2_lpx84")
@@ -22,15 +22,22 @@ if not center_captured:
 	center_x = host.position.x
 	center_y = host.position.y
 	center_captured = true
-angle += deg_to_rad(speed_degrees) * delta
-host.position = Vector2(center_x, center_y) + Vector2.from_angle(angle) * radius"
+var step := deg_to_rad(speed_degrees) * delta
+angle += step
+total_rotation += absf(step)
+var radius_b := secondary_radius if secondary_radius > 0.0 else primary_radius
+var local := Vector2(cos(angle) * primary_radius, sin(angle) * radius_b).rotated(deg_to_rad(offset_angle_degrees))
+var previous := host.position
+host.position = Vector2(center_x, center_y) + local
+if match_rotation and host.position != previous:
+	host.rotation = (host.position - previous).angle()"
 
 [sub_resource type="Resource" id="Resource_u8wjc"]
 script = ExtResource("6_edhbl")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_odtee")])
-event_uid = "822cb4"
+event_uid = "b1db5e"
 
 [sub_resource type="Resource" id="Resource_7xjsu"]
 script = ExtResource("2_lpx84")
@@ -83,6 +90,35 @@ ace_category = "Orbit"
 params = Array[ExtResource("7_q3dsn")]([SubResource("Resource_er1va")])
 events = Array[Resource]([SubResource("Resource_ux2da")])
 
+[sub_resource type="Resource" id="Resource_5rthf"]
+script = ExtResource("2_lpx84")
+code = "primary_radius = primary
+secondary_radius = secondary"
+
+[sub_resource type="Resource" id="Resource_qm3rt"]
+script = ExtResource("7_q3dsn")
+id = "primary"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ldi7v"]
+script = ExtResource("7_q3dsn")
+id = "secondary"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_xhkt4"]
+script = ExtResource("8_cs8cc")
+function_name = "set_orbit_radii"
+description = "Primary/secondary radii (secondary 0 = circle)."
+expose_as_ace = true
+ace_display_name = "Set Orbit Radii"
+ace_category = "Orbit"
+params = Array[ExtResource("7_q3dsn")]([SubResource("Resource_qm3rt"), SubResource("Resource_ldi7v")])
+events = Array[Resource]([SubResource("Resource_5rthf")])
+
 [resource]
 script = ExtResource("9_mgc0e")
 host_class = "Node2D"
@@ -110,8 +146,23 @@ variables = {
 "exported": false,
 "type": "float"
 },
-"radius": {
+"match_rotation": {
+"default": false,
+"exported": true,
+"type": "bool"
+},
+"offset_angle_degrees": {
+"default": 0.0,
+"exported": true,
+"type": "float"
+},
+"primary_radius": {
 "default": 100.0,
+"exported": true,
+"type": "float"
+},
+"secondary_radius": {
+"default": 0.0,
 "exported": true,
 "type": "float"
 },
@@ -119,6 +170,11 @@ variables = {
 "default": 90.0,
 "exported": true,
 "type": "float"
+},
+"total_rotation": {
+"default": 0.0,
+"exported": false,
+"type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_rgwaf"), SubResource("Resource_ib20v")])
+functions = Array[Resource]([SubResource("Resource_rgwaf"), SubResource("Resource_ib20v"), SubResource("Resource_xhkt4")])
