@@ -37,7 +37,7 @@ static func run() -> bool:
 	all_passed = _check("split pane exists", split != null, true) and all_passed
 	all_passed = _check("split pane shows the same sheet",
 		split.get_flat_rows().size(), primary.get_flat_rows().size()) and all_passed
-	all_passed = _check("split pane is a companion", split.companion_mode, true) and all_passed
+	all_passed = _check("split pane is a full editor (phase 1.5)", split.companion_mode, false) and all_passed
 
 	# Shared per-sheet state: a breakpoint toggled in the primary is true in the split.
 	primary._select_row(0, -1)
@@ -50,10 +50,25 @@ static func run() -> bool:
 	split_first = split.get_flat_rows()[0].get("row")
 	all_passed = _check("bookmarks are shared across panes", split_first.bookmark_enabled, true) and all_passed
 
-	# Companion mode: inline editing never starts in the split pane.
-	split._select_row(0, -1)
-	split._begin_edit(0, 0)
-	all_passed = _check("companion panes never start inline edits", split._editing_row_index, -1) and all_passed
+	# Phase 1.5: the split pane is a FULL editor — selection there drives toolbar ops.
+	split._select_row(1, -1)
+	split.selection_changed.emit(split.get_flat_rows()[1].get("row"))
+	all_passed = _check("selection in the split makes it the active view",
+		editor._active_view() == split, true) and all_passed
+	var second_comment: CommentRow = sheet.events[1] as CommentRow
+	editor._toggle_selected_rows_enabled()
+	all_passed = _check("Ctrl+/ acts on the SPLIT's selection", second_comment.enabled, false) and all_passed
+	editor._toggle_selected_rows_enabled()
+	primary._select_row(0, -1)
+	primary.selection_changed.emit(primary.get_flat_rows()[0].get("row"))
+	all_passed = _check("primary selection reclaims the active view",
+		editor._active_view() == primary, true) and all_passed
+
+	# Open in Split pins a row in the other pane.
+	var pin_target: EventRowData = primary.get_flat_rows()[2].get("row")
+	editor._open_row_in_split(pin_target)
+	all_passed = _check("Open in Split selects the row in the other pane",
+		split.get_selected_context().get("source_resource", null), sheet.events[2]) and all_passed
 
 	# The refresh bus: a dock edit updates BOTH panes.
 	var before: int = split.get_flat_rows().size()
@@ -71,6 +86,8 @@ static func run() -> bool:
 	# Closing restores the original layout and the primary keeps working.
 	editor._toggle_split_view()
 	all_passed = _check("closing clears the split", editor._split_viewport == null, true) and all_passed
+	all_passed = _check("active view falls back to the primary after close",
+		editor._active_view() == primary, true) and all_passed
 	editor._refresh_after_edit()
 	all_passed = _check("primary survives the close", primary.get_flat_rows().size(), before + 1) and all_passed
 	editor.free()

@@ -407,7 +407,7 @@ hook, and the visual theme editor. Authoritative per-feature detail:
 
 Still open (post-1.0 polish):
 
-- **Multi-view: the same sheet in multiple panes (PHASE 1 SHIPPED: the Split toggle, shared EventSheetViewState, refresh bus, read-only companion). Remaining phases below.**
+- **Multi-view (PHASES 1 + 1.5 SHIPPED: Split toggle, shared EventSheetViewState, refresh bus, full editing in both panes via payload-driven handlers + active-view routing, Open in Split). Remaining: detachable windows, linked follow-selection panes.**
   The VSCode gesture — one file open in two editors — for sheets: read a trigger handler
   while editing the function it calls, keep a group pinned while debugging another, eyeball
   two distant regions at once.
@@ -425,11 +425,11 @@ Still open (post-1.0 polish):
   **State model (the real work).** Today several stores live ON the viewport; multi-view
   forces an explicit split:
   - **Per-view** (each pane its own): scroll, zoom, selection, hover, fold state,
-    inline-edit session. Folds per-view matches VSCode.
+	inline-edit session. Folds per-view matches VSCode.
   - **Per-sheet shared** (must move to a shared store keyed by sheet): breakpoints,
-    bookmarks, the runtime disabled-state overlay — two views must never disagree about
-    a breakpoint. Introduce an `EventSheetViewState` (shared) handed to each viewport at
-    setup; viewport keeps only its per-view fields.
+	bookmarks, the runtime disabled-state overlay — two views must never disagree about
+	a breakpoint. Introduce an `EventSheetViewState` (shared) handed to each viewport at
+	setup; viewport keeps only its per-view fields.
 
   **Change propagation:** the model is already shared (rows are `Resource`s), but
   refresh is dock→single-viewport today. Add a per-sheet refresh bus: every edit that

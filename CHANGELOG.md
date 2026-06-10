@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Multi-view phase 1.5: both panes are full editors
+- The split pane graduated from read-only companion to a **full editor**: double-click
+  edits, dialogs, drag/drop, context menus, find — everything works in either pane (the
+  dock's handlers are payload-driven, so one handler set serves both).
+- **Active-view routing**: selection-driven toolbar ops (copy/paste, Ctrl+/, Alt+arrows,
+  Add Condition/Action, quick-add anchors) follow the **last-focused pane**; closing the
+  split falls back to the primary.
+- **"Open in Split"** (row context menu): pins the row in the other pane — opening the
+  split automatically if needed — the "keep this visible while I work over there" move.
+- Covered by the extended `tests/multi_view_test.gd` (14 assertions).
+
 ### Multi-view phase 1: split view (same sheet, two panes)
 - A **Split** toolbar toggle opens a second pane over the SAME sheet (VSCode's
   one-file-two-editors gesture) — read a handler while editing the function it calls,

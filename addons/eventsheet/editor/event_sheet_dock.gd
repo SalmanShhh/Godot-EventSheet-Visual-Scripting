@@ -38,6 +38,7 @@ const ROW_MENU_ADD_ENUM := 19
 const ROW_MENU_EDIT_GROUP_DESC := 20
 const ROW_MENU_ADD_SIGNAL := 21
 const ROW_MENU_ADD_MATCH := 22
+const ROW_MENU_OPEN_IN_SPLIT := 23
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -584,6 +585,7 @@ func _build_ui() -> void:
     _identity_banner.setup(_viewport)
 
     _viewport.selection_changed.connect(_on_viewport_selection_changed)
+    _viewport.selection_changed.connect(func(_row_data: EventRowData) -> void: _active_viewport_ref = _viewport)
     _viewport.row_drop_requested.connect(_on_row_drop_requested)
     _viewport.rows_drop_requested.connect(_on_rows_drop_requested)
     _viewport.ace_preview_requested.connect(_on_ace_preview_requested)
@@ -759,6 +761,7 @@ func _build_context_menus() -> void:
     _row_context_menu.add_item("Edit Group Description…", ROW_MENU_EDIT_GROUP_DESC)
     _row_context_menu.add_item("Add Signal Below", ROW_MENU_ADD_SIGNAL)
     _row_context_menu.add_item("Add Match To Actions…", ROW_MENU_ADD_MATCH)
+    _row_context_menu.add_item("Open in Split", ROW_MENU_OPEN_IN_SPLIT)
     _row_context_menu.add_separator()
     _row_context_menu.add_item("Edit Comment…", ROW_MENU_EDIT_COMMENT)
     _row_context_menu.add_item("Attach Comment To Event Above", ROW_MENU_ATTACH_COMMENT)
@@ -1096,17 +1099,17 @@ func _save_sheet_to_path(path: String) -> void:
 func _on_add_event_requested() -> void:
     if not _ensure_sheet_for_editing():
         return
-    _ace_picker.open("new_event", false, _viewport.get_selected_context().get("source_resource", null))
+    _ace_picker.open("new_event", false, _active_view().get_selected_context().get("source_resource", null))
 
 func _on_add_signal_event_requested() -> void:
     if not _ensure_sheet_for_editing():
         return
-    _ace_picker.open("new_event", true, _viewport.get_selected_context().get("source_resource", null))
+    _ace_picker.open("new_event", true, _active_view().get_selected_context().get("source_resource", null))
 
 func _on_add_condition_requested() -> void:
     if not _ensure_sheet_for_editing():
         return
-    var selected_resource: Resource = _viewport.get_selected_context().get("source_resource", null)
+    var selected_resource: Resource = _active_view().get_selected_context().get("source_resource", null)
     if selected_resource is EventRow:
         _ace_picker.open("append_condition", false, selected_resource)
         return
@@ -1115,7 +1118,7 @@ func _on_add_condition_requested() -> void:
 func _on_add_action_requested() -> void:
     if not _ensure_selected_event():
         return
-    _ace_picker.open("append_action", false, _viewport.get_selected_context().get("source_resource", null))
+    _ace_picker.open("append_action", false, _active_view().get_selected_context().get("source_resource", null))
 
 func _on_add_comment_requested() -> void:
     if not _ensure_sheet_for_editing():
@@ -1145,7 +1148,7 @@ func _on_add_group_requested() -> void:
 func _on_duplicate_requested() -> void:
     if not _ensure_sheet_for_editing():
         return
-    var selected_resource: Resource = _viewport.get_selected_context().get("source_resource", null)
+    var selected_resource: Resource = _active_view().get_selected_context().get("source_resource", null)
     if not (selected_resource is EventRow):
         _set_status("Select an event row to duplicate.", true)
         return
@@ -1179,7 +1182,7 @@ func _on_zoom_out_requested() -> void:
     _set_status("Zoom: %d%%" % int(round(_viewport.get_zoom_factor() * 100.0)))
 
 func _on_copy_requested() -> void:
-    var context: Dictionary = _viewport.get_selected_context()
+    var context: Dictionary = _active_view().get_selected_context()
     var selected_resource: Resource = context.get("source_resource", null)
     if selected_resource == null:
         _set_status("Nothing selected to copy.", true)
@@ -1246,7 +1249,7 @@ func _on_paste_requested() -> void:
         return
     var clip_type: String = str(_clipboard.get("type", ""))
     var payload: Variant = _clipboard.get("payload", null)
-    var context: Dictionary = _viewport.get_selected_context()
+    var context: Dictionary = _active_view().get_selected_context()
     var selected_resource: Resource = context.get("source_resource", null)
     var result := {"label": ""}
     var changed: bool = _perform_undoable_sheet_edit("Paste", func() -> bool:
@@ -1300,7 +1303,7 @@ func _paste_snippet_text(text: String) -> bool:
             if not _current_sheet.variables.has(variable_name):
                 _current_sheet.variables[variable_name] = required_variables[variable_name]
                 counters["variables_created"] = int(counters["variables_created"]) + 1
-        var anchor: Resource = _viewport.get_selected_context().get("source_resource", null)
+        var anchor: Resource = _active_view().get_selected_context().get("source_resource", null)
         for row in rows:
             if row is EventRow:
                 _assign_fresh_event_uids(row as EventRow)
@@ -1368,7 +1371,7 @@ func _ensure_sheet_for_editing() -> bool:
 func _ensure_selected_event() -> bool:
     if not _ensure_sheet_for_editing():
         return false
-    var selected: Resource = _viewport.get_selected_context().get("source_resource", null)
+    var selected: Resource = _active_view().get_selected_context().get("source_resource", null)
     if selected is EventRow:
         return true
     _set_status("Select an event row first.", true)
@@ -1603,7 +1606,7 @@ func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionar
 func _insert_row_below_selection(row_resource: Resource, explicit_selected_resource: Resource = null) -> void:
     if _current_sheet == null or row_resource == null:
         return
-    var selected_resource: Resource = explicit_selected_resource if explicit_selected_resource != null else _viewport.get_selected_context().get("source_resource", null)
+    var selected_resource: Resource = explicit_selected_resource if explicit_selected_resource != null else _active_view().get_selected_context().get("source_resource", null)
     if selected_resource == null:
         _current_sheet.events.append(row_resource)
         return
@@ -2051,7 +2054,7 @@ func _update_code_panel_highlight() -> void:
             if line < _code_edit.get_line_count():
                 _code_edit.set_line_background_color(line, Color(0, 0, 0, 0))
     _code_panel_highlight = Vector2i(-1, -1)
-    var selected: Resource = _viewport.get_selected_context().get("source_resource", null) if _viewport != null else null
+    var selected: Resource = _active_view().get_selected_context().get("source_resource", null) if _viewport != null else null
     if selected == null:
         return
     var uid: String = str(selected.get_instance_id())
@@ -2230,7 +2233,7 @@ func _paste_gdscript_text(text: String) -> bool:
         return false
     var rows: Array = imported.events.duplicate()
     var lifted_events: int = 0
-    var context: Dictionary = _viewport.get_selected_context()
+    var context: Dictionary = _active_view().get_selected_context()
     var anchor: Resource = context.get("source_resource", null)
     var changed: bool = _perform_undoable_sheet_edit("Paste GDScript", func() -> bool:
         var insert_after: Resource = anchor
@@ -2579,6 +2582,15 @@ func _on_match_dialog_confirmed() -> void:
 var _split_container: HSplitContainer = null
 var _split_scroll: ScrollContainer = null
 var _split_viewport: EventSheetViewport = null
+# The pane whose selection drives selection-based ops (toolbar copy/paste, Ctrl+/,
+# Alt+arrows, dialogs opened from the toolbar). Updated whenever a pane's selection
+# changes; falls back to the primary.
+var _active_viewport_ref: EventSheetViewport = null
+
+func _active_view() -> EventSheetViewport:
+    if _active_viewport_ref != null and is_instance_valid(_active_viewport_ref):
+        return _active_viewport_ref
+    return _viewport
 
 ## Toggles a second, read/navigate-only pane over the SAME sheet (debugging, reading,
 ## comparing distant regions). Breakpoints/bookmarks/disabled state are shared by
@@ -2608,16 +2620,59 @@ func _toggle_split_view() -> void:
     _split_viewport.name = "EventSheetSplitViewport"
     _split_viewport.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _split_viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _split_viewport.companion_mode = true
     _split_viewport.set_ace_registry(_ace_registry)
     _split_viewport.adopt_shared_state(_viewport.get_shared_state())
     _split_scroll.add_child(_split_viewport)
+    _connect_view_signals(_split_viewport)
     _split_viewport.set_sheet(_current_sheet)
     _set_status("Split view: the right pane navigates independently (editing happens in the left pane).")
+
+## Wires a secondary pane for FULL editing: the dock's handlers are payload-driven
+## (signals carry the row/resource), so the same set serves any number of panes;
+## selection-driven toolbar ops route through _active_view().
+func _connect_view_signals(view: EventSheetViewport) -> void:
+    view.selection_changed.connect(func(row_data: EventRowData) -> void:
+        _active_viewport_ref = view
+        _on_viewport_selection_changed(row_data)
+    )
+    view.row_drop_requested.connect(_on_row_drop_requested)
+    view.rows_drop_requested.connect(_on_rows_drop_requested)
+    view.ace_picker_requested.connect(_on_viewport_ace_picker_requested)
+    view.span_edit_requested.connect(_on_viewport_span_edit_requested)
+    view.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
+    view.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
+    view.comment_edit_requested.connect(_open_comment_dialog)
+    view.pick_filter_edit_requested.connect(_open_pick_filter_dialog)
+    view.enum_edit_requested.connect(_open_enum_dialog)
+    view.signal_edit_requested.connect(_open_signal_dialog)
+    view.match_edit_requested.connect(_open_match_dialog)
+    view.row_disable_toggle_requested.connect(_toggle_selected_rows_enabled)
+    view.row_move_requested.connect(_move_selected_row)
+    view.find_requested.connect(_show_find_bar)
+    view.find_step_requested.connect(_find_step)
+    view.context_menu_requested.connect(_on_viewport_context_menu_requested)
+    view.raw_code_edit_requested.connect(_on_viewport_raw_code_edit_requested)
+
+## "Open in Split": pins the given row in the other pane (opens the split if needed).
+func _open_row_in_split(row_data: EventRowData) -> void:
+    if row_data == null:
+        return
+    if _split_viewport == null:
+        _toggle_split_view()
+    if _split_viewport == null:
+        return
+    for index in range(_split_viewport.get_flat_rows().size()):
+        var split_row: EventRowData = _split_viewport.get_flat_rows()[index].get("row")
+        if split_row != null and split_row.source_resource == row_data.source_resource:
+            _split_viewport._select_row(index, -1)
+            _split_viewport.ensure_selection_visible()
+            _split_viewport.queue_redraw()
+            return
 
 func _close_split_view() -> void:
     if _split_container == null:
         return
+    _active_viewport_ref = null
     var slot: Node = _split_container.get_parent()
     var slot_index: int = _split_container.get_index()
     _split_container.remove_child(_scroll)
@@ -2736,7 +2791,7 @@ func _toggle_selected_rows_enabled() -> void:
     if _viewport == null or _current_sheet == null:
         return
     var targets: Array[Resource] = []
-    for row_data: EventRowData in _viewport.get_selected_rows():
+    for row_data: EventRowData in _active_view().get_selected_rows():
         if row_data != null and row_data.source_resource != null:
             targets.append(row_data.source_resource)
     if targets.is_empty():
@@ -2754,8 +2809,8 @@ func _toggle_selected_rows_enabled() -> void:
 func _move_selected_row(direction: int) -> void:
     if _viewport == null:
         return
-    var selected_index: int = _viewport.get_selected_context().get("row_index", -1)
-    var row_data: EventRowData = _viewport.get_selected_row_data()
+    var selected_index: int = _active_view().get_selected_context().get("row_index", -1)
+    var row_data: EventRowData = _active_view().get_selected_row_data()
     if row_data == null or selected_index < 0:
         return
     var target_index: int = selected_index + direction
@@ -2844,7 +2899,7 @@ func _quick_add(query: String) -> bool:
     var mode: String = "" if definition.ace_type == ACEDefinition.ACEType.ACTION else "new_condition_event"
     var context: Dictionary = {
         "mode": mode,
-        "selected_resource": _viewport.get_selected_context().get("source_resource", null)
+        "selected_resource": _active_view().get_selected_context().get("source_resource", null)
     }
     _apply_ace_definition(definition, matched.get("params", {}), context)
     return true
@@ -3467,6 +3522,8 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
             var new_enum: EnumRow = EnumRow.new()
             _insert_context_row_below(new_enum, "Added enum.")
             _open_enum_dialog(new_enum)
+        ROW_MENU_OPEN_IN_SPLIT:
+            _open_row_in_split(_context_row)
         ROW_MENU_ADD_SIGNAL:
             var new_signal: SignalRow = SignalRow.new()
             _insert_context_row_below(new_signal, "Added signal.")
@@ -3603,7 +3660,7 @@ func _toggle_context_ace_enabled() -> void:
 func _toggle_selected_enabled() -> void:
     if _viewport == null:
         return
-    var span_targets: Array = _viewport.get_selected_span_targets()
+    var span_targets: Array = _active_view().get_selected_span_targets()
     var row_targets: Array[EventRowData] = []
     if span_targets.is_empty():
         row_targets = _get_selected_rows_from_context()
@@ -3777,7 +3834,7 @@ func _delete_selected_content() -> void:
 func _delete_selected_spans() -> bool:
     if _viewport == null:
         return false
-    var selected_targets: Array = _viewport.get_selected_span_targets()
+    var selected_targets: Array = _active_view().get_selected_span_targets()
     if selected_targets.is_empty():
         return false
     var deleted: bool = _perform_undoable_sheet_edit("Delete ACE", func() -> bool:
@@ -3899,7 +3956,7 @@ func _open_sub_condition_picker_for_context_row() -> void:
 func _selected_event_resource() -> EventRow:
     if _viewport == null:
         return null
-    var resource: Variant = _viewport.get_selected_context().get("source_resource", null)
+    var resource: Variant = _active_view().get_selected_context().get("source_resource", null)
     return resource as EventRow if resource is EventRow else null
 
 ## Nests the selected event under the event directly above it (its preceding sibling),
@@ -3992,7 +4049,7 @@ func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
     _refresh_variable_panel()
     _update_code_panel_highlight()
     if _exposed_node != null and _viewport != null:
-        _exposed_node.set_row_context(_viewport.get_selected_ace_resource())
+        _exposed_node.set_row_context(_active_view().get_selected_ace_resource())
 
 func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String) -> void:
     if row_data == null or row_data.source_resource == null:
@@ -4044,7 +4101,7 @@ func _on_variable_dialog_confirmed(
     if sanitized_name != var_name:
         _set_status("Variable name auto-corrected to \"%s\"." % sanitized_name)
     var_name = sanitized_name
-    var selected: Resource = context.get("selected_resource", _viewport.get_selected_context().get("source_resource", null))
+    var selected: Resource = context.get("selected_resource", _active_view().get_selected_context().get("source_resource", null))
     var original_name: String = str(context.get("original_name", ""))
     var editing: bool = bool(context.get("editing", false))
     var action_verb: String = "Updated" if editing else "Added"
@@ -4164,7 +4221,7 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
         if row_data.source_resource is EventRow:
             owner_event = row_data.source_resource as EventRow
         if owner_event == null and _viewport != null:
-            var selected_resource: Resource = _viewport.get_selected_context().get("source_resource", null)
+            var selected_resource: Resource = _active_view().get_selected_context().get("source_resource", null)
             if selected_resource is EventRow:
                 owner_event = selected_resource as EventRow
         if owner_event == null:
@@ -4541,7 +4598,7 @@ func _event_rows_use_or_mode(event_rows: Array[EventRow]) -> bool:
 func _get_selected_rows_from_context() -> Array[EventRowData]:
     if _viewport == null:
         return []
-    var selected_rows: Array[EventRowData] = _viewport.get_selected_rows()
+    var selected_rows: Array[EventRowData] = _active_view().get_selected_rows()
     if selected_rows.is_empty():
         if _context_row != null:
             return [_context_row]
@@ -4696,7 +4753,7 @@ func _refresh_variable_panel() -> void:
                 "default": descriptor.get("default", ""),
                 "const": is_constant
             })
-    var selected_resource: Resource = _viewport.get_selected_context().get("source_resource", null)
+    var selected_resource: Resource = _active_view().get_selected_context().get("source_resource", null)
     if selected_resource is EventRow:
         for index in range((selected_resource as EventRow).local_variables.size()):
             var local_var: LocalVariable = (selected_resource as EventRow).local_variables[index]
