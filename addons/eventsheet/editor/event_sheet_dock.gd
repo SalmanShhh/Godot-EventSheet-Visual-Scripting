@@ -589,6 +589,11 @@ func _build_ui() -> void:
     _viewport.comment_edit_requested.connect(_open_comment_dialog)
     _viewport.pick_filter_edit_requested.connect(_open_pick_filter_dialog)
     _viewport.enum_edit_requested.connect(_open_enum_dialog)
+    _viewport.row_disable_toggle_requested.connect(_toggle_selected_rows_enabled)
+    _viewport.row_move_requested.connect(_move_selected_row)
+    _viewport.find_requested.connect(_show_find_bar)
+    _viewport.find_step_requested.connect(_find_step)
+    _apply_editor_native_defaults()
     _viewport.ace_drop_requested.connect(_on_viewport_ace_drop_requested)
     _viewport.drag_status_requested.connect(_on_viewport_drag_status_requested)
     _viewport.lane_ratio_changed.connect(_on_viewport_lane_ratio_changed)
@@ -2432,6 +2437,116 @@ func _regex_rename(regex: RegEx, text: String, new_name: String, counter: Dictio
         return text
     counter["count"] = int(counter.get("count", 0)) + hits
     return regex.sub(text, new_name, true)
+
+# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ────────────────────
+var _find_bar: HBoxContainer = null
+var _find_edit: LineEdit = null
+var _find_count_label: Label = null
+var _find_matches: Array[int] = []
+var _find_cursor: int = -1
+
+## Ctrl+F: a script-editor-style find bar (Enter/F3 next, Shift+F3 previous, Esc hides).
+func _show_find_bar() -> void:
+    _ensure_find_bar()
+    _find_bar.visible = true
+    _find_edit.grab_focus()
+    _find_edit.select_all()
+
+func _ensure_find_bar() -> void:
+    if _find_bar != null:
+        return
+    _find_bar = HBoxContainer.new()
+    _find_bar.name = "EventSheetFindBar"
+    _find_edit = LineEdit.new()
+    _find_edit.placeholder_text = "Find in sheet…  (Enter: next, Esc: close)"
+    _find_edit.custom_minimum_size = Vector2(220.0, 0.0)
+    _find_edit.text_changed.connect(_on_find_text_changed)
+    _find_edit.text_submitted.connect(func(_text: String) -> void: _find_step(1))
+    _find_edit.gui_input.connect(func(input_event: InputEvent) -> void:
+        if input_event is InputEventKey and (input_event as InputEventKey).pressed and (input_event as InputEventKey).keycode == KEY_ESCAPE:
+            _find_bar.visible = false
+            if _viewport != null:
+                _viewport.grab_focus()
+    )
+    _find_bar.add_child(_find_edit)
+    _find_count_label = Label.new()
+    _find_count_label.text = ""
+    _find_bar.add_child(_find_count_label)
+    var close_button: Button = Button.new()
+    close_button.text = "✕"
+    close_button.flat = true
+    close_button.pressed.connect(func() -> void: _find_bar.visible = false)
+    _find_bar.add_child(close_button)
+    _toolbar.add_child(_find_bar)
+
+func _on_find_text_changed(text: String) -> void:
+    _find_matches = _viewport.search_rows(text) if _viewport != null else []
+    _find_cursor = -1
+    if _find_matches.is_empty():
+        _find_count_label.text = "no matches" if not text.strip_edges().is_empty() else ""
+        return
+    _find_step(1)
+
+func _find_step(direction: int) -> void:
+    if _find_matches.is_empty():
+        if _find_edit != null and not _find_edit.text.strip_edges().is_empty():
+            _find_matches = _viewport.search_rows(_find_edit.text) if _viewport != null else []
+        if _find_matches.is_empty():
+            return
+    _find_cursor = wrapi(_find_cursor + direction, 0, _find_matches.size())
+    _find_count_label.text = "%d of %d" % [_find_cursor + 1, _find_matches.size()]
+    if _viewport != null:
+        _viewport._select_row(_find_matches[_find_cursor], -1)
+        _viewport.ensure_selection_visible()
+        _viewport.queue_redraw()
+
+## Ctrl+/: toggles the selected rows' enabled state (the sheet's "comment out").
+func _toggle_selected_rows_enabled() -> void:
+    if _viewport == null or _current_sheet == null:
+        return
+    var targets: Array[Resource] = []
+    for row_data: EventRowData in _viewport.get_selected_rows():
+        if row_data != null and row_data.source_resource != null:
+            targets.append(row_data.source_resource)
+    if targets.is_empty():
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Toggle Row Enabled", func() -> bool:
+        for target: Resource in targets:
+            target.set("enabled", not bool(target.get("enabled")))
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Toggled %d row(s)." % targets.size())
+
+## Alt+Up/Down: moves the selected row past its flat neighbor (reuses the drag machinery).
+func _move_selected_row(direction: int) -> void:
+    if _viewport == null:
+        return
+    var selected_index: int = _viewport.get_selected_context().get("row_index", -1)
+    var row_data: EventRowData = _viewport.get_selected_row_data()
+    if row_data == null or selected_index < 0:
+        return
+    var target_index: int = selected_index + direction
+    if target_index < 0 or target_index >= _viewport.get_flat_rows().size():
+        return
+    var target_row: EventRowData = _viewport.get_flat_rows()[target_index].get("row")
+    if target_row == null or target_row.source_resource == null:
+        return
+    _move_rows([row_data], target_row, "before" if direction < 0 else "after")
+
+## Editor-native defaults: inherit the user's editor theme + display scale when no
+## explicit sheet theme was chosen (presets/per-sheet themes still override).
+func _apply_editor_native_defaults() -> void:
+    if not Engine.is_editor_hint() or _viewport == null:
+        return
+    if _active_theme_style == null:
+        var derived: EventSheetEditorStyle = EventSheetEditorThemeDeriver.derive_from_editor()
+        if derived != null:
+            apply_theme_style(derived)
+    var editor_scale: float = EditorInterface.get_editor_scale()
+    if editor_scale > 1.01:
+        _viewport.set_zoom_factor(editor_scale)
 
 # ── Quick-add bar (C3 "type to insert") ──────────────────────────────────────
 var _quick_add_edit: LineEdit = null

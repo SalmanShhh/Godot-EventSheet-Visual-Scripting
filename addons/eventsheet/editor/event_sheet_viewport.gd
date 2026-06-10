@@ -29,6 +29,14 @@ signal comment_edit_requested(comment_row: Resource)
 signal pick_filter_edit_requested(event_row: Resource, pick_index: int)
 ## Emitted when an enum row is double-clicked.
 signal enum_edit_requested(enum_row: Resource)
+## Emitted on Ctrl+/ — the dock toggles the selected rows' enabled state (undoable).
+signal row_disable_toggle_requested()
+## Emitted on Alt+Up/Down — the dock moves the selected row (direction -1 = up).
+signal row_move_requested(direction: int)
+## Emitted on Ctrl+F — the dock shows the find bar.
+signal find_requested()
+## Emitted on F3 / Shift+F3 — the dock steps through find matches.
+signal find_step_requested(direction: int)
 ## Emitted when the user finishes dragging the conditions/actions lane divider.
 signal lane_ratio_changed(ratio: float)
 ## Emitted when a footer "Add event…" row is clicked. owner_resource is the EventGroup the
@@ -543,6 +551,28 @@ func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1)
         return true
     _begin_edit(row_index, span_index)
     return true
+
+## Flat indices of rows whose visible text (or GDScript block code) contains the query,
+## case-insensitively — the find bar's data source.
+func search_rows(query: String) -> Array[int]:
+    var matches: Array[int] = []
+    var needle: String = query.strip_edges().to_lower()
+    if needle.is_empty():
+        return matches
+    for index in range(_flat_rows.size()):
+        var row_data: EventRowData = _row_at(index)
+        if row_data == null:
+            continue
+        if row_data.row_type == EventRowData.RowType.EVENT and row_data.spans.is_empty():
+            _ensure_event_spans(row_data)
+        var haystack: String = ""
+        for span: SemanticSpan in row_data.spans:
+            haystack += span.text + " "
+        if row_data.source_resource is RawCodeRow:
+            haystack += (row_data.source_resource as RawCodeRow).code
+        if haystack.to_lower().contains(needle):
+            matches.append(index)
+    return matches
 
 ## Toggles a session bookmark on the selected row (Ctrl+M; F4 / Shift+F4 navigate).
 func toggle_bookmark_selected() -> void:
@@ -1156,6 +1186,26 @@ func _handle_key(event: InputEventKey) -> void:
         accept_event()
     elif event.keycode == KEY_F4:
         jump_to_bookmark(-1 if event.shift_pressed else 1)
+        accept_event()
+    elif event.keycode == KEY_F9:
+        # Script-editor convention (Ctrl+B remains as an alias).
+        _toggle_breakpoint(_selected_row_index)
+        accept_event()
+    elif event.keycode == KEY_SLASH and (event.ctrl_pressed or event.meta_pressed):
+        # Ctrl+/: the "comment out" of event sheets — toggle the row's enabled state.
+        row_disable_toggle_requested.emit()
+        accept_event()
+    elif event.keycode == KEY_UP and event.alt_pressed:
+        row_move_requested.emit(-1)
+        accept_event()
+    elif event.keycode == KEY_DOWN and event.alt_pressed:
+        row_move_requested.emit(1)
+        accept_event()
+    elif event.keycode == KEY_F and (event.ctrl_pressed or event.meta_pressed):
+        find_requested.emit()
+        accept_event()
+    elif event.keycode == KEY_F3:
+        find_step_requested.emit(-1 if event.shift_pressed else 1)
         accept_event()
     elif event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_F2]:
         _begin_edit(_selected_row_index, _selected_span_index)

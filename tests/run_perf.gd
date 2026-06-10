@@ -64,6 +64,7 @@ func _init() -> void:
 	passed = CollectionAcesTest.run() and passed
 	passed = McpServerTest.run() and passed
 	passed = InputTimeAcesTest.run() and passed
+	passed = GodotFeelTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")

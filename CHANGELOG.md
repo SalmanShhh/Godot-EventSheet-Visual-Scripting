@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Godot-feel batch: find-in-sheet, script-editor shortcuts, editor-theme inheritance
+- **Ctrl+F find bar**: script-editor-style find-in-sheet (matches visible row text AND
+  GDScript block code, case-insensitive); Enter/F3 next, Shift+F3 previous, Esc closes,
+  with an "n of m" counter and wrap-around.
+- **Script-editor shortcut conventions**: **F9** toggles breakpoints (Ctrl+B stays as an
+  alias), **Ctrl+/** toggles the selected rows' enabled state — the "comment out" of
+  event sheets — and **Alt+Up/Down** moves the selected row (reusing the drag machinery,
+  fully undoable).
+- **The sheet inherits your editor theme**: when no explicit theme is chosen, default
+  visual tokens derive from the editor's base + accent colors (dark/light/custom-accent
+  editors all match out of the box), and the initial zoom honors the editor display
+  scale on hi-DPI. Theme presets and per-sheet themes still override.
+- Covered by `tests/godot_feel_test.gd` (14 assertions).
+
 ### Input vocabulary + Wait/Await (Godot-familiarity batch 1)
 - **Input ACE group** — the most-used trigger family finally has first-class vocabulary:
   Is Action Pressed / On Action Just Pressed / On Action Just Released conditions,

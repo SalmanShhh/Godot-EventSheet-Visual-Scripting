@@ -71,6 +71,7 @@ const CollectionVariablesTestScript := preload("res://tests/collection_variables
 const CollectionAcesTestScript := preload("res://tests/collection_aces_test.gd")
 const McpServerTestScript := preload("res://tests/mcp_server_test.gd")
 const InputTimeAcesTestScript := preload("res://tests/input_time_aces_test.gd")
+const GodotFeelTestScript := preload("res://tests/godot_feel_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
@@ -137,6 +138,7 @@ func _init() -> void:
 	passed = CollectionAcesTestScript.run() and passed
 	passed = McpServerTestScript.run() and passed
 	passed = InputTimeAcesTestScript.run() and passed
+	passed = GodotFeelTestScript.run() and passed
 	passed = EventSheetEditorTestScript.run() and passed
 	passed = EventSheetStyleTestScript.run() and passed
 	passed = PluginWorkspaceTestScript.run() and passed
