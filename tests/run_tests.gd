@@ -61,6 +61,7 @@ const GDScriptPasteTestScript := preload("res://tests/gdscript_paste_test.gd")
 const PickFilterTestScript := preload("res://tests/pick_filter_test.gd")
 const FxCompletionWatchTestScript := preload("res://tests/fx_completion_watch_test.gd")
 const SignalLiftTestScript := preload("res://tests/signal_lift_test.gd")
+const IntellisenseTestScript := preload("res://tests/intellisense_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
@@ -117,6 +118,7 @@ func _init() -> void:
 	passed = PickFilterTestScript.run() and passed
 	passed = FxCompletionWatchTestScript.run() and passed
 	passed = SignalLiftTestScript.run() and passed
+	passed = IntellisenseTestScript.run() and passed
 	passed = EventSheetEditorTestScript.run() and passed
 	passed = EventSheetStyleTestScript.run() and passed
 	passed = PluginWorkspaceTestScript.run() and passed

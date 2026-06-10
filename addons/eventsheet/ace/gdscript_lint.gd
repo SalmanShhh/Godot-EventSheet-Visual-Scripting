@@ -52,6 +52,106 @@ static func build_scratch_source(code: String, in_flow: bool, sheet: EventSheetR
 			lines.append(code_line)
 	return "\n".join(lines)
 
+## Context-aware completion: when the text before the caret ends in `<identifier>.`, the
+## resolved type's members are offered (dot-context); otherwise the flat sheet/host
+## candidates. This is the single choke point both the block editor and ƒx fields use.
+static func completion_for_context(text_before_caret: String, sheet: EventSheetResource) -> Array[Dictionary]:
+	var dot_regex: RegEx = RegEx.new()
+	if dot_regex.compile("([$]?[A-Za-z_][A-Za-z0-9_]*)\\.$") == OK:
+		var dot_match: RegExMatch = dot_regex.search(text_before_caret)
+		if dot_match != null:
+			return dot_completion_candidates(dot_match.get_string(1), sheet)
+	return completion_candidates(sheet)
+
+## Members of the type the dotted token resolves to:
+## - `host` (behavior sheets) → the declared host class
+## - a sheet variable with a known class type → that class
+## - `$NodeName` → the global script class of the same name (the behavior child-node
+##   convention), including its script-declared methods/properties + base class members
+## Unresolvable tokens return [] (no wrong suggestions).
+static func dot_completion_candidates(token: String, sheet: EventSheetResource) -> Array[Dictionary]:
+	var candidates: Array[Dictionary] = []
+	var seen: Dictionary = {}
+	if token == "host" and sheet != null and sheet.behavior_mode:
+		_add_class_members(candidates, seen, sheet.host_class)
+		return candidates
+	if token.begins_with("$"):
+		var class_path: String = _global_class_path(token.substr(1))
+		if not class_path.is_empty():
+			var script: Script = load(class_path) as Script
+			if script != null:
+				for method_info in script.get_script_method_list():
+					var method_name: String = str(method_info.get("name", ""))
+					if not method_name.is_empty() and not method_name.begins_with("_"):
+						_add_candidate(candidates, seen, CodeEdit.KIND_FUNCTION, method_name)
+				for property_info in script.get_script_property_list():
+					var property_name: String = str(property_info.get("name", ""))
+					if not property_name.is_empty() and not property_name.begins_with("_") and not property_name.ends_with(".gd"):
+						_add_candidate(candidates, seen, CodeEdit.KIND_MEMBER, property_name)
+				_add_class_members(candidates, seen, script.get_instance_base_type())
+		return candidates
+	# A sheet variable with a declared class type → that class's members.
+	if sheet != null:
+		var type_name: String = ""
+		if sheet.variables.has(token):
+			type_name = str((sheet.variables[token] as Dictionary).get("type", ""))
+		for entry in sheet.events:
+			if entry is LocalVariable and (entry as LocalVariable).name == token:
+				type_name = (entry as LocalVariable).type_name
+		if ClassDB.class_exists(type_name):
+			_add_class_members(candidates, seen, type_name)
+	return candidates
+
+## Signature hint for the innermost unclosed call before the caret ("" = none): sheet
+## functions show their declared params, host/dotted-class methods come from ClassDB.
+static func signature_hint(text_before_caret: String, sheet: EventSheetResource) -> String:
+	var call_regex: RegEx = RegEx.new()
+	if call_regex.compile("([A-Za-z_][A-Za-z0-9_]*)\\(([^()]*)$") != OK:
+		return ""
+	var call_match: RegExMatch = call_regex.search(text_before_caret)
+	if call_match == null:
+		return ""
+	var function_name: String = call_match.get_string(1)
+	if sheet != null:
+		for function_resource in sheet.functions:
+			if function_resource is EventFunction and (function_resource as EventFunction).function_name == function_name:
+				var parts: PackedStringArray = PackedStringArray()
+				for param in (function_resource as EventFunction).params:
+					if param is ACEParam:
+						parts.append("%s: %s" % [(param as ACEParam).id, (param as ACEParam).type_name])
+				return "%s(%s)" % [function_name, ", ".join(parts)]
+	var host_class: String = sheet.host_class if sheet != null and ClassDB.class_exists(sheet.host_class) else ""
+	if not host_class.is_empty():
+		for method_info in ClassDB.class_get_method_list(host_class):
+			if str(method_info.get("name", "")) != function_name:
+				continue
+			var arg_parts: PackedStringArray = PackedStringArray()
+			for argument in method_info.get("args", []):
+				var arg_type: int = int((argument as Dictionary).get("type", TYPE_NIL))
+				var arg_name: String = str((argument as Dictionary).get("name", ""))
+				arg_parts.append(arg_name if arg_type == TYPE_NIL else "%s: %s" % [arg_name, type_string(arg_type)])
+			return "%s(%s)" % [function_name, ", ".join(arg_parts)]
+	return ""
+
+## Path of a registered global script class (class_name), "" when unknown.
+static func _global_class_path(global_class: String) -> String:
+	for entry in ProjectSettings.get_global_class_list():
+		if str((entry as Dictionary).get("class", "")) == global_class:
+			return str((entry as Dictionary).get("path", ""))
+	return ""
+
+static func _add_class_members(candidates: Array[Dictionary], seen: Dictionary, member_class: String) -> void:
+	if not ClassDB.class_exists(member_class):
+		return
+	for property_info in ClassDB.class_get_property_list(member_class):
+		var property_name: String = str(property_info.get("name", ""))
+		if not property_name.is_empty() and not property_name.begins_with("_") and not property_name.contains("/"):
+			_add_candidate(candidates, seen, CodeEdit.KIND_MEMBER, property_name)
+	for method_info in ClassDB.class_get_method_list(member_class):
+		var method_name: String = str(method_info.get("name", ""))
+		if not method_name.is_empty() and not method_name.begins_with("_"):
+			_add_candidate(candidates, seen, CodeEdit.KIND_FUNCTION, method_name)
+
 ## Completion candidates for the block editor: sheet variables, sheet functions, and the
 ## host class's properties/methods. [{kind: CodeEdit.CodeCompletionKind, label: String}]
 static func completion_candidates(sheet: EventSheetResource) -> Array[Dictionary]:

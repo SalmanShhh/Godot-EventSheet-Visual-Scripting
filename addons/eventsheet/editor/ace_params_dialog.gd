@@ -284,13 +284,16 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 	if not _lint_context_provider.is_valid():
 		return
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
-	for candidate: Dictionary in EventSheetGDScriptLint.completion_candidates(sheet):
+	var before_caret: String = edit.get_line(edit.get_caret_line()).substr(0, edit.get_caret_column())
+	# Context-aware: `host.` / typed-variable. / $Behavior. offer that type's members.
+	for candidate: Dictionary in EventSheetGDScriptLint.completion_for_context(before_caret, sheet):
 		edit.add_code_completion_option(
 			int(candidate.get("kind", CodeEdit.KIND_PLAIN_TEXT)),
 			str(candidate.get("label", "")),
 			str(candidate.get("label", ""))
 		)
 	edit.update_code_completion_options(true)
+	edit.set_code_hint(EventSheetGDScriptLint.signature_hint(before_caret, sheet))
 
 ## Extract the typed value from a registered field node.
 func _extract_value(field: Control) -> Variant:

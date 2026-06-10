@@ -496,6 +496,15 @@ func _build_ui() -> void:
     _add_toolbar_button("GDScript", _toggle_code_panel)
     _add_toolbar_button("Sheet Type…", _open_sheet_type_dialog)
     _add_toolbar_button("Theme Editor…", _open_theme_editor)
+    _quick_add_edit = LineEdit.new()
+    _quick_add_edit.placeholder_text = "Quick add…  (e.g. every tick, heal 5)"
+    _quick_add_edit.tooltip_text = "C3-style quick add: type an event/condition/action (C3 phrasing works) plus optional parameter values, press Enter."
+    _quick_add_edit.custom_minimum_size = Vector2(190.0, 0.0)
+    _quick_add_edit.text_submitted.connect(func(text: String) -> void:
+        if _quick_add(text):
+            _quick_add_edit.clear()
+    )
+    _toolbar.add_child(_quick_add_edit)
 
     _tab_bar = TabBar.new()
     _tab_bar.name = "EventSheetTabBar"
@@ -2139,10 +2148,16 @@ func _validate_raw_code() -> void:
 func _populate_raw_code_completion() -> void:
     if _raw_code_edit == null:
         return
-    for candidate: Dictionary in EventSheetGDScriptLint.completion_candidates(_current_sheet):
+    # Context-aware: `host.` / typed-variable. / $Behavior. offer that type's members.
+    for candidate: Dictionary in EventSheetGDScriptLint.completion_for_context(_text_before_caret(_raw_code_edit), _current_sheet):
         var label: String = str(candidate.get("label", ""))
         _raw_code_edit.add_code_completion_option(int(candidate.get("kind", CodeEdit.KIND_PLAIN_TEXT)), label, label)
     _raw_code_edit.update_code_completion_options(true)
+    _raw_code_edit.set_code_hint(EventSheetGDScriptLint.signature_hint(_text_before_caret(_raw_code_edit), _current_sheet))
+
+## The current line's text up to the caret (what context completion/hints parse).
+static func _text_before_caret(edit: CodeEdit) -> String:
+    return edit.get_line(edit.get_caret_line()).substr(0, edit.get_caret_column())
 
 func _on_raw_code_dialog_confirmed() -> void:
     if _raw_code_target == null:
@@ -2232,6 +2247,76 @@ func apply_theme_style(style: EventSheetEditorStyle) -> void:
         _refresh_after_edit()
         _refresh_theme_picker_selection()
         _mark_dirty("Theme applied from the theme editor.")
+
+# ── Quick-add bar (C3 "type to insert") ──────────────────────────────────────
+var _quick_add_edit: LineEdit = null
+
+## Best ACE for a quick-add query. Leading words match a definition (display name / id,
+## with the picker's C3 synonym phrasing honored); trailing words fill its parameters
+## positionally as raw values. Returns {definition, params} or {}.
+func _quick_match(query: String) -> Dictionary:
+    var text: String = query.strip_edges().to_lower()
+    if text.is_empty() or _ace_registry == null:
+        return {}
+    var queries: Array[String] = [text]
+    for synonym_query: String in ACEPickerDialog._c3_synonym_queries(text):
+        queries.append(synonym_query.to_lower())
+    var best: ACEDefinition = null
+    var best_score: int = 0
+    var best_rest: String = ""
+    var best_name_length: int = 1 << 30
+    for definition: ACEDefinition in _ace_registry.get_all_definitions():
+        if bool(definition.metadata.get("hidden", false)):
+            continue
+        for candidate_name: String in [definition.display_name.to_lower(), definition.id.to_lower()]:
+            if candidate_name.is_empty():
+                continue
+            for candidate_query: String in queries:
+                var score: int = 0
+                var rest: String = ""
+                if candidate_query == candidate_name:
+                    score = 100
+                elif candidate_query.begins_with(candidate_name + " "):
+                    score = 90
+                    rest = candidate_query.substr(candidate_name.length() + 1)
+                elif candidate_name.begins_with(candidate_query):
+                    score = 60
+                elif candidate_name.contains(candidate_query):
+                    score = 40
+                # Shorter matched names win ties (the query "process" should pick
+                # OnProcess, not OnPhysicsProcess).
+                if score > best_score or (score == best_score and candidate_name.length() < best_name_length):
+                    best = definition
+                    best_score = score
+                    best_rest = rest
+                    best_name_length = candidate_name.length()
+    if best == null or best_score == 0:
+        return {}
+    var params: Dictionary = {}
+    var values: PackedStringArray = best_rest.split(" ", false)
+    for index in range(mini(values.size(), best.parameters.size())):
+        var parameter: Variant = best.parameters[index]
+        if parameter is Dictionary:
+            params[str((parameter as Dictionary).get("id", ""))] = values[index]
+    return {"definition": best, "params": params}
+
+## Applies the best match: triggers/conditions become a new event; actions append via the
+## standard apply flow (below the current selection). Returns true when something landed.
+func _quick_add(query: String) -> bool:
+    if not _ensure_sheet_for_editing():
+        return false
+    var matched: Dictionary = _quick_match(query)
+    if matched.is_empty():
+        _set_status("Quick add: nothing matches \"%s\"." % query.strip_edges(), true)
+        return false
+    var definition: ACEDefinition = matched.get("definition")
+    var mode: String = "" if definition.ace_type == ACEDefinition.ACEType.ACTION else "new_condition_event"
+    var context: Dictionary = {
+        "mode": mode,
+        "selected_resource": _viewport.get_selected_context().get("source_resource", null)
+    }
+    _apply_ace_definition(definition, matched.get("params", {}), context)
+    return true
 
 # ── Pick-filter dialog (C3 "for each" picking) ───────────────────────────────
 var _pick_dialog: ConfirmationDialog = null

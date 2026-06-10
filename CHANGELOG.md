@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Intellisense upgrades: dot-context completion, signature hints, quick-add bar
+- **Dot-context completion** in GDScript blocks and ƒx fields: typing `host.` offers the
+  host class's members, a typed sheet variable offers *its* class's members, and
+  `$TimerBehavior.` offers that behavior's script methods + base-class members (resolved
+  via ClassDB + the global class list). Unresolvable tokens offer nothing rather than
+  guessing; non-dot contexts keep the flat sheet/host candidates. One shared choke point:
+  `EventSheetGDScriptLint.completion_for_context`.
+- **Signature hints**: while typing inside a call, the editor shows the signature —
+  sheet functions from their declared params, host methods from ClassDB
+  (`signature_hint`, displayed via CodeEdit's code-hint popup in both editors).
+- **Quick-add bar** (toolbar): C3's "type to insert" — `every tick` creates the On
+  Process event (synonym phrasing honored), `heal 5` applies the Heal action with
+  `amount = 5` (trailing words fill parameters positionally). Ties prefer the most
+  specific name ("process" picks On Process, not On Physics Process); unknown queries
+  report and decline. Covered by `tests/intellisense_test.gd` (16 assertions).
+
 ### Three more behavior packs: Timer, Flash, State Machine
 - **TimerBehavior** (host: any Node): Start Timer / Stop Timer ACEs, exported
   `duration`/`repeating`, and the **On Timer** trigger (repeats when repeating).

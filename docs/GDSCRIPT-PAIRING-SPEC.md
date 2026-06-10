@@ -112,6 +112,18 @@ func _on_pad_pressed() -> void:
 5. GDScript callers hold direct references, so they are *more* robust than the sheet-side
    default templates (which address behaviors as `$ClassName` child nodes).
 
+### Intellisense: dot-context completion, signature hints, quick-add bar
+
+Completion in blocks and ƒx fields is context-aware: `host.` / a typed sheet variable /
+`$BehaviorName.` offer that type's members (ClassDB + global class list;
+`completion_for_context` is the shared choke point), with signature hints for the
+innermost call (`signature_hint` → CodeEdit code-hint). The toolbar **quick-add bar** is
+C3's "type to insert": synonym phrasing matches an ACE, trailing words fill parameters
+positionally. Ceiling note: Godot does not expose its real completion engine
+(`complete_code`/LSP) to plugins — this is the documented approximation, and
+full-fidelity IntelliSense always exists one panel away because the generated script is
+plain GDScript.
+
 ### Pick filters, ƒx autocomplete, external-sheet watcher
 
 Pick filters compile to direct `for` loops (group / children / any iterable + iterator-
@@ -278,14 +290,6 @@ conditions/actions) is planned.
 - **GDScript-backed sheets, next tiers**: function rows with canonical-signature
   verify-lift, and comment preservation inside lifted regions. (Tier 1, lifecycle +
   signal-handler ACE lifting, and the changed-on-disk reload prompt are implemented.)
-- **Deeper completion (intellisense upgrades)**: Godot does not expose its real completion
-  engine (`ScriptLanguage::complete_code` / the GDScript LSP) to plugins, so block/ƒx
-  completion is a documented approximation. Realistic upgrades within plugin limits:
-  **dot-context member completion** (after `host.` / a typed sheet variable / a
-  `$BehaviorName.` child, offer that type's members via ClassDB + script class lists),
-  **signature hints** while typing inside a call, and a C3-style **quick-add bar** ("type
-  to insert an ACE", powered by the picker's synonym search). Full-fidelity IntelliSense
-  always exists one panel away by design: the generated script is plain GDScript.
 - **More behavior packs**: tweens and beyond (platformer, 8-direction, timer, flash, and
   state machine ship today — see Implemented).
 - **C3 migration guide**: implemented — `docs/C3-MIGRATION-GUIDE.md` (concept map + System
