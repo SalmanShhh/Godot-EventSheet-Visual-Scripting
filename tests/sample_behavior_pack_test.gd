@@ -25,7 +25,16 @@ const PACKS: Array[String] = [
 	"res://eventsheet_addons/eight_direction/eight_direction_movement_behavior",
 	"res://eventsheet_addons/timer/timer_behavior",
 	"res://eventsheet_addons/flash/flash_behavior",
-	"res://eventsheet_addons/state_machine/state_machine_behavior"
+	"res://eventsheet_addons/state_machine/state_machine_behavior",
+	"res://eventsheet_addons/sine/sine_behavior",
+	"res://eventsheet_addons/orbit/orbit_behavior",
+	"res://eventsheet_addons/bullet/bullet_behavior",
+	"res://eventsheet_addons/move_to/move_to_behavior",
+	"res://eventsheet_addons/follow/follow_behavior",
+	"res://eventsheet_addons/drag_drop/drag_drop_behavior",
+	"res://eventsheet_addons/car/car_behavior",
+	"res://eventsheet_addons/tile_movement/tile_movement_behavior",
+	"res://eventsheet_addons/line_of_sight/line_of_sight_behavior"
 ]
 
 static func run() -> bool:

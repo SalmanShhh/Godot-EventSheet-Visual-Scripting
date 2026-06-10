@@ -1,0 +1,97 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_3pe77"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_me8t3"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_r2w0l"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_mqtf7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_8wed0"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_jjqsf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_l3qb0"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_oywdo"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_8eb11"]
+
+[sub_resource type="Resource" id="Resource_ycohw"]
+script = ExtResource("1_3pe77")
+text = "Follow behavior (C3-style): smoothly trails another node (set the target path)."
+
+[sub_resource type="Resource" id="Resource_bov8v"]
+script = ExtResource("2_me8t3")
+code = "if not following or host == null or target_path == \"\":
+	return
+var target := host.get_node_or_null(NodePath(target_path))
+if not (target is Node2D):
+	return
+if host.position.distance_to(target.position) <= min_distance:
+	return
+host.position = host.position.lerp(target.position, clampf(follow_speed * delta, 0.0, 1.0))"
+
+[sub_resource type="Resource" id="Resource_c7vdw"]
+script = ExtResource("6_jjqsf")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_bov8v")])
+event_uid = "b415d9"
+
+[sub_resource type="Resource" id="Resource_na37c"]
+script = ExtResource("2_me8t3")
+code = "target_path = path
+following = true"
+
+[sub_resource type="Resource" id="Resource_5y2vt"]
+script = ExtResource("7_l3qb0")
+id = "path"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_eu4p6"]
+script = ExtResource("8_oywdo")
+function_name = "start_following"
+description = "Follows the node at the given path."
+expose_as_ace = true
+ace_display_name = "Start Following"
+ace_category = "Follow"
+params = Array[ExtResource("7_l3qb0")]([SubResource("Resource_5y2vt")])
+events = Array[Resource]([SubResource("Resource_na37c")])
+
+[sub_resource type="Resource" id="Resource_r3cqn"]
+script = ExtResource("2_me8t3")
+code = "following = false"
+
+[sub_resource type="Resource" id="Resource_k8t8f"]
+script = ExtResource("8_oywdo")
+function_name = "stop_following"
+description = "Stops trailing the target."
+expose_as_ace = true
+ace_display_name = "Stop Following"
+ace_category = "Follow"
+events = Array[Resource]([SubResource("Resource_r3cqn")])
+
+[resource]
+script = ExtResource("9_8eb11")
+host_class = "Node2D"
+behavior_mode = true
+custom_class_name = "FollowBehavior"
+events = Array[Resource]([SubResource("Resource_ycohw"), SubResource("Resource_c7vdw")])
+variables = {
+"follow_speed": {
+"default": 5.0,
+"exported": true,
+"type": "float"
+},
+"following": {
+"default": true,
+"exported": true,
+"type": "bool"
+},
+"min_distance": {
+"default": 0.0,
+"exported": true,
+"type": "float"
+},
+"target_path": {
+"default": "",
+"exported": true,
+"type": "String"
+}
+}
+functions = Array[Resource]([SubResource("Resource_eu4p6"), SubResource("Resource_k8t8f")])

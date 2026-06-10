@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_ny82h"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_0y3wa"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_stfdb"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_b2vug"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_j1a0i"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_wmmtp"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="7_vegns"]
+
+[sub_resource type="Resource" id="Resource_mnxbw"]
+script = ExtResource("1_ny82h")
+text = "Line of Sight behavior (C3-style): the Has Line Of Sight To condition raycasts against solids within range."
+
+[sub_resource type="Resource" id="Resource_yeela"]
+script = ExtResource("2_0y3wa")
+code = "## @ace_condition
+## @ace_name(\"Has Line Of Sight To\")
+## @ace_category(\"Line Of Sight\")
+## @ace_codegen_template(\"$LOSBehavior.has_los_to({point})\")
+func has_los_to(point: Vector2) -> bool:
+	if host == null or host.global_position.distance_to(point) > sight_range:
+		return false
+	var query := PhysicsRayQueryParameters2D.create(host.global_position, point)
+	query.collision_mask = collision_mask
+	return host.get_world_2d().direct_space_state.intersect_ray(query).is_empty()"
+
+[sub_resource type="Resource" id="Resource_ljcjg"]
+script = ExtResource("2_0y3wa")
+code = "pass"
+
+[sub_resource type="Resource" id="Resource_454na"]
+script = ExtResource("6_wmmtp")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_ljcjg")])
+event_uid = "a8c866"
+
+[resource]
+script = ExtResource("7_vegns")
+host_class = "Node2D"
+behavior_mode = true
+custom_class_name = "LOSBehavior"
+events = Array[Resource]([SubResource("Resource_mnxbw"), SubResource("Resource_yeela"), SubResource("Resource_454na")])
+variables = {
+"collision_mask": {
+"default": 1,
+"exported": true,
+"type": "int"
+},
+"sight_range": {
+"default": 400.0,
+"exported": true,
+"type": "float"
+}
+}

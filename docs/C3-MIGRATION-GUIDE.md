@@ -81,9 +81,10 @@ it), and anything not covered is one ƒx expression away.
 | Solid / Jump-thru behaviors | Godot collision layers + one-way collision shapes (scene setup, not events) |
 | Physics behavior | RigidBody2D + the existing impulse/velocity ACEs |
 
-**Lane 2 — portable behaviors** ship as event-sheet packs (Platformer, 8-Direction, Timer,
-Flash, State Machine today; Sine, Orbit, Bullet, Move To, Follow, Drag & Drop, Car, Tile
-Movement, Line of Sight planned).
+**Lane 2 — portable behaviors** ship as event-sheet packs — all fourteen are bundled:
+Platformer, 8-Direction, Timer, Flash, State Machine, **Sine, Orbit, Bullet, Move To,
+Follow, Drag & Drop, Car, Tile Movement, and Line of Sight**. Attach as a child node;
+properties live in the Inspector; their ACEs appear in the picker automatically.
 
 **Lane 3 — use the Godot feature directly**: Multiplayer (high-level multiplayer API),
 Drawing Canvas (`_draw`), 3D plugins (Godot 3D), Binary Data (`PackedByteArray`),

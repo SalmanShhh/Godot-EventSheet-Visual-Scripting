@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Nine new behavior packs (C3 coverage, Phase B — all fourteen C3-style behaviors bundled)
+- **Sine** (oscillate position/angle), **Orbit** (circle a point), **Bullet** (angle-of-
+  motion movement with acceleration/gravity), **Move To** (glide to a point + On
+  Arrived), **Follow** (smoothly trail a node path), **Drag & Drop** (mouse grab within
+  a radius + On Drag Start / On Dropped), **Car** (accelerate/brake/steer, speed-scaled
+  steering, `move_and_slide`), **Tile Movement** (grid stepping + On Step Finished), and
+  **Line of Sight** (a raycast-backed *Has Line Of Sight To* condition).
+- All built as event sheets through the established pack pipeline (`.tres` source +
+  generated `.gd`, zero-config ACE publishing, behaviors attach as child nodes,
+  properties in the Inspector) and guarded by the pack test's no-drift goldens,
+  class-load, and publish assertions — the compatibility covenant in action.
+
 ### Native-node ACE providers (C3 coverage, Phase A)
 - **38 new builtin ACEs wrapping native Godot features** — lane 1 of the C3 coverage
   program (the engine maintains the implementation; we maintain vocabulary):
@@ -12,7 +24,7 @@
   - **AudioStreamPlayer**, **AnimatedSprite2D**, **Camera2D**, **Label**,
 	**NavigationAgent2D** (C3 Pathfinding), and **CanvasItem** visibility/tint groups,
   - **Math & Random** expressions: Random, Random Integer, **Choose** (C3's `choose()`
-    as `[…].pick_random()`), Clamp, Lerp, Distance To, Angle Toward.
+	as `[…].pick_random()`), Clamp, Lerp, Distance To, Angle Toward.
 - **C3 search synonyms** for the new vocabulary ("go to layout" → scene, "choose",
   "play sound", "set text", "fade"/"animate" → tween, "find path"…), and the migration
   guide gains the full **three-lane behavior/plugin mapping table**.

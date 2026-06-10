@@ -1,0 +1,133 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_tbxl6"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_urm38"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_1dpa7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_cwajh"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_jkean"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_eoq7w"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_h0i2u"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_0amdn"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_q1rqs"]
+
+[sub_resource type="Resource" id="Resource_dbolv"]
+script = ExtResource("1_tbxl6")
+text = "Bullet behavior (C3-style): moves at the host's angle of motion with acceleration and gravity."
+
+[sub_resource type="Resource" id="Resource_a26d5"]
+script = ExtResource("2_urm38")
+code = "if host == null:
+	return
+if not launched:
+	vel_x = cos(host.rotation) * speed
+	vel_y = sin(host.rotation) * speed
+	launched = true
+var direction := Vector2(vel_x, vel_y).normalized()
+vel_x += direction.x * acceleration * delta
+vel_y += direction.y * acceleration * delta + 0.0
+vel_y += gravity * delta
+host.position += Vector2(vel_x, vel_y) * delta
+if align_rotation and (vel_x != 0.0 or vel_y != 0.0):
+	host.rotation = Vector2(vel_x, vel_y).angle()"
+
+[sub_resource type="Resource" id="Resource_2c7to"]
+script = ExtResource("6_eoq7w")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_a26d5")])
+event_uid = "b4e040"
+
+[sub_resource type="Resource" id="Resource_bw4ti"]
+script = ExtResource("2_urm38")
+code = "speed = value
+var direction := Vector2(vel_x, vel_y).normalized()
+if direction == Vector2.ZERO and host != null:
+	direction = Vector2.from_angle(host.rotation)
+vel_x = direction.x * value
+vel_y = direction.y * value
+launched = true"
+
+[sub_resource type="Resource" id="Resource_5780g"]
+script = ExtResource("7_h0i2u")
+id = "value"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_m8wb2"]
+script = ExtResource("8_0amdn")
+function_name = "set_bullet_speed"
+description = "Changes speed, keeping the current direction."
+expose_as_ace = true
+ace_display_name = "Set Bullet Speed"
+ace_category = "Bullet"
+params = Array[ExtResource("7_h0i2u")]([SubResource("Resource_5780g")])
+events = Array[Resource]([SubResource("Resource_bw4ti")])
+
+[sub_resource type="Resource" id="Resource_av21u"]
+script = ExtResource("2_urm38")
+code = "vel_x = cos(deg_to_rad(degrees)) * speed
+vel_y = sin(deg_to_rad(degrees)) * speed
+launched = true"
+
+[sub_resource type="Resource" id="Resource_qvkgn"]
+script = ExtResource("7_h0i2u")
+id = "degrees"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_hud1t"]
+script = ExtResource("8_0amdn")
+function_name = "set_angle_of_motion"
+description = "Redirects the bullet (degrees)."
+expose_as_ace = true
+ace_display_name = "Set Angle Of Motion"
+ace_category = "Bullet"
+params = Array[ExtResource("7_h0i2u")]([SubResource("Resource_qvkgn")])
+events = Array[Resource]([SubResource("Resource_av21u")])
+
+[resource]
+script = ExtResource("9_q1rqs")
+host_class = "Node2D"
+behavior_mode = true
+custom_class_name = "BulletBehavior"
+events = Array[Resource]([SubResource("Resource_dbolv"), SubResource("Resource_2c7to")])
+variables = {
+"acceleration": {
+"default": 0.0,
+"exported": true,
+"type": "float"
+},
+"align_rotation": {
+"default": true,
+"exported": true,
+"type": "bool"
+},
+"gravity": {
+"default": 0.0,
+"exported": true,
+"type": "float"
+},
+"launched": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"speed": {
+"default": 300.0,
+"exported": true,
+"type": "float"
+},
+"vel_x": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"vel_y": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+}
+}
+functions = Array[Resource]([SubResource("Resource_m8wb2"), SubResource("Resource_hud1t")])

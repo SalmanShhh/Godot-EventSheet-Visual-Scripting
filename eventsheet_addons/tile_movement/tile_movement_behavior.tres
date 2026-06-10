@@ -1,0 +1,133 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_vgvrg"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_8yhrj"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_tqv7t"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_m4uii"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_gml7f"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_g35kp"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_f5eri"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_g5l8f"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_63fav"]
+
+[sub_resource type="Resource" id="Resource_0b1ao"]
+script = ExtResource("1_vgvrg")
+text = "Tile Movement behavior (C3-style): grid-locked stepping with the arrow keys; fires On Step Finished per tile."
+
+[sub_resource type="Resource" id="Resource_gl44j"]
+script = ExtResource("2_8yhrj")
+code = "## @ace_trigger
+## @ace_name(\"On Step Finished\")
+## @ace_category(\"Tile Movement\")
+signal step_finished"
+
+[sub_resource type="Resource" id="Resource_s6njm"]
+script = ExtResource("2_8yhrj")
+code = "if host == null:
+	return
+if moving:
+	progress += delta / move_time
+	if progress >= 1.0:
+		host.position = Vector2(to_x, to_y)
+		moving = false
+		step_finished.emit()
+	else:
+		host.position = Vector2(from_x, from_y).lerp(Vector2(to_x, to_y), progress)
+	return
+var step := Vector2(Input.get_axis(&\"ui_left\", &\"ui_right\"), Input.get_axis(&\"ui_up\", &\"ui_down\"))
+if step.x != 0.0:
+	step.y = 0.0
+if step != Vector2.ZERO:
+	from_x = host.position.x
+	from_y = host.position.y
+	to_x = from_x + signf(step.x) * tile_size
+	to_y = from_y + signf(step.y) * tile_size
+	progress = 0.0
+	moving = true"
+
+[sub_resource type="Resource" id="Resource_svak1"]
+script = ExtResource("6_g35kp")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_s6njm")])
+event_uid = "2336da"
+
+[sub_resource type="Resource" id="Resource_6dtgv"]
+script = ExtResource("2_8yhrj")
+code = "if host != null:
+	host.position = Vector2(tile_x, tile_y) * tile_size
+moving = false"
+
+[sub_resource type="Resource" id="Resource_joxbd"]
+script = ExtResource("7_f5eri")
+id = "tile_x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_u0ahq"]
+script = ExtResource("7_f5eri")
+id = "tile_y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_bxm2s"]
+script = ExtResource("8_g5l8f")
+function_name = "teleport_to_tile"
+description = "Snaps to a tile coordinate instantly."
+expose_as_ace = true
+ace_display_name = "Teleport To Tile"
+ace_category = "Tile Movement"
+params = Array[ExtResource("7_f5eri")]([SubResource("Resource_joxbd"), SubResource("Resource_u0ahq")])
+events = Array[Resource]([SubResource("Resource_6dtgv")])
+
+[resource]
+script = ExtResource("9_63fav")
+host_class = "Node2D"
+behavior_mode = true
+custom_class_name = "TileMovementBehavior"
+events = Array[Resource]([SubResource("Resource_0b1ao"), SubResource("Resource_gl44j"), SubResource("Resource_svak1")])
+variables = {
+"from_x": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"from_y": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"move_time": {
+"default": 0.15,
+"exported": true,
+"type": "float"
+},
+"moving": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"progress": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"tile_size": {
+"default": 64.0,
+"exported": true,
+"type": "float"
+},
+"to_x": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"to_y": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+}
+}
+functions = Array[Resource]([SubResource("Resource_bxm2s")])

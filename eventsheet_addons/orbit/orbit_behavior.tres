@@ -1,0 +1,124 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=20 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_sdrqy"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_lpx84"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_50eko"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_rpwnl"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_81upg"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_edhbl"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_q3dsn"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_cs8cc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_mgc0e"]
+
+[sub_resource type="Resource" id="Resource_c3hde"]
+script = ExtResource("1_sdrqy")
+text = "Orbit behavior (C3-style): circles the host around its starting point (or a set center)."
+
+[sub_resource type="Resource" id="Resource_odtee"]
+script = ExtResource("2_lpx84")
+code = "if host == null:
+	return
+if not center_captured:
+	center_x = host.position.x
+	center_y = host.position.y
+	center_captured = true
+angle += deg_to_rad(speed_degrees) * delta
+host.position = Vector2(center_x, center_y) + Vector2.from_angle(angle) * radius"
+
+[sub_resource type="Resource" id="Resource_u8wjc"]
+script = ExtResource("6_edhbl")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_odtee")])
+event_uid = "4feb90"
+
+[sub_resource type="Resource" id="Resource_7xjsu"]
+script = ExtResource("2_lpx84")
+code = "center_x = x
+center_y = y
+center_captured = true"
+
+[sub_resource type="Resource" id="Resource_yofqy"]
+script = ExtResource("7_q3dsn")
+id = "x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_io6o6"]
+script = ExtResource("7_q3dsn")
+id = "y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_rgwaf"]
+script = ExtResource("8_cs8cc")
+function_name = "set_orbit_center"
+description = "Orbits around the given point from now on."
+expose_as_ace = true
+ace_display_name = "Set Orbit Center"
+ace_category = "Orbit"
+params = Array[ExtResource("7_q3dsn")]([SubResource("Resource_yofqy"), SubResource("Resource_io6o6")])
+events = Array[Resource]([SubResource("Resource_7xjsu")])
+
+[sub_resource type="Resource" id="Resource_ux2da"]
+script = ExtResource("2_lpx84")
+code = "speed_degrees = degrees_per_second"
+
+[sub_resource type="Resource" id="Resource_er1va"]
+script = ExtResource("7_q3dsn")
+id = "degrees_per_second"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ib20v"]
+script = ExtResource("8_cs8cc")
+function_name = "set_orbit_speed"
+description = "Degrees per second (negative reverses)."
+expose_as_ace = true
+ace_display_name = "Set Orbit Speed"
+ace_category = "Orbit"
+params = Array[ExtResource("7_q3dsn")]([SubResource("Resource_er1va")])
+events = Array[Resource]([SubResource("Resource_ux2da")])
+
+[resource]
+script = ExtResource("9_mgc0e")
+host_class = "Node2D"
+behavior_mode = true
+custom_class_name = "OrbitBehavior"
+events = Array[Resource]([SubResource("Resource_c3hde"), SubResource("Resource_u8wjc")])
+variables = {
+"angle": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"center_captured": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"center_x": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"center_y": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"radius": {
+"default": 100.0,
+"exported": true,
+"type": "float"
+},
+"speed_degrees": {
+"default": 90.0,
+"exported": true,
+"type": "float"
+}
+}
+functions = Array[Resource]([SubResource("Resource_rgwaf"), SubResource("Resource_ib20v")])

@@ -1,0 +1,112 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=20 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_gfj36"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_q7uqc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_c4ll7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_jlqat"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_wyhg1"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_2l66c"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_xp0oq"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_28rk4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_14g6j"]
+
+[sub_resource type="Resource" id="Resource_1q018"]
+script = ExtResource("1_gfj36")
+text = "Move To behavior (C3-style): glides the host to a target position and fires On Arrived."
+
+[sub_resource type="Resource" id="Resource_k6qdc"]
+script = ExtResource("2_q7uqc")
+code = "## @ace_trigger
+## @ace_name(\"On Arrived\")
+## @ace_category(\"Move To\")
+signal arrived"
+
+[sub_resource type="Resource" id="Resource_f2y24"]
+script = ExtResource("2_q7uqc")
+code = "if not moving or host == null:
+	return
+var target := Vector2(target_x, target_y)
+host.position = host.position.move_toward(target, max_speed * delta)
+if host.position.distance_to(target) < 0.5:
+	moving = false
+	arrived.emit()"
+
+[sub_resource type="Resource" id="Resource_2d2na"]
+script = ExtResource("6_2l66c")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_f2y24")])
+event_uid = "1afc3e"
+
+[sub_resource type="Resource" id="Resource_kd6xl"]
+script = ExtResource("2_q7uqc")
+code = "target_x = x
+target_y = y
+moving = true"
+
+[sub_resource type="Resource" id="Resource_8bsqb"]
+script = ExtResource("7_xp0oq")
+id = "x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_xnw0y"]
+script = ExtResource("7_xp0oq")
+id = "y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_g487a"]
+script = ExtResource("8_28rk4")
+function_name = "move_to_position"
+description = "Starts gliding toward the point."
+expose_as_ace = true
+ace_display_name = "Move To Position"
+ace_category = "Move To"
+params = Array[ExtResource("7_xp0oq")]([SubResource("Resource_8bsqb"), SubResource("Resource_xnw0y")])
+events = Array[Resource]([SubResource("Resource_kd6xl")])
+
+[sub_resource type="Resource" id="Resource_g7ol3"]
+script = ExtResource("2_q7uqc")
+code = "moving = false"
+
+[sub_resource type="Resource" id="Resource_fsq1l"]
+script = ExtResource("8_28rk4")
+function_name = "stop_moving"
+description = "Stops without firing On Arrived."
+expose_as_ace = true
+ace_display_name = "Stop Moving"
+ace_category = "Move To"
+events = Array[Resource]([SubResource("Resource_g7ol3")])
+
+[resource]
+script = ExtResource("9_14g6j")
+host_class = "Node2D"
+behavior_mode = true
+custom_class_name = "MoveToBehavior"
+events = Array[Resource]([SubResource("Resource_1q018"), SubResource("Resource_k6qdc"), SubResource("Resource_2d2na")])
+variables = {
+"max_speed": {
+"default": 200.0,
+"exported": true,
+"type": "float"
+},
+"moving": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"target_x": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"target_y": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+}
+}
+functions = Array[Resource]([SubResource("Resource_g487a"), SubResource("Resource_fsq1l")])

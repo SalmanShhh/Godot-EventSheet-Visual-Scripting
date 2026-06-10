@@ -1,0 +1,88 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_phgd3"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_cb0ow"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_i5pmt"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_ct0p5"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_saqex"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_8vblq"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_bgk0m"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_s1mgl"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_1hj83"]
+
+[sub_resource type="Resource" id="Resource_1707f"]
+script = ExtResource("1_phgd3")
+text = "Car behavior (C3-style): accelerate/brake with up/down, steer with left/right (steering scales with speed)."
+
+[sub_resource type="Resource" id="Resource_bb4cx"]
+script = ExtResource("2_cb0ow")
+code = "if host == null:
+	return
+var throttle := Input.get_axis(&\"ui_down\", &\"ui_up\")
+if throttle > 0.0:
+	speed = minf(speed + acceleration * delta, max_speed)
+elif throttle < 0.0:
+	speed = maxf(speed - acceleration * delta, -max_speed * 0.5)
+else:
+	speed = move_toward(speed, 0.0, deceleration * delta)
+var steer := Input.get_axis(&\"ui_left\", &\"ui_right\")
+host.rotation += deg_to_rad(steer_degrees) * steer * delta * clampf(absf(speed) / max_speed, 0.0, 1.0) * signf(speed)
+host.velocity = Vector2.from_angle(host.rotation) * speed
+host.move_and_slide()"
+
+[sub_resource type="Resource" id="Resource_pbr7j"]
+script = ExtResource("6_8vblq")
+trigger_provider_id = "Core"
+trigger_id = "OnPhysicsProcess"
+actions = Array[Resource]([SubResource("Resource_bb4cx")])
+event_uid = "469bf5"
+
+[sub_resource type="Resource" id="Resource_8htxg"]
+script = ExtResource("2_cb0ow")
+code = "speed = 0.0
+if host != null:
+	host.velocity = Vector2.ZERO"
+
+[sub_resource type="Resource" id="Resource_3ywck"]
+script = ExtResource("8_s1mgl")
+function_name = "stop_car"
+description = "Kills all momentum."
+expose_as_ace = true
+ace_display_name = "Stop Car"
+ace_category = "Car"
+events = Array[Resource]([SubResource("Resource_8htxg")])
+
+[resource]
+script = ExtResource("9_1hj83")
+host_class = "CharacterBody2D"
+behavior_mode = true
+custom_class_name = "CarBehavior"
+events = Array[Resource]([SubResource("Resource_1707f"), SubResource("Resource_pbr7j")])
+variables = {
+"acceleration": {
+"default": 300.0,
+"exported": true,
+"type": "float"
+},
+"deceleration": {
+"default": 400.0,
+"exported": true,
+"type": "float"
+},
+"max_speed": {
+"default": 400.0,
+"exported": true,
+"type": "float"
+},
+"speed": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"steer_degrees": {
+"default": 180.0,
+"exported": true,
+"type": "float"
+}
+}
+functions = Array[Resource]([SubResource("Resource_3ywck")])

@@ -1,0 +1,84 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_bxshy"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_bvvcx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_7f2sw"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_aiqtj"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_85j5o"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_b7r38"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_s828s"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_3pjg3"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_07u1j"]
+
+[sub_resource type="Resource" id="Resource_p2muo"]
+script = ExtResource("1_bxshy")
+text = "Drag & Drop behavior (C3-style): grab the host with the mouse within the grab radius; fires On Drag Start and On Dropped."
+
+[sub_resource type="Resource" id="Resource_u540h"]
+script = ExtResource("2_bvvcx")
+code = "## @ace_trigger
+## @ace_name(\"On Drag Start\")
+## @ace_category(\"Drag & Drop\")
+signal drag_started
+
+## @ace_trigger
+## @ace_name(\"On Dropped\")
+## @ace_category(\"Drag & Drop\")
+signal dropped"
+
+[sub_resource type="Resource" id="Resource_q2el6"]
+script = ExtResource("2_bvvcx")
+code = "if host == null:
+	return
+if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+	var mouse := host.get_global_mouse_position()
+	if not dragging and mouse.distance_to(host.global_position) <= grab_radius:
+		dragging = true
+		drag_started.emit()
+	if dragging:
+		host.global_position = mouse
+elif dragging:
+	dragging = false
+	dropped.emit()"
+
+[sub_resource type="Resource" id="Resource_0clv1"]
+script = ExtResource("6_b7r38")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_q2el6")])
+event_uid = "18d057"
+
+[sub_resource type="Resource" id="Resource_swrhc"]
+script = ExtResource("2_bvvcx")
+code = "if dragging:
+	dragging = false
+	dropped.emit()"
+
+[sub_resource type="Resource" id="Resource_gava7"]
+script = ExtResource("8_3pjg3")
+function_name = "drop_now"
+description = "Releases the drag immediately."
+expose_as_ace = true
+ace_display_name = "Drop Now"
+ace_category = "Drag & Drop"
+events = Array[Resource]([SubResource("Resource_swrhc")])
+
+[resource]
+script = ExtResource("9_07u1j")
+host_class = "Node2D"
+behavior_mode = true
+custom_class_name = "DragDropBehavior"
+events = Array[Resource]([SubResource("Resource_p2muo"), SubResource("Resource_u540h"), SubResource("Resource_0clv1")])
+variables = {
+"dragging": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"grab_radius": {
+"default": 48.0,
+"exported": true,
+"type": "float"
+}
+}
+functions = Array[Resource]([SubResource("Resource_gava7")])
