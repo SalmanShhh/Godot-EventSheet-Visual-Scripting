@@ -63,6 +63,7 @@ const FxCompletionWatchTestScript := preload("res://tests/fx_completion_watch_te
 const SignalLiftTestScript := preload("res://tests/signal_lift_test.gd")
 const IntellisenseTestScript := preload("res://tests/intellisense_test.gd")
 const FunctionLiftTestScript := preload("res://tests/function_lift_test.gd")
+const BookmarksIncludesTestScript := preload("res://tests/bookmarks_includes_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
@@ -121,6 +122,7 @@ func _init() -> void:
 	passed = SignalLiftTestScript.run() and passed
 	passed = IntellisenseTestScript.run() and passed
 	passed = FunctionLiftTestScript.run() and passed
+	passed = BookmarksIncludesTestScript.run() and passed
 	passed = EventSheetEditorTestScript.run() and passed
 	passed = EventSheetStyleTestScript.run() and passed
 	passed = PluginWorkspaceTestScript.run() and passed

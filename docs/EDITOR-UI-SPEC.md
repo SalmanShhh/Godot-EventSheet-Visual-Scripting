@@ -409,7 +409,7 @@ Still open (post-1.0 polish):
 
 - Gutter bookmarks; per-`widget_hint` inspector widgets; advanced per-row override UI.
   (Pick-filter compilation and ƒx autocomplete have since shipped.)
-- **Sheet includes** (`includes: Array[NodePath]` exists on the resource; no semantics yet).
+
 - Candidate: MCP server for AI tooling (see GDSCRIPT-PAIRING-SPEC "Planned").
 
 ## 4. Implementation anchors

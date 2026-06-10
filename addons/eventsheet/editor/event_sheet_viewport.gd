@@ -120,6 +120,8 @@ var _last_scroll_size: Vector2 = Vector2.ZERO
 var _fold_state: Dictionary = {}
 var _debug_rows: Dictionary = {}
 var _breakpoint_rows: Dictionary = {}
+# Session bookmarks (navigation aid; not persisted): row_uid -> true. Ctrl+M / F4.
+var _bookmark_rows: Dictionary = {}
 var _row_disabled_state: Dictionary = {}
 var _focused_lane: String = "condition"
 var _selection_anchor_index: int = -1
@@ -494,6 +496,47 @@ func select_resource(resource: Resource) -> bool:
             queue_redraw()
             return true
     return false
+
+## Toggles a session bookmark on the selected row (Ctrl+M; F4 / Shift+F4 navigate).
+func toggle_bookmark_selected() -> void:
+    var row_data: EventRowData = _row_at(_selected_row_index)
+    if row_data == null:
+        return
+    if _bookmark_rows.has(row_data.row_uid):
+        _bookmark_rows.erase(row_data.row_uid)
+    else:
+        _bookmark_rows[row_data.row_uid] = true
+    row_data.bookmark_enabled = _bookmark_rows.has(row_data.row_uid)
+    queue_redraw()
+
+## Selects the next (direction >= 0) or previous bookmarked row, wrapping around.
+## Returns false when nothing is bookmarked.
+func jump_to_bookmark(direction: int = 1) -> bool:
+    var marked: Array[int] = []
+    for index in range(_flat_rows.size()):
+        var marked_row: EventRowData = _row_at(index)
+        if marked_row != null and _bookmark_rows.has(marked_row.row_uid):
+            marked.append(index)
+    if marked.is_empty():
+        return false
+    var target: int = -1
+    if direction >= 0:
+        for index: int in marked:
+            if index > _selected_row_index:
+                target = index
+                break
+        if target == -1:
+            target = marked[0]
+    else:
+        for index: int in marked:
+            if index < _selected_row_index:
+                target = index
+        if target == -1:
+            target = marked[marked.size() - 1]
+    _select_row(target, -1)
+    ensure_selection_visible()
+    queue_redraw()
+    return true
 
 func ensure_selection_visible() -> void:
     if _selected_row_index < 0:
@@ -1053,6 +1096,12 @@ func _handle_key(event: InputEventKey) -> void:
     elif event.keycode == KEY_B and (event.ctrl_pressed or event.meta_pressed):
         _toggle_breakpoint(_selected_row_index)
         accept_event()
+    elif event.keycode == KEY_M and (event.ctrl_pressed or event.meta_pressed):
+        toggle_bookmark_selected()
+        accept_event()
+    elif event.keycode == KEY_F4:
+        jump_to_bookmark(-1 if event.shift_pressed else 1)
+        accept_event()
     elif event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_F2]:
         _begin_edit(_selected_row_index, _selected_span_index)
         accept_event()
@@ -1110,6 +1159,7 @@ func _refresh_rows() -> void:
         line_row.line_number = index + 1
         if _breakpoint_rows.has(line_row.row_uid):
             line_row.breakpoint_enabled = bool(_breakpoint_rows[line_row.row_uid])
+        line_row.bookmark_enabled = _bookmark_rows.has(line_row.row_uid)
         if _row_disabled_state.has(line_row.row_uid):
             line_row.disabled = bool(_row_disabled_state[line_row.row_uid])
     if _selected_row_index >= _flat_rows.size():

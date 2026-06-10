@@ -24,6 +24,7 @@ var row_uid: String = ""
 var debug_state: String = ""
 var line_number: int = 0
 var breakpoint_enabled: bool = false
+var bookmark_enabled: bool = false
 var disabled: bool = false
 # Per-row custom tint (C3-style colored comments); alpha 0 = use the theme color.
 var custom_color: Color = Color(0, 0, 0, 0)

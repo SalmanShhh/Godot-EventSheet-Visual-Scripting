@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Gutter bookmarks + compile-time sheet includes
+- **Bookmarks**: Ctrl+M toggles a session bookmark on the selected row (gold pennant in
+  the gutter beside the breakpoint dot); **F4 / Shift+F4** cycle forward/backward through
+  bookmarked rows with wrap-around. Session-scoped navigation aids (not persisted),
+  synced through the central row-state pass so they survive refreshes.
+- **Sheet includes are real** (the `includes` field finally has semantics, C3-style):
+  list other sheets' `res://….tres` paths in the Inspector and their **variables,
+  class-level blocks, events, and functions merge into this sheet's generated script** at
+  compile time. The root sheet wins name collisions (warned), cycles and missing files
+  are skipped with warnings, and included rows never enter the editing model — a shared
+  "library sheet" pattern. Ignored for GDScript-backed sheets. (Field retyped
+  `Array[NodePath]` → `Array[String]`; it was never used or serialized before.)
+- Covered by `tests/bookmarks_includes_test.gd` (18 assertions).
+
 ### Importer completed: function verify-lift + comment preservation (two-pass safe)
 - **Sheet functions lift back** when opening generated `.gd` files: their `@ace_*`
   annotation blocks reverse into `expose_as_ace`/name/category/description, parameters

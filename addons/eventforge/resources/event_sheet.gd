@@ -20,7 +20,11 @@ class_name EventSheetResource
 @export_file("*.svg", "*.png") var custom_class_icon: String = ""
 @export var events: Array[Resource] = []
 @export var variables: Dictionary = {}
-@export var includes: Array[NodePath] = []
+## Compile-time includes (C3-style): paths to other event sheets (res://….tres) whose
+## variables, class-level blocks, events, and functions merge into this sheet's generated
+## script. The root sheet wins name collisions (warnings emitted); cycles are detected and
+## skipped. Edited via the Inspector; ignored for GDScript-backed sheets.
+@export var includes: Array[String] = []
 @export var functions: Array[Resource] = []
 @export var editor_style: EventSheetEditorStyle = null
 ## Paths to GDScript files registered as custom-ACE providers. Each script is

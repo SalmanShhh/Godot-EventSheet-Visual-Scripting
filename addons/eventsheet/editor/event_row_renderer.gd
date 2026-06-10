@@ -165,7 +165,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
         else EventSheetPalette.COLOR_HOVER
     )
 
-    _draw_gutter(control, gutter_rect, line_number, breakpoint_enabled, font, font_size)
+    _draw_gutter(control, gutter_rect, line_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size)
     if row_data.row_type == EventRowData.RowType.GROUP:
         _draw_group_row_chrome(control, row_rect, fold_rect, alternating, event_style)
     elif row_data.row_type == EventRowData.RowType.COMMENT and event_style != null:
@@ -232,7 +232,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
     if not debug_text.is_empty():
         _draw_debug_overlay(control, row_rect, font, font_size, debug_text)
 
-func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, font: Font, font_size: int) -> void:
+func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int) -> void:
     if gutter_rect.size == Vector2.ZERO:
         return
     control.draw_rect(gutter_rect, EventSheetPalette.COLOR_GUTTER_BG, true)
@@ -244,6 +244,15 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
     if breakpoint_enabled:
         var center: Vector2 = Vector2(gutter_rect.position.x + 7.0, gutter_rect.get_center().y)
         control.draw_circle(center, 3.5, EventSheetPalette.COLOR_BREAKPOINT)
+    if bookmark_enabled:
+        # Bookmark flag: a small right-pointing pennant at the gutter's right edge.
+        var flag_x: float = gutter_rect.end.x - 10.0
+        var flag_y: float = gutter_rect.get_center().y
+        control.draw_colored_polygon(PackedVector2Array([
+            Vector2(flag_x, flag_y - 4.0),
+            Vector2(flag_x + 7.0, flag_y),
+            Vector2(flag_x, flag_y + 4.0)
+        ]), EventSheetPalette.COLOR_BOOKMARK)
 
 func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int) -> void:
     for level: int in range(depth):
