@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Starter 3D vocabulary
+- **14 native 3D ACEs** under their node-type groups: **Node3D** (Set Position/Rotation/
+  Scale, Move By, Look At, position expression), **CharacterBody3D** (Is On Floor,
+  Move And Slide, Set/Get Velocity), **RigidBody3D** (Apply Central Impulse), and
+  **Camera3D** (Make Current, Set FOV) — plus the **Input Vector** expression
+  (`Input.get_vector`, StringName idiom, InputMap dropdowns) for 2D and 3D movement
+  alike.
+- Tween, visibility/tint, math & random, scene flow, and audio were already
+  dimension-agnostic; signal/collision triggers work on 3D nodes unchanged. The README's
+  "2D-first" con is softened accordingly.
+- Covered by `tests/native_3d_aces_test.gd` (7 assertions).
+
 ## [0.3.0] - 2026-06-10
 
 The multi-view release: the same sheet in split panes, detached OS windows, and linked

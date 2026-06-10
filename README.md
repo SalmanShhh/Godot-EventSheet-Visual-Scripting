@@ -52,8 +52,9 @@ Conditions                        | Actions
 - **It's a bridge, not a wall.** Complex logic will eventually pull you toward writing
   GDScript directly — by design. If you want to never see code, C3 itself is better at
   hiding it.
-- **2D-first vocabulary.** The built-in ACEs and packs target 2D nodes; 3D works through
-  ƒx/GDScript blocks but has no curated vocabulary yet.
+- **2D-first.** The behavior packs target 2D; a starter 3D vocabulary exists (Node3D /
+  CharacterBody3D / RigidBody3D / Camera3D groups) but 3D depth still comes from
+  ƒx/GDScript blocks.
 - **Some C3 plugins intentionally have no equivalent** (Multiplayer, Drawing Canvas,
   XML): the migration guide points to the native Godot feature instead — that honesty
   keeps the project maintainable.
