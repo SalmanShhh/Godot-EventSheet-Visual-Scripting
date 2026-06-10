@@ -48,8 +48,14 @@ static func run() -> bool:
 		by_id[descriptor.ace_id] = descriptor
 	all_passed = _check("OnSignal uses the signal picker",
 		str((by_id["OnSignal"].params[0] as ACEParam).hint), "signal_reference") and all_passed
-	all_passed = _check("EmitSignal emits a StringName literal",
-		str(by_id["EmitSignal"].codegen_template).contains("emit_signal(&\"{signal_name}\""), true) and all_passed
+	all_passed = _check("EmitSignal emits a StringName literal (quoted param values)",
+		str(by_id["EmitSignal"].codegen_template).contains("emit_signal(&{signal_name}"), true) and all_passed
+	all_passed = _check("EmitSignal stores quoted values",
+		str((by_id["EmitSignal"].params[0] as ACEParam).hint), "signal_reference:quoted") and all_passed
+	var quoted_field: Control = dialog._create_signal_reference_field("signal_name", "\"custom_hit\"", true)
+	all_passed = _check("quoted picker shows raw names but stores literals",
+		(quoted_field as OptionButton).get_item_metadata((quoted_field as OptionButton).selected), "\"custom_hit\"") and all_passed
+	quoted_field.free()
 
 	return all_passed
 

@@ -157,8 +157,8 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 
 	if hint == VARIABLE_REFERENCE_HINT or hint.begins_with(VARIABLE_REFERENCE_HINT + ":"):
 		return _create_variable_reference_field(key, default_value, hint)
-	if hint == "signal_reference":
-		return _create_signal_reference_field(key, default_value)
+	if hint == "signal_reference" or hint.begins_with("signal_reference:"):
+		return _create_signal_reference_field(key, default_value, hint.ends_with(":quoted"))
 	if hint == EXPRESSION_HINT:
 		return _create_expression_field(key, default_value)
 	if options is Array and not options.is_empty():
@@ -249,9 +249,13 @@ func _variable_matches_type(variable_name: String, required: String) -> bool:
 ## C3-style object-signal picker: a dropdown of the host class's signals plus signals
 ## declared in the sheet's GDScript blocks (raw names — OnSignal connects them directly).
 ## The current value is always offered (custom names persist).
-func _create_signal_reference_field(key: String, default_value: Variant) -> Control:
+## quoted=true stores values as "name" string literals (Emit Signal's template wraps
+## them in &{...}); false stores raw names (On Signal connects them directly).
+func _create_signal_reference_field(key: String, default_value: Variant, quoted: bool = false) -> Control:
 	var options: Array[String] = _signal_options()
 	var current: String = str(default_value).strip_edges()
+	if quoted:
+		current = current.trim_prefix("\"").trim_suffix("\"")
 	if not current.is_empty() and not options.has(current):
 		options.insert(0, current)
 	if options.is_empty():
@@ -264,7 +268,7 @@ func _create_signal_reference_field(key: String, default_value: Variant) -> Cont
 	for signal_name in options:
 		dropdown.add_item(signal_name)
 		var index: int = dropdown.item_count - 1
-		dropdown.set_item_metadata(index, signal_name)
+		dropdown.set_item_metadata(index, "\"%s\"" % signal_name if quoted else signal_name)
 		if signal_name == current:
 			dropdown.select(index)
 	if dropdown.selected < 0 and dropdown.item_count > 0:
