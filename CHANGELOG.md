@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Post-1.0 polish: pick filters compile, fx autocomplete, external-sheet watcher
+- **Pick filters compile** — the last event-flow TODO is gone. C3's "for each" picking,
+  the Godot way: each filter wraps the event body in a direct `for` loop over a node
+  group / the children / any GDScript iterable, with an optional iterator-scoped `where`
+  predicate and a first-N cap; conditions gate the loop and multiple filters nest. Pick
+  rows render as "For each item in group \"enemies\"…" lines in the condition lane,
+  author via the row context menu ("Add Pick Filter (For Each)…") and edit/delete via
+  double-click. order_by and condition-based filtering warn honestly (predicate is the
+  supported path). Plain loops — the performance-parity contract holds.
+  Covered by `tests/pick_filter_test.gd` (17 assertions).
+- **fx expression autocomplete**: expression fields are now single-line CodeEdits with
+  completion popups (sheet variables, sheet functions, host members — the same candidate
+  source as the GDScript-block editor), on top of the existing live validation. Newlines
+  can never reach the stored value.
+- **External-sheet file watcher**: GDScript-backed sheets track their file's mtime; when
+  the editor regains focus after an outside edit (script editor, git, another tool), a
+  prompt offers "Reload (re-import + event lifting)" vs "Keep Editor Version" (asked once
+  per change). Save/open keep the timestamp in sync.
+  Both covered by `tests/fx_completion_watch_test.gd` (10 assertions).
+
 ### Docs & demo final sweep
 - **EDITOR-UI-SPEC §3 rewritten** as a roadmap-status section (everything planned has
   shipped; only pick-filter compilation, ƒx autocomplete, bookmarks, includes, and the

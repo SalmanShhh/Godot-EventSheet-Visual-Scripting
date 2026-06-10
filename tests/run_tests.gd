@@ -58,6 +58,8 @@ const RuntimeProviderTestScript := preload("res://tests/runtime_provider_test.gd
 const VisualCompletenessTestScript := preload("res://tests/visual_completeness_test.gd")
 const ReleaseHardeningTestScript := preload("res://tests/release_hardening_test.gd")
 const GDScriptPasteTestScript := preload("res://tests/gdscript_paste_test.gd")
+const PickFilterTestScript := preload("res://tests/pick_filter_test.gd")
+const FxCompletionWatchTestScript := preload("res://tests/fx_completion_watch_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
@@ -111,6 +113,8 @@ func _init() -> void:
 	passed = VisualCompletenessTestScript.run() and passed
 	passed = ReleaseHardeningTestScript.run() and passed
 	passed = GDScriptPasteTestScript.run() and passed
+	passed = PickFilterTestScript.run() and passed
+	passed = FxCompletionWatchTestScript.run() and passed
 	passed = EventSheetEditorTestScript.run() and passed
 	passed = EventSheetStyleTestScript.run() and passed
 	passed = PluginWorkspaceTestScript.run() and passed

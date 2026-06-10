@@ -224,14 +224,31 @@ func _create_variable_reference_field(key: String, default_value: Variant) -> Co
 func _create_expression_field(key: String, default_value: Variant) -> Control:
 	var container: HBoxContainer = HBoxContainer.new()
 	container.add_theme_constant_override("separation", 4)
-	var edit: LineEdit = LineEdit.new()
+	# A single-line CodeEdit instead of a LineEdit: same look, but with completion popups
+	# for sheet variables/functions and host members (Ctrl+Space or just typing).
+	var edit: CodeEdit = CodeEdit.new()
 	edit.text = str(default_value)
 	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	edit.custom_minimum_size = Vector2(0.0, 31.0)
+	edit.scroll_fit_content_height = true
+	edit.gutters_draw_line_numbers = false
+	edit.code_completion_enabled = true
 	# Expressions are plain GDScript — say so explicitly so C3 users learn there is no
 	# separate expression language to memorize.
 	edit.placeholder_text = "GDScript expression (e.g. health + 10)"
-	edit.tooltip_text = "Plain GDScript — anything valid in an expression works here."
-	edit.text_changed.connect(func(_text: String) -> void: _validate_expression_field(edit))
+	edit.tooltip_text = "Plain GDScript — anything valid in an expression works here. Ctrl+Space completes sheet variables/functions and host members."
+	edit.text_changed.connect(func() -> void:
+		# Keep it single-line (Enter confirms the dialog instead of inserting a newline).
+		if edit.text.contains("
+"):
+			var caret: int = edit.get_caret_column()
+			edit.text = edit.text.replace("
+", " ")
+			edit.set_caret_column(mini(caret, edit.text.length()))
+		_validate_expression_field(edit)
+		edit.request_code_completion()
+	)
+	edit.code_completion_requested.connect(func() -> void: _populate_expression_completion(edit))
 	_validate_expression_field(edit)
 	container.add_child(edit)
 	var fx_button: Button = Button.new()
@@ -245,11 +262,11 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 ## Live expression validation: compile-checks the field against the sheet context
 ## (variables, host members) and tints the text red when it would not compile. The lint
 ## context provider is optional — without it the field stays unvalidated.
-func _validate_expression_field(edit: LineEdit) -> void:
+func _validate_expression_field(edit: Control) -> void:
 	if not _lint_context_provider.is_valid():
 		return
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
-	var lint_result: Dictionary = EventSheetGDScriptLint.lint_expression(edit.text, sheet)
+	var lint_result: Dictionary = EventSheetGDScriptLint.lint_expression(str(edit.get("text")), sheet)
 	if bool(lint_result.get("ok", true)):
 		edit.remove_theme_color_override("font_color")
 		edit.tooltip_text = "Plain GDScript — anything valid in an expression works here."
@@ -260,6 +277,20 @@ func _validate_expression_field(edit: LineEdit) -> void:
 ## Wires the sheet-context source for expression validation (returns EventSheetResource).
 func set_lint_context_provider(provider: Callable) -> void:
 	_lint_context_provider = provider
+
+## Fills the completion popup with sheet variables/functions + host members (same source
+## as the GDScript-block editor, so the vocabulary matches everywhere).
+func _populate_expression_completion(edit: CodeEdit) -> void:
+	if not _lint_context_provider.is_valid():
+		return
+	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
+	for candidate: Dictionary in EventSheetGDScriptLint.completion_candidates(sheet):
+		edit.add_code_completion_option(
+			int(candidate.get("kind", CodeEdit.KIND_PLAIN_TEXT)),
+			str(candidate.get("label", "")),
+			str(candidate.get("label", ""))
+		)
+	edit.update_code_completion_options(true)
 
 ## Extract the typed value from a registered field node.
 func _extract_value(field: Control) -> Variant:
@@ -281,6 +312,11 @@ func _extract_value(field: Control) -> Variant:
 		return spin.value
 	if field is LineEdit:
 		return (field as LineEdit).text
+	if field is CodeEdit:
+		# Expression fields are single-line CodeEdits (for completion); strip any newline
+		# completion may sneak in.
+		return (field as CodeEdit).text.replace("
+", " ").strip_edges()
 	return ""
 
 func _on_confirmed() -> void:

@@ -25,6 +25,8 @@ signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
 ## Emitted when a comment needs the dialog editor (multiline comment rows and action-cell
 ## comments; single-line comment rows keep fast inline editing).
 signal comment_edit_requested(comment_row: Resource)
+## Emitted when a pick-filter row is double-clicked (event + index into pick_filters).
+signal pick_filter_edit_requested(event_row: Resource, pick_index: int)
 ## Emitted when the user finishes dragging the conditions/actions lane divider.
 signal lane_ratio_changed(ratio: float)
 ## Emitted when a footer "Add event…" row is clicked. owner_resource is the EventGroup the
@@ -689,6 +691,11 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
                     comment_edit_requested.emit(inline_comment)
                     accept_event()
                     return
+            # Pick-filter rows open the pick-filter dialog.
+            if str(double_click_meta.get("kind", "")) == "pick_filter" and row_data != null and row_data.source_resource is EventRow:
+                pick_filter_edit_requested.emit(row_data.source_resource, int(double_click_meta.get("pick_index", -1)))
+                accept_event()
+                return
             # Multiline comment rows edit in the dialog (per-line inline editing would
             # replace the whole text with one line — data loss).
             if row_data != null and row_data.source_resource is CommentRow and (row_data.source_resource as CommentRow).text.contains("\n"):
@@ -1600,6 +1607,26 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 )
             )
             condition_line_index += 1
+    # Pick filters render as "For each …" lines below the conditions (C3's picking rows);
+    # double-click opens the pick-filter dialog.
+    for pick_index in range(event_row.pick_filters.size()):
+        var pick: PickFilter = event_row.pick_filters[pick_index] as PickFilter
+        if pick == null or not pick.enabled:
+            continue
+        spans.append(
+            _make_span(
+                _format_pick_filter(pick),
+                SemanticSpan.SpanType.CONDITION,
+                {
+                    "lane": "condition",
+                    "kind": "pick_filter",
+                    "pick_index": pick_index,
+                    "chip": true,
+                    "line_index": condition_line_index
+                }.merged(condition_style_meta, true)
+            )
+        )
+        condition_line_index += 1
     if spans.is_empty() and event_row.else_mode != EventRow.ElseMode.ELSE:
         # An event with no conditions reads as "every tick"; render it as a real cell (not bare
         # text) so the condition lane still shows a clear, clickable empty event block.
@@ -1749,6 +1776,9 @@ func _count_event_lines(event_row: EventRow) -> int:
         if event_row.conditions[condition_index] == null:
             continue
         condition_lines += 1
+    for pick_entry in event_row.pick_filters:
+        if pick_entry is PickFilter and (pick_entry as PickFilter).enabled:
+            condition_lines += 1
     var max_condition_line: int = maxi(condition_lines - 1, 0)
     # Action lane: "+ Add" sits on its own line below the actions (and below the event comment
     # when present), so the lane spans action_count (+ comment) + 1 lines. In-flow GDScript
@@ -2113,6 +2143,27 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     }
     _layout_cache.store(key, layout)
     return layout
+
+## Display text for a pick-filter row: "For each item in group \"enemies\" (first 3)".
+func _format_pick_filter(pick: PickFilter) -> String:
+    var iterator: String = pick.iterator_name.strip_edges()
+    if iterator.is_empty():
+        iterator = "item"
+    var collection: String = pick.collection_value.strip_edges()
+    if collection.is_empty():
+        collection = pick.source_expression.strip_edges()
+    var source_text: String = collection
+    match pick.collection_kind:
+        PickFilter.CollectionKind.GROUP:
+            source_text = "group \"%s\"" % collection
+        PickFilter.CollectionKind.CHILDREN:
+            source_text = "children"
+    var text: String = "For each %s in %s" % [iterator, source_text]
+    if not pick.predicate_expression.strip_edges().is_empty():
+        text += " where %s" % pick.predicate_expression.strip_edges()
+    if pick.pick_first_n > 0:
+        text += " (first %d)" % pick.pick_first_n
+    return text
 
 ## Identity context for the pinned column header: behavior sheets show their host class so
 ## it is always visible what the conditions/actions act on.

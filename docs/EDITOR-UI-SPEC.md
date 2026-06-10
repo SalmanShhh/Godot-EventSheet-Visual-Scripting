@@ -407,10 +407,8 @@ hook, and the visual theme editor. Authoritative per-feature detail:
 
 Still open (post-1.0 polish):
 
-- **Pick-filter compilation** — the one remaining event-flow construct (`PickFilter`
-  resources render but emit a TODO comment).
-- **Expression autocomplete** in ƒx fields (live compile-check validation is shipped).
 - Gutter bookmarks; per-`widget_hint` inspector widgets; advanced per-row override UI.
+  (Pick-filter compilation and ƒx autocomplete have since shipped.)
 - **Sheet includes** (`includes: Array[NodePath]` exists on the resource; no semantics yet).
 - Candidate: MCP server for AI tooling (see GDSCRIPT-PAIRING-SPEC "Planned").
 

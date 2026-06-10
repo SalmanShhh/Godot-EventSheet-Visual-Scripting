@@ -112,6 +112,14 @@ func _on_pad_pressed() -> void:
 5. GDScript callers hold direct references, so they are *more* robust than the sheet-side
    default templates (which address behaviors as `$ClassName` child nodes).
 
+### Pick filters, ƒx autocomplete, external-sheet watcher
+
+Pick filters compile to direct `for` loops (group / children / any iterable + iterator-
+scoped predicate + first-N), authored via the row menu and edited by double-clicking the
+"For each …" row. ƒx fields are single-line CodeEdits with completion (same candidates as
+the block editor) plus live validation. GDScript-backed sheets watch their file's mtime
+and prompt to reload (re-import + lifting) when it changes outside the editor.
+
 ### Reverse provenance, ƒx validation, and row-cell icons
 
 The pairing loop now runs both directions: selecting a row highlights its generated lines,
@@ -265,11 +273,8 @@ conditions/actions) is planned.
   AI tools an unstructured path today (any `.gd` an AI edits opens as a sheet).
 - **GDScript-backed sheets, next tiers**: signal-handler lifting (reversing `_ready`
   connections + `_on_*` handlers into signal-trigger events), function rows with
-  canonical-signature verify-lift, a file watcher with a reimport prompt when the same
-  `.gd` is edited in the script editor, and comment preservation inside lifted regions.
-  (Tier 1 + lifecycle ACE lifting are implemented — see "Implemented".)
-- **Expression autocomplete**: completion popups in ƒx fields for sheet variables,
-  functions, and host-node properties (live compile-check validation is implemented).
+  canonical-signature verify-lift, and comment preservation inside lifted regions.
+  (Tier 1, lifecycle ACE lifting, and the changed-on-disk reload prompt are implemented.)
 - **More behavior packs**: timers, tweens, state machines (platformer + 8-direction ship
   today — see Implemented).
 - **C3 migration guide**: a docs table mapping common C3 events/actions/expressions to

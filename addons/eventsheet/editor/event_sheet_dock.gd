@@ -33,6 +33,7 @@ const ROW_MENU_ADD_GDSCRIPT_ACTION := 15
 const ROW_MENU_EDIT_COMMENT := 16
 const ROW_MENU_ATTACH_COMMENT := 17
 const ACTION_MENU_DETACH_COMMENT := 6
+const ROW_MENU_ADD_PICK_FILTER := 18
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -573,6 +574,7 @@ func _build_ui() -> void:
     _viewport.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
     _viewport.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
     _viewport.comment_edit_requested.connect(_open_comment_dialog)
+    _viewport.pick_filter_edit_requested.connect(_open_pick_filter_dialog)
     _viewport.ace_drop_requested.connect(_on_viewport_ace_drop_requested)
     _viewport.drag_status_requested.connect(_on_viewport_drag_status_requested)
     _viewport.lane_ratio_changed.connect(_on_viewport_lane_ratio_changed)
@@ -602,6 +604,48 @@ func _notification(what: int) -> void:
             _active_theme_style.changed.disconnect(_on_active_theme_style_changed)
         _active_theme_style = null
         _release_ace_sources()
+    elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+        # GDScript-backed sheets: refocusing the editor is the moment external edits (the
+        # script editor, another tool, git) usually land — offer to reload from disk.
+        _prompt_external_reload_if_changed()
+
+# ── External sheet file watching (GDScript-backed sheets) ────────────────────
+# mtime of the active external .gd at open/save time; divergence = changed on disk.
+var _external_mtime: int = 0
+var _external_reload_dialog: ConfirmationDialog = null
+
+## True when the active GDScript-backed sheet's file changed on disk since open/save.
+func _external_sheet_changed_on_disk() -> bool:
+    if _current_sheet == null or _current_sheet.external_source_path.is_empty():
+        return false
+    var disk_mtime: int = FileAccess.get_modified_time(_current_sheet.external_source_path)
+    return disk_mtime != 0 and _external_mtime != 0 and disk_mtime != _external_mtime
+
+## Re-imports the active external sheet from disk (fresh lossless import + ACE lift).
+func _reload_external_sheet() -> void:
+    if _current_sheet == null or _current_sheet.external_source_path.is_empty():
+        return
+    _load_sheet_from_path(_current_sheet.external_source_path)
+    _set_status("Reloaded from disk: %s" % _current_sheet_path.get_file())
+
+func _prompt_external_reload_if_changed() -> void:
+    if not _external_sheet_changed_on_disk():
+        return
+    if _external_reload_dialog == null:
+        _external_reload_dialog = ConfirmationDialog.new()
+        _external_reload_dialog.title = "File Changed On Disk"
+        _external_reload_dialog.ok_button_text = "Reload"
+        _external_reload_dialog.cancel_button_text = "Keep Editor Version"
+        _external_reload_dialog.confirmed.connect(_reload_external_sheet)
+        # Keeping the editor version: remember the new mtime so we only ask once per change.
+        _external_reload_dialog.canceled.connect(func() -> void:
+            if _current_sheet != null:
+                _external_mtime = FileAccess.get_modified_time(_current_sheet.external_source_path)
+        )
+        add_child(_external_reload_dialog)
+    _external_reload_dialog.dialog_text = "%s was modified outside the sheet editor.
+Reload it (re-import + event lifting)? Unsaved sheet edits will be lost." % _current_sheet.external_source_path.get_file()
+    _external_reload_dialog.popup_centered(Vector2i(460, 160))
 
 func _build_preview_window() -> void:
     if _preview_window != null:
@@ -684,6 +728,7 @@ func _build_context_menus() -> void:
     _row_context_menu.add_item("Add Variable Below", ROW_MENU_ADD_VARIABLE_BELOW)
     _row_context_menu.add_item("Add GDScript Block Below", ROW_MENU_ADD_GDSCRIPT_BELOW)
     _row_context_menu.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
+    _row_context_menu.add_item("Add Pick Filter (For Each)…", ROW_MENU_ADD_PICK_FILTER)
     _row_context_menu.add_separator()
     _row_context_menu.add_item("Edit Comment…", ROW_MENU_EDIT_COMMENT)
     _row_context_menu.add_item("Attach Comment To Event Above", ROW_MENU_ATTACH_COMMENT)
@@ -938,6 +983,7 @@ func _load_sheet_from_path(path: String) -> void:
         for entry in imported.events:
             if entry is LocalVariable:
                 lifted_count += 1
+        _external_mtime = FileAccess.get_modified_time(resolved_path)
         _set_status("Opened GDScript as sheet: %d variable(s) lifted, file remains the source of truth." % lifted_count)
         return
     var loaded: Resource = ResourceLoader.load(resolved_path)
@@ -960,6 +1006,7 @@ func _on_save_requested() -> void:
         var compile_result: Dictionary = SheetCompiler.compile(_current_sheet, _current_sheet.external_source_path)
         if bool(compile_result.get("success", false)):
             _dirty = false
+            _external_mtime = FileAccess.get_modified_time(_current_sheet.external_source_path)
             _refresh_title_strip()
             _set_status("Saved GDScript: %s" % _current_sheet.external_source_path.get_file())
         else:
@@ -2186,6 +2233,136 @@ func apply_theme_style(style: EventSheetEditorStyle) -> void:
         _refresh_theme_picker_selection()
         _mark_dirty("Theme applied from the theme editor.")
 
+# ── Pick-filter dialog (C3 "for each" picking) ───────────────────────────────
+var _pick_dialog: ConfirmationDialog = null
+var _pick_iterator_edit: LineEdit = null
+var _pick_kind_option: OptionButton = null
+var _pick_collection_edit: LineEdit = null
+var _pick_predicate_edit: LineEdit = null
+var _pick_first_n_spin: SpinBox = null
+var _pick_delete_button: Button = null
+var _pick_target_event: EventRow = null
+var _pick_target_index: int = -1
+
+## Opens the pick-filter dialog: pick_index = -1 adds a new filter, >= 0 edits/deletes.
+func _open_pick_filter_dialog(event_resource: Resource, pick_index: int = -1) -> void:
+    var event_row: EventRow = event_resource as EventRow
+    if event_row == null:
+        _set_status("Select an event to add a pick filter.", true)
+        return
+    _ensure_pick_dialog()
+    _pick_target_event = event_row
+    _pick_target_index = pick_index
+    var editing: bool = pick_index >= 0 and pick_index < event_row.pick_filters.size()
+    var pick: PickFilter = event_row.pick_filters[pick_index] if editing else PickFilter.new()
+    _pick_iterator_edit.text = pick.iterator_name
+    _pick_kind_option.select(_pick_kind_to_option(pick.collection_kind))
+    _pick_collection_edit.text = pick.collection_value if not pick.collection_value.is_empty() else pick.source_expression
+    _pick_predicate_edit.text = pick.predicate_expression
+    _pick_first_n_spin.value = pick.pick_first_n
+    _pick_delete_button.visible = editing
+    _pick_dialog.title = "Edit Pick Filter (For Each)" if editing else "Add Pick Filter (For Each)"
+    _pick_dialog.popup_centered(Vector2i(520, 300))
+
+func _ensure_pick_dialog() -> void:
+    if _pick_dialog != null:
+        return
+    _pick_dialog = ConfirmationDialog.new()
+    var form: VBoxContainer = VBoxContainer.new()
+    form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _pick_iterator_edit = _add_sheet_type_field(form, "Iterator name", "item")
+    var kind_row: HBoxContainer = HBoxContainer.new()
+    var kind_label: Label = Label.new()
+    kind_label.text = "Collection"
+    kind_label.custom_minimum_size = Vector2(130.0, 0.0)
+    kind_row.add_child(kind_label)
+    _pick_kind_option = OptionButton.new()
+    _pick_kind_option.add_item("Node group")        # → get_tree().get_nodes_in_group(value)
+    _pick_kind_option.add_item("Children")          # → get_children()
+    _pick_kind_option.add_item("GDScript iterable") # → value verbatim (array, range(), …)
+    _pick_kind_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    kind_row.add_child(_pick_kind_option)
+    form.add_child(kind_row)
+    _pick_collection_edit = _add_sheet_type_field(form, "Group / expression", "enemies   or   range(3)")
+    _pick_predicate_edit = _add_sheet_type_field(form, "Where (GDScript)", "item.health < 50   (optional)")
+    var n_row: HBoxContainer = HBoxContainer.new()
+    var n_label: Label = Label.new()
+    n_label.text = "Pick first N (0 = all)"
+    n_label.custom_minimum_size = Vector2(130.0, 0.0)
+    n_row.add_child(n_label)
+    _pick_first_n_spin = SpinBox.new()
+    _pick_first_n_spin.min_value = 0
+    _pick_first_n_spin.max_value = 9999
+    n_row.add_child(_pick_first_n_spin)
+    form.add_child(n_row)
+    _pick_delete_button = Button.new()
+    _pick_delete_button.text = "Delete This Pick Filter"
+    _pick_delete_button.pressed.connect(_on_pick_filter_deleted)
+    form.add_child(_pick_delete_button)
+    _pick_dialog.add_child(form)
+    _pick_dialog.confirmed.connect(_on_pick_filter_confirmed)
+    add_child(_pick_dialog)
+
+func _pick_kind_to_option(kind: int) -> int:
+    match kind:
+        PickFilter.CollectionKind.GROUP:
+            return 0
+        PickFilter.CollectionKind.CHILDREN:
+            return 1
+        _:
+            return 2
+
+func _pick_option_to_kind(option: int) -> int:
+    match option:
+        0:
+            return PickFilter.CollectionKind.GROUP
+        1:
+            return PickFilter.CollectionKind.CHILDREN
+        _:
+            return PickFilter.CollectionKind.EXPRESSION
+
+func _on_pick_filter_confirmed() -> void:
+    if _pick_target_event == null:
+        return
+    var event_row: EventRow = _pick_target_event
+    var target_index: int = _pick_target_index
+    var iterator: String = _pick_iterator_edit.text.strip_edges()
+    var kind: int = _pick_option_to_kind(_pick_kind_option.selected)
+    var collection: String = _pick_collection_edit.text.strip_edges()
+    var predicate: String = _pick_predicate_edit.text.strip_edges()
+    var first_n: int = int(_pick_first_n_spin.value)
+    var changed: bool = _perform_undoable_sheet_edit("Edit Pick Filter", func() -> bool:
+        var pick: PickFilter = event_row.pick_filters[target_index] if target_index >= 0 and target_index < event_row.pick_filters.size() else PickFilter.new()
+        pick.iterator_name = iterator if not iterator.is_empty() else "item"
+        pick.collection_kind = kind
+        pick.collection_value = collection
+        pick.predicate_expression = predicate
+        pick.pick_first_n = first_n
+        if target_index < 0:
+            event_row.pick_filters.append(pick)
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Pick filter saved (compiles as a for-each loop).")
+
+func _on_pick_filter_deleted() -> void:
+    if _pick_target_event == null or _pick_target_index < 0:
+        _pick_dialog.hide()
+        return
+    var event_row: EventRow = _pick_target_event
+    var target_index: int = _pick_target_index
+    var changed: bool = _perform_undoable_sheet_edit("Delete Pick Filter", func() -> bool:
+        if target_index < event_row.pick_filters.size():
+            event_row.pick_filters.remove_at(target_index)
+            return true
+        return false
+    )
+    _pick_dialog.hide()
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Pick filter removed.")
+
 # ── Comment dialog (multiline text + per-comment color) ─────────────────────
 var _comment_dialog: ConfirmationDialog = null
 var _comment_text_edit: TextEdit = null
@@ -2668,6 +2845,8 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
                 _attach_comment_to_event_above(_context_row.source_resource as CommentRow)
             else:
                 _set_status("Only comment rows can attach to an event.", true)
+        ROW_MENU_ADD_PICK_FILTER:
+            _open_pick_filter_dialog(_context_row.source_resource, -1)
 
 func _on_variable_context_menu_id_pressed(id: int) -> void:
     if _context_variable.is_empty():

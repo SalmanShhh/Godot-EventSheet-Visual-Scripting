@@ -42,7 +42,7 @@ event flow, or write the expression directly — `ƒx` fields are plain GDScript
 | Set position / angle | `Set Position` / `Set Rotation` (Node2D) |
 | Simulate control (Platform) | PlatformerMovement behavior ACEs (`Jump`, `Set Move Speed`) |
 | Wait | An `await`-flagged action, or `await get_tree().create_timer(1.0).timeout` in a block |
-| Pick by comparison / For each | No picking system (Godot has no object lists per type) — iterate in a GDScript block: `for enemy in get_tree().get_nodes_in_group("enemies"):` |
+| Pick by comparison / For each | **Pick filters**: right-click an event → "Add Pick Filter (For Each)…" — loops a node group/children/any iterable with a GDScript `where` predicate and first-N; compiles to a plain `for` loop |
 | random(a, b) | `randf_range(a, b)` / `randi_range(a, b)` |
 | dt | `delta` |
 | lerp(a, b, x) | `lerp(a, b, x)` |

@@ -457,6 +457,14 @@ static func _emit_event_body(
 			had_body = true
 
 		var body_depth: int = depth + (1 if emitted_block else 0)
+		# Pick filters (C3 "for each" picking, the Godot way): each enabled filter wraps the
+		# event's body in a direct `for` loop — group members, children, or any GDScript
+		# iterable — with an optional predicate and first-N cap. Conditions gate the whole
+		# loop; multiple filters nest in order. Plain loops keep the parity contract.
+		var pick_start_size: int = lines.size()
+		body_depth = _emit_pick_filters(event_row, lines, body_depth, warnings)
+		var emitted_pick_loop: bool = lines.size() > pick_start_size
+		had_body = had_body or emitted_pick_loop
 		var body_indent: String = "\t".repeat(body_depth)
 		var body_start_size: int = lines.size()
 
@@ -497,19 +505,72 @@ static func _emit_event_body(
 		if not event_row.sub_events.is_empty():
 			had_body = _emit_event_body(event_row.sub_events, lines, source_map, body_depth, warnings) or had_body
 
-		# An if/elif/else block whose body emitted nothing needs `pass` to stay valid GDScript
-		# (e.g. a condition-only event, or one whose actions all compiled to nothing).
-		if emitted_block and lines.size() == body_start_size:
+		# An if/elif/else block (or pick loop) whose body emitted nothing needs `pass` to
+		# stay valid GDScript (e.g. a condition-only event, or one whose actions all
+		# compiled to nothing).
+		if (emitted_block or emitted_pick_loop) and lines.size() == body_start_size:
 			lines.append(body_indent + "pass")
-			had_body = true
-
-		if not event_row.pick_filters.is_empty():
-			lines.append(indent + "# TODO: pick filters not yet implemented")
 			had_body = true
 		if lines.size() >= event_start_line:
 			source_map.append({"uid": str(event_row.get_instance_id()), "start": event_start_line, "end": lines.size(), "kind": "event"})
 		chain_open = emitted_block
 	return had_body
+
+## Emits the `for` loop headers for an event's pick filters and returns the new body depth.
+## Supported per filter: collection (GROUP → get_nodes_in_group, CHILDREN → get_children,
+## EXPRESSION/ARRAY → verbatim GDScript iterable), predicate_expression (iterator-scoped
+## GDScript), pick_first_n. order_by is not compiled yet (warning); filter_conditions use
+## host-context templates and are likewise warned — write the predicate instead.
+static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, body_depth: int, warnings: Array) -> int:
+	var loop_index: int = 0
+	for filter_entry: Variant in event_row.pick_filters:
+		if not (filter_entry is PickFilter) or not (filter_entry as PickFilter).enabled:
+			continue
+		var pick: PickFilter = filter_entry as PickFilter
+		var collection: String = _pick_collection_expression(pick)
+		if collection.is_empty():
+			warnings.append("Pick filter skipped: no collection for kind %d (set collection_value)." % pick.collection_kind)
+			continue
+		if not pick.order_by_expression.strip_edges().is_empty():
+			warnings.append("Pick filter order_by is not compiled yet; iterating in collection order.")
+		if not pick.filter_conditions.is_empty():
+			warnings.append("Pick filter conditions are not compiled yet; use predicate_expression (iterator-scoped GDScript).")
+		var iterator: String = pick.iterator_name.strip_edges()
+		if iterator.is_empty():
+			iterator = "item"
+		var indent: String = "\t".repeat(body_depth)
+		var counter_name: String = "__pick_count_%d" % loop_index
+		if pick.pick_first_n > 0:
+			lines.append("%svar %s: int = 0" % [indent, counter_name])
+		lines.append("%sfor %s in %s:" % [indent, iterator, collection])
+		body_depth += 1
+		indent = "\t".repeat(body_depth)
+		var predicate: String = pick.predicate_expression.strip_edges()
+		if not predicate.is_empty():
+			lines.append("%sif not (%s):" % [indent, predicate])
+			lines.append("%s\tcontinue" % indent)
+		if pick.pick_first_n > 0:
+			lines.append("%s%s += 1" % [indent, counter_name])
+			lines.append("%sif %s > %d:" % [indent, counter_name, pick.pick_first_n])
+			lines.append("%s\tbreak" % indent)
+		loop_index += 1
+	return body_depth
+
+## The GDScript iterable a pick filter loops over ("" = unsupported configuration).
+static func _pick_collection_expression(pick: PickFilter) -> String:
+	var value: String = pick.collection_value.strip_edges()
+	if value.is_empty():
+		value = pick.source_expression.strip_edges()
+	match pick.collection_kind:
+		PickFilter.CollectionKind.GROUP:
+			return "get_tree().get_nodes_in_group(\"%s\")" % value if not value.is_empty() else ""
+		PickFilter.CollectionKind.CHILDREN:
+			return "get_children()"
+		PickFilter.CollectionKind.EXPRESSION, PickFilter.CollectionKind.ARRAY:
+			return value
+		_:
+			# NODE_PATH_ARRAY / NODE_TREE / CUSTOM: honor an explicit expression, else skip.
+			return value
 
 ## Indents a sibling GDScript block's lines for `depth`. Imported code already carries its
 ## own leading tab (function bodies arrive pre-indented for depth 1), while code written in

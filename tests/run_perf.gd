@@ -51,6 +51,8 @@ func _init() -> void:
 	passed = VisualCompletenessTest.run() and passed
 	passed = ReleaseHardeningTest.run() and passed
 	passed = GDScriptPasteTest.run() and passed
+	passed = PickFilterTest.run() and passed
+	passed = FxCompletionWatchTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")
