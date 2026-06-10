@@ -27,6 +27,8 @@ signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
 signal comment_edit_requested(comment_row: Resource)
 ## Emitted when a pick-filter row is double-clicked (event + index into pick_filters).
 signal pick_filter_edit_requested(event_row: Resource, pick_index: int)
+## Emitted when an enum row is double-clicked.
+signal enum_edit_requested(enum_row: Resource)
 ## Emitted when the user finishes dragging the conditions/actions lane divider.
 signal lane_ratio_changed(ratio: float)
 ## Emitted when a footer "Add event…" row is clicked. owner_resource is the EventGroup the
@@ -752,6 +754,11 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
                     comment_edit_requested.emit(inline_comment)
                     accept_event()
                     return
+            # Enum rows open the enum dialog.
+            if row_data != null and row_data.source_resource is EnumRow:
+                enum_edit_requested.emit(row_data.source_resource)
+                accept_event()
+                return
             # Pick-filter rows open the pick-filter dialog.
             if str(double_click_meta.get("kind", "")) == "pick_filter" and row_data != null and row_data.source_resource is EventRow:
                 pick_filter_edit_requested.emit(row_data.source_resource, int(double_click_meta.get("pick_index", -1)))
@@ -1243,9 +1250,40 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
         return _build_tree_variable_row(entry as LocalVariable, indent)
     if entry is RawCodeRow:
         return _build_raw_code_row(entry as RawCodeRow, indent)
+    if entry is EnumRow:
+        return _build_enum_row(entry as EnumRow, indent)
     if entry is EventRow:
         return _build_event_row(entry as EventRow, indent)
     return null
+
+## An enum row: rendered like a variable declaration ("enum  State { IDLE, RUN }");
+## double-click opens the enum dialog.
+func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
+    var event_style: EventSheetEventStyle = _get_event_style()
+    var row_data := EventRowData.new()
+    row_data.indent = indent
+    row_data.row_type = EventRowData.RowType.SECTION
+    row_data.source_resource = enum_row
+    row_data.row_uid = "enum_%s_%d" % [str(enum_row.get_instance_id()), indent]
+    row_data.disabled = not enum_row.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
+    row_data.breakpoint_enabled = bool(_breakpoint_rows.get(row_data.row_uid, false))
+    var members: PackedStringArray = PackedStringArray()
+    for member: String in enum_row.members:
+        if not member.strip_edges().is_empty():
+            members.append(member.strip_edges())
+    row_data.spans = [
+        _make_span(
+            "enum",
+            SemanticSpan.SpanType.KEYWORD,
+            {"badge": true, "text_color": event_style.behavior_accent_color}
+        ),
+        _make_span(
+            "%s { %s }" % [enum_row.enum_name, ", ".join(members)],
+            SemanticSpan.SpanType.VALUE,
+            {"kind": "enum_row", "text_color": event_style.object_label_color}
+        )
+    ]
+    return row_data
 
 ## A GDScript block row: verbatim code shown line-by-line, edited via the dock's code dialog
 ## (double-click), compiled at class level. The C3-style "inline code" escape hatch.

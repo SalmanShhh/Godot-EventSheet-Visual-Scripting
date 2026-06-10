@@ -74,6 +74,17 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		lines.append("\thost = get_parent() as %s" % host_type)
 		lines.append("\tif host == null:")
 		lines.append("\t\tpush_warning(\"%s behavior requires a %s parent.\")" % [behavior_label, host_type])
+	# Enums emit FIRST so enum-typed variable declarations below can reference them.
+	var enum_rows: Array = []
+	_collect_enum_rows(all_events, enum_rows)
+	if not enum_rows.is_empty():
+		lines.append("")
+		for enum_entry: Variant in enum_rows:
+			var enum_line: String = _emit_enum_line(enum_entry as EnumRow)
+			if enum_line.is_empty():
+				continue
+			lines.append(enum_line)
+			source_map.append({"uid": str((enum_entry as EnumRow).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "enum"})
 	var tree_variables: Array = []
 	_collect_tree_variables(all_events, tree_variables)
 	var variable_lines: PackedStringArray = _emit_variables(merged_variables)
@@ -199,6 +210,11 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			added_event_rows.append(entry)
 		elif entry is CommentRow and (entry as CommentRow).enabled and not (entry as CommentRow).text.strip_edges().is_empty():
 			deferred_comment_lines_external.append_array((entry as CommentRow).text.split("\n"))
+		elif entry is EnumRow:
+			var external_enum_line: String = _emit_enum_line(entry as EnumRow)
+			if not external_enum_line.is_empty():
+				lines.append(external_enum_line)
+				source_map.append({"uid": str((entry as EnumRow).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "enum"})
 	# External sheets: raw rows include the original file's verbatim segments, so signals
 	# declared anywhere in the source validate self-connections.
 	var external_raw_rows: Array = []
@@ -720,6 +736,28 @@ static func _emit_variables(variables: Dictionary) -> PackedStringArray:
 
 ## Recursively gathers tree-placed GDScript blocks from the top level and groups (sub-event
 ## raw blocks stay deferred until sub-events compile).
+## Canonical single-line enum emission ("" when unnamed/empty/disabled). The importer's
+## verify-lift depends on this exact form — change it only with a lifter update.
+static func _emit_enum_line(enum_row: EnumRow) -> String:
+	if enum_row == null or not enum_row.enabled or enum_row.enum_name.strip_edges().is_empty():
+		return ""
+	var members: PackedStringArray = PackedStringArray()
+	for member: String in enum_row.members:
+		if not member.strip_edges().is_empty():
+			members.append(member.strip_edges())
+	if members.is_empty():
+		return ""
+	return "enum %s { %s }" % [enum_row.enum_name.strip_edges(), ", ".join(members)]
+
+## Recursively gathers EnumRow rows (top level and inside groups).
+static func _collect_enum_rows(entries: Array, into: Array) -> void:
+	for entry: Variant in entries:
+		if entry is EnumRow:
+			into.append(entry)
+		elif entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_collect_enum_rows(group.events if not group.events.is_empty() else group.rows, into)
+
 static func _collect_class_level_raw_rows(entries: Array, into: Array) -> void:
 	for entry: Variant in entries:
 		if entry is RawCodeRow:

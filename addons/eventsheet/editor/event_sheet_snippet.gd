@@ -103,6 +103,8 @@ static func _row_to_dict(resource: Variant) -> Dictionary:
 		return {"kind": "raw", "code": (resource as RawCodeRow).code, "enabled": (resource as RawCodeRow).enabled}
 	if resource is LocalVariable:
 		return _variable_to_dict(resource as LocalVariable).merged({"kind": "variable"}, true)
+	if resource is EnumRow:
+		return {"kind": "enum", "name": (resource as EnumRow).enum_name, "members": Array((resource as EnumRow).members), "enabled": (resource as EnumRow).enabled}
 	return {}
 
 static func _ace_to_dict(condition: ACECondition) -> Dictionary:
@@ -195,6 +197,12 @@ static func _dict_to_row(row_data: Dictionary) -> Resource:
 			raw_block.code = str(row_data.get("code", ""))
 			raw_block.enabled = bool(row_data.get("enabled", true))
 			return raw_block
+		"enum":
+			var enum_row: EnumRow = EnumRow.new()
+			enum_row.enum_name = str(row_data.get("name", "State"))
+			enum_row.members = PackedStringArray(row_data.get("members", []))
+			enum_row.enabled = bool(row_data.get("enabled", true))
+			return enum_row
 		"variable":
 			return _dict_to_variable(row_data)
 	return null

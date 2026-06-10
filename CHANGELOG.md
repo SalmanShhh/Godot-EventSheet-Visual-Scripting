@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### First-class enums (rich-variables phase 1 of 3 — 1.0 scope)
+- **Enums are sheet rows**: add via the row menu ("Add Enum Below") or double-click to
+  edit (name + members, optional explicit values like `HURT = 4`). They compile to
+  canonical class enums **before variables**, so `var state: State` works — and exported
+  enum-typed variables get Godot's **Inspector dropdown for free**.
+- Full citizen everywhere: rendered as keyword-badged rows; **verify-lifted** back from
+  generated code (non-canonical/multi-line enums stay verbatim blocks; byte-identical
+  round-trip guarded); travel in **snippets**; expressions referencing them **lint**
+  correctly; `State.` **dot-completes the members** in ƒx fields and GDScript blocks;
+  source-mapped for provenance.
+- Scope decisions recorded: rich variables (collections UX + curated Dictionary/Array/
+  JSON ACE set) are **required for 1.0**; **XML support is dropped** — JSON is the
+  interchange format. Covered by `tests/enum_row_test.gd` (16 assertions).
+
 ### Inspector polish: widget_hint editors + per-row "Selected ACE" properties
 - **widget_hint-specific inspector editors**: exposed ACE params with `widget_hint`
   (or an `@ace_param_hint`) now render custom controls in Godot's Inspector — `slider`/

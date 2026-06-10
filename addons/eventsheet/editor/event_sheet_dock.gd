@@ -34,6 +34,7 @@ const ROW_MENU_EDIT_COMMENT := 16
 const ROW_MENU_ATTACH_COMMENT := 17
 const ACTION_MENU_DETACH_COMMENT := 6
 const ROW_MENU_ADD_PICK_FILTER := 18
+const ROW_MENU_ADD_ENUM := 19
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -586,6 +587,7 @@ func _build_ui() -> void:
     _viewport.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
     _viewport.comment_edit_requested.connect(_open_comment_dialog)
     _viewport.pick_filter_edit_requested.connect(_open_pick_filter_dialog)
+    _viewport.enum_edit_requested.connect(_open_enum_dialog)
     _viewport.ace_drop_requested.connect(_on_viewport_ace_drop_requested)
     _viewport.drag_status_requested.connect(_on_viewport_drag_status_requested)
     _viewport.lane_ratio_changed.connect(_on_viewport_lane_ratio_changed)
@@ -740,6 +742,7 @@ func _build_context_menus() -> void:
     _row_context_menu.add_item("Add GDScript Block Below", ROW_MENU_ADD_GDSCRIPT_BELOW)
     _row_context_menu.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
     _row_context_menu.add_item("Add Pick Filter (For Each)…", ROW_MENU_ADD_PICK_FILTER)
+    _row_context_menu.add_item("Add Enum Below", ROW_MENU_ADD_ENUM)
     _row_context_menu.add_separator()
     _row_context_menu.add_item("Edit Comment…", ROW_MENU_EDIT_COMMENT)
     _row_context_menu.add_item("Attach Comment To Event Above", ROW_MENU_ATTACH_COMMENT)
@@ -2267,6 +2270,65 @@ func _on_exposed_row_param_changed(target: Resource, param_id: String, value: Va
         _refresh_after_edit()
         _mark_dirty("Parameter updated from the Inspector.")
 
+# ── Enum dialog (name + members, one per line) ───────────────────────────────────────
+var _enum_dialog: ConfirmationDialog = null
+var _enum_name_edit: LineEdit = null
+var _enum_members_edit: TextEdit = null
+var _enum_target: EnumRow = null
+
+## Opens the enum editor for an EnumRow (double-click or "Add Enum Below").
+func _open_enum_dialog(enum_resource: Resource) -> void:
+    var enum_row: EnumRow = enum_resource as EnumRow
+    if enum_row == null:
+        return
+    _ensure_enum_dialog()
+    _enum_target = enum_row
+    _enum_name_edit.text = enum_row.enum_name
+    _enum_members_edit.text = "
+".join(enum_row.members)
+    _enum_dialog.popup_centered(Vector2i(420, 300))
+
+func _ensure_enum_dialog() -> void:
+    if _enum_dialog != null:
+        return
+    _enum_dialog = ConfirmationDialog.new()
+    _enum_dialog.title = "Edit Enum"
+    var form: VBoxContainer = VBoxContainer.new()
+    form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _enum_name_edit = _add_sheet_type_field(form, "Enum name", "State")
+    var members_label: Label = Label.new()
+    members_label.text = "Members (one per line; optional \"NAME = 4\" values)"
+    form.add_child(members_label)
+    _enum_members_edit = TextEdit.new()
+    _enum_members_edit.custom_minimum_size = Vector2(380.0, 150.0)
+    _enum_members_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    form.add_child(_enum_members_edit)
+    _enum_dialog.add_child(form)
+    _enum_dialog.confirmed.connect(_on_enum_dialog_confirmed)
+    add_child(_enum_dialog)
+
+func _on_enum_dialog_confirmed() -> void:
+    if _enum_target == null:
+        return
+    var target: EnumRow = _enum_target
+    var new_name: String = _enum_name_edit.text.strip_edges()
+    var new_members: PackedStringArray = PackedStringArray()
+    for line: String in _enum_members_edit.text.split("
+"):
+        if not line.strip_edges().is_empty():
+            new_members.append(line.strip_edges())
+    if new_name.is_empty() or new_members.is_empty():
+        _set_status("Enums need a name and at least one member.", true)
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Edit Enum", func() -> bool:
+        target.enum_name = new_name
+        target.members = new_members
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Enum updated (compiles before variables; use it as a variable type).")
+
 # ── Quick-add bar (C3 "type to insert") ──────────────────────────────────────
 var _quick_add_edit: LineEdit = null
 
@@ -2951,6 +3013,10 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
                 _set_status("Only comment rows can attach to an event.", true)
         ROW_MENU_ADD_PICK_FILTER:
             _open_pick_filter_dialog(_context_row.source_resource, -1)
+        ROW_MENU_ADD_ENUM:
+            var new_enum: EnumRow = EnumRow.new()
+            _insert_context_row_below(new_enum, "Added enum.")
+            _open_enum_dialog(new_enum)
 
 func _on_variable_context_menu_id_pressed(id: int) -> void:
     if _context_variable.is_empty():

@@ -70,6 +70,12 @@ func import_external_source(source: String) -> EventSheetResource:
 			sheet.events.append(lifted)
 			index += 1
 			continue
+		var lifted_enum: EnumRow = _try_lift_enum(line)
+		if lifted_enum != null:
+			_flush_pending(pending, sheet)
+			sheet.events.append(lifted_enum)
+			index += 1
+			continue
 		pending.append(line)
 		index += 1
 	_flush_pending(pending, sheet)
@@ -110,6 +116,25 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	lifted.default_value = descriptor.get("default", null)
 	lifted.exported = bool(descriptor.get("exported", false))
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+		return null
+	return lifted
+
+## Lifts a canonical single-line enum (`enum Name { A, B = 4 }`) to an EnumRow when the
+## compiler's emission reproduces the line exactly (the verify-lift rule); multi-line or
+## otherwise-formatted enums stay verbatim blocks.
+func _try_lift_enum(line: String) -> EnumRow:
+	if not line.begins_with("enum "):
+		return null
+	var enum_regex: RegEx = RegEx.new()
+	if enum_regex.compile("^enum ([A-Za-z_][A-Za-z0-9_]*) \\{ (.+) \\}$") != OK:
+		return null
+	var enum_match: RegExMatch = enum_regex.search(line)
+	if enum_match == null:
+		return null
+	var lifted: EnumRow = EnumRow.new()
+	lifted.enum_name = enum_match.get_string(1)
+	lifted.members = PackedStringArray(enum_match.get_string(2).split(", "))
+	if SheetCompiler._emit_enum_line(lifted) != line:
 		return null
 	return lifted
 

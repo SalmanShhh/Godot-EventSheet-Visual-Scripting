@@ -38,6 +38,8 @@ static func build_scratch_source(code: String, in_flow: bool, sheet: EventSheetR
 		lines.append("var host: %s = null" % host_class)
 	else:
 		lines.append("extends %s" % host_class)
+	for enum_row in _sheet_enums(sheet):
+		lines.append(SheetCompiler._emit_enum_line(enum_row))
 	for variable_name in _sheet_variable_names(sheet):
 		lines.append("var %s" % variable_name)
 	for function_name in _sheet_function_names(sheet):
@@ -75,6 +77,13 @@ static func dot_completion_candidates(token: String, sheet: EventSheetResource) 
 	if token == "host" and sheet != null and sheet.behavior_mode:
 		_add_class_members(candidates, seen, sheet.host_class)
 		return candidates
+	# Sheet enums: `State.` offers the members.
+	if sheet != null:
+		for enum_row in _sheet_enums(sheet):
+			if enum_row.enum_name == token:
+				for member: String in enum_row.members:
+					_add_candidate(candidates, seen, CodeEdit.KIND_CONSTANT, member.get_slice("=", 0).strip_edges())
+				return candidates
 	if token.begins_with("$"):
 		var class_path: String = _global_class_path(token.substr(1))
 		if not class_path.is_empty():
@@ -161,6 +170,8 @@ static func completion_candidates(sheet: EventSheetResource) -> Array[Dictionary
 		_add_candidate(candidates, seen, CodeEdit.KIND_VARIABLE, variable_name)
 	for function_name in _sheet_function_names(sheet):
 		_add_candidate(candidates, seen, CodeEdit.KIND_FUNCTION, function_name)
+	for enum_row in _sheet_enums(sheet):
+		_add_candidate(candidates, seen, CodeEdit.KIND_CLASS, enum_row.enum_name)
 	if sheet != null and ClassDB.class_exists(sheet.host_class):
 		for property_info in ClassDB.class_get_property_list(sheet.host_class):
 			var property_name: String = str(property_info.get("name", ""))
@@ -177,6 +188,21 @@ static func _add_candidate(candidates: Array[Dictionary], seen: Dictionary, kind
 		return
 	seen[label] = true
 	candidates.append({"kind": kind, "label": label})
+
+## Sheet-declared enums (top level and inside groups), enabled only.
+static func _sheet_enums(sheet: EventSheetResource) -> Array[EnumRow]:
+	var enums: Array[EnumRow] = []
+	if sheet != null:
+		_collect_sheet_enums(sheet.events, enums)
+	return enums
+
+static func _collect_sheet_enums(entries: Array, into: Array[EnumRow]) -> void:
+	for entry in entries:
+		if entry is EnumRow and (entry as EnumRow).enabled:
+			into.append(entry)
+		elif entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_collect_sheet_enums(group.events if not group.events.is_empty() else group.rows, into)
 
 static func _sheet_variable_names(sheet: EventSheetResource) -> Array[String]:
 	var names: Array[String] = []

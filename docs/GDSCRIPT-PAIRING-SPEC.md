@@ -124,6 +124,17 @@ positionally. Ceiling note: Godot does not expose its real completion engine
 full-fidelity IntelliSense always exists one panel away because the generated script is
 plain GDScript.
 
+### First-class enums (rich-variables phase 1)
+
+Enums are sheet rows (`EnumRow`: name + members, optional explicit values) compiling to
+canonical single-line class enums (`enum State { IDLE, RUN, HURT = 4 }`) **before**
+variables so enum-typed declarations work — exported enum variables get Godot's Inspector
+dropdown for free. They render as keyword-badged rows, edit via dialog (row menu "Add
+Enum Below" / double-click), verify-lift from generated code (non-canonical forms stay
+verbatim blocks), travel in snippets (kind "enum"; older versions drop them via the
+whitelist), feed the lint scratch (expressions referencing them validate), and `State.`
+dot-completes members. Guarded by `tests/enum_row_test.gd`.
+
 ### Pick filters, ƒx autocomplete, external-sheet watcher
 
 Pick filters compile to direct `for` loops (group / children / any iterable + iterator-
@@ -291,24 +302,18 @@ conditions/actions) is planned.
   editor-embedded WebSocket variant later for live, undoable edits. Local-only by default;
   tool schemas versioned like the snippet format. Note: GDScript-backed sheets already give
   AI tools an unstructured path today (any `.gd` an AI edits opens as a sheet).
-- **First-class rich variables (Dictionary / Array / JSON / Enums)** — user-confirmed
-  direction. Key insight: unlike C3 (where these are capability-providing addons), GDScript
-  already HAS all of it and ƒx fields are GDScript — so this is vocabulary + UX, not
-  capability. Design decisions: the curated ACE set (~10 dict, ~12 array, ~5 JSON ops)
-  lives in the **builtin Core descriptors** (always present + reverse-liftable by the ACE
-  lifter), grouped as "Variables: Dictionary/Array/JSON"; codegen stays direct
-  (`{var}[{key}] = {value}`, `{var}.append({value})`, `JSON.stringify({var})`) so the
-  parity contract holds; typed collections use Godot's `Array[T]`/`Dictionary[K,V]` type
-  strings; structured defaults edit as GDScript literals with the existing live ƒx
-  validation (v1) before any per-element editor (v2); **EnumRow** is the one new row kind
-  (name + members → class `enum`, canonical emission for verify-lift, members feed
-  dot-context completion, exported enum variables get free Inspector dropdowns) and needs
-  a snippet-whitelist extension (v2 marker, graceful v1 fallback); variable-reference
-  params become type-aware (array ACEs offer only Array variables). **XML is explicitly
-  out of first-class scope** (Godot has only a pull-parser, no writer/XPath) — ConfigFile
-  ACEs are the Godot-native equivalent; XML at most as an optional addon pack. Phasing:
-  enums → collection variable UX → curated ACE set + migration-guide rows → optional
-  ConfigFile/XML pack.
+- **First-class rich variables (Dictionary / Array / JSON) — REQUIRED FOR 1.0** (enums
+  shipped; see Implemented). Key insight: unlike C3 (where these are capability-providing
+  addons), GDScript already HAS all of it and ƒx fields are GDScript — so this is
+  vocabulary + UX, not capability. Remaining phases: **collection variable UX** (Godot's
+  `Array[T]`/`Dictionary[K,V]` type strings in the variable dialog; structured defaults
+  edited as GDScript literals with the existing live ƒx validation; canonical
+  `_to_code_literal` emission so verify-lift holds) and the **curated builtin ACE set**
+  (~10 dictionary, ~12 array, ~5 JSON ops as Core descriptors — always present and
+  reverse-liftable — grouped "Variables: Dictionary/Array/JSON"; direct codegen like
+  `{var}[{key}] = {value}` keeps the parity contract; type-aware variable-reference
+  dropdowns; migration-guide rows). **XML is dropped entirely** (user decision): JSON is
+  the supported interchange format.
 - **More behavior packs**: tweens and beyond (platformer, 8-direction, timer, flash, and
   state machine ship today — see Implemented).
 - **C3 migration guide**: implemented — `docs/C3-MIGRATION-GUIDE.md` (concept map + System
