@@ -22,7 +22,9 @@ class_name EventSheetACELifter
 const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _ready() -> void:": "OnReady",
 	"func _process(delta: float) -> void:": "OnProcess",
-	"func _physics_process(delta: float) -> void:": "OnPhysicsProcess"
+	"func _physics_process(delta: float) -> void:": "OnPhysicsProcess",
+	"func _input(event: InputEvent) -> void:": "OnInput",
+	"func _unhandled_input(event: InputEvent) -> void:": "OnUnhandledInput"
 }
 
 ## Attempts the lift on an imported external sheet. Mutates sheet.events only when the

@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Input vocabulary + Wait/Await (Godot-familiarity batch 1)
+- **Input ACE group** — the most-used trigger family finally has first-class vocabulary:
+  Is Action Pressed / On Action Just Pressed / On Action Just Released conditions,
+  Action Strength + Input Axis expressions, and **On Input / On Unhandled Input**
+  lifecycle triggers (`_input(event)` / `_unhandled_input(event)`) that compile AND
+  verify-lift back from generated code.
+- **Action params are dropdowns read from the project's InputMap** (custom actions
+  first, then the `ui_*` defaults) — pick real actions instead of typing strings.
+- **Wait / Wait For Signal** actions (C3's System → Wait): compile to
+  `await get_tree().create_timer(s).timeout` / `await <signal>` — handlers are implicit
+  coroutines in GDScript, so awaiting mid-event is safe and idiomatic.
+- Covered by `tests/input_time_aces_test.gd` (14 assertions).
+
 ### MCP server — AI tooling (the backlog's final item)
 - **A pure-GDScript Model Context Protocol server** ships in the addon
   (`addons/eventsheet/mcp/`): the Godot binary itself is the server process — no

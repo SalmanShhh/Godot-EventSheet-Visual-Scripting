@@ -27,9 +27,15 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		"Signals / Scene / Input",
 		"On signal {signal_name}"
 	))
+	descriptors.append(_make_descriptor("Core", "OnInput", "On Input", ACEDescriptor.ACEType.TRIGGER, "", "_input", [], "Input", "On input event"))
+	descriptors.append(_make_descriptor("Core", "OnUnhandledInput", "On Unhandled Input", ACEDescriptor.ACEType.TRIGGER, "", "_unhandled_input", [], "Input", "On unhandled input event"))
 	descriptors.append(_make_descriptor("Core", "OnTimeout", "On Timeout", ACEDescriptor.ACEType.TRIGGER, "", "timeout", [], "Signals / Scene / Input", "On timeout", "Timer"))
 	descriptors.append(_make_descriptor("Core", "OnAnimationFinished", "On Animation Finished", ACEDescriptor.ACEType.TRIGGER, "", "animation_finished", [_make_param("anim_name", "String", "", "Animation", "Name of the animation that finished.")], "Signals / Scene / Input", "On animation finished {anim_name}", "AnimationPlayer"))
 
+	# Input (action names come from the project's InputMap + the ui_* defaults)
+	descriptors.append(_make_descriptor("Core", "IsActionPressed", "Is Action Pressed", ACEDescriptor.ACEType.CONDITION, "Input.is_action_pressed({action})", "", [_make_param("action", "String", _default_input_action(), "Action", "Input action (from the InputMap).", "", _input_action_options())], "Input", "{action} is pressed"))
+	descriptors.append(_make_descriptor("Core", "IsActionJustPressed", "On Action Just Pressed", ACEDescriptor.ACEType.CONDITION, "Input.is_action_just_pressed({action})", "", [_make_param("action", "String", _default_input_action(), "Action", "Input action (from the InputMap).", "", _input_action_options())], "Input", "{action} just pressed"))
+	descriptors.append(_make_descriptor("Core", "IsActionJustReleased", "On Action Just Released", ACEDescriptor.ACEType.CONDITION, "Input.is_action_just_released({action})", "", [_make_param("action", "String", _default_input_action(), "Action", "Input action (from the InputMap).", "", _input_action_options())], "Input", "{action} just released"))
 	# Conditions
 	descriptors.append(_make_descriptor("Core", "Always", "Always", ACEDescriptor.ACEType.CONDITION, "true", "", [], "General Conditions", "Always"))
 	descriptors.append(_make_descriptor("Core", "IsOnFloor", "Is On Floor", ACEDescriptor.ACEType.CONDITION, "is_on_floor()", "", [], "General Conditions", "Is on floor", "CharacterBody2D"))
@@ -96,6 +102,12 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(_make_descriptor("Core", "JsonSaveFile", "Save JSON File", ACEDescriptor.ACEType.ACTION, "FileAccess.open({path}, FileAccess.WRITE).store_string(JSON.stringify({value}, \"\\t\"))", "", [_make_param("path", "String", "\"user://save.json\"", "Path", "File path (user:// is the writable location in exports).", "expression"), _make_param("value", "String", "data", "Value", "Value to serialize and save.", "expression")], "Variables: JSON", "Save {value} as JSON to {path}"))
 	descriptors.append(_make_descriptor("Core", "JsonLoadFile", "Load JSON File", ACEDescriptor.ACEType.ACTION, "{var_name} = JSON.parse_string(FileAccess.get_file_as_string({path}))", "", [_make_param("var_name", "String", "data", "Into Variable", "Variable receiving the parsed value (null when missing/invalid).", "variable_reference"), _make_param("path", "String", "\"user://save.json\"", "Path", "File path to read.", "expression")], "Variables: JSON", "Load JSON {path} into {var_name}"))
 
+	# Time (C3 System: Wait — handlers are implicit coroutines, await is safe anywhere)
+	descriptors.append(_make_descriptor("Core", "Wait", "Wait", ACEDescriptor.ACEType.ACTION, "await get_tree().create_timer({seconds}).timeout", "", [_make_param("seconds", "String", "1.0", "Seconds", "How long to wait before the next action runs.", "expression")], "Time", "Wait {seconds} s"))
+	descriptors.append(_make_descriptor("Core", "AwaitSignal", "Wait For Signal", ACEDescriptor.ACEType.ACTION, "await {signal_expression}", "", [_make_param("signal_expression", "String", "get_tree().process_frame", "Signal", "Signal to wait for (e.g. $Timer.timeout).", "expression")], "Time", "Wait for {signal_expression}"))
+	# Input expressions
+	descriptors.append(_make_descriptor("Core", "GetActionStrength", "Action Strength", ACEDescriptor.ACEType.EXPRESSION, "Input.get_action_strength({action})", "", [_make_param("action", "String", _default_input_action(), "Action", "Input action (analog strength 0..1).", "", _input_action_options())], "Input", "strength of {action}"))
+	descriptors.append(_make_descriptor("Core", "GetInputAxis", "Input Axis", ACEDescriptor.ACEType.EXPRESSION, "Input.get_axis({negative}, {positive})", "", [_make_param("negative", "String", "\"ui_left\"", "Negative", "Action for the negative direction.", "", _input_action_options()), _make_param("positive", "String", "\"ui_right\"", "Positive", "Action for the positive direction.", "", _input_action_options())], "Input", "axis {negative}/{positive}"))
 	# Expressions
 	descriptors.append(_make_descriptor("Core", "GetVar", "Get Variable", ACEDescriptor.ACEType.EXPRESSION, "{var_name}", "", [_make_param("var_name", "String", "var", "Variable", "Variable to read.", "variable_reference")], "Variables", "{var_name}"))
 	descriptors.append(_make_descriptor("Core", "GetDelta", "Get Delta", ACEDescriptor.ACEType.EXPRESSION, "delta", "", [], "General Expressions", "delta"))
@@ -107,6 +119,26 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(_make_descriptor("Core", "GetCurrentAnimation", "Get Current Animation", ACEDescriptor.ACEType.EXPRESSION, "current_animation", "", [], "General Expressions", "current_animation", "AnimationPlayer"))
 
 	return descriptors
+
+## The project's InputMap action names as quoted GDScript string literals (custom actions
+## from project settings first, then the ui_* defaults) — dropdown options for action
+## params, so users pick real actions instead of typing strings.
+static func _input_action_options() -> Array[String]:
+	var options: Array[String] = []
+	for property_info: Dictionary in ProjectSettings.get_property_list():
+		var property_name: String = str(property_info.get("name", ""))
+		if property_name.begins_with("input/") and not property_name.contains("."):
+			options.append("\"%s\"" % property_name.trim_prefix("input/"))
+	for builtin: String in ["ui_accept", "ui_cancel", "ui_select", "ui_left", "ui_right", "ui_up", "ui_down"]:
+		var quoted: String = "\"%s\"" % builtin
+		if not options.has(quoted):
+			options.append(quoted)
+	return options
+
+## First custom project action when one exists, else "ui_accept".
+static func _default_input_action() -> String:
+	var options: Array[String] = _input_action_options()
+	return options[0] if not options.is_empty() else "\"ui_accept\""
 
 ## Creates an ACE descriptor instance.
 static func _make_descriptor(provider_id: String, ace_id: String, display_name: String, ace_type: int, codegen_template: String, signal_name: String = "", params: Array[ACEParam] = [], category: String = "", display_text: String = "", node_type: String = "") -> ACEDescriptor:
