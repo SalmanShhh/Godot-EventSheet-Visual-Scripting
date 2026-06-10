@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Export Addon Pack, Godot-native affordances, README overhaul
+- **Export Addon… (toolbar)**: one click turns the current behavior sheet into a
+  published pack folder (`eventsheet_addons/<class_snake>/` — editable `.tres` +
+  compiled `.gd`, no-drift rule honored, FileSystem rescanned) with guardrails for
+  non-behavior sheets and invalid class names. The addon-builder loop is now fully
+  in-editor: author behavior → annotate → Export → ACEs published project-wide.
+- **Drag from the docks into ƒx fields**: drop a FileSystem file → its quoted `res://`
+  path; drop a Scene-dock node → a `$Path` reference (relative to the edited scene,
+  quoted automatically when the name needs it).
+- **Scene-tree-aware completion**: `$Child.` now completes against the OPEN scene's
+  actual nodes — script methods, signals, and class members — and direct children appear
+  as `$Name` candidates in flat completion.
+- **README rewritten** as a proper front door: honest pros & cons, current status,
+  milestones table, and a quick start — kept current with every major update from now on.
+- Covered by `tests/phase_c_affordances_test.gd` (12 assertions).
+
 ### Behavior packs aligned with their C3 capabilities
 - **Sine**: seven movement types (horizontal, vertical, forwards-backwards, size, angle,
   opacity, value-only) and **five wave shapes** (sine, triangle, sawtooth,

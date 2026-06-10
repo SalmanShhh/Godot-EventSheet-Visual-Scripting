@@ -1,115 +1,148 @@
 # Godot EventSheets
 
-**Godot EventSheets** (engine codename *EventForge* — you'll see that prefix on internal class names) brings **Construct 3-style event sheets to Godot 4.x**. Sheets are authored in a
-fast visual editor and **compile to plain, readable, typed GDScript** — no runtime
-interpreter, no plugin dependency in your exported game, and **zero performance difference
-from hand-written code** (a guarded, tested contract).
+**Construct 3-style event sheets for Godot 4 that compile to plain, readable GDScript.**
+
+Godot EventSheets (engine codename *EventForge* — you'll see that prefix on internal
+class names) brings the event-sheet workflow C3 users love into the Godot editor: a fast
+visual editor where events read like sentences, and a compiler that turns every sheet
+into **typed, idiomatic GDScript** — no runtime interpreter, no plugin dependency in your
+exported game, and **zero performance difference from hand-written code** (a guarded,
+tested contract).
 
 ```text
 Conditions                        | Actions
 ----------------------------------+--------------------------------
 ▶ Every tick                      |
    [icon] System  Is on floor     | [icon] System  Queue free
-								  | GDScript  health -= 1
+                                  | GDScript  health -= 1
 ```
 
-## Install
+## Quick start
 
-1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot project.
-2. In **Project > Project Settings > Plugins**, enable **Godot EventSheets**.
-3. Open the **EventSheet** workspace tab in the main editor strip (next to Script/2D/3D).
-4. Optional: copy `eventsheet_addons/` for the sample behaviors and demo custom ACEs.
+1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project
+   (optional: `eventsheet_addons/` for the 14 behavior packs and demo ACEs).
+2. **Project → Project Settings → Plugins** → enable **Godot EventSheets**.
+3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
+4. Create a sheet (or open `demo/sheets/player.tres`), add an event from the picker —
+   live search understands C3 phrases like *"every tick"* or *"go to layout"* — and
+   press **Compile**. The generated `.gd` is the script you attach and ship.
+5. Coming from Construct? Read the [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) —
+   it maps every C3 concept, behavior, and plugin to its home here.
 
-## Quickstart
+## Why event sheets in Godot? (the honest pros & cons)
 
-1. Open the repository project (`project.godot`) in Godot **4.5+**.
-2. Open `demo/sheets/player.tres` in the EventSheet tab, or just start a new sheet.
-3. Add events from the picker (live search, C3 synonym aliases like "every tick"),
-   double-click anything to edit, and press **Compile** — the generated `.gd` is the
-   script you attach and ship.
+**Pros**
 
-## What's implemented (major phases)
+- **You ship GDScript, not a black box.** Delete the plugin and your game still runs —
+  generated scripts are plain code with no runtime hooks. Performance parity with
+  hand-written GDScript is a permanent, test-enforced contract.
+- **It teaches Godot while you use it.** Every action's tooltip shows the GDScript it
+  generates; ƒx expressions *are* GDScript with live validation and autocomplete; the
+  GDScript panel maps every row to its generated lines (and back).
+- **Two-way street.** Open *any* `.gd` file as a sheet (lossless, byte-identical
+  round-trips), paste GDScript and it converts to events, write GDScript that calls
+  sheet-built classes like any other class.
+- **C3 muscle memory works.** The grammar, the picker, behaviors-as-components, combos,
+  waits, the full 14-pack behavior set — designed against C3 conventions on purpose.
+- **Scales.** The custom-drawn virtualized viewport keeps 10,000+ rows fluid (no
+  per-row widgets — a measured ~490 ms build for a 10k sheet, 8-row draw window).
+
+**Cons (knowing them is part of trusting the tool)**
+
+- **It's a bridge, not a wall.** Complex logic will eventually pull you toward writing
+  GDScript directly — by design. If you want to never see code, C3 itself is better at
+  hiding it.
+- **2D-first vocabulary.** The built-in ACEs and packs target 2D nodes; 3D works through
+  ƒx/GDScript blocks but has no curated vocabulary yet.
+- **Some C3 plugins intentionally have no equivalent** (Multiplayer, Drawing Canvas,
+  XML): the migration guide points to the native Godot feature instead — that honesty
+  keeps the project maintainable.
+- **Young project.** The test suite is large (940+ assertions, CI-gated) but real-world
+  mileage is still accumulating; expect rough edges and report them.
+
+## Feature tour
 
 ### The editor (C3-parity UX on a virtualized canvas)
-- **Custom-rendered virtualized viewport** — tens of thousands of events/ACEs scroll,
-  zoom, and edit fluidly; only visible rows are drawn, never per-row widgets.
-- Construct-style grammar: two-lane condition/action rows, **object icons + labels** per
-  cell, flat cells, per-cell hover, whole-cell click targets, value highlighting, crisp
-  text at every zoom, drag/drop with insertion arrows and drag ghosts, footer
-  "Add event…" rows, drag-resizable lane divider, groups/comments/variables as rows,
-  multi-select, copy/paste, collective enable/disable with strikethrough, full undo/redo.
-- **Theming**: every color/metric is a token on `EventSheetEditorStyle` resources —
-  bundled presets, per-sheet overrides, and a **Godot-adaptive default** that derives the
-  sheet look from your editor theme. (`docs/EVENTSHEET_THEME_TOKEN_SPEC.md`; element
-  visual scenes under `addons/eventsheet/elements/` remain supported.)
+- Two-lane condition/action rows, object icons + labels, flat cells, whole-cell click
+  targets, drag/drop with insertion arrows, groups (with descriptions), comments
+  (multiline, colored, color swatches for Color params), multi-select, copy/paste,
+  enable/disable with strikethrough, full undo/redo.
+- **Find-in-sheet (Ctrl+F)**, script-editor shortcuts (F9 breakpoints, **Ctrl+/** to
+  toggle rows like commenting code, Alt+Up/Down to move rows), slow-double-click rename,
+  quick-add bar ("type to insert" with C3 synonyms).
+- **Theming**: every color/metric is a token; bundled presets include **Dracula, Nord,
+  Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha**, plus a Godot-adaptive
+  default derived from *your* editor theme. A live visual theme editor is built in.
+- Guardrails everywhere: invalid names auto-correct or block, broken GDScript never
+  commits, renaming a variable refactors every reference (blocks, params, pick filters,
+  templates) automatically.
 
-### The compiler (sheets → plain GDScript)
-- Events group by trigger into handler functions; conditions become `if` expressions,
-  actions direct statements; **sub-events compile nested** under their parent's
-  conditions; **Else / Else-If chains** emit `elif`/`else`; nested comments become `#`
-  lines; variables in the event flow become function locals.
-- **Signal triggers really connect**: `_ready` gets `signal.connect(handler)` lines —
-  self signals (compile-time validated against the host class + block-declared signals),
-  **other nodes' signals** (`trigger_source_path`), and custom addon signal triggers with
-  baked argument signatures.
-- **Performance-parity contract** (`docs/GDSCRIPT-PAIRING-SPEC.md`, Principles #5): no
-  `call()`/`Callable` indirection, no reflection, no plugin classes in output, static
-  types wherever known — enforced permanently by `tests/codegen_parity_test.gd`.
-- Source maps: every row knows exactly which generated lines it produced.
+### The language (GDScript constructs as first-class rows)
+- Events, sub-events, Else/Else-If, **pick filters** (C3 picking → for-loops),
+  **functions** (with params, publishable as ACEs), **enums** (Inspector dropdowns for
+  free), **signals** (declared as rows, validated connections), **match rows** (C3's
+  switch), **collection variables** (`Array[int]`, `Dictionary[String, int]`, literal
+  defaults with live validation), **combo variables** (`@export_enum` dropdowns),
+  GDScript blocks (class-level and in-flow), local variables, includes (C3-style
+  library sheets), **Wait / Wait For Signal** (`await`).
+- **Input vocabulary**: action conditions/expressions with dropdowns read from your
+  InputMap; `_input`/`_unhandled_input` triggers.
+- **38 native-node ACEs**: Tween (with ease/transition combos), Scene flow, Audio,
+  AnimatedSprite2D, Camera2D, Label, NavigationAgent2D, visibility/tint, Math & Random
+  (`choose()` included).
 
-### GDScript pairing (two languages, one project)
-- **GDScript panel with provenance both ways**: select a row → its generated lines
-  highlight; **click a line → the row that generated it is selected**.
-- **GDScript blocks in sheets**: class-level blocks (helpers, signals, `@onready`) and
-  **in-flow blocks inside events** (C3 inline scripting) with compile-check linting and
-  sheet-aware completion. Expression (`ƒx`) fields are plain GDScript with **live
-  validation** against your sheet's variables and host members.
-- **Open ANY `.gd` file as an event sheet** (GDScript-backed sheets): the file stays the
-  single source of truth, everything unrecognized is preserved verbatim, and untouched
-  files round-trip **byte-identically** (golden-tested). **ACE-level lifting** reverses
-  codegen templates, so EventForge-generated scripts re-open as real events — verified by
-  byte-identical recompile, with graceful fallback to code blocks.
-- **Shareable snippets**: copying rows also puts a portable text snippet on the system
-  clipboard — paste into another project (or a forum post); variables auto-create, UIDs
-  refresh, baked templates keep addon ACEs compiling. And **pasting raw GDScript converts
-  to events automatically** (trigger functions lift, declarations become variables, the
-  rest stays as code blocks).
+### Behaviors & addons (zero configuration, no JSON)
+- **14 C3-style behavior packs**, all authored as event sheets: Platformer, 8-Direction,
+  Timer, Flash, State Machine, Sine (7 movements × 5 wave shapes), Orbit (ellipses),
+  Bullet, Move To (waypoint queues), Follow (smooth + delayed history modes),
+  Drag & Drop (axis locking), Car (drift), Tile Movement (simulate control, grid
+  helpers), Line of Sight (cone + raycast conditions).
+- **Custom ACE addons**: drop a script in `res://eventsheet_addons/` — `class_name` is
+  the provider, `@ace_*` annotations shape everything (`@ace_param_options` for combos,
+  `@ace_param_hint` for ƒx/color/signal pickers). Annotated signals become triggers.
+- **Export Addon…** turns the current behavior sheet into a published pack folder with
+  one click. Custom node types (`class_name` + `@icon`) appear in Godot's Create Node
+  dialog.
 
-### Extending the vocabulary (zero configuration, no JSON)
-- **Custom ACE addons**: drop a script into `res://eventsheet_addons/` — `class_name` is
-  the provider, `##` doc comment the description, and `@ace_*` annotations
-  (`@ace_action/condition/trigger`, `@ace_name`, `@ace_category`, `@ace_icon`,
-  `@ace_display_template`, `@ace_codegen_template`, `@ace_param_hint`, `@ace_hidden`)
-  shape picker display and generated code. Annotated signals become triggers. Other
-  plugins can register providers from code via
-  `EventForgeBridge.register_script_as_provider`; methods without a codegen template
-  compile **instance-backed** (the generated script owns a plain instance of the addon —
-  still zero plugin classes in output).
-- **Custom node types from sheets**: set `custom_class_name`/`custom_class_icon` (or use
-  the **Sheet Type…** toolbar dialog) and the generated script emits
-  `@icon(...)` + `class_name X` — your sheet-defined node appears in Godot's Create Node
-  dialog like any GDScript class.
-- **Behaviors authored as event sheets**: behavior sheets compile to attachable Node
-  components with a typed `host` accessor (the parent), exported parameters, and
-  **expose-as-ACE functions** that publish the behavior's own actions project-wide via the
-  addon folder. Identity UX everywhere: ⚙ tab badges, in-sheet banner, host-aware column
-  header. **Fourteen sample packs included**: Platformer, 8-Direction, Timer,
-  Flash, State Machine, Sine, Orbit, Bullet, Move To, Follow, Drag & Drop, Car, Tile
-  Movement, and Line of Sight — the full C3-style behavior set, all shipped as editable
-  sheets + compiled scripts.
-- **Use it all from hand-written GDScript** like regular code — typed autocomplete,
-  signals, `extends` — because generated classes *are* regular code.
+### Tooling
+- **MCP server** (pure GDScript): AI assistants can list/read/compile/lint sheets and
+  apply snippets — `docs/MCP-SERVER.md`.
+- **Export integrity**: every sheet recompiles when an export starts; stale scripts
+  can never ship.
+- Shareable text snippets (paste events into another project or a forum post).
+
+## Current status
+
+- **Version**: `v0.1.0` released; `main` carries ~35 shipped features since (a `v0.2.0`
+  tag is imminent). See [CHANGELOG.md](CHANGELOG.md) for the full ledger.
+- **Quality**: 940+ test assertions, all green, CI-gated on every push (any `[FAIL]`
+  fails the build); byte-exact golden round-trips guard the lossless rules.
+- **Compatibility covenant**: generated code never depends on the plugin; templates bake
+  at apply (updates never rewrite your sheets); upgrades can never corrupt a file.
+
+## Milestones
+
+| Milestone | Status |
+|---|---|
+| 1.0 editor + compiler + pairing (virtualized editor, parity contract, lossless `.gd` sheets) | ✅ shipped |
+| Rich variables (enums, collections, combos, curated Dictionary/Array/JSON ACEs) | ✅ shipped |
+| C3 coverage program (native-node ACEs, all 14 behavior packs, migration guide) | ✅ shipped |
+| Godot-familiarity (find bar, shortcuts, theme inheritance, scene-aware completion, drag-from-docks) | ✅ shipped |
+| MCP server (AI tooling) | ✅ shipped |
+| `v0.2.0` release tag | 🔜 next |
+| Tool sheets (event sheets for editor tooling — experimental, editor-version-coupled) | 🧪 spec'd |
+| 3D vocabulary, more packs (tweens+), community feedback rounds | 🗺 planned |
 
 ## Project layout
 
 | Path | What it is |
 |---|---|
 | `addons/eventforge/` | Data model, compiler, importer, builtin ACEs, runtime bridge |
-| `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, addon scanner |
-| `eventsheet_addons/` | Zero-config ACE addons + the sample behavior packs |
+| `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, MCP server |
+| `eventsheet_addons/` | Zero-config ACE addons + the 14 behavior packs |
 | `demo/` | Demo sheets, themes, and the golden compiled output |
-| `tests/` | Headless test suite (580+ assertions) — `tests/run_tests.gd` (full) and `tests/run_perf.gd` (headless-safe subset) |
-| `docs/` | Specs: editor UI, GDScript pairing, theme tokens, architecture |
+| `tests/` | Headless suite — `tests/run_tests.gd` (full) and `tests/run_perf.gd` (headless-safe gate) |
+| `docs/` | Specs: GDScript pairing, editor UI, theme tokens, MCP, C3 migration |
 
 ## Verifying a change
 
@@ -119,27 +152,15 @@ godot --headless --path . --script tests/run_tests.gd   # full suite
 ```
 
 Every feature lands with tests, a CHANGELOG entry, and its spec updated — see
-`docs/GDSCRIPT-PAIRING-SPEC.md` and `docs/EDITOR-UI-SPEC.md` for the authoritative
+`docs/GDSCRIPT-PAIRING-SPEC.md` and `docs/EDITOR-UI-SPEC.md` for authoritative
 feature-by-feature status.
 
 ## Releases & CI
 
-Pushes and PRs run the headless test suite (`.github/workflows/ci.yml`). Pushing a tag
-like `v0.2.0` runs the test gate, stamps the version into `plugin.cfg`, and publishes a
-GitHub Release with two zips (`.github/workflows/release.yml`):
-`godot-eventsheets-<v>.zip` (the addons, drop-in layout) and `godot-eventsheets-samples-<v>.zip`
+Pushes and PRs run the headless suite (`.github/workflows/ci.yml`). Pushing a tag like
+`v0.2.0` runs the test gate, stamps `plugin.cfg`, and publishes a GitHub Release with
+`godot-eventsheets-<v>.zip` (drop-in addons) and `godot-eventsheets-samples-<v>.zip`
 (behavior packs + demo project).
-
-## Road to 1.0 (remaining)
-
-All planned 1.0 phases are implemented — including multiline/colored comments with
-comment↔action conversion, the **export-integrity hook** (every sheet recompiles when an
-export starts, so stale generated scripts can never ship), and the designer-facing
-**visual theme editor** (live preview + reflective token form, preset saving). Release housekeeping is
-done too: the test suite is fully green (594 passing, 0 failures), the
-[C3 migration guide](docs/C3-MIGRATION-GUIDE.md) is in, and the 10k-row perf baseline
-holds (~490 ms build, 8-row draw window, zero per-row widgets). Post-1.0 candidates: MCP server for AI tooling, expression
-autocomplete, more behavior packs.
 
 ## License
 

@@ -7,6 +7,10 @@
 class_name EventSheetGDScriptLint
 extends RefCounted
 
+## Override for tests / non-editor hosts: a Callable returning the scene root used for
+## $Node completion. Defaults to the editor's edited scene when inside the editor.
+static var scene_root_provider: Callable = Callable()
+
 ## Compile-checks `code`. in_flow=true validates statements (wrapped in a function body, as
 ## emitted inside an event); false validates class-level code (helper funcs, vars, signals).
 ## Returns {"ok": bool, "error": String}.
@@ -106,6 +110,22 @@ static func dot_completion_candidates(token: String, sheet: EventSheetResource) 
 					if not property_name.is_empty() and not property_name.begins_with("_") and not property_name.ends_with(".gd"):
 						_add_candidate(candidates, seen, CodeEdit.KIND_MEMBER, property_name)
 				_add_class_members(candidates, seen, script.get_instance_base_type())
+		# Not a registered class: try the OPEN SCENE's actual nodes ($Child completes its
+		# script members, signals and class members).
+		if candidates.is_empty():
+			var scene_root: Node = _resolve_scene_root()
+			if scene_root != null:
+				var child: Node = scene_root.get_node_or_null(NodePath(token.substr(1)))
+				if child != null:
+					var child_script: Script = child.get_script() as Script
+					if child_script != null:
+						for method_info in child_script.get_script_method_list():
+							var script_method: String = str(method_info.get("name", ""))
+							if not script_method.is_empty() and not script_method.begins_with("_"):
+								_add_candidate(candidates, seen, CodeEdit.KIND_FUNCTION, script_method)
+						for signal_info in child_script.get_script_signal_list():
+							_add_candidate(candidates, seen, CodeEdit.KIND_SIGNAL, str(signal_info.get("name", "")))
+					_add_class_members(candidates, seen, child.get_class())
 		return candidates
 	# A sheet variable with a declared class type → that class's members.
 	if sheet != null:
@@ -150,6 +170,15 @@ static func signature_hint(text_before_caret: String, sheet: EventSheetResource)
 			return "%s(%s)" % [function_name, ", ".join(arg_parts)]
 	return ""
 
+## The scene root for $-completion: the injected provider (tests), else the editor's
+## edited scene, else null (headless/runtime).
+static func _resolve_scene_root() -> Node:
+	if scene_root_provider.is_valid():
+		return scene_root_provider.call() as Node
+	if Engine.is_editor_hint():
+		return EditorInterface.get_edited_scene_root()
+	return null
+
 ## Path of a registered global script class (class_name), "" when unknown.
 static func _global_class_path(global_class: String) -> String:
 	for entry in ProjectSettings.get_global_class_list():
@@ -184,6 +213,11 @@ static func completion_candidates(sheet: EventSheetResource) -> Array[Dictionary
 		_add_candidate(candidates, seen, CodeEdit.KIND_FUNCTION, function_name)
 	for enum_row in _sheet_enums(sheet):
 		_add_candidate(candidates, seen, CodeEdit.KIND_CLASS, enum_row.enum_name)
+	# Direct children of the open scene complete as $Name references.
+	var scene_root: Node = _resolve_scene_root()
+	if scene_root != null:
+		for child in scene_root.get_children():
+			_add_candidate(candidates, seen, CodeEdit.KIND_NODE_PATH, "$%s" % child.name)
 	if sheet != null:
 		for entry in sheet.events:
 			if entry is SignalRow and (entry as SignalRow).enabled:

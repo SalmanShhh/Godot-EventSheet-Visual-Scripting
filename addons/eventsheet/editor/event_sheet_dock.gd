@@ -469,6 +469,7 @@ func _build_ui() -> void:
     _add_toolbar_button("Open", _on_open_requested)
     _add_toolbar_button("Save", _on_save_requested)
     _add_toolbar_button("Save As", _on_save_as_requested)
+    _add_toolbar_button("Export Addon…", _export_addon_pack)
     _add_toolbar_separator()
     _add_toolbar_button("Add Event", _on_add_event_requested)
     _add_toolbar_button("Add Signal Event", _on_add_signal_event_requested)
@@ -2572,7 +2573,42 @@ func _on_match_dialog_confirmed() -> void:
         _refresh_after_edit()
         _mark_dirty("Match updated.")
 
-# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ─# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ────────────────────
+# ── Export as Addon Pack (C3 coverage Phase C) ────────────────────────────────────────
+
+## One-click addon publishing: writes the current behavior sheet (+ compiled script) into
+## eventsheet_addons/<class_snake>/ where the zero-config scanner publishes its ACEs
+## project-wide — the same layout the bundled packs use. base_dir_override is for tests.
+func _export_addon_pack(base_dir_override: String = "") -> void:
+    if _current_sheet == null:
+        return
+    if not _current_sheet.behavior_mode or _current_sheet.custom_class_name.strip_edges().is_empty():
+        _set_status("Addon packs are behavior sheets — enable behavior mode and set a class name first (Sheet Type).", true)
+        return
+    var class_name_text: String = _current_sheet.custom_class_name.strip_edges()
+    if not EventSheetIdentifierRules.is_valid(class_name_text):
+        _set_status("\"%s\" can't be a class name (letters/digits/underscores, not a keyword)." % class_name_text, true)
+        return
+    var folder_name: String = class_name_text.to_snake_case()
+    var base_dir: String = base_dir_override if not base_dir_override.is_empty() else "res://eventsheet_addons/%s" % folder_name
+    var base_path: String = "%s/%s" % [base_dir, folder_name]
+    DirAccess.make_dir_recursive_absolute(base_dir)
+    var pack_sheet: EventSheetResource = _current_sheet.duplicate(true)
+    var save_error: Error = ResourceSaver.save(pack_sheet, base_path + ".tres")
+    if save_error != OK:
+        _set_status("Export failed: couldn't save %s.tres (error %d)." % [base_path, save_error], true)
+        return
+    # Adopt the saved path BEFORE compiling so the generated "# Source:" header matches a
+    # recompile of the exported .tres (the same no-drift rule the bundled packs follow).
+    pack_sheet.take_over_path(base_path + ".tres")
+    var compile_result: Dictionary = SheetCompiler.compile(pack_sheet, base_path + ".gd")
+    if not bool(compile_result.get("success", false)):
+        _set_status("Export failed: the sheet doesn't compile (%s)." % str(compile_result.get("errors")), true)
+        return
+    if Engine.is_editor_hint() and is_inside_tree():
+        EditorInterface.get_resource_filesystem().scan()
+    _set_status("Exported addon pack to %s (.tres + .gd) — its ACEs are now published project-wide." % base_dir)
+
+# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ─# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ─# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ────────────────────
 var _find_bar: HBoxContainer = null
 var _find_edit: LineEdit = null
 var _find_count_label: Label = null

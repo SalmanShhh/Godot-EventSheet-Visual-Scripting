@@ -336,6 +336,49 @@ func _create_color_field(key: String, default_value: Variant) -> Control:
 	_fields[key] = picker
 	return picker
 
+func _can_drop_on_expression(_position: Vector2, data: Variant) -> bool:
+	if not (data is Dictionary):
+		return false
+	var kind: String = str((data as Dictionary).get("type", ""))
+	return kind == "files" or kind == "nodes"
+
+func _drop_on_expression(_position: Vector2, data: Variant, edit: CodeEdit) -> void:
+	var snippet: String = drop_data_to_expression(data)
+	if not snippet.is_empty():
+		edit.insert_text_at_caret(snippet)
+
+## Converts an editor drag payload to GDScript: FileSystem files become quoted res://
+## paths; Scene-dock nodes become $Path references (relative to the edited scene root).
+static func drop_data_to_expression(data: Variant) -> String:
+	if not (data is Dictionary):
+		return ""
+	var payload: Dictionary = data as Dictionary
+	match str(payload.get("type", "")):
+		"files":
+			var files: Array = payload.get("files", [])
+			return "\"%s\"" % str(files[0]) if not files.is_empty() else ""
+		"nodes":
+			var nodes: Array = payload.get("nodes", [])
+			if nodes.is_empty():
+				return ""
+			var node_path: String = str(nodes[0])
+			var relative: String = node_path.get_file()
+			if Engine.is_editor_hint():
+				var scene_root: Node = EditorInterface.get_edited_scene_root()
+				if scene_root != null:
+					var root_prefix: String = str(scene_root.get_path())
+					if node_path.begins_with(root_prefix + "/"):
+						relative = node_path.trim_prefix(root_prefix + "/")
+			return _node_reference(relative)
+	return ""
+
+## $Name for identifier-safe paths, $"Path/To Node" otherwise.
+static func _node_reference(relative_path: String) -> String:
+	var identifier_regex: RegEx = RegEx.new()
+	if identifier_regex.compile("^[A-Za-z_][A-Za-z0-9_]*$") == OK and identifier_regex.search(relative_path) != null:
+		return "$%s" % relative_path
+	return "$\"%s\"" % relative_path
+
 static func color_to_literal(value: Color) -> String:
 	return "Color(%s, %s, %s, %s)" % [String.num(value.r, 3), String.num(value.g, 3), String.num(value.b, 3), String.num(value.a, 3)]
 
@@ -355,6 +398,9 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	# separate expression language to memorize.
 	edit.placeholder_text = "GDScript expression (e.g. health + 10)"
 	edit.tooltip_text = "Plain GDScript — anything valid in an expression works here. Ctrl+Space completes sheet variables/functions and host members."
+	# Godot-native drag & drop: dropping a FileSystem file inserts its quoted res:// path,
+	# dropping a Scene-dock node inserts a $Path reference.
+	edit.set_drag_forwarding(Callable(), _can_drop_on_expression, _drop_on_expression.bind(edit))
 	edit.text_changed.connect(func() -> void:
 		# Keep it single-line (Enter confirms the dialog instead of inserting a newline).
 		if edit.text.contains("
