@@ -62,6 +62,7 @@ func _init() -> void:
 	passed = UxGuardrailsTest.run() and passed
 	passed = CollectionVariablesTest.run() and passed
 	passed = CollectionAcesTest.run() and passed
+	passed = McpServerTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")

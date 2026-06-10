@@ -124,6 +124,15 @@ positionally. Ceiling note: Godot does not expose its real completion engine
 full-fidelity IntelliSense always exists one panel away because the generated script is
 plain GDScript.
 
+### MCP server (AI tooling)
+
+A pure-GDScript MCP server (`addons/eventsheet/mcp/`) exposes sheets to AI assistants
+over stdio JSON-RPC: list/read sheets, browse the ACE vocabulary (builtins + zero-config
+addons via the same registry bootstrap as the editor), dry-run-by-default compilation,
+context-aware lint, and append-only snippet/GDScript application through the lossless
+paste pipeline. Protocol core is transport-free and unit-tested; setup in
+`docs/MCP-SERVER.md`.
+
 ### First-class rich variables — complete (enums, collection variables, curated ACEs)
 
 The full arc shipped: **enums** (below), **collection variables** (Array/Dictionary incl.
@@ -304,15 +313,6 @@ conditions/actions) is planned.
   tick functions), triggers on a behavior's signals from the host sheet require
   non-self signal connection codegen, and multiple instances of one behavior are naturally
   supported as separate child nodes.
-- **MCP server (AI tooling, post-1.0 candidate)**: a Model Context Protocol server exposing
-  sheet operations to AI assistants — `read_sheet`, `list_aces` (registry incl. addons, with
-  codegen templates), `apply_snippet` (reusing the versioned snippet format + its
-  validation/fresh-UID/variable-dependency machinery), `compile_sheet` (output + source map
-  + warnings), `lint_block`. Architecture: headless-first (a stdio JSON-RPC loop over the
-  already-headless engine, runnable as `godot --headless --script`), with an
-  editor-embedded WebSocket variant later for live, undoable edits. Local-only by default;
-  tool schemas versioned like the snippet format. Note: GDScript-backed sheets already give
-  AI tools an unstructured path today (any `.gd` an AI edits opens as a sheet).
 - **More behavior packs**: tweens and beyond (platformer, 8-direction, timer, flash, and
   state machine ship today — see Implemented).
 - **C3 migration guide**: implemented — `docs/C3-MIGRATION-GUIDE.md` (concept map + System

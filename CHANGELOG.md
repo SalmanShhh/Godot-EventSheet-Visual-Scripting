@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### MCP server — AI tooling (the backlog's final item)
+- **A pure-GDScript Model Context Protocol server** ships in the addon
+  (`addons/eventsheet/mcp/`): the Godot binary itself is the server process — no
+  Python/Node dependencies. Setup guide: `docs/MCP-SERVER.md`.
+- Six tools for AI assistants: `list_sheets`, `read_sheet` (structured JSON of rows/
+  variables/enums/functions; also opens any `.gd` as a sheet), `list_aces` (the full
+  vocabulary incl. zero-config addons), `compile_sheet` (**dry-run by default**),
+  `lint_block` (compile-check against sheet context), and `apply_snippet` (append rows
+  from snippet text or plain GDScript via the lossless paste pipeline — the only
+  mutating tool, `.tres`-only, append-only).
+- Transport-free protocol core (`EventSheetMCPServer.handle_message`) covered by
+  `tests/mcp_server_test.gd` (21 assertions); the stdio loop is a thin newline-delimited
+  JSON-RPC wrapper (launch with `--headless --quiet`).
+
 ### Curated collection ACE set (rich-variables phase 3 of 3 — the 1.0 arc is complete)
 - **27 ready-made Dictionary / Array / JSON ops** as builtin Core descriptors, grouped in
   the picker as **Variables: Dictionary** (Set/Delete Key, Clear, Merge, Has Key,

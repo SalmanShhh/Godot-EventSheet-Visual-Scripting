@@ -69,6 +69,7 @@ const EnumRowTestScript := preload("res://tests/enum_row_test.gd")
 const UxGuardrailsTestScript := preload("res://tests/ux_guardrails_test.gd")
 const CollectionVariablesTestScript := preload("res://tests/collection_variables_test.gd")
 const CollectionAcesTestScript := preload("res://tests/collection_aces_test.gd")
+const McpServerTestScript := preload("res://tests/mcp_server_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
@@ -133,6 +134,7 @@ func _init() -> void:
 	passed = UxGuardrailsTestScript.run() and passed
 	passed = CollectionVariablesTestScript.run() and passed
 	passed = CollectionAcesTestScript.run() and passed
+	passed = McpServerTestScript.run() and passed
 	passed = EventSheetEditorTestScript.run() and passed
 	passed = EventSheetStyleTestScript.run() and passed
 	passed = PluginWorkspaceTestScript.run() and passed
