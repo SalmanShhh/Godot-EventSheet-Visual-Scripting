@@ -1,5 +1,8 @@
 # GDevelop / Construct 3 EventSheet UI/UX Spec — Godot Translation
 
+> **Reference design study** that guided the editor. Current shipped behavior and the
+> parity matrix live in `docs/EDITOR-UI-SPEC.md` (§5 interaction contract, §6 parity).
+
 This document captures the key interaction-model learnings from GDevelop and Construct 3
 EventSheet editors that directly inform the visual and interaction design of the Godot EventForge
 EventSheet editor.

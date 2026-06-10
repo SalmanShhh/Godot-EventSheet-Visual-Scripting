@@ -2,15 +2,29 @@
 
 ## [Unreleased]
 
+### Docs & demo final sweep
+- **EDITOR-UI-SPEC §3 rewritten** as a roadmap-status section (everything planned has
+  shipped; only pick-filter compilation, ƒx autocomplete, bookmarks, includes, and the
+  MCP candidate remain open) and the **C3 parity matrix updated** (inline code blocks,
+  behaviors, object icons, per-comment colors → Matched).
+- **Theme token spec** gains the `behavior_accent_color` row; the two `docs/spec/` design
+  studies are banner-marked as reference documents pointing at the live specs.
+- **Demo refreshed**: `demo/README.md` rewritten for Godot EventSheets (asset map, golden
+  regeneration workflow, toolbar theme switcher/theme editor); `demo/scenes/player.tscn`
+  now actually attaches the generated script (with a collision shape) instead of being an
+  empty node; the committed `player_generated_test_output.gd` byproduct is removed and
+  `compile_demo_test` writes to `user://` so tests never dirty the repo again; orphan
+  `.uid` cleaned up.
+
 ### Release housekeeping: zero test failures, paste-GDScript-as-events, migration guide
 - **The full test suite is GREEN for the first time: 594 passing, 0 failures.** The four
   legacy `event_sheet_editor_test` failures are fixed for real:
   - the built-in demo sheet stamped its ACEs with provider "Core" while reflection
-    registers the demo actor as `EventSheetDemoGameplayActor` — the resolver now matches
-    by name (and no longer depends on registry refresh order), so demo rows render
-    "On Died"/"Take Damage 10" again;
+	registers the demo actor as `EventSheetDemoGameplayActor` — the resolver now matches
+	by name (and no longer depends on registry refresh order), so demo rows render
+	"On Died"/"Take Damage 10" again;
   - non-event spans (comments/variables/blocks) clamp 2px tighter, accounting for the
-    chip rect's expansion — long comments stay inside the row width at any zoom;
+	chip rect's expansion — long comments stay inside the row width at any zoom;
   - the context-menu test re-acquires live row data between undoable edits (snapshot
     restore replaces row resources; the old assertion toggled an orphan).
   Only the long-known harmless tail segfault remains (after the summary prints); CI now

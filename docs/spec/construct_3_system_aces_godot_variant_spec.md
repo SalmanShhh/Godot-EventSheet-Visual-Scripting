@@ -1,5 +1,9 @@
 # Construct 3 System ACEs — Godot Variant Spec
 
+> **Reference design study.** Implementation status lives in `docs/SPEC.md` §3 and the
+> builtin registry (`addons/eventforge/registration/builtin_aces.gd`); the practical
+> C3→Godot vocabulary map for users is `docs/C3-MIGRATION-GUIDE.md`.
+
 This document defines the Godot-native equivalent of Construct 3's built-in **System** object ACEs
 (Actions, Conditions, Expressions). These form the control-flow, variable, timing, and utility
 vocabulary that every EventSheet-based game needs before adding any custom plugin ACEs.

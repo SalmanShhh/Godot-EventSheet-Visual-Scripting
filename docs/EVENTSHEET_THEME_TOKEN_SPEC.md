@@ -75,6 +75,7 @@ Entries render as flat full-line cells (C3-style contiguous blocks), not rounded
 | `ace.value_highlight` | `value_highlight_color` | palette `COLOR_VALUE` | Numbers/strings/booleans inside ACE text |
 | `condition.invert_marker` | `invert_marker_color` | `#FF0000` | Red ✗ on inverted conditions (C3 `--invert-icon-color`) |
 | `interaction.cell_hover` | `cell_hover_color` | `Color(1,1,1,0.14)` | Hover tint on an individual condition/action cell |
+| `sheet.behavior_accent` | `behavior_accent_color` | `#8a7bd8` | Behavior identity accent (banner bar, ⚙ tab badge) |
 
 ### Group and comment blocks
 

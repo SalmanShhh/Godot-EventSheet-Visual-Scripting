@@ -393,73 +393,26 @@ inside the Construct 3-style sheet established by Phase 8.
 - The shortcuts hint strip in the toolbar now also shows:
   `G Group` · `Ctrl+D Duplicate` · `Esc Deselect`
 
-## 3. Still planned (not implemented yet)
+## 3. Roadmap status (updated 2026-06)
 
-All previously planned roadmap items have landed (multi-tab, sub-events, sheet functions,
-scripted ACE providers, GDScript blocks, structural importer round-trip). Remaining:
+**Every roadmap item from the overhaul plan has shipped** — multi-tab, sub-events (incl.
+compilation with Else/Else-If chains), sheet functions (incl. expose-as-ACE), zero-config
+addon providers + code registration, GDScript blocks (class-level and in-flow, with lint +
+completion), the structural + ACE-level importer (open/paste any GDScript), shareable
+snippets, object icons, multiline/colored comments with comment↔action conversion,
+eventsheet-authored behaviors + sample packs, sheet-type identity UX, the export-integrity
+hook, and the visual theme editor. Authoritative per-feature detail:
+`docs/GDSCRIPT-PAIRING-SPEC.md` (compiler/pairing/addons/behaviors) and the sections below
+(UX contracts).
 
-- Object icons per ACE origin (Godot class icons / provider icons)
-- ACE-level importer body parsing (generated `if` chains → conditions/actions)
-- Pick-filter compilation (the one remaining event-flow TODO; sub-events, else/elif,
-  nested comments/variables/blocks all compile as of the sub-event compilation phase)
-- Multiline inline comment editing; per-comment text/background colors (C3 parity)
-- Behavior packs: bundled ACE provider scripts mirroring common C3 behaviors
-- Shareable snippets: row copy also writes a versioned portable text form to the system
-  clipboard (paste across projects/forums; fresh UIDs; auto-creates missing referenced
-  variables) — see GDSCRIPT-PAIRING-SPEC "Shareable snippets"
-- Eventsheet-authored Behaviors: behavior sheets compile to attachable Node component
-  scripts with a `host` accessor, @export params, and auto-`@ace_*` annotations on exposed
-  functions — see GDSCRIPT-PAIRING-SPEC "Eventsheet-authored Behaviors"
-- **Sheet-type identity UX (custom nodes / behaviors)** — dual-audience cues (Godot:
-  "custom node with an icon"; C3: "behavior attached to an object"):
-  - Tab badge + icon per sheet type (behavior tint; custom-node icon), and a slim **header
-    banner** inside the sheet: `⚙ [icon] PatrolBehavior — Behavior · acts on host:
-    CharacterBody2D` / `[icon] PatrollingGuard — Custom Node · extends CharacterBody2D`;
-    the banner doubles as the click target to edit name/icon/host.
-  - A **"Sheet Type" toolbar control** (Event Sheet / Custom Node / Behavior) opening a
-    small name+icon+host dialog — the Inspector fields stay the data layer, but the
-	visible control matches C3's "Add behavior" discoverability.
-  - **One icon set once, shown everywhere**: `custom_class_icon` flows to the Create Node
-	dialog/scene tree (@icon — done), the ACE picker when the behavior's ACEs publish
-    (its @ace_icon defaults to the behavior icon), and row cells once row icons land.
-    Bundled fallback glyphs (gear-node for behaviors, sheet-node for custom nodes) so the
-    types are distinct even without custom art.
-  - **Behavior-aware vocabulary**: host-targeting ACEs label as "Host" with the host
-	class's icon; column header reads `Conditions — host: <class>`; empty-state hint
-	explains the host model.
-  - **Color language**: new `behavior_accent_color` theme token (soft purple default)
-	tinting banner + tab badge; themable like all tokens.
-- **Visual theme editor (designer-facing)**: a live theme-editing dialog — real sheet
-  preview (the actual viewport rendering a representative sample sheet, with toggles to
-  preview hover/selection/disabled states) beside grouped token controls (per the token
-  spec's groups: shell, lanes, cells, semantic colors, group/comment, header,
-  interaction). Edits apply instantly (theme apply is a cheap redraw); works on a
-  duplicate until saved; saves as a named `.tres` preset (theme name/author/description
-  metadata fields) into the scanned themes folder so it appears in the switcher and is
-  shareable as a single file. Considerations: token grouping/search for the ~30+ tokens;
-  contrast/readability warnings (text-vs-background luminance) for accessibility; "start
-  from" pickers (current theme / Godot-native / any preset); no JSON anywhere.
-- **Export integrity hook**: an `EditorExportPlugin` that re-compiles every sheet at export
-  time (failing the export on compile errors), so exported games can never ship a stale
-  generated script. Note the architecture guarantee this protects: sheets compile to plain
-  GDScript with zero plugin dependencies — exported games contain only the generated `.gd`
-  files (no runtime interpreter, no addon requirement), and sheet `.tres` sources can be
-  excluded from exports entirely.
-- ACE addon runtime bridge: `EventForgeBridge.register_script_as_provider` so addon ACEs
-  needing runtime support work in exported games. (The zero-config addon system itself is
-  **implemented**: scripts in `res://eventsheet_addons/` register project-wide
-  automatically, metadata derived from the script — `class_name`, top doc comment,
-  `@ace_*` annotations incl. `@ace_display_template` / `@ace_codegen_template` /
-  `@ace_param_hint`; baked codegen templates make addon ACEs compile. See
-  `docs/GDSCRIPT-PAIRING-SPEC.md` and the shipped `eventsheet_addons/demo_health_addon.gd`.)
-  Behavior packs ship as plain script folders in this format.
-- **GDScript inside the event flow (C3 inline scripting)**: GDScript blocks placeable as
-  actions / inside an event's flow, compiled indented into the generated trigger body
-  (class-level blocks already exist). Editing keeps script-editor affordances:
-  GDScriptSyntaxHighlighter highlighting, **compile-check linting** (scratch
-  `GDScript.reload()` flags parse errors on the block), and CodeEdit completion fed with
-  sheet variables/functions and host-node members. Full ScriptEditor-grade analysis is
-  not plugin-accessible in Godot today; this is the documented approximation.
+Still open (post-1.0 polish):
+
+- **Pick-filter compilation** — the one remaining event-flow construct (`PickFilter`
+  resources render but emit a TODO comment).
+- **Expression autocomplete** in ƒx fields (live compile-check validation is shipped).
+- Gutter bookmarks; per-`widget_hint` inspector widgets; advanced per-row override UI.
+- **Sheet includes** (`includes: Array[NodePath]` exists on the resource; no semantics yet).
+- Candidate: MCP server for AI tooling (see GDSCRIPT-PAIRING-SPEC "Planned").
 
 ## 4. Implementation anchors
 
@@ -524,16 +477,16 @@ The behavioral guarantees the editor maintains (each is regression-tested headle
 | Insert marker with arrowheads | Matched | row + ACE drop lines |
 | Drag ghost (~0.66 opacity) | Matched | label follows cursor |
 | Event number gutter + breakpoint/bookmark | Matched (numbers, breakpoints) | bookmarks not yet |
-| Inline code blocks | Adapted | GDScript blocks compile at class level (C3: inline JS in event flow) |
+| Inline code blocks | Matched | GDScript blocks class-level AND in-flow inside events |
 | Expressions | **Intentionally different** | plain GDScript, no proprietary expression language |
-| Behaviors | Adapted | custom ACE provider scripts instead |
-| Object icons per ACE | Missing | planned |
-| Per-comment custom colors | Missing | planned |
+| Behaviors | Matched | behavior sheets compile to Node components (typed `host`); sample packs ship |
+| Object icons per ACE | Matched | @ace_icon / class icons / member glyphs, picker + row cells |
+| Per-comment custom colors | Matched | `CommentRow.custom_color` + comment dialog |
 | Sheet includes | Missing | candidate feature |
 
 ## 7. GDScript pairing
 
-The sheet is a bridge to GDScript, not a wall beside it. The pairing features (codegen
-tooltips, GDScript blocks, GDScript-as-expressions, C3 search synonyms, importer
-round-trip, planned provenance panel) are specified in
-`docs/GDSCRIPT-PAIRING-SPEC.md`.
+The sheet is a bridge to GDScript, not a wall beside it. The pairing features (two-way
+provenance, codegen tooltips, GDScript blocks with lint/completion, GDScript-as-expressions
+with live ƒx validation, C3 search synonyms, GDScript-backed sheets + ACE lifting,
+paste-GDScript-as-events, snippets) are specified in `docs/GDSCRIPT-PAIRING-SPEC.md`.
