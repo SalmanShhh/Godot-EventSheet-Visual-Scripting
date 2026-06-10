@@ -473,6 +473,8 @@ func _build_ui() -> void:
     _add_toolbar_button("Save As", _on_save_as_requested)
     _add_toolbar_button("Export Addon…", _export_addon_pack)
     _add_toolbar_button("Split", _toggle_split_view)
+    _add_toolbar_button("Detach", _toggle_detached_view)
+    _add_toolbar_button("Link", _toggle_linked_views)
     _add_toolbar_separator()
     _add_toolbar_button("Add Event", _on_add_event_requested)
     _add_toolbar_button("Add Signal Event", _on_add_signal_event_requested)
@@ -585,7 +587,10 @@ func _build_ui() -> void:
     _identity_banner.setup(_viewport)
 
     _viewport.selection_changed.connect(_on_viewport_selection_changed)
-    _viewport.selection_changed.connect(func(_row_data: EventRowData) -> void: _active_viewport_ref = _viewport)
+    _viewport.selection_changed.connect(func(row_data: EventRowData) -> void:
+        _active_viewport_ref = _viewport
+        _mirror_selection(_viewport, row_data)
+    )
     _viewport.row_drop_requested.connect(_on_row_drop_requested)
     _viewport.rows_drop_requested.connect(_on_rows_drop_requested)
     _viewport.ace_preview_requested.connect(_on_ace_preview_requested)
@@ -2633,6 +2638,7 @@ func _toggle_split_view() -> void:
 func _connect_view_signals(view: EventSheetViewport) -> void:
     view.selection_changed.connect(func(row_data: EventRowData) -> void:
         _active_viewport_ref = view
+        _mirror_selection(view, row_data)
         _on_viewport_selection_changed(row_data)
     )
     view.row_drop_requested.connect(_on_row_drop_requested)
@@ -2669,6 +2675,77 @@ func _open_row_in_split(row_data: EventRowData) -> void:
             _split_viewport.queue_redraw()
             return
 
+# ── Multi-view P2: detached window (a pane on another monitor) ────────────────────────
+var _detached_window: Window = null
+var _detached_viewport: EventSheetViewport = null
+
+## Toggles a floating OS window hosting another full-editing pane over the same sheet —
+## drag it to a second monitor while debugging. Same shared state + refresh bus as the
+## split pane.
+func _toggle_detached_view() -> void:
+    if _detached_window != null:
+        _close_detached_view()
+        _set_status("Detached view closed.")
+        return
+    if _viewport == null:
+        return
+    _detached_window = Window.new()
+    _detached_window.title = "Event Sheet — detached view"
+    _detached_window.size = Vector2i(960, 640)
+    _detached_window.close_requested.connect(_close_detached_view)
+    var detached_scroll: ScrollContainer = ScrollContainer.new()
+    detached_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _detached_window.add_child(detached_scroll)
+    _detached_viewport = EventSheetViewport.new()
+    _detached_viewport.name = "EventSheetDetachedViewport"
+    _detached_viewport.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _detached_viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _detached_viewport.set_ace_registry(_ace_registry)
+    _detached_viewport.adopt_shared_state(_viewport.get_shared_state())
+    detached_scroll.add_child(_detached_viewport)
+    _connect_view_signals(_detached_viewport)
+    add_child(_detached_window)
+    _detached_viewport.set_sheet(_current_sheet)
+    if is_inside_tree():
+        _detached_window.popup_centered(Vector2i(960, 640))
+    _set_status("Detached view opened — drag it anywhere; both panes edit the same sheet.")
+
+func _close_detached_view() -> void:
+    if _detached_window == null:
+        return
+    _active_viewport_ref = null
+    _detached_window.queue_free()
+    _detached_window = null
+    _detached_viewport = null
+
+# ── Multi-view P3: linked panes (follow selection) ─────────────────────────────────────
+var _linked_views: bool = false
+var _mirroring_selection: bool = false
+
+## Toggles follow-selection: selecting a row in one pane scrolls/selects it in the
+## others — e.g. keep the split zoomed out as an overview and click rows to focus them
+## in the detail pane.
+func _toggle_linked_views() -> void:
+    _linked_views = not _linked_views
+    _set_status("Linked panes: selection now follows across views." if _linked_views else "Panes unlinked.")
+
+## Mirrors a selection into every OTHER pane (guarded against recursion).
+func _mirror_selection(from_view: EventSheetViewport, row_data: EventRowData) -> void:
+    if not _linked_views or _mirroring_selection or row_data == null or row_data.source_resource == null:
+        return
+    _mirroring_selection = true
+    for view: EventSheetViewport in [_viewport, _split_viewport, _detached_viewport]:
+        if view == null or view == from_view or not is_instance_valid(view):
+            continue
+        for index in range(view.get_flat_rows().size()):
+            var candidate: EventRowData = view.get_flat_rows()[index].get("row")
+            if candidate != null and candidate.source_resource == row_data.source_resource:
+                view._select_row(index, -1)
+                view.ensure_selection_visible()
+                view.queue_redraw()
+                break
+    _mirroring_selection = false
+
 func _close_split_view() -> void:
     if _split_container == null:
         return
@@ -2684,10 +2761,12 @@ func _close_split_view() -> void:
     _split_scroll = null
     _split_viewport = null
 
-## Keeps the companion pane on the current sheet after every edit/open (the refresh bus).
+## Keeps every secondary pane on the current sheet after edits/opens (the refresh bus).
 func _sync_split_sheet() -> void:
     if _split_viewport != null:
         _split_viewport.set_sheet(_current_sheet)
+    if _detached_viewport != null:
+        _detached_viewport.set_sheet(_current_sheet)
 
 # ── Export as Addon Pack (C3 coverage Phase C) ─# ── Export as Addon Pack (C3 coverage Phase C) ────────────────────────────────────────
 

@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Multi-view complete: detached windows + linked panes (P2/P3)
+- **Detach** (toolbar): a floating OS window hosting another full-editing pane over the
+  same sheet — drag it to a second monitor while debugging. Same shared per-sheet state
+  (breakpoints/bookmarks/disabled) and the same refresh bus as the split pane.
+- **Link** (toolbar): follow-selection across panes — selecting a row in any pane
+  scrolls/selects it in the others. Keep the split zoomed out as an overview and click
+  rows to focus them in your detail pane (recursion-guarded; unlink any time).
+- With Split (P1) + full dual-pane editing (P1.5), the multi-view arc from the spec is
+  **complete**. Covered by the extended `tests/multi_view_test.gd` (21 assertions).
+
 ### Multi-view phase 1.5: both panes are full editors
 - The split pane graduated from read-only companion to a **full editor**: double-click
   edits, dialogs, drag/drop, context menus, find — everything works in either pane (the

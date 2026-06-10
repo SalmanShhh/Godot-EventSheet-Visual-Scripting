@@ -83,6 +83,31 @@ static func run() -> bool:
 	all_passed = _check("edits refresh the split pane too", split.get_flat_rows().size(), before + 1) and all_passed
 	all_passed = _check("edits refresh the primary too", primary.get_flat_rows().size(), before + 1) and all_passed
 
+	# P2: detached window — another full pane sharing state + the refresh bus.
+	editor._toggle_detached_view()
+	var detached: EventSheetViewport = editor._detached_viewport
+	all_passed = _check("detached pane exists", detached != null, true) and all_passed
+	all_passed = _check("detached pane shows the sheet",
+		detached.get_flat_rows().size(), primary.get_flat_rows().size()) and all_passed
+	var detached_first: EventRowData = detached.get_flat_rows()[0].get("row")
+	all_passed = _check("detached pane shares breakpoints", detached_first.breakpoint_enabled, true) and all_passed
+
+	# P3: linked panes — selection mirrors across views (no recursion).
+	editor._toggle_linked_views()
+	primary._select_row(2, -1)
+	primary.selection_changed.emit(primary.get_flat_rows()[2].get("row"))
+	all_passed = _check("linked panes mirror selection to the split",
+		split.get_selected_context().get("source_resource", null), sheet.events[2]) and all_passed
+	all_passed = _check("linked panes mirror selection to the detached pane",
+		detached.get_selected_context().get("source_resource", null), sheet.events[2]) and all_passed
+	editor._toggle_linked_views()
+	primary._select_row(0, -1)
+	primary.selection_changed.emit(primary.get_flat_rows()[0].get("row"))
+	all_passed = _check("unlinking stops the mirroring",
+		split.get_selected_context().get("source_resource", null), sheet.events[2]) and all_passed
+	editor._toggle_detached_view()
+	all_passed = _check("closing clears the detached pane", editor._detached_viewport == null, true) and all_passed
+
 	# Closing restores the original layout and the primary keeps working.
 	editor._toggle_split_view()
 	all_passed = _check("closing clears the split", editor._split_viewport == null, true) and all_passed

@@ -407,7 +407,7 @@ hook, and the visual theme editor. Authoritative per-feature detail:
 
 Still open (post-1.0 polish):
 
-- **Multi-view (PHASES 1 + 1.5 SHIPPED: Split toggle, shared EventSheetViewState, refresh bus, full editing in both panes via payload-driven handlers + active-view routing, Open in Split). Remaining: detachable windows, linked follow-selection panes.**
+- **Multi-view: COMPLETE** (Split toggle, shared EventSheetViewState, refresh bus, full editing in every pane via payload-driven handlers + active-view routing, Open in Split, **Detach** floating window, **Link** follow-selection). Design notes below remain as the reference.
   The VSCode gesture — one file open in two editors — for sheets: read a trigger handler
   while editing the function it calls, keep a group pinned while debugging another, eyeball
   two distant regions at once.
