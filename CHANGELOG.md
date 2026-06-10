@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Open-source readiness: CONTRIBUTING.md
+- A contributor guide distilling the project's institutional knowledge: the verification
+  loop (with its known quirks), the house rules (compatibility covenant, performance
+  parity, lossless rule, zero-config addons, hidden optimization, guardrails), canonical
+  emission + golden-regeneration workflow, how-to-add recipes (ACEs, addons, packs,
+  themes), and the GDScript gotcha list that has bitten before.
+
 ### Find reaches folded groups + addon tags
 - **Ctrl+F now searches the FULL tree**: matches inside collapsed groups are found, and
   stepping onto one **unfolds the path to it** and lands on the row (the sweep's known

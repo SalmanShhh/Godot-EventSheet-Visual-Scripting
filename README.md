@@ -164,6 +164,12 @@ Pushes and PRs run the headless suite (`.github/workflows/ci.yml`). Pushing a ta
 `godot-eventsheets-<v>.zip` (drop-in addons) and `godot-eventsheets-samples-<v>.zip`
 (behavior packs + demo project).
 
+## Contributing
+
+[CONTRIBUTING.md](CONTRIBUTING.md) has the dev setup, the verification loop, the house
+rules (compatibility covenant, canonical-emission rules, the gotcha list), and how to add
+ACEs, addons, behavior packs, and theme presets.
+
 ## License
 
 MIT. See `LICENSE`.
