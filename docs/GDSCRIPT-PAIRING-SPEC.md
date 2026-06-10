@@ -326,6 +326,32 @@ conditions/actions) is planned.
   tick functions), triggers on a behavior's signals from the host sheet require
   non-self signal connection codegen, and multiple instances of one behavior are naturally
   supported as separate child nodes.
+- **C3 coverage program (user-confirmed direction)** — bring the C3 behavior/plugin
+  surface over under a strict **three-lane rule** so nothing rots:
+  **Lane 1 (Godot owns it → ACE providers over NATIVE features, never reimplementations):**
+  Tween→create_tween, Physics→RigidBody2D, Pathfinding→NavigationAgent2D,
+  Solid/Jump-thru→collision layers + one-way shapes, Audio→AudioStreamPlayer,
+  Sprite/animation→AnimatedSprite2D/AnimationPlayer, Text→Label/RichTextLabel, Tilemap,
+  Keyboard/Gamepad/Touch→Input (partly shipped), Anchor→Control anchors.
+  **Lane 2 (portable gameplay logic → sheet-built behavior packs, the shipped pattern):**
+  Sine, Orbit, Bullet, Move To, Follow, Drag & Drop, Car, Tile Movement, Line of Sight.
+  **Lane 3 (honest out-of-scope → migration-guide rows):** Multiplayer, Drawing Canvas,
+  3D plugins, Binary Data, i18n → their Godot equivalents.
+  **Compatibility covenant** (binding for all of it): (1) generated GDScript never depends
+  on the plugin at runtime — packs ship their .gd, projects survive plugin removal;
+  (2) templates bake at apply — descriptor changes never rewrite sheets; ace_ids are API,
+  retired via hiding, never renamed/deleted; (3) the lossless rule + snippet whitelist
+  mean upgrades cannot corrupt files. Every pack/provider ships with publish-assert
+  tests + golden round-trips + the parse gate (CI-enforced). C3 names stay as display
+  names + search synonyms; tooltips teach the generated GDScript.
+  Phasing: A) native-node ACE providers (+SceneTree spawn/change-scene/pause, Camera2D,
+  RNG); B) the nine lane-2 packs; C) **in-editor "Export as Addon Pack…"** (the addon
+  builder is ~90% shipped via behavior authoring + @ace annotations — this adds the
+  one-click eventsheet_addons/<name>/ export with guardrail validation, no manifest);
+  D) **tool sheets** (EventSheet Builder for Editor Tools): a `tool_mode` flag emitting
+  @tool/EditorScript with an "On Editor Run" trigger — EXPLICITLY experimental and
+  editor-version-coupled (editor APIs are Godot's most volatile surface; runtime ACEs
+  stay on stable APIs only).
 - **More behavior packs**: tweens and beyond (platformer, 8-direction, timer, flash, and
   state machine ship today — see Implemented).
 - **C3 migration guide**: implemented — `docs/C3-MIGRATION-GUIDE.md` (concept map + System
