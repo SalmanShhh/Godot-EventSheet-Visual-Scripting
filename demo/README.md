@@ -83,7 +83,8 @@ What they're for:
 | ✅ `v0.1.0` | The editor + compiler + lossless GDScript pairing |
 | ✅ `v0.2.0` | Rich variables (enums/collections/combos), C3 coverage (38 native ACEs + 14 packs), input/Wait, MCP server, find bar, iconic themes |
 | ✅ `v0.3.0` | Multi-view (split / detached / linked panes), tool sheets (experimental) |
-| 🔜 next | 3D vocabulary shipped on `main`; community feedback rounds |
+| ✅ `v0.4.0` | 3D vocabulary, addon tags, folded-group find, hardening sweeps, contributor docs |
+| 🔜 next | community feedback rounds; 3D behavior packs |
 
 Full ledger: [CHANGELOG.md](../CHANGELOG.md) · honest pros & cons: [README.md](../README.md)
 

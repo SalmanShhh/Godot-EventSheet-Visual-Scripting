@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-10
+
+The polish-and-reach release: the starter **3D vocabulary**, a **five-fix silent-bug
+sweep** (plus a second sweep fixing stale addon tags on plain sheets), **find that
+reaches folded groups**, **addon tags** (searchable, MCP-filterable, with documented use
+cases), the **showcase demo README**, an up-to-date Theme Editor preview, and
+**CONTRIBUTING.md** for open-source readiness. Details below (newest first).
+
+### Sweep 2 (pre-tag)
+- Plain sheets now clear `addon_tags` on type switch (no stale never-emitted tags), and
+  the analyzer's directive handling is regression-tested against the generated-pack
+  layout (`@ace_tags` above `@icon(...)` above `class_name`).
+
 ### Open-source readiness: CONTRIBUTING.md
 - A contributor guide distilling the project's institutional knowledge: the verification
   loop (with its known quirks), the house rules (compatibility covenant, performance

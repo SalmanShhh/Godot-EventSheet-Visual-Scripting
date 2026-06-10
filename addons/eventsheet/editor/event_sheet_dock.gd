@@ -3359,7 +3359,9 @@ func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_p
         _current_sheet.tool_mode = tool_enabled or type_index == 3
         _current_sheet.custom_class_name = class_name_text.strip_edges() if type_index != 0 else ""
         _current_sheet.custom_class_icon = icon_path.strip_edges() if type_index != 0 else ""
-        _current_sheet.addon_tags = addon_tags
+        # Plain sheets aren't addons: clear tags like the class name/icon (otherwise a
+        # type switch would leave stale tags that never emit — silent confusion).
+        _current_sheet.addon_tags = addon_tags if type_index != 0 else PackedStringArray()
         if type_index == 3:
             _current_sheet.host_class = "EditorScript"
         elif not host_class_text.strip_edges().is_empty():

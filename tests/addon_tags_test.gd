@@ -60,7 +60,29 @@ static func run() -> bool:
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	editor._apply_sheet_type_settings(2, "TaggedThing", "", "Node2D", false, PackedStringArray(["ai", "patrol"]))
 	all_passed = _check("Sheet Type applies tags", dialog_sheet.addon_tags, PackedStringArray(["ai", "patrol"])) and all_passed
+	editor._apply_sheet_type_settings(0, "", "", "", false, PackedStringArray(["stale"]))
+	all_passed = _check("plain sheets clear tags (no stale never-emitted tags)",
+		dialog_sheet.addon_tags.is_empty(), true) and all_passed
 	editor.free()
+
+	# Tags survive a raw @icon(...) line between the annotation and class_name (the
+	# generated-pack layout: header comments, tags, icon, class_name).
+	var icon_source: String = "# AUTO-GENERATED
+
+## @ace_tags(fx, audio)
+@icon(\"res://icon.svg\")
+class_name IconProbe
+extends Node
+"
+	var icon_path: String = "user://eventsheets_icon_probe.gd"
+	var icon_file: FileAccess = FileAccess.open(icon_path, FileAccess.WRITE)
+	icon_file.store_string(icon_source)
+	icon_file.close()
+	var icon_script: GDScript = GDScript.new()
+	icon_script.source_code = icon_source
+	icon_script.take_over_path(icon_path)
+	var icon_metadata: Dictionary = EventSheetSemanticAnalyzer.new().parse_source_metadata(icon_script)
+	all_passed = _check("tags survive an @icon line", icon_metadata.get("tags", []), ["fx", "audio"]) and all_passed
 
 	# MCP: list_aces filters by tag and reports tags.
 	var server: EventSheetMCPServer = EventSheetMCPServer.new()
