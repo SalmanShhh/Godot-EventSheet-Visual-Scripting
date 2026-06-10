@@ -2817,7 +2817,7 @@ func _export_addon_pack(base_dir_override: String = "") -> void:
 var _find_bar: HBoxContainer = null
 var _find_edit: LineEdit = null
 var _find_count_label: Label = null
-var _find_matches: Array[int] = []
+var _find_resource_matches: Array[Resource] = []
 var _find_cursor: int = -1
 
 ## Ctrl+F: a script-editor-style find bar (Enter/F3 next, Shift+F3 previous, Esc hides).
@@ -2855,28 +2855,26 @@ func _ensure_find_bar() -> void:
     _toolbar.add_child(_find_bar)
 
 func _on_find_text_changed(text: String) -> void:
-    _find_matches = _viewport.search_rows(text) if _viewport != null else []
+    _find_resource_matches = _viewport.search_all(text) if _viewport != null else []
     _find_cursor = -1
-    if _find_matches.is_empty():
+    if _find_resource_matches.is_empty():
         _find_count_label.text = "no matches" if not text.strip_edges().is_empty() else ""
         return
     _find_step(1)
 
 func _find_step(direction: int) -> void:
-    # Flat indices go stale after any edit, so matches recompute on every step.
+    # Matches recompute on every step (results go stale after any edit) and search the
+    # FULL tree — find lands inside folded groups by unfolding the path to the match.
     if _find_edit == null or _viewport == null or _find_edit.text.strip_edges().is_empty():
         return
-    _find_matches = _viewport.search_rows(_find_edit.text)
-    if _find_matches.is_empty():
+    _find_resource_matches = _viewport.search_all(_find_edit.text)
+    if _find_resource_matches.is_empty():
         if _find_count_label != null:
             _find_count_label.text = "no matches"
         return
-    _find_cursor = wrapi(_find_cursor + direction, 0, _find_matches.size())
-    _find_count_label.text = "%d of %d" % [_find_cursor + 1, _find_matches.size()]
-    if _viewport != null:
-        _viewport._select_row(_find_matches[_find_cursor], -1)
-        _viewport.ensure_selection_visible()
-        _viewport.queue_redraw()
+    _find_cursor = wrapi(_find_cursor + direction, 0, _find_resource_matches.size())
+    _find_count_label.text = "%d of %d" % [_find_cursor + 1, _find_resource_matches.size()]
+    _viewport.reveal_resource(_find_resource_matches[_find_cursor])
 
 ## Ctrl+/: toggles the selected rows' enabled state (the sheet's "comment out").
 func _toggle_selected_rows_enabled() -> void:
@@ -3278,6 +3276,7 @@ var _sheet_type_name_edit: LineEdit = null
 var _sheet_type_icon_edit: LineEdit = null
 var _sheet_type_host_edit: LineEdit = null
 var _sheet_type_tool_check: CheckBox = null
+var _sheet_type_tags_edit: LineEdit = null
 
 func _open_sheet_type_dialog() -> void:
     if not _ensure_sheet_for_editing():
@@ -3295,6 +3294,7 @@ func _open_sheet_type_dialog() -> void:
     _sheet_type_icon_edit.text = _current_sheet.custom_class_icon
     _sheet_type_host_edit.text = _current_sheet.host_class
     _sheet_type_tool_check.button_pressed = _current_sheet.tool_mode
+    _sheet_type_tags_edit.text = ", ".join(_current_sheet.addon_tags)
     _sheet_type_dialog.popup_centered(Vector2i(460, 300))
 
 func _ensure_sheet_type_dialog() -> void:
@@ -3316,6 +3316,7 @@ func _ensure_sheet_type_dialog() -> void:
     _sheet_type_tool_check = CheckBox.new()
     _sheet_type_tool_check.text = "@tool — runs inside the editor (EXPERIMENTAL, editor-version-coupled)"
     form.add_child(_sheet_type_tool_check)
+    _sheet_type_tags_edit = _add_sheet_type_field(form, "Tags (comma-separated)", "movement, retro, jam")
     var hint: Label = Label.new()
     hint.text = "Custom nodes appear in Godot's Create Node dialog with their icon.\nBehaviors attach as child nodes and act on their parent via the typed `host` accessor."
     hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -3343,12 +3344,13 @@ func _on_sheet_type_confirmed() -> void:
         _sheet_type_name_edit.text,
         _sheet_type_icon_edit.text,
         _sheet_type_host_edit.text,
-        _sheet_type_tool_check.button_pressed
+        _sheet_type_tool_check.button_pressed,
+        VariableDialog.parse_options(_sheet_type_tags_edit.text)
     )
 
 ## Applies the chosen sheet type (0 = plain, 1 = custom node, 2 = behavior) undoably and
 ## refreshes every identity surface (banner, tab badge, header, lint context).
-func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false) -> void:
+func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray()) -> void:
     if _current_sheet == null:
         return
     var changed: bool = _perform_undoable_sheet_edit("Set Sheet Type", func() -> bool:
@@ -3357,6 +3359,7 @@ func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_p
         _current_sheet.tool_mode = tool_enabled or type_index == 3
         _current_sheet.custom_class_name = class_name_text.strip_edges() if type_index != 0 else ""
         _current_sheet.custom_class_icon = icon_path.strip_edges() if type_index != 0 else ""
+        _current_sheet.addon_tags = addon_tags
         if type_index == 3:
             _current_sheet.host_class = "EditorScript"
         elif not host_class_text.strip_edges().is_empty():

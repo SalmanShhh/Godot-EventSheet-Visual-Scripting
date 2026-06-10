@@ -187,7 +187,7 @@ func _tool_list_aces(arguments: Dictionary) -> Dictionary:
 	}
 	var aces: Array = []
 	for definition: ACEDefinition in _registry.get_all_definitions():
-		var haystack: String = ("%s %s %s %s" % [definition.id, definition.display_name, definition.category, definition.provider_id]).to_lower()
+		var haystack: String = definition.get_search_text().to_lower() + " " + ("%s %s" % [definition.id, definition.provider_id]).to_lower()
 		if not query.is_empty() and not haystack.contains(query):
 			continue
 		var params: Array = []
@@ -204,6 +204,7 @@ func _tool_list_aces(arguments: Dictionary) -> Dictionary:
 			"display_name": definition.display_name,
 			"category": definition.category,
 			"codegen_template": str((definition.metadata as Dictionary).get("codegen_template", "")) if definition.metadata is Dictionary else "",
+			"tags": (definition.metadata as Dictionary).get("tags", []) if definition.metadata is Dictionary else [],
 			"params": params
 		})
 	return {"aces": aces, "count": aces.size()}

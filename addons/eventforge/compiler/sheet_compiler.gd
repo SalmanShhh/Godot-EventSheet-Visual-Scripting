@@ -52,6 +52,8 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 	# A named sheet defines a custom node type: `@icon` + `class_name` make the generated
 	# script register in the Create Node dialog exactly like hand-written GDScript.
 	if not sheet.custom_class_name.strip_edges().is_empty():
+		if not sheet.addon_tags.is_empty():
+			lines.append("## @ace_tags(%s)" % ", ".join(sheet.addon_tags))
 		if not sheet.custom_class_icon.strip_edges().is_empty():
 			lines.append("@icon(\"%s\")" % sheet.custom_class_icon)
 		lines.append("class_name %s" % sheet.custom_class_name.strip_edges())

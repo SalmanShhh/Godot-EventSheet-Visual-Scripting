@@ -59,14 +59,33 @@ static func run() -> bool:
 	editor._ensure_find_bar()
 	editor._find_edit.text = "o"
 	editor._on_find_text_changed("o")
-	var first_hit: int = editor._find_matches[0] if not editor._find_matches.is_empty() else -1
+	var first_hit: Resource = editor._find_resource_matches[0] if not editor._find_resource_matches.is_empty() else null
 	all_passed = _check("typing jumps to the first match",
-		viewport.get_selected_context().get("row_index", -1), first_hit) and all_passed
-	var match_count: int = editor._find_matches.size()
+		viewport.get_selected_context().get("source_resource", null), first_hit) and all_passed
+	var match_count: int = editor._find_resource_matches.size()
 	for step in range(match_count):
 		editor._find_step(1)
 	all_passed = _check("stepping wraps back around",
-		viewport.get_selected_context().get("row_index", -1), first_hit) and all_passed
+		viewport.get_selected_context().get("source_resource", null), first_hit) and all_passed
+
+	# Find lands inside FOLDED groups (tree search + reveal).
+	var hidden_group: EventGroup = EventGroup.new()
+	hidden_group.group_name = "Hidden"
+	hidden_group.group_uid = "hidden_group"
+	var secret: CommentRow = CommentRow.new()
+	secret.text = "the secret needle"
+	hidden_group.events.append(secret)
+	sheet.events.append(hidden_group)
+	editor._refresh_after_edit()
+	for index in range(viewport.get_flat_rows().size()):
+		var row: EventRowData = viewport.get_flat_rows()[index].get("row")
+		if row != null and row.source_resource == hidden_group:
+			viewport._toggle_row_fold(index)
+			break
+	editor._find_edit.text = "secret needle"
+	editor._find_step(1)
+	all_passed = _check("find reaches rows inside folded groups",
+		viewport.get_selected_context().get("source_resource", null), secret) and all_passed
 
 	# Ctrl+/: toggles enabled on the model (undoable path).
 	viewport._select_row(0, -1)

@@ -6,6 +6,7 @@ func parse_source_metadata(script: Script) -> Dictionary:
     var metadata := {
         "class_name": "",
         "class_description": "",
+        "tags": [],
         "signals": {},
         "methods": {},
         "properties": {}
@@ -25,7 +26,13 @@ func parse_source_metadata(script: Script) -> Dictionary:
             if str(metadata["class_description"]).is_empty():
                 var doc_lines: Array[String] = []
                 for pending in pending_directives:
-                    if not pending.begins_with("@ace_"):
+                    if pending.begins_with("@ace_tags"):
+                        # `@ace_tags(movement, retro, jam)` -> provider tags (searchable
+                        # in the picker, filterable over MCP, shown in tooltips).
+                        for raw_tag in _extract_annotation_value(pending).split(","):
+                            if not raw_tag.strip_edges().is_empty():
+                                (metadata["tags"] as Array).append(raw_tag.strip_edges())
+                    elif not pending.begins_with("@ace_"):
                         doc_lines.append(pending)
                 metadata["class_description"] = " ".join(doc_lines).strip_edges()
             pending_directives.clear()

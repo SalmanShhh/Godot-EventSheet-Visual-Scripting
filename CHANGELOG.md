@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Find reaches folded groups + addon tags
+- **Ctrl+F now searches the FULL tree**: matches inside collapsed groups are found, and
+  stepping onto one **unfolds the path to it** and lands on the row (the sweep's known
+  limitation, fixed properly via tree search + reveal).
+- **Addon tags**: tag any addon with a class-level `@ace_tags(movement, retro, jam)`
+  annotation — or the **Tags field** in the Sheet Type dialog for sheet-built addons
+  (emitted into the generated script, zero-config as always). Tags are **searchable in
+  the picker**, ride along on every ACE the provider publishes, and are **exposed and
+  filterable over MCP** (`list_aces` now matches tags and reports them).
+- Covered by `tests/addon_tags_test.gd` (7 assertions) + the folded-find assertion in
+  `tests/godot_feel_test.gd`.
+
 ### Silent-bug sweep (five fixes)
 - **Linked panes stole the active view**: mirroring a selection re-emitted
   `selection_changed` in the mirrored panes, silently rerouting Ctrl+/, copy/paste and

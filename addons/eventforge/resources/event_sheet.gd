@@ -20,6 +20,9 @@ class_name EventSheetResource
 ## custom node type that appears in Godot's Create Node dialog, exactly like a hand-written
 ## GDScript class. Must be unique across the project (Godot enforces this).
 @export var custom_class_name: String = ""
+## Addon tags (C3-style: organize/filter your addon library): emitted as a class-level
+## `@ace_tags(...)` annotation, searchable in the picker and over MCP.
+@export var addon_tags: PackedStringArray = PackedStringArray()
 ## Optional icon for the custom node type (emitted as `@icon("path")`; shown in the Create
 ## Node dialog and scene tree). 16×16 SVG recommended, like engine icons.
 @export_file("*.svg", "*.png") var custom_class_icon: String = ""

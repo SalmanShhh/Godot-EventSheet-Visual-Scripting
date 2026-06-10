@@ -581,6 +581,68 @@ func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1)
     _begin_edit(row_index, span_index)
     return true
 
+## Tree-wide search (the find bar's data source): walks the FULL row tree — including
+## rows hidden inside folded groups — and returns matching source resources in order.
+func search_all(query: String) -> Array[Resource]:
+    var matches: Array[Resource] = []
+    var needle: String = query.strip_edges().to_lower()
+    if needle.is_empty():
+        return matches
+    for root in _root_rows:
+        _search_row_tree(root, needle, matches)
+    return matches
+
+func _search_row_tree(row_data: EventRowData, needle: String, into: Array[Resource]) -> void:
+    if row_data == null:
+        return
+    if row_data.row_type == EventRowData.RowType.EVENT and row_data.spans.is_empty():
+        _ensure_event_spans(row_data)
+    var haystack: String = ""
+    for span: SemanticSpan in row_data.spans:
+        haystack += span.text + " "
+    if row_data.source_resource is RawCodeRow:
+        haystack += (row_data.source_resource as RawCodeRow).code
+    if haystack.to_lower().contains(needle) and row_data.source_resource != null:
+        into.append(row_data.source_resource)
+    for child in row_data.children:
+        _search_row_tree(child, needle, into)
+
+## Selects and scrolls to the row backing `resource`, unfolding any folded ancestor
+## groups so find can land inside collapsed regions. Returns false when not found.
+func reveal_resource(resource: Resource) -> bool:
+    if resource == null:
+        return false
+    for attempt in range(2):
+        for index in range(_flat_rows.size()):
+            var row_data: EventRowData = _row_at(index)
+            if row_data != null and row_data.source_resource == resource:
+                _select_row(index, -1)
+                ensure_selection_visible()
+                queue_redraw()
+                return true
+        # Hidden inside folded groups: unfold the ancestors on the path and re-flatten.
+        var unfolded: bool = false
+        for root in _root_rows:
+            if _unfold_path_to(root, resource):
+                unfolded = true
+        if not unfolded:
+            return false
+        _refresh_rows()
+    return false
+
+func _unfold_path_to(row_data: EventRowData, resource: Resource) -> bool:
+    if row_data == null:
+        return false
+    if row_data.source_resource == resource:
+        return true
+    for child in row_data.children:
+        if _unfold_path_to(child, resource):
+            if row_data.folded:
+                row_data.folded = false
+                _fold_state[row_data.row_uid] = false
+            return true
+    return false
+
 ## Flat indices of rows whose visible text (or GDScript block code) contains the query,
 ## case-insensitively — the find bar's data source.
 func search_rows(query: String) -> Array[int]:

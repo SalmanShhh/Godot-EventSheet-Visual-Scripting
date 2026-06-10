@@ -46,7 +46,14 @@ func get_identifier() -> String:
     return "%s::%s" % [provider_id, id]
 
 func get_search_text() -> String:
-    return "%s %s %s %s" % [display_name, category, description, str(metadata.get("source_name", ""))]
+    var tag_text: String = ""
+    var tags: Variant = metadata.get("tags", [])
+    if tags is Array and not (tags as Array).is_empty():
+        var tag_parts: PackedStringArray = PackedStringArray()
+        for tag in tags:
+            tag_parts.append(str(tag))
+        tag_text = " ".join(tag_parts)
+    return "%s %s %s %s %s" % [display_name, category, description, str(metadata.get("source_name", "")), tag_text]
 
 ## Returns the category to display in the inspector (respects category_override).
 func get_inspector_category() -> String:

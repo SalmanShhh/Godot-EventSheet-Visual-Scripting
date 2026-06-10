@@ -67,6 +67,10 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
     if not class_description.is_empty():
         for definition in output:
             definition.metadata["provider_description"] = class_description
+    var provider_tags: Array = source_metadata.get("tags", [])
+    if not provider_tags.is_empty():
+        for definition in output:
+            definition.metadata["tags"] = provider_tags.duplicate()
     return output
 
 ## Applies the @ace_display_template / @ace_codegen_template overrides onto a definition's
