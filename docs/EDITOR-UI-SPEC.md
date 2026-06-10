@@ -407,9 +407,9 @@ hook, and the visual theme editor. Authoritative per-feature detail:
 
 Still open (post-1.0 polish):
 
-- Gutter bookmarks; per-`widget_hint` inspector widgets; advanced per-row override UI.
-  (Pick-filter compilation and ƒx autocomplete have since shipped.)
-
+- Per-`widget_hint` inspector widgets; advanced per-row override UI. (Pick-filter
+  compilation, ƒx autocomplete + dot-context completion, gutter bookmarks, and
+  compile-time sheet includes have since shipped.)
 - Candidate: MCP server for AI tooling (see GDSCRIPT-PAIRING-SPEC "Planned").
 
 ## 4. Implementation anchors
