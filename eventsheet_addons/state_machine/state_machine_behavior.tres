@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_5r6i7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_q66f6"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="3_000pv"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="4_v30r0"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="5_a3ipg"]
+
+[sub_resource type="Resource" id="Resource_84wsg"]
+script = ExtResource("1_5r6i7")
+text = "State machine behavior: Set State / Is In State from any sheet; On State Changed fires with (previous, next)."
+
+[sub_resource type="Resource" id="Resource_u0a6h"]
+script = ExtResource("2_q66f6")
+code = "## @ace_trigger
+## @ace_name(\"On State Changed\")
+## @ace_category(\"State Machine\")
+signal state_changed(previous: String, next: String)
+
+## @ace_condition
+## @ace_name(\"Is In State\")
+## @ace_category(\"State Machine\")
+## @ace_codegen_template(\"$StateMachineBehavior.state == {state_name}\")
+func is_in_state(state_name: String) -> bool:
+	return state == state_name"
+
+[sub_resource type="Resource" id="Resource_ae0f8"]
+script = ExtResource("2_q66f6")
+code = "if state == next:
+	return
+var previous: String = state
+state = next
+state_changed.emit(previous, next)"
+
+[sub_resource type="Resource" id="Resource_j2x8f"]
+script = ExtResource("3_000pv")
+id = "next"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_31hh8"]
+script = ExtResource("4_v30r0")
+function_name = "set_state"
+description = "Switches to the given state and fires On State Changed."
+expose_as_ace = true
+ace_display_name = "Set State"
+ace_category = "State Machine"
+params = Array[ExtResource("3_000pv")]([SubResource("Resource_j2x8f")])
+events = Array[Resource]([SubResource("Resource_ae0f8")])
+
+[resource]
+script = ExtResource("5_a3ipg")
+behavior_mode = true
+custom_class_name = "StateMachineBehavior"
+events = Array[Resource]([SubResource("Resource_84wsg"), SubResource("Resource_u0a6h")])
+variables = {
+"state": {
+"default": "idle",
+"exported": true,
+"type": "String"
+}
+}
+functions = Array[Resource]([SubResource("Resource_31hh8")])

@@ -1,0 +1,111 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_2ftid"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_1yoqm"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_5x47p"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_em10l"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_yaapd"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_xn11d"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_ybd88"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_d46t5"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_hpxd0"]
+
+[sub_resource type="Resource" id="Resource_1uias"]
+script = ExtResource("1_2ftid")
+text = "Flash behavior (C3-style): blinks the host's visibility for a duration, then restores it and fires On Flash Finished."
+
+[sub_resource type="Resource" id="Resource_it4ek"]
+script = ExtResource("2_1yoqm")
+code = "## @ace_trigger
+## @ace_name(\"On Flash Finished\")
+## @ace_category(\"Flash\")
+signal flash_finished"
+
+[sub_resource type="Resource" id="Resource_y7j0k"]
+script = ExtResource("2_1yoqm")
+code = "if not flashing or host == null:
+	return
+remaining -= delta
+accumulator += delta
+if accumulator >= interval:
+	accumulator = 0.0
+	host.visible = not host.visible
+if remaining <= 0.0:
+	flashing = false
+	host.visible = true
+	flash_finished.emit()"
+
+[sub_resource type="Resource" id="Resource_dftwn"]
+script = ExtResource("6_xn11d")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_y7j0k")])
+event_uid = "f42026"
+
+[sub_resource type="Resource" id="Resource_r8mfy"]
+script = ExtResource("2_1yoqm")
+code = "remaining = seconds
+accumulator = 0.0
+flashing = true"
+
+[sub_resource type="Resource" id="Resource_avg4v"]
+script = ExtResource("7_ybd88")
+id = "seconds"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_31bce"]
+script = ExtResource("8_d46t5")
+function_name = "flash"
+description = "Blinks the host for the given number of seconds."
+expose_as_ace = true
+ace_display_name = "Flash"
+ace_category = "Flash"
+params = Array[ExtResource("7_ybd88")]([SubResource("Resource_avg4v")])
+events = Array[Resource]([SubResource("Resource_r8mfy")])
+
+[sub_resource type="Resource" id="Resource_cg5ak"]
+script = ExtResource("2_1yoqm")
+code = "flashing = false
+if host != null:
+	host.visible = true"
+
+[sub_resource type="Resource" id="Resource_dnxji"]
+script = ExtResource("8_d46t5")
+function_name = "stop_flash"
+description = "Stops flashing and restores visibility."
+expose_as_ace = true
+ace_display_name = "Stop Flash"
+ace_category = "Flash"
+events = Array[Resource]([SubResource("Resource_cg5ak")])
+
+[resource]
+script = ExtResource("9_hpxd0")
+host_class = "CanvasItem"
+behavior_mode = true
+custom_class_name = "FlashBehavior"
+events = Array[Resource]([SubResource("Resource_1uias"), SubResource("Resource_it4ek"), SubResource("Resource_dftwn")])
+variables = {
+"accumulator": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"flashing": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"interval": {
+"default": 0.1,
+"exported": true,
+"type": "float"
+},
+"remaining": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+}
+}
+functions = Array[Resource]([SubResource("Resource_31bce"), SubResource("Resource_dnxji")])

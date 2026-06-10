@@ -93,8 +93,9 @@ Conditions                        | Actions
   components with a typed `host` accessor (the parent), exported parameters, and
   **expose-as-ACE functions** that publish the behavior's own actions project-wide via the
   addon folder. Identity UX everywhere: ⚙ tab badges, in-sheet banner, host-aware column
-  header. **Sample packs included**: `PlatformerMovement` (Jump / Set Move Speed /
-  On Jumped) and `EightDirectionMovement`, shipped as editable sheets + compiled scripts.
+  header. **Five sample packs included**: `PlatformerMovement`, `EightDirectionMovement`,
+  `TimerBehavior`, `FlashBehavior`, and `StateMachineBehavior` (with an annotated
+  block-condition example) — all shipped as editable sheets + compiled scripts.
 - **Use it all from hand-written GDScript** like regular code — typed autocomplete,
   signals, `extends` — because generated classes *are* regular code.
 

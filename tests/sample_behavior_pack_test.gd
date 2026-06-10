@@ -22,7 +22,10 @@ class NoopUndoManager:
 
 const PACKS: Array[String] = [
 	"res://eventsheet_addons/platformer_movement/platformer_movement_behavior",
-	"res://eventsheet_addons/eight_direction/eight_direction_movement_behavior"
+	"res://eventsheet_addons/eight_direction/eight_direction_movement_behavior",
+	"res://eventsheet_addons/timer/timer_behavior",
+	"res://eventsheet_addons/flash/flash_behavior",
+	"res://eventsheet_addons/state_machine/state_machine_behavior"
 ]
 
 static func run() -> bool:
@@ -64,6 +67,20 @@ static func run() -> bool:
 		all_passed = _check("Jump categorized for the picker", jump_definition.category, "Platformer") and all_passed
 	all_passed = _check("On Jumped trigger publishes from the block annotation",
 		jumped_trigger != null and jumped_trigger.display_name == "On Jumped", true) and all_passed
+	# New packs: Timer/Flash actions, the On Timer trigger, and the state-machine CONDITION
+	# authored as an annotated class-level block (with its own codegen template).
+	var start_timer: ACEDefinition = editor._ace_registry.find_definition("TimerBehavior", "method:start_timer")
+	var on_timer: ACEDefinition = editor._ace_registry.find_definition("TimerBehavior", "signal:timer_finished")
+	var flash_action: ACEDefinition = editor._ace_registry.find_definition("FlashBehavior", "method:flash")
+	var is_in_state: ACEDefinition = editor._ace_registry.find_definition("StateMachineBehavior", "method:is_in_state")
+	all_passed = _check("Timer pack publishes Start Timer", start_timer != null, true) and all_passed
+	all_passed = _check("Timer pack publishes the On Timer trigger",
+		on_timer != null and on_timer.display_name == "On Timer", true) and all_passed
+	all_passed = _check("Flash pack publishes Flash", flash_action != null, true) and all_passed
+	all_passed = _check("state machine block-condition publishes with its template",
+		is_in_state != null and str(is_in_state.metadata.get("codegen_template", "")) == "$StateMachineBehavior.state == {state_name}", true) and all_passed
+	all_passed = _check("block condition is typed as a condition",
+		is_in_state != null and is_in_state.ace_type == ACEDefinition.ACEType.CONDITION, true) and all_passed
 	editor.free()
 
 	# The movement block lints against the behavior context (host accessor + sheet vars).

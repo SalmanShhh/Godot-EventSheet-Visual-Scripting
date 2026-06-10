@@ -12,8 +12,190 @@ func _init() -> void:
 	var ok: bool = true
 	ok = _build_platformer() and ok
 	ok = _build_eight_direction() and ok
+	ok = _build_timer() and ok
+	ok = _build_flash() and ok
+	ok = _build_state_machine() and ok
 	print("[build_sample_behaviors] %s" % ("done" if ok else "FAILED"))
 	quit(0 if ok else 1)
+
+## C3 "Timer" behavior: attach under any node; Start/Stop ACEs; "On Timer" trigger.
+func _build_timer() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.behavior_mode = true
+	sheet.host_class = "Node"
+	sheet.custom_class_name = "TimerBehavior"
+	sheet.variables = {
+		"duration": {"type": "float", "default": 1.0, "exported": true},
+		"repeating": {"type": "bool", "default": false, "exported": true},
+		"remaining": {"type": "float", "default": 0.0, "exported": false},
+		"running": {"type": "bool", "default": false, "exported": false}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "Timer behavior (C3-style): Start Timer / Stop Timer from any sheet; the On Timer trigger fires when it elapses (repeats when 'repeating')."
+	sheet.events.append(about)
+	var signal_block: RawCodeRow = RawCodeRow.new()
+	signal_block.code = "## @ace_trigger\n## @ace_name(\"On Timer\")\n## @ace_category(\"Timer\")\nsignal timer_finished"
+	sheet.events.append(signal_block)
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	var countdown: RawCodeRow = RawCodeRow.new()
+	countdown.code = "\n".join(PackedStringArray([
+		"if not running:",
+		"\treturn",
+		"remaining -= delta",
+		"if remaining > 0.0:",
+		"\treturn",
+		"timer_finished.emit()",
+		"if repeating:",
+		"\tremaining = duration",
+		"else:",
+		"\trunning = false"
+	]))
+	tick.actions.append(countdown)
+	sheet.events.append(tick)
+
+	var start_timer: EventFunction = EventFunction.new()
+	start_timer.function_name = "start_timer"
+	start_timer.expose_as_ace = true
+	start_timer.ace_display_name = "Start Timer"
+	start_timer.ace_category = "Timer"
+	start_timer.description = "Starts (or restarts) the countdown with the given duration."
+	var seconds_param: ACEParam = ACEParam.new()
+	seconds_param.id = "seconds"
+	seconds_param.type_name = "float"
+	start_timer.params.append(seconds_param)
+	var start_body: RawCodeRow = RawCodeRow.new()
+	start_body.code = "duration = seconds\nremaining = seconds\nrunning = true"
+	start_timer.events.append(start_body)
+	sheet.functions.append(start_timer)
+
+	var stop_timer: EventFunction = EventFunction.new()
+	stop_timer.function_name = "stop_timer"
+	stop_timer.expose_as_ace = true
+	stop_timer.ace_display_name = "Stop Timer"
+	stop_timer.ace_category = "Timer"
+	stop_timer.description = "Stops the countdown without firing On Timer."
+	var stop_body: RawCodeRow = RawCodeRow.new()
+	stop_body.code = "running = false"
+	stop_timer.events.append(stop_body)
+	sheet.functions.append(stop_timer)
+	return _save_pack(sheet, "res://eventsheet_addons/timer/timer_behavior")
+
+## C3 "Flash" behavior: toggles host visibility at an interval for a duration.
+func _build_flash() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.behavior_mode = true
+	sheet.host_class = "CanvasItem"
+	sheet.custom_class_name = "FlashBehavior"
+	sheet.variables = {
+		"interval": {"type": "float", "default": 0.1, "exported": true},
+		"remaining": {"type": "float", "default": 0.0, "exported": false},
+		"accumulator": {"type": "float", "default": 0.0, "exported": false},
+		"flashing": {"type": "bool", "default": false, "exported": false}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "Flash behavior (C3-style): blinks the host's visibility for a duration, then restores it and fires On Flash Finished."
+	sheet.events.append(about)
+	var signal_block: RawCodeRow = RawCodeRow.new()
+	signal_block.code = "## @ace_trigger\n## @ace_name(\"On Flash Finished\")\n## @ace_category(\"Flash\")\nsignal flash_finished"
+	sheet.events.append(signal_block)
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	var blink: RawCodeRow = RawCodeRow.new()
+	blink.code = "\n".join(PackedStringArray([
+		"if not flashing or host == null:",
+		"\treturn",
+		"remaining -= delta",
+		"accumulator += delta",
+		"if accumulator >= interval:",
+		"\taccumulator = 0.0",
+		"\thost.visible = not host.visible",
+		"if remaining <= 0.0:",
+		"\tflashing = false",
+		"\thost.visible = true",
+		"\tflash_finished.emit()"
+	]))
+	tick.actions.append(blink)
+	sheet.events.append(tick)
+
+	var flash: EventFunction = EventFunction.new()
+	flash.function_name = "flash"
+	flash.expose_as_ace = true
+	flash.ace_display_name = "Flash"
+	flash.ace_category = "Flash"
+	flash.description = "Blinks the host for the given number of seconds."
+	var flash_seconds: ACEParam = ACEParam.new()
+	flash_seconds.id = "seconds"
+	flash_seconds.type_name = "float"
+	flash.params.append(flash_seconds)
+	var flash_body: RawCodeRow = RawCodeRow.new()
+	flash_body.code = "remaining = seconds\naccumulator = 0.0\nflashing = true"
+	flash.events.append(flash_body)
+	sheet.functions.append(flash)
+
+	var stop_flash: EventFunction = EventFunction.new()
+	stop_flash.function_name = "stop_flash"
+	stop_flash.expose_as_ace = true
+	stop_flash.ace_display_name = "Stop Flash"
+	stop_flash.ace_category = "Flash"
+	stop_flash.description = "Stops flashing and restores visibility."
+	var stop_flash_body: RawCodeRow = RawCodeRow.new()
+	stop_flash_body.code = "flashing = false\nif host != null:\n\thost.visible = true"
+	stop_flash.events.append(stop_flash_body)
+	sheet.functions.append(stop_flash)
+	return _save_pack(sheet, "res://eventsheet_addons/flash/flash_behavior")
+
+## Minimal state machine: Set State action, On State Changed trigger, and an Is In State
+## CONDITION authored as an annotated class-level GDScript block — the example of mixing
+## expose-as-ACE functions with hand-annotated block ACEs in one behavior.
+func _build_state_machine() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.behavior_mode = true
+	sheet.host_class = "Node"
+	sheet.custom_class_name = "StateMachineBehavior"
+	sheet.variables = {"state": {"type": "String", "default": "idle", "exported": true}}
+	var about: CommentRow = CommentRow.new()
+	about.text = "State machine behavior: Set State / Is In State from any sheet; On State Changed fires with (previous, next)."
+	sheet.events.append(about)
+	var block: RawCodeRow = RawCodeRow.new()
+	block.code = "\n".join(PackedStringArray([
+		"## @ace_trigger",
+		"## @ace_name(\"On State Changed\")",
+		"## @ace_category(\"State Machine\")",
+		"signal state_changed(previous: String, next: String)",
+		"",
+		"## @ace_condition",
+		"## @ace_name(\"Is In State\")",
+		"## @ace_category(\"State Machine\")",
+		"## @ace_codegen_template(\"$StateMachineBehavior.state == {state_name}\")",
+		"func is_in_state(state_name: String) -> bool:",
+		"\treturn state == state_name"
+	]))
+	sheet.events.append(block)
+
+	var set_state: EventFunction = EventFunction.new()
+	set_state.function_name = "set_state"
+	set_state.expose_as_ace = true
+	set_state.ace_display_name = "Set State"
+	set_state.ace_category = "State Machine"
+	set_state.description = "Switches to the given state and fires On State Changed."
+	var next_param: ACEParam = ACEParam.new()
+	next_param.id = "next"
+	next_param.type_name = "String"
+	set_state.params.append(next_param)
+	var set_body: RawCodeRow = RawCodeRow.new()
+	set_body.code = "\n".join(PackedStringArray([
+		"if state == next:",
+		"\treturn",
+		"var previous: String = state",
+		"state = next",
+		"state_changed.emit(previous, next)"
+	]))
+	set_state.events.append(set_body)
+	sheet.functions.append(set_state)
+	return _save_pack(sheet, "res://eventsheet_addons/state_machine/state_machine_behavior")
 
 func _build_platformer() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()

@@ -26,8 +26,8 @@ event flow, or write the expression directly — `ƒx` fields are plain GDScript
 | The expression language | **GDScript** — there is no separate language to learn |
 | Scripting (JS blocks) | GDScript blocks: class-level or in-flow inside events, with lint + completion |
 | Functions (event sheets) | Sheet functions — callable as actions, optionally **exposed as ACEs** project-wide |
-| Timer behavior | Timer node + `On Timeout` trigger |
-| Tween behavior | Godot's built-in tweens via a GDScript block (`create_tween()…`) |
+| Timer behavior | **TimerBehavior pack** (Start/Stop Timer, On Timer) — or a Timer node + `On Timeout` |
+| Flash / Tween behaviors | **FlashBehavior pack** (Flash, On Flash Finished); tweens via a GDScript block (`create_tween()…`) |
 
 ## Common System vocabulary
 

@@ -1,0 +1,107 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_njusl"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_508eb"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_766qb"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_m1bna"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_j6rvl"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_m7th5"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_uhvqa"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_1kfjc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_2hfnr"]
+
+[sub_resource type="Resource" id="Resource_mb0oi"]
+script = ExtResource("1_njusl")
+text = "Timer behavior (C3-style): Start Timer / Stop Timer from any sheet; the On Timer trigger fires when it elapses (repeats when 'repeating')."
+
+[sub_resource type="Resource" id="Resource_whix2"]
+script = ExtResource("2_508eb")
+code = "## @ace_trigger
+## @ace_name(\"On Timer\")
+## @ace_category(\"Timer\")
+signal timer_finished"
+
+[sub_resource type="Resource" id="Resource_xncmq"]
+script = ExtResource("2_508eb")
+code = "if not running:
+	return
+remaining -= delta
+if remaining > 0.0:
+	return
+timer_finished.emit()
+if repeating:
+	remaining = duration
+else:
+	running = false"
+
+[sub_resource type="Resource" id="Resource_pt8bp"]
+script = ExtResource("6_m7th5")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_xncmq")])
+event_uid = "a28237"
+
+[sub_resource type="Resource" id="Resource_n2gek"]
+script = ExtResource("2_508eb")
+code = "duration = seconds
+remaining = seconds
+running = true"
+
+[sub_resource type="Resource" id="Resource_phn2u"]
+script = ExtResource("7_uhvqa")
+id = "seconds"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_n42nf"]
+script = ExtResource("8_1kfjc")
+function_name = "start_timer"
+description = "Starts (or restarts) the countdown with the given duration."
+expose_as_ace = true
+ace_display_name = "Start Timer"
+ace_category = "Timer"
+params = Array[ExtResource("7_uhvqa")]([SubResource("Resource_phn2u")])
+events = Array[Resource]([SubResource("Resource_n2gek")])
+
+[sub_resource type="Resource" id="Resource_rgkuy"]
+script = ExtResource("2_508eb")
+code = "running = false"
+
+[sub_resource type="Resource" id="Resource_g4shn"]
+script = ExtResource("8_1kfjc")
+function_name = "stop_timer"
+description = "Stops the countdown without firing On Timer."
+expose_as_ace = true
+ace_display_name = "Stop Timer"
+ace_category = "Timer"
+events = Array[Resource]([SubResource("Resource_rgkuy")])
+
+[resource]
+script = ExtResource("9_2hfnr")
+behavior_mode = true
+custom_class_name = "TimerBehavior"
+events = Array[Resource]([SubResource("Resource_mb0oi"), SubResource("Resource_whix2"), SubResource("Resource_pt8bp")])
+variables = {
+"duration": {
+"default": 1.0,
+"exported": true,
+"type": "float"
+},
+"remaining": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"repeating": {
+"default": false,
+"exported": true,
+"type": "bool"
+},
+"running": {
+"default": false,
+"exported": false,
+"type": "bool"
+}
+}
+functions = Array[Resource]([SubResource("Resource_n42nf"), SubResource("Resource_g4shn")])

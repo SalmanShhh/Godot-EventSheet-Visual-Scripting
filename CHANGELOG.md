@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Three more behavior packs: Timer, Flash, State Machine
+- **TimerBehavior** (host: any Node): Start Timer / Stop Timer ACEs, exported
+  `duration`/`repeating`, and the **On Timer** trigger (repeats when repeating).
+- **FlashBehavior** (host: CanvasItem): Flash / Stop Flash ACEs blink the host's
+  visibility at an exported `interval` for a duration, restore it, and fire
+  **On Flash Finished** — the C3 Flash behavior.
+- **StateMachineBehavior** (host: any Node): Set State action, **On State Changed**
+  trigger `(previous, next)`, and an **Is In State condition** authored as an annotated
+  class-level GDScript block — the reference example for mixing expose-as-ACE functions
+  with hand-annotated block ACEs (including a custom codegen template) in one behavior.
+- All authored as behavior sheets via `tools/build_sample_behaviors.gd` (editable `.tres`
+  beside compiled `.gd`), no-drift goldens + publish assertions extended in
+  `tests/sample_behavior_pack_test.gd`.
+
 ### Signal-handler lifting (round-trip for signal triggers)
 - **Sheets that use signal triggers now lift back into events.** Previously any generated
   file with a signal trigger failed the all-or-nothing lift entirely (handlers aren't
@@ -60,7 +74,7 @@
   - non-event spans (comments/variables/blocks) clamp 2px tighter, accounting for the
 	chip rect's expansion — long comments stay inside the row width at any zoom;
   - the context-menu test re-acquires live row data between undoable edits (snapshot
-    restore replaces row resources; the old assertion toggled an orphan).
+	restore replaces row resources; the old assertion toggled an orphan).
   Only the long-known harmless tail segfault remains (after the summary prints); CI now
   fails on ANY `[FAIL]`.
 - **Paste GDScript → events**: pasting raw GDScript from anywhere converts through the
