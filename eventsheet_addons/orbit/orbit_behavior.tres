@@ -37,7 +37,7 @@ script = ExtResource("6_edhbl")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_odtee")])
-event_uid = "b1db5e"
+event_uid = "28b8a8"
 
 [sub_resource type="Resource" id="Resource_7xjsu"]
 script = ExtResource("2_lpx84")
@@ -124,6 +124,7 @@ script = ExtResource("9_mgc0e")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "OrbitBehavior"
+addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_c3hde"), SubResource("Resource_u8wjc")])
 variables = {
 "angle": {

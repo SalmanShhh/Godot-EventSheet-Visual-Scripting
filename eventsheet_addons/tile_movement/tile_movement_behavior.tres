@@ -64,7 +64,7 @@ script = ExtResource("6_g35kp")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_svak1")])
-event_uid = "0474b7"
+event_uid = "c4fdb5"
 
 [sub_resource type="Resource" id="Resource_joxbd"]
 script = ExtResource("2_8yhrj")
@@ -128,6 +128,7 @@ script = ExtResource("9_63fav")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "TileMovementBehavior"
+addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_0b1ao"), SubResource("Resource_gl44j"), SubResource("Resource_s6njm"), SubResource("Resource_6dtgv")])
 variables = {
 "default_controls": {

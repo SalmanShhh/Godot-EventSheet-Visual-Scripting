@@ -47,13 +47,14 @@ script = ExtResource("6_wmmtp")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_ljcjg")])
-event_uid = "9a8bc2"
+event_uid = "f6d57f"
 
 [resource]
 script = ExtResource("7_vegns")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "LOSBehavior"
+addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_mnxbw"), SubResource("Resource_yeela"), SubResource("Resource_454na")])
 variables = {
 "collision_mask": {

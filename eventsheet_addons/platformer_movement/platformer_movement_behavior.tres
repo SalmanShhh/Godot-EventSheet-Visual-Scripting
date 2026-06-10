@@ -36,7 +36,7 @@ script = ExtResource("6_wybey")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
 actions = Array[Resource]([SubResource("Resource_3d0wo")])
-event_uid = "0a494c"
+event_uid = "b18f08"
 
 [sub_resource type="Resource" id="Resource_dop18"]
 script = ExtResource("2_7fivs")
@@ -79,6 +79,7 @@ script = ExtResource("9_4680w")
 host_class = "CharacterBody2D"
 behavior_mode = true
 custom_class_name = "PlatformerMovement"
+addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_wlsfs"), SubResource("Resource_b2uae"), SubResource("Resource_4dex6")])
 variables = {
 "gravity": {

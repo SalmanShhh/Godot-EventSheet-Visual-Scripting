@@ -58,7 +58,7 @@ script = ExtResource("6_brf4f")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_733ur")])
-event_uid = "b28477"
+event_uid = "277065"
 
 [sub_resource type="Resource" id="Resource_1wlap"]
 script = ExtResource("2_3x5jo")
@@ -142,6 +142,7 @@ script = ExtResource("9_lul5e")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "SineBehavior"
+addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_052by"), SubResource("Resource_4g6ho"), SubResource("Resource_81y13")])
 variables = {
 "active": {

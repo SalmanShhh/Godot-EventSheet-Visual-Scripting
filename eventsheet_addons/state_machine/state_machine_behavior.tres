@@ -52,6 +52,7 @@ events = Array[Resource]([SubResource("Resource_ae0f8")])
 script = ExtResource("5_a3ipg")
 behavior_mode = true
 custom_class_name = "StateMachineBehavior"
+addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_84wsg"), SubResource("Resource_u0a6h")])
 variables = {
 "state": {

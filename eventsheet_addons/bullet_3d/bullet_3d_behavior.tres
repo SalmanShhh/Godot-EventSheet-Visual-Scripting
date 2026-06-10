@@ -1,0 +1,126 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_7th43"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_25dsr"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_mcy0o"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_0j3rh"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_elqwn"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_n4o3h"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_l86d7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_r04y7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_nss1k"]
+
+[sub_resource type="Resource" id="Resource_fp4pu"]
+script = ExtResource("1_7th43")
+text = "Bullet 3D behavior (C3-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled."
+
+[sub_resource type="Resource" id="Resource_iaqmi"]
+script = ExtResource("2_25dsr")
+code = "if host == null:
+	return
+if not launched:
+	launch_forward()
+vel_y -= gravity * delta
+var motion := Vector3(vel_x, vel_y, vel_z) * delta
+host.position += motion
+distance_travelled += motion.length()"
+
+[sub_resource type="Resource" id="Resource_wrg6a"]
+script = ExtResource("6_n4o3h")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_iaqmi")])
+event_uid = "2c4fb8"
+
+[sub_resource type="Resource" id="Resource_5m1b1"]
+script = ExtResource("2_25dsr")
+code = "if host == null:
+	return
+var forward := -host.global_transform.basis.z * speed
+vel_x = forward.x
+vel_y = forward.y
+vel_z = forward.z
+launched = true"
+
+[sub_resource type="Resource" id="Resource_5abs4"]
+script = ExtResource("8_r04y7")
+function_name = "launch_forward"
+description = "(Re)launches along the host's current forward direction."
+expose_as_ace = true
+ace_display_name = "Launch Forward"
+ace_category = "Bullet 3D"
+events = Array[Resource]([SubResource("Resource_5m1b1")])
+
+[sub_resource type="Resource" id="Resource_qs7cs"]
+script = ExtResource("2_25dsr")
+code = "speed = value
+var direction := Vector3(vel_x, vel_y, vel_z).normalized()
+if direction == Vector3.ZERO and host != null:
+	direction = -host.global_transform.basis.z
+vel_x = direction.x * value
+vel_y = direction.y * value
+vel_z = direction.z * value
+launched = true"
+
+[sub_resource type="Resource" id="Resource_i2vrm"]
+script = ExtResource("7_l86d7")
+id = "value"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_gbdrp"]
+script = ExtResource("8_r04y7")
+function_name = "set_bullet3d_speed"
+description = "Changes speed, keeping the current direction."
+expose_as_ace = true
+ace_display_name = "Set Bullet 3D Speed"
+ace_category = "Bullet 3D"
+params = Array[ExtResource("7_l86d7")]([SubResource("Resource_i2vrm")])
+events = Array[Resource]([SubResource("Resource_qs7cs")])
+
+[resource]
+script = ExtResource("9_nss1k")
+host_class = "Node3D"
+behavior_mode = true
+custom_class_name = "Bullet3DBehavior"
+addon_tags = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_fp4pu"), SubResource("Resource_wrg6a")])
+variables = {
+"distance_travelled": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"gravity": {
+"default": 0.0,
+"exported": true,
+"type": "float"
+},
+"launched": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"speed": {
+"default": 10.0,
+"exported": true,
+"type": "float"
+},
+"vel_x": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"vel_y": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"vel_z": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+}
+}
+functions = Array[Resource]([SubResource("Resource_5abs4"), SubResource("Resource_gbdrp")])

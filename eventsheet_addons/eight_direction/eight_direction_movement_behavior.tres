@@ -27,7 +27,7 @@ script = ExtResource("6_0yw3h")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
 actions = Array[Resource]([SubResource("Resource_cd6x4")])
-event_uid = "23be69"
+event_uid = "9343c0"
 
 [sub_resource type="Resource" id="Resource_w741j"]
 script = ExtResource("2_qu4da")
@@ -55,6 +55,7 @@ script = ExtResource("9_a5hw0")
 host_class = "CharacterBody2D"
 behavior_mode = true
 custom_class_name = "EightDirectionMovement"
+addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_mcrq6"), SubResource("Resource_hnixl")])
 variables = {
 "move_speed": {

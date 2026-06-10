@@ -37,7 +37,7 @@ script = ExtResource("6_eoq7w")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_a26d5")])
-event_uid = "5a86c7"
+event_uid = "75f27d"
 
 [sub_resource type="Resource" id="Resource_bw4ti"]
 script = ExtResource("2_urm38")
@@ -115,6 +115,7 @@ script = ExtResource("9_q1rqs")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "BulletBehavior"
+addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_dbolv"), SubResource("Resource_2c7to")])
 variables = {
 "acceleration": {

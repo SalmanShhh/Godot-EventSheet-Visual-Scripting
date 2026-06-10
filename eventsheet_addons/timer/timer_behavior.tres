@@ -39,7 +39,7 @@ script = ExtResource("6_m7th5")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_xncmq")])
-event_uid = "1e89ff"
+event_uid = "ab6e59"
 
 [sub_resource type="Resource" id="Resource_n2gek"]
 script = ExtResource("2_508eb")
@@ -81,6 +81,7 @@ events = Array[Resource]([SubResource("Resource_rgkuy")])
 script = ExtResource("9_2hfnr")
 behavior_mode = true
 custom_class_name = "TimerBehavior"
+addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_mb0oi"), SubResource("Resource_whix2"), SubResource("Resource_pt8bp")])
 variables = {
 "duration": {

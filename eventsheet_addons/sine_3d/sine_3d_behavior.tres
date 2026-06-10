@@ -1,0 +1,162 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_lheeo"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_p4ivb"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_ron22"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_5mxdm"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_x8d86"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_j4ynf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_whq3n"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_bff3u"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_6c0uw"]
+
+[sub_resource type="Resource" id="Resource_526kk"]
+script = ExtResource("1_lheeo")
+text = "Sine 3D behavior (C3-style): oscillates the host along an axis (x, y, z) or around the Y axis (rotation-y), with the full wave set."
+
+[sub_resource type="Resource" id="Resource_w5wfh"]
+script = ExtResource("2_p4ivb")
+code = "## @ace_hidden
+func _wave(t: float) -> float:
+	var cycle := fposmod(t, 1.0)
+	match wave:
+		\"triangle\":
+			return 1.0 - 4.0 * absf(cycle - 0.5)
+		\"sawtooth\":
+			return 2.0 * cycle - 1.0
+		\"reverse-sawtooth\":
+			return 1.0 - 2.0 * cycle
+		\"square\":
+			return 1.0 if cycle < 0.5 else -1.0
+	return sin(cycle * TAU)"
+
+[sub_resource type="Resource" id="Resource_pe8wu"]
+script = ExtResource("2_p4ivb")
+code = "if not active or host == null:
+	return
+if not base_captured:
+	base_x = host.position.x
+	base_y = host.position.y
+	base_z = host.position.z
+	base_rot_y = host.rotation.y
+	base_captured = true
+time += delta
+var offset := _wave(time / maxf(period, 0.001)) * magnitude
+if movement == \"x\":
+	host.position.x = base_x + offset
+elif movement == \"y\":
+	host.position.y = base_y + offset
+elif movement == \"z\":
+	host.position.z = base_z + offset
+elif movement == \"rotation-y\":
+	host.rotation.y = base_rot_y + offset * 0.0174533"
+
+[sub_resource type="Resource" id="Resource_wu8f5"]
+script = ExtResource("6_j4ynf")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_pe8wu")])
+event_uid = "ae3502"
+
+[sub_resource type="Resource" id="Resource_ol3o0"]
+script = ExtResource("2_p4ivb")
+code = "active = is_active"
+
+[sub_resource type="Resource" id="Resource_i2rxt"]
+script = ExtResource("7_whq3n")
+id = "is_active"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_mvta1"]
+script = ExtResource("8_bff3u")
+function_name = "set_sine3d_active"
+description = "Pauses or resumes the oscillation."
+expose_as_ace = true
+ace_display_name = "Set Sine 3D Active"
+ace_category = "Sine 3D"
+params = Array[ExtResource("7_whq3n")]([SubResource("Resource_i2rxt")])
+events = Array[Resource]([SubResource("Resource_ol3o0")])
+
+[sub_resource type="Resource" id="Resource_dwdnu"]
+script = ExtResource("2_p4ivb")
+code = "time = 0.0
+base_captured = false"
+
+[sub_resource type="Resource" id="Resource_ipr4t"]
+script = ExtResource("8_bff3u")
+function_name = "reset_sine3d"
+description = "Restarts the wave from the current state."
+expose_as_ace = true
+ace_display_name = "Reset Sine 3D"
+ace_category = "Sine 3D"
+events = Array[Resource]([SubResource("Resource_dwdnu")])
+
+[resource]
+script = ExtResource("9_6c0uw")
+host_class = "Node3D"
+behavior_mode = true
+custom_class_name = "Sine3DBehavior"
+addon_tags = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_526kk"), SubResource("Resource_w5wfh"), SubResource("Resource_wu8f5")])
+variables = {
+"active": {
+"default": true,
+"exported": true,
+"type": "bool"
+},
+"base_captured": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"base_rot_y": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"base_x": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"base_y": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"base_z": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"magnitude": {
+"default": 2.0,
+"exported": true,
+"type": "float"
+},
+"movement": {
+"default": "y",
+"exported": true,
+"options": ["x", "y", "z", "rotation-y"],
+"type": "String"
+},
+"period": {
+"default": 4.0,
+"exported": true,
+"type": "float"
+},
+"time": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"wave": {
+"default": "sine",
+"exported": true,
+"options": ["sine", "triangle", "sawtooth", "reverse-sawtooth", "square"],
+"type": "String"
+}
+}
+functions = Array[Resource]([SubResource("Resource_mvta1"), SubResource("Resource_ipr4t")])

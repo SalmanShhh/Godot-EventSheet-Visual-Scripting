@@ -93,7 +93,7 @@ Conditions                        | Actions
   (`choose()` included).
 
 ### Behaviors & addons (zero configuration, no JSON)
-- **14 C3-style behavior packs**, all authored as event sheets: Platformer, 8-Direction,
+- **18 behavior packs** (14 C3 classics + Sine/Orbit/Bullet/Move To in 3D), all authored as event sheets: Platformer, 8-Direction,
   Timer, Flash, State Machine, Sine (7 movements × 5 wave shapes), Orbit (ellipses),
   Bullet, Move To (waypoint queues), Follow (smooth + delayed history modes),
   Drag & Drop (axis locking), Car (drift), Tile Movement (simulate control, grid

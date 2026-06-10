@@ -24,6 +24,10 @@ func _init() -> void:
 	ok = _build_car() and ok
 	ok = _build_tile_movement() and ok
 	ok = _build_line_of_sight() and ok
+	ok = _build_sine_3d() and ok
+	ok = _build_orbit_3d() and ok
+	ok = _build_bullet_3d() and ok
+	ok = _build_move_to_3d() and ok
 	print("[build_sample_behaviors] %s" % ("done" if ok else "FAILED"))
 	quit(0 if ok else 1)
 
@@ -1168,6 +1172,359 @@ func _build_line_of_sight() -> bool:
 	sheet.events.append(tick)
 
 	return _save_pack(sheet, "res://eventsheet_addons/line_of_sight/line_of_sight_behavior")
+
+## Sine 3D behavior (C3-style)
+func _build_sine_3d() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.behavior_mode = true
+	sheet.host_class = "Node3D"
+	sheet.custom_class_name = "Sine3DBehavior"
+	sheet.variables = {
+		"movement": {"type": "String", "default": "y", "exported": true, "options": ["x", "y", "z", "rotation-y"]},
+		"wave": {"type": "String", "default": "sine", "exported": true, "options": ["sine", "triangle", "sawtooth", "reverse-sawtooth", "square"]},
+		"period": {"type": "float", "default": 4.0, "exported": true},
+		"magnitude": {"type": "float", "default": 2.0, "exported": true},
+		"active": {"type": "bool", "default": true, "exported": true},
+		"time": {"type": "float", "default": 0.0, "exported": false},
+		"base_x": {"type": "float", "default": 0.0, "exported": false},
+		"base_y": {"type": "float", "default": 0.0, "exported": false},
+		"base_z": {"type": "float", "default": 0.0, "exported": false},
+		"base_rot_y": {"type": "float", "default": 0.0, "exported": false},
+		"base_captured": {"type": "bool", "default": false, "exported": false}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "Sine 3D behavior (C3-style): oscillates the host along an axis (x, y, z) or around the Y axis (rotation-y), with the full wave set."
+	sheet.events.append(about)
+	var extra_block_0: RawCodeRow = RawCodeRow.new()
+	extra_block_0.code = "\n".join(PackedStringArray([
+		"## @ace_hidden",
+		"func _wave(t: float) -> float:",
+		"\tvar cycle := fposmod(t, 1.0)",
+		"\tmatch wave:",
+		"\t\t\"triangle\":",
+		"\t\t\treturn 1.0 - 4.0 * absf(cycle - 0.5)",
+		"\t\t\"sawtooth\":",
+		"\t\t\treturn 2.0 * cycle - 1.0",
+		"\t\t\"reverse-sawtooth\":",
+		"\t\t\treturn 1.0 - 2.0 * cycle",
+		"\t\t\"square\":",
+		"\t\t\treturn 1.0 if cycle < 0.5 else -1.0",
+		"\treturn sin(cycle * TAU)"
+	]))
+	sheet.events.append(extra_block_0)
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	var tick_body: RawCodeRow = RawCodeRow.new()
+	tick_body.code = "\n".join(PackedStringArray([
+		"if not active or host == null:",
+		"\treturn",
+		"if not base_captured:",
+		"\tbase_x = host.position.x",
+		"\tbase_y = host.position.y",
+		"\tbase_z = host.position.z",
+		"\tbase_rot_y = host.rotation.y",
+		"\tbase_captured = true",
+		"time += delta",
+		"var offset := _wave(time / maxf(period, 0.001)) * magnitude",
+		"if movement == \"x\":",
+		"\thost.position.x = base_x + offset",
+		"elif movement == \"y\":",
+		"\thost.position.y = base_y + offset",
+		"elif movement == \"z\":",
+		"\thost.position.z = base_z + offset",
+		"elif movement == \"rotation-y\":",
+		"\thost.rotation.y = base_rot_y + offset * 0.0174533"
+	]))
+	tick.actions.append(tick_body)
+	sheet.events.append(tick)
+
+	var set_sine3d_active_fn: EventFunction = EventFunction.new()
+	set_sine3d_active_fn.function_name = "set_sine3d_active"
+	set_sine3d_active_fn.expose_as_ace = true
+	set_sine3d_active_fn.ace_display_name = "Set Sine 3D Active"
+	set_sine3d_active_fn.ace_category = "Sine 3D"
+	set_sine3d_active_fn.description = "Pauses or resumes the oscillation."
+	var set_sine3d_active_fn_is_active: ACEParam = ACEParam.new()
+	set_sine3d_active_fn_is_active.id = "is_active"
+	set_sine3d_active_fn_is_active.type_name = "bool"
+	set_sine3d_active_fn.params.append(set_sine3d_active_fn_is_active)
+	var set_sine3d_active_fn_body: RawCodeRow = RawCodeRow.new()
+	set_sine3d_active_fn_body.code = "\n".join(PackedStringArray([
+		"active = is_active"
+	]))
+	set_sine3d_active_fn.events.append(set_sine3d_active_fn_body)
+	sheet.functions.append(set_sine3d_active_fn)
+
+	var reset_sine3d_fn: EventFunction = EventFunction.new()
+	reset_sine3d_fn.function_name = "reset_sine3d"
+	reset_sine3d_fn.expose_as_ace = true
+	reset_sine3d_fn.ace_display_name = "Reset Sine 3D"
+	reset_sine3d_fn.ace_category = "Sine 3D"
+	reset_sine3d_fn.description = "Restarts the wave from the current state."
+	var reset_sine3d_fn_body: RawCodeRow = RawCodeRow.new()
+	reset_sine3d_fn_body.code = "\n".join(PackedStringArray([
+		"time = 0.0",
+		"base_captured = false"
+	]))
+	reset_sine3d_fn.events.append(reset_sine3d_fn_body)
+	sheet.functions.append(reset_sine3d_fn)
+
+	return _save_pack(sheet, "res://eventsheet_addons/sine_3d/sine_3d_behavior")
+
+## Orbit 3D behavior (C3-style)
+func _build_orbit_3d() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.behavior_mode = true
+	sheet.host_class = "Node3D"
+	sheet.custom_class_name = "Orbit3DBehavior"
+	sheet.variables = {
+		"radius": {"type": "float", "default": 3.0, "exported": true},
+		"speed_degrees": {"type": "float", "default": 90.0, "exported": true},
+		"angle": {"type": "float", "default": 0.0, "exported": false},
+		"center_x": {"type": "float", "default": 0.0, "exported": false},
+		"center_y": {"type": "float", "default": 0.0, "exported": false},
+		"center_z": {"type": "float", "default": 0.0, "exported": false},
+		"center_captured": {"type": "bool", "default": false, "exported": false}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "Orbit 3D behavior (C3-style): circles the host around its starting point in the XZ plane (Y stays)."
+	sheet.events.append(about)
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	var tick_body: RawCodeRow = RawCodeRow.new()
+	tick_body.code = "\n".join(PackedStringArray([
+		"if host == null:",
+		"\treturn",
+		"if not center_captured:",
+		"\tcenter_x = host.position.x",
+		"\tcenter_y = host.position.y",
+		"\tcenter_z = host.position.z",
+		"\tcenter_captured = true",
+		"angle += deg_to_rad(speed_degrees) * delta",
+		"host.position = Vector3(center_x + cos(angle) * radius, center_y, center_z + sin(angle) * radius)"
+	]))
+	tick.actions.append(tick_body)
+	sheet.events.append(tick)
+
+	var set_orbit3d_center_fn: EventFunction = EventFunction.new()
+	set_orbit3d_center_fn.function_name = "set_orbit3d_center"
+	set_orbit3d_center_fn.expose_as_ace = true
+	set_orbit3d_center_fn.ace_display_name = "Set Orbit 3D Center"
+	set_orbit3d_center_fn.ace_category = "Orbit 3D"
+	set_orbit3d_center_fn.description = "Orbits around the given point from now on."
+	var set_orbit3d_center_fn_x: ACEParam = ACEParam.new()
+	set_orbit3d_center_fn_x.id = "x"
+	set_orbit3d_center_fn_x.type_name = "float"
+	set_orbit3d_center_fn.params.append(set_orbit3d_center_fn_x)
+	var set_orbit3d_center_fn_y: ACEParam = ACEParam.new()
+	set_orbit3d_center_fn_y.id = "y"
+	set_orbit3d_center_fn_y.type_name = "float"
+	set_orbit3d_center_fn.params.append(set_orbit3d_center_fn_y)
+	var set_orbit3d_center_fn_z: ACEParam = ACEParam.new()
+	set_orbit3d_center_fn_z.id = "z"
+	set_orbit3d_center_fn_z.type_name = "float"
+	set_orbit3d_center_fn.params.append(set_orbit3d_center_fn_z)
+	var set_orbit3d_center_fn_body: RawCodeRow = RawCodeRow.new()
+	set_orbit3d_center_fn_body.code = "\n".join(PackedStringArray([
+		"center_x = x",
+		"center_y = y",
+		"center_z = z",
+		"center_captured = true"
+	]))
+	set_orbit3d_center_fn.events.append(set_orbit3d_center_fn_body)
+	sheet.functions.append(set_orbit3d_center_fn)
+
+	return _save_pack(sheet, "res://eventsheet_addons/orbit_3d/orbit_3d_behavior")
+
+## Bullet 3D behavior (C3-style)
+func _build_bullet_3d() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.behavior_mode = true
+	sheet.host_class = "Node3D"
+	sheet.custom_class_name = "Bullet3DBehavior"
+	sheet.variables = {
+		"speed": {"type": "float", "default": 10.0, "exported": true},
+		"gravity": {"type": "float", "default": 0.0, "exported": true},
+		"distance_travelled": {"type": "float", "default": 0.0, "exported": false},
+		"vel_x": {"type": "float", "default": 0.0, "exported": false},
+		"vel_y": {"type": "float", "default": 0.0, "exported": false},
+		"vel_z": {"type": "float", "default": 0.0, "exported": false},
+		"launched": {"type": "bool", "default": false, "exported": false}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "Bullet 3D behavior (C3-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled."
+	sheet.events.append(about)
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	var tick_body: RawCodeRow = RawCodeRow.new()
+	tick_body.code = "\n".join(PackedStringArray([
+		"if host == null:",
+		"\treturn",
+		"if not launched:",
+		"\tlaunch_forward()",
+		"vel_y -= gravity * delta",
+		"var motion := Vector3(vel_x, vel_y, vel_z) * delta",
+		"host.position += motion",
+		"distance_travelled += motion.length()"
+	]))
+	tick.actions.append(tick_body)
+	sheet.events.append(tick)
+
+	var launch_forward_fn: EventFunction = EventFunction.new()
+	launch_forward_fn.function_name = "launch_forward"
+	launch_forward_fn.expose_as_ace = true
+	launch_forward_fn.ace_display_name = "Launch Forward"
+	launch_forward_fn.ace_category = "Bullet 3D"
+	launch_forward_fn.description = "(Re)launches along the host's current forward direction."
+	var launch_forward_fn_body: RawCodeRow = RawCodeRow.new()
+	launch_forward_fn_body.code = "\n".join(PackedStringArray([
+		"if host == null:",
+		"\treturn",
+		"var forward := -host.global_transform.basis.z * speed",
+		"vel_x = forward.x",
+		"vel_y = forward.y",
+		"vel_z = forward.z",
+		"launched = true"
+	]))
+	launch_forward_fn.events.append(launch_forward_fn_body)
+	sheet.functions.append(launch_forward_fn)
+
+	var set_bullet3d_speed_fn: EventFunction = EventFunction.new()
+	set_bullet3d_speed_fn.function_name = "set_bullet3d_speed"
+	set_bullet3d_speed_fn.expose_as_ace = true
+	set_bullet3d_speed_fn.ace_display_name = "Set Bullet 3D Speed"
+	set_bullet3d_speed_fn.ace_category = "Bullet 3D"
+	set_bullet3d_speed_fn.description = "Changes speed, keeping the current direction."
+	var set_bullet3d_speed_fn_value: ACEParam = ACEParam.new()
+	set_bullet3d_speed_fn_value.id = "value"
+	set_bullet3d_speed_fn_value.type_name = "float"
+	set_bullet3d_speed_fn.params.append(set_bullet3d_speed_fn_value)
+	var set_bullet3d_speed_fn_body: RawCodeRow = RawCodeRow.new()
+	set_bullet3d_speed_fn_body.code = "\n".join(PackedStringArray([
+		"speed = value",
+		"var direction := Vector3(vel_x, vel_y, vel_z).normalized()",
+		"if direction == Vector3.ZERO and host != null:",
+		"\tdirection = -host.global_transform.basis.z",
+		"vel_x = direction.x * value",
+		"vel_y = direction.y * value",
+		"vel_z = direction.z * value",
+		"launched = true"
+	]))
+	set_bullet3d_speed_fn.events.append(set_bullet3d_speed_fn_body)
+	sheet.functions.append(set_bullet3d_speed_fn)
+
+	return _save_pack(sheet, "res://eventsheet_addons/bullet_3d/bullet_3d_behavior")
+
+## Move To 3D behavior (C3-style)
+func _build_move_to_3d() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.behavior_mode = true
+	sheet.host_class = "Node3D"
+	sheet.custom_class_name = "MoveTo3DBehavior"
+	sheet.variables = {
+		"max_speed": {"type": "float", "default": 5.0, "exported": true},
+		"waypoints": {"type": "Array", "default": [], "exported": false},
+		"moving": {"type": "bool", "default": false, "exported": false}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "Move To 3D behavior (C3-style): glides through a queue of Vector3 waypoints and fires On Arrived at the final stop."
+	sheet.events.append(about)
+	var signal_block: RawCodeRow = RawCodeRow.new()
+	signal_block.code = "\n".join(PackedStringArray([
+		"## @ace_trigger",
+		"## @ace_name(\"On Arrived (3D)\")",
+		"## @ace_category(\"Move To 3D\")",
+		"signal arrived"
+	]))
+	sheet.events.append(signal_block)
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	var tick_body: RawCodeRow = RawCodeRow.new()
+	tick_body.code = "\n".join(PackedStringArray([
+		"if not moving or host == null or waypoints.is_empty():",
+		"\treturn",
+		"var target: Vector3 = waypoints[0]",
+		"host.position = host.position.move_toward(target, max_speed * delta)",
+		"if host.position.distance_to(target) < 0.05:",
+		"\twaypoints.pop_front()",
+		"\tif waypoints.is_empty():",
+		"\t\tmoving = false",
+		"\t\tarrived.emit()"
+	]))
+	tick.actions.append(tick_body)
+	sheet.events.append(tick)
+
+	var move_to_position_3d_fn: EventFunction = EventFunction.new()
+	move_to_position_3d_fn.function_name = "move_to_position_3d"
+	move_to_position_3d_fn.expose_as_ace = true
+	move_to_position_3d_fn.ace_display_name = "Move To Position (3D)"
+	move_to_position_3d_fn.ace_category = "Move To 3D"
+	move_to_position_3d_fn.description = "Replaces the queue and glides toward the point."
+	var move_to_position_3d_fn_x: ACEParam = ACEParam.new()
+	move_to_position_3d_fn_x.id = "x"
+	move_to_position_3d_fn_x.type_name = "float"
+	move_to_position_3d_fn.params.append(move_to_position_3d_fn_x)
+	var move_to_position_3d_fn_y: ACEParam = ACEParam.new()
+	move_to_position_3d_fn_y.id = "y"
+	move_to_position_3d_fn_y.type_name = "float"
+	move_to_position_3d_fn.params.append(move_to_position_3d_fn_y)
+	var move_to_position_3d_fn_z: ACEParam = ACEParam.new()
+	move_to_position_3d_fn_z.id = "z"
+	move_to_position_3d_fn_z.type_name = "float"
+	move_to_position_3d_fn.params.append(move_to_position_3d_fn_z)
+	var move_to_position_3d_fn_body: RawCodeRow = RawCodeRow.new()
+	move_to_position_3d_fn_body.code = "\n".join(PackedStringArray([
+		"waypoints = [Vector3(x, y, z)]",
+		"moving = true"
+	]))
+	move_to_position_3d_fn.events.append(move_to_position_3d_fn_body)
+	sheet.functions.append(move_to_position_3d_fn)
+
+	var add_waypoint_3d_fn: EventFunction = EventFunction.new()
+	add_waypoint_3d_fn.function_name = "add_waypoint_3d"
+	add_waypoint_3d_fn.expose_as_ace = true
+	add_waypoint_3d_fn.ace_display_name = "Add Waypoint (3D)"
+	add_waypoint_3d_fn.ace_category = "Move To 3D"
+	add_waypoint_3d_fn.description = "Appends a stop to the queue."
+	var add_waypoint_3d_fn_x: ACEParam = ACEParam.new()
+	add_waypoint_3d_fn_x.id = "x"
+	add_waypoint_3d_fn_x.type_name = "float"
+	add_waypoint_3d_fn.params.append(add_waypoint_3d_fn_x)
+	var add_waypoint_3d_fn_y: ACEParam = ACEParam.new()
+	add_waypoint_3d_fn_y.id = "y"
+	add_waypoint_3d_fn_y.type_name = "float"
+	add_waypoint_3d_fn.params.append(add_waypoint_3d_fn_y)
+	var add_waypoint_3d_fn_z: ACEParam = ACEParam.new()
+	add_waypoint_3d_fn_z.id = "z"
+	add_waypoint_3d_fn_z.type_name = "float"
+	add_waypoint_3d_fn.params.append(add_waypoint_3d_fn_z)
+	var add_waypoint_3d_fn_body: RawCodeRow = RawCodeRow.new()
+	add_waypoint_3d_fn_body.code = "\n".join(PackedStringArray([
+		"waypoints.append(Vector3(x, y, z))",
+		"moving = true"
+	]))
+	add_waypoint_3d_fn.events.append(add_waypoint_3d_fn_body)
+	sheet.functions.append(add_waypoint_3d_fn)
+
+	var stop_moving_3d_fn: EventFunction = EventFunction.new()
+	stop_moving_3d_fn.function_name = "stop_moving_3d"
+	stop_moving_3d_fn.expose_as_ace = true
+	stop_moving_3d_fn.ace_display_name = "Stop Moving (3D)"
+	stop_moving_3d_fn.ace_category = "Move To 3D"
+	stop_moving_3d_fn.description = "Clears the queue without firing On Arrived."
+	var stop_moving_3d_fn_body: RawCodeRow = RawCodeRow.new()
+	stop_moving_3d_fn_body.code = "\n".join(PackedStringArray([
+		"moving = false",
+		"waypoints = []"
+	]))
+	stop_moving_3d_fn.events.append(stop_moving_3d_fn_body)
+	sheet.functions.append(stop_moving_3d_fn)
+
+	return _save_pack(sheet, "res://eventsheet_addons/move_to_3d/move_to_3d_behavior")
 
 func _save_pack(sheet: EventSheetResource, base_path: String) -> bool:
 	DirAccess.make_dir_recursive_absolute(base_path.get_base_dir())

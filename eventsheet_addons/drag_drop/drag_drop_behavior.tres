@@ -53,7 +53,7 @@ script = ExtResource("6_b7r38")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_q2el6")])
-event_uid = "f66b1d"
+event_uid = "e83dce"
 
 [sub_resource type="Resource" id="Resource_swrhc"]
 script = ExtResource("2_bvvcx")
@@ -75,6 +75,7 @@ script = ExtResource("9_07u1j")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "DragDropBehavior"
+addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_p2muo"), SubResource("Resource_u540h"), SubResource("Resource_0clv1")])
 variables = {
 "axes": {

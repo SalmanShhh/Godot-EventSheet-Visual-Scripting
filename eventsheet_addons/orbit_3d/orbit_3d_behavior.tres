@@ -1,0 +1,118 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_3bqpc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_1ihjn"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_qhrj8"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_ui1lx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_h4i66"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_6xk7j"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_2wm85"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_crwpp"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_ph37s"]
+
+[sub_resource type="Resource" id="Resource_i0mc6"]
+script = ExtResource("1_3bqpc")
+text = "Orbit 3D behavior (C3-style): circles the host around its starting point in the XZ plane (Y stays)."
+
+[sub_resource type="Resource" id="Resource_51g62"]
+script = ExtResource("2_1ihjn")
+code = "if host == null:
+	return
+if not center_captured:
+	center_x = host.position.x
+	center_y = host.position.y
+	center_z = host.position.z
+	center_captured = true
+angle += deg_to_rad(speed_degrees) * delta
+host.position = Vector3(center_x + cos(angle) * radius, center_y, center_z + sin(angle) * radius)"
+
+[sub_resource type="Resource" id="Resource_5urnx"]
+script = ExtResource("6_6xk7j")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_51g62")])
+event_uid = "de19ec"
+
+[sub_resource type="Resource" id="Resource_3s5dy"]
+script = ExtResource("2_1ihjn")
+code = "center_x = x
+center_y = y
+center_z = z
+center_captured = true"
+
+[sub_resource type="Resource" id="Resource_cp8gk"]
+script = ExtResource("7_2wm85")
+id = "x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_5ogdh"]
+script = ExtResource("7_2wm85")
+id = "y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_snjo7"]
+script = ExtResource("7_2wm85")
+id = "z"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_srxho"]
+script = ExtResource("8_crwpp")
+function_name = "set_orbit3d_center"
+description = "Orbits around the given point from now on."
+expose_as_ace = true
+ace_display_name = "Set Orbit 3D Center"
+ace_category = "Orbit 3D"
+params = Array[ExtResource("7_2wm85")]([SubResource("Resource_cp8gk"), SubResource("Resource_5ogdh"), SubResource("Resource_snjo7")])
+events = Array[Resource]([SubResource("Resource_3s5dy")])
+
+[resource]
+script = ExtResource("9_ph37s")
+host_class = "Node3D"
+behavior_mode = true
+custom_class_name = "Orbit3DBehavior"
+addon_tags = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_i0mc6"), SubResource("Resource_5urnx")])
+variables = {
+"angle": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"center_captured": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"center_x": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"center_y": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"center_z": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"radius": {
+"default": 3.0,
+"exported": true,
+"type": "float"
+},
+"speed_degrees": {
+"default": 90.0,
+"exported": true,
+"type": "float"
+}
+}
+functions = Array[Resource]([SubResource("Resource_srxho")])

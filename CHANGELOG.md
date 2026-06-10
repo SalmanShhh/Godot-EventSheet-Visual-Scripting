@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### 3D behavior packs (starter quartet)
+- **Sine 3D** (oscillate along x/y/z or around Y, full wave set), **Orbit 3D** (XZ-plane
+  circling), **Bullet 3D** (launch along the host's forward with gravity + distance
+  tracking, relaunchable), and **Move To 3D** (Vector3 waypoint queue + On Arrived) —
+  eighteen packs bundled total, all sheet-built and covered by the pack test's
+  no-drift/load/publish assertions.
+
 ## [0.4.0] - 2026-06-10
 
 The polish-and-reach release: the starter **3D vocabulary**, a **five-fix silent-bug
