@@ -173,6 +173,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	var lines: PackedStringArray = PackedStringArray()
 	var source_map: Array = result["source_map"]
 	var added_event_rows: Array = []
+	var deferred_comment_lines_external: PackedStringArray = PackedStringArray()
 	for entry: Variant in sheet.events:
 		if entry is LocalVariable:
 			var declaration: String = _emit_tree_variable_line(entry as LocalVariable)
@@ -185,6 +186,8 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			source_map.append({"uid": str((entry as RawCodeRow).get_instance_id()), "start": block_start, "end": lines.size(), "kind": "raw"})
 		elif entry is EventRow or entry is EventGroup:
 			added_event_rows.append(entry)
+		elif entry is CommentRow and (entry as CommentRow).enabled and not (entry as CommentRow).text.strip_edges().is_empty():
+			deferred_comment_lines_external.append_array((entry as CommentRow).text.split("\n"))
 	# External sheets: raw rows include the original file's verbatim segments, so signals
 	# declared anywhere in the source validate self-connections.
 	var external_raw_rows: Array = []
@@ -211,6 +214,10 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			lines.append("\tpass")
 		source_map.append({"uid": str(event_function.get_instance_id()), "start": function_start, "end": lines.size(), "kind": "function"})
 
+	# Top-level comments emit last, one blank before each line (main path's deferred format).
+	for comment_line: String in deferred_comment_lines_external:
+		lines.append("")
+		lines.append("# %s" % comment_line)
 	_insert_provider_member_declarations(lines, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output

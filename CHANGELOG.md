@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Importer completed: function verify-lift + comment preservation (two-pass safe)
+- **Sheet functions lift back** when opening generated `.gd` files: their `@ace_*`
+  annotation blocks reverse into `expose_as_ace`/name/category/description, parameters
+  parse with types, and bodies use the event grammar with **lenient ifs** — unmatched
+  control flow becomes in-flow GDScript inside the event instead of failing the file
+  (trigger bodies got the same upgrade). Codegen templates and icons are regenerated
+  rather than stored (behavior identity — `class_name`, host, behavior mode — is now
+  recovered from the prelude so `$Class.fn()` templates verify).
+- **Trailing top-level comments lift** into comment rows; the external compile path now
+  emits top-level comments (it silently dropped them before — found by the byte-verify).
+- **Two-pass safety**: when the full lift can't verify byte-identically, the event-only
+  lift retries, so these upgrades can never regress previously-lifting files. Also fixed
+  a latent revert leak (the shallow backup left a boundary row's stripped newline behind
+  after a failed verify, corrupting round-trips).
+- End-to-end fixture: the shipped **PlatformerMovement pack re-opens fully** — events,
+  exposed functions, annotations, comments — with only the `_enter_tree` host-binding
+  scaffold staying a verbatim block (external emission keeps the prelude untouched by
+  design). Covered by `tests/function_lift_test.gd` (13 assertions).
+
 ### Intellisense upgrades: dot-context completion, signature hints, quick-add bar
 - **Dot-context completion** in GDScript blocks and ƒx fields: typing `host.` offers the
   host class's members, a typed sheet variable offers *its* class's members, and

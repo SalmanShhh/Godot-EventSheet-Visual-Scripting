@@ -73,9 +73,23 @@ func import_external_source(source: String) -> EventSheetResource:
 		pending.append(line)
 		index += 1
 	_flush_pending(pending, sheet)
-	# Tier 2: reverse template matching lifts trailing trigger functions into real events,
-	# verified by a byte-identical recompile and reverted entirely otherwise (the lossless
-	# rule always wins). See EventSheetACELifter.
+	# Recover identity fields from the source text: emission keeps the prelude verbatim
+	# (so these never affect bytes), but lint, the identity banner, and the lifter's
+	# annotation regeneration ($Class.fn templates for behaviors) all need them.
+	var class_name_regex: RegEx = RegEx.new()
+	if class_name_regex.compile("(?m)^class_name ([A-Za-z_][A-Za-z0-9_]*)") == OK:
+		var class_match: RegExMatch = class_name_regex.search(source)
+		if class_match != null:
+			sheet.custom_class_name = class_match.get_string(1)
+	var host_regex: RegEx = RegEx.new()
+	if source.contains("\nextends Node\n") and host_regex.compile("(?m)^var host: ([A-Za-z_][A-Za-z0-9_]*) = null$") == OK:
+		var host_match: RegExMatch = host_regex.search(source)
+		if host_match != null:
+			sheet.behavior_mode = true
+			sheet.host_class = host_match.get_string(1)
+	# Tier 2: reverse template matching lifts trailing trigger functions, sheet functions
+	# (with their @ace annotation blocks), and trailing comments into real rows — verified
+	# by a byte-identical recompile and reverted otherwise (the lossless rule always wins).
 	EventSheetACELifter.attempt_lift(sheet, source)
 	return sheet
 

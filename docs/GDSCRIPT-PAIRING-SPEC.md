@@ -243,7 +243,11 @@ the trailing run of trigger functions lifts into EventRows — lifecycle handler
 connect lines** (Core signals reverse to their trigger ids; custom ones become
 `signal:<name>` triggers carrying the handler args as `trigger_args` and the
 `get_node("…")` source as `trigger_source_path`; the connects regenerate on emission).
-Bodies lift by reverse-matching builtin codegen templates — `{param}`
+Sheet FUNCTIONS lift too: their `@ace_*` annotation
+blocks reverse into exposure fields, parameters parse with types, and unmatched control
+flow stays as in-flow GDScript (lenient ifs — trigger bodies included). Trailing
+top-level comments lift into comment rows. **Two-pass**: a full lift that fails the
+byte-verify retries event-only, so upgrades never regress coverage. Bodies lift by reverse-matching builtin codegen templates — `{param}`
 placeholders become named captures (params round-trip as plain strings because codegen
 substitutes with `str()`), `not (...)` reverses to negated conditions, ` and `-joined
 expressions split into condition lists, and any statement matching no template becomes an
@@ -287,9 +291,6 @@ conditions/actions) is planned.
   editor-embedded WebSocket variant later for live, undoable edits. Local-only by default;
   tool schemas versioned like the snippet format. Note: GDScript-backed sheets already give
   AI tools an unstructured path today (any `.gd` an AI edits opens as a sheet).
-- **GDScript-backed sheets, next tiers**: function rows with canonical-signature
-  verify-lift, and comment preservation inside lifted regions. (Tier 1, lifecycle +
-  signal-handler ACE lifting, and the changed-on-disk reload prompt are implemented.)
 - **More behavior packs**: tweens and beyond (platformer, 8-direction, timer, flash, and
   state machine ship today — see Implemented).
 - **C3 migration guide**: implemented — `docs/C3-MIGRATION-GUIDE.md` (concept map + System

@@ -55,6 +55,7 @@ func _init() -> void:
 	passed = FxCompletionWatchTest.run() and passed
 	passed = SignalLiftTest.run() and passed
 	passed = IntellisenseTest.run() and passed
+	passed = FunctionLiftTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")
