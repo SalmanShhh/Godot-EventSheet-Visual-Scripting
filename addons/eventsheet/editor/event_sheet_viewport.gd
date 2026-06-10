@@ -1641,16 +1641,21 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
     row_data.line_count = comment_lines.size()
     var comment_spans: Array[SemanticSpan] = []
     for line_index in range(comment_lines.size()):
+        var line_metadata: Dictionary = {
+            "editable": true,
+            "edit_kind": "comment_text",
+            "line_index": line_index,
+            "text_color": event_style.comment_text_color
+        }
+        # BBCode-lite ([b]/[i]/[color=…]): segments shape the pixels; the RAW text stays
+        # the editing/serialization truth (no data loss on edit/copy).
+        if EventSheetBBCodeLite.has_markup(comment_lines[line_index]):
+            line_metadata["bbcode_segments"] = EventSheetBBCodeLite.parse(comment_lines[line_index], event_style.comment_text_color)
         comment_spans.append(
             _make_span(
                 comment_lines[line_index],
                 SemanticSpan.SpanType.COMMENT,
-                {
-                    "editable": true,
-                    "edit_kind": "comment_text",
-                    "line_index": line_index,
-                    "text_color": event_style.comment_text_color
-                }
+                line_metadata
             )
         )
     row_data.spans = comment_spans

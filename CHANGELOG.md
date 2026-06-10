@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### BBCode-lite comments
+- Comments now style with a small BBCode subset: **[b]bold[/b]**, *[i]italic[/i]*, and
+  **[color=#ff7777]…[/color]** (hex or named colors), rendered natively on the
+  virtualized canvas with nesting support.
+- **No data loss, ever**: the raw text (tags included) remains the editing and
+  serialization truth — inline editing shows the tags, styling only shapes the pixels.
+  Unknown tags strip gracefully (inner text survives), unclosed tags degrade sanely, and
+  plain bracket text like `array[0]` is never mistaken for markup.
+- Covered by `tests/bbcode_comments_test.gd` (13 assertions).
+
 ### 3D behavior packs (starter quartet)
 - **Sine 3D** (oscillate along x/y/z or around Y, full wave set), **Orbit 3D** (XZ-plane
   circling), **Bullet 3D** (launch along the host's forward with gravity + distance
