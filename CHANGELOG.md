@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Multi-view phase 1: split view (same sheet, two panes)
+- A **Split** toolbar toggle opens a second pane over the SAME sheet (VSCode's
+  one-file-two-editors gesture) — read a handler while editing the function it calls,
+  keep a group pinned while debugging another.
+- **Per-sheet state is shared by reference** (`EventSheetViewState`): breakpoints,
+  bookmarks, and the disabled overlay agree across panes instantly. Scroll, zoom,
+  selection, and folds stay per-pane.
+- Every edit refreshes both panes (the refresh bus); the companion pane is
+  read/navigate-only in phase 1 (inline editing stays in the primary — full
+  active-view editing is the spec'd phase 1.5). Closing the split restores the layout.
+- Covered by `tests/multi_view_test.gd` (10 assertions).
+
 ## [0.2.0] - 2026-06-10
 
 Thirty-five features since 0.1.0 — the C3 coverage program (38 native-node ACEs, all 14

@@ -407,20 +407,20 @@ hook, and the visual theme editor. Authoritative per-feature detail:
 
 Still open (post-1.0 polish):
 
-- **Multi-view: the same sheet in multiple panes (spec'd, user-confirmed direction).**
+- **Multi-view: the same sheet in multiple panes (PHASE 1 SHIPPED: the Split toggle, shared EventSheetViewState, refresh bus, read-only companion). Remaining phases below.**
   The VSCode gesture — one file open in two editors — for sheets: read a trigger handler
   while editing the function it calls, keep a group pinned while debugging another, eyeball
   two distant regions at once.
 
   **UI shape (phased):**
   1. **Split view** first: a toolbar toggle splits the dock into an `HSplitContainer`
-     hosting TWO `EventSheetViewport`s over the SAME `EventSheetResource`. Lowest
-     architecture risk, covers the debugging/reading use cases.
+	 hosting TWO `EventSheetViewport`s over the SAME `EventSheetResource`. Lowest
+	 architecture risk, covers the debugging/reading use cases.
   2. **Detachable window** later (a floating `Window` hosting a viewport — needs
-     shortcut/focus routing).
+	 shortcut/focus routing).
   3. **Linked panes** last: a "follow selection" toggle where pane B jumps to the row
-     related to pane A's selection (source-map powered: "open this function's definition
-     in the split").
+	 related to pane A's selection (source-map powered: "open this function's definition
+	 in the split").
 
   **State model (the real work).** Today several stores live ON the viewport; multi-view
   forces an explicit split:

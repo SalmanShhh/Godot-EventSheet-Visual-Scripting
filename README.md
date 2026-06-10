@@ -131,7 +131,7 @@ Conditions                        | Actions
 | MCP server (AI tooling) | ✅ shipped |
 | `v0.2.0` release | ✅ shipped |
 | Tool sheets (event sheets for editor tooling — experimental, editor-version-coupled) | 🧪 spec'd |
-| Multi-view (same sheet in split panes / detached windows, VSCode-style) | 🗺 spec'd |
+| Multi-view (same sheet in split panes; detached windows + linked panes next) | ✅ phase 1 shipped |
 | 3D vocabulary, more packs (tweens+), community feedback rounds | 🗺 planned |
 
 ## Project layout

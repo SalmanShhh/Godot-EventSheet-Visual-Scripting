@@ -137,6 +137,12 @@ var _breakpoint_rows: Dictionary = {}
 # Session bookmarks (navigation aid; not persisted): row_uid -> true. Ctrl+M / F4.
 var _bookmark_rows: Dictionary = {}
 var _row_disabled_state: Dictionary = {}
+# Multi-view: panes over the same sheet share the three dictionaries above through this
+# state object (adopted by reference). Null until a second view asks for it.
+var _shared_state: EventSheetViewState = null
+# Companion panes (split view) are read/navigate-only: inline editing is disabled and the
+# dock connects no edit signals to them. Selection, scroll, zoom, folds all work.
+var companion_mode: bool = false
 var _focused_lane: String = "condition"
 var _selection_anchor_index: int = -1
 var _external_span_edit_handler_enabled: bool = false
@@ -173,6 +179,25 @@ func _process(_delta: float) -> void:
         _last_scroll_size = scroll.size
         _update_canvas_min_size()
         queue_redraw()
+
+## The shared per-sheet view state (created on demand around this view's dictionaries).
+func get_shared_state() -> EventSheetViewState:
+    if _shared_state == null:
+        _shared_state = EventSheetViewState.new()
+        _shared_state.breakpoint_rows = _breakpoint_rows
+        _shared_state.bookmark_rows = _bookmark_rows
+        _shared_state.row_disabled_state = _row_disabled_state
+    return _shared_state
+
+## Adopts another view's shared state: the dictionaries are taken BY REFERENCE, so a
+## breakpoint toggled in any pane is instantly true in all of them.
+func adopt_shared_state(state: EventSheetViewState) -> void:
+    if state == null:
+        return
+    _shared_state = state
+    _breakpoint_rows = state.breakpoint_rows
+    _bookmark_rows = state.bookmark_rows
+    _row_disabled_state = state.row_disabled_state
 
 func set_sheet(sheet: EventSheetResource) -> void:
     _sheet = sheet
@@ -2616,6 +2641,8 @@ func _toggle_row_fold(row_index: int) -> void:
     _refresh_rows()
 
 func _begin_edit(row_index: int, span_index: int) -> void:
+    if companion_mode:
+        return
     var row_data: EventRowData = _row_at(row_index)
     if row_data == null:
         return

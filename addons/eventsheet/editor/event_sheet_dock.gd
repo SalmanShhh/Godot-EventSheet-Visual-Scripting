@@ -160,6 +160,7 @@ func _activate_tab(index: int) -> void:
     _clear_undo_history()
     _refresh_ace_registry()
     _viewport.set_sheet(_current_sheet)
+    _sync_split_sheet()
     _sync_active_theme_binding()
     _refresh_title_strip()
     _refresh_theme_picker_selection()
@@ -470,6 +471,7 @@ func _build_ui() -> void:
     _add_toolbar_button("Save", _on_save_requested)
     _add_toolbar_button("Save As", _on_save_as_requested)
     _add_toolbar_button("Export Addon…", _export_addon_pack)
+    _add_toolbar_button("Split", _toggle_split_view)
     _add_toolbar_separator()
     _add_toolbar_button("Add Event", _on_add_event_requested)
     _add_toolbar_button("Add Signal Event", _on_add_signal_event_requested)
@@ -2573,7 +2575,66 @@ func _on_match_dialog_confirmed() -> void:
         _refresh_after_edit()
         _mark_dirty("Match updated.")
 
-# ── Export as Addon Pack (C3 coverage Phase C) ────────────────────────────────────────
+# ── Multi-view: split view (same sheet, two panes — VSCode-style) ─────────────────────
+var _split_container: HSplitContainer = null
+var _split_scroll: ScrollContainer = null
+var _split_viewport: EventSheetViewport = null
+
+## Toggles a second, read/navigate-only pane over the SAME sheet (debugging, reading,
+## comparing distant regions). Breakpoints/bookmarks/disabled state are shared by
+## reference; scroll/zoom/selection/folds are per-pane. See EDITOR-UI-SPEC "Multi-view".
+func _toggle_split_view() -> void:
+    if _split_viewport != null:
+        _close_split_view()
+        _set_status("Split view closed.")
+        return
+    if _scroll == null or _scroll.get_parent() == null:
+        return
+    var slot: Node = _scroll.get_parent()
+    var slot_index: int = _scroll.get_index()
+    slot.remove_child(_scroll)
+    _split_container = HSplitContainer.new()
+    _split_container.name = "EventSheetSplit"
+    _split_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _split_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    slot.add_child(_split_container)
+    slot.move_child(_split_container, slot_index)
+    _split_container.add_child(_scroll)
+    _split_scroll = ScrollContainer.new()
+    _split_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _split_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _split_container.add_child(_split_scroll)
+    _split_viewport = EventSheetViewport.new()
+    _split_viewport.name = "EventSheetSplitViewport"
+    _split_viewport.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _split_viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _split_viewport.companion_mode = true
+    _split_viewport.set_ace_registry(_ace_registry)
+    _split_viewport.adopt_shared_state(_viewport.get_shared_state())
+    _split_scroll.add_child(_split_viewport)
+    _split_viewport.set_sheet(_current_sheet)
+    _set_status("Split view: the right pane navigates independently (editing happens in the left pane).")
+
+func _close_split_view() -> void:
+    if _split_container == null:
+        return
+    var slot: Node = _split_container.get_parent()
+    var slot_index: int = _split_container.get_index()
+    _split_container.remove_child(_scroll)
+    if slot != null:
+        slot.add_child(_scroll)
+        slot.move_child(_scroll, slot_index)
+    _split_container.queue_free()
+    _split_container = null
+    _split_scroll = null
+    _split_viewport = null
+
+## Keeps the companion pane on the current sheet after every edit/open (the refresh bus).
+func _sync_split_sheet() -> void:
+    if _split_viewport != null:
+        _split_viewport.set_sheet(_current_sheet)
+
+# ── Export as Addon Pack (C3 coverage Phase C) ─# ── Export as Addon Pack (C3 coverage Phase C) ────────────────────────────────────────
 
 ## One-click addon publishing: writes the current behavior sheet (+ compiled script) into
 ## eventsheet_addons/<class_snake>/ where the zero-config scanner publishes its ACEs
@@ -4683,6 +4744,7 @@ func _refresh_after_edit() -> void:
     if _viewport == null:
         return
     _viewport.set_sheet(_current_sheet)
+    _sync_split_sheet()
     _sync_active_theme_binding()
     _refresh_exposed_node()
     _refresh_variable_panel()
