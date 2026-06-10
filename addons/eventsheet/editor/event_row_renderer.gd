@@ -408,6 +408,14 @@ func _draw_spans(
         else:
             var value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
             _draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, value_color)
+        # Color params get a small swatch right after the text (C3-style color preview).
+        var swatch: Variant = metadata.get("swatch_color")
+        if swatch is Color:
+            var swatch_advance: float = minf(font.get_string_size(draw_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x, text_width)
+            var swatch_size: float = maxf(draw_font_size * 0.7, 8.0)
+            var swatch_rect: Rect2 = Rect2(text_x + swatch_advance + 6.0, span.rect.position.y + (span.rect.size.y - swatch_size) * 0.5, swatch_size, swatch_size)
+            control.draw_rect(swatch_rect, swatch as Color, true)
+            control.draw_rect(swatch_rect, Color(0.0, 0.0, 0.0, 0.55), false, 1.0)
         # Strike through the text when the ACE is disabled OR its whole row (event/group/
         # comment) is disabled, so "commented out" reads clearly like in code.
         if not ace_enabled or (row_data != null and row_data.disabled):

@@ -153,7 +153,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# Visibility / tint (CanvasItem)
 	descriptors.append(_make_descriptor("Core", "ShowNode", "Show", ACEDescriptor.ACEType.ACTION, "show()", "", [], "General Actions", "Show", "CanvasItem"))
 	descriptors.append(_make_descriptor("Core", "HideNode", "Hide", ACEDescriptor.ACEType.ACTION, "hide()", "", [], "General Actions", "Hide", "CanvasItem"))
-	descriptors.append(_make_descriptor("Core", "SetModulate", "Set Color Tint", ACEDescriptor.ACEType.ACTION, "modulate = {color}", "", [_make_param("color", "String", "Color(1, 1, 1, 1)", "Color", "Tint (RGBA).", "expression")], "General Actions", "Set tint to {color}", "CanvasItem"))
+	descriptors.append(_make_descriptor("Core", "SetModulate", "Set Color Tint", ACEDescriptor.ACEType.ACTION, "modulate = {color}", "", [_make_param("color", "String", "Color(1, 1, 1, 1)", "Color", "Tint (RGBA).", "color")], "General Actions", "Set tint to {color}", "CanvasItem"))
 	descriptors.append(_make_descriptor("Core", "IsVisible", "Is Visible", ACEDescriptor.ACEType.CONDITION, "visible", "", [], "General Conditions", "Is visible", "CanvasItem"))
 	# Math & random (C3 System expressions: random, choose, clamp, lerp, distance, angle)
 	descriptors.append(_make_descriptor("Core", "RandomRange", "Random", ACEDescriptor.ACEType.EXPRESSION, "randf_range({from}, {to})", "", [_make_param("from", "String", "0.0", "From", "Lower bound.", "expression"), _make_param("to", "String", "1.0", "To", "Upper bound.", "expression")], "Math & Random", "random({from}, {to})"))

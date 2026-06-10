@@ -34,7 +34,7 @@ script = ExtResource("6_wmmtp")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_ljcjg")])
-event_uid = "a8c866"
+event_uid = "47f8de"
 
 [resource]
 script = ExtResource("7_vegns")

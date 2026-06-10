@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Combo properties + color params (C3's Combo/Color, the Godot way)
+- **Combo variables**: String variables can declare allowed values ("Options" in the
+  variable dialog, comma-separated). Exported combos compile to **`@export_enum`** — a
+  real Inspector dropdown — and **verify-lift back** with their options intact
+  (byte-identical round-trips). Guardrail: the default must be one of the options.
+  The Sine pack's `movement` showcases it (horizontal/vertical/angle dropdown).
+- **`@ace_param_options(param a, b, c)`** annotation: addon ACE params render as
+  dropdowns in the params dialog — the C3 Combo for addon authors, zero config.
+- **Sheet-enum-driven params**: the `enum:State` param hint offers the enum's members
+  (`State.IDLE`, …) as a dropdown — combos backed by real enums.
+- **Color params**: the `color` hint (or a Color-typed param) renders a **color picker**
+  in the params dialog, values round-trip as canonical `Color(r, g, b, a)` literals, and
+  **conditions/actions with a color param draw a small swatch** next to their text in
+  the sheet (C3-style color preview). Set Color Tint now uses it.
+- Covered by `tests/combo_color_test.gd` (15 assertions).
+
 ### Nine new behavior packs (C3 coverage, Phase B — all fourteen C3-style behaviors bundled)
 - **Sine** (oscillate position/angle), **Orbit** (circle a point), **Bullet** (angle-of-
   motion movement with acceleration/gravity), **Move To** (glide to a point + On

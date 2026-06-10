@@ -14,7 +14,14 @@ func parse(source: String) -> Dictionary:
 			continue
 		var line: String = raw_line.strip_edges()
 		var exported: bool = false
-		if line.begins_with("@export "):
+		var combo_options: PackedStringArray = PackedStringArray()
+		if line.begins_with("@export_enum(") and line.find(") ") != -1:
+			exported = true
+			var close_index: int = line.find(") ")
+			for raw_option: String in line.substr("@export_enum(".length(), close_index - "@export_enum(".length()).split(", "):
+				combo_options.append(raw_option.strip_edges().trim_prefix("\"").trim_suffix("\""))
+			line = line.substr(close_index + 2).strip_edges()
+		elif line.begins_with("@export "):
 			exported = true
 			line = line.substr("@export ".length()).strip_edges()
 		if not line.begins_with("var "):
@@ -34,7 +41,8 @@ func parse(source: String) -> Dictionary:
 		variables[variable_name] = {
 			"type": type_name,
 			"default": _parse_literal(default_text),
-			"exported": exported
+			"exported": exported,
+			"options": combo_options
 		}
 	return variables
 

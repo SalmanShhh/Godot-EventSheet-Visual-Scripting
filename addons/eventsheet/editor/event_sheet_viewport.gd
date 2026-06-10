@@ -1334,6 +1334,20 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 func _row_is_add_event_footer(row_data: EventRowData) -> bool:
     return row_data != null and row_data.row_uid.begins_with("add_event_footer_")
 
+## First Color(...) literal among an ACE's param values (null when none) — drives the
+## little color swatch drawn after the condition/action text.
+func _first_color_in_params(ace: Resource) -> Variant:
+    var params: Variant = ace.get("params")
+    if not (params is Dictionary):
+        return null
+    for key: Variant in (params as Dictionary).keys():
+        var value: Variant = (params as Dictionary)[key]
+        if value is String and (value as String).strip_edges().begins_with("Color("):
+            var parsed: Variant = str_to_var((value as String).strip_edges())
+            if parsed is Color:
+                return parsed
+    return null
+
 func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
     if entry == null:
         return null
@@ -1848,7 +1862,8 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                         "chip": true,
                         "line_index": line_index,
                         "object_label": _object_label_for(condition.provider_id, condition.ace_id),
-                        "object_icon": _object_icon_for(condition.provider_id, condition.ace_id)
+                        "object_icon": _object_icon_for(condition.provider_id, condition.ace_id),
+                        "swatch_color": _first_color_in_params(condition)
                     }.merged(condition_style_meta, true)
                 )
             )
@@ -1906,7 +1921,8 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                             "chip": true,
                             "line_index": action_line_index,
                             "object_label": _object_label_for((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id),
-                            "object_icon": _object_icon_for((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id)
+                            "object_icon": _object_icon_for((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id),
+                            "swatch_color": _first_color_in_params(action_resource)
                         }.merged(action_style_meta, true)
                     )
                 )

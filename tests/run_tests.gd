@@ -75,6 +75,7 @@ const GodotFeelTestScript := preload("res://tests/godot_feel_test.gd")
 const SignalAutocompleteTestScript := preload("res://tests/signal_autocomplete_test.gd")
 const SignalMatchRowsTestScript := preload("res://tests/signal_match_rows_test.gd")
 const NativeNodeAcesTestScript := preload("res://tests/native_node_aces_test.gd")
+const ComboColorTestScript := preload("res://tests/combo_color_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
@@ -145,6 +146,7 @@ func _init() -> void:
 	passed = SignalAutocompleteTestScript.run() and passed
 	passed = SignalMatchRowsTestScript.run() and passed
 	passed = NativeNodeAcesTestScript.run() and passed
+	passed = ComboColorTestScript.run() and passed
 	passed = EventSheetEditorTestScript.run() and passed
 	passed = EventSheetStyleTestScript.run() and passed
 	passed = PluginWorkspaceTestScript.run() and passed

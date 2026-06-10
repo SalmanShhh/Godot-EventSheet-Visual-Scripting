@@ -109,7 +109,7 @@ func import_external_source(source: String) -> EventSheetResource:
 ## compiler's canonical emission reproduces the source line exactly (the verify-lift rule);
 ## otherwise the line stays verbatim in a block row and nothing is lost.
 func _try_lift_variable(line: String) -> LocalVariable:
-	if not (line.begins_with("var ") or line.begins_with("@export var ")):
+	if not (line.begins_with("var ") or line.begins_with("@export var ") or line.begins_with("@export_enum(")):
 		return null
 	var parsed: Dictionary = VariableParser.new().parse(line)
 	if parsed.size() != 1:
@@ -121,6 +121,7 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	lifted.type_name = str(descriptor.get("type", "Variant"))
 	lifted.default_value = descriptor.get("default", null)
 	lifted.exported = bool(descriptor.get("exported", false))
+	lifted.options = PackedStringArray(descriptor.get("options", []))
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:
 		return null
 	return lifted

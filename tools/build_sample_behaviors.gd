@@ -322,7 +322,7 @@ func _build_sine() -> bool:
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "SineBehavior"
 	sheet.variables = {
-		"movement": {"type": "String", "default": "horizontal", "exported": true},
+		"movement": {"type": "String", "default": "horizontal", "exported": true, "options": ["horizontal", "vertical", "angle"]},
 		"period": {"type": "float", "default": 4.0, "exported": true},
 		"magnitude": {"type": "float", "default": 50.0, "exported": true},
 		"active": {"type": "bool", "default": true, "exported": true},

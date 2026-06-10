@@ -127,6 +127,19 @@ func _build_overrides(directives: Array[String], exported: bool = false) -> Dict
             overrides["display_template"] = _extract_annotation_value(directive)
         elif directive.begins_with("@ace_codegen_template"):
             overrides["codegen_template"] = _extract_annotation_value(directive)
+        elif directive.begins_with("@ace_param_options"):
+            # `@ace_param_options(movement horizontal, vertical, angle)` -> the param
+            # renders as a dropdown (C3's Combo) in the params dialog.
+            var options_value: String = _extract_annotation_value(directive)
+            var options_split: PackedStringArray = options_value.split(" ", false, 1)
+            if options_split.size() == 2:
+                var param_options: Dictionary = overrides.get("param_options", {})
+                var option_values: Array = []
+                for raw_option in options_split[1].split(","):
+                    if not raw_option.strip_edges().is_empty():
+                        option_values.append(raw_option.strip_edges())
+                param_options[options_split[0].strip_edges()] = option_values
+                overrides["param_options"] = param_options
         elif directive.begins_with("@ace_param_hint"):
             # `@ace_param_hint(amount expression)` → param "amount" gets hint "expression"
             # (drives the params dialog: expression ƒx field, variable_reference dropdown…).

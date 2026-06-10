@@ -159,6 +159,10 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 		return _create_variable_reference_field(key, default_value, hint)
 	if hint == "signal_reference" or hint.begins_with("signal_reference:"):
 		return _create_signal_reference_field(key, default_value, hint.ends_with(":quoted"))
+	if hint.begins_with("enum:"):
+		return _create_enum_reference_field(key, default_value, hint.get_slice(":", 1))
+	if hint == "color" or field_type == TYPE_COLOR:
+		return _create_color_field(key, default_value)
 	if hint == EXPRESSION_HINT:
 		return _create_expression_field(key, default_value)
 	if options is Array and not options.is_empty():
@@ -303,6 +307,38 @@ func _signal_options() -> Array[String]:
 	names.sort()
 	return names
 
+## Sheet-enum-driven dropdown (hint "enum:State"): options are the enum's members as
+## State.MEMBER values — the C3 Combo backed by a real enum.
+func _create_enum_reference_field(key: String, default_value: Variant, enum_name: String) -> Control:
+	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
+	var member_options: Array = []
+	if sheet != null:
+		for entry in sheet.events:
+			if entry is EnumRow and (entry as EnumRow).enum_name == enum_name and (entry as EnumRow).enabled:
+				for member: String in (entry as EnumRow).members:
+					var member_name: String = member.get_slice("=", 0).strip_edges()
+					member_options.append({"key": "%s.%s" % [enum_name, member_name], "label": member_name})
+	if member_options.is_empty():
+		var fallback: LineEdit = LineEdit.new()
+		fallback.text = str(default_value)
+		fallback.placeholder_text = "%s.MEMBER (enum not found in this sheet)" % enum_name
+		_fields[key] = fallback
+		return fallback
+	return _create_options_field(key, member_options, default_value)
+
+## Color picker param (hint "color" or a Color-typed param). The value round-trips as a
+## canonical Color(r, g, b, a) literal so the sheet can show a swatch next to the text.
+func _create_color_field(key: String, default_value: Variant) -> Control:
+	var picker: ColorPickerButton = ColorPickerButton.new()
+	picker.custom_minimum_size = Vector2(72.0, 0.0)
+	var parsed: Variant = str_to_var(str(default_value))
+	picker.color = parsed if parsed is Color else Color.WHITE
+	_fields[key] = picker
+	return picker
+
+static func color_to_literal(value: Color) -> String:
+	return "Color(%s, %s, %s, %s)" % [String.num(value.r, 3), String.num(value.g, 3), String.num(value.b, 3), String.num(value.a, 3)]
+
 func _create_expression_field(key: String, default_value: Variant) -> Control:
 	var container: HBoxContainer = HBoxContainer.new()
 	container.add_theme_constant_override("separation", 4)
@@ -395,6 +431,8 @@ func _extract_value(field: Control) -> Variant:
 		if is_equal_approx(spin.step, 1.0):
 			return int(spin.value)
 		return spin.value
+	if field is ColorPickerButton:
+		return color_to_literal((field as ColorPickerButton).color)
 	if field is LineEdit:
 		return (field as LineEdit).text
 	if field is CodeEdit:

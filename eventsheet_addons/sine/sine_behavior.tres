@@ -36,7 +36,7 @@ script = ExtResource("6_brf4f")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_4g6ho")])
-event_uid = "d8eee4"
+event_uid = "d3674b"
 
 [sub_resource type="Resource" id="Resource_81y13"]
 script = ExtResource("2_3x5jo")
@@ -108,6 +108,7 @@ variables = {
 "movement": {
 "default": "horizontal",
 "exported": true,
+"options": ["horizontal", "vertical", "angle"],
 "type": "String"
 },
 "period": {

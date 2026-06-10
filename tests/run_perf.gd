@@ -68,6 +68,7 @@ func _init() -> void:
 	passed = SignalAutocompleteTest.run() and passed
 	passed = SignalMatchRowsTest.run() and passed
 	passed = NativeNodeAcesTest.run() and passed
+	passed = ComboColorTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")

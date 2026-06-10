@@ -221,6 +221,7 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
         return output
     var param_overrides: Dictionary = overrides.get("params", {})
     var param_hints: Dictionary = overrides.get("param_hints", {})
+    var param_options: Dictionary = overrides.get("param_options", {})
     for argument_info in raw_args:
         if not (argument_info is Dictionary):
             continue
@@ -232,6 +233,9 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
         if param_hints.has(argument_name) and not parameter_override.has("hint"):
             parameter_override = parameter_override.duplicate()
             parameter_override["hint"] = str(param_hints[argument_name])
+        if param_options.has(argument_name) and not parameter_override.has("options"):
+            parameter_override = parameter_override.duplicate()
+            parameter_override["options"] = param_options[argument_name]
         var param_type: int = int(parameter_override.get("type", argument_dict.get("type", TYPE_NIL)))
         output.append({
             "id": argument_name,

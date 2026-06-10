@@ -18,7 +18,7 @@ var base_captured: bool = false
 var base_x: float = 0.0
 var base_y: float = 0.0
 @export var magnitude: float = 50.0
-@export var movement: String = "horizontal"
+@export_enum("horizontal", "vertical", "angle") var movement: String = "horizontal"
 @export var period: float = 4.0
 var time: float = 0.0
 

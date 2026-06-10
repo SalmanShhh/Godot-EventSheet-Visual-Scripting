@@ -785,6 +785,10 @@ static func _emit_variables(variables: Dictionary) -> PackedStringArray:
 			var type_name: String = str(descriptor.get("type", "Variant"))
 			var default_value: Variant = descriptor.get("default", "null")
 			var exported: bool = bool(descriptor.get("exported", true))
+			var combo_options: PackedStringArray = PackedStringArray(descriptor.get("options", []))
+			if exported and type_name == "String" and not combo_options.is_empty():
+				lines.append("%s var %s: String = %s" % [_export_enum_prefix(combo_options), var_name, _to_code_literal(default_value)])
+				continue
 			var export_prefix: String = "@export " if exported else ""
 			lines.append("%svar %s: %s = %s" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])
 		else:
@@ -864,8 +868,20 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 		return ""
 	if local_var.is_constant:
 		return "const %s: %s = %s" % [local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+	# Combo (C3): exported String with options -> @export_enum dropdown in the Inspector.
+	if local_var.exported and local_var.type_name == "String" and not local_var.options.is_empty():
+		return "%s var %s: String = %s" % [_export_enum_prefix(local_var.options), local_var.name, _to_code_literal(local_var.default_value)]
 	var export_prefix: String = "@export " if local_var.exported else ""
 	return "%svar %s: %s = %s" % [export_prefix, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+
+## Canonical @export_enum prefix ("@export_enum(\"a\", \"b\")") — verify-lift relies on
+## this exact form.
+static func _export_enum_prefix(options: PackedStringArray) -> String:
+	var quoted: PackedStringArray = PackedStringArray()
+	for option: String in options:
+		if not option.strip_edges().is_empty():
+			quoted.append("\"%s\"" % option.strip_edges())
+	return "@export_enum(%s)" % ", ".join(quoted)
 
 ## Converts a Variant to a deterministic code literal.
 static func _to_code_literal(value: Variant) -> String:

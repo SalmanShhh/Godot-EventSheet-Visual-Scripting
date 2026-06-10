@@ -3936,7 +3936,8 @@ func _on_variable_dialog_confirmed(
     scope: String,
     context: Dictionary = {},
     is_constant: bool = false,
-    exported: bool = true
+    exported: bool = true,
+    combo_options: PackedStringArray = PackedStringArray()
 ) -> void:
     # Guardrail (C3-style): auto-correct what's fixable, block what isn't — BEFORE commit.
     var sanitized_name: String = EventSheetIdentifierRules.sanitize(var_name)
@@ -3958,6 +3959,7 @@ func _on_variable_dialog_confirmed(
             var editing_resource: Variant = context.get("variable_resource", null)
             if editing and editing_resource is LocalVariable:
                 var existing: LocalVariable = editing_resource as LocalVariable
+                existing.options = combo_options
                 var previous_tree_name: String = existing.name
                 existing.name = var_name
                 if previous_tree_name != var_name:
@@ -3969,6 +3971,7 @@ func _on_variable_dialog_confirmed(
                 message["text"] = "Updated variable %s." % var_name
                 return true
             var tree_var: LocalVariable = LocalVariable.new()
+            tree_var.options = combo_options
             tree_var.name = var_name
             tree_var.type_name = type_name
             tree_var.default_value = default_value
@@ -3993,7 +3996,8 @@ func _on_variable_dialog_confirmed(
                 "default": default_value,
                 "const": resolved_constant,
                 "exported": exported,
-                "exposed": exported
+                "exposed": exported,
+                "options": Array(combo_options)
             }
             message["text"] = "%s %s variable %s." % [action_verb, "global" if exported else "private", var_name]
             return true

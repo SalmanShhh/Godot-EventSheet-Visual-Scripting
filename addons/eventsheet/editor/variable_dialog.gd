@@ -8,7 +8,7 @@ extends RefCounted
 ## Emitted when the user confirms variable creation or editing.
 ## scope is "global" or "local". exported = accessible outside the generated script
 ## (@export var) vs. private (var).
-signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary, is_constant: bool, exported: bool)
+signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary, is_constant: bool, exported: bool, options: PackedStringArray)
 
 var _dialog: ConfirmationDialog = null
 var _scope_label: Label = null
@@ -22,6 +22,7 @@ var _type_help: Label = null
 var _scope: String = "global"
 var _context: Dictionary = {}
 var _default_help: Label = null
+var _options_edit: LineEdit = null
 
 ## Offered types. Collections accept GDScript literal defaults ({"key": 1}, [1, 2]) with
 ## live validation; typed containers (Godot 4 Array[T] / Dictionary[K, V]) also check
@@ -96,6 +97,16 @@ func init_dialog(parent_node: Node) -> void:
 	)
 	default_row.add_child(_default_edit)
 	form.add_child(default_row)
+	var options_row: HBoxContainer = HBoxContainer.new()
+	var options_label: Label = Label.new()
+	options_label.text = "Options (combo)"
+	options_label.custom_minimum_size = Vector2(120.0, 0.0)
+	options_row.add_child(options_label)
+	_options_edit = LineEdit.new()
+	_options_edit.placeholder_text = "comma-separated, e.g. easy, normal, hard (String only)"
+	_options_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	options_row.add_child(_options_edit)
+	form.add_child(options_row)
 	_default_help = Label.new()
 	_default_help.visible = false
 	_default_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
@@ -204,17 +215,37 @@ func _on_confirmed() -> void:
 			_dialog.call_deferred("popup_centered", Vector2i(440, 240))
 		return
 	var default_value: Variant = _parse_default(type_name, _default_edit.text)
+	# Combo guardrail (C3): a String with options must default to one of them.
+	var combo_options: PackedStringArray = parse_options(_options_edit.text if _options_edit != null else "")
+	if type_name == "String" and not combo_options.is_empty():
+		if str(default_value).strip_edges().is_empty():
+			default_value = combo_options[0]
+		elif not combo_options.has(str(default_value)):
+			if _default_help != null:
+				_default_help.visible = true
+				_default_help.text = "✗ Default must be one of the options (%s)." % ", ".join(combo_options)
+			if _dialog.is_inside_tree():
+				_dialog.call_deferred("popup_centered", Vector2i(440, 260))
+			return
 	# Keep this defensive check in case stale UI state emits a checked const flag
 	# for a type that does not support const.
 	var is_constant: bool = _const_check.button_pressed and _supports_constant(type_name)
 	var exported: bool = _exported_check.button_pressed and _scope == "global"
-	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported)
+	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options)
 
 ## Returns the trimmed text from the name field.
 func get_last_name_text() -> String:
 	if _name_edit == null:
 		return ""
 	return _name_edit.text.strip_edges()
+
+## Parses the comma-separated combo options text ("a, b, c").
+static func parse_options(raw: String) -> PackedStringArray:
+	var options: PackedStringArray = PackedStringArray()
+	for entry: String in raw.split(","):
+		if not entry.strip_edges().is_empty():
+			options.append(entry.strip_edges())
+	return options
 
 static func _parse_default(type_name: String, raw: String) -> Variant:
 	var value: String = raw.strip_edges()
