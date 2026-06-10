@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Collection variables (rich-variables phase 2 of 3 — 1.0 scope)
+- **Array and Dictionary variables are first-class**, including Godot 4 typed containers
+  (`Array[int]`, `Dictionary[String, int]`, …) offered in the variable dialog's type list.
+- **Defaults edit as GDScript literals** (`{"sword": 1}`, `[1, 2, 3]`) with a live ✓/✗
+  hint while typing, and a commit guardrail: invalid literals never save (wrong container
+  kind, garbage, or **element-type mismatches** against the declared `Array[T]` /
+  `Dictionary[K, V]` — with int→float allowed, as in GDScript).
+- **Canonical emission**: containers compile through a recursive, escape-correct,
+  deterministic literal formatter (`{"k": 1, "nested": {"ids": [1, 2.5]}}`); editing an
+  existing collection variable shows that same canonical literal.
+- **Verify-lift round-trips**: canonical collection declarations in generated `.gd` files
+  re-open as editable variable rows with their values intact; non-canonical formatting
+  stays a verbatim block — byte-identical round-trips guarded.
+- Covered by `tests/collection_variables_test.gd` (17 assertions).
+
 ### C3-familiarity batch: group descriptions, slow-click editing, rename refactoring, commit guardrails
 - **Group events now actually compile** — the batch's tests exposed that events inside
   groups were silently dropped with a TODO comment (a long-standing compiler hole).

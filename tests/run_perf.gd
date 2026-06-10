@@ -60,6 +60,7 @@ func _init() -> void:
 	passed = InspectorPolishTest.run() and passed
 	passed = EnumRowTest.run() and passed
 	passed = UxGuardrailsTest.run() and passed
+	passed = CollectionVariablesTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")

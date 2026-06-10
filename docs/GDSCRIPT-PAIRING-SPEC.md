@@ -305,10 +305,8 @@ conditions/actions) is planned.
 - **First-class rich variables (Dictionary / Array / JSON) — REQUIRED FOR 1.0** (enums
   shipped; see Implemented). Key insight: unlike C3 (where these are capability-providing
   addons), GDScript already HAS all of it and ƒx fields are GDScript — so this is
-  vocabulary + UX, not capability. Remaining phases: **collection variable UX** (Godot's
-  `Array[T]`/`Dictionary[K,V]` type strings in the variable dialog; structured defaults
-  edited as GDScript literals with the existing live ƒx validation; canonical
-  `_to_code_literal` emission so verify-lift holds) and the **curated builtin ACE set**
+  vocabulary + UX, not capability. Remaining phase (enums and
+  collection variable UX shipped; see Implemented): the **curated builtin ACE set**
   (~10 dictionary, ~12 array, ~5 JSON ops as Core descriptors — always present and
   reverse-liftable — grouped "Variables: Dictionary/Array/JSON"; direct codegen like
   `{var}[{key}] = {value}` keeps the parity contract; type-aware variable-reference

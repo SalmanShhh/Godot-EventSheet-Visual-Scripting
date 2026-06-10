@@ -54,4 +54,10 @@ func _parse_literal(text: String) -> Variant:
 		return value.to_int()
 	if value.is_valid_float():
 		return value.to_float()
+	# Container literals (canonical compiler emissions are str_to_var-parseable; the
+	# verify-lift byte check rejects anything whose re-emission differs).
+	if (value.begins_with("[") and value.ends_with("]")) or (value.begins_with("{") and value.ends_with("}")):
+		var parsed: Variant = str_to_var(value)
+		if parsed != null:
+			return parsed
 	return value

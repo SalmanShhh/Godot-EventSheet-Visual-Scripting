@@ -21,6 +21,17 @@ var _const_help: Label = null
 var _type_help: Label = null
 var _scope: String = "global"
 var _context: Dictionary = {}
+var _default_help: Label = null
+
+## Offered types. Collections accept GDScript literal defaults ({"key": 1}, [1, 2]) with
+## live validation; typed containers (Godot 4 Array[T] / Dictionary[K, V]) also check
+## element types for builtin T.
+const TYPE_OPTIONS: PackedStringArray = [
+	"int", "float", "bool", "String", "Variant",
+	"Array", "Array[int]", "Array[float]", "Array[String]",
+	"Dictionary", "Dictionary[String, int]", "Dictionary[String, float]",
+	"Dictionary[String, String]", "Dictionary[String, Variant]"
+]
 
 ## Initialise and attach the dialog to parent_node.
 ## Must be called before open().
@@ -62,11 +73,12 @@ func init_dialog(parent_node: Node) -> void:
 	type_label.custom_minimum_size = Vector2(120.0, 0.0)
 	type_row.add_child(type_label)
 	_type_option = OptionButton.new()
-	for option: String in ["int", "float", "bool", "String", "Variant"]:
+	for option: String in TYPE_OPTIONS:
 		_type_option.add_item(option)
 	_type_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_type_option.item_selected.connect(func(_index: int) -> void:
 		_refresh_const_ui()
+		_refresh_default_hint()
 	)
 	type_row.add_child(_type_option)
 	form.add_child(type_row)
@@ -79,8 +91,15 @@ func init_dialog(parent_node: Node) -> void:
 	_default_edit = LineEdit.new()
 	_default_edit.placeholder_text = "0"
 	_default_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_default_edit.text_changed.connect(func(_text: String) -> void:
+		_refresh_default_hint()
+	)
 	default_row.add_child(_default_edit)
 	form.add_child(default_row)
+	_default_help = Label.new()
+	_default_help.visible = false
+	_default_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
+	form.add_child(_default_help)
 
 	var const_row: HBoxContainer = HBoxContainer.new()
 	var const_label: Label = Label.new()
@@ -136,7 +155,11 @@ func open_for_edit(
 	_scope_label.text = "Scope: %s" % scope.capitalize()
 	_dialog.title = title
 	_name_edit.text = name
-	_default_edit.text = str(default_value)
+	# Containers display as canonical GDScript literals (str() doesn't escape strings).
+	if default_value is Array or default_value is Dictionary:
+		_default_edit.text = SheetCompiler._to_code_literal(default_value)
+	else:
+		_default_edit.text = str(default_value)
 	var selected_index: int = 0
 	for index: int in range(_type_option.item_count):
 		if _type_option.get_item_text(index) == type_name:
@@ -155,6 +178,7 @@ func open_for_edit(
 		else "On: emitted as @export var (readable outside the script).\nOff: a plain private var."
 	)
 	_refresh_const_ui()
+	_refresh_default_hint()
 	_type_option.disabled = lock_type
 	_type_help.visible = lock_type
 	_type_help.text = "Type is locked because this variable is already in use."
@@ -169,6 +193,16 @@ func _on_confirmed() -> void:
 	if var_name.is_empty():
 		return
 	var type_name: String = _type_option.get_item_text(_type_option.selected)
+	# Guardrail (C3-style): an invalid collection literal never commits — the dialog
+	# reopens with the text intact so the user fixes or cancels deliberately.
+	var verdict: Dictionary = validate_default(type_name, _default_edit.text)
+	if not bool(verdict.get("ok", true)):
+		if _default_help != null:
+			_default_help.visible = true
+			_default_help.text = "✗ %s" % str(verdict.get("error", ""))
+		if _dialog.is_inside_tree():
+			_dialog.call_deferred("popup_centered", Vector2i(440, 240))
+		return
 	var default_value: Variant = _parse_default(type_name, _default_edit.text)
 	# Keep this defensive check in case stale UI state emits a checked const flag
 	# for a type that does not support const.
@@ -184,6 +218,13 @@ func get_last_name_text() -> String:
 
 static func _parse_default(type_name: String, raw: String) -> Variant:
 	var value: String = raw.strip_edges()
+	if is_collection_type(type_name):
+		if value.is_empty():
+			return {} if type_name.begins_with("Dictionary") else []
+		var parsed: Variant = str_to_var(value)
+		if parsed is Array or parsed is Dictionary:
+			return parsed
+		return {} if type_name.begins_with("Dictionary") else []
 	match type_name:
 		"int":
 			return int(value) if not value.is_empty() else 0
@@ -195,6 +236,56 @@ static func _parse_default(type_name: String, raw: String) -> Variant:
 			return value
 		_:
 			return value
+
+static func is_collection_type(type_name: String) -> bool:
+	return type_name.begins_with("Array") or type_name.begins_with("Dictionary")
+
+## Validates a default-value text against the chosen type ({ok, error}). Collections must
+## be GDScript literals of the right container kind; typed containers (Array[T] /
+## Dictionary[K, V]) also check element types when T is a builtin scalar.
+static func validate_default(type_name: String, raw: String) -> Dictionary:
+	var value: String = raw.strip_edges()
+	if not is_collection_type(type_name) or value.is_empty():
+		return {"ok": true, "error": ""}
+	var parsed: Variant = str_to_var(value)
+	var wants_dictionary: bool = type_name.begins_with("Dictionary")
+	if parsed == null or (wants_dictionary and not (parsed is Dictionary)) or (not wants_dictionary and not (parsed is Array)):
+		return {"ok": false, "error": "Not a valid %s literal — e.g. %s" % [
+			"Dictionary" if wants_dictionary else "Array",
+			"{\"key\": 1}" if wants_dictionary else "[1, 2, 3]"
+		]}
+	var element_type: String = ""
+	if type_name.contains("[") and type_name.ends_with("]"):
+		var inner: String = type_name.get_slice("[", 1).trim_suffix("]")
+		element_type = inner.get_slice(",", 1).strip_edges() if wants_dictionary else inner.strip_edges()
+	var scalar_checks: Dictionary = {"int": TYPE_INT, "float": TYPE_FLOAT, "String": TYPE_STRING, "bool": TYPE_BOOL}
+	if scalar_checks.has(element_type):
+		var expected_type: int = int(scalar_checks[element_type])
+		var values: Array = (parsed as Dictionary).values() if wants_dictionary else (parsed as Array)
+		for element: Variant in values:
+			# int literals are valid floats in GDScript.
+			if typeof(element) == TYPE_INT and expected_type == TYPE_FLOAT:
+				continue
+			if typeof(element) != expected_type:
+				return {"ok": false, "error": "Element %s is not %s (declared %s)." % [str(element), element_type, type_name]}
+	return {"ok": true, "error": ""}
+
+## Live ✓/✗ hint under the default field while typing collection literals.
+func _refresh_default_hint() -> void:
+	if _default_help == null or _type_option == null or _default_edit == null:
+		return
+	var type_name: String = _type_option.get_item_text(_type_option.selected)
+	if not is_collection_type(type_name):
+		_default_help.visible = false
+		_default_edit.placeholder_text = "0"
+		return
+	_default_edit.placeholder_text = "{\"key\": 1}" if type_name.begins_with("Dictionary") else "[1, 2, 3]"
+	if _default_edit.text.strip_edges().is_empty():
+		_default_help.visible = false
+		return
+	var verdict: Dictionary = validate_default(type_name, _default_edit.text)
+	_default_help.visible = true
+	_default_help.text = "✓ literal OK" if bool(verdict.get("ok", false)) else "✗ %s" % str(verdict.get("error", ""))
 
 func _refresh_const_ui() -> void:
 	if _const_check == null or _const_help == null or _type_option == null:

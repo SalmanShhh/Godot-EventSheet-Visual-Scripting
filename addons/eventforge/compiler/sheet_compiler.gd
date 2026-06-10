@@ -830,6 +830,19 @@ static func _to_code_literal(value: Variant) -> String:
 			return float_text
 		TYPE_NIL:
 			return "null"
+		TYPE_ARRAY:
+			# Canonical container literals (recursive, deterministic, str_to_var-parseable):
+			# verify-lift depends on this exact spacing — change only with a lifter update.
+			var parts: PackedStringArray = PackedStringArray()
+			for item: Variant in (value as Array):
+				parts.append(_to_code_literal(item))
+			return "[%s]" % ", ".join(parts)
+		TYPE_DICTIONARY:
+			var entries: PackedStringArray = PackedStringArray()
+			var dictionary_value: Dictionary = value as Dictionary
+			for key: Variant in dictionary_value.keys():
+				entries.append("%s: %s" % [_to_code_literal(key), _to_code_literal(dictionary_value[key])])
+			return "{%s}" % ", ".join(entries)
 		_:
 			return str(value)
 
