@@ -88,6 +88,8 @@ func import_external_source(source: String) -> EventSheetResource:
 	# Recover identity fields from the source text: emission keeps the prelude verbatim
 	# (so these never affect bytes), but lint, the identity banner, and the lifter's
 	# annotation regeneration ($Class.fn templates for behaviors) all need them.
+	if source.begins_with("@tool\n") or source.contains("\n@tool\n"):
+		sheet.tool_mode = true
 	var class_name_regex: RegEx = RegEx.new()
 	if class_name_regex.compile("(?m)^class_name ([A-Za-z_][A-Za-z0-9_]*)") == OK:
 		var class_match: RegExMatch = class_name_regex.search(source)

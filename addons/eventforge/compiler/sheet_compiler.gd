@@ -46,6 +46,9 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 	lines.append("# Source: %s" % sheet.resource_path)
 	lines.append("# DO NOT EDIT — this file is regenerated on every compile.")
 	lines.append("")
+	# Tool sheets (EXPERIMENTAL): @tool must precede class_name/extends.
+	if sheet.tool_mode:
+		lines.append("@tool")
 	# A named sheet defines a custom node type: `@icon` + `class_name` make the generated
 	# script register in the Create Node dialog exactly like hand-written GDScript.
 	if not sheet.custom_class_name.strip_edges().is_empty():

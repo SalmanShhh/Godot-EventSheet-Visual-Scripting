@@ -130,7 +130,7 @@ Conditions                        | Actions
 | Godot-familiarity (find bar, shortcuts, theme inheritance, scene-aware completion, drag-from-docks) | ✅ shipped |
 | MCP server (AI tooling) | ✅ shipped |
 | `v0.2.0` release | ✅ shipped |
-| Tool sheets (event sheets for editor tooling — experimental, editor-version-coupled) | 🧪 spec'd |
+| Tool sheets (`@tool` + EditorScript / On Editor Run — experimental) | ✅ shipped |
 | Multi-view (split panes, detached windows, linked follow-selection — all full editors) | ✅ shipped |
 | 3D vocabulary, more packs (tweens+), community feedback rounds | 🗺 planned |
 

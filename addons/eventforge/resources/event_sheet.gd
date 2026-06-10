@@ -11,6 +11,11 @@ class_name EventSheetResource
 ## accessor, and host_class becomes the declared/required host type (typed accessor +
 ## attach-time warning + lint/completion context).
 @export var behavior_mode: bool = false
+## EXPERIMENTAL (editor-version-coupled): emits `@tool` so the generated script runs
+## inside the editor. Combine with host_class "EditorScript" + the On Editor Run trigger
+## to build editor tooling from events (File > Run / Ctrl+Shift+X). Runtime ACEs stay on
+## stable APIs only — editor APIs are Godot's most volatile surface.
+@export var tool_mode: bool = false
 ## When set, the generated script declares `class_name <this>` — the sheet then defines a
 ## custom node type that appears in Godot's Create Node dialog, exactly like a hand-written
 ## GDScript class. Must be unique across the project (Godot enforces this).

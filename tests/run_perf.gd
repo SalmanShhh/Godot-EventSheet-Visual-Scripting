@@ -72,6 +72,7 @@ func _init() -> void:
 	passed = PackParityTest.run() and passed
 	passed = PhaseCAffordancesTest.run() and passed
 	passed = MultiViewTest.run() and passed
+	passed = ToolSheetsTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")

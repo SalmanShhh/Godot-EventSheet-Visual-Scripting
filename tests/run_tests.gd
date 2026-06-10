@@ -79,6 +79,7 @@ const ComboColorTestScript := preload("res://tests/combo_color_test.gd")
 const PackParityTestScript := preload("res://tests/pack_parity_test.gd")
 const PhaseCAffordancesTestScript := preload("res://tests/phase_c_affordances_test.gd")
 const MultiViewTestScript := preload("res://tests/multi_view_test.gd")
+const ToolSheetsTestScript := preload("res://tests/tool_sheets_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
@@ -153,6 +154,7 @@ func _init() -> void:
 	passed = PackParityTestScript.run() and passed
 	passed = PhaseCAffordancesTestScript.run() and passed
 	passed = MultiViewTestScript.run() and passed
+	passed = ToolSheetsTestScript.run() and passed
 	passed = EventSheetEditorTestScript.run() and passed
 	passed = EventSheetStyleTestScript.run() and passed
 	passed = PluginWorkspaceTestScript.run() and passed

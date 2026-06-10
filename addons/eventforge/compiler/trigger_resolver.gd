@@ -33,6 +33,8 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _lifecycle("_input", "event: InputEvent")
 		"OnUnhandledInput":
 			return _lifecycle("_unhandled_input", "event: InputEvent")
+		"OnEditorRun":
+			return _lifecycle("_run", "")
 		"OnBodyEntered":
 			return _signal_backed("_on%s_body_entered" % source_token, "body: Node", "body_entered", source_path)
 		"OnAreaEntered":

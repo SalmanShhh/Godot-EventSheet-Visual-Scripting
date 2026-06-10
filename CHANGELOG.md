@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Tool sheets (Phase D — EXPERIMENTAL): build editor tooling from events
+- **`@tool` sheets**: a Sheet Type checkbox emits `@tool` ahead of
+  `class_name`/`extends`, so sheet-built nodes and behaviors run inside the editor.
+- **Editor Tool preset** (Sheet Type → "Editor Tool"): an `EditorScript` host paired
+  with the new **On Editor Run** trigger — your events run from **File > Run**
+  (Ctrl+Shift+X). Batch renames, scene generation, project chores: event-sheet style.
+- Full citizen: generated tools **verify-lift back** (On Editor Run round-trips
+  byte-identically) and `tool_mode` recovers when re-opening a generated `.gd`.
+- Explicitly **experimental and editor-version-coupled** (editor APIs are Godot's most
+  volatile surface — runtime ACEs stay on stable APIs only, per the covenant).
+- Covered by `tests/tool_sheets_test.gd` (10 assertions).
+
 ### Multi-view complete: detached windows + linked panes (P2/P3)
 - **Detach** (toolbar): a floating OS window hosting another full-editing pane over the
   same sheet — drag it to a second monitor while debugging. Same shared per-sheet state

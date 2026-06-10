@@ -124,6 +124,15 @@ positionally. Ceiling note: Godot does not expose its real completion engine
 full-fidelity IntelliSense always exists one panel away because the generated script is
 plain GDScript.
 
+### Tool sheets (EXPERIMENTAL)
+
+`tool_mode` emits `@tool` first; the Editor Tool sheet-type preset pairs an
+`EditorScript` host with the **On Editor Run** trigger (`_run`, File > Run) so editor
+tooling can be authored as events. Lifecycle round-trips through the standard
+verify-lift; `tool_mode` recovers from the `@tool` line on re-open. Explicitly
+editor-version-coupled — the compatibility covenant's stable-API rule applies to
+runtime ACEs only, and tool sheets carry the experimental label for exactly that reason.
+
 ### Hidden optimization (ACEs emit expert idioms)
 
 Because the sheet shows friendly labels — not the code — ACE templates are free to emit

@@ -24,7 +24,8 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _process(delta: float) -> void:": "OnProcess",
 	"func _physics_process(delta: float) -> void:": "OnPhysicsProcess",
 	"func _input(event: InputEvent) -> void:": "OnInput",
-	"func _unhandled_input(event: InputEvent) -> void:": "OnUnhandledInput"
+	"func _unhandled_input(event: InputEvent) -> void:": "OnUnhandledInput",
+	"func _run() -> void:": "OnEditorRun"
 }
 
 ## Attempts the lift on an imported external sheet. Mutates sheet.events only when the

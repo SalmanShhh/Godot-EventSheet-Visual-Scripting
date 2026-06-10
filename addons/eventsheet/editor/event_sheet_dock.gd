@@ -3264,12 +3264,15 @@ var _sheet_type_option: OptionButton = null
 var _sheet_type_name_edit: LineEdit = null
 var _sheet_type_icon_edit: LineEdit = null
 var _sheet_type_host_edit: LineEdit = null
+var _sheet_type_tool_check: CheckBox = null
 
 func _open_sheet_type_dialog() -> void:
     if not _ensure_sheet_for_editing():
         return
     _ensure_sheet_type_dialog()
-    if _current_sheet.behavior_mode:
+    if _current_sheet.tool_mode and _current_sheet.host_class == "EditorScript":
+        _sheet_type_option.select(3)
+    elif _current_sheet.behavior_mode:
         _sheet_type_option.select(2)
     elif not _current_sheet.custom_class_name.strip_edges().is_empty():
         _sheet_type_option.select(1)
@@ -3278,7 +3281,8 @@ func _open_sheet_type_dialog() -> void:
     _sheet_type_name_edit.text = _current_sheet.custom_class_name
     _sheet_type_icon_edit.text = _current_sheet.custom_class_icon
     _sheet_type_host_edit.text = _current_sheet.host_class
-    _sheet_type_dialog.popup_centered(Vector2i(460, 260))
+    _sheet_type_tool_check.button_pressed = _current_sheet.tool_mode
+    _sheet_type_dialog.popup_centered(Vector2i(460, 300))
 
 func _ensure_sheet_type_dialog() -> void:
     if _sheet_type_dialog != null:
@@ -3291,10 +3295,14 @@ func _ensure_sheet_type_dialog() -> void:
     _sheet_type_option.add_item("Event Sheet")           # plain: compiles onto the host node
     _sheet_type_option.add_item("Custom Node")           # class_name + @icon → Create Node dialog
     _sheet_type_option.add_item("Behavior (acts on parent)")  # Node component with `host`
+    _sheet_type_option.add_item("Editor Tool (EditorScript)")  # EXPERIMENTAL: events -> editor tooling
     form.add_child(_sheet_type_option)
     _sheet_type_name_edit = _add_sheet_type_field(form, "Class name", "PatrolBehavior")
     _sheet_type_icon_edit = _add_sheet_type_field(form, "Icon (res://…)", "res://icons/patrol.svg")
     _sheet_type_host_edit = _add_sheet_type_field(form, "Host / base class", "CharacterBody2D")
+    _sheet_type_tool_check = CheckBox.new()
+    _sheet_type_tool_check.text = "@tool — runs inside the editor (EXPERIMENTAL, editor-version-coupled)"
+    form.add_child(_sheet_type_tool_check)
     var hint: Label = Label.new()
     hint.text = "Custom nodes appear in Godot's Create Node dialog with their icon.\nBehaviors attach as child nodes and act on their parent via the typed `host` accessor."
     hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -3321,19 +3329,24 @@ func _on_sheet_type_confirmed() -> void:
         _sheet_type_option.selected,
         _sheet_type_name_edit.text,
         _sheet_type_icon_edit.text,
-        _sheet_type_host_edit.text
+        _sheet_type_host_edit.text,
+        _sheet_type_tool_check.button_pressed
     )
 
 ## Applies the chosen sheet type (0 = plain, 1 = custom node, 2 = behavior) undoably and
 ## refreshes every identity surface (banner, tab badge, header, lint context).
-func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String) -> void:
+func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false) -> void:
     if _current_sheet == null:
         return
     var changed: bool = _perform_undoable_sheet_edit("Set Sheet Type", func() -> bool:
         _current_sheet.behavior_mode = type_index == 2
+        # Editor Tool preset: an EditorScript with @tool — pair with On Editor Run.
+        _current_sheet.tool_mode = tool_enabled or type_index == 3
         _current_sheet.custom_class_name = class_name_text.strip_edges() if type_index != 0 else ""
         _current_sheet.custom_class_icon = icon_path.strip_edges() if type_index != 0 else ""
-        if not host_class_text.strip_edges().is_empty():
+        if type_index == 3:
+            _current_sheet.host_class = "EditorScript"
+        elif not host_class_text.strip_edges().is_empty():
             _current_sheet.host_class = host_class_text.strip_edges()
         return true
     )
