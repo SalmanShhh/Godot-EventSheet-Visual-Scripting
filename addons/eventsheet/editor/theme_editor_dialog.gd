@@ -68,6 +68,26 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	comment.text = "Colored comment\nsecond line"
 	comment.custom_color = Color(0.32, 0.27, 0.14, 1.0)
 	sheet.events.append(comment)
+	# Newer row kinds so the live preview exercises their tokens too (keyword badges,
+	# declaration text, color swatches).
+	var sample_enum: EnumRow = EnumRow.new()
+	sample_enum.enum_name = "State"
+	sample_enum.members = PackedStringArray(["IDLE", "RUN"])
+	sheet.events.append(sample_enum)
+	var sample_signal: SignalRow = SignalRow.new()
+	sample_signal.signal_name = "hit"
+	sample_signal.params = PackedStringArray(["damage: int"])
+	sheet.events.append(sample_signal)
+	var tint_event: EventRow = EventRow.new()
+	tint_event.trigger_provider_id = "Core"
+	tint_event.trigger_id = "OnReady"
+	var tint: ACEAction = ACEAction.new()
+	tint.provider_id = "Core"
+	tint.ace_id = "SetModulate"
+	tint.codegen_template = "modulate = {color}"
+	tint.params = {"color": "Color(0.4, 0.7, 1.0, 1.0)"}
+	tint_event.actions.append(tint)
+	sheet.events.append(tint_event)
 	return sheet
 
 ## Exported tokens of a style resource that the form can edit (Color/float/int/bool).

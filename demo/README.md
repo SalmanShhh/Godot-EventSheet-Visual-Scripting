@@ -1,28 +1,72 @@
-# Godot EventSheets — Demo Project
+# Godot EventSheets — Demo & Showcase
 
-The demo assets exercised by the test suite and the quickest way to poke at the plugin.
+The fastest way to *feel* what this plugin is: open one sheet, click around, and watch
+plain GDScript fall out of it. This folder is the guided tour.
 
-## What's here
+## The 60-second pitch
+
+**If you're coming from Construct 3:** events read exactly like home — two-lane rows,
+a searchable picker that understands your vocabulary ("every tick", "go to layout",
+"choose"), behaviors that attach to objects, Wait actions, combo dropdowns, color
+pickers with swatches. All **fourteen C3-style behaviors** ship in the box (Platformer,
+8-Direction, Sine with wave types, Orbit ellipses, Bullet, Move To with waypoints,
+Follow with delay mode, Drag & Drop, Car with drift, Tile Movement, Line of Sight,
+Timer, Flash, State Machine).
+
+**If you're a Godot user:** there is no runtime, no interpreter, no lock-in. Every sheet
+compiles to **typed, idiomatic GDScript** you could have written yourself — delete the
+plugin and your game still runs. Signals are real signals, behaviors are child nodes,
+exported variables get Inspector dropdowns, `@export_enum` combos and `Array[int]`
+collections are first-class, and the editor inherits *your* theme by default.
+
+**For both:** the sheet and GDScript are a two-way street. Open any `.gd` as a sheet.
+Paste GDScript and it becomes events. Rename a variable and every reference refactors.
+Ctrl+F finds rows even inside folded groups. Split the editor (or detach a pane to a
+second monitor) like VSCode. An MCP server lets AI assistants read, lint, compile, and
+extend your sheets.
+
+## Try it (five minutes)
+
+1. Open the repository root project in Godot **4.5+** → open the **EventSheet** tab.
+2. Open `demo/sheets/player.tres`. Double-click anything. Press Ctrl+F. Right-click a
+   row → **Open in Split**.
+3. Toolbar → **GDScript**: select a row and watch its generated lines highlight —
+   click a line and the row that produced it selects back.
+4. Toolbar → theme switcher: try **Dracula**, **Nord**, **Catppuccin Mocha**…
+   then **Theme Editor…** to restyle any token live (the preview now shows enums,
+   signals, and color swatches too).
+5. Add a node in a scene → attach `SineBehavior` from the Create Node dialog → set
+   *movement* and *wave* from their Inspector dropdowns. That dropdown **is** a sheet
+   feature (`@export_enum` combos).
+6. Compile. Read `sheets/player_generated.gd`. That's the whole trick — there is no
+   step 7.
+
+## What's in this folder
 
 | Path | What it is |
 |---|---|
 | `sheets/player.tres` | The demo event sheet (variables, triggers, conditions, actions) |
-| `sheets/player_generated.gd` | Its compiled output — also the **golden file** `tests/compile_demo_test.gd` checks against |
+| `sheets/player_generated.gd` | Its compiled output — also the **golden file** the test suite byte-checks *and parses* |
 | `scenes/player.tscn` | A minimal CharacterBody2D with the generated script attached |
-| `themes/` | Bundled editor themes + the designer template/manifest |
-| `demo_project.godot` | Rename to `project.godot` only if you need the demo as a standalone project (rename back afterwards) |
+| `themes/` | Ten bundled themes: Dracula, Nord, Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha, high-contrast, soft-light, Construct3-stacked, + the designer template |
+| `demo_project.godot` | Rename to `project.godot` only for standalone use (rename back afterwards) |
 
-The sample **behavior packs** (PlatformerMovement, EightDirectionMovement) live in
-`res://eventsheet_addons/`, not here — they double as zero-config addon examples.
+The **behavior packs** live in `res://eventsheet_addons/` — each one is an editable
+sheet *plus* its compiled script, doubling as a zero-config addon example (tag yours
+with `@ace_tags(...)` or the Sheet Type dialog's Tags field).
 
-## Try it
+## Milestones at a glance
 
-1. Open the repository root project in Godot 4.5+ and open the **EventSheet** tab.
-2. Open `demo/sheets/player.tres` — edit events, watch the GDScript panel (toolbar →
-   "GDScript") highlight both ways.
-3. Compile; the output is `sheets/player_generated.gd`, attached to `scenes/player.tscn`.
+| | |
+|---|---|
+| ✅ `v0.1.0` | The editor + compiler + lossless GDScript pairing |
+| ✅ `v0.2.0` | Rich variables (enums/collections/combos), C3 coverage (38 native ACEs + 14 packs), input/Wait, MCP server, find bar, iconic themes |
+| ✅ `v0.3.0` | Multi-view (split / detached / linked panes), tool sheets (experimental) |
+| 🔜 next | 3D vocabulary shipped on `main`; community feedback rounds |
 
-## Compile manually
+Full ledger: [CHANGELOG.md](../CHANGELOG.md) · honest pros & cons: [README.md](../README.md)
+
+## Compile manually / regenerate the golden
 
 ```gdscript
 var sheet: EventSheetResource = load("res://demo/sheets/player.tres")
@@ -30,16 +74,14 @@ var result: Dictionary = SheetCompiler.compile(sheet, "res://demo/sheets/player_
 print(result.get("warnings"))
 ```
 
-`tests/compile_demo_test.gd` performs the golden comparison automatically; after an
-intentional codegen change, regenerate the golden with
-`godot --headless --script tools/regenerate_demo_golden.gd`.
+After an intentional codegen change:
+`godot --headless --script tools/regenerate_demo_golden.gd`
 
 ## Themes
 
-Bundled in `res://demo/themes/` and listed in the dock's **toolbar theme switcher**
-(no file dialog needed): `construct3_stacked_theme`, `high_contrast_theme`,
-`soft_light_theme`, plus `designer_template_theme.tres` +
-`designer_template_theme_manifest.cfg` as the duplicate-me starting point for designers.
-The **Theme Editor…** toolbar dialog edits any of them live (reflective token form,
-preset saving); with no theme assigned, the editor derives a Godot-native look from your
-editor theme.
+All presets in `res://demo/themes/` are auto-discovered by the toolbar **theme
+switcher** — no registration. The **Theme Editor…** dialog edits any of them live
+(reflective token form — new tokens appear automatically — with preset saving), and its
+sample preview exercises the full row vocabulary: events, groups, comments, enums,
+signals, and color-swatch actions. With no theme assigned, the sheet derives a
+Godot-native look from **your** editor's base and accent colors.
