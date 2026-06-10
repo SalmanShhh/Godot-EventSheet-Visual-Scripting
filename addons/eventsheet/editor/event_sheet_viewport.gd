@@ -29,6 +29,10 @@ signal comment_edit_requested(comment_row: Resource)
 signal pick_filter_edit_requested(event_row: Resource, pick_index: int)
 ## Emitted when an enum row is double-clicked.
 signal enum_edit_requested(enum_row: Resource)
+## Emitted when a signal row is double-clicked.
+signal signal_edit_requested(signal_row: Resource)
+## Emitted when a match action cell is double-clicked.
+signal match_edit_requested(match_row: Resource)
 ## Emitted on Ctrl+/ — the dock toggles the selected rows' enabled state (undoable).
 signal row_disable_toggle_requested()
 ## Emitted on Alt+Up/Down — the dock moves the selected row (direction -1 = up).
@@ -798,6 +802,12 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
         if event.double_click:
             # In-flow GDScript blocks (actions) open the code dialog, not the ACE editor.
             var double_click_meta: Dictionary = hit.get("span_metadata", {})
+            if bool(double_click_meta.get("match_action", false)) and row_data != null and row_data.source_resource is EventRow:
+                var match_target: Resource = _resolve_ace_resource(row_data.source_resource, "action", int(double_click_meta.get("ace_index", -1)))
+                if match_target is MatchRow:
+                    match_edit_requested.emit(match_target)
+                    accept_event()
+                    return
             if bool(double_click_meta.get("raw_action", false)) and row_data != null and row_data.source_resource is EventRow:
                 var inline_raw: Resource = _resolve_ace_resource(row_data.source_resource, "action", int(double_click_meta.get("ace_index", -1)))
                 if inline_raw is RawCodeRow:
@@ -814,6 +824,11 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
             # Enum rows open the enum dialog.
             if row_data != null and row_data.source_resource is EnumRow:
                 enum_edit_requested.emit(row_data.source_resource)
+                accept_event()
+                return
+            # Signal rows open the signal dialog.
+            if row_data != null and row_data.source_resource is SignalRow:
+                signal_edit_requested.emit(row_data.source_resource)
                 accept_event()
                 return
             # Pick-filter rows open the pick-filter dialog.
@@ -1332,6 +1347,8 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
         return _build_raw_code_row(entry as RawCodeRow, indent)
     if entry is EnumRow:
         return _build_enum_row(entry as EnumRow, indent)
+    if entry is SignalRow:
+        return _build_signal_row(entry as SignalRow, indent)
     if entry is EventRow:
         return _build_event_row(entry as EventRow, indent)
     return null
@@ -1361,6 +1378,34 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
             "%s { %s }" % [enum_row.enum_name, ", ".join(members)],
             SemanticSpan.SpanType.VALUE,
             {"kind": "enum_row", "text_color": event_style.object_label_color}
+        )
+    ]
+    return row_data
+
+## A signal row: rendered like a declaration ("signal  hit(damage: int)"); double-click
+## opens the signal dialog.
+func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
+    var event_style: EventSheetEventStyle = _get_event_style()
+    var row_data := EventRowData.new()
+    row_data.indent = indent
+    row_data.row_type = EventRowData.RowType.SECTION
+    row_data.source_resource = signal_row
+    row_data.row_uid = "signal_%s_%d" % [str(signal_row.get_instance_id()), indent]
+    row_data.disabled = not signal_row.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
+    row_data.breakpoint_enabled = bool(_breakpoint_rows.get(row_data.row_uid, false))
+    var declaration: String = signal_row.signal_name
+    if not signal_row.params.is_empty():
+        declaration += "(%s)" % ", ".join(signal_row.params)
+    row_data.spans = [
+        _make_span(
+            "signal",
+            SemanticSpan.SpanType.KEYWORD,
+            {"badge": true, "text_color": event_style.behavior_accent_color}
+        ),
+        _make_span(
+            declaration,
+            SemanticSpan.SpanType.VALUE,
+            {"kind": "signal_row", "text_color": event_style.object_label_color}
         )
     ]
     return row_data
@@ -1866,6 +1911,28 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     )
                 )
                 action_line_index += 1
+            elif action_resource is MatchRow:
+                # match statement (C3's switch): header + branch lines as action cells
+                # sharing one ace_index; double-click opens the match dialog.
+                var match_resource: MatchRow = action_resource as MatchRow
+                var match_lines: PackedStringArray = PackedStringArray(["match %s:" % match_resource.match_expression])
+                for branch_line: String in match_resource.branches_text.split("\n"):
+                    match_lines.append("\t" + branch_line)
+                for match_line_index in range(match_lines.size()):
+                    spans.append(
+                        _make_span(
+                            match_lines[match_line_index] if not match_lines[match_line_index].is_empty() else " ",
+                            SemanticSpan.SpanType.VALUE,
+                            {
+                                "lane": "action",
+                                "kind": "action",
+                                "ace_index": action_index,
+                                "match_action": true,
+                                "action_line": match_line_index,
+                                "text_color": event_style.value_highlight_color
+                            }
+                        )
+                    )
             elif action_resource is RawCodeRow:
                 # In-flow GDScript block: one action-lane cell per code line. All lines share
                 # the block's ace_index, so click/drag/delete treat the block as one action.
@@ -1990,6 +2057,8 @@ func _count_event_lines(event_row: EventRow) -> int:
             action_count += 1
         elif action_resource is RawCodeRow:
             action_count += maxi((action_resource as RawCodeRow).code.split("\n").size(), 1)
+        elif action_resource is MatchRow:
+            action_count += (action_resource as MatchRow).branches_text.split("\n").size() + 1
         elif action_resource is CommentRow:
             action_count += maxi((action_resource as CommentRow).text.split("\n").size(), 1)
     var max_action_line: int = action_count

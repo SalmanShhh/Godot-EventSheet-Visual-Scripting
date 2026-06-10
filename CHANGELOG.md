@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Signal rows + match rows (GDScript language parity)
+- **Signals are first-class rows** (the enum-row treatment): add via the row menu
+  ("Add Signal Below") or double-click to edit — name plus typed params one-per-line
+  (`damage: int`). They compile canonically (after enums, before variables),
+  **verify-lift** back from generated code (non-canonical formats stay blocks,
+  byte-identical round-trips guarded), travel in **snippets**, feed the **On Signal /
+  Emit Signal pickers**, lint (`hit.emit(3)` validates), and **validate custom-signal
+  trigger connections** at compile time. Names/params pass the identifier guardrails.
+- **Match rows** (C3's switch, GDScript's `match`): a structured action-lane row with an
+  ƒx subject expression and branch text in real GDScript match-body syntax — enum members
+  complete in patterns. Renders as indented action cells; double-click opens the match
+  dialog, whose commit guardrail **lint-checks the whole construct** (broken matches
+  never commit). Compiles in-flow inside the event body, source-mapped.
+- Covered by `tests/signal_match_rows_test.gd` (16 assertions).
+
 ### Hidden codegen optimization + signal autocomplete (C3 object-signal parity)
 - **ACEs now emit expert idioms behind the scenes** (new spec rule, "Hidden
   optimization"): hot-path builtin templates use `&"name"` **StringName literals**

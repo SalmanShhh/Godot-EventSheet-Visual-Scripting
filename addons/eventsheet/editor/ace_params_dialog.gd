@@ -284,6 +284,10 @@ func _signal_options() -> Array[String]:
 	if sheet == null:
 		return names
 	for entry in sheet.events:
+		if entry is SignalRow and (entry as SignalRow).enabled:
+			var row_signal: String = (entry as SignalRow).signal_name
+			if not row_signal.is_empty() and not names.has(row_signal):
+				names.append(row_signal)
 		if entry is RawCodeRow:
 			for line in (entry as RawCodeRow).code.split("\n"):
 				if line.begins_with("signal "):

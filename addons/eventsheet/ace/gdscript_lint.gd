@@ -40,6 +40,10 @@ static func build_scratch_source(code: String, in_flow: bool, sheet: EventSheetR
 		lines.append("extends %s" % host_class)
 	for enum_row in _sheet_enums(sheet):
 		lines.append(SheetCompiler._emit_enum_line(enum_row))
+	if sheet != null:
+		for entry in sheet.events:
+			if entry is SignalRow and (entry as SignalRow).enabled:
+				lines.append(SheetCompiler._emit_signal_line(entry))
 	for variable_name in _sheet_variable_names(sheet):
 		lines.append("var %s" % variable_name)
 	for function_name in _sheet_function_names(sheet):
@@ -180,6 +184,10 @@ static func completion_candidates(sheet: EventSheetResource) -> Array[Dictionary
 		_add_candidate(candidates, seen, CodeEdit.KIND_FUNCTION, function_name)
 	for enum_row in _sheet_enums(sheet):
 		_add_candidate(candidates, seen, CodeEdit.KIND_CLASS, enum_row.enum_name)
+	if sheet != null:
+		for entry in sheet.events:
+			if entry is SignalRow and (entry as SignalRow).enabled:
+				_add_candidate(candidates, seen, CodeEdit.KIND_SIGNAL, (entry as SignalRow).signal_name)
 	if sheet != null and ClassDB.class_exists(sheet.host_class):
 		for property_info in ClassDB.class_get_property_list(sheet.host_class):
 			var property_name: String = str(property_info.get("name", ""))

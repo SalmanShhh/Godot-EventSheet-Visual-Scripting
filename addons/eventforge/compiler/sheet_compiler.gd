@@ -85,6 +85,16 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 				continue
 			lines.append(enum_line)
 			source_map.append({"uid": str((enum_entry as EnumRow).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "enum"})
+	var signal_rows: Array = []
+	_collect_signal_rows(all_events, signal_rows)
+	if not signal_rows.is_empty():
+		lines.append("")
+		for signal_entry: Variant in signal_rows:
+			var signal_line: String = _emit_signal_line(signal_entry as SignalRow)
+			if signal_line.is_empty():
+				continue
+			lines.append(signal_line)
+			source_map.append({"uid": str((signal_entry as SignalRow).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "signal"})
 	var tree_variables: Array = []
 	_collect_tree_variables(all_events, tree_variables)
 	var variable_lines: PackedStringArray = _emit_variables(merged_variables)
@@ -137,6 +147,8 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			# honoring C3 semantics — a DISABLED group drops all of its children).
 			top_level_events.append(row)
 			continue
+		if row is EnumRow or row is SignalRow:
+			continue  # emitted above as class-level declarations
 		if row.has_method("get_row_kind") and str(row.call("get_row_kind")) != "event":
 			deferred_rows.append("# TODO: row type not yet implemented in Phase 1")
 			continue
@@ -149,9 +161,13 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			(result["warnings"] as Array[String]).append("Skipping event %s with no trigger" % event_row.event_uid)
 			continue
 		top_level_events.append(event_row)
+	var declared_signals: Array = _scan_declared_signals(raw_blocks)
+	for signal_entry: Variant in signal_rows:
+		if signal_entry is SignalRow and (signal_entry as SignalRow).enabled:
+			declared_signals.append((signal_entry as SignalRow).signal_name)
 	var connect_context: Dictionary = {
 		"self_class": "Node" if sheet.behavior_mode else (sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node"),
-		"declared_signals": _scan_declared_signals(raw_blocks)
+		"declared_signals": declared_signals
 	}
 	var group_comment_lines: PackedStringArray = PackedStringArray()
 	_emit_grouped_trigger_functions(top_level_events, lines, source_map, result, connect_context, group_comment_lines)
@@ -223,6 +239,11 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			if not external_enum_line.is_empty():
 				lines.append(external_enum_line)
 				source_map.append({"uid": str((entry as EnumRow).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "enum"})
+		elif entry is SignalRow:
+			var external_signal_line: String = _emit_signal_line(entry as SignalRow)
+			if not external_signal_line.is_empty():
+				lines.append(external_signal_line)
+				source_map.append({"uid": str((entry as SignalRow).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "signal"})
 	# External sheets: raw rows include the original file's verbatim segments, so signals
 	# declared anywhere in the source validate self-connections.
 	var external_raw_rows: Array = []
@@ -583,6 +604,18 @@ static func _emit_event_body(
 					lines.append(body_indent + inline_line)
 				had_body = true
 				source_map.append({"uid": str(inline_raw.get_instance_id()), "start": inline_start, "end": lines.size(), "kind": "raw"})
+			elif action_item is MatchRow:
+				# A GDScript `match` as a structured action row (C3's switch): subject +
+				# verbatim branch lines, one level deeper.
+				var match_row: MatchRow = action_item as MatchRow
+				if not match_row.enabled or match_row.match_expression.strip_edges().is_empty():
+					continue
+				var match_start: int = lines.size() + 1
+				lines.append(body_indent + "match %s:" % match_row.match_expression.strip_edges())
+				for branch_line: String in match_row.branches_text.split("\n"):
+					lines.append(body_indent + "\t" + branch_line)
+				had_body = true
+				source_map.append({"uid": str(match_row.get_instance_id()), "start": match_start, "end": lines.size(), "kind": "match"})
 			elif action_item is CommentRow:
 				# Action-cell comment: annotates the flow, compiles to comment lines.
 				var action_comment: CommentRow = action_item as CommentRow
@@ -773,6 +806,28 @@ static func _emit_enum_line(enum_row: EnumRow) -> String:
 	if members.is_empty():
 		return ""
 	return "enum %s { %s }" % [enum_row.enum_name.strip_edges(), ", ".join(members)]
+
+## Canonical single-line signal emission ("" when unnamed/disabled). The importer's
+## verify-lift depends on this exact form.
+static func _emit_signal_line(signal_row: SignalRow) -> String:
+	if signal_row == null or not signal_row.enabled or signal_row.signal_name.strip_edges().is_empty():
+		return ""
+	var params: PackedStringArray = PackedStringArray()
+	for param: String in signal_row.params:
+		if not param.strip_edges().is_empty():
+			params.append(param.strip_edges())
+	if params.is_empty():
+		return "signal %s" % signal_row.signal_name.strip_edges()
+	return "signal %s(%s)" % [signal_row.signal_name.strip_edges(), ", ".join(params)]
+
+## Recursively gathers SignalRow rows (top level and inside groups).
+static func _collect_signal_rows(entries: Array, into: Array) -> void:
+	for entry: Variant in entries:
+		if entry is SignalRow:
+			into.append(entry)
+		elif entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_collect_signal_rows(group.events if not group.events.is_empty() else group.rows, into)
 
 ## Recursively gathers EnumRow rows (top level and inside groups).
 static func _collect_enum_rows(entries: Array, into: Array) -> void:

@@ -36,6 +36,8 @@ const ACTION_MENU_DETACH_COMMENT := 6
 const ROW_MENU_ADD_PICK_FILTER := 18
 const ROW_MENU_ADD_ENUM := 19
 const ROW_MENU_EDIT_GROUP_DESC := 20
+const ROW_MENU_ADD_SIGNAL := 21
+const ROW_MENU_ADD_MATCH := 22
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -589,6 +591,8 @@ func _build_ui() -> void:
     _viewport.comment_edit_requested.connect(_open_comment_dialog)
     _viewport.pick_filter_edit_requested.connect(_open_pick_filter_dialog)
     _viewport.enum_edit_requested.connect(_open_enum_dialog)
+    _viewport.signal_edit_requested.connect(_open_signal_dialog)
+    _viewport.match_edit_requested.connect(_open_match_dialog)
     _viewport.row_disable_toggle_requested.connect(_toggle_selected_rows_enabled)
     _viewport.row_move_requested.connect(_move_selected_row)
     _viewport.find_requested.connect(_show_find_bar)
@@ -750,6 +754,8 @@ func _build_context_menus() -> void:
     _row_context_menu.add_item("Add Pick Filter (For Each)…", ROW_MENU_ADD_PICK_FILTER)
     _row_context_menu.add_item("Add Enum Below", ROW_MENU_ADD_ENUM)
     _row_context_menu.add_item("Edit Group Description…", ROW_MENU_EDIT_GROUP_DESC)
+    _row_context_menu.add_item("Add Signal Below", ROW_MENU_ADD_SIGNAL)
+    _row_context_menu.add_item("Add Match To Actions…", ROW_MENU_ADD_MATCH)
     _row_context_menu.add_separator()
     _row_context_menu.add_item("Edit Comment…", ROW_MENU_EDIT_COMMENT)
     _row_context_menu.add_item("Attach Comment To Event Above", ROW_MENU_ATTACH_COMMENT)
@@ -2438,7 +2444,135 @@ func _regex_rename(regex: RegEx, text: String, new_name: String, counter: Dictio
     counter["count"] = int(counter.get("count", 0)) + hits
     return regex.sub(text, new_name, true)
 
-# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ────────────────────
+# ── Signal + match dialogs ─────────────────────────────────────────────────────────────
+var _signal_dialog: ConfirmationDialog = null
+var _signal_name_edit: LineEdit = null
+var _signal_params_edit: TextEdit = null
+var _signal_target: SignalRow = null
+var _match_dialog: ConfirmationDialog = null
+var _match_expression_edit: LineEdit = null
+var _match_branches_edit: TextEdit = null
+var _match_hint: Label = null
+var _match_target: MatchRow = null
+
+## Opens the signal editor (double-click or "Add Signal Below").
+func _open_signal_dialog(signal_resource: Resource) -> void:
+    var signal_row: SignalRow = signal_resource as SignalRow
+    if signal_row == null:
+        return
+    _ensure_signal_dialog()
+    _signal_target = signal_row
+    _signal_name_edit.text = signal_row.signal_name
+    _signal_params_edit.text = "\n".join(signal_row.params)
+    _signal_dialog.popup_centered(Vector2i(420, 280))
+
+func _ensure_signal_dialog() -> void:
+    if _signal_dialog != null:
+        return
+    _signal_dialog = ConfirmationDialog.new()
+    _signal_dialog.title = "Edit Signal"
+    var form: VBoxContainer = VBoxContainer.new()
+    form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _signal_name_edit = _add_sheet_type_field(form, "Signal name", "hit")
+    var params_label: Label = Label.new()
+    params_label.text = "Parameters (one per line; optional \"damage: int\" types)"
+    form.add_child(params_label)
+    _signal_params_edit = TextEdit.new()
+    _signal_params_edit.custom_minimum_size = Vector2(380.0, 120.0)
+    _signal_params_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    form.add_child(_signal_params_edit)
+    _signal_dialog.add_child(form)
+    _signal_dialog.confirmed.connect(_on_signal_dialog_confirmed)
+    add_child(_signal_dialog)
+
+func _on_signal_dialog_confirmed() -> void:
+    if _signal_target == null:
+        return
+    var target: SignalRow = _signal_target
+    var new_name: String = EventSheetIdentifierRules.sanitize(_signal_name_edit.text)
+    if not EventSheetIdentifierRules.is_valid(new_name):
+        _set_status("\"%s\" can't be a signal name (letters/digits/underscores, not a GDScript keyword)." % _signal_name_edit.text, true)
+        return
+    var new_params: PackedStringArray = PackedStringArray()
+    for line: String in _signal_params_edit.text.split("\n"):
+        if line.strip_edges().is_empty():
+            continue
+        var param_name: String = EventSheetIdentifierRules.sanitize(line.get_slice(":", 0))
+        if not EventSheetIdentifierRules.is_valid(param_name):
+            _set_status("\"%s\" can't be a signal parameter name." % line.strip_edges(), true)
+            return
+        var param_text: String = param_name
+        if line.contains(":"):
+            param_text += ": " + line.get_slice(":", 1).strip_edges()
+        new_params.append(param_text)
+    var changed: bool = _perform_undoable_sheet_edit("Edit Signal", func() -> bool:
+        target.signal_name = new_name
+        target.params = new_params
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Signal updated (it now appears in the On/Emit Signal pickers).")
+
+## Opens the match editor (double-click a match cell or "Add Match To Actions…").
+func _open_match_dialog(match_resource: Resource) -> void:
+    var match_row: MatchRow = match_resource as MatchRow
+    if match_row == null:
+        return
+    _ensure_match_dialog()
+    _match_target = match_row
+    _match_expression_edit.text = match_row.match_expression
+    _match_branches_edit.text = match_row.branches_text
+    _match_hint.text = ""
+    _match_dialog.popup_centered(Vector2i(520, 380))
+
+func _ensure_match_dialog() -> void:
+    if _match_dialog != null:
+        return
+    _match_dialog = ConfirmationDialog.new()
+    _match_dialog.title = "Edit Match (switch)"
+    var form: VBoxContainer = VBoxContainer.new()
+    form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _match_expression_edit = _add_sheet_type_field(form, "Match expression", "state")
+    var branches_label: Label = Label.new()
+    branches_label.text = "Branches (GDScript match-body syntax — patterns + indented bodies)"
+    form.add_child(branches_label)
+    _match_branches_edit = TextEdit.new()
+    _match_branches_edit.custom_minimum_size = Vector2(480.0, 200.0)
+    _match_branches_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    form.add_child(_match_branches_edit)
+    _match_hint = Label.new()
+    form.add_child(_match_hint)
+    _match_dialog.add_child(form)
+    _match_dialog.confirmed.connect(_on_match_dialog_confirmed)
+    add_child(_match_dialog)
+
+func _on_match_dialog_confirmed() -> void:
+    if _match_target == null:
+        return
+    var target: MatchRow = _match_target
+    var expression: String = _match_expression_edit.text.strip_edges()
+    var branches: String = _match_branches_edit.text
+    # Guardrail: the WHOLE construct must compile before it commits.
+    var construct: String = "match %s:\n" % expression
+    for branch_line: String in branches.split("\n"):
+        construct += "\t" + branch_line + "\n"
+    var verdict: Dictionary = EventSheetGDScriptLint.lint(construct.trim_suffix("\n"), true, _current_sheet)
+    if expression.is_empty() or not bool(verdict.get("ok", true)):
+        _match_hint.text = "✗ The match doesn't compile — fix it before applying."
+        if is_inside_tree():
+            _match_dialog.call_deferred("popup_centered", Vector2i(520, 380))
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Edit Match", func() -> bool:
+        target.match_expression = expression
+        target.branches_text = branches
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Match updated.")
+
+# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ─# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ────────────────────
 var _find_bar: HBoxContainer = null
 var _find_edit: LineEdit = null
 var _find_count_label: Label = null
@@ -3236,6 +3370,23 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
             var new_enum: EnumRow = EnumRow.new()
             _insert_context_row_below(new_enum, "Added enum.")
             _open_enum_dialog(new_enum)
+        ROW_MENU_ADD_SIGNAL:
+            var new_signal: SignalRow = SignalRow.new()
+            _insert_context_row_below(new_signal, "Added signal.")
+            _open_signal_dialog(new_signal)
+        ROW_MENU_ADD_MATCH:
+            if _context_row.source_resource is EventRow:
+                var new_match: MatchRow = MatchRow.new()
+                var match_host: EventRow = _context_row.source_resource as EventRow
+                var added_match: bool = _perform_undoable_sheet_edit("Add Match", func() -> bool:
+                    match_host.actions.append(new_match)
+                    return true
+                )
+                if added_match:
+                    _refresh_after_edit()
+                    _open_match_dialog(new_match)
+            else:
+                _set_status("Select an event to add a match to its actions.", true)
         ROW_MENU_EDIT_GROUP_DESC:
             if _context_row.source_resource is EventGroup:
                 var described_group: EventGroup = _context_row.source_resource as EventGroup

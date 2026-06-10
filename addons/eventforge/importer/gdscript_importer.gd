@@ -76,6 +76,12 @@ func import_external_source(source: String) -> EventSheetResource:
 			sheet.events.append(lifted_enum)
 			index += 1
 			continue
+		var lifted_signal: SignalRow = _try_lift_signal(line)
+		if lifted_signal != null:
+			_flush_pending(pending, sheet)
+			sheet.events.append(lifted_signal)
+			index += 1
+			continue
 		pending.append(line)
 		index += 1
 	_flush_pending(pending, sheet)
@@ -135,6 +141,26 @@ func _try_lift_enum(line: String) -> EnumRow:
 	lifted.enum_name = enum_match.get_string(1)
 	lifted.members = PackedStringArray(enum_match.get_string(2).split(", "))
 	if SheetCompiler._emit_enum_line(lifted) != line:
+		return null
+	return lifted
+
+## Lifts a canonical signal declaration to a SignalRow when re-emission reproduces the
+## line exactly (the verify-lift rule); other formats stay verbatim blocks.
+func _try_lift_signal(line: String) -> SignalRow:
+	if not line.begins_with("signal "):
+		return null
+	var signal_regex: RegEx = RegEx.new()
+	if signal_regex.compile("^signal ([A-Za-z_][A-Za-z0-9_]*)(?:\\((.*)\\))?$") != OK:
+		return null
+	var signal_match: RegExMatch = signal_regex.search(line)
+	if signal_match == null:
+		return null
+	var lifted: SignalRow = SignalRow.new()
+	lifted.signal_name = signal_match.get_string(1)
+	var params_text: String = signal_match.get_string(2)
+	if not params_text.is_empty():
+		lifted.params = PackedStringArray(params_text.split(", "))
+	if SheetCompiler._emit_signal_line(lifted) != line:
 		return null
 	return lifted
 
