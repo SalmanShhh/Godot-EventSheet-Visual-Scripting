@@ -155,8 +155,8 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 	var default_value: Variant = initial_values.get(key, param_dict.get("default_value", ""))
 	var options: Array = param_dict.get("options", [])
 
-	if hint == VARIABLE_REFERENCE_HINT:
-		return _create_variable_reference_field(key, default_value)
+	if hint == VARIABLE_REFERENCE_HINT or hint.begins_with(VARIABLE_REFERENCE_HINT + ":"):
+		return _create_variable_reference_field(key, default_value, hint)
 	if hint == EXPRESSION_HINT:
 		return _create_expression_field(key, default_value)
 	if options is Array and not options.is_empty():
@@ -200,17 +200,24 @@ func _create_options_field(key: String, options: Array, default_value: Variant) 
 	_fields[key] = dropdown
 	return dropdown
 
-func _create_variable_reference_field(key: String, default_value: Variant) -> Control:
-	if _variable_names.is_empty():
-		# No variables exist: surface a disabled placeholder and block apply.
+## hint may carry a required base type ("variable_reference:Array") — the dropdown then
+## offers only variables of that container type (Variant/untyped always qualify).
+func _create_variable_reference_field(key: String, default_value: Variant, hint: String = VARIABLE_REFERENCE_HINT) -> Control:
+	var required_type: String = hint.get_slice(":", 1) if hint.contains(":") else ""
+	var offered_names: Array = []
+	for candidate_name in _variable_names:
+		if required_type.is_empty() or _variable_matches_type(str(candidate_name), required_type):
+			offered_names.append(candidate_name)
+	if offered_names.is_empty():
+		# No (matching) variables exist: surface a disabled placeholder and block apply.
 		_apply_blocked = true
 		var placeholder: LineEdit = LineEdit.new()
-		placeholder.text = NO_VARIABLES_PLACEHOLDER
+		placeholder.text = NO_VARIABLES_PLACEHOLDER if required_type.is_empty() else "No %s variables — add one first" % required_type
 		placeholder.editable = false
 		_fields[key] = placeholder
 		return placeholder
 	var dropdown: OptionButton = OptionButton.new()
-	for variable_name in _variable_names:
+	for variable_name in offered_names:
 		dropdown.add_item(variable_name)
 		var index: int = dropdown.item_count - 1
 		dropdown.set_item_metadata(index, variable_name)
@@ -220,6 +227,22 @@ func _create_variable_reference_field(key: String, default_value: Variant) -> Co
 		dropdown.select(0)
 	_fields[key] = dropdown
 	return dropdown
+
+## True when the sheet variable's declared type starts with `required` (so "Array" also
+## matches "Array[int]"); untyped/Variant variables always qualify.
+func _variable_matches_type(variable_name: String, required: String) -> bool:
+	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
+	if sheet == null:
+		return true
+	var type_name: String = ""
+	if sheet.variables.has(variable_name):
+		type_name = str((sheet.variables[variable_name] as Dictionary).get("type", ""))
+	for entry in sheet.events:
+		if entry is LocalVariable and (entry as LocalVariable).name == variable_name:
+			type_name = (entry as LocalVariable).type_name
+	if type_name.is_empty() or type_name == "Variant":
+		return true
+	return type_name.begins_with(required)
 
 func _create_expression_field(key: String, default_value: Variant) -> Control:
 	var container: HBoxContainer = HBoxContainer.new()

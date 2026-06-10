@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Curated collection ACE set (rich-variables phase 3 of 3 — the 1.0 arc is complete)
+- **27 ready-made Dictionary / Array / JSON ops** as builtin Core descriptors, grouped in
+  the picker as **Variables: Dictionary** (Set/Delete Key, Clear, Merge, Has Key,
+  Is Empty, Get-with-default, Size, Keys, Values), **Variables: Array** (Append, Insert
+  At, Remove At, Erase, Clear, Sort, Shuffle, Contains, Is Empty, Value At, Size, Pick
+  Random), and **Variables: JSON** (To/From JSON Text, JSON Is Valid, Save/Load JSON
+  File — `user://` paths survive exports).
+- Every op compiles to a **single direct GDScript line** (`inventory["sword"] = 1`,
+  `scores.append(10)`, `JSON.parse_string(...)`) — parity-safe, reverse-lift-eligible,
+  and the templates double as GDScript teachers. The long tail stays one ƒx away.
+- **Type-aware variable dropdowns**: `variable_reference:Array` / `:Dictionary` hints
+  filter the dropdown to matching variables (typed containers match their base;
+  Variant/untyped always qualify) — with a clear "No Array variables — add one first"
+  block when none exist.
+- **C3 migration guide** gains a data-plugins table (Dictionary/Array/JSON addons → the
+  Variables groups; XML → intentionally unsupported, use JSON).
+- Covered by `tests/collection_aces_test.gd` (15 assertions). With enums (phase 1) and
+  collection variables (phase 2), **the first-class rich-variables feature is complete**.
+
 ### Collection variables (rich-variables phase 2 of 3 — 1.0 scope)
 - **Array and Dictionary variables are first-class**, including Godot 4 typed containers
   (`Array[int]`, `Dictionary[String, int]`, …) offered in the variable dialog's type list.

@@ -124,6 +124,17 @@ positionally. Ceiling note: Godot does not expose its real completion engine
 full-fidelity IntelliSense always exists one panel away because the generated script is
 plain GDScript.
 
+### First-class rich variables — complete (enums, collection variables, curated ACEs)
+
+The full arc shipped: **enums** (below), **collection variables** (Array/Dictionary incl.
+Godot 4 typed `Array[T]`/`Dictionary[K, V]`; literal defaults with live validation and a
+commit guardrail; canonical recursive escape-correct emission; verify-lift round-trips),
+and the **curated collection ACE set** — 27 Dictionary/Array/JSON ops as builtin Core
+descriptors under "Variables: …" picker groups, each compiling to one direct GDScript
+line, with type-aware variable dropdowns (`variable_reference:Array` offers only Array
+variables). XML is intentionally unsupported (user decision): JSON is the format.
+Guarded by `tests/collection_variables_test.gd` and `tests/collection_aces_test.gd`.
+
 ### First-class enums (rich-variables phase 1)
 
 Enums are sheet rows (`EnumRow`: name + members, optional explicit values) compiling to
@@ -302,16 +313,6 @@ conditions/actions) is planned.
   editor-embedded WebSocket variant later for live, undoable edits. Local-only by default;
   tool schemas versioned like the snippet format. Note: GDScript-backed sheets already give
   AI tools an unstructured path today (any `.gd` an AI edits opens as a sheet).
-- **First-class rich variables (Dictionary / Array / JSON) — REQUIRED FOR 1.0** (enums
-  shipped; see Implemented). Key insight: unlike C3 (where these are capability-providing
-  addons), GDScript already HAS all of it and ƒx fields are GDScript — so this is
-  vocabulary + UX, not capability. Remaining phase (enums and
-  collection variable UX shipped; see Implemented): the **curated builtin ACE set**
-  (~10 dictionary, ~12 array, ~5 JSON ops as Core descriptors — always present and
-  reverse-liftable — grouped "Variables: Dictionary/Array/JSON"; direct codegen like
-  `{var}[{key}] = {value}` keeps the parity contract; type-aware variable-reference
-  dropdowns; migration-guide rows). **XML is dropped entirely** (user decision): JSON is
-  the supported interchange format.
 - **More behavior packs**: tweens and beyond (platformer, 8-direction, timer, flash, and
   state machine ship today — see Implemented).
 - **C3 migration guide**: implemented — `docs/C3-MIGRATION-GUIDE.md` (concept map + System

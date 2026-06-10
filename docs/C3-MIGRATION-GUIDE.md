@@ -51,6 +51,18 @@ event flow, or write the expression directly — `ƒx` fields are plain GDScript
 The picker's search understands C3 phrasing ("every tick", "on created", "spawn"…) via
 synonym aliases, so type what you know and the Godot equivalent surfaces.
 
+## Data plugins (Dictionary / Array / JSON / XML)
+
+| Construct 3 | Godot EventSheets |
+| --- | --- |
+| **Dictionary** addon (Add key, Delete key, Has key, For each key…) | First-class: declare a `Dictionary` variable, then use the **Variables: Dictionary** picker group (Set Key, Delete Key, Has Key, Get/Keys/Values/Size). "For each key" = a pick filter over `your_dict.keys()`. |
+| **Array** addon (Push, Pop, Insert, Sort, Contains…) | First-class: declare an `Array` (or typed `Array[int]`) variable, then the **Variables: Array** group (Append, Insert At, Remove At, Erase, Sort, Shuffle, Contains, Value At, Pick Random). |
+| **JSON** plugin (Parse, Stringify, Load/Save) | The **Variables: JSON** group: To/From JSON Text, JSON Is Valid, Save/Load JSON File (`user://` paths survive exports). |
+| **XML** plugin | Intentionally unsupported — Godot has no XML writer/XPath. Use JSON. |
+
+Everything in these groups compiles to a single direct GDScript line (the tooltip shows
+it), and anything not covered is one ƒx expression away.
+
 ## Habits that transfer directly
 
 - Double-click empty space to add an event; right-click for context actions.
