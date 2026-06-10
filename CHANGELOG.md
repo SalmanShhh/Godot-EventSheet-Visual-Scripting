@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Signal-handler lifting (round-trip for signal triggers)
+- **Sheets that use signal triggers now lift back into events.** Previously any generated
+  file with a signal trigger failed the all-or-nothing lift entirely (handlers aren't
+  lifecycle functions). Now `_ready`'s leading connect lines are parsed into a handler →
+  {signal, source node} map: Core signals reverse to their trigger ids (`_on_body_entered`
+  → On Body Entered), custom ones become `signal:<name>` triggers with the handler's
+  argument signature as `trigger_args` and the connect's `get_node("…")` path as
+  `trigger_source_path`. Connect lines themselves are skipped (emission regenerates
+  them), so a connects-only `_ready` produces no phantom OnReady event.
+- Handlers with no connect entry (scene-wired) keep the whole file as verbatim blocks —
+  the lossless byte-identical contract is unchanged and still gates every lift. This also
+  upgrades paste-GDScript-as-events for pasted scripts containing signal handlers.
+  Covered by `tests/signal_lift_test.gd` (13 assertions).
+
 ### Post-1.0 polish: pick filters compile, fx autocomplete, external-sheet watcher
 - **Pick filters compile** — the last event-flow TODO is gone. C3's "for each" picking,
   the Godot way: each filter wraps the event body in a direct `for` loop over a node

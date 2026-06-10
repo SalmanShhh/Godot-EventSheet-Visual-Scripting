@@ -226,8 +226,12 @@ sheets (host class parsed from the prelude).
 ### ACE-level import lifting (reverse template matching)
 
 Opening a `.gd` as a sheet runs `EventSheetACELifter` after the lossless segmentation:
-the trailing run of lifecycle trigger functions (`_ready`/`_process`/`_physics_process`)
-lifts into EventRows by reverse-matching builtin codegen templates — `{param}`
+the trailing run of trigger functions lifts into EventRows — lifecycle handlers
+(`_ready`/`_process`/`_physics_process`) by header, and **signal handlers via `_ready`'s
+connect lines** (Core signals reverse to their trigger ids; custom ones become
+`signal:<name>` triggers carrying the handler args as `trigger_args` and the
+`get_node("…")` source as `trigger_source_path`; the connects regenerate on emission).
+Bodies lift by reverse-matching builtin codegen templates — `{param}`
 placeholders become named captures (params round-trip as plain strings because codegen
 substitutes with `str()`), `not (...)` reverses to negated conditions, ` and `-joined
 expressions split into condition lists, and any statement matching no template becomes an
@@ -271,10 +275,9 @@ conditions/actions) is planned.
   editor-embedded WebSocket variant later for live, undoable edits. Local-only by default;
   tool schemas versioned like the snippet format. Note: GDScript-backed sheets already give
   AI tools an unstructured path today (any `.gd` an AI edits opens as a sheet).
-- **GDScript-backed sheets, next tiers**: signal-handler lifting (reversing `_ready`
-  connections + `_on_*` handlers into signal-trigger events), function rows with
-  canonical-signature verify-lift, and comment preservation inside lifted regions.
-  (Tier 1, lifecycle ACE lifting, and the changed-on-disk reload prompt are implemented.)
+- **GDScript-backed sheets, next tiers**: function rows with canonical-signature
+  verify-lift, and comment preservation inside lifted regions. (Tier 1, lifecycle +
+  signal-handler ACE lifting, and the changed-on-disk reload prompt are implemented.)
 - **More behavior packs**: timers, tweens, state machines (platformer + 8-direction ship
   today — see Implemented).
 - **C3 migration guide**: a docs table mapping common C3 events/actions/expressions to

@@ -17,7 +17,8 @@
 extends RefCounted
 class_name EventSheetACELifter
 
-## Lifecycle handlers reversible without signal-connection analysis (v1 scope).
+## Lifecycle handlers reversible from the header alone (signal handlers reverse via the
+## `_ready` connection map — see _parse_connections/_lift_function).
 const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _ready() -> void:": "OnReady",
 	"func _process(delta: float) -> void:": "OnProcess",
@@ -38,6 +39,14 @@ static func attempt_lift(sheet: EventSheetResource, source: String) -> bool:
 			first_run_index = index
 			continue
 		break
+	# Pass 1: `_ready`'s leading connect lines reveal which functions are signal handlers
+	# (and for which signal/source node). Emission regenerates the connects.
+	var connections: Dictionary = {}
+	for index in range(first_run_index, sheet.events.size()):
+		var ready_row: RawCodeRow = sheet.events[index] as RawCodeRow
+		if ready_row != null and ready_row.code.begins_with("func _ready() -> void:"):
+			connections = _parse_connections(ready_row.code.split("\n"))
+	# Pass 2: lift every function in the run (all-or-nothing).
 	var lifted_events: Array = []
 	var saw_function: bool = false
 	for index in range(first_run_index, sheet.events.size()):
@@ -45,10 +54,10 @@ static func attempt_lift(sheet: EventSheetResource, source: String) -> bool:
 		if row.code.strip_edges().is_empty():
 			continue  # blank separator between functions; emission re-adds it
 		saw_function = true
-		var function_events: Array = _lift_function(row.code.split("\n"))
-		if function_events.is_empty():
+		var lift: Dictionary = _lift_function(row.code.split("\n"), connections)
+		if not bool(lift.get("ok", false)):
 			return false  # one unliftable function → whole file stays as blocks
-		lifted_events.append_array(function_events)
+		lifted_events.append_array(lift.get("events", []))
 	if not saw_function or lifted_events.is_empty():
 		return false
 
@@ -75,25 +84,82 @@ static func attempt_lift(sheet: EventSheetResource, source: String) -> bool:
 	sheet.events = backup
 	return false
 
-## One trigger function → EventRows ([] when the shape is not liftable).
-static func _lift_function(function_lines: PackedStringArray) -> Array:
-	if function_lines.is_empty() or not LIFECYCLE_TRIGGERS.has(function_lines[0]):
-		return []
-	var trigger_id: String = str(LIFECYCLE_TRIGGERS[function_lines[0]])
+## Core signal names ↔ trigger ids, mirroring TriggerResolver's signal-backed table.
+const CORE_SIGNAL_TRIGGERS: Dictionary = {
+	"body_entered": "OnBodyEntered",
+	"area_entered": "OnAreaEntered",
+	"timeout": "OnTimeout",
+	"animation_finished": "OnAnimationFinished"
+}
+
+## Parses `_ready`'s leading connect lines into {handler_name: {signal, source}}.
+## Shapes (exactly what _emit_grouped_trigger_functions emits):
+##   	body_entered.connect(_on_body_entered)
+##   	get_node("Platform").landed.connect(_on_platform_landed)
+static func _parse_connections(ready_lines: PackedStringArray) -> Dictionary:
+	var connections: Dictionary = {}
+	var regex: RegEx = RegEx.new()
+	if regex.compile("^\t(?:get_node\\(\"([^\"]+)\"\\)\\.)?([A-Za-z_][A-Za-z0-9_]*)\\.connect\\(([A-Za-z_][A-Za-z0-9_]*)\\)$") != OK:
+		return connections
+	for index in range(1, ready_lines.size()):
+		var regex_match: RegExMatch = regex.search(ready_lines[index])
+		if regex_match == null:
+			break  # connects are emitted first; the rest is OnReady body
+		connections[regex_match.get_string(3)] = {
+			"signal": regex_match.get_string(2),
+			"source": regex_match.get_string(1)
+		}
+	return connections
+
+## One trigger function → {ok: bool, events: Array}. Recognizes lifecycle headers and —
+## via the `_ready` connection map — signal handlers, which lift to signal-trigger events
+## (Core signals reverse to their trigger ids; others become "signal:<name>" triggers with
+## the handler's argument signature baked as trigger_args and the connect's source node as
+## trigger_source_path). `_ready`'s connect lines are skipped: emission regenerates them.
+static func _lift_function(function_lines: PackedStringArray, connections: Dictionary = {}) -> Dictionary:
+	if function_lines.is_empty():
+		return {"ok": false}
+	var trigger_id: String = ""
+	var trigger_provider: String = "Core"
+	var trigger_args: String = ""
+	var trigger_source: String = ""
+	var index: int = 1
+	if LIFECYCLE_TRIGGERS.has(function_lines[0]):
+		trigger_id = str(LIFECYCLE_TRIGGERS[function_lines[0]])
+		if function_lines[0].begins_with("func _ready()"):
+			# Skip the regenerated connect lines; what remains is the OnReady body.
+			while index < function_lines.size() and _is_connect_line(function_lines[index]):
+				index += 1
+			if index >= function_lines.size():
+				return {"ok": true, "events": []}  # connects-only _ready
+	else:
+		var header_regex: RegEx = RegEx.new()
+		header_regex.compile("^func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\) -> void:$")
+		var header_match: RegExMatch = header_regex.search(function_lines[0])
+		if header_match == null or not connections.has(header_match.get_string(1)):
+			return {"ok": false}
+		var connection: Dictionary = connections[header_match.get_string(1)]
+		var signal_name: String = str(connection.get("signal", ""))
+		trigger_source = str(connection.get("source", ""))
+		if CORE_SIGNAL_TRIGGERS.has(signal_name):
+			trigger_id = str(CORE_SIGNAL_TRIGGERS[signal_name])
+		else:
+			trigger_id = "signal:%s" % signal_name
+			trigger_provider = ""
+			trigger_args = header_match.get_string(2)
 	var reverse_entries: Array = _build_reverse_entries()
 	var events: Array = []
 	var current: EventRow = null
 	var pending_raw: PackedStringArray = PackedStringArray()
-	var index: int = 1
 	while index < function_lines.size():
 		var line: String = function_lines[index]
 		if line.strip_edges().is_empty():
-			return []  # blank inside a generated body never happens; bail to blocks
+			return {"ok": false}  # blank inside a generated body never happens; bail to blocks
 		if line.begins_with("\tif ") and line.ends_with(":"):
 			_flush_raw(current, pending_raw)
-			current = _make_event(trigger_id)
+			current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
 			if not _parse_conditions(line.substr(4, line.length() - 5), current, reverse_entries):
-				return []
+				return {"ok": false}
 			events.append(current)
 			index += 1
 			# Conditioned body: depth-2 lines belong to this event.
@@ -104,23 +170,29 @@ static func _lift_function(function_lines: PackedStringArray) -> Array:
 			current = null
 			continue
 		if not line.begins_with("\t"):
-			return []  # dedented content inside a function — not our shape
+			return {"ok": false}  # dedented content inside a function — not our shape
 		# Unconditioned statement at depth 1: attach to an open conditionless event.
 		if current == null:
-			current = _make_event(trigger_id)
+			current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
 			events.append(current)
 		_consume_action_line(current, line.substr(1), 0, pending_raw, reverse_entries)
 		index += 1
 	_flush_raw(current, pending_raw)
 	for event: Variant in events:
 		if (event as EventRow).actions.is_empty() and (event as EventRow).conditions.is_empty():
-			return []
-	return events
+			return {"ok": false}
+	return {"ok": true, "events": events}
 
-static func _make_event(trigger_id: String) -> EventRow:
+## True for a `_ready` body line that is a regenerated signal connection.
+static func _is_connect_line(line: String) -> bool:
+	return line.begins_with("\t") and line.ends_with(")") and line.contains(".connect(")
+
+static func _make_event(trigger_id: String, trigger_provider: String = "Core", trigger_args: String = "", trigger_source: String = "") -> EventRow:
 	var event: EventRow = EventRow.new()
-	event.trigger_provider_id = "Core"
+	event.trigger_provider_id = trigger_provider
 	event.trigger_id = trigger_id
+	event.trigger_args = trigger_args
+	event.trigger_source_path = trigger_source
 	return event
 
 ## Splits a joined condition expression on " and " and reverse-matches every term
