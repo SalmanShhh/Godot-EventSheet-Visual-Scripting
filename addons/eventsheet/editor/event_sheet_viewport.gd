@@ -517,6 +517,33 @@ func select_resource(resource: Resource) -> bool:
             return true
     return false
 
+const SLOW_CLICK_MIN_MS := 450   # beyond the OS double-click window
+const SLOW_CLICK_MAX_MS := 1600
+var _slow_click: Dictionary = {"row": -1, "span": -1, "msec": 0}
+
+## Explorer-style slow double-click: a second single click on the SAME editable span,
+## after the double-click window but within the slow window, begins inline editing
+## (multiline comments route to their dialog instead). now_msec is injectable for tests.
+func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1) -> bool:
+    var now: int = now_msec if now_msec >= 0 else Time.get_ticks_msec()
+    var was_same: bool = int(_slow_click.get("row", -1)) == row_index and int(_slow_click.get("span", -1)) == span_index
+    var elapsed: int = now - int(_slow_click.get("msec", 0))
+    _slow_click = {"row": row_index, "span": span_index, "msec": now}
+    if not was_same or elapsed < SLOW_CLICK_MIN_MS or elapsed > SLOW_CLICK_MAX_MS:
+        return false
+    var row_data: EventRowData = _row_at(row_index)
+    if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
+        return false
+    var metadata: Dictionary = row_data.spans[span_index].metadata if row_data.spans[span_index].metadata is Dictionary else {}
+    if not bool(metadata.get("editable", false)):
+        return false
+    if row_data.source_resource is CommentRow and (row_data.source_resource as CommentRow).text.contains("
+"):
+        comment_edit_requested.emit(row_data.source_resource)
+        return true
+    _begin_edit(row_index, span_index)
+    return true
+
 ## Toggles a session bookmark on the selected row (Ctrl+M; F4 / Shift+F4 navigate).
 func toggle_bookmark_selected() -> void:
     var row_data: EventRowData = _row_at(_selected_row_index)
@@ -781,6 +808,9 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
                 accept_event()
                 return
             _begin_edit(row_index, span_index)
+            accept_event()
+            return
+        if _maybe_begin_slow_edit(row_index, span_index):
             accept_event()
             return
         _drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
@@ -1372,6 +1402,21 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
             }
         )
     ]
+    # C3-style group description: a muted second line on the header, inline-editable.
+    if not group.description.strip_edges().is_empty():
+        row_data.line_count = 2
+        row_data.spans.append(
+            _make_span(
+                group.description,
+                SemanticSpan.SpanType.COMMENT,
+                {
+                    "editable": true,
+                    "edit_kind": "group_description",
+                    "line_index": 1,
+                    "text_color": event_style.comment_text_color
+                }
+            )
+        )
     for child in _group_children(group):
         var child_row: EventRowData = _build_row_from_resource(child, indent + 1)
         if child_row != null:

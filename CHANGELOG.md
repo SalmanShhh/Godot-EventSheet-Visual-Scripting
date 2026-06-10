@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### C3-familiarity batch: group descriptions, slow-click editing, rename refactoring, commit guardrails
+- **Group events now actually compile** — the batch's tests exposed that events inside
+  groups were silently dropped with a TODO comment (a long-standing compiler hole).
+  Groups flatten inline at emission, with C3 semantics: **disabling a group drops all of
+  its children from the compiled output**; group comments compile as comment lines.
+- **Group descriptions** (C3-style): a muted, inline-editable second line on the group
+  header (`EventGroup.description` — also via the row menu "Edit Group Description…");
+  travels in snippets. Group titles were already double-click renameable.
+- **Slow double-click editing** (Explorer-style): click an already-selected editable
+  cell again after the double-click window (450–1600 ms) to start editing — comments,
+  group names/descriptions, variable rows; multiline comments route to their dialog.
+- **Variable rename refactoring**: renaming a variable rewrites every reference across
+  the sheet — GDScript blocks (class-level, in-flow, function bodies), ƒx/string params,
+  pick-filter expressions, and **baked codegen templates** (placeholders like `{amount}`
+  are never touched). Whole-word matching; the status bar reports how many references
+  updated. A rename can no longer silently break compiled code.
+- **Commit-time guardrails** ("you can't enter broken stuff"): variable and enum names
+  auto-correct where fixable (`my var` → `my_var`, digit-led names prefixed) and are
+  **blocked with a clear message** when not (GDScript keywords); broken GDScript blocks
+  never commit (the dialog reopens with your text intact); the params dialog refuses to
+  apply while any ƒx expression fails its compile-check.
+- Covered by `tests/ux_guardrails_test.gd` (29 assertions).
+
 ### First-class enums (rich-variables phase 1 of 3 — 1.0 scope)
 - **Enums are sheet rows**: add via the row menu ("Add Enum Below") or double-click to
   edit (name + members, optional explicit values like `HURT = 4`). They compile to

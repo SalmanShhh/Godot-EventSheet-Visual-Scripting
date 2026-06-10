@@ -322,8 +322,29 @@ func _extract_value(field: Control) -> Variant:
 ", " ").strip_edges()
 	return ""
 
+## First expression field whose text fails the compile-check (null = all valid). The
+## commit guardrail: invalid GDScript never reaches the sheet.
+func _first_invalid_expression() -> Control:
+	if not _lint_context_provider.is_valid():
+		return null
+	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
+	for key: Variant in _fields.keys():
+		var field: Control = _fields[key]
+		if field is CodeEdit and not bool(EventSheetGDScriptLint.lint_expression(str(field.get("text")), sheet).get("ok", true)):
+			return field
+	return null
+
 func _on_confirmed() -> void:
 	if _definition == null or _apply_blocked:
+		return
+	# Guardrail (C3-style): block the commit while any expression doesn't compile.
+	var invalid_field: Control = _first_invalid_expression()
+	if invalid_field != null:
+		if _hint != null:
+			_hint.text = "✗ An expression doesn't compile — fix it before applying."
+		invalid_field.grab_focus()
+		if _dialog != null and is_instance_valid(_dialog) and _dialog.is_inside_tree():
+			_dialog.call_deferred("popup_centered", Vector2i(520, 380))
 		return
 	var values: Dictionary = {}
 	for key: Variant in _fields.keys():

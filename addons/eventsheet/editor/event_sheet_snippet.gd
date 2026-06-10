@@ -90,7 +90,7 @@ static func _row_to_dict(resource: Variant) -> Dictionary:
 		return event_data
 	if resource is EventGroup:
 		var group: EventGroup = resource as EventGroup
-		var group_data: Dictionary = {"kind": "group", "name": group.group_name, "enabled": group.enabled, "children": []}
+		var group_data: Dictionary = {"kind": "group", "name": group.group_name, "description": group.description, "enabled": group.enabled, "children": []}
 		var children: Array = group.events if not group.events.is_empty() else group.rows
 		for child in children:
 			var child_data: Dictionary = _row_to_dict(child)
@@ -180,6 +180,7 @@ static func _dict_to_row(row_data: Dictionary) -> Resource:
 			var group: EventGroup = EventGroup.new()
 			group.group_name = str(row_data.get("name", "Group"))
 			group.name = group.group_name
+			group.description = str(row_data.get("description", ""))
 			group.enabled = bool(row_data.get("enabled", true))
 			for child_data in row_data.get("children", []):
 				if child_data is Dictionary:

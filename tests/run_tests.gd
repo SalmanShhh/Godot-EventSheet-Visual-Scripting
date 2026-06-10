@@ -66,6 +66,7 @@ const FunctionLiftTestScript := preload("res://tests/function_lift_test.gd")
 const BookmarksIncludesTestScript := preload("res://tests/bookmarks_includes_test.gd")
 const InspectorPolishTestScript := preload("res://tests/inspector_polish_test.gd")
 const EnumRowTestScript := preload("res://tests/enum_row_test.gd")
+const UxGuardrailsTestScript := preload("res://tests/ux_guardrails_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
@@ -127,6 +128,7 @@ func _init() -> void:
 	passed = BookmarksIncludesTestScript.run() and passed
 	passed = InspectorPolishTestScript.run() and passed
 	passed = EnumRowTestScript.run() and passed
+	passed = UxGuardrailsTestScript.run() and passed
 	passed = EventSheetEditorTestScript.run() and passed
 	passed = EventSheetStyleTestScript.run() and passed
 	passed = PluginWorkspaceTestScript.run() and passed

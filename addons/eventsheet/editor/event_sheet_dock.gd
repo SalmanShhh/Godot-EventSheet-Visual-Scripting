@@ -35,6 +35,7 @@ const ROW_MENU_ATTACH_COMMENT := 17
 const ACTION_MENU_DETACH_COMMENT := 6
 const ROW_MENU_ADD_PICK_FILTER := 18
 const ROW_MENU_ADD_ENUM := 19
+const ROW_MENU_EDIT_GROUP_DESC := 20
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -743,6 +744,7 @@ func _build_context_menus() -> void:
     _row_context_menu.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
     _row_context_menu.add_item("Add Pick Filter (For Each)…", ROW_MENU_ADD_PICK_FILTER)
     _row_context_menu.add_item("Add Enum Below", ROW_MENU_ADD_ENUM)
+    _row_context_menu.add_item("Edit Group Description…", ROW_MENU_EDIT_GROUP_DESC)
     _row_context_menu.add_separator()
     _row_context_menu.add_item("Edit Comment…", ROW_MENU_EDIT_COMMENT)
     _row_context_menu.add_item("Attach Comment To Event Above", ROW_MENU_ATTACH_COMMENT)
@@ -2168,6 +2170,13 @@ func _on_raw_code_dialog_confirmed() -> void:
     if _raw_code_target == null:
         return
     var target: RawCodeRow = _raw_code_target
+    # Guardrail: broken GDScript never commits — the dialog reopens with the text intact.
+    var commit_lint: Dictionary = EventSheetGDScriptLint.lint(_raw_code_edit.text, _raw_code_in_flow, _current_sheet)
+    if not bool(commit_lint.get("ok", true)):
+        _set_status("GDScript block not saved: fix the error first (or Cancel to discard).", true)
+        if is_inside_tree():
+            _raw_code_dialog.call_deferred("popup_centered", Vector2i(680, 420))
+        return
     _raw_code_target = null
     var new_code: String = _raw_code_edit.text
     var changed: bool = _perform_undoable_sheet_edit("Edit GDScript Block", func() -> bool:
@@ -2311,13 +2320,24 @@ func _on_enum_dialog_confirmed() -> void:
     if _enum_target == null:
         return
     var target: EnumRow = _enum_target
-    var new_name: String = _enum_name_edit.text.strip_edges()
+    var new_name: String = EventSheetIdentifierRules.sanitize(_enum_name_edit.text)
+    if not EventSheetIdentifierRules.is_valid(new_name):
+        _set_status("\"%s\" can't be an enum name (letters/digits/underscores, not a GDScript keyword)." % _enum_name_edit.text, true)
+        return
     var new_members: PackedStringArray = PackedStringArray()
     for line: String in _enum_members_edit.text.split("
 "):
-        if not line.strip_edges().is_empty():
-            new_members.append(line.strip_edges())
-    if new_name.is_empty() or new_members.is_empty():
+        if line.strip_edges().is_empty():
+            continue
+        var member_name: String = EventSheetIdentifierRules.sanitize(line.get_slice("=", 0))
+        if not EventSheetIdentifierRules.is_valid(member_name):
+            _set_status("\"%s\" can't be an enum member name." % line.strip_edges(), true)
+            return
+        var member_text: String = member_name
+        if line.contains("="):
+            member_text += " = " + line.get_slice("=", 1).strip_edges()
+        new_members.append(member_text)
+    if new_members.is_empty():
         _set_status("Enums need a name and at least one member.", true)
         return
     var changed: bool = _perform_undoable_sheet_edit("Edit Enum", func() -> bool:
@@ -2328,6 +2348,90 @@ func _on_enum_dialog_confirmed() -> void:
     if changed:
         _refresh_after_edit()
         _mark_dirty("Enum updated (compiles before variables; use it as a variable type).")
+
+# ── Variable rename refactor ──────────────────────────────────────────────────────────
+
+## Whole-word renames a variable across everything that embeds GDScript text — ACE params,
+## GDScript blocks (class-level, in-flow, function bodies), and pick-filter expressions —
+## so a rename never silently breaks compiled code (C3-style refactor safety).
+## Returns the number of replacements. Call inside the same undoable edit as the rename.
+func _rename_variable_references(old_name: String, new_name: String) -> int:
+    if old_name.is_empty() or old_name == new_name or _current_sheet == null:
+        return 0
+    var regex: RegEx = RegEx.new()
+    if regex.compile("\\b%s\\b" % old_name) != OK:  # names are sanitized identifiers — regex-safe
+        return 0
+    var counter: Dictionary = {"count": 0}
+    _rename_in_rows(_current_sheet.events, regex, new_name, counter)
+    for function_resource: Variant in _current_sheet.functions:
+        if function_resource is EventFunction:
+            var function_rows: Array = (function_resource as EventFunction).events if not (function_resource as EventFunction).events.is_empty() else (function_resource as EventFunction).rows
+            _rename_in_rows(function_rows, regex, new_name, counter)
+    return int(counter.get("count", 0))
+
+func _rename_in_rows(rows: Array, regex: RegEx, new_name: String, counter: Dictionary) -> void:
+    for row: Variant in rows:
+        if row is RawCodeRow:
+            (row as RawCodeRow).code = _regex_rename(regex, (row as RawCodeRow).code, new_name, counter)
+        elif row is EventGroup:
+            var group: EventGroup = row as EventGroup
+            _rename_in_rows(group.events if not group.events.is_empty() else group.rows, regex, new_name, counter)
+        elif row is EventRow:
+            var event_row: EventRow = row as EventRow
+            if event_row.trigger != null:
+                _rename_in_params(event_row.trigger, regex, new_name, counter)
+            for condition: Variant in event_row.conditions:
+                if condition is ACECondition:
+                    _rename_in_params(condition, regex, new_name, counter)
+            for action: Variant in event_row.actions:
+                if action is ACEAction:
+                    _rename_in_params(action, regex, new_name, counter)
+                elif action is RawCodeRow:
+                    (action as RawCodeRow).code = _regex_rename(regex, (action as RawCodeRow).code, new_name, counter)
+            for pick: Variant in event_row.pick_filters:
+                if pick is PickFilter:
+                    (pick as PickFilter).collection_value = _regex_rename(regex, (pick as PickFilter).collection_value, new_name, counter)
+                    (pick as PickFilter).predicate_expression = _regex_rename(regex, (pick as PickFilter).predicate_expression, new_name, counter)
+            _rename_in_rows(event_row.sub_events, regex, new_name, counter)
+
+## String params hold GDScript expressions / variable references — rename inside them.
+## Baked codegen templates can embed the variable too, but their {placeholder} tokens must
+## never be touched (they're param names, not variables).
+func _rename_in_params(ace: Resource, regex: RegEx, new_name: String, counter: Dictionary) -> void:
+    var params: Dictionary = ace.get("params")
+    for key: Variant in params.keys():
+        if params[key] is String:
+            params[key] = _regex_rename(regex, params[key], new_name, counter)
+    var template: String = str(ace.get("codegen_template"))
+    if not template.is_empty():
+        ace.set("codegen_template", _rename_in_template(template, regex, new_name, counter))
+
+## Renames only OUTSIDE {placeholder} segments of a codegen template.
+func _rename_in_template(template: String, regex: RegEx, new_name: String, counter: Dictionary) -> String:
+    var output: String = ""
+    var cursor: int = 0
+    while cursor < template.length():
+        var open: int = template.find("{", cursor)
+        if open == -1:
+            output += _regex_rename(regex, template.substr(cursor), new_name, counter)
+            break
+        var close: int = template.find("}", open)
+        if close == -1:
+            output += _regex_rename(regex, template.substr(cursor), new_name, counter)
+            break
+        output += _regex_rename(regex, template.substr(cursor, open - cursor), new_name, counter)
+        output += template.substr(open, close - open + 1)
+        cursor = close + 1
+    return output
+
+func _regex_rename(regex: RegEx, text: String, new_name: String, counter: Dictionary) -> String:
+    if text.is_empty():
+        return text
+    var hits: int = regex.search_all(text).size()
+    if hits == 0:
+        return text
+    counter["count"] = int(counter.get("count", 0)) + hits
+    return regex.sub(text, new_name, true)
 
 # ── Quick-add bar (C3 "type to insert") ──────────────────────────────────────
 var _quick_add_edit: LineEdit = null
@@ -3017,6 +3121,19 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
             var new_enum: EnumRow = EnumRow.new()
             _insert_context_row_below(new_enum, "Added enum.")
             _open_enum_dialog(new_enum)
+        ROW_MENU_EDIT_GROUP_DESC:
+            if _context_row.source_resource is EventGroup:
+                var described_group: EventGroup = _context_row.source_resource as EventGroup
+                if described_group.description.strip_edges().is_empty():
+                    var seeded: bool = _perform_undoable_sheet_edit("Add Group Description", func() -> bool:
+                        described_group.description = "Description"
+                        return true
+                    )
+                    if seeded:
+                        _refresh_after_edit()
+                _set_status("Double-click the description line (or slow-double-click) to edit it.")
+            else:
+                _set_status("Select a group to edit its description.", true)
 
 func _on_variable_context_menu_id_pressed(id: int) -> void:
     if _context_variable.is_empty():
@@ -3531,6 +3648,10 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
                 if row_data.source_resource is CommentRow:
                     (row_data.source_resource as CommentRow).text = new_value
                     return true
+            "group_description":
+                if row_data.source_resource is EventGroup:
+                    (row_data.source_resource as EventGroup).description = new_value
+                    return true
             "event_comment":
                 if row_data.source_resource is EventRow:
                     (row_data.source_resource as EventRow).comment = new_value
@@ -3551,9 +3672,14 @@ func _on_variable_dialog_confirmed(
     is_constant: bool = false,
     exported: bool = true
 ) -> void:
-    if var_name.is_empty():
-        _set_status("Variable name is required.", true)
+    # Guardrail (C3-style): auto-correct what's fixable, block what isn't — BEFORE commit.
+    var sanitized_name: String = EventSheetIdentifierRules.sanitize(var_name)
+    if sanitized_name.is_empty() or not EventSheetIdentifierRules.is_valid(sanitized_name):
+        _set_status("\"%s\" can't be a variable name (letters/digits/underscores, not a GDScript keyword)." % var_name, true)
         return
+    if sanitized_name != var_name:
+        _set_status("Variable name auto-corrected to \"%s\"." % sanitized_name)
+    var_name = sanitized_name
     var selected: Resource = context.get("selected_resource", _viewport.get_selected_context().get("source_resource", null))
     var original_name: String = str(context.get("original_name", ""))
     var editing: bool = bool(context.get("editing", false))
@@ -3566,7 +3692,10 @@ func _on_variable_dialog_confirmed(
             var editing_resource: Variant = context.get("variable_resource", null)
             if editing and editing_resource is LocalVariable:
                 var existing: LocalVariable = editing_resource as LocalVariable
+                var previous_tree_name: String = existing.name
                 existing.name = var_name
+                if previous_tree_name != var_name:
+                    message["renamed"] = _rename_variable_references(previous_tree_name, var_name)
                 existing.type_name = type_name
                 existing.default_value = default_value
                 existing.is_constant = resolved_constant
@@ -3592,6 +3721,7 @@ func _on_variable_dialog_confirmed(
         if scope == "global":
             if editing and not original_name.is_empty() and original_name != var_name:
                 _current_sheet.variables.erase(original_name)
+                message["renamed"] = _rename_variable_references(original_name, var_name)
             _current_sheet.variables[var_name] = {
                 "type": type_name,
                 "default": default_value,
@@ -3630,7 +3760,11 @@ func _on_variable_dialog_confirmed(
         _set_status("Add or select an event row before editing local variables.", true)
         return
     if added:
-        _mark_dirty(str(message.get("text", "Saved variable.")))
+        var status_text: String = str(message.get("text", "Saved variable."))
+        var renamed_references: int = int(message.get("renamed", 0))
+        if renamed_references > 0:
+            status_text += " %d reference(s) updated across the sheet." % renamed_references
+        _mark_dirty(status_text)
         if scope == "local" and not (selected is EventRow):
             _select_first_event_row()
 

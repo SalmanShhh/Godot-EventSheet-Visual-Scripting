@@ -132,6 +132,11 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 				for comment_line: String in (row as CommentRow).text.split("\n"):
 					deferred_rows.append("# %s" % comment_line)
 			continue
+		if row is EventGroup:
+			# Groups are organizational: their events compile inline (the helper flattens,
+			# honoring C3 semantics — a DISABLED group drops all of its children).
+			top_level_events.append(row)
+			continue
 		if row.has_method("get_row_kind") and str(row.call("get_row_kind")) != "event":
 			deferred_rows.append("# TODO: row type not yet implemented in Phase 1")
 			continue
@@ -148,7 +153,10 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		"self_class": "Node" if sheet.behavior_mode else (sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node"),
 		"declared_signals": _scan_declared_signals(raw_blocks)
 	}
-	_emit_grouped_trigger_functions(top_level_events, lines, source_map, result, connect_context)
+	var group_comment_lines: PackedStringArray = PackedStringArray()
+	_emit_grouped_trigger_functions(top_level_events, lines, source_map, result, connect_context, group_comment_lines)
+	for group_comment_line: String in group_comment_lines:
+		deferred_rows.append("# %s" % group_comment_line)
 
 	# Emit sheet functions as callable GDScript methods (after the trigger handlers).
 	for function_resource: Variant in all_functions:
@@ -225,7 +233,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		"self_class": sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node",
 		"declared_signals": _scan_declared_signals(external_raw_rows)
 	}
-	_emit_grouped_trigger_functions(added_event_rows, lines, source_map, result, external_connect_context)
+	_emit_grouped_trigger_functions(added_event_rows, lines, source_map, result, external_connect_context, deferred_comment_lines_external)
 	for function_resource: Variant in sheet.functions:
 		if not (function_resource is EventFunction):
 			continue
@@ -333,6 +341,21 @@ static func _merge_includes(sheet: EventSheetResource, all_events: Array, all_fu
 		all_events.append_array(included.events)
 		_merge_includes(included, all_events, all_functions, merged_variables, visited, warnings)
 
+## Flattens trigger-bearing rows for emission: EventRows kept, ENABLED groups recursed
+## (a disabled group drops all of its children — C3 group-disable semantics), and group
+## comments collected as deferred comment lines.
+static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray) -> void:
+	for row: Variant in rows:
+		if row is EventRow:
+			into_events.append(row)
+		elif row is EventGroup:
+			var group: EventGroup = row as EventGroup
+			if group.enabled:
+				_flatten_trigger_rows(group.events if not group.events.is_empty() else group.rows, into_events, deferred_comment_lines)
+		elif row is CommentRow and (row as CommentRow).enabled and not (row as CommentRow).text.strip_edges().is_empty():
+			deferred_comment_lines.append_array((row as CommentRow).text.split("
+"))
+
 ## Signal names declared in class-level GDScript blocks, so self-connections to
 ## block-declared signals validate at compile time.
 static func _scan_declared_signals(raw_blocks: Array) -> Array:
@@ -352,10 +375,12 @@ static func _scan_declared_signals(raw_blocks: Array) -> Array:
 ## connect_context: {self_class: String, declared_signals: Array} — self-connections are
 ## validated against these at compile time (emitting a connect to a missing signal would
 ## make the whole generated script fail to parse).
-static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStringArray, source_map: Array, result: Dictionary, connect_context: Dictionary = {}) -> void:
+static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStringArray, source_map: Array, result: Dictionary, connect_context: Dictionary = {}, deferred_comment_lines: PackedStringArray = PackedStringArray()) -> void:
+	var flattened: Array = []
+	_flatten_trigger_rows(event_rows, flattened, deferred_comment_lines)
 	var grouped: Dictionary = {}
 	var trigger_order: PackedStringArray = PackedStringArray()
-	for entry: Variant in event_rows:
+	for entry: Variant in flattened:
 		if not (entry is EventRow):
 			continue
 		var event_row: EventRow = entry as EventRow
