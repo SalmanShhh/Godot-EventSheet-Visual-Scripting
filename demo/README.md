@@ -55,6 +55,27 @@ The **behavior packs** live in `res://eventsheet_addons/` — each one is an edi
 sheet *plus* its compiled script, doubling as a zero-config addon example (tag yours
 with `@ace_tags(...)` or the Sheet Type dialog's Tags field).
 
+## Addon tags — example use cases
+
+Tag any addon with a class-level `@ace_tags(movement, retro, jam)` annotation (or the
+**Tags** field in the Sheet Type dialog for sheet-built addons). Tags ride on every ACE
+the provider publishes and are **searchable in the picker** and **filterable over MCP**.
+What they're for:
+
+- **Library organization** — type `retro` or `movement` in the picker and only matching
+  vocabularies surface; great once a project accumulates dozens of addons.
+- **Jam kits** — tag a curated set `jam-ready` and find your trusted toolkit instantly
+  at the next game jam.
+- **Team conventions** — `approved`, `experimental`, `deprecated`: reviewers see at a
+  glance which addons are production-blessed; search `approved` to stay on the path.
+- **Compatibility labels** — `godot-4.5`, `mobile-safe`, `web-ok`: encode what an addon
+  was validated against.
+- **AI-assisted building** — MCP's `list_aces` matches tags, so an AI assistant can be
+  told "only use addons tagged `approved`" and filter the vocabulary accordingly.
+- **Sharing & marketplaces** — when packs travel (Export Addon… + zips), tags act as
+  categories for whoever receives them — genre (`platformer`, `puzzle`), domain
+  (`ui`, `audio`), or audience (`beginner-friendly`).
+
 ## Milestones at a glance
 
 | | |
