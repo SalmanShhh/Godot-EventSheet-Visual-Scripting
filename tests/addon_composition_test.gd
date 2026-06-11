@@ -130,6 +130,44 @@ static func run() -> bool:
 		FileAccess.file_exists("user://eventsheets_pack_out/eventsheets_base_addon.tres"), true) and all_passed
 	editor.free()
 
+	# Lane B: uses_addons emit owned helper instances; bad names warn-and-skip.
+	var lane_b: EventSheetResource = EventSheetResource.new()
+	lane_b.uses_addons = ["EventSheetIdentifierRules", "Not A Class!"]
+	var lane_b_result: Dictionary = SheetCompiler.compile(lane_b, "user://eventsheets_laneb.gd")
+	var lane_b_output: String = str(lane_b_result.get("output", ""))
+	all_passed = _check("uses_addons emits an owned instance",
+		lane_b_output.contains("var __uses_event_sheet_identifier_rules := EventSheetIdentifierRules.new()"), true) and all_passed
+	all_passed = _check("invalid uses entries warn and skip",
+		str(lane_b_result.get("warnings")).contains("Not A Class!") and not lane_b_output.contains("Not A Class!"), true) and all_passed
+	var lane_b_script: GDScript = GDScript.new()
+	lane_b_script.source_code = lane_b_output
+	all_passed = _check("uses output parses", lane_b_script.reload(true) == OK, true) and all_passed
+
+	# Depth rail: chains past max_include_depth warn (rail tightened to 1 here so a
+	# two-level chain crosses it; the default rail is 2).
+	var chain_base: EventSheetResource = EventSheetResource.new()
+	ResourceSaver.save(chain_base, "user://eventsheets_chain_base.tres")
+	var chain_mid: EventSheetResource = EventSheetResource.new()
+	chain_mid.includes = ["user://eventsheets_chain_base.tres"]
+	ResourceSaver.save(chain_mid, "user://eventsheets_chain_mid.tres")
+	var chain_top: EventSheetResource = EventSheetResource.new()
+	chain_top.includes = ["user://eventsheets_chain_mid.tres"]
+	_set_policy("max_include_depth", 1)
+	var chain_result: Dictionary = SheetCompiler.compile(chain_top, "user://eventsheets_chain.gd")
+	_clear_policies()
+	all_passed = _check("include chains past the depth rail warn",
+		bool(chain_result.get("success", false)) and str(chain_result.get("warnings")).contains("Deep chains"), true) and all_passed
+
+	# Sheet Type applies Uses too.
+	var uses_editor: EventSheetEditor = EventSheetEditor.new()
+	var uses_sheet: EventSheetResource = EventSheetResource.new()
+	uses_editor.setup(uses_sheet)
+	uses_editor.set_undo_redo_manager(NoopUndoManager.new())
+	uses_editor._apply_sheet_type_settings(2, "UsesThing", "", "Node2D", false, PackedStringArray(), PackedStringArray(), PackedStringArray(["ScreenShake"]))
+	all_passed = _check("Sheet Type applies uses classes",
+		uses_sheet.uses_addons.size() == 1 and uses_sheet.uses_addons[0] == "ScreenShake", true) and all_passed
+	uses_editor.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

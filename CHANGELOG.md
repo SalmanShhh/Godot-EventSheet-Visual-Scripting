@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Addon composition Lane B (v1) + maintainability & sweep 5
+- **Uses (addon classes)** in the Sheet Type dialog: declared classes emit owned helper
+  instances (`var __uses_screen_shake := ScreenShake.new()`) so ƒx/blocks call shared
+  provider addons without duplication — has-a composition, still plain GDScript.
+  Invalid class names warn and skip. (Node-behavior auto-attach is the planned B.2.)
+- **Maintainability**: `sheet_compiler.gd` now opens with a full pipeline overview
+  (the 7 emission phases, both compile paths, and the four standing contracts) — the
+  file is the plugin's heart and now reads like it.
+- **Sweep 5**: unsaved sheets no longer produce a blank name in the composition-off
+  policy error; match-row branches joined the node-reference audit; the variable
+  dialog's attribute prefill (incl. the range field) is now regression-covered.
+- `tests/addon_composition_test.gd` grew to 17 assertions; inspector test to 11.
+
 ### Addon composition Lane A — meta-packs / jam kits, with project policy
 - **Addons can now include other addons** (compile-time bake): the Sheet Type dialog
   gains an *Includes (addon sheets)* field, and the merged result compiles to one

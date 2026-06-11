@@ -1,5 +1,20 @@
 # EventForge — Event sheet compiler
 # Compiles EventSheetResource assets into deterministic GDScript output.
+#
+# THE PIPELINE (main path, in emission order — each phase is a "## …" section below):
+#   1. includes merge (C3-style; policy-gated — see _merge_includes/_addon_policy)
+#   2. header comments, @tool, @ace_tags, @icon, class_name, extends
+#   3. behavior host accessor (behavior_mode)
+#   4. enums → signals → variables (with Inspector attributes) → tree variables
+#      → group locals → stateful-condition members → Lane B uses-instances
+#   5. class-level raw GDScript blocks
+#   6. trigger sections (events grouped per trigger; _emit_event_body does rows,
+#      pick filters/loops, stateful preludes, breakpoints, actions, sub-events)
+#   7. sheet functions, deferred comments, provider/stateful member insertion
+# The EXTERNAL path (_compile_external) is order-preserving instead: rows re-emit in
+# file order so untouched GDScript-backed sheets reproduce byte-identically.
+# CONTRACTS: parity (plain GDScript, no runtime indirection), lossless round-trips,
+# bake-at-apply (templates), policy-gates-never-bytes (composition).
 @tool
 extends RefCounted
 class_name SheetCompiler
@@ -147,6 +162,19 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			lines.append("")
 		for member_line: String in stateful_members:
 			lines.append(member_line)
+
+	# Lane B composition (has-a): owned helper instances for the declared addon classes.
+	if not sheet.uses_addons.is_empty():
+		if variable_lines.is_empty() and tree_variables.is_empty():
+			lines.append("")
+		for uses_class: String in sheet.uses_addons:
+			var trimmed_class: String = uses_class.strip_edges()
+			if trimmed_class.is_empty():
+				continue
+			if not EventSheetIdentifierRules.is_valid(trimmed_class):
+				(result["warnings"] as Array).append("Uses entry \"%s\" isn't a valid class name — skipped." % trimmed_class)
+				continue
+			lines.append("var __uses_%s := %s.new()" % [trimmed_class.to_snake_case(), trimmed_class])
 
 	# Tree-placed GDScript blocks (top level / inside groups) are emitted verbatim at class
 	# level — helper functions, @onready vars, signal declarations, etc.
@@ -415,7 +443,8 @@ static func _merge_includes(sheet: EventSheetResource, all_events: Array, all_fu
 		if include_path.is_empty():
 			continue
 		if composition_mode == "off" and sheet.behavior_mode:
-			errors.append("Policy: addon composition is off (eventsheets/addons/composition_mode) — %s can't include %s." % [sheet.resource_path.get_file(), include_path.get_file()])
+			var sheet_label: String = sheet.resource_path.get_file() if not sheet.resource_path.is_empty() else (sheet.custom_class_name if not sheet.custom_class_name.is_empty() else "this sheet")
+			errors.append("Policy: addon composition is off (eventsheets/addons/composition_mode) — %s can't include %s." % [sheet_label, include_path.get_file()])
 			continue
 		if depth > max_depth:
 			var depth_message: String = "Include chain deeper than policy max (%d): %s. Deep chains are where addon ecosystems rot — consider flattening." % [max_depth, include_path.get_file()]

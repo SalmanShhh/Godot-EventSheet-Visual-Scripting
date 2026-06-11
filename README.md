@@ -161,7 +161,8 @@ Conditions                        | Actions
 | Inspector attributes Tiers 2–3 (Show If / On Changed / tool buttons; custom drawers) | 🗺 planned ([spec](docs/INSPECTOR-ATTRIBUTES-SPEC.md)) |
 | **Addon composition** — meta-packs / jam kits (addon includes addon, compile-time bake) | ✅ shipped |
 | **Project policy** for composition (approved-tag sourcing, depth rails, collision gates) | ✅ shipped |
-| Composition Lane B (has-a runtime deps, auto-attach) + MCP policy awareness | 🗺 planned ([spec](docs/ADDON-COMPOSITION-SPEC.md)) |
+| Composition Lane B v1 (has-a uses-instances) | ✅ shipped |
+| Lane B.2 (behavior auto-attach) + MCP policy awareness | 🗺 planned ([spec](docs/ADDON-COMPOSITION-SPEC.md)) |
 | Live-values debug overlay (EngineDebugger channel), community feedback rounds | 🗺 planned |
 
 ## Project layout

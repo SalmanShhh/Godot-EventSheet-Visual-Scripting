@@ -35,6 +35,11 @@ class_name EventSheetResource
 ## script. The root sheet wins name collisions (warnings emitted); cycles are detected and
 ## skipped. Edited via the Inspector; ignored for GDScript-backed sheets.
 @export var includes: Array[String] = []
+## Lane B composition (has-a): addon CLASS NAMES this sheet uses as owned helper
+## instances — each emits `var __uses_<snake> := <Class>.new()` so ƒx/blocks can call
+## them (suits RefCounted provider/helper addons; Node-behavior auto-attach is the
+## planned Lane B.2). See docs/ADDON-COMPOSITION-SPEC.md.
+@export var uses_addons: Array[String] = []
 @export var functions: Array[Resource] = []
 @export var editor_style: EventSheetEditorStyle = null
 ## Paths to GDScript files registered as custom-ACE providers. Each script is

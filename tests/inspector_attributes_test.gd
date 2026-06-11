@@ -71,6 +71,15 @@ static func run() -> bool:
 	all_passed = _check("external attribute lines round-trip byte-identically",
 		str(SheetCompiler.compile(imported, "user://eventsheets_attrs_ext.gd").get("output", "")) == ext, true) and all_passed
 
+	# Edit prefill: reopening a variable restores its attribute fields (incl. range).
+	var prefill_dialog: VariableDialog = VariableDialog.new()
+	var prefill_host: Node = Node.new()
+	prefill_dialog.init_dialog(prefill_host)
+	prefill_dialog.open_for_edit("global", {"attributes": {"tooltip": "Hi", "group": "Combat", "range": {"min": "0", "max": "9", "step": "1"}, "multiline": false}}, "hp", "int", 5)
+	all_passed = _check("edit prefills tooltip", prefill_dialog._attr_tooltip_edit.text, "Hi") and all_passed
+	all_passed = _check("edit prefills range as min, max, step", prefill_dialog._attr_range_edit.text, "0, 9, 1") and all_passed
+	prefill_host.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

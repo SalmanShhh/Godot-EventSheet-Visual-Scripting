@@ -714,6 +714,8 @@ static func _collect_reference_haystacks(rows: Array, into: PackedStringArray) -
 			for ace: Variant in event_row.conditions + event_row.actions:
 				if ace is RawCodeRow:
 					into.append((ace as RawCodeRow).code)
+				elif ace is MatchRow:
+					into.append((ace as MatchRow).branches_text)
 				elif ace is Resource and ace.get("params") is Dictionary:
 					for value: Variant in (ace.get("params") as Dictionary).values():
 						if value is String:
