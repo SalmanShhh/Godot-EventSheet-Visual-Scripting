@@ -157,7 +157,11 @@ Conditions                        | Actions
 | Language completeness (loops, picking, returns, stateful conditions, group locals) | ✅ shipped |
 | Debugging rung 1 (real breakpoints) + device input + Audio module | ✅ shipped |
 | `v0.5.0` release (System ACEs, loops/picking, debugging, devices, Audio) | ✅ shipped |
-| Inspector attributes (Unity/Odin-style — spec'd), live-values overlay, community feedback | 🗺 planned |
+| Inspector attributes **Tier 1** (tooltip / group / range / multiline on exported variables) | ✅ shipped |
+| Inspector attributes Tiers 2–3 (Show If / On Changed / tool buttons; custom drawers) | 🗺 planned ([spec](docs/INSPECTOR-ATTRIBUTES-SPEC.md)) |
+| **Addon composition** — meta-packs / jam kits (addon includes addon, compile-time bake) | 🗺 planned ([spec](docs/ADDON-COMPOSITION-SPEC.md)) |
+| **Project policy** for composition (approved-tag sourcing, depth rails, CI + MCP enforcement) | 🗺 planned ([spec](docs/ADDON-COMPOSITION-SPEC.md)) |
+| Live-values debug overlay (EngineDebugger channel), community feedback rounds | 🗺 planned |
 
 ## Project layout
 

@@ -84,7 +84,8 @@ What they're for:
 | ✅ `v0.2.0` | Rich variables (enums/collections/combos), C3 coverage (38 native ACEs + 14 packs), input/Wait, MCP server, find bar, iconic themes |
 | ✅ `v0.3.0` | Multi-view (split / detached / linked panes), tool sheets (experimental) |
 | ✅ `v0.4.0` | 3D vocabulary, addon tags, folded-group find, hardening sweeps, contributor docs |
-| 🔜 next | community feedback rounds; 3D behavior packs |
+| ✅ `v0.5.0` | C3 System coverage (Every X Seconds!), full loops & picking, function returns, real breakpoints, Find & Replace, Keyboard/Mouse/Gamepad/Touch with press-a-key, the Audio module (▶ preview), starter templates, the searchable node picker, Inspector attributes Tier 1 |
+| 🔜 next | **addon composition** — meta-packs / jam kits with project policy rails; Inspector attributes Tiers 2–3; live-values debug overlay; community feedback |
 
 Full ledger: [CHANGELOG.md](../CHANGELOG.md) · honest pros & cons: [README.md](../README.md)
 
