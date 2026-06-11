@@ -659,7 +659,12 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 					"Trigger %s: %s has no signal \"%s\" — connection skipped (connect it in the scene or declare the signal in a GDScript block)." % [key, self_class, signal_name]
 				)
 				continue
-		var source_prefix: String = "" if source_path.is_empty() else "get_node(\"%s\")." % source_path
+		var source_prefix: String = ""
+		if source_path.begins_with("autoload:"):
+			# Bus triggers: autoloads are global — connect by name, no node paths.
+			source_prefix = "%s." % source_path.trim_prefix("autoload:")
+		elif not source_path.is_empty():
+			source_prefix = "get_node(\"%s\")." % source_path
 		ready_connections.append("\t%s%s.connect(%s)" % [source_prefix, signal_name, function_name])
 
 	var has_ready_group: bool = false

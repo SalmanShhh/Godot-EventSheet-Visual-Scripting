@@ -76,6 +76,48 @@ static func run() -> bool:
 			template_sheet.autoload_mode and not template_sheet.autoload_name.is_empty() and template_script.reload(true) == OK, true) and all_passed
 		template_editor.free()
 
+	# ── Event-bus triggers: autoload signals fire events in ANY sheet ──
+	ProjectSettings.set_setting("autoload/TestBus", "*res://tests/fixtures/test_bus.gd")
+	var consumer: EventSheetResource = EventSheetResource.new()
+	var bus_event: EventRow = EventRow.new()
+	bus_event.trigger_provider_id = "TestBus"
+	bus_event.trigger_id = "signal:game_paused"
+	bus_event.trigger_source_path = "autoload:TestBus"
+	var pause_action: ACEAction = ACEAction.new()
+	pause_action.provider_id = "Core"
+	pause_action.ace_id = "X"
+	pause_action.codegen_template = "print(\"paused\")"
+	bus_event.actions.append(pause_action)
+	consumer.events.append(bus_event)
+	var bus_output: String = str(SheetCompiler.compile(consumer, "user://eventsheets_bus.gd").get("output", ""))
+	all_passed = _check("bus triggers connect by singleton name",
+		bus_output.contains("	TestBus.game_paused.connect(_on_test_bus_game_paused)"), true) and all_passed
+	all_passed = _check("bus handlers token on the bus name",
+		bus_output.contains("func _on_test_bus_game_paused() -> void:"), true) and all_passed
+	# (No reload() assert here: the GDScript analyzer snapshots autoloads at project
+	# load, so a runtime-registered TestBus isn't resolvable headless — the editor
+	# smoke covers real in-editor usage.)
+	ProjectSettings.set_setting("autoload/TestBus", null)
+
+	# Registered autoloads join the provider scan and map class -> singleton name.
+	ProjectSettings.set_setting("autoload/SpringDemo", "*res://eventsheet_addons/spring/spring_behavior.gd")
+	var scan_editor: EventSheetEditor = EventSheetEditor.new()
+	scan_editor.setup(EventSheetResource.new())
+	scan_editor.set_undo_redo_manager(NoopUndoManager.new())
+	scan_editor._build_addon_ace_sources()
+	all_passed = _check("registered autoloads map provider class to singleton name",
+		str(scan_editor._autoload_provider_names.get("SpringBehavior", "")), "SpringDemo") and all_passed
+	var bus_definition: ACEDefinition = ACEDefinition.new()
+	bus_definition.provider_id = "SpringBehavior"
+	bus_definition.id = "signal:spring_reached"
+	bus_definition.ace_type = ACEDefinition.ACEType.TRIGGER
+	var baked_event: EventRow = EventRow.new()
+	scan_editor._bake_trigger_signature(baked_event, bus_definition)
+	all_passed = _check("picked bus triggers bake the autoload source",
+		baked_event.trigger_source_path, "autoload:SpringDemo") and all_passed
+	scan_editor.free()
+	ProjectSettings.set_setting("autoload/SpringDemo", null)
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

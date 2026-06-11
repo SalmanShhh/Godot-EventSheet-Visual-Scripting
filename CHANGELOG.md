@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Event-bus triggers — autoload signals fire events in ANY sheet
+- The Event Bus pattern is complete: signals on a **registered autoload** publish as
+  project-wide triggers ("On Game Paused — EventBus"), and consumer sheets compile a
+  direct by-name connection (`EventBus.game_paused.connect(_on_event_bus_game_paused)`)
+  — the non-self connection codegen the pairing spec has anticipated since the
+  behaviors era. No node paths, works from every scene.
+- Registered autoloads with annotated scripts now **join the provider scan
+  automatically** (zero-config, like `eventsheet_addons/`): their triggers/ACEs appear
+  in every sheet's picker under the singleton's name.
+
 ### Autoload (Singleton) sheets — a new pillar
 - **New sheet type: Autoload (Singleton)** — Game State, Event Bus, Save System and
   friends, built as event sheets. Set the type + a global name in the Sheet Type

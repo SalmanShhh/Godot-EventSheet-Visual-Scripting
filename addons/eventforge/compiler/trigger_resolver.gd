@@ -64,6 +64,10 @@ static func _signal_backed(function_name: String, args: String, signal_name: Str
 static func _identifier_for_source(source_path: String) -> String:
 	if source_path.is_empty():
 		return ""
+	# Autoload sources ("autoload:EventBus") token on the singleton name alone,
+	# snake-cased for readable handlers (_on_event_bus_game_paused).
+	if source_path.begins_with("autoload:"):
+		source_path = source_path.trim_prefix("autoload:").to_snake_case()
 	var token: String = ""
 	for character in source_path.to_lower():
 		token += character if (character >= "a" and character <= "z") or (character >= "0" and character <= "9") else "_"

@@ -85,6 +85,9 @@ var _open_tabs: Array[Dictionary] = []
 var _active_tab_index: int = -1
 var _tab_bar: TabBar = null
 var _suppress_tab_signal: bool = false
+# Provider class -> autoload name (rebuilt with the registry): lets picked bus triggers
+# bake "autoload:<Name>" sources so consumers connect by singleton name.
+var _autoload_provider_names: Dictionary = {}
 var _ace_registry: EventSheetACERegistry = EventSheetACERegistry.new()
 var _editor_param_store: EditorParamStore = EditorParamStore.new()
 var _param_resolver: ParamDefaultResolver = ParamDefaultResolver.new()
@@ -1608,6 +1611,9 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
         return
     event_row.trigger_provider_id = definition.provider_id
     event_row.trigger_id = definition.id
+    # Bus triggers: autoload providers connect by singleton name (project-wide signals).
+    if _autoload_provider_names.has(definition.provider_id):
+        event_row.trigger_source_path = "autoload:%s" % str(_autoload_provider_names[definition.provider_id])
     var parts: PackedStringArray = PackedStringArray()
     for parameter in definition.parameters:
         if not (parameter is Dictionary):
@@ -5737,6 +5743,27 @@ func _build_addon_ace_sources() -> Array[Object]:
     for registered_path: String in EventForgeBridgeRuntime.get_registered_provider_scripts():
         if not provider_paths.has(registered_path):
             provider_paths.append(registered_path)
+    # Registered autoloads with annotated scripts publish project-wide (event buses,
+    # game state) — zero-config, like eventsheet_addons/.
+    _autoload_provider_names.clear()
+    for property_info: Dictionary in ProjectSettings.get_property_list():
+        var setting_name: String = str(property_info.get("name", ""))
+        if not setting_name.begins_with("autoload/"):
+            continue
+        var autoload_path: String = str(ProjectSettings.get_setting(setting_name, "")).trim_prefix("*")
+        if not autoload_path.ends_with(".gd"):
+            continue
+        var autoload_script: Script = load(autoload_path) if ResourceLoader.exists(autoload_path) else null
+        if autoload_script == null:
+            continue
+        # Map class -> singleton name even when the script is ALREADY scanned (an addon
+        # registered as an autoload still needs bus-style trigger baking).
+        var provider_class: String = str(autoload_script.get_global_name())
+        if provider_class.is_empty():
+            provider_class = autoload_path.get_file().get_basename().to_pascal_case()
+        _autoload_provider_names[provider_class] = setting_name.trim_prefix("autoload/")
+        if not provider_paths.has(autoload_path):
+            provider_paths.append(autoload_path)
     for path: String in provider_paths:
         if sheet_paths.has(path):
             continue
