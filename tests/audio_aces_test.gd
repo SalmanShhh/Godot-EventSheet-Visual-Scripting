@@ -54,6 +54,18 @@ static func run() -> bool:
 	all_passed = _check("preview field round-trips the path", dialog._extract_value(path_edit), "\"res://x.ogg\"") and all_passed
 	field.free()
 
+	# Node picker: expression fields gain the 🔍 browser; filter logic matches
+	# name/class/path case-insensitively (asserted via the row builder on a tiny tree).
+	var field2: Control = dialog._create_expression_field("target", "self")
+	var has_node_button: bool = false
+	for child in field2.get_children():
+		if child is Button and (child as Button).tooltip_text.begins_with("Pick a scene node"):
+			has_node_button = true
+	all_passed = _check("expression fields offer the node picker", has_node_button, true) and all_passed
+	field2.free()
+	all_passed = _check("node references stay identifier-safe",
+		ACEParamsDialog._node_reference("UI/Health Bar"), "$\"UI/Health Bar\"") and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

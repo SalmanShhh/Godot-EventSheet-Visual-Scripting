@@ -500,8 +500,88 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	fx_button.tooltip_text = "Insert a GDScript expression"
 	fx_button.pressed.connect(_open_expression_picker.bind(key))
 	container.add_child(fx_button)
+	var node_button: Button = Button.new()
+	node_button.text = "🔍"
+	node_button.tooltip_text = "Pick a scene node (search by name, class or path)"
+	node_button.pressed.connect(_open_node_picker.bind(key))
+	container.add_child(node_button)
 	_fields[key] = edit
 	return container
+
+# ── Scene node picker (large-project search: filter by name, class or path) ──────────
+var _node_picker_window: Window = null
+var _node_picker_tree: Tree = null
+var _node_picker_search: LineEdit = null
+var _node_picker_target_key: String = ""
+
+## Opens a searchable browser over the edited scene's nodes. Selecting a node inserts a
+## `$Path` reference into the target expression field. The filter matches the node NAME,
+## CLASS (so "AudioStreamPlayer" finds every player) and PATH segment, case-insensitively.
+func _open_node_picker(key: String) -> void:
+	_node_picker_target_key = key
+	if _node_picker_window == null:
+		_node_picker_window = Window.new()
+		_node_picker_window.title = "Pick Node"
+		_node_picker_window.size = Vector2i(440, 420)
+		_node_picker_window.close_requested.connect(func() -> void: _node_picker_window.hide())
+		var box: VBoxContainer = VBoxContainer.new()
+		box.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_node_picker_search = LineEdit.new()
+		_node_picker_search.placeholder_text = "Search name, class or path…  (e.g. Enemy, Area2D, UI/)"
+		_node_picker_search.text_changed.connect(func(_t: String) -> void: _populate_node_picker())
+		box.add_child(_node_picker_search)
+		_node_picker_tree = Tree.new()
+		_node_picker_tree.columns = 2
+		_node_picker_tree.set_column_title(0, "Node")
+		_node_picker_tree.set_column_title(1, "Class")
+		_node_picker_tree.column_titles_visible = true
+		_node_picker_tree.hide_root = true
+		_node_picker_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_node_picker_tree.item_activated.connect(_on_node_picker_activated)
+		box.add_child(_node_picker_tree)
+		_node_picker_window.add_child(box)
+		_dialog.add_child(_node_picker_window)
+	_populate_node_picker()
+	_node_picker_window.popup_centered()
+	_node_picker_search.grab_focus()
+
+func _populate_node_picker() -> void:
+	_node_picker_tree.clear()
+	var root_item: TreeItem = _node_picker_tree.create_item()
+	if not Engine.is_editor_hint():
+		return
+	var scene_root: Node = EditorInterface.get_edited_scene_root()
+	if scene_root == null:
+		var empty: TreeItem = _node_picker_tree.create_item(root_item)
+		empty.set_text(0, "(no scene open)")
+		return
+	var query: String = _node_picker_search.text.strip_edges().to_lower()
+	_append_node_picker_rows(scene_root, scene_root, root_item, query)
+
+func _append_node_picker_rows(node: Node, scene_root: Node, parent_item: TreeItem, query: String) -> void:
+	var relative: String = str(scene_root.get_path_to(node))
+	var matches: bool = query.is_empty() 		or node.name.to_lower().contains(query) 		or node.get_class().to_lower().contains(query) 		or relative.to_lower().contains(query)
+	if matches:
+		var item: TreeItem = _node_picker_tree.create_item(parent_item)
+		item.set_text(0, relative if node != scene_root else node.name)
+		item.set_text(1, node.get_class())
+		item.set_metadata(0, relative if node != scene_root else ".")
+	for child: Node in node.get_children():
+		_append_node_picker_rows(child, scene_root, parent_item, query)
+
+func _on_node_picker_activated() -> void:
+	var selected: TreeItem = _node_picker_tree.get_selected()
+	if selected == null:
+		return
+	var relative: String = str(selected.get_metadata(0))
+	var reference: String = "self" if relative == "." else _node_reference(relative)
+	var field: Variant = _fields.get(_node_picker_target_key)
+	if field is TextEdit:
+		(field as TextEdit).insert_text_at_caret(reference)
+		_validate_expression_field(field)
+	elif field is LineEdit:
+		(field as LineEdit).insert_text_at_caret(reference)
+	_node_picker_window.hide()
 
 ## Live expression validation: compile-checks the field against the sheet context
 ## (variables, host members) and tints the text red when it would not compile. The lint

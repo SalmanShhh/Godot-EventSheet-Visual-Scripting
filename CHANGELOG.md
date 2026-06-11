@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Searchable scene-node picker
+- Expression params gain a **🔍 Pick Node** browser next to ƒx: a filterable tree of the
+  edited scene — the filter matches **name, class or path** (type `Area2D` to see every
+  area, `UI/` to scope to a branch), double-click inserts the `$Path` reference
+  (identifier-safe quoting) at the caret. Built for large scenes where drag-drop means
+  scrolling hundreds of nodes.
+
 ### Audio module (the C3 Audio addon, the Godot way) + the new module structure
 - **Play Sound / Play Sound At (2D)** — C3's fire-and-forget Play: a throwaway
   AudioStreamPlayer(2D) that frees itself when finished (multi-line `{uid}` template;
