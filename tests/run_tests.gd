@@ -91,6 +91,7 @@ const DeviceInputTestScript := preload("res://tests/device_input_test.gd")
 const AudioAcesTestScript := preload("res://tests/audio_aces_test.gd")
 const NodePickerTestScript := preload("res://tests/node_picker_test.gd")
 const InspectorAttributesTestScript := preload("res://tests/inspector_attributes_test.gd")
+const AddonCompositionTestScript := preload("res://tests/addon_composition_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
@@ -177,6 +178,7 @@ func _init() -> void:
 	passed = AudioAcesTestScript.run() and passed
 	passed = NodePickerTestScript.run() and passed
 	passed = InspectorAttributesTestScript.run() and passed
+	passed = AddonCompositionTestScript.run() and passed
 	passed = EventSheetEditorTestScript.run() and passed
 	passed = EventSheetStyleTestScript.run() and passed
 	passed = PluginWorkspaceTestScript.run() and passed

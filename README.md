@@ -159,8 +159,9 @@ Conditions                        | Actions
 | `v0.5.0` release (System ACEs, loops/picking, debugging, devices, Audio) | ✅ shipped |
 | Inspector attributes **Tier 1** (tooltip / group / range / multiline on exported variables) | ✅ shipped |
 | Inspector attributes Tiers 2–3 (Show If / On Changed / tool buttons; custom drawers) | 🗺 planned ([spec](docs/INSPECTOR-ATTRIBUTES-SPEC.md)) |
-| **Addon composition** — meta-packs / jam kits (addon includes addon, compile-time bake) | 🗺 planned ([spec](docs/ADDON-COMPOSITION-SPEC.md)) |
-| **Project policy** for composition (approved-tag sourcing, depth rails, CI + MCP enforcement) | 🗺 planned ([spec](docs/ADDON-COMPOSITION-SPEC.md)) |
+| **Addon composition** — meta-packs / jam kits (addon includes addon, compile-time bake) | ✅ shipped |
+| **Project policy** for composition (approved-tag sourcing, depth rails, collision gates) | ✅ shipped |
+| Composition Lane B (has-a runtime deps, auto-attach) + MCP policy awareness | 🗺 planned ([spec](docs/ADDON-COMPOSITION-SPEC.md)) |
 | Live-values debug overlay (EngineDebugger channel), community feedback rounds | 🗺 planned |
 
 ## Project layout

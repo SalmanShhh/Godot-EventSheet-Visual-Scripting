@@ -84,6 +84,7 @@ func _init() -> void:
 	passed = AudioAcesTest.run() and passed
 	passed = NodePickerTest.run() and passed
 	passed = InspectorAttributesTest.run() and passed
+	passed = AddonCompositionTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")

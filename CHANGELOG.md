@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Addon composition Lane A — meta-packs / jam kits, with project policy
+- **Addons can now include other addons** (compile-time bake): the Sheet Type dialog
+  gains an *Includes (addon sheets)* field, and the merged result compiles to one
+  standalone class — a *Jam Kit* meta-pack is one include away, with zero runtime
+  coupling (the compatibility covenant untouched).
+- **Project policy knobs** under `eventsheets/addons/*` in ProjectSettings (versioned,
+  PR-reviewable, CI-readable): `composition_mode`, `max_include_depth` (the
+  anti-addon-hell rail), `collision_policy` (warn/error/silent), `include_sources`
+  (`tagged:approved` turns the tag system into enforcement), `deprecated_tag_blocks`,
+  `export_bundling`. **Defaults are permissive — jams never meet the policy system.**
+- **The invariant** (test-pinned): policy never changes emitted bytes — it only gates.
+- **Export Addon… bundles included sheets** so packs travel complete.
+- Covered by `tests/addon_composition_test.gd` (12 assertions). Spec status updated.
+
 ### Spec: addon composition (addon includes addon)
 - `docs/ADDON-COMPOSITION-SPEC.md` — analysis + design for addons building on other
   addons: compile-time inclusion (meta-packs / jam kits — first), has-a runtime

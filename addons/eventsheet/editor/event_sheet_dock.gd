@@ -2833,9 +2833,19 @@ func _export_addon_pack(base_dir_override: String = "") -> void:
     if not bool(compile_result.get("success", false)):
         _set_status("Export failed: the sheet doesn't compile (%s)." % str(compile_result.get("errors")), true)
         return
+    # Lane A composition: packs travel complete — bundle included sheets unless the
+    # project policy says reference-only (docs/ADDON-COMPOSITION-SPEC.md).
+    var bundled_count: int = 0
+    if str(SheetCompiler._addon_policy("export_bundling", "bundle")) == "bundle":
+        for include_path: String in pack_sheet.includes:
+            if ResourceLoader.exists(include_path):
+                var bundle_target: String = "%s/%s" % [base_dir, include_path.get_file()]
+                if bundle_target != include_path and DirAccess.copy_absolute(include_path, bundle_target) == OK:
+                    bundled_count += 1
     if Engine.is_editor_hint() and is_inside_tree():
         EditorInterface.get_resource_filesystem().scan()
-    _set_status("Exported addon pack to %s (.tres + .gd) — its ACEs are now published project-wide." % base_dir)
+    var bundle_note: String = " (+%d bundled include(s))" % bundled_count if bundled_count > 0 else ""
+    _set_status("Exported addon pack to %s (.tres + .gd)%s — its ACEs are now published project-wide." % [base_dir, bundle_note])
 
 # ── Godot-feel: find bar, keyboard row ops, editor-native defaults ─# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ─# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ────────────────────
 var _find_bar: HBoxContainer = null
@@ -3467,6 +3477,7 @@ var _sheet_type_icon_edit: LineEdit = null
 var _sheet_type_host_edit: LineEdit = null
 var _sheet_type_tool_check: CheckBox = null
 var _sheet_type_tags_edit: LineEdit = null
+var _sheet_type_includes_edit: LineEdit = null
 
 func _open_sheet_type_dialog() -> void:
     if not _ensure_sheet_for_editing():
@@ -3485,6 +3496,7 @@ func _open_sheet_type_dialog() -> void:
     _sheet_type_host_edit.text = _current_sheet.host_class
     _sheet_type_tool_check.button_pressed = _current_sheet.tool_mode
     _sheet_type_tags_edit.text = ", ".join(_current_sheet.addon_tags)
+    _sheet_type_includes_edit.text = ", ".join(PackedStringArray(_current_sheet.includes))
     _sheet_type_dialog.popup_centered(Vector2i(460, 300))
 
 func _ensure_sheet_type_dialog() -> void:
@@ -3507,6 +3519,7 @@ func _ensure_sheet_type_dialog() -> void:
     _sheet_type_tool_check.text = "@tool — runs inside the editor (EXPERIMENTAL, editor-version-coupled)"
     form.add_child(_sheet_type_tool_check)
     _sheet_type_tags_edit = _add_sheet_type_field(form, "Tags (comma-separated)", "movement, retro, jam")
+    _sheet_type_includes_edit = _add_sheet_type_field(form, "Includes (addon sheets)", "res://eventsheet_addons/screen_shake/screen_shake.tres, …")
     var hint: Label = Label.new()
     hint.text = "Custom nodes appear in Godot's Create Node dialog with their icon.\nBehaviors attach as child nodes and act on their parent via the typed `host` accessor."
     hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -3536,11 +3549,13 @@ func _on_sheet_type_confirmed() -> void:
         _sheet_type_host_edit.text,
         _sheet_type_tool_check.button_pressed,
         VariableDialog.parse_options(_sheet_type_tags_edit.text)
+    ,
+        VariableDialog.parse_options(_sheet_type_includes_edit.text)
     )
 
 ## Applies the chosen sheet type (0 = plain, 1 = custom node, 2 = behavior) undoably and
 ## refreshes every identity surface (banner, tab badge, header, lint context).
-func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray()) -> void:
+func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray(), include_paths: PackedStringArray = PackedStringArray()) -> void:
     if _current_sheet == null:
         return
     var changed: bool = _perform_undoable_sheet_edit("Set Sheet Type", func() -> bool:
@@ -3552,6 +3567,13 @@ func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_p
         # Plain sheets aren't addons: clear tags like the class name/icon (otherwise a
         # type switch would leave stale tags that never emit — silent confusion).
         _current_sheet.addon_tags = addon_tags if type_index != 0 else PackedStringArray()
+        # Lane A composition (meta-packs): includes apply like tags; plain sheets keep
+        # their includes too (library sheets predate addon composition).
+        var applied_includes: Array[String] = []
+        for include_path: String in include_paths:
+            if not include_path.strip_edges().is_empty():
+                applied_includes.append(include_path.strip_edges())
+        _current_sheet.includes = applied_includes
         if type_index == 3:
             _current_sheet.host_class = "EditorScript"
         elif not host_class_text.strip_edges().is_empty():
