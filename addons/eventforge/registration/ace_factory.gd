@@ -48,3 +48,24 @@ static func make_param(param_id: String, type_name: String, default_value: Varia
 	parameter.hint = hint
 	parameter.options = options.duplicate()
 	return parameter
+
+## Canonical comparison operators (CompareVar/CompareValues dropdowns).
+const COMPARISON_OPERATORS: Array[String] = ["==", "!=", "<", "<=", ">", ">="]
+
+## InputMap action names (project actions + the ui_* defaults), quoted for templates.
+static func input_action_options() -> Array[String]:
+	var options: Array[String] = []
+	for property_info: Dictionary in ProjectSettings.get_property_list():
+		var property_name: String = str(property_info.get("name", ""))
+		if property_name.begins_with("input/") and not property_name.contains("."):
+			options.append("\"%s\"" % property_name.trim_prefix("input/"))
+	for builtin: String in ["ui_accept", "ui_cancel", "ui_select", "ui_left", "ui_right", "ui_up", "ui_down"]:
+		var quoted: String = "\"%s\"" % builtin
+		if not options.has(quoted):
+			options.append(quoted)
+	return options
+
+## First custom project action when one exists, else "ui_accept".
+static func default_input_action() -> String:
+	var options: Array[String] = input_action_options()
+	return options[0] if not options.is_empty() else "\"ui_accept\""

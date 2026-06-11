@@ -2,7 +2,16 @@
 
 ## [Unreleased]
 
-_Nothing yet._
+### Builtin vocabularies fully modularized
+- The legacy groups in `builtin_aces.gd` moved into per-module files under
+  `registration/modules/` — **System** (time/display/text/comparisons/stateful/spawn/
+  shader/date/platform), **Device input**, **3D vocabulary**, **Collections** — joining
+  Audio on the documented module contract (`ace_factory.gd`). Each C3-equivalent
+  "addon" is now one readable, standalone-shippable file.
+- Shared helpers (`COMPARISON_OPERATORS`, InputMap option builders) moved to the
+  factory as the canonical home; the registry concatenates modules **in their original
+  order**, and every ace_id/template is byte-identical (compatibility covenant — the
+  full suite, golden round-trips and lift tests gate the move).
 
 ## [0.5.0] - 2026-06-12
 
