@@ -2943,6 +2943,12 @@ var _find_cursor: int = -1
 # ── Live Values (debugging rung 2) ────────────────────────────────────────────────────
 var _live_values_window: Window = null
 var _live_values_label: RichTextLabel = null
+var _live_values_tree: Tree = null
+var _live_values_debugger: EventSheetLiveValuesDebugger = null
+
+## Wired by the plugin entry point so value edits can flow back to the running game.
+func set_live_values_debugger(debugger: EventSheetLiveValuesDebugger) -> void:
+    _live_values_debugger = debugger
 
 ## Toggles live-value streaming for this sheet (debug compiles send variable frames;
 ## the window shows them while the game runs). Recompile + run to start streaming.
@@ -2966,26 +2972,66 @@ func _ensure_live_values_window() -> void:
     _live_values_window.title = "Live Values"
     _live_values_window.size = Vector2i(320, 380)
     _live_values_window.close_requested.connect(func() -> void: _live_values_window.hide())
+    var live_box: VBoxContainer = VBoxContainer.new()
+    live_box.set_anchors_preset(Control.PRESET_FULL_RECT)
     _live_values_label = RichTextLabel.new()
-    _live_values_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-    _live_values_label.text = "Waiting for a running game…"
-    _live_values_window.add_child(_live_values_label)
+    _live_values_label.fit_content = true
+    _live_values_label.text = "Waiting for a running game…  (double-click a value to EDIT it live)"
+    live_box.add_child(_live_values_label)
+    _live_values_tree = Tree.new()
+    _live_values_tree.hide_root = true
+    _live_values_tree.columns = 2
+    _live_values_tree.set_column_title(0, "Variable")
+    _live_values_tree.set_column_title(1, "Value (editable)")
+    _live_values_tree.column_titles_visible = true
+    _live_values_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _live_values_tree.item_edited.connect(_on_live_value_edited)
+    live_box.add_child(_live_values_tree)
+    _live_values_window.add_child(live_box)
     add_child(_live_values_window)
 
-## Debugger-plugin sink (wired by the plugin entry point): one values frame -> text
-## window + inline chips next to variable rows in every pane (rung 3).
+## Debugger-plugin sink (wired by the plugin entry point): one values frame -> the
+## editable tree + inline chips next to variable rows in every pane (rung 3).
 func update_live_values(values: Dictionary) -> void:
     for pane: EventSheetViewport in [_viewport, _split_viewport, _detached_viewport]:
         if pane != null:
             pane.set_live_values(values)
     _ensure_live_values_window()
-    var frame_lines: PackedStringArray = PackedStringArray()
+    _live_values_label.text = "Streaming — double-click a value to edit it in the running game."
     var value_keys: Array = values.keys()
     value_keys.sort()
-    for value_key: Variant in value_keys:
-        frame_lines.append("%s = %s" % [str(value_key), str(values[value_key])])
-    _live_values_label.text = "
-".join(frame_lines)
+    # Rebuild only when the key set changes; otherwise update in place so an
+    # in-progress edit isn't stomped by the next frame.
+    var rebuild: bool = _live_values_tree.get_root() == null or _live_values_tree.get_root().get_child_count() != value_keys.size()
+    if rebuild:
+        _live_values_tree.clear()
+        var root_item: TreeItem = _live_values_tree.create_item()
+        for value_key: Variant in value_keys:
+            var item: TreeItem = _live_values_tree.create_item(root_item)
+            item.set_text(0, str(value_key))
+            item.set_text(1, str(values[value_key]))
+            item.set_editable(1, true)
+    else:
+        var item: TreeItem = _live_values_tree.get_root().get_first_child()
+        var index: int = 0
+        while item != null and index < value_keys.size():
+            item.set_text(0, str(value_keys[index]))
+            if _live_values_tree.get_edited() != item:
+                item.set_text(1, str(values[value_keys[index]]))
+            item = item.get_next()
+            index += 1
+
+## Tree edit -> typed value -> running game (debug session). C3's editable debugger.
+func _on_live_value_edited() -> void:
+    var edited: TreeItem = _live_values_tree.get_edited()
+    if edited == null:
+        return
+    var variable_name: String = edited.get_text(0)
+    var new_value: Variant = EventSheetLiveValuesDebugger.parse_edited_value(edited.get_text(1))
+    if _live_values_debugger != null and _live_values_debugger.send_set_value(variable_name, new_value):
+        _set_status("Live edit: %s = %s sent to the running game." % [variable_name, str(new_value)])
+    else:
+        _set_status("Live edit needs a streaming debug session (run the game with Live Values on).", true)
 
 # ── Single-param inline editing (C3's fastest gesture) ───────────────────────────────
 var _param_edit_popup: PopupPanel = null

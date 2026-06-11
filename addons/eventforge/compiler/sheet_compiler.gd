@@ -27,6 +27,9 @@ static var _emit_breakpoints_flag: bool = false
 # Live-values payload for the current compile (same single-threaded pattern as the
 # breakpoints flag — the trigger-section helper injects it into _process).
 static var _live_values_payload: String = ""
+# Whether the current debug compile still needs the edit-back receiver emitted (the
+# Live Values window's value edits arrive through it). Cleared once injected.
+static var _live_values_receiver_pending: bool = false
 
 # Runtime-toggleable groups: event -> "__group_<snake>_active" guard (per-compile).
 static var _runtime_group_guards: Dictionary = {}
@@ -212,6 +215,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 	# Live values (debugging rung 2): a throttle timer member; the send block itself
 	# lands inside _process below. Variables list is baked at compile time.
 	_live_values_payload = ""
+	_live_values_receiver_pending = false
 	if sheet.emit_live_values:
 		var live_keys: Array = merged_variables.keys()
 		live_keys.sort()
@@ -222,6 +226,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			(result["warnings"] as Array).append("Live values: this sheet has no variables to stream — add some or turn the toggle off.")
 		else:
 			_live_values_payload = ", ".join(payload_parts)
+			_live_values_receiver_pending = true
 			if variable_lines.is_empty() and tree_variables.is_empty():
 				lines.append("")
 			lines.append("var __live_values_timer: float = 0.0")
@@ -336,6 +341,15 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		lines.append("\t\tEngineDebugger.send_message(\"eventsheets:live_values\", [%s])" % _live_values_payload)
 		_live_values_payload = ""
 
+	if sheet.emit_live_values and not sheet.variables.is_empty():
+		lines.append("")
+		lines.append("## Live Values edit-back receiver (debug sessions only).")
+		lines.append("func _eventsheets_debug_set(message: String, data: Array) -> bool:")
+		lines.append("\tif message != \"set_value\" or data.size() < 2:")
+		lines.append("\t\treturn false")
+		lines.append("\tset(str(data[0]), data[1])")
+		lines.append("\treturn true")
+
 	# Emit sheet functions as callable GDScript methods (after the trigger handlers).
 	for function_resource: Variant in all_functions:
 		if not (function_resource is EventFunction):
@@ -379,6 +393,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 ## afterwards append as standard trigger functions at the end. Disabled blocks still emit —
 ## external mode is lossless, never a filter.
 static func _compile_external(sheet: EventSheetResource, result: Dictionary, output_path: String) -> Dictionary:
+	_live_values_receiver_pending = false
 	_emit_breakpoints_flag = sheet.emit_breakpoints
 	_live_values_payload = ""
 	if not sheet.includes.is_empty() or not sheet.uses_addons.is_empty() or not sheet.requires_behaviors.is_empty():
@@ -702,10 +717,14 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 	for key: String in trigger_order:
 		if str((signatures.get(key, {}) as Dictionary).get("function_name", "")) == "_ready":
 			has_ready_group = true
-	# No OnReady events but connections needed → synthesize a `_ready` for them.
-	if not has_ready_group and not ready_connections.is_empty():
+	# No OnReady events but connections/receiver needed → synthesize a `_ready`.
+	if not has_ready_group and (not ready_connections.is_empty() or _live_values_receiver_pending):
 		lines.append("")
 		lines.append("func _ready() -> void:")
+		if _live_values_receiver_pending:
+			lines.append("\tif EngineDebugger.is_active() and not EngineDebugger.has_capture(\"eventsheets\"):")
+			lines.append("\t\tEngineDebugger.register_message_capture(&\"eventsheets\", _eventsheets_debug_set)")
+			_live_values_receiver_pending = false
 		for connection_line: String in ready_connections:
 			lines.append(connection_line)
 
@@ -725,6 +744,14 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		else:
 			lines.append("func %s(%s) -> void:" % [function_name, args])
 		var had_body: bool = false
+		if function_name == "_ready" and _live_values_receiver_pending:
+			# Edit-back channel: the Live Values window's edits arrive as
+			# "eventsheets:set_value" messages (debug sessions only; one receiver per
+			# game — the first streaming sheet wins, noted in the window).
+			lines.append("\tif EngineDebugger.is_active() and not EngineDebugger.has_capture(\"eventsheets\"):")
+			lines.append("\t\tEngineDebugger.register_message_capture(&\"eventsheets\", _eventsheets_debug_set)")
+			had_body = true
+			_live_values_receiver_pending = false
 		if function_name == "_process" and not _live_values_payload.is_empty():
 			# Live-values stream: throttled, debug-session-only, before user logic.
 			lines.append("\t__live_values_timer += delta")

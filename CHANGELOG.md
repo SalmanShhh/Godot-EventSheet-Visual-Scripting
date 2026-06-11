@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Editable Live Values — C3's debugger, both directions
+- The Live Values window is now an **editable tree**: double-click a value while the
+  game runs and the change lands in the running game (typed — `3.5`, `true`,
+  `Vector2(1, 2)` all parse; plain words stay strings). Streaming frames update rows
+  in place so an in-progress edit is never stomped.
+- Debug compiles register a tiny `EngineDebugger` edit-back receiver alongside the
+  stream (first streaming sheet wins, noted in the window); **normal compiles carry
+  neither direction** — the covenant story is unchanged.
+
 ### Save System v2 — strategy in the Inspector, extension through signals
 - **Every former opinion is now a property**: save directory, file pattern, section,
   **format** (`config` / `json`), and **encryption** (one key field — encrypted

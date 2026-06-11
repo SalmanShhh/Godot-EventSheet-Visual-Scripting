@@ -78,8 +78,26 @@ static func run() -> bool:
 	editor.setup(EventSheetResource.new())
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	editor.update_live_values({"hp": 42, "ammo": 7})
-	all_passed = _check("Live Values window renders the frame sorted",
-		editor._live_values_label.text, "ammo = 7\nhp = 42") and all_passed
+	var first_row: TreeItem = editor._live_values_tree.get_root().get_first_child()
+	all_passed = _check("Live Values tree renders the frame sorted",
+		first_row.get_text(0) == "ammo" and first_row.get_text(1) == "7" and first_row.get_next().get_text(0) == "hp", true) and all_passed
+	all_passed = _check("values are editable in place", first_row.is_editable(1), true) and all_passed
+	# Edit-back channel: typed parsing + the no-session guard.
+	all_passed = _check("edited text parses to typed values",
+		[EventSheetLiveValuesDebugger.parse_edited_value("3.5"), EventSheetLiveValuesDebugger.parse_edited_value("true"), EventSheetLiveValuesDebugger.parse_edited_value("hello")],
+		[3.5, true, "hello"]) and all_passed
+	# (EditorDebuggerPlugin isn't instantiable headless — send_set_value's no-session
+	# guard is exercised by the editor smoke instead.)
+	# Debug compiles register the receiver + handler; normal compiles never do.
+	var rx_output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_lv_rx.gd").get("output", ""))
+	all_passed = _check("debug compiles register the edit-back receiver",
+		rx_output.contains("EngineDebugger.register_message_capture(&\"eventsheets\", _eventsheets_debug_set)")
+		and rx_output.contains("func _eventsheets_debug_set(message: String, data: Array) -> bool:"), true) and all_passed
+	var rx_script: GDScript = GDScript.new()
+	rx_script.source_code = rx_output
+	all_passed = _check("receiver output parses", rx_script.reload(true) == OK, true) and all_passed
+	all_passed = _check("normal compiles carry no receiver",
+		off_output.contains("_eventsheets_debug_set"), false) and all_passed
 	editor.free()
 
 	# Stateful copy independence (sweep regression): duplicated Every X Seconds

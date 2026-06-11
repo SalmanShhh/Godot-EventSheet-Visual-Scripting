@@ -79,6 +79,8 @@ func _enter_tree() -> void:
 			_event_sheet_editor = editor_candidate
 			if _live_values_debugger != null and _event_sheet_editor.has_method("update_live_values"):
 				_live_values_debugger.values_received.connect(_event_sheet_editor.update_live_values)
+			if _live_values_debugger != null and _event_sheet_editor.has_method("set_live_values_debugger"):
+				_event_sheet_editor.set_live_values_debugger(_live_values_debugger)
 			_event_sheet_editor.name = MAIN_SCREEN_ROOT_NAME
 			get_editor_interface().get_editor_main_screen().add_child(_event_sheet_editor)
 			# Contract: EventSheetEditor can expose setup(sheet := null) for safe initial state.
