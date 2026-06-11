@@ -70,9 +70,72 @@ the jam-kit and team-library cases), Lane B when a real pack needs it, never Lan
 The thing that makes C3-style addon ecosystems fragile is *runtime* coupling and silent
 upstream changes — Lane A's compile-time bake avoids both by construction.
 
+## Project policy (settings governing composition)
+
+Policy lives in **ProjectSettings** (`eventsheets/addons/*`) — Godot-native, stored in
+`project.godot`, so it is **versioned, diffable and PR-reviewable** like any other
+project decision, and readable headlessly by CI.
+
+### The knobs (deliberately few — fixed settings, not a policy language)
+
+| Setting | Values (default first) | What it gates |
+|---|---|---|
+| `composition_mode` | `allowed` / `lane_a_only` / `off` | Whether addon sheets may include other addons at all |
+| `max_include_depth` | `2` (warn past) / N / `0` = flat | The anti-"addon hell" rail |
+| `collision_policy` | `warn` / `error` / `silent` | Shadowed symbol on include merge |
+| `include_sources` | `anywhere` / project folders / `tagged:<tag>` | Where includes may come from — `tagged:approved` turns the existing tag system into enforcement |
+| `deprecated_tag_blocks` | `warn` / `error` / `off` | Including an addon tagged `deprecated` |
+| `export_bundling` | `bundle` / `reference` | Whether Export Addon… must carry its includes |
+
+Per-addon overrides: none in v1. One project, one policy — overrides are where
+governance sprawl starts.
+
+### The invariant that keeps policy honest
+
+**Policy never changes generated code.** Same sheet + same includes ⇒ same bytes,
+under every policy. Policy only decides whether a compile is *allowed* (error), *flagged*
+(warning), or *clean* — it is a gate, not a compiler input. Otherwise policy becomes
+hidden state that breaks reproducibility, golden tests, and pack portability.
+
+### Enforcement points
+1. **Edit time** — the Sheet Type dialog pre-flights the include list (disabled field
+   when `off`, inline warnings for depth/tags) so users learn policy where they work,
+   not at compile.
+2. **Compile time** — warnings/errors in the compile result (existing channel).
+3. **CI** — policy errors fail the headless suite; conventions become enforced, free.
+4. **MCP** — `list_aces`/snippet tools respect `include_sources`, so AI assistants are
+   policy-bound ("only approved addons" stops being advisory).
+
+### Effect on usefulness by project size
+
+- **Solo / jam:** policy must be invisible. Defaults are permissive (`allowed`, depth-2
+  *warning*, `collision: warn`) — zero ceremony, full speed-to-game. The only default
+  that may block anything is nothing; jams never meet the policy system unless they
+  open it.
+- **Mid teams:** the sweet spot — this is *who policy is for*. `tagged:approved`
+  sourcing + `collision: error` + the depth rail turn composition from "risky habit"
+  into adoptable infrastructure: conventions ride in `project.godot` (reviewed in PRs,
+  inherited by new members automatically instead of via wiki), and CI enforces them.
+- **Large orgs:** policy is governance — allowlists, deprecation bans, build gating,
+  staleness visibility. Two risks: **policy sprawl** (countered by the tiny fixed knob
+  set and no per-addon overrides) and **policy drift between projects** (a pack legal
+  in project A errors in project B) — countered by Export Addon… recording its
+  composition assumptions (depth, includes, tags) in pack metadata so a rejection is
+  always explainable, never mysterious.
+
+### Honest skips
+- No semantic versioning / version-range constraints in v1 (bake-at-compile already
+  prevents silent upstream breakage; version machinery is ecosystem-scale work).
+- No per-user policy (it's a *project* contract).
+- No runtime enforcement (generated games never know policy existed — covenant).
+
 ## Test plan (when scheduled)
 - Addon sheet including another addon sheet compiles standalone + parses.
 - Collision warning names the include and the symbol; root still wins.
 - Addon-shaped include cycle degrades with a warning (no hang, no partial class).
 - Export Addon… bundles the included sheet; re-import of the bundle compiles.
 - Meta-pack attaches and runs in the demo scene (editor smoke).
+- Policy matrix: `off` blocks the dialog field; `tagged:approved` rejects an untagged
+  include with a named error; depth-3 chain warns at default policy and errors at
+  `max_include_depth = 2` + `error`; identical bytes emitted under permissive vs strict
+  policy for a legal sheet (the invariant).
