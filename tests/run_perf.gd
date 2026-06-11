@@ -87,6 +87,7 @@ func _init() -> void:
 	passed = AddonCompositionTest.run() and passed
 	passed = LiveValuesTest.run() and passed
 	passed = UxPolishTest.run() and passed
+	passed = SpringTweenPacksTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")

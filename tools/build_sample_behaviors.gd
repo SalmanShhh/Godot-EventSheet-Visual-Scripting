@@ -14,6 +14,8 @@ func _init() -> void:
 	ok = _build_eight_direction() and ok
 	ok = _build_timer() and ok
 	ok = _build_flash() and ok
+	ok = _build_spring() and ok
+	ok = _build_tween() and ok
 	ok = _build_state_machine() and ok
 	ok = _build_sine() and ok
 	ok = _build_orbit() and ok
@@ -1541,3 +1543,240 @@ func _save_pack(sheet: EventSheetResource, base_path: String) -> bool:
 		return false
 	print("[build_sample_behaviors] built %s (.tres + .gd), warnings: %s" % [base_path.get_file(), compile_result.get("warnings")])
 	return true
+
+
+## Numeric springing (cleaned-up port of the author's C3 simple_spring addon): NAMED
+## springs (value/target/velocity each) driven by stiffness + damping + precision, with
+## impulses, reached-triggers and host-transform conveniences. Mesh deformation from the
+## C3 original is an honest skip (that's shader/skeleton territory in Godot). Exported
+## properties showcase Inspector attributes (ranges + tooltips) in a shipped pack.
+func _build_spring() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.behavior_mode = true
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "SpringBehavior"
+	sheet.addon_tags = PackedStringArray(["motion", "juice"])
+	sheet.variables = {
+		"default_stiffness": {"type": "float", "default": 170.0, "exported": true,
+			"attributes": {"tooltip": "Spring force toward the target (higher = snappier).", "range": {"min": "1", "max": "1000", "step": "1"}}},
+		"default_damping": {"type": "float", "default": 0.85, "exported": true,
+			"attributes": {"tooltip": "0 = oscillate forever, 1 = no overshoot.", "range": {"min": "0", "max": "1", "step": "0.01"}}},
+		"default_precision": {"type": "float", "default": 0.01, "exported": true,
+			"attributes": {"tooltip": "Distance + speed below which a spring counts as settled."}},
+		"springs": {"type": "Dictionary", "default": {}, "exported": false}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "Numeric springing: snappy, physical motion for ANY number. Name a spring, set its target, read its value — or use the host helpers (x/y/angle/scale) for instant juice."
+	sheet.events.append(about)
+	var block: RawCodeRow = RawCodeRow.new()
+	block.code = "\n".join(PackedStringArray([
+		"## @ace_trigger",
+		"## @ace_name(\"On Spring Reached\")",
+		"## @ace_category(\"Spring\")",
+		"signal spring_reached(spring_name: String)",
+		"",
+		"## @ace_condition",
+		"## @ace_name(\"Is Springing\")",
+		"## @ace_category(\"Spring\")",
+		"## @ace_codegen_template(\"$SpringBehavior.is_springing({spring_name})\")",
+		"func is_springing(spring_name: String) -> bool:",
+		"\treturn springs.has(spring_name) and bool(springs[spring_name].get(\"active\", false))",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Spring Value\")",
+		"## @ace_category(\"Spring\")",
+		"func spring_value(spring_name: String) -> float:",
+		"\treturn float(springs.get(spring_name, {}).get(\"value\", 0.0))",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Spring Velocity\")",
+		"## @ace_category(\"Spring\")",
+		"func spring_velocity(spring_name: String) -> float:",
+		"\treturn float(springs.get(spring_name, {}).get(\"velocity\", 0.0))",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Spring Progress\")",
+		"## @ace_category(\"Spring\")",
+		"func spring_progress(spring_name: String) -> float:",
+		"\tvar entry: Dictionary = springs.get(spring_name, {})",
+		"\tvar span: float = absf(float(entry.get(\"target\", 0.0)) - float(entry.get(\"from\", 0.0)))",
+		"\tif span <= 0.0:",
+		"\t\treturn 1.0",
+		"\treturn clampf(1.0 - absf(float(entry.get(\"target\", 0.0)) - float(entry.get(\"value\", 0.0))) / span, 0.0, 1.0)",
+		"",
+		"func _spring_entry(spring_name: String) -> Dictionary:",
+		"\tif not springs.has(spring_name):",
+		"\t\tsprings[spring_name] = {\"value\": 0.0, \"from\": 0.0, \"target\": 0.0, \"velocity\": 0.0,",
+		"\t\t\t\"stiffness\": default_stiffness, \"damping\": default_damping, \"precision\": default_precision, \"active\": false}",
+		"\treturn springs[spring_name]",
+		"",
+		"# Host conveniences: springs with these names write straight onto the parent.",
+		"func _apply_to_host(spring_name: String, value: float) -> void:",
+		"\tif host == null:",
+		"\t\treturn",
+		"\tmatch spring_name:",
+		"\t\t\"__x\": host.position.x = value",
+		"\t\t\"__y\": host.position.y = value",
+		"\t\t\"__angle\": host.rotation_degrees = value",
+		"\t\t\"__scale\": host.scale = Vector2(value, value)"
+	]))
+	sheet.events.append(block)
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	var simulate: RawCodeRow = RawCodeRow.new()
+	simulate.code = "\n".join(PackedStringArray([
+		"# Semi-implicit integration; damping uses pow() so motion is framerate-independent.",
+		"for spring_name: Variant in springs.keys():",
+		"\tvar entry: Dictionary = springs[spring_name]",
+		"\tif not bool(entry.get(\"active\", false)):",
+		"\t\tcontinue",
+		"\tentry[\"velocity\"] = float(entry[\"velocity\"]) + (float(entry[\"target\"]) - float(entry[\"value\"])) * float(entry[\"stiffness\"]) * delta",
+		"\t# Damping is the fraction of velocity LOST PER SECOND (framerate-independent).",
+		"\tentry[\"velocity\"] = float(entry[\"velocity\"]) * pow(1.0 - float(entry[\"damping\"]), delta)",
+		"\tentry[\"value\"] = float(entry[\"value\"]) + float(entry[\"velocity\"]) * delta",
+		"\tif absf(float(entry[\"target\"]) - float(entry[\"value\"])) < float(entry[\"precision\"]) and absf(float(entry[\"velocity\"])) < float(entry[\"precision\"]):",
+		"\t\tentry[\"value\"] = float(entry[\"target\"])",
+		"\t\tentry[\"velocity\"] = 0.0",
+		"\t\tentry[\"active\"] = false",
+		"\t\tspring_reached.emit(str(spring_name))",
+		"\t_apply_to_host(str(spring_name), float(entry[\"value\"]))"
+	]))
+	tick.actions.append(simulate)
+	sheet.events.append(tick)
+	_append_function(sheet, "spring_to", "Spring To", "Spring", "Springs the named value toward a target.",
+		[["spring_name", "String"], ["target", "float"]],
+		"var entry: Dictionary = _spring_entry(spring_name)\nentry[\"from\"] = float(entry[\"value\"])\nentry[\"target\"] = target\nentry[\"active\"] = true")
+	_append_function(sheet, "spring_between", "Spring Between", "Spring", "Snaps to a start value, then springs to the end value.",
+		[["spring_name", "String"], ["from_value", "float"], ["to_value", "float"]],
+		"var entry: Dictionary = _spring_entry(spring_name)\nentry[\"value\"] = from_value\nentry[\"from\"] = from_value\nentry[\"velocity\"] = 0.0\nentry[\"target\"] = to_value\nentry[\"active\"] = true")
+	_append_function(sheet, "set_spring", "Set Spring Value", "Spring", "Snaps the named spring (no motion).",
+		[["spring_name", "String"], ["value", "float"]],
+		"var entry: Dictionary = _spring_entry(spring_name)\nentry[\"value\"] = value\nentry[\"from\"] = value\nentry[\"target\"] = value\nentry[\"velocity\"] = 0.0\nentry[\"active\"] = false")
+	_append_function(sheet, "add_impulse", "Add Impulse", "Spring", "Kicks the named spring's velocity (instant juice).",
+		[["spring_name", "String"], ["amount", "float"]],
+		"var entry: Dictionary = _spring_entry(spring_name)\nentry[\"velocity\"] = float(entry[\"velocity\"]) + amount\nentry[\"active\"] = true")
+	_append_function(sheet, "stop_spring", "Stop Spring", "Spring", "Freezes the named spring where it is.",
+		[["spring_name", "String"]],
+		"if springs.has(spring_name):\n\tsprings[spring_name][\"active\"] = false")
+	_append_function(sheet, "configure_spring", "Configure Spring", "Spring", "Per-spring stiffness/damping/precision overrides.",
+		[["spring_name", "String"], ["stiffness", "float"], ["damping", "float"], ["precision", "float"]],
+		"var entry: Dictionary = _spring_entry(spring_name)\nentry[\"stiffness\"] = stiffness\nentry[\"damping\"] = clampf(damping, 0.0, 1.0)\nentry[\"precision\"] = precision")
+	_append_function(sheet, "spring_host_x", "Spring Host X", "Spring", "Springs the host's X position.",
+		[["target", "float"]],
+		"var entry: Dictionary = _spring_entry(\"__x\")\nif not bool(entry[\"active\"]) and host != null:\n\tentry[\"value\"] = host.position.x\nentry[\"from\"] = float(entry[\"value\"])\nentry[\"target\"] = target\nentry[\"active\"] = true")
+	_append_function(sheet, "spring_host_y", "Spring Host Y", "Spring", "Springs the host's Y position.",
+		[["target", "float"]],
+		"var entry: Dictionary = _spring_entry(\"__y\")\nif not bool(entry[\"active\"]) and host != null:\n\tentry[\"value\"] = host.position.y\nentry[\"from\"] = float(entry[\"value\"])\nentry[\"target\"] = target\nentry[\"active\"] = true")
+	_append_function(sheet, "spring_host_angle", "Spring Host Angle", "Spring", "Springs the host's rotation (degrees).",
+		[["degrees", "float"]],
+		"var entry: Dictionary = _spring_entry(\"__angle\")\nif not bool(entry[\"active\"]) and host != null:\n\tentry[\"value\"] = host.rotation_degrees\nentry[\"from\"] = float(entry[\"value\"])\nentry[\"target\"] = degrees\nentry[\"active\"] = true")
+	_append_function(sheet, "spring_host_scale", "Spring Host Scale", "Spring", "Springs the host's uniform scale (squash & stretch!).",
+		[["target", "float"]],
+		"var entry: Dictionary = _spring_entry(\"__scale\")\nif not bool(entry[\"active\"]) and host != null:\n\tentry[\"value\"] = host.scale.x\nentry[\"from\"] = float(entry[\"value\"])\nentry[\"target\"] = target\nentry[\"active\"] = true")
+	return _save_pack(sheet, "res://eventsheet_addons/spring/spring_behavior")
+
+## Tween behavior: Godot's Tween, the C3-behavior way — duration/transition/easing as
+## Inspector combos, one-call property/position/scale/rotation/alpha tweens on the host,
+## and an On Tween Finished trigger. Plain create_tween underneath (parity contract).
+func _build_tween() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.behavior_mode = true
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "TweenBehavior"
+	sheet.addon_tags = PackedStringArray(["motion", "juice"])
+	sheet.variables = {
+		"default_duration": {"type": "float", "default": 0.3, "exported": true,
+			"attributes": {"tooltip": "Seconds used when a tween call passes 0.", "range": {"min": "0.01", "max": "10", "step": "0.01"}}},
+		"transition": {"type": "String", "default": "sine", "exported": true,
+			"options": ["linear", "sine", "quad", "cubic", "quart", "quint", "expo", "circ", "elastic", "back", "bounce", "spring"]},
+		"easing": {"type": "String", "default": "out", "exported": true,
+			"options": ["in", "out", "in_out", "out_in"]}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "Tweens, the behavior way: pick transition + easing in the Inspector, then call one action — Tween Position / Scale / Rotation / Alpha / any property."
+	sheet.events.append(about)
+	var block: RawCodeRow = RawCodeRow.new()
+	block.code = "\n".join(PackedStringArray([
+		"## @ace_trigger",
+		"## @ace_name(\"On Tween Finished\")",
+		"## @ace_category(\"Tween\")",
+		"signal tween_finished",
+		"",
+		"## @ace_condition",
+		"## @ace_name(\"Is Tweening\")",
+		"## @ace_category(\"Tween\")",
+		"## @ace_codegen_template(\"$TweenBehavior.is_tweening()\")",
+		"func is_tweening() -> bool:",
+		"\treturn _active_tween != null and _active_tween.is_running()",
+		"",
+		"var _active_tween: Tween = null",
+		"",
+		"func _trans_id() -> int:",
+		"\tmatch transition:",
+		"\t\t\"linear\": return Tween.TRANS_LINEAR",
+		"\t\t\"quad\": return Tween.TRANS_QUAD",
+		"\t\t\"cubic\": return Tween.TRANS_CUBIC",
+		"\t\t\"quart\": return Tween.TRANS_QUART",
+		"\t\t\"quint\": return Tween.TRANS_QUINT",
+		"\t\t\"expo\": return Tween.TRANS_EXPO",
+		"\t\t\"circ\": return Tween.TRANS_CIRC",
+		"\t\t\"elastic\": return Tween.TRANS_ELASTIC",
+		"\t\t\"back\": return Tween.TRANS_BACK",
+		"\t\t\"bounce\": return Tween.TRANS_BOUNCE",
+		"\t\t\"spring\": return Tween.TRANS_SPRING",
+		"\treturn Tween.TRANS_SINE",
+		"",
+		"func _ease_id() -> int:",
+		"\tmatch easing:",
+		"\t\t\"in\": return Tween.EASE_IN",
+		"\t\t\"in_out\": return Tween.EASE_IN_OUT",
+		"\t\t\"out_in\": return Tween.EASE_OUT_IN",
+		"\treturn Tween.EASE_OUT",
+		"",
+		"func _start_tween(property_path: String, final_value: Variant, duration: float) -> void:",
+		"\tif host == null:",
+		"\t\treturn",
+		"\tvar seconds: float = duration if duration > 0.0 else default_duration",
+		"\t_active_tween = host.create_tween()",
+		"\t_active_tween.tween_property(host, NodePath(property_path), final_value, seconds).set_trans(_trans_id()).set_ease(_ease_id())",
+		"\t_active_tween.finished.connect(func() -> void: tween_finished.emit())"
+	]))
+	sheet.events.append(block)
+	_append_function(sheet, "tween_property_to", "Tween Property", "Tween", "Tweens any host property (e.g. position:x) to a value.",
+		[["property_path", "String"], ["final_value", "float"], ["duration", "float"]],
+		"_start_tween(property_path, final_value, duration)")
+	_append_function(sheet, "tween_position", "Tween Position", "Tween", "Moves the host to (x, y).",
+		[["x", "float"], ["y", "float"], ["duration", "float"]],
+		"_start_tween(\"position\", Vector2(x, y), duration)")
+	_append_function(sheet, "tween_scale", "Tween Scale", "Tween", "Scales the host uniformly.",
+		[["amount", "float"], ["duration", "float"]],
+		"_start_tween(\"scale\", Vector2(amount, amount), duration)")
+	_append_function(sheet, "tween_rotation", "Tween Rotation", "Tween", "Rotates the host to the given degrees.",
+		[["degrees", "float"], ["duration", "float"]],
+		"_start_tween(\"rotation_degrees\", degrees, duration)")
+	_append_function(sheet, "tween_alpha", "Tween Alpha", "Tween", "Fades the host's modulate alpha.",
+		[["alpha", "float"], ["duration", "float"]],
+		"_start_tween(\"modulate:a\", clampf(alpha, 0.0, 1.0), duration)")
+	_append_function(sheet, "stop_tweens", "Stop Tweens", "Tween", "Kills the running tween (host stays where it is).",
+		[],
+		"if _active_tween != null:\n\t_active_tween.kill()\n\t_active_tween = null")
+	return _save_pack(sheet, "res://eventsheet_addons/tween/tween_behavior")
+
+## Shared shape for the spring/tween builders: one exposed-as-ACE function.
+func _append_function(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> void:
+	var event_function: EventFunction = EventFunction.new()
+	event_function.function_name = function_name
+	event_function.expose_as_ace = true
+	event_function.ace_display_name = display_name
+	event_function.ace_category = category
+	event_function.description = description
+	for param_pair: Array in params:
+		var parameter: ACEParam = ACEParam.new()
+		parameter.id = str(param_pair[0])
+		parameter.type_name = str(param_pair[1])
+		event_function.params.append(parameter)
+	var body_row: RawCodeRow = RawCodeRow.new()
+	body_row.code = body
+	event_function.events.append(body_row)
+	sheet.functions.append(event_function)

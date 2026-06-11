@@ -1,0 +1,261 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=32 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_4m2ht"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_mwc6u"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="3_i2nmf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="4_660gr"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="5_r84we"]
+
+[sub_resource type="Resource" id="Resource_gnvbk"]
+script = ExtResource("1_4m2ht")
+text = "Tweens, the behavior way: pick transition + easing in the Inspector, then call one action — Tween Position / Scale / Rotation / Alpha / any property."
+
+[sub_resource type="Resource" id="Resource_hlhhl"]
+script = ExtResource("2_mwc6u")
+code = "## @ace_trigger
+## @ace_name(\"On Tween Finished\")
+## @ace_category(\"Tween\")
+signal tween_finished
+
+## @ace_condition
+## @ace_name(\"Is Tweening\")
+## @ace_category(\"Tween\")
+## @ace_codegen_template(\"$TweenBehavior.is_tweening()\")
+func is_tweening() -> bool:
+	return _active_tween != null and _active_tween.is_running()
+
+var _active_tween: Tween = null
+
+func _trans_id() -> int:
+	match transition:
+		\"linear\": return Tween.TRANS_LINEAR
+		\"quad\": return Tween.TRANS_QUAD
+		\"cubic\": return Tween.TRANS_CUBIC
+		\"quart\": return Tween.TRANS_QUART
+		\"quint\": return Tween.TRANS_QUINT
+		\"expo\": return Tween.TRANS_EXPO
+		\"circ\": return Tween.TRANS_CIRC
+		\"elastic\": return Tween.TRANS_ELASTIC
+		\"back\": return Tween.TRANS_BACK
+		\"bounce\": return Tween.TRANS_BOUNCE
+		\"spring\": return Tween.TRANS_SPRING
+	return Tween.TRANS_SINE
+
+func _ease_id() -> int:
+	match easing:
+		\"in\": return Tween.EASE_IN
+		\"in_out\": return Tween.EASE_IN_OUT
+		\"out_in\": return Tween.EASE_OUT_IN
+	return Tween.EASE_OUT
+
+func _start_tween(property_path: String, final_value: Variant, duration: float) -> void:
+	if host == null:
+		return
+	var seconds: float = duration if duration > 0.0 else default_duration
+	_active_tween = host.create_tween()
+	_active_tween.tween_property(host, NodePath(property_path), final_value, seconds).set_trans(_trans_id()).set_ease(_ease_id())
+	_active_tween.finished.connect(func() -> void: tween_finished.emit())"
+
+[sub_resource type="Resource" id="Resource_3yx42"]
+script = ExtResource("2_mwc6u")
+code = "_start_tween(property_path, final_value, duration)"
+
+[sub_resource type="Resource" id="Resource_cmlci"]
+script = ExtResource("3_i2nmf")
+id = "property_path"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_tqmve"]
+script = ExtResource("3_i2nmf")
+id = "final_value"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_wc40t"]
+script = ExtResource("3_i2nmf")
+id = "duration"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_5v5yh"]
+script = ExtResource("4_660gr")
+function_name = "tween_property_to"
+description = "Tweens any host property (e.g. position:x) to a value."
+expose_as_ace = true
+ace_display_name = "Tween Property"
+ace_category = "Tween"
+params = Array[ExtResource("3_i2nmf")]([SubResource("Resource_cmlci"), SubResource("Resource_tqmve"), SubResource("Resource_wc40t")])
+events = Array[Resource]([SubResource("Resource_3yx42")])
+
+[sub_resource type="Resource" id="Resource_pti3s"]
+script = ExtResource("2_mwc6u")
+code = "_start_tween(\"position\", Vector2(x, y), duration)"
+
+[sub_resource type="Resource" id="Resource_y4qvn"]
+script = ExtResource("3_i2nmf")
+id = "x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_paonx"]
+script = ExtResource("3_i2nmf")
+id = "y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_bxuom"]
+script = ExtResource("3_i2nmf")
+id = "duration"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_elexq"]
+script = ExtResource("4_660gr")
+function_name = "tween_position"
+description = "Moves the host to (x, y)."
+expose_as_ace = true
+ace_display_name = "Tween Position"
+ace_category = "Tween"
+params = Array[ExtResource("3_i2nmf")]([SubResource("Resource_y4qvn"), SubResource("Resource_paonx"), SubResource("Resource_bxuom")])
+events = Array[Resource]([SubResource("Resource_pti3s")])
+
+[sub_resource type="Resource" id="Resource_5ubra"]
+script = ExtResource("2_mwc6u")
+code = "_start_tween(\"scale\", Vector2(amount, amount), duration)"
+
+[sub_resource type="Resource" id="Resource_rp2y6"]
+script = ExtResource("3_i2nmf")
+id = "amount"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_6r4o1"]
+script = ExtResource("3_i2nmf")
+id = "duration"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ldndk"]
+script = ExtResource("4_660gr")
+function_name = "tween_scale"
+description = "Scales the host uniformly."
+expose_as_ace = true
+ace_display_name = "Tween Scale"
+ace_category = "Tween"
+params = Array[ExtResource("3_i2nmf")]([SubResource("Resource_rp2y6"), SubResource("Resource_6r4o1")])
+events = Array[Resource]([SubResource("Resource_5ubra")])
+
+[sub_resource type="Resource" id="Resource_dapsx"]
+script = ExtResource("2_mwc6u")
+code = "_start_tween(\"rotation_degrees\", degrees, duration)"
+
+[sub_resource type="Resource" id="Resource_bpmm2"]
+script = ExtResource("3_i2nmf")
+id = "degrees"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_h2j5s"]
+script = ExtResource("3_i2nmf")
+id = "duration"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_q24d4"]
+script = ExtResource("4_660gr")
+function_name = "tween_rotation"
+description = "Rotates the host to the given degrees."
+expose_as_ace = true
+ace_display_name = "Tween Rotation"
+ace_category = "Tween"
+params = Array[ExtResource("3_i2nmf")]([SubResource("Resource_bpmm2"), SubResource("Resource_h2j5s")])
+events = Array[Resource]([SubResource("Resource_dapsx")])
+
+[sub_resource type="Resource" id="Resource_mcso3"]
+script = ExtResource("2_mwc6u")
+code = "_start_tween(\"modulate:a\", clampf(alpha, 0.0, 1.0), duration)"
+
+[sub_resource type="Resource" id="Resource_lxjd6"]
+script = ExtResource("3_i2nmf")
+id = "alpha"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_p8fn1"]
+script = ExtResource("3_i2nmf")
+id = "duration"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_4sn2j"]
+script = ExtResource("4_660gr")
+function_name = "tween_alpha"
+description = "Fades the host's modulate alpha."
+expose_as_ace = true
+ace_display_name = "Tween Alpha"
+ace_category = "Tween"
+params = Array[ExtResource("3_i2nmf")]([SubResource("Resource_lxjd6"), SubResource("Resource_p8fn1")])
+events = Array[Resource]([SubResource("Resource_mcso3")])
+
+[sub_resource type="Resource" id="Resource_4tlnk"]
+script = ExtResource("2_mwc6u")
+code = "if _active_tween != null:
+	_active_tween.kill()
+	_active_tween = null"
+
+[sub_resource type="Resource" id="Resource_64u0s"]
+script = ExtResource("4_660gr")
+function_name = "stop_tweens"
+description = "Kills the running tween (host stays where it is)."
+expose_as_ace = true
+ace_display_name = "Stop Tweens"
+ace_category = "Tween"
+events = Array[Resource]([SubResource("Resource_4tlnk")])
+
+[resource]
+script = ExtResource("5_r84we")
+host_class = "Node2D"
+behavior_mode = true
+custom_class_name = "TweenBehavior"
+addon_tags = PackedStringArray("motion", "juice")
+events = Array[Resource]([SubResource("Resource_gnvbk"), SubResource("Resource_hlhhl")])
+variables = {
+"default_duration": {
+"attributes": {
+"range": {
+"max": "10",
+"min": "0.01",
+"step": "0.01"
+},
+"tooltip": "Seconds used when a tween call passes 0."
+},
+"default": 0.3,
+"exported": true,
+"type": "float"
+},
+"easing": {
+"default": "out",
+"exported": true,
+"options": ["in", "out", "in_out", "out_in"],
+"type": "String"
+},
+"transition": {
+"default": "sine",
+"exported": true,
+"options": ["linear", "sine", "quad", "cubic", "quart", "quint", "expo", "circ", "elastic", "back", "bounce", "spring"],
+"type": "String"
+}
+}
+functions = Array[Resource]([SubResource("Resource_5v5yh"), SubResource("Resource_elexq"), SubResource("Resource_ldndk"), SubResource("Resource_q24d4"), SubResource("Resource_4sn2j"), SubResource("Resource_64u0s")])

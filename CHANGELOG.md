@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Spring + Tween behavior packs (packs 19 & 20) + sweep 10
+- **SpringBehavior** — a cleaned-up Godot port of the author's C3 *simple_spring*
+  addon: **named numeric springs** (per-spring stiffness/damping/precision), Spring
+  To / Between, impulses, Stop/Configure, **On Spring Reached**, Is Springing, and
+  value/velocity/progress expressions — plus host helpers (Spring Host X/Y/Angle/
+  **Scale** for one-action squash & stretch). Framerate-independent semi-implicit
+  integration (damping = fraction of velocity lost per second); the suite *simulates*
+  a spring and asserts convergence + the reached-trigger. Mesh deformation from the
+  C3 original is an honest skip (shader territory).
+- **TweenBehavior** — Godot Tweens the C3-behavior way: transition + easing as
+  Inspector **combos** (all 12 Godot transitions), default duration with range
+  attributes, one-action Tween Position/Scale/Rotation/Alpha/any-property,
+  Stop Tweens, Is Tweening and **On Tween Finished**.
+- Both packs showcase Inspector attributes shipping inside packs (ranges + tooltips
+  on their exports). Pack counts refreshed everywhere (20).
+- **Sweep 10**: live-value chips positioned with the control width *inside the zoomed
+  transform* — drifted at zoom ≠ 100% (now uses the logical canvas width); the early
+  architecture-slices tracker is stamped as a historical record (its "scaffolded"
+  claims all shipped).
+
 ### UX polish: C3 reflexes + the general polish set
 - **E / C / A single keys** add an event / condition / action on the selection — the
   C3 keyboard reflexes, joining Q (comment) and G (group).

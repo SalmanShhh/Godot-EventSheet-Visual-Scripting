@@ -2591,7 +2591,7 @@ func _draw_live_value_chip(row_data: EventRowData, row_top: float, row_height: f
     if chip_text.is_empty():
         return
     var text_width: float = font.get_string_size(chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-    var chip_x: float = size.x - text_width - 24.0
+    var chip_x: float = _get_logical_canvas_width() - text_width - 24.0
     draw_string(font, Vector2(chip_x, row_top + row_height * 0.5 + font_size * 0.35), chip_text,
         HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, get_event_style().value_highlight_color if get_event_style() != null else EventSheetPalette.COLOR_VALUE)
 

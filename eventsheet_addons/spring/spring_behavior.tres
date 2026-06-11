@@ -1,0 +1,441 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=52 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_ltbgk"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_xhrlg"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_jtet6"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_k7qed"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_xngu2"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_7gr1r"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_qx3vc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_almrk"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_0olq3"]
+
+[sub_resource type="Resource" id="Resource_swf5b"]
+script = ExtResource("1_ltbgk")
+text = "Numeric springing: snappy, physical motion for ANY number. Name a spring, set its target, read its value — or use the host helpers (x/y/angle/scale) for instant juice."
+
+[sub_resource type="Resource" id="Resource_kefu4"]
+script = ExtResource("2_xhrlg")
+code = "## @ace_trigger
+## @ace_name(\"On Spring Reached\")
+## @ace_category(\"Spring\")
+signal spring_reached(spring_name: String)
+
+## @ace_condition
+## @ace_name(\"Is Springing\")
+## @ace_category(\"Spring\")
+## @ace_codegen_template(\"$SpringBehavior.is_springing({spring_name})\")
+func is_springing(spring_name: String) -> bool:
+	return springs.has(spring_name) and bool(springs[spring_name].get(\"active\", false))
+
+## @ace_expression
+## @ace_name(\"Spring Value\")
+## @ace_category(\"Spring\")
+func spring_value(spring_name: String) -> float:
+	return float(springs.get(spring_name, {}).get(\"value\", 0.0))
+
+## @ace_expression
+## @ace_name(\"Spring Velocity\")
+## @ace_category(\"Spring\")
+func spring_velocity(spring_name: String) -> float:
+	return float(springs.get(spring_name, {}).get(\"velocity\", 0.0))
+
+## @ace_expression
+## @ace_name(\"Spring Progress\")
+## @ace_category(\"Spring\")
+func spring_progress(spring_name: String) -> float:
+	var entry: Dictionary = springs.get(spring_name, {})
+	var span: float = absf(float(entry.get(\"target\", 0.0)) - float(entry.get(\"from\", 0.0)))
+	if span <= 0.0:
+		return 1.0
+	return clampf(1.0 - absf(float(entry.get(\"target\", 0.0)) - float(entry.get(\"value\", 0.0))) / span, 0.0, 1.0)
+
+func _spring_entry(spring_name: String) -> Dictionary:
+	if not springs.has(spring_name):
+		springs[spring_name] = {\"value\": 0.0, \"from\": 0.0, \"target\": 0.0, \"velocity\": 0.0,
+			\"stiffness\": default_stiffness, \"damping\": default_damping, \"precision\": default_precision, \"active\": false}
+	return springs[spring_name]
+
+# Host conveniences: springs with these names write straight onto the parent.
+func _apply_to_host(spring_name: String, value: float) -> void:
+	if host == null:
+		return
+	match spring_name:
+		\"__x\": host.position.x = value
+		\"__y\": host.position.y = value
+		\"__angle\": host.rotation_degrees = value
+		\"__scale\": host.scale = Vector2(value, value)"
+
+[sub_resource type="Resource" id="Resource_m7rga"]
+script = ExtResource("2_xhrlg")
+code = "# Semi-implicit integration; damping uses pow() so motion is framerate-independent.
+for spring_name: Variant in springs.keys():
+	var entry: Dictionary = springs[spring_name]
+	if not bool(entry.get(\"active\", false)):
+		continue
+	entry[\"velocity\"] = float(entry[\"velocity\"]) + (float(entry[\"target\"]) - float(entry[\"value\"])) * float(entry[\"stiffness\"]) * delta
+	# Damping is the fraction of velocity LOST PER SECOND (framerate-independent).
+	entry[\"velocity\"] = float(entry[\"velocity\"]) * pow(1.0 - float(entry[\"damping\"]), delta)
+	entry[\"value\"] = float(entry[\"value\"]) + float(entry[\"velocity\"]) * delta
+	if absf(float(entry[\"target\"]) - float(entry[\"value\"])) < float(entry[\"precision\"]) and absf(float(entry[\"velocity\"])) < float(entry[\"precision\"]):
+		entry[\"value\"] = float(entry[\"target\"])
+		entry[\"velocity\"] = 0.0
+		entry[\"active\"] = false
+		spring_reached.emit(str(spring_name))
+	_apply_to_host(str(spring_name), float(entry[\"value\"]))"
+
+[sub_resource type="Resource" id="Resource_22bip"]
+script = ExtResource("6_7gr1r")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_m7rga")])
+event_uid = "449c85"
+
+[sub_resource type="Resource" id="Resource_dn21t"]
+script = ExtResource("2_xhrlg")
+code = "var entry: Dictionary = _spring_entry(spring_name)
+entry[\"from\"] = float(entry[\"value\"])
+entry[\"target\"] = target
+entry[\"active\"] = true"
+
+[sub_resource type="Resource" id="Resource_iqxm8"]
+script = ExtResource("7_qx3vc")
+id = "spring_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_o5f7p"]
+script = ExtResource("7_qx3vc")
+id = "target"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_er0il"]
+script = ExtResource("8_almrk")
+function_name = "spring_to"
+description = "Springs the named value toward a target."
+expose_as_ace = true
+ace_display_name = "Spring To"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_iqxm8"), SubResource("Resource_o5f7p")])
+events = Array[Resource]([SubResource("Resource_dn21t")])
+
+[sub_resource type="Resource" id="Resource_dl1ol"]
+script = ExtResource("2_xhrlg")
+code = "var entry: Dictionary = _spring_entry(spring_name)
+entry[\"value\"] = from_value
+entry[\"from\"] = from_value
+entry[\"velocity\"] = 0.0
+entry[\"target\"] = to_value
+entry[\"active\"] = true"
+
+[sub_resource type="Resource" id="Resource_552gn"]
+script = ExtResource("7_qx3vc")
+id = "spring_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_bnpvg"]
+script = ExtResource("7_qx3vc")
+id = "from_value"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_8vls3"]
+script = ExtResource("7_qx3vc")
+id = "to_value"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_0i7ck"]
+script = ExtResource("8_almrk")
+function_name = "spring_between"
+description = "Snaps to a start value, then springs to the end value."
+expose_as_ace = true
+ace_display_name = "Spring Between"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_552gn"), SubResource("Resource_bnpvg"), SubResource("Resource_8vls3")])
+events = Array[Resource]([SubResource("Resource_dl1ol")])
+
+[sub_resource type="Resource" id="Resource_27kfm"]
+script = ExtResource("2_xhrlg")
+code = "var entry: Dictionary = _spring_entry(spring_name)
+entry[\"value\"] = value
+entry[\"from\"] = value
+entry[\"target\"] = value
+entry[\"velocity\"] = 0.0
+entry[\"active\"] = false"
+
+[sub_resource type="Resource" id="Resource_8fecb"]
+script = ExtResource("7_qx3vc")
+id = "spring_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_4ghok"]
+script = ExtResource("7_qx3vc")
+id = "value"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_fc7br"]
+script = ExtResource("8_almrk")
+function_name = "set_spring"
+description = "Snaps the named spring (no motion)."
+expose_as_ace = true
+ace_display_name = "Set Spring Value"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_8fecb"), SubResource("Resource_4ghok")])
+events = Array[Resource]([SubResource("Resource_27kfm")])
+
+[sub_resource type="Resource" id="Resource_hd6c3"]
+script = ExtResource("2_xhrlg")
+code = "var entry: Dictionary = _spring_entry(spring_name)
+entry[\"velocity\"] = float(entry[\"velocity\"]) + amount
+entry[\"active\"] = true"
+
+[sub_resource type="Resource" id="Resource_hw21p"]
+script = ExtResource("7_qx3vc")
+id = "spring_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_gmnao"]
+script = ExtResource("7_qx3vc")
+id = "amount"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_v55em"]
+script = ExtResource("8_almrk")
+function_name = "add_impulse"
+description = "Kicks the named spring's velocity (instant juice)."
+expose_as_ace = true
+ace_display_name = "Add Impulse"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_hw21p"), SubResource("Resource_gmnao")])
+events = Array[Resource]([SubResource("Resource_hd6c3")])
+
+[sub_resource type="Resource" id="Resource_n8tm2"]
+script = ExtResource("2_xhrlg")
+code = "if springs.has(spring_name):
+	springs[spring_name][\"active\"] = false"
+
+[sub_resource type="Resource" id="Resource_vhsbd"]
+script = ExtResource("7_qx3vc")
+id = "spring_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_yumfq"]
+script = ExtResource("8_almrk")
+function_name = "stop_spring"
+description = "Freezes the named spring where it is."
+expose_as_ace = true
+ace_display_name = "Stop Spring"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_vhsbd")])
+events = Array[Resource]([SubResource("Resource_n8tm2")])
+
+[sub_resource type="Resource" id="Resource_rugel"]
+script = ExtResource("2_xhrlg")
+code = "var entry: Dictionary = _spring_entry(spring_name)
+entry[\"stiffness\"] = stiffness
+entry[\"damping\"] = clampf(damping, 0.0, 1.0)
+entry[\"precision\"] = precision"
+
+[sub_resource type="Resource" id="Resource_i4cst"]
+script = ExtResource("7_qx3vc")
+id = "spring_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_kijxg"]
+script = ExtResource("7_qx3vc")
+id = "stiffness"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_cnaeb"]
+script = ExtResource("7_qx3vc")
+id = "damping"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_d02j4"]
+script = ExtResource("7_qx3vc")
+id = "precision"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_cseej"]
+script = ExtResource("8_almrk")
+function_name = "configure_spring"
+description = "Per-spring stiffness/damping/precision overrides."
+expose_as_ace = true
+ace_display_name = "Configure Spring"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_i4cst"), SubResource("Resource_kijxg"), SubResource("Resource_cnaeb"), SubResource("Resource_d02j4")])
+events = Array[Resource]([SubResource("Resource_rugel")])
+
+[sub_resource type="Resource" id="Resource_u3qhl"]
+script = ExtResource("2_xhrlg")
+code = "var entry: Dictionary = _spring_entry(\"__x\")
+if not bool(entry[\"active\"]) and host != null:
+	entry[\"value\"] = host.position.x
+entry[\"from\"] = float(entry[\"value\"])
+entry[\"target\"] = target
+entry[\"active\"] = true"
+
+[sub_resource type="Resource" id="Resource_yfwlq"]
+script = ExtResource("7_qx3vc")
+id = "target"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_1s7hb"]
+script = ExtResource("8_almrk")
+function_name = "spring_host_x"
+description = "Springs the host's X position."
+expose_as_ace = true
+ace_display_name = "Spring Host X"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_yfwlq")])
+events = Array[Resource]([SubResource("Resource_u3qhl")])
+
+[sub_resource type="Resource" id="Resource_sevdf"]
+script = ExtResource("2_xhrlg")
+code = "var entry: Dictionary = _spring_entry(\"__y\")
+if not bool(entry[\"active\"]) and host != null:
+	entry[\"value\"] = host.position.y
+entry[\"from\"] = float(entry[\"value\"])
+entry[\"target\"] = target
+entry[\"active\"] = true"
+
+[sub_resource type="Resource" id="Resource_6hdki"]
+script = ExtResource("7_qx3vc")
+id = "target"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_yhbyb"]
+script = ExtResource("8_almrk")
+function_name = "spring_host_y"
+description = "Springs the host's Y position."
+expose_as_ace = true
+ace_display_name = "Spring Host Y"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_6hdki")])
+events = Array[Resource]([SubResource("Resource_sevdf")])
+
+[sub_resource type="Resource" id="Resource_vy162"]
+script = ExtResource("2_xhrlg")
+code = "var entry: Dictionary = _spring_entry(\"__angle\")
+if not bool(entry[\"active\"]) and host != null:
+	entry[\"value\"] = host.rotation_degrees
+entry[\"from\"] = float(entry[\"value\"])
+entry[\"target\"] = degrees
+entry[\"active\"] = true"
+
+[sub_resource type="Resource" id="Resource_bvlsq"]
+script = ExtResource("7_qx3vc")
+id = "degrees"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_y6r42"]
+script = ExtResource("8_almrk")
+function_name = "spring_host_angle"
+description = "Springs the host's rotation (degrees)."
+expose_as_ace = true
+ace_display_name = "Spring Host Angle"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_bvlsq")])
+events = Array[Resource]([SubResource("Resource_vy162")])
+
+[sub_resource type="Resource" id="Resource_0f5e4"]
+script = ExtResource("2_xhrlg")
+code = "var entry: Dictionary = _spring_entry(\"__scale\")
+if not bool(entry[\"active\"]) and host != null:
+	entry[\"value\"] = host.scale.x
+entry[\"from\"] = float(entry[\"value\"])
+entry[\"target\"] = target
+entry[\"active\"] = true"
+
+[sub_resource type="Resource" id="Resource_eak7h"]
+script = ExtResource("7_qx3vc")
+id = "target"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_6cyd2"]
+script = ExtResource("8_almrk")
+function_name = "spring_host_scale"
+description = "Springs the host's uniform scale (squash & stretch!)."
+expose_as_ace = true
+ace_display_name = "Spring Host Scale"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_eak7h")])
+events = Array[Resource]([SubResource("Resource_0f5e4")])
+
+[resource]
+script = ExtResource("9_0olq3")
+host_class = "Node2D"
+behavior_mode = true
+custom_class_name = "SpringBehavior"
+addon_tags = PackedStringArray("motion", "juice")
+events = Array[Resource]([SubResource("Resource_swf5b"), SubResource("Resource_kefu4"), SubResource("Resource_22bip")])
+variables = {
+"default_damping": {
+"attributes": {
+"range": {
+"max": "1",
+"min": "0",
+"step": "0.01"
+},
+"tooltip": "0 = oscillate forever, 1 = no overshoot."
+},
+"default": 0.85,
+"exported": true,
+"type": "float"
+},
+"default_precision": {
+"attributes": {
+"tooltip": "Distance + speed below which a spring counts as settled."
+},
+"default": 0.01,
+"exported": true,
+"type": "float"
+},
+"default_stiffness": {
+"attributes": {
+"range": {
+"max": "1000",
+"min": "1",
+"step": "1"
+},
+"tooltip": "Spring force toward the target (higher = snappier)."
+},
+"default": 170.0,
+"exported": true,
+"type": "float"
+},
+"springs": {
+"default": {},
+"exported": false,
+"type": "Dictionary"
+}
+}
+functions = Array[Resource]([SubResource("Resource_er0il"), SubResource("Resource_0i7ck"), SubResource("Resource_fc7br"), SubResource("Resource_v55em"), SubResource("Resource_yumfq"), SubResource("Resource_cseej"), SubResource("Resource_1s7hb"), SubResource("Resource_yhbyb"), SubResource("Resource_y6r42"), SubResource("Resource_6cyd2")])

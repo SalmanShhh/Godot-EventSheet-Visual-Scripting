@@ -8,10 +8,12 @@ plain GDScript fall out of it. This folder is the guided tour.
 **If you're coming from Construct 3:** events read exactly like home — two-lane rows,
 a searchable picker that understands your vocabulary ("every tick", "go to layout",
 "choose"), behaviors that attach to objects, Wait actions, combo dropdowns, color
-pickers with swatches. **Eighteen behavior packs** ship in the box — the C3 classics (Platformer,
+pickers with swatches. **Twenty behavior packs** ship in the box — the C3 classics (Platformer,
 8-Direction, Sine with wave types, Orbit ellipses, Bullet, Move To with waypoints,
 Follow with delay mode, Drag & Drop, Car with drift, Tile Movement, Line of Sight,
-Timer, Flash, State Machine) plus a 3D starter quartet (Sine, Orbit, Bullet, Move To).
+Timer, Flash, State Machine), a 3D starter quartet (Sine, Orbit, Bullet, Move To), and
+the juice duo: **Spring** (named numeric springs — squash & stretch in one action) and
+**Tween** (Godot Tweens with Inspector combos).
 
 **If you're a Godot user:** there is no runtime, no interpreter, no lock-in. Every sheet
 compiles to **typed, idiomatic GDScript** you could have written yourself — delete the

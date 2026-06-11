@@ -2,6 +2,11 @@
 
 This document tracks the broad architecture/spec-alignment PR in explicit slices and calls out what is fully implemented, scaffolded, or deferred.
 
+> **Historical record (early era).** This tracker predates the overhaul arcs — every
+> "scaffolded/deferred" claim below has since shipped or been superseded. The current
+> truth lives in `CHANGELOG.md` (ledger), `README.md` (milestones) and the per-feature
+> specs in `docs/`. Kept for archaeology, not navigation.
+
 ## Slice 0 — Architecture consolidation (current overhaul)
 
 The editor now has a **single** architecture: the custom-rendered, virtualized viewport
@@ -79,7 +84,7 @@ Status summary:
   - Viewport interaction extraction, selection model improvements, row/ACE enabled toggles, and renderer updates are wired into existing undoable workflows.
 - **Phase 3 (picker/params/expression):** **Partial**
   - Params dialog gained stronger flow awareness and re-edit cues.
-  - Picker/params workflows remain central; expression tooling still partially scaffolded.
+  - Picker/params workflows remain central; expression tooling has since shipped (ƒx picker, live validation, autocomplete).
 - **Phase 4 (compiler/runtime semantics):** **Implemented** (post-push)
   - Sub-events, Else/Else-If chains, signal-trigger connections (validated), behaviors as
     Node components, instance-backed addon ACEs, source maps — see `CHANGELOG.md` and

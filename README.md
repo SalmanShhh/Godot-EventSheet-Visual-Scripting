@@ -25,7 +25,7 @@ Conditions                        | Actions
 ## Quick start
 
 1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project
-   (optional: `eventsheet_addons/` for the 18 behavior packs and demo ACEs).
+   (optional: `eventsheet_addons/` for the 20 behavior packs and demo ACEs).
 2. **Project → Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
 4. **New…** → *Platformer Starter* (or open `demo/sheets/player.tres`), add events —
@@ -48,7 +48,7 @@ Conditions                        | Actions
   round-trips), paste GDScript and it converts to events, write GDScript that calls
   sheet-built classes like any other class.
 - **C3 muscle memory works.** The grammar, the picker, behaviors-as-components, combos,
-  waits, press-a-key capture, the 18-pack behavior set, System/Keyboard/Mouse/Gamepad/
+  waits, press-a-key capture, the 20-pack behavior set, System/Keyboard/Mouse/Gamepad/
   Touch/Audio vocabularies — designed against C3 conventions on purpose.
 - **Scales.** The custom-drawn virtualized viewport keeps 10,000+ rows fluid (no
   per-row widgets — a measured ~490 ms build for a 10k sheet, 8-row draw window).
@@ -176,7 +176,7 @@ Conditions                        | Actions
 |---|---|
 | `addons/eventforge/` | Data model, compiler, importer, builtin ACEs, runtime bridge |
 | `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, MCP server |
-| `eventsheet_addons/` | Zero-config ACE addons + the 18 behavior packs |
+| `eventsheet_addons/` | Zero-config ACE addons + the 20 behavior packs |
 | `demo/` | Demo sheets, themes, and the golden compiled output |
 | `tests/` | Headless suite — `tests/run_tests.gd` (full) and `tests/run_perf.gd` (headless-safe gate) |
 | `docs/` | Specs: GDScript pairing, editor UI, theme tokens, MCP, C3 migration |
