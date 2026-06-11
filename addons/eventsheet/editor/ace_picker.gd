@@ -201,7 +201,13 @@ const C3_SEARCH_SYNONYMS := {
 	"find path": "path",
 	"set invisible": "hide",
 	"set visible": "show",
-	"set opacity": "tint"
+	"set opacity": "tint",
+	"time scale": "time scale",
+	"tokenat": "token",
+	"zeropad": "zero pad",
+	"fullscreen": "fullscreen",
+	"compare two values": "compare values",
+	"is between": "between"
 }
 
 static func _c3_synonym_queries(query: String) -> Array[String]:

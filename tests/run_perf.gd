@@ -76,6 +76,7 @@ func _init() -> void:
 	passed = Native3DAcesTest.run() and passed
 	passed = AddonTagsTest.run() and passed
 	passed = BBCodeCommentsTest.run() and passed
+	passed = SystemAcesTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")

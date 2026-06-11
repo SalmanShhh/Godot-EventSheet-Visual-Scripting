@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### C3 System coverage, batch 1: time, display, text, comparisons
+- **Time group**: Set Time Scale (`Engine.time_scale` — C3's slow-motion staple) + Time
+  Scale / Game Time / FPS / Frame Count expressions.
+- **Display group**: Set Fullscreen Mode (window-mode dropdown), Set Window Size, Window
+  Width/Height expressions.
+- **Text group** (the C3 System string functions, as direct String methods): Token At /
+  Token Count (`get_slice`), Find, Left/Right/Mid, Upper/Lowercase, Length, Replace,
+  Trim, **Zero Pad** (`"%0*d" %`).
+- **Generic comparisons**: Compare Values (`{a} {op} {b}` with the operator dropdown) and
+  Is Between Values — plus C3 search synonyms for all of it.
+- Covered by `tests/system_aces_test.gd` (9 assertions).
+
 ### BBCode-lite comments
 - Comments now style with a small BBCode subset: **[b]bold[/b]**, *[i]italic[/i]*, and
   **[color=#ff7777]…[/color]** (hex or named colors), rendered natively on the
