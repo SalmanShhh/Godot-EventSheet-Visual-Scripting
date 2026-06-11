@@ -88,6 +88,7 @@ var _suppress_tab_signal: bool = false
 # Provider class -> autoload name (rebuilt with the registry): lets picked bus triggers
 # bake "autoload:<Name>" sources so consumers connect by singleton name.
 var _autoload_provider_names: Dictionary = {}
+var _autoload_annotation_regex: RegEx = null
 var _ace_registry: EventSheetACERegistry = EventSheetACERegistry.new()
 var _editor_param_store: EditorParamStore = EditorParamStore.new()
 var _param_resolver: ParamDefaultResolver = ParamDefaultResolver.new()
@@ -479,12 +480,29 @@ func _build_ui() -> void:
     _add_toolbar_button("Save", _on_save_requested)
     _add_toolbar_button("Save As", _on_save_as_requested)
     _add_toolbar_button("Export Addon…", _export_addon_pack)
-    _add_toolbar_button("Debug BP", _toggle_breakpoint_emission)
-    _add_toolbar_button("Live Values", _toggle_live_values)
-    _add_toolbar_button("Bookmarks", _open_bookmarks_panel)
-    _add_toolbar_button("Register Autoload", _register_autoload)
-    _add_toolbar_button("Publish Preview", _open_publish_preview)
-    _add_toolbar_button("Test Bench", _open_test_bench)
+    # Debug + addon-author tools live in one menu — the toolbar had grown past 25
+    # buttons (UX audit finding); these six are workflow tools, not per-row editing.
+    var tools_menu: MenuButton = MenuButton.new()
+    tools_menu.text = "Tools"
+    tools_menu.flat = false
+    var tools_popup: PopupMenu = tools_menu.get_popup()
+    tools_popup.add_item("Debug Breakpoints (toggle)", 0)
+    tools_popup.add_item("Live Values (toggle)", 1)
+    tools_popup.add_item("Bookmarks…", 2)
+    tools_popup.add_separator()
+    tools_popup.add_item("Register Autoload", 3)
+    tools_popup.add_item("Publish Preview…", 4)
+    tools_popup.add_item("Test Bench", 5)
+    tools_popup.id_pressed.connect(func(id: int) -> void:
+        match id:
+            0: _toggle_breakpoint_emission()
+            1: _toggle_live_values()
+            2: _open_bookmarks_panel()
+            3: _register_autoload()
+            4: _open_publish_preview()
+            5: _open_test_bench()
+    )
+    _toolbar.add_child(tools_menu)
     _add_toolbar_button("Split", _toggle_split_view)
     _add_toolbar_button("Detach", _toggle_detached_view)
     _add_toolbar_button("Link", _toggle_linked_views)
@@ -3389,14 +3407,15 @@ func _open_test_bench() -> void:
 ## Returns "" or the user-facing problem.
 func _build_test_bench(sheet: EventSheetResource, scene_path: String) -> String:
     var host_class: String = sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node2D"
-    var compile_result: Dictionary = SheetCompiler.compile(sheet, "res://.eventsheets_test_bench.gd")
+    var bench_script_path: String = scene_path.get_basename() + ".gd"
+    var compile_result: Dictionary = SheetCompiler.compile(sheet, bench_script_path)
     if not bool(compile_result.get("success", false)):
         return "Test Bench: the sheet doesn't compile (%s)." % str(compile_result.get("errors"))
     var host: Node = ClassDB.instantiate(host_class)
     host.name = "BenchHost"
     var behavior: Node = Node.new()
     behavior.name = sheet.custom_class_name if not sheet.custom_class_name.is_empty() else "Behavior"
-    behavior.set_script(load("res://.eventsheets_test_bench.gd"))
+    behavior.set_script(load(bench_script_path))
     host.add_child(behavior)
     behavior.owner = host
     var packed: PackedScene = PackedScene.new()
@@ -5942,6 +5961,16 @@ func _build_addon_ace_sources() -> Array[Object]:
             continue
         var autoload_path: String = str(ProjectSettings.get_setting(setting_name, "")).trim_prefix("*")
         if not autoload_path.ends_with(".gd"):
+            continue
+        # Only ANNOTATED autoloads publish (reflection would otherwise dump every
+        # public method of e.g. the plugin's own bridge into every picker — silent
+        # vocabulary pollution). The regex anchors on the annotation form so a passing
+        # doc-comment mention of "@ace_*" doesn't count.
+        var autoload_source: String = FileAccess.get_file_as_string(autoload_path)
+        if _autoload_annotation_regex == null:
+            _autoload_annotation_regex = RegEx.new()
+            _autoload_annotation_regex.compile("(?m)^\\s*## @ace_")
+        if _autoload_annotation_regex.search(autoload_source) == null:
             continue
         var autoload_script: Script = load(autoload_path) if ResourceLoader.exists(autoload_path) else null
         if autoload_script == null:

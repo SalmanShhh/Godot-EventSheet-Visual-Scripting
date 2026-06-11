@@ -1107,7 +1107,9 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			# function called after assignment). Canonical multi-line shape.
 			var on_changed: String = str(attributes.get("on_changed", "")).strip_edges() if exported else ""
 			var clamp_enabled: bool = exported and bool(attributes.get("clamp", false)) and attributes.get("range") is Dictionary and (type_name == "int" or type_name == "float")
-			if not on_changed.is_empty() and not function_names.is_empty() and not function_names.has(on_changed):
+			# Warn on typos even when the sheet has no functions at all (the empty-dict
+			# guard used to silently skip exactly the case most likely to be a mistake).
+			if not on_changed.is_empty() and not function_names.has(on_changed):
 				warnings.append("Variable \"%s\": On Changed targets unknown function \"%s\" — check the spelling." % [var_name, on_changed])
 			if not on_changed.is_empty() or clamp_enabled:
 				lines.append("%svar %s: %s = %s:" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])

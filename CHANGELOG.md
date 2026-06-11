@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Audits: UI/UX + compiler + sweep 11
+- **Sweep 11 (silent bugs)**: the Test Bench wrote (and once committed!) scratch files
+  at the repo root — the bench script now rides next to the scene path and the pattern
+  is gitignored; the autoload provider scan would have published **every public method
+  of every autoload** (including the plugin's own bridge) into every picker — only
+  scripts with real `## @ace_` annotations publish now (a doc-comment *mention* of
+  @ace_* doesn't count; regression-asserted).
+- **UI/UX audit**: the toolbar had grown past 30 buttons — the six workflow tools
+  (Debug Breakpoints, Live Values, Bookmarks, Register Autoload, Publish Preview,
+  Test Bench) now live in one **Tools** menu.
+- **Compiler audit**: pipeline order re-verified end-to-end; the `on_changed` typo
+  warning no longer silently skips sheets with zero functions (the case most likely
+  to be a mistake).
+- **README milestones truncated** to one row per release (the table had drifted to 26
+  rows with shipped entries stranded below "planned").
+
 ### The addon-author loop: Publish Preview, auto-READMEs, Test Bench
 - **Publish Preview** (toolbar): a live window showing exactly what this sheet
   publishes to other sheets' pickers — triggers, conditions, actions, expressions and

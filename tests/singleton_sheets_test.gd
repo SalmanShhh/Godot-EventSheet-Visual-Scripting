@@ -166,6 +166,15 @@ signal kicked"
 	all_passed = _check("bench host carries the behavior child",
 		bench_root is Node2D and bench_root.get_child_count() == 1 and bench_root.get_child(0).get_script() != null, true) and all_passed
 	bench_root.free()
+	all_passed = _check("bench script rides next to the scene (no repo-root pollution)",
+		FileAccess.file_exists("user://eventsheets_bench.gd"), true) and all_passed
+	# Unannotated autoload scripts must NOT publish (the bridge mentions \"@ace_*\" in a
+	# doc comment — that must not count either).
+	ProjectSettings.set_setting("autoload/PlainBus", "*res://tests/fixtures/test_bus.gd")
+	author_editor._build_addon_ace_sources()
+	all_passed = _check("unannotated autoloads stay out of the provider scan",
+		author_editor._autoload_provider_names.values().has("PlainBus"), false) and all_passed
+	ProjectSettings.set_setting("autoload/PlainBus", null)
 	author_editor.free()
 
 	return all_passed

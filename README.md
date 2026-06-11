@@ -147,35 +147,15 @@ Conditions                        | Actions
 
 | Milestone | Status |
 |---|---|
-| 1.0 editor + compiler + pairing (virtualized editor, parity contract, lossless `.gd` sheets) | ✅ shipped |
-| Rich variables (enums, collections, combos, curated Dictionary/Array/JSON ACEs) | ✅ shipped |
-| C3 coverage program (native-node ACEs, all 14 behavior packs, migration guide) | ✅ shipped |
-| Godot-familiarity (find bar, shortcuts, theme inheritance, scene-aware completion, drag-from-docks) | ✅ shipped |
-| MCP server (AI tooling) | ✅ shipped |
-| `v0.2.0` release | ✅ shipped |
-| Tool sheets (`@tool` + EditorScript / On Editor Run — experimental) | ✅ shipped |
-| Multi-view (split panes, detached windows, linked follow-selection — all full editors) | ✅ shipped |
-| 3D vocabulary + 3D behavior packs | ✅ shipped |
-| Language completeness (loops, picking, returns, stateful conditions, group locals) | ✅ shipped |
-| Debugging rung 1 (real breakpoints) + device input + Audio module | ✅ shipped |
-| `v0.5.0` release (System ACEs, loops/picking, debugging, devices, Audio) | ✅ shipped |
-| Inspector attributes **Tier 1** (tooltip / group / range / multiline on exported variables) | ✅ shipped |
-| Inspector attributes **Tier 2** (Clamp / On Changed setters, Show If / Lock Unless, read-only) | ✅ shipped |
-| Tool buttons (Inspector-clickable sheet functions) + MCP policy enforcement | ✅ shipped |
-| **Live Values** (variables stream to the editor while the game runs) | ✅ shipped |
-| Inspector attributes Tier 3 (custom drawers — full spec delivered) | ✅ shipped |
-| **Autoload (Singleton) sheets** — Game State / Event Bus / Save System as sheets, one-click registration, project-wide ACEs | ✅ shipped |
-| **Event-bus triggers** — autoload signals fire events in any sheet (by-name connections) | ✅ shipped |
-| **Addon-author loop** — Publish Preview, generated pack READMEs, Test Bench | ✅ shipped |
-| Spring + Tween packs, inline param editing, group colors, picker favorites (the UX-familiarity arc) | ✅ shipped |
-| `v0.6.0` release | 🔜 next |
-| Community feedback rounds | 🗺 planned |
-| **Addon composition** — meta-packs / jam kits (addon includes addon, compile-time bake) | ✅ shipped |
-| **Project policy** for composition (approved-tag sourcing, depth rails, collision gates) | ✅ shipped |
-| Composition Lane B v1 (has-a uses-instances) | ✅ shipped |
-| Lane B.2 (sibling-behavior requirements → ⚠ badge) | ✅ shipped |
+| `v0.1.0` — editor + compiler + lossless GDScript pairing (virtualized viewport, parity contract) | ✅ shipped |
+| `v0.2.0` — rich variables, C3 coverage (native ACEs + packs), input/Wait, MCP server, themes | ✅ shipped |
+| `v0.3.0` — multi-view (split / detached / linked), tool sheets | ✅ shipped |
+| `v0.4.0` — 3D vocabulary, addon tags, hardening sweeps, contributor docs | ✅ shipped |
+| `v0.5.0` — C3 System ACEs, full loops & picking, real breakpoints, devices, Audio, node picker | ✅ shipped |
+| `v0.6.0` — Inspector attributes (all tiers), addon composition + project policy + MCP enforcement, Live Values, **Singleton sheets + event-bus triggers**, Spring & Tween packs, the addon-author loop, the C3-reflex UX arc | 🔜 next |
+| Community feedback rounds, inline live-values overlay polish | 🗺 planned |
 
-| Live-values debug overlay (EngineDebugger channel), community feedback rounds | 🗺 planned |
+Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
 
 ## Project layout
 
