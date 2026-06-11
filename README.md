@@ -7,6 +7,14 @@ experienced dev who wants game logic to pour out faster, or you're 6 hours into 
 jam — events get you from idea to *playing it* in minutes, and the tool keeps up when the
 project balloons to thousands of events.
 
+> [!WARNING]
+> **Early, vibecoded, and not yet validated.** This plugin has been built almost
+> entirely through AI-assisted ("vibe") coding. The test suite is large (1,200+
+> CI-gated assertions) and every feature ships with regression tests, but the project
+> has **not yet been validated by real-world use**. It is **very early in
+> development** and **subject to large, sweeping changes** between releases — pin a
+> release tag if you build on it, expect rough edges, and please report what you hit.
+
 Godot EventSheets (engine codename *EventForge* — you'll see that prefix on internal
 class names) brings the event-sheet workflow C3 users love into the Godot editor: a fast
 visual editor where events read like sentences, and a compiler that turns every sheet
@@ -64,8 +72,10 @@ Conditions                        | Actions
 - **Some C3 plugins intentionally have no equivalent** (Multiplayer, Drawing Canvas,
   XML): the migration guide points to the native Godot feature instead — that honesty
   keeps the project maintainable.
-- **Young project.** The test suite is large (1,100+ assertions, CI-gated) but real-world
-  mileage is still accumulating; expect rough edges and report them.
+- **Young, vibecoded project.** Built AI-first with a large CI-gated suite (1,200+
+  assertions) standing in for mileage it hasn't earned yet — real-world validation is
+  still ahead, and large sweeping changes between releases are likely (see the warning
+  up top).
 
 ## Feature tour
 
