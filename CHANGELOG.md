@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Spec: addon composition (addon includes addon)
+- `docs/ADDON-COMPOSITION-SPEC.md` — analysis + design for addons building on other
+  addons: compile-time inclusion (meta-packs / jam kits — first), has-a runtime
+  dependencies with auto-attach (second), inheritance honestly skipped; pros/cons by
+  project size and the anti-"addon hell" rationale (bake-at-compile, shallow chains,
+  collision warnings, export bundling).
+
 ### Inspector attributes, Tier 1 (Unity/Odin-style, the Godot way)
 - Exported globals can now carry **Tooltip** (emitted as the `##` doc comment Godot
   shows natively on hover), **Group** (`@export_group` Inspector sections), **Range**
