@@ -132,6 +132,28 @@ static func run() -> bool:
 	all_passed = _check("duplicate _validate_property raw block warns",
 		str(SheetCompiler.compile(collide, "user://eventsheets_t2dup.gd").get("warnings")).contains("_validate_property"), true) and all_passed
 
+	# Tool buttons: labeled sheet functions export a clickable Callable.
+	var button_sheet: EventSheetResource = EventSheetResource.new()
+	button_sheet.tool_mode = true
+	var button_fn: EventFunction = EventFunction.new()
+	button_fn.function_name = "recalculate"
+	button_fn.tool_button_label = "Recalculate"
+	var button_body: RawCodeRow = RawCodeRow.new()
+	button_body.code = "print(\"recalc\")"
+	button_fn.events.append(button_body)
+	button_sheet.functions.append(button_fn)
+	var button_result: Dictionary = SheetCompiler.compile(button_sheet, "user://eventsheets_btn.gd")
+	var button_output: String = str(button_result.get("output", ""))
+	all_passed = _check("tool buttons emit the Callable export",
+		button_output.contains("@export_tool_button(\"Recalculate\") var _btn_recalculate: Callable = recalculate"), true) and all_passed
+	var button_script: GDScript = GDScript.new()
+	button_script.source_code = button_output
+	all_passed = _check("tool-button output parses", button_script.reload(true) == OK, true) and all_passed
+	all_passed = _check("tool sheets don't warn", str(button_result.get("warnings")).contains("@tool"), false) and all_passed
+	button_sheet.tool_mode = false
+	all_passed = _check("non-tool sheets warn about tool buttons",
+		str(SheetCompiler.compile(button_sheet, "user://eventsheets_btn2.gd").get("warnings")).contains("@tool sheet"), true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

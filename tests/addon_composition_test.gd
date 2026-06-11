@@ -197,6 +197,28 @@ static func run() -> bool:
 		req_sheet.requires_behaviors.size() == 1 and req_sheet.requires_behaviors[0] == "ScreenShake", true) and all_passed
 	req_editor.free()
 
+	# MCP policy awareness: tagged include_sources hides untagged ADDON ACEs from
+	# list_aces while Core builtins stay listed.
+	var server: EventSheetMCPServer = EventSheetMCPServer.new()
+	var core_definition: ACEDefinition = ACEDefinition.new()
+	core_definition.provider_id = "Core"
+	core_definition.id = "Wait"
+	var tagged_definition: ACEDefinition = ACEDefinition.new()
+	tagged_definition.provider_id = "ScreenShake"
+	tagged_definition.id = "Shake"
+	tagged_definition.metadata = {"tags": ["approved"]}
+	var untagged_definition: ACEDefinition = ACEDefinition.new()
+	untagged_definition.provider_id = "OldThing"
+	untagged_definition.id = "DoOld"
+	all_passed = _check("permissive policy lists everything",
+		server._policy_allows_definition(core_definition) and server._policy_allows_definition(untagged_definition), true) and all_passed
+	_set_policy("include_sources", "tagged:approved")
+	all_passed = _check("tagged policy keeps Core + tagged addons",
+		server._policy_allows_definition(core_definition) and server._policy_allows_definition(tagged_definition), true) and all_passed
+	all_passed = _check("tagged policy hides untagged addons over MCP",
+		server._policy_allows_definition(untagged_definition), false) and all_passed
+	_clear_policies()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

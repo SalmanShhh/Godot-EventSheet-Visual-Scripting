@@ -201,6 +201,21 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 				continue
 			lines.append("var __uses_%s := %s.new()" % [trimmed_class.to_snake_case(), trimmed_class])
 
+	# Tool buttons (Inspector-attributes spec, Tier 2): one Callable export per labeled
+	# sheet function. The Callable resolves at class scope, so emitting before the
+	# function bodies is fine.
+	var emitted_tool_button: bool = false
+	for button_function: Variant in all_functions:
+		if button_function is EventFunction and not (button_function as EventFunction).tool_button_label.strip_edges().is_empty():
+			var button_label: String = (button_function as EventFunction).tool_button_label.strip_edges()
+			var button_target: String = (button_function as EventFunction).function_name
+			if not emitted_tool_button:
+				lines.append("")
+				emitted_tool_button = true
+			lines.append("@export_tool_button(\"%s\") var _btn_%s: Callable = %s" % [button_label.c_escape(), button_target, button_target])
+	if emitted_tool_button and not sheet.tool_mode:
+		(result["warnings"] as Array).append("Tool buttons need a @tool sheet to run in the editor — enable Tool in the Sheet Type dialog.")
+
 	# Tree-placed GDScript blocks (top level / inside groups) are emitted verbatim at class
 	# level — helper functions, @onready vars, signal declarations, etc.
 	var raw_blocks: Array = []

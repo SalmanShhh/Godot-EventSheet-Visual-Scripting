@@ -11,6 +11,11 @@ class_name EventFunction
 ## script into res://eventsheet_addons/ publishes this function as an ACE in every sheet —
 ## the sheet → script → addon loop that makes behaviors/custom nodes extend the vocabulary.
 @export var expose_as_ace: bool = false
+## Odin-style [Button]: a non-empty label emits
+## `@export_tool_button("Label") var _btn_<name>: Callable = <name>` so the Inspector
+## shows a clickable button running this function. Needs a @tool sheet to act in-editor
+## (the compiler warns otherwise). Godot 4.4+.
+@export var tool_button_label: String = ""
 ## Optional ACE presentation when exposed (fall back to a humanized function name).
 @export var ace_display_name: String = ""
 @export var ace_category: String = ""

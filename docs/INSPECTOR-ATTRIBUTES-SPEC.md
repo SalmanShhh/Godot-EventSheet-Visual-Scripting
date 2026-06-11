@@ -3,7 +3,7 @@
 Unity-style (and Odin-Inspector-style) **attributes on exported variables**, mapped onto
 what Godot actually supports. Status: **Tiers 1–2 SHIPPED** (tooltip/group/range/multiline; clamp/on-changed
 setters, Show If / Lock Unless via generated `_validate_property`, static read-only —
-`tests/inspector_attributes_test.gd`); Tier 3 (custom drawers) + tool buttons planned. This documents the
+`tests/inspector_attributes_test.gd`); tool buttons SHIPPED; Tier 3 (custom drawers) planned. This documents the
 design so a later phase can implement it without re-deriving the constraints.
 
 ## Goal

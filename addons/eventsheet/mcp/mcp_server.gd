@@ -176,6 +176,20 @@ func _serialize_ace(ace: Resource) -> Dictionary:
 	}
 
 ## The full ACE vocabulary (builtins + zero-config addons), optionally filtered.
+## Composition-policy enforcement over MCP (docs/ADDON-COMPOSITION-SPEC.md): when the
+## project restricts include sources to a tag, addon ACEs without that tag disappear
+## from list_aces — an AI assistant told "only approved addons" is policy-BOUND, not
+## policy-advised. Core builtins always list.
+func _policy_allows_definition(definition: ACEDefinition) -> bool:
+	var include_sources: String = str(SheetCompiler._addon_policy("include_sources", "anywhere"))
+	if not include_sources.begins_with("tagged:"):
+		return true
+	if definition.provider_id == "Core":
+		return true
+	var required_tag: String = include_sources.trim_prefix("tagged:").strip_edges()
+	var definition_tags: Array = definition.metadata.get("tags", []) if definition.metadata.get("tags") is Array else []
+	return definition_tags.has(required_tag)
+
 func _tool_list_aces(arguments: Dictionary) -> Dictionary:
 	_ensure_registry()
 	var query: String = str(arguments.get("query", "")).to_lower()
@@ -187,6 +201,8 @@ func _tool_list_aces(arguments: Dictionary) -> Dictionary:
 	}
 	var aces: Array = []
 	for definition: ACEDefinition in _registry.get_all_definitions():
+		if not _policy_allows_definition(definition):
+			continue
 		var haystack: String = definition.get_search_text().to_lower() + " " + ("%s %s" % [definition.id, definition.provider_id]).to_lower()
 		if not query.is_empty() and not haystack.contains(query):
 			continue

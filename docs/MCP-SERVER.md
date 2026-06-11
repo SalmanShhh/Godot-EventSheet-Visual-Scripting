@@ -60,3 +60,10 @@ Notes:
   per the MCP stdio transport).
 - The ACE registry is bootstrapped exactly like the editor (builtin descriptors + the
   zero-config addon scan), so `list_aces` always matches what the picker shows.
+
+## Composition policy
+
+`list_aces` honors the project's composition policy: when
+`eventsheets/addons/include_sources` is `tagged:<tag>`, addon ACEs without that tag are
+omitted (Core builtins always list). AI assistants are therefore policy-bound — see
+`docs/ADDON-COMPOSITION-SPEC.md`.

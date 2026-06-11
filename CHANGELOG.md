@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Tool buttons + MCP policy awareness
+- **Tool buttons** (Odin's `[Button]`): give a sheet function a *Tool Button Label*
+  and the Inspector shows a clickable button running it
+  (`@export_tool_button("Label") var _btn_x: Callable = x`, Godot 4.4+). Non-@tool
+  sheets get a compile warning pointing at the Sheet Type toggle — the button needs a
+  tool sheet to act in-editor.
+- **MCP is now policy-bound**: with `include_sources = tagged:approved`, untagged
+  addon ACEs disappear from `list_aces` (Core builtins always list) — an AI assistant
+  told "only approved addons" is enforced, not advised. This completes the composition
+  spec's four enforcement points.
+- Suite: inspector test 24 assertions; composition test 25.
+
 ### Inspector attributes Tier 2 + doc refresh + sweep 6
 - **Tier 2 attributes** on exported globals: **Clamp to range** (`clampi`/`clampf`
   setters), **On Changed** (setter calls a sheet function — typos warn at compile),
