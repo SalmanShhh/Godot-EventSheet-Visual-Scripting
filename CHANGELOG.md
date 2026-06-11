@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Pack builders: one file per pack
+- The 1,968-line `build_sample_behaviors.gd` monolith split into
+  `tools/pack_builders/` — one builder file per pack (21) plus a shared `_lib.gd`
+  scaffold; the runner is a thin ordered orchestrator. **Faithfulness proven by the
+  drift audit: all 21 regenerated packs are byte-identical** to the monolith's
+  output (`audited=21 drifted=0`).
+
 ### Review fixes for the param-picker slice
 - A nine-angle code review of the slice confirmed three bugs, all fixed: the scene
   Browse… dialog is now **one cached EditorFileDialog** parented to the persistent

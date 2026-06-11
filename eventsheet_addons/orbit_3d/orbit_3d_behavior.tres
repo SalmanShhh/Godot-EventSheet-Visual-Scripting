@@ -31,7 +31,7 @@ script = ExtResource("6_6xk7j")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_51g62")])
-event_uid = "e05c06"
+event_uid = "730598"
 
 [sub_resource type="Resource" id="Resource_3s5dy"]
 script = ExtResource("2_1ihjn")
