@@ -6,13 +6,25 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin that provides a Construct-sty
 
 ## Architecture notes
 
-- Plugin entry: `res://addons/eventforge/plugin.gd`
+- Plugin entry: `res://addons/eventforge/plugin.gd` (registers the workspace, export
+  integrity, the Live Values debugger bridge and the attribute-drawers inspector plugin)
 - Main workspace/editor surface: `res://addons/eventsheet/editor/event_sheet_dock.gd`
 - Custom-rendered row viewport: `res://addons/eventsheet/editor/event_sheet_viewport.gd`
 - Row chrome/text drawing: `res://addons/eventsheet/editor/event_row_renderer.gd`
+- Compiler (pipeline overview in its header comment): `res://addons/eventforge/compiler/sheet_compiler.gd`
+- Builtin ACE vocabularies: per-module files in `res://addons/eventforge/registration/modules/`
+  built via `ace_factory.gd` (module contract documented there); legacy remainder in
+  `builtin_aces.gd`
+- Importer/lifter (lossless GDScript pairing): `res://addons/eventforge/importer/`
+- MCP server (AI tooling, policy-aware): `res://addons/eventsheet/mcp/mcp_server.gd`
 - Theme resources: `res://addons/eventsheet/theme/*.gd`
-- Theme/template scenes: `res://addons/eventsheet/elements/*.tscn`
-- Headless regression entrypoint: `res://tests/run_tests.gd`
+- Theme/template scenes: `res://addons/eventsheet/elements/*.tscn` (designer previews —
+  the live editor paints via the renderer + tokens, see `docs/elements/`)
+- Headless suites: `res://tests/run_perf.gd` (safe gate) and `res://tests/run_tests.gd`
+  (full; a tail segfault AFTER the summary is a known harmless teardown flake — count
+  `[FAIL]` lines)
+- Maintenance tools: `tools/` (pack builder, demo-golden regenerator, theme presets +
+  header backfill, addon drift audit)
 
 ## EventSheet editor structure
 
@@ -47,12 +59,28 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin that provides a Construct-sty
 - `docs/elements/*.md` — template scene guidance
 - `docs/spec/construct_3_system_aces_godot_variant_spec.md` — Construct 3-style System ACE vocabulary (conditions, actions, expressions) for Godot; implementation priority guide
 - `docs/spec/gdevelop_c3_eventsheet_uiux_spec.md` — GDevelop/C3 row-lane-block interaction model; hover, selection, drag, group, and variable row design spec
+- `docs/C3-MIGRATION-GUIDE.md` — user-facing C3→Godot concept/behavior/plugin map
+- `docs/MCP-SERVER.md` — the AI-tooling protocol (list/read/compile/lint/snippets)
+- `docs/INSPECTOR-ATTRIBUTES-SPEC.md` — Unity/Odin-style attributes (all tiers shipped)
+- `docs/ADDON-COMPOSITION-SPEC.md` — meta-packs, uses/requires, project policy (shipped)
+- `CONTRIBUTING.md` — dev setup, verification loop, house rules, gotcha list
+- `CHANGELOG.md` — the authoritative feature ledger per release
+
+## Standing contracts (read before changing the compiler or descriptors)
+
+- **Parity**: generated GDScript is plain code — no plugin runtime, no indirection.
+- **Lossless**: GDScript-backed sheets round-trip byte-identically (verify-lift gates).
+- **Bake-at-apply**: templates bake onto ACEs when applied; descriptor changes never
+  rewrite sheets. `ace_id`s are API — hide with `@ace_hidden`, never rename.
+- **Policy gates, never bytes**: composition ProjectSettings only allow/warn/error.
+- Indentation split: tabs in `addons/eventforge/`, **spaces** in
+  `addons/eventsheet/editor/`. See `CONTRIBUTING.md` for the gotcha list (e.g. `""`
+  is a backspace escape; `Dictionary.get` doesn't fall back on empty values).
 
 ## Current known gaps
 
 - Condition/action name vs description cells are documented as separate roles but still share one text token in the current renderer.
 - The theme package manifest is documentation/template only; it is not auto-imported yet.
-- Full runtime/compiler expansion is intentionally out of scope for this PR line.
 - UI screenshots still require a Godot runtime; this sandbox may only be able to do syntax-level validation.
 - The parallel Control-widget editor prototypes (`EventRowUI`, `GroupRowUI`, `CommentRowUI`, `VariableRowUI`, `SheetToolbar`, and assorted stubs) were **removed** — they could not scale to large sheets. The custom-rendered virtualized viewport (`EventSheetDock`/`EventSheetViewport`/`EventRowRenderer`) is the sole editor architecture. Variable-row text formatting that the removed widget owned now lives in `addons/eventsheet/editor/variable_row_format.gd` (`VariableRowFormat`).
 

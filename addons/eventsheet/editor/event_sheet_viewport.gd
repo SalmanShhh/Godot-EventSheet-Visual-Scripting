@@ -750,6 +750,14 @@ func _draw() -> void:
             continue
         var layout: Dictionary = _get_or_build_row_layout(index, width, font, font_size)
         _renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
+        var row_rect: Rect2 = layout.get("rect", Rect2())
+        _draw_live_value_chip(row_data, row_rect.position.y, row_rect.size.y, font, font_size)
+        # Drag-handle affordance: subtle grip dots on the hovered row's left edge so
+        # reordering is discoverable without being told.
+        if index == _hovered_row_index and not _flat_rows.is_empty():
+            var grip_color: Color = Color(1.0, 1.0, 1.0, 0.28)
+            for dot_row in range(3):
+                draw_circle(Vector2(row_rect.position.x + 5.0, row_rect.position.y + row_rect.size.y * 0.5 + (dot_row - 1) * 5.0), 1.4, grip_color)
     _draw_box_selection_overlay()
     _draw_drag_ghost(font, font_size)
 
@@ -2554,10 +2562,43 @@ func get_host_context_label() -> String:
         return " — host: %s" % _sheet.host_class
     return ""
 
+# ── Live values (rung 3): inline chips next to variable rows ──────────────────────────
+var _live_values: Dictionary = {}
+
+## Streamed name->value frame (debug runs). Redraws value chips on variable rows.
+func set_live_values(values: Dictionary) -> void:
+    _live_values = values
+    queue_redraw()
+
+## The "= value" chip for a row, or "" (variable rows whose name has a live frame).
+func live_value_chip_for(row_data: EventRowData) -> String:
+    var variable_name: String = ""
+    if row_data.source_resource is LocalVariable:
+        variable_name = (row_data.source_resource as LocalVariable).name
+    elif not row_data.spans.is_empty():
+        var first_word: String = str(row_data.spans[0].text).get_slice(":", 0).strip_edges()
+        if _live_values.has(first_word):
+            variable_name = first_word
+    if variable_name.is_empty() or not _live_values.has(variable_name):
+        return ""
+    return "= %s" % str(_live_values[variable_name])
+
+## Draws "= value" after a variable row's text when a live frame carries its name.
+func _draw_live_value_chip(row_data: EventRowData, row_top: float, row_height: float, font: Font, font_size: int) -> void:
+    if _live_values.is_empty() or row_data == null:
+        return
+    var chip_text: String = live_value_chip_for(row_data)
+    if chip_text.is_empty():
+        return
+    var text_width: float = font.get_string_size(chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+    var chip_x: float = size.x - text_width - 24.0
+    draw_string(font, Vector2(chip_x, row_top + row_height * 0.5 + font_size * 0.35), chip_text,
+        HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, get_event_style().value_highlight_color if get_event_style() != null else EventSheetPalette.COLOR_VALUE)
+
 func _draw_empty_state(width: float) -> void:
     var font: Font = _get_font()
     var font_size: int = _get_font_size()
-    var text: String = "No rows. Select an EventSheet resource or use the dock's demo sheet."
+    var text: String = "Empty sheet — press E (event), C (condition), A (action), Q (comment), or double-click to start. The picker speaks Construct: try \"every tick\"."
     if _sheet != null and _sheet.behavior_mode:
         text = "This behavior runs on its parent node (host: %s). Add events — actions can use the typed `host` accessor." % _sheet.host_class
     var text_size: Vector2 = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size)

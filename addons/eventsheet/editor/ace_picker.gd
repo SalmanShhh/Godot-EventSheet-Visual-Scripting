@@ -19,6 +19,20 @@ extends RefCounted
 ## context is the same dictionary passed to open().
 signal ace_selected(definition: ACEDefinition, context: Dictionary)
 
+## Session-recents (C3 surfaces familiar ACEs first): last-used ACE ids, newest first.
+static var _recent_ace_ids: PackedStringArray = PackedStringArray()
+const RECENT_ACES_CAP := 8
+
+## Records a use (newest first, deduped, capped) — drives the ★ Recent picker section.
+static func note_recent(provider_id: String, ace_id: String) -> void:
+	var recent_key: String = "%s/%s" % [provider_id, ace_id]
+	var existing_recent: int = _recent_ace_ids.find(recent_key)
+	if existing_recent >= 0:
+		_recent_ace_ids.remove_at(existing_recent)
+	_recent_ace_ids.insert(0, recent_key)
+	if _recent_ace_ids.size() > RECENT_ACES_CAP:
+		_recent_ace_ids.resize(RECENT_ACES_CAP)
+
 ## Node-type sections pre-declared at the top of the "Add Event" picker, in order.
 const EVENT_PICKER_GROUPS: Array[String] = [
 	"CharacterBody2D", "Area2D", "Node2D", "RigidBody2D", "Timer", "AnimationPlayer"
@@ -252,6 +266,25 @@ func _refresh_tree() -> void:
 		for node_type: String in EVENT_PICKER_GROUPS:
 			group_nodes[node_type] = _make_group_item(root, node_type, true)
 
+	# ★ Recent: your last-used ACEs pin to the top while not searching.
+	if not filtering and not _recent_ace_ids.is_empty():
+		var recent_group: TreeItem = null
+		for recent_key: String in _recent_ace_ids:
+			for candidate: ACEDefinition in _registry.get_all_definitions():
+				if "%s/%s" % [candidate.provider_id, candidate.id] != recent_key:
+					continue
+				if not _is_allowed_for_mode(candidate, mode, signals_only):
+					break
+				if recent_group == null:
+					recent_group = _make_group_item(root, "★ Recent", false)
+				var recent_item: TreeItem = _tree.create_item(recent_group)
+				recent_item.set_text(0, _item_label(candidate))
+				recent_item.set_custom_color(0, _item_color_for(candidate.ace_type))
+				recent_item.set_text(1, _ace_type_label(candidate.ace_type))
+				recent_item.set_custom_color(1, _item_color_for(candidate.ace_type))
+				recent_item.set_metadata(0, candidate)
+				break
+
 	var definitions: Array[ACEDefinition] = _registry.search(query)
 	# Construct 3 vocabulary bridge: familiar C3 phrases also find their Godot equivalents.
 	for synonym_query: String in _c3_synonym_queries(query):
@@ -417,6 +450,7 @@ func _on_item_activated() -> void:
 	if definition == null:
 		return
 	close()
+	note_recent(definition.provider_id, definition.id)
 	ace_selected.emit(definition, _context.duplicate(true))
 
 func close() -> void:

@@ -477,6 +477,7 @@ func _build_ui() -> void:
     _add_toolbar_button("Export Addon…", _export_addon_pack)
     _add_toolbar_button("Debug BP", _toggle_breakpoint_emission)
     _add_toolbar_button("Live Values", _toggle_live_values)
+    _add_toolbar_button("Bookmarks", _open_bookmarks_panel)
     _add_toolbar_button("Split", _toggle_split_view)
     _add_toolbar_button("Detach", _toggle_detached_view)
     _add_toolbar_button("Link", _toggle_linked_views)
@@ -885,6 +886,16 @@ func _unhandled_key_input(event: InputEvent) -> void:
         return
     if key_event.keycode == KEY_Q:
         _on_add_comment_requested()
+        accept_event()
+    # C3 reflexes: E adds an event, C a condition, A an action (on the selection).
+    elif key_event.keycode == KEY_E:
+        _on_add_event_requested()
+        accept_event()
+    elif key_event.keycode == KEY_C:
+        _on_add_condition_requested()
+        accept_event()
+    elif key_event.keycode == KEY_A:
+        _on_add_action_requested()
         accept_event()
     elif key_event.keycode == KEY_G:
         _on_add_group_requested()
@@ -2918,8 +2929,12 @@ func _ensure_live_values_window() -> void:
     _live_values_window.add_child(_live_values_label)
     add_child(_live_values_window)
 
-## Debugger-plugin sink (wired by the plugin entry point): one values frame -> text.
+## Debugger-plugin sink (wired by the plugin entry point): one values frame -> text
+## window + inline chips next to variable rows in every pane (rung 3).
 func update_live_values(values: Dictionary) -> void:
+    for pane: EventSheetViewport in [_viewport, _split_viewport, _detached_viewport]:
+        if pane != null:
+            pane.set_live_values(values)
     _ensure_live_values_window()
     var frame_lines: PackedStringArray = PackedStringArray()
     var value_keys: Array = values.keys()
@@ -2971,6 +2986,11 @@ func _ensure_find_bar() -> void:
     replace_button.text = "Replace All"
     replace_button.pressed.connect(_replace_all_in_sheet)
     _find_bar.add_child(replace_button)
+    var split_match_button: Button = Button.new()
+    split_match_button.text = "Open in Split"
+    split_match_button.tooltip_text = "Open the current match in the split pane."
+    split_match_button.pressed.connect(_open_match_in_split)
+    _find_bar.add_child(split_match_button)
     var close_button: Button = Button.new()
     close_button.text = "✕"
     close_button.flat = true
@@ -3065,6 +3085,57 @@ func _replace_in_rows(rows: Array, find_text: String, replace_text: String, coun
                     (pick as PickFilter).predicate_expression = (pick as PickFilter).predicate_expression.replace(find_text, replace_text)
                     (pick as PickFilter).order_by_expression = (pick as PickFilter).order_by_expression.replace(find_text, replace_text)
             _replace_in_rows(event_row.sub_events, find_text, replace_text, counter)
+
+## Find-bar "Open in Split": jumps the split pane to the current match (opening the
+## split if needed) — marrying search and multi-view.
+func _open_match_in_split() -> void:
+    if _find_resource_matches.is_empty():
+        _set_status("Find something first.", true)
+        return
+    var match_resource: Resource = _find_resource_matches[clampi(_find_cursor, 0, _find_resource_matches.size() - 1)]
+    if _split_viewport == null:
+        _toggle_split_view()
+    if _split_viewport != null:
+        _split_viewport.reveal_resource(match_resource)
+        _set_status("Match opened in the split pane.")
+
+# ── Bookmarks panel (C3's bookmarks window) ───────────────────────────────────────────
+var _bookmarks_window: Window = null
+var _bookmarks_list: ItemList = null
+
+## Lists every bookmarked row; activating one reveals it (Ctrl+B marks rows).
+func _open_bookmarks_panel() -> void:
+    if _bookmarks_window == null:
+        _bookmarks_window = Window.new()
+        _bookmarks_window.title = "Bookmarks"
+        _bookmarks_window.size = Vector2i(360, 300)
+        _bookmarks_window.close_requested.connect(func() -> void: _bookmarks_window.hide())
+        _bookmarks_list = ItemList.new()
+        _bookmarks_list.set_anchors_preset(Control.PRESET_FULL_RECT)
+        _bookmarks_list.item_activated.connect(func(index: int) -> void:
+            var target: Resource = _bookmarks_list.get_item_metadata(index)
+            if target != null and _viewport != null:
+                _viewport.reveal_resource(target)
+        )
+        _bookmarks_window.add_child(_bookmarks_list)
+        add_child(_bookmarks_window)
+    _refresh_bookmarks_list()
+    _bookmarks_window.popup_centered()
+
+## Fills the bookmarks list from the primary pane (popup-free; testable headless).
+func _refresh_bookmarks_list() -> void:
+    _bookmarks_list.clear()
+    if _viewport != null:
+        for flat_entry: Dictionary in _viewport.get_flat_rows():
+            var row_data: EventRowData = flat_entry.get("row")
+            if row_data != null and row_data.bookmark_enabled and row_data.source_resource != null:
+                var label: String = row_data.source_resource.get_class()
+                if not row_data.spans.is_empty():
+                    label = str(row_data.spans[0].text).left(60)
+                var item_index: int = _bookmarks_list.add_item("🔖 %s" % label)
+                _bookmarks_list.set_item_metadata(item_index, row_data.source_resource)
+    if _bookmarks_list.item_count == 0:
+        _bookmarks_list.add_item("(no bookmarks — Ctrl+B marks the selected row)")
 
 ## Ctrl+/: toggles the selected rows' enabled state (the sheet's "comment out").
 func _toggle_selected_rows_enabled() -> void:

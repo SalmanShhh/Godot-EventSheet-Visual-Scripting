@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### UX polish: C3 reflexes + the general polish set
+- **E / C / A single keys** add an event / condition / action on the selection — the
+  C3 keyboard reflexes, joining Q (comment) and G (group).
+- **★ Recent in the picker**: your last-used ACEs pin to the top while not searching
+  (newest first, deduped, capped at 8).
+- **Onboarding watermark**: empty sheets now teach the keys and the C3-phrase search.
+- **Inline live values (rung 3)**: streamed frames draw `= value` chips next to
+  variable rows in every pane — the window remains for the full list.
+- **Drag-handle grip dots** on the hovered row's edge — reordering is discoverable.
+- **Bookmarks panel**: a toolbar window listing every Ctrl+B row; activate to jump.
+- **Find → Split**: the find bar's "Open in Split" jumps the split pane to the current
+  match.
+- `AGENTS.md` refreshed (architecture map, standing contracts, docs map, suites/tools).
+- Covered by `tests/ux_polish_test.gd` (6 assertions).
+
 ### Full audit: features, themes, addons, docs (sweep 9)
 - **Themes**: 4 of 10 presets (Construct3-stacked, high-contrast, soft-light, designer
   template) predated the column-header tokens and rendered headers with generic

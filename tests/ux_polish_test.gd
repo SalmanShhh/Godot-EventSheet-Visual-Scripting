@@ -1,0 +1,94 @@
+# Godot EventSheets — UX polish slice: C/A/E reflexes, picker recents, onboarding
+# watermark, inline live-value chips, bookmarks panel, find→split.
+@tool
+extends RefCounted
+class_name UxPolishTest
+
+class NoopUndoManager:
+	extends RefCounted
+	func create_action(_a = null) -> void: pass
+	func add_do_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func add_undo_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func commit_action() -> void: pass
+	func has_undo() -> bool: return false
+	func has_redo() -> bool: return false
+	func undo() -> void: pass
+	func redo() -> void: pass
+	func clear_history() -> void: pass
+
+static func run() -> bool:
+	var all_passed: bool = true
+
+	# Picker recents: newest first, deduped, capped.
+	ACEPickerDialog._recent_ace_ids = PackedStringArray()
+	ACEPickerDialog.note_recent("Core", "Wait")
+	ACEPickerDialog.note_recent("Core", "PlaySound")
+	ACEPickerDialog.note_recent("Core", "Wait")
+	all_passed = _check("recents dedupe to newest-first",
+		ACEPickerDialog._recent_ace_ids[0] == "Core/Wait" and ACEPickerDialog._recent_ace_ids.size() == 2, true) and all_passed
+	for index in range(12):
+		ACEPickerDialog.note_recent("Core", "Filler%d" % index)
+	all_passed = _check("recents cap at %d" % ACEPickerDialog.RECENT_ACES_CAP,
+		ACEPickerDialog._recent_ace_ids.size(), ACEPickerDialog.RECENT_ACES_CAP) and all_passed
+	ACEPickerDialog._recent_ace_ids = PackedStringArray()
+
+	# Inline live-value chips resolve variable rows by name.
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var tree_var: LocalVariable = LocalVariable.new()
+	tree_var.name = "hp"
+	tree_var.type_name = "int"
+	tree_var.default_value = 100
+	sheet.events.append(tree_var)
+	var marked: CommentRow = CommentRow.new()
+	marked.text = "remember this"
+	sheet.events.append(marked)
+	editor.setup(sheet)
+	editor.set_undo_redo_manager(NoopUndoManager.new())
+	var viewport: EventSheetViewport = editor.get_viewport_control()
+	viewport.set_live_values({"hp": 42})
+	var variable_row: EventRowData = null
+	for flat_entry: Dictionary in viewport.get_flat_rows():
+		if (flat_entry.get("row") as EventRowData).source_resource == tree_var:
+			variable_row = flat_entry.get("row")
+	all_passed = _check("live chips resolve variable rows", viewport.live_value_chip_for(variable_row), "= 42") and all_passed
+	editor.update_live_values({"hp": 7})
+	all_passed = _check("frames forward to panes via the dock sink",
+		viewport.live_value_chip_for(variable_row), "= 7") and all_passed
+
+	# Bookmarks panel lists marked rows (popup-free refresh).
+	viewport._select_row(1, -1)
+	viewport.toggle_bookmark_selected()
+	editor._ensure_live_values_window()  # unrelated windows coexist
+	if editor._bookmarks_window == null:
+		editor._bookmarks_window = Window.new()
+		editor._bookmarks_list = ItemList.new()
+		editor._bookmarks_window.add_child(editor._bookmarks_list)
+		editor.add_child(editor._bookmarks_window)
+	editor._refresh_bookmarks_list()
+	var listed: bool = false
+	for index in range(editor._bookmarks_list.item_count):
+		if editor._bookmarks_list.get_item_text(index).contains("remember this"):
+			listed = true
+	all_passed = _check("bookmarks panel lists marked rows", listed, true) and all_passed
+
+	# Find -> split: the current match opens in the split pane.
+	editor._ensure_find_bar()
+	editor._find_edit.text = "remember"
+	editor._find_resource_matches = editor.get_viewport_control().search_all("remember")
+	editor._find_cursor = 0
+	editor._open_match_in_split()
+	all_passed = _check("find match opens in the split pane",
+		editor._split_viewport != null and editor._split_viewport.get_flat_rows().size() > 0, true) and all_passed
+	editor.free()
+
+	return all_passed
+
+static func _check(label: String, actual: Variant, expected: Variant) -> bool:
+	if actual == expected:
+		print("[PASS] ux_polish_test: %s" % label)
+		return true
+	print("[FAIL] ux_polish_test: %s" % label)
+	print("  expected: %s" % str(expected))
+	print("  actual:   %s" % str(actual))
+	return false
