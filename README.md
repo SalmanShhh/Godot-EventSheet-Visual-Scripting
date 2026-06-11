@@ -202,6 +202,16 @@ Pushes and PRs run the headless suite (`.github/workflows/ci.yml`). Pushing a ta
 `godot-eventsheets-<v>.zip` (drop-in addons) and `godot-eventsheets-samples-<v>.zip`
 (behavior packs + demo project).
 
+## Feedback
+
+This experiment lives or dies by real-world reports. If something breaks or a C3
+workflow feels wrong here, [open an issue](../../issues/new/choose) — the bug template
+asks for the two things that make fixes fast (your versions + a minimal sheet or text
+snippet), and the feature template asks what you're trying to *make*, which is how
+this project designs. Permanent non-goals are documented in the
+[migration guide](docs/C3-MIGRATION-GUIDE.md) so nobody waits on something that isn't
+coming.
+
 ## Contributing
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has the dev setup, the verification loop, the house

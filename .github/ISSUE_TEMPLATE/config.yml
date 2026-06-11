@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "Docs: C3 migration guide"
+    url: "https://github.com/SalmanShhh/GodotEventSheet/blob/main/docs/C3-MIGRATION-GUIDE.md"
+    about: "Maps every C3 concept/behavior/plugin to its home here (incl. honest non-goals)."

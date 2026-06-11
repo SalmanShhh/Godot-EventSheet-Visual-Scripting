@@ -1,0 +1,51 @@
+name: Bug report
+description: Something broke — the editor, the compiler, or generated GDScript.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for kicking the tires on an **experimental** plugin — reports like this
+        are exactly how it earns real-world validation. Two minutes of detail here
+        usually saves a day of guessing.
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Plugin release tag + Godot version.
+      placeholder: "v0.6.1, Godot 4.5.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where did it break?
+      options:
+        - Editor (viewport, dialogs, picker, themes)
+        - Compiler / generated GDScript
+        - GDScript pairing (open .gd as sheet, paste, round-trip)
+        - Behavior packs / addons
+        - Live Values / debugging
+        - MCP server
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: |
+        The gold standard is a minimal sheet: attach the .tres (zip it), or paste a
+        **text snippet** (select rows → Copy — the clipboard format is shareable text).
+      placeholder: |
+        1. New sheet → add event "Every tick"
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: Expected vs actual
+      description: For compiler bugs, paste the generated GDScript (the GDScript panel shows it) and any errors from the Output dock.
+    validations:
+      required: true

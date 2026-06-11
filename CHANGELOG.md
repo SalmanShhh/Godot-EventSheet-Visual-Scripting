@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Community-feedback groundwork
+- GitHub issue templates: the bug form asks for versions + a minimal sheet or text
+  snippet (the two things that make fixes fast); the feature form asks for the game
+  situation and the current workaround, and routes C3 requests through the migration
+  guide first. README gains a Feedback section.
+
 ### Pack builders: one file per pack
 - The 1,968-line `build_sample_behaviors.gd` monolith split into
   `tools/pack_builders/` — one builder file per pack (21) plus a shared `_lib.gd`

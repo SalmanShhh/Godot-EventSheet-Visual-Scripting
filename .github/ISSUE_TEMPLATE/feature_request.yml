@@ -1,0 +1,30 @@
+name: Feature request
+description: Something from Construct 3 / GDevelop you miss, or a Godot-native idea.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: skim the [C3 migration guide](../blob/main/docs/C3-MIGRATION-GUIDE.md) —
+        many C3 features map to a Godot idiom that already exists here, and a few are
+        documented **permanent non-goals** (e.g. importing `.c3p` projects).
+  - type: input
+    id: c3_equivalent
+    attributes:
+      label: C3/GDevelop equivalent (if any)
+      placeholder: "C3's 'Pick overlapping object', GDevelop's external layouts, …"
+  - type: textarea
+    id: usecase
+    attributes:
+      label: What are you trying to make?
+      description: |
+        The concrete game situation beats the abstract feature: "my boss fight needs X"
+        gets designed faster than "add X". This project's tie-breakers are
+        speed-to-game and C3 familiarity — frame it that way and you're halfway in.
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: How do you work around it today?
+      description: ƒx expression? GDScript block? A behavior pack you hand-rolled?
