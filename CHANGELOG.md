@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Language gaps closed: C3 Loops, Pick Instances, returns, group locals, real breakpoints
+- **The full C3 Loops set** in the pick-filter dialog (with a C3-named preset menu):
+  **For** (indexed), **For Each**, **For Each (ordered)**, **Repeat**, **While** — Repeat
+  compiles to `for i in range(n)`, While to a real `while`, all reusing the picking
+  pipeline (predicates and first-N still apply).
+- **The C3 Pick Instances set** as presets: Pick all, **by comparison/evaluate**
+  (predicate), **by highest/lowest value** (ordered + first-1), **nth**, **random**
+  (`[….pick_random()]`), **last created**, **overlapping point** — powered by **ordered
+  picking finally compiling** (`order_by` sorts a copy via `sort_custom`; descending
+  flips the comparator). *Pick nearest* is `order by distance, first 1`.
+- **Function return types**: `EventFunction.return_type` (Variant.Type) emits
+  `-> int:` etc., **Return Value / Return** actions author it, and typed functions
+  **verify-lift round-trip**. Non-void functions are usable in ƒx expressions.
+- **Group-local variables** (C3): variables attached to a group compile as class members
+  under a `# <Group> — group locals` header.
+- **Real breakpoints**: gutter-flagged events (persisted as `EventRow.debug_break`) emit
+  a `breakpoint` statement when the sheet's debug-compile toggle is on — pausing the
+  actual Godot debugger. Normal compiles are untouched.
+- Covered by `tests/language_gaps_test.gd` (16 assertions).
+
 ### Bug sweep 3 (stateful-condition hardening)
 - **GDScript-backed sheets compiled broken scripts when a stateful condition was added**
   (Every X Seconds referenced a member the external path never declared) — members now

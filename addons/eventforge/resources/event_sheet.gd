@@ -16,6 +16,8 @@ class_name EventSheetResource
 ## to build editor tooling from events (File > Run / Ctrl+Shift+X). Runtime ACEs stay on
 ## stable APIs only — editor APIs are Godot's most volatile surface.
 @export var tool_mode: bool = false
+## Debug compile: emit `breakpoint` statements for rows flagged via the gutter (F9).
+@export var emit_breakpoints: bool = false
 ## When set, the generated script declares `class_name <this>` — the sheet then defines a
 ## custom node type that appears in Godot's Create Node dialog, exactly like a hand-written
 ## GDScript class. Must be unique across the project (Godot enforces this).

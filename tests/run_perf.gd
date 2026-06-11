@@ -78,6 +78,7 @@ func _init() -> void:
 	passed = BBCodeCommentsTest.run() and passed
 	passed = SystemAcesTest.run() and passed
 	passed = StatefulAcesTest.run() and passed
+	passed = LanguageGapsTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")

@@ -222,12 +222,17 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	if annotations.is_empty():
 		return {"ok": false}  # generated sheet functions always carry an annotation block
 	var header_regex: RegEx = RegEx.new()
-	header_regex.compile("^func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\) -> void:$")
+	header_regex.compile("^func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\) -> ([A-Za-z_][A-Za-z0-9_]*):$")
 	var header_match: RegExMatch = header_regex.search(function_lines[0])
 	if header_match == null:
 		return {"ok": false}
 	var event_function: EventFunction = EventFunction.new()
 	event_function.function_name = header_match.get_string(1)
+	var return_name: String = header_match.get_string(3) if header_match.get_group_count() >= 3 else "void"
+	var return_types: Dictionary = {"void": TYPE_NIL, "bool": TYPE_BOOL, "int": TYPE_INT, "float": TYPE_FLOAT, "String": TYPE_STRING, "Vector2": TYPE_VECTOR2, "Vector3": TYPE_VECTOR3, "Color": TYPE_COLOR, "Array": TYPE_ARRAY, "Dictionary": TYPE_DICTIONARY}
+	if not return_types.has(return_name):
+		return {"ok": false}
+	event_function.return_type = return_types[return_name]
 	for argument: String in header_match.get_string(2).split(", ", false):
 		var param: ACEParam = ACEParam.new()
 		var colon: int = argument.find(": ")

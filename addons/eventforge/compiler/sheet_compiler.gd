@@ -6,6 +6,9 @@ class_name SheetCompiler
 
 const VERSION: String = "0.1.0"
 
+# Set per-compile from sheet.emit_breakpoints (single-threaded compiles).
+static var _emit_breakpoints_flag: bool = false
+
 ## Compiles an event sheet resource to a GDScript output file.
 static func compile(sheet: EventSheetResource, output_path: String = "") -> Dictionary:
 	var result: Dictionary = {
@@ -30,6 +33,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 	if not sheet.external_source_path.is_empty():
 		return _compile_external(sheet, result, output_path)
 
+	_emit_breakpoints_flag = sheet.emit_breakpoints
 	# C3-style includes: merge included sheets' rows/variables/functions (compile-time
 	# only; the root sheet wins collisions, cycles are skipped with warnings).
 	var all_events: Array = sheet.events.duplicate()
@@ -117,6 +121,18 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			lines.append(declaration)
 			source_map.append({"uid": str((tree_entry as LocalVariable).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "variable"})
 
+	# C3 group-local variables: class members under a per-group header comment.
+	var group_local_sets: Array = []
+	_collect_group_locals(all_events, group_local_sets)
+	for group_set: Dictionary in group_local_sets:
+		lines.append("")
+		lines.append("# %s — group locals" % str(group_set.get("group", "Group")))
+		for local_entry: Variant in group_set.get("locals", []):
+			var local_line: String = _emit_tree_variable_line(local_entry as LocalVariable)
+			if not local_line.is_empty():
+				lines.append(local_line)
+				source_map.append({"uid": str((local_entry as LocalVariable).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "variable"})
+
 	# Stateful-condition members (Every X Seconds…): one class member per applied instance.
 	var stateful_members: Array = []
 	_collect_stateful_members(all_events, stateful_members)
@@ -201,7 +217,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		lines.append("")
 		var function_start: int = lines.size() + 1
 		_emit_expose_annotations(event_function, sheet, lines)
-		lines.append("func %s(%s) -> void:" % [event_function.function_name, _emit_function_params(event_function)])
+		lines.append("func %s(%s) -> %s:" % [event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
 		var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
 		var function_had_body: bool = _emit_event_body(function_events, lines, source_map, 1, result["warnings"])
 		if not function_had_body:
@@ -234,6 +250,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 ## afterwards append as standard trigger functions at the end. Disabled blocks still emit —
 ## external mode is lossless, never a filter.
 static func _compile_external(sheet: EventSheetResource, result: Dictionary, output_path: String) -> Dictionary:
+	_emit_breakpoints_flag = sheet.emit_breakpoints
 	var lines: PackedStringArray = PackedStringArray()
 	var source_map: Array = result["source_map"]
 	var added_event_rows: Array = []
@@ -282,7 +299,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		lines.append("")
 		var function_start: int = lines.size() + 1
 		_emit_expose_annotations(event_function, sheet, lines)
-		lines.append("func %s(%s) -> void:" % [event_function.function_name, _emit_function_params(event_function)])
+		lines.append("func %s(%s) -> %s:" % [event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
 		var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
 		if not _emit_event_body(function_events, lines, source_map, 1, result["warnings"]):
 			lines.append("\tpass")
@@ -649,6 +666,9 @@ static func _emit_event_body(
 		var emitted_pick_loop: bool = lines.size() > pick_start_size
 		had_body = had_body or emitted_pick_loop
 		var body_indent: String = "\t".repeat(body_depth)
+		if _emit_breakpoints_flag and event_row.debug_break:
+			lines.append(body_indent + "breakpoint")
+			had_body = true
 		var body_start_size: int = lines.size()
 
 		for action_item: Variant in event_row.actions:
@@ -728,8 +748,6 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 		if collection.is_empty():
 			warnings.append("Pick filter skipped: no collection for kind %d (set collection_value)." % pick.collection_kind)
 			continue
-		if not pick.order_by_expression.strip_edges().is_empty():
-			warnings.append("Pick filter order_by is not compiled yet; iterating in collection order.")
 		if not pick.filter_conditions.is_empty():
 			warnings.append("Pick filter conditions are not compiled yet; use predicate_expression (iterator-scoped GDScript).")
 		var iterator: String = pick.iterator_name.strip_edges()
@@ -739,7 +757,22 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 		var counter_name: String = "__pick_count_%d" % loop_index
 		if pick.pick_first_n > 0:
 			lines.append("%svar %s: int = 0" % [indent, counter_name])
-		lines.append("%sfor %s in %s:" % [indent, iterator, collection])
+		if pick.collection_kind == PickFilter.CollectionKind.WHILE:
+			# While loops reuse the picking pipeline (predicate/first-N still apply).
+			lines.append("%swhile %s:" % [indent, collection])
+		else:
+			# Ordered picking (C3 pick nearest/furthest): sort a copy by the order
+			# expression (written in terms of the iterator) before looping.
+			if not pick.order_by_expression.strip_edges().is_empty():
+				var sorted_name: String = "__pick_sorted_%d" % loop_index
+				var iterator_regex: RegEx = RegEx.new()
+				iterator_regex.compile("\\b%s\\b" % iterator)
+				var key_a: String = iterator_regex.sub(pick.order_by_expression.strip_edges(), "__pick_a", true)
+				var key_b: String = iterator_regex.sub(pick.order_by_expression.strip_edges(), "__pick_b", true)
+				lines.append("%svar %s: Array = Array(%s)" % [indent, sorted_name, collection])
+				lines.append("%s%s.sort_custom(func(__pick_a, __pick_b): return (%s) %s (%s))" % [indent, sorted_name, key_a, ">" if pick.order_descending else "<", key_b])
+				collection = sorted_name
+			lines.append("%sfor %s in %s:" % [indent, iterator, collection])
 		body_depth += 1
 		indent = "\t".repeat(body_depth)
 		var predicate: String = pick.predicate_expression.strip_edges()
@@ -759,6 +792,10 @@ static func _pick_collection_expression(pick: PickFilter) -> String:
 	if value.is_empty():
 		value = pick.source_expression.strip_edges()
 	match pick.collection_kind:
+		PickFilter.CollectionKind.REPEAT:
+			return "range(%s)" % value
+		PickFilter.CollectionKind.WHILE:
+			return value
 		PickFilter.CollectionKind.GROUP:
 			return "get_tree().get_nodes_in_group(\"%s\")" % value if not value.is_empty() else ""
 		PickFilter.CollectionKind.CHILDREN:
@@ -820,6 +857,12 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 	lines.append("## @ace_codegen_template(\"%s%s(%s)\")" % [call_prefix, event_function.function_name, ", ".join(argument_tokens)])
 
 ## Builds the typed parameter list for a sheet function (e.g. "amount: int, label: String").
+## "-> void" unless the function declares a Variant.Type return (TYPE_NIL = void).
+static func _function_return_type_name(event_function: EventFunction) -> String:
+	if event_function.return_type == TYPE_NIL:
+		return "void"
+	return type_string(event_function.return_type)
+
 static func _emit_function_params(event_function: EventFunction) -> String:
 	var parts: PackedStringArray = PackedStringArray()
 	if not event_function.params.is_empty():
@@ -912,6 +955,19 @@ static func _collect_enum_rows(entries: Array, into: Array) -> void:
 			_collect_enum_rows(group.events if not group.events.is_empty() else group.rows, into)
 
 ## Gathers stateful-condition member declarations (deduped) from the event tree.
+## Gathers group-local variables: [{group: name, locals: [LocalVariable…]}] in order.
+static func _collect_group_locals(entries: Array, into: Array) -> void:
+	for entry: Variant in entries:
+		if entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			var locals: Array = []
+			for local_entry: Variant in group.local_variables:
+				if local_entry is LocalVariable:
+					locals.append(local_entry)
+			if not locals.is_empty():
+				into.append({"group": group.group_name if not group.group_name.is_empty() else group.name, "locals": locals})
+			_collect_group_locals(group.events if not group.events.is_empty() else group.rows, into)
+
 static func _collect_stateful_members(entries: Array, into: Array) -> void:
 	for entry: Variant in entries:
 		if entry is EventRow:

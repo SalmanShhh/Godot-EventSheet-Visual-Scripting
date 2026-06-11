@@ -16,6 +16,10 @@ static var _uid_counter: int = 0
 @export var events: Array[Resource] = []
 @export var rows: Array[Resource] = [] # Backwards-compatible alias.
 @export var group_uid: String = ""
+## C3-style group-local variables: visually scoped to the group, compiled as class-level
+## members under a "# <Group> group locals" header (GDScript has no narrower scope that
+## persists across frames).
+@export var local_variables: Array[Resource] = []
 
 func _init() -> void:
 	if group_uid.is_empty():

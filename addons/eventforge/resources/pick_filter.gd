@@ -11,7 +11,9 @@ enum CollectionKind {
 	CHILDREN,
 	ARRAY,
 	NODE_TREE,
-	CUSTOM
+	CUSTOM,
+	REPEAT,  # collection_value = count expression -> for i in range(n)
+	WHILE,   # collection_value = condition expression -> while expr
 }
 
 @export var enabled: bool = true

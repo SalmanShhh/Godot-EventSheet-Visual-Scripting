@@ -2536,6 +2536,10 @@ func _format_pick_filter(pick: PickFilter) -> String:
             source_text = "group \"%s\"" % collection
         PickFilter.CollectionKind.CHILDREN:
             source_text = "children"
+        PickFilter.CollectionKind.REPEAT:
+            return "Repeat %s times" % collection
+        PickFilter.CollectionKind.WHILE:
+            return "While %s" % collection
     var text: String = "For each %s in %s" % [iterator, source_text]
     if not pick.predicate_expression.strip_edges().is_empty():
         text += " where %s" % pick.predicate_expression.strip_edges()

@@ -3012,6 +3012,9 @@ var _pick_iterator_edit: LineEdit = null
 var _pick_kind_option: OptionButton = null
 var _pick_collection_edit: LineEdit = null
 var _pick_predicate_edit: LineEdit = null
+var _pick_order_edit: LineEdit = null
+var _pick_desc_check: CheckBox = null
+var _pick_preset_option: OptionButton = null
 var _pick_first_n_spin: SpinBox = null
 var _pick_delete_button: Button = null
 var _pick_target_event: EventRow = null
@@ -3032,6 +3035,9 @@ func _open_pick_filter_dialog(event_resource: Resource, pick_index: int = -1) ->
     _pick_kind_option.select(_pick_kind_to_option(pick.collection_kind))
     _pick_collection_edit.text = pick.collection_value if not pick.collection_value.is_empty() else pick.source_expression
     _pick_predicate_edit.text = pick.predicate_expression
+    _pick_order_edit.text = pick.order_by_expression
+    _pick_desc_check.button_pressed = pick.order_descending
+    _pick_preset_option.select(0)
     _pick_first_n_spin.value = pick.pick_first_n
     _pick_delete_button.visible = editing
     _pick_dialog.title = "Edit Pick Filter (For Each)" if editing else "Add Pick Filter (For Each)"
@@ -3053,11 +3059,25 @@ func _ensure_pick_dialog() -> void:
     _pick_kind_option.add_item("Node group")        # → get_tree().get_nodes_in_group(value)
     _pick_kind_option.add_item("Children")          # → get_children()
     _pick_kind_option.add_item("GDScript iterable") # → value verbatim (array, range(), …)
+    _pick_kind_option.add_item("Repeat N times")    # → for i in range(value)
+    _pick_kind_option.add_item("While (condition)") # → while value
     _pick_kind_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     kind_row.add_child(_pick_kind_option)
     form.add_child(kind_row)
     _pick_collection_edit = _add_sheet_type_field(form, "Group / expression", "enemies   or   range(3)")
     _pick_predicate_edit = _add_sheet_type_field(form, "Where (GDScript)", "item.health < 50   (optional)")
+    _pick_order_edit = _add_sheet_type_field(form, "Order by (GDScript)", "item.global_position.distance_to(position)   (optional)")
+    _pick_desc_check = CheckBox.new()
+    _pick_desc_check.text = "Descending (highest first)"
+    form.add_child(_pick_desc_check)
+    var preset_label: Label = Label.new()
+    preset_label.text = "C3 presets (loops & picking)"
+    form.add_child(preset_label)
+    _pick_preset_option = OptionButton.new()
+    for preset_name: String in ["Custom…", "For (indexed)", "For Each", "For Each (ordered)", "Repeat", "While", "Pick all (group)", "Pick by comparison / evaluate", "Pick by highest value", "Pick by lowest value", "Pick nth instance", "Pick random instance", "Pick last created", "Pick overlapping point"]:
+        _pick_preset_option.add_item(preset_name)
+    _pick_preset_option.item_selected.connect(_apply_pick_preset)
+    form.add_child(_pick_preset_option)
     var n_row: HBoxContainer = HBoxContainer.new()
     var n_label: Label = Label.new()
     n_label.text = "Pick first N (0 = all)"
@@ -3082,17 +3102,80 @@ func _pick_kind_to_option(kind: int) -> int:
             return 0
         PickFilter.CollectionKind.CHILDREN:
             return 1
+        PickFilter.CollectionKind.REPEAT:
+            return 3
+        PickFilter.CollectionKind.WHILE:
+            return 4
         _:
             return 2
-
 func _pick_option_to_kind(option: int) -> int:
     match option:
         0:
             return PickFilter.CollectionKind.GROUP
         1:
             return PickFilter.CollectionKind.CHILDREN
+        3:
+            return PickFilter.CollectionKind.REPEAT
+        4:
+            return PickFilter.CollectionKind.WHILE
         _:
             return PickFilter.CollectionKind.EXPRESSION
+
+## C3 presets: each fills the pick-filter fields with the matching loop/picking shape
+## (everything still compiles to plain for/while loops — see _emit_pick_filters).
+func _apply_pick_preset(index: int) -> void:
+    match index:
+        1:  # For (indexed)
+            _pick_kind_option.select(3)
+            _pick_iterator_edit.text = "i"
+            _pick_collection_edit.text = "10"
+            _pick_order_edit.text = ""
+            _pick_predicate_edit.text = ""
+        2:  # For Each
+            _pick_kind_option.select(0)
+            _pick_iterator_edit.text = "item"
+            _pick_order_edit.text = ""
+        3:  # For Each (ordered)
+            _pick_kind_option.select(0)
+            _pick_iterator_edit.text = "item"
+            _pick_order_edit.text = "item.name"
+        4:  # Repeat
+            _pick_kind_option.select(3)
+            _pick_iterator_edit.text = "_i"
+            _pick_collection_edit.text = "10"
+        5:  # While
+            _pick_kind_option.select(4)
+            _pick_collection_edit.text = "health > 0"
+        6:  # Pick all (group)
+            _pick_kind_option.select(0)
+            _pick_predicate_edit.text = ""
+            _pick_order_edit.text = ""
+            _pick_first_n_spin.value = 0
+        7:  # Pick by comparison / evaluate
+            _pick_kind_option.select(0)
+            _pick_predicate_edit.text = "item.health < 50"
+        8:  # Pick by highest value
+            _pick_kind_option.select(0)
+            _pick_order_edit.text = "item.health"
+            _pick_desc_check.button_pressed = true
+            _pick_first_n_spin.value = 1
+        9:  # Pick by lowest value
+            _pick_kind_option.select(0)
+            _pick_order_edit.text = "item.health"
+            _pick_desc_check.button_pressed = false
+            _pick_first_n_spin.value = 1
+        10: # Pick nth instance
+            _pick_kind_option.select(2)
+            _pick_collection_edit.text = "[get_tree().get_nodes_in_group(\"enemies\")[0]]"
+        11: # Pick random instance
+            _pick_kind_option.select(2)
+            _pick_collection_edit.text = "[get_tree().get_nodes_in_group(\"enemies\").pick_random()]"
+        12: # Pick last created
+            _pick_kind_option.select(2)
+            _pick_collection_edit.text = "[get_tree().get_nodes_in_group(\"enemies\").back()]"
+        13: # Pick overlapping point
+            _pick_kind_option.select(0)
+            _pick_predicate_edit.text = "item.global_position.distance_to(get_global_mouse_position()) < 32.0"
 
 func _on_pick_filter_confirmed() -> void:
     if _pick_target_event == null:
@@ -3110,6 +3193,8 @@ func _on_pick_filter_confirmed() -> void:
         pick.collection_kind = kind
         pick.collection_value = collection
         pick.predicate_expression = predicate
+        pick.order_by_expression = _pick_order_edit.text.strip_edges()
+        pick.order_descending = _pick_desc_check.button_pressed
         pick.pick_first_n = first_n
         if target_index < 0:
             event_row.pick_filters.append(pick)

@@ -81,10 +81,11 @@ static func run() -> bool:
 	child_sheet.events.append(child_event)
 	var child_result: Dictionary = SheetCompiler.compile(child_sheet, "user://eventsheets_pick_children.gd")
 	var child_output: String = str(child_result.get("output", ""))
-	all_passed = _check("children collection compiles", child_output.contains("for item in get_children():"), true) and all_passed
+	all_passed = _check("children collection compiles (ordered copy)",
+		child_output.contains("var __pick_sorted_0: Array = Array(get_children())") and child_output.contains("for item in __pick_sorted_0:"), true) and all_passed
 	all_passed = _check("empty loop body gets pass", child_output.contains("\t\tpass"), true) and all_passed
-	all_passed = _check("order_by records a warning",
-		str(child_result.get("warnings", [])).contains("order_by"), true) and all_passed
+	all_passed = _check("order_by compiles a sorted copy (no warning anymore)",
+		str(child_result.get("output", "")).contains(".sort_custom(func(__pick_a, __pick_b): return ("), true) and all_passed
 
 	# Disabled filters are skipped entirely.
 	child_pick.enabled = false
