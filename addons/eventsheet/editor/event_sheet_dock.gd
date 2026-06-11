@@ -38,6 +38,7 @@ const ACTION_MENU_DETACH_COMMENT := 6
 const ROW_MENU_ADD_PICK_FILTER := 18
 const ROW_MENU_ADD_ENUM := 19
 const ROW_MENU_EDIT_GROUP_DESC := 20
+const ROW_MENU_GROUP_COLOR := 27
 const ROW_MENU_ADD_SIGNAL := 21
 const ROW_MENU_ADD_MATCH := 22
 const ROW_MENU_OPEN_IN_SPLIT := 23
@@ -775,6 +776,7 @@ func _build_context_menus() -> void:
     _row_context_menu.add_item("Add Pick Filter (For Each)…", ROW_MENU_ADD_PICK_FILTER)
     _row_context_menu.add_item("Add Enum Below", ROW_MENU_ADD_ENUM)
     _row_context_menu.add_item("Edit Group Description…", ROW_MENU_EDIT_GROUP_DESC)
+    _row_context_menu.add_item("Group Color…", ROW_MENU_GROUP_COLOR)
     _row_context_menu.add_item("Add Signal Below", ROW_MENU_ADD_SIGNAL)
     _row_context_menu.add_item("Add Match To Actions…", ROW_MENU_ADD_MATCH)
     _row_context_menu.add_item("Open in Split", ROW_MENU_OPEN_IN_SPLIT)
@@ -3128,6 +3130,51 @@ func _replace_in_rows(rows: Array, find_text: String, replace_text: String, coun
                     (pick as PickFilter).order_by_expression = (pick as PickFilter).order_by_expression.replace(find_text, replace_text)
             _replace_in_rows(event_row.sub_events, find_text, replace_text, counter)
 
+# ── Group color tags ──────────────────────────────────────────────────────────────────
+var _group_color_popup: PopupPanel = null
+var _group_color_picker: ColorPickerButton = null
+var _group_color_target: EventGroup = null
+
+## C3-style group colors: tint the selected group's accent/background (clear = theme).
+func _open_group_color_picker() -> void:
+    var target: Resource = _context_row.source_resource if _context_row != null else null
+    if not (target is EventGroup):
+        _set_status("Right-click a group to color it.", true)
+        return
+    if _group_color_popup == null:
+        _group_color_popup = PopupPanel.new()
+        var color_box: HBoxContainer = HBoxContainer.new()
+        _group_color_picker = ColorPickerButton.new()
+        _group_color_picker.custom_minimum_size = Vector2(120.0, 0.0)
+        _group_color_picker.color_changed.connect(func(value: Color) -> void: _apply_group_color(value))
+        color_box.add_child(_group_color_picker)
+        var clear_button: Button = Button.new()
+        clear_button.text = "Theme default"
+        clear_button.pressed.connect(func() -> void:
+            _apply_group_color(Color(0.0, 0.0, 0.0, 0.0))
+            _group_color_popup.hide()
+        )
+        color_box.add_child(clear_button)
+        _group_color_popup.add_child(color_box)
+        add_child(_group_color_popup)
+    _group_color_target = target
+    _group_color_picker.color = target.custom_color if target.custom_color.a > 0.0 else Color(0.55, 0.45, 0.85, 1.0)
+    _group_color_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i(220, 42)))
+
+func _apply_group_color(value: Color) -> void:
+    if _group_color_target == null:
+        return
+    var target: EventGroup = _group_color_target
+    var changed: bool = _perform_undoable_sheet_edit("Group Color", func() -> bool:
+        if target.custom_color == value:
+            return false
+        target.custom_color = value
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Group color updated.")
+
 ## Find-bar "Open in Split": jumps the split pane to the current match (opening the
 ## split if needed) — marrying search and multi-view.
 func _open_match_in_split() -> void:
@@ -4075,6 +4122,8 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
                     _open_match_dialog(new_match)
             else:
                 _set_status("Select an event to add a match to its actions.", true)
+        ROW_MENU_GROUP_COLOR:
+            _open_group_color_picker()
         ROW_MENU_EDIT_GROUP_DESC:
             if _context_row.source_resource is EventGroup:
                 var described_group: EventGroup = _context_row.source_resource as EventGroup

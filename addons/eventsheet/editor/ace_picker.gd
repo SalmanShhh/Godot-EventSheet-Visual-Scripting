@@ -23,6 +23,28 @@ signal ace_selected(definition: ACEDefinition, context: Dictionary)
 static var _recent_ace_ids: PackedStringArray = PackedStringArray()
 const RECENT_ACES_CAP := 8
 
+## ⭐ Favorites persist in ProjectSettings — per-project and PR-shareable, like the
+## composition policy. Right-click a picker entry to pin/unpin.
+const FAVORITES_SETTING := "eventsheets/picker/favorites"
+
+static func favorite_ids() -> PackedStringArray:
+	if ProjectSettings.has_setting(FAVORITES_SETTING):
+		return PackedStringArray(ProjectSettings.get_setting(FAVORITES_SETTING))
+	return PackedStringArray()
+
+static func toggle_favorite(provider_id: String, ace_id: String) -> bool:
+	var favorites: PackedStringArray = favorite_ids()
+	var favorite_key: String = "%s/%s" % [provider_id, ace_id]
+	var existing: int = favorites.find(favorite_key)
+	if existing >= 0:
+		favorites.remove_at(existing)
+	else:
+		favorites.append(favorite_key)
+	ProjectSettings.set_setting(FAVORITES_SETTING, favorites if not favorites.is_empty() else null)
+	if Engine.is_editor_hint():
+		ProjectSettings.save()
+	return existing < 0
+
 ## Records a use (newest first, deduped, capped) — drives the ★ Recent picker section.
 static func note_recent(provider_id: String, ace_id: String) -> void:
 	var recent_key: String = "%s/%s" % [provider_id, ace_id]
@@ -113,6 +135,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_tree.set_column_titles_visible(true)
 	_tree.item_activated.connect(_on_item_activated)
 	_tree.item_selected.connect(_on_item_selected_for_info)
+	_tree.gui_input.connect(_on_tree_gui_input)
 	content.add_child(_tree)
 	# C3-style info pane: description + the generated GDScript of the selection.
 	_info_label = Label.new()
@@ -273,6 +296,25 @@ func _refresh_tree() -> void:
 	if is_event_mode and not signals_only and not filtering:
 		for node_type: String in EVENT_PICKER_GROUPS:
 			group_nodes[node_type] = _make_group_item(root, node_type, true)
+
+	# ⭐ Favorites first (project-pinned), then ★ Recent — while not searching.
+	if not filtering and not favorite_ids().is_empty():
+		var favorites_group: TreeItem = null
+		for favorite_key: String in favorite_ids():
+			for favorite_candidate: ACEDefinition in _registry.get_all_definitions():
+				if "%s/%s" % [favorite_candidate.provider_id, favorite_candidate.id] != favorite_key:
+					continue
+				if not _is_allowed_for_mode(favorite_candidate, mode, signals_only):
+					break
+				if favorites_group == null:
+					favorites_group = _make_group_item(root, "⭐ Favorites", false)
+				var favorite_item: TreeItem = _tree.create_item(favorites_group)
+				favorite_item.set_text(0, _item_label(favorite_candidate))
+				favorite_item.set_custom_color(0, _item_color_for(favorite_candidate.ace_type))
+				favorite_item.set_text(1, _ace_type_label(favorite_candidate.ace_type))
+				favorite_item.set_custom_color(1, _item_color_for(favorite_candidate.ace_type))
+				favorite_item.set_metadata(0, favorite_candidate)
+				break
 
 	# ★ Recent: your last-used ACEs pin to the top while not searching.
 	if not filtering and not _recent_ace_ids.is_empty():
@@ -463,6 +505,22 @@ func _on_item_selected_for_info() -> void:
 	var template: String = str(definition.metadata.get("codegen_template", ""))
 	var description: String = str(definition.metadata.get("display_template", definition.display_name))
 	_info_label.text = description + ("\n→  " + template if not template.is_empty() else "")
+
+## Right-click pins/unpins the entry under the cursor as a ⭐ Favorite.
+func _on_tree_gui_input(input_event: InputEvent) -> void:
+	if not (input_event is InputEventMouseButton):
+		return
+	var mouse_event: InputEventMouseButton = input_event
+	if not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_RIGHT:
+		return
+	var clicked: TreeItem = _tree.get_item_at_position(mouse_event.position)
+	var definition: ACEDefinition = clicked.get_metadata(0) as ACEDefinition if clicked != null else null
+	if definition == null:
+		return
+	var pinned: bool = toggle_favorite(definition.provider_id, definition.id)
+	if _info_label != null:
+		_info_label.text = ("⭐ Pinned %s to Favorites" if pinned else "Unpinned %s from Favorites") % definition.display_name
+	_refresh_tree()
 
 func _on_item_activated() -> void:
 	var item: TreeItem = _tree.get_selected()

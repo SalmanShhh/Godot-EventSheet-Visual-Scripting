@@ -111,6 +111,33 @@ static func run() -> bool:
 		str(ace.params.get("y")) == "42" and str(ace.params.get("x")) == "10", true) and all_passed
 	param_editor.free()
 
+	# Favorites: toggle pins/unpins and persists via ProjectSettings.
+	if ProjectSettings.has_setting(ACEPickerDialog.FAVORITES_SETTING):
+		ProjectSettings.set_setting(ACEPickerDialog.FAVORITES_SETTING, null)
+	all_passed = _check("pinning a favorite reports pinned",
+		ACEPickerDialog.toggle_favorite("Core", "Wait"), true) and all_passed
+	all_passed = _check("favorites persist in project settings",
+		ACEPickerDialog.favorite_ids().has("Core/Wait"), true) and all_passed
+	all_passed = _check("toggling again unpins",
+		ACEPickerDialog.toggle_favorite("Core", "Wait"), false) and all_passed
+	all_passed = _check("unpinned favorites clear", ACEPickerDialog.favorite_ids().is_empty(), true) and all_passed
+
+	# Group color tags: undoable apply + clear-to-theme.
+	var color_editor: EventSheetEditor = EventSheetEditor.new()
+	var color_sheet: EventSheetResource = EventSheetResource.new()
+	var colored_group: EventGroup = EventGroup.new()
+	colored_group.group_name = "Combat"
+	color_sheet.events.append(colored_group)
+	color_editor.setup(color_sheet)
+	color_editor.set_undo_redo_manager(NoopUndoManager.new())
+	color_editor._group_color_target = colored_group
+	color_editor._apply_group_color(Color(0.9, 0.3, 0.3, 1.0))
+	all_passed = _check("group color applies", colored_group.custom_color, Color(0.9, 0.3, 0.3, 1.0)) and all_passed
+	color_editor._apply_group_color(Color(0.0, 0.0, 0.0, 0.0))
+	all_passed = _check("clearing returns the group to theme colors",
+		colored_group.custom_color.a == 0.0, true) and all_passed
+	color_editor.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

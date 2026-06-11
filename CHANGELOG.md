@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Group color tags + picker favorites (the suggestion list, completed)
+- **Group colors** (C3 parity): right-click a group → *Group Color…* — the picked
+  color tints the group's accent bar and background (clear returns to theme tokens;
+  mirrors per-comment colors). Organize big sheets by color.
+- **⭐ Favorites in the picker**: right-click any entry to pin it; favorites sit above
+  ★ Recent and **persist in ProjectSettings** — per-project and PR-shareable, so team
+  vocabularies travel with the repo (same philosophy as the composition policy).
+
 ### Single-param inline editing + picker info pane
 - **C3's fastest gesture**: double-click a highlighted *value* inside any condition or
   action and edit just that parameter in a one-field popup — no full dialog. Values map

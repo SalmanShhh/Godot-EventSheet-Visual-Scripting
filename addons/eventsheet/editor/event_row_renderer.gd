@@ -167,7 +167,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 
     _draw_gutter(control, gutter_rect, line_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size)
     if row_data.row_type == EventRowData.RowType.GROUP:
-        _draw_group_row_chrome(control, row_rect, fold_rect, alternating, event_style)
+        var group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)
+        if row_data.source_resource is EventGroup:
+            group_tint = (row_data.source_resource as EventGroup).custom_color
+        _draw_group_row_chrome(control, row_rect, fold_rect, alternating, event_style, group_tint)
     elif row_data.row_type == EventRowData.RowType.COMMENT and event_style != null:
         # Per-comment colors (C3 parity): the row's custom tint wins over the theme token.
         var comment_bg: Color = row_data.custom_color if row_data.custom_color.a > 0.01 else event_style.comment_row_background_color
@@ -298,11 +301,15 @@ func _draw_row_outline(control: Control, row_rect: Rect2, base_color: Color, lig
     outline.a = alpha
     control.draw_rect(row_rect.grow(-0.5), outline, false, 1.0)
 
-func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2, alternating: bool, event_style: EventSheetEventStyle = null) -> void:
+func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2, alternating: bool, event_style: EventSheetEventStyle = null, group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)) -> void:
     var bg: Color = EventSheetPalette.COLOR_GROUP_BG_ALT if alternating else EventSheetPalette.COLOR_GROUP_BG
     if event_style != null:
         bg = event_style.group_background_alt_color if alternating else event_style.group_background_color
     var accent: Color = event_style.group_accent_color if event_style != null else EventSheetPalette.COLOR_GROUP_ACCENT
+    # Per-group color tag wins over the theme (C3 parity, mirrors per-comment colors).
+    if group_tint.a > 0.0:
+        accent = group_tint
+        bg = bg.lerp(Color(group_tint.r, group_tint.g, group_tint.b, bg.a), 0.22)
     var fold_bg: Color = event_style.group_fold_background_color if event_style != null else EventSheetPalette.COLOR_GROUP_FOLD_BG
     control.draw_rect(row_rect, bg, true)
     control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), accent, true)

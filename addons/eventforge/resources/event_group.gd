@@ -16,6 +16,9 @@ static var _uid_counter: int = 0
 @export var events: Array[Resource] = []
 @export var rows: Array[Resource] = [] # Backwards-compatible alias.
 @export var group_uid: String = ""
+## C3-style group color tag: when alpha > 0 this tints the group's accent bar and
+## background instead of the theme tokens (organize big sheets by color).
+@export var custom_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 ## C3-style group-local variables: visually scoped to the group, compiled as class-level
 ## members under a "# <Group> group locals" header (GDScript has no narrower scope that
 ## persists across frames).
