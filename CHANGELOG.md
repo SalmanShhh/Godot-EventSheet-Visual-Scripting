@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.6.2] - 2026-06-12
+
+**The project-usability release** — the whole accepted automation arc: the editor now
+keeps generated scripts, project health, documentation and history current *by
+itself*. Showcase note: these headliners are workflow tooling, so the playable
+`demo/showcase/` from v0.6.0 remains current; this release's living demonstrations
+are in the repo itself — the committed [EVENTSHEETS-VOCABULARY.md](EVENTSHEETS-VOCABULARY.md),
+the Project Doctor gate in CI, and the sheet-diff textconv driver in CONTRIBUTING.
+
 ### Project-usability slice 4: sheet backups + project-local templates
 - **Sheet backups** — every save of an existing sheet first rings the file's
   pre-save bytes into `user://eventsheet_backups/` (newest 10 kept;

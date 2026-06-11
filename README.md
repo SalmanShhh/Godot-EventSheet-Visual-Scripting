@@ -141,20 +141,31 @@ Conditions                        | Actions
   `group:`, or `script:`, search *other* scenes with `scene:`, pin recents, and audit
   every node reference the sheet makes (missing ones flag red).
 - **Export integrity**: every sheet recompiles when an export starts; stale scripts
-  can never ship.
+  can never ship — and **compile-on-save** keeps F5 just as safe during development.
+- **Reviewable sheet diffs**: a one-line git `textconv` setup makes `.tres` PRs show
+  readable events instead of serialized-resource noise.
+- **Project Doctor**: one audit (dock / CLI / CI) for cross-file drift — stale outputs,
+  unregistered autoloads, unused vocabulary, unattached scripts.
+- **Vocabulary doc**: a generated, committed reference of everything your sheets and
+  packs publish ([this repo's own](EVENTSHEETS-VOCABULARY.md) is the living example).
+- **Sheet backups** (save-time ring + restore) and **project-local templates**
+  (drop a sheet in `eventsheet_templates/`, it joins the New… menu).
 - Shareable text snippets (paste events into another project or a forum post).
 
 ## Current status
 
-- **Version**: **`v0.6.1`** (maintenance: dock decomposition, module-split completion,
-  repo hygiene — no behavior changes). Feature state = `v0.6.0` — Inspector attributes (all tiers + tool buttons), addon
-  composition with project policy + MCP enforcement, **Singleton sheets + event-bus
-  triggers**, **editable Live Values** (the debugger writes back), runtime-toggleable
-  groups, Find in Project, Save System v2, Spring & Tween packs (21 total), the
-  addon-author loop, the C3-reflex UX arc, and eight hardening sweeps.
-  See [CHANGELOG.md](CHANGELOG.md) and the playable `demo/showcase/`.
-- **Quality**: 1,100+ test assertions, all green, CI-gated on every push (any `[FAIL]`
-  fails the build); byte-exact golden round-trips guard the lossless rules.
+- **Version**: **`v0.6.2`** — the **project-usability release**: compile-on-save,
+  reviewable sheet diffs (git `textconv`), the **Project Doctor** (one dock/CLI/CI
+  audit for cross-file drift — it caught and fixed a real output-duplication bug on
+  this very repo), the generated **vocabulary doc**, save-time **sheet backups** with
+  restore, and **project-local templates**. C3 param-type parity completed
+  (scene + animation pickers), pack builders split per-pack (drift-audited),
+  community-feedback groundwork (issue templates). The playable `demo/showcase/`
+  from v0.6.0 remains current — this release's headliners are workflow tooling,
+  demonstrated by the repo itself. See [CHANGELOG.md](CHANGELOG.md).
+- **Quality**: 1,300+ test assertions, all green, CI-gated on every push (any `[FAIL]`
+  fails the build, and the Project Doctor gate fails it on sheet/output drift);
+  byte-exact golden round-trips guard the lossless rules.
 - **Compatibility covenant**: generated code never depends on the plugin; templates bake
   at apply (updates never rewrite your sheets); upgrades can never corrupt a file.
 
@@ -169,6 +180,7 @@ Conditions                        | Actions
 | `v0.5.0` — C3 System ACEs, full loops & picking, real breakpoints, devices, Audio, node picker | ✅ shipped |
 | `v0.6.0` — Inspector attributes (all tiers), addon composition + policy + MCP enforcement, **editable Live Values**, Singleton sheets + event-bus triggers, Spring & Tween & Save System packs, the addon-author loop, the C3-reflex UX arc | ✅ shipped |
 | `v0.6.1` — maintenance: dock decomposed into subsystems, module split completed, repo hygiene (no behavior changes) | ✅ shipped |
+| `v0.6.2` — project usability: compile-on-save, sheet diffs (textconv), Project Doctor (dock/CLI/CI), vocabulary doc, sheet backups + restore, project templates; C3 param parity completed; per-pack builders; issue templates | ✅ shipped |
 | Community feedback rounds, inline live-values overlay polish | 🗺 planned |
 
 Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
