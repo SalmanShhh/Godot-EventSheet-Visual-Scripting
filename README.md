@@ -8,12 +8,14 @@ jam — events get you from idea to *playing it* in minutes, and the tool keeps 
 project balloons to thousands of events.
 
 > [!WARNING]
-> **Early, vibecoded, and not yet validated.** This plugin has been built almost
-> entirely through AI-assisted ("vibe") coding. The test suite is large (1,200+
-> CI-gated assertions) and every feature ships with regression tests, but the project
-> has **not yet been validated by real-world use**. It is **very early in
-> development** and **subject to large, sweeping changes** between releases — pin a
-> release tag if you build on it, expect rough edges, and please report what you hit.
+> **Purely experimental — early, vibecoded, and not yet validated.** This plugin is an
+> experiment, not a production tool: it has been built almost entirely through
+> AI-assisted ("vibe") coding. The test suite is large (1,200+ CI-gated assertions)
+> and every feature ships with regression tests, but the project has **not yet been
+> validated by real-world use**. It is **very early in development** and **subject to
+> large, sweeping changes** between releases — do not build anything you can't afford
+> to rework on it yet. Pin a release tag if you experiment with it, expect rough
+> edges, and please report what you hit.
 
 Godot EventSheets (engine codename *EventForge* — you'll see that prefix on internal
 class names) brings the event-sheet workflow C3 users love into the Godot editor: a fast
@@ -72,7 +74,7 @@ Conditions                        | Actions
 - **Some C3 plugins intentionally have no equivalent** (Multiplayer, Drawing Canvas,
   XML): the migration guide points to the native Godot feature instead — that honesty
   keeps the project maintainable.
-- **Young, vibecoded project.** Built AI-first with a large CI-gated suite (1,200+
+- **Purely experimental, vibecoded project.** Built AI-first with a large CI-gated suite (1,200+
   assertions) standing in for mileage it hasn't earned yet — real-world validation is
   still ahead, and large sweeping changes between releases are likely (see the warning
   up top).
