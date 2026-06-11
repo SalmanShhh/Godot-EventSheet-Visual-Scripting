@@ -114,6 +114,31 @@ static func publish_surface_text(surface: Dictionary) -> String:
         return "Nothing published yet — expose a function as an ACE, or annotate a signal with @ace_trigger."
     return "\n".join(sections)
 
+## Markdown sections for a publish surface — shared by the pack README and the project
+## vocabulary doc (EventSheetVocabularyDoc). `heading` sets the section level so callers
+## can nest the sections under their own headings.
+static func surface_markdown(surface: Dictionary, heading: String = "##") -> PackedStringArray:
+    var lines: PackedStringArray = PackedStringArray()
+    for section_pair: Array in [["Properties", "properties"], ["Triggers", "triggers"], ["Conditions", "conditions"], ["Actions", "actions"], ["Expressions", "expressions"]]:
+        var entries: Array = surface.get(section_pair[1], [])
+        if entries.is_empty():
+            continue
+        lines.append("")
+        lines.append("%s %s" % [heading, str(section_pair[0])])
+        for entry: Dictionary in entries:
+            if str(section_pair[1]) == "properties":
+                var attributes: Dictionary = entry.get("attributes", {}) if entry.get("attributes") is Dictionary else {}
+                var note: String = str(attributes.get("tooltip", ""))
+                lines.append("- `%s: %s` (default `%s`)%s" % [str(entry.get("name")), str(entry.get("type")), str(entry.get("default")), " — " + note if not note.is_empty() else ""])
+            else:
+                var ace_line: String = "- **%s**" % str(entry.get("name"))
+                if not str(entry.get("params", "")).is_empty():
+                    ace_line += " (`%s`)" % str(entry.get("params"))
+                if not str(entry.get("description", "")).is_empty():
+                    ace_line += " — %s" % str(entry.get("description"))
+                lines.append(ace_line)
+    return lines
+
 ## The pack README: name/tags/host, properties with attributes, the full ACE surface,
 ## and composition dependencies — generated so shared packs are documented by default.
 static func generate_pack_readme(sheet: EventSheetResource) -> String:
@@ -129,24 +154,7 @@ static func generate_pack_readme(sheet: EventSheetResource) -> String:
     if sheet.behavior_mode:
         lines.append("")
         lines.append("**Attach to:** a child of any `%s` node." % sheet.host_class)
-    for section_pair: Array in [["Properties", "properties"], ["Triggers", "triggers"], ["Conditions", "conditions"], ["Actions", "actions"], ["Expressions", "expressions"]]:
-        var entries: Array = surface.get(section_pair[1], [])
-        if entries.is_empty():
-            continue
-        lines.append("")
-        lines.append("## %s" % str(section_pair[0]))
-        for entry: Dictionary in entries:
-            if str(section_pair[1]) == "properties":
-                var attributes: Dictionary = entry.get("attributes", {}) if entry.get("attributes") is Dictionary else {}
-                var note: String = str(attributes.get("tooltip", ""))
-                lines.append("- `%s: %s` (default `%s`)%s" % [str(entry.get("name")), str(entry.get("type")), str(entry.get("default")), " — " + note if not note.is_empty() else ""])
-            else:
-                var ace_line: String = "- **%s**" % str(entry.get("name"))
-                if not str(entry.get("params", "")).is_empty():
-                    ace_line += " (`%s`)" % str(entry.get("params"))
-                if not str(entry.get("description", "")).is_empty():
-                    ace_line += " — %s" % str(entry.get("description"))
-                lines.append(ace_line)
+    lines.append_array(surface_markdown(surface))
     if not sheet.includes.is_empty() or not sheet.uses_addons.is_empty() or not sheet.requires_behaviors.is_empty():
         lines.append("")
         lines.append("## Dependencies")

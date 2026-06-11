@@ -498,6 +498,7 @@ func _build_ui() -> void:
     tools_popup.add_separator()
     tools_popup.add_item("Find in Project…", 6)
     tools_popup.add_item("Project Doctor…", 7)
+    tools_popup.add_item("Vocabulary Doc", 8)
     tools_popup.id_pressed.connect(func(id: int) -> void:
         match id:
             0: _toggle_breakpoint_emission()
@@ -508,6 +509,7 @@ func _build_ui() -> void:
             5: _open_test_bench()
             6: _open_project_find()
             7: _open_project_doctor()
+            8: _generate_vocabulary_doc()
     )
     _toolbar.add_child(tools_menu)
     _add_toolbar_button("Split", _toggle_split_view)
@@ -3344,6 +3346,17 @@ func _run_project_doctor() -> void:
         item.set_text(2, str(finding.get("message")))
     var errors: int = int(report.get("errors", 0))
     _set_status("Project Doctor: %d error(s), %d warning(s), %d note(s)." % [errors, int(report.get("warnings", 0)), int(report.get("infos", 0))], errors > 0)
+
+## Writes the always-current project vocabulary reference (EventSheetVocabularyDoc) —
+## the answer to "what can I say in this project?" as one committed markdown file.
+func _generate_vocabulary_doc() -> void:
+    var doc_path: String = EventSheetVocabularyDoc.write()
+    if doc_path.is_empty():
+        _set_status("Couldn't write the vocabulary doc to %s." % EventSheetVocabularyDoc.doc_path(), true)
+        return
+    if Engine.is_editor_hint() and is_inside_tree():
+        EditorInterface.get_resource_filesystem().scan()
+    _set_status("Vocabulary doc written to %s." % doc_path)
 
 static func list_project_sheets() -> PackedStringArray:
     return EventSheetProjectFind.list_project_sheets()

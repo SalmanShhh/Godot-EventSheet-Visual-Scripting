@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Project-usability slice 3: the project vocabulary doc
+- **Vocabulary Doc** — one committed markdown reference answering "what can I say
+  in this project?": every sheet's class, properties and published
+  triggers/conditions/actions/expressions (straight from the model), plus
+  hand-written script packs parsed from their `@ace_*` annotations. Deterministic
+  by contract (sorted, no timestamps) so it diffs cleanly in PRs — for teammates
+  and AI assistants alike. Generate from the dock (Tools → Vocabulary Doc) or
+  `tools/vocabulary_doc.gd`; path configurable via
+  `eventsheets/project/vocabulary_doc_path`.
+- The Project Doctor gains an opt-in staleness note: once a vocabulary doc exists,
+  it's flagged (advisory) whenever the project's published surface drifts from it.
+- The pack-README section renderer is now shared (`surface_markdown`) between the
+  Export Addon README and the vocabulary doc — one rendering, two documents.
+
 ### Project-usability slice 2: the Project Doctor
 - **Project Doctor** — one audit for the cross-file drift no single check sees,
   identical from the dock (Tools → Project Doctor…), the headless CLI
@@ -11,9 +25,9 @@
 	compiles to, or a sheet stopped compiling — the pack-golden byte-identity
 	contract, generalized to every sheet in the project.
   - **warnings**: never-compiled sheets, autoload sheets that aren't registered
-    (or point at the wrong script).
+	(or point at the wrong script).
   - **infos**: private variables nothing references, packs no sheet/scene/autoload
-    uses, compiled sheets attached to no scene — advisory, never fails CI.
+	uses, compiled sheets attached to no scene — advisory, never fails CI.
   The doctor never writes inside `res://`; verification recompiles go to a
   `user://` scratch file.
 - First catch on this very repo: `demo/showcase/showcase_v060_generated.gd` was a

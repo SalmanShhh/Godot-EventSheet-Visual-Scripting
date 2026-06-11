@@ -27,6 +27,7 @@ static func run() -> Dictionary:
 	check_scene_attachment(sheet_paths, findings)
 	check_unused_variables(sheet_paths, findings)
 	check_unused_packs(sheet_paths, findings)
+	check_vocabulary_doc(findings)
 	var counts: Dictionary = {"error": 0, "warning": 0, "info": 0}
 	for finding: Dictionary in findings:
 		var severity: String = str(finding.get("severity"))
@@ -182,6 +183,17 @@ static func check_unused_packs(sheet_paths: PackedStringArray, findings: Array[D
 			continue
 		_add(findings, "info", "unused-pack", script_path,
 			"Pack class %s is referenced by no sheet, scene or autoload — fine if you call it from hand-written GDScript." % pack_class)
+
+## A generated vocabulary doc is a promise to the team — once one exists, the doctor
+## notes when it no longer matches what the project actually publishes. Opt-in by
+## design: no doc, no note.
+static func check_vocabulary_doc(findings: Array[Dictionary]) -> void:
+	var path: String = EventSheetVocabularyDoc.doc_path()
+	if not FileAccess.file_exists(path):
+		return
+	if FileAccess.get_file_as_string(path) != EventSheetVocabularyDoc.generate():
+		_add(findings, "info", "vocabulary-doc", path,
+			"Vocabulary doc is stale — regenerate via Tools → Vocabulary Doc… or tools/vocabulary_doc.gd.")
 
 ## Everything in a sheet that can REFERENCE vocabulary: raw code, ACE param values and
 ## baked templates, pick filters, trigger args, local-variable defaults. Comments are
