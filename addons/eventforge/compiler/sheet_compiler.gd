@@ -308,7 +308,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		if row is EnumRow or row is SignalRow:
 			continue  # emitted above as class-level declarations
 		if row.has_method("get_row_kind") and str(row.call("get_row_kind")) != "event":
-			deferred_rows.append("# TODO: row type not yet implemented in Phase 1")
+			deferred_rows.append("# (unknown row type — preserved as a comment so nothing is silently dropped)")
 			continue
 		if not (row is EventRow):
 			continue
@@ -954,7 +954,7 @@ static func _emit_event_body(
 					had_body = true
 					source_map.append({"uid": str(action_comment.get_instance_id()), "start": action_comment_start, "end": lines.size(), "kind": "comment"})
 			elif action_item is Resource and action_item.has_method("get_row_kind"):
-				lines.append(body_indent + "# TODO: row type not yet implemented in Phase 1")
+				lines.append(body_indent + "# (unknown row type — preserved as a comment so nothing is silently dropped)")
 				had_body = true
 
 		# Sub-events run inside the parent's block (under its conditions).

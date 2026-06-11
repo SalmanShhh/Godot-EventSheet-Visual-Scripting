@@ -1,5 +1,11 @@
 # Construct 3 Style Event Sheet UI for Godot 4
 
+> **Historical record (early era).** This document predates the overhaul arcs and the
+> v0.5/v0.6 feature waves — treat its claims as a design-time snapshot, not current
+> behavior. Current truth: `CHANGELOG.md`, `README.md`, and the maintained specs in
+> `docs/` (EDITOR-UI-SPEC, GDSCRIPT-PAIRING-SPEC, the per-feature specs).
+
+
 ## Objective
 
 Create a fully custom event sheet editor UI inside Godot 4 that visually and behaviorally resembles Construct 3’s event sheet system.

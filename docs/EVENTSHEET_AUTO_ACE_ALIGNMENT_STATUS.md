@@ -1,5 +1,11 @@
 # Auto-ACE Alignment Status
 
+> **Historical record (early era).** This document predates the overhaul arcs and the
+> v0.5/v0.6 feature waves — treat its claims as a design-time snapshot, not current
+> behavior. Current truth: `CHANGELOG.md`, `README.md`, and the maintained specs in
+> `docs/` (EDITOR-UI-SPEC, GDSCRIPT-PAIRING-SPEC, the per-feature specs).
+
+
 > Updated 2026-06. The detailed design lives in `docs/GDSCRIPT-PAIRING-SPEC.md`
 > ("Zero-config addons", "Expose-as-ACE sheet functions", "Instance-backed ACEs").
 

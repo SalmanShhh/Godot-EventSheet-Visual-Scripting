@@ -1,5 +1,11 @@
 # Event Sheet System — Editor Parameter Exposure Expansion Spec
 
+> **Historical record (early era).** This document predates the overhaul arcs and the
+> v0.5/v0.6 feature waves — treat its claims as a design-time snapshot, not current
+> behavior. Current truth: `CHANGELOG.md`, `README.md`, and the maintained specs in
+> `docs/` (EDITOR-UI-SPEC, GDSCRIPT-PAIRING-SPEC, the per-feature specs).
+
+
 **Expanding:** Integrated EventSheet + AutoACE System for Godot 4  
 **Expansion Module:** `Public Editor Parameter Exposure`  
 **Scope:** Inspector integration, editor property widgets, project settings, runtime linkage, serialization

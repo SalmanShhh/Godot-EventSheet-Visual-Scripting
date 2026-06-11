@@ -2,7 +2,19 @@
 
 ## [Unreleased]
 
-_Nothing yet._
+### Repo review actions (post-v0.6.0 hygiene)
+- **Module split finished**: the remaining Core vocabulary (triggers, InputMap
+  conditions, variables, the native-node action set) moved to
+  `registration/modules/core_aces.gd`; `builtin_aces.gd` is now a pure ordered
+  registry (~50 lines) with the legacy `_make_*` helpers kept as factory delegates
+  for external callers.
+- **Dead code removed**: three 8-line "Phase 4" importer stubs whose functionality
+  shipped inside `ace_lifter.gd` long ago.
+- **Era-stale strings**: the compiler's "Phase 1" TODO comments now say what they
+  mean (unknown row types are preserved as comments); `plugin.cfg` carries the
+  released version in-repo.
+- **Eight early-era docs stamped as historical records** (status reports and
+  pre-overhaul design briefs that predate the feature waves).
 
 ## [0.6.0] - 2026-06-12
 
