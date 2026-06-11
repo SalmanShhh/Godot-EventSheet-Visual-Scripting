@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### C3 System coverage, batch 2: stateful conditions + multi-statement actions
+- **Every X Seconds** — C3's most-used System condition, done the parity-safe way:
+  each applied instance bakes a **private class member** (fresh uid), a prelude line
+  accumulates `delta` before the `if`, and an on-true line rebases the accumulator
+  inside it. Plain members, plain statements, zero indirection; per-frame triggers only
+  (documented). Stateful events never chain as Else/Else-If (warned + emitted
+  standalone).
+- The machinery is generic: descriptors can declare `member_template` /
+  `codegen_prelude` / `codegen_on_true` — future latches and cooldowns ride the same
+  rails, including from addons.
+- **Multi-statement action templates**: baked templates may span lines (each emitted at
+  body indent, `{uid}` locals baked per instance) — enabling **Spawn Scene At**
+  (instance + position + add_child in one action, C3's create-object-at-position).
+- Covered by `tests/stateful_aces_test.gd` (11 assertions).
+
 ### C3 System coverage, batch 1: time, display, text, comparisons
 - **Time group**: Set Time Scale (`Engine.time_scale` — C3's slow-motion staple) + Time
   Scale / Game Time / FPS / Frame Count expressions.

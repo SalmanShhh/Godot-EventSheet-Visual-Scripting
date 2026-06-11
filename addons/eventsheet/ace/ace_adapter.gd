@@ -19,6 +19,9 @@ static func from_eventforge_descriptor(descriptor: ACEDescriptor) -> ACEDefiniti
         "source_name": descriptor.ace_id,
         "display_template": descriptor.get_display_text(),
         "codegen_template": descriptor.codegen_template,
+        "member_template": descriptor.member_template,
+        "codegen_prelude": descriptor.codegen_prelude,
+        "codegen_on_true": descriptor.codegen_on_true,
         "node_type": descriptor.node_type
     }
     return definition

@@ -117,6 +117,18 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			lines.append(declaration)
 			source_map.append({"uid": str((tree_entry as LocalVariable).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "variable"})
 
+	# Stateful-condition members (Every X Seconds…): one class member per applied instance.
+	var stateful_members: Array = []
+	_collect_stateful_members(all_events, stateful_members)
+	for function_entry: Variant in all_functions:
+		if function_entry is EventFunction:
+			_collect_stateful_members((function_entry as EventFunction).events if not (function_entry as EventFunction).events.is_empty() else (function_entry as EventFunction).rows, stateful_members)
+	if not stateful_members.is_empty():
+		if variable_lines.is_empty() and tree_variables.is_empty():
+			lines.append("")
+		for member_line: String in stateful_members:
+			lines.append(member_line)
+
 	# Tree-placed GDScript blocks (top level / inside groups) are emitted verbatim at class
 	# level — helper functions, @onready vars, signal declarations, etc.
 	var raw_blocks: Array = []
@@ -559,8 +571,25 @@ static func _emit_event_body(
 		var joiner: String = " or " if event_row.condition_mode == EventRow.ConditionMode.OR else " and "
 		var joined_conditions: String = joiner.join(condition_texts)
 
+		# Stateful conditions: prelude lines run every tick BEFORE the if (so they must
+		# not sit between an if and its elif — stateful events never chain).
+		var stateful_preludes: PackedStringArray = PackedStringArray()
+		var stateful_on_true: PackedStringArray = PackedStringArray()
+		for condition: ACECondition in event_row.conditions:
+			if not condition.enabled:
+				continue
+			if not condition.codegen_prelude.is_empty():
+				stateful_preludes.append(_substitute_params(condition.codegen_prelude, condition.params))
+			if not condition.codegen_on_true.is_empty():
+				stateful_on_true.append(_substitute_params(condition.codegen_on_true, condition.params))
+		for prelude_line: String in stateful_preludes:
+			lines.append(indent + prelude_line)
+			had_body = true
 		# Resolve the block header: if / elif / else, per the chaining rules above.
 		var wants_chain: bool = event_row.else_mode != EventRow.ElseMode.NONE
+		if wants_chain and not stateful_preludes.is_empty():
+			warnings.append("Stateful conditions (Every X Seconds…) can't chain as Else/Else-If; emitted standalone.")
+			wants_chain = false
 		if wants_chain and not chain_open:
 			warnings.append("Else/Else-If event has no preceding conditioned event to chain onto; emitted standalone.")
 			wants_chain = false
@@ -578,6 +607,9 @@ static func _emit_event_body(
 			had_body = true
 
 		var body_depth: int = depth + (1 if emitted_block else 0)
+		if emitted_block:
+			for on_true_line: String in stateful_on_true:
+				lines.append("\t".repeat(body_depth) + on_true_line)
 		# Pick filters (C3 "for each" picking, the Godot way): each enabled filter wraps the
 		# event's body in a direct `for` loop — group members, children, or any GDScript
 		# iterable — with an optional predicate and first-N cap. Conditions gate the whole
@@ -596,7 +628,9 @@ static func _emit_event_body(
 					continue
 				if action_item.is_awaited or action_item.await_call:
 					action_line = "await %s" % action_line
-				lines.append(body_indent + action_line)
+				# Multi-statement templates (Spawn Scene At…) emit one line each.
+				for action_template_line: String in action_line.split("\n"):
+					lines.append(body_indent + action_template_line)
 				had_body = true
 			elif action_item is RawCodeRow:
 				# In-flow GDScript block (C3 inline scripting): emitted verbatim inside the
@@ -846,6 +880,26 @@ static func _collect_enum_rows(entries: Array, into: Array) -> void:
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
 			_collect_enum_rows(group.events if not group.events.is_empty() else group.rows, into)
+
+## Gathers stateful-condition member declarations (deduped) from the event tree.
+static func _collect_stateful_members(entries: Array, into: Array) -> void:
+	for entry: Variant in entries:
+		if entry is EventRow:
+			for condition: Variant in (entry as EventRow).conditions:
+				if condition is ACECondition and not (condition as ACECondition).member_declaration.is_empty():
+					if not into.has((condition as ACECondition).member_declaration):
+						into.append((condition as ACECondition).member_declaration)
+			_collect_stateful_members((entry as EventRow).sub_events, into)
+		elif entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_collect_stateful_members(group.events if not group.events.is_empty() else group.rows, into)
+
+## Substitutes {param} tokens with the row's param values (plain str(), like codegen).
+static func _substitute_params(template: String, params: Dictionary) -> String:
+	var output: String = template
+	for key: Variant in params.keys():
+		output = output.replace("{%s}" % str(key), str(params[key]))
+	return output
 
 static func _collect_class_level_raw_rows(entries: Array, into: Array) -> void:
 	for entry: Variant in entries:

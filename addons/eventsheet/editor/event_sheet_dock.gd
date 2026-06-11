@@ -1574,6 +1574,15 @@ func _create_condition_from_definition(definition: ACEDefinition, params: Dictio
     condition.params = _resolve_definition_params(definition, params)
     # Bake the custom/addon codegen template so the ACE compiles standalone.
     condition.codegen_template = _baked_template_for(definition)
+    # Stateful conditions (Every X Seconds…): bake a fresh uid into the member/prelude/
+    # on-true/template so every applied instance owns its own state.
+    var member_template: String = str(definition.metadata.get("member_template", ""))
+    if not member_template.is_empty():
+        var stateful_uid: String = "%08x" % (randi() & 0x7fffffff)
+        condition.member_declaration = member_template.replace("{uid}", stateful_uid)
+        condition.codegen_prelude = str(definition.metadata.get("codegen_prelude", "")).replace("{uid}", stateful_uid)
+        condition.codegen_on_true = str(definition.metadata.get("codegen_on_true", "")).replace("{uid}", stateful_uid)
+        condition.codegen_template = condition.codegen_template.replace("{uid}", stateful_uid)
     return condition
 
 func _create_action_from_definition(definition: ACEDefinition, params: Dictionary) -> ACEAction:
@@ -1583,6 +1592,9 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
     action.params = _resolve_definition_params(definition, params)
     # Bake the custom/addon codegen template so the ACE compiles standalone.
     action.codegen_template = _baked_template_for(definition)
+    # Multi-statement action templates declare locals — bake a fresh uid per instance.
+    if action.codegen_template.contains("{uid}"):
+        action.codegen_template = action.codegen_template.replace("{uid}", "%08x" % (randi() & 0x7fffffff))
     return action
 
 ## The codegen template baked onto applied ACEs. Explicit @ace_codegen_template wins; addon
