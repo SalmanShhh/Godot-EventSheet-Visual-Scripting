@@ -82,6 +82,35 @@ static func run() -> bool:
 		editor._split_viewport != null and editor._split_viewport.get_flat_rows().size() > 0, true) and all_passed
 	editor.free()
 
+	# Single-param inline editing: value -> param resolution (incl. equal-value
+	# disambiguation by occurrence) and the undoable dock apply.
+	var ace: ACEAction = ACEAction.new()
+	ace.provider_id = "Core"
+	ace.ace_id = "X"
+	ace.codegen_template = "move({x}, {y})"
+	ace.params = {"x": "10", "y": "10"}
+	all_passed = _check("first occurrence resolves the first equal param",
+		EventSheetViewport.param_id_for_value(ace, "10", 0), "x") and all_passed
+	all_passed = _check("second occurrence resolves the second equal param",
+		EventSheetViewport.param_id_for_value(ace, "10", 1), "y") and all_passed
+	all_passed = _check("unknown values resolve to nothing",
+		EventSheetViewport.param_id_for_value(ace, "99", 0), "") and all_passed
+	var param_editor: EventSheetEditor = EventSheetEditor.new()
+	var param_sheet: EventSheetResource = EventSheetResource.new()
+	var param_event: EventRow = EventRow.new()
+	param_event.trigger_provider_id = "Core"
+	param_event.trigger_id = "OnReady"
+	param_event.actions.append(ace)
+	param_sheet.events.append(param_event)
+	param_editor.setup(param_sheet)
+	param_editor.set_undo_redo_manager(NoopUndoManager.new())
+	param_editor._on_param_value_edit_requested(ace, "y", "10")
+	param_editor._param_edit_field.text = "42"
+	param_editor._commit_inline_param_edit()
+	all_passed = _check("inline edits land on just that param",
+		str(ace.params.get("y")) == "42" and str(ace.params.get("x")) == "10", true) and all_passed
+	param_editor.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

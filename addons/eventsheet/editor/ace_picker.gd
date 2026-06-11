@@ -55,6 +55,7 @@ var _window: Window = null
 var _header: Label = null
 var _search: LineEdit = null
 var _tree: Tree = null
+var _info_label: Label = null
 var _hint: Label = null
 var _context: Dictionary = {}
 var _registry: EventSheetACERegistry = null
@@ -111,7 +112,14 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_tree.set_column_custom_minimum_width(1, 96)
 	_tree.set_column_titles_visible(true)
 	_tree.item_activated.connect(_on_item_activated)
+	_tree.item_selected.connect(_on_item_selected_for_info)
 	content.add_child(_tree)
+	# C3-style info pane: description + the generated GDScript of the selection.
+	_info_label = Label.new()
+	_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_info_label.custom_minimum_size = Vector2(0.0, 34.0)
+	_info_label.modulate = Color(1.0, 1.0, 1.0, 0.75)
+	content.add_child(_info_label)
 
 ## Update the registry used for searching (e.g. after a hot-reload).
 func set_registry(registry: EventSheetACERegistry) -> void:
@@ -441,6 +449,20 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 			return definition.ace_type == ACEDefinition.ACEType.ACTION
 		_:
 			return definition.ace_type in [ACEDefinition.ACEType.TRIGGER, ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.ACTION]
+
+## C3-style bottom info pane: selecting an entry shows its description AND the exact
+## GDScript it will generate — the picker doubles as a teaching surface.
+func _on_item_selected_for_info() -> void:
+	if _info_label == null:
+		return
+	var selected: TreeItem = _tree.get_selected()
+	var definition: ACEDefinition = selected.get_metadata(0) as ACEDefinition if selected != null else null
+	if definition == null:
+		_info_label.text = ""
+		return
+	var template: String = str(definition.metadata.get("codegen_template", ""))
+	var description: String = str(definition.metadata.get("display_template", definition.display_name))
+	_info_label.text = description + ("\n→  " + template if not template.is_empty() else "")
 
 func _on_item_activated() -> void:
 	var item: TreeItem = _tree.get_selected()

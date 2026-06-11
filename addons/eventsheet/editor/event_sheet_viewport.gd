@@ -9,6 +9,9 @@ signal ace_preview_requested(source_label: String, definitions: Array[ACEDefinit
 signal ace_picker_requested(row_data: EventRowData, lane: String)
 signal span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String)
 signal ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary)
+## C3's fastest gesture: double-click a highlighted VALUE inside an ACE to edit just
+## that parameter (no full dialog). Emitted with the resolved ACE + param id.
+signal param_value_edit_requested(ace: Resource, param_id: String, current_text: String)
 signal ace_drop_requested(
     source_entries: Array,
     target_row: EventRowData,
@@ -561,6 +564,42 @@ var _slow_click: Dictionary = {"row": -1, "span": -1, "msec": 0}
 ## Explorer-style slow double-click: a second single click on the SAME editable span,
 ## after the double-click window but within the slow window, begins inline editing
 ## (multiline comments route to their dialog instead). now_msec is injectable for tests.
+## Which highlighted value (if any) sits under logical x in a span: [text, occurrence]
+## where occurrence counts earlier ranges with IDENTICAL text (disambiguates "0" vs "0").
+func _value_text_at(span: SemanticSpan, logical_x: float, font: Font, font_size: int) -> Array:
+    var ranges: Array = span.metadata.get("value_ranges", []) if span.metadata is Dictionary else []
+    if ranges.is_empty():
+        return []
+    var origin_x: float = span.rect.position.x
+    for range_index in range(ranges.size()):
+        var range_entry: Array = ranges[range_index]
+        var start: int = int(range_entry[0])
+        var length: int = int(range_entry[1])
+        var prefix_width: float = font.get_string_size(span.text.substr(0, start), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+        var value_width: float = font.get_string_size(span.text.substr(start, length), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+        if logical_x >= origin_x + prefix_width and logical_x <= origin_x + prefix_width + value_width:
+            var value_text: String = span.text.substr(start, length)
+            var occurrence: int = 0
+            for earlier_index in range(range_index):
+                if span.text.substr(int(ranges[earlier_index][0]), int(ranges[earlier_index][1])) == value_text:
+                    occurrence += 1
+            return [value_text, occurrence]
+    return []
+
+## Maps a displayed value back to the param that produced it (params are substituted
+## verbatim into display templates, so str(param) == shown text; equal values
+## disambiguate by occurrence order). "" when nothing matches.
+static func param_id_for_value(ace: Resource, value_text: String, occurrence: int) -> String:
+    if ace == null or not (ace.get("params") is Dictionary):
+        return ""
+    var seen: int = 0
+    for param_key: Variant in (ace.get("params") as Dictionary).keys():
+        if str((ace.get("params") as Dictionary)[param_key]) == value_text:
+            if seen == occurrence:
+                return str(param_key)
+            seen += 1
+    return ""
+
 func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1) -> bool:
     var now: int = now_msec if now_msec >= 0 else Time.get_ticks_msec()
     var was_same: bool = int(_slow_click.get("row", -1)) == row_index and int(_slow_click.get("span", -1)) == span_index
@@ -931,6 +970,20 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
                 pick_filter_edit_requested.emit(row_data.source_resource, int(double_click_meta.get("pick_index", -1)))
                 accept_event()
                 return
+            # Single-param inline editing: a double-click landing on a highlighted VALUE
+            # within an ACE edits just that parameter.
+            var value_kind: String = str(double_click_meta.get("kind", ""))
+            if value_kind in ["condition", "trigger", "action"] and row_data != null and row_data.source_resource is EventRow and span_index >= 0 and span_index < row_data.spans.size():
+                var value_hit: Array = _value_text_at(row_data.spans[span_index], local_position.x, _get_font(), _get_font_size())
+                if not value_hit.is_empty():
+                    var clicked_lane: String = "action" if value_kind == "action" else "condition"
+                    var clicked_ace: Resource = row_data.source_resource.trigger if value_kind == "trigger" else _resolve_ace_resource(row_data.source_resource, clicked_lane, int(double_click_meta.get("ace_index", -1)))
+                    if clicked_ace != null:
+                        var clicked_param: String = param_id_for_value(clicked_ace, str(value_hit[0]), int(value_hit[1]))
+                        if not clicked_param.is_empty():
+                            param_value_edit_requested.emit(clicked_ace, clicked_param, str(value_hit[0]))
+                            accept_event()
+                            return
             # Multiline comment rows edit in the dialog (per-line inline editing would
             # replace the whole text with one line — data loss).
             if row_data != null and row_data.source_resource is CommentRow and (row_data.source_resource as CommentRow).text.contains("\n"):

@@ -605,6 +605,7 @@ func _build_ui() -> void:
     _viewport.ace_picker_requested.connect(_on_viewport_ace_picker_requested)
     _viewport.span_edit_requested.connect(_on_viewport_span_edit_requested)
     _viewport.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
+    _viewport.param_value_edit_requested.connect(_on_param_value_edit_requested)
     _viewport.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
     _viewport.comment_edit_requested.connect(_open_comment_dialog)
     _viewport.pick_filter_edit_requested.connect(_open_pick_filter_dialog)
@@ -2716,6 +2717,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
     view.ace_picker_requested.connect(_on_viewport_ace_picker_requested)
     view.span_edit_requested.connect(_on_viewport_span_edit_requested)
     view.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
+    view.param_value_edit_requested.connect(_on_param_value_edit_requested)
     view.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
     view.comment_edit_requested.connect(_open_comment_dialog)
     view.pick_filter_edit_requested.connect(_open_pick_filter_dialog)
@@ -2943,6 +2945,46 @@ func update_live_values(values: Dictionary) -> void:
         frame_lines.append("%s = %s" % [str(value_key), str(values[value_key])])
     _live_values_label.text = "
 ".join(frame_lines)
+
+# ── Single-param inline editing (C3's fastest gesture) ───────────────────────────────
+var _param_edit_popup: PopupPanel = null
+var _param_edit_field: LineEdit = null
+var _param_edit_target: Resource = null
+var _param_edit_key: String = ""
+
+## Double-clicking a highlighted value opens this one-field editor at the mouse.
+func _on_param_value_edit_requested(ace: Resource, param_id: String, current_text: String) -> void:
+    if _param_edit_popup == null:
+        _param_edit_popup = PopupPanel.new()
+        _param_edit_field = LineEdit.new()
+        _param_edit_field.custom_minimum_size = Vector2(180.0, 0.0)
+        _param_edit_field.text_submitted.connect(func(_t: String) -> void: _commit_inline_param_edit())
+        _param_edit_popup.add_child(_param_edit_field)
+        add_child(_param_edit_popup)
+    _param_edit_target = ace
+    _param_edit_key = param_id
+    _param_edit_field.text = current_text
+    _param_edit_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i(200, 36)))
+    _param_edit_field.grab_focus()
+    _param_edit_field.select_all()
+
+func _commit_inline_param_edit() -> void:
+    if _param_edit_target == null or _param_edit_key.is_empty():
+        return
+    var target: Resource = _param_edit_target
+    var key: String = _param_edit_key
+    var new_text: String = _param_edit_field.text
+    var changed: bool = _perform_undoable_sheet_edit("Edit Parameter", func() -> bool:
+        var params: Dictionary = target.get("params")
+        if str(params.get(key, "")) == new_text:
+            return false
+        params[key] = new_text
+        return true
+    )
+    _param_edit_popup.hide()
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Parameter updated.")
 
 ## Toggles debug compiles: gutter breakpoints (F9) emit real `breakpoint` statements.
 func _toggle_breakpoint_emission() -> void:

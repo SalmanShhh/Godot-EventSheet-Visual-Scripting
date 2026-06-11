@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Single-param inline editing + picker info pane
+- **C3's fastest gesture**: double-click a highlighted *value* inside any condition or
+  action and edit just that parameter in a one-field popup — no full dialog. Values map
+  back to their params verbatim (equal values disambiguate by occurrence order);
+  commits are undoable.
+- **Picker info pane**: selecting an entry shows its description **and the exact
+  GDScript it generates** at the bottom of the picker — C3's info bar doubled as the
+  teach-Godot surface.
+
 ### Spring + Tween behavior packs (packs 19 & 20) + sweep 10
 - **SpringBehavior** — a cleaned-up Godot port of the author's C3 *simple_spring*
   addon: **named numeric springs** (per-spring stiffness/damping/precision), Spring
