@@ -3009,17 +3009,43 @@ func update_live_values(values: Dictionary) -> void:
         for value_key: Variant in value_keys:
             var item: TreeItem = _live_values_tree.create_item(root_item)
             item.set_text(0, str(value_key))
-            item.set_text(1, str(values[value_key]))
-            item.set_editable(1, true)
+            _fill_live_value_item(item, values[value_key])
     else:
         var item: TreeItem = _live_values_tree.get_root().get_first_child()
         var index: int = 0
         while item != null and index < value_keys.size():
             item.set_text(0, str(value_keys[index]))
             if _live_values_tree.get_edited() != item:
-                item.set_text(1, str(values[value_keys[index]]))
+                _fill_live_value_item(item, values[value_keys[index]])
             item = item.get_next()
             index += 1
+
+## One value -> one tree row. Dictionaries/Arrays expand into read-only subtrees
+## (GDevelop's variables-debugger style); scalars stay editable leaves.
+func _fill_live_value_item(item: TreeItem, value: Variant) -> void:
+    for stale: TreeItem in item.get_children():
+        item.remove_child(stale)
+    if value is Dictionary:
+        item.set_text(1, "{…} %d entries" % (value as Dictionary).size())
+        item.set_editable(1, false)
+        var dictionary_keys: Array = (value as Dictionary).keys()
+        dictionary_keys.sort()
+        for child_key: Variant in dictionary_keys:
+            var child: TreeItem = item.create_child()
+            child.set_text(0, str(child_key))
+            _fill_live_value_item(child, (value as Dictionary)[child_key])
+            child.set_editable(1, false)
+    elif value is Array:
+        item.set_text(1, "[…] %d items" % (value as Array).size())
+        item.set_editable(1, false)
+        for child_index: int in range((value as Array).size()):
+            var element: TreeItem = item.create_child()
+            element.set_text(0, "[%d]" % child_index)
+            _fill_live_value_item(element, (value as Array)[child_index])
+            element.set_editable(1, false)
+    else:
+        item.set_text(1, str(value))
+        item.set_editable(1, true)
 
 ## Tree edit -> typed value -> running game (debug session). C3's editable debugger.
 func _on_live_value_edited() -> void:

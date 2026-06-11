@@ -153,6 +153,12 @@ static func run() -> bool:
 	all_passed = _check("find_in_sheet is case-insensitive",
 		EventSheetEditor.find_in_sheet(probe_sheet, "TREASURE").size(), 1) and all_passed
 
+	# Fuzzy picker matching: subsequence, case/space-insensitive, never empty-query.
+	all_passed = _check("fuzzy matches subsequences", ACEPickerDialog.fuzzy_match("stt", "Set Time Scale"), true) and all_passed
+	all_passed = _check("fuzzy respects order", ACEPickerDialog.fuzzy_match("tts", "Set Time Scale"), true) and all_passed
+	all_passed = _check("fuzzy rejects missing letters", ACEPickerDialog.fuzzy_match("xyz", "Set Time Scale"), false) and all_passed
+	all_passed = _check("empty queries never fuzzy-match", ACEPickerDialog.fuzzy_match("", "anything"), false) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

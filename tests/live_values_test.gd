@@ -86,6 +86,25 @@ static func run() -> bool:
 	all_passed = _check("edited text parses to typed values",
 		[EventSheetLiveValuesDebugger.parse_edited_value("3.5"), EventSheetLiveValuesDebugger.parse_edited_value("true"), EventSheetLiveValuesDebugger.parse_edited_value("hello")],
 		[3.5, true, "hello"]) and all_passed
+	# Nested values: containers expand into read-only subtrees; scalars stay editable.
+	editor.update_live_values({"stats": {"hp": 9, "mp": 3}, "tags": ["a", "b"], "score": 5})
+	var score_row: TreeItem = null
+	var stats_row: TreeItem = null
+	var tags_row: TreeItem = null
+	var walk: TreeItem = editor._live_values_tree.get_root().get_first_child()
+	while walk != null:
+		match walk.get_text(0):
+			"score": score_row = walk
+			"stats": stats_row = walk
+			"tags": tags_row = walk
+		walk = walk.get_next()
+	all_passed = _check("dictionaries expand into subtrees",
+		stats_row.get_child_count() == 2 and stats_row.get_first_child().get_text(0) == "hp" and stats_row.get_first_child().get_text(1) == "9", true) and all_passed
+	all_passed = _check("arrays expand with indices",
+		tags_row.get_child_count() == 2 and tags_row.get_first_child().get_text(0) == "[0]", true) and all_passed
+	all_passed = _check("containers are read-only, scalars stay editable",
+		not stats_row.is_editable(1) and not stats_row.get_first_child().is_editable(1) and score_row.is_editable(1), true) and all_passed
+
 	# (EditorDebuggerPlugin isn't instantiable headless — send_set_value's no-session
 	# guard is exercised by the editor smoke instead.)
 	# Debug compiles register the receiver + handler; normal compiles never do.

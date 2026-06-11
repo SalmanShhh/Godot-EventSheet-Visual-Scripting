@@ -45,6 +45,21 @@ static func toggle_favorite(provider_id: String, ace_id: String) -> bool:
 		ProjectSettings.save()
 	return existing < 0
 
+## True when `query`'s characters appear in order inside `text` (case/space-insensitive)
+## — the power user's "stt" reflex from C3/GDevelop pickers.
+static func fuzzy_match(query: String, text: String) -> bool:
+	var needle: String = query.to_lower().replace(" ", "")
+	var haystack: String = text.to_lower().replace(" ", "")
+	if needle.is_empty():
+		return false
+	var position: int = 0
+	for character in needle:
+		position = haystack.find(character, position)
+		if position < 0:
+			return false
+		position += 1
+	return true
+
 ## Records a use (newest first, deduped, capped) — drives the ★ Recent picker section.
 static func note_recent(provider_id: String, ace_id: String) -> void:
 	var recent_key: String = "%s/%s" % [provider_id, ace_id]
@@ -116,6 +131,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_search.placeholder_text = "Search actions, conditions, triggers..."
 	_search.clear_button_enabled = true
 	_search.text_changed.connect(func(_text: String) -> void: _refresh_tree())
+	_search.text_submitted.connect(func(_text: String) -> void: _activate_first_match())
 	content.add_child(_search)
 
 	_hint = Label.new()
@@ -341,6 +357,18 @@ func _refresh_tree() -> void:
 		for extra_definition: ACEDefinition in _registry.search(synonym_query):
 			if not definitions.has(extra_definition):
 				definitions.append(extra_definition)
+	# Fuzzy fallback ("stt" -> Set Time Scale): subsequence matches on the display name
+	# join AFTER exact + synonym hits, capped so noise never buries real matches.
+	if filtering and query.length() >= 2:
+		var fuzzy_added: int = 0
+		for candidate: ACEDefinition in _registry.get_all_definitions():
+			if fuzzy_added >= 12:
+				break
+			if definitions.has(candidate):
+				continue
+			if fuzzy_match(query, candidate.display_name):
+				definitions.append(candidate)
+				fuzzy_added += 1
 	for definition: ACEDefinition in definitions:
 		if not _is_allowed_for_mode(definition, mode, signals_only):
 			continue
@@ -521,6 +549,19 @@ func _on_tree_gui_input(input_event: InputEvent) -> void:
 	if _info_label != null:
 		_info_label.text = ("⭐ Pinned %s to Favorites" if pinned else "Unpinned %s from Favorites") % definition.display_name
 	_refresh_tree()
+
+## Enter in the search box applies the first concrete match — type-and-Enter, no mouse.
+func _activate_first_match() -> void:
+	var group_item: TreeItem = _tree.get_root().get_first_child() if _tree.get_root() != null else null
+	while group_item != null:
+		var entry: TreeItem = group_item.get_first_child()
+		while entry != null:
+			if entry.get_metadata(0) is ACEDefinition:
+				entry.select(0)
+				_on_item_activated()
+				return
+			entry = entry.get_next()
+		group_item = group_item.get_next()
 
 func _on_item_activated() -> void:
 	var item: TreeItem = _tree.get_selected()

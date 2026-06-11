@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Power-user trio: nested live values, fuzzy picker, keyboard flow
+- **Nested Live Values**: dictionaries and arrays expand into read-only subtrees
+  (GDevelop's variables-debugger style — `stats → hp / mp`); scalars stay editable.
+- **Fuzzy picker matching**: `stt` finds *Set Time Scale* — subsequence matching joins
+  after exact + synonym hits, capped at 12 so it never buries real matches.
+- **Keyboard flow**: **Enter in the picker search applies the first match**, and Enter
+  in any params-dialog field presses OK — `E → type → Enter → type → Enter` authors an
+  event without touching the mouse.
+
 ### Editable Live Values — C3's debugger, both directions
 - The Live Values window is now an **editable tree**: double-click a value while the
   game runs and the change lands in the running game (typed — `3.5`, `true`,

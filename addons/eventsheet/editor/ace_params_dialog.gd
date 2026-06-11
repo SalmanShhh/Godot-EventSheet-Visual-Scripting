@@ -190,6 +190,9 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 		return spin
 	var edit: LineEdit = LineEdit.new()
 	edit.text = str(default_value)
+	# Keyboard flow: Enter in any plain field presses OK (type, Enter, done).
+	if _dialog is AcceptDialog:
+		(_dialog as AcceptDialog).register_text_enter(edit)
 	_fields[key] = edit
 	return edit
 
