@@ -1389,11 +1389,25 @@ static func _to_code_literal(value: Variant) -> String:
 		_:
 			return str(value)
 
-## Resolves output path from explicit input or sheet resource path.
+## Resolves output path from explicit input or sheet resource path. With no explicit
+## path the sheet's EXISTING pair wins: the conventional <name>_generated.gd when
+## present, else a sibling <name>.gd — but only when its header proves the compiler
+## wrote it for THIS sheet (the pack builder's take_over_path convention); a
+## hand-written same-name script is never adopted as an output target. This keeps
+## compile-on-save and the export-integrity pass refreshing the committed pair
+## instead of inventing a parallel *_generated.gd next to it.
 static func _resolve_output_path(sheet: EventSheetResource, output_path: String) -> String:
 	if not output_path.is_empty():
 		return output_path
 	if not sheet.resource_path.is_empty():
-		var base_name: String = sheet.resource_path.get_file().get_basename()
-		return "%s/%s_generated.gd" % [sheet.resource_path.get_base_dir(), base_name]
+		# get_basename() (full path minus extension) — building from get_base_dir()
+		# yields user:///… triple slashes for root-level paths.
+		var base: String = sheet.resource_path.get_basename()
+		var generated: String = base + "_generated.gd"
+		if FileAccess.file_exists(generated):
+			return generated
+		var sibling: String = base + ".gd"
+		if FileAccess.file_exists(sibling) and FileAccess.get_file_as_string(sibling).left(400).contains("# Source: %s" % sheet.resource_path):
+			return sibling
+		return generated
 	return "res://event_sheet_generated.gd"

@@ -15,8 +15,9 @@ func _export_begin(_features: PackedStringArray, _is_debug: bool, _path: String,
 	var report: Dictionary = recompile_all_sheets()
 	print("[Godot EventSheets] export integrity: %d sheet(s) recompiled, %d failed." % [int(report.get("compiled", 0)), int(report.get("failed", 0))])
 
-## Walks res:// for EventSheetResource .tres files and recompiles each to its conventional
-## output path. Returns {compiled: int, failed: int, failures: Array[String]}.
+## Walks res:// for EventSheetResource .tres files and recompiles each to its existing
+## pair (the compiler's resolution — never a parallel duplicate next to a builder-shipped
+## sibling). Returns {compiled: int, failed: int, failures: Array[String]}.
 ## Static + headless-safe so tests (and CI) can run the exact export-time pass.
 static func recompile_all_sheets(root: String = "res://") -> Dictionary:
 	var report: Dictionary = {"compiled": 0, "failed": 0, "failures": []}

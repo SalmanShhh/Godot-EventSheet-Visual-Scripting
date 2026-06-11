@@ -19,6 +19,7 @@ godot --headless --import --path .                      # 0 script/parse errors 
 godot --headless --path . --script tests/run_perf.gd    # headless-safe gate (CI gate)
 godot --headless --path . --script tests/run_tests.gd   # full suite
 godot --editor --headless --quit-after 170 --path .     # editor smoke (then: git checkout -- project.godot)
+godot --headless --path . --script tools/project_doctor.gd  # repo health (CI gate; -- --strict fails on warnings)
 ```
 
 Quirks worth knowing:

@@ -44,6 +44,9 @@ jobs:
       - name: Headless-safe suite (gates the build)
         run: ~/godot/godot --headless --path . --script tests/run_perf.gd
 
+      - name: Project Doctor (committed generated scripts must match their sheets)
+        run: ~/godot/godot --headless --path . --script tools/project_doctor.gd
+
       - name: Full suite (known harmless tail segfault tolerated; zero failures expected)
         run: |
           ~/godot/godot --headless --path . --script tests/run_tests.gd 2>&1 | tee full.log || true

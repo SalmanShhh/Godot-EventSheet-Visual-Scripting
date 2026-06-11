@@ -497,6 +497,7 @@ func _build_ui() -> void:
     tools_popup.add_item("Test Bench", 5)
     tools_popup.add_separator()
     tools_popup.add_item("Find in Project…", 6)
+    tools_popup.add_item("Project Doctor…", 7)
     tools_popup.id_pressed.connect(func(id: int) -> void:
         match id:
             0: _toggle_breakpoint_emission()
@@ -506,6 +507,7 @@ func _build_ui() -> void:
             4: _open_publish_preview()
             5: _open_test_bench()
             6: _open_project_find()
+            7: _open_project_doctor()
     )
     _toolbar.add_child(tools_menu)
     _add_toolbar_button("Split", _toggle_split_view)
@@ -3291,6 +3293,57 @@ func _open_project_find(initial_query: String = "") -> void:
     if _project_find == null:
         _project_find = EventSheetProjectFind.new(self)
     _project_find.open(initial_query)
+
+# ── Project Doctor — the one-stop health audit (Tools menu; core lives in
+# EventSheetProjectDoctor so the headless CLI and CI run the same checks) ─────────────
+var _doctor_window: Window = null
+var _doctor_tree: Tree = null
+
+func _open_project_doctor() -> void:
+    if _doctor_window == null:
+        _doctor_window = Window.new()
+        _doctor_window.title = "Project Doctor"
+        _doctor_window.size = Vector2i(680, 440)
+        _doctor_window.close_requested.connect(func() -> void: _doctor_window.hide())
+        var box: VBoxContainer = VBoxContainer.new()
+        box.set_anchors_preset(Control.PRESET_FULL_RECT)
+        _doctor_tree = Tree.new()
+        _doctor_tree.hide_root = true
+        _doctor_tree.columns = 3
+        _doctor_tree.set_column_title(0, "Severity")
+        _doctor_tree.set_column_title(1, "Where")
+        _doctor_tree.set_column_title(2, "Finding")
+        _doctor_tree.set_column_expand(0, false)
+        _doctor_tree.set_column_custom_minimum_width(0, 80)
+        _doctor_tree.set_column_expand(1, false)
+        _doctor_tree.set_column_custom_minimum_width(1, 180)
+        _doctor_tree.column_titles_visible = true
+        _doctor_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        box.add_child(_doctor_tree)
+        var rerun_button: Button = Button.new()
+        rerun_button.text = "Re-run checks"
+        rerun_button.pressed.connect(_run_project_doctor)
+        box.add_child(rerun_button)
+        _doctor_window.add_child(box)
+        add_child(_doctor_window)
+    _doctor_window.popup_centered()
+    _run_project_doctor()
+
+func _run_project_doctor() -> void:
+    _doctor_tree.clear()
+    var root_item: TreeItem = _doctor_tree.create_item()
+    var report: Dictionary = EventSheetProjectDoctor.run()
+    for finding: Dictionary in (report.get("findings", []) as Array):
+        var item: TreeItem = _doctor_tree.create_item(root_item)
+        var severity: String = str(finding.get("severity"))
+        item.set_text(0, severity.to_upper())
+        item.set_custom_color(0, Color(0.92, 0.42, 0.42) if severity == "error"
+            else (Color(0.93, 0.78, 0.4) if severity == "warning" else Color(0.6, 0.72, 0.86)))
+        item.set_text(1, str(finding.get("path")).get_file())
+        item.set_tooltip_text(1, str(finding.get("path")))
+        item.set_text(2, str(finding.get("message")))
+    var errors: int = int(report.get("errors", 0))
+    _set_status("Project Doctor: %d error(s), %d warning(s), %d note(s)." % [errors, int(report.get("warnings", 0)), int(report.get("infos", 0))], errors > 0)
 
 static func list_project_sheets() -> PackedStringArray:
     return EventSheetProjectFind.list_project_sheets()

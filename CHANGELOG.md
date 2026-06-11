@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Project-usability slice 2: the Project Doctor
+- **Project Doctor** — one audit for the cross-file drift no single check sees,
+  identical from the dock (Tools → Project Doctor…), the headless CLI
+  (`godot --headless --path . --script tools/project_doctor.gd`, `-- --strict`
+  to fail on warnings) and CI (a new gate fails the build on errors).
+  - **errors**: a committed generated script no longer matches what its sheet
+	compiles to, or a sheet stopped compiling — the pack-golden byte-identity
+	contract, generalized to every sheet in the project.
+  - **warnings**: never-compiled sheets, autoload sheets that aren't registered
+    (or point at the wrong script).
+  - **infos**: private variables nothing references, packs no sheet/scene/autoload
+    uses, compiled sheets attached to no scene — advisory, never fails CI.
+  The doctor never writes inside `res://`; verification recompiles go to a
+  `user://` scratch file.
+- First catch on this very repo: `demo/showcase/showcase_v060_generated.gd` was a
+  committed orphan (the scene attaches `showcase_v060.gd`) — removed, and the doctor
+  exposed the silent bug that kept recreating it: default output resolution always
+  invented `<name>_generated.gd`, so the export-integrity pass (and compile-on-save)
+  duplicated outputs next to builder-shipped pairs like the showcase and every pack.
+  `_resolve_output_path` now refreshes the sheet's EXISTING pair — adopting a sibling
+  `<name>.gd` only when its `# Source:` header proves the compiler wrote it for that
+  sheet, so a hand-written same-name script is never clobbered.
+
 ### Project-usability slice 1: compile-on-save + reviewable sheet diffs
 - **Compile-on-save** (default on; `eventsheets/editor/compile_on_save` to disable):
   saving a sheet also writes its `<name>_generated.gd`, so F5 can never play-test a

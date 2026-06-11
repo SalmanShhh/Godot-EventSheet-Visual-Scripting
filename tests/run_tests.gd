@@ -96,6 +96,7 @@ const LiveValuesTestScript := preload("res://tests/live_values_test.gd")
 const UxPolishTestScript := preload("res://tests/ux_polish_test.gd")
 const SpringTweenPacksTestScript := preload("res://tests/spring_tween_packs_test.gd")
 const SingletonSheetsTestScript := preload("res://tests/singleton_sheets_test.gd")
+const ProjectDoctorTestScript := preload("res://tests/project_doctor_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
@@ -187,6 +188,7 @@ func _init() -> void:
 	passed = UxPolishTestScript.run() and passed
 	passed = SpringTweenPacksTestScript.run() and passed
 	passed = SingletonSheetsTestScript.run() and passed
+	passed = ProjectDoctorTestScript.run() and passed
 	passed = EventSheetEditorTestScript.run() and passed
 	passed = EventSheetStyleTestScript.run() and passed
 	passed = PluginWorkspaceTestScript.run() and passed
