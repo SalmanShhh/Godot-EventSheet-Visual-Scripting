@@ -162,7 +162,8 @@ Conditions                        | Actions
 | **Addon composition** — meta-packs / jam kits (addon includes addon, compile-time bake) | ✅ shipped |
 | **Project policy** for composition (approved-tag sourcing, depth rails, collision gates) | ✅ shipped |
 | Composition Lane B v1 (has-a uses-instances) | ✅ shipped |
-| Lane B.2 (behavior auto-attach) + MCP policy awareness | 🗺 planned ([spec](docs/ADDON-COMPOSITION-SPEC.md)) |
+| Lane B.2 (sibling-behavior requirements → ⚠ badge) | ✅ shipped |
+| MCP policy awareness, attributes Tiers 2–3, live-values overlay | 🗺 planned |
 | Live-values debug overlay (EngineDebugger channel), community feedback rounds | 🗺 planned |
 
 ## Project layout

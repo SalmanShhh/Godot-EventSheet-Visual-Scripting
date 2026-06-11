@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Addon composition Lane B.2 — sibling-behavior requirements
+- Behavior packs can declare **Requires (sibling behaviors)** in the Sheet Type
+  dialog: the compiler emits a canonical `_get_configuration_warnings()` that checks
+  the parent's children by class (native or script class), so Godot shows its **⚠
+  badge** the moment a dependency is missing — the Unity *RequireComponent* idiom,
+  warning-only by design (no silent auto-mutation of the user's scene).
+- Invalid class names warn and skip; sheets without requirements emit nothing.
+- `tests/addon_composition_test.gd` grew to 22 assertions. The composition arc
+  (Lane A + policy + B.1 uses-instances + B.2 requirements) is complete.
+
 ### Addon composition Lane B (v1) + maintainability & sweep 5
 - **Uses (addon classes)** in the Sheet Type dialog: declared classes emit owned helper
   instances (`var __uses_screen_shake := ScreenShake.new()`) so ƒx/blocks call shared

@@ -168,6 +168,35 @@ static func run() -> bool:
 		uses_sheet.uses_addons.size() == 1 and uses_sheet.uses_addons[0] == "ScreenShake", true) and all_passed
 	uses_editor.free()
 
+	# Lane B.2: sibling requirements compile to _get_configuration_warnings().
+	var pack: EventSheetResource = EventSheetResource.new()
+	pack.behavior_mode = true
+	pack.host_class = "Node2D"
+	pack.custom_class_name = "ComboKit"
+	pack.requires_behaviors = ["ScreenShake", "bad name!"]
+	var pack_result: Dictionary = SheetCompiler.compile(pack, "user://eventsheets_b2.gd")
+	var pack_output: String = str(pack_result.get("output", ""))
+	all_passed = _check("requires emits the configuration-warnings hook",
+		pack_output.contains("func _get_configuration_warnings() -> PackedStringArray:") and pack_output.contains("[\"ScreenShake\"]"), true) and all_passed
+	all_passed = _check("invalid requires entries warn and skip",
+		str(pack_result.get("warnings")).contains("bad name!") and not pack_output.contains("bad name!"), true) and all_passed
+	var pack_script: GDScript = GDScript.new()
+	pack_script.source_code = pack_output
+	all_passed = _check("requires output parses", pack_script.reload(true) == OK, true) and all_passed
+	pack.requires_behaviors = []
+	all_passed = _check("no requires, no hook",
+		str(SheetCompiler.compile(pack, "user://eventsheets_b2b.gd").get("output", "")).contains("_get_configuration_warnings"), false) and all_passed
+
+	# Sheet Type applies Requires too.
+	var req_editor: EventSheetEditor = EventSheetEditor.new()
+	var req_sheet: EventSheetResource = EventSheetResource.new()
+	req_editor.setup(req_sheet)
+	req_editor.set_undo_redo_manager(NoopUndoManager.new())
+	req_editor._apply_sheet_type_settings(2, "ReqThing", "", "Node2D", false, PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(["ScreenShake"]))
+	all_passed = _check("Sheet Type applies sibling requirements",
+		req_sheet.requires_behaviors.size() == 1 and req_sheet.requires_behaviors[0] == "ScreenShake", true) and all_passed
+	req_editor.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -3479,6 +3479,7 @@ var _sheet_type_tool_check: CheckBox = null
 var _sheet_type_tags_edit: LineEdit = null
 var _sheet_type_includes_edit: LineEdit = null
 var _sheet_type_uses_edit: LineEdit = null
+var _sheet_type_requires_edit: LineEdit = null
 
 func _open_sheet_type_dialog() -> void:
     if not _ensure_sheet_for_editing():
@@ -3499,6 +3500,7 @@ func _open_sheet_type_dialog() -> void:
     _sheet_type_tags_edit.text = ", ".join(_current_sheet.addon_tags)
     _sheet_type_includes_edit.text = ", ".join(PackedStringArray(_current_sheet.includes))
     _sheet_type_uses_edit.text = ", ".join(PackedStringArray(_current_sheet.uses_addons))
+    _sheet_type_requires_edit.text = ", ".join(PackedStringArray(_current_sheet.requires_behaviors))
     _sheet_type_dialog.popup_centered(Vector2i(460, 300))
 
 func _ensure_sheet_type_dialog() -> void:
@@ -3523,6 +3525,7 @@ func _ensure_sheet_type_dialog() -> void:
     _sheet_type_tags_edit = _add_sheet_type_field(form, "Tags (comma-separated)", "movement, retro, jam")
     _sheet_type_includes_edit = _add_sheet_type_field(form, "Includes (addon sheets)", "res://eventsheet_addons/screen_shake/screen_shake.tres, …")
     _sheet_type_uses_edit = _add_sheet_type_field(form, "Uses (addon classes)", "ScreenShake, MathHelpers — owned helper instances")
+    _sheet_type_requires_edit = _add_sheet_type_field(form, "Requires (sibling behaviors)", "ScreenShake — shows the warning badge when the sibling is missing")
     var hint: Label = Label.new()
     hint.text = "Custom nodes appear in Godot's Create Node dialog with their icon.\nBehaviors attach as child nodes and act on their parent via the typed `host` accessor."
     hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -3554,12 +3557,13 @@ func _on_sheet_type_confirmed() -> void:
         VariableDialog.parse_options(_sheet_type_tags_edit.text)
     ,
         VariableDialog.parse_options(_sheet_type_includes_edit.text),
-        VariableDialog.parse_options(_sheet_type_uses_edit.text)
+        VariableDialog.parse_options(_sheet_type_uses_edit.text),
+        VariableDialog.parse_options(_sheet_type_requires_edit.text)
     )
 
 ## Applies the chosen sheet type (0 = plain, 1 = custom node, 2 = behavior) undoably and
 ## refreshes every identity surface (banner, tab badge, header, lint context).
-func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray(), include_paths: PackedStringArray = PackedStringArray(), uses_classes: PackedStringArray = PackedStringArray()) -> void:
+func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray(), include_paths: PackedStringArray = PackedStringArray(), uses_classes: PackedStringArray = PackedStringArray(), requires_classes: PackedStringArray = PackedStringArray()) -> void:
     if _current_sheet == null:
         return
     var changed: bool = _perform_undoable_sheet_edit("Set Sheet Type", func() -> bool:
@@ -3583,6 +3587,11 @@ func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_p
             if not uses_class.strip_edges().is_empty():
                 applied_uses.append(uses_class.strip_edges())
         _current_sheet.uses_addons = applied_uses
+        var applied_requires: Array[String] = []
+        for requires_class: String in requires_classes:
+            if not requires_class.strip_edges().is_empty():
+                applied_requires.append(requires_class.strip_edges())
+        _current_sheet.requires_behaviors = applied_requires
         if type_index == 3:
             _current_sheet.host_class = "EditorScript"
         elif not host_class_text.strip_edges().is_empty():

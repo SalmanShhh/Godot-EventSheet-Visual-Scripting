@@ -101,6 +101,27 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		lines.append("\thost = get_parent() as %s" % host_type)
 		lines.append("\tif host == null:")
 		lines.append("\t\tpush_warning(\"%s behavior requires a %s parent.\")" % [behavior_label, host_type])
+		# Lane B.2: declared sibling dependencies surface as the editor's ⚠ badge.
+		var required_behaviors: PackedStringArray = PackedStringArray()
+		for required_entry: String in sheet.requires_behaviors:
+			if EventSheetIdentifierRules.is_valid(required_entry.strip_edges()):
+				required_behaviors.append("\"%s\"" % required_entry.strip_edges())
+			elif not required_entry.strip_edges().is_empty():
+				(result["warnings"] as Array).append("Requires entry \"%s\" isn't a valid class name — skipped." % required_entry.strip_edges())
+		if not required_behaviors.is_empty():
+			lines.append("")
+			lines.append("## Declared sibling dependencies (attach these to the same parent).")
+			lines.append("func _get_configuration_warnings() -> PackedStringArray:")
+			lines.append("\tvar dependency_warnings: PackedStringArray = PackedStringArray()")
+			lines.append("\tfor required_class: String in [%s]:" % ", ".join(required_behaviors))
+			lines.append("\t\tvar dependency_found: bool = false")
+			lines.append("\t\tfor sibling: Node in (get_parent().get_children() if get_parent() != null else []):")
+			lines.append("\t\t\tif sibling.is_class(required_class) or (sibling.get_script() != null and str(sibling.get_script().get_global_name()) == required_class):")
+			lines.append("\t\t\t\tdependency_found = true")
+			lines.append("\t\t\t\tbreak")
+			lines.append("\t\tif not dependency_found:")
+			lines.append("\t\t\tdependency_warnings.append(\"Requires a %s sibling behavior.\" % required_class)")
+			lines.append("\treturn dependency_warnings")
 	# Enums emit FIRST so enum-typed variable declarations below can reference them.
 	var enum_rows: Array = []
 	_collect_enum_rows(all_events, enum_rows)

@@ -1,8 +1,9 @@
 # Addon Composition — Spec (addon includes addon)
 
 Can one EventSheets addon **dock/include another addon** and build on it? Status:
-**Lane A + policy SHIPPED**; **Lane B v1 SHIPPED** (uses-instances via the Sheet Type
-Uses field; behavior auto-attach = planned B.2); Lane C honestly skipped. The analysis below is the decision record.
+**Lane A + policy SHIPPED**; **Lane B SHIPPED** (B.1 uses-instances + B.2 sibling
+requirements via _get_configuration_warnings — warning-badge only, no scene
+auto-mutation); Lane C honestly skipped. The composition arc is complete. The analysis below is the decision record.
 
 ## What exists today (the building blocks)
 

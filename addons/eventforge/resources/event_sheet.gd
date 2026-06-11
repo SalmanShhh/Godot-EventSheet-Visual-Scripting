@@ -40,6 +40,10 @@ class_name EventSheetResource
 ## them (suits RefCounted provider/helper addons; Node-behavior auto-attach is the
 ## planned Lane B.2). See docs/ADDON-COMPOSITION-SPEC.md.
 @export var uses_addons: Array[String] = []
+## Lane B.2 composition: behavior CLASS NAMES this pack expects as SIBLING nodes —
+## compiles to _get_configuration_warnings(), so Godot shows the ⚠ badge when a
+## dependency is missing (the Unity RequireComponent idiom, warning-only by design).
+@export var requires_behaviors: Array[String] = []
 @export var functions: Array[Resource] = []
 @export var editor_style: EventSheetEditorStyle = null
 ## Paths to GDScript files registered as custom-ACE providers. Each script is
