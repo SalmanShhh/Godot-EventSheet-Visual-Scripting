@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Autoload (Singleton) sheets — a new pillar
+- **New sheet type: Autoload (Singleton)** — Game State, Event Bus, Save System and
+  friends, built as event sheets. Set the type + a global name in the Sheet Type
+  dialog, then **Register Autoload** (toolbar) compiles next to the sheet and writes
+  the ProjectSettings entry in one click — guarded against missing names, unsaved
+  sheets, broken compiles, and **name collisions** (it never overwrites a different
+  autoload).
+- **Project-wide ACEs**: exposed functions on an autoload sheet publish ACEs that call
+  **through the singleton name** (`GameState.add_score(10)`) — no node paths, callable
+  from every sheet and from hand-written GDScript alike.
+- **Three singleton starters** in the New… menu: **Game State** (score/lives with
+  Inspector attributes + On Score Changed), **Event Bus** (project-wide signals,
+  documented usage), **Save System** (ConfigFile save/load with a typed return).
+- Covered by `tests/singleton_sheets_test.gd` (11 assertions).
+
 ### Group color tags + picker favorites (the suggestion list, completed)
 - **Group colors** (C3 parity): right-click a group → *Group Color…* — the picked
   color tints the group's accent bar and background (clear returns to theme tokens;

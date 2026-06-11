@@ -11,6 +11,12 @@ class_name EventSheetResource
 ## accessor, and host_class becomes the declared/required host type (typed accessor +
 ## attach-time warning + lint/completion context).
 @export var behavior_mode: bool = false
+## Autoload (Singleton) sheets: compiles to an `extends Node` class meant to be
+## registered as a project autoload under autoload_name — Game State, Event Bus,
+## Save System and friends, project-wide. Exposed functions publish ACEs that call
+## through the autoload name (`GameState.add_score(...)`), usable from every sheet.
+@export var autoload_mode: bool = false
+@export var autoload_name: String = ""
 ## EXPERIMENTAL (editor-version-coupled): emits `@tool` so the generated script runs
 ## inside the editor. Combine with host_class "EditorScript" + the On Editor Run trigger
 ## to build editor tooling from events (File > Run / Ctrl+Shift+X). Runtime ACEs stay on

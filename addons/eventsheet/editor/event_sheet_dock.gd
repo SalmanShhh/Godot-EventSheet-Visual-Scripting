@@ -479,6 +479,7 @@ func _build_ui() -> void:
     _add_toolbar_button("Debug BP", _toggle_breakpoint_emission)
     _add_toolbar_button("Live Values", _toggle_live_values)
     _add_toolbar_button("Bookmarks", _open_bookmarks_panel)
+    _add_toolbar_button("Register Autoload", _register_autoload)
     _add_toolbar_button("Split", _toggle_split_view)
     _add_toolbar_button("Detach", _toggle_detached_view)
     _add_toolbar_button("Link", _toggle_linked_views)
@@ -3175,6 +3176,41 @@ func _apply_group_color(value: Color) -> void:
         _refresh_after_edit()
         _mark_dirty("Group color updated.")
 
+# ── Autoload (Singleton) sheets ───────────────────────────────────────────────────────
+
+## One click: compile the autoload sheet and register the generated script in
+## ProjectSettings. Guarded: needs the type, a name, a saved sheet, and a free slot.
+func _register_autoload() -> void:
+    if _current_sheet == null or not _current_sheet.autoload_mode:
+        _set_status("Set the sheet type to Autoload (Singleton) first (Sheet Type…).", true)
+        return
+    var problem: String = _register_autoload_entry(_current_sheet, _current_sheet_path)
+    if problem.is_empty():
+        _set_status("Registered autoload \"%s\" — every sheet (and script) can call it now." % _current_sheet.autoload_name)
+    else:
+        _set_status(problem, true)
+
+## The testable core: compiles next to the sheet and writes the autoload entry.
+## Returns "" on success or the user-facing problem.
+func _register_autoload_entry(sheet: EventSheetResource, sheet_path: String) -> String:
+    var autoload_name: String = sheet.autoload_name.strip_edges()
+    if autoload_name.is_empty() or not EventSheetIdentifierRules.is_valid(autoload_name):
+        return "Autoload needs a valid name (Sheet Type… → Autoload name)."
+    if sheet_path.is_empty():
+        return "Save the sheet first — the autoload entry must point at a real file."
+    var output_path: String = sheet_path.get_basename() + ".gd"
+    var compile_result: Dictionary = SheetCompiler.compile(sheet, output_path)
+    if not bool(compile_result.get("success", false)):
+        return "Autoload not registered: the sheet doesn't compile (%s)." % str(compile_result.get("errors"))
+    var setting_name: String = "autoload/%s" % autoload_name
+    var target_value: String = "*%s" % output_path
+    if ProjectSettings.has_setting(setting_name) and str(ProjectSettings.get_setting(setting_name)) != target_value:
+        return "An autoload named \"%s\" already exists and points elsewhere — pick another name." % autoload_name
+    ProjectSettings.set_setting(setting_name, target_value)
+    if Engine.is_editor_hint():
+        ProjectSettings.save()
+    return ""
+
 ## Find-bar "Open in Split": jumps the split pane to the current match (opening the
 ## split if needed) — marrying search and multi-view.
 func _open_match_in_split() -> void:
@@ -3717,6 +3753,7 @@ var _sheet_type_tags_edit: LineEdit = null
 var _sheet_type_includes_edit: LineEdit = null
 var _sheet_type_uses_edit: LineEdit = null
 var _sheet_type_requires_edit: LineEdit = null
+var _sheet_type_autoload_edit: LineEdit = null
 
 func _open_sheet_type_dialog() -> void:
     if not _ensure_sheet_for_editing():
@@ -3738,6 +3775,7 @@ func _open_sheet_type_dialog() -> void:
     _sheet_type_includes_edit.text = ", ".join(PackedStringArray(_current_sheet.includes))
     _sheet_type_uses_edit.text = ", ".join(PackedStringArray(_current_sheet.uses_addons))
     _sheet_type_requires_edit.text = ", ".join(PackedStringArray(_current_sheet.requires_behaviors))
+    _sheet_type_autoload_edit.text = _current_sheet.autoload_name
     _sheet_type_dialog.popup_centered(Vector2i(460, 300))
 
 func _ensure_sheet_type_dialog() -> void:
@@ -3752,6 +3790,7 @@ func _ensure_sheet_type_dialog() -> void:
     _sheet_type_option.add_item("Custom Node")           # class_name + @icon → Create Node dialog
     _sheet_type_option.add_item("Behavior (acts on parent)")  # Node component with `host`
     _sheet_type_option.add_item("Editor Tool (EditorScript)")  # EXPERIMENTAL: events -> editor tooling
+    _sheet_type_option.add_item("Autoload (Singleton)")  # extends Node; registered project-wide
     form.add_child(_sheet_type_option)
     _sheet_type_name_edit = _add_sheet_type_field(form, "Class name", "PatrolBehavior")
     _sheet_type_icon_edit = _add_sheet_type_field(form, "Icon (res://…)", "res://icons/patrol.svg")
@@ -3763,6 +3802,7 @@ func _ensure_sheet_type_dialog() -> void:
     _sheet_type_includes_edit = _add_sheet_type_field(form, "Includes (addon sheets)", "res://eventsheet_addons/screen_shake/screen_shake.tres, …")
     _sheet_type_uses_edit = _add_sheet_type_field(form, "Uses (addon classes)", "ScreenShake, MathHelpers — owned helper instances")
     _sheet_type_requires_edit = _add_sheet_type_field(form, "Requires (sibling behaviors)", "ScreenShake — shows the warning badge when the sibling is missing")
+    _sheet_type_autoload_edit = _add_sheet_type_field(form, "Autoload name (singleton)", "GameState — global identifier every sheet can call")
     var hint: Label = Label.new()
     hint.text = "Custom nodes appear in Godot's Create Node dialog with their icon.\nBehaviors attach as child nodes and act on their parent via the typed `host` accessor."
     hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -3795,16 +3835,22 @@ func _on_sheet_type_confirmed() -> void:
     ,
         VariableDialog.parse_options(_sheet_type_includes_edit.text),
         VariableDialog.parse_options(_sheet_type_uses_edit.text),
-        VariableDialog.parse_options(_sheet_type_requires_edit.text)
+        VariableDialog.parse_options(_sheet_type_requires_edit.text),
+        _sheet_type_autoload_edit.text
     )
 
 ## Applies the chosen sheet type (0 = plain, 1 = custom node, 2 = behavior) undoably and
 ## refreshes every identity surface (banner, tab badge, header, lint context).
-func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray(), include_paths: PackedStringArray = PackedStringArray(), uses_classes: PackedStringArray = PackedStringArray(), requires_classes: PackedStringArray = PackedStringArray()) -> void:
+func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray(), include_paths: PackedStringArray = PackedStringArray(), uses_classes: PackedStringArray = PackedStringArray(), requires_classes: PackedStringArray = PackedStringArray(), autoload_name_text: String = "") -> void:
     if _current_sheet == null:
         return
     var changed: bool = _perform_undoable_sheet_edit("Set Sheet Type", func() -> bool:
         _current_sheet.behavior_mode = type_index == 2
+        # Autoload (Singleton) sheets: extends Node, addressed project-wide by name.
+        _current_sheet.autoload_mode = type_index == 4
+        _current_sheet.autoload_name = autoload_name_text.strip_edges() if type_index == 4 else ""
+        if type_index == 4:
+            _current_sheet.host_class = "Node"
         # Editor Tool preset: an EditorScript with @tool — pair with On Editor Run.
         _current_sheet.tool_mode = tool_enabled or type_index == 3
         _current_sheet.custom_class_name = class_name_text.strip_edges() if type_index != 0 else ""
@@ -4252,6 +4298,9 @@ func _open_template_menu() -> void:
         _template_menu.add_item("Blank Sheet", 0)
         _template_menu.add_item("Platformer Starter", 1)
         _template_menu.add_item("Top-down Starter", 2)
+        _template_menu.add_item("Game State (Autoload)", 3)
+        _template_menu.add_item("Event Bus (Autoload)", 4)
+        _template_menu.add_item("Save System (Autoload)", 5)
         _template_menu.id_pressed.connect(_new_sheet_from_template)
         add_child(_template_menu)
     _template_menu.popup(Rect2i(Vector2i(get_global_mouse_position()), Vector2i(0, 0)))
@@ -4305,6 +4354,73 @@ func _new_sheet_from_template(template_id: int) -> void:
             move2.code = "velocity = Input.get_vector(&\"ui_left\", &\"ui_right\", &\"ui_up\", &\"ui_down\") * 200.0\nmove_and_slide()"
             tick2.actions.append(move2)
             sheet.events.append(tick2)
+        3:
+            sheet.autoload_mode = true
+            sheet.autoload_name = "GameState"
+            sheet.host_class = "Node"
+            sheet.variables = {
+                "score": {"type": "int", "default": 0, "exported": true, "attributes": {"tooltip": "Current score."}},
+                "lives": {"type": "int", "default": 3, "exported": true, "attributes": {"range": {"min": "0", "max": "99", "step": "1"}}}
+            }
+            var score_signal: RawCodeRow = RawCodeRow.new()
+            score_signal.code = "## @ace_trigger\n## @ace_name(\"On Score Changed\")\n## @ace_category(\"Game State\")\nsignal score_changed(new_score: int)"
+            sheet.events.append(score_signal)
+            var add_score: EventFunction = EventFunction.new()
+            add_score.function_name = "add_score"
+            add_score.expose_as_ace = true
+            add_score.ace_display_name = "Add Score"
+            add_score.ace_category = "Game State"
+            var amount_param: ACEParam = ACEParam.new()
+            amount_param.id = "amount"
+            amount_param.type_name = "int"
+            add_score.params.append(amount_param)
+            var add_body: RawCodeRow = RawCodeRow.new()
+            add_body.code = "score += amount\nscore_changed.emit(score)"
+            add_score.events.append(add_body)
+            sheet.functions.append(add_score)
+        4:
+            sheet.autoload_mode = true
+            sheet.autoload_name = "EventBus"
+            sheet.host_class = "Node"
+            var bus_note: CommentRow = CommentRow.new()
+            bus_note.text = "[b]Event Bus[/b] — declare project-wide signals here; emit them from any sheet via EventBus.<signal>.emit(...)."
+            sheet.events.append(bus_note)
+            var bus_signals: RawCodeRow = RawCodeRow.new()
+            bus_signals.code = "## @ace_trigger\n## @ace_name(\"On Game Paused\")\n## @ace_category(\"Event Bus\")\nsignal game_paused\n\n## @ace_trigger\n## @ace_name(\"On Level Completed\")\n## @ace_category(\"Event Bus\")\nsignal level_completed(level: int)"
+            sheet.events.append(bus_signals)
+        5:
+            sheet.autoload_mode = true
+            sheet.autoload_name = "SaveSystem"
+            sheet.host_class = "Node"
+            sheet.variables = {"save_path": {"type": "String", "default": "user://save.cfg", "exported": true, "attributes": {"tooltip": "Where the save file lives."}}}
+            var save_fn: EventFunction = EventFunction.new()
+            save_fn.function_name = "save_number"
+            save_fn.expose_as_ace = true
+            save_fn.ace_display_name = "Save Number"
+            save_fn.ace_category = "Save System"
+            for save_param_pair in [["key", "String"], ["value", "float"]]:
+                var save_param: ACEParam = ACEParam.new()
+                save_param.id = str(save_param_pair[0])
+                save_param.type_name = str(save_param_pair[1])
+                save_fn.params.append(save_param)
+            var save_body: RawCodeRow = RawCodeRow.new()
+            save_body.code = "var config: ConfigFile = ConfigFile.new()\nconfig.load(save_path)\nconfig.set_value(\"save\", key, value)\nconfig.save(save_path)"
+            save_fn.events.append(save_body)
+            sheet.functions.append(save_fn)
+            var load_fn: EventFunction = EventFunction.new()
+            load_fn.function_name = "load_number"
+            load_fn.expose_as_ace = true
+            load_fn.ace_display_name = "Load Number"
+            load_fn.ace_category = "Save System"
+            load_fn.return_type = TYPE_FLOAT
+            var load_param: ACEParam = ACEParam.new()
+            load_param.id = "key"
+            load_param.type_name = "String"
+            load_fn.params.append(load_param)
+            var load_body: RawCodeRow = RawCodeRow.new()
+            load_body.code = "var config: ConfigFile = ConfigFile.new()\nconfig.load(save_path)\nreturn float(config.get_value(\"save\", key, 0.0))"
+            load_fn.events.append(load_body)
+            sheet.functions.append(load_fn)
     setup(sheet)
     _current_sheet_path = ""
     _dirty = true

@@ -1,0 +1,88 @@
+# Godot EventSheets — Autoload (Singleton) sheets: a new sheet type compiling to
+# project-wide Nodes whose exposed functions publish ACEs addressed by autoload name.
+@tool
+extends RefCounted
+class_name SingletonSheetsTest
+
+class NoopUndoManager:
+	extends RefCounted
+	func create_action(_a = null) -> void: pass
+	func add_do_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func add_undo_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func commit_action() -> void: pass
+	func has_undo() -> bool: return false
+	func has_redo() -> bool: return false
+	func undo() -> void: pass
+	func redo() -> void: pass
+	func clear_history() -> void: pass
+
+static func run() -> bool:
+	var all_passed: bool = true
+
+	# Sheet Type applies the autoload identity (extends Node, named).
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	var sheet: EventSheetResource = EventSheetResource.new()
+	editor.setup(sheet)
+	editor.set_undo_redo_manager(NoopUndoManager.new())
+	editor._apply_sheet_type_settings(4, "", "", "", false, PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(), "GameState")
+	all_passed = _check("Sheet Type applies the autoload identity",
+		sheet.autoload_mode and sheet.autoload_name == "GameState" and sheet.host_class == "Node", true) and all_passed
+
+	# Exposed functions publish ACEs that call THROUGH the autoload name.
+	var add_score: EventFunction = EventFunction.new()
+	add_score.function_name = "add_score"
+	add_score.expose_as_ace = true
+	var amount: ACEParam = ACEParam.new()
+	amount.id = "amount"
+	amount.type_name = "int"
+	add_score.params.append(amount)
+	var body: RawCodeRow = RawCodeRow.new()
+	body.code = "pass"
+	add_score.events.append(body)
+	sheet.functions.append(add_score)
+	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_singleton.gd").get("output", ""))
+	all_passed = _check("autoload sheets extend Node", output.contains("extends Node"), true) and all_passed
+	all_passed = _check("exposed ACEs call through the singleton name",
+		output.contains("## @ace_codegen_template(\"GameState.add_score({amount})\")"), true) and all_passed
+	var generated: GDScript = GDScript.new()
+	generated.source_code = output
+	all_passed = _check("singleton output parses", generated.reload(true) == OK, true) and all_passed
+
+	# Register flow: guards + the ProjectSettings entry (temp name, cleaned up).
+	all_passed = _check("unnamed autoloads refuse to register",
+		editor._register_autoload_entry(EventSheetResource.new(), "user://x.tres").is_empty(), false) and all_passed
+	sheet.autoload_name = "EventSheetsTestSingleton"
+	var register_problem: String = editor._register_autoload_entry(sheet, "user://eventsheets_singleton.tres")
+	all_passed = _check("registration succeeds for a valid sheet", register_problem, "") and all_passed
+	all_passed = _check("the autoload entry points at the generated script",
+		str(ProjectSettings.get_setting("autoload/EventSheetsTestSingleton")), "*user://eventsheets_singleton.gd") and all_passed
+	ProjectSettings.set_setting("autoload/EventSheetsTestSingleton", "*res://somewhere_else.gd")
+	all_passed = _check("name collisions refuse to overwrite",
+		editor._register_autoload_entry(sheet, "user://eventsheets_singleton.tres").contains("already exists"), true) and all_passed
+	ProjectSettings.set_setting("autoload/EventSheetsTestSingleton", null)
+	editor.free()
+
+	# Singleton starter templates build, compile, and parse.
+	for template_id in [3, 4, 5]:
+		var template_editor: EventSheetEditor = EventSheetEditor.new()
+		template_editor.setup(EventSheetResource.new())
+		template_editor.set_undo_redo_manager(NoopUndoManager.new())
+		template_editor._new_sheet_from_template(template_id)
+		var template_sheet: EventSheetResource = template_editor._current_sheet
+		var template_output: String = str(SheetCompiler.compile(template_sheet, "user://eventsheets_tpl_%d.gd" % template_id).get("output", ""))
+		var template_script: GDScript = GDScript.new()
+		template_script.source_code = template_output
+		all_passed = _check("singleton template %d is an autoload that compiles + parses" % template_id,
+			template_sheet.autoload_mode and not template_sheet.autoload_name.is_empty() and template_script.reload(true) == OK, true) and all_passed
+		template_editor.free()
+
+	return all_passed
+
+static func _check(label: String, actual: Variant, expected: Variant) -> bool:
+	if actual == expected:
+		print("[PASS] singleton_sheets_test: %s" % label)
+		return true
+	print("[FAIL] singleton_sheets_test: %s" % label)
+	print("  expected: %s" % str(expected))
+	print("  actual:   %s" % str(actual))
+	return false

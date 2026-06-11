@@ -97,7 +97,9 @@ Conditions                        | Actions
   switch), **collection variables** (`Array[int]`, `Dictionary[String, int]`, literal
   defaults with live validation), **combo variables** (`@export_enum` dropdowns),
   GDScript blocks (class-level and in-flow), local variables, includes (C3-style
-  library sheets), **Wait / Wait For Signal** (`await`).
+  library sheets), **Wait / Wait For Signal** (`await`), and **Autoload (Singleton)
+  sheets** — Game State / Event Bus / Save System built as sheets, registered
+  project-wide in one click, their functions callable from everywhere.
 - **Input vocabulary**: InputMap actions with dropdowns, plus **Keyboard / Mouse /
   Gamepad / Touch** groups — key params capture with C3's *press-a-key* workflow.
 - **75+ native ACEs**: Tween (ease/transition combos), Scene flow (incl. multi-line
