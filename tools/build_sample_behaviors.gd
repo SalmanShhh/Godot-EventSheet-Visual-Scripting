@@ -16,6 +16,7 @@ func _init() -> void:
 	ok = _build_flash() and ok
 	ok = _build_spring() and ok
 	ok = _build_tween() and ok
+	ok = _build_save_system() and ok
 	ok = _build_state_machine() and ok
 	ok = _build_sine() and ok
 	ok = _build_orbit() and ok
@@ -1780,3 +1781,88 @@ func _append_function(sheet: EventSheetResource, function_name: String, display_
 	body_row.code = body
 	event_function.events.append(body_row)
 	sheet.functions.append(event_function)
+
+
+## Save System addon: slot-based persistence as an AUTOLOAD sheet (register once,
+## save/load from every sheet via SaveSystem.*). ConfigFile-backed — human-readable
+## saves, Godot's settings idiom. Full-state snapshots (C3's System Save) are an honest
+## non-goal: Godot serializes scenes, not "the whole game", so this pack owns explicit
+## key/value persistence and games own WHAT to save.
+func _build_save_system() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.autoload_mode = true
+	sheet.autoload_name = "SaveSystem"
+	sheet.host_class = "Node"
+	sheet.custom_class_name = "SaveSystemAddon"
+	sheet.addon_tags = PackedStringArray(["persistence"])
+	sheet.variables = {
+		"slot": {"type": "int", "default": 0, "exported": true,
+			"attributes": {"tooltip": "Active save slot (each slot is its own file).", "range": {"min": "0", "max": "9", "step": "1"}}}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "Save System: register as the SaveSystem autoload, then Save/Load Number/Text from any sheet. Slot-based (user://save_<slot>.cfg), human-readable ConfigFile underneath."
+	sheet.events.append(about)
+	var helpers: RawCodeRow = RawCodeRow.new()
+	helpers.code = "
+".join(PackedStringArray([
+		"## @ace_trigger",
+		"## @ace_name(\"On Save Written\")",
+		"## @ace_category(\"Save System\")",
+		"signal save_written(slot: int)",
+		"",
+		"func _slot_path() -> String:",
+		"	return \"user://save_%d.cfg\" % slot",
+		"",
+		"func _open_slot() -> ConfigFile:",
+		"	var config: ConfigFile = ConfigFile.new()",
+		"	config.load(_slot_path())",
+		"	return config"
+	]))
+	sheet.events.append(helpers)
+	_append_function(sheet, "save_number", "Save Number", "Save System", "Writes a number under the key (active slot).",
+		[["key", "String"], ["value", "float"]],
+		"var config: ConfigFile = _open_slot()
+config.set_value(\"save\", key, value)
+config.save(_slot_path())
+save_written.emit(slot)")
+	_append_function(sheet, "save_text", "Save Text", "Save System", "Writes a string under the key (active slot).",
+		[["key", "String"], ["value", "String"]],
+		"var config: ConfigFile = _open_slot()
+config.set_value(\"save\", key, value)
+config.save(_slot_path())
+save_written.emit(slot)")
+	var load_number: EventFunction = _exposed_function("load_number", "Load Number", "Save System", "Reads a number (0 when missing).", [["key", "String"]],
+		"return float(_open_slot().get_value(\"save\", key, 0.0))")
+	load_number.return_type = TYPE_FLOAT
+	sheet.functions.append(load_number)
+	var load_text: EventFunction = _exposed_function("load_text", "Load Text", "Save System", "Reads a string (\"\" when missing).", [["key", "String"]],
+		"return str(_open_slot().get_value(\"save\", key, \"\"))")
+	load_text.return_type = TYPE_STRING
+	sheet.functions.append(load_text)
+	var has_key: EventFunction = _exposed_function("has_save_key", "Has Save Key", "Save System", "Whether the key exists in the active slot.", [["key", "String"]],
+		"return _open_slot().has_section_key(\"save\", key)")
+	has_key.return_type = TYPE_BOOL
+	sheet.functions.append(has_key)
+	_append_function(sheet, "delete_slot", "Delete Slot", "Save System", "Removes the active slot's save file.",
+		[],
+		"if FileAccess.file_exists(_slot_path()):
+	DirAccess.remove_absolute(_slot_path())")
+	return _save_pack(sheet, "res://eventsheet_addons/save_system/save_system_addon")
+
+## _append_function, but returning the function for return-type tweaks.
+func _exposed_function(function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> EventFunction:
+	var event_function: EventFunction = EventFunction.new()
+	event_function.function_name = function_name
+	event_function.expose_as_ace = true
+	event_function.ace_display_name = display_name
+	event_function.ace_category = category
+	event_function.description = description
+	for param_pair: Array in params:
+		var parameter: ACEParam = ACEParam.new()
+		parameter.id = str(param_pair[0])
+		parameter.type_name = str(param_pair[1])
+		event_function.params.append(parameter)
+	var body_row: RawCodeRow = RawCodeRow.new()
+	body_row.code = body
+	event_function.events.append(body_row)
+	return event_function

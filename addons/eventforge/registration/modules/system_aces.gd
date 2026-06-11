@@ -57,4 +57,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "CompareValues", "Compare Values", ACEDescriptor.ACEType.CONDITION, "{a} {op} {b}", "", [F.make_param("a", "String", "0", "First", "Left value.", "expression"), F.make_param("op", "String", "==", "Operator", "Comparison.", "", F.COMPARISON_OPERATORS), F.make_param("b", "String", "0", "Second", "Right value.", "expression")], "General Conditions", "{a} {op} {b}"))
 	descriptors.append(F.make_descriptor("Core", "IsBetween", "Is Between Values", ACEDescriptor.ACEType.CONDITION, "({min} <= {value} and {value} <= {max})", "", [F.make_param("value", "String", "0", "Value", "Value to test.", "expression"), F.make_param("min", "String", "0", "Min", "Lower bound (inclusive).", "expression"), F.make_param("max", "String", "10", "Max", "Upper bound (inclusive).", "expression")], "General Conditions", "{value} is between {min} and {max}"))
 
+	# Runtime group toggling (C3 Set Group Active): targets the opt-in "runtime
+	# toggleable" flag members. The group param is the snake-cased group name.
+	descriptors.append(F.make_descriptor("Core", "SetGroupActive", "Set Group Active", ACEDescriptor.ACEType.ACTION, "set(\"__group_\" + {group} + \"_active\", {active})", "", [F.make_param("group", "String", "\"combat\"", "Group", "Snake-cased group name (runtime-toggleable groups only).", "expression"), F.make_param("active", "String", "true", "Active", "true / false.", "", ["true", "false"])], "General Actions", "Set group {group} active: {active}"))
+	descriptors.append(F.make_descriptor("Core", "IsGroupActive", "Is Group Active", ACEDescriptor.ACEType.CONDITION, "bool(get(\"__group_\" + {group} + \"_active\"))", "", [F.make_param("group", "String", "\"combat\"", "Group", "Snake-cased group name.", "expression")], "General Conditions", "group {group} is active"))
+
 	return descriptors

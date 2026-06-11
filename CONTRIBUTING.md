@@ -108,3 +108,12 @@ Match the file you're in (tabs in `addons/eventforge/`, spaces in
 `addons/eventsheet/editor/` — yes, really; don't "fix" it). Comment for contributors:
 document schemas, extension points, and constraints the code can't show — not what the
 next line does.
+
+## Release ritual
+
+Tagging `vX.Y.Z` (push the tag; CI publishes the zips) also means:
+1. Roll `[Unreleased]` into the version section in `CHANGELOG.md`.
+2. Refresh `README.md` + `demo/README.md` (status, milestones, counts).
+3. **Refresh the demo showcase**: `demo/` must exercise the release's headline
+   features — every release ships a playable example making full use of what's new
+   (sheets + scene + a "what to look at" note in `demo/README.md`).

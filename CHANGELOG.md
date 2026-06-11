@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Advanced C3/GDevelop workflows: runtime groups, project-wide find, Save System
+- **Runtime-toggleable groups** (C3's *Set Group Active*, opt-in): right-click a group
+  → *Runtime Toggleable* — it compiles a `__group_<name>_active` flag guarding every
+  contained event (nested groups inherit the innermost guard), with **Set Group
+  Active** / **Is Group Active** ACEs. Default stays zero-cost compile-time
+  organization.
+- **Find in Project** (Tools menu): search every sheet in the project (same surfaces
+  Replace All covers), jump to matches, and **Replace in Project** (open sheet goes
+  through undo; touched files are named). **Find Usages** on a variable/group row
+  pre-fills it.
+- **Save System addon (pack 21)**: slot-based persistence as an autoload sheet —
+  Save/Load Number/Text, Has Save Key, Delete Slot, On Save Written; human-readable
+  ConfigFile underneath; suite round-trips a real save file.
+- Release ritual recorded in CONTRIBUTING: every release refreshes the demo showcase
+  to exercise its headline features.
+
 ### Audits: UI/UX + compiler + sweep 11
 - **Sweep 11 (silent bugs)**: the Test Bench wrote (and once committed!) scratch files
   at the repo root — the bench script now rides next to the scene path and the pattern

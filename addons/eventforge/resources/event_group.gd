@@ -23,6 +23,10 @@ static var _uid_counter: int = 0
 ## members under a "# <Group> group locals" header (GDScript has no narrower scope that
 ## persists across frames).
 @export var local_variables: Array[Resource] = []
+## C3's Set Group Active, opt-in: compiles a `__group_<name>_active` member and guards
+## every contained event with it — feature flags / debug switches / cheap state
+## machines at RUNTIME. Off (default) keeps groups zero-cost compile-time organization.
+@export var runtime_toggleable: bool = false
 
 func _init() -> void:
 	if group_uid.is_empty():

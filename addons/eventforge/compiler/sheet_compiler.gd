@@ -28,6 +28,11 @@ static var _emit_breakpoints_flag: bool = false
 # breakpoints flag — the trigger-section helper injects it into _process).
 static var _live_values_payload: String = ""
 
+# Runtime-toggleable groups: event -> "__group_<snake>_active" guard (per-compile).
+static var _runtime_group_guards: Dictionary = {}
+# [group snake-name, initially_active] pairs for member emission, in encounter order.
+static var _runtime_group_members: Array = []
+
 ## Compiles an event sheet resource to a GDScript output file.
 static func compile(sheet: EventSheetResource, output_path: String = "") -> Dictionary:
 	var result: Dictionary = {
@@ -53,6 +58,8 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		return _compile_external(sheet, result, output_path)
 
 	_emit_breakpoints_flag = sheet.emit_breakpoints
+	_runtime_group_guards = {}
+	_runtime_group_members = []
 	# C3-style includes: merge included sheets' rows/variables/functions (compile-time
 	# only; the root sheet wins collisions, cycles are skipped with warnings).
 	var all_events: Array = sheet.events.duplicate()
@@ -179,6 +186,16 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			if not local_line.is_empty():
 				lines.append(local_line)
 				source_map.append({"uid": str((local_entry as LocalVariable).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "variable"})
+
+	# Runtime-toggleable group flags (Set Group Active targets these members). Collected
+	# in a dedicated early pass — the flatten that ALSO maps guards runs later, in the
+	# trigger-section phase, after this member block has already emitted.
+	_collect_runtime_group_members(all_events)
+	if not _runtime_group_members.is_empty():
+		if variable_lines.is_empty() and tree_variables.is_empty():
+			lines.append("")
+		for group_member: Array in _runtime_group_members:
+			lines.append("var %s: bool = %s" % [str(group_member[0]), "true" if bool(group_member[1]) else "false"])
 
 	# Stateful-condition members (Every X Seconds…): one class member per applied instance.
 	var stateful_members: Array = []
@@ -584,14 +601,28 @@ static func _merge_includes(sheet: EventSheetResource, all_events: Array, all_fu
 ## Flattens trigger-bearing rows for emission: EventRows kept, ENABLED groups recursed
 ## (a disabled group drops all of its children — C3 group-disable semantics), and group
 ## comments collected as deferred comment lines.
-static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray) -> void:
+static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "") -> void:
 	for row: Variant in rows:
 		if row is EventRow:
+			if not runtime_guard.is_empty():
+				_runtime_group_guards[row] = runtime_guard
 			into_events.append(row)
 		elif row is EventGroup:
 			var group: EventGroup = row as EventGroup
 			if group.enabled:
-				_flatten_trigger_rows(group.events if not group.events.is_empty() else group.rows, into_events, deferred_comment_lines)
+				# Runtime-toggleable groups guard their events (nested groups inherit the
+				# INNERMOST toggleable guard — toggling the inner group wins, C3-style).
+				var child_guard: String = runtime_guard
+				if group.runtime_toggleable:
+					var guard_token: String = group.group_name.to_snake_case() if not group.group_name.is_empty() else "group"
+					child_guard = "__group_%s_active" % guard_token
+					var already_known: bool = false
+					for member_pair: Array in _runtime_group_members:
+						if str(member_pair[0]) == child_guard:
+							already_known = true
+					if not already_known:
+						_runtime_group_members.append([child_guard, group.enabled])
+				_flatten_trigger_rows(group.events if not group.events.is_empty() else group.rows, into_events, deferred_comment_lines, child_guard)
 		elif row is CommentRow and (row as CommentRow).enabled and not (row as CommentRow).text.strip_edges().is_empty():
 			deferred_comment_lines.append_array((row as CommentRow).text.split("
 "))
@@ -779,6 +810,9 @@ static func _emit_event_body(
 			continue
 		var event_start_line: int = lines.size() + 1
 		var condition_texts: PackedStringArray = PackedStringArray()
+		var runtime_group_guard: String = str(_runtime_group_guards.get(event_row, ""))
+		if not runtime_group_guard.is_empty():
+			condition_texts.append(runtime_group_guard)
 		for condition: ACECondition in event_row.conditions:
 			var condition_line: String = ConditionCodegen.generate_condition(condition)
 			if not condition_line.is_empty():
@@ -1205,6 +1239,23 @@ static func _collect_group_locals(entries: Array, into: Array) -> void:
 			if not locals.is_empty():
 				into.append({"group": group.group_name if not group.group_name.is_empty() else group.name, "locals": locals})
 			_collect_group_locals(group.events if not group.events.is_empty() else group.rows, into)
+
+## Early pass for the flag members of runtime-toggleable groups (nested included).
+static func _collect_runtime_group_members(rows: Array) -> void:
+	for row: Variant in rows:
+		if row is EventGroup:
+			var group: EventGroup = row as EventGroup
+			if group.enabled and group.runtime_toggleable:
+				var guard_token: String = group.group_name.to_snake_case() if not group.group_name.is_empty() else "group"
+				var guard_name: String = "__group_%s_active" % guard_token
+				var already_known: bool = false
+				for member_pair: Array in _runtime_group_members:
+					if str(member_pair[0]) == guard_name:
+						already_known = true
+				if not already_known:
+					_runtime_group_members.append([guard_name, group.enabled])
+			if group.enabled:
+				_collect_runtime_group_members(group.events if not group.events.is_empty() else group.rows)
 
 static func _collect_stateful_members(entries: Array, into: Array) -> void:
 	for entry: Variant in entries:

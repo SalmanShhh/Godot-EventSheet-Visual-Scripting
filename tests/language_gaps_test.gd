@@ -155,6 +155,41 @@ static func run() -> bool:
 		editor._pick_collection_edit.text.contains(".pick_random()"), true) and all_passed
 	editor.free()
 
+	# Runtime-toggleable groups (C3 Set Group Active, opt-in).
+	var rt_sheet: EventSheetResource = EventSheetResource.new()
+	var rt_group: EventGroup = EventGroup.new()
+	rt_group.group_name = "Combat"
+	rt_group.runtime_toggleable = true
+	var rt_event: EventRow = EventRow.new()
+	rt_event.trigger_provider_id = "Core"
+	rt_event.trigger_id = "OnProcess"
+	var rt_action: ACEAction = ACEAction.new()
+	rt_action.provider_id = "Core"
+	rt_action.ace_id = "X"
+	rt_action.codegen_template = "rotation += delta"
+	rt_event.actions.append(rt_action)
+	rt_group.events.append(rt_event)
+	rt_sheet.events.append(rt_group)
+	rt_sheet.host_class = "Node2D"
+	var rt_output: String = str(SheetCompiler.compile(rt_sheet, "user://eventsheets_rtgroup.gd").get("output", ""))
+	all_passed = _check("runtime groups declare their flag member",
+		rt_output.contains("var __group_combat_active: bool = true"), true) and all_passed
+	all_passed = _check("contained events guard on the flag",
+		rt_output.contains("if __group_combat_active:"), true) and all_passed
+	var rt_script: GDScript = GDScript.new()
+	rt_script.source_code = rt_output
+	all_passed = _check("runtime-group output parses", rt_script.reload(true) == OK, true) and all_passed
+	rt_group.runtime_toggleable = false
+	var plain_output: String = str(SheetCompiler.compile(rt_sheet, "user://eventsheets_rtgroup2.gd").get("output", ""))
+	all_passed = _check("non-toggleable groups stay zero-cost",
+		plain_output.contains("__group_combat_active"), false) and all_passed
+	# The Set Group Active ACE compiles a dynamic set() (works from any sheet code).
+	var by_id: Dictionary = {}
+	for descriptor in EventForgeBuiltinACEs.get_descriptors():
+		by_id[descriptor.ace_id] = descriptor
+	all_passed = _check("Set/Is Group Active registered",
+		by_id.has("SetGroupActive") and by_id.has("IsGroupActive"), true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

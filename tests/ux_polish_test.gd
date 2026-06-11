@@ -138,6 +138,21 @@ static func run() -> bool:
 		colored_group.custom_color.a == 0.0, true) and all_passed
 	color_editor.free()
 
+	# Project-wide find: sheet discovery + per-sheet matching share Replace All's
+	# surfaces (so find and replace can never disagree).
+	var project_sheets: PackedStringArray = EventSheetEditor.list_project_sheets()
+	all_passed = _check("project scan finds the demo sheet",
+		project_sheets.has("res://demo/sheets/player.tres"), true) and all_passed
+	var probe_sheet: EventSheetResource = EventSheetResource.new()
+	var probe_comment: CommentRow = CommentRow.new()
+	probe_comment.text = "the hidden treasure"
+	probe_sheet.events.append(probe_comment)
+	var found: Array = EventSheetEditor.find_in_sheet(probe_sheet, "treasure")
+	all_passed = _check("find_in_sheet matches with preview",
+		found.size() == 1 and str(found[0].get("preview", "")).contains("treasure"), true) and all_passed
+	all_passed = _check("find_in_sheet is case-insensitive",
+		EventSheetEditor.find_in_sheet(probe_sheet, "TREASURE").size(), 1) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

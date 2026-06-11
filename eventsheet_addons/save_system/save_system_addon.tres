@@ -1,0 +1,186 @@
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=27 format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_mmxhw"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_mudca"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="3_i4nnm"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="4_0k0bw"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="5_c3yvf"]
+
+[sub_resource type="Resource" id="Resource_w5kqx"]
+script = ExtResource("1_mmxhw")
+text = "Save System: register as the SaveSystem autoload, then Save/Load Number/Text from any sheet. Slot-based (user://save_<slot>.cfg), human-readable ConfigFile underneath."
+
+[sub_resource type="Resource" id="Resource_wcebd"]
+script = ExtResource("2_mudca")
+code = "## @ace_trigger
+## @ace_name(\"On Save Written\")
+## @ace_category(\"Save System\")
+signal save_written(slot: int)
+
+func _slot_path() -> String:
+	return \"user://save_%d.cfg\" % slot
+
+func _open_slot() -> ConfigFile:
+	var config: ConfigFile = ConfigFile.new()
+	config.load(_slot_path())
+	return config"
+
+[sub_resource type="Resource" id="Resource_jkkfh"]
+script = ExtResource("2_mudca")
+code = "var config: ConfigFile = _open_slot()
+config.set_value(\"save\", key, value)
+config.save(_slot_path())
+save_written.emit(slot)"
+
+[sub_resource type="Resource" id="Resource_4e81o"]
+script = ExtResource("3_i4nnm")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_46iiw"]
+script = ExtResource("3_i4nnm")
+id = "value"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_j515e"]
+script = ExtResource("4_0k0bw")
+function_name = "save_number"
+description = "Writes a number under the key (active slot)."
+expose_as_ace = true
+ace_display_name = "Save Number"
+ace_category = "Save System"
+params = Array[ExtResource("3_i4nnm")]([SubResource("Resource_4e81o"), SubResource("Resource_46iiw")])
+events = Array[Resource]([SubResource("Resource_jkkfh")])
+
+[sub_resource type="Resource" id="Resource_a3chd"]
+script = ExtResource("2_mudca")
+code = "var config: ConfigFile = _open_slot()
+config.set_value(\"save\", key, value)
+config.save(_slot_path())
+save_written.emit(slot)"
+
+[sub_resource type="Resource" id="Resource_flxs2"]
+script = ExtResource("3_i4nnm")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_n23dw"]
+script = ExtResource("3_i4nnm")
+id = "value"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_amh6u"]
+script = ExtResource("4_0k0bw")
+function_name = "save_text"
+description = "Writes a string under the key (active slot)."
+expose_as_ace = true
+ace_display_name = "Save Text"
+ace_category = "Save System"
+params = Array[ExtResource("3_i4nnm")]([SubResource("Resource_flxs2"), SubResource("Resource_n23dw")])
+events = Array[Resource]([SubResource("Resource_a3chd")])
+
+[sub_resource type="Resource" id="Resource_rhc3k"]
+script = ExtResource("2_mudca")
+code = "return float(_open_slot().get_value(\"save\", key, 0.0))"
+
+[sub_resource type="Resource" id="Resource_h03nn"]
+script = ExtResource("3_i4nnm")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_fvwqe"]
+script = ExtResource("4_0k0bw")
+function_name = "load_number"
+description = "Reads a number (0 when missing)."
+expose_as_ace = true
+ace_display_name = "Load Number"
+ace_category = "Save System"
+params = Array[ExtResource("3_i4nnm")]([SubResource("Resource_h03nn")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_rhc3k")])
+
+[sub_resource type="Resource" id="Resource_3ud0f"]
+script = ExtResource("2_mudca")
+code = "return str(_open_slot().get_value(\"save\", key, \"\"))"
+
+[sub_resource type="Resource" id="Resource_3fyie"]
+script = ExtResource("3_i4nnm")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_xwtfp"]
+script = ExtResource("4_0k0bw")
+function_name = "load_text"
+description = "Reads a string (\"\" when missing)."
+expose_as_ace = true
+ace_display_name = "Load Text"
+ace_category = "Save System"
+params = Array[ExtResource("3_i4nnm")]([SubResource("Resource_3fyie")])
+return_type = 4
+events = Array[Resource]([SubResource("Resource_3ud0f")])
+
+[sub_resource type="Resource" id="Resource_e0wex"]
+script = ExtResource("2_mudca")
+code = "return _open_slot().has_section_key(\"save\", key)"
+
+[sub_resource type="Resource" id="Resource_qmq6m"]
+script = ExtResource("3_i4nnm")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_kdd2e"]
+script = ExtResource("4_0k0bw")
+function_name = "has_save_key"
+description = "Whether the key exists in the active slot."
+expose_as_ace = true
+ace_display_name = "Has Save Key"
+ace_category = "Save System"
+params = Array[ExtResource("3_i4nnm")]([SubResource("Resource_qmq6m")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_e0wex")])
+
+[sub_resource type="Resource" id="Resource_6a8sv"]
+script = ExtResource("2_mudca")
+code = "if FileAccess.file_exists(_slot_path()):
+	DirAccess.remove_absolute(_slot_path())"
+
+[sub_resource type="Resource" id="Resource_pdbic"]
+script = ExtResource("4_0k0bw")
+function_name = "delete_slot"
+description = "Removes the active slot's save file."
+expose_as_ace = true
+ace_display_name = "Delete Slot"
+ace_category = "Save System"
+events = Array[Resource]([SubResource("Resource_6a8sv")])
+
+[resource]
+script = ExtResource("5_c3yvf")
+autoload_mode = true
+autoload_name = "SaveSystem"
+custom_class_name = "SaveSystemAddon"
+addon_tags = PackedStringArray("persistence")
+events = Array[Resource]([SubResource("Resource_w5kqx"), SubResource("Resource_wcebd")])
+variables = {
+"slot": {
+"attributes": {
+"range": {
+"max": "9",
+"min": "0",
+"step": "1"
+},
+"tooltip": "Active save slot (each slot is its own file)."
+},
+"default": 0,
+"exported": true,
+"type": "int"
+}
+}
+functions = Array[Resource]([SubResource("Resource_j515e"), SubResource("Resource_amh6u"), SubResource("Resource_fvwqe"), SubResource("Resource_xwtfp"), SubResource("Resource_kdd2e"), SubResource("Resource_pdbic")])

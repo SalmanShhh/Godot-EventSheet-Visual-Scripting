@@ -37,7 +37,7 @@ script = ExtResource("6_8vblq")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
 actions = Array[Resource]([SubResource("Resource_bb4cx")])
-event_uid = "b3e0b5"
+event_uid = "852290"
 
 [sub_resource type="Resource" id="Resource_8htxg"]
 script = ExtResource("2_cb0ow")
