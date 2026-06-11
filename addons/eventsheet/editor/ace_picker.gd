@@ -207,7 +207,15 @@ const C3_SEARCH_SYNONYMS := {
 	"zeropad": "zero pad",
 	"fullscreen": "fullscreen",
 	"compare two values": "compare values",
-	"is between": "between"
+	"is between": "between",
+	"key is down": "key",
+	"on key pressed": "key pressed",
+	"mouse button is down": "mouse button",
+	"cursor": "mouse",
+	"gamepad": "gamepad",
+	"is in touch": "touch",
+	"on any touch start": "on touch",
+	"vibrate": "vibrate",
 }
 
 static func _c3_synonym_queries(query: String) -> Array[String]:

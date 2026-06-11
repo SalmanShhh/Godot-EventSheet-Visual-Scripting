@@ -108,6 +108,8 @@ func init_dialog(parent_node: Node) -> void:
 	options_row.add_child(_options_edit)
 	form.add_child(options_row)
 	_default_help = Label.new()
+	_default_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_default_help.custom_minimum_size = Vector2(380.0, 0.0)
 	_default_help.visible = false
 	_default_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
 	form.add_child(_default_help)
@@ -134,11 +136,15 @@ func init_dialog(parent_node: Node) -> void:
 	form.add_child(access_row)
 
 	_const_help = Label.new()
+	_const_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_const_help.custom_minimum_size = Vector2(380.0, 0.0)
 	_const_help.visible = false
 	_const_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
 	form.add_child(_const_help)
 
 	_type_help = Label.new()
+	_type_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_type_help.custom_minimum_size = Vector2(380.0, 0.0)
 	_type_help.visible = false
 	_type_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
 	form.add_child(_type_help)

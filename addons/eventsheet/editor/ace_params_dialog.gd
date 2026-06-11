@@ -161,6 +161,8 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 		return _create_signal_reference_field(key, default_value, hint.ends_with(":quoted"))
 	if hint.begins_with("enum:"):
 		return _create_enum_reference_field(key, default_value, hint.get_slice(":", 1))
+	if hint == "key_capture":
+		return _create_key_capture_field(key, default_value)
 	if hint == "color" or field_type == TYPE_COLOR:
 		return _create_color_field(key, default_value)
 	if hint == EXPRESSION_HINT:
@@ -379,6 +381,42 @@ static func _node_reference(relative_path: String) -> String:
 		return "$%s" % relative_path
 	return "$\"%s\"" % relative_path
 
+## C3's press-a-key workflow: a button that captures the next key press (storing the
+## KEY_* constant), plus a fallback dropdown for keys that can't be detected.
+func _create_key_capture_field(key: String, default_value: Variant) -> Control:
+	var container: HBoxContainer = HBoxContainer.new()
+	var capture: Button = Button.new()
+	capture.text = str(default_value) if not str(default_value).is_empty() else "<click, then press a key>"
+	capture.set_meta("key_constant", str(default_value))
+	capture.toggle_mode = true
+	capture.tooltip_text = "Click, then press the key you want."
+	capture.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	capture.gui_input.connect(func(input_event: InputEvent) -> void:
+		if capture.button_pressed and input_event is InputEventKey and (input_event as InputEventKey).pressed:
+			var constant: String = key_constant_for((input_event as InputEventKey).physical_keycode)
+			capture.set_meta("key_constant", constant)
+			capture.text = constant
+			capture.button_pressed = false
+			capture.accept_event()
+	)
+	container.add_child(capture)
+	var fallback: OptionButton = OptionButton.new()
+	fallback.add_item("(or choose)")
+	for key_name in ["KEY_SPACE", "KEY_ENTER", "KEY_ESCAPE", "KEY_SHIFT", "KEY_CTRL", "KEY_ALT", "KEY_TAB", "KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT"]:
+		fallback.add_item(key_name)
+	fallback.item_selected.connect(func(index: int) -> void:
+		if index > 0:
+			capture.set_meta("key_constant", fallback.get_item_text(index))
+			capture.text = fallback.get_item_text(index)
+	)
+	container.add_child(fallback)
+	_fields[key] = capture
+	return container
+
+## Physical keycode -> KEY_* constant name (KEY_F8, KEY_PAGEUP, KEY_SPACE…).
+static func key_constant_for(keycode: int) -> String:
+	return "KEY_%s" % OS.get_keycode_string(keycode).to_upper().replace(" ", "")
+
 static func color_to_literal(value: Color) -> String:
 	return "Color(%s, %s, %s, %s)" % [String.num(value.r, 3), String.num(value.g, 3), String.num(value.b, 3), String.num(value.a, 3)]
 
@@ -479,6 +517,8 @@ func _extract_value(field: Control) -> Variant:
 		return spin.value
 	if field is ColorPickerButton:
 		return color_to_literal((field as ColorPickerButton).color)
+	if field is Button and field.has_meta("key_constant"):
+		return str(field.get_meta("key_constant"))
 	if field is LineEdit:
 		return (field as LineEdit).text
 	if field is CodeEdit:

@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Device input vocabulary (C3 Keyboard / Mouse / Gamepad / Touch)
+- **Keyboard**: Key Is Down (`is_physical_key_pressed`), On Key Pressed/Released
+  (event-scoped, for On Input events) — and key params use **C3's press-a-key
+  workflow**: click the field, press the key, the `KEY_*` constant is captured
+  (with a fallback dropdown for undetectable keys).
+- **Mouse**: button-down condition, world/screen position expressions, Set Mouse Mode
+  (visible/hidden/captured/confined — the Godot-contextual extra).
+- **Gamepad**: button-down (12-button dropdown), axis expression (sticks + triggers),
+  is-connected, and **Vibrate Gamepad** (weak/strong motors).
+- **Touch**: touchscreen-available, On Touch / Touch Released (event-scoped), touch
+  position. Plus C3 search synonyms for all four devices.
+- **Dialog-width fix**: long helper labels in the variable/enum/signal/match/pick dialogs
+  now autowrap, so dialogs open compact instead of stretching to the longest sentence.
+- Covered by `tests/device_input_test.gd` (13 assertions).
+
 ### Per-ACE comments + starter templates
 - **ACE comments** (C3's per-condition/action notes): right-click any condition or
   action → "Edit ACE Comment…" — the note renders dimmed after the ACE text (`⊳ why

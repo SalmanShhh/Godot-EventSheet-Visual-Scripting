@@ -2349,6 +2349,8 @@ func _ensure_enum_dialog() -> void:
     _enum_name_edit = _add_sheet_type_field(form, "Enum name", "State")
     var members_label: Label = Label.new()
     members_label.text = "Members (one per line; optional \"NAME = 4\" values)"
+    members_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    members_label.custom_minimum_size = Vector2(380.0, 0.0)
     form.add_child(members_label)
     _enum_members_edit = TextEdit.new()
     _enum_members_edit.custom_minimum_size = Vector2(380.0, 150.0)
@@ -2507,6 +2509,8 @@ func _ensure_signal_dialog() -> void:
     _signal_name_edit = _add_sheet_type_field(form, "Signal name", "hit")
     var params_label: Label = Label.new()
     params_label.text = "Parameters (one per line; optional \"damage: int\" types)"
+    params_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    params_label.custom_minimum_size = Vector2(380.0, 0.0)
     form.add_child(params_label)
     _signal_params_edit = TextEdit.new()
     _signal_params_edit.custom_minimum_size = Vector2(380.0, 120.0)
@@ -2567,6 +2571,8 @@ func _ensure_match_dialog() -> void:
     _match_expression_edit = _add_sheet_type_field(form, "Match expression", "state")
     var branches_label: Label = Label.new()
     branches_label.text = "Branches (GDScript match-body syntax — patterns + indented bodies)"
+    branches_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    branches_label.custom_minimum_size = Vector2(380.0, 0.0)
     form.add_child(branches_label)
     _match_branches_edit = TextEdit.new()
     _match_branches_edit.custom_minimum_size = Vector2(480.0, 200.0)
@@ -3157,6 +3163,8 @@ func _ensure_pick_dialog() -> void:
     form.add_child(_pick_desc_check)
     var preset_label: Label = Label.new()
     preset_label.text = "C3 presets (loops & picking)"
+    preset_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    preset_label.custom_minimum_size = Vector2(380.0, 0.0)
     form.add_child(preset_label)
     _pick_preset_option = OptionButton.new()
     for preset_name: String in ["Custom…", "For (indexed)", "For Each", "For Each (ordered)", "Repeat", "While", "Pick all (group)", "Pick by comparison / evaluate", "Pick by highest value", "Pick by lowest value", "Pick nth instance", "Pick random instance", "Pick last created", "Pick overlapping point"]:
