@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Live Values (debugging rung 2) + bug sweep 7
+- **Live Values**: toggle it on the toolbar, recompile, run — the sheet's variables
+  stream to an editor window every 0.25s while the debugger is attached (C3's debugger
+  panel, the Godot way). Debug compiles inject a throttled `EngineDebugger` send into
+  `_process` (merging with an existing process trigger, or emitting a standalone one);
+  **normal compiles never carry the stream** — same covenant story as breakpoints,
+  plain core-Godot API only. Sheets without variables warn instead of emitting.
+- New editor pieces: `EventSheetLiveValuesDebugger` (EditorDebuggerPlugin capturing
+  `eventsheets:live_values`) registered by the plugin entry point and wired to the
+  workspace editor's Live Values window.
+- **Sweep 7 (silent bugs)**: duplicating/pasting an **Every X Seconds** condition no
+  longer shares one accumulator between the copies (the member uid re-bakes on
+  fresh-uid assignment — C3 copies are independent timers); combo variables now
+  **warn** when Tier-2 attributes are ignored instead of dropping them silently;
+  Show If / Lock Unless targeting an unknown variable warns at compile (typo guard).
+- Covered by `tests/live_values_test.gd` (11 assertions).
+
 ### Tool buttons + MCP policy awareness
 - **Tool buttons** (Odin's `[Button]`): give a sheet function a *Tool Button Label*
   and the Inspector shows a clickable button running it

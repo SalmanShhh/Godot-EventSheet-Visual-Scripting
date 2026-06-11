@@ -24,6 +24,10 @@ const VERSION: String = "0.1.0"
 # Set per-compile from sheet.emit_breakpoints (single-threaded compiles).
 static var _emit_breakpoints_flag: bool = false
 
+# Live-values payload for the current compile (same single-threaded pattern as the
+# breakpoints flag — the trigger-section helper injects it into _process).
+static var _live_values_payload: String = ""
+
 ## Compiles an event sheet resource to a GDScript output file.
 static func compile(sheet: EventSheetResource, output_path: String = "") -> Dictionary:
 	var result: Dictionary = {
@@ -188,6 +192,23 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		for member_line: String in stateful_members:
 			lines.append(member_line)
 
+	# Live values (debugging rung 2): a throttle timer member; the send block itself
+	# lands inside _process below. Variables list is baked at compile time.
+	_live_values_payload = ""
+	if sheet.emit_live_values:
+		var live_keys: Array = merged_variables.keys()
+		live_keys.sort()
+		var payload_parts: PackedStringArray = PackedStringArray()
+		for live_key: Variant in live_keys:
+			payload_parts.append("\"%s\", %s" % [str(live_key), str(live_key)])
+		if payload_parts.is_empty():
+			(result["warnings"] as Array).append("Live values: this sheet has no variables to stream — add some or turn the toggle off.")
+		else:
+			_live_values_payload = ", ".join(payload_parts)
+			if variable_lines.is_empty() and tree_variables.is_empty():
+				lines.append("")
+			lines.append("var __live_values_timer: float = 0.0")
+
 	# Lane B composition (has-a): owned helper instances for the declared addon classes.
 	if not sheet.uses_addons.is_empty():
 		if variable_lines.is_empty() and tree_variables.is_empty():
@@ -289,6 +310,15 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 	for group_comment_line: String in group_comment_lines:
 		deferred_rows.append("# %s" % group_comment_line)
 
+	if not _live_values_payload.is_empty():
+		lines.append("")
+		lines.append("func _process(delta: float) -> void:")
+		lines.append("\t__live_values_timer += delta")
+		lines.append("\tif __live_values_timer >= 0.25 and EngineDebugger.is_active():")
+		lines.append("\t\t__live_values_timer = 0.0")
+		lines.append("\t\tEngineDebugger.send_message(\"eventsheets:live_values\", [%s])" % _live_values_payload)
+		_live_values_payload = ""
+
 	# Emit sheet functions as callable GDScript methods (after the trigger handlers).
 	for function_resource: Variant in all_functions:
 		if not (function_resource is EventFunction):
@@ -333,6 +363,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 ## external mode is lossless, never a filter.
 static func _compile_external(sheet: EventSheetResource, result: Dictionary, output_path: String) -> Dictionary:
 	_emit_breakpoints_flag = sheet.emit_breakpoints
+	_live_values_payload = ""
 	if not sheet.includes.is_empty() or not sheet.uses_addons.is_empty() or not sheet.requires_behaviors.is_empty():
 		(result["warnings"] as Array).append("GDScript-backed sheets ignore Includes/Uses/Requires — the .gd file is the source of truth (write the equivalent code directly).")
 	var lines: PackedStringArray = PackedStringArray()
@@ -658,6 +689,14 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		else:
 			lines.append("func %s(%s) -> void:" % [function_name, args])
 		var had_body: bool = false
+		if function_name == "_process" and not _live_values_payload.is_empty():
+			# Live-values stream: throttled, debug-session-only, before user logic.
+			lines.append("\t__live_values_timer += delta")
+			lines.append("\tif __live_values_timer >= 0.25 and EngineDebugger.is_active():")
+			lines.append("\t\t__live_values_timer = 0.0")
+			lines.append("\t\tEngineDebugger.send_message(\"eventsheets:live_values\", [%s])" % _live_values_payload)
+			had_body = true
+			_live_values_payload = ""
 		if function_name == "_ready" and not ready_connections.is_empty():
 			# Signal connections run before the user's OnReady logic.
 			for connection_line: String in ready_connections:
@@ -1036,6 +1075,9 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			if exported and not str(attributes.get("group", "")).strip_edges().is_empty():
 				lines.append("@export_group(\"%s\")" % str(attributes.get("group")).strip_edges())
 			if exported and type_name == "String" and not combo_options.is_empty():
+				for unsupported_key: String in ["clamp", "on_changed", "read_only", "show_if", "lock_unless"]:
+					if attributes.has(unsupported_key):
+						warnings.append("Variable \"%s\": combo variables don't support the %s attribute yet — ignored." % [var_name, unsupported_key])
 				lines.append("%s var %s: String = %s" % [_export_enum_prefix(combo_options), var_name, _to_code_literal(default_value)])
 				continue
 			var export_prefix: String = "@export " if exported else ""
@@ -1066,10 +1108,12 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 					lines.append("\t\t%s()" % on_changed)
 			else:
 				lines.append("%svar %s: %s = %s" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])
-			if exported and not str(attributes.get("show_if", "")).strip_edges().is_empty():
-				property_conditions.append({"name": var_name, "predicate": str(attributes.get("show_if")).strip_edges(), "kind": "show_if"})
-			if exported and not str(attributes.get("lock_unless", "")).strip_edges().is_empty():
-				property_conditions.append({"name": var_name, "predicate": str(attributes.get("lock_unless")).strip_edges(), "kind": "lock_unless"})
+			for condition_key: String in ["show_if", "lock_unless"]:
+				var condition_predicate: String = str(attributes.get(condition_key, "")).strip_edges()
+				if exported and not condition_predicate.is_empty():
+					if not variables.has(condition_predicate):
+						warnings.append("Variable \"%s\": %s targets unknown variable \"%s\" — check the spelling." % [var_name, condition_key, condition_predicate])
+					property_conditions.append({"name": var_name, "predicate": condition_predicate, "kind": condition_key})
 		else:
 			lines.append("@export var %s: Variant = %s" % [var_name, _to_code_literal(descriptor)])
 

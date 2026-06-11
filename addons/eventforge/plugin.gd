@@ -11,6 +11,7 @@ const MAIN_SCREEN_ROOT_NAME: String = "EventSheetWorkspace"
 
 var _event_sheet_editor: Control = null
 var _export_integrity_plugin: EditorExportPlugin = null
+var _live_values_debugger: EventSheetLiveValuesDebugger = null
 var _ace_param_inspector_plugin: ACEParamInspectorPlugin = null
 
 ## Returns the display name of the plugin.
@@ -56,6 +57,10 @@ func _enter_tree() -> void:
 	# scripts can never ship (see export_integrity_plugin.gd).
 	_export_integrity_plugin = EventSheetExportIntegrityPlugin.new()
 	add_export_plugin(_export_integrity_plugin)
+	# Live Values (debugging rung 2): capture the values frames debug-compiled sheets
+	# stream, and feed them to the workspace editor's Live Values window.
+	_live_values_debugger = EventSheetLiveValuesDebugger.new()
+	add_debugger_plugin(_live_values_debugger)
 	var editor_script: Script = load(EVENT_SHEET_EDITOR_PATH)
 	if editor_script == null:
 		push_warning("[EventForge] Failed to load EventSheetEditor script at %s. Verify the file exists and contains valid GDScript." % EVENT_SHEET_EDITOR_PATH)
@@ -67,6 +72,8 @@ func _enter_tree() -> void:
 			push_warning("[EventForge] EventSheetEditor script could not be instantiated: %s" % EVENT_SHEET_EDITOR_PATH)
 		elif editor_candidate is Control:
 			_event_sheet_editor = editor_candidate
+			if _live_values_debugger != null and _event_sheet_editor.has_method("update_live_values"):
+				_live_values_debugger.values_received.connect(_event_sheet_editor.update_live_values)
 			_event_sheet_editor.name = MAIN_SCREEN_ROOT_NAME
 			get_editor_interface().get_editor_main_screen().add_child(_event_sheet_editor)
 			# Contract: EventSheetEditor can expose setup(sheet := null) for safe initial state.
@@ -96,6 +103,9 @@ func _exit_tree() -> void:
 	if _export_integrity_plugin != null:
 		remove_export_plugin(_export_integrity_plugin)
 		_export_integrity_plugin = null
+	if _live_values_debugger != null:
+		remove_debugger_plugin(_live_values_debugger)
+		_live_values_debugger = null
 	if _ace_param_inspector_plugin != null:
 		remove_inspector_plugin(_ace_param_inspector_plugin)
 		_ace_param_inspector_plugin = null

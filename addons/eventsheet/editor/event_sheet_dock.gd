@@ -476,6 +476,7 @@ func _build_ui() -> void:
     _add_toolbar_button("Save As", _on_save_as_requested)
     _add_toolbar_button("Export Addon…", _export_addon_pack)
     _add_toolbar_button("Debug BP", _toggle_breakpoint_emission)
+    _add_toolbar_button("Live Values", _toggle_live_values)
     _add_toolbar_button("Split", _toggle_split_view)
     _add_toolbar_button("Detach", _toggle_detached_view)
     _add_toolbar_button("Link", _toggle_linked_views)
@@ -1178,6 +1179,23 @@ func _on_duplicate_requested() -> void:
 ## duplicate does not share selection/fold identity with the source.
 func _assign_fresh_event_uids(row: EventRow) -> void:
     row.event_uid = EventRow._generate_short_uid()
+    # Stateful conditions (Every X Seconds…): the COPY must own its own accumulator —
+    # re-bake the member uid across all four baked fields, or both timers silently
+    # share one member (C3 copies are independent timers).
+    for condition: Variant in row.conditions:
+        if condition is ACECondition and not (condition as ACECondition).member_declaration.is_empty():
+            var stateful: ACECondition = condition as ACECondition
+            var uid_regex: RegEx = RegEx.new()
+            uid_regex.compile("__[a-z_]+_([0-9a-f]{8})\\b")
+            var uid_match: RegExMatch = uid_regex.search(stateful.member_declaration)
+            if uid_match == null:
+                continue
+            var old_uid: String = uid_match.get_string(1)
+            var new_uid: String = "%08x" % (randi() & 0x7fffffff)
+            stateful.member_declaration = stateful.member_declaration.replace(old_uid, new_uid)
+            stateful.codegen_template = stateful.codegen_template.replace(old_uid, new_uid)
+            stateful.codegen_prelude = stateful.codegen_prelude.replace(old_uid, new_uid)
+            stateful.codegen_on_true = stateful.codegen_on_true.replace(old_uid, new_uid)
     for sub_event in row.sub_events:
         if sub_event is EventRow:
             _assign_fresh_event_uids(sub_event as EventRow)
@@ -2854,6 +2872,49 @@ var _find_count_label: Label = null
 var _replace_edit: LineEdit = null
 var _find_resource_matches: Array[Resource] = []
 var _find_cursor: int = -1
+
+# ── Live Values (debugging rung 2) ────────────────────────────────────────────────────
+var _live_values_window: Window = null
+var _live_values_label: RichTextLabel = null
+
+## Toggles live-value streaming for this sheet (debug compiles send variable frames;
+## the window shows them while the game runs). Recompile + run to start streaming.
+func _toggle_live_values() -> void:
+    if _current_sheet == null:
+        return
+    _current_sheet.emit_live_values = not _current_sheet.emit_live_values
+    if _current_sheet.emit_live_values:
+        _ensure_live_values_window()
+        _live_values_window.popup_centered()
+        _set_status("Live Values ON: recompile and run — variables stream every 0.25s while the debugger is attached.")
+    else:
+        if _live_values_window != null:
+            _live_values_window.hide()
+        _set_status("Live Values OFF (recompile to remove the stream).")
+
+func _ensure_live_values_window() -> void:
+    if _live_values_window != null:
+        return
+    _live_values_window = Window.new()
+    _live_values_window.title = "Live Values"
+    _live_values_window.size = Vector2i(320, 380)
+    _live_values_window.close_requested.connect(func() -> void: _live_values_window.hide())
+    _live_values_label = RichTextLabel.new()
+    _live_values_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _live_values_label.text = "Waiting for a running game…"
+    _live_values_window.add_child(_live_values_label)
+    add_child(_live_values_window)
+
+## Debugger-plugin sink (wired by the plugin entry point): one values frame -> text.
+func update_live_values(values: Dictionary) -> void:
+    _ensure_live_values_window()
+    var frame_lines: PackedStringArray = PackedStringArray()
+    var value_keys: Array = values.keys()
+    value_keys.sort()
+    for value_key: Variant in value_keys:
+        frame_lines.append("%s = %s" % [str(value_key), str(values[value_key])])
+    _live_values_label.text = "
+".join(frame_lines)
 
 ## Toggles debug compiles: gutter breakpoints (F9) emit real `breakpoint` statements.
 func _toggle_breakpoint_emission() -> void:

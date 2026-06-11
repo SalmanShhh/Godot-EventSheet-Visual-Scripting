@@ -18,6 +18,10 @@ class_name EventSheetResource
 @export var tool_mode: bool = false
 ## Debug compile: emit `breakpoint` statements for rows flagged via the gutter (F9).
 @export var emit_breakpoints: bool = false
+## Debug compile: stream this sheet's variables to the editor's Live Values window
+## (throttled EngineDebugger messages from _process — plain core-Godot API, debug
+## compiles only; normal compiles never carry it).
+@export var emit_live_values: bool = false
 ## When set, the generated script declares `class_name <this>` — the sheet then defines a
 ## custom node type that appears in Godot's Create Node dialog, exactly like a hand-written
 ## GDScript class. Must be unique across the project (Godot enforces this).
