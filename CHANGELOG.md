@@ -2,7 +2,14 @@
 
 ## [Unreleased]
 
-_Nothing yet._
+### C3 param-type parity completed: scene + animation pickers
+- **`scene_path` hint** — Browse… opens the editor's file dialog filtered to scenes;
+  the chosen path inserts quoted (Spawn Scene At uses it).
+- **`animation_reference` hint** — a dropdown of every animation on every
+  AnimationPlayer in the edited scene, with free-text fallback for runtime-only names
+  (Play Animation uses it). With these, every C3 ACE parameter type is covered
+  outright, mapped to a Godot idiom, or an explicit honest skip (layer pickers).
+- Hints are dialog-UX only — templates and ace_ids untouched (covenant).
 
 ## [0.6.1] - 2026-06-12
 

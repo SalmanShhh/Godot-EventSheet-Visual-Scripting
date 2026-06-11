@@ -69,6 +69,41 @@ static func run() -> bool:
 		vd._default_help.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and vd._const_help.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART, true) and all_passed
 	host.free()
 
+	# scene_path + animation_reference hints (the last two C3 param-type gaps).
+	var hint_dialog: ACEParamsDialog = ACEParamsDialog.new()
+	var scene_field: Control = hint_dialog._create_scene_path_field("path", "\"res://x.tscn\"")
+	var scene_edit: LineEdit = null
+	for child in scene_field.get_children():
+		if child is LineEdit:
+			scene_edit = child
+	all_passed = _check("scene_path field round-trips the path",
+		scene_edit != null and hint_dialog._extract_value(scene_edit) == "\"res://x.tscn\"", true) and all_passed
+	var anim_root: Node = Node.new()
+	var anim_player: AnimationPlayer = AnimationPlayer.new()
+	var library: AnimationLibrary = AnimationLibrary.new()
+	library.add_animation("idle", Animation.new())
+	library.add_animation("run", Animation.new())
+	anim_player.add_animation_library("", library)
+	anim_root.add_child(anim_player)
+	all_passed = _check("animation options scan the scene's players",
+		ACEParamsDialog.animation_options_from(anim_root), PackedStringArray(["idle", "run"])) and all_passed
+	hint_dialog.animation_scene_root_override = anim_root
+	var anim_field: Control = hint_dialog._create_animation_field("anim_name", "\"idle\"")
+	var anim_picker: OptionButton = null
+	for child in anim_field.get_children():
+		if child is OptionButton:
+			anim_picker = child
+	all_passed = _check("animation field offers the dropdown when players exist",
+		anim_picker != null and anim_picker.item_count == 3, true) and all_passed
+	scene_field.free()
+	anim_field.free()
+	anim_root.free()
+	# Descriptor hints flipped (UX-only; templates untouched).
+	all_passed = _check("Spawn Scene At browses scenes",
+		str((by_id["SpawnSceneAt"].params[0] as ACEParam).hint), "scene_path") and all_passed
+	all_passed = _check("Play Animation offers the animation dropdown",
+		str((by_id["PlayAnimation"].params[0] as ACEParam).hint), "animation_reference") and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

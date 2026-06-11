@@ -169,6 +169,10 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 		return _create_key_capture_field(key, default_value)
 	if hint == "audio_path":
 		return _create_audio_path_field(key, default_value)
+	if hint == "scene_path":
+		return _create_scene_path_field(key, default_value)
+	if hint == "animation_reference":
+		return _create_animation_field(key, default_value)
 	if hint == "color" or field_type == TYPE_COLOR:
 		return _create_color_field(key, default_value)
 	if hint == EXPRESSION_HINT:
@@ -429,6 +433,79 @@ func _create_audio_path_field(key: String, default_value: Variant) -> Control:
 	return container
 
 var _preview_player: AudioStreamPlayer = null
+
+## Scene params: a path field plus a Browse… button (editor file dialog filtered to
+## scenes); the chosen path inserts quoted, ready for load()/Spawn Scene At.
+func _create_scene_path_field(key: String, default_value: Variant) -> Control:
+	var container: HBoxContainer = HBoxContainer.new()
+	var path_edit: LineEdit = LineEdit.new()
+	path_edit.text = str(default_value)
+	path_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	container.add_child(path_edit)
+	var browse: Button = Button.new()
+	browse.text = "Browse…"
+	browse.pressed.connect(func() -> void:
+		if not Engine.is_editor_hint():
+			return
+		var file_dialog: EditorFileDialog = EditorFileDialog.new()
+		file_dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
+		file_dialog.add_filter("*.tscn", "Scenes")
+		file_dialog.add_filter("*.scn", "Scenes (binary)")
+		file_dialog.file_selected.connect(func(selected_path: String) -> void:
+			path_edit.text = "\"%s\"" % selected_path
+		)
+		container.add_child(file_dialog)
+		file_dialog.popup_file_dialog()
+	)
+	container.add_child(browse)
+	_fields[key] = path_edit
+	return container
+
+## Animation params (C3's animation picker): a dropdown of every animation on every
+## AnimationPlayer in the edited scene, plus a free-text fallback for names that only
+## exist at runtime. Selections insert quoted.
+var animation_scene_root_override: Node = null  # tests inject a tree here
+
+func _create_animation_field(key: String, default_value: Variant) -> Control:
+	var container: HBoxContainer = HBoxContainer.new()
+	var name_edit: LineEdit = LineEdit.new()
+	name_edit.text = str(default_value)
+	name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	container.add_child(name_edit)
+	var scene_root: Node = animation_scene_root_override
+	if scene_root == null and Engine.is_editor_hint():
+		scene_root = EditorInterface.get_edited_scene_root()
+	var known: PackedStringArray = animation_options_from(scene_root)
+	if not known.is_empty():
+		var picker: OptionButton = OptionButton.new()
+		picker.add_item("(animations)")
+		for animation_name: String in known:
+			picker.add_item(animation_name)
+		picker.item_selected.connect(func(index: int) -> void:
+			if index > 0:
+				name_edit.text = "\"%s\"" % picker.get_item_text(index)
+		)
+		container.add_child(picker)
+	_fields[key] = name_edit
+	return container
+
+## Every animation name on every AnimationPlayer under root (sorted, deduped) —
+## static + UI-free so the headless suite can pin it.
+static func animation_options_from(root: Node) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	if root == null:
+		return names
+	var pending: Array = [root]
+	while not pending.is_empty():
+		var node: Node = pending.pop_back()
+		if node is AnimationPlayer:
+			for animation_name: StringName in (node as AnimationPlayer).get_animation_list():
+				if not names.has(str(animation_name)):
+					names.append(str(animation_name))
+		for child: Node in node.get_children():
+			pending.append(child)
+	names.sort()
+	return names
 
 ## C3's press-a-key workflow: a button that captures the next key press (storing the
 ## KEY_* constant), plus a fallback dropdown for keys that can't be detected.
