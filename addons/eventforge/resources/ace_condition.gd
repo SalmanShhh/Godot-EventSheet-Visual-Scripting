@@ -13,6 +13,8 @@ class_name ACECondition
 ## Baked codegen template (from a custom ACE's @ace_codegen_template). When non-empty it
 ## takes precedence over the descriptor registry, so addon ACEs compile without one.
 @export var codegen_template: String = ""
+## C3-style per-ACE note, shown dimmed after the text in the sheet (right-click to edit).
+@export var comment: String = ""
 ## Stateful conditions: a class member this instance owns (baked with a fresh uid at
 ## apply), a line run every tick BEFORE the if, and a line run just inside it.
 @export var member_declaration: String = ""

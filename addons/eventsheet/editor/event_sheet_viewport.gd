@@ -3239,6 +3239,13 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
     return provider_id
 
 func _format_condition_descriptor(condition: ACECondition) -> String:
+    var base_text: String = _format_condition_descriptor_base(condition)
+    var ace_note: String = str(condition.comment).strip_edges()
+    if not ace_note.is_empty():
+        return "%s   ⊳ %s" % [base_text, ace_note]
+    return base_text
+
+func _format_condition_descriptor_base(condition: ACECondition) -> String:
     var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
     var generated_definition: ACEDefinition = _find_definition(condition.provider_id, condition.ace_id)
     if generated_definition != null:
@@ -3289,6 +3296,13 @@ func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []
     return false
 
 func _format_action_descriptor(action: ACEAction) -> String:
+    var base_text: String = _format_action_descriptor_base(action)
+    var ace_note: String = str(action.comment).strip_edges()
+    if not ace_note.is_empty():
+        return "%s   ⊳ %s" % [base_text, ace_note]
+    return base_text
+
+func _format_action_descriptor_base(action: ACEAction) -> String:
     var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
     var generated_definition: ACEDefinition = _find_definition(action.provider_id, action.ace_id)
     if generated_definition != null:

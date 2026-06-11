@@ -10,11 +10,13 @@ const CONDITION_MENU_REPLACE := 3
 const CONDITION_MENU_INVERT := 4
 const CONDITION_MENU_DELETE := 5
 const CONDITION_MENU_TOGGLE_ENABLED := 6
+const CONDITION_MENU_EDIT_ACE_COMMENT := 21
 const ACTION_MENU_EDIT := 1
 const ACTION_MENU_ADD := 2
 const ACTION_MENU_REPLACE := 3
 const ACTION_MENU_DELETE := 4
 const ACTION_MENU_TOGGLE_ENABLED := 5
+const ACTION_MENU_EDIT_ACE_COMMENT := 21
 const ROW_MENU_ADD_SUB_EVENT := 1
 const ROW_MENU_ADD_EVENT_BELOW := 2
 const ROW_MENU_ADD_GROUP_BELOW := 3
@@ -468,6 +470,7 @@ func _build_ui() -> void:
     _toolbar.add_theme_constant_override("separation", 4)
     root.add_child(_toolbar)
 
+    _add_toolbar_button("New…", _open_template_menu)
     _add_toolbar_button("Open", _on_open_requested)
     _add_toolbar_button("Save", _on_save_requested)
     _add_toolbar_button("Save As", _on_save_as_requested)
@@ -736,6 +739,7 @@ func _build_context_menus() -> void:
     _condition_context_menu.add_separator()
     _condition_context_menu.add_item("Invert Condition", CONDITION_MENU_INVERT)
     _condition_context_menu.add_item("Disable Condition", CONDITION_MENU_TOGGLE_ENABLED)
+    _condition_context_menu.add_item("Edit ACE Comment…", CONDITION_MENU_EDIT_ACE_COMMENT)
     _condition_context_menu.add_separator()
     _condition_context_menu.add_item("Delete Condition", CONDITION_MENU_DELETE)
     _condition_context_menu.id_pressed.connect(_on_condition_context_menu_id_pressed)
@@ -747,6 +751,7 @@ func _build_context_menus() -> void:
     _action_context_menu.add_item("Replace Action", ACTION_MENU_REPLACE)
     _action_context_menu.add_separator()
     _action_context_menu.add_item("Disable Action", ACTION_MENU_TOGGLE_ENABLED)
+    _action_context_menu.add_item("Edit ACE Comment…", ACTION_MENU_EDIT_ACE_COMMENT)
     _action_context_menu.add_item("Detach Comment To Row", ACTION_MENU_DETACH_COMMENT)
     _action_context_menu.add_item("Delete Action", ACTION_MENU_DELETE)
     _action_context_menu.id_pressed.connect(_on_action_context_menu_id_pressed)
@@ -3723,6 +3728,8 @@ func _on_condition_context_menu_id_pressed(id: int) -> void:
                 _ace_picker.open(str(replace_context.get("mode", "replace_condition")), false, _context_row.source_resource, replace_context)
         CONDITION_MENU_INVERT:
             _toggle_context_condition_inversion()
+        CONDITION_MENU_EDIT_ACE_COMMENT:
+            _open_ace_comment_dialog(_context_ace_resource("condition"))
         CONDITION_MENU_TOGGLE_ENABLED:
             _toggle_context_ace_enabled()
         CONDITION_MENU_DELETE:
@@ -3740,6 +3747,8 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
             var replace_context: Dictionary = _build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
             if not replace_context.is_empty():
                 _ace_picker.open("replace_action", false, _context_row.source_resource, replace_context)
+        ACTION_MENU_EDIT_ACE_COMMENT:
+            _open_ace_comment_dialog(_context_ace_resource("action"))
         ACTION_MENU_TOGGLE_ENABLED:
             _toggle_context_ace_enabled()
         ACTION_MENU_DETACH_COMMENT:
@@ -3897,6 +3906,124 @@ func _toggle_context_condition_inversion() -> void:
     )
     if toggled:
         _mark_dirty("Updated condition inversion.")
+
+## The ACE resource the context menu was opened on (condition/trigger/action lanes).
+func _context_ace_resource(lane: String) -> Resource:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        return null
+    var event_row: EventRow = _context_row.source_resource as EventRow
+    var metadata: Dictionary = _context_hit.get("span_metadata", {})
+    var ace_index: int = int(metadata.get("ace_index", -1))
+    if lane == "condition":
+        if str(metadata.get("kind", "")) == "trigger":
+            return event_row.trigger
+        return event_row.conditions[ace_index] if ace_index >= 0 and ace_index < event_row.conditions.size() else null
+    return event_row.actions[ace_index] if ace_index >= 0 and ace_index < event_row.actions.size() else null
+
+# ── Per-ACE comments (C3 condition/action notes) ──────────────────────────────────────
+var _ace_comment_dialog: ConfirmationDialog = null
+var _ace_comment_edit: LineEdit = null
+var _ace_comment_target: Resource = null
+
+## C3-style per-condition/action note: shown dimmed after the ACE text in the sheet.
+func _open_ace_comment_dialog(target: Resource) -> void:
+    if target == null:
+        _set_status("Right-click a condition or action to comment it.", true)
+        return
+    if _ace_comment_dialog == null:
+        _ace_comment_dialog = ConfirmationDialog.new()
+        _ace_comment_dialog.title = "ACE Comment"
+        _ace_comment_edit = LineEdit.new()
+        _ace_comment_edit.placeholder_text = "Why this condition/action exists…"
+        _ace_comment_edit.custom_minimum_size = Vector2(360.0, 0.0)
+        _ace_comment_dialog.add_child(_ace_comment_edit)
+        _ace_comment_dialog.confirmed.connect(_on_ace_comment_confirmed)
+        add_child(_ace_comment_dialog)
+    _ace_comment_target = target
+    _ace_comment_edit.text = str(target.get("comment"))
+    _ace_comment_dialog.popup_centered(Vector2i(420, 110))
+
+func _on_ace_comment_confirmed() -> void:
+    if _ace_comment_target == null:
+        return
+    var target: Resource = _ace_comment_target
+    var new_comment: String = _ace_comment_edit.text.strip_edges()
+    var changed: bool = _perform_undoable_sheet_edit("Edit ACE Comment", func() -> bool:
+        target.set("comment", new_comment)
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("ACE comment saved.")
+
+# ── Starter templates (C3 "new from template") ─────────────────────────────────────────
+var _template_menu: PopupMenu = null
+
+func _open_template_menu() -> void:
+    if _template_menu == null:
+        _template_menu = PopupMenu.new()
+        _template_menu.add_item("Blank Sheet", 0)
+        _template_menu.add_item("Platformer Starter", 1)
+        _template_menu.add_item("Top-down Starter", 2)
+        _template_menu.id_pressed.connect(_new_sheet_from_template)
+        add_child(_template_menu)
+    _template_menu.popup(Rect2i(Vector2i(get_global_mouse_position()), Vector2i(0, 0)))
+
+## Builds a fresh sheet from a starter template and adopts it (unsaved; Save As to keep).
+func _new_sheet_from_template(template_id: int) -> void:
+    var sheet: EventSheetResource = EventSheetResource.new()
+    match template_id:
+        1:
+            sheet.host_class = "CharacterBody2D"
+            var note: CommentRow = CommentRow.new()
+            note.text = "[b]Platformer Starter[/b] — move with ui_left/ui_right, jump with ui_accept.\nTune the numbers, then Compile and attach the script."
+            sheet.events.append(note)
+            var tick: EventRow = EventRow.new()
+            tick.trigger_provider_id = "Core"
+            tick.trigger_id = "OnPhysicsProcess"
+            var move: RawCodeRow = RawCodeRow.new()
+            move.code = "velocity.x = Input.get_axis(&\"ui_left\", &\"ui_right\") * 220.0\nif not is_on_floor():\n\tvelocity.y += 980.0 * delta\nmove_and_slide()"
+            tick.actions.append(move)
+            sheet.events.append(tick)
+            var jump: EventRow = EventRow.new()
+            jump.trigger_provider_id = "Core"
+            jump.trigger_id = "OnPhysicsProcess"
+            var grounded: ACECondition = ACECondition.new()
+            grounded.provider_id = "Core"
+            grounded.ace_id = "IsOnFloor"
+            grounded.codegen_template = "is_on_floor()"
+            jump.conditions.append(grounded)
+            var pressed: ACECondition = ACECondition.new()
+            pressed.provider_id = "Core"
+            pressed.ace_id = "IsActionJustPressed"
+            pressed.codegen_template = "Input.is_action_just_pressed(&{action})"
+            pressed.params = {"action": "\"ui_accept\""}
+            jump.conditions.append(pressed)
+            var leap: ACEAction = ACEAction.new()
+            leap.provider_id = "Core"
+            leap.ace_id = "SetVelocity2D"
+            leap.codegen_template = "velocity.y = {vel}"
+            leap.params = {"vel": "-420.0"}
+            jump.actions.append(leap)
+            sheet.events.append(jump)
+        2:
+            sheet.host_class = "CharacterBody2D"
+            var note2: CommentRow = CommentRow.new()
+            note2.text = "[b]Top-down Starter[/b] — 8-way movement with the arrow keys."
+            sheet.events.append(note2)
+            var tick2: EventRow = EventRow.new()
+            tick2.trigger_provider_id = "Core"
+            tick2.trigger_id = "OnPhysicsProcess"
+            var move2: RawCodeRow = RawCodeRow.new()
+            move2.code = "velocity = Input.get_vector(&\"ui_left\", &\"ui_right\", &\"ui_up\", &\"ui_down\") * 200.0\nmove_and_slide()"
+            tick2.actions.append(move2)
+            sheet.events.append(tick2)
+    setup(sheet)
+    _current_sheet_path = ""
+    _dirty = true
+    _refresh_title_strip()
+    _clear_undo_history()
+    _set_status("New sheet from template — Save As… to keep it.")
 
 func _context_ace_is_disabled() -> bool:
     if _context_row == null or not (_context_row.source_resource is EventRow):

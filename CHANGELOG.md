@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Per-ACE comments + starter templates
+- **ACE comments** (C3's per-condition/action notes): right-click any condition or
+  action → "Edit ACE Comment…" — the note renders dimmed after the ACE text (`⊳ why
+  this exists`), undoable, persisted on the resource.
+- **New… templates**: a toolbar menu with **Blank**, **Platformer Starter** (move +
+  gravity + grounded jump) and **Top-down Starter** (8-way `get_vector` movement) —
+  adopted unsaved, compile-verified, the C3 new-project feel.
+
 ### Debug & polish: breakpoint UX, Find & Replace, shader/date/platform vocabulary
 - **Breakpoints are fully wired**: F9 persists onto the event resource, and the new
   **Debug BP** toolbar toggle turns debug compiles on per sheet (`breakpoint`

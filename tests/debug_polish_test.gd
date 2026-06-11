@@ -71,6 +71,31 @@ static func run() -> bool:
 	all_passed = _check("shader template uses the StringName idiom",
 		str(by_id["SetShaderParameter"].codegen_template), "material.set_shader_parameter(&{param}, {value})") and all_passed
 
+	# Stage 3: ACE comments + starter templates.
+	var note_editor: EventSheetEditor = EventSheetEditor.new()
+	note_editor.setup(EventSheetResource.new())
+	note_editor.set_undo_redo_manager(NoopUndoManager.new())
+	var noted: ACECondition = ACECondition.new()
+	noted.provider_id = "Core"
+	noted.ace_id = "Always"
+	noted.codegen_template = "true"
+	noted.comment = "guards the tutorial"
+	all_passed = _check("ACE comments render dimmed after the text",
+		note_editor.get_viewport_control()._format_condition_descriptor(noted).contains("⊳ guards the tutorial"), true) and all_passed
+	note_editor._new_sheet_from_template(1)
+	var template_sheet: EventSheetResource = note_editor._current_sheet
+	var template_events: int = 0
+	for row in template_sheet.events:
+		if row is EventRow:
+			template_events += 1
+	all_passed = _check("platformer template builds events", template_events >= 2, true) and all_passed
+	all_passed = _check("template adopts as unsaved", note_editor._current_sheet_path, "") and all_passed
+	var template_output: String = str(SheetCompiler.compile(template_sheet, "user://eventsheets_template.gd").get("output", ""))
+	var template_script: GDScript = GDScript.new()
+	template_script.source_code = template_output
+	all_passed = _check("template compiles + parses", template_script.reload(true) == OK, true) and all_passed
+	note_editor.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
