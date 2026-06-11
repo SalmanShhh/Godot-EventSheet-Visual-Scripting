@@ -11,8 +11,10 @@
   **Enter applies the dialog** from the new fields (and audio path, which shared the
   gap). Also: the animation walk dedupes in O(n), dropdown entries are
   metadata-tagged instead of index-guessed, and quoting has a single helper.
-- Deferred with eyes open: folding the path-field factories into one, and a
-  hint→factory dispatch table for `_create_field` (flagged at 11 branches).
+- Both deferred cleanups are now in too: path-style fields share one scaffold
+  (`_build_path_field_base` — container, drag-drop, Enter, registration), and
+  exact-match field hints dispatch through a **hint→factory registry** (the next
+  hint is one registration line, not another branch).
 
 ### C3 param-type parity completed: scene + animation pickers
 - **`scene_path` hint** — Browse… opens the editor's file dialog filtered to scenes;

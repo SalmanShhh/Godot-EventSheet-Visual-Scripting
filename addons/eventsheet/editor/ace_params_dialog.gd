@@ -154,6 +154,17 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 
 ## Build a typed input widget for one parameter entry. The value-extraction node is
 ## registered in _fields[key]; the returned Control is what gets added to the row.
+var _hint_factories: Dictionary = {}
+
+func _ensure_hint_factories() -> void:
+	if _hint_factories.is_empty():
+		_hint_factories = {
+			"key_capture": _create_key_capture_field,
+			"audio_path": _create_audio_path_field,
+			"scene_path": _create_scene_path_field,
+			"animation_reference": _create_animation_field,
+		}
+
 func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: String, hint: String) -> Control:
 	var field_type: int = int(param_dict.get("type", TYPE_NIL))
 	var default_value: Variant = initial_values.get(key, param_dict.get("default_value", ""))
@@ -165,14 +176,12 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 		return _create_signal_reference_field(key, default_value, hint.ends_with(":quoted"))
 	if hint.begins_with("enum:"):
 		return _create_enum_reference_field(key, default_value, hint.get_slice(":", 1))
-	if hint == "key_capture":
-		return _create_key_capture_field(key, default_value)
-	if hint == "audio_path":
-		return _create_audio_path_field(key, default_value)
-	if hint == "scene_path":
-		return _create_scene_path_field(key, default_value)
-	if hint == "animation_reference":
-		return _create_animation_field(key, default_value)
+	# Exact-match field hints dispatch through the registry — adding the next hint is
+	# one registration line, not another branch (prefix hints stay above: they carry
+	# arguments after ':').
+	_ensure_hint_factories()
+	if _hint_factories.has(hint):
+		return (_hint_factories[hint] as Callable).call(key, default_value)
 	if hint == "color" or field_type == TYPE_COLOR:
 		return _create_color_field(key, default_value)
 	if hint == EXPRESSION_HINT:
@@ -396,12 +405,25 @@ static func _node_reference(relative_path: String) -> String:
 
 ## Audio params: a path field plus a ▶ button that previews the sound in the editor
 ## (loads the stream into a throwaway player under the dialog; ■ stops it).
-func _create_audio_path_field(key: String, default_value: Variant) -> Control:
+## Shared scaffold for path-style fields (audio/scene/…): container + expanding
+## LineEdit with FileSystem drag-drop, Enter-applies, and _fields registration.
+## Returns {"container": HBoxContainer, "edit": LineEdit}; callers add their button.
+func _build_path_field_base(key: String, default_value: Variant) -> Dictionary:
 	var container: HBoxContainer = HBoxContainer.new()
 	var path_edit: LineEdit = LineEdit.new()
 	path_edit.text = str(default_value)
 	path_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	container.add_child(path_edit)
+	path_edit.set_drag_forwarding(Callable(), _can_drop_on_expression, _drop_on_line_edit.bind(path_edit))
+	if _dialog is AcceptDialog:
+		(_dialog as AcceptDialog).register_text_enter(path_edit)
+	_fields[key] = path_edit
+	return {"container": container, "edit": path_edit}
+
+func _create_audio_path_field(key: String, default_value: Variant) -> Control:
+	var base: Dictionary = _build_path_field_base(key, default_value)
+	var container: HBoxContainer = base["container"]
+	var path_edit: LineEdit = base["edit"]
 	var preview: Button = Button.new()
 	preview.text = "▶"
 	preview.tooltip_text = "Preview this sound"
@@ -429,10 +451,6 @@ func _create_audio_path_field(key: String, default_value: Variant) -> Control:
 		preview.text = "■"
 	)
 	container.add_child(preview)
-	path_edit.set_drag_forwarding(Callable(), _can_drop_on_expression, _drop_on_line_edit.bind(path_edit))
-	if _dialog is AcceptDialog:
-		(_dialog as AcceptDialog).register_text_enter(path_edit)
-	_fields[key] = path_edit
 	return container
 
 var _preview_player: AudioStreamPlayer = null
@@ -440,21 +458,13 @@ var _preview_player: AudioStreamPlayer = null
 ## Scene params: a path field plus a Browse… button (editor file dialog filtered to
 ## scenes); the chosen path inserts quoted, ready for load()/Spawn Scene At.
 func _create_scene_path_field(key: String, default_value: Variant) -> Control:
-	var container: HBoxContainer = HBoxContainer.new()
-	var path_edit: LineEdit = LineEdit.new()
-	path_edit.text = str(default_value)
-	path_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	container.add_child(path_edit)
+	var base: Dictionary = _build_path_field_base(key, default_value)
+	var container: HBoxContainer = base["container"]
+	var path_edit: LineEdit = base["edit"]
 	var browse: Button = Button.new()
 	browse.text = "Browse…"
 	browse.pressed.connect(func() -> void: _browse_for_scene(path_edit))
 	container.add_child(browse)
-	# Review fixes: scenes drag in from the FileSystem dock (auto-quoted, like
-	# expression fields), and Enter applies the dialog.
-	path_edit.set_drag_forwarding(Callable(), _can_drop_on_expression, _drop_on_line_edit.bind(path_edit))
-	if _dialog is AcceptDialog:
-		(_dialog as AcceptDialog).register_text_enter(path_edit)
-	_fields[key] = path_edit
 	return container
 
 # One cached scene browser, parented to the PERSISTENT params dialog: no per-press
