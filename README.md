@@ -25,7 +25,7 @@ Conditions                        | Actions
 ## Quick start
 
 1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project
-   (optional: `eventsheet_addons/` for the 20 behavior packs and demo ACEs).
+   (optional: `eventsheet_addons/` for the 21 addon packs and demo ACEs).
 2. **Project → Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
 4. **New…** → *Platformer Starter* (or open `demo/sheets/player.tres`), add events —
@@ -48,7 +48,7 @@ Conditions                        | Actions
   round-trips), paste GDScript and it converts to events, write GDScript that calls
   sheet-built classes like any other class.
 - **C3 muscle memory works.** The grammar, the picker, behaviors-as-components, combos,
-  waits, press-a-key capture, the 20-pack behavior set, System/Keyboard/Mouse/Gamepad/
+  waits, press-a-key capture, the 21-pack addon set, System/Keyboard/Mouse/Gamepad/
   Touch/Audio vocabularies — designed against C3 conventions on purpose.
 - **Scales.** The custom-drawn virtualized viewport keeps 10,000+ rows fluid (no
   per-row widgets — a measured ~490 ms build for a 10k sheet, 8-row draw window).
@@ -109,11 +109,12 @@ Conditions                        | Actions
   params, date/time/platform info, Math & Random (`choose()` included).
 
 ### Behaviors & addons (zero configuration, no JSON)
-- **18 behavior packs** (14 C3 classics + Sine/Orbit/Bullet/Move To in 3D), all authored as event sheets: Platformer, 8-Direction,
-  Timer, Flash, State Machine, Sine (7 movements × 5 wave shapes), Orbit (ellipses),
-  Bullet, Move To (waypoint queues), Follow (smooth + delayed history modes),
-  Drag & Drop (axis locking), Car (drift), Tile Movement (simulate control, grid
-  helpers), Line of Sight (cone + raycast conditions).
+- **21 addon packs**, all authored as event sheets: the C3 classics (Platformer,
+  8-Direction, Timer, Flash, State Machine, Sine with wave shapes, Orbit, Bullet,
+  Move To, Follow, Drag & Drop, Car, Tile Movement, Line of Sight), a 3D quartet
+  (Sine/Orbit/Bullet/Move To), the juice duo (**Spring** — named numeric springs,
+  squash & stretch in one action — and **Tween** with Inspector combos), and the
+  **Save System** singleton (slots, formats, encryption, lifecycle broadcasts).
 - **Custom ACE addons**: drop a script in `res://eventsheet_addons/` — `class_name` is
   the provider, `@ace_*` annotations shape everything (`@ace_param_options` for combos,
   `@ace_param_hint` for ƒx/color/signal pickers). Annotated signals become triggers.
@@ -133,11 +134,12 @@ Conditions                        | Actions
 
 ## Current status
 
-- **Version**: **`v0.5.0`** — C3 System coverage (time/display/text/comparisons,
-  Every X Seconds), the full loop & picking set, function returns, real breakpoints,
-  Find & Replace, device input with press-a-key, the Audio module (with sound preview),
-  starter templates, the searchable node picker, per-ACE comments, and three hardening
-  sweeps. See [CHANGELOG.md](CHANGELOG.md).
+- **Version**: **`v0.6.0`** — Inspector attributes (all tiers + tool buttons), addon
+  composition with project policy + MCP enforcement, **Singleton sheets + event-bus
+  triggers**, **editable Live Values** (the debugger writes back), runtime-toggleable
+  groups, Find in Project, Save System v2, Spring & Tween packs (21 total), the
+  addon-author loop, the C3-reflex UX arc, and eight hardening sweeps.
+  See [CHANGELOG.md](CHANGELOG.md) and the playable `demo/showcase/`.
 - **Quality**: 1,100+ test assertions, all green, CI-gated on every push (any `[FAIL]`
   fails the build); byte-exact golden round-trips guard the lossless rules.
 - **Compatibility covenant**: generated code never depends on the plugin; templates bake
@@ -152,7 +154,7 @@ Conditions                        | Actions
 | `v0.3.0` — multi-view (split / detached / linked), tool sheets | ✅ shipped |
 | `v0.4.0` — 3D vocabulary, addon tags, hardening sweeps, contributor docs | ✅ shipped |
 | `v0.5.0` — C3 System ACEs, full loops & picking, real breakpoints, devices, Audio, node picker | ✅ shipped |
-| `v0.6.0` — Inspector attributes (all tiers), addon composition + project policy + MCP enforcement, Live Values, **Singleton sheets + event-bus triggers**, Spring & Tween packs, the addon-author loop, the C3-reflex UX arc | 🔜 next |
+| `v0.6.0` — Inspector attributes (all tiers), addon composition + policy + MCP enforcement, **editable Live Values**, Singleton sheets + event-bus triggers, Spring & Tween & Save System packs, the addon-author loop, the C3-reflex UX arc | ✅ shipped |
 | Community feedback rounds, inline live-values overlay polish | 🗺 planned |
 
 Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
@@ -163,7 +165,7 @@ Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
 |---|---|
 | `addons/eventforge/` | Data model, compiler, importer, builtin ACEs, runtime bridge |
 | `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, MCP server |
-| `eventsheet_addons/` | Zero-config ACE addons + the 20 behavior packs |
+| `eventsheet_addons/` | Zero-config ACE addons + the 21 addon packs |
 | `demo/` | Demo sheets, themes, and the golden compiled output |
 | `tests/` | Headless suite — `tests/run_tests.gd` (full) and `tests/run_perf.gd` (headless-safe gate) |
 | `docs/` | Specs: GDScript pairing, editor UI, theme tokens, MCP, C3 migration |

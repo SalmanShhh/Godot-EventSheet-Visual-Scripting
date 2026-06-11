@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.6.0] - 2026-06-12
+
+### Bug sweep 12 (pre-release)
+- **Runtime-group guards on OR-mode events** joined into the OR list — silently
+  disabling the gate (`guard or a or b`); guards now AND-wrap the whole condition
+  (`guard and (a or b)`), regression-asserted.
+- Find in Project now also searches per-ACE `⊳` notes (parity with Replace All).
+
+### Release showcase
+- `demo/showcase/showcase_v060.tscn` — the v0.6.0 features in one playable scene: a
+  color-tagged **runtime-toggleable group** pulses the host every 2 seconds
+  (**Every X Seconds**) through the **Spring** behavior while **Tween** spins it,
+  with **Live Values** streaming (watch `pulses` climb — then double-click and
+  rewrite it in the running game). Regenerate with `tools/build_showcase.gd`.
+
 ### Power-user trio: nested live values, fuzzy picker, keyboard flow
 - **Nested Live Values**: dictionaries and arrays expand into read-only subtrees
   (GDevelop's variables-debugger style — `stats → hp / mp`); scalars stay editable.

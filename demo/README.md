@@ -27,6 +27,14 @@ Ctrl+F finds rows even inside folded groups. Split the editor (or detach a pane 
 second monitor) like VSCode. An MCP server lets AI assistants read, lint, compile, and
 extend your sheets.
 
+## The v0.6.0 showcase (one minute)
+
+Open `demo/showcase/showcase_v060.tscn` and run it **with Live Values on**: a
+runtime-toggleable *Juice* group pulses the icon every 2 seconds through the Spring
+behavior while Tween spins it. Watch `pulses` climb in the Live Values window — then
+double-click the value and rewrite it in the running game. Open
+`showcase_v060.tres` to see the whole thing as six rows of events.
+
 ## Try it (five minutes)
 
 1. Open the repository root project in Godot **4.5+** → open the **EventSheet** tab.
@@ -87,7 +95,7 @@ What they're for:
 | ✅ `v0.3.0` | Multi-view (split / detached / linked panes), tool sheets (experimental) |
 | ✅ `v0.4.0` | 3D vocabulary, addon tags, folded-group find, hardening sweeps, contributor docs |
 | ✅ `v0.5.0` | C3 System coverage (Every X Seconds!), full loops & picking, function returns, real breakpoints, Find & Replace, Keyboard/Mouse/Gamepad/Touch with press-a-key, the Audio module (▶ preview), starter templates, the searchable node picker, Inspector attributes Tier 1 |
-| 🔜 `v0.6.0` | Inspector attributes (all tiers + tool buttons), addon composition + project policy + MCP enforcement, Live Values (window + inline chips), device input with press-a-key, Audio module, the node-picker kit, **Spring & Tween packs**, **Autoload/Singleton sheets + event-bus triggers**, the addon-author loop (Publish Preview / auto-READMEs / Test Bench), and the full C3-reflex UX arc |
+| ✅ `v0.6.0` | Inspector attributes (all tiers + tool buttons), addon composition + project policy + MCP enforcement, Live Values (window + inline chips), device input with press-a-key, Audio module, the node-picker kit, **Spring & Tween packs**, **Autoload/Singleton sheets + event-bus triggers**, the addon-author loop (Publish Preview / auto-READMEs / Test Bench), and the full C3-reflex UX arc |
 | 🗺 planned | community feedback rounds |
 
 Full ledger: [CHANGELOG.md](../CHANGELOG.md) · honest pros & cons: [README.md](../README.md)

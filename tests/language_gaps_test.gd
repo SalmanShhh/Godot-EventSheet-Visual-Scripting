@@ -189,6 +189,23 @@ static func run() -> bool:
 		by_id[descriptor.ace_id] = descriptor
 	all_passed = _check("Set/Is Group Active registered",
 		by_id.has("SetGroupActive") and by_id.has("IsGroupActive"), true) and all_passed
+	# OR-mode events inside runtime groups must AND-wrap the guard (joining it into
+	# the OR list would silently disable the gate).
+	rt_group.runtime_toggleable = true
+	rt_event.condition_mode = EventRow.ConditionMode.OR
+	var or_a: ACECondition = ACECondition.new()
+	or_a.provider_id = "Core"
+	or_a.ace_id = "A"
+	or_a.codegen_template = "is_on_floor()"
+	var or_b: ACECondition = ACECondition.new()
+	or_b.provider_id = "Core"
+	or_b.ace_id = "B"
+	or_b.codegen_template = "is_on_wall()"
+	rt_event.conditions.append(or_a)
+	rt_event.conditions.append(or_b)
+	var or_guard_output: String = str(SheetCompiler.compile(rt_sheet, "user://eventsheets_rtor.gd").get("output", ""))
+	all_passed = _check("OR events AND-wrap the runtime guard",
+		or_guard_output.contains("if __group_combat_active and (is_on_floor() or is_on_wall()):"), true) and all_passed
 
 	return all_passed
 

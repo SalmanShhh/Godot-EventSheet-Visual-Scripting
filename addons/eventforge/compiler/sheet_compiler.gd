@@ -838,14 +838,22 @@ static func _emit_event_body(
 		var event_start_line: int = lines.size() + 1
 		var condition_texts: PackedStringArray = PackedStringArray()
 		var runtime_group_guard: String = str(_runtime_group_guards.get(event_row, ""))
-		if not runtime_group_guard.is_empty():
-			condition_texts.append(runtime_group_guard)
 		for condition: ACECondition in event_row.conditions:
 			var condition_line: String = ConditionCodegen.generate_condition(condition)
 			if not condition_line.is_empty():
 				condition_texts.append(condition_line)
 		var joiner: String = " or " if event_row.condition_mode == EventRow.ConditionMode.OR else " and "
 		var joined_conditions: String = joiner.join(condition_texts)
+		# Runtime-group guards AND-wrap the whole condition — joining a guard into an
+		# OR list would silently disable the gate (`guard or a or b`).
+		if not runtime_group_guard.is_empty():
+			if condition_texts.is_empty():
+				joined_conditions = runtime_group_guard
+			elif event_row.condition_mode == EventRow.ConditionMode.OR and condition_texts.size() > 1:
+				joined_conditions = "%s and (%s)" % [runtime_group_guard, joined_conditions]
+			else:
+				joined_conditions = "%s and %s" % [runtime_group_guard, joined_conditions]
+			condition_texts.append(runtime_group_guard)
 
 		# Stateful conditions: prelude lines run every tick BEFORE the if (so they must
 		# not sit between an if and its elif — stateful events never chain).

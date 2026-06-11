@@ -3632,6 +3632,8 @@ static func _collect_findable_text(rows: Array, into: Array) -> void:
                 if ace is RawCodeRow:
                     into.append((ace as RawCodeRow).code)
                 elif ace is Resource and ace.get("params") is Dictionary:
+                    if ace.get("comment") is String and not str(ace.get("comment")).is_empty():
+                        into.append(str(ace.get("comment")))
                     for value: Variant in (ace.get("params") as Dictionary).values():
                         if value is String:
                             into.append(value)
