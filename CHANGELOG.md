@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.6.1] - 2026-06-12
+
+**Maintenance release** — no user-facing feature changes; the v0.6.0 showcase remains
+current. Structure, hygiene and review actions only:
+
 ### Repo re-review + sweep 13
 - **Committed scratch removed**: six one-shot patch scripts had slipped into `tools/`
   when their cleanup steps were skipped by mid-script failures — deleted, and

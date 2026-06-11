@@ -144,7 +144,8 @@ Conditions                        | Actions
 
 ## Current status
 
-- **Version**: **`v0.6.0`** — Inspector attributes (all tiers + tool buttons), addon
+- **Version**: **`v0.6.1`** (maintenance: dock decomposition, module-split completion,
+  repo hygiene — no behavior changes). Feature state = `v0.6.0` — Inspector attributes (all tiers + tool buttons), addon
   composition with project policy + MCP enforcement, **Singleton sheets + event-bus
   triggers**, **editable Live Values** (the debugger writes back), runtime-toggleable
   groups, Find in Project, Save System v2, Spring & Tween packs (21 total), the
@@ -165,6 +166,7 @@ Conditions                        | Actions
 | `v0.4.0` — 3D vocabulary, addon tags, hardening sweeps, contributor docs | ✅ shipped |
 | `v0.5.0` — C3 System ACEs, full loops & picking, real breakpoints, devices, Audio, node picker | ✅ shipped |
 | `v0.6.0` — Inspector attributes (all tiers), addon composition + policy + MCP enforcement, **editable Live Values**, Singleton sheets + event-bus triggers, Spring & Tween & Save System packs, the addon-author loop, the C3-reflex UX arc | ✅ shipped |
+| `v0.6.1` — maintenance: dock decomposed into subsystems, module split completed, repo hygiene (no behavior changes) | ✅ shipped |
 | Community feedback rounds, inline live-values overlay polish | 🗺 planned |
 
 Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
