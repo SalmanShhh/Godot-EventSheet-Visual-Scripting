@@ -429,6 +429,9 @@ func _create_audio_path_field(key: String, default_value: Variant) -> Control:
 		preview.text = "■"
 	)
 	container.add_child(preview)
+	path_edit.set_drag_forwarding(Callable(), _can_drop_on_expression, _drop_on_line_edit.bind(path_edit))
+	if _dialog is AcceptDialog:
+		(_dialog as AcceptDialog).register_text_enter(path_edit)
 	_fields[key] = path_edit
 	return container
 
@@ -444,22 +447,48 @@ func _create_scene_path_field(key: String, default_value: Variant) -> Control:
 	container.add_child(path_edit)
 	var browse: Button = Button.new()
 	browse.text = "Browse…"
-	browse.pressed.connect(func() -> void:
-		if not Engine.is_editor_hint():
-			return
-		var file_dialog: EditorFileDialog = EditorFileDialog.new()
-		file_dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
-		file_dialog.add_filter("*.tscn", "Scenes")
-		file_dialog.add_filter("*.scn", "Scenes (binary)")
-		file_dialog.file_selected.connect(func(selected_path: String) -> void:
-			path_edit.text = "\"%s\"" % selected_path
-		)
-		container.add_child(file_dialog)
-		file_dialog.popup_file_dialog()
-	)
+	browse.pressed.connect(func() -> void: _browse_for_scene(path_edit))
 	container.add_child(browse)
+	# Review fixes: scenes drag in from the FileSystem dock (auto-quoted, like
+	# expression fields), and Enter applies the dialog.
+	path_edit.set_drag_forwarding(Callable(), _can_drop_on_expression, _drop_on_line_edit.bind(path_edit))
+	if _dialog is AcceptDialog:
+		(_dialog as AcceptDialog).register_text_enter(path_edit)
 	_fields[key] = path_edit
 	return container
+
+# One cached scene browser, parented to the PERSISTENT params dialog: no per-press
+# accumulation, and a form rebuild can't kill it mid-interaction. The target retargets
+# per open via a single stored reference (old lambda connections would pile up).
+var _scene_file_dialog: EditorFileDialog = null
+var _scene_browse_target: LineEdit = null
+
+func _browse_for_scene(path_edit: LineEdit) -> void:
+	if not Engine.is_editor_hint():
+		return
+	if _scene_file_dialog == null:
+		_scene_file_dialog = EditorFileDialog.new()
+		_scene_file_dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
+		_scene_file_dialog.add_filter("*.tscn", "Scenes")
+		_scene_file_dialog.add_filter("*.scn", "Scenes (binary)")
+		_scene_file_dialog.file_selected.connect(func(selected_path: String) -> void:
+			if _scene_browse_target != null and is_instance_valid(_scene_browse_target):
+				_scene_browse_target.text = format_quoted_literal(selected_path)
+		)
+		_dialog.add_child(_scene_file_dialog)
+	_scene_browse_target = path_edit
+	_scene_file_dialog.popup_file_dialog()
+
+## Drops onto plain LineEdit fields: files become quoted paths, nodes $Refs (reuses
+## the expression-field converter so the two can never disagree).
+func _drop_on_line_edit(_position: Vector2, data: Variant, edit: LineEdit) -> void:
+	var snippet: String = drop_data_to_expression(data)
+	if not snippet.is_empty() and is_instance_valid(edit):
+		edit.text = snippet
+
+## The single source of truth for "value as a GDScript string literal".
+static func format_quoted_literal(value: String) -> String:
+	return "\"%s\"" % value
 
 ## Animation params (C3's animation picker): a dropdown of every animation on every
 ## AnimationPlayer in the edited scene, plus a free-text fallback for names that only
@@ -481,11 +510,16 @@ func _create_animation_field(key: String, default_value: Variant) -> Control:
 		picker.add_item("(animations)")
 		for animation_name: String in known:
 			picker.add_item(animation_name)
+			# Real entries are tagged — position-proof against future separators.
+			picker.set_item_metadata(picker.item_count - 1, animation_name)
 		picker.item_selected.connect(func(index: int) -> void:
-			if index > 0:
-				name_edit.text = "\"%s\"" % picker.get_item_text(index)
+			var tagged: Variant = picker.get_item_metadata(index)
+			if tagged is String:
+				name_edit.text = format_quoted_literal(tagged)
 		)
 		container.add_child(picker)
+	if _dialog is AcceptDialog:
+		(_dialog as AcceptDialog).register_text_enter(name_edit)
 	_fields[key] = name_edit
 	return container
 
@@ -495,15 +529,17 @@ static func animation_options_from(root: Node) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
 	if root == null:
 		return names
+	var seen: Dictionary = {}
 	var pending: Array = [root]
 	while not pending.is_empty():
 		var node: Node = pending.pop_back()
 		if node is AnimationPlayer:
 			for animation_name: StringName in (node as AnimationPlayer).get_animation_list():
-				if not names.has(str(animation_name)):
-					names.append(str(animation_name))
+				seen[str(animation_name)] = true
 		for child: Node in node.get_children():
 			pending.append(child)
+	for unique_name: Variant in seen.keys():
+		names.append(str(unique_name))
 	names.sort()
 	return names
 

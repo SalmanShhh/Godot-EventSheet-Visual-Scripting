@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Review fixes for the param-picker slice
+- A nine-angle code review of the slice confirmed three bugs, all fixed: the scene
+  Browse… dialog is now **one cached EditorFileDialog** parented to the persistent
+  params dialog (no per-press accumulation, can't be destroyed mid-pick by a form
+  rebuild, cancel-safe); **FileSystem drag-and-drop restored** on scene and audio
+  path fields (same converter as expression fields, so they can never disagree);
+  **Enter applies the dialog** from the new fields (and audio path, which shared the
+  gap). Also: the animation walk dedupes in O(n), dropdown entries are
+  metadata-tagged instead of index-guessed, and quoting has a single helper.
+- Deferred with eyes open: folding the path-field factories into one, and a
+  hint→factory dispatch table for `_create_field` (flagged at 11 branches).
+
 ### C3 param-type parity completed: scene + animation pickers
 - **`scene_path` hint** — Browse… opens the editor's file dialog filtered to scenes;
   the chosen path inserts quoted (Spawn Scene At uses it).

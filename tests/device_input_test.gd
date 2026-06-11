@@ -95,9 +95,20 @@ static func run() -> bool:
 			anim_picker = child
 	all_passed = _check("animation field offers the dropdown when players exist",
 		anim_picker != null and anim_picker.item_count == 3, true) and all_passed
+	all_passed = _check("dropdown entries are metadata-tagged, placeholder is not",
+		anim_picker.get_item_metadata(0) == null and str(anim_picker.get_item_metadata(1)) == "idle", true) and all_passed
 	scene_field.free()
 	anim_field.free()
 	anim_root.free()
+	# Review-fix regressions: shared quoting helper; drag payloads land on the new
+	# fields exactly like expression fields (same converter); dropdown entries are
+	# metadata-tagged (position-proof).
+	all_passed = _check("quoted-literal helper is the single source",
+		ACEParamsDialog.format_quoted_literal("res://a.tscn"), "\"res://a.tscn\"") and all_passed
+	var drop_payload: Dictionary = {"type": "files", "files": ["res://level.tscn"]}
+	all_passed = _check("file drops convert identically for line edits",
+		ACEParamsDialog.drop_data_to_expression(drop_payload), "\"res://level.tscn\"") and all_passed
+	hint_dialog.animation_scene_root_override = null
 	# Descriptor hints flipped (UX-only; templates untouched).
 	all_passed = _check("Spawn Scene At browses scenes",
 		str((by_id["SpawnSceneAt"].params[0] as ACEParam).hint), "scene_path") and all_passed
