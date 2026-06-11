@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Spec: Inspector attributes (Unity/Odin-style, the Godot way)
+- `docs/INSPECTOR-ATTRIBUTES-SPEC.md` — design for Range/Tooltip/Group/Multiline/
+  Show-If/On-Changed/Tool-Button/Read-only attributes on sheet variables, tiered by
+  mechanism (pure annotations → generated setters/`_validate_property` →
+  EditorInspectorPlugin drawers), with data model, dialog UX, canonical emission
+  shapes and lifting rules. Later phase; parity + lossless contracts preserved.
+
 ### Searchable scene-node picker
 - Expression params gain a **🔍 Pick Node** browser next to ƒx: a filterable tree of the
   edited scene — the filter matches **name, class or path** (type `Area2D` to see every
