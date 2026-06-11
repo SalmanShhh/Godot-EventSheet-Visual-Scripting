@@ -296,7 +296,7 @@ func _create_signal_reference_field(key: String, default_value: Variant, quoted:
 	for signal_name in options:
 		dropdown.add_item(signal_name)
 		var index: int = dropdown.item_count - 1
-		dropdown.set_item_metadata(index, "\"%s\"" % signal_name if quoted else signal_name)
+		dropdown.set_item_metadata(index, format_quoted_literal(signal_name) if quoted else signal_name)
 		if signal_name == current:
 			dropdown.select(index)
 	if dropdown.selected < 0 and dropdown.item_count > 0:
@@ -380,7 +380,7 @@ static func drop_data_to_expression(data: Variant) -> String:
 	match str(payload.get("type", "")):
 		"files":
 			var files: Array = payload.get("files", [])
-			return "\"%s\"" % str(files[0]) if not files.is_empty() else ""
+			return format_quoted_literal(str(files[0])) if not files.is_empty() else ""
 		"nodes":
 			var nodes: Array = payload.get("nodes", [])
 			if nodes.is_empty():
@@ -894,7 +894,7 @@ func _on_node_picker_activated() -> void:
 	var relative: String = str(selected.get_metadata(0))
 	var reference: String
 	if relative.begins_with("scene::"):
-		reference = "\"%s\"" % relative.trim_prefix("scene::")
+		reference = format_quoted_literal(relative.trim_prefix("scene::"))
 	else:
 		reference = "self" if relative == "." else _node_reference(relative)
 		var existing_index: int = _node_picker_recents.find(relative)
