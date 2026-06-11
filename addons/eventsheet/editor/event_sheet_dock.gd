@@ -4513,7 +4513,8 @@ func _on_variable_dialog_confirmed(
     context: Dictionary = {},
     is_constant: bool = false,
     exported: bool = true,
-    combo_options: PackedStringArray = PackedStringArray()
+    combo_options: PackedStringArray = PackedStringArray(),
+    attributes: Dictionary = {}
 ) -> void:
     # Guardrail (C3-style): auto-correct what's fixable, block what isn't — BEFORE commit.
     var sanitized_name: String = EventSheetIdentifierRules.sanitize(var_name)
@@ -4573,7 +4574,8 @@ func _on_variable_dialog_confirmed(
                 "const": resolved_constant,
                 "exported": exported,
                 "exposed": exported,
-                "options": Array(combo_options)
+                "options": Array(combo_options),
+                "attributes": attributes
             }
             message["text"] = "%s %s variable %s." % [action_verb, "global" if exported else "private", var_name]
             return true

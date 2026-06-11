@@ -8,7 +8,7 @@ extends RefCounted
 ## Emitted when the user confirms variable creation or editing.
 ## scope is "global" or "local". exported = accessible outside the generated script
 ## (@export var) vs. private (var).
-signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary, is_constant: bool, exported: bool, options: PackedStringArray)
+signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary, is_constant: bool, exported: bool, options: PackedStringArray, attributes: Dictionary)
 
 var _dialog: ConfirmationDialog = null
 var _scope_label: Label = null
@@ -23,6 +23,10 @@ var _scope: String = "global"
 var _context: Dictionary = {}
 var _default_help: Label = null
 var _options_edit: LineEdit = null
+var _attr_tooltip_edit: LineEdit = null
+var _attr_group_edit: LineEdit = null
+var _attr_range_edit: LineEdit = null
+var _attr_multiline_check: CheckBox = null
 
 ## Offered types. Collections accept GDScript literal defaults ({"key": 1}, [1, 2]) with
 ## live validation; typed containers (Godot 4 Array[T] / Dictionary[K, V]) also check
@@ -107,6 +111,23 @@ func init_dialog(parent_node: Node) -> void:
 	_options_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	options_row.add_child(_options_edit)
 	form.add_child(options_row)
+	# Inspector attributes (Tier 1): tooltip / group / range / multiline — exported
+	# globals only; everything compiles to plain Godot annotations.
+	var attr_label: Label = Label.new()
+	attr_label.text = "Inspector (exported globals)"
+	form.add_child(attr_label)
+	_attr_tooltip_edit = LineEdit.new()
+	_attr_tooltip_edit.placeholder_text = "Tooltip — shown when hovering the property"
+	form.add_child(_attr_tooltip_edit)
+	_attr_group_edit = LineEdit.new()
+	_attr_group_edit.placeholder_text = "Group — Inspector section header (e.g. Combat)"
+	form.add_child(_attr_group_edit)
+	_attr_range_edit = LineEdit.new()
+	_attr_range_edit.placeholder_text = "Range — min, max, step (numeric types: slider)"
+	form.add_child(_attr_range_edit)
+	_attr_multiline_check = CheckBox.new()
+	_attr_multiline_check.text = "Multiline (String: big text box)"
+	form.add_child(_attr_multiline_check)
 	_default_help = Label.new()
 	_default_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_default_help.custom_minimum_size = Vector2(380.0, 0.0)
@@ -194,6 +215,12 @@ func open_for_edit(
 		if is_local
 		else "On: emitted as @export var (readable outside the script).\nOff: a plain private var."
 	)
+	var existing_attributes: Dictionary = context.get("attributes") if context.get("attributes") is Dictionary else {}
+	_attr_tooltip_edit.text = str(existing_attributes.get("tooltip", ""))
+	_attr_group_edit.text = str(existing_attributes.get("group", ""))
+	var existing_range: Variant = existing_attributes.get("range")
+	_attr_range_edit.text = "%s, %s, %s" % [existing_range.get("min"), existing_range.get("max"), existing_range.get("step")] if existing_range is Dictionary else ""
+	_attr_multiline_check.button_pressed = bool(existing_attributes.get("multiline", false))
 	_refresh_const_ui()
 	_refresh_default_hint()
 	_type_option.disabled = lock_type
@@ -237,7 +264,25 @@ func _on_confirmed() -> void:
 	# for a type that does not support const.
 	var is_constant: bool = _const_check.button_pressed and _supports_constant(type_name)
 	var exported: bool = _exported_check.button_pressed and _scope == "global"
-	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options)
+	var attributes: Dictionary = {}
+	if not _attr_tooltip_edit.text.strip_edges().is_empty():
+		attributes["tooltip"] = _attr_tooltip_edit.text.strip_edges()
+	if not _attr_group_edit.text.strip_edges().is_empty():
+		attributes["group"] = _attr_group_edit.text.strip_edges()
+	var range_text: String = _attr_range_edit.text.strip_edges()
+	if not range_text.is_empty():
+		var range_parts: PackedStringArray = range_text.split(",", false)
+		if range_parts.size() != 3 or not (type_name == "int" or type_name == "float"):
+			if _default_help != null:
+				_default_help.visible = true
+				_default_help.text = "✗ Range needs 'min, max, step' on an int/float variable."
+			if _dialog.is_inside_tree():
+				_dialog.call_deferred("popup_centered", Vector2i(440, 260))
+			return
+		attributes["range"] = {"min": range_parts[0].strip_edges(), "max": range_parts[1].strip_edges(), "step": range_parts[2].strip_edges()}
+	if _attr_multiline_check.button_pressed and type_name == "String":
+		attributes["multiline"] = true
+	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes)
 
 ## Returns the trimmed text from the name field.
 func get_last_name_text() -> String:

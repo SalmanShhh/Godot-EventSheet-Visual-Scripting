@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Inspector attributes, Tier 1 (Unity/Odin-style, the Godot way)
+- Exported globals can now carry **Tooltip** (emitted as the `##` doc comment Godot
+  shows natively on hover), **Group** (`@export_group` Inspector sections), **Range**
+  (`@export_range` sliders on int/float) and **Multiline** (`@export_multiline` on
+  String) — set from the Variable dialog's new *Inspector* section, validated before
+  commit (range demands `min, max, step` on a numeric type).
+- Canonical emission order (tooltip → group → annotated export line); combos keep
+  their `@export_enum` prefix alongside attributes; behavior-pack properties get all
+  of this for free. External `.gd` files with attribute lines round-trip
+  byte-identically (raw fallback — the lossless rule).
+- Spec: `docs/INSPECTOR-ATTRIBUTES-SPEC.md` (Tier 1 now shipped; Tiers 2–3 still
+  planned). Covered by `tests/inspector_attributes_test.gd` (9 assertions).
+
 ### Builtin vocabularies fully modularized
 - The legacy groups in `builtin_aces.gd` moved into per-module files under
   `registration/modules/` — **System** (time/display/text/comparisons/stateful/spawn/

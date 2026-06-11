@@ -898,10 +898,23 @@ static func _emit_variables(variables: Dictionary) -> PackedStringArray:
 			var default_value: Variant = descriptor.get("default", "null")
 			var exported: bool = bool(descriptor.get("exported", true))
 			var combo_options: PackedStringArray = PackedStringArray(descriptor.get("options", []))
+			# Inspector attributes (Tier 1 — see docs/INSPECTOR-ATTRIBUTES-SPEC.md):
+			# canonical order is tooltip doc-comment, group, then the export line. The
+			# doc comment is Godot's native Inspector tooltip.
+			var attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
+			if exported and not str(attributes.get("tooltip", "")).strip_edges().is_empty():
+				lines.append("## %s" % str(attributes.get("tooltip")).strip_edges())
+			if exported and not str(attributes.get("group", "")).strip_edges().is_empty():
+				lines.append("@export_group(\"%s\")" % str(attributes.get("group")).strip_edges())
 			if exported and type_name == "String" and not combo_options.is_empty():
 				lines.append("%s var %s: String = %s" % [_export_enum_prefix(combo_options), var_name, _to_code_literal(default_value)])
 				continue
 			var export_prefix: String = "@export " if exported else ""
+			if exported and attributes.get("range") is Dictionary and (type_name == "int" or type_name == "float"):
+				var range_spec: Dictionary = attributes.get("range")
+				export_prefix = "@export_range(%s, %s, %s) " % [str(range_spec.get("min", "0")), str(range_spec.get("max", "100")), str(range_spec.get("step", "1"))]
+			elif exported and bool(attributes.get("multiline", false)) and type_name == "String":
+				export_prefix = "@export_multiline "
 			lines.append("%svar %s: %s = %s" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])
 		else:
 			lines.append("@export var %s: Variant = %s" % [var_name, _to_code_literal(descriptor)])
