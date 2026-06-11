@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.5.0] - 2026-06-12
+
 ### Node picker, large-project edition + bug sweep 4
 - The node picker grows the full large-project toolkit: **filter chips**
   (2D/3D/UI/Audio/Physics), **`group:`** and **`script:`** queries, **`scene:`

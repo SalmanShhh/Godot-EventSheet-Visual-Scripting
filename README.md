@@ -131,11 +131,11 @@ Conditions                        | Actions
 
 ## Current status
 
-- **Version**: **`v0.4.0`** tagged; `[Unreleased]` holds the v0.5.0 candidate — C3
-  System coverage (time/display/text/comparisons, Every X Seconds), the full loop &
-  picking set, function returns, real breakpoints, Find & Replace, device input with
-  press-a-key, the Audio module, starter templates, the searchable node picker, and
-  three hardening sweeps. See [CHANGELOG.md](CHANGELOG.md).
+- **Version**: **`v0.5.0`** — C3 System coverage (time/display/text/comparisons,
+  Every X Seconds), the full loop & picking set, function returns, real breakpoints,
+  Find & Replace, device input with press-a-key, the Audio module (with sound preview),
+  starter templates, the searchable node picker, per-ACE comments, and three hardening
+  sweeps. See [CHANGELOG.md](CHANGELOG.md).
 - **Quality**: 1,100+ test assertions, all green, CI-gated on every push (any `[FAIL]`
   fails the build); byte-exact golden round-trips guard the lossless rules.
 - **Compatibility covenant**: generated code never depends on the plugin; templates bake
@@ -156,7 +156,7 @@ Conditions                        | Actions
 | 3D vocabulary + 3D behavior packs | ✅ shipped |
 | Language completeness (loops, picking, returns, stateful conditions, group locals) | ✅ shipped |
 | Debugging rung 1 (real breakpoints) + device input + Audio module | ✅ shipped |
-| `v0.5.0` release | 🔜 next |
+| `v0.5.0` release (System ACEs, loops/picking, debugging, devices, Audio) | ✅ shipped |
 | Inspector attributes (Unity/Odin-style — spec'd), live-values overlay, community feedback | 🗺 planned |
 
 ## Project layout
