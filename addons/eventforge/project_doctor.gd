@@ -21,7 +21,9 @@ const SCRATCH_PATH := "user://eventsheets_doctor_scratch.gd"
 ## {findings: Array[Dictionary{severity, check, path, message}], errors, warnings, infos}.
 static func run() -> Dictionary:
 	var findings: Array[Dictionary] = []
-	var sheet_paths: PackedStringArray = EventSheetProjectFind.list_project_sheets()
+	# Templates are blueprints: no generated output, no scene, no live vocabulary —
+	# auditing them would only manufacture noise.
+	var sheet_paths: PackedStringArray = EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets())
 	check_generated_outputs(sheet_paths, findings)
 	check_autoload_registration(sheet_paths, findings)
 	check_scene_attachment(sheet_paths, findings)

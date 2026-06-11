@@ -30,7 +30,8 @@ static func generate() -> String:
 	lines.append("")
 	lines.append("> Generated — do not edit. Regenerate via the dock (Tools → Vocabulary Doc…) or")
 	lines.append("> `godot --headless --path . --script tools/vocabulary_doc.gd`.")
-	var sheet_paths: PackedStringArray = EventSheetProjectFind.list_project_sheets()
+	# Templates are blueprints, not live vocabulary — they don't publish anything yet.
+	var sheet_paths: PackedStringArray = EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets())
 	var sorted_paths: Array = []
 	for sheet_path: String in sheet_paths:
 		sorted_paths.append(sheet_path)

@@ -499,6 +499,9 @@ func _build_ui() -> void:
     tools_popup.add_item("Find in Project…", 6)
     tools_popup.add_item("Project Doctor…", 7)
     tools_popup.add_item("Vocabulary Doc", 8)
+    tools_popup.add_separator()
+    tools_popup.add_item("Sheet Backups…", 9)
+    tools_popup.add_item("Save as Template", 10)
     tools_popup.id_pressed.connect(func(id: int) -> void:
         match id:
             0: _toggle_breakpoint_emission()
@@ -510,6 +513,8 @@ func _build_ui() -> void:
             6: _open_project_find()
             7: _open_project_doctor()
             8: _generate_vocabulary_doc()
+            9: _open_sheet_backups()
+            10: _save_as_project_template()
     )
     _toolbar.add_child(tools_menu)
     _add_toolbar_button("Split", _toggle_split_view)
@@ -1112,6 +1117,10 @@ func _on_save_requested() -> void:
         _on_save_as_requested()
         return
     var save_path: String = _current_sheet_path if not _current_sheet_path.is_empty() else _current_sheet.resource_path
+    # Backup ring: the file's pre-save bytes go to user://eventsheet_backups first
+    # (eventsheets/editor/backup_count, 0 disables) — a bad save costs one save, not
+    # the sheet. Restore lives in Tools → Sheet Backups….
+    EventSheetBackups.backup_sheet(save_path)
     var err: Error = ResourceSaver.save(_current_sheet, save_path)
     if err == OK:
         _current_sheet.take_over_path(save_path)
@@ -3358,6 +3367,91 @@ func _generate_vocabulary_doc() -> void:
         EditorInterface.get_resource_filesystem().scan()
     _set_status("Vocabulary doc written to %s." % doc_path)
 
+# ── Sheet backups — the save-time ring (core in EventSheetBackups) ────────────────────
+var _backups_window: Window = null
+var _backups_list: ItemList = null
+
+func _open_sheet_backups() -> void:
+    if _current_sheet == null or _current_sheet_path.is_empty():
+        _set_status("Backups track saved sheets — save this sheet first.", true)
+        return
+    if _backups_window == null:
+        _backups_window = Window.new()
+        _backups_window.title = "Sheet Backups"
+        _backups_window.size = Vector2i(460, 360)
+        _backups_window.close_requested.connect(func() -> void: _backups_window.hide())
+        var box: VBoxContainer = VBoxContainer.new()
+        box.set_anchors_preset(Control.PRESET_FULL_RECT)
+        _backups_list = ItemList.new()
+        _backups_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        _backups_list.item_activated.connect(func(_index: int) -> void: _on_restore_backup_pressed())
+        box.add_child(_backups_list)
+        var restore_button: Button = Button.new()
+        restore_button.text = "Restore into editor (unsaved — Save to keep)"
+        restore_button.pressed.connect(_on_restore_backup_pressed)
+        box.add_child(restore_button)
+        _backups_window.add_child(box)
+        add_child(_backups_window)
+    _backups_list.clear()
+    for backup_path: String in EventSheetBackups.list_backups(_current_sheet_path):
+        var stamp: String = Time.get_datetime_string_from_unix_time(int(FileAccess.get_modified_time(backup_path))).replace("T", " ")
+        _backups_list.add_item("%s — %s" % [stamp, backup_path.get_file()])
+        _backups_list.set_item_metadata(_backups_list.item_count - 1, backup_path)
+    if _backups_list.item_count == 0:
+        _backups_list.add_item("(no backups yet — they appear from the second save on)")
+        _backups_list.set_item_disabled(0, true)
+    _backups_window.popup_centered()
+
+func _on_restore_backup_pressed() -> void:
+    var selected: PackedInt32Array = _backups_list.get_selected_items()
+    if selected.is_empty() or _backups_list.get_item_metadata(selected[0]) == null:
+        return
+    _restore_backup_path(str(_backups_list.get_item_metadata(selected[0])))
+    _backups_window.hide()
+
+## Restores a backup INTO the editor as an unsaved change: every storage property of
+## the backup is copied onto the open sheet (same object — tabs, viewport and code
+## panel stay coherent), the user reviews and saves to keep it. Nothing on disk
+## changes until that save, and the save itself backs up the pre-restore state.
+func _restore_backup_path(backup_path: String) -> void:
+    var backup: EventSheetResource = ResourceLoader.load(backup_path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
+    if backup == null:
+        _set_status("Couldn't load that backup.", true)
+        return
+    for property: Dictionary in backup.get_property_list():
+        var property_name: String = str(property.get("name"))
+        if (int(property.get("usage", 0)) & PROPERTY_USAGE_STORAGE) != 0 \
+                and not property_name.begins_with("resource_") and property_name != "script":
+            _current_sheet.set(property_name, backup.get(property_name))
+    _dirty = true
+    _clear_undo_history()
+    _refresh_after_edit()
+    _refresh_title_strip()
+    _set_status("Backup restored into the editor (unsaved) — Save to keep it, reopen the sheet to discard.")
+
+## Writes a deep copy of the current sheet into the project templates dir (never
+## overwrites — an existing name gets a -2/-3 suffix). It joins the New… menu
+## immediately (the menu rescans on every open).
+func _save_as_project_template() -> void:
+    if _current_sheet == null:
+        return
+    var dir_path: String = EventSheetTemplates.templates_dir()
+    DirAccess.make_dir_recursive_absolute(dir_path)
+    var base_name: String = _current_sheet.custom_class_name.to_snake_case()
+    if base_name.is_empty():
+        base_name = _current_sheet_path.get_file().get_basename() if not _current_sheet_path.is_empty() else "template"
+    var target: String = dir_path.path_join(base_name + ".tres")
+    var suffix: int = 2
+    while FileAccess.file_exists(target):
+        target = dir_path.path_join("%s-%d.tres" % [base_name, suffix])
+        suffix += 1
+    if ResourceSaver.save(_current_sheet.duplicate(true), target) != OK:
+        _set_status("Couldn't write the template to %s." % target, true)
+        return
+    if Engine.is_editor_hint() and is_inside_tree():
+        EditorInterface.get_resource_filesystem().scan()
+    _set_status("Template saved: %s — it's in the New… menu now." % target)
+
 static func list_project_sheets() -> PackedStringArray:
     return EventSheetProjectFind.list_project_sheets()
 
@@ -4445,20 +4539,49 @@ func _on_ace_comment_confirmed() -> void:
 var _template_menu: PopupMenu = null
 
 func _open_template_menu() -> void:
+    _build_template_menu_items()
+    _template_menu.popup(Rect2i(Vector2i(get_global_mouse_position()), Vector2i(0, 0)))
+
+## Rebuilt on every open so project templates (res://eventsheet_templates/, ids 100+)
+## appear the moment a .tres lands in the folder — same zero-config convention as
+## eventsheet_addons/.
+var _project_template_paths: PackedStringArray = PackedStringArray()
+
+func _build_template_menu_items() -> void:
     if _template_menu == null:
         _template_menu = PopupMenu.new()
-        _template_menu.add_item("Blank Sheet", 0)
-        _template_menu.add_item("Platformer Starter", 1)
-        _template_menu.add_item("Top-down Starter", 2)
-        _template_menu.add_item("Game State (Autoload)", 3)
-        _template_menu.add_item("Event Bus (Autoload)", 4)
-        _template_menu.add_item("Save System (Autoload)", 5)
         _template_menu.id_pressed.connect(_new_sheet_from_template)
         add_child(_template_menu)
-    _template_menu.popup(Rect2i(Vector2i(get_global_mouse_position()), Vector2i(0, 0)))
+    _template_menu.clear()
+    _template_menu.add_item("Blank Sheet", 0)
+    _template_menu.add_item("Platformer Starter", 1)
+    _template_menu.add_item("Top-down Starter", 2)
+    _template_menu.add_item("Game State (Autoload)", 3)
+    _template_menu.add_item("Event Bus (Autoload)", 4)
+    _template_menu.add_item("Save System (Autoload)", 5)
+    _project_template_paths = EventSheetTemplates.list_templates()
+    if not _project_template_paths.is_empty():
+        _template_menu.add_separator("Project templates")
+        for index in _project_template_paths.size():
+            _template_menu.add_item(_project_template_paths[index].get_file().get_basename().capitalize(), 100 + index)
 
 ## Builds a fresh sheet from a starter template and adopts it (unsaved; Save As to keep).
 func _new_sheet_from_template(template_id: int) -> void:
+    if template_id >= 100:
+        var template_index: int = template_id - 100
+        if template_index >= _project_template_paths.size():
+            return
+        var template_copy: EventSheetResource = EventSheetTemplates.load_copy(_project_template_paths[template_index])
+        if template_copy == null:
+            _set_status("Couldn't load that template.", true)
+            return
+        setup(template_copy)
+        _current_sheet_path = ""
+        _dirty = true
+        _refresh_title_strip()
+        _clear_undo_history()
+        _set_status("New sheet from project template — Save As… to keep it.")
+        return
     var sheet: EventSheetResource = EventSheetResource.new()
     match template_id:
         1:

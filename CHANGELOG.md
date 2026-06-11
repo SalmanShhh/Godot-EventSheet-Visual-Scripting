@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Project-usability slice 4: sheet backups + project-local templates
+- **Sheet backups** — every save of an existing sheet first rings the file's
+  pre-save bytes into `user://eventsheet_backups/` (newest 10 kept;
+  `eventsheets/editor/backup_count`, 0 disables). Tools → Sheet Backups… restores
+  a backup INTO the editor as an unsaved change — review, then Save to keep; a
+  restore never silently rewrites a file. Git-grade safety for projects that
+  don't have git discipline yet.
+- **Project-local templates** — drop a sheet `.tres` into
+  `res://eventsheet_templates/` (or `eventsheets/project/templates_dir`) and it
+  joins the New… menu under "Project templates"; Tools → Save as Template writes
+  the current sheet in (suffixing, never overwriting). Adopting a template is a
+  deep, path-less copy — edits can't leak back into the blueprint. Templates are
+  skipped by the Project Doctor and the vocabulary doc (blueprints, not live code).
+
 ### Project-usability slice 3: the project vocabulary doc
 - **Vocabulary Doc** — one committed markdown reference answering "what can I say
   in this project?": every sheet's class, properties and published
