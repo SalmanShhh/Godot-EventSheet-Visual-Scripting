@@ -13,6 +13,7 @@ var _event_sheet_editor: Control = null
 var _export_integrity_plugin: EditorExportPlugin = null
 var _live_values_debugger: EventSheetLiveValuesDebugger = null
 var _ace_param_inspector_plugin: ACEParamInspectorPlugin = null
+var _attribute_drawers_plugin: EventSheetAttributeDrawers = null
 
 ## Returns the display name of the plugin.
 func _get_plugin_name() -> String:
@@ -61,6 +62,10 @@ func _enter_tree() -> void:
 	# stream, and feed them to the workspace editor's Live Values window.
 	_live_values_debugger = EventSheetLiveValuesDebugger.new()
 	add_debugger_plugin(_live_values_debugger)
+	# Tier 3 attribute drawers (progress bars…): purely cosmetic — generated scripts
+	# degrade to plain fields without this plugin.
+	_attribute_drawers_plugin = EventSheetAttributeDrawers.new()
+	add_inspector_plugin(_attribute_drawers_plugin)
 	var editor_script: Script = load(EVENT_SHEET_EDITOR_PATH)
 	if editor_script == null:
 		push_warning("[EventForge] Failed to load EventSheetEditor script at %s. Verify the file exists and contains valid GDScript." % EVENT_SHEET_EDITOR_PATH)
@@ -106,6 +111,9 @@ func _exit_tree() -> void:
 	if _live_values_debugger != null:
 		remove_debugger_plugin(_live_values_debugger)
 		_live_values_debugger = null
+	if _attribute_drawers_plugin != null:
+		remove_inspector_plugin(_attribute_drawers_plugin)
+		_attribute_drawers_plugin = null
 	if _ace_param_inspector_plugin != null:
 		remove_inspector_plugin(_ace_param_inspector_plugin)
 		_ace_param_inspector_plugin = null

@@ -32,6 +32,7 @@ var _attr_lock_unless_edit: LineEdit = null
 var _attr_on_changed_edit: LineEdit = null
 var _attr_clamp_check: CheckBox = null
 var _attr_read_only_check: CheckBox = null
+var _attr_drawer_option: OptionButton = null
 
 ## Offered types. Collections accept GDScript literal defaults ({"key": 1}, [1, 2]) with
 ## live validation; typed containers (Godot 4 Array[T] / Dictionary[K, V]) also check
@@ -146,6 +147,10 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_clamp_check = CheckBox.new()
 	_attr_clamp_check.text = "Clamp to range"
 	attr_checks.add_child(_attr_clamp_check)
+	_attr_drawer_option = OptionButton.new()
+	_attr_drawer_option.add_item("Default field")
+	_attr_drawer_option.add_item("Progress bar (numeric)")
+	attr_checks.add_child(_attr_drawer_option)
 	_attr_read_only_check = CheckBox.new()
 	_attr_read_only_check.text = "Read-only"
 	attr_checks.add_child(_attr_read_only_check)
@@ -248,6 +253,7 @@ func open_for_edit(
 	_attr_on_changed_edit.text = str(existing_attributes.get("on_changed", ""))
 	_attr_clamp_check.button_pressed = bool(existing_attributes.get("clamp", false))
 	_attr_read_only_check.button_pressed = bool(existing_attributes.get("read_only", false))
+	_attr_drawer_option.select(1 if str(existing_attributes.get("drawer", "")) == "progress_bar" else 0)
 	_refresh_const_ui()
 	_refresh_default_hint()
 	_type_option.disabled = lock_type
@@ -332,6 +338,15 @@ func _on_confirmed() -> void:
 		attributes["clamp"] = true
 	if _attr_read_only_check.button_pressed:
 		attributes["read_only"] = true
+	if _attr_drawer_option.selected == 1:
+		if not (type_name == "int" or type_name == "float"):
+			if _default_help != null:
+				_default_help.visible = true
+				_default_help.text = "✗ The progress-bar drawer needs an int/float variable."
+			if _dialog.is_inside_tree():
+				_dialog.call_deferred("popup_centered", Vector2i(440, 260))
+			return
+		attributes["drawer"] = "progress_bar"
 	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes)
 
 ## Returns the trimmed text from the name field.

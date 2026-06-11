@@ -161,7 +161,8 @@ Conditions                        | Actions
 | Inspector attributes **Tier 2** (Clamp / On Changed setters, Show If / Lock Unless, read-only) | ✅ shipped |
 | Tool buttons (Inspector-clickable sheet functions) + MCP policy enforcement | ✅ shipped |
 | **Live Values** (variables stream to the editor while the game runs) | ✅ shipped |
-| Inspector attributes Tier 3 (custom drawers), community feedback rounds | 🗺 planned |
+| Inspector attributes Tier 3 (custom drawers — full spec delivered) | ✅ shipped |
+| Community feedback rounds | 🗺 planned |
 | **Addon composition** — meta-packs / jam kits (addon includes addon, compile-time bake) | ✅ shipped |
 | **Project policy** for composition (approved-tag sourcing, depth rails, collision gates) | ✅ shipped |
 | Composition Lane B v1 (has-a uses-instances) | ✅ shipped |

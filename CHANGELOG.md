@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Inspector attributes Tier 3 (custom drawers) + bug sweep 8
+- **Custom drawers** (the Odin-cosmetics tier): pick *Progress bar* in the Variable
+  dialog and the Inspector renders the value as a bar (range-aware). Mechanism: the
+  compiler bakes an `eventsheet:progress_bar:<min>:<max>` marker into
+  `@export_custom`, and one `EditorInspectorPlugin` recognizes it — **without the
+  plugin the property degrades to a plain field**, so generated scripts stay plain
+  GDScript (the parity covenant, by construction). The marker format is the extension
+  point for future drawers (swatch rows, dials).
+- **The Inspector-attributes spec is now fully delivered** (Tiers 1–3 + tool buttons).
+- **Sweep 8**: the duplicate-hook guard now also covers `_process`/`_ready`/
+  `_physics_process` — a raw GDScript block colliding with a generated trigger
+  function (or the Live Values standalone `_process`) warns by name instead of
+  silently emitting a script that won't compile; combos report ignored drawers too.
+- `tests/inspector_attributes_test.gd` grew to 30 assertions.
+
 ### Live Values (debugging rung 2) + bug sweep 7
 - **Live Values**: toggle it on the toolbar, recompile, run — the sheet's variables
   stream to an editor window every 0.25s while the debugger is attached (C3's debugger

@@ -154,6 +154,39 @@ static func run() -> bool:
 	all_passed = _check("non-tool sheets warn about tool buttons",
 		str(SheetCompiler.compile(button_sheet, "user://eventsheets_btn2.gd").get("warnings")).contains("@tool sheet"), true) and all_passed
 
+	# ── Tier 3: drawers ──
+	var drawer_sheet: EventSheetResource = EventSheetResource.new()
+	drawer_sheet.variables = {
+		"hp": {"type": "int", "default": 100, "exported": true,
+			"attributes": {"drawer": "progress_bar", "range": {"min": "0", "max": "200", "step": "1"}}}
+	}
+	var drawer_output: String = str(SheetCompiler.compile(drawer_sheet, "user://eventsheets_t3.gd").get("output", ""))
+	all_passed = _check("drawer markers ride @export_custom",
+		drawer_output.contains("@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:200\") var hp: int = 100"), true) and all_passed
+	var drawer_script: GDScript = GDScript.new()
+	drawer_script.source_code = drawer_output
+	all_passed = _check("drawer output parses (degrades to a plain field)",
+		drawer_script.reload(true) == OK, true) and all_passed
+	all_passed = _check("drawer hints parse on the editor side",
+		EventSheetAttributeDrawers.parse_drawer_hint("eventsheet:progress_bar:0:200"), {"drawer": "progress_bar", "min": 0.0, "max": 200.0}) and all_passed
+	all_passed = _check("non-marker hints stay untouched",
+		EventSheetAttributeDrawers.parse_drawer_hint("0,200,1"), {}) and all_passed
+	drawer_sheet.variables["hp"]["attributes"]["read_only"] = true
+	var locked_output: String = str(SheetCompiler.compile(drawer_sheet, "user://eventsheets_t3b.gd").get("output", ""))
+	all_passed = _check("read-only outranks the drawer",
+		locked_output.contains("PROPERTY_USAGE_READ_ONLY") and not locked_output.contains("eventsheet:progress_bar"), true) and all_passed
+
+	# Sweep: a raw-block _process colliding with a generated one warns by name.
+	var clash: EventSheetResource = EventSheetResource.new()
+	clash.emit_live_values = true
+	clash.variables = {"hp": {"type": "int", "default": 1, "exported": true}}
+	var clash_block: RawCodeRow = RawCodeRow.new()
+	clash_block.code = "func _process(_delta: float) -> void:
+	pass"
+	clash.events.append(clash_block)
+	all_passed = _check("generated/_process raw-block collisions warn",
+		str(SheetCompiler.compile(clash, "user://eventsheets_t3c.gd").get("warnings")).contains("_process"), true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

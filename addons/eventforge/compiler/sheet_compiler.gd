@@ -251,7 +251,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			lines.append(code_line)
 		source_map.append({"uid": str(raw_block.get_instance_id()), "start": raw_start, "end": lines.size(), "kind": "raw"})
 
-	for hook_name: String in ["_validate_property", "_get_configuration_warnings"]:
+	for hook_name: String in ["_validate_property", "_get_configuration_warnings", "_process", "_ready", "_physics_process"]:
 		var hook_generated: bool = false
 		for emitted_line: String in lines:
 			if emitted_line.begins_with("func %s(" % hook_name):
@@ -1075,7 +1075,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			if exported and not str(attributes.get("group", "")).strip_edges().is_empty():
 				lines.append("@export_group(\"%s\")" % str(attributes.get("group")).strip_edges())
 			if exported and type_name == "String" and not combo_options.is_empty():
-				for unsupported_key: String in ["clamp", "on_changed", "read_only", "show_if", "lock_unless"]:
+				for unsupported_key: String in ["clamp", "on_changed", "read_only", "show_if", "lock_unless", "drawer"]:
 					if attributes.has(unsupported_key):
 						warnings.append("Variable \"%s\": combo variables don't support the %s attribute yet — ignored." % [var_name, unsupported_key])
 				lines.append("%s var %s: String = %s" % [_export_enum_prefix(combo_options), var_name, _to_code_literal(default_value)])
@@ -1086,7 +1086,12 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 				export_prefix = "@export_range(%s, %s, %s) " % [str(range_spec.get("min", "0")), str(range_spec.get("max", "100")), str(range_spec.get("step", "1"))]
 			elif exported and bool(attributes.get("multiline", false)) and type_name == "String":
 				export_prefix = "@export_multiline "
-			# Read-only wins over range/multiline (a locked field needs no slider).
+			# Tier 3 drawers: the marker rides an @export_custom hint string; without the
+			# editor plugin the property degrades to a plain field (parity preserved).
+			if exported and str(attributes.get("drawer", "")) == "progress_bar" and (type_name == "int" or type_name == "float"):
+				var drawer_range: Dictionary = attributes.get("range") if attributes.get("range") is Dictionary else {}
+				export_prefix = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:%s:%s\") " % [str(drawer_range.get("min", "0")), str(drawer_range.get("max", "100"))]
+			# Read-only wins over range/multiline/drawers (a locked field needs no slider).
 			if exported and bool(attributes.get("read_only", false)):
 				export_prefix = "@export_custom(PROPERTY_HINT_NONE, \"\", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY) "
 			# Tier 2 setters: Clamp (needs Range + numeric) and/or On Changed (a sheet
