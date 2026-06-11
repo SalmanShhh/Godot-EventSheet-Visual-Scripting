@@ -112,3 +112,15 @@ i18n (Godot translations).
   C3 "pick" logic becomes a `for` loop block or a signal connection.
 - **Scenes replace layouts** and instancing replaces "create object by name" — spawn via
   `preload("res://enemy.tscn").instantiate()` in a block or action.
+
+## Importing C3 projects directly — a permanent non-goal
+
+There is deliberately **no `.c3p` / C3-clipboard importer**, and there won't be one:
+Construct's internal event JSON is proprietary and unversioned — it churns with C3
+releases, so an importer would silently rot between updates and break exactly when
+users trust it most. Maintaining that treadmill is not sustainable.
+
+The supported migration path is the one this guide documents: the **vocabulary map**
+(C3 phrases work in the picker), **behaviors with C3-parity capabilities**, and
+**text snippets** for moving events between EventSheets projects. Porting a project is
+a sheet-by-sheet rebuild — faster than it sounds, because the grammar is the same.
