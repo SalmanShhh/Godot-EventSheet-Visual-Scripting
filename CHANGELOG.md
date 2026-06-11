@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Repo re-review + sweep 13
+- **Committed scratch removed**: six one-shot patch scripts had slipped into `tools/`
+  when their cleanup steps were skipped by mid-script failures — deleted, and
+  `tools/_*.py` is gitignored so the class of mistake is closed.
+- **Two orphan `.uid` sidecars** removed (their `.gd` files were deleted in earlier
+  eras; the sidecars survived).
+- Verified clean: no extraction residue (`_dock._dock`, mangled names) in any
+  `dock/` helper; the author-loop statics are dock-free; the legacy
+  `EventForgeBuiltinACEs._*` delegates have a real consumer (the input/time test)
+  and work.
+
 ### Dock decomposition (steps 1–4): four subsystems extracted
 - The god-object dock (6,455 lines — the repo review's top finding) shed four
   cohesive subsystems into `editor/dock/`: **project find**

@@ -31,3 +31,6 @@ _preview.png.import
 
 # Test Bench scratch artifacts (generated per run)
 .eventsheets_test_bench.*
+
+# One-shot patch scripts (session scratch; never commit)
+tools/_*.py
