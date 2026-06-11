@@ -2,11 +2,14 @@
 
 ## [Unreleased]
 
-### Dock decomposition, step 1: project find extracted
-- `Find in Project / Replace / Usages` moved from the 6,400-line dock into
-  `editor/dock/project_find.gd` (state + logic; the dock keeps thin delegates so the
-  public/test surface is unchanged). The remaining subsystems (Live Values panel,
-  bookmarks, the author loop) follow the same pattern next.
+### Dock decomposition (steps 1–4): four subsystems extracted
+- The god-object dock (6,455 lines — the repo review's top finding) shed four
+  cohesive subsystems into `editor/dock/`: **project find**
+  (`project_find.gd`), the **addon-author loop** (`author_loop.gd` — publish
+  surface/README statics + preview window/Test Bench), the **Live Values panel**
+  (`live_values_panel.gd`) and the **bookmarks panel** (`bookmarks_panel.gd`).
+- The dock keeps thin delegates and forwarding properties, so the entire public/test
+  surface (1,279 assertions) passed unchanged — pure structure, zero behavior.
 
 ### Repo review actions (post-v0.6.0 hygiene)
 - **Module split finished**: the remaining Core vocabulary (triggers, InputMap

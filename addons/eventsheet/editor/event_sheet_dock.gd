@@ -2940,124 +2940,33 @@ var _replace_edit: LineEdit = null
 var _find_resource_matches: Array[Resource] = []
 var _find_cursor: int = -1
 
-# ── Live Values (debugging rung 2) ────────────────────────────────────────────────────
-var _live_values_window: Window = null
-var _live_values_label: RichTextLabel = null
-var _live_values_tree: Tree = null
-var _live_values_debugger: EventSheetLiveValuesDebugger = null
+# ── Live Values panel — extracted to dock/live_values_panel.gd ───────────────────────
+var _live_values_panel: EventSheetLiveValuesPanel = null
 
-## Wired by the plugin entry point so value edits can flow back to the running game.
+func _ensure_live_values_panel() -> EventSheetLiveValuesPanel:
+    if _live_values_panel == null:
+        _live_values_panel = EventSheetLiveValuesPanel.new(self)
+    return _live_values_panel
+
+# Forwarding properties: tests (and the plugin) reach these through the dock.
+var _live_values_tree: Tree:
+    get: return _ensure_live_values_panel().tree
+var _live_values_label: RichTextLabel:
+    get: return _ensure_live_values_panel().label
+var _live_values_window: Window:
+    get: return _ensure_live_values_panel().window
+
 func set_live_values_debugger(debugger: EventSheetLiveValuesDebugger) -> void:
-    _live_values_debugger = debugger
+    _ensure_live_values_panel().debugger = debugger
 
-## Toggles live-value streaming for this sheet (debug compiles send variable frames;
-## the window shows them while the game runs). Recompile + run to start streaming.
 func _toggle_live_values() -> void:
-    if _current_sheet == null:
-        return
-    _current_sheet.emit_live_values = not _current_sheet.emit_live_values
-    if _current_sheet.emit_live_values:
-        _ensure_live_values_window()
-        _live_values_window.popup_centered()
-        _set_status("Live Values ON: recompile and run — variables stream every 0.25s while the debugger is attached.")
-    else:
-        if _live_values_window != null:
-            _live_values_window.hide()
-        _set_status("Live Values OFF (recompile to remove the stream).")
+    _ensure_live_values_panel().toggle()
 
 func _ensure_live_values_window() -> void:
-    if _live_values_window != null:
-        return
-    _live_values_window = Window.new()
-    _live_values_window.title = "Live Values"
-    _live_values_window.size = Vector2i(320, 380)
-    _live_values_window.close_requested.connect(func() -> void: _live_values_window.hide())
-    var live_box: VBoxContainer = VBoxContainer.new()
-    live_box.set_anchors_preset(Control.PRESET_FULL_RECT)
-    _live_values_label = RichTextLabel.new()
-    _live_values_label.fit_content = true
-    _live_values_label.text = "Waiting for a running game…  (double-click a value to EDIT it live)"
-    live_box.add_child(_live_values_label)
-    _live_values_tree = Tree.new()
-    _live_values_tree.hide_root = true
-    _live_values_tree.columns = 2
-    _live_values_tree.set_column_title(0, "Variable")
-    _live_values_tree.set_column_title(1, "Value (editable)")
-    _live_values_tree.column_titles_visible = true
-    _live_values_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _live_values_tree.item_edited.connect(_on_live_value_edited)
-    live_box.add_child(_live_values_tree)
-    _live_values_window.add_child(live_box)
-    add_child(_live_values_window)
+    _ensure_live_values_panel().ensure_window()
 
-## Debugger-plugin sink (wired by the plugin entry point): one values frame -> the
-## editable tree + inline chips next to variable rows in every pane (rung 3).
 func update_live_values(values: Dictionary) -> void:
-    for pane: EventSheetViewport in [_viewport, _split_viewport, _detached_viewport]:
-        if pane != null:
-            pane.set_live_values(values)
-    _ensure_live_values_window()
-    _live_values_label.text = "Streaming — double-click a value to edit it in the running game."
-    var value_keys: Array = values.keys()
-    value_keys.sort()
-    # Rebuild only when the key set changes; otherwise update in place so an
-    # in-progress edit isn't stomped by the next frame.
-    var rebuild: bool = _live_values_tree.get_root() == null or _live_values_tree.get_root().get_child_count() != value_keys.size()
-    if rebuild:
-        _live_values_tree.clear()
-        var root_item: TreeItem = _live_values_tree.create_item()
-        for value_key: Variant in value_keys:
-            var item: TreeItem = _live_values_tree.create_item(root_item)
-            item.set_text(0, str(value_key))
-            _fill_live_value_item(item, values[value_key])
-    else:
-        var item: TreeItem = _live_values_tree.get_root().get_first_child()
-        var index: int = 0
-        while item != null and index < value_keys.size():
-            item.set_text(0, str(value_keys[index]))
-            if _live_values_tree.get_edited() != item:
-                _fill_live_value_item(item, values[value_keys[index]])
-            item = item.get_next()
-            index += 1
-
-## One value -> one tree row. Dictionaries/Arrays expand into read-only subtrees
-## (GDevelop's variables-debugger style); scalars stay editable leaves.
-func _fill_live_value_item(item: TreeItem, value: Variant) -> void:
-    for stale: TreeItem in item.get_children():
-        item.remove_child(stale)
-    if value is Dictionary:
-        item.set_text(1, "{…} %d entries" % (value as Dictionary).size())
-        item.set_editable(1, false)
-        var dictionary_keys: Array = (value as Dictionary).keys()
-        dictionary_keys.sort()
-        for child_key: Variant in dictionary_keys:
-            var child: TreeItem = item.create_child()
-            child.set_text(0, str(child_key))
-            _fill_live_value_item(child, (value as Dictionary)[child_key])
-            child.set_editable(1, false)
-    elif value is Array:
-        item.set_text(1, "[…] %d items" % (value as Array).size())
-        item.set_editable(1, false)
-        for child_index: int in range((value as Array).size()):
-            var element: TreeItem = item.create_child()
-            element.set_text(0, "[%d]" % child_index)
-            _fill_live_value_item(element, (value as Array)[child_index])
-            element.set_editable(1, false)
-    else:
-        item.set_text(1, str(value))
-        item.set_editable(1, true)
-
-## Tree edit -> typed value -> running game (debug session). C3's editable debugger.
-func _on_live_value_edited() -> void:
-    var edited: TreeItem = _live_values_tree.get_edited()
-    if edited == null:
-        return
-    var variable_name: String = edited.get_text(0)
-    var new_value: Variant = EventSheetLiveValuesDebugger.parse_edited_value(edited.get_text(1))
-    if _live_values_debugger != null and _live_values_debugger.send_set_value(variable_name, new_value):
-        _set_status("Live edit: %s = %s sent to the running game." % [variable_name, str(new_value)])
-    else:
-        _set_status("Live edit needs a streaming debug session (run the game with Live Values on).", true)
+    _ensure_live_values_panel().update_values(values)
 
 # ── Single-param inline editing (C3's fastest gesture) ───────────────────────────────
 var _param_edit_popup: PopupPanel = null
@@ -3337,189 +3246,31 @@ func _register_autoload_entry(sheet: EventSheetResource, sheet_path: String) -> 
         ProjectSettings.save()
     return ""
 
-# ── Addon-author loop: publish preview, pack README, test bench ──────────────────────
+# ── Addon-author loop — extracted to dock/author_loop.gd ─────────────────────────────
+var _author_loop: EventSheetAuthorLoop = null
 
-## Everything this sheet will publish to OTHER sheets' pickers, straight from the model
-## (no compile round-trip): exposed functions, annotated block ACEs, signals-as-triggers
-## and exported properties. Shared by the Publish Preview window and the pack README.
+func _ensure_author_loop() -> EventSheetAuthorLoop:
+    if _author_loop == null:
+        _author_loop = EventSheetAuthorLoop.new(self)
+    return _author_loop
+
 func _collect_publish_surface(sheet: EventSheetResource) -> Dictionary:
-    var surface: Dictionary = {"actions": [], "triggers": [], "conditions": [], "expressions": [], "properties": []}
-    if sheet == null:
-        return surface
-    var keys: Array = sheet.variables.keys()
-    keys.sort()
-    for key: Variant in keys:
-        var descriptor: Variant = sheet.variables[key]
-        if descriptor is Dictionary and bool((descriptor as Dictionary).get("exported", true)):
-            (surface["properties"] as Array).append({
-                "name": str(key),
-                "type": str((descriptor as Dictionary).get("type", "Variant")),
-                "default": (descriptor as Dictionary).get("default"),
-                "attributes": (descriptor as Dictionary).get("attributes", {})
-            })
-    for function_entry: Variant in sheet.functions:
-        if function_entry is EventFunction and (function_entry as EventFunction).expose_as_ace:
-            var exposed: EventFunction = function_entry
-            var param_names: PackedStringArray = PackedStringArray()
-            for param: Variant in exposed.params:
-                if param is ACEParam:
-                    param_names.append("%s: %s" % [(param as ACEParam).id, (param as ACEParam).type_name])
-            (surface["actions" if exposed.return_type == TYPE_NIL else "expressions"] as Array).append({
-                "name": exposed.ace_display_name if not exposed.ace_display_name.is_empty() else exposed.function_name.capitalize(),
-                "category": exposed.ace_category,
-                "params": ", ".join(param_names),
-                "description": exposed.description
-            })
-    # Annotated GDScript blocks: signals -> triggers, funcs -> conditions/expressions.
-    var annotation_regex: RegEx = RegEx.new()
-    annotation_regex.compile("## @ace_(trigger|condition|expression)\\b")
-    var name_regex: RegEx = RegEx.new()
-    name_regex.compile("## @ace_name\\(\"([^\"]+)\"\\)")
-    var symbol_regex: RegEx = RegEx.new()
-    symbol_regex.compile("(?m)^(?:signal|func)\\s+([A-Za-z_][A-Za-z0-9_]*)")
-    for row: Variant in sheet.events:
-        if not (row is RawCodeRow):
-            continue
-        var chunks: PackedStringArray = (row as RawCodeRow).code.split("\n\n")
-        for chunk: String in chunks:
-            var kind_match: RegExMatch = annotation_regex.search(chunk)
-            if kind_match == null:
-                continue
-            var symbol_match: RegExMatch = symbol_regex.search(chunk)
-            if symbol_match == null:
-                continue
-            var shown_match: RegExMatch = name_regex.search(chunk)
-            var bucket: String = kind_match.get_string(1) + "s"
-            (surface[bucket] as Array).append({
-                "name": shown_match.get_string(1) if shown_match != null else symbol_match.get_string(1).capitalize(),
-                "category": "", "params": "", "description": ""
-            })
-    return surface
+    return EventSheetAuthorLoop.collect_publish_surface(sheet)
 
-var _publish_preview_window: Window = null
-var _publish_preview_text: RichTextLabel = null
-
-## Shows what THIS sheet publishes — refreshed from the live model on every open, so
-## renaming a function updates the surface immediately (no compile-and-reopen loop).
-func _open_publish_preview() -> void:
-    if _current_sheet == null:
-        return
-    if _publish_preview_window == null:
-        _publish_preview_window = Window.new()
-        _publish_preview_window.title = "Publish Preview — what other sheets will see"
-        _publish_preview_window.size = Vector2i(440, 460)
-        _publish_preview_window.close_requested.connect(func() -> void: _publish_preview_window.hide())
-        _publish_preview_text = RichTextLabel.new()
-        _publish_preview_text.set_anchors_preset(Control.PRESET_FULL_RECT)
-        _publish_preview_text.bbcode_enabled = true
-        _publish_preview_window.add_child(_publish_preview_text)
-        add_child(_publish_preview_window)
-    _publish_preview_text.text = publish_surface_text(_collect_publish_surface(_current_sheet))
-    _publish_preview_window.popup_centered()
-
-## Renders a publish surface as readable BBCode (also testable headless).
 static func publish_surface_text(surface: Dictionary) -> String:
-    var sections: PackedStringArray = PackedStringArray()
-    for bucket: String in ["triggers", "conditions", "actions", "expressions", "properties"]:
-        var entries: Array = surface.get(bucket, [])
-        if entries.is_empty():
-            continue
-        sections.append("[b]%s[/b]" % bucket.capitalize())
-        for entry: Dictionary in entries:
-            var line: String = "  • %s" % str(entry.get("name", ""))
-            if not str(entry.get("params", "")).is_empty():
-                line += " (%s)" % str(entry.get("params"))
-            if not str(entry.get("category", "")).is_empty():
-                line += "   [%s]" % str(entry.get("category"))
-            if bucket == "properties":
-                line = "  • %s: %s = %s" % [str(entry.get("name")), str(entry.get("type")), str(entry.get("default"))]
-            sections.append(line)
-    if sections.is_empty():
-        return "Nothing published yet — expose a function as an ACE, or annotate a signal with @ace_trigger."
-    return "\n".join(sections)
+    return EventSheetAuthorLoop.publish_surface_text(surface)
 
-## The pack README: name/tags/host, properties with attributes, the full ACE surface,
-## and composition dependencies — generated so shared packs are documented by default.
 func _generate_pack_readme(sheet: EventSheetResource) -> String:
-    var surface: Dictionary = _collect_publish_surface(sheet)
-    var lines: PackedStringArray = PackedStringArray()
-    lines.append("# %s" % sheet.custom_class_name)
-    lines.append("")
-    lines.append("An EventSheets behavior pack (editable `.tres` sheet + compiled `.gd` script —")
-    lines.append("the script is plain GDScript and runs without the plugin).")
-    if not sheet.addon_tags.is_empty():
-        lines.append("")
-        lines.append("**Tags:** %s" % ", ".join(sheet.addon_tags))
-    if sheet.behavior_mode:
-        lines.append("")
-        lines.append("**Attach to:** a child of any `%s` node." % sheet.host_class)
-    for section_pair: Array in [["Properties", "properties"], ["Triggers", "triggers"], ["Conditions", "conditions"], ["Actions", "actions"], ["Expressions", "expressions"]]:
-        var entries: Array = surface.get(section_pair[1], [])
-        if entries.is_empty():
-            continue
-        lines.append("")
-        lines.append("## %s" % str(section_pair[0]))
-        for entry: Dictionary in entries:
-            if str(section_pair[1]) == "properties":
-                var attributes: Dictionary = entry.get("attributes", {}) if entry.get("attributes") is Dictionary else {}
-                var note: String = str(attributes.get("tooltip", ""))
-                lines.append("- `%s: %s` (default `%s`)%s" % [str(entry.get("name")), str(entry.get("type")), str(entry.get("default")), " — " + note if not note.is_empty() else ""])
-            else:
-                var ace_line: String = "- **%s**" % str(entry.get("name"))
-                if not str(entry.get("params", "")).is_empty():
-                    ace_line += " (`%s`)" % str(entry.get("params"))
-                if not str(entry.get("description", "")).is_empty():
-                    ace_line += " — %s" % str(entry.get("description"))
-                lines.append(ace_line)
-    if not sheet.includes.is_empty() or not sheet.uses_addons.is_empty() or not sheet.requires_behaviors.is_empty():
-        lines.append("")
-        lines.append("## Dependencies")
-        for include_path: String in sheet.includes:
-            lines.append("- includes `%s` (bundled)" % include_path.get_file())
-        for uses_class: String in sheet.uses_addons:
-            lines.append("- uses `%s` (owned helper instance)" % uses_class)
-        for requires_class: String in sheet.requires_behaviors:
-            lines.append("- requires a `%s` sibling behavior" % requires_class)
-    lines.append("")
-    return "\n".join(lines)
+    return EventSheetAuthorLoop.generate_pack_readme(sheet)
 
-## Test Bench: one click builds host + behavior scene from the CURRENT sheet and runs
-## it — verify a behavior without hand-building a scene. The scene builder is the
-## testable core; running needs the editor.
+func _open_publish_preview() -> void:
+    _ensure_author_loop().open_publish_preview()
+
 func _open_test_bench() -> void:
-    if _current_sheet == null or not _current_sheet.behavior_mode:
-        _set_status("Test Bench drives behavior sheets — set the type to Behavior first.", true)
-        return
-    var bench_error: String = _build_test_bench(_current_sheet, "res://.eventsheets_test_bench.tscn")
-    if not bench_error.is_empty():
-        _set_status(bench_error, true)
-        return
-    if Engine.is_editor_hint() and is_inside_tree():
-        EditorInterface.play_custom_scene("res://.eventsheets_test_bench.tscn")
-        _set_status("Test Bench running — Live Values shows the behavior's variables if enabled.")
+    _ensure_author_loop().open_test_bench()
 
-## Builds + saves the bench scene (host of host_class + the compiled behavior child).
-## Returns "" or the user-facing problem.
 func _build_test_bench(sheet: EventSheetResource, scene_path: String) -> String:
-    var host_class: String = sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node2D"
-    var bench_script_path: String = scene_path.get_basename() + ".gd"
-    var compile_result: Dictionary = SheetCompiler.compile(sheet, bench_script_path)
-    if not bool(compile_result.get("success", false)):
-        return "Test Bench: the sheet doesn't compile (%s)." % str(compile_result.get("errors"))
-    var host: Node = ClassDB.instantiate(host_class)
-    host.name = "BenchHost"
-    var behavior: Node = Node.new()
-    behavior.name = sheet.custom_class_name if not sheet.custom_class_name.is_empty() else "Behavior"
-    behavior.set_script(load(bench_script_path))
-    host.add_child(behavior)
-    behavior.owner = host
-    var packed: PackedScene = PackedScene.new()
-    if packed.pack(host) != OK:
-        host.queue_free()
-        return "Test Bench: couldn't pack the scene."
-    var save_error: Error = ResourceSaver.save(packed, scene_path)
-    host.queue_free()
-    return "" if save_error == OK else "Test Bench: couldn't save %s (error %d)." % [scene_path, save_error]
+    return _ensure_author_loop().build_test_bench(sheet, scene_path)
 
 # ── Project-wide find / replace / usages — extracted to dock/project_find.gd ─────────
 # (Dock decomposition arc: state + logic live in the helper; these delegates keep the
@@ -3550,43 +3301,27 @@ func _open_match_in_split() -> void:
         _split_viewport.reveal_resource(match_resource)
         _set_status("Match opened in the split pane.")
 
-# ── Bookmarks panel (C3's bookmarks window) ───────────────────────────────────────────
-var _bookmarks_window: Window = null
-var _bookmarks_list: ItemList = null
+# ── Bookmarks panel — extracted to dock/bookmarks_panel.gd ───────────────────────────
+var _bookmarks_panel: EventSheetBookmarksPanel = null
 
-## Lists every bookmarked row; activating one reveals it (Ctrl+B marks rows).
+func _ensure_bookmarks_panel() -> EventSheetBookmarksPanel:
+    if _bookmarks_panel == null:
+        _bookmarks_panel = EventSheetBookmarksPanel.new(self)
+    return _bookmarks_panel
+
+# Forwarding properties (tests assign these directly — keep them settable).
+var _bookmarks_window: Window:
+    get: return _ensure_bookmarks_panel().window
+    set(value): _ensure_bookmarks_panel().window = value
+var _bookmarks_list: ItemList:
+    get: return _ensure_bookmarks_panel().list
+    set(value): _ensure_bookmarks_panel().list = value
+
 func _open_bookmarks_panel() -> void:
-    if _bookmarks_window == null:
-        _bookmarks_window = Window.new()
-        _bookmarks_window.title = "Bookmarks"
-        _bookmarks_window.size = Vector2i(360, 300)
-        _bookmarks_window.close_requested.connect(func() -> void: _bookmarks_window.hide())
-        _bookmarks_list = ItemList.new()
-        _bookmarks_list.set_anchors_preset(Control.PRESET_FULL_RECT)
-        _bookmarks_list.item_activated.connect(func(index: int) -> void:
-            var target: Resource = _bookmarks_list.get_item_metadata(index)
-            if target != null and _viewport != null:
-                _viewport.reveal_resource(target)
-        )
-        _bookmarks_window.add_child(_bookmarks_list)
-        add_child(_bookmarks_window)
-    _refresh_bookmarks_list()
-    _bookmarks_window.popup_centered()
+    _ensure_bookmarks_panel().open()
 
-## Fills the bookmarks list from the primary pane (popup-free; testable headless).
 func _refresh_bookmarks_list() -> void:
-    _bookmarks_list.clear()
-    if _viewport != null:
-        for flat_entry: Dictionary in _viewport.get_flat_rows():
-            var row_data: EventRowData = flat_entry.get("row")
-            if row_data != null and row_data.bookmark_enabled and row_data.source_resource != null:
-                var label: String = row_data.source_resource.get_class()
-                if not row_data.spans.is_empty():
-                    label = str(row_data.spans[0].text).left(60)
-                var item_index: int = _bookmarks_list.add_item("🔖 %s" % label)
-                _bookmarks_list.set_item_metadata(item_index, row_data.source_resource)
-    if _bookmarks_list.item_count == 0:
-        _bookmarks_list.add_item("(no bookmarks — Ctrl+B marks the selected row)")
+    _ensure_bookmarks_panel().refresh()
 
 ## Ctrl+/: toggles the selected rows' enabled state (the sheet's "comment out").
 func _toggle_selected_rows_enabled() -> void:
