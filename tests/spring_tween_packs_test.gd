@@ -68,6 +68,42 @@ static func run() -> bool:
 	all_passed = _check("has_save_key sees the key", save_instance.has_save_key("hp"), true) and all_passed
 	save_instance.delete_slot()
 	all_passed = _check("delete clears the slot", save_instance.has_save_key("hp"), false) and all_passed
+	# v2: Variant core, formats, encryption, lifecycle, slot metadata, autosave.
+	var v2: Node = load("res://eventsheet_addons/save_system/save_system_addon.gd").new()
+	v2.slot = 8
+	v2.save_value("spawn", Vector2(3, 4))
+	all_passed = _check("Variant values round-trip", v2.load_value("spawn", Vector2.ZERO), Vector2(3, 4)) and all_passed
+	v2.format = "json"
+	v2.file_pattern = "save_{slot}.json"
+	v2.save_value("name", "Robin")
+	all_passed = _check("json format round-trips", str(v2.load_value("name", "")), "Robin") and all_passed
+	v2.encryption_key = "hunter2"
+	v2.file_pattern = "save_{slot}.enc"
+	v2.save_value("secret", 99.0)
+	all_passed = _check("encrypted saves round-trip", float(v2.load_value("secret", 0.0)), 99.0) and all_passed
+	var raw_bytes: String = FileAccess.get_file_as_string(v2._slot_path())
+	all_passed = _check("encrypted files don't leak plaintext", raw_bytes.contains("secret"), false) and all_passed
+	v2.encryption_key = ""
+	v2.format = "config"
+	v2.file_pattern = "save_{slot}.cfg"
+	var broadcast_log: Array = []
+	v2.before_save.connect(func(slot_index: int) -> void: broadcast_log.append("before:%d" % slot_index))
+	v2.after_load.connect(func(slot_index: int) -> void: broadcast_log.append("after:%d" % slot_index))
+	v2.save_game()
+	v2.load_game()
+	all_passed = _check("lifecycle broadcasts fire in order",
+		broadcast_log == ["before:8", "after:8"], true) and all_passed
+	v2.save_value("hp", 5.0)
+	all_passed = _check("slot metadata sees the file",
+		v2.slot_exists(8) and v2.list_slots().has(8) and int(v2.slot_modified_time(8)) > 0, true) and all_passed
+	v2.delete_slot()
+	broadcast_log.clear()
+	v2.autosave_interval = 0.5
+	for step in range(40):
+		v2._process(1.0 / 60.0)
+	all_passed = _check("autosave fires On Before Save on its interval",
+		broadcast_log.has("before:8"), true) and all_passed
+	v2.free()
 	save_instance.free()
 
 	return all_passed

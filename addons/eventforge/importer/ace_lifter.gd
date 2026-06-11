@@ -229,7 +229,7 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	var event_function: EventFunction = EventFunction.new()
 	event_function.function_name = header_match.get_string(1)
 	var return_name: String = header_match.get_string(3) if header_match.get_group_count() >= 3 else "void"
-	var return_types: Dictionary = {"void": TYPE_NIL, "bool": TYPE_BOOL, "int": TYPE_INT, "float": TYPE_FLOAT, "String": TYPE_STRING, "Vector2": TYPE_VECTOR2, "Vector3": TYPE_VECTOR3, "Color": TYPE_COLOR, "Array": TYPE_ARRAY, "Dictionary": TYPE_DICTIONARY}
+	var return_types: Dictionary = {"void": TYPE_NIL, "bool": TYPE_BOOL, "int": TYPE_INT, "float": TYPE_FLOAT, "String": TYPE_STRING, "Vector2": TYPE_VECTOR2, "Vector3": TYPE_VECTOR3, "Color": TYPE_COLOR, "Array": TYPE_ARRAY, "Dictionary": TYPE_DICTIONARY, "Variant": TYPE_MAX}
 	if not return_types.has(return_name):
 		return {"ok": false}
 	event_function.return_type = return_types[return_name]

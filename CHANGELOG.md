@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Save System v2 — strategy in the Inspector, extension through signals
+- **Every former opinion is now a property**: save directory, file pattern, section,
+  **format** (`config` / `json`), and **encryption** (one key field — encrypted
+  ConfigFile or encrypted JSON; the suite verifies no plaintext leaks).
+- **Variant-typed core**: Save Value / Load Value persist *anything* (Vector2, Color,
+  dictionaries…); Save/Load Number/Text remain as thin conveniences (ace_ids are API
+  — fully backward-compatible, asserted).
+- **Lifecycle broadcasts**: **Save Game** fires *On Before Save* (every sheet writes
+  its own state — the pack never needs to know contributors exist), then On Save
+  Written; **Load Game** fires *On After Load*. Plus **optional autosave**
+  (interval property, 0 = off).
+- **Slot metadata for menus**: Slot Exists, List Slots, Slot Modified Time.
+- The compiler gained a **Variant-return sentinel** (`TYPE_MAX` → `-> Variant`,
+  lifter-aware) to support the Variant-typed core.
+
 ### Advanced C3/GDevelop workflows: runtime groups, project-wide find, Save System
 - **Runtime-toggleable groups** (C3's *Set Group Active*, opt-in): right-click a group
   → *Runtime Toggleable* — it compiles a `__group_<name>_active` flag guarding every

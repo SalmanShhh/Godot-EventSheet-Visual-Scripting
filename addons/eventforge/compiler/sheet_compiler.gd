@@ -1069,6 +1069,9 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 static func _function_return_type_name(event_function: EventFunction) -> String:
 	if event_function.return_type == TYPE_NIL:
 		return "void"
+	# TYPE_MAX is the "returns Variant" sentinel (there is no Variant.Type for Variant).
+	if event_function.return_type == TYPE_MAX:
+		return "Variant"
 	return type_string(event_function.return_type)
 
 static func _emit_function_params(event_function: EventFunction) -> String:

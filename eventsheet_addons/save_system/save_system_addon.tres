@@ -1,176 +1,435 @@
-[gd_resource type="Resource" script_class="EventSheetResource" load_steps=27 format=3]
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=53 format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_mmxhw"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_mudca"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="3_i4nnm"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="4_0k0bw"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="5_c3yvf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_c3yvf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_w5kqx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_wcebd"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_jkkfh"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_4e81o"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_46iiw"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_j515e"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_a3chd"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_flxs2"]
 
-[sub_resource type="Resource" id="Resource_w5kqx"]
-script = ExtResource("1_mmxhw")
-text = "Save System: register as the SaveSystem autoload, then Save/Load Number/Text from any sheet. Slot-based (user://save_<slot>.cfg), human-readable ConfigFile underneath."
+[sub_resource type="Resource" id="Resource_n23dw"]
+script = ExtResource("1_c3yvf")
+text = "Save System: register as the SaveSystem autoload, then save from any sheet. Strategy (paths/format/encryption) lives in the Inspector; On Before Save / On After Load let every sheet contribute its own state. This pack is an event sheet — extend it by editing it."
 
-[sub_resource type="Resource" id="Resource_wcebd"]
-script = ExtResource("2_mudca")
+[sub_resource type="Resource" id="Resource_amh6u"]
+script = ExtResource("2_w5kqx")
 code = "## @ace_trigger
 ## @ace_name(\"On Save Written\")
 ## @ace_category(\"Save System\")
-signal save_written(slot: int)
+signal save_written(slot_index: int)
 
-func _slot_path() -> String:
-	return \"user://save_%d.cfg\" % slot
+## @ace_trigger
+## @ace_name(\"On Before Save\")
+## @ace_category(\"Save System\")
+signal before_save(slot_index: int)
 
-func _open_slot() -> ConfigFile:
+## @ace_trigger
+## @ace_name(\"On After Load\")
+## @ace_category(\"Save System\")
+signal after_load(slot_index: int)
+
+func _slot_path(target_slot: int = -1) -> String:
+	var chosen: int = slot if target_slot < 0 else target_slot
+	return save_directory.path_join(file_pattern.replace(\"{slot}\", str(chosen)))
+
+# Format-agnostic backends: everything above reads/writes one Dictionary.
+func _read_all() -> Dictionary:
+	var path: String = _slot_path()
+	if format == \"json\":
+		var file: FileAccess = FileAccess.open_encrypted_with_pass(path, FileAccess.READ, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.READ)
+		if file == null:
+			return {}
+		var parsed: Variant = JSON.parse_string(file.get_as_text())
+		return (parsed as Dictionary).get(section, {}) if parsed is Dictionary else {}
 	var config: ConfigFile = ConfigFile.new()
-	config.load(_slot_path())
-	return config"
+	if encryption_key.is_empty():
+		config.load(path)
+	else:
+		config.load_encrypted_pass(path, encryption_key)
+	var data: Dictionary = {}
+	for key: String in config.get_section_keys(section) if config.has_section(section) else PackedStringArray():
+		data[key] = config.get_value(section, key)
+	return data
 
-[sub_resource type="Resource" id="Resource_jkkfh"]
-script = ExtResource("2_mudca")
-code = "var config: ConfigFile = _open_slot()
-config.set_value(\"save\", key, value)
-config.save(_slot_path())
-save_written.emit(slot)"
-
-[sub_resource type="Resource" id="Resource_4e81o"]
-script = ExtResource("3_i4nnm")
-id = "key"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_46iiw"]
-script = ExtResource("3_i4nnm")
-id = "value"
-type_name = "float"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_j515e"]
-script = ExtResource("4_0k0bw")
-function_name = "save_number"
-description = "Writes a number under the key (active slot)."
-expose_as_ace = true
-ace_display_name = "Save Number"
-ace_category = "Save System"
-params = Array[ExtResource("3_i4nnm")]([SubResource("Resource_4e81o"), SubResource("Resource_46iiw")])
-events = Array[Resource]([SubResource("Resource_jkkfh")])
-
-[sub_resource type="Resource" id="Resource_a3chd"]
-script = ExtResource("2_mudca")
-code = "var config: ConfigFile = _open_slot()
-config.set_value(\"save\", key, value)
-config.save(_slot_path())
-save_written.emit(slot)"
-
-[sub_resource type="Resource" id="Resource_flxs2"]
-script = ExtResource("3_i4nnm")
-id = "key"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_n23dw"]
-script = ExtResource("3_i4nnm")
-id = "value"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_amh6u"]
-script = ExtResource("4_0k0bw")
-function_name = "save_text"
-description = "Writes a string under the key (active slot)."
-expose_as_ace = true
-ace_display_name = "Save Text"
-ace_category = "Save System"
-params = Array[ExtResource("3_i4nnm")]([SubResource("Resource_flxs2"), SubResource("Resource_n23dw")])
-events = Array[Resource]([SubResource("Resource_a3chd")])
+func _write_all(data: Dictionary) -> void:
+	var path: String = _slot_path()
+	if format == \"json\":
+		var file: FileAccess = FileAccess.open_encrypted_with_pass(path, FileAccess.WRITE, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.WRITE)
+		if file != null:
+			file.store_string(JSON.stringify({section: data}, \"\\t\"))
+			file.close()
+	else:
+		var config: ConfigFile = ConfigFile.new()
+		for key: Variant in data.keys():
+			config.set_value(section, str(key), data[key])
+		if encryption_key.is_empty():
+			config.save(path)
+		else:
+			config.save_encrypted_pass(path, encryption_key)
+	save_written.emit(slot)"
 
 [sub_resource type="Resource" id="Resource_rhc3k"]
-script = ExtResource("2_mudca")
-code = "return float(_open_slot().get_value(\"save\", key, 0.0))"
+script = ExtResource("2_w5kqx")
+code = "if autosave_interval <= 0.0:
+	return
+autosave_accumulator += delta
+if autosave_accumulator >= autosave_interval:
+	autosave_accumulator = 0.0
+	save_game()"
 
 [sub_resource type="Resource" id="Resource_h03nn"]
-script = ExtResource("3_i4nnm")
+script = ExtResource("6_46iiw")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_rhc3k")])
+event_uid = "c33a9b"
+
+[sub_resource type="Resource" id="Resource_fvwqe"]
+script = ExtResource("2_w5kqx")
+code = "var data: Dictionary = _read_all()
+data[key] = value
+_write_all(data)"
+
+[sub_resource type="Resource" id="Resource_3ud0f"]
+script = ExtResource("7_j515e")
 id = "key"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_fvwqe"]
-script = ExtResource("4_0k0bw")
-function_name = "load_number"
-description = "Reads a number (0 when missing)."
-expose_as_ace = true
-ace_display_name = "Load Number"
-ace_category = "Save System"
-params = Array[ExtResource("3_i4nnm")]([SubResource("Resource_h03nn")])
-return_type = 3
-events = Array[Resource]([SubResource("Resource_rhc3k")])
-
-[sub_resource type="Resource" id="Resource_3ud0f"]
-script = ExtResource("2_mudca")
-code = "return str(_open_slot().get_value(\"save\", key, \"\"))"
-
 [sub_resource type="Resource" id="Resource_3fyie"]
-script = ExtResource("3_i4nnm")
-id = "key"
+script = ExtResource("7_j515e")
+id = "value"
+type_name = "Variant"
 initial_value = null
 initialValue = null
 
 [sub_resource type="Resource" id="Resource_xwtfp"]
-script = ExtResource("4_0k0bw")
-function_name = "load_text"
-description = "Reads a string (\"\" when missing)."
+script = ExtResource("8_a3chd")
+function_name = "save_value"
+description = "Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key."
 expose_as_ace = true
-ace_display_name = "Load Text"
+ace_display_name = "Save Value"
 ace_category = "Save System"
-params = Array[ExtResource("3_i4nnm")]([SubResource("Resource_3fyie")])
-return_type = 4
-events = Array[Resource]([SubResource("Resource_3ud0f")])
+params = Array[ExtResource("7_j515e")]([SubResource("Resource_3ud0f"), SubResource("Resource_3fyie")])
+events = Array[Resource]([SubResource("Resource_fvwqe")])
 
 [sub_resource type="Resource" id="Resource_e0wex"]
-script = ExtResource("2_mudca")
-code = "return _open_slot().has_section_key(\"save\", key)"
+script = ExtResource("2_w5kqx")
+code = "return _read_all().get(key, default_value)"
 
 [sub_resource type="Resource" id="Resource_qmq6m"]
-script = ExtResource("3_i4nnm")
+script = ExtResource("7_j515e")
 id = "key"
 initial_value = null
 initialValue = null
 
 [sub_resource type="Resource" id="Resource_kdd2e"]
-script = ExtResource("4_0k0bw")
+script = ExtResource("7_j515e")
+id = "default_value"
+type_name = "Variant"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_6a8sv"]
+script = ExtResource("8_a3chd")
+function_name = "load_value"
+description = "Reads any value (your default when missing)."
+expose_as_ace = true
+ace_display_name = "Load Value"
+ace_category = "Save System"
+params = Array[ExtResource("7_j515e")]([SubResource("Resource_qmq6m"), SubResource("Resource_kdd2e")])
+return_type = 39
+events = Array[Resource]([SubResource("Resource_e0wex")])
+
+[sub_resource type="Resource" id="Resource_pdbic"]
+script = ExtResource("2_w5kqx")
+code = "save_value(key, value)"
+
+[sub_resource type="Resource" id="Resource_4a0hk"]
+script = ExtResource("7_j515e")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_465ib"]
+script = ExtResource("7_j515e")
+id = "value"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_fu0d4"]
+script = ExtResource("8_a3chd")
+function_name = "save_number"
+description = "Writes a number under the key (active slot)."
+expose_as_ace = true
+ace_display_name = "Save Number"
+ace_category = "Save System"
+params = Array[ExtResource("7_j515e")]([SubResource("Resource_4a0hk"), SubResource("Resource_465ib")])
+events = Array[Resource]([SubResource("Resource_pdbic")])
+
+[sub_resource type="Resource" id="Resource_l08dy"]
+script = ExtResource("2_w5kqx")
+code = "return float(load_value(key, 0.0))"
+
+[sub_resource type="Resource" id="Resource_xjiya"]
+script = ExtResource("7_j515e")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_yrdlv"]
+script = ExtResource("8_a3chd")
+function_name = "load_number"
+description = "Reads a number (0 when missing)."
+expose_as_ace = true
+ace_display_name = "Load Number"
+ace_category = "Save System"
+params = Array[ExtResource("7_j515e")]([SubResource("Resource_xjiya")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_l08dy")])
+
+[sub_resource type="Resource" id="Resource_25cy8"]
+script = ExtResource("2_w5kqx")
+code = "save_value(key, value)"
+
+[sub_resource type="Resource" id="Resource_g2w86"]
+script = ExtResource("7_j515e")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_blpb3"]
+script = ExtResource("7_j515e")
+id = "value"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_14fj2"]
+script = ExtResource("8_a3chd")
+function_name = "save_text"
+description = "Writes a string under the key (active slot)."
+expose_as_ace = true
+ace_display_name = "Save Text"
+ace_category = "Save System"
+params = Array[ExtResource("7_j515e")]([SubResource("Resource_g2w86"), SubResource("Resource_blpb3")])
+events = Array[Resource]([SubResource("Resource_25cy8")])
+
+[sub_resource type="Resource" id="Resource_7ymxj"]
+script = ExtResource("2_w5kqx")
+code = "return str(load_value(key, \"\"))"
+
+[sub_resource type="Resource" id="Resource_sg1v5"]
+script = ExtResource("7_j515e")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_0fywq"]
+script = ExtResource("8_a3chd")
+function_name = "load_text"
+description = "Reads a string (\"\" when missing)."
+expose_as_ace = true
+ace_display_name = "Load Text"
+ace_category = "Save System"
+params = Array[ExtResource("7_j515e")]([SubResource("Resource_sg1v5")])
+return_type = 4
+events = Array[Resource]([SubResource("Resource_7ymxj")])
+
+[sub_resource type="Resource" id="Resource_dtqxr"]
+script = ExtResource("2_w5kqx")
+code = "return _read_all().has(key)"
+
+[sub_resource type="Resource" id="Resource_on66u"]
+script = ExtResource("7_j515e")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_8610w"]
+script = ExtResource("8_a3chd")
 function_name = "has_save_key"
 description = "Whether the key exists in the active slot."
 expose_as_ace = true
 ace_display_name = "Has Save Key"
 ace_category = "Save System"
-params = Array[ExtResource("3_i4nnm")]([SubResource("Resource_qmq6m")])
+params = Array[ExtResource("7_j515e")]([SubResource("Resource_on66u")])
 return_type = 1
-events = Array[Resource]([SubResource("Resource_e0wex")])
+events = Array[Resource]([SubResource("Resource_dtqxr")])
 
-[sub_resource type="Resource" id="Resource_6a8sv"]
-script = ExtResource("2_mudca")
+[sub_resource type="Resource" id="Resource_n48t7"]
+script = ExtResource("2_w5kqx")
 code = "if FileAccess.file_exists(_slot_path()):
 	DirAccess.remove_absolute(_slot_path())"
 
-[sub_resource type="Resource" id="Resource_pdbic"]
-script = ExtResource("4_0k0bw")
+[sub_resource type="Resource" id="Resource_ng3xc"]
+script = ExtResource("8_a3chd")
 function_name = "delete_slot"
 description = "Removes the active slot's save file."
 expose_as_ace = true
 ace_display_name = "Delete Slot"
 ace_category = "Save System"
-events = Array[Resource]([SubResource("Resource_6a8sv")])
+events = Array[Resource]([SubResource("Resource_n48t7")])
+
+[sub_resource type="Resource" id="Resource_ec14y"]
+script = ExtResource("2_w5kqx")
+code = "before_save.emit(slot)
+save_written.emit(slot)"
+
+[sub_resource type="Resource" id="Resource_1bnkf"]
+script = ExtResource("8_a3chd")
+function_name = "save_game"
+description = "Broadcasts On Before Save (every sheet writes its state), then On Save Written."
+expose_as_ace = true
+ace_display_name = "Save Game"
+ace_category = "Save System"
+events = Array[Resource]([SubResource("Resource_ec14y")])
+
+[sub_resource type="Resource" id="Resource_sylj5"]
+script = ExtResource("2_w5kqx")
+code = "after_load.emit(slot)"
+
+[sub_resource type="Resource" id="Resource_owu2g"]
+script = ExtResource("8_a3chd")
+function_name = "load_game"
+description = "Broadcasts On After Load — every sheet reads its state back."
+expose_as_ace = true
+ace_display_name = "Load Game"
+ace_category = "Save System"
+events = Array[Resource]([SubResource("Resource_sylj5")])
+
+[sub_resource type="Resource" id="Resource_edg47"]
+script = ExtResource("2_w5kqx")
+code = "return FileAccess.file_exists(_slot_path(slot_index))"
+
+[sub_resource type="Resource" id="Resource_psf86"]
+script = ExtResource("7_j515e")
+id = "slot_index"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_pqew2"]
+script = ExtResource("8_a3chd")
+function_name = "slot_exists"
+description = "Whether the slot has a save file."
+expose_as_ace = true
+ace_display_name = "Slot Exists"
+ace_category = "Save System"
+params = Array[ExtResource("7_j515e")]([SubResource("Resource_psf86")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_edg47")])
+
+[sub_resource type="Resource" id="Resource_74vb5"]
+script = ExtResource("2_w5kqx")
+code = "var found: Array = []
+for candidate: int in range(100):
+	if FileAccess.file_exists(_slot_path(candidate)):
+		found.append(candidate)
+return found"
+
+[sub_resource type="Resource" id="Resource_lxiv3"]
+script = ExtResource("8_a3chd")
+function_name = "list_slots"
+description = "Slot numbers that have save files (for menus)."
+expose_as_ace = true
+ace_display_name = "List Slots"
+ace_category = "Save System"
+return_type = 28
+events = Array[Resource]([SubResource("Resource_74vb5")])
+
+[sub_resource type="Resource" id="Resource_wxkdm"]
+script = ExtResource("2_w5kqx")
+code = "return FileAccess.get_modified_time(_slot_path(slot_index)) if FileAccess.file_exists(_slot_path(slot_index)) else 0"
+
+[sub_resource type="Resource" id="Resource_withl"]
+script = ExtResource("7_j515e")
+id = "slot_index"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_qmk5k"]
+script = ExtResource("8_a3chd")
+function_name = "slot_modified_time"
+description = "Unix mtime of the slot's file (0 when missing)."
+expose_as_ace = true
+ace_display_name = "Slot Modified Time"
+ace_category = "Save System"
+params = Array[ExtResource("7_j515e")]([SubResource("Resource_withl")])
+return_type = 2
+events = Array[Resource]([SubResource("Resource_wxkdm")])
 
 [resource]
-script = ExtResource("5_c3yvf")
+script = ExtResource("9_flxs2")
 autoload_mode = true
 autoload_name = "SaveSystem"
 custom_class_name = "SaveSystemAddon"
 addon_tags = PackedStringArray("persistence")
-events = Array[Resource]([SubResource("Resource_w5kqx"), SubResource("Resource_wcebd")])
+events = Array[Resource]([SubResource("Resource_n23dw"), SubResource("Resource_amh6u"), SubResource("Resource_h03nn")])
 variables = {
+"autosave_accumulator": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"autosave_interval": {
+"attributes": {
+"range": {
+"max": "600",
+"min": "0",
+"step": "1"
+},
+"tooltip": "Seconds between autosaves (0 = off). Fires On Before Save first."
+},
+"default": 0.0,
+"exported": true,
+"type": "float"
+},
+"encryption_key": {
+"attributes": {
+"tooltip": "Non-empty = encrypted saves (keep the key out of screenshots!)."
+},
+"default": "",
+"exported": true,
+"type": "String"
+},
+"file_pattern": {
+"attributes": {
+"tooltip": "{slot} becomes the slot number."
+},
+"default": "save_{slot}.cfg",
+"exported": true,
+"type": "String"
+},
+"format": {
+"default": "config",
+"exported": true,
+"options": ["config", "json"],
+"type": "String"
+},
+"save_directory": {
+"attributes": {
+"tooltip": "Where save files live."
+},
+"default": "user://",
+"exported": true,
+"type": "String"
+},
+"section": {
+"attributes": {
+"tooltip": "ConfigFile section / JSON namespace for values."
+},
+"default": "save",
+"exported": true,
+"type": "String"
+},
 "slot": {
 "attributes": {
+"group": "Save System",
 "range": {
 "max": "9",
 "min": "0",
@@ -183,4 +442,4 @@ variables = {
 "type": "int"
 }
 }
-functions = Array[Resource]([SubResource("Resource_j515e"), SubResource("Resource_amh6u"), SubResource("Resource_fvwqe"), SubResource("Resource_xwtfp"), SubResource("Resource_kdd2e"), SubResource("Resource_pdbic")])
+functions = Array[Resource]([SubResource("Resource_xwtfp"), SubResource("Resource_6a8sv"), SubResource("Resource_fu0d4"), SubResource("Resource_yrdlv"), SubResource("Resource_14fj2"), SubResource("Resource_0fywq"), SubResource("Resource_8610w"), SubResource("Resource_ng3xc"), SubResource("Resource_1bnkf"), SubResource("Resource_owu2g"), SubResource("Resource_pqew2"), SubResource("Resource_lxiv3"), SubResource("Resource_qmk5k")])
