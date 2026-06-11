@@ -163,6 +163,8 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 		return _create_enum_reference_field(key, default_value, hint.get_slice(":", 1))
 	if hint == "key_capture":
 		return _create_key_capture_field(key, default_value)
+	if hint == "audio_path":
+		return _create_audio_path_field(key, default_value)
 	if hint == "color" or field_type == TYPE_COLOR:
 		return _create_color_field(key, default_value)
 	if hint == EXPRESSION_HINT:
@@ -380,6 +382,46 @@ static func _node_reference(relative_path: String) -> String:
 	if identifier_regex.compile("^[A-Za-z_][A-Za-z0-9_]*$") == OK and identifier_regex.search(relative_path) != null:
 		return "$%s" % relative_path
 	return "$\"%s\"" % relative_path
+
+## Audio params: a path field plus a ▶ button that previews the sound in the editor
+## (loads the stream into a throwaway player under the dialog; ■ stops it).
+func _create_audio_path_field(key: String, default_value: Variant) -> Control:
+	var container: HBoxContainer = HBoxContainer.new()
+	var path_edit: LineEdit = LineEdit.new()
+	path_edit.text = str(default_value)
+	path_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	container.add_child(path_edit)
+	var preview: Button = Button.new()
+	preview.text = "▶"
+	preview.tooltip_text = "Preview this sound"
+	preview.pressed.connect(func() -> void:
+		if _preview_player != null and is_instance_valid(_preview_player):
+			_preview_player.queue_free()
+			_preview_player = null
+			preview.text = "▶"
+			return
+		var resource_path: String = path_edit.text.strip_edges().trim_prefix("\"").trim_suffix("\"")
+		var stream: Resource = load(resource_path) if ResourceLoader.exists(resource_path) else null
+		if not (stream is AudioStream):
+			preview.tooltip_text = "Not an audio file: %s" % resource_path
+			return
+		_preview_player = AudioStreamPlayer.new()
+		_preview_player.stream = stream
+		container.add_child(_preview_player)
+		_preview_player.finished.connect(func() -> void:
+			if _preview_player != null and is_instance_valid(_preview_player):
+				_preview_player.queue_free()
+				_preview_player = null
+			preview.text = "▶"
+		)
+		_preview_player.play()
+		preview.text = "■"
+	)
+	container.add_child(preview)
+	_fields[key] = path_edit
+	return container
+
+var _preview_player: AudioStreamPlayer = null
 
 ## C3's press-a-key workflow: a button that captures the next key press (storing the
 ## KEY_* constant), plus a fallback dropdown for keys that can't be detected.

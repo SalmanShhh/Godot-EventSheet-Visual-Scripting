@@ -88,6 +88,7 @@ const StatefulAcesTestScript := preload("res://tests/stateful_aces_test.gd")
 const LanguageGapsTestScript := preload("res://tests/language_gaps_test.gd")
 const DebugPolishTestScript := preload("res://tests/debug_polish_test.gd")
 const DeviceInputTestScript := preload("res://tests/device_input_test.gd")
+const AudioAcesTestScript := preload("res://tests/audio_aces_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
@@ -171,6 +172,7 @@ func _init() -> void:
 	passed = LanguageGapsTestScript.run() and passed
 	passed = DebugPolishTestScript.run() and passed
 	passed = DeviceInputTestScript.run() and passed
+	passed = AudioAcesTestScript.run() and passed
 	passed = EventSheetEditorTestScript.run() and passed
 	passed = EventSheetStyleTestScript.run() and passed
 	passed = PluginWorkspaceTestScript.run() and passed

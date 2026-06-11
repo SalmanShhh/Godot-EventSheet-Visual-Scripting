@@ -81,6 +81,7 @@ func _init() -> void:
 	passed = LanguageGapsTest.run() and passed
 	passed = DebugPolishTest.run() and passed
 	passed = DeviceInputTest.run() and passed
+	passed = AudioAcesTest.run() and passed
 	passed = PerfSmokeTest.run() and passed
 	if passed:
 		print("Headless-safe checks passed.")

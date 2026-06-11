@@ -10,6 +10,10 @@ const COMPARISON_OPERATORS: Array[String] = ["==", "!=", "<", "<=", ">", ">="]
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
+	# Per-vocabulary modules (the maintainable shape — see ace_factory.gd for the module
+	# contract). New vocabularies land here; the legacy groups below migrate over time.
+	descriptors.append_array(EventForgeAudioACEs.get_descriptors())
+
 	# Triggers
 	descriptors.append(_make_descriptor("Core", "OnReady", "On Ready", ACEDescriptor.ACEType.TRIGGER, "", "ready", [], "Run Context", "Run on ready"))
 	descriptors.append(_make_descriptor("Core", "OnProcess", "Every Frame", ACEDescriptor.ACEType.TRIGGER, "", "_process", [], "Run Context", "Run every tick"))

@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Audio module (the C3 Audio addon, the Godot way) + the new module structure
+- **Play Sound / Play Sound At (2D)** — C3's fire-and-forget Play: a throwaway
+  AudioStreamPlayer(2D) that frees itself when finished (multi-line `{uid}` template;
+  zero bookkeeping, zero plugin runtime), with bus + volume params.
+- **Player-scoped group** (attach to an AudioStreamPlayer — music & controlled playback):
+  Play (from seconds), Play Sound File, Stop, Seek, Set Volume, Set Playback Rate,
+  Is Playing, Playback Position.
+- **Godot extras C3 fakes with tags**: Set Bus Volume / Mute Bus / Bus Volume
+  (AudioServer) — master/music/SFX sliders in one action.
+- **▶ Sound preview in the params dialog**: audio params show a preview button — hear
+  the file before applying (■ stops).
+- **Maintainability**: vocabularies now live in per-module files
+  (`registration/modules/audio_aces.gd` first) built through a shared
+  `EventForgeACEFactory`, with a documented module contract — each C3-equivalent
+  "addon" is one readable file that can ship standalone or be curated into packs.
+  Existing groups migrate over time; ace_ids/templates frozen (compatibility covenant).
+- Covered by `tests/audio_aces_test.gd` (9 assertions).
+
 ### Device input vocabulary (C3 Keyboard / Mouse / Gamepad / Touch)
 - **Keyboard**: Key Is Down (`is_physical_key_pressed`), On Key Pressed/Released
   (event-scoped, for On Input events) — and key params use **C3's press-a-key

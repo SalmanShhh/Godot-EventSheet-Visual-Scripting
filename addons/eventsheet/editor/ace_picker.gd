@@ -216,6 +216,10 @@ const C3_SEARCH_SYNONYMS := {
 	"is in touch": "touch",
 	"on any touch start": "on touch",
 	"vibrate": "vibrate",
+	"play music": "play file",
+	"set master volume": "bus volume",
+	"audio": "audio",
+	"playback time": "playback position",
 }
 
 static func _c3_synonym_queries(query: String) -> Array[String]:
