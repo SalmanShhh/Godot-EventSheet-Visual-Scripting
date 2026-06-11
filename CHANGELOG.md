@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Project-usability slice 1: compile-on-save + reviewable sheet diffs
+- **Compile-on-save** (default on; `eventsheets/editor/compile_on_save` to disable):
+  saving a sheet also writes its `<name>_generated.gd`, so F5 can never play-test a
+  stale script — the last manual step between editing and playing is gone. A sheet
+  that doesn't compile says so at save time instead of at run time.
+- **Reviewable sheet diffs**: `EventSheetTextDump` renders any sheet as stable,
+  readable rows; `tools/sheet_to_text.gd` + the shipped git `textconv` driver
+  (one-line setup in CONTRIBUTING) make `.tres` PRs show events, conditions and
+  actions instead of serialized-resource noise — the team-adoption unblock.
+
 ### Community-feedback groundwork
 - GitHub issue templates: the bug form asks for versions + a minimal sheet or text
   snippet (the two things that make fixes fast); the feature form asks for the game

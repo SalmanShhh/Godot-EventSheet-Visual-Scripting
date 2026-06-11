@@ -16,3 +16,4 @@
 *.jpg binary
 *.ttf binary
 *.zip binary
+*.tres diff=eventsheet

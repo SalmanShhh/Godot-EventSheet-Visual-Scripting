@@ -1113,6 +1113,16 @@ func _on_save_requested() -> void:
         _current_sheet.take_over_path(save_path)
         _current_sheet_path = save_path
         _dirty = false
+        # Compile-on-save (default ON; eventsheets/editor/compile_on_save to disable):
+        # play-testing can never hit a stale generated script. Export integrity still
+        # covers exports; this covers F5.
+        var compile_on_save: bool = bool(ProjectSettings.get_setting("eventsheets/editor/compile_on_save", true))
+        if compile_on_save:
+            var auto_result: Dictionary = SheetCompiler.compile(_current_sheet, "")
+            if not bool(auto_result.get("success", false)):
+                _set_status("Saved, but the sheet doesn't compile: %s" % str(auto_result.get("errors")), true)
+                _refresh_title_strip()
+                return
         _refresh_title_strip()
         _set_status("Saved: %s" % save_path.get_file())
     else:

@@ -109,6 +109,19 @@ Match the file you're in (tabs in `addons/eventforge/`, spaces in
 document schemas, extension points, and constraints the code can't show — not what the
 next line does.
 
+## Reviewable sheet diffs (teams)
+
+`.tres` diffs are unreadable; the repo ships a git `textconv` driver that renders
+sheets as rows (events, conditions, actions) in `git diff` and PR reviews. One-time
+setup per clone:
+
+```text
+git config diff.eventsheet.textconv "sh tools/sheet_diff.sh"
+```
+
+(`.gitattributes` already maps `*.tres` to the driver; it needs Godot on PATH or in
+`$GODOT`, prints non-sheet `.tres` verbatim, and never modifies files.)
+
 ## Release ritual
 
 Tagging `vX.Y.Z` (push the tag; CI publishes the zips) also means:

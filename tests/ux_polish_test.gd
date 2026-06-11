@@ -159,6 +159,52 @@ static func run() -> bool:
 	all_passed = _check("fuzzy rejects missing letters", ACEPickerDialog.fuzzy_match("xyz", "Set Time Scale"), false) and all_passed
 	all_passed = _check("empty queries never fuzzy-match", ACEPickerDialog.fuzzy_match("", "anything"), false) and all_passed
 
+	# Sheet text dump (the git-textconv backbone): readable, deterministic rows.
+	var dump_sheet: EventSheetResource = EventSheetResource.new()
+	dump_sheet.variables = {"hp": {"type": "int", "default": 3, "exported": true}}
+	var dump_group: EventGroup = EventGroup.new()
+	dump_group.group_name = "Combat"
+	dump_group.runtime_toggleable = true
+	var dump_event: EventRow = EventRow.new()
+	dump_event.trigger_provider_id = "Core"
+	dump_event.trigger_id = "OnProcess"
+	var dump_condition: ACECondition = ACECondition.new()
+	dump_condition.ace_id = "IsOnFloor"
+	dump_condition.negated = true
+	dump_event.conditions.append(dump_condition)
+	var dump_action: ACEAction = ACEAction.new()
+	dump_action.ace_id = "SetVar"
+	dump_action.params = {"var_name": "hp", "value": "3"}
+	dump_event.actions.append(dump_action)
+	dump_group.events.append(dump_event)
+	dump_sheet.events.append(dump_group)
+	var dumped: String = EventSheetTextDump.dump(dump_sheet)
+	all_passed = _check("dump renders rows readably",
+		dumped.contains("VAR hp: int = 3")
+		and dumped.contains("GROUP Combat (runtime-toggleable)")
+		and dumped.contains("EVENT Core/OnProcess")
+		and dumped.contains("IF NOT IsOnFloor")
+		and dumped.contains("DO SetVar {value=3, var_name=hp}"), true) and all_passed
+	all_passed = _check("dump is deterministic", EventSheetTextDump.dump(dump_sheet), dumped) and all_passed
+
+	# Compile-on-save: saving a .tres also writes the conventional generated script.
+	var cos_editor: EventSheetEditor = EventSheetEditor.new()
+	cos_editor.setup(dump_sheet)
+	cos_editor.set_undo_redo_manager(NoopUndoManager.new())
+	cos_editor._current_sheet_path = "user://eventsheets_cos.tres"
+	if FileAccess.file_exists("user://eventsheets_cos_generated.gd"):
+		DirAccess.remove_absolute("user://eventsheets_cos_generated.gd")
+	cos_editor._on_save_requested()
+	all_passed = _check("save also compiles the generated script",
+		FileAccess.file_exists("user://eventsheets_cos_generated.gd"), true) and all_passed
+	ProjectSettings.set_setting("eventsheets/editor/compile_on_save", false)
+	DirAccess.remove_absolute("user://eventsheets_cos_generated.gd")
+	cos_editor._on_save_requested()
+	all_passed = _check("the setting disables compile-on-save",
+		FileAccess.file_exists("user://eventsheets_cos_generated.gd"), false) and all_passed
+	ProjectSettings.set_setting("eventsheets/editor/compile_on_save", null)
+	cos_editor.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
