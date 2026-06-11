@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Dock decomposition, step 1: project find extracted
+- `Find in Project / Replace / Usages` moved from the 6,400-line dock into
+  `editor/dock/project_find.gd` (state + logic; the dock keeps thin delegates so the
+  public/test surface is unchanged). The remaining subsystems (Live Values panel,
+  bookmarks, the author loop) follow the same pattern next.
+
 ### Repo review actions (post-v0.6.0 hygiene)
 - **Module split finished**: the remaining Core vocabulary (triggers, InputMap
   conditions, variables, the native-node action set) moved to
