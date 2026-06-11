@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Node picker, large-project edition + bug sweep 4
+- The node picker grows the full large-project toolkit: **filter chips**
+  (2D/3D/UI/Audio/Physics), **`group:`** and **`script:`** queries, **`scene:`
+  cross-scene search** (scans `.tscn` node headers project-wide), **pinned recents**,
+  and a **"Used in sheet" audit** listing every `$Ref` the sheet makes — missing nodes
+  flag red (broken-reference detection after scene restructures).
+- Sweep 4 fixes: the audio preview now stops when the params dialog closes (it kept
+  playing); keypad keys capture as their real constants (`KEY_KP_ADD`, not `KEY_KPADD`).
+- README refreshed around the core philosophy (speed-to-game, newcomer-to-expert,
+  jam-ready, scales with the project).
+- Covered by `tests/node_picker_test.gd` (10 assertions).
+
 ### Spec: Inspector attributes (Unity/Odin-style, the Godot way)
 - `docs/INSPECTOR-ATTRIBUTES-SPEC.md` — design for Range/Tooltip/Group/Multiline/
   Show-If/On-Changed/Tool-Button/Read-only attributes on sheet variables, tiered by
