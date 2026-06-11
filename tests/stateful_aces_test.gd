@@ -88,6 +88,54 @@ static func run() -> bool:
 	spawn_script.source_code = spawn_output
 	all_passed = _check("spawn-at output parses", spawn_script.reload(true) == OK, true) and all_passed
 
+	# Sweep regressions: external sheets declare baked members; disabled conditions
+	# leave no orphan members; OR-mode stateful events warn.
+	var external_source: String = "extends Node
+"
+	var external_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(external_source)
+	external_sheet.external_source_path = "user://eventsheets_stateful_ext.gd"
+	var ext_event: EventRow = EventRow.new()
+	ext_event.trigger_provider_id = "Core"
+	ext_event.trigger_id = "OnProcess"
+	var ext_condition: ACECondition = ACECondition.new()
+	ext_condition.provider_id = "Core"
+	ext_condition.ace_id = "EveryXSeconds"
+	ext_condition.codegen_template = "__every_ext1 >= maxf({seconds}, 0.001)"
+	ext_condition.member_declaration = "var __every_ext1: float = 0.0"
+	ext_condition.codegen_prelude = "__every_ext1 += delta"
+	ext_condition.codegen_on_true = "__every_ext1 = fmod(__every_ext1, maxf({seconds}, 0.001))"
+	ext_condition.params = {"seconds": "1.0"}
+	ext_event.conditions.append(ext_condition)
+	var ext_action: ACEAction = ACEAction.new()
+	ext_action.provider_id = "Core"
+	ext_action.ace_id = "PrintLog"
+	ext_action.codegen_template = "print({message})"
+	ext_action.params = {"message": "\"ext\""}
+	ext_event.actions.append(ext_action)
+	external_sheet.events.append(ext_event)
+	var ext_output: String = str(SheetCompiler.compile(external_sheet, "user://eventsheets_stateful_ext.gd").get("output", ""))
+	all_passed = _check("external sheets declare the baked member",
+		ext_output.contains("var __every_ext1: float = 0.0"), true) and all_passed
+	var ext_script: GDScript = GDScript.new()
+	ext_script.source_code = ext_output
+	all_passed = _check("external stateful output parses", ext_script.reload(true) == OK, true) and all_passed
+
+	condition.enabled = false
+	var disabled_output: String = str(SheetCompiler.compile(compile_sheet, "user://eventsheets_stateful_off.gd").get("output", ""))
+	all_passed = _check("disabled stateful conditions leave no orphan member",
+		disabled_output.contains(condition.member_declaration), false) and all_passed
+	condition.enabled = true
+
+	event.condition_mode = EventRow.ConditionMode.OR
+	var extra: ACECondition = ACECondition.new()
+	extra.provider_id = "Core"
+	extra.ace_id = "Always"
+	extra.codegen_template = "true"
+	event.conditions.append(extra)
+	var or_warnings: Array = SheetCompiler.compile(compile_sheet, "user://eventsheets_stateful_or.gd").get("warnings", [])
+	all_passed = _check("OR-mode stateful events warn",
+		str(or_warnings).contains("rebase"), true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

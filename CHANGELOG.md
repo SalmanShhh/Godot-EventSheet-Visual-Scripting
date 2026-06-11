@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Bug sweep 3 (stateful-condition hardening)
+- **GDScript-backed sheets compiled broken scripts when a stateful condition was added**
+  (Every X Seconds referenced a member the external path never declared) — members now
+  insert before the first function, skipping any already present verbatim so untouched
+  round-trips stay byte-identical.
+- Disabled stateful conditions no longer leave orphan member declarations behind.
+- Stateful conditions in OR-mode events now **warn** (the accumulator rebases whenever
+  ANY condition passes — usually not what you meant; use a dedicated event).
+- All three regression-asserted in `tests/stateful_aces_test.gd` (now 15 assertions).
+
 ### C3 System coverage, batch 2: stateful conditions + multi-statement actions
 - **Every X Seconds** — C3's most-used System condition, done the parity-safe way:
   each applied instance bakes a **private class member** (fresh uid), a prelude line

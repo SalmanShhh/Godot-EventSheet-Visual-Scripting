@@ -212,6 +212,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		lines.append("")
 		lines.append(deferred)
 
+	_insert_stateful_member_declarations(lines, sheet)
 	_insert_provider_member_declarations(lines, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -291,6 +292,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	for comment_line: String in deferred_comment_lines_external:
 		lines.append("")
 		lines.append("# %s" % comment_line)
+	_insert_stateful_member_declarations(lines, sheet)
 	_insert_provider_member_declarations(lines, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -311,6 +313,32 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 ## a direct, typed call path with zero EventForge dependency in the output (the addon
 ## script ships with the game like any other class). Providers extending Node should
 ## prefer behaviors/autoloads; RefCounted providers are the intended shape.
+## External-path counterpart of the main path's stateful-member emission: declares the
+## members baked onto stateful conditions (Every X Seconds…) before the first function,
+## skipping any already present verbatim (untouched files stay byte-identical).
+static func _insert_stateful_member_declarations(lines: PackedStringArray, sheet: EventSheetResource) -> void:
+	var members: Array = []
+	_collect_stateful_members(sheet.events, members)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			_collect_stateful_members((function_entry as EventFunction).events if not (function_entry as EventFunction).events.is_empty() else (function_entry as EventFunction).rows, members)
+	var missing: PackedStringArray = PackedStringArray()
+	for member_line: Variant in members:
+		if not lines.has(str(member_line)):
+			missing.append(str(member_line))
+	if missing.is_empty():
+		return
+	var insert_index: int = -1
+	for index in range(lines.size()):
+		if lines[index].begins_with("func ") or lines[index].begins_with("## @ace"):
+			insert_index = index
+			break
+	if insert_index < 0:
+		insert_index = lines.size()
+	for offset in range(missing.size()):
+		lines.insert(insert_index + offset, missing[offset])
+	lines.insert(insert_index + missing.size(), "")
+
 static func _insert_provider_member_declarations(lines: PackedStringArray, result: Dictionary) -> void:
 	var member_regex: RegEx = RegEx.new()
 	if member_regex.compile("__eventsheet_provider_([A-Za-z_][A-Za-z0-9_]*)") != OK:
@@ -590,6 +618,8 @@ static func _emit_event_body(
 		if wants_chain and not stateful_preludes.is_empty():
 			warnings.append("Stateful conditions (Every X Seconds…) can't chain as Else/Else-If; emitted standalone.")
 			wants_chain = false
+		if not stateful_on_true.is_empty() and event_row.condition_mode == EventRow.ConditionMode.OR and event_row.conditions.size() > 1:
+			warnings.append("Stateful conditions in OR events rebase whenever ANY condition passes — consider a dedicated event.")
 		if wants_chain and not chain_open:
 			warnings.append("Else/Else-If event has no preceding conditioned event to chain onto; emitted standalone.")
 			wants_chain = false
@@ -886,7 +916,7 @@ static func _collect_stateful_members(entries: Array, into: Array) -> void:
 	for entry: Variant in entries:
 		if entry is EventRow:
 			for condition: Variant in (entry as EventRow).conditions:
-				if condition is ACECondition and not (condition as ACECondition).member_declaration.is_empty():
+				if condition is ACECondition and (condition as ACECondition).enabled and not (condition as ACECondition).member_declaration.is_empty():
 					if not into.has((condition as ACECondition).member_declaration):
 						into.append((condition as ACECondition).member_declaration)
 			_collect_stateful_members((entry as EventRow).sub_events, into)
