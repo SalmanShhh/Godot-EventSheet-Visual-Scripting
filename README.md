@@ -164,6 +164,11 @@ Conditions                        | Actions
 | Tool buttons (Inspector-clickable sheet functions) + MCP policy enforcement | ✅ shipped |
 | **Live Values** (variables stream to the editor while the game runs) | ✅ shipped |
 | Inspector attributes Tier 3 (custom drawers — full spec delivered) | ✅ shipped |
+| **Autoload (Singleton) sheets** — Game State / Event Bus / Save System as sheets, one-click registration, project-wide ACEs | ✅ shipped |
+| **Event-bus triggers** — autoload signals fire events in any sheet (by-name connections) | ✅ shipped |
+| **Addon-author loop** — Publish Preview, generated pack READMEs, Test Bench | ✅ shipped |
+| Spring + Tween packs, inline param editing, group colors, picker favorites (the UX-familiarity arc) | ✅ shipped |
+| `v0.6.0` release | 🔜 next |
 | Community feedback rounds | 🗺 planned |
 | **Addon composition** — meta-packs / jam kits (addon includes addon, compile-time bake) | ✅ shipped |
 | **Project policy** for composition (approved-tag sourcing, depth rails, collision gates) | ✅ shipped |

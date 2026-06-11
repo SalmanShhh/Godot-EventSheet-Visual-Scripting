@@ -118,6 +118,56 @@ static func run() -> bool:
 	scan_editor.free()
 	ProjectSettings.set_setting("autoload/SpringDemo", null)
 
+	# ── Addon-author loop: publish surface, pack README, test bench ──
+	var author_editor: EventSheetEditor = EventSheetEditor.new()
+	var pack: EventSheetResource = EventSheetResource.new()
+	pack.behavior_mode = true
+	pack.host_class = "Node2D"
+	pack.custom_class_name = "JuiceKit"
+	pack.addon_tags = PackedStringArray(["juice"])
+	pack.variables = {"strength": {"type": "float", "default": 1.0, "exported": true, "attributes": {"tooltip": "How juicy."}}}
+	var kick: EventFunction = EventFunction.new()
+	kick.function_name = "kick"
+	kick.expose_as_ace = true
+	kick.ace_display_name = "Kick"
+	kick.ace_category = "Juice"
+	var kick_param: ACEParam = ACEParam.new()
+	kick_param.id = "amount"
+	kick_param.type_name = "float"
+	kick.params.append(kick_param)
+	var kick_body: RawCodeRow = RawCodeRow.new()
+	kick_body.code = "pass"
+	kick.events.append(kick_body)
+	pack.functions.append(kick)
+	var kit_signal: RawCodeRow = RawCodeRow.new()
+	kit_signal.code = "## @ace_trigger
+## @ace_name(\"On Kicked\")
+signal kicked"
+	pack.events.append(kit_signal)
+	author_editor.setup(pack)
+	author_editor.set_undo_redo_manager(NoopUndoManager.new())
+	var surface: Dictionary = author_editor._collect_publish_surface(pack)
+	all_passed = _check("publish surface lists exposed actions",
+		str((surface.get("actions", []) as Array)[0].get("name", "")), "Kick") and all_passed
+	all_passed = _check("publish surface lists annotated triggers",
+		str((surface.get("triggers", []) as Array)[0].get("name", "")), "On Kicked") and all_passed
+	all_passed = _check("publish surface lists exported properties",
+		str((surface.get("properties", []) as Array)[0].get("name", "")), "strength") and all_passed
+	var surface_text: String = EventSheetEditor.publish_surface_text(surface)
+	all_passed = _check("surface text renders all sections",
+		surface_text.contains("Kick (amount: float)") and surface_text.contains("On Kicked") and surface_text.contains("strength: float"), true) and all_passed
+	var readme: String = author_editor._generate_pack_readme(pack)
+	all_passed = _check("pack README documents the surface",
+		readme.contains("# JuiceKit") and readme.contains("**Tags:** juice") and readme.contains("- **Kick** (`amount: float`)") and readme.contains("`strength: float` (default `1.0`) — How juicy."), true) and all_passed
+	var bench_problem: String = author_editor._build_test_bench(pack, "user://eventsheets_bench.tscn")
+	all_passed = _check("test bench builds host + behavior scene", bench_problem, "") and all_passed
+	var bench_scene: PackedScene = load("user://eventsheets_bench.tscn")
+	var bench_root: Node = bench_scene.instantiate()
+	all_passed = _check("bench host carries the behavior child",
+		bench_root is Node2D and bench_root.get_child_count() == 1 and bench_root.get_child(0).get_script() != null, true) and all_passed
+	bench_root.free()
+	author_editor.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

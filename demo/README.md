@@ -87,7 +87,8 @@ What they're for:
 | ✅ `v0.3.0` | Multi-view (split / detached / linked panes), tool sheets (experimental) |
 | ✅ `v0.4.0` | 3D vocabulary, addon tags, folded-group find, hardening sweeps, contributor docs |
 | ✅ `v0.5.0` | C3 System coverage (Every X Seconds!), full loops & picking, function returns, real breakpoints, Find & Replace, Keyboard/Mouse/Gamepad/Touch with press-a-key, the Audio module (▶ preview), starter templates, the searchable node picker, Inspector attributes Tier 1 |
-| 🔜 next | **addon composition** — meta-packs / jam kits with project policy rails; Inspector attributes Tiers 2–3; live-values debug overlay; community feedback |
+| 🔜 `v0.6.0` | Inspector attributes (all tiers + tool buttons), addon composition + project policy + MCP enforcement, Live Values (window + inline chips), device input with press-a-key, Audio module, the node-picker kit, **Spring & Tween packs**, **Autoload/Singleton sheets + event-bus triggers**, the addon-author loop (Publish Preview / auto-READMEs / Test Bench), and the full C3-reflex UX arc |
+| 🗺 planned | community feedback rounds |
 
 Full ledger: [CHANGELOG.md](../CHANGELOG.md) · honest pros & cons: [README.md](../README.md)
 

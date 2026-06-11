@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### The addon-author loop: Publish Preview, auto-READMEs, Test Bench
+- **Publish Preview** (toolbar): a live window showing exactly what this sheet
+  publishes to other sheets' pickers — triggers, conditions, actions, expressions and
+  exported properties — straight from the model, so renaming a function updates the
+  surface instantly (no compile-and-reopen loop).
+- **Export Addon… now writes a README.md** into the pack: tags, host class, properties
+  (with their attribute tooltips/defaults), the full ACE surface, and composition
+  dependencies — shared packs are documented by default.
+- **Test Bench** (toolbar): one click compiles the behavior, builds a host +
+  behavior scene, and runs it — verify a behavior without hand-building a scene
+  (pairs with Live Values).
+
 ### Event-bus triggers — autoload signals fire events in ANY sheet
 - The Event Bus pattern is complete: signals on a **registered autoload** publish as
   project-wide triggers ("On Game Paused — EventBus"), and consumer sheets compile a
