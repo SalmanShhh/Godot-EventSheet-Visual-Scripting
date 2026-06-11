@@ -1196,6 +1196,19 @@ func _assign_fresh_event_uids(row: EventRow) -> void:
             stateful.codegen_template = stateful.codegen_template.replace(old_uid, new_uid)
             stateful.codegen_prelude = stateful.codegen_prelude.replace(old_uid, new_uid)
             stateful.codegen_on_true = stateful.codegen_on_true.replace(old_uid, new_uid)
+    # Multi-line action templates bake `__spawn_<uid>`/`__sfx_<uid>` locals — pasting the
+    # same event twice into one trigger would declare the same local twice in one
+    # function body. Re-bake every baked uid the template carries.
+    for action: Variant in row.actions:
+        if action is ACEAction and (action as ACEAction).codegen_template.contains("__"):
+            var baked: ACEAction = action as ACEAction
+            var action_uid_regex: RegEx = RegEx.new()
+            action_uid_regex.compile("__[a-z_]+_([0-9a-f]{8})\\b")
+            var seen_uids: Dictionary = {}
+            for action_match: RegExMatch in action_uid_regex.search_all(baked.codegen_template):
+                seen_uids[action_match.get_string(1)] = true
+            for stale_uid: Variant in seen_uids.keys():
+                baked.codegen_template = baked.codegen_template.replace(str(stale_uid), "%08x" % (randi() & 0x7fffffff))
     for sub_event in row.sub_events:
         if sub_event is EventRow:
             _assign_fresh_event_uids(sub_event as EventRow)
@@ -3037,6 +3050,9 @@ func _replace_in_rows(rows: Array, find_text: String, replace_text: String, coun
                     counter["count"] = int(counter.get("count", 0)) + (ace as MatchRow).branches_text.count(find_text)
                     (ace as MatchRow).branches_text = (ace as MatchRow).branches_text.replace(find_text, replace_text)
                 elif ace is Resource and ace.get("params") is Dictionary:
+                    if ace.get("comment") is String and not str(ace.get("comment")).is_empty():
+                        counter["count"] = int(counter.get("count", 0)) + str(ace.get("comment")).count(find_text)
+                        ace.set("comment", str(ace.get("comment")).replace(find_text, replace_text))
                     var params: Dictionary = ace.get("params")
                     for key: Variant in params.keys():
                         if params[key] is String:

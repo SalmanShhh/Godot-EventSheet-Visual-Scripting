@@ -108,7 +108,8 @@ func _on_pad_pressed() -> void:
    before calling methods that act on the host (generated bodies null-guard, so misuse
    warns rather than crashes).
 4. **Stay compiled**: stale generated scripts mean a stale API — compile on save (and the
-   planned export-integrity hook covers exports).
+   export-integrity hook covers exports — shipped: every sheet recompiles when an
+   export starts).
 5. GDScript callers hold direct references, so they are *more* robust than the sheet-side
    default templates (which address behaviors as `$ClassName` child nodes).
 
@@ -315,10 +316,13 @@ lift opportunistically or not at all, never lossily.
 `GDScriptImporter` parses generated or handwritten GDScript back into a sheet: `extends`
 → host class, top-level `var`/`@export var` → variables (typed defaults), `func`
 signatures → `EventFunction`s with bodies preserved as `RawCodeRow`. Compiling the
-imported sheet reproduces the structure. ACE-level body parsing (generated `if` chains →
-conditions/actions) is planned.
+imported sheet reproduces the structure. ACE-level body parsing SHIPPED: the lifter
+(`ace_lifter.gd`) reverse-matches generated `if` chains and action templates back into
+real events, gated by the byte-identical verify-lift.
 
-## Planned
+## Planned → Delivered
+
+Everything in this section SHIPPED and is kept as the design record:
 - **Eventsheet-authored Behaviors (C3 behaviors, built with sheets)**: a behavior is an
   event sheet that compiles to an **attachable Node component script** — add the node as a
   child of any object (Godot's component idiom) and it runs. Key design points: a

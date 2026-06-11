@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Full audit: features, themes, addons, docs (sweep 9)
+- **Themes**: 4 of 10 presets (Construct3-stacked, high-contrast, soft-light, designer
+  template) predated the column-header tokens and rendered headers with generic
+  defaults — backfilled from each preset's own palette
+  (`tools/backfill_theme_headers.gd` kept as a maintenance tool). All 10 presets now
+  cover every token.
+- **Addons**: all 18 behavior packs audited (`tools/audit_addons.gd`) — every pack's
+  `.tres` recompiles **byte-identical** to its shipped `.gd` (zero drift since the
+  last regeneration) and every shipped script loads cleanly.
+- **Silent bugs (sweep 9)**: pasting the same event twice into one trigger duplicated
+  the baked `__spawn_`/`__sfx_` locals in a single function body (same bug class as
+  the Every-X-Seconds accumulator, action-template side) — uids now re-bake on
+  duplicate/paste; Replace All now also covers per-ACE `⊳` notes.
+- **Stale docs corrected**: Live Values and the MCP server are no longer "planned/
+  candidate" in `EDITOR-UI-SPEC` (both shipped); bookmarks marked shipped in the
+  parity matrix; `GDSCRIPT-PAIRING-SPEC`'s "Planned" section renamed
+  **Planned → Delivered** (behavior packs, the C3 coverage program and ACE-level
+  lifting all shipped); export-integrity hook noted as shipped.
+
 ### Theme Editor preview brought current
 - The live preview's sample sheet now exercises the newest renderer vocabulary:
   **BBCode comments**, **per-ACE `⊳` notes**, **Repeat/pick loop rows**, and a

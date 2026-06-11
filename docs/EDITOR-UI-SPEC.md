@@ -447,12 +447,11 @@ Still open (post-1.0 polish):
   **Perf gate:** two virtualized viewports = 2× the visible-row draw only (still no
   per-row widgets); the 10k stress checkpoint must be re-run with an active split before
   this ships.
-- **Live values overlay (deferred design)**: C3's debugger shows variable values on
-  events while the game runs. Sketch: an `EngineDebugger` plugin channel (game side sends
-  watched member values per frame; editor side feeds the viewport an overlay layer keyed
-  by source-map uids). Real breakpoints (F9 + Debug BP toggle) shipped as the first
-  debugging rung; this is the second. Large; needs its own slice.
-- Candidate: MCP server for AI tooling (see GDSCRIPT-PAIRING-SPEC "Planned"). Everything
+- **Live Values — SHIPPED** (debugging rung 2): debug compiles stream sheet variables
+  over an `EngineDebugger` channel; the editor's Live Values window shows them
+  (`live_values_debugger.gd`, toolbar toggle). Possible rung 3: inline per-row overlay
+  keyed by source-map uids.
+- MCP server for AI tooling — SHIPPED (`docs/MCP-SERVER.md`). Everything
   else from the post-1.0 polish list has shipped (pick filters, ƒx autocomplete +
   dot-context completion, bookmarks, sheet includes, widget_hint inspector editors, the
   per-row "Selected ACE" inspector section).
@@ -519,7 +518,7 @@ The behavioral guarantees the editor maintains (each is regression-tested headle
 | "Add event…" footers (sheet + group) | Matched | per-group footer indented, always last |
 | Insert marker with arrowheads | Matched | row + ACE drop lines |
 | Drag ghost (~0.66 opacity) | Matched | label follows cursor |
-| Event number gutter + breakpoint/bookmark | Matched (numbers, breakpoints) | bookmarks not yet |
+| Event number gutter + breakpoint/bookmark | Matched | bookmarks shipped (Ctrl+B + shared across panes); breakpoints are REAL in debug compiles |
 | Inline code blocks | Matched | GDScript blocks class-level AND in-flow inside events |
 | Expressions | **Intentionally different** | plain GDScript, no proprietary expression language |
 | Behaviors | Matched | behavior sheets compile to Node components (typed `host`); sample packs ship |
