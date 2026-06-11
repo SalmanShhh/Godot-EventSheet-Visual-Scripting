@@ -80,6 +80,58 @@ static func run() -> bool:
 	all_passed = _check("edit prefills range as min, max, step", prefill_dialog._attr_range_edit.text, "0, 9, 1") and all_passed
 	prefill_host.free()
 
+	# ── Tier 2: setters, conditions, read-only ──
+	var t2: EventSheetResource = EventSheetResource.new()
+	var notify_fn: EventFunction = EventFunction.new()
+	notify_fn.function_name = "_on_hp_changed"
+	t2.functions.append(notify_fn)
+	t2.variables = {
+		"hp": {"type": "int", "default": 100, "exported": true,
+			"attributes": {"range": {"min": "0", "max": "200", "step": "1"}, "clamp": true, "on_changed": "_on_hp_changed"}},
+		"speed": {"type": "float", "default": 5.0, "exported": true,
+			"attributes": {"range": {"min": "0", "max": "10", "step": "0.5"}, "clamp": true}},
+		"use_gravity": {"type": "bool", "default": true, "exported": true, "attributes": {}},
+		"gravity_scale": {"type": "float", "default": 1.0, "exported": true, "attributes": {"show_if": "use_gravity"}},
+		"drag": {"type": "float", "default": 0.1, "exported": true, "attributes": {"lock_unless": "use_gravity"}},
+		"version_label": {"type": "String", "default": "1.0", "exported": true, "attributes": {"read_only": true}}
+	}
+	var t2_output: String = str(SheetCompiler.compile(t2, "user://eventsheets_t2.gd").get("output", ""))
+	all_passed = _check("clamp + on_changed emit the canonical setter",
+		t2_output.contains("@export_range(0, 200, 1) var hp: int = 100:")
+		and t2_output.contains("		hp = clampi(value, 0, 200)")
+		and t2_output.contains("		_on_hp_changed()"), true) and all_passed
+	all_passed = _check("float clamps use clampf", t2_output.contains("		speed = clampf(value, 0, 10)"), true) and all_passed
+	all_passed = _check("show_if joins the aggregated _validate_property",
+		t2_output.contains("func _validate_property(property: Dictionary) -> void:")
+		and t2_output.contains("if str(property.name) == \"gravity_scale\" and not bool(use_gravity):")
+		and t2_output.contains("property.usage &= ~PROPERTY_USAGE_EDITOR"), true) and all_passed
+	all_passed = _check("lock_unless flips read-only usage",
+		t2_output.contains("if str(property.name) == \"drag\" and not bool(use_gravity):")
+		and t2_output.contains("property.usage |= PROPERTY_USAGE_READ_ONLY"), true) and all_passed
+	all_passed = _check("static read-only uses @export_custom",
+		t2_output.contains("@export_custom(PROPERTY_HINT_NONE, \"\", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY) var version_label"), true) and all_passed
+	all_passed = _check("only one _validate_property emits", t2_output.count("func _validate_property") == 1, true) and all_passed
+	var t2_script: GDScript = GDScript.new()
+	t2_script.source_code = t2_output
+	all_passed = _check("Tier 2 output parses", t2_script.reload(true) == OK, true) and all_passed
+
+	# Unknown on_changed target warns (typo guard).
+	var typo: EventSheetResource = EventSheetResource.new()
+	typo.variables = {"hp": {"type": "int", "default": 1, "exported": true, "attributes": {"on_changed": "_no_such_fn"}}}
+	typo.functions.append(notify_fn)
+	all_passed = _check("unknown on_changed target warns",
+		str(SheetCompiler.compile(typo, "user://eventsheets_t2typo.gd").get("warnings")).contains("_no_such_fn"), true) and all_passed
+
+	# Hook-collision guard: a raw block also defining _validate_property warns.
+	var collide: EventSheetResource = EventSheetResource.new()
+	collide.variables = {"a": {"type": "float", "default": 0.0, "exported": true, "attributes": {"show_if": "a"}}}
+	var hook_block: RawCodeRow = RawCodeRow.new()
+	hook_block.code = "func _validate_property(property: Dictionary) -> void:
+	pass"
+	collide.events.append(hook_block)
+	all_passed = _check("duplicate _validate_property raw block warns",
+		str(SheetCompiler.compile(collide, "user://eventsheets_t2dup.gd").get("warnings")).contains("_validate_property"), true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

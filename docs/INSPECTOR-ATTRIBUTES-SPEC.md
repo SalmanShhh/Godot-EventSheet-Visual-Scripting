@@ -1,8 +1,9 @@
 # Inspector Attributes — Spec (later phase)
 
 Unity-style (and Odin-Inspector-style) **attributes on exported variables**, mapped onto
-what Godot actually supports. Status: **Tier 1 SHIPPED** (tooltip/group/range/multiline —
-`tests/inspector_attributes_test.gd`); Tiers 2–3 planned. This documents the
+what Godot actually supports. Status: **Tiers 1–2 SHIPPED** (tooltip/group/range/multiline; clamp/on-changed
+setters, Show If / Lock Unless via generated `_validate_property`, static read-only —
+`tests/inspector_attributes_test.gd`); Tier 3 (custom drawers) + tool buttons planned. This documents the
 design so a later phase can implement it without re-deriving the constraints.
 
 ## Goal

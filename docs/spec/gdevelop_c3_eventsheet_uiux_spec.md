@@ -3,6 +3,20 @@
 > **Reference design study** that guided the editor. Current shipped behavior and the
 > parity matrix live in `docs/EDITOR-UI-SPEC.md` (§5 interaction contract, §6 parity).
 
+## Implementation status (updated 2026-06-12)
+
+The interaction model below is now **substantially shipped** in the virtualized editor
+(see `docs/EDITOR-UI-SPEC.md` for the authoritative matrix). Shipped since this study:
+two-lane row grammar with whole-cell click targets and C3 hover; the searchable picker
+with C3 phrase synonyms; Find & **Replace**; **BBCode comments** and per-ACE `⊳` notes;
+real **F9 breakpoints** (debug compiles pause the Godot debugger); multi-view (split /
+detached / linked panes); starter templates; iconic theme presets + the live theme
+editor; press-a-key capture for key params; the searchable scene-node picker with
+group/script/scene filters. Still open from this study: drag-handle affordance polish
+and the live-values overlay (spec'd, planned).
+
+---
+
 This document captures the key interaction-model learnings from GDevelop and Construct 3
 EventSheet editors that directly inform the visual and interaction design of the Godot EventForge
 EventSheet editor.

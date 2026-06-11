@@ -27,6 +27,11 @@ var _attr_tooltip_edit: LineEdit = null
 var _attr_group_edit: LineEdit = null
 var _attr_range_edit: LineEdit = null
 var _attr_multiline_check: CheckBox = null
+var _attr_show_if_edit: LineEdit = null
+var _attr_lock_unless_edit: LineEdit = null
+var _attr_on_changed_edit: LineEdit = null
+var _attr_clamp_check: CheckBox = null
+var _attr_read_only_check: CheckBox = null
 
 ## Offered types. Collections accept GDScript literal defaults ({"key": 1}, [1, 2]) with
 ## live validation; typed containers (Godot 4 Array[T] / Dictionary[K, V]) also check
@@ -128,6 +133,23 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_multiline_check = CheckBox.new()
 	_attr_multiline_check.text = "Multiline (String: big text box)"
 	form.add_child(_attr_multiline_check)
+	_attr_show_if_edit = LineEdit.new()
+	_attr_show_if_edit.placeholder_text = "Show if — bool variable (hidden when false)"
+	form.add_child(_attr_show_if_edit)
+	_attr_lock_unless_edit = LineEdit.new()
+	_attr_lock_unless_edit.placeholder_text = "Lock unless — bool variable (read-only when false)"
+	form.add_child(_attr_lock_unless_edit)
+	_attr_on_changed_edit = LineEdit.new()
+	_attr_on_changed_edit.placeholder_text = "On changed — sheet function called after assignment"
+	form.add_child(_attr_on_changed_edit)
+	var attr_checks: HBoxContainer = HBoxContainer.new()
+	_attr_clamp_check = CheckBox.new()
+	_attr_clamp_check.text = "Clamp to range"
+	attr_checks.add_child(_attr_clamp_check)
+	_attr_read_only_check = CheckBox.new()
+	_attr_read_only_check.text = "Read-only"
+	attr_checks.add_child(_attr_read_only_check)
+	form.add_child(attr_checks)
 	_default_help = Label.new()
 	_default_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_default_help.custom_minimum_size = Vector2(380.0, 0.0)
@@ -221,6 +243,11 @@ func open_for_edit(
 	var existing_range: Variant = existing_attributes.get("range")
 	_attr_range_edit.text = "%s, %s, %s" % [existing_range.get("min"), existing_range.get("max"), existing_range.get("step")] if existing_range is Dictionary else ""
 	_attr_multiline_check.button_pressed = bool(existing_attributes.get("multiline", false))
+	_attr_show_if_edit.text = str(existing_attributes.get("show_if", ""))
+	_attr_lock_unless_edit.text = str(existing_attributes.get("lock_unless", ""))
+	_attr_on_changed_edit.text = str(existing_attributes.get("on_changed", ""))
+	_attr_clamp_check.button_pressed = bool(existing_attributes.get("clamp", false))
+	_attr_read_only_check.button_pressed = bool(existing_attributes.get("read_only", false))
 	_refresh_const_ui()
 	_refresh_default_hint()
 	_type_option.disabled = lock_type
@@ -282,6 +309,29 @@ func _on_confirmed() -> void:
 		attributes["range"] = {"min": range_parts[0].strip_edges(), "max": range_parts[1].strip_edges(), "step": range_parts[2].strip_edges()}
 	if _attr_multiline_check.button_pressed and type_name == "String":
 		attributes["multiline"] = true
+	for conditional in [["show_if", _attr_show_if_edit], ["lock_unless", _attr_lock_unless_edit], ["on_changed", _attr_on_changed_edit]]:
+		var conditional_value: String = (conditional[1] as LineEdit).text.strip_edges()
+		if conditional_value.is_empty():
+			continue
+		if not EventSheetIdentifierRules.is_valid(conditional_value):
+			if _default_help != null:
+				_default_help.visible = true
+				_default_help.text = "✗ %s must be a single identifier (a variable/function name)." % str(conditional[0]).capitalize()
+			if _dialog.is_inside_tree():
+				_dialog.call_deferred("popup_centered", Vector2i(440, 260))
+			return
+		attributes[conditional[0]] = conditional_value
+	if _attr_clamp_check.button_pressed:
+		if not attributes.has("range"):
+			if _default_help != null:
+				_default_help.visible = true
+				_default_help.text = "✗ Clamp needs a Range (min, max, step) to clamp to."
+			if _dialog.is_inside_tree():
+				_dialog.call_deferred("popup_centered", Vector2i(440, 260))
+			return
+		attributes["clamp"] = true
+	if _attr_read_only_check.button_pressed:
+		attributes["read_only"] = true
 	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes)
 
 ## Returns the trimmed text from the name field.

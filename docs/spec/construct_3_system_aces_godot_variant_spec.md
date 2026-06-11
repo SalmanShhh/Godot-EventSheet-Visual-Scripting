@@ -4,6 +4,31 @@
 > builtin registry (`addons/eventforge/registration/builtin_aces.gd`); the practical
 > C3→Godot vocabulary map for users is `docs/C3-MIGRATION-GUIDE.md`.
 
+## Implementation status (updated 2026-06-12)
+
+The vocabulary this study proposed has **largely shipped** — see `CHANGELOG.md` for the
+batches. Highlights against the tables below:
+
+- **Loops & picking** — shipped as *pick filters* rather than standalone rows: For /
+  For Each / For Each (ordered) / Repeat / While, plus the full C3 Pick Instances set
+  (by comparison, highest/lowest, nearest, nth, random, last created) — all compiling
+  to plain `for`/`while` loops. `Stop loop` stays an honest skip (use a GDScript
+  `break` block).
+- **Timing** — `Wait`, `Wait for signal`, and **Every X Seconds** (stateful condition
+  with a baked per-instance accumulator) shipped; *Trigger once while true* remains
+  deferred (needs on-false re-arm hooks).
+- **Time/engine, display, text, comparisons** — shipped (batch 1: ~20 descriptors:
+  `Engine.time_scale`, fullscreen/window sizing, the String-method text functions
+  incl. zero-pad, Compare Values / Is Between).
+- **Spawn** — *Spawn Scene At* shipped on multi-line action templates.
+- **Groups** — enable/disable shipped with C3 semantics (disabled group drops its
+  children at compile); a runtime `GroupActive` condition is out of scope (groups are
+  compile-time organization here).
+- **Beyond this study** — Date & Time / Platform expressions, shader params, the
+  Keyboard/Mouse/Gamepad/Touch device groups and the Audio module also shipped.
+
+---
+
 This document defines the Godot-native equivalent of Construct 3's built-in **System** object ACEs
 (Actions, Conditions, Expressions). These form the control-flow, variable, timing, and utility
 vocabulary that every EventSheet-based game needs before adding any custom plugin ACEs.

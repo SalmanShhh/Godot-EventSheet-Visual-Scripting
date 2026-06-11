@@ -158,7 +158,8 @@ Conditions                        | Actions
 | Debugging rung 1 (real breakpoints) + device input + Audio module | ✅ shipped |
 | `v0.5.0` release (System ACEs, loops/picking, debugging, devices, Audio) | ✅ shipped |
 | Inspector attributes **Tier 1** (tooltip / group / range / multiline on exported variables) | ✅ shipped |
-| Inspector attributes Tiers 2–3 (Show If / On Changed / tool buttons; custom drawers) | 🗺 planned ([spec](docs/INSPECTOR-ATTRIBUTES-SPEC.md)) |
+| Inspector attributes **Tier 2** (Clamp / On Changed setters, Show If / Lock Unless, read-only) | ✅ shipped |
+| Inspector attributes Tier 3 (custom drawers) + tool buttons | 🗺 planned ([spec](docs/INSPECTOR-ATTRIBUTES-SPEC.md)) |
 | **Addon composition** — meta-packs / jam kits (addon includes addon, compile-time bake) | ✅ shipped |
 | **Project policy** for composition (approved-tag sourcing, depth rails, collision gates) | ✅ shipped |
 | Composition Lane B v1 (has-a uses-instances) | ✅ shipped |

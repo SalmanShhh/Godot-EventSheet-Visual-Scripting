@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Inspector attributes Tier 2 + doc refresh + sweep 6
+- **Tier 2 attributes** on exported globals: **Clamp to range** (`clampi`/`clampf`
+  setters), **On Changed** (setter calls a sheet function — typos warn at compile),
+  **Show If** / **Lock Unless** (one aggregated, canonical `_validate_property()` —
+  hidden or read-only until a bool variable is true), and static **Read-only**
+  (`@export_custom` usage flags). All from the Variable dialog, validated before
+  commit; behavior packs inherit everything.
+- **Sweep 6**: a GDScript block that also defines `_validate_property`/
+  `_get_configuration_warnings` now warns (duplicate functions don't compile — the
+  cause is named instead of a mystery parse error); GDScript-backed sheets now say
+  they ignore Includes/Uses/Requires instead of silently dropping them.
+- **Doc refresh**: implementation-status sections added to the two reference design
+  studies (`docs/spec/`) and the three `docs/elements/` notes now explain their
+  relationship to the live virtualized renderer (preview templates vs theme tokens).
+- `tests/inspector_attributes_test.gd` grew to 20 assertions.
+
 ### Addon composition Lane B.2 — sibling-behavior requirements
 - Behavior packs can declare **Requires (sibling behaviors)** in the Sheet Type
   dialog: the compiler emits a canonical `_get_configuration_warnings()` that checks

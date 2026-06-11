@@ -145,7 +145,11 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			source_map.append({"uid": str((signal_entry as SignalRow).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "signal"})
 	var tree_variables: Array = []
 	_collect_tree_variables(all_events, tree_variables)
-	var variable_lines: PackedStringArray = _emit_variables(merged_variables)
+	var sheet_function_names: Dictionary = {}
+	for known_function: Variant in all_functions:
+		if known_function is EventFunction:
+			sheet_function_names[(known_function as EventFunction).function_name] = true
+	var variable_lines: PackedStringArray = _emit_variables(merged_variables, result["warnings"], sheet_function_names)
 	if variable_lines.size() > 0:
 		lines.append("")
 		for line: String in variable_lines:
@@ -210,6 +214,17 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		for code_line: String in raw_block.code.split("\n"):
 			lines.append(code_line)
 		source_map.append({"uid": str(raw_block.get_instance_id()), "start": raw_start, "end": lines.size(), "kind": "raw"})
+
+	for hook_name: String in ["_validate_property", "_get_configuration_warnings"]:
+		var hook_generated: bool = false
+		for emitted_line: String in lines:
+			if emitted_line.begins_with("func %s(" % hook_name):
+				hook_generated = true
+				break
+		if hook_generated:
+			for raw_entry2: Variant in raw_blocks:
+				if raw_entry2 is RawCodeRow and (raw_entry2 as RawCodeRow).code.contains("func %s(" % hook_name):
+					(result["warnings"] as Array).append("A GDScript block also defines %s() — remove it or clear the Inspector/Requires settings (duplicate functions don't compile)." % hook_name)
 
 	var deferred_rows: PackedStringArray = PackedStringArray()
 	var top_level_events: Array = []
@@ -303,6 +318,8 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 ## external mode is lossless, never a filter.
 static func _compile_external(sheet: EventSheetResource, result: Dictionary, output_path: String) -> Dictionary:
 	_emit_breakpoints_flag = sheet.emit_breakpoints
+	if not sheet.includes.is_empty() or not sheet.uses_addons.is_empty() or not sheet.requires_behaviors.is_empty():
+		(result["warnings"] as Array).append("GDScript-backed sheets ignore Includes/Uses/Requires — the .gd file is the source of truth (write the equivalent code directly).")
 	var lines: PackedStringArray = PackedStringArray()
 	var source_map: Array = result["source_map"]
 	var added_event_rows: Array = []
@@ -979,10 +996,13 @@ static func _emit_function_params(event_function: EventFunction) -> String:
 	return ", ".join(parts)
 
 ## Emits `@export var` lines from the sheet variables dictionary.
-static func _emit_variables(variables: Dictionary) -> PackedStringArray:
+static func _emit_variables(variables: Dictionary, warnings: Array = [], function_names: Dictionary = {}) -> PackedStringArray:
 	var lines: PackedStringArray = PackedStringArray()
 	var keys: Array = variables.keys()
 	keys.sort()
+	# Tier 2 conditions (Show If / Lock Unless) aggregate into ONE generated
+	# _validate_property below, in variable order — canonical shape, dialog-edited.
+	var property_conditions: Array = []
 
 	for key: Variant in keys:
 		var var_name: String = str(key)
@@ -1009,9 +1029,45 @@ static func _emit_variables(variables: Dictionary) -> PackedStringArray:
 				export_prefix = "@export_range(%s, %s, %s) " % [str(range_spec.get("min", "0")), str(range_spec.get("max", "100")), str(range_spec.get("step", "1"))]
 			elif exported and bool(attributes.get("multiline", false)) and type_name == "String":
 				export_prefix = "@export_multiline "
-			lines.append("%svar %s: %s = %s" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])
+			# Read-only wins over range/multiline (a locked field needs no slider).
+			if exported and bool(attributes.get("read_only", false)):
+				export_prefix = "@export_custom(PROPERTY_HINT_NONE, \"\", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY) "
+			# Tier 2 setters: Clamp (needs Range + numeric) and/or On Changed (a sheet
+			# function called after assignment). Canonical multi-line shape.
+			var on_changed: String = str(attributes.get("on_changed", "")).strip_edges() if exported else ""
+			var clamp_enabled: bool = exported and bool(attributes.get("clamp", false)) and attributes.get("range") is Dictionary and (type_name == "int" or type_name == "float")
+			if not on_changed.is_empty() and not function_names.is_empty() and not function_names.has(on_changed):
+				warnings.append("Variable \"%s\": On Changed targets unknown function \"%s\" — check the spelling." % [var_name, on_changed])
+			if not on_changed.is_empty() or clamp_enabled:
+				lines.append("%svar %s: %s = %s:" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])
+				lines.append("\tset(value):")
+				if clamp_enabled:
+					var clamp_range: Dictionary = attributes.get("range")
+					var clamp_call: String = "clampi" if type_name == "int" else "clampf"
+					lines.append("\t\t%s = %s(value, %s, %s)" % [var_name, clamp_call, str(clamp_range.get("min", "0")), str(clamp_range.get("max", "100"))])
+				else:
+					lines.append("\t\t%s = value" % var_name)
+				if not on_changed.is_empty():
+					lines.append("\t\t%s()" % on_changed)
+			else:
+				lines.append("%svar %s: %s = %s" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])
+			if exported and not str(attributes.get("show_if", "")).strip_edges().is_empty():
+				property_conditions.append({"name": var_name, "predicate": str(attributes.get("show_if")).strip_edges(), "kind": "show_if"})
+			if exported and not str(attributes.get("lock_unless", "")).strip_edges().is_empty():
+				property_conditions.append({"name": var_name, "predicate": str(attributes.get("lock_unless")).strip_edges(), "kind": "lock_unless"})
 		else:
 			lines.append("@export var %s: Variant = %s" % [var_name, _to_code_literal(descriptor)])
+
+	if not property_conditions.is_empty():
+		lines.append("")
+		lines.append("## Inspector conditions (Show If / Lock Unless) — generated; edit via the Variable dialog.")
+		lines.append("func _validate_property(property: Dictionary) -> void:")
+		for condition: Dictionary in property_conditions:
+			lines.append("\tif str(property.name) == \"%s\" and not bool(%s):" % [str(condition.get("name")), str(condition.get("predicate"))])
+			if str(condition.get("kind")) == "show_if":
+				lines.append("\t\tproperty.usage &= ~PROPERTY_USAGE_EDITOR")
+			else:
+				lines.append("\t\tproperty.usage |= PROPERTY_USAGE_READ_ONLY")
 
 	return lines
 

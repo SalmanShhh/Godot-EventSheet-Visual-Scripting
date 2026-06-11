@@ -1,5 +1,20 @@
 # Event Visual Element
 
+## Relationship to the live editor (read this first)
+
+These element scenes are **designer preview/reference templates** — a hand-tunable
+mirror of the stacked Construct-style grammar. The shipping editor does **not**
+instantiate per-row Control scenes: it paints every row through `EventRowRenderer`
+on the virtualized `EventSheetViewport` (10k+ rows stay fluid), reading colors and
+metrics from `EventSheetEditorStyle` / `EventSheetEventStyle` theme tokens. Use these
+scenes to prototype looks; promote final values into theme tokens (see
+`EVENTSHEET_THEME_TOKEN_SPEC.md`), which is what the renderer (and the Theme Editor
+dialog) actually consumes.
+
+The live renderer also draws vocabulary beyond this template: enum/signal/match badge
+rows, BBCode-styled comments, per-ACE `⊳` notes, color-param swatches, breakpoint and
+bookmark gutters, and fold arrows — when restyling, check those token groups too.
+
 ## What this element is
 
 `res://addons/eventsheet/elements/event_visual_element.tscn` is the structural preview scene for the whole EventSheet event block. It is where designers can understand how the stacked Construct-style shell is divided into the sheet background, condition lane, badge column, lane divider, and action lane.
