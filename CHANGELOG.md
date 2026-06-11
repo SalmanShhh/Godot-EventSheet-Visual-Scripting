@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Theme Editor preview brought current
+- The live preview's sample sheet now exercises the newest renderer vocabulary:
+  **BBCode comments**, **per-ACE `⊳` notes**, **Repeat/pick loop rows**, and a
+  **disabled row** (strikethrough) — so restyling shows everything the renderer can
+  draw. (The token form was already current by construction — it reflects over the
+  style resource — and `EVENTSHEET_THEME_TOKEN_SPEC.md` needed no changes: the newer
+  vocabulary reuses existing span tokens.)
+
 ### Inspector attributes Tier 3 (custom drawers) + bug sweep 8
 - **Custom drawers** (the Odin-cosmetics tier): pick *Progress bar* in the Variable
   dialog and the Inspector renders the value as a bar (range-aware). Mechanism: the

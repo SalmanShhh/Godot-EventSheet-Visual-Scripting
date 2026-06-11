@@ -86,8 +86,28 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	tint.ace_id = "SetModulate"
 	tint.codegen_template = "modulate = {color}"
 	tint.params = {"color": "Color(0.4, 0.7, 1.0, 1.0)"}
+	tint.comment = "ACE note (⊳)"
 	tint_event.actions.append(tint)
+	# Loop/pick rows, BBCode comments, and a disabled row — the newest vocabulary, so
+	# restyling sees everything the renderer can draw.
+	var repeat_pick: PickFilter = PickFilter.new()
+	repeat_pick.collection_kind = PickFilter.CollectionKind.REPEAT
+	repeat_pick.collection_value = "3"
+	repeat_pick.iterator_name = "i"
+	tint_event.pick_filters.append(repeat_pick)
 	sheet.events.append(tint_event)
+	var bbcode_comment: CommentRow = CommentRow.new()
+	bbcode_comment.text = "[b]Bold[/b], [i]italic[/i] and [color=orange]colored[/color] BBCode"
+	sheet.events.append(bbcode_comment)
+	var disabled_event: EventRow = EventRow.new()
+	disabled_event.trigger_provider_id = "Core"
+	disabled_event.trigger_id = "OnReady"
+	disabled_event.enabled = false
+	var disabled_action: ACEAction = ACEAction.new()
+	disabled_action.provider_id = "Core"
+	disabled_action.ace_id = "QueueFree"
+	disabled_event.actions.append(disabled_action)
+	sheet.events.append(disabled_event)
 	return sheet
 
 ## Exported tokens of a style resource that the form can edit (Color/float/int/bool).

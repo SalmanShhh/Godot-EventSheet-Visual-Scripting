@@ -105,6 +105,7 @@ After an intentional codegen change:
 All presets in `res://demo/themes/` are auto-discovered by the toolbar **theme
 switcher** — no registration. The **Theme Editor…** dialog edits any of them live
 (reflective token form — new tokens appear automatically — with preset saving), and its
-sample preview exercises the full row vocabulary: events, groups, comments, enums,
-signals, and color-swatch actions. With no theme assigned, the sheet derives a
+sample preview exercises the full row vocabulary: events, groups, BBCode comments,
+enums, signals, color-swatch actions, per-ACE notes, loop/pick rows, and disabled
+rows. With no theme assigned, the sheet derives a
 Godot-native look from **your** editor's base and accent colors.
