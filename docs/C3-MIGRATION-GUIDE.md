@@ -86,6 +86,10 @@ Platformer, 8-Direction, Timer, Flash, State Machine, **Sine, Orbit, Bullet, Mov
 Follow, Drag & Drop, Car, Tile Movement, and Line of Sight**. Attach as a child node;
 properties live in the Inspector; their ACEs appear in the picker automatically.
 
+**Families** → Godot **node groups** + behaviors-as-components: put nodes in a group
+(`add_to_group`), pick them with the group pick filter, and attach shared behavior packs
+for shared ACEs — same workflows, native machinery, no fake feature to maintain.
+
 **Lane 3 — use the Godot feature directly**: Multiplayer (high-level multiplayer API),
 Drawing Canvas (`_draw`), 3D plugins (Godot 3D), Binary Data (`PackedByteArray`),
 i18n (Godot translations).

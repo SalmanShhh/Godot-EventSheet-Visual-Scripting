@@ -447,6 +447,11 @@ Still open (post-1.0 polish):
   **Perf gate:** two virtualized viewports = 2× the visible-row draw only (still no
   per-row widgets); the 10k stress checkpoint must be re-run with an active split before
   this ships.
+- **Live values overlay (deferred design)**: C3's debugger shows variable values on
+  events while the game runs. Sketch: an `EngineDebugger` plugin channel (game side sends
+  watched member values per frame; editor side feeds the viewport an overlay layer keyed
+  by source-map uids). Real breakpoints (F9 + Debug BP toggle) shipped as the first
+  debugging rung; this is the second. Large; needs its own slice.
 - Candidate: MCP server for AI tooling (see GDSCRIPT-PAIRING-SPEC "Planned"). Everything
   else from the post-1.0 polish list has shipped (pick filters, ƒx autocomplete +
   dot-context completion, bookmarks, sheet includes, widget_hint inspector editors, the

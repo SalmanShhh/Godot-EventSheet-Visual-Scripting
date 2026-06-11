@@ -3373,6 +3373,9 @@ func _toggle_breakpoint(row_index: int) -> void:
     if row_data == null:
         return
     row_data.breakpoint_enabled = not row_data.breakpoint_enabled
+    # Persist onto the model so debug compiles (sheet.emit_breakpoints) see it.
+    if row_data.source_resource is EventRow:
+        (row_data.source_resource as EventRow).debug_break = row_data.breakpoint_enabled
     if row_data.breakpoint_enabled:
         _breakpoint_rows[row_data.row_uid] = true
     else:

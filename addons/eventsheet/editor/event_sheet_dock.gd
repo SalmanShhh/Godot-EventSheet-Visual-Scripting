@@ -472,6 +472,7 @@ func _build_ui() -> void:
     _add_toolbar_button("Save", _on_save_requested)
     _add_toolbar_button("Save As", _on_save_as_requested)
     _add_toolbar_button("Export Addon…", _export_addon_pack)
+    _add_toolbar_button("Debug BP", _toggle_breakpoint_emission)
     _add_toolbar_button("Split", _toggle_split_view)
     _add_toolbar_button("Detach", _toggle_detached_view)
     _add_toolbar_button("Link", _toggle_linked_views)
@@ -2829,8 +2830,16 @@ func _export_addon_pack(base_dir_override: String = "") -> void:
 var _find_bar: HBoxContainer = null
 var _find_edit: LineEdit = null
 var _find_count_label: Label = null
+var _replace_edit: LineEdit = null
 var _find_resource_matches: Array[Resource] = []
 var _find_cursor: int = -1
+
+## Toggles debug compiles: gutter breakpoints (F9) emit real `breakpoint` statements.
+func _toggle_breakpoint_emission() -> void:
+    if _current_sheet == null:
+        return
+    _current_sheet.emit_breakpoints = not _current_sheet.emit_breakpoints
+    _set_status("Debug compile ON: breakpointed events emit `breakpoint` (recompile to apply)." if _current_sheet.emit_breakpoints else "Debug compile OFF: breakpoints render only.")
 
 ## Ctrl+F: a script-editor-style find bar (Enter/F3 next, Shift+F3 previous, Esc hides).
 func _show_find_bar() -> void:
@@ -2859,6 +2868,14 @@ func _ensure_find_bar() -> void:
     _find_count_label = Label.new()
     _find_count_label.text = ""
     _find_bar.add_child(_find_count_label)
+    _replace_edit = LineEdit.new()
+    _replace_edit.placeholder_text = "Replace with…"
+    _replace_edit.custom_minimum_size = Vector2(160.0, 0.0)
+    _find_bar.add_child(_replace_edit)
+    var replace_button: Button = Button.new()
+    replace_button.text = "Replace All"
+    replace_button.pressed.connect(_replace_all_in_sheet)
+    _find_bar.add_child(replace_button)
     var close_button: Button = Button.new()
     close_button.text = "✕"
     close_button.flat = true
@@ -2887,6 +2904,69 @@ func _find_step(direction: int) -> void:
     _find_cursor = wrapi(_find_cursor + direction, 0, _find_resource_matches.size())
     _find_count_label.text = "%d of %d" % [_find_cursor + 1, _find_resource_matches.size()]
     _viewport.reveal_resource(_find_resource_matches[_find_cursor])
+
+## Replace All: substitutes the find text across comments, GDScript blocks, string
+## params, pick-filter expressions, group names/descriptions and match branches —
+## one undoable edit, count reported.
+func _replace_all_in_sheet() -> void:
+    if _viewport == null or _current_sheet == null or _find_edit == null or _replace_edit == null:
+        return
+    var find_text: String = _find_edit.text
+    if find_text.is_empty():
+        _set_status("Type something in Find first.", true)
+        return
+    var replace_text: String = _replace_edit.text
+    var counter: Dictionary = {"count": 0}
+    var changed: bool = _perform_undoable_sheet_edit("Replace All", func() -> bool:
+        _replace_in_rows(_current_sheet.events, find_text, replace_text, counter)
+        for function_resource: Variant in _current_sheet.functions:
+            if function_resource is EventFunction:
+                _replace_in_rows((function_resource as EventFunction).events if not (function_resource as EventFunction).events.is_empty() else (function_resource as EventFunction).rows, find_text, replace_text, counter)
+        return int(counter.get("count", 0)) > 0
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Replaced %d occurrence(s)." % int(counter.get("count", 0)))
+    else:
+        _set_status("No matches for \"%s\"." % find_text)
+
+func _replace_in_rows(rows: Array, find_text: String, replace_text: String, counter: Dictionary) -> void:
+    for row: Variant in rows:
+        if row is CommentRow:
+            counter["count"] = int(counter.get("count", 0)) + (row as CommentRow).text.count(find_text)
+            (row as CommentRow).text = (row as CommentRow).text.replace(find_text, replace_text)
+        elif row is RawCodeRow:
+            counter["count"] = int(counter.get("count", 0)) + (row as RawCodeRow).code.count(find_text)
+            (row as RawCodeRow).code = (row as RawCodeRow).code.replace(find_text, replace_text)
+        elif row is EventGroup:
+            var group: EventGroup = row as EventGroup
+            counter["count"] = int(counter.get("count", 0)) + group.group_name.count(find_text) + group.description.count(find_text)
+            group.group_name = group.group_name.replace(find_text, replace_text)
+            group.name = group.group_name
+            group.description = group.description.replace(find_text, replace_text)
+            _replace_in_rows(group.events if not group.events.is_empty() else group.rows, find_text, replace_text, counter)
+        elif row is EventRow:
+            var event_row: EventRow = row as EventRow
+            for ace: Variant in event_row.conditions + event_row.actions:
+                if ace is RawCodeRow:
+                    counter["count"] = int(counter.get("count", 0)) + (ace as RawCodeRow).code.count(find_text)
+                    (ace as RawCodeRow).code = (ace as RawCodeRow).code.replace(find_text, replace_text)
+                elif ace is MatchRow:
+                    counter["count"] = int(counter.get("count", 0)) + (ace as MatchRow).branches_text.count(find_text)
+                    (ace as MatchRow).branches_text = (ace as MatchRow).branches_text.replace(find_text, replace_text)
+                elif ace is Resource and ace.get("params") is Dictionary:
+                    var params: Dictionary = ace.get("params")
+                    for key: Variant in params.keys():
+                        if params[key] is String:
+                            counter["count"] = int(counter.get("count", 0)) + (params[key] as String).count(find_text)
+                            params[key] = (params[key] as String).replace(find_text, replace_text)
+            for pick: Variant in event_row.pick_filters:
+                if pick is PickFilter:
+                    counter["count"] = int(counter.get("count", 0)) + (pick as PickFilter).collection_value.count(find_text) + (pick as PickFilter).predicate_expression.count(find_text) + (pick as PickFilter).order_by_expression.count(find_text)
+                    (pick as PickFilter).collection_value = (pick as PickFilter).collection_value.replace(find_text, replace_text)
+                    (pick as PickFilter).predicate_expression = (pick as PickFilter).predicate_expression.replace(find_text, replace_text)
+                    (pick as PickFilter).order_by_expression = (pick as PickFilter).order_by_expression.replace(find_text, replace_text)
+            _replace_in_rows(event_row.sub_events, find_text, replace_text, counter)
 
 ## Ctrl+/: toggles the selected rows' enabled state (the sheet's "comment out").
 func _toggle_selected_rows_enabled() -> void:

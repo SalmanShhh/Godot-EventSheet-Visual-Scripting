@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Debug & polish: breakpoint UX, Find & Replace, shader/date/platform vocabulary
+- **Breakpoints are fully wired**: F9 persists onto the event resource, and the new
+  **Debug BP** toolbar toggle turns debug compiles on per sheet (`breakpoint`
+  statements pause the real Godot debugger; normal compiles untouched).
+- **Find & Replace**: the find bar gains a replace field + **Replace All** — one
+  undoable substitution across comments, GDScript blocks, string params, pick-filter
+  expressions, group names/descriptions and match branches, with a count.
+- **Set Shader Parameter** (C3 effects → Godot materials, StringName idiom),
+  **Date & Time** (datetime string, unix time) and **Platform** (OS Name,
+  Has Feature with the mobile/web/pc dropdown) vocabularies.
+- **Families** mapped honestly in the migration guide (node groups + behavior packs);
+  the **live-values overlay** is spec'd as the next debugging rung (EngineDebugger
+  channel design, deferred to its own slice).
+- Covered by `tests/debug_polish_test.gd` (9 assertions).
+
 ### Language gaps closed: C3 Loops, Pick Instances, returns, group locals, real breakpoints
 - **The full C3 Loops set** in the pick-filter dialog (with a C3-named preset menu):
   **For** (indexed), **For Each**, **For Each (ordered)**, **Repeat**, **While** — Repeat

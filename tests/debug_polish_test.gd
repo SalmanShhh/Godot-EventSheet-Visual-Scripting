@@ -1,0 +1,83 @@
+# Godot EventSheets — Debug & polish: breakpoint UX wiring, Find & Replace, shader/
+# date/platform vocabulary.
+@tool
+extends RefCounted
+class_name DebugPolishTest
+
+class NoopUndoManager:
+	extends RefCounted
+	func create_action(_a = null) -> void: pass
+	func add_do_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func add_undo_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func commit_action() -> void: pass
+	func has_undo() -> bool: return false
+	func has_redo() -> bool: return false
+	func undo() -> void: pass
+	func redo() -> void: pass
+	func clear_history() -> void: pass
+
+static func run() -> bool:
+	var all_passed: bool = true
+
+	# F9 persists onto the model; the toolbar toggle flips the sheet's debug compile.
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var event: EventRow = EventRow.new()
+	event.trigger_provider_id = "Core"
+	event.trigger_id = "OnReady"
+	sheet.events.append(event)
+	var comment: CommentRow = CommentRow.new()
+	comment.text = "old_name notes"
+	sheet.events.append(comment)
+	var block: RawCodeRow = RawCodeRow.new()
+	block.code = "old_name += 1"
+	event.actions.append(block)
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(sheet)
+	editor.set_undo_redo_manager(NoopUndoManager.new())
+	var viewport: EventSheetViewport = editor.get_viewport_control()
+	viewport._toggle_breakpoint(0)
+	all_passed = _check("F9 persists onto the event resource", event.debug_break, true) and all_passed
+	viewport._toggle_breakpoint(0)
+	all_passed = _check("F9 toggles back off", event.debug_break, false) and all_passed
+	editor._toggle_breakpoint_emission()
+	all_passed = _check("Debug BP toggle flips the sheet flag", sheet.emit_breakpoints, true) and all_passed
+	editor._toggle_breakpoint_emission()
+
+	# Find & Replace across comments, blocks, and params.
+	var ace: ACEAction = ACEAction.new()
+	ace.provider_id = "Core"
+	ace.ace_id = "X"
+	ace.codegen_template = "set({v})"
+	ace.params = {"v": "old_name + 1"}
+	event.actions.append(ace)
+	editor._refresh_after_edit()
+	editor._ensure_find_bar()
+	editor._find_edit.text = "old_name"
+	editor._replace_edit.text = "new_name"
+	editor._replace_all_in_sheet()
+	all_passed = _check("replace hits comments", comment.text, "new_name notes") and all_passed
+	all_passed = _check("replace hits GDScript blocks", block.code, "new_name += 1") and all_passed
+	all_passed = _check("replace hits string params", str(ace.params.get("v")), "new_name + 1") and all_passed
+	editor.free()
+
+	# New vocabulary registered + compiles.
+	var by_id: Dictionary = {}
+	for descriptor in EventForgeBuiltinACEs.get_descriptors():
+		by_id[descriptor.ace_id] = descriptor
+	all_passed = _check("shader/date/platform registered",
+		by_id.has("SetShaderParameter") and by_id.has("GetDatetimeString") and by_id.has("GetUnixTime") and by_id.has("GetOSName") and by_id.has("HasOSFeature"), true) and all_passed
+	all_passed = _check("platform feature is a dropdown",
+		((by_id["HasOSFeature"].params[0] as ACEParam).options as Array).size() >= 6, true) and all_passed
+	all_passed = _check("shader template uses the StringName idiom",
+		str(by_id["SetShaderParameter"].codegen_template), "material.set_shader_parameter(&{param}, {value})") and all_passed
+
+	return all_passed
+
+static func _check(label: String, actual: Variant, expected: Variant) -> bool:
+	if actual == expected:
+		print("[PASS] debug_polish_test: %s" % label)
+		return true
+	print("[FAIL] debug_polish_test: %s" % label)
+	print("  expected: %s" % str(expected))
+	print("  actual:   %s" % str(actual))
+	return false
