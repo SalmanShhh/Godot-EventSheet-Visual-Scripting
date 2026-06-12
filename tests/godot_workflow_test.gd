@@ -158,6 +158,88 @@ static func run() -> bool:
 		plain_editor.is_code_panel_visible(), false) and all_passed
 	plain_editor.free()
 
+	# ── GDScript-coverage arc: if/elif/else reverse-lift (sub-events + else chains)
+	# round-trips through the compiler and back ────────────────────────────────────
+	var rt_sheet: EventSheetResource = EventSheetResource.new()
+	rt_sheet.host_class = "CharacterBody2D"
+	var rt_event: EventRow = EventRow.new()
+	rt_event.trigger_provider_id = "Core"
+	rt_event.trigger_id = "OnPhysicsProcess"
+	var grounded: ACECondition = ACECondition.new()
+	grounded.provider_id = "Core"
+	grounded.ace_id = "IsOnFloor"
+	grounded.codegen_template = "is_on_floor()"
+	rt_event.conditions.append(grounded)
+	var run_raw: RawCodeRow = RawCodeRow.new()
+	run_raw.code = "velocity.x = 100.0"
+	rt_event.actions.append(run_raw)
+	var jump_sub: EventRow = EventRow.new()
+	var pressed: ACECondition = ACECondition.new()
+	pressed.provider_id = "Core"
+	pressed.ace_id = "IsActionJustPressed"
+	pressed.codegen_template = "Input.is_action_just_pressed(&{action})"
+	pressed.params = {"action": "\"ui_accept\""}
+	jump_sub.conditions.append(pressed)
+	var jump_raw: RawCodeRow = RawCodeRow.new()
+	jump_raw.code = "velocity.y = -300.0"
+	jump_sub.actions.append(jump_raw)
+	rt_event.sub_events.append(jump_sub)
+	var settle_sub: EventRow = EventRow.new()
+	settle_sub.else_mode = EventRow.ElseMode.ELSE
+	var settle_raw: RawCodeRow = RawCodeRow.new()
+	settle_raw.code = "velocity.y = 0.0"
+	settle_sub.actions.append(settle_raw)
+	rt_event.sub_events.append(settle_sub)
+	rt_sheet.events.append(rt_event)
+	var airborne_event: EventRow = EventRow.new()
+	airborne_event.trigger_provider_id = "Core"
+	airborne_event.trigger_id = "OnPhysicsProcess"
+	airborne_event.else_mode = EventRow.ElseMode.ELSE
+	var spin_raw: RawCodeRow = RawCodeRow.new()
+	spin_raw.code = "rotation = 0.0"
+	airborne_event.actions.append(spin_raw)
+	rt_sheet.events.append(airborne_event)
+	var rt_compile: Dictionary = SheetCompiler.compile(rt_sheet, "user://lift_roundtrip.gd")
+	all_passed = _check("the branching fixture compiles", bool(rt_compile.get("success")), true) and all_passed
+	var lifted: EventSheetResource = GDScriptImporter.new().import_external("user://lift_roundtrip.gd")
+	var lifted_events: Array = []
+	for row: Variant in lifted.events:
+		if row is EventRow:
+			lifted_events.append(row)
+	all_passed = _check("both chained events lift back",
+		lifted_events.size() == 2
+		and (lifted_events[1] as EventRow).else_mode == EventRow.ElseMode.ELSE, true) and all_passed
+	var lifted_first: EventRow = lifted_events[0] as EventRow
+	all_passed = _check("conditions reverse-match through the chain",
+		lifted_first.conditions.size() == 1 and (lifted_first.conditions[0] as ACECondition).ace_id == "IsOnFloor", true) and all_passed
+	all_passed = _check("nested if/else lifts into sub-events with else_mode",
+		lifted_first.sub_events.size() == 2
+		and (lifted_first.sub_events[0] as EventRow).conditions.size() == 1
+		and ((lifted_first.sub_events[0] as EventRow).conditions[0] as ACECondition).ace_id == "IsActionJustPressed"
+		and (lifted_first.sub_events[1] as EventRow).else_mode == EventRow.ElseMode.ELSE, true) and all_passed
+	var rt_back: Dictionary = SheetCompiler.compile(lifted, "user://lift_roundtrip_back.gd")
+	all_passed = _check("the lifted structure reproduces the source byte-for-byte",
+		str(rt_back.get("output")), FileAccess.get_file_as_string("user://lift_roundtrip.gd")) and all_passed
+
+	# ── The lift report: the boundary explains itself ─────────────────────────────
+	all_passed = _check("await blocks point at Wait",
+		EventSheetLiftReport.reason_for("func wait_a_bit() -> void:\n\tawait get_tree().create_timer(1.0).timeout").contains("Wait"), true) and all_passed
+	all_passed = _check("while loops point at the loop ACEs",
+		EventSheetLiftReport.reason_for("func spin() -> void:\n\twhile true:\n\t\tpass").contains("while loop"), true) and all_passed
+	all_passed = _check("match blocks point at Add Match",
+		EventSheetLiftReport.reason_for("func route(x) -> void:\n\tmatch x:\n\t\t_: pass").contains("match"), true) and all_passed
+	all_passed = _check("preludes are explained as declarations",
+		EventSheetLiftReport.reason_for("extends Node\n\nvar hp: int = 3").contains("prelude"), true) and all_passed
+	var report: Array[Dictionary] = EventSheetLiftReport.for_sheet(lifted)
+	var event_entries: int = 0
+	for entry: Dictionary in report:
+		if str(entry.get("kind")) == "event":
+			event_entries += 1
+	all_passed = _check("the report covers lifted events and the summary counts them",
+		event_entries == 2 and EventSheetLiftReport.summary(report).contains("2 event(s)"), true) and all_passed
+	DirAccess.remove_absolute("user://lift_roundtrip.gd")
+	DirAccess.remove_absolute("user://lift_roundtrip_back.gd")
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

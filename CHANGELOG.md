@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### GDScript coverage: branching lifts, and the boundary explains itself
+- **if/elif/else reverse-lift** — opening a `.gd` as a sheet now lifts branching
+  into real structure: `if` blocks become conditioned events, adjacent
+  `elif`/`else:` become chained else-rows, and *nested* branches become
+  sub-events, recursively. Anything unrepresentable falls back to the old
+  in-flow GDScript behavior, and the byte-identical recompile still gates every
+  lift (lossless, as ever).
+- **The Lift Report** (Tools → Lift Report…, plus the open-status summary) —
+  after a `.gd` opens, every block explains itself: what lifted into events,
+  and why each remaining block stayed code with the closest ACE named ("uses
+  await — the Wait action is the structured equivalent"). For C3 users learning
+  Godot the boundary becomes the curriculum; for Godot devs it's trust through
+  transparency.
+
 ### Godot-native workflow (3/3): the first-run hook
 - **Welcome panel** on first enable (per project, stored in editor metadata —
   nothing committed, never shows headless): open the playable showcase, jump to

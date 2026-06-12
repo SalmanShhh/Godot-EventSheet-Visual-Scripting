@@ -521,6 +521,7 @@ func _build_ui() -> void:
     tools_popup.add_item("Sheet Backups…", 9)
     tools_popup.add_item("Save as Template", 10)
     tools_popup.add_item("Attach to Selected Node", 11)
+    tools_popup.add_item("Lift Report…", 12)
     tools_popup.id_pressed.connect(func(id: int) -> void:
         match id:
             0: _toggle_breakpoint_emission()
@@ -535,6 +536,7 @@ func _build_ui() -> void:
             9: _open_sheet_backups()
             10: _save_as_project_template()
             11: _attach_behavior_to_selection()
+            12: _open_lift_report()
     )
     _toolbar.add_child(tools_menu)
     _add_toolbar_button("Split", _toggle_split_view)
@@ -1086,7 +1088,10 @@ func _load_sheet_from_path(path: String) -> void:
             if entry is LocalVariable:
                 lifted_count += 1
         _external_mtime = FileAccess.get_modified_time(resolved_path)
-        _set_status("Opened GDScript as sheet: %d variable(s) lifted, file remains the source of truth." % lifted_count)
+        # The lift report explains the structure/code boundary per block — the
+        # teaching surface for what GDScript maps to which events.
+        _last_lift_report = EventSheetLiftReport.for_sheet(imported)
+        _set_status("Opened GDScript as sheet: %d variable(s) lifted, %s — Tools → Lift Report…" % [lifted_count, EventSheetLiftReport.summary(_last_lift_report)])
         return
     var loaded: Resource = ResourceLoader.load(resolved_path)
     if loaded is EventSheetResource:
@@ -4663,6 +4668,45 @@ func _action_for_asset(asset_path: String) -> ACEAction:
                 action.codegen_template = action.codegen_template.replace("{uid}", "%08x" % (randi() & 0x7fffffff))
             return action
     return null
+
+# ── Lift report: what lifted to events and why each block stayed code
+# (EventSheetLiftReport; refreshed for the current sheet on open) ─────────────────────
+var _last_lift_report: Array[Dictionary] = []
+var _lift_report_window: Window = null
+var _lift_report_tree: Tree = null
+
+func _open_lift_report() -> void:
+    var report: Array[Dictionary] = EventSheetLiftReport.for_sheet(_current_sheet)
+    if _lift_report_window == null:
+        _lift_report_window = Window.new()
+        _lift_report_window.title = "Lift Report — what became events, what stayed code"
+        _lift_report_window.size = Vector2i(640, 400)
+        _lift_report_window.close_requested.connect(func() -> void: _lift_report_window.hide())
+        _lift_report_tree = Tree.new()
+        _lift_report_tree.set_anchors_preset(Control.PRESET_FULL_RECT)
+        _lift_report_tree.hide_root = true
+        _lift_report_tree.columns = 3
+        _lift_report_tree.set_column_title(0, "Kind")
+        _lift_report_tree.set_column_title(1, "Row")
+        _lift_report_tree.set_column_title(2, "Why it stayed code (and the structured equivalent)")
+        _lift_report_tree.set_column_expand(0, false)
+        _lift_report_tree.set_column_custom_minimum_width(0, 80)
+        _lift_report_tree.set_column_expand(1, false)
+        _lift_report_tree.set_column_custom_minimum_width(1, 220)
+        _lift_report_tree.column_titles_visible = true
+        _lift_report_window.add_child(_lift_report_tree)
+        add_child(_lift_report_window)
+    _lift_report_tree.clear()
+    var root_item: TreeItem = _lift_report_tree.create_item()
+    for entry: Dictionary in report:
+        var item: TreeItem = _lift_report_tree.create_item(root_item)
+        var kind: String = str(entry.get("kind"))
+        item.set_text(0, kind.to_upper())
+        item.set_custom_color(0, Color(0.55, 0.85, 0.6) if kind in ["event", "function"] else Color(0.85, 0.78, 0.5))
+        item.set_text(1, str(entry.get("label")))
+        item.set_text(2, str(entry.get("reason")))
+    _set_status("Lift Report: %s." % EventSheetLiftReport.summary(report))
+    _lift_report_window.popup_centered()
 
 # ── Loop closers: attach the behavior where you're looking, run the scene that
 # uses this sheet (core lookups are headless; playing needs the editor) ───────────────

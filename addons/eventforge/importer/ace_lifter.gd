@@ -2,11 +2,13 @@
 #
 # Turns generated GDScript back into real sheet events when a file is opened as a
 # GDScript-backed sheet: lifecycle trigger functions (_ready/_process/_physics_process)
-# whose bodies are `if <condition templates>:` blocks + action-template lines lift into
-# EventRows; statements that match no template become in-flow GDScript blocks, so the
-# event still lifts. Reverse templates come from the builtin descriptor registry
-# (`{param}` placeholders become named captures; params round-trip as strings because
-# codegen substitutes with plain str()).
+# lift into EventRows — `if <condition templates>:` blocks become conditioned events,
+# adjacent `elif`/`else:` chains become else_mode siblings, NESTED if/elif/else become
+# sub-events (recursively), and action-template lines become ACEActions; statements
+# that match no template become in-flow GDScript blocks, so the event still lifts.
+# Reverse templates come from the builtin descriptor registry (`{param}` placeholders
+# become named captures; params round-trip as strings because codegen substitutes with
+# plain str()).
 #
 # THE CONTRACT (lossless rule): lifting is all-or-nothing per file and verified by
 # recompiling the whole sheet — if the output is not byte-identical to the source, the
@@ -320,51 +322,107 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			trigger_provider = ""
 			trigger_args = header_match.get_string(2)
 	var reverse_entries: Array = _build_reverse_entries()
-	var events: Array = []
-	var current: EventRow = null
-	var pending_raw: PackedStringArray = PackedStringArray()
-	while index < function_lines.size():
-		var line: String = function_lines[index]
-		if line.strip_edges().is_empty():
-			return {"ok": false}  # blank inside a generated body never happens; bail to blocks
-		if line.begins_with("\tif ") and line.ends_with(":"):
-			var condition_event: EventRow = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
-			if not _parse_conditions(line.substr(4, line.length() - 5), condition_event, reverse_entries):
-				if lenient_ifs:
-					# Function bodies may contain arbitrary control flow: keep the whole
-					# if-line as in-flow GDScript (deeper lines follow via the raw branch,
-					# preserving their relative indentation).
-					if current == null:
-						current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
-						events.append(current)
-					pending_raw.append(line.substr(1))
-					index += 1
-					continue
-				return {"ok": false}
-			_flush_raw(current, pending_raw)
-			current = condition_event
-			events.append(current)
-			index += 1
-			# Conditioned body: depth-2 lines belong to this event.
-			while index < function_lines.size() and function_lines[index].begins_with("\t\t"):
-				_consume_action_line(current, function_lines[index].substr(2), 0, pending_raw, reverse_entries)
-				index += 1
-			_flush_raw(current, pending_raw)
-			current = null
-			continue
-		if not line.begins_with("\t"):
-			return {"ok": false}  # dedented content inside a function — not our shape
-		# Unconditioned statement at depth 1: attach to an open conditionless event.
-		if current == null:
-			current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
-			events.append(current)
-		_consume_action_line(current, line.substr(1), 0, pending_raw, reverse_entries)
-		index += 1
-	_flush_raw(current, pending_raw)
+	var parsed: Dictionary = _parse_body(function_lines, index, 1, trigger_id, trigger_provider, trigger_args, trigger_source, reverse_entries, lenient_ifs)
+	if not bool(parsed.get("ok", false)) or int(parsed.get("next", 0)) < function_lines.size():
+		return {"ok": false}  # dedented/blank content inside a function — not our shape
+	var events: Array = parsed.get("rows", [])
 	for event: Variant in events:
-		if (event as EventRow).actions.is_empty() and (event as EventRow).conditions.is_empty():
+		if _is_plain_collector(event as EventRow) and (event as EventRow).actions.is_empty():
 			return {"ok": false}
 	return {"ok": true, "events": events}
+
+## Recursive body grammar (the reverse of _emit_event_body): at each depth,
+## `if <conds>:` opens a conditioned row, an adjacent `elif <conds>:`/`else:` chains
+## onto it via else_mode (ELSE + conditions == ELIF — the emitter's rule), and the
+## block's own body parses one level deeper — statements become the row's actions,
+## nested blocks its sub_events. Anything unrepresentable (unmatched conditions,
+## statements interleaved AFTER a nested block, arbitrary control flow) falls back to
+## the lenient path: the raw line + its deeper lines stay in-flow GDScript with their
+## relative indentation, exactly as before this grammar existed. The byte-identical
+## recompile in attempt_lift gates every shape this parser produces.
+## Returns {ok, rows: Array[EventRow], next: int}; a "plain collector" row (no
+## conditions, no else_mode) holds the statements between blocks.
+static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigger_id: String, trigger_provider: String, trigger_args: String, trigger_source: String, reverse_entries: Array, lenient_ifs: bool) -> Dictionary:
+	var indent: String = "\t".repeat(depth)
+	var rows: Array = []
+	var current: EventRow = null
+	var pending_raw: PackedStringArray = PackedStringArray()
+	var chain_open: bool = false
+	var index: int = start
+	while index < lines.size():
+		var line: String = lines[index]
+		if line.strip_edges().is_empty():
+			return {"ok": false}  # blank inside a generated body never happens; bail to blocks
+		if not line.begins_with(indent):
+			break  # dedent: this body is done; the caller resumes here
+		var rest: String = line.substr(depth)
+		var at_this_depth: bool = not rest.begins_with("\t")
+		var is_if: bool = at_this_depth and rest.begins_with("if ") and rest.ends_with(":")
+		var is_elif: bool = at_this_depth and chain_open and rest.begins_with("elif ") and rest.ends_with(":")
+		var is_else: bool = at_this_depth and chain_open and rest == "else:"
+		if is_if or is_elif or is_else:
+			var expression: String = ""
+			if is_if:
+				expression = rest.substr(3, rest.length() - 4)
+			elif is_elif:
+				expression = rest.substr(5, rest.length() - 6)
+			var block_event: EventRow = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+			if not is_if:
+				block_event.else_mode = EventRow.ElseMode.ELSE
+			var representable: bool = expression.is_empty() or _parse_conditions(expression, block_event, reverse_entries)
+			var inner: Dictionary = {}
+			if representable:
+				inner = _parse_body(lines, index + 1, depth + 1, "", "", "", "", reverse_entries, lenient_ifs)
+				representable = bool(inner.get("ok", false)) and _adopt_block_body(block_event, inner.get("rows", []))
+			if not representable:
+				if not lenient_ifs:
+					return {"ok": false}
+				# Raw fallback: the header line joins the open collector; its deeper
+				# lines arrive through the statement branch below, tabs preserved.
+				if current == null:
+					current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+					rows.append(current)
+				pending_raw.append(rest)
+				index += 1
+				chain_open = false
+				continue
+			_flush_raw(current, pending_raw)
+			current = null
+			rows.append(block_event)
+			index = int(inner.get("next"))
+			chain_open = true
+			continue
+		# Statement at this depth (or deeper, inside an unlifted block): collect with
+		# relative indentation intact.
+		if current == null:
+			current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+			rows.append(current)
+		_consume_action_line(current, rest, 0, pending_raw, reverse_entries)
+		index += 1
+		chain_open = false
+	_flush_raw(current, pending_raw)
+	return {"ok": true, "rows": rows, "next": index}
+
+## Folds a parsed block body into its event: a leading plain collector's statements
+## become the event's actions, every conditioned/chained row becomes a sub-event.
+## False when the shape can't survive emission (actions emit BEFORE sub-events, so
+## statements after a nested block have no faithful home).
+static func _adopt_block_body(block_event: EventRow, inner_rows: Array) -> bool:
+	var cursor: int = 0
+	if cursor < inner_rows.size() and _is_plain_collector(inner_rows[cursor] as EventRow):
+		for action: Variant in (inner_rows[cursor] as EventRow).actions:
+			block_event.actions.append(action)
+		cursor += 1
+	while cursor < inner_rows.size():
+		var child: EventRow = inner_rows[cursor] as EventRow
+		if _is_plain_collector(child):
+			return false
+		block_event.sub_events.append(child)
+		cursor += 1
+	return true
+
+static func _is_plain_collector(event: EventRow) -> bool:
+	return event != null and event.conditions.is_empty() and event.else_mode == EventRow.ElseMode.NONE
 
 ## True for a `_ready` body line that is a regenerated signal connection.
 static func _is_connect_line(line: String) -> bool:
