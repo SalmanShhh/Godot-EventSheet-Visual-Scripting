@@ -6,6 +6,15 @@
 extends RefCounted
 class_name GodotWorkflowTest
 
+class NoopUndoManager:
+	extends RefCounted
+	func create_action(_a = null) -> void: pass
+	func add_do_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func add_undo_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func commit_action() -> void: pass
+	func has_undo() -> bool: return false
+	func has_redo() -> bool: return false
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -78,6 +87,58 @@ static func run() -> bool:
 	all_passed = _check("re-registering never clobbers a changed value",
 		int(ProjectSettings.get_setting("eventsheets/editor/backup_count")), 3) and all_passed
 	ProjectSettings.set_setting("eventsheets/editor/backup_count", null)
+
+	# ── Rebindable shortcuts: exact modifier matching, Project Settings overrides ─
+	var parsed: Dictionary = EventSheetShortcuts.parse("Ctrl+Shift+S")
+	all_passed = _check("bindings parse modifiers + key",
+		int(parsed.get("keycode")) == KEY_S and bool(parsed.get("ctrl")) and bool(parsed.get("shift")), true) and all_passed
+	var combo: InputEventKey = InputEventKey.new()
+	combo.keycode = KEY_D
+	combo.ctrl_pressed = true
+	all_passed = _check("default bindings match their combo",
+		EventSheetShortcuts.matches(combo, "duplicate") and not EventSheetShortcuts.matches(combo, "copy"), true) and all_passed
+	var chord: InputEventKey = InputEventKey.new()
+	chord.keycode = KEY_C
+	chord.ctrl_pressed = true
+	chord.shift_pressed = true
+	all_passed = _check("chords never shadow their plain form",
+		EventSheetShortcuts.matches(chord, "add_condition_chord") and not EventSheetShortcuts.matches(chord, "copy"), true) and all_passed
+	ProjectSettings.set_setting("eventsheets/editor/shortcuts/duplicate", "Alt+D")
+	var rebound: InputEventKey = InputEventKey.new()
+	rebound.keycode = KEY_D
+	rebound.alt_pressed = true
+	all_passed = _check("Project Settings rebinds win over defaults",
+		EventSheetShortcuts.matches(rebound, "duplicate") and not EventSheetShortcuts.matches(combo, "duplicate"), true) and all_passed
+	ProjectSettings.set_setting("eventsheets/editor/shortcuts/duplicate", null)
+
+	# ── Go to Sheet Row + docs links ──────────────────────────────────────────────
+	all_passed = _check("class docs resolve to the engine help topic",
+		ACEParamsDialog.open_class_docs("CharacterBody2D"), "class_name:CharacterBody2D") and all_passed
+	var goto_editor: EventSheetEditor = EventSheetEditor.new()
+	var goto_sheet: EventSheetResource = EventSheetResource.new()
+	goto_sheet.host_class = "Node"
+	var goto_event: EventRow = EventRow.new()
+	goto_event.trigger_provider_id = "Core"
+	goto_event.trigger_id = "OnProcess"
+	var goto_raw: RawCodeRow = RawCodeRow.new()
+	goto_raw.code = "print(\"tick\")"
+	goto_event.actions.append(goto_raw)
+	goto_sheet.events.append(goto_event)
+	goto_editor.setup(goto_sheet)
+	goto_editor.set_undo_redo_manager(NoopUndoManager.new())
+	var preview: Dictionary = SheetCompiler.compile(goto_sheet, "user://goto_probe.gd")
+	var event_line: int = 0
+	for entry: Variant in (preview.get("source_map", []) as Array):
+		if entry is Dictionary and str((entry as Dictionary).get("kind")) == "event":
+			event_line = int((entry as Dictionary).get("start", 0))
+			break
+	goto_editor.goto_generated_line(event_line)
+	all_passed = _check("goto_generated_line opens the panel and selects the emitting row",
+		goto_editor.is_code_panel_visible()
+		and goto_editor._viewport.get_selected_row_data() != null
+		and goto_editor._viewport.get_selected_row_data().source_resource == goto_event, true) and all_passed
+	goto_editor.free()
+	DirAccess.remove_absolute("user://goto_probe.gd")
 
 	return all_passed
 

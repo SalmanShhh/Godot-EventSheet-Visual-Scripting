@@ -900,50 +900,41 @@ func _unhandled_key_input(event: InputEvent) -> void:
     # keys never fire mid-edit (text fields already consume their own text shortcuts).
     var typing: bool = _text_field_has_focus()
     var shift: bool = key_event.shift_pressed
+    # Rebindable shortcuts (eventsheets/editor/shortcuts/* — EventSheetShortcuts):
+    # exact modifier matching, so a chord never shadows its plain form. Entries:
+    # [action, suppressed-while-typing, handler]. C3 reflexes by default: E event,
+    # C condition, A action, Q comment, G group, X toggle.
+    for entry: Array in [
+        ["add_condition_chord", true, _on_add_condition_requested],
+        ["add_action_chord", true, _on_add_action_requested],
+        ["add_variable_chord", true, _on_add_global_variable_requested],
+        ["add_event_chord", true, _on_add_event_requested],
+        ["duplicate", true, _on_duplicate_requested],
+        ["save_as", false, _on_save_as_requested],
+        ["save", false, _on_save_requested],
+        ["open", false, _on_open_requested],
+        ["copy", false, _on_copy_requested],
+        ["paste", false, _on_paste_requested],
+        ["redo", false, _on_redo_requested],
+        ["undo", false, _on_undo_requested],
+        ["add_comment", true, _on_add_comment_requested],
+        ["add_event", true, _on_add_event_requested],
+        ["add_condition", true, _on_add_condition_requested],
+        ["add_action", true, _on_add_action_requested],
+        ["add_group", true, _on_add_group_requested],
+        ["toggle_enabled", true, _toggle_selected_enabled],
+    ]:
+        if EventSheetShortcuts.matches(key_event, str(entry[0])):
+            if bool(entry[1]) and typing:
+                return  # let the text field keep the keystroke
+            (entry[2] as Callable).call()
+            accept_event()
+            return
+    # Fixed alternates + structural keys (grammar, not preference — never rebindable):
+    # Ctrl+Y redo, Ctrl+± zoom, Tab nesting, Delete, Enter/F2 inline edit.
     if key_event.ctrl_pressed or key_event.meta_pressed:
-        if key_event.keycode == KEY_C and shift:
-            if not typing:
-                _on_add_condition_requested()
-                accept_event()
-        elif key_event.keycode == KEY_C:
-            _on_copy_requested()
-            accept_event()
-        elif key_event.keycode == KEY_V and shift:
-            if not typing:
-                _on_add_global_variable_requested()
-                accept_event()
-        elif key_event.keycode == KEY_V:
-            _on_paste_requested()
-            accept_event()
-        elif key_event.keycode == KEY_A and shift:
-            if not typing:
-                _on_add_action_requested()
-                accept_event()
-        elif key_event.keycode == KEY_S and shift:
-            _on_save_as_requested()
-            accept_event()
-        elif key_event.keycode == KEY_S:
-            _on_save_requested()
-            accept_event()
-        elif key_event.keycode == KEY_E:
-            if not typing:
-                _on_add_event_requested()
-                accept_event()
-        elif key_event.keycode == KEY_D:
-            if not typing:
-                _on_duplicate_requested()
-                accept_event()
-        elif key_event.keycode == KEY_Z and shift:
+        if key_event.keycode == KEY_Y:
             _on_redo_requested()
-            accept_event()
-        elif key_event.keycode == KEY_Z:
-            _on_undo_requested()
-            accept_event()
-        elif key_event.keycode == KEY_Y:
-            _on_redo_requested()
-            accept_event()
-        elif key_event.keycode == KEY_O:
-            _on_open_requested()
             accept_event()
         elif key_event.keycode in [KEY_EQUAL, KEY_PLUS, KEY_KP_ADD]:
             _on_zoom_in_requested()
@@ -954,28 +945,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
         return
     if typing:
         return
-    if key_event.keycode == KEY_Q:
-        _on_add_comment_requested()
-        accept_event()
-    # C3 reflexes: E adds an event, C a condition, A an action (on the selection).
-    elif key_event.keycode == KEY_E:
-        _on_add_event_requested()
-        accept_event()
-    elif key_event.keycode == KEY_C:
-        _on_add_condition_requested()
-        accept_event()
-    elif key_event.keycode == KEY_A:
-        _on_add_action_requested()
-        accept_event()
-    elif key_event.keycode == KEY_G:
-        _on_add_group_requested()
-        accept_event()
-    elif key_event.keycode == KEY_X:
-        # Toggle enabled/disabled for the whole current selection (conditions, actions,
-        # events, groups, comments) — single or multi-select.
-        _toggle_selected_enabled()
-        accept_event()
-    elif key_event.keycode == KEY_TAB and shift:
+    if key_event.keycode == KEY_TAB and shift:
         # Outdent (un-nest); only consume Tab when the move actually applies so normal
         # focus traversal still works when there is nothing to outdent.
         if _outdent_selected_event():
@@ -2236,6 +2206,19 @@ func _on_code_panel_gui_input(event: InputEvent) -> void:
         return
     # The click already moved the caret; source maps are 1-based.
     _select_sheet_row_for_code_line(_code_edit.get_caret_line() + 1)
+
+## The script editor's "Go to Sheet Row": shows the GDScript panel, refreshes the
+## source map and selects the row that emitted the given 1-based generated line —
+## errors and stack traces land on rows, not on generated code.
+func goto_generated_line(line: int) -> void:
+    _ensure_code_panel()
+    if not _side_panel.visible:
+        _toggle_code_panel()
+    else:
+        _refresh_code_panel()
+    if _code_edit != null and line > 0:
+        _code_edit.set_caret_line(maxi(line - 1, 0))
+    _select_sheet_row_for_code_line(line)
 
 ## Picks the most specific source-map entry containing the line (smallest range wins, so
 ## in-flow blocks beat their event and events beat their trigger function), then walks

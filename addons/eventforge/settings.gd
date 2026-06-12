@@ -49,7 +49,15 @@ const DEFINITIONS: Array[Dictionary] = [
 ## Registers every setting (idempotent; call at plugin load). Values equal to the
 ## initial value are never persisted into project.godot.
 static func register_all() -> void:
-	for definition: Dictionary in DEFINITIONS:
+	var definitions: Array[Dictionary] = DEFINITIONS.duplicate()
+	# Rebindable shortcuts join the same registry (eventsheets/editor/shortcuts/*).
+	for action: Variant in EventSheetShortcuts.DEFAULTS:
+		definitions.append({
+			"name": EventSheetShortcuts.SETTING_PREFIX + str(action),
+			"default": EventSheetShortcuts.DEFAULTS[action],
+			"type": TYPE_STRING,
+		})
+	for definition: Dictionary in definitions:
 		var setting_name: String = str(definition.get("name"))
 		if not ProjectSettings.has_setting(setting_name):
 			ProjectSettings.set_setting(setting_name, definition.get("default"))

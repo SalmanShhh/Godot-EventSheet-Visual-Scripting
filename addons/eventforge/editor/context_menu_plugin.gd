@@ -10,6 +10,7 @@ extends EditorContextMenuPlugin
 var slot: int = -1
 var open_sheet: Callable = Callable()    # Callable(path: String)
 var attach_sheet: Callable = Callable()  # Callable(node: Node)
+var goto_row: Callable = Callable()      # Callable(script_path: String)
 
 func _popup_menu(paths: PackedStringArray) -> void:
 	match slot:
@@ -23,6 +24,15 @@ func _popup_menu(paths: PackedStringArray) -> void:
 					break
 		EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR:
 			add_context_menu_item("Open as Event Sheet", _on_open_requested)
+			for path: String in paths:
+				if not EventSheetProjectDoctor.sheet_for_script(path).is_empty():
+					add_context_menu_item("Go to Sheet Row", _on_goto_row_requested)
+					break
+
+func _on_goto_row_requested(targets: Variant) -> void:
+	if goto_row.is_valid() and targets is Array and not (targets as Array).is_empty():
+		var entry: Variant = (targets as Array)[0]
+		goto_row.call((entry as Script).resource_path if entry is Script else str(entry))
 
 func _on_attach_requested(targets: Variant) -> void:
 	if attach_sheet.is_valid() and targets is Array and not (targets as Array).is_empty() and (targets as Array)[0] is Node:

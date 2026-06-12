@@ -118,6 +118,16 @@ func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint.add_theme_color_override("font_color", Color(0.80, 0.85, 0.95, 0.95))
 	_form.add_child(_hint)
+	# Native-node ACEs link to the engine's own class reference — the vocabulary IS
+	# Godot, and the built-in docs are one click away.
+	var docs_class: String = str(definition.metadata.get("node_type", "")).strip_edges()
+	if not docs_class.is_empty() and ClassDB.class_exists(docs_class):
+		var docs_button: Button = Button.new()
+		docs_button.text = "View %s in Godot Docs" % docs_class
+		docs_button.flat = true
+		docs_button.tooltip_text = "Open the built-in class reference for %s." % docs_class
+		docs_button.pressed.connect(func() -> void: open_class_docs(docs_class))
+		_form.add_child(docs_button)
 
 	for parameter: Variant in definition.parameters:
 		if not (parameter is Dictionary):
@@ -931,6 +941,16 @@ func _validate_expression_field(edit: Control) -> void:
 ## Wires the sheet-context source for expression validation (returns EventSheetResource).
 func set_lint_context_provider(provider: Callable) -> void:
 	_lint_context_provider = provider
+
+## Opens the editor's built-in class reference for a native class. Returns the help
+## topic (testable headless, where there's no editor to open it in).
+static func open_class_docs(docs_class: String) -> String:
+	var topic: String = "class_name:%s" % docs_class
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var script_editor: Variant = (Engine.get_singleton("EditorInterface") as Object).call("get_script_editor")
+		if script_editor is Object:
+			(script_editor as Object).call("goto_help", topic)
+	return topic
 
 # ── Create-variable quick-fix: an undeclared identifier in an expression field grows
 # a one-click "+ var" button (cancel → Add Variable → retype, collapsed to one click).

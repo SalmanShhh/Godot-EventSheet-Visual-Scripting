@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Godot-native workflow (2/3): debug, docs and shortcuts like Godot
+- **Go to Sheet Row** (script-editor context menu on generated scripts): carries
+  the caret line through the compiler's source map into the sheet — the GDScript
+  panel opens and the emitting row is selected. Errors and stack traces land on
+  rows, not on generated code.
+- **Rebindable shortcuts** — every authoring/editing key reads its binding from
+  `eventsheets/editor/shortcuts/*` in Project Settings ("Ctrl+D", "Q",
+  "Ctrl+Shift+S"); matching is exact on modifiers so chords never shadow plain
+  forms. Structural keys (Tab nesting, Delete, Enter/F2, Escape) stay fixed —
+  grammar, not preference. (The Editor-Settings shortcut dialog isn't exposed to
+  GDScript plugins; this is the rebindable-the-Godot-way alternative.)
+- **View in Godot Docs** — native-node ACEs link to the engine's built-in class
+  reference from the params dialog: the vocabulary IS Godot, one click away.
+
 ### Godot-native workflow (1/3): entry points + discoverable settings
 - **Right-click a node → Attach Event Sheet** (Scene dock): creates a sheet whose
   host class matches the node, saves it beside the scene (suffix, never

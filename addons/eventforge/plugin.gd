@@ -61,6 +61,20 @@ func _open_sheet_in_workspace(path: String) -> void:
 	get_editor_interface().set_main_screen_editor(_get_plugin_name())
 	_event_sheet_editor.call("_load_sheet_from_path", path)
 
+## The script editor's "Go to Sheet Row": carries the caret line into the sheet's
+## reverse provenance — errors and stack traces land on rows, not generated code.
+func _goto_sheet_row_from_script(script_path: String) -> void:
+	var sheet_path: String = EventSheetProjectDoctor.sheet_for_script(script_path)
+	if sheet_path.is_empty():
+		return
+	var line: int = 0
+	var current_editor: ScriptEditorBase = get_editor_interface().get_script_editor().get_current_editor()
+	if current_editor != null and current_editor.get_base_editor() is CodeEdit:
+		line = (current_editor.get_base_editor() as CodeEdit).get_caret_line() + 1
+	_open_sheet_in_workspace(sheet_path)
+	if _event_sheet_editor != null and _event_sheet_editor.has_method("goto_generated_line"):
+		_event_sheet_editor.call("goto_generated_line", line)
+
 ## The Scene dock's "Attach Event Sheet": create beside the scene, compile, attach,
 ## then drop the user straight into the sheet.
 func _attach_sheet_to_node(node: Node) -> void:
@@ -91,6 +105,7 @@ func _enter_tree() -> void:
 		menu.slot = slot
 		menu.open_sheet = _open_sheet_in_workspace
 		menu.attach_sheet = _attach_sheet_to_node
+		menu.goto_row = _goto_sheet_row_from_script
 		add_context_menu_plugin(slot, menu)
 		_context_menus.append(menu)
 	# Inspector: nodes whose script is sheet-generated get an "Edit Event Sheet" button.
