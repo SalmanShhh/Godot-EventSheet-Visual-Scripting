@@ -269,6 +269,51 @@ static func run() -> bool:
 	DirAccess.remove_absolute("user://session_a.tres")
 	DirAccess.remove_absolute("user://eventsheets_session.cfg")
 
+	# ── Loop closers: attach where you're looking, run what uses the sheet ────────
+	all_passed = _check("reverse scene lookup pairs the showcase",
+		EventSheetProjectDoctor.scenes_attaching("res://demo/showcase/showcase_v060.gd"),
+		PackedStringArray(["res://demo/showcase/showcase_v060.tscn"])) and all_passed
+	all_passed = _check("reverse scene lookup pairs the demo player",
+		EventSheetProjectDoctor.scenes_attaching("res://demo/sheets/player_generated.gd"),
+		PackedStringArray(["res://demo/scenes/player.tscn"])) and all_passed
+	var behavior_sheet: EventSheetResource = EventSheetResource.new()
+	behavior_sheet.behavior_mode = true
+	behavior_sheet.host_class = "Node2D"
+	ResourceSaver.save(behavior_sheet, "user://attach_probe.tres")
+	var attach_sheet: EventSheetResource = ResourceLoader.load("user://attach_probe.tres", "", ResourceLoader.CACHE_MODE_IGNORE)
+	var host: Node2D = Node2D.new()
+	var attach_result: Dictionary = EventSheetAuthorLoop.attach_behavior(attach_sheet, host)
+	all_passed = _check("attach compiles + parents the behavior child",
+		bool(attach_result.get("ok")) and host.get_child_count() == 1
+		and host.get_child(0).get_script() != null and host.get_child(0).owner == host, true) and all_passed
+	all_passed = _check("matching hosts attach without a warning note",
+		str(attach_result.get("message")).contains("expects"), false) and all_passed
+	var wrong_host: Node = Node.new()
+	var mismatch_result: Dictionary = EventSheetAuthorLoop.attach_behavior(attach_sheet, wrong_host)
+	all_passed = _check("host mismatch warns but still attaches",
+		bool(mismatch_result.get("ok")) and str(mismatch_result.get("message")).contains("expects a Node2D"), true) and all_passed
+	var unsaved_behavior: EventSheetResource = EventSheetResource.new()
+	unsaved_behavior.behavior_mode = true
+	all_passed = _check("unsaved behavior sheets are refused with the fix named",
+		str(EventSheetAuthorLoop.attach_behavior(unsaved_behavior, host).get("message")).contains("Save the sheet"), true) and all_passed
+	all_passed = _check("non-behavior sheets are refused",
+		bool(EventSheetAuthorLoop.attach_behavior(EventSheetResource.new(), host).get("ok")), false) and all_passed
+	host.free()
+	wrong_host.free()
+	DirAccess.remove_absolute("user://attach_probe.tres")
+	DirAccess.remove_absolute("user://attach_probe_generated.gd")
+	# Run-from-sheet routes behaviors to the Test Bench instead of hunting scenes.
+	var run_editor: EventSheetEditor = EventSheetEditor.new()
+	var run_sheet: EventSheetResource = EventSheetResource.new()
+	run_sheet.behavior_mode = true
+	run_sheet.host_class = "Node2D"
+	run_editor.setup(run_sheet)
+	run_editor.set_undo_redo_manager(NoopUndoManager.new())
+	run_editor._run_from_sheet()
+	all_passed = _check("run-from-sheet guards behaviors without side effects",
+		run_editor.get_open_tab_count(), 1) and all_passed
+	run_editor.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

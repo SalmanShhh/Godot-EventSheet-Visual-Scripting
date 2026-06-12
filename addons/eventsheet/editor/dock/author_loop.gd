@@ -167,6 +167,32 @@ static func generate_pack_readme(sheet: EventSheetResource) -> String:
     lines.append("")
     return "\n".join(lines)
 
+## One-click behavior attach: compiles the sheet's pair fresh, then parents a Node
+## named after the sheet's class with the generated script under the host (owner set
+## so the scene serializes it). A host-class mismatch warns in the message but still
+## attaches — _get_configuration_warnings already surfaces it in-scene, and blocking
+## would just re-route through the same manual steps. Returns {ok, message}.
+static func attach_behavior(sheet: EventSheetResource, host: Node) -> Dictionary:
+    if sheet == null or not sheet.behavior_mode:
+        return {"ok": false, "message": "Attach to Node works on behavior sheets — set the Sheet Type first."}
+    if host == null:
+        return {"ok": false, "message": "Select a node in the Scene dock first."}
+    if sheet.resource_path.is_empty():
+        return {"ok": false, "message": "Save the sheet first — the behavior attaches by its compiled script."}
+    var compile_result: Dictionary = SheetCompiler.compile(sheet, "")
+    if not bool(compile_result.get("success", false)):
+        return {"ok": false, "message": "The sheet doesn't compile: %s" % str(compile_result.get("errors"))}
+    var script_path: String = SheetCompiler._resolve_output_path(sheet, "")
+    var behavior: Node = Node.new()
+    behavior.name = sheet.custom_class_name if not sheet.custom_class_name.is_empty() else script_path.get_file().get_basename().to_pascal_case()
+    behavior.set_script(load(script_path))
+    host.add_child(behavior)
+    behavior.owner = host.owner if host.owner != null else host
+    var message: String = "Attached %s under %s." % [behavior.name, host.name]
+    if ClassDB.class_exists(sheet.host_class) and not host.is_class(sheet.host_class):
+        message += " Note: this behavior expects a %s host — it will warn in the scene." % sheet.host_class
+    return {"ok": true, "message": message}
+
 ## Test Bench: one click builds host + behavior scene from the CURRENT sheet and runs
 ## it — verify a behavior without hand-building a scene. The scene builder is the
 ## testable core; running needs the editor.

@@ -495,6 +495,7 @@ func _build_ui() -> void:
     _add_toolbar_button("Save", _on_save_requested)
     _add_toolbar_button("Save As", _on_save_as_requested)
     _add_toolbar_button("Export Addon…", _export_addon_pack)
+    _add_toolbar_button("Run Scene", _run_from_sheet)
     # Debug + addon-author tools live in one menu — the toolbar had grown past 25
     # buttons (UX audit finding); these six are workflow tools, not per-row editing.
     var tools_menu: MenuButton = MenuButton.new()
@@ -515,6 +516,7 @@ func _build_ui() -> void:
     tools_popup.add_separator()
     tools_popup.add_item("Sheet Backups…", 9)
     tools_popup.add_item("Save as Template", 10)
+    tools_popup.add_item("Attach to Selected Node", 11)
     tools_popup.id_pressed.connect(func(id: int) -> void:
         match id:
             0: _toggle_breakpoint_emission()
@@ -528,6 +530,7 @@ func _build_ui() -> void:
             8: _generate_vocabulary_doc()
             9: _open_sheet_backups()
             10: _save_as_project_template()
+            11: _attach_behavior_to_selection()
     )
     _toolbar.add_child(tools_menu)
     _add_toolbar_button("Split", _toggle_split_view)
@@ -4673,6 +4676,56 @@ func _action_for_asset(asset_path: String) -> ACEAction:
                 action.codegen_template = action.codegen_template.replace("{uid}", "%08x" % (randi() & 0x7fffffff))
             return action
     return null
+
+# ── Loop closers: attach the behavior where you're looking, run the scene that
+# uses this sheet (core lookups are headless; playing needs the editor) ───────────────
+
+func _attach_behavior_to_selection() -> void:
+    if not Engine.is_editor_hint() or not is_inside_tree():
+        return
+    var selected: Array[Node] = EditorInterface.get_selection().get_selected_nodes()
+    var result: Dictionary = EventSheetAuthorLoop.attach_behavior(_current_sheet, selected[0] if not selected.is_empty() else null)
+    if bool(result.get("ok", false)):
+        EditorInterface.mark_scene_as_unsaved()
+    _set_status(str(result.get("message", "")), not bool(result.get("ok", false)))
+
+var _run_scene_menu: PopupMenu = null
+
+## Sheet → playing game in one click: save (compile-on-save keeps the script fresh),
+## find the scene(s) attaching this sheet's script (the doctor's reverse lookup),
+## play the only one — or offer the pick menu.
+func _run_from_sheet() -> void:
+    if _current_sheet == null:
+        return
+    if _current_sheet.behavior_mode:
+        _set_status("Behaviors run on a host — use Tools → Test Bench.", true)
+        return
+    _on_save_requested()
+    if _current_sheet_path.is_empty():
+        return  # Unsaved sheet: the Save As flow took over.
+    var script_path: String = EventSheetProjectDoctor.output_path_for(_current_sheet_path)
+    var scenes: PackedStringArray = EventSheetProjectDoctor.scenes_attaching(script_path)
+    if scenes.is_empty():
+        _set_status("No scene attaches %s yet — attach it to a scene and run again." % script_path.get_file(), true)
+        return
+    if scenes.size() == 1:
+        _play_scene_path(scenes[0])
+        return
+    if _run_scene_menu == null:
+        _run_scene_menu = PopupMenu.new()
+        _run_scene_menu.index_pressed.connect(func(index: int) -> void:
+            _play_scene_path(str(_run_scene_menu.get_item_metadata(index))))
+        add_child(_run_scene_menu)
+    _run_scene_menu.clear()
+    for scene_path: String in scenes:
+        _run_scene_menu.add_item(scene_path.get_file())
+        _run_scene_menu.set_item_metadata(_run_scene_menu.item_count - 1, scene_path)
+    _run_scene_menu.popup(Rect2i(Vector2i(get_global_mouse_position()), Vector2i(0, 0)))
+
+func _play_scene_path(scene_path: String) -> void:
+    if Engine.is_editor_hint() and is_inside_tree():
+        EditorInterface.play_custom_scene(scene_path)
+    _set_status("Running %s." % scene_path.get_file())
 
 # ── Session restore: the open tabs survive an editor restart
 # (user://eventsheets_session.cfg; eventsheets/editor/restore_session, default on) ────

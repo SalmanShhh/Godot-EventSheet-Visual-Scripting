@@ -1,7 +1,7 @@
 # Tedium Reduction — Tier 2 & 3 (spec)
 
-Status: **in progress** — each item flips to *Delivered* as its slice ships; the
-table is the truth.
+Status: **complete** — all eight items shipped (slices B–E, 2026-06); the table is
+the truth.
 
 The Tier 1 items (add-another chaining, per-ACE value memory, apply-with-defaults)
 are **out of scope here** — this spec covers the accepted Tier 2 (repetition
@@ -26,8 +26,8 @@ contracts:
 | 7 | Bulk operations on multi-select | 2 | ✅ Delivered |
 | 8 | Session restore (tabs) | 3 | ✅ Delivered |
 | 9 | Asset drops on the canvas with intent | 3 | ✅ Delivered |
-| 10 | Attach behavior to selected node | 3 | 🗺 Planned |
-| 11 | Run-from-sheet | 3 | 🗺 Planned |
+| 10 | Attach behavior to selected node | 3 | ✅ Delivered |
+| 11 | Run-from-sheet | 3 | ✅ Delivered |
 
 ---
 
@@ -153,8 +153,8 @@ non-asset extensions ignored; empty-space drop hints.
 **Problem.** After authoring a behavior the loop is: save, find the scene, add a
 Node child, attach the script — four manual steps the Doctor then nags about.
 
-**Design.** Core `EventSheetAuthorLoop.attach_behavior(sheet, host) -> String`
-(“” or problem): ensures the sheet is saved+compiled, adds a child Node named
+**Design.** Core `EventSheetAuthorLoop.attach_behavior(sheet, host) -> Dictionary`
+(`{ok, message}` — mismatch notes ride the message): ensures the sheet is saved+compiled, adds a child Node named
 after the sheet's class with the generated script, sets owner for serialization.
 Host-class mismatch **warns but attaches** (`_get_configuration_warnings`
 already surfaces it in-scene — blocking would just re-route through the same

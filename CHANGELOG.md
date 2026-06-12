@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Tedium reduction (Tier 3): the loop closers — attach + run
+- **Attach to Selected Node** (Tools) — one click compiles the open behavior sheet
+  and parents it under the node selected in the Scene dock (owner set, scene
+  marked unsaved). Host-class mismatches warn but attach — the in-scene
+  configuration warning already covers it. The save→find scene→add child→attach
+  loop the Doctor used to nag about is now the fix-it button.
+- **Run Scene** (toolbar) — saves the sheet (compile-on-save keeps the script
+  fresh), finds the scene(s) attaching it via the Doctor's reverse lookup, and
+  plays: one scene runs immediately, several offer a pick menu, none explains
+  what to wire. Sheet → playing game in one click; behaviors are routed to the
+  Test Bench.
+
 ### Tedium reduction (Tier 3): session restore + asset drops with intent
 - **Session restore** — the editor reopens last session's tabs (and re-activates
   the one you were on) on startup; `eventsheets/editor/restore_session` (default
