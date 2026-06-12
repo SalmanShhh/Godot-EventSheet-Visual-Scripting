@@ -154,16 +154,17 @@ Conditions                        | Actions
 
 ## Current status
 
-- **Version**: **`v0.6.2`** — the **project-usability release**: compile-on-save,
-  reviewable sheet diffs (git `textconv`), the **Project Doctor** (one dock/CLI/CI
-  audit for cross-file drift — it caught and fixed a real output-duplication bug on
-  this very repo), the generated **vocabulary doc**, save-time **sheet backups** with
-  restore, and **project-local templates**. C3 param-type parity completed
-  (scene + animation pickers), pack builders split per-pack (drift-audited),
-  community-feedback groundwork (issue templates). The playable `demo/showcase/`
-  from v0.6.0 remains current — this release's headliners are workflow tooling,
-  demonstrated by the repo itself. See [CHANGELOG.md](CHANGELOG.md).
-- **Quality**: 1,300+ test assertions, all green, CI-gated on every push (any `[FAIL]`
+- **Version**: **`v0.7.0` — “The Native Workflow Update”**: EventSheets meets you
+  where you work. Tedium killers (**Rename Everywhere**, row **snippets**, bulk
+  selection ops, **session restore**, asset drops with intent, one-click **attach**
+  and **Run Scene**), Godot-native entry points (right-click a node → **Attach
+  Event Sheet**, the Inspector's **Edit Event Sheet** button, Open-as-Event-Sheet
+  in FileSystem/script editor, discoverable Project Settings, **rebindable
+  shortcuts**, **Go to Sheet Row** from the script editor, View-in-Godot-Docs,
+  first-run welcome), and a GDScript bridge that explains itself (**if/elif/else
+  reverse-lift** into sub-events + the **Lift Report**). New interactive showcase:
+  `demo/showcase/showcase_v070.tscn`. See [CHANGELOG.md](CHANGELOG.md).
+- **Quality**: 1,400+ test assertions, all green, CI-gated on every push (any `[FAIL]`
   fails the build, and the Project Doctor gate fails it on sheet/output drift);
   byte-exact golden round-trips guard the lossless rules.
 - **Compatibility covenant**: generated code never depends on the plugin; templates bake
@@ -181,6 +182,7 @@ Conditions                        | Actions
 | `v0.6.0` — Inspector attributes (all tiers), addon composition + policy + MCP enforcement, **editable Live Values**, Singleton sheets + event-bus triggers, Spring & Tween & Save System packs, the addon-author loop, the C3-reflex UX arc | ✅ shipped |
 | `v0.6.1` — maintenance: dock decomposed into subsystems, module split completed, repo hygiene (no behavior changes) | ✅ shipped |
 | `v0.6.2` — project usability: compile-on-save, sheet diffs (textconv), Project Doctor (dock/CLI/CI), vocabulary doc, sheet backups + restore, project templates; C3 param parity completed; per-pack builders; issue templates | ✅ shipped |
+| `v0.7.0` — **The Native Workflow Update**: Rename Everywhere, snippets, bulk ops, session restore, asset drops, attach + Run Scene; Godot-native entry points (Scene-dock attach, Inspector button, settings, rebindable shortcuts, go-to-sheet-row, docs links, welcome); if/elif/else reverse-lift + Lift Report | ✅ shipped |
 | Community feedback rounds, inline live-values overlay polish | 🗺 planned |
 
 Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
