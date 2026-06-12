@@ -4737,7 +4737,7 @@ func _run_from_sheet() -> void:
     _on_save_requested()
     if _current_sheet_path.is_empty():
         return  # Unsaved sheet: the Save As flow took over.
-    var script_path: String = EventSheetProjectDoctor.output_path_for(_current_sheet_path)
+    var script_path: String = _run_target_script_path()
     var scenes: PackedStringArray = EventSheetProjectDoctor.scenes_attaching(script_path)
     if scenes.is_empty():
         _set_status("No scene attaches %s yet — attach it to a scene and run again." % script_path.get_file(), true)
@@ -4755,6 +4755,14 @@ func _run_from_sheet() -> void:
         _run_scene_menu.add_item(scene_path.get_file())
         _run_scene_menu.set_item_metadata(_run_scene_menu.item_count - 1, scene_path)
     _run_scene_menu.popup(Rect2i(Vector2i(get_global_mouse_position()), Vector2i(0, 0)))
+
+## The script scenes actually attach for this sheet: GDScript-backed sheets ARE their
+## .gd (review catch: pairing-rule resolution would invent <name>_generated.gd for
+## them); .tres sheets resolve through the pairing rule.
+func _run_target_script_path() -> String:
+    if _current_sheet != null and not _current_sheet.external_source_path.is_empty():
+        return _current_sheet.external_source_path
+    return EventSheetProjectDoctor.output_path_for(_current_sheet_path)
 
 func _play_scene_path(scene_path: String) -> void:
     if Engine.is_editor_hint() and is_inside_tree():

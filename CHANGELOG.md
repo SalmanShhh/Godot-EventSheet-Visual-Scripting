@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.7.0] - 2026-06-12 — “The Native Workflow Update”
+
+**EventSheets meets you where you work.** Three arcs in one release: the tedium
+killers (rename everywhere, snippets, bulk ops, session restore, asset drops,
+one-click attach and run), the Godot-native entry points (right-click a node →
+Attach Event Sheet, the Inspector's Edit button, discoverable settings,
+rebindable shortcuts, go-to-sheet-row from the script editor), and a GDScript
+bridge that explains itself (recursive if/elif/else reverse-lift + the Lift
+Report). Showcase: `demo/showcase/showcase_v070.tscn` — press ui_accept /
+ui_cancel for the interactive if/elif chain.
+
+### Review + sweep (pre-release)
+- A seven-angle code review of the whole range confirmed one bug and four
+  cleanups, all fixed: **Run Scene now targets the source `.gd` for
+  GDScript-backed sheets** (pairing-rule resolution invented a `_generated.gd`
+  for them); the doctor's scene-attachment check reads scene texts once again
+  (the shared-lookup refactor had made it O(sheets × scenes)); shortcut
+  bindings are parse-memoized per keystroke; the Inspector pairing check is
+  memoized by script mtime; the welcome panel discovers the newest showcase
+  instead of hardcoding the versioned filename.
+- Sweep catches: the export-integrity pass no longer compiles template
+  blueprints, and Save/Save As persists the session immediately.
+
 ### GDScript coverage: branching lifts, and the boundary explains itself
 - **if/elif/else reverse-lift** — opening a `.gd` as a sheet now lifts branching
   into real structure: `if` blocks become conditioned events, adjacent

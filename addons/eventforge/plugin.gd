@@ -90,6 +90,22 @@ func _attach_sheet_to_node(node: Node) -> void:
 	else:
 		push_warning("[Godot EventSheets] %s" % str(result.get("message")))
 
+## The newest showcase scene under demo/showcase (review catch: hardcoding the
+## versioned filename meant every showcase refresh had to edit the plugin).
+static func _find_showcase_scene() -> String:
+	var dir: DirAccess = DirAccess.open("res://demo/showcase")
+	if dir == null:
+		return ""
+	var newest: String = ""
+	dir.list_dir_begin()
+	var entry: String = dir.get_next()
+	while not entry.is_empty():
+		if entry.begins_with("showcase_") and entry.ends_with(".tscn") and entry > newest:
+			newest = entry
+		entry = dir.get_next()
+	dir.list_dir_end()
+	return "res://demo/showcase/%s" % newest if not newest.is_empty() else ""
+
 ## Registers plugin services when the plugin is enabled.
 func _enter_tree() -> void:
 	add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)
@@ -189,8 +205,9 @@ func _maybe_show_welcome() -> void:
 	var showcase_button: Button = Button.new()
 	showcase_button.text = "Open the playable showcase scene"
 	showcase_button.pressed.connect(func() -> void:
-		if FileAccess.file_exists("res://demo/showcase/showcase_v070.tscn"):
-			get_editor_interface().open_scene_from_path("res://demo/showcase/showcase_v070.tscn")
+		var showcase_scene: String = _find_showcase_scene()
+		if not showcase_scene.is_empty():
+			get_editor_interface().open_scene_from_path(showcase_scene)
 		_welcome_window.hide())
 	box.add_child(showcase_button)
 	var workspace_button: Button = Button.new()

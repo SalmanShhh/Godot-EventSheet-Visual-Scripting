@@ -250,6 +250,23 @@ static func run() -> bool:
 	all_passed = _check("non-template sheets still recompile at export",
 		int(unfiltered.get("compiled", 0)) >= 1, true) and all_passed
 
+	# ── Review fixes: Run Scene targets the .gd itself for GDScript-backed sheets;
+	# the welcome panel discovers the newest showcase instead of hardcoding it ─────
+	var run_target_file: FileAccess = FileAccess.open("user://run_target.gd", FileAccess.WRITE)
+	run_target_file.store_string("extends Node\n\n\nfunc _ready() -> void:\n\tpass\n")
+	run_target_file.close()
+	var external_sheet: EventSheetResource = GDScriptImporter.new().import_external("user://run_target.gd")
+	var run_editor_2: EventSheetEditor = EventSheetEditor.new()
+	run_editor_2.setup(external_sheet)
+	run_editor_2.set_undo_redo_manager(NoopUndoManager.new())
+	run_editor_2._current_sheet_path = "user://run_target.gd"
+	all_passed = _check("Run Scene targets the source .gd for GDScript-backed sheets",
+		run_editor_2._run_target_script_path(), "user://run_target.gd") and all_passed
+	run_editor_2.free()
+	DirAccess.remove_absolute("user://run_target.gd")
+	all_passed = _check("the welcome panel discovers the newest showcase scene",
+		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/showcase_v070.tscn") and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

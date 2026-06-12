@@ -25,6 +25,10 @@ func _parse_begin(object: Object) -> void:
 			open_sheet.call(sheet_path))
 	add_custom_control(button)
 
+# _can_handle fires on every Inspector refresh; sheet_for_script reads files, so
+# results are memoized by script path + mtime (review catch).
+static var _pairing_cache: Dictionary = {}
+
 ## The sheet behind this object's attached script, or "" (which also means
 ## "don't handle").
 static func sheet_path_for(object: Object) -> String:
@@ -33,4 +37,11 @@ static func sheet_path_for(object: Object) -> String:
 	var script: Script = (object as Node).get_script() as Script
 	if script == null or script.resource_path.is_empty():
 		return ""
-	return EventSheetProjectDoctor.sheet_for_script(script.resource_path)
+	var script_path: String = script.resource_path
+	var mtime: int = int(FileAccess.get_modified_time(script_path))
+	var cached: Variant = _pairing_cache.get(script_path)
+	if cached is Dictionary and int((cached as Dictionary).get("mtime")) == mtime:
+		return str((cached as Dictionary).get("sheet"))
+	var sheet_path: String = EventSheetProjectDoctor.sheet_for_script(script_path)
+	_pairing_cache[script_path] = {"mtime": mtime, "sheet": sheet_path}
+	return sheet_path

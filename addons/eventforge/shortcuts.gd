@@ -55,8 +55,17 @@ static func parse(binding: String) -> Dictionary:
 				parsed["keycode"] = OS.find_keycode_from_string(token)
 	return parsed
 
+# Parse memo: the key handler probes up to ~18 actions per keystroke; bindings only
+# change when the setting string does, so cache by (action, binding text).
+static var _parse_cache: Dictionary = {}
+
 static func matches(event: InputEventKey, action: String) -> bool:
-	var parsed: Dictionary = parse(binding_for(action))
+	var binding: String = binding_for(action)
+	var cached: Variant = _parse_cache.get(action)
+	if not (cached is Dictionary) or str((cached as Dictionary).get("binding")) != binding:
+		cached = {"binding": binding, "parsed": parse(binding)}
+		_parse_cache[action] = cached
+	var parsed: Dictionary = (cached as Dictionary).get("parsed")
 	return event.keycode == int(parsed.get("keycode")) \
 		and (event.ctrl_pressed or event.meta_pressed) == bool(parsed.get("ctrl")) \
 		and event.shift_pressed == bool(parsed.get("shift")) \

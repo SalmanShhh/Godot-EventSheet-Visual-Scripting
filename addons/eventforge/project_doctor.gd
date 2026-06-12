@@ -98,6 +98,11 @@ static func check_autoload_registration(sheet_paths: PackedStringArray, findings
 ## (vocabulary, not project wiring) — and stays advisory, since scripts can be
 ## attached from code or used as a named class.
 static func check_scene_attachment(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	# Scene texts read ONCE for all sheets (review catch: per-sheet scenes_attaching
+	# calls were O(sheets × scenes) file reads).
+	var scene_texts: Array[String] = []
+	for scene_path: String in _list_files_with_extension("tscn"):
+		scene_texts.append(FileAccess.get_file_as_string(scene_path))
 	for sheet_path: String in sheet_paths:
 		if sheet_path.begins_with("res://eventsheet_addons/"):
 			continue
@@ -107,7 +112,12 @@ static func check_scene_attachment(sheet_paths: PackedStringArray, findings: Arr
 		var output_path: String = output_path_for(sheet_path)
 		if not FileAccess.file_exists(output_path):
 			continue  # Already reported by the stale-output check.
-		if scenes_attaching(output_path).is_empty():
+		var attached: bool = false
+		for scene_text: String in scene_texts:
+			if scene_text.contains(output_path):
+				attached = true
+				break
+		if not attached:
 			_add(findings, "info", "scene-attachment", sheet_path,
 				"%s is attached to no scene — fine if it's instanced from code or used as a class." % output_path.get_file())
 
