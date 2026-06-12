@@ -1,6 +1,9 @@
 # EventForge — EventSheet resource
 # Top-level event sheet resource attached to one host node.
+# The @icon makes sheets recognizable at a glance in the FileSystem dock and the
+# Create Resource dialog instead of reading as generic .tres files.
 @tool
+@icon("res://addons/eventsheet/icons/eventsheet.svg")
 extends Resource
 class_name EventSheetResource
 

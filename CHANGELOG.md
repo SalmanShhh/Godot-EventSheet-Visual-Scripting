@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Godot-native workflow (1/3): entry points + discoverable settings
+- **Right-click a node → Attach Event Sheet** (Scene dock): creates a sheet whose
+  host class matches the node, saves it beside the scene (suffix, never
+  overwrite), compiles and attaches the generated script, and lands you in the
+  sheet — the "Attach Script" reflex, for sheets.
+- **Open as Event Sheet** on FileSystem and script-editor context menus (sheet
+  `.tres` files and any `.gd` — GDScript-backed sheets open scripts losslessly);
+  sheets now carry a **distinct FileSystem icon** instead of reading as generic
+  resources.
+- **Inspector "Edit Event Sheet" button** on any node whose attached script is
+  sheet-generated (paired via the script's `# Source:` header, pack siblings via
+  the pairing rule) — one click from where Godot devs already live.
+- **Every `eventsheets/*` setting is now registered in Project Settings** with
+  type hints and ranges — discoverable and documented the Godot way, value-neutral
+  (defaults match the in-code fallbacks; unchanged values never touch
+  project.godot).
+
 ### Tedium reduction (Tier 3): the loop closers — attach + run
 - **Attach to Selected Node** (Tools) — one click compiles the open behavior sheet
   and parents it under the node selected in the Scene dock (owner set, scene

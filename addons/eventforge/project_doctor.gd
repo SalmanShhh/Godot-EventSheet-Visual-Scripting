@@ -111,6 +111,21 @@ static func check_scene_attachment(sheet_paths: PackedStringArray, findings: Arr
 			_add(findings, "info", "scene-attachment", sheet_path,
 				"%s is attached to no scene — fine if it's instanced from code or used as a class." % output_path.get_file())
 
+## The sheet a generated script belongs to — the inverse of output_path_for.
+## Trusts the script's "# Source:" header first (exact), then sibling naming
+## verified through the pairing rule. "" when the script isn't sheet-generated.
+static func sheet_for_script(script_path: String) -> String:
+	if script_path.is_empty() or not FileAccess.file_exists(script_path):
+		return ""
+	var header: String = FileAccess.get_file_as_string(script_path).left(400)
+	var found: RegExMatch = RegEx.create_from_string("(?m)^# Source: (.+\\.tres)$").search(header)
+	if found != null and FileAccess.file_exists(found.get_string(1)):
+		return found.get_string(1)
+	var sibling: String = script_path.get_basename().trim_suffix("_generated") + ".tres"
+	if FileAccess.file_exists(sibling) and ResourceLoader.load(sibling, "", ResourceLoader.CACHE_MODE_REUSE) is EventSheetResource and output_path_for(sibling) == script_path:
+		return sibling
+	return ""
+
 ## Every scene that references a script path — the reverse lookup the attachment
 ## check and the dock's Run Scene share (sorted for stable pick menus).
 static func scenes_attaching(script_path: String) -> PackedStringArray:

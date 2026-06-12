@@ -14,6 +14,8 @@ var _export_integrity_plugin: EditorExportPlugin = null
 var _live_values_debugger: EventSheetLiveValuesDebugger = null
 var _ace_param_inspector_plugin: ACEParamInspectorPlugin = null
 var _attribute_drawers_plugin: EventSheetAttributeDrawers = null
+var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
+var _context_menus: Array[EventSheetContextMenu] = []
 
 ## Returns the display name of the plugin.
 func _get_plugin_name() -> String:
@@ -51,9 +53,50 @@ func _edit(object: Object) -> void:
 static func is_event_sheet_resource(object: Object) -> bool:
 	return object is EventSheetResource
 
+## Switches to the EventSheet workspace and loads a sheet (.tres or GDScript-backed
+## .gd) — the landing point for every native entry (context menus, Inspector button).
+func _open_sheet_in_workspace(path: String) -> void:
+	if _event_sheet_editor == null or not _event_sheet_editor.has_method("_load_sheet_from_path"):
+		return
+	get_editor_interface().set_main_screen_editor(_get_plugin_name())
+	_event_sheet_editor.call("_load_sheet_from_path", path)
+
+## The Scene dock's "Attach Event Sheet": create beside the scene, compile, attach,
+## then drop the user straight into the sheet.
+func _attach_sheet_to_node(node: Node) -> void:
+	var scene_root: Node = get_editor_interface().get_edited_scene_root()
+	var directory: String = "res://"
+	if scene_root != null and not scene_root.scene_file_path.is_empty():
+		directory = scene_root.scene_file_path.get_base_dir()
+	var result: Dictionary = EventSheetWorkflow.create_sheet_for_node(node, directory)
+	if bool(result.get("ok", false)):
+		get_editor_interface().mark_scene_as_unsaved()
+		get_editor_interface().get_resource_filesystem().scan()
+		_open_sheet_in_workspace(str(result.get("sheet_path")))
+	else:
+		push_warning("[Godot EventSheets] %s" % str(result.get("message")))
+
 ## Registers plugin services when the plugin is enabled.
 func _enter_tree() -> void:
 	add_autoload_singleton(BRIDGE_NAME, BRIDGE_PATH)
+	# Every eventsheets/* setting becomes visible + documented in Project Settings
+	# (value-neutral: defaults match the in-code fallbacks).
+	EventSheetSettings.register_all()
+	# Native entry points: right-click a node → Attach Event Sheet; right-click a
+	# sheet .tres / any .gd in the FileSystem or script editor → Open as Event Sheet.
+	for slot: int in [EditorContextMenuPlugin.CONTEXT_SLOT_SCENE_TREE,
+			EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM,
+			EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR]:
+		var menu: EventSheetContextMenu = EventSheetContextMenu.new()
+		menu.slot = slot
+		menu.open_sheet = _open_sheet_in_workspace
+		menu.attach_sheet = _attach_sheet_to_node
+		add_context_menu_plugin(slot, menu)
+		_context_menus.append(menu)
+	# Inspector: nodes whose script is sheet-generated get an "Edit Event Sheet" button.
+	_sheet_edit_button_plugin = EventSheetEditButtonPlugin.new()
+	_sheet_edit_button_plugin.open_sheet = _open_sheet_in_workspace
+	add_inspector_plugin(_sheet_edit_button_plugin)
 	# Export integrity: recompile every sheet when an export starts so stale generated
 	# scripts can never ship (see export_integrity_plugin.gd).
 	_export_integrity_plugin = EventSheetExportIntegrityPlugin.new()
@@ -107,6 +150,12 @@ func _enter_tree() -> void:
 
 ## Unregisters plugin services when the plugin is disabled.
 func _exit_tree() -> void:
+	for menu: EventSheetContextMenu in _context_menus:
+		remove_context_menu_plugin(menu)
+	_context_menus.clear()
+	if _sheet_edit_button_plugin != null:
+		remove_inspector_plugin(_sheet_edit_button_plugin)
+		_sheet_edit_button_plugin = null
 	if _export_integrity_plugin != null:
 		remove_export_plugin(_export_integrity_plugin)
 		_export_integrity_plugin = null
