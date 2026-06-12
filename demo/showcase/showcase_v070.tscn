@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/showcase_v070.gd" id="1_juoo8"]
+[ext_resource type="Script" path="res://eventsheet_addons/spring/spring_behavior.gd" id="2_cphjf"]
+[ext_resource type="Script" path="res://eventsheet_addons/tween/tween_behavior.gd" id="3_skace"]
+
+[node name="Showcase" type="Node2D"]
+script = ExtResource("1_juoo8")
+
+[node name="Icon" type="Sprite2D" parent="."]
+
+[node name="SpringBehavior" type="Node" parent="."]
+script = ExtResource("2_cphjf")
+
+[node name="TweenBehavior" type="Node" parent="."]
+script = ExtResource("3_skace")

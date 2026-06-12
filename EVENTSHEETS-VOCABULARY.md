@@ -12,7 +12,7 @@ Node script extending `CharacterBody2D`.
 - `health: int` (default `100`)
 - `speed: float` (default `200.0`)
 
-### ShowcaseV060 (`res://demo/showcase/showcase_v060.tres`)
+### ShowcaseV070 (`res://demo/showcase/showcase_v070.tres`)
 Node script extending `Node2D`.
 
 #### Properties

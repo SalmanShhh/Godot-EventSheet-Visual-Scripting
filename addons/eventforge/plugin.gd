@@ -189,8 +189,8 @@ func _maybe_show_welcome() -> void:
 	var showcase_button: Button = Button.new()
 	showcase_button.text = "Open the playable showcase scene"
 	showcase_button.pressed.connect(func() -> void:
-		if FileAccess.file_exists("res://demo/showcase/showcase_v060.tscn"):
-			get_editor_interface().open_scene_from_path("res://demo/showcase/showcase_v060.tscn")
+		if FileAccess.file_exists("res://demo/showcase/showcase_v070.tscn"):
+			get_editor_interface().open_scene_from_path("res://demo/showcase/showcase_v070.tscn")
 		_welcome_window.hide())
 	box.add_child(showcase_button)
 	var workspace_button: Button = Button.new()

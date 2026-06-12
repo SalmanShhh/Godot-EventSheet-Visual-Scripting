@@ -29,11 +29,13 @@ extend your sheets.
 
 ## The v0.6.0 showcase (one minute)
 
-Open `demo/showcase/showcase_v060.tscn` and run it **with Live Values on**: a
+Open `demo/showcase/showcase_v070.tscn` and run it **with Live Values on**: a
 runtime-toggleable *Juice* group pulses the icon every 2 seconds through the Spring
 behavior while Tween spins it. Watch `pulses` climb in the Live Values window — then
 double-click the value and rewrite it in the running game. Open
-`showcase_v060.tres` to see the whole thing as six rows of events.
+`showcase_v070.tres` to see the whole thing as a handful of event rows — press
+ui_accept for a manual pulse, ui_cancel to tween home (an if/elif chain authored
+as Else rows), and open `showcase_v070.gd` as a sheet for the Lift Report.
 
 ## Try it (five minutes)
 

@@ -240,6 +240,16 @@ static func run() -> bool:
 	DirAccess.remove_absolute("user://lift_roundtrip.gd")
 	DirAccess.remove_absolute("user://lift_roundtrip_back.gd")
 
+	# ── Sweep regression: the export-integrity pass skips template blueprints ─────
+	ProjectSettings.set_setting("eventsheets/project/templates_dir", "res://demo/sheets")
+	var filtered: Dictionary = EventSheetExportIntegrityPlugin.recompile_all_sheets("res://demo/sheets")
+	all_passed = _check("export pass never compiles template sheets",
+		int(filtered.get("compiled", -1)), 0) and all_passed
+	ProjectSettings.set_setting("eventsheets/project/templates_dir", null)
+	var unfiltered: Dictionary = EventSheetExportIntegrityPlugin.recompile_all_sheets("res://demo/sheets")
+	all_passed = _check("non-template sheets still recompile at export",
+		int(unfiltered.get("compiled", 0)) >= 1, true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

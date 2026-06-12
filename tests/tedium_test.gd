@@ -272,8 +272,8 @@ static func run() -> bool:
 
 	# ── Loop closers: attach where you're looking, run what uses the sheet ────────
 	all_passed = _check("reverse scene lookup pairs the showcase",
-		EventSheetProjectDoctor.scenes_attaching("res://demo/showcase/showcase_v060.gd"),
-		PackedStringArray(["res://demo/showcase/showcase_v060.tscn"])) and all_passed
+		EventSheetProjectDoctor.scenes_attaching("res://demo/showcase/showcase_v070.gd"),
+		PackedStringArray(["res://demo/showcase/showcase_v070.tscn"])) and all_passed
 	all_passed = _check("reverse scene lookup pairs the demo player",
 		EventSheetProjectDoctor.scenes_attaching("res://demo/sheets/player_generated.gd"),
 		PackedStringArray(["res://demo/scenes/player.tscn"])) and all_passed

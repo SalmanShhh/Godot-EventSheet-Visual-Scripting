@@ -22,6 +22,10 @@ func _export_begin(_features: PackedStringArray, _is_debug: bool, _path: String,
 static func recompile_all_sheets(root: String = "res://") -> Dictionary:
 	var report: Dictionary = {"compiled": 0, "failed": 0, "failures": []}
 	for sheet_path: String in _find_sheet_paths(root):
+		# Templates are blueprints, not game code: compiling them at export would
+		# strew *_generated.gd siblings through the templates dir (sweep catch).
+		if EventSheetTemplates.is_template_path(sheet_path):
+			continue
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
 		if sheet == null or not sheet.external_source_path.is_empty():
 			continue

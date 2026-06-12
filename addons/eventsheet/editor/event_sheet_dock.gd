@@ -1132,6 +1132,9 @@ func _on_save_requested() -> void:
         _current_sheet.take_over_path(save_path)
         _current_sheet_path = save_path
         _dirty = false
+        # Save As can change the path — keep the saved session pointing at it
+        # (sweep catch: sessions otherwise lag until the next tab switch).
+        _persist_session()
         # Compile-on-save (default ON; eventsheets/editor/compile_on_save to disable):
         # play-testing can never hit a stale generated script. Export integrity still
         # covers exports; this covers F5.
