@@ -20,8 +20,8 @@ contracts:
 
 | # | Item | Tier | Status |
 |---|---|---|---|
-| 5 | True Rename (variables + functions) | 2 | 🗺 Planned |
-| 6 | Create-variable quick-fix in expression fields | 2 | 🗺 Planned |
+| 5 | True Rename (variables + functions) | 2 | ✅ Delivered |
+| 6 | Create-variable quick-fix in expression fields | 2 | ✅ Delivered |
 | 4 | Row snippets (project-local) | 2 | 🗺 Planned |
 | 7 | Bulk operations on multi-select | 2 | 🗺 Planned |
 | 8 | Session restore (tabs) | 3 | 🗺 Planned |
@@ -44,8 +44,9 @@ filters, trigger args, other variables' attribute strings (`show_if` etc.), and
 function bodies. Comments are deliberately *included* (a rename should keep prose
 honest — the opposite trade from usage detection).
 
-**UI.** Row context menu on variable rows and function rows: **Rename…**
-(ROW_MENU id 30) → name dialog prefilled with the old name. Validation: new name
+**UI.** Variable context menu: **Rename Everywhere…** (functions rename through
+the same core; a function-row menu entry can join when function rows grow
+context entries) → name dialog prefilled with the old name. Validation: new name
 must be a valid identifier and collide with no existing variable/function;
 refusal is a status line, never a silent no-op.
 
@@ -53,8 +54,9 @@ refusal is a status line, never a silent no-op.
 this sheet gets the same rename and is saved directly (Replace-in-Project
 precedent: closed sheets save, the status names every touched file).
 
-**Undo.** The open sheet's rename is one undoable action (whole-surface snapshot);
-includer saves are not undoable (named in status instead).
+**Undo.** The open sheet's rename rides `_perform_undoable_sheet_edit` (one
+whole-sheet snapshot action); includer saves are not undoable (named in status
+instead).
 
 **Tests.** Word-boundary safety (`hp` doesn't touch `hp_max`), key rename,
 function rename updates call params, includer rewrite, collision refusal.
@@ -64,16 +66,20 @@ function rename updates call params, includer rewrite, collision refusal.
 **Problem.** Typing a not-yet-declared variable in an expression field flags red;
 fixing it means cancel → Add Global Var → retype → reopen → retype.
 
-**Design.** When an expression field's lint failure is an undeclared plain
-identifier (parsed from the GDScript error text), the field grows a one-click
+**Design.** When an expression field fails lint and the expression holds a plain
+identifier the sheet context can't account for (the engine never exposes parse-error
+text to scripts, so the culprit is derived from the expression itself — skipping
+literals, member accesses, calls, keywords, sheet symbols, host members, classes
+and singletons), the field grows a one-click
 **“+ var”** affordance: creates the variable on the sheet (type guessed `float` —
 the C3 "number" default — editable later in the variables row), re-lints, clears
 the red. The dialog stays dock-agnostic: the dock injects a creator callback
 (`set_variable_creator(Callable)`), mirroring `set_lint_context_provider`.
 
-**Tests.** Unknown-identifier extraction from lint output; creator callback
-invoked with the identifier; declared identifiers and non-identifier errors never
-offer the fix.
+**Tests.** Unknown-identifier derivation (declared vars, calls, literals, member
+accesses all accounted for); creator declares a float exactly once; end-to-end:
+failing field grows the button, clicking creates the variable and the field
+re-lints clean.
 
 ## 4. Row snippets (project-local)
 

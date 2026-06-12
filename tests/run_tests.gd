@@ -99,6 +99,7 @@ const SingletonSheetsTestScript := preload("res://tests/singleton_sheets_test.gd
 const ProjectDoctorTestScript := preload("res://tests/project_doctor_test.gd")
 const VocabularyDocTestScript := preload("res://tests/vocabulary_doc_test.gd")
 const SheetBackupsTemplatesTestScript := preload("res://tests/sheet_backups_templates_test.gd")
+const TediumTestScript := preload("res://tests/tedium_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
@@ -193,6 +194,7 @@ func _init() -> void:
 	passed = ProjectDoctorTestScript.run() and passed
 	passed = VocabularyDocTestScript.run() and passed
 	passed = SheetBackupsTemplatesTestScript.run() and passed
+	passed = TediumTestScript.run() and passed
 	passed = EventSheetEditorTestScript.run() and passed
 	passed = EventSheetStyleTestScript.run() and passed
 	passed = PluginWorkspaceTestScript.run() and passed

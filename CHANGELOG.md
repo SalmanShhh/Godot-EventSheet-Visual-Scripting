@@ -2,7 +2,16 @@
 
 ## [Unreleased]
 
-_Nothing yet._
+### Tedium reduction (Tier 2): True Rename + create-variable quick-fix
+- **Rename Everywhere…** on variable rows: a word-boundary rename across every
+  model surface (params, raw code, pick filters, attributes, comments — prose
+  stays honest) in the open sheet *and* every sheet that includes it (saved
+  directly, named in the status). Baked codegen templates are never touched —
+  a variable named `value` can't rewrite a `{value}` placeholder. Functions
+  rename through the same core (`EventSheetRefactor`).
+- **Create-variable quick-fix**: an undeclared identifier in an expression field
+  grows a one-click **+ var** button — declares it as a float (the C3 "number"
+  default) and re-lints, instead of cancel → Add Variable → retype.
 
 ## [0.6.2] - 2026-06-12
 

@@ -922,13 +922,93 @@ func _validate_expression_field(edit: Control) -> void:
 	if bool(lint_result.get("ok", true)):
 		edit.remove_theme_color_override("font_color")
 		edit.tooltip_text = "Plain GDScript — anything valid in an expression works here."
+		_update_quickfix_button(edit, "")
 	else:
 		edit.add_theme_color_override("font_color", Color(0.96, 0.45, 0.45))
 		edit.tooltip_text = "✗ Not a valid GDScript expression for this sheet."
+		_update_quickfix_button(edit, undeclared_identifier_in_expression(str(edit.get("text")), sheet))
 
 ## Wires the sheet-context source for expression validation (returns EventSheetResource).
 func set_lint_context_provider(provider: Callable) -> void:
 	_lint_context_provider = provider
+
+# ── Create-variable quick-fix: an undeclared identifier in an expression field grows
+# a one-click "+ var" button (cancel → Add Variable → retype, collapsed to one click).
+# The dialog stays dock-agnostic: the dock injects a creator Callable(name) -> bool.
+var _variable_creator: Callable = Callable()
+var _quickfix_buttons: Dictionary = {}
+
+func set_variable_creator(creator: Callable) -> void:
+	_variable_creator = creator
+
+## The probable culprit when an expression fails lint: the first plain identifier the
+## sheet context can't account for. The engine never exposes its parse-error text to
+## scripts (the lint result is generic), so this derives the answer from the
+## expression itself — skipping string literals, member accesses (`x.y`), node refs
+## (`$`/`%`/`&`), calls, keywords, sheet variables/functions/tree vars, host members,
+## global classes and singletons. "" when the failure isn't identifier-shaped.
+static func undeclared_identifier_in_expression(expression: String, sheet: EventSheetResource) -> String:
+	var stripped: String = RegEx.create_from_string("\"[^\"]*\"|'[^']*'").sub(expression, " ", true)
+	var skip_words: PackedStringArray = PackedStringArray([
+		"true", "false", "null", "and", "or", "not", "in", "is", "as", "if", "else",
+		"self", "host", "delta", "PI", "TAU", "INF", "NAN",
+	])
+	var host_class: String = sheet.host_class if sheet != null and ClassDB.class_exists(sheet.host_class) else "Node"
+	var host_members: Dictionary = {}
+	for property: Dictionary in ClassDB.class_get_property_list(host_class):
+		host_members[str(property.get("name"))] = true
+	var tree_variables: Dictionary = {}
+	if sheet != null:
+		for row: Variant in sheet.events:
+			if row is LocalVariable:
+				tree_variables[(row as LocalVariable).name] = true
+	for ident_match: RegExMatch in RegEx.create_from_string("[A-Za-z_][A-Za-z0-9_]*").search_all(stripped):
+		var ident: String = ident_match.get_string()
+		var before: String = stripped.substr(0, ident_match.get_start()).strip_edges(false, true)
+		if before.ends_with(".") or before.ends_with("$") or before.ends_with("&") or before.ends_with("%"):
+			continue
+		if stripped.substr(ident_match.get_end()).strip_edges(true, false).begins_with("("):
+			continue
+		if skip_words.has(ident) or ClassDB.class_exists(ident) or Engine.has_singleton(ident):
+			continue
+		if sheet != null and (sheet.variables.has(ident) or tree_variables.has(ident)):
+			continue
+		var is_sheet_function: bool = false
+		if sheet != null:
+			for function_entry: Variant in sheet.functions:
+				if function_entry is EventFunction and (function_entry as EventFunction).function_name == ident:
+					is_sheet_function = true
+					break
+		if is_sheet_function or ClassDB.class_has_method(host_class, ident) or host_members.has(ident):
+			continue
+		return ident
+	return ""
+
+func _update_quickfix_button(edit: Control, identifier: String) -> void:
+	var button: Button = _quickfix_buttons.get(edit) as Button
+	if identifier.is_empty() or not _variable_creator.is_valid():
+		if button != null:
+			button.visible = false
+		return
+	if button == null or not is_instance_valid(button):
+		button = Button.new()
+		button.pressed.connect(_on_quickfix_pressed.bind(edit))
+		var parent: Node = edit.get_parent()
+		if parent == null:
+			return
+		parent.add_child(button)
+		_quickfix_buttons[edit] = button
+	button.text = "+ var %s" % identifier
+	button.tooltip_text = "Create the sheet variable \"%s\" and re-check this expression." % identifier
+	button.set_meta("identifier", identifier)
+	button.visible = true
+
+func _on_quickfix_pressed(edit: Control) -> void:
+	var button: Button = _quickfix_buttons.get(edit) as Button
+	if button == null or not _variable_creator.is_valid():
+		return
+	if bool(_variable_creator.call(str(button.get_meta("identifier", "")))):
+		_validate_expression_field(edit)
 
 ## Fills the completion popup with sheet variables/functions + host members (same source
 ## as the GDScript-block editor, so the vocabulary matches everywhere).

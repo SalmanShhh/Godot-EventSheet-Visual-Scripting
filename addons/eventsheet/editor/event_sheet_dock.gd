@@ -47,6 +47,7 @@ const ROW_MENU_OPEN_IN_SPLIT := 23
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
+const VARIABLE_MENU_RENAME := 4
 const THEME_FILTERS: Array[String] = ["*.tres ; EventSheetEditorStyle", "*.res ; EventSheetEditorStyle"]
 const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
@@ -129,6 +130,7 @@ func _ready() -> void:
     _ace_picker.ace_selected.connect(_on_ace_picker_selected)
     _ace_params.init_dialog(self, _ace_registry, _collect_sheet_variable_names)
     _ace_params.set_lint_context_provider(func() -> EventSheetResource: return _current_sheet)
+    _ace_params.set_variable_creator(_create_variable_quickfix)
     _ace_params.params_confirmed.connect(_on_ace_params_confirmed)
     _ace_params.back_requested.connect(_on_ace_params_back_requested)
     _variable_dlg.init_dialog(self)
@@ -836,6 +838,7 @@ func _build_context_menus() -> void:
 
     _variable_context_menu = PopupMenu.new()
     _variable_context_menu.add_item("Edit Variable", VARIABLE_MENU_EDIT)
+    _variable_context_menu.add_item("Rename Everywhere…", VARIABLE_MENU_RENAME)
     _variable_context_menu.add_item("Convert Scope", VARIABLE_MENU_CONVERT_SCOPE)
     _variable_context_menu.add_item("Toggle Constant", VARIABLE_MENU_TOGGLE_CONST)
     _variable_context_menu.id_pressed.connect(_on_variable_context_menu_id_pressed)
@@ -4436,10 +4439,95 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
     match id:
         VARIABLE_MENU_EDIT:
             _edit_context_variable()
+        VARIABLE_MENU_RENAME:
+            _open_rename_dialog(str(_context_variable.get("name", "")))
         VARIABLE_MENU_CONVERT_SCOPE:
             _convert_context_variable_scope()
         VARIABLE_MENU_TOGGLE_CONST:
             _toggle_context_variable_constant()
+
+# ── True Rename (core in EventSheetRefactor; word-boundary, every model surface) ──────
+var _rename_window: Window = null
+var _rename_edit: LineEdit = null
+var _rename_old_name: String = ""
+
+func _open_rename_dialog(old_name: String) -> void:
+    if old_name.is_empty():
+        return
+    _rename_old_name = old_name
+    if _rename_window == null:
+        _rename_window = Window.new()
+        _rename_window.title = "Rename Everywhere"
+        _rename_window.size = Vector2i(380, 110)
+        _rename_window.close_requested.connect(func() -> void: _rename_window.hide())
+        var box: VBoxContainer = VBoxContainer.new()
+        box.set_anchors_preset(Control.PRESET_FULL_RECT)
+        _rename_edit = LineEdit.new()
+        _rename_edit.text_submitted.connect(func(_t: String) -> void: _confirm_rename())
+        box.add_child(_rename_edit)
+        var apply_button: Button = Button.new()
+        apply_button.text = "Rename in this sheet + every sheet that includes it"
+        apply_button.pressed.connect(_confirm_rename)
+        box.add_child(apply_button)
+        _rename_window.add_child(box)
+        add_child(_rename_window)
+    _rename_edit.text = old_name
+    _rename_window.popup_centered()
+    _rename_edit.grab_focus()
+    _rename_edit.select_all()
+
+func _confirm_rename() -> void:
+    var renamed: bool = _perform_symbol_rename(_rename_old_name, _rename_edit.text.strip_edges())
+    if renamed:
+        _rename_window.hide()
+
+## The create-variable quick-fix behind the params dialog's "+ var" button: declares
+## the identifier as a float (the C3 "number" default — retype via Edit Variable) so
+## the expression lints clean without leaving the dialog.
+func _create_variable_quickfix(variable_name: String) -> bool:
+    if _current_sheet == null or not variable_name.is_valid_identifier() or _current_sheet.variables.has(variable_name):
+        return false
+    return _perform_undoable_sheet_edit("Create variable %s" % variable_name, func() -> bool:
+        _current_sheet.variables[variable_name] = {"type": "float", "default": 0.0, "exported": true}
+        return true)
+
+## The full rename: validate, undoably rewrite the open sheet, then rewrite + save
+## every project sheet whose `includes` lists this one (Replace-in-Project contract:
+## closed sheets save directly, the status names every touched file).
+func _perform_symbol_rename(old_name: String, new_name: String) -> bool:
+    if _current_sheet == null:
+        return false
+    var problem: String = EventSheetRefactor.validate_new_name(_current_sheet, old_name, new_name)
+    if not problem.is_empty():
+        _set_status(problem, true)
+        return false
+    var renamed: bool = _perform_undoable_sheet_edit("Rename %s" % old_name, func() -> bool:
+        return EventSheetRefactor.rename_symbol(_current_sheet, old_name, new_name) > 0)
+    if not renamed:
+        _set_status("\"%s\" appears nowhere in this sheet." % old_name, true)
+        return false
+    var touched: PackedStringArray = PackedStringArray()
+    if not _current_sheet_path.is_empty():
+        touched = _rename_in_includers(old_name, new_name, EventSheetProjectFind.list_project_sheets())
+    _refresh_title_strip()
+    _set_status("Renamed %s → %s%s." % [old_name, new_name,
+        " (also in: %s)" % ", ".join(touched) if not touched.is_empty() else ""])
+    return true
+
+## Rewrites + saves every candidate sheet whose `includes` lists the open sheet
+## (closed sheets save directly — the Replace-in-Project contract).
+func _rename_in_includers(old_name: String, new_name: String, candidate_paths: PackedStringArray) -> PackedStringArray:
+    var touched: PackedStringArray = PackedStringArray()
+    for sheet_path: String in candidate_paths:
+        if sheet_path == _current_sheet_path:
+            continue
+        var other: EventSheetResource = load(sheet_path) as EventSheetResource
+        if other == null or not other.includes.has(_current_sheet_path):
+            continue
+        if EventSheetRefactor.rename_symbol(other, old_name, new_name) > 0:
+            ResourceSaver.save(other, sheet_path)
+            touched.append(sheet_path.get_file())
+    return touched
 
 func _delete_context_ace() -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
