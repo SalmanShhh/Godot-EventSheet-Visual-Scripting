@@ -204,6 +204,71 @@ static func run() -> bool:
 		and grouped.events[0] == bulk_rows[1] and grouped.events[1] == bulk_rows[2], true) and all_passed
 	insert_editor.free()
 
+	# ── Session restore: tabs survive a restart ──────────────────────────────────
+	var session_a: EventSheetResource = EventSheetResource.new()
+	session_a.host_class = "Node"
+	ResourceSaver.save(session_a, "user://session_a.tres")
+	var session_b: EventSheetResource = EventSheetResource.new()
+	session_b.host_class = "Node"
+	ResourceSaver.save(session_b, "user://session_b.tres")
+	var session_editor: EventSheetEditor = EventSheetEditor.new()
+	session_editor.setup(ResourceLoader.load("user://session_a.tres", "", ResourceLoader.CACHE_MODE_IGNORE))
+	session_editor.set_undo_redo_manager(NoopUndoManager.new())
+	session_editor._open_sheet_in_tab(ResourceLoader.load("user://session_b.tres", "", ResourceLoader.CACHE_MODE_IGNORE), "user://session_b.tres")
+	session_editor._session_tracking = true
+	session_editor._persist_session()
+	var written: ConfigFile = ConfigFile.new()
+	written.load("user://eventsheets_session.cfg")
+	all_passed = _check("sessions persist saved-tab paths + the active index",
+		PackedStringArray(written.get_value("session", "paths", PackedStringArray()))
+		== PackedStringArray(["user://session_a.tres", "user://session_b.tres"])
+		and int(written.get_value("session", "active", -1)) == 1, true) and all_passed
+	session_editor.free()
+	DirAccess.remove_absolute("user://session_b.tres")
+	var restored_editor: EventSheetEditor = EventSheetEditor.new()
+	restored_editor.setup(null)
+	restored_editor.set_undo_redo_manager(NoopUndoManager.new())
+	restored_editor._restore_session()
+	all_passed = _check("restore reopens existing sheets and skips deleted ones",
+		restored_editor.get_open_tab_count() == 2
+		and restored_editor._current_sheet_path == "user://session_a.tres", true) and all_passed
+	ProjectSettings.set_setting("eventsheets/editor/restore_session", false)
+	var gated_editor: EventSheetEditor = EventSheetEditor.new()
+	gated_editor.setup(null)
+	gated_editor.set_undo_redo_manager(NoopUndoManager.new())
+	gated_editor._restore_session()
+	all_passed = _check("the setting gates session restore",
+		gated_editor.get_open_tab_count(), 1) and all_passed
+	ProjectSettings.set_setting("eventsheets/editor/restore_session", null)
+	gated_editor.free()
+
+	# ── Canvas asset drops with intent ────────────────────────────────────────────
+	all_passed = _check("file payloads resolve to droppable assets only",
+		EventSheetViewport._resolve_dropped_asset_paths({"type": "files", "files": ["res://a.tscn", "res://b.png", "res://c.ogg"]}),
+		PackedStringArray(["res://a.tscn", "res://c.ogg"])) and all_passed
+	all_passed = _check("non-file payloads resolve to nothing",
+		EventSheetViewport._resolve_dropped_asset_paths({"type": "nodes", "nodes": []}), PackedStringArray()) and all_passed
+	var drop_event: EventRow = EventRow.new()
+	drop_event.trigger_provider_id = "Core"
+	drop_event.trigger_id = "OnProcess"
+	restored_editor._current_sheet.events.append(drop_event)
+	restored_editor._apply_asset_drop(drop_event, PackedStringArray(["res://level.tscn", "res://jump.ogg"]))
+	all_passed = _check("dropped assets become pre-filled actions",
+		drop_event.actions.size() == 2
+		and (drop_event.actions[0] as ACEAction).ace_id == "SpawnSceneAt"
+		and str((drop_event.actions[0] as ACEAction).params.get("path")) == "\"res://level.tscn\""
+		and (drop_event.actions[1] as ACEAction).ace_id == "PlaySound", true) and all_passed
+	all_passed = _check("multi-line drop templates bake a fresh uid",
+		(drop_event.actions[0] as ACEAction).codegen_template.contains("{uid}"), false) and all_passed
+	restored_editor._apply_asset_drop(null, PackedStringArray(["res://x.tscn"]))
+	all_passed = _check("empty-space drops only hint",
+		drop_event.actions.size(), 2) and all_passed
+	all_passed = _check("unknown extensions build no action",
+		restored_editor._action_for_asset("res://image.png") == null, true) and all_passed
+	restored_editor.free()
+	DirAccess.remove_absolute("user://session_a.tres")
+	DirAccess.remove_absolute("user://eventsheets_session.cfg")
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

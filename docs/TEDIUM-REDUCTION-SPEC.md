@@ -24,8 +24,8 @@ contracts:
 | 6 | Create-variable quick-fix in expression fields | 2 | ✅ Delivered |
 | 4 | Row snippets (project-local) | 2 | ✅ Delivered |
 | 7 | Bulk operations on multi-select | 2 | ✅ Delivered |
-| 8 | Session restore (tabs) | 3 | 🗺 Planned |
-| 9 | Asset drops on the canvas with intent | 3 | 🗺 Planned |
+| 8 | Session restore (tabs) | 3 | ✅ Delivered |
+| 9 | Asset drops on the canvas with intent | 3 | ✅ Delivered |
 | 10 | Attach behavior to selected node | 3 | 🗺 Planned |
 | 11 | Run-from-sheet | 3 | 🗺 Planned |
 

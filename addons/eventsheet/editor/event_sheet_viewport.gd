@@ -6,6 +6,7 @@ signal selection_changed(row_data: EventRowData)
 signal row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String, copy_mode: bool)
 signal rows_drop_requested(source_rows: Array, target_row: EventRowData, drop_mode: String, copy_mode: bool)
 signal ace_preview_requested(source_label: String, definitions: Array[ACEDefinition])
+signal asset_dropped(target_event: Resource, asset_paths: PackedStringArray)
 signal ace_picker_requested(row_data: EventRowData, lane: String)
 signal span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String)
 signal ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary)
@@ -3563,9 +3564,20 @@ func _get_scroll_width() -> float:
     return size.x if size.x > 0.0 else 640.0
 
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
-    return not _resolve_dropped_source_objects(data).is_empty()
+    return not _resolve_dropped_source_objects(data).is_empty() \
+        or not _resolve_dropped_asset_paths(data).is_empty()
 
 func _drop_data(_at_position: Vector2, data: Variant) -> void:
+    # FileSystem asset drops carry intent: a scene or sound dropped ON an event row
+    # becomes a pre-filled action (the dock builds it). Recognized assets are accepted
+    # anywhere on the canvas so an empty-space drop can explain itself instead of
+    # silently bouncing.
+    var asset_paths: PackedStringArray = _resolve_dropped_asset_paths(data)
+    if not asset_paths.is_empty():
+        var row_index: int = _find_row_index_at_y(_at_position.y)
+        var row_data: EventRowData = _row_at(row_index) if row_index >= 0 else null
+        asset_dropped.emit(row_data.source_resource if row_data != null else null, asset_paths)
+        return
     var source_objects: Array[Object] = _resolve_dropped_source_objects(data)
     if source_objects.is_empty():
         return
@@ -3576,6 +3588,16 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
     if source_objects[0] is Node:
         source_label = (source_objects[0] as Node).name
     ace_preview_requested.emit(source_label, definitions)
+
+## Scene/audio files in a FileSystem-dock drop payload — the asset kinds an event
+## can act on directly (spawn / play).
+static func _resolve_dropped_asset_paths(data: Variant) -> PackedStringArray:
+    var assets: PackedStringArray = PackedStringArray()
+    if data is Dictionary and str((data as Dictionary).get("type", "")) == "files":
+        for file_path: Variant in ((data as Dictionary).get("files", []) as Array):
+            if str(file_path).get_extension().to_lower() in ["tscn", "scn", "ogg", "wav", "mp3"]:
+                assets.append(str(file_path))
+    return assets
 
 func _resolve_dropped_source_objects(data: Variant) -> Array[Object]:
     var objects: Array[Object] = []

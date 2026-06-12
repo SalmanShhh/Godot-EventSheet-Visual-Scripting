@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Tedium reduction (Tier 3): session restore + asset drops with intent
+- **Session restore** — the editor reopens last session's tabs (and re-activates
+  the one you were on) on startup; `eventsheets/editor/restore_session` (default
+  on) gates it, deleted sheets are skipped silently. Every launch stops starting
+  from zero.
+- **Asset drops with intent** — drop a `.tscn` from the FileSystem dock onto an
+  event row and it becomes a pre-filled **Spawn Scene At** action; drop an
+  `.ogg/.wav/.mp3` and it's **Play Sound** — undoable, templates baked exactly
+  like a picker apply. The C3 drag-into-layout reflex, grafted onto events
+  (empty-space drops explain themselves instead of silently bouncing).
+
 ### Tedium reduction (Tier 2): row snippets + bulk selection ops
 - **Row snippets** — Save Selection as Snippet… files the selection in
   `res://eventsheet_snippets/` using the SAME text format Copy puts on the

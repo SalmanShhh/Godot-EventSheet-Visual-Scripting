@@ -145,6 +145,10 @@ func _ready() -> void:
         _current_sheet = _build_demo_sheet()
         _viewport.set_debug_overlay_states({})
     setup(_current_sheet)
+    # Last session's tabs come back on editor startup (never in headless tests —
+    # they drive setup() directly).
+    if Engine.is_editor_hint() and is_inside_tree():
+        _restore_session()
 
 func setup(sheet: EventSheetResource = null) -> void:
     _build_ui()
@@ -186,6 +190,7 @@ func _activate_tab(index: int) -> void:
     _refresh_tab_bar()
     var label: String = _current_sheet_path.get_file() if not _current_sheet_path.is_empty() else "(unsaved EventSheet)"
     _set_status("Loaded: %s" % label)
+    _persist_session()
 
 ## Persists the live active-tab state (_current_sheet/path/dirty) back into _open_tabs.
 func _sync_active_tab_state() -> void:
@@ -201,6 +206,7 @@ func _close_tab(index: int) -> void:
     _active_tab_index = -1
     if _open_tabs.is_empty():
         setup(null)
+        _persist_session()
         return
     _activate_tab(mini(index, _open_tabs.size() - 1))
 
@@ -648,6 +654,7 @@ func _build_ui() -> void:
     _viewport.row_drop_requested.connect(_on_row_drop_requested)
     _viewport.rows_drop_requested.connect(_on_rows_drop_requested)
     _viewport.ace_preview_requested.connect(_on_ace_preview_requested)
+    _viewport.asset_dropped.connect(_apply_asset_drop)
     _viewport.ace_picker_requested.connect(_on_viewport_ace_picker_requested)
     _viewport.span_edit_requested.connect(_on_viewport_span_edit_requested)
     _viewport.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
@@ -4619,6 +4626,107 @@ func _refresh_clone_uids(resource: Resource) -> void:
         for child: Variant in (group.events if not group.events.is_empty() else group.rows):
             if child is Resource:
                 _refresh_clone_uids(child as Resource)
+
+# ── Asset drops with intent (the C3 drag-into-layout reflex, grafted onto events):
+# a scene dropped on an event row spawns, a sound plays — pre-filled, undoable. ───────
+
+func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -> void:
+    if not (target_event is EventRow):
+        _set_status("Drop scenes or sounds onto an event row to add a pre-filled action.", true)
+        return
+    if not _ensure_sheet_for_editing():
+        return
+    var counters: Dictionary = {"added": 0}
+    var changed: bool = _perform_undoable_sheet_edit("Drop Asset", func() -> bool:
+        for asset_path: String in asset_paths:
+            var action: ACEAction = _action_for_asset(asset_path)
+            if action != null:
+                (target_event as EventRow).actions.append(action)
+                counters["added"] = int(counters["added"]) + 1
+        return int(counters["added"]) > 0)
+    if changed:
+        _mark_dirty("Added %d pre-filled action(s) from the dropped asset(s)." % int(counters["added"]))
+
+## The pre-filled action for one dropped asset: scenes spawn (Spawn Scene At), sounds
+## play (Play Sound) — the builtin descriptor's template baked exactly like a picker
+## apply ({uid} re-baked per instance). Unknown extensions return null.
+func _action_for_asset(asset_path: String) -> ACEAction:
+    var extension: String = asset_path.get_extension().to_lower()
+    var ace_id: String = ""
+    var params: Dictionary = {}
+    if extension in ["tscn", "scn"]:
+        ace_id = "SpawnSceneAt"
+        params = {"path": ACEParamsDialog.format_quoted_literal(asset_path), "position": "Vector2(0, 0)"}
+    elif extension in ["ogg", "wav", "mp3"]:
+        ace_id = "PlaySound"
+        params = {"path": ACEParamsDialog.format_quoted_literal(asset_path)}
+    else:
+        return null
+    for descriptor in EventForgeBuiltinACEs.get_descriptors():
+        if descriptor.ace_id == ace_id:
+            var action: ACEAction = ACEAction.new()
+            action.provider_id = descriptor.provider_id
+            action.ace_id = ace_id
+            action.params = params
+            action.codegen_template = str(descriptor.codegen_template)
+            if action.codegen_template.contains("{uid}"):
+                action.codegen_template = action.codegen_template.replace("{uid}", "%08x" % (randi() & 0x7fffffff))
+            return action
+    return null
+
+# ── Session restore: the open tabs survive an editor restart
+# (user://eventsheets_session.cfg; eventsheets/editor/restore_session, default on) ────
+const SESSION_PATH := "user://eventsheets_session.cfg"
+# Persisting starts only after _restore_session has run: the dock's own startup
+# (demo tab activation) would otherwise clobber the saved session before it's read.
+var _session_tracking: bool = false
+
+## Saved-tab paths + the active index. Unsaved sheets (no path) are skipped — there's
+## no file to reopen.
+func _persist_session() -> void:
+    if not _session_tracking:
+        return
+    _sync_active_tab_state()
+    var paths: PackedStringArray = PackedStringArray()
+    var active_in_saved: int = -1
+    for index in _open_tabs.size():
+        var tab_path: String = str(_open_tabs[index].get("path", ""))
+        if tab_path.is_empty():
+            continue
+        if index == _active_tab_index:
+            active_in_saved = paths.size()
+        paths.append(tab_path)
+    var session: ConfigFile = ConfigFile.new()
+    session.set_value("session", "paths", paths)
+    session.set_value("session", "active", active_in_saved)
+    session.save(SESSION_PATH)
+
+## Reopens last session's tabs (missing files skipped silently — a deleted sheet
+## shouldn't block startup), then turns persistence on.
+func _restore_session() -> void:
+    # Setting off = sessions fully dormant (no restore, no writes); the last saved
+    # session survives untouched for whenever it's re-enabled.
+    if not bool(ProjectSettings.get_setting("eventsheets/editor/restore_session", true)):
+        return
+    var session: ConfigFile = ConfigFile.new()
+    if session.load(SESSION_PATH) == OK:
+        var paths: PackedStringArray = PackedStringArray(session.get_value("session", "paths", PackedStringArray()))
+        var active: int = int(session.get_value("session", "active", -1))
+        var opened: int = 0
+        for sheet_path: String in paths:
+            if FileAccess.file_exists(sheet_path):
+                _load_sheet_from_path(sheet_path)
+                opened += 1
+        if active >= 0 and active < paths.size():
+            var active_path: String = paths[active]
+            for index in _open_tabs.size():
+                if str(_open_tabs[index].get("path", "")) == active_path:
+                    _activate_tab(index)
+                    break
+        if opened > 0:
+            _set_status("Session restored: %d sheet(s)." % opened)
+    _session_tracking = true
+    _persist_session()
 
 # ── Row snippets — save the selection, insert from the project library
 # (EventSheetSnippetLibrary; the clipboard text format is the file format) ────────────
