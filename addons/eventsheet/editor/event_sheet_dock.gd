@@ -188,6 +188,10 @@ func _activate_tab(index: int) -> void:
     _refresh_exposed_node()
     _refresh_variable_panel()
     _refresh_tab_bar()
+    # Godot-native default (welcome panel choice): the generated-GDScript panel rides
+    # along with every sheet, so the honest output is always in view.
+    if bool(ProjectSettings.get_setting("eventsheets/editor/open_code_panel_by_default", false)) and not is_code_panel_visible():
+        _toggle_code_panel()
     var label: String = _current_sheet_path.get_file() if not _current_sheet_path.is_empty() else "(unsaved EventSheet)"
     _set_status("Loaded: %s" % label)
     _persist_session()

@@ -140,6 +140,24 @@ static func run() -> bool:
 	goto_editor.free()
 	DirAccess.remove_absolute("user://goto_probe.gd")
 
+	# ── The welcome panel's Godot-native default: code panel rides every sheet ────
+	ProjectSettings.set_setting("eventsheets/editor/open_code_panel_by_default", true)
+	var native_editor: EventSheetEditor = EventSheetEditor.new()
+	var native_sheet: EventSheetResource = EventSheetResource.new()
+	native_sheet.host_class = "Node"
+	native_editor.setup(native_sheet)
+	native_editor.set_undo_redo_manager(NoopUndoManager.new())
+	all_passed = _check("Godot-native default opens the GDScript panel with the sheet",
+		native_editor.is_code_panel_visible(), true) and all_passed
+	ProjectSettings.set_setting("eventsheets/editor/open_code_panel_by_default", null)
+	native_editor.free()
+	var plain_editor: EventSheetEditor = EventSheetEditor.new()
+	plain_editor.setup(EventSheetResource.new())
+	plain_editor.set_undo_redo_manager(NoopUndoManager.new())
+	all_passed = _check("the default stays off without the setting",
+		plain_editor.is_code_panel_visible(), false) and all_passed
+	plain_editor.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

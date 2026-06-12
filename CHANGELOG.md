@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Godot-native workflow (3/3): the first-run hook
+- **Welcome panel** on first enable (per project, stored in editor metadata —
+  nothing committed, never shows headless): open the playable showcase, jump to
+  the workspace starters, and one checkbox — *"I'm Godot-native"* — that opens
+  the generated-GDScript panel beside every sheet from then on
+  (`eventsheets/editor/open_code_panel_by_default`), so the first thing a
+  skeptical Godot dev sees is the honest output.
+- Asset Library submission kit deliberately deferred until v1.0.
+- Drag-a-sheet-onto-a-node explored and dropped: the Scene dock's drop surface
+  isn't reachable from plugins — the Scene dock's "Attach Event Sheet" context
+  entry covers the intent.
+
 ### Godot-native workflow (2/3): debug, docs and shortcuts like Godot
 - **Go to Sheet Row** (script-editor context menu on generated scripts): carries
   the caret line through the compiler's source map into the sheet — the GDScript

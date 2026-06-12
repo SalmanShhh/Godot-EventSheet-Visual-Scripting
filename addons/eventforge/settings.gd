@@ -18,6 +18,8 @@ const DEFINITIONS: Array[Dictionary] = [
 		"doc": "Pre-save backups kept per sheet under user://eventsheet_backups (0 disables)."},
 	{"name": "eventsheets/editor/restore_session", "default": true, "type": TYPE_BOOL,
 		"doc": "Reopen last session's sheet tabs when the editor starts."},
+	{"name": "eventsheets/editor/open_code_panel_by_default", "default": false, "type": TYPE_BOOL,
+		"doc": "Show the generated-GDScript panel whenever a sheet opens (the Godot-native default from the welcome panel)."},
 	{"name": "eventsheets/project/vocabulary_doc_path", "default": "res://EVENTSHEETS-VOCABULARY.md", "type": TYPE_STRING,
 		"hint": PROPERTY_HINT_FILE, "hint_string": "*.md",
 		"doc": "Where Tools → Vocabulary Doc writes the generated project reference."},
