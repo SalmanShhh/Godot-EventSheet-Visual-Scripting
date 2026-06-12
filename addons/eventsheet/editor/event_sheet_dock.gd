@@ -41,6 +41,11 @@ const ROW_MENU_EDIT_GROUP_DESC := 20
 const ROW_MENU_GROUP_COLOR := 27
 const ROW_MENU_GROUP_RUNTIME := 28
 const ROW_MENU_FIND_USAGES := 29
+const ROW_MENU_SAVE_SNIPPET := 30
+const ROW_MENU_INSERT_SNIPPET := 31
+const ROW_MENU_BULK_TOGGLE_ENABLED := 32
+const ROW_MENU_BULK_DUPLICATE := 33
+const ROW_MENU_BULK_GROUP := 34
 const ROW_MENU_ADD_SIGNAL := 21
 const ROW_MENU_ADD_MATCH := 22
 const ROW_MENU_OPEN_IN_SPLIT := 23
@@ -830,6 +835,15 @@ func _build_context_menus() -> void:
     _row_context_menu.add_separator()
     _row_context_menu.add_item("Copy", ROW_MENU_COPY)
     _row_context_menu.add_item("Paste", ROW_MENU_PASTE)
+    _row_context_menu.add_separator()
+    # Selection section: every entry runs on the multi-selection when one exists,
+    # falling back to the clicked row (the _top_level_selected_resources contract).
+    _row_context_menu.add_item("Disable/Enable Selection", ROW_MENU_BULK_TOGGLE_ENABLED)
+    _row_context_menu.add_item("Duplicate Selection", ROW_MENU_BULK_DUPLICATE)
+    _row_context_menu.add_item("Group Selection into New Group", ROW_MENU_BULK_GROUP)
+    _row_context_menu.add_separator()
+    _row_context_menu.add_item("Save Selection as Snippet…", ROW_MENU_SAVE_SNIPPET)
+    _row_context_menu.add_item("Insert Snippet…", ROW_MENU_INSERT_SNIPPET)
     _row_context_menu.add_separator()
     _row_context_menu.add_item("Delete Row", ROW_MENU_DELETE)
     _row_context_menu.add_theme_font_size_override("font_size", 14)
@@ -4419,6 +4433,18 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
             _toggle_group_runtime()
         ROW_MENU_GROUP_COLOR:
             _open_group_color_picker()
+        ROW_MENU_BULK_TOGGLE_ENABLED:
+            _bulk_set_enabled_on(_top_level_selected_resources())
+        ROW_MENU_BULK_DUPLICATE:
+            _bulk_duplicate_rows(_top_level_selected_resources())
+        ROW_MENU_BULK_GROUP:
+            var group_problem: String = _bulk_group_rows(_top_level_selected_resources())
+            if not group_problem.is_empty():
+                _set_status(group_problem, true)
+        ROW_MENU_SAVE_SNIPPET:
+            _open_save_snippet_dialog()
+        ROW_MENU_INSERT_SNIPPET:
+            _open_insert_snippet()
         ROW_MENU_EDIT_GROUP_DESC:
             if _context_row.source_resource is EventGroup:
                 var described_group: EventGroup = _context_row.source_resource as EventGroup
@@ -4513,6 +4539,168 @@ func _perform_symbol_rename(old_name: String, new_name: String) -> bool:
     _set_status("Renamed %s → %s%s." % [old_name, new_name,
         " (also in: %s)" % ", ".join(touched) if not touched.is_empty() else ""])
     return true
+
+# ── Bulk operations on the multi-selection (one undo action each) ─────────────────────
+
+## Disables every selected row that can be disabled — or re-enables them all when the
+## first one is already off (uniform result, never a mixed toggle).
+func _bulk_set_enabled_on(targets: Array) -> void:
+    var rows: Array = targets.filter(func(resource: Variant) -> bool:
+        return resource is EventRow or resource is EventGroup)
+    if rows.is_empty():
+        _set_status("Select event or group rows to disable/enable.", true)
+        return
+    var make_enabled: bool = not bool(rows[0].get("enabled"))
+    var changed: bool = _perform_undoable_sheet_edit("Toggle Selection", func() -> bool:
+        for row: Variant in rows:
+            (row as Resource).set("enabled", make_enabled)
+        return true)
+    if changed:
+        _mark_dirty("%s %d row(s)." % ["Enabled" if make_enabled else "Disabled", rows.size()])
+
+## Duplicates every selected row in place (each copy lands right under its source,
+## event uids re-baked so stateful conditions never share accumulators).
+func _bulk_duplicate_rows(targets: Array) -> void:
+    if targets.is_empty():
+        _set_status("Nothing selected to duplicate.", true)
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Duplicate Selection", func() -> bool:
+        var any: bool = false
+        for resource: Variant in targets:
+            var location: Dictionary = _find_resource_location(resource)
+            if location.is_empty():
+                continue
+            var copy: Resource = (resource as Resource).duplicate(true)
+            _refresh_clone_uids(copy)
+            (location.get("container") as Array).insert(int(location.get("index")) + 1, copy)
+            any = true
+        return any)
+    if changed:
+        _mark_dirty("Duplicated %d row(s)." % targets.size())
+
+## Wraps a same-parent selection in a fresh group (selection order preserved).
+## Returns "" or the user-facing problem — mixed-parent selections are refused
+## because silent cross-depth reparenting is how sheets get scrambled.
+func _bulk_group_rows(targets: Array) -> String:
+    if targets.is_empty():
+        return "Nothing selected to group."
+    var first_location: Dictionary = _find_resource_location(targets[0])
+    if first_location.is_empty():
+        return "Couldn't locate the selection."
+    var container: Array = first_location.get("container")
+    for resource: Variant in targets:
+        var location: Dictionary = _find_resource_location(resource)
+        # is_same: Array == compares CONTENTS; the parent rail needs identity.
+        if location.is_empty() or not is_same(location.get("container"), container):
+            return "Group Selection needs rows with the same parent."
+    var ordered: Array = targets.duplicate()
+    ordered.sort_custom(func(a: Variant, b: Variant) -> bool:
+        return container.find(a) < container.find(b))
+    var changed: bool = _perform_undoable_sheet_edit("Group Selection", func() -> bool:
+        var group: EventGroup = EventGroup.new()
+        group.group_name = "Group"
+        var insert_at: int = container.find(ordered[0])
+        for resource: Variant in ordered:
+            container.erase(resource)
+            group.events.append(resource)
+        container.insert(mini(insert_at, container.size()), group)
+        return true)
+    if changed:
+        _mark_dirty("Grouped %d row(s)." % ordered.size())
+    return ""
+
+## Fresh uids on a duplicated row tree (groups recurse; EventRows re-bake stateful
+## member uids — the paste contract).
+func _refresh_clone_uids(resource: Resource) -> void:
+    if resource is EventRow:
+        _assign_fresh_event_uids(resource as EventRow)
+    elif resource is EventGroup:
+        var group: EventGroup = resource as EventGroup
+        for child: Variant in (group.events if not group.events.is_empty() else group.rows):
+            if child is Resource:
+                _refresh_clone_uids(child as Resource)
+
+# ── Row snippets — save the selection, insert from the project library
+# (EventSheetSnippetLibrary; the clipboard text format is the file format) ────────────
+var _snippet_name_window: Window = null
+var _snippet_name_edit: LineEdit = null
+var _snippet_list_window: Window = null
+var _snippet_list: ItemList = null
+
+func _open_save_snippet_dialog() -> void:
+    if _top_level_selected_resources().is_empty():
+        _set_status("Select rows to save as a snippet.", true)
+        return
+    if _snippet_name_window == null:
+        _snippet_name_window = Window.new()
+        _snippet_name_window.title = "Save Selection as Snippet"
+        _snippet_name_window.size = Vector2i(360, 100)
+        _snippet_name_window.close_requested.connect(func() -> void: _snippet_name_window.hide())
+        var box: VBoxContainer = VBoxContainer.new()
+        box.set_anchors_preset(Control.PRESET_FULL_RECT)
+        _snippet_name_edit = LineEdit.new()
+        _snippet_name_edit.placeholder_text = "Snippet name (e.g. fade_and_free)"
+        _snippet_name_edit.text_submitted.connect(func(_t: String) -> void: _confirm_save_snippet())
+        box.add_child(_snippet_name_edit)
+        var save_button: Button = Button.new()
+        save_button.text = "Save to the project snippet library"
+        save_button.pressed.connect(_confirm_save_snippet)
+        box.add_child(save_button)
+        _snippet_name_window.add_child(box)
+        add_child(_snippet_name_window)
+    _snippet_name_window.popup_centered()
+    _snippet_name_edit.grab_focus()
+
+func _confirm_save_snippet() -> void:
+    var saved: String = _save_selection_snippet_named(_snippet_name_edit.text.strip_edges())
+    if not saved.is_empty():
+        _snippet_name_window.hide()
+
+## The testable save core: serializes the top-level selection with the SAME serializer
+## Copy uses and files it in the library. Returns the path, or "" on a problem.
+func _save_selection_snippet_named(snippet_name: String) -> String:
+    var targets: Array = _top_level_selected_resources()
+    if targets.is_empty() or snippet_name.is_empty():
+        _set_status("Name the snippet and select at least one row.", true)
+        return ""
+    var path: String = EventSheetSnippetLibrary.save_snippet(snippet_name, EventSheetSnippet.serialize_rows(targets, _current_sheet))
+    if path.is_empty():
+        _set_status("Couldn't write the snippet.", true)
+        return ""
+    if Engine.is_editor_hint() and is_inside_tree():
+        EditorInterface.get_resource_filesystem().scan()
+    _set_status("Snippet saved: %s — Insert Snippet… lists it now." % path)
+    return path
+
+func _open_insert_snippet() -> void:
+    var snippets: PackedStringArray = EventSheetSnippetLibrary.list_snippets()
+    if snippets.is_empty():
+        _set_status("No snippets yet — select rows and Save Selection as Snippet… first.", true)
+        return
+    if _snippet_list_window == null:
+        _snippet_list_window = Window.new()
+        _snippet_list_window.title = "Insert Snippet"
+        _snippet_list_window.size = Vector2i(380, 320)
+        _snippet_list_window.close_requested.connect(func() -> void: _snippet_list_window.hide())
+        _snippet_list = ItemList.new()
+        _snippet_list.set_anchors_preset(Control.PRESET_FULL_RECT)
+        _snippet_list.item_activated.connect(func(index: int) -> void:
+            _insert_snippet_path(str(_snippet_list.get_item_metadata(index)))
+            _snippet_list_window.hide())
+        _snippet_list_window.add_child(_snippet_list)
+        add_child(_snippet_list_window)
+    _snippet_list.clear()
+    for snippet_path: String in snippets:
+        _snippet_list.add_item(snippet_path.get_file().get_basename().capitalize())
+        _snippet_list.set_item_metadata(_snippet_list.item_count - 1, snippet_path)
+        _snippet_list.set_item_tooltip(_snippet_list.item_count - 1, snippet_path)
+    _snippet_list_window.popup_centered()
+
+## Insert = the normal snippet paste (fresh uids, missing variables created — the
+## whole paste contract for free).
+func _insert_snippet_path(snippet_path: String) -> void:
+    if not _paste_snippet_text(EventSheetSnippetLibrary.read_snippet(snippet_path)):
+        _set_status("That file isn't a sheet snippet: %s" % snippet_path.get_file(), true)
 
 ## Rewrites + saves every candidate sheet whose `includes` lists the open sheet
 ## (closed sheets save directly — the Replace-in-Project contract).

@@ -22,8 +22,8 @@ contracts:
 |---|---|---|---|
 | 5 | True Rename (variables + functions) | 2 | ✅ Delivered |
 | 6 | Create-variable quick-fix in expression fields | 2 | ✅ Delivered |
-| 4 | Row snippets (project-local) | 2 | 🗺 Planned |
-| 7 | Bulk operations on multi-select | 2 | 🗺 Planned |
+| 4 | Row snippets (project-local) | 2 | ✅ Delivered |
+| 7 | Bulk operations on multi-select | 2 | ✅ Delivered |
 | 8 | Session restore (tabs) | 3 | 🗺 Planned |
 | 9 | Asset drops on the canvas with intent | 3 | 🗺 Planned |
 | 10 | Attach behavior to selected node | 3 | 🗺 Planned |
@@ -87,7 +87,7 @@ re-lints clean.
 every sheet that needs them.
 
 **Design.** The existing shareable **text-snippet format is the file format**
-(one serializer, no new dialect). `EventSheetSnippets` (eventforge):
+(one serializer, no new dialect). `EventSheetSnippetLibrary` (eventforge):
 `snippets_dir()` (`eventsheets/project/snippets_dir`, default
 `res://eventsheet_snippets`), `list_snippets()` (sorted `.txt` files),
 `save_snippet(name, text) -> path` (suffix `-2/-3`, never overwrites —
@@ -108,12 +108,13 @@ with re-baked uids; suffix-on-collision; menu listing.
 **Problem.** The viewport already supports multi-row selection
 (`_selected_row_uids`), but the context menu only acts on the clicked row.
 
-**Design.** When the selection holds >1 row, the row context menu gains a
-**“Selection (N rows)”** section: **Disable/Enable**, **Duplicate**, **Delete**,
-**Group into New Group**. Disable/enable/duplicate/delete act on every selected
-row wherever it lives; group-into-group requires a same-parent selection (refused
-with a status line otherwise — silent reparenting across depths is how sheets get
-scrambled). All wrapped in **one** undo action.
+**Design.** The row context menu gains a Selection section — **Disable/Enable**,
+**Duplicate**, **Group into New Group** — running on the multi-selection when one
+exists and falling back to the clicked row (Delete already handled selections).
+Disable/enable lands uniformly (the first row's state decides the direction);
+group-into-group requires a same-parent selection (refused with a status line
+otherwise — silent reparenting across depths is how sheets get scrambled). Each
+op is **one** undo action (whole-sheet snapshot).
 
 **Tests.** Each op across a 3-row selection; mixed-parent group refusal; single
 undo restores all.

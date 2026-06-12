@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Tedium reduction (Tier 2): row snippets + bulk selection ops
+- **Row snippets** — Save Selection as Snippet… files the selection in
+  `res://eventsheet_snippets/` using the SAME text format Copy puts on the
+  clipboard (one serializer); Insert Snippet… pastes any library entry through
+  the normal paste path (fresh uids, missing variables created). Committed
+  files = team-shared patterns, exactly like templates and packs.
+- **Bulk selection ops** on the row context menu: Disable/Enable Selection
+  (uniform, never a mixed toggle), Duplicate Selection (copies land under their
+  sources, uids re-baked), Group Selection into New Group (same-parent
+  selections only — cross-depth reparenting is refused, not guessed). Each is
+  one undo step.
+
 ### Tedium reduction (Tier 2): True Rename + create-variable quick-fix
 - **Rename Everywhere…** on variable rows: a word-boundary rename across every
   model surface (params, raw code, pick filters, attributes, comments — prose

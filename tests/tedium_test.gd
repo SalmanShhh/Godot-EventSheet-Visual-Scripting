@@ -126,6 +126,84 @@ static func run() -> bool:
 	DirAccess.remove_absolute("user://rename_lib.tres")
 	DirAccess.remove_absolute("user://rename_consumer.tres")
 
+	# ── Row snippets: the clipboard text format is the file format ────────────────
+	ProjectSettings.set_setting("eventsheets/project/snippets_dir", "user://snip_dir")
+	for stale: String in EventSheetSnippetLibrary.list_snippets():
+		DirAccess.remove_absolute(stale)
+	var snippet_sheet: EventSheetResource = EventSheetResource.new()
+	snippet_sheet.host_class = "Node"
+	var snippet_event: EventRow = EventRow.new()
+	snippet_event.trigger_provider_id = "Core"
+	snippet_event.trigger_id = "OnProcess"
+	var snippet_action: ACEAction = ACEAction.new()
+	snippet_action.ace_id = "SetVar"
+	snippet_action.codegen_template = "combo += 1"
+	snippet_event.actions.append(snippet_action)
+	snippet_sheet.events.append(snippet_event)
+	var snippet_text: String = EventSheetSnippet.serialize_rows([snippet_event], snippet_sheet)
+	var saved_path: String = EventSheetSnippetLibrary.save_snippet("Combo Bump", snippet_text)
+	all_passed = _check("snippets file under snake_case names",
+		saved_path, "user://snip_dir/combo_bump.txt") and all_passed
+	all_passed = _check("the file IS the clipboard format",
+		EventSheetSnippetLibrary.read_snippet(saved_path), snippet_text) and all_passed
+	all_passed = _check("name collisions suffix instead of overwriting",
+		EventSheetSnippetLibrary.save_snippet("Combo Bump", snippet_text), "user://snip_dir/combo_bump-2.txt") and all_passed
+	all_passed = _check("the library lists sorted snippets",
+		EventSheetSnippetLibrary.list_snippets(),
+		PackedStringArray(["user://snip_dir/combo_bump-2.txt", "user://snip_dir/combo_bump.txt"])) and all_passed
+	# Insert rides the normal snippet paste: fresh rows land on the open sheet.
+	var insert_editor: EventSheetEditor = EventSheetEditor.new()
+	var insert_sheet: EventSheetResource = EventSheetResource.new()
+	insert_sheet.host_class = "Node"
+	insert_editor.setup(insert_sheet)
+	insert_editor.set_undo_redo_manager(NoopUndoManager.new())
+	insert_editor._insert_snippet_path(saved_path)
+	all_passed = _check("insert appends the snippet's rows",
+		insert_sheet.events.size() == 1 and insert_sheet.events[0] is EventRow, true) and all_passed
+	all_passed = _check("inserted events never share the source uid",
+		(insert_sheet.events[0] as EventRow).event_uid == snippet_event.event_uid, false) and all_passed
+	ProjectSettings.set_setting("eventsheets/project/snippets_dir", null)
+	DirAccess.remove_absolute("user://snip_dir/combo_bump.txt")
+	DirAccess.remove_absolute("user://snip_dir/combo_bump-2.txt")
+
+	# ── Bulk operations on a selection ────────────────────────────────────────────
+	var bulk_sheet: EventSheetResource = insert_editor._current_sheet
+	var bulk_rows: Array = []
+	for index in 3:
+		var bulk_event: EventRow = EventRow.new()
+		bulk_event.trigger_provider_id = "Core"
+		bulk_event.trigger_id = "OnProcess"
+		bulk_sheet.events.append(bulk_event)
+		bulk_rows.append(bulk_event)
+	insert_editor._bulk_set_enabled_on(bulk_rows)
+	all_passed = _check("bulk disable lands uniformly",
+		not (bulk_rows[0] as EventRow).enabled and not (bulk_rows[2] as EventRow).enabled, true) and all_passed
+	insert_editor._bulk_set_enabled_on(bulk_rows)
+	all_passed = _check("bulk toggle re-enables uniformly",
+		(bulk_rows[0] as EventRow).enabled and (bulk_rows[2] as EventRow).enabled, true) and all_passed
+	var before_count: int = bulk_sheet.events.size()
+	insert_editor._bulk_duplicate_rows(bulk_rows)
+	all_passed = _check("bulk duplicate copies each row in place",
+		bulk_sheet.events.size(), before_count + 3) and all_passed
+	var first_duplicate: EventRow = bulk_sheet.events[bulk_sheet.events.find(bulk_rows[0]) + 1] as EventRow
+	all_passed = _check("duplicates re-bake their event uids",
+		first_duplicate.event_uid == (bulk_rows[0] as EventRow).event_uid, false) and all_passed
+	# Same-parent rail: a top-level row + a sub-event can't be grouped together.
+	var nested_parent: EventRow = bulk_rows[0] as EventRow
+	var nested_child: EventRow = EventRow.new()
+	nested_parent.sub_events.append(nested_child)
+	all_passed = _check("mixed-parent selections refuse to group",
+		insert_editor._bulk_group_rows([bulk_rows[1], nested_child]).is_empty(), false) and all_passed
+	var group_problem: String = insert_editor._bulk_group_rows([bulk_rows[1], bulk_rows[2]])
+	var grouped: EventGroup = null
+	for row: Variant in bulk_sheet.events:
+		if row is EventGroup:
+			grouped = row
+	all_passed = _check("same-parent selections group in order",
+		group_problem.is_empty() and grouped != null and grouped.events.size() == 2
+		and grouped.events[0] == bulk_rows[1] and grouped.events[1] == bulk_rows[2], true) and all_passed
+	insert_editor.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
