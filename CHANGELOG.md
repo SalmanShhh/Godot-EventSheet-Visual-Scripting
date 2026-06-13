@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Field-test round 2: the replace flow, fixed for real
+- **Preselect now actually shows** — the entry WAS being selected, but inside a
+  collapsed picker group, which reads as nothing happening. Preselect expands
+  the ancestor chain, runs after the popup settles (carried via the picker
+  context instead of racing the open sequence), and scrolls to the entry.
+- **OK can never be locked out again** — when a sheet variable shadows a host
+  member (e.g. `velocity` on a CharacterBody2D sheet), the lint scratch breaks
+  and EVERY expression "failed", so the params dialog just closed and reopened
+  without applying. The guardrail now checks the lint baseline first: a broken
+  context skips the expression gate instead of locking the user out.
+
 ### Field-test round 1: author tooling
 - **The Theme Editor is actually editable now** — both panes carry real minimum
   sizes (the token controls used to collapse to an invisible sliver, leaving

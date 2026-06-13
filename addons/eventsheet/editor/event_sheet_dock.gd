@@ -1645,8 +1645,8 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
     # call: "I expect to replace it"): pick another to swap it out, or re-pick the
     # same one to edit its params — existing values prefill through the context.
     if str(edit_context.get("mode", "")) == "replace_condition":
+        edit_context["preselect_ace_id"] = definition.id
         _ace_picker.open("replace_condition", false, event_row, edit_context)
-        _ace_picker.preselect(definition.id)
         return
     _ace_params.open_with_values(definition, edit_context, edit_context.get("existing_params", {}))
 

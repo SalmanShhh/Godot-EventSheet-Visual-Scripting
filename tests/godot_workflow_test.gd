@@ -411,6 +411,63 @@ static func run() -> bool:
 	function_editor.free()
 	function_host.free()
 
+	# ── Field-test regressions: picker preselect must REVEAL (expand ancestors);
+	# a broken lint context must never lock the params dialog's OK ─────────────────
+	var pre_editor: EventSheetEditor = EventSheetEditor.new()
+	var pre_sheet: EventSheetResource = EventSheetResource.new()
+	pre_sheet.host_class = "CharacterBody2D"
+	var pre_event: EventRow = EventRow.new()
+	pre_event.trigger_provider_id = "Core"
+	pre_event.trigger_id = "OnProcess"
+	var pre_cond: ACECondition = ACECondition.new()
+	pre_cond.provider_id = "Core"
+	pre_cond.ace_id = "IsOnFloor"
+	pre_cond.codegen_template = "is_on_floor()"
+	pre_event.conditions.append(pre_cond)
+	pre_sheet.events.append(pre_event)
+	pre_editor.setup(pre_sheet)
+	pre_editor.set_undo_redo_manager(NoopUndoManager.new())
+	pre_editor._ace_picker.init_dialog(pre_editor, pre_editor._ace_registry)
+	pre_editor._refresh_ace_registry()
+	pre_editor._ace_picker._context = {"mode": "replace_condition", "signals_only": false, "selected_resource": pre_event}
+	pre_editor._ace_picker._refresh_tree()
+	# Collapse every group: selection inside a collapsed group is what read as
+	# "not preselecting" in the field test.
+	var group_item: TreeItem = pre_editor._ace_picker._tree.get_root().get_first_child()
+	while group_item != null:
+		group_item.collapsed = true
+		group_item = group_item.get_next()
+	pre_editor._ace_picker.preselect("IsOnFloor")
+	var preselected: TreeItem = pre_editor._ace_picker._tree.get_selected()
+	all_passed = _check("preselect reveals the entry (selected + ancestors expanded)",
+		preselected != null and preselected.get_text(0) == "Is On Floor"
+		and not preselected.get_parent().collapsed, true) and all_passed
+
+	# Broken lint context: a sheet variable shadowing a host member breaks the
+	# scratch script, so EVERY expression "fails" — OK must still commit.
+	var broken_sheet: EventSheetResource = EventSheetResource.new()
+	broken_sheet.host_class = "CharacterBody2D"
+	broken_sheet.variables = {"velocity": {"type": "float", "default": 0.0, "exported": true}}
+	all_passed = _check("the shadowed-member sheet really breaks the lint baseline",
+		bool(EventSheetGDScriptLint.lint_expression("0", broken_sheet).get("ok", true)), false) and all_passed
+	var guard_dialog: ACEParamsDialog = ACEParamsDialog.new()
+	var guard_host: Node = Node.new()
+	guard_dialog.init_dialog(guard_host)
+	guard_dialog.set_lint_context_provider(func() -> EventSheetResource: return broken_sheet)
+	var guard_definition: ACEDefinition = ACEDefinition.new()
+	guard_definition.id = "GuardProbe"
+	guard_definition.parameters = [{"id": "value", "display_name": "Value", "hint": "expression", "default_value": "1.0"}]
+	guard_dialog._definition = guard_definition
+	guard_dialog._context = {"mode": "append_action"}
+	guard_dialog._build_form(guard_definition, {})
+	var guard_fired: Array = [false]
+	guard_dialog.params_confirmed.connect(func(_d, _v, _c) -> void: guard_fired[0] = true)
+	guard_dialog._on_confirmed()
+	all_passed = _check("a broken lint context never locks the OK button",
+		guard_fired[0], true) and all_passed
+	guard_host.free()
+	pre_editor.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -166,7 +166,8 @@ func set_registry(registry: EventSheetACERegistry) -> void:
 
 ## Open the picker for the given mode.
 ## Selects + reveals the entry for an ace id — the double-click-to-replace flow
-## opens the picker focused on what's being replaced.
+## opens the picker focused on what's being replaced. Ancestors expand first:
+## selecting inside a collapsed group is invisible, which reads as "not selected".
 func preselect(ace_id: String) -> void:
 	if _tree == null or ace_id.is_empty():
 		return
@@ -177,6 +178,10 @@ func preselect(ace_id: String) -> void:
 			continue
 		var item_meta: Variant = item.get_metadata(0)
 		if item_meta is ACEDefinition and (item_meta as ACEDefinition).id == ace_id:
+			var ancestor: TreeItem = item.get_parent()
+			while ancestor != null:
+				ancestor.collapsed = false
+				ancestor = ancestor.get_parent()
 			item.select(0)
 			_tree.scroll_to_item(item)
 			return
@@ -207,6 +212,10 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	_window.popup_centered(Vector2i(720, 520))
 	_window.grab_focus()
 	_search.grab_focus()
+	# Deferred so it lands AFTER the popup and any visibility-driven refresh —
+	# callers preselect via context instead of racing the open sequence.
+	if _context.has("preselect_ace_id"):
+		call_deferred("preselect", str(_context.get("preselect_ace_id")))
 
 func _title_for_mode(mode: String, signals_only: bool) -> String:
 	if signals_only:

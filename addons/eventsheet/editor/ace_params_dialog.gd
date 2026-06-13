@@ -1171,7 +1171,16 @@ func _on_confirmed() -> void:
 	if _definition == null or _apply_blocked:
 		return
 	# Guardrail (C3-style): block the commit while any expression doesn't compile.
-	var invalid_field: Control = _first_invalid_expression()
+	# Field-test catch: when the LINT CONTEXT itself is broken (a sheet variable
+	# shadowing a host member makes the scratch script unparseable), every
+	# expression "fails" and OK can never commit — the dialog just closed and
+	# reopened. A broken context must never lock the user out: verify the baseline
+	# first and skip the guardrail when even a literal won't lint.
+	var lint_context_healthy: bool = true
+	if _lint_context_provider.is_valid():
+		var baseline_sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
+		lint_context_healthy = bool(EventSheetGDScriptLint.lint_expression("0", baseline_sheet).get("ok", true))
+	var invalid_field: Control = _first_invalid_expression() if lint_context_healthy else null
 	if invalid_field != null:
 		if _hint != null:
 			_hint.text = "✗ An expression doesn't compile — fix it before applying."
