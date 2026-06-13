@@ -1,9 +1,9 @@
-[gd_resource type="Resource" script_class="EventSheetEditorStyle" load_steps=10 format=3]
+[gd_resource type="Resource" script_class="EventSheetEditorStyle" load_steps=10 format=3 uid="uid://6kkkspxeu0t4"]
 
-[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_editor_style.gd" id="1_editor_style"]
-[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_event_style.gd" id="2_event_style"]
+[ext_resource type="Script" uid="uid://bi4je8hybhu85" path="res://addons/eventsheet/theme/event_sheet_editor_style.gd" id="1_editor_style"]
+[ext_resource type="Script" uid="uid://co8xev8hw3miu" path="res://addons/eventsheet/theme/event_sheet_event_style.gd" id="2_event_style"]
 [ext_resource type="PackedScene" path="res://addons/eventsheet/elements/action_visual_element.tscn" id="2_ihd31"]
-[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_element_style.gd" id="3_element_style"]
+[ext_resource type="Script" uid="uid://qpmpq2p3ch2l" path="res://addons/eventsheet/theme/event_sheet_element_style.gd" id="3_element_style"]
 [ext_resource type="PackedScene" path="res://addons/eventsheet/elements/condition_visual_element.tscn" id="3_rphpx"]
 [ext_resource type="PackedScene" path="res://addons/eventsheet/elements/event_visual_element.tscn" id="5_cv6jy"]
 

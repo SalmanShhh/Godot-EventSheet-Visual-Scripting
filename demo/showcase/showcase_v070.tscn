@@ -1,8 +1,8 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=4 format=3 uid="uid://bjxxis23eol8u"]
 
-[ext_resource type="Script" path="res://demo/showcase/showcase_v070.gd" id="1_juoo8"]
-[ext_resource type="Script" path="res://eventsheet_addons/spring/spring_behavior.gd" id="2_cphjf"]
-[ext_resource type="Script" path="res://eventsheet_addons/tween/tween_behavior.gd" id="3_skace"]
+[ext_resource type="Script" uid="uid://bteyw3ds8amih" path="res://demo/showcase/showcase_v070.gd" id="1_juoo8"]
+[ext_resource type="Script" uid="uid://c6lchnoe8axxt" path="res://eventsheet_addons/spring/spring_behavior.gd" id="2_cphjf"]
+[ext_resource type="Script" uid="uid://du3qku5cbigq1" path="res://eventsheet_addons/tween/tween_behavior.gd" id="3_skace"]
 
 [node name="Showcase" type="Node2D"]
 script = ExtResource("1_juoo8")

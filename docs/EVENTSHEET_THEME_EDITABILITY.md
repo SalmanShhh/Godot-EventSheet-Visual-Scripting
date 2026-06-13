@@ -48,7 +48,6 @@ Current additions on top of the model below:
 
 These themes are bundled in `res://demo/themes/`:
 
-- `construct3_stacked_theme.tres` — strongest Construct-like stacked baseline
 - `high_contrast_theme.tres` — accessibility-focused contrast preset
 - `soft_light_theme.tres` — softer default for long authoring sessions
 - `designer_template_theme.tres` — neutral starting point meant to be duplicated

@@ -71,6 +71,9 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry = null, vari
 	scroll.custom_minimum_size = Vector2(520.0, 260.0)
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# Fields fit the dialog width instead of growing a horizontal scrollbar (long
+	# enum defaults like DisplayServer.WINDOW_MODE_FULLSCREEN used to overflow).
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_dialog.add_child(scroll)
 
 	_form = VBoxContainer.new()
@@ -151,6 +154,16 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(field)
 	_form.add_child(row)
+	# Hover the label OR the field for the parameter's purpose (descriptions also
+	# render below, but tooltips answer "what is this?" without scanning down).
+	var hover_text: String = str(param_dict.get("description", ""))
+	if not hover_text.is_empty():
+		label.tooltip_text = hover_text
+		field.tooltip_text = hover_text
+	# Dropdowns clip long entries instead of forcing the dialog wider.
+	if field is OptionButton:
+		(field as OptionButton).clip_text = true
+		(field as OptionButton).custom_minimum_size = Vector2(220.0, 0.0)
 
 	# Parameter description rendered below its control.
 	var description: String = str(param_dict.get("description", ""))

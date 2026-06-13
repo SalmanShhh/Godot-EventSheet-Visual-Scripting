@@ -19,7 +19,7 @@ static func run() -> bool:
 		all_passed = _check("preset '%s' loads as an editor style" % name, resource is EventSheetEditorStyle, true) and all_passed
 
 	all_passed = _check("humanize strips _theme and title-cases",
-		EventSheetThemePresets._humanize("construct3_stacked_theme.tres"), "Construct3 Stacked") and all_passed
+		EventSheetThemePresets._humanize("gruvbox_dark_theme.tres"), "Gruvbox Dark") and all_passed
 	all_passed = _check("humanize handles multi-word names",
 		EventSheetThemePresets._humanize("high_contrast_theme.tres"), "High Contrast") and all_passed
 

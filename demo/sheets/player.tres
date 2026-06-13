@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="EventSheetResource" load_steps=15 format=3]
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=17 format=3 uid="uid://uewp5fqfnf6a"]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="1_event_sheet"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="2_event_row"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="3_ace_action"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="4_ace_condition"]
+[ext_resource type="Script" uid="uid://das1ks7khoh18" path="res://addons/eventforge/resources/event_sheet.gd" id="1_event_sheet"]
+[ext_resource type="Script" uid="uid://b7h46xqcnqmkv" path="res://addons/eventforge/resources/event_row.gd" id="2_event_row"]
+[ext_resource type="Script" uid="uid://b3tlhpqqjsxma" path="res://addons/eventforge/resources/local_variable.gd" id="3_24re1"]
+[ext_resource type="Script" uid="uid://cqf5u07am3jvp" path="res://addons/eventforge/resources/ace_action.gd" id="3_ace_action"]
+[ext_resource type="Script" uid="uid://k7isxxi2kcg2" path="res://addons/eventforge/resources/ace_condition.gd" id="4_ace_condition"]
+[ext_resource type="Script" uid="uid://c50gq4i8jk85y" path="res://addons/eventforge/resources/pick_filter.gd" id="4_engxs"]
 
 [sub_resource type="Resource" id="ACEAction_ready_log"]
 script = ExtResource("3_ace_action")
@@ -11,7 +13,6 @@ ace_id = "PrintLog"
 parameters = {
 "message": "\"Player ready\""
 }
-provider_id = "Core"
 
 [sub_resource type="Resource" id="ACEAction_ready_set"]
 script = ExtResource("3_ace_action")
@@ -20,13 +21,20 @@ parameters = {
 "value": "100",
 "var_name": "health"
 }
-provider_id = "Core"
 
 [sub_resource type="Resource" id="EventRow_ready"]
 script = ExtResource("2_event_row")
-actions = [SubResource("ACEAction_ready_log"), SubResource("ACEAction_ready_set")]
-trigger_id = "OnReady"
 trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("ACEAction_ready_log"), SubResource("ACEAction_ready_set")])
+event_uid = "8ca00c"
+
+[sub_resource type="Resource" id="ACEAction_low_health_log"]
+script = ExtResource("3_ace_action")
+ace_id = "PrintLog"
+parameters = {
+"message": "\"Low health!\""
+}
 
 [sub_resource type="Resource" id="ACECondition_low_health"]
 script = ExtResource("4_ace_condition")
@@ -36,30 +44,14 @@ parameters = {
 "value": "50",
 "var_name": "health"
 }
-provider_id = "Core"
-
-[sub_resource type="Resource" id="ACEAction_low_health_log"]
-script = ExtResource("3_ace_action")
-ace_id = "PrintLog"
-parameters = {
-"message": "\"Low health!\""
-}
-provider_id = "Core"
 
 [sub_resource type="Resource" id="EventRow_process_low_health"]
 script = ExtResource("2_event_row")
-actions = [SubResource("ACEAction_low_health_log")]
-conditions = [SubResource("ACECondition_low_health")]
-trigger_id = "OnProcess"
 trigger_provider_id = "Core"
-
-[sub_resource type="Resource" id="ACECondition_enemy_group"]
-script = ExtResource("4_ace_condition")
-ace_id = "HasGroupMember"
-parameters = {
-"group": "\"enemy\""
-}
-provider_id = "Core"
+trigger_id = "OnProcess"
+conditions = Array[ExtResource("4_ace_condition")]([SubResource("ACECondition_low_health")])
+actions = Array[Resource]([SubResource("ACEAction_low_health_log")])
+event_uid = "4d4700"
 
 [sub_resource type="Resource" id="ACEAction_damage_add"]
 script = ExtResource("3_ace_action")
@@ -68,7 +60,6 @@ parameters = {
 "amount": "-10",
 "var_name": "health"
 }
-provider_id = "Core"
 
 [sub_resource type="Resource" id="ACEAction_damage_emit"]
 script = ExtResource("3_ace_action")
@@ -77,19 +68,27 @@ parameters = {
 "args": "10",
 "signal_name": "\"damage_taken\""
 }
-provider_id = "Core"
+
+[sub_resource type="Resource" id="ACECondition_enemy_group"]
+script = ExtResource("4_ace_condition")
+ace_id = "HasGroupMember"
+parameters = {
+"group": "\"enemy\""
+}
 
 [sub_resource type="Resource" id="EventRow_body_entered"]
 script = ExtResource("2_event_row")
-actions = [SubResource("ACEAction_damage_add"), SubResource("ACEAction_damage_emit")]
-conditions = [SubResource("ACECondition_enemy_group")]
-trigger_id = "OnBodyEntered"
 trigger_provider_id = "Core"
+trigger_id = "OnBodyEntered"
+conditions = Array[ExtResource("4_ace_condition")]([SubResource("ACECondition_enemy_group")])
+actions = Array[Resource]([SubResource("ACEAction_damage_add"), SubResource("ACEAction_damage_emit")])
+event_uid = "a7648e"
 
 [resource]
 script = ExtResource("1_event_sheet")
-events = [SubResource("EventRow_ready"), SubResource("EventRow_process_low_health"), SubResource("EventRow_body_entered")]
 host_class = "CharacterBody2D"
+addon_tags = PackedStringArray()
+events = Array[Resource]([SubResource("EventRow_ready"), SubResource("EventRow_process_low_health"), SubResource("EventRow_body_entered")])
 variables = {
 "health": {
 "default": 100,

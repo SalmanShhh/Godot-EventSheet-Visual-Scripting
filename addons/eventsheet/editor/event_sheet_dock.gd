@@ -286,13 +286,10 @@ func get_exposed_node() -> EventSheetExposedNode:
 func use_default_theme() -> bool:
     if _current_sheet == null or _current_sheet.editor_style == null:
         return false
-    var changed: bool = _perform_undoable_sheet_edit("Set Default Theme", func() -> bool:
-        _current_sheet.editor_style = null
-        return true
-    )
-    if changed:
-        _refresh_after_edit()
-    return changed
+    # Out of undo history, like every theme switch (presentation, not content).
+    _current_sheet.editor_style = null
+    _refresh_after_edit()
+    return true
 
 func load_theme_style_from_path(path: String) -> bool:
     if _current_sheet == null:
@@ -305,14 +302,13 @@ func load_theme_style_from_path(path: String) -> bool:
     if not (loaded is EventSheetEditorStyle):
         _set_status("Theme load failed: %s is not an EventSheetEditorStyle." % resolved_path.get_file(), true)
         return false
-    var changed: bool = _perform_undoable_sheet_edit("Set Theme", func() -> bool:
-        _current_sheet.editor_style = loaded as EventSheetEditorStyle
-        return true
-    )
-    if changed:
-        _refresh_after_edit()
-        _mark_dirty("Applied theme: %s." % resolved_path.get_file())
-    return changed
+    # Theme switches stay OUT of the undo history (user call: undo is for sheet
+    # content — ACEs and variables — never presentation). Still marks dirty: the
+    # style is persisted on the sheet.
+    _current_sheet.editor_style = loaded as EventSheetEditorStyle
+    _refresh_after_edit()
+    _mark_dirty("Applied theme: %s." % resolved_path.get_file())
+    return true
 
 func reload_active_theme() -> bool:
     if _current_sheet == null:
@@ -523,13 +519,13 @@ func _build_ui() -> void:
             6: _export_addon_pack()
     )
     _toolbar.add_child(sheet_menu)
-    _add_toolbar_button("Save", _on_save_requested)
-    _add_toolbar_button("Run Scene", _run_from_sheet)
+    _add_toolbar_button("Save", _on_save_requested, "Save the sheet — compile-on-save keeps its generated script fresh (Ctrl+S).")
+    _add_toolbar_button("Run Scene", _run_from_sheet, "Save, then play the scene that uses this sheet's script.")
     _add_toolbar_separator()
     # The C3 reflexes stay one click (E / C / A on the keyboard).
-    _add_toolbar_button("Add Event", _on_add_event_requested)
-    _add_toolbar_button("Add Condition", _on_add_condition_requested)
-    _add_toolbar_button("Add Action", _on_add_action_requested)
+    _add_toolbar_button("Add Event", _on_add_event_requested, "Add an event (E).")
+    _add_toolbar_button("Add Condition", _on_add_condition_requested, "Add a condition to the selected event (C).")
+    _add_toolbar_button("Add Action", _on_add_action_requested, "Add an action to the selected event (A).")
     # Add ▾ — the rest of the authoring vocabulary.
     var add_menu: MenuButton = MenuButton.new()
     add_menu.name = "EventSheetAddMenu"
@@ -595,6 +591,12 @@ func _build_ui() -> void:
             7: _on_reload_theme_requested()
             8: _open_theme_editor()
     )
+    # Toggles say what they toggle on hover (user call: hovering a toggle should
+    # explain it).
+    view_popup.set_item_tooltip(view_popup.get_item_index(0), "Show/hide the generated-GDScript panel beside the sheet.")
+    view_popup.set_item_tooltip(view_popup.get_item_index(1), "Show/hide a second synchronized view of this sheet, side by side.")
+    view_popup.set_item_tooltip(view_popup.get_item_index(2), "Pop the sheet view out into its own window / bring it back.")
+    view_popup.set_item_tooltip(view_popup.get_item_index(3), "Link/unlink scrolling between the split views.")
     _toolbar.add_child(view_menu)
     # Tools ▾ — debug + project workflow tools (the UX-audit consolidation).
     var tools_menu: MenuButton = MenuButton.new()
@@ -636,11 +638,13 @@ func _build_ui() -> void:
             12: _open_lift_report()
             13: show_welcome()
     )
+    tools_popup.set_item_tooltip(tools_popup.get_item_index(0), "Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.")
+    tools_popup.set_item_tooltip(tools_popup.get_item_index(1), "Toggle Live Values: running sheets stream their variables here (editable).")
     _toolbar.add_child(tools_menu)
     _add_toolbar_separator()
     # GDScript stays a one-click toggle (the pairing thesis: honest output, always
     # one click away) next to the per-sheet theme picker.
-    _add_toolbar_button("GDScript", _toggle_code_panel)
+    _add_toolbar_button("GDScript", _toggle_code_panel, "Toggle the generated-GDScript panel — the sheet's honest compiled output, side by side.")
     _theme_picker = OptionButton.new()
     _theme_picker.name = "EventSheetThemePicker"
     _theme_picker.tooltip_text = "Theme for this sheet (Load/Reload and the Theme Editor live in View)"
@@ -954,9 +958,10 @@ func _build_context_menus() -> void:
     _empty_space_context_menu.id_pressed.connect(_on_empty_space_context_menu_id_pressed)
     add_child(_empty_space_context_menu)
 
-func _add_toolbar_button(text: String, callable: Callable) -> void:
+func _add_toolbar_button(text: String, callable: Callable, tooltip: String = "") -> void:
     var button: Button = Button.new()
     button.text = text
+    button.tooltip_text = tooltip
     button.pressed.connect(callable)
     _toolbar.add_child(button)
 
@@ -4805,18 +4810,20 @@ func show_welcome() -> void:
     native_check.set_pressed_no_signal(bool(ProjectSettings.get_setting("eventsheets/editor/open_code_panel_by_default", false)))
     _welcome_window.popup_centered()
 
-## Margined, autowrapped layout (review of the first cut: full-rect content with no
-## margins read as misaligned text jammed against the window edges).
+## An AcceptDialog so the window sizes itself to the content (the hand-sized Window
+## of the first two cuts clipped buttons and text at the edges); every label wraps
+## inside a fixed content width.
 func _build_welcome_window() -> void:
-    _welcome_window = Window.new()
-    _welcome_window.title = "Godot EventSheets — welcome"
-    _welcome_window.size = Vector2i(480, 320)
-    _welcome_window.close_requested.connect(func() -> void: _welcome_window.hide())
+    var dialog: AcceptDialog = AcceptDialog.new()
+    dialog.title = "Godot EventSheets — welcome"
+    dialog.ok_button_text = "Close"
+    _welcome_window = dialog
     var margin: MarginContainer = MarginContainer.new()
-    margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+    margin.name = "WelcomeMargin"
     for side: String in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
         margin.add_theme_constant_override(side, 14)
     var box: VBoxContainer = VBoxContainer.new()
+    box.custom_minimum_size = Vector2(440.0, 0.0)
     box.add_theme_constant_override("separation", 10)
     var blurb: Label = Label.new()
     blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -4837,7 +4844,8 @@ func _build_welcome_window() -> void:
         _open_template_menu())
     box.add_child(starter_button)
     var native_check: CheckBox = CheckBox.new()
-    native_check.text = "I'm Godot-native: show the generated GDScript beside every sheet"
+    native_check.text = "Open the GDScript panel with every sheet"
+    native_check.tooltip_text = "The Godot-native default: every sheet opens with its generated script beside it (eventsheets/editor/open_code_panel_by_default)."
     native_check.toggled.connect(func(on: bool) -> void:
         ProjectSettings.set_setting("eventsheets/editor/open_code_panel_by_default", true if on else null))
     box.add_child(native_check)
@@ -4848,8 +4856,8 @@ func _build_welcome_window() -> void:
     docs_label.add_theme_font_size_override("font_size", 11)
     box.add_child(docs_label)
     margin.add_child(box)
-    _welcome_window.add_child(margin)
-    add_child(_welcome_window)
+    dialog.add_child(margin)
+    add_child(dialog)
 
 # ── Loop closers: attach the behavior where you're looking, run the scene that
 # uses this sheet (core lookups are headless; playing needs the editor) ───────────────

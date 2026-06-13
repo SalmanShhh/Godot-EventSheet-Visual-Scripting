@@ -35,7 +35,7 @@ static func list_presets() -> Array[Dictionary]:
 	presets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a.get("name", "")) < str(b.get("name", "")))
 	return presets
 
-## Turns "construct3_stacked_theme.tres" into "Construct3 Stacked".
+## Turns "gruvbox_dark_theme.tres" into "Gruvbox Dark".
 static func _humanize(file_name: String) -> String:
 	var base: String = file_name.get_basename()
 	if base.ends_with("_theme"):

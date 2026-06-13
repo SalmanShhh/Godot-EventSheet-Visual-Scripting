@@ -1,11 +1,11 @@
-[gd_resource type="Resource" script_class="EventSheetEditorStyle" load_steps=10 format=3]
+[gd_resource type="Resource" script_class="EventSheetEditorStyle" load_steps=10 format=3 uid="uid://bb16lc84a671c"]
 
-[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_element_style.gd" id="1_mawrp"]
+[ext_resource type="Script" uid="uid://qpmpq2p3ch2l" path="res://addons/eventsheet/theme/event_sheet_element_style.gd" id="1_mawrp"]
 [ext_resource type="PackedScene" path="res://addons/eventsheet/elements/action_visual_element.tscn" id="2_gmkbj"]
 [ext_resource type="PackedScene" path="res://addons/eventsheet/elements/condition_visual_element.tscn" id="3_0yl7m"]
-[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_event_style.gd" id="4_xyv7q"]
+[ext_resource type="Script" uid="uid://co8xev8hw3miu" path="res://addons/eventsheet/theme/event_sheet_event_style.gd" id="4_xyv7q"]
 [ext_resource type="PackedScene" path="res://addons/eventsheet/elements/event_visual_element.tscn" id="5_kyk3f"]
-[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_editor_style.gd" id="6_j1iqj"]
+[ext_resource type="Script" uid="uid://bi4je8hybhu85" path="res://addons/eventsheet/theme/event_sheet_editor_style.gd" id="6_j1iqj"]
 
 [sub_resource type="Resource" id="Resource_ej2uv"]
 script = ExtResource("1_mawrp")

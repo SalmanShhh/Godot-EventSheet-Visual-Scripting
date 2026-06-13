@@ -285,9 +285,11 @@ static func run() -> bool:
 		and edit_menu != null and edit_menu.get_popup().item_count == 5
 		and view_menu != null and view_menu.get_popup().item_count == 12, true) and all_passed
 
-	# ── Welcome window: margined layout, reopenable, checkbox mirrors the setting ─
+	# ── Welcome window: self-sizing dialog, margined, reopenable, checkbox synced ─
 	toolbar_editor._build_welcome_window()
-	var welcome_margin: MarginContainer = toolbar_editor._welcome_window.get_child(0) as MarginContainer
+	all_passed = _check("welcome self-sizes to its content (AcceptDialog)",
+		toolbar_editor._welcome_window is AcceptDialog, true) and all_passed
+	var welcome_margin: MarginContainer = toolbar_editor._welcome_window.find_child("WelcomeMargin", true, false) as MarginContainer
 	all_passed = _check("welcome content sits inside real margins",
 		welcome_margin != null and welcome_margin.get_theme_constant("margin_left") == 14, true) and all_passed
 	all_passed = _check("welcome exposes the native-default checkbox for reopen sync",

@@ -47,7 +47,7 @@ Token sizing/spacing lives in `EventSheetElementStyle`:
 
 ## Construct 3-like tuning recipe
 
-1. Start from `res://demo/themes/construct3_stacked_theme.tres`.
+1. Start from any bundled theme under `res://demo/themes/` (e.g. `gruvbox_dark_theme.tres`).
 2. Keep `condition_badge_column_width` between 24–32.
 3. Keep condition/action `gap_after` small (about 6–8).
 4. Keep `minimum_conditions_lane_width` high enough (200+ for long ACE labels).

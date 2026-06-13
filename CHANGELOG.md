@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Field-test round 1: quick fixes
+- **Welcome window actually fits now** — rebuilt as a self-sizing dialog (the
+  fixed-size window clipped buttons and text at the edges twice); every label
+  wraps, the checkbox text is short, and the tooltip carries the detail.
+- **Theme switches are no longer undo steps** — undo history is for sheet
+  content (ACEs, variables), never presentation. Switching themes still marks
+  the sheet dirty (the style is saved with it).
+- **The Construct3-stacked theme is removed** — it wasn't a faithful C3 look
+  and earned no keep.
+- **Toggles explain themselves on hover** — the GDScript toggle, Split/Detach/
+  Link, Debug Breakpoints and Live Values all carry tooltips; param dialogs get
+  hover descriptions on every label and field.
+- **Param dialogs stopped overflowing** — fields fit the dialog width (no more
+  horizontal scrollbar under long enum defaults); dropdowns clip long entries.
+
 ### Toolbar redesign + welcome fixes
 - **The workspace toolbar is grouped and never clips**: Sheet ▾ (file lifecycle +
   identity), Add ▾, Edit ▾, View ▾ (panels, multi-view, zoom, theming) and the

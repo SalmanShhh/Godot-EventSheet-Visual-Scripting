@@ -6,7 +6,6 @@ class_name EventSheetStyleTest
 const TEST_LONG_CONDITION_PROVIDER := "TestLongCondition"
 const TEST_LONG_ACTION_PROVIDER := "TestLongAction"
 const EXAMPLE_THEME_PATHS := [
-	"res://demo/themes/construct3_stacked_theme.tres",
 	"res://demo/themes/high_contrast_theme.tres",
 	"res://demo/themes/soft_light_theme.tres",
 	"res://demo/themes/designer_template_theme.tres",
