@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Bug-review fixes (silent bugs)
+- **Selecting a multi-line block by clicking any line but the first showed no
+  highlight** — single-click selects the clicked line's span (usually not the
+  block head), but the merged-cell renderer only drew selection at the head. The
+  block grouping is now a tested helper (`resolve_block_groups`) and selection
+  draws once at the union whichever member line is clicked.
+- **A leftover Range/Clamp/Drawer value errored about an invisible field** — after
+  switching a variable from numeric to String/bool (which hides those fields), the
+  values persisted and the confirm guardrail rejected them with a message about a
+  field the user could no longer see. Numeric-only attributes are now inert when
+  the type isn't numeric.
+
 ### Tier-1 authoring speed: value memory + add-another chaining
 - **Apply & Add Another** on the params dialog (append modes) — apply a condition
   or action and the picker reopens for the next one, so building a three-condition

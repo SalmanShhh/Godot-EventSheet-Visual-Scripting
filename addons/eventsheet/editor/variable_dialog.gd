@@ -336,13 +336,17 @@ func _on_confirmed() -> void:
 		attributes["tooltip"] = _attr_tooltip_edit.text.strip_edges()
 	if not _attr_group_edit.text.strip_edges().is_empty():
 		attributes["group"] = _attr_group_edit.text.strip_edges()
+	# Numeric-only attributes are gated on the type so a leftover value from a
+	# previous type (the field is now HIDDEN by _refresh_contextual_rows) is inert
+	# rather than erroring about a field the user can no longer see.
+	var is_numeric: bool = type_name == "int" or type_name == "float"
 	var range_text: String = _attr_range_edit.text.strip_edges()
-	if not range_text.is_empty():
+	if not range_text.is_empty() and is_numeric:
 		var range_parts: PackedStringArray = range_text.split(",", false)
-		if range_parts.size() != 3 or not (type_name == "int" or type_name == "float"):
+		if range_parts.size() != 3:
 			if _default_help != null:
 				_default_help.visible = true
-				_default_help.text = "✗ Range needs 'min, max, step' on an int/float variable."
+				_default_help.text = "✗ Range needs 'min, max, step'."
 			if _dialog.is_inside_tree():
 				_dialog.call_deferred("popup_centered", Vector2i(440, 260))
 			return
@@ -361,7 +365,8 @@ func _on_confirmed() -> void:
 				_dialog.call_deferred("popup_centered", Vector2i(440, 260))
 			return
 		attributes[conditional[0]] = conditional_value
-	if _attr_clamp_check.button_pressed:
+	# Clamp/drawer are numeric-only and hidden otherwise: inert when not numeric.
+	if _attr_clamp_check.button_pressed and is_numeric:
 		if not attributes.has("range"):
 			if _default_help != null:
 				_default_help.visible = true
@@ -372,14 +377,7 @@ func _on_confirmed() -> void:
 		attributes["clamp"] = true
 	if _attr_read_only_check.button_pressed:
 		attributes["read_only"] = true
-	if _attr_drawer_option.selected == 1:
-		if not (type_name == "int" or type_name == "float"):
-			if _default_help != null:
-				_default_help.visible = true
-				_default_help.text = "✗ The progress-bar drawer needs an int/float variable."
-			if _dialog.is_inside_tree():
-				_dialog.call_deferred("popup_centered", Vector2i(440, 260))
-			return
+	if _attr_drawer_option.selected == 1 and is_numeric:
 		attributes["drawer"] = "progress_bar"
 	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes)
 

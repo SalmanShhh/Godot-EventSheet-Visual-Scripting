@@ -468,6 +468,46 @@ static func run() -> bool:
 	guard_host.free()
 	pre_editor.free()
 
+	# ── Review fix: clicking any line of a multi-line block resolves to the block
+	# head + full union (selection/hover drew nothing when a non-head line was clicked).
+	var s0: SemanticSpan = SemanticSpan.new()
+	s0.rect = Rect2(0, 0, 100, 10)
+	s0.metadata = {"chip": true, "code_cell": true, "block_lines": 3, "block_line": 0}
+	var s1: SemanticSpan = SemanticSpan.new()
+	s1.rect = Rect2(0, 10, 100, 10)
+	s1.metadata = {"chip": true, "code_cell": true, "block_lines": 3, "block_line": 1}
+	var s2: SemanticSpan = SemanticSpan.new()
+	s2.rect = Rect2(0, 20, 100, 10)
+	s2.metadata = {"chip": true, "code_cell": true, "block_lines": 3, "block_line": 2}
+	var groups: Dictionary = EventRowRenderer.resolve_block_groups([s0, s1, s2])
+	all_passed = _check("clicking the last block line resolves to the head",
+		int((groups["heads"] as Dictionary).get(2, -1)), 0) and all_passed
+	all_passed = _check("the block union covers every member line",
+		(groups["unions"] as Dictionary).get(2), Rect2(0, 0, 100, 30)) and all_passed
+
+	# ── Review fix: a numeric-only attribute left over after switching type is inert
+	# (it's hidden), not a can't-fix error about an invisible field.
+	var leftover_dialog: VariableDialog = VariableDialog.new()
+	var leftover_host: Node = Node.new()
+	leftover_dialog.init_dialog(leftover_host)
+	leftover_dialog.open_for_edit("global", {}, "label", "float", "1.0", false, "Edit Variable", false, true)
+	leftover_dialog._attr_range_edit.text = "0, 100, 1"
+	leftover_dialog._attr_clamp_check.button_pressed = true
+	var string_index: int = 0
+	for type_index: int in range(leftover_dialog._type_option.item_count):
+		if leftover_dialog._type_option.get_item_text(type_index) == "String":
+			string_index = type_index
+	leftover_dialog._type_option.select(string_index)
+	leftover_dialog._refresh_contextual_rows()
+	leftover_dialog._default_edit.text = "\"hi\""
+	var captured_attrs: Array = [null]
+	leftover_dialog.variable_confirmed.connect(func(_n, _t, _d, _s, _c, _ic, _ex, _co, attrs) -> void: captured_attrs[0] = attrs)
+	leftover_dialog._on_confirmed()
+	all_passed = _check("leftover numeric attributes are inert after switching type",
+		captured_attrs[0] is Dictionary and not (captured_attrs[0] as Dictionary).has("range")
+		and not (captured_attrs[0] as Dictionary).has("clamp"), true) and all_passed
+	leftover_host.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

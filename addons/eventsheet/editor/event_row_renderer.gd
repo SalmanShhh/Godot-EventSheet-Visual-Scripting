@@ -358,25 +358,13 @@ func _draw_spans(
     # cell: union rects per block, background/hover/selection drawn once. The per-line
     # spans remain the layout + hit-test truth — the merge is purely visual (user
     # call: a 3-line GDScript action is one resized cell, not three stacked cells).
-    var block_unions: Dictionary = {}
-    var block_heads: Dictionary = {}
-    var scan_index: int = 0
-    while scan_index < row_data.spans.size():
-        var head_span: SemanticSpan = row_data.spans[scan_index]
-        var head_meta: Dictionary = head_span.metadata if head_span != null and head_span.metadata is Dictionary else {}
-        var block_total: int = int(head_meta.get("block_lines", 0))
-        if block_total > 1 and int(head_meta.get("block_line", -1)) == 0:
-            var last_member: int = mini(scan_index + block_total, row_data.spans.size()) - 1
-            var union_rect: Rect2 = head_span.rect
-            for member: int in range(scan_index + 1, last_member + 1):
-                if row_data.spans[member] != null:
-                    union_rect = union_rect.merge(row_data.spans[member].rect)
-            for member: int in range(scan_index, last_member + 1):
-                block_unions[member] = union_rect
-                block_heads[member] = scan_index
-            scan_index = last_member + 1
-            continue
-        scan_index += 1
+    var groups: Dictionary = resolve_block_groups(row_data.spans)
+    var block_unions: Dictionary = groups["unions"]
+    var block_heads: Dictionary = groups["heads"]
+    # Selection/background for a block draws once at the union, regardless of WHICH
+    # member line is the selected/hovered one (a single click selects only the clicked
+    # line's span, often not the head — guarding on the head dropped the highlight).
+    var drawn_block_selection: Dictionary = {}
     for span_index: int in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null:
@@ -394,11 +382,15 @@ func _draw_spans(
                 _draw_chip_span(control, span, metadata)
         if selected_span_indices.has(span_index):
             if bool(metadata.get("chip", false)):
-                if not in_block or is_block_head:
-                    var selected_rect_span: SemanticSpan = span
-                    if in_block:
-                        selected_rect_span = SemanticSpan.new()
-                        selected_rect_span.rect = block_unions[span_index]
+                var head_for_block: int = int(block_heads.get(span_index, -1))
+                if not in_block:
+                    _draw_chip_selected_span(control, span, metadata, selection_fill, total_selected_spans > 1)
+                elif not drawn_block_selection.has(head_for_block):
+                    # One draw per block — alpha would otherwise stack when several
+                    # members are selected (rubber-band).
+                    drawn_block_selection[head_for_block] = true
+                    var selected_rect_span: SemanticSpan = SemanticSpan.new()
+                    selected_rect_span.rect = block_unions[span_index]
                     _draw_chip_selected_span(control, selected_rect_span, metadata, selection_fill, total_selected_spans > 1)
             else:
                 var selected_bg: Color = selection_fill
@@ -517,6 +509,33 @@ func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary)
 
 const CODE_CELL_BG := Color(0.5, 0.65, 0.9, 0.07)
 const CODE_CELL_STRIPE := Color(0.55, 0.7, 0.95, 0.45)
+
+## Groups consecutive multi-line block spans (block_lines>1, starting at block_line 0)
+## into one visual cell. Returns {"unions": {span_index: Rect2}, "heads":
+## {span_index: head_index}} covering every member of every block — so background,
+## hover and selection can draw once at the union no matter which member line the
+## user clicked (the per-line spans stay the hit-test truth).
+static func resolve_block_groups(spans: Array) -> Dictionary:
+    var unions: Dictionary = {}
+    var heads: Dictionary = {}
+    var scan_index: int = 0
+    while scan_index < spans.size():
+        var head_span: SemanticSpan = spans[scan_index]
+        var head_meta: Dictionary = head_span.metadata if head_span != null and head_span.metadata is Dictionary else {}
+        var block_total: int = int(head_meta.get("block_lines", 0))
+        if block_total > 1 and int(head_meta.get("block_line", -1)) == 0:
+            var last_member: int = mini(scan_index + block_total, spans.size()) - 1
+            var union_rect: Rect2 = head_span.rect
+            for member: int in range(scan_index + 1, last_member + 1):
+                if spans[member] != null:
+                    union_rect = union_rect.merge(spans[member].rect)
+            for member: int in range(scan_index, last_member + 1):
+                unions[member] = union_rect
+                heads[member] = scan_index
+            scan_index = last_member + 1
+            continue
+        scan_index += 1
+    return {"unions": unions, "heads": heads}
 
 ## One merged cell for a multi-line block. In-flow GDScript additionally gets a code
 ## stripe + cool tint, so "this cell is code" reads at a glance (user call: it must be
