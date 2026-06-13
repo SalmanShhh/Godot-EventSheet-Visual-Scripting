@@ -138,11 +138,16 @@ func _ensure_dialog() -> void:
 	_dialog.ok_button_text = "Close"
 	var split: HSplitContainer = HSplitContainer.new()
 	split.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	split.split_offset = 620
+	# Both panes carry REAL minimum sizes (field-test catch: with none, the dialog
+	# auto-sized to the preview alone and the token controls collapsed to a sliver —
+	# the editor looked like "just highlighting things").
+	split.split_offset = 560
+	split.custom_minimum_size = Vector2(1000.0, 540.0)
 
 	var preview_scroll: ScrollContainer = ScrollContainer.new()
 	preview_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	preview_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	preview_scroll.custom_minimum_size = Vector2(420.0, 0.0)
 	_preview_viewport = EventSheetViewport.new()
 	preview_scroll.add_child(_preview_viewport)
 	split.add_child(preview_scroll)
@@ -150,8 +155,12 @@ func _ensure_dialog() -> void:
 	var form_scroll: ScrollContainer = ScrollContainer.new()
 	form_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	form_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	form_scroll.custom_minimum_size = Vector2(380.0, 0.0)
+	form_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var form: VBoxContainer = VBoxContainer.new()
 	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Editor-level tokens first — hover/selection strength lives here.
+	_build_section(form, "Editor (hover, selection, lanes)", _working_style)
 	_build_section(form, "Sheet & rows (event style)", _working_style.event_style)
 	_build_section(form, "Condition cells", _working_style.condition_style)
 	_build_section(form, "Action cells", _working_style.action_style)

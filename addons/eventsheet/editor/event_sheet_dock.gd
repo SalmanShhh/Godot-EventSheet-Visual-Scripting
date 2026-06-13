@@ -543,11 +543,13 @@ func _build_ui() -> void:
     add_popup.add_item("Signal Event…", 0)
     add_popup.add_item("Global Variable…", 1)
     add_popup.add_item("Local Variable…", 2)
+    add_popup.add_item("Function…", 3)
     add_popup.id_pressed.connect(func(id: int) -> void:
         match id:
             0: _on_add_signal_event_requested()
             1: _on_add_global_variable_requested()
             2: _on_add_local_variable_requested()
+            3: _open_function_dialog()
     )
     _toolbar.add_child(add_menu)
     # Edit ▾ — clipboard + history (all on shortcuts too).
@@ -4802,6 +4804,47 @@ func _open_lift_report() -> void:
         item.set_text(2, str(entry.get("reason")))
     _set_status("Lift Report: %s." % EventSheetLiftReport.summary(report))
     _lift_report_window.popup_centered()
+
+# ── Sheet functions: the dialog with the expanding param list (Add ▾ → Function…) ────
+var _function_dialog: EventSheetFunctionDialog = null
+
+func _open_function_dialog() -> void:
+    if not _ensure_sheet_for_editing():
+        return
+    if _function_dialog == null:
+        _function_dialog = EventSheetFunctionDialog.new()
+        _function_dialog.init_dialog(self)
+        _function_dialog.set_taken_names_provider(func() -> PackedStringArray:
+            var taken: PackedStringArray = PackedStringArray()
+            if _current_sheet != null:
+                for variable_name: Variant in _current_sheet.variables:
+                    taken.append(str(variable_name))
+                for function_entry: Variant in _current_sheet.functions:
+                    if function_entry is EventFunction:
+                        taken.append((function_entry as EventFunction).function_name)
+            return taken)
+        _function_dialog.function_confirmed.connect(_apply_function_data)
+    _function_dialog.open()
+
+## Creates the EventFunction from validated dialog data (undoable). The body is
+## authored as rows afterwards; CallFunction and the publish surface pick it up.
+func _apply_function_data(data: Dictionary) -> void:
+    var changed: bool = _perform_undoable_sheet_edit("Add Function", func() -> bool:
+        var event_function: EventFunction = EventFunction.new()
+        event_function.function_name = str(data.get("name"))
+        event_function.return_type = int(data.get("return_type", TYPE_NIL))
+        for param_entry: Dictionary in (data.get("params", []) as Array):
+            var param: ACEParam = ACEParam.new()
+            param.id = str(param_entry.get("id"))
+            param.type_name = str(param_entry.get("type_name", "Variant"))
+            event_function.params.append(param)
+        event_function.expose_as_ace = bool(data.get("expose", false))
+        event_function.ace_display_name = str(data.get("ace_display_name", ""))
+        event_function.ace_category = str(data.get("ace_category", ""))
+        _current_sheet.functions.append(event_function)
+        return true)
+    if changed:
+        _mark_dirty("Added function %s()." % str(data.get("name")))
 
 # ── Welcome (shown once on first run; reopen any time via Tools → Welcome…) ──────────
 var _welcome_window: Window = null

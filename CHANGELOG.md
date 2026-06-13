@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Field-test round 1: author tooling
+- **The Theme Editor is actually editable now** — both panes carry real minimum
+  sizes (the token controls used to collapse to an invisible sliver, leaving
+  only the preview: "it's just highlighting things"), and the editor-level
+  tokens (hover, selection, lanes) join the form, so emphasis strength is
+  user-tunable per theme.
+- **Sheet functions get a dialog** (Add ▾ → Function…) — the first authoring UI
+  for them: parameters expand row by row with auto-unique suggested names,
+  function/param names auto-snake_case, duplicates are refused with the reason
+  named, and the expose-as-ACE fields stay behind their checkbox. Built for the
+  first-time developer: hard to make an invalid function.
+
 ### Field-test round 1: dialog UX
 - **Double-clicking a condition opens the replace picker, preselected on it** —
   pick another to swap it out, or re-pick the same one to edit its params

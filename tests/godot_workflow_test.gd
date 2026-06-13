@@ -281,7 +281,7 @@ static func run() -> bool:
 	var view_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetViewMenu", true, false) as MenuButton
 	all_passed = _check("Sheet/Add/Edit/View menus carry the consolidated actions",
 		sheet_menu != null and sheet_menu.get_popup().item_count == 8
-		and add_menu != null and add_menu.get_popup().item_count == 3
+		and add_menu != null and add_menu.get_popup().item_count == 4
 		and edit_menu != null and edit_menu.get_popup().item_count == 5
 		and view_menu != null and view_menu.get_popup().item_count == 12, true) and all_passed
 
@@ -373,6 +373,43 @@ static func run() -> bool:
 	all_passed = _check("sheet enums fill the combo with member names (values stripped)",
 		enum_popup.item_count == 1 and str(enum_popup.get_item_metadata(0)) == "IDLE, RUN, HURT", true) and all_passed
 	variable_host.free()
+
+	# ── Function dialog: expanding params, auto-unique names, duplicate guard ─────
+	var function_dialog: EventSheetFunctionDialog = EventSheetFunctionDialog.new()
+	var function_host: Node = Node.new()
+	function_dialog.init_dialog(function_host)
+	function_dialog.set_taken_names_provider(func() -> PackedStringArray:
+		return PackedStringArray(["existing_fn"]))
+	function_dialog.open()
+	function_dialog.add_param_row()
+	function_dialog.add_param_row()
+	all_passed = _check("param rows auto-suggest unique names",
+		function_dialog.collect_params().size() == 2
+		and str(function_dialog.collect_params()[1].get("id")) == "param_2", true) and all_passed
+	function_dialog._name_edit.text = "Deal Damage"
+	var built: Dictionary = function_dialog.build_function_data()
+	all_passed = _check("function names auto-snake_case and params carry types",
+		str(built.get("name")) == "deal_damage"
+		and (built.get("params") as Array).size() == 2
+		and str(built.get("problem")).is_empty(), true) and all_passed
+	function_dialog._name_edit.text = "existing_fn"
+	all_passed = _check("duplicate names are refused with the reason named",
+		str(function_dialog.build_function_data().get("problem")).contains("already exists"), true) and all_passed
+	# Dock apply: the validated data becomes a real EventFunction on the sheet.
+	var function_editor: EventSheetEditor = EventSheetEditor.new()
+	var function_sheet: EventSheetResource = EventSheetResource.new()
+	function_sheet.host_class = "Node"
+	function_editor.setup(function_sheet)
+	function_editor.set_undo_redo_manager(NoopUndoManager.new())
+	function_editor._apply_function_data({"name": "boost", "return_type": TYPE_NIL,
+		"params": [{"id": "amount", "type_name": "float"}], "expose": true,
+		"ace_display_name": "Boost", "ace_category": "Combat"})
+	var created_function: EventFunction = function_sheet.functions[0] as EventFunction
+	all_passed = _check("dock apply creates the sheet function",
+		created_function.function_name == "boost" and created_function.expose_as_ace
+		and created_function.params.size() == 1 and (created_function.params[0] as ACEParam).id == "amount", true) and all_passed
+	function_editor.free()
+	function_host.free()
 
 	return all_passed
 
