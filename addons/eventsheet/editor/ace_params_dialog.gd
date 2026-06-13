@@ -110,10 +110,13 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 
 ## Rebuilds the parameter rows. Separated from open() so it can be exercised without
 ## popping the window (which requires a display server).
+var _single_param_form: bool = false
+
 func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 	_fields.clear()
 	_field_hints.clear()
 	_apply_blocked = false
+	_single_param_form = definition.parameters.size() == 1
 	for child in _form.get_children():
 		_form.remove_child(child)
 		child.queue_free()
@@ -193,6 +196,13 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 	var default_value: Variant = initial_values.get(key, param_dict.get("default_value", ""))
 	var options: Array = param_dict.get("options", [])
 
+	# A lone Vector2/Vector3 param (positions, sizes…) splits into per-axis fields —
+	# each axis is still a full GDScript expression (user call: "when setting
+	# positions, split it into 2-3 params").
+	if _single_param_form and hint in ["", EXPRESSION_HINT]:
+		var vector_parts: PackedStringArray = vector_literal_parts(str(default_value))
+		if not vector_parts.is_empty():
+			return _create_vector_field(key, vector_parts)
 	if hint == VARIABLE_REFERENCE_HINT or hint.begins_with(VARIABLE_REFERENCE_HINT + ":"):
 		return _create_variable_reference_field(key, default_value, hint)
 	if hint == "signal_reference" or hint.begins_with("signal_reference:"):
@@ -1061,9 +1071,63 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 	edit.set_code_hint(EventSheetGDScriptLint.signature_hint(before_caret, sheet))
 
 ## Extract the typed value from a registered field node.
+## "Vector2(0, 0)" → ["0", "0"]; "Vector3(1, 2, 3)" → ["1", "2", "3"]; [] otherwise.
+## Splits on TOP-LEVEL commas only, so nested calls inside an axis survive.
+static func vector_literal_parts(value: String) -> PackedStringArray:
+	var trimmed: String = value.strip_edges()
+	var dims: int = 0
+	if trimmed.begins_with("Vector2(") and trimmed.ends_with(")"):
+		dims = 2
+	elif trimmed.begins_with("Vector3(") and trimmed.ends_with(")"):
+		dims = 3
+	if dims == 0:
+		return PackedStringArray()
+	var inner: String = trimmed.substr(8, trimmed.length() - 9)
+	var parts: PackedStringArray = PackedStringArray()
+	var depth: int = 0
+	var current: String = ""
+	for character in inner:
+		if character == "(":
+			depth += 1
+		elif character == ")":
+			depth -= 1
+		if character == "," and depth == 0:
+			parts.append(current.strip_edges())
+			current = ""
+		else:
+			current += character
+	parts.append(current.strip_edges())
+	return parts if parts.size() == dims else PackedStringArray()
+
+## Per-axis fields composing back to "VectorN(x, y[, z])" on extract.
+func _create_vector_field(key: String, parts: PackedStringArray) -> Control:
+	var container: HBoxContainer = HBoxContainer.new()
+	container.add_theme_constant_override("separation", 6)
+	var axis_edits: Array = []
+	var axis_names: PackedStringArray = PackedStringArray(["x", "y", "z"])
+	for axis in parts.size():
+		var axis_label: Label = Label.new()
+		axis_label.text = axis_names[axis]
+		container.add_child(axis_label)
+		var axis_edit: LineEdit = LineEdit.new()
+		axis_edit.text = parts[axis]
+		axis_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		axis_edit.tooltip_text = "Any GDScript expression works per axis."
+		_dialog.register_text_enter(axis_edit)
+		container.add_child(axis_edit)
+		axis_edits.append(axis_edit)
+	container.set_meta("vector_axis_edits", axis_edits)
+	_fields[key] = container
+	return container
+
 func _extract_value(field: Control) -> Variant:
 	if field is CheckBox:
 		return (field as CheckBox).button_pressed
+	if field.has_meta("vector_axis_edits"):
+		var axis_values: PackedStringArray = PackedStringArray()
+		for axis_edit: Variant in (field.get_meta("vector_axis_edits") as Array):
+			axis_values.append((axis_edit as LineEdit).text.strip_edges())
+		return "Vector%d(%s)" % [axis_values.size(), ", ".join(axis_values)]
 	if field is OptionButton:
 		var option_button: OptionButton = field as OptionButton
 		var selected_index: int = option_button.selected

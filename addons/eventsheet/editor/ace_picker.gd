@@ -165,6 +165,24 @@ func set_registry(registry: EventSheetACERegistry) -> void:
 	_registry = registry
 
 ## Open the picker for the given mode.
+## Selects + reveals the entry for an ace id — the double-click-to-replace flow
+## opens the picker focused on what's being replaced.
+func preselect(ace_id: String) -> void:
+	if _tree == null or ace_id.is_empty():
+		return
+	var stack: Array = [_tree.get_root()]
+	while not stack.is_empty():
+		var item: TreeItem = stack.pop_back()
+		if item == null:
+			continue
+		var item_meta: Variant = item.get_metadata(0)
+		if item_meta is ACEDefinition and (item_meta as ACEDefinition).id == ace_id:
+			item.select(0)
+			_tree.scroll_to_item(item)
+			return
+		stack.push_back(item.get_next())
+		stack.push_back(item.get_first_child())
+
 ## mode: "new_event" | "new_condition_event" | "new_sub_condition_event" | "append_condition"
 ##       | "append_action" | "replace_condition" | "replace_action" | "replace_trigger"
 ## signals_only: restrict results to signal triggers

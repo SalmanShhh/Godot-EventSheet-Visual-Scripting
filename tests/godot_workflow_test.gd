@@ -336,6 +336,44 @@ static func run() -> bool:
 		comment_lines == 2 and comment_has_chip_chrome, true) and all_passed
 	block_viewport.free()
 
+	# ── Vector params split into per-axis fields (single-param ACEs only) ─────────
+	all_passed = _check("vector literals split on top-level commas",
+		ACEParamsDialog.vector_literal_parts("Vector2(maxf(0, 1), speed * 2)"),
+		PackedStringArray(["maxf(0, 1)", "speed * 2"])) and all_passed
+	all_passed = _check("vector3 literals split into three axes",
+		ACEParamsDialog.vector_literal_parts("Vector3(1, 2, 3)").size(), 3) and all_passed
+	all_passed = _check("non-vector values never split",
+		ACEParamsDialog.vector_literal_parts("position + Vector2(1, 2)").is_empty(), true) and all_passed
+	var vector_dialog: ACEParamsDialog = ACEParamsDialog.new()
+	var vector_host: Node = Node.new()
+	vector_dialog.init_dialog(vector_host)
+	vector_dialog._single_param_form = true
+	var vector_field: Control = vector_dialog._create_field({"id": "pos", "default_value": "Vector2(4, 8)"}, {}, "pos", "")
+	all_passed = _check("a lone vector param becomes per-axis fields that recompose",
+		vector_field.has_meta("vector_axis_edits")
+		and str(vector_dialog._extract_value(vector_field)) == "Vector2(4, 8)", true) and all_passed
+	vector_host.free()
+
+	# ── Variable dialog: progressive disclosure + enum→combo fill ─────────────────
+	var variable_dialog: VariableDialog = VariableDialog.new()
+	var variable_host: Node = Node.new()
+	variable_dialog.init_dialog(variable_host)
+	variable_dialog.set_enum_provider(func() -> Array:
+		return [{"name": "State", "members": PackedStringArray(["IDLE", "RUN", "HURT = 4"])}])
+	variable_dialog.open_for_edit("global", {}, "speed", "float", "1.0", false, "Edit Variable", false, true)
+	all_passed = _check("inspector options start collapsed for plain variables",
+		variable_dialog._attr_section.visible, false) and all_passed
+	all_passed = _check("combo options hide for non-String types",
+		variable_dialog._options_row.visible, false) and all_passed
+	variable_dialog.open_for_edit("global", {"attributes": {"tooltip": "hi"}}, "title", "String", "\"x\"", false, "Edit Variable", false, true)
+	all_passed = _check("existing attributes auto-expand the section",
+		variable_dialog._attr_section.visible and variable_dialog._options_row.visible, true) and all_passed
+	variable_dialog._populate_enum_fill_menu()
+	var enum_popup: PopupMenu = variable_dialog._enum_fill_menu.get_popup()
+	all_passed = _check("sheet enums fill the combo with member names (values stripped)",
+		enum_popup.item_count == 1 and str(enum_popup.get_item_metadata(0)) == "IDLE, RUN, HURT", true) and all_passed
+	variable_host.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

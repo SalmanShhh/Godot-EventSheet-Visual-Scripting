@@ -140,6 +140,14 @@ func _ready() -> void:
     _ace_params.back_requested.connect(_on_ace_params_back_requested)
     _variable_dlg.init_dialog(self)
     _variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
+    # Sheet enums feed the variable dialog's one-click combo fill.
+    _variable_dlg.set_enum_provider(func() -> Array:
+        var sheet_enums: Array = []
+        if _current_sheet != null:
+            for row: Variant in _current_sheet.events:
+                if row is EnumRow and (row as EnumRow).enabled:
+                    sheet_enums.append({"name": (row as EnumRow).enum_name, "members": (row as EnumRow).members})
+        return sheet_enums)
     _refresh_ace_registry()
     if _current_sheet == null:
         _current_sheet = _build_demo_sheet()
@@ -1630,6 +1638,13 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
         return
     if definition.parameters.is_empty():
         _ace_picker.open(str(edit_context.get("mode", "")), false, event_row, edit_context)
+        return
+    # Double-clicking a CONDITION opens the replace picker preselected on it (user
+    # call: "I expect to replace it"): pick another to swap it out, or re-pick the
+    # same one to edit its params — existing values prefill through the context.
+    if str(edit_context.get("mode", "")) == "replace_condition":
+        _ace_picker.open("replace_condition", false, event_row, edit_context)
+        _ace_picker.preselect(definition.id)
         return
     _ace_params.open_with_values(definition, edit_context, edit_context.get("existing_params", {}))
 

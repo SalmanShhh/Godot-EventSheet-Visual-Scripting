@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Field-test round 1: dialog UX
+- **Double-clicking a condition opens the replace picker, preselected on it** —
+  pick another to swap it out, or re-pick the same one to edit its params
+  (existing values prefill either way). The "I expect to replace it" reflex.
+- **Edit Variable stopped throwing everything at once** — the Inspector
+  attributes live behind a disclosure (collapsed for new variables, auto-expanded
+  when the variable already uses any); combo options appear only for Strings;
+  range/clamp/drawer only for numerics; multiline only for Strings.
+- **Sheet enums fill combos in one click** — a "From enum" menu on the combo
+  field lists the sheet's enums and fills the options with member names
+  (explicit values stripped).
+- **Lone Vector2/Vector3 params split into per-axis fields** — positions edit as
+  x / y (/ z), each axis still a full GDScript expression, recomposed on apply.
+
 ### Field-test round 1: the renderer pass
 - **A multi-line GDScript action is ONE cell now** — block lines merge into a
   single vertically-resized code cell instead of stacked per-line cells (the

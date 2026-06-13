@@ -23,6 +23,11 @@ var _scope: String = "global"
 var _context: Dictionary = {}
 var _default_help: Label = null
 var _options_edit: LineEdit = null
+var _options_row: HBoxContainer = null
+var _enum_fill_menu: MenuButton = null
+var _enum_provider: Callable = Callable()
+var _attr_toggle: Button = null
+var _attr_section: VBoxContainer = null
 var _attr_tooltip_edit: LineEdit = null
 var _attr_group_edit: LineEdit = null
 var _attr_range_edit: LineEdit = null
@@ -90,6 +95,7 @@ func init_dialog(parent_node: Node) -> void:
 	_type_option.item_selected.connect(func(_index: int) -> void:
 		_refresh_const_ui()
 		_refresh_default_hint()
+		_refresh_contextual_rows()
 	)
 	type_row.add_child(_type_option)
 	form.add_child(type_row)
@@ -107,42 +113,62 @@ func init_dialog(parent_node: Node) -> void:
 	)
 	default_row.add_child(_default_edit)
 	form.add_child(default_row)
-	var options_row: HBoxContainer = HBoxContainer.new()
+	_options_row = HBoxContainer.new()
 	var options_label: Label = Label.new()
 	options_label.text = "Options (combo)"
 	options_label.custom_minimum_size = Vector2(120.0, 0.0)
-	options_row.add_child(options_label)
+	_options_row.add_child(options_label)
 	_options_edit = LineEdit.new()
 	_options_edit.placeholder_text = "comma-separated, e.g. easy, normal, hard (String only)"
 	_options_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	options_row.add_child(_options_edit)
-	form.add_child(options_row)
-	# Inspector attributes (Tier 1): tooltip / group / range / multiline — exported
-	# globals only; everything compiles to plain Godot annotations.
-	var attr_label: Label = Label.new()
-	attr_label.text = "Inspector (exported globals)"
-	form.add_child(attr_label)
+	_options_row.add_child(_options_edit)
+	# Sheet enums fill the combo in one click (user call: automate enums into combos).
+	_enum_fill_menu = MenuButton.new()
+	_enum_fill_menu.text = "From enum"
+	_enum_fill_menu.flat = false
+	_enum_fill_menu.visible = false
+	_enum_fill_menu.about_to_popup.connect(_populate_enum_fill_menu)
+	_enum_fill_menu.get_popup().index_pressed.connect(func(index: int) -> void:
+		_options_edit.text = str(_enum_fill_menu.get_popup().get_item_metadata(index)))
+	_options_row.add_child(_enum_fill_menu)
+	form.add_child(_options_row)
+	# Inspector attributes (Tiers 1–3) live behind a disclosure (user call: the dialog
+	# threw everything at once) — collapsed for new variables, auto-expanded when the
+	# variable being edited already uses any of them. Exported globals only.
+	_attr_toggle = Button.new()
+	_attr_toggle.flat = true
+	_attr_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_attr_toggle.toggle_mode = true
+	_attr_toggle.text = "▸  Inspector options (tooltip, range, show-if…)"
+	_attr_toggle.tooltip_text = "Optional Inspector polish for exported globals — everything compiles to plain Godot annotations."
+	_attr_toggle.toggled.connect(func(expanded: bool) -> void:
+		_attr_toggle.text = ("▾" if expanded else "▸") + _attr_toggle.text.substr(1)
+		_attr_section.visible = expanded)
+	form.add_child(_attr_toggle)
+	_attr_section = VBoxContainer.new()
+	_attr_section.visible = false
+	form.add_child(_attr_section)
 	_attr_tooltip_edit = LineEdit.new()
 	_attr_tooltip_edit.placeholder_text = "Tooltip — shown when hovering the property"
-	form.add_child(_attr_tooltip_edit)
+	_attr_section.add_child(_attr_tooltip_edit)
 	_attr_group_edit = LineEdit.new()
 	_attr_group_edit.placeholder_text = "Group — Inspector section header (e.g. Combat)"
-	form.add_child(_attr_group_edit)
+	_attr_section.add_child(_attr_group_edit)
 	_attr_range_edit = LineEdit.new()
 	_attr_range_edit.placeholder_text = "Range — min, max, step (numeric types: slider)"
-	form.add_child(_attr_range_edit)
+	_attr_section.add_child(_attr_range_edit)
 	_attr_multiline_check = CheckBox.new()
 	_attr_multiline_check.text = "Multiline (String: big text box)"
-	form.add_child(_attr_multiline_check)
+	_attr_section.add_child(_attr_multiline_check)
 	_attr_show_if_edit = LineEdit.new()
 	_attr_show_if_edit.placeholder_text = "Show if — bool variable (hidden when false)"
-	form.add_child(_attr_show_if_edit)
+	_attr_section.add_child(_attr_show_if_edit)
 	_attr_lock_unless_edit = LineEdit.new()
 	_attr_lock_unless_edit.placeholder_text = "Lock unless — bool variable (read-only when false)"
-	form.add_child(_attr_lock_unless_edit)
+	_attr_section.add_child(_attr_lock_unless_edit)
 	_attr_on_changed_edit = LineEdit.new()
 	_attr_on_changed_edit.placeholder_text = "On changed — sheet function called after assignment"
-	form.add_child(_attr_on_changed_edit)
+	_attr_section.add_child(_attr_on_changed_edit)
 	var attr_checks: HBoxContainer = HBoxContainer.new()
 	_attr_clamp_check = CheckBox.new()
 	_attr_clamp_check.text = "Clamp to range"
@@ -154,7 +180,7 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_read_only_check = CheckBox.new()
 	_attr_read_only_check.text = "Read-only"
 	attr_checks.add_child(_attr_read_only_check)
-	form.add_child(attr_checks)
+	_attr_section.add_child(attr_checks)
 	_default_help = Label.new()
 	_default_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_default_help.custom_minimum_size = Vector2(380.0, 0.0)
@@ -254,12 +280,20 @@ func open_for_edit(
 	_attr_clamp_check.button_pressed = bool(existing_attributes.get("clamp", false))
 	_attr_read_only_check.button_pressed = bool(existing_attributes.get("read_only", false))
 	_attr_drawer_option.select(1 if str(existing_attributes.get("drawer", "")) == "progress_bar" else 0)
+	# Progressive disclosure: the Inspector section starts collapsed for new variables
+	# and auto-expands when the variable already uses any attribute.
+	if _attr_toggle != null:
+		_attr_toggle.button_pressed = not existing_attributes.is_empty()
+		_attr_section.visible = not existing_attributes.is_empty()
+		_attr_toggle.text = ("▾" if _attr_section.visible else "▸") + _attr_toggle.text.substr(1)
 	_refresh_const_ui()
 	_refresh_default_hint()
+	_refresh_contextual_rows()
 	_type_option.disabled = lock_type
 	_type_help.visible = lock_type
 	_type_help.text = "Type is locked because this variable is already in use."
-	_dialog.popup_centered(Vector2i(440, 220))
+	if _dialog.is_inside_tree():
+		_dialog.popup_centered(Vector2i(440, 220))
 
 func _close() -> void:
 	if _dialog != null:
@@ -418,6 +452,41 @@ static func validate_default(type_name: String, raw: String) -> Dictionary:
 	return {"ok": true, "error": ""}
 
 ## Live ✓/✗ hint under the default field while typing collection literals.
+## Show fields only when they can apply (user call: don't throw everything at once):
+## combo options are String-only, range/clamp/drawer are numeric, multiline is String.
+func _refresh_contextual_rows() -> void:
+	if _type_option == null or _options_row == null:
+		return
+	var type_name: String = _type_option.get_item_text(maxi(_type_option.selected, 0))
+	var numeric: bool = type_name in ["int", "float"]
+	_options_row.visible = type_name == "String"
+	_enum_fill_menu.visible = _options_row.visible and _enum_provider.is_valid() and not (_enum_provider.call() as Array).is_empty()
+	if _attr_range_edit != null:
+		_attr_range_edit.visible = numeric
+		_attr_clamp_check.visible = numeric
+		_attr_drawer_option.visible = numeric
+		_attr_multiline_check.visible = type_name == "String"
+
+## Wires the sheet-enum source for the one-click combo fill (returns
+## Array[Dictionary{name, members}]).
+func set_enum_provider(provider: Callable) -> void:
+	_enum_provider = provider
+
+func _populate_enum_fill_menu() -> void:
+	var popup: PopupMenu = _enum_fill_menu.get_popup()
+	popup.clear()
+	if not _enum_provider.is_valid():
+		return
+	for entry: Variant in (_enum_provider.call() as Array):
+		if not (entry is Dictionary):
+			continue
+		var members: PackedStringArray = PackedStringArray()
+		for member: Variant in (entry as Dictionary).get("members", []):
+			# Members may carry explicit values ("HURT = 4") — the combo wants names.
+			members.append(str(member).get_slice("=", 0).strip_edges())
+		popup.add_item(str((entry as Dictionary).get("name", "")))
+		popup.set_item_metadata(popup.item_count - 1, ", ".join(members))
+
 func _refresh_default_hint() -> void:
 	if _default_help == null or _type_option == null or _default_edit == null:
 		return
