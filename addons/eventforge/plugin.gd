@@ -180,61 +180,15 @@ func _enter_tree() -> void:
 		print("[Godot EventSheets] plugin loaded (editor panel unavailable)")
 	_maybe_show_welcome()
 
-# ── First-run welcome: the 60-second hook (per-project, via editor metadata —
-# nothing committed; never shows headless) ─────────────────────────────────────────────
-var _welcome_window: Window = null
-
+# ── First-run welcome: the 60-second hook. The window lives on the dock (it owns
+# every other window, fixes the unmargined first cut, and Tools → Welcome… can
+# reopen it any time); the plugin only triggers the first-run check.
 func _maybe_show_welcome() -> void:
-	if not Engine.is_editor_hint() or DisplayServer.get_name() == "headless":
-		return
-	var editor_settings: EditorSettings = get_editor_interface().get_editor_settings()
-	if bool(editor_settings.get_project_metadata("eventsheets", "welcomed", false)):
-		return
-	editor_settings.set_project_metadata("eventsheets", "welcomed", true)
-	_welcome_window = Window.new()
-	_welcome_window.title = "Godot EventSheets — welcome"
-	_welcome_window.size = Vector2i(440, 290)
-	_welcome_window.close_requested.connect(func() -> void: _welcome_window.hide())
-	var box: VBoxContainer = VBoxContainer.new()
-	box.set_anchors_preset(Control.PRESET_FULL_RECT)
-	box.add_theme_constant_override("separation", 8)
-	var blurb: Label = Label.new()
-	blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	blurb.text = "Construct 3-style event sheets that compile to plain GDScript — zero runtime, performance parity, and every sheet shows you its honest generated code."
-	box.add_child(blurb)
-	var showcase_button: Button = Button.new()
-	showcase_button.text = "Open the playable showcase scene"
-	showcase_button.pressed.connect(func() -> void:
-		var showcase_scene: String = _find_showcase_scene()
-		if not showcase_scene.is_empty():
-			get_editor_interface().open_scene_from_path(showcase_scene)
-		_welcome_window.hide())
-	box.add_child(showcase_button)
-	var workspace_button: Button = Button.new()
-	workspace_button.text = "Open the EventSheet workspace (New… has starters)"
-	workspace_button.pressed.connect(func() -> void:
-		get_editor_interface().set_main_screen_editor(_get_plugin_name())
-		_welcome_window.hide())
-	box.add_child(workspace_button)
-	var native_check: CheckBox = CheckBox.new()
-	native_check.text = "I'm Godot-native: show the generated GDScript beside every sheet"
-	native_check.toggled.connect(func(on: bool) -> void:
-		ProjectSettings.set_setting("eventsheets/editor/open_code_panel_by_default", on if on else null))
-	box.add_child(native_check)
-	var docs_label: Label = Label.new()
-	docs_label.text = "Coming from Construct? docs/C3-MIGRATION-GUIDE.md maps the vocabulary."
-	docs_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	docs_label.add_theme_font_size_override("font_size", 11)
-	box.add_child(docs_label)
-	_welcome_window.add_child(box)
-	get_editor_interface().get_base_control().add_child(_welcome_window)
-	_welcome_window.popup_centered()
+	if _event_sheet_editor != null and _event_sheet_editor.has_method("show_welcome_if_first_run"):
+		_event_sheet_editor.call("show_welcome_if_first_run")
 
 ## Unregisters plugin services when the plugin is disabled.
 func _exit_tree() -> void:
-	if _welcome_window != null:
-		_welcome_window.queue_free()
-		_welcome_window = null
 	for menu: EventSheetContextMenu in _context_menus:
 		remove_context_menu_plugin(menu)
 	_context_menus.clear()

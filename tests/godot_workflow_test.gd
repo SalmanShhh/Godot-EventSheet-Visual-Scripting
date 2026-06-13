@@ -267,6 +267,33 @@ static func run() -> bool:
 	all_passed = _check("the welcome panel discovers the newest showcase scene",
 		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/showcase_v070.tscn") and all_passed
 
+	# ── Toolbar redesign: grouped menus, flow-wraps instead of clipping ───────────
+	var toolbar_editor: EventSheetEditor = EventSheetEditor.new()
+	toolbar_editor.setup(EventSheetResource.new())
+	toolbar_editor.set_undo_redo_manager(NoopUndoManager.new())
+	all_passed = _check("the toolbar wraps instead of clipping",
+		toolbar_editor._toolbar is HFlowContainer, true) and all_passed
+	all_passed = _check("grouping leaves a short toolbar",
+		toolbar_editor._toolbar.get_child_count() <= 16, true) and all_passed
+	var sheet_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetSheetMenu", true, false) as MenuButton
+	var add_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetAddMenu", true, false) as MenuButton
+	var edit_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetEditMenu", true, false) as MenuButton
+	var view_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetViewMenu", true, false) as MenuButton
+	all_passed = _check("Sheet/Add/Edit/View menus carry the consolidated actions",
+		sheet_menu != null and sheet_menu.get_popup().item_count == 8
+		and add_menu != null and add_menu.get_popup().item_count == 3
+		and edit_menu != null and edit_menu.get_popup().item_count == 5
+		and view_menu != null and view_menu.get_popup().item_count == 12, true) and all_passed
+
+	# ── Welcome window: margined layout, reopenable, checkbox mirrors the setting ─
+	toolbar_editor._build_welcome_window()
+	var welcome_margin: MarginContainer = toolbar_editor._welcome_window.get_child(0) as MarginContainer
+	all_passed = _check("welcome content sits inside real margins",
+		welcome_margin != null and welcome_margin.get_theme_constant("margin_left") == 14, true) and all_passed
+	all_passed = _check("welcome exposes the native-default checkbox for reopen sync",
+		toolbar_editor._welcome_window.get_meta("native_check") is CheckBox, true) and all_passed
+	toolbar_editor.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

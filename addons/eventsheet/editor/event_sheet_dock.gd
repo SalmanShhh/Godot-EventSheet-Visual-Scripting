@@ -62,7 +62,7 @@ const SIDE_PANEL_MIN_WIDTH := 160.0
 const SIDE_PANEL_MAX_WIDTH := 220.0
 const SIDE_PANEL_WIDTH_RATIO := 0.18
 
-var _toolbar: HBoxContainer = null
+var _toolbar: HFlowContainer = null
 var _title_strip: HBoxContainer = null
 var _title_tab_label: Label = null
 var _title_path_label: Label = null
@@ -489,19 +489,114 @@ func _build_ui() -> void:
     root.size_flags_vertical = Control.SIZE_EXPAND_FILL
     add_child(root)
 
-    _toolbar = HBoxContainer.new()
+    # Toolbar redesign: grouped by purpose (Sheet / Add / Edit / View / Tools menus)
+    # with only the high-frequency C3 reflexes as one-click buttons — and it FLOWS to
+    # a second row instead of clipping when the panel is narrow (the old single HBox
+    # of ~28 controls overflowed past the panel edge).
+    _toolbar = HFlowContainer.new()
     _toolbar.name = "EventSheetToolbar"
-    _toolbar.add_theme_constant_override("separation", 4)
+    _toolbar.add_theme_constant_override("h_separation", 4)
     root.add_child(_toolbar)
 
-    _add_toolbar_button("New…", _open_template_menu)
-    _add_toolbar_button("Open", _on_open_requested)
+    # Sheet ▾ — file lifecycle + identity (low frequency, one menu).
+    var sheet_menu: MenuButton = MenuButton.new()
+    sheet_menu.name = "EventSheetSheetMenu"
+    sheet_menu.text = "Sheet"
+    sheet_menu.flat = false
+    var sheet_popup: PopupMenu = sheet_menu.get_popup()
+    sheet_popup.add_item("New…", 0)
+    sheet_popup.add_item("Open…", 1)
+    sheet_popup.add_item("Save", 2)
+    sheet_popup.add_item("Save As…", 3)
+    sheet_popup.add_separator()
+    sheet_popup.add_item("Sheet Type…", 4)
+    sheet_popup.add_item("ACE Providers…", 5)
+    sheet_popup.add_item("Export Addon…", 6)
+    sheet_popup.id_pressed.connect(func(id: int) -> void:
+        match id:
+            0: _open_template_menu()
+            1: _on_open_requested()
+            2: _on_save_requested()
+            3: _on_save_as_requested()
+            4: _open_sheet_type_dialog()
+            5: _on_manage_ace_providers_requested()
+            6: _export_addon_pack()
+    )
+    _toolbar.add_child(sheet_menu)
     _add_toolbar_button("Save", _on_save_requested)
-    _add_toolbar_button("Save As", _on_save_as_requested)
-    _add_toolbar_button("Export Addon…", _export_addon_pack)
     _add_toolbar_button("Run Scene", _run_from_sheet)
-    # Debug + addon-author tools live in one menu — the toolbar had grown past 25
-    # buttons (UX audit finding); these six are workflow tools, not per-row editing.
+    _add_toolbar_separator()
+    # The C3 reflexes stay one click (E / C / A on the keyboard).
+    _add_toolbar_button("Add Event", _on_add_event_requested)
+    _add_toolbar_button("Add Condition", _on_add_condition_requested)
+    _add_toolbar_button("Add Action", _on_add_action_requested)
+    # Add ▾ — the rest of the authoring vocabulary.
+    var add_menu: MenuButton = MenuButton.new()
+    add_menu.name = "EventSheetAddMenu"
+    add_menu.text = "Add"
+    add_menu.flat = false
+    var add_popup: PopupMenu = add_menu.get_popup()
+    add_popup.add_item("Signal Event…", 0)
+    add_popup.add_item("Global Variable…", 1)
+    add_popup.add_item("Local Variable…", 2)
+    add_popup.id_pressed.connect(func(id: int) -> void:
+        match id:
+            0: _on_add_signal_event_requested()
+            1: _on_add_global_variable_requested()
+            2: _on_add_local_variable_requested()
+    )
+    _toolbar.add_child(add_menu)
+    # Edit ▾ — clipboard + history (all on shortcuts too).
+    var edit_menu: MenuButton = MenuButton.new()
+    edit_menu.name = "EventSheetEditMenu"
+    edit_menu.text = "Edit"
+    edit_menu.flat = false
+    var edit_popup: PopupMenu = edit_menu.get_popup()
+    edit_popup.add_item("Copy", 0)
+    edit_popup.add_item("Paste", 1)
+    edit_popup.add_separator()
+    edit_popup.add_item("Undo", 2)
+    edit_popup.add_item("Redo", 3)
+    edit_popup.id_pressed.connect(func(id: int) -> void:
+        match id:
+            0: _on_copy_requested()
+            1: _on_paste_requested()
+            2: _on_undo_requested()
+            3: _on_redo_requested()
+    )
+    _toolbar.add_child(edit_menu)
+    # View ▾ — panels, multi-view, zoom and theming.
+    var view_menu: MenuButton = MenuButton.new()
+    view_menu.name = "EventSheetViewMenu"
+    view_menu.text = "View"
+    view_menu.flat = false
+    var view_popup: PopupMenu = view_menu.get_popup()
+    view_popup.add_item("GDScript Panel (toggle)", 0)
+    view_popup.add_separator()
+    view_popup.add_item("Split View (toggle)", 1)
+    view_popup.add_item("Detached View (toggle)", 2)
+    view_popup.add_item("Link Views (toggle)", 3)
+    view_popup.add_separator()
+    view_popup.add_item("Zoom In", 4)
+    view_popup.add_item("Zoom Out", 5)
+    view_popup.add_separator()
+    view_popup.add_item("Load Theme…", 6)
+    view_popup.add_item("Reload Theme", 7)
+    view_popup.add_item("Theme Editor…", 8)
+    view_popup.id_pressed.connect(func(id: int) -> void:
+        match id:
+            0: _toggle_code_panel()
+            1: _toggle_split_view()
+            2: _toggle_detached_view()
+            3: _toggle_linked_views()
+            4: _on_zoom_in_requested()
+            5: _on_zoom_out_requested()
+            6: _on_load_theme_requested()
+            7: _on_reload_theme_requested()
+            8: _open_theme_editor()
+    )
+    _toolbar.add_child(view_menu)
+    # Tools ▾ — debug + project workflow tools (the UX-audit consolidation).
     var tools_menu: MenuButton = MenuButton.new()
     tools_menu.text = "Tools"
     tools_menu.flat = false
@@ -522,6 +617,8 @@ func _build_ui() -> void:
     tools_popup.add_item("Save as Template", 10)
     tools_popup.add_item("Attach to Selected Node", 11)
     tools_popup.add_item("Lift Report…", 12)
+    tools_popup.add_separator()
+    tools_popup.add_item("Welcome…", 13)
     tools_popup.id_pressed.connect(func(id: int) -> void:
         match id:
             0: _toggle_breakpoint_emission()
@@ -537,44 +634,19 @@ func _build_ui() -> void:
             10: _save_as_project_template()
             11: _attach_behavior_to_selection()
             12: _open_lift_report()
+            13: show_welcome()
     )
     _toolbar.add_child(tools_menu)
-    _add_toolbar_button("Split", _toggle_split_view)
-    _add_toolbar_button("Detach", _toggle_detached_view)
-    _add_toolbar_button("Link", _toggle_linked_views)
     _add_toolbar_separator()
-    _add_toolbar_button("Add Event", _on_add_event_requested)
-    _add_toolbar_button("Add Signal Event", _on_add_signal_event_requested)
-    _add_toolbar_button("Add Condition", _on_add_condition_requested)
-    _add_toolbar_button("Add Action", _on_add_action_requested)
-    _add_toolbar_separator()
-    _add_toolbar_button("Copy", _on_copy_requested)
-    _add_toolbar_button("Paste", _on_paste_requested)
-    _add_toolbar_button("Undo", _on_undo_requested)
-    _add_toolbar_button("Redo", _on_redo_requested)
-    _add_toolbar_separator()
-    _add_toolbar_button("Zoom -", _on_zoom_out_requested)
-    _add_toolbar_button("Zoom +", _on_zoom_in_requested)
-    _add_toolbar_separator()
-    _add_toolbar_button("Add Global Var", _on_add_global_variable_requested)
-    _add_toolbar_button("Add Local Var", _on_add_local_variable_requested)
-    _add_toolbar_separator()
-    var theme_label: Label = Label.new()
-    theme_label.text = "Theme:"
-    _toolbar.add_child(theme_label)
+    # GDScript stays a one-click toggle (the pairing thesis: honest output, always
+    # one click away) next to the per-sheet theme picker.
+    _add_toolbar_button("GDScript", _toggle_code_panel)
     _theme_picker = OptionButton.new()
     _theme_picker.name = "EventSheetThemePicker"
-    _theme_picker.tooltip_text = "Switch the editor theme for this sheet"
+    _theme_picker.tooltip_text = "Theme for this sheet (Load/Reload and the Theme Editor live in View)"
     _theme_picker.item_selected.connect(_on_theme_preset_selected)
     _toolbar.add_child(_theme_picker)
     _populate_theme_picker()
-    _add_toolbar_button("Load Theme…", _on_load_theme_requested)
-    _add_toolbar_button("Reload Theme", _on_reload_theme_requested)
-    _add_toolbar_separator()
-    _add_toolbar_button("ACE Providers…", _on_manage_ace_providers_requested)
-    _add_toolbar_button("GDScript", _toggle_code_panel)
-    _add_toolbar_button("Sheet Type…", _open_sheet_type_dialog)
-    _add_toolbar_button("Theme Editor…", _open_theme_editor)
     _quick_add_edit = LineEdit.new()
     _quick_add_edit.placeholder_text = "Quick add…  (e.g. every tick, heal 5)"
     _quick_add_edit.tooltip_text = "C3-style quick add: type an event/condition/action (C3 phrasing works) plus optional parameter values, press Enter."
@@ -4710,6 +4782,74 @@ func _open_lift_report() -> void:
         item.set_text(2, str(entry.get("reason")))
     _set_status("Lift Report: %s." % EventSheetLiftReport.summary(report))
     _lift_report_window.popup_centered()
+
+# ── Welcome (shown once on first run; reopen any time via Tools → Welcome…) ──────────
+var _welcome_window: Window = null
+
+## Called by the plugin at startup: first run per project (editor metadata, nothing
+## committed) pops the welcome; after that it lives in Tools → Welcome….
+func show_welcome_if_first_run() -> void:
+    if not Engine.is_editor_hint() or DisplayServer.get_name() == "headless":
+        return
+    var editor_settings: EditorSettings = EditorInterface.get_editor_settings()
+    if bool(editor_settings.get_project_metadata("eventsheets", "welcomed", false)):
+        return
+    editor_settings.set_project_metadata("eventsheets", "welcomed", true)
+    show_welcome()
+
+func show_welcome() -> void:
+    if _welcome_window == null:
+        _build_welcome_window()
+    # The checkbox reflects the CURRENT setting on every open, not first-run state.
+    var native_check: CheckBox = _welcome_window.get_meta("native_check") as CheckBox
+    native_check.set_pressed_no_signal(bool(ProjectSettings.get_setting("eventsheets/editor/open_code_panel_by_default", false)))
+    _welcome_window.popup_centered()
+
+## Margined, autowrapped layout (review of the first cut: full-rect content with no
+## margins read as misaligned text jammed against the window edges).
+func _build_welcome_window() -> void:
+    _welcome_window = Window.new()
+    _welcome_window.title = "Godot EventSheets — welcome"
+    _welcome_window.size = Vector2i(480, 320)
+    _welcome_window.close_requested.connect(func() -> void: _welcome_window.hide())
+    var margin: MarginContainer = MarginContainer.new()
+    margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+    for side: String in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
+        margin.add_theme_constant_override(side, 14)
+    var box: VBoxContainer = VBoxContainer.new()
+    box.add_theme_constant_override("separation", 10)
+    var blurb: Label = Label.new()
+    blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    blurb.text = "Construct 3-style event sheets that compile to plain GDScript — zero runtime, performance parity, and every sheet shows you its honest generated code."
+    box.add_child(blurb)
+    var showcase_button: Button = Button.new()
+    showcase_button.text = "Open the playable showcase scene"
+    showcase_button.pressed.connect(func() -> void:
+        var showcase_scene: String = EventForgePlugin._find_showcase_scene()
+        if Engine.is_editor_hint() and is_inside_tree() and not showcase_scene.is_empty():
+            EditorInterface.open_scene_from_path(showcase_scene)
+        _welcome_window.hide())
+    box.add_child(showcase_button)
+    var starter_button: Button = Button.new()
+    starter_button.text = "New sheet from a starter template"
+    starter_button.pressed.connect(func() -> void:
+        _welcome_window.hide()
+        _open_template_menu())
+    box.add_child(starter_button)
+    var native_check: CheckBox = CheckBox.new()
+    native_check.text = "I'm Godot-native: show the generated GDScript beside every sheet"
+    native_check.toggled.connect(func(on: bool) -> void:
+        ProjectSettings.set_setting("eventsheets/editor/open_code_panel_by_default", true if on else null))
+    box.add_child(native_check)
+    _welcome_window.set_meta("native_check", native_check)
+    var docs_label: Label = Label.new()
+    docs_label.text = "Coming from Construct? docs/C3-MIGRATION-GUIDE.md maps the vocabulary.\nReopen this window any time: Tools → Welcome…"
+    docs_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    docs_label.add_theme_font_size_override("font_size", 11)
+    box.add_child(docs_label)
+    margin.add_child(box)
+    _welcome_window.add_child(margin)
+    add_child(_welcome_window)
 
 # ── Loop closers: attach the behavior where you're looking, run the scene that
 # uses this sheet (core lookups are headless; playing needs the editor) ───────────────

@@ -2,7 +2,18 @@
 
 ## [Unreleased]
 
-_Nothing yet._
+### Toolbar redesign + welcome fixes
+- **The workspace toolbar is grouped and never clips**: Sheet ▾ (file lifecycle +
+  identity), Add ▾, Edit ▾, View ▾ (panels, multi-view, zoom, theming) and the
+  existing Tools ▾ replace ~28 loose buttons; the C3 reflexes (Add Event /
+  Condition / Action), Save, Run Scene, the GDScript toggle, the theme picker and
+  Quick add stay one click. The bar is a flow container now — when the panel is
+  narrow it wraps to a second row instead of clipping off-screen.
+- **Welcome window fixed and reopenable**: content sits in real margins (the
+  first cut jammed text against the window edges), the Godot-native checkbox
+  reflects the current setting on every open, and **Tools → Welcome…** reopens
+  it any time (it previously appeared exactly once per project, with no way to
+  see it again).
 
 ## [0.7.0] - 2026-06-12 — “The Native Workflow Update”
 
