@@ -508,6 +508,17 @@ static func run() -> bool:
 		and not (captured_attrs[0] as Dictionary).has("clamp"), true) and all_passed
 	leftover_host.free()
 
+	# ── Native polish: the GDScript panel reads like the script editor ────────────
+	var code_editor: EventSheetEditor = EventSheetEditor.new()
+	code_editor.setup(EventSheetResource.new())
+	code_editor.set_undo_redo_manager(NoopUndoManager.new())
+	var probe_code_edit: CodeEdit = CodeEdit.new()
+	code_editor._apply_editor_code_settings(probe_code_edit)
+	all_passed = _check("the code panel adopts script-editor chrome (minimap, current line)",
+		probe_code_edit.minimap_draw and probe_code_edit.highlight_current_line, true) and all_passed
+	probe_code_edit.free()
+	code_editor.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

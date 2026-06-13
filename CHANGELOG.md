@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Godot-native polish
+- **The GDScript panel reads like the script editor** — it adopts the editor's
+  code font + size, the built-in minimap, current-line highlight and tab
+  rendering, so the honest output looks like a Godot script, not a foreign box.
+  It re-skins live when you switch editor themes.
+- **The default theme is labeled "Match Editor"** — it always derived from your
+  editor's base/accent colors; now the picker says so, and it re-derives the
+  moment you change your editor theme.
+- **Key toolbar buttons carry editor icons** (Save, Run/Play, Add, Script) — the
+  same glyphs the rest of the editor uses.
+- (Most of the obvious native gaps were already closed: editor-theme colors,
+  font + size, row-cell editor icons, Ctrl+wheel zoom, and node drag from the
+  Scene dock into expression fields all shipped earlier.)
+
 ### Bug-review fixes (silent bugs)
 - **Selecting a multi-line block by clicking any line but the first showed no
   highlight** — single-click selects the clicked line's span (usually not the

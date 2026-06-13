@@ -527,11 +527,11 @@ func _build_ui() -> void:
             6: _export_addon_pack()
     )
     _toolbar.add_child(sheet_menu)
-    _add_toolbar_button("Save", _on_save_requested, "Save the sheet — compile-on-save keeps its generated script fresh (Ctrl+S).")
-    _add_toolbar_button("Run Scene", _run_from_sheet, "Save, then play the scene that uses this sheet's script.")
+    _add_toolbar_button("Save", _on_save_requested, "Save the sheet — compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
+    _add_toolbar_button("Run Scene", _run_from_sheet, "Save, then play the scene that uses this sheet's script.", "Play")
     _add_toolbar_separator()
     # The C3 reflexes stay one click (E / C / A on the keyboard).
-    _add_toolbar_button("Add Event", _on_add_event_requested, "Add an event (E).")
+    _add_toolbar_button("Add Event", _on_add_event_requested, "Add an event (E).", "Add")
     _add_toolbar_button("Add Condition", _on_add_condition_requested, "Add a condition to the selected event (C).")
     _add_toolbar_button("Add Action", _on_add_action_requested, "Add an action to the selected event (A).")
     # Add ▾ — the rest of the authoring vocabulary.
@@ -654,7 +654,7 @@ func _build_ui() -> void:
     _add_toolbar_separator()
     # GDScript stays a one-click toggle (the pairing thesis: honest output, always
     # one click away) next to the per-sheet theme picker.
-    _add_toolbar_button("GDScript", _toggle_code_panel, "Toggle the generated-GDScript panel — the sheet's honest compiled output, side by side.")
+    _add_toolbar_button("GDScript", _toggle_code_panel, "Toggle the generated-GDScript panel — the sheet's honest compiled output, side by side.", "Script")
     _theme_picker = OptionButton.new()
     _theme_picker.name = "EventSheetThemePicker"
     _theme_picker.tooltip_text = "Theme for this sheet (Load/Reload and the Theme Editor live in View)"
@@ -798,6 +798,12 @@ func _notification(what: int) -> void:
         # GDScript-backed sheets: refocusing the editor is the moment external edits (the
         # script editor, another tool, git) usually land — offer to reload from disk.
         _prompt_external_reload_if_changed()
+    elif what == NOTIFICATION_THEME_CHANGED and is_inside_tree():
+        # The user switched their editor theme — re-derive the "Match Editor" default
+        # (no-op when an explicit sheet theme is active) and re-skin the code panel.
+        _apply_editor_native_defaults()
+        if _code_edit != null:
+            _apply_editor_code_settings(_code_edit)
 
 # ── External sheet file watching (GDScript-backed sheets) ────────────────────
 # mtime of the active external .gd at open/save time; divergence = changed on disk.
@@ -968,10 +974,16 @@ func _build_context_menus() -> void:
     _empty_space_context_menu.id_pressed.connect(_on_empty_space_context_menu_id_pressed)
     add_child(_empty_space_context_menu)
 
-func _add_toolbar_button(text: String, callable: Callable, tooltip: String = "") -> void:
+func _add_toolbar_button(text: String, callable: Callable, tooltip: String = "", editor_icon: String = "") -> void:
     var button: Button = Button.new()
     button.text = text
     button.tooltip_text = tooltip
+    # Editor icons make the toolbar read as part of Godot (no-op headless / pre-1.0
+    # editor theme without the icon).
+    if not editor_icon.is_empty() and Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+        var editor_theme: Theme = EditorInterface.get_editor_theme()
+        if editor_theme != null and editor_theme.has_icon(editor_icon, "EditorIcons"):
+            button.icon = editor_theme.get_icon(editor_icon, "EditorIcons")
     button.pressed.connect(callable)
     _toolbar.add_child(button)
 
@@ -1121,7 +1133,9 @@ func _populate_theme_picker() -> void:
     if _theme_picker == null:
         return
     _theme_picker.clear()
-    _theme_picker.add_item("Default")
+    # The default IS the editor-derived style (see _apply_editor_native_defaults) —
+    # label it so a Godot dev knows the sheet already matches their editor.
+    _theme_picker.add_item("Match Editor (default)")
     _theme_picker.set_item_metadata(0, "")
     for preset: Dictionary in EventSheetThemePresets.list_presets():
         _theme_picker.add_item(str(preset.get("name", "Theme")))
@@ -2262,10 +2276,28 @@ func _ensure_code_panel() -> void:
     # GDScriptSyntaxHighlighter is editor-only; headless test runs skip it.
     if Engine.is_editor_hint() and ClassDB.class_exists("GDScriptSyntaxHighlighter"):
         _code_edit.syntax_highlighter = ClassDB.instantiate("GDScriptSyntaxHighlighter")
+    # Make the panel read like the actual script editor: its code font + the minimap.
+    _apply_editor_code_settings(_code_edit)
     _code_edit.gui_input.connect(_on_code_panel_gui_input)
     _side_panel.add_child(_code_edit)
     _split.add_child(_side_panel)
     _split.split_offset = int(size.x * 0.6) if size.x > 0.0 else 600
+
+## Adopts the editor's code-editor look on a CodeEdit (the GDScript panel): the same
+## monospace code font + size the script editor uses, plus the built-in minimap and
+## current-line highlight — so the panel reads as part of Godot, not a foreign box.
+## No-op headless (no editor theme/settings).
+func _apply_editor_code_settings(code_edit: CodeEdit) -> void:
+    code_edit.minimap_draw = true
+    code_edit.highlight_current_line = true
+    code_edit.draw_tabs = true
+    if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+        return
+    var editor_theme: Theme = EditorInterface.get_editor_theme()
+    if editor_theme != null and editor_theme.has_font("source", "EditorFonts"):
+        code_edit.add_theme_font_override("font", editor_theme.get_font("source", "EditorFonts"))
+        if editor_theme.has_font_size("source_size", "EditorFonts"):
+            code_edit.add_theme_font_size_override("font_size", editor_theme.get_font_size("source_size", "EditorFonts"))
 
 ## Recompiles the current sheet into the panel (text + source map) and re-highlights.
 func _refresh_code_panel() -> void:
