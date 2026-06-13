@@ -533,6 +533,10 @@ static func run() -> bool:
 		and event_labels.has("Add Sub-Event") and event_labels.has("Convert to OR Block")
 		and event_labels.has("Insert Below") and event_labels.has("More") and event_labels.has("Delete")
 		and not event_labels.has("Group Color…") and not event_labels.has("Edit Comment…"), true) and all_passed
+	# Single-row disable uses the singular id so the live state can relabel it
+	# Disable Row / Enable Row (regression: a static "Disable / Enable" label was shipped).
+	all_passed = _check("single-row disable keeps the dynamic Row label",
+		event_labels.has("Disable Row") and not event_labels.has("Disable / Enable"), true) and all_passed
 	var group_row: EventRowData = EventRowData.new()
 	group_row.row_type = EventRowData.RowType.GROUP
 	menu_editor._context_row = group_row

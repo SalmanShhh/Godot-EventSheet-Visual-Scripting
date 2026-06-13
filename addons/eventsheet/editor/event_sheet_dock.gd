@@ -804,7 +804,8 @@ func _notification(what: int) -> void:
     elif what == NOTIFICATION_THEME_CHANGED and is_inside_tree():
         # The user switched their editor theme — re-derive the "Match Editor" default
         # (no-op when an explicit sheet theme is active) and re-skin the code panel.
-        _apply_editor_native_defaults()
+        # apply_zoom=false: never reset the user's manual zoom on a theme change.
+        _apply_editor_native_defaults(false)
         if _code_edit != null:
             _apply_editor_code_settings(_code_edit)
 
@@ -3664,16 +3665,20 @@ func _move_selected_row(direction: int) -> void:
 
 ## Editor-native defaults: inherit the user's editor theme + display scale when no
 ## explicit sheet theme was chosen (presets/per-sheet themes still override).
-func _apply_editor_native_defaults() -> void:
+## apply_zoom is true only for the initial setup — a live editor-theme change re-derives
+## the style but must NOT re-apply the editor-scale zoom (that would clobber whatever the
+## user manually zoomed to since opening the sheet).
+func _apply_editor_native_defaults(apply_zoom: bool = true) -> void:
     if not Engine.is_editor_hint() or _viewport == null:
         return
     if _active_theme_style == null:
         var derived: EventSheetEditorStyle = EventSheetEditorThemeDeriver.derive_from_editor()
         if derived != null:
             apply_theme_style(derived)
-    var editor_scale: float = EditorInterface.get_editor_scale()
-    if editor_scale > 1.01:
-        _viewport.set_zoom_factor(editor_scale)
+    if apply_zoom:
+        var editor_scale: float = EditorInterface.get_editor_scale()
+        if editor_scale > 1.01:
+            _viewport.set_zoom_factor(editor_scale)
 
 # ── Quick-add bar (C3 "type to insert") ──────────────────────────────────────
 var _quick_add_edit: LineEdit = null
@@ -4313,7 +4318,9 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
     var is_group: bool = row_type == EventRowData.RowType.GROUP
     var is_comment: bool = row_type == EventRowData.RowType.COMMENT
     var multi: bool = _get_selected_rows_from_context().size() > 1
-    # Type-specific authoring first.
+    # Type-specific authoring first. (Open/Close Group and the disable label below are
+    # relabeled to the live state by _configure_context_menu before the popup shows.)
+    var added_type_items: bool = true
     if is_event:
         menu.add_item("Add Sub-Event", ROW_MENU_ADD_SUB_EVENT)
         menu.add_item("Convert to OR Block", ROW_MENU_TOGGLE_CONDITION_BLOCK)
@@ -4325,13 +4332,22 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
     elif is_comment:
         menu.add_item("Edit Comment…", ROW_MENU_EDIT_COMMENT)
         menu.add_item("Attach To Event Above", ROW_MENU_ATTACH_COMMENT)
-    menu.add_separator()
+    else:
+        # SECTION / unknown rows get only the universal items — no leading separator.
+        added_type_items = false
+    if added_type_items:
+        menu.add_separator()
     # Universal clipboard + lifecycle (Disable/Duplicate act on the selection, or the
     # clicked row when nothing is selected — _top_level_selected_resources).
     menu.add_item("Copy", ROW_MENU_COPY)
     menu.add_item("Paste", ROW_MENU_PASTE)
     menu.add_item("Duplicate Selection" if multi else "Duplicate", ROW_MENU_BULK_DUPLICATE)
-    menu.add_item("Disable / Enable Selection" if multi else "Disable / Enable", ROW_MENU_BULK_TOGGLE_ENABLED)
+    # Single row uses the singular id so _configure_context_menu can relabel it
+    # "Disable Row" / "Enable Row" to the row's live state; multi uses the bulk id.
+    if multi:
+        menu.add_item("Disable / Enable Selection", ROW_MENU_BULK_TOGGLE_ENABLED)
+    else:
+        menu.add_item("Disable Row", ROW_MENU_TOGGLE_ENABLED)
     if multi:
         menu.add_item("Group Selection into New Group", ROW_MENU_BULK_GROUP)
     menu.add_separator()
