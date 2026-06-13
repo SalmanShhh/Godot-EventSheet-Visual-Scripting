@@ -103,7 +103,8 @@ static func run() -> bool:
     var title_path_label: Label = dock.find_child("EventSheetTitlePath", true, false) as Label
     var title_dirty_dot: Label = dock.find_child("EventSheetTitleDirtyDot", true, false) as Label
     all_passed = _check("demo sheet populates rows", dock_viewport.get_total_row_count() > 0, true) and all_passed
-    all_passed = _check("workflow toolbar is present", toolbar is HBoxContainer, true) and all_passed
+    # HFlowContainer since the toolbar redesign: wraps on narrow panels, never clips.
+    all_passed = _check("workflow toolbar is present", toolbar is HFlowContainer, true) and all_passed
     all_passed = _check("title strip is present", title_strip is HBoxContainer, true) and all_passed
     all_passed = _check("title tab label is present", title_tab_label is Label, true) and all_passed
     all_passed = _check("title path label is present", title_path_label is Label, true) and all_passed
