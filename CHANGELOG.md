@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Tier-1 authoring speed: value memory + add-another chaining
+- **Apply & Add Another** on the params dialog (append modes) — apply a condition
+  or action and the picker reopens for the next one, so building a three-condition
+  event no longer means re-summoning the picker each time.
+- **Per-ACE value memory** — re-adding an ACE prefills the values you used last
+  time (session memory, keyed by ace id) instead of the bare descriptor default.
+  The numbers you type repeatedly stop being re-typed.
+- (Apply-with-defaults was held back: auto-applying from the picker would hide the
+  remembered values and remove the chance to set params — it fights both features
+  above.)
+
 ### Field-test round 2: the replace flow, fixed for real
 - **Shadowed variables are caught at both ends** — naming a sheet variable after
   a host member (`velocity` on a CharacterBody2D sheet…) breaks the generated

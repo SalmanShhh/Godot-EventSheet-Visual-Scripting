@@ -1661,6 +1661,13 @@ func _on_viewport_variable_edit_requested(row_data: EventRowData, metadata: Dict
 
 func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
     _apply_ace_definition(definition, values, context)
+    # "Apply & Add Another": reopen the picker in the same append mode so the next
+    # condition/action can be added without re-summoning the picker by hand.
+    if bool(context.get("chain_add", false)):
+        var mode: String = str(context.get("mode", ""))
+        var selected_resource: Resource = context.get("selected_resource", null)
+        if mode in ["append_condition", "append_action"] and selected_resource is EventRow:
+            _ace_picker.open(mode, false, selected_resource, {})
 
 func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, context: Dictionary) -> void:
     if definition == null:

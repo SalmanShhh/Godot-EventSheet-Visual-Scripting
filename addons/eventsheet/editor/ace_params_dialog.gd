@@ -21,6 +21,13 @@ const VARIABLE_REFERENCE_HINT := "variable_reference"
 const EXPRESSION_HINT := "expression"
 const NO_VARIABLES_PLACEHOLDER := "No variables available"
 const BACK_ACTION := "back"
+const ADD_ANOTHER_ACTION := "add_another"
+
+## Session memory of the last-applied values per ace id, so re-adding the same ACE
+## prefills what you used last time instead of the bare descriptor default (Tier-1
+## tedium cut: the values you type repeatedly stop being re-typed). Static = shared
+## across dialog instances; cleared only on editor restart.
+static var _remembered_values: Dictionary = {}
 
 var _dialog: ConfirmationDialog = null
 var _form: VBoxContainer = null
@@ -34,6 +41,7 @@ var _variable_names_provider: Callable = Callable()
 var _variable_names: PackedStringArray = PackedStringArray()
 var _apply_blocked: bool = false
 var _back_button: Button = null
+var _add_another_button: Button = null
 
 # Sheet-context source for live ƒx validation (set by the dock; returns the active sheet).
 var _lint_context_provider: Callable = Callable()
@@ -63,6 +71,10 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry = null, vari
 	)
 	_dialog.canceled.connect(_close)
 	_back_button = _dialog.add_button("◀ Back", true, BACK_ACTION)
+	# "Apply & Add Another" keeps the picker loop going for repeated authoring
+	# (add three conditions without re-opening the picker each time). Only shown in
+	# append modes, where the target event is stable.
+	_add_another_button = _dialog.add_button("✚ Apply & Add Another", false, ADD_ANOTHER_ACTION)
 	_dialog.custom_action.connect(_on_custom_action)
 	parent_node.add_child(_dialog)
 
@@ -96,7 +108,12 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 	_definition = definition
 	_context = context.duplicate(true)
 	_variable_names = _resolve_variable_names()
-	_build_form(definition, initial_values)
+	# Fresh add (no existing params, not a re-edit) prefills from session memory of
+	# the last values used for this ACE.
+	var form_values: Dictionary = initial_values
+	if initial_values.is_empty() and not _is_reedit_flow() and _remembered_values.has(definition.id):
+		form_values = (_remembered_values[definition.id] as Dictionary).duplicate(true)
+	_build_form(definition, form_values)
 	_dialog.title = "%s Parameters%s" % [
 		definition.display_name,
 		" (Edit)" if _is_reedit_flow() else ""
@@ -104,6 +121,8 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 	_dialog.get_ok_button().disabled = _apply_blocked
 	# Back only makes sense when this dialog was opened from the picker flow.
 	_set_back_visible(_came_from_picker())
+	if _add_another_button != null:
+		_add_another_button.visible = str(_context.get("mode", "")) in ["append_condition", "append_action"]
 	_dialog.popup_centered(Vector2i(560, 380))
 	_dialog.call_deferred("grab_focus")
 	call_deferred("_focus_first_field")
@@ -1167,20 +1186,20 @@ func _first_invalid_expression() -> Control:
 			return field
 	return null
 
+## True unless the lint scratch ITSELF is broken (a sheet variable shadowing a host
+## member makes the scratch unparseable, so every expression "fails" and the OK
+## guardrail would lock the user out — verified by linting a bare literal).
+func _lint_context_healthy() -> bool:
+	if not _lint_context_provider.is_valid():
+		return true
+	var baseline_sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
+	return bool(EventSheetGDScriptLint.lint_expression("0", baseline_sheet).get("ok", true))
+
 func _on_confirmed() -> void:
 	if _definition == null or _apply_blocked:
 		return
 	# Guardrail (C3-style): block the commit while any expression doesn't compile.
-	# Field-test catch: when the LINT CONTEXT itself is broken (a sheet variable
-	# shadowing a host member makes the scratch script unparseable), every
-	# expression "fails" and OK can never commit — the dialog just closed and
-	# reopened. A broken context must never lock the user out: verify the baseline
-	# first and skip the guardrail when even a literal won't lint.
-	var lint_context_healthy: bool = true
-	if _lint_context_provider.is_valid():
-		var baseline_sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
-		lint_context_healthy = bool(EventSheetGDScriptLint.lint_expression("0", baseline_sheet).get("ok", true))
-	var invalid_field: Control = _first_invalid_expression() if lint_context_healthy else null
+	var invalid_field: Control = _first_invalid_expression() if _lint_context_healthy() else null
 	if invalid_field != null:
 		if _hint != null:
 			_hint.text = "✗ An expression doesn't compile — fix it before applying."
@@ -1188,20 +1207,42 @@ func _on_confirmed() -> void:
 		if _dialog != null and is_instance_valid(_dialog) and _dialog.is_inside_tree():
 			_dialog.call_deferred("popup_centered", Vector2i(520, 380))
 		return
+	_commit(false)
+
+## Shared apply path for OK and "Apply & Add Another". When chaining, the context
+## carries chain_add so the dock reopens the picker in the same append mode; the
+## values are remembered either way.
+func _commit(chain: bool) -> void:
 	var values: Dictionary = {}
 	for key: Variant in _fields.keys():
 		values[str(key)] = _extract_value(_fields[key])
-	params_confirmed.emit(_definition, values, _context.duplicate(true))
+	_remembered_values[_definition.id] = values.duplicate(true)
+	var context: Dictionary = _context.duplicate(true)
+	if chain:
+		context["chain_add"] = true
+	params_confirmed.emit(_definition, values, context)
 	_definition = null
 	_context.clear()
 
 func _on_custom_action(action: StringName) -> void:
-	if str(action) != BACK_ACTION:
+	if str(action) == BACK_ACTION:
+		var definition: ACEDefinition = _definition
+		var context: Dictionary = _context.duplicate(true)
+		_close()
+		back_requested.emit(definition, context)
 		return
-	var definition: ACEDefinition = _definition
-	var context: Dictionary = _context.duplicate(true)
-	_close()
-	back_requested.emit(definition, context)
+	if str(action) == ADD_ANOTHER_ACTION:
+		# Same validation gate as OK; only chain when it passed (definition cleared).
+		if _definition == null or _apply_blocked:
+			return
+		var invalid_field: Control = _first_invalid_expression() if _lint_context_healthy() else null
+		if invalid_field != null:
+			if _hint != null:
+				_hint.text = "✗ An expression doesn't compile — fix it before applying."
+			invalid_field.grab_focus()
+			return
+		_commit(true)
+		_close()
 
 func _set_back_visible(visible: bool) -> void:
 	if _back_button != null:

@@ -59,6 +59,51 @@ static func run() -> bool:
 	all_passed = _check("extract LineEdit value", dialog._extract_value(line_edit), "hello") and all_passed
 	line_edit.free()
 
+	# ── Tier-1 tedium cuts: per-ACE value memory + Apply & Add Another ────────────
+	var host: Node = Node.new()
+	var flow_dialog: ACEParamsDialog = ACEParamsDialog.new()
+	flow_dialog.init_dialog(host)
+	var flow_def: ACEDefinition = ACEDefinition.new()
+	flow_def.id = "TierOneProbe"
+	flow_def.display_name = "Tier One Probe"
+	flow_def.parameters = [{"id": "amount", "display_name": "Amount", "default_value": "1"}]
+	# A fresh add starts at the descriptor default…
+	flow_dialog._definition = flow_def
+	flow_dialog._context = {"mode": "append_action"}
+	flow_dialog._build_form(flow_def, {})
+	all_passed = _check("fresh add uses the descriptor default",
+		str(flow_dialog._extract_value(flow_dialog._fields["amount"])), "1") and all_passed
+	# …editing the value and committing remembers it.
+	(flow_dialog._fields["amount"] as LineEdit).text = "42"
+	flow_dialog._commit(false)
+	all_passed = _check("commit remembers the last value per ace id",
+		str((ACEParamsDialog._remembered_values["TierOneProbe"] as Dictionary).get("amount")), "42") and all_passed
+	# Re-adding the same ACE prefills the remembered value (open_with_values needs a
+	# display server, so exercise the prefill path through _build_form directly).
+	flow_dialog._definition = flow_def
+	flow_dialog._context = {"mode": "append_action"}
+	var remembered: Dictionary = ACEParamsDialog._remembered_values["TierOneProbe"]
+	flow_dialog._build_form(flow_def, remembered.duplicate(true))
+	all_passed = _check("re-adding prefills the remembered value",
+		str(flow_dialog._extract_value(flow_dialog._fields["amount"])), "42") and all_passed
+
+	# Add-Another visibility: append modes only (the target event is stable there).
+	flow_dialog._add_another_button.visible = str(flow_dialog._context.get("mode", "")) in ["append_condition", "append_action"]
+	all_passed = _check("Add Another shows in append modes", flow_dialog._add_another_button.visible, true) and all_passed
+	flow_dialog._context = {"mode": "replace_condition"}
+	flow_dialog._add_another_button.visible = str(flow_dialog._context.get("mode", "")) in ["append_condition", "append_action"]
+	all_passed = _check("Add Another hides when replacing", flow_dialog._add_another_button.visible, false) and all_passed
+
+	# Chaining marks the context so the dock reopens the picker.
+	flow_dialog._definition = flow_def
+	flow_dialog._context = {"mode": "append_action", "selected_resource": null}
+	var chained: Array = [false]
+	flow_dialog.params_confirmed.connect(func(_d, _v, c) -> void: chained[0] = bool(c.get("chain_add", false)))
+	flow_dialog._commit(true)
+	all_passed = _check("Apply & Add Another flags the context for re-opening",
+		chained[0], true) and all_passed
+	host.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
