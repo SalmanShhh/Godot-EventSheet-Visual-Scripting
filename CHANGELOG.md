@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Field-test round 1: the renderer pass
+- **A multi-line GDScript action is ONE cell now** — block lines merge into a
+  single vertically-resized code cell instead of stacked per-line cells (the
+  per-line spans stay the layout/hit-test truth, so selection, drag and delete
+  behave exactly as before).
+- **Code cells look like code** — in-flow GDScript gets a cool tint and a left
+  code stripe, so "this action is just GDScript" reads at a glance.
+- **Comments in the action lane look like action cells** — they carry the same
+  cell chrome as their siblings (comment text color kept), merge into one cell,
+  and keep growing vertically as lines are added.
+- **Hover and selection are easier on the eyes** — whole-row hover (comments
+  especially) is a faint tint with no outline; whole-row selection is tempered
+  for single-cell rows; span hover is softer and thinner. Selection stays
+  unmistakable via the outline and accent bar.
+
 ### Field-test round 1: quick fixes
 - **Welcome window actually fits now** — rebuilt as a self-sizing dialog (the
   fixed-size window clipped buttons and text at the edges twice); every label

@@ -296,6 +296,46 @@ static func run() -> bool:
 		toolbar_editor._welcome_window.get_meta("native_check") is CheckBox, true) and all_passed
 	toolbar_editor.free()
 
+	# ── Merged block cells: GDScript + action comments group their lines so the
+	# renderer paints ONE cell (per-line spans stay the layout/hit-test truth) ─────
+	var block_sheet: EventSheetResource = EventSheetResource.new()
+	block_sheet.host_class = "Node"
+	var block_event: EventRow = EventRow.new()
+	block_event.trigger_provider_id = "Core"
+	block_event.trigger_id = "OnProcess"
+	var block_raw: RawCodeRow = RawCodeRow.new()
+	block_raw.code = "var a := 1\nvar b := 2\nprint(a + b)"
+	block_event.actions.append(block_raw)
+	var block_comment: CommentRow = CommentRow.new()
+	block_comment.text = "first line\nsecond line"
+	block_event.actions.append(block_comment)
+	block_sheet.events.append(block_event)
+	var block_viewport: EventSheetViewport = EventSheetViewport.new()
+	block_viewport.set_sheet(block_sheet)
+	var block_row: EventRowData = null
+	for flat_entry: Dictionary in block_viewport.get_flat_rows():
+		var candidate: EventRowData = flat_entry.get("row")
+		if candidate != null and candidate.source_resource == block_event:
+			block_row = candidate
+	block_viewport._ensure_event_spans(block_row)
+	var code_lines: int = 0
+	var comment_lines: int = 0
+	var comment_has_chip_chrome: bool = false
+	for span: SemanticSpan in block_row.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var span_meta: Dictionary = span.metadata
+		if bool(span_meta.get("code_cell", false)) and int(span_meta.get("block_lines", 0)) == 3:
+			code_lines += 1
+		if bool(span_meta.get("action_comment", false)) and int(span_meta.get("block_lines", 0)) == 2:
+			comment_lines += 1
+			comment_has_chip_chrome = comment_has_chip_chrome or span_meta.has("chip_bg") or bool(span_meta.get("chip", false))
+	all_passed = _check("GDScript lines group into one code cell",
+		code_lines, 3) and all_passed
+	all_passed = _check("action comments group and carry the action-cell chrome",
+		comment_lines == 2 and comment_has_chip_chrome, true) and all_passed
+	block_viewport.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

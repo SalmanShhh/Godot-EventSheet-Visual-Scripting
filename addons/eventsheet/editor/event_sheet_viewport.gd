@@ -2108,7 +2108,8 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 # the block's ace_index, so click/drag/delete treat the block as one action.
                 var inline_raw: RawCodeRow = action_resource as RawCodeRow
                 var inline_lines: PackedStringArray = inline_raw.code.split("\n")
-                for inline_line_index in range(maxi(inline_lines.size(), 1)):
+                var inline_total: int = maxi(inline_lines.size(), 1)
+                for inline_line_index in range(inline_total):
                     var inline_text: String = inline_lines[inline_line_index] if inline_line_index < inline_lines.size() else " "
                     spans.append(
                         _make_span(
@@ -2121,6 +2122,12 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                                 "ace_enabled": inline_raw.enabled,
                                 "chip": true,
                                 "raw_action": true,
+                                # The renderer merges block lines into ONE code cell
+                                # (left stripe, continuous background) — per-line
+                                # spans stay the layout/hit-test truth.
+                                "code_cell": true,
+                                "block_lines": inline_total,
+                                "block_line": inline_line_index,
                                 "line_index": action_line_index,
                                 "object_label": "GDScript" if inline_line_index == 0 else ""
                             }.merged(action_style_meta, true)
@@ -2133,10 +2140,10 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 # comment-styled cell per text line, sharing the ace_index.
                 var action_comment: CommentRow = action_resource as CommentRow
                 var action_comment_lines: PackedStringArray = action_comment.text.split("\n") if not action_comment.text.is_empty() else PackedStringArray(["Comment"])
-                for comment_line in action_comment_lines:
+                for comment_line_index in range(action_comment_lines.size()):
                     spans.append(
                         _make_span(
-                            "# " + comment_line,
+                            "# " + action_comment_lines[comment_line_index],
                             SemanticSpan.SpanType.COMMENT,
                             {
                                 "lane": "action",
@@ -2145,9 +2152,15 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                                 "ace_enabled": action_comment.enabled,
                                 "chip": true,
                                 "action_comment": true,
+                                # Merged like GDScript blocks, and carrying the action
+                                # cell chrome (chip_bg etc.) so a comment in the action
+                                # lane reads like its sibling cells — comment text
+                                # color wins (merged with overwrite OFF).
+                                "block_lines": action_comment_lines.size(),
+                                "block_line": comment_line_index,
                                 "line_index": action_line_index,
                                 "text_color": _get_event_style().comment_text_color
-                            }
+                            }.merged(action_style_meta, false)
                         )
                     )
                     action_line_index += 1

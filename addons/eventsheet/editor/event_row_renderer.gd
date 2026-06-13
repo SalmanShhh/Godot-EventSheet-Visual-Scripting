@@ -207,15 +207,23 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
         control.draw_rect(Rect2(row_rect.position.x, row_rect.end.y - 1.0, row_rect.size.x, 1.0), block_border, true)
     _draw_indent_guides(control, row_rect, row_data.indent)
     if row_data.selected and not has_span_selection:
-        control.draw_rect(row_rect, selection_fill, true)
+        # Slightly tempered for single-cell rows (comments especially) — selection
+        # stays unmistakable via the outline, without the full-strength flood fill.
+        var row_selection: Color = selection_fill
+        if row_data.row_type != EventRowData.RowType.EVENT:
+            row_selection.a *= 0.75
+        control.draw_rect(row_rect, row_selection, true)
         if row_data.row_type != EventRowData.RowType.EVENT:
             _draw_row_outline(control, row_rect, selection_fill, SELECTION_OUTLINE_LIGHTEN, SELECTION_OUTLINE_ALPHA)
     # Hover feedback: individual conditions/actions highlight per-cell (drawn in _draw_spans).
     # Whole-row hover is only for single-cell rows (group/comment/variable); on a multi-cell
     # event it lights up the entire block and reads as "selected", which is confusing.
     if row_data.hovered and row_data.row_type != EventRowData.RowType.EVENT:
-        control.draw_rect(row_rect, hover_fill, true)
-        _draw_row_outline(control, row_rect, hover_fill, HOVER_OUTLINE_LIGHTEN, HOVER_OUTLINE_ALPHA)
+        # Softened (user call: full-strength fill + outline on comment rows strained
+        # the eyes): a faint tint, no outline — selection keeps the strong look.
+        var soft_hover: Color = hover_fill
+        soft_hover.a *= 0.4
+        control.draw_rect(row_rect, soft_hover, true)
     _draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
     _draw_icon(control, icon_rect, row_data)
     _draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill)
@@ -346,16 +354,52 @@ func _draw_spans(
     selection_fill: Color = EventSheetPalette.COLOR_SELECTION,
     hover_fill: Color = EventSheetPalette.COLOR_HOVER
 ) -> void:
+    # Multi-line blocks (in-flow GDScript, action-lane comments) paint as ONE merged
+    # cell: union rects per block, background/hover/selection drawn once. The per-line
+    # spans remain the layout + hit-test truth — the merge is purely visual (user
+    # call: a 3-line GDScript action is one resized cell, not three stacked cells).
+    var block_unions: Dictionary = {}
+    var block_heads: Dictionary = {}
+    var scan_index: int = 0
+    while scan_index < row_data.spans.size():
+        var head_span: SemanticSpan = row_data.spans[scan_index]
+        var head_meta: Dictionary = head_span.metadata if head_span != null and head_span.metadata is Dictionary else {}
+        var block_total: int = int(head_meta.get("block_lines", 0))
+        if block_total > 1 and int(head_meta.get("block_line", -1)) == 0:
+            var last_member: int = mini(scan_index + block_total, row_data.spans.size()) - 1
+            var union_rect: Rect2 = head_span.rect
+            for member: int in range(scan_index + 1, last_member + 1):
+                if row_data.spans[member] != null:
+                    union_rect = union_rect.merge(row_data.spans[member].rect)
+            for member: int in range(scan_index, last_member + 1):
+                block_unions[member] = union_rect
+                block_heads[member] = scan_index
+            scan_index = last_member + 1
+            continue
+        scan_index += 1
     for span_index: int in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null:
             continue
         var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+        var in_block: bool = block_heads.has(span_index)
+        var is_block_head: bool = in_block and int(block_heads[span_index]) == span_index
         if bool(metadata.get("chip", false)):
-            _draw_chip_span(control, span, metadata)
+            if in_block:
+                if is_block_head:
+                    _draw_block_cell(control, block_unions[span_index], metadata)
+            elif bool(metadata.get("code_cell", false)):
+                _draw_block_cell(control, span.rect, metadata)
+            else:
+                _draw_chip_span(control, span, metadata)
         if selected_span_indices.has(span_index):
             if bool(metadata.get("chip", false)):
-                _draw_chip_selected_span(control, span, metadata, selection_fill, total_selected_spans > 1)
+                if not in_block or is_block_head:
+                    var selected_rect_span: SemanticSpan = span
+                    if in_block:
+                        selected_rect_span = SemanticSpan.new()
+                        selected_rect_span.rect = block_unions[span_index]
+                    _draw_chip_selected_span(control, selected_rect_span, metadata, selection_fill, total_selected_spans > 1)
             else:
                 var selected_bg: Color = selection_fill
                 selected_bg.a = 0.72
@@ -365,14 +409,16 @@ func _draw_spans(
                 control.draw_rect(span.rect.grow(2.0), selected_outline, false, 1.0)
         elif span_index == hovered_span_index:
             if bool(metadata.get("chip", false)):
-                _draw_cell_hover(control, span.rect, event_style.cell_hover_color if event_style != null else Color(1.0, 1.0, 1.0, 0.14))
+                var hover_rect: Rect2 = block_unions[span_index] if in_block else span.rect
+                _draw_cell_hover(control, hover_rect, event_style.cell_hover_color if event_style != null else Color(1.0, 1.0, 1.0, 0.14))
             else:
+                # Softened span hover (user call: highlighting strained the eyes).
                 var hover_bg: Color = hover_fill
-                hover_bg.a = 0.46
+                hover_bg.a = 0.28
                 control.draw_rect(span.rect.grow(1.0), hover_bg, true)
                 var hover_outline: Color = hover_fill.lightened(SPAN_HOVER_OUTLINE_LIGHTEN)
-                hover_outline.a = SPAN_HOVER_OUTLINE_ALPHA
-                control.draw_rect(span.rect.grow(1.0), hover_outline, false, 1.5)
+                hover_outline.a = 0.55
+                control.draw_rect(span.rect.grow(1.0), hover_outline, false, 1.0)
         if bool(metadata.get("badge", false)):
             _draw_badge_span(control, span, font, font_size, metadata)
             continue
@@ -468,6 +514,20 @@ func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary)
     # Flat C3/GDevelop-style cell: a subtle rectangular fill, no border or rounded corners.
     var bg: Color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.035))
     control.draw_rect(span.rect, bg, true)
+
+const CODE_CELL_BG := Color(0.5, 0.65, 0.9, 0.07)
+const CODE_CELL_STRIPE := Color(0.55, 0.7, 0.95, 0.45)
+
+## One merged cell for a multi-line block. In-flow GDScript additionally gets a code
+## stripe + cool tint, so "this cell is code" reads at a glance (user call: it must be
+## visually obvious when an action is just GDScript).
+func _draw_block_cell(control: Control, rect: Rect2, metadata: Dictionary) -> void:
+    if bool(metadata.get("code_cell", false)):
+        control.draw_rect(rect, CODE_CELL_BG, true)
+        control.draw_rect(Rect2(rect.position.x, rect.position.y, 2.0, rect.size.y), CODE_CELL_STRIPE, true)
+        return
+    var bg: Color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.035))
+    control.draw_rect(rect, bg, true)
 
 ## Flat, clearly-visible hover for a single condition/action cell: a neutral light tint over
 ## just that cell (distinct from the accent-coloured selection), so it reads as "this cell".
