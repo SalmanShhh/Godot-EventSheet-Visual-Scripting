@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Context menu, truncated
+- **The row right-click menu is rebuilt per click for the row you clicked** — it
+  used to be one flat ~30-item list shown for everything (an event right-click
+  still offered "Edit Group Description", "Add Enum Below", etc.). Now an event
+  shows ~9 items, a group shows group items, a comment shows comment items.
+- **The "Add … Below" family folds into an `Insert Below ▸` submenu**, and the
+  advanced/rare authoring (sub-condition, pick filter, match, find usages, open
+  in split, snippets) folds into a `More ▸` submenu.
+- **Bulk-selection items only appear when more than one row is selected** —
+  otherwise Copy/Paste/Duplicate/Disable act on the clicked row directly.
+- **Insert Snippet moved to the empty-canvas menu** (you're adding to the sheet,
+  not acting on a row).
+
 ### Godot-native polish
 - **The GDScript panel reads like the script editor** — it adopts the editor's
   code font + size, the built-in minimap, current-line highlight and tab

@@ -519,7 +519,51 @@ static func run() -> bool:
 	probe_code_edit.free()
 	code_editor.free()
 
+	# ── Context menu truncation: rebuilt per row type, short, type-specific ───────
+	var menu_editor: EventSheetEditor = EventSheetEditor.new()
+	menu_editor.setup(EventSheetResource.new())
+	menu_editor.set_undo_redo_manager(NoopUndoManager.new())
+	var event_row: EventRowData = EventRowData.new()
+	event_row.row_type = EventRowData.RowType.EVENT
+	menu_editor._context_row = event_row
+	menu_editor._build_row_context_menu(event_row)
+	var event_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
+	all_passed = _check("event menu is short and type-specific",
+		event_labels.size() <= 12
+		and event_labels.has("Add Sub-Event") and event_labels.has("Convert to OR Block")
+		and event_labels.has("Insert Below") and event_labels.has("More") and event_labels.has("Delete")
+		and not event_labels.has("Group Color…") and not event_labels.has("Edit Comment…"), true) and all_passed
+	var group_row: EventRowData = EventRowData.new()
+	group_row.row_type = EventRowData.RowType.GROUP
+	menu_editor._context_row = group_row
+	menu_editor._build_row_context_menu(group_row)
+	var group_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
+	all_passed = _check("group menu shows group items, hides event-only ones",
+		group_labels.has("Group Color…") and group_labels.has("Runtime Toggleable")
+		and not group_labels.has("Convert to OR Block") and not group_labels.has("Edit Comment…"), true) and all_passed
+	var comment_row: EventRowData = EventRowData.new()
+	comment_row.row_type = EventRowData.RowType.COMMENT
+	menu_editor._context_row = comment_row
+	menu_editor._build_row_context_menu(comment_row)
+	var comment_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
+	all_passed = _check("comment menu shows comment items, hides group/event ones",
+		comment_labels.has("Edit Comment…") and comment_labels.has("Attach To Event Above")
+		and not comment_labels.has("Group Color…") and not comment_labels.has("Add Sub-Event"), true) and all_passed
+	# The advanced/event-only authoring lives in More, not at the top.
+	menu_editor._context_row = event_row
+	menu_editor._build_row_more_submenu(true)
+	all_passed = _check("advanced authoring is folded into More",
+		_menu_labels(menu_editor._row_more_submenu).has("Add Pick Filter (For Each)…"), true) and all_passed
+	menu_editor.free()
+
 	return all_passed
+
+static func _menu_labels(menu: PopupMenu) -> PackedStringArray:
+	var labels: PackedStringArray = PackedStringArray()
+	for i in range(menu.item_count):
+		if not menu.is_item_separator(i):
+			labels.append(menu.get_item_text(i))
+	return labels
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

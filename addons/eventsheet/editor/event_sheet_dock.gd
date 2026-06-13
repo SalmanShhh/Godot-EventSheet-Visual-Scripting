@@ -57,6 +57,7 @@ const THEME_FILTERS: Array[String] = ["*.tres ; EventSheetEditorStyle", "*.res ;
 const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
 const EMPTY_MENU_ADD_VARIABLE := 3
+const EMPTY_MENU_INSERT_SNIPPET := 4
 const ACE_DRAG_KINDS := ["condition", "action"]
 const SIDE_PANEL_MIN_WIDTH := 160.0
 const SIDE_PANEL_MAX_WIDTH := 220.0
@@ -113,6 +114,8 @@ var _variable_dlg: VariableDialog = VariableDialog.new()
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
+var _row_insert_submenu: PopupMenu = null
+var _row_more_submenu: PopupMenu = null
 var _variable_context_menu: PopupMenu = null
 var _empty_space_context_menu: PopupMenu = null
 var _theme_file_dialog: FileDialog = null
@@ -914,49 +917,21 @@ func _build_context_menus() -> void:
     _action_context_menu.id_pressed.connect(_on_action_context_menu_id_pressed)
     add_child(_action_context_menu)
 
+    # The row menu is rebuilt per right-click (_build_row_context_menu) showing only
+    # what applies to the clicked row type + selection — it used to be a flat ~30-item
+    # list shown for everything. Insert/More are submenus, built the same way.
     _row_context_menu = PopupMenu.new()
-    _row_context_menu.add_item("Add Sub-Event", ROW_MENU_ADD_SUB_EVENT)
-    _row_context_menu.add_item("Add Comment Sub-Event", ROW_MENU_ADD_COMMENT_SUB_EVENT)
-    _row_context_menu.add_item("Convert to OR Block", ROW_MENU_TOGGLE_CONDITION_BLOCK)
-    _row_context_menu.add_item("Add Sub-Condition", ROW_MENU_ADD_SUB_CONDITION)
-    _row_context_menu.add_item("Close Group", ROW_MENU_TOGGLE_GROUP_FOLD)
-    _row_context_menu.add_item("Add Event Below", ROW_MENU_ADD_EVENT_BELOW)
-    _row_context_menu.add_item("Add Group Below", ROW_MENU_ADD_GROUP_BELOW)
-    _row_context_menu.add_item("Add Comment Below", ROW_MENU_ADD_COMMENT_BELOW)
-    _row_context_menu.add_item("Add Variable Below", ROW_MENU_ADD_VARIABLE_BELOW)
-    _row_context_menu.add_item("Add GDScript Block Below", ROW_MENU_ADD_GDSCRIPT_BELOW)
-    _row_context_menu.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
-    _row_context_menu.add_item("Add Pick Filter (For Each)…", ROW_MENU_ADD_PICK_FILTER)
-    _row_context_menu.add_item("Add Enum Below", ROW_MENU_ADD_ENUM)
-    _row_context_menu.add_item("Edit Group Description…", ROW_MENU_EDIT_GROUP_DESC)
-    _row_context_menu.add_item("Group Color…", ROW_MENU_GROUP_COLOR)
-    _row_context_menu.add_item("Runtime Toggleable (Set Group Active)", ROW_MENU_GROUP_RUNTIME)
-    _row_context_menu.add_item("Find Usages (project)", ROW_MENU_FIND_USAGES)
-    _row_context_menu.add_item("Add Signal Below", ROW_MENU_ADD_SIGNAL)
-    _row_context_menu.add_item("Add Match To Actions…", ROW_MENU_ADD_MATCH)
-    _row_context_menu.add_item("Open in Split", ROW_MENU_OPEN_IN_SPLIT)
-    _row_context_menu.add_separator()
-    _row_context_menu.add_item("Edit Comment…", ROW_MENU_EDIT_COMMENT)
-    _row_context_menu.add_item("Attach Comment To Event Above", ROW_MENU_ATTACH_COMMENT)
-    _row_context_menu.add_separator()
-    _row_context_menu.add_item("Disable Row", ROW_MENU_TOGGLE_ENABLED)
-    _row_context_menu.add_separator()
-    _row_context_menu.add_item("Copy", ROW_MENU_COPY)
-    _row_context_menu.add_item("Paste", ROW_MENU_PASTE)
-    _row_context_menu.add_separator()
-    # Selection section: every entry runs on the multi-selection when one exists,
-    # falling back to the clicked row (the _top_level_selected_resources contract).
-    _row_context_menu.add_item("Disable/Enable Selection", ROW_MENU_BULK_TOGGLE_ENABLED)
-    _row_context_menu.add_item("Duplicate Selection", ROW_MENU_BULK_DUPLICATE)
-    _row_context_menu.add_item("Group Selection into New Group", ROW_MENU_BULK_GROUP)
-    _row_context_menu.add_separator()
-    _row_context_menu.add_item("Save Selection as Snippet…", ROW_MENU_SAVE_SNIPPET)
-    _row_context_menu.add_item("Insert Snippet…", ROW_MENU_INSERT_SNIPPET)
-    _row_context_menu.add_separator()
-    _row_context_menu.add_item("Delete Row", ROW_MENU_DELETE)
     _row_context_menu.add_theme_font_size_override("font_size", 14)
     _row_context_menu.id_pressed.connect(_on_row_context_menu_id_pressed)
     add_child(_row_context_menu)
+    _row_insert_submenu = PopupMenu.new()
+    _row_insert_submenu.name = "RowInsertSubmenu"
+    _row_insert_submenu.id_pressed.connect(_on_row_context_menu_id_pressed)
+    _row_context_menu.add_child(_row_insert_submenu)
+    _row_more_submenu = PopupMenu.new()
+    _row_more_submenu.name = "RowMoreSubmenu"
+    _row_more_submenu.id_pressed.connect(_on_row_context_menu_id_pressed)
+    _row_context_menu.add_child(_row_more_submenu)
 
     _variable_context_menu = PopupMenu.new()
     _variable_context_menu.add_item("Edit Variable", VARIABLE_MENU_EDIT)
@@ -971,6 +946,10 @@ func _build_context_menus() -> void:
     _empty_space_context_menu.add_item("New Event", EMPTY_MENU_NEW_EVENT)
     _empty_space_context_menu.add_item("New Condition", EMPTY_MENU_NEW_CONDITION)
     _empty_space_context_menu.add_item("Add New Variable", EMPTY_MENU_ADD_VARIABLE)
+    _empty_space_context_menu.add_separator()
+    # Inserting a saved snippet is "add to the sheet" — it belongs on the canvas menu,
+    # not buried in a row's More submenu.
+    _empty_space_context_menu.add_item("Insert Snippet…", EMPTY_MENU_INSERT_SNIPPET)
     _empty_space_context_menu.id_pressed.connect(_on_empty_space_context_menu_id_pressed)
     add_child(_empty_space_context_menu)
 
@@ -4319,7 +4298,79 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
     if kind == "action":
         _show_popup_menu(_action_context_menu, global_position)
         return
+    _build_row_context_menu(row_data)
     _show_popup_menu(_row_context_menu, global_position)
+
+## Rebuilds the row context menu for the clicked row: only the items that apply to its
+## type (event / group / comment) at the top, universal clipboard/lifecycle next, and
+## the rest folded into Insert ▸ / More ▸ submenus — replacing the old flat ~30-item
+## list shown for every row regardless of type.
+func _build_row_context_menu(row_data: EventRowData) -> void:
+    var menu: PopupMenu = _row_context_menu
+    menu.clear()
+    var row_type: int = row_data.row_type if row_data != null else EventRowData.RowType.EVENT
+    var is_event: bool = row_type == EventRowData.RowType.EVENT
+    var is_group: bool = row_type == EventRowData.RowType.GROUP
+    var is_comment: bool = row_type == EventRowData.RowType.COMMENT
+    var multi: bool = _get_selected_rows_from_context().size() > 1
+    # Type-specific authoring first.
+    if is_event:
+        menu.add_item("Add Sub-Event", ROW_MENU_ADD_SUB_EVENT)
+        menu.add_item("Convert to OR Block", ROW_MENU_TOGGLE_CONDITION_BLOCK)
+    elif is_group:
+        menu.add_item("Open / Close Group", ROW_MENU_TOGGLE_GROUP_FOLD)
+        menu.add_item("Edit Description…", ROW_MENU_EDIT_GROUP_DESC)
+        menu.add_item("Group Color…", ROW_MENU_GROUP_COLOR)
+        menu.add_item("Runtime Toggleable", ROW_MENU_GROUP_RUNTIME)
+    elif is_comment:
+        menu.add_item("Edit Comment…", ROW_MENU_EDIT_COMMENT)
+        menu.add_item("Attach To Event Above", ROW_MENU_ATTACH_COMMENT)
+    menu.add_separator()
+    # Universal clipboard + lifecycle (Disable/Duplicate act on the selection, or the
+    # clicked row when nothing is selected — _top_level_selected_resources).
+    menu.add_item("Copy", ROW_MENU_COPY)
+    menu.add_item("Paste", ROW_MENU_PASTE)
+    menu.add_item("Duplicate Selection" if multi else "Duplicate", ROW_MENU_BULK_DUPLICATE)
+    menu.add_item("Disable / Enable Selection" if multi else "Disable / Enable", ROW_MENU_BULK_TOGGLE_ENABLED)
+    if multi:
+        menu.add_item("Group Selection into New Group", ROW_MENU_BULK_GROUP)
+    menu.add_separator()
+    _build_row_insert_submenu()
+    menu.add_submenu_item("Insert Below", "RowInsertSubmenu")
+    _build_row_more_submenu(is_event)
+    if _row_more_submenu.item_count > 0:
+        menu.add_submenu_item("More", "RowMoreSubmenu")
+    menu.add_separator()
+    menu.add_item("Delete", ROW_MENU_DELETE)
+
+## The Insert ▸ submenu — insert a sibling row of any type below the clicked one.
+func _build_row_insert_submenu() -> void:
+    var m: PopupMenu = _row_insert_submenu
+    m.clear()
+    m.add_item("Event", ROW_MENU_ADD_EVENT_BELOW)
+    m.add_item("Group", ROW_MENU_ADD_GROUP_BELOW)
+    m.add_item("Comment", ROW_MENU_ADD_COMMENT_BELOW)
+    m.add_item("Variable", ROW_MENU_ADD_VARIABLE_BELOW)
+    m.add_item("GDScript Block", ROW_MENU_ADD_GDSCRIPT_BELOW)
+    m.add_item("Signal Handler", ROW_MENU_ADD_SIGNAL)
+    m.add_item("Enum", ROW_MENU_ADD_ENUM)
+
+## The More ▸ submenu — advanced authoring (events only) + navigation + snippets.
+func _build_row_more_submenu(is_event: bool) -> void:
+    var m: PopupMenu = _row_more_submenu
+    m.clear()
+    if is_event:
+        m.add_item("Add Sub-Condition", ROW_MENU_ADD_SUB_CONDITION)
+        m.add_item("Add Comment Sub-Event", ROW_MENU_ADD_COMMENT_SUB_EVENT)
+        m.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
+        m.add_item("Add Pick Filter (For Each)…", ROW_MENU_ADD_PICK_FILTER)
+        m.add_item("Add Match To Actions…", ROW_MENU_ADD_MATCH)
+        m.add_separator()
+    m.add_item("Find Usages (project)", ROW_MENU_FIND_USAGES)
+    m.add_item("Open in Split", ROW_MENU_OPEN_IN_SPLIT)
+    m.add_separator()
+    m.add_item("Save Selection as Snippet…", ROW_MENU_SAVE_SNIPPET)
+    m.add_item("Insert Snippet…", ROW_MENU_INSERT_SNIPPET)
 
 func _on_viewport_empty_space_double_clicked() -> void:
     if not _ensure_sheet_for_editing():
@@ -4347,6 +4398,8 @@ func _on_empty_space_context_menu_id_pressed(id: int) -> void:
             _on_add_condition_requested()
         EMPTY_MENU_ADD_VARIABLE:
             _on_add_global_variable_requested()
+        EMPTY_MENU_INSERT_SNIPPET:
+            _open_insert_snippet()
 
 func _show_popup_menu(menu: PopupMenu, global_position: Vector2) -> void:
     if menu == null:
