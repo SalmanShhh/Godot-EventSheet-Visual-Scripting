@@ -29,6 +29,7 @@ static func run() -> Dictionary:
 	check_scene_attachment(sheet_paths, findings)
 	check_unused_variables(sheet_paths, findings)
 	check_unused_packs(sheet_paths, findings)
+	check_shadowed_variables(sheet_paths, findings)
 	check_vocabulary_doc(findings)
 	var counts: Dictionary = {"error": 0, "warning": 0, "info": 0}
 	for finding: Dictionary in findings:
@@ -212,6 +213,44 @@ static func check_unused_packs(sheet_paths: PackedStringArray, findings: Array[D
 			continue
 		_add(findings, "info", "unused-pack", script_path,
 			"Pack class %s is referenced by no sheet, scene or autoload — fine if you call it from hand-written GDScript." % pack_class)
+
+## The class whose members a sheet's variables actually share a script with:
+## behavior/autoload sheets compile to Node components (host members live behind
+## `host.`), everything else extends the host class directly.
+static func variable_scope_class(sheet: EventSheetResource) -> String:
+	if sheet == null:
+		return "Node"
+	if sheet.behavior_mode or sheet.autoload_mode:
+		return "Node"
+	return sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node"
+
+## "" when the name is free, else the class whose member it shadows. A shadowing
+## variable (e.g. `velocity` on a CharacterBody2D sheet) makes the generated script
+## unparseable AND blinds expression lint — the one rule shared by the doctor check
+## and the variable dialog's refusal.
+static func shadowed_member_class(sheet: EventSheetResource, variable_name: String) -> String:
+	var scope_class: String = variable_scope_class(sheet)
+	if ClassDB.class_has_method(scope_class, variable_name, false) \
+			or ClassDB.class_has_signal(scope_class, variable_name) \
+			or ClassDB.class_has_integer_constant(scope_class, variable_name):
+		return scope_class
+	for property: Dictionary in ClassDB.class_get_property_list(scope_class):
+		if str(property.get("name")) == variable_name:
+			return scope_class
+	return ""
+
+## Variables shadowing host members break the generated script at load (duplicate
+## member) — error tier: the game cannot run until the variable is renamed.
+static func check_shadowed_variables(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null:
+			continue
+		for variable_name: Variant in sheet.variables:
+			var owner_class: String = shadowed_member_class(sheet, str(variable_name))
+			if not owner_class.is_empty():
+				_add(findings, "error", "shadowed-variable", sheet_path,
+					"Variable \"%s\" shadows a %s member — the generated script can't load. Rename Everywhere… fixes every reference." % [str(variable_name), owner_class])
 
 ## A generated vocabulary doc is a promise to the team — once one exists, the doctor
 ## notes when it no longer matches what the project actually publishes. Opt-in by

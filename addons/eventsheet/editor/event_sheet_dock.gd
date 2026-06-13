@@ -5879,6 +5879,14 @@ func _on_variable_dialog_confirmed(
     if sanitized_name != var_name:
         _set_status("Variable name auto-corrected to \"%s\"." % sanitized_name)
     var_name = sanitized_name
+    # A name shadowing a host member would make the generated script unparseable
+    # AND blind expression lint (field-test catch) — refuse at the source; the
+    # doctor catches pre-existing ones.
+    if scope == "global" and _current_sheet != null:
+        var shadow_owner: String = EventSheetProjectDoctor.shadowed_member_class(_current_sheet, var_name)
+        if not shadow_owner.is_empty():
+            _set_status("\"%s\" is already a %s member — pick another name (e.g. %s_value)." % [var_name, shadow_owner, var_name], true)
+            return
     var selected: Resource = context.get("selected_resource", _active_view().get_selected_context().get("source_resource", null))
     var original_name: String = str(context.get("original_name", ""))
     var editing: bool = bool(context.get("editing", false))

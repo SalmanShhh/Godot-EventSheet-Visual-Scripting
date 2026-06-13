@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Field-test round 2: the replace flow, fixed for real
+- **Shadowed variables are caught at both ends** — naming a sheet variable after
+  a host member (`velocity` on a CharacterBody2D sheet…) breaks the generated
+  script at load and blinds expression lint. The variable dialog now refuses the
+  name with a suggestion, and the Project Doctor flags pre-existing ones at the
+  error tier, pointing at Rename Everywhere… (behavior/autoload sheets scope to
+  Node — their host members live safely behind `host.`).
 - **Preselect now actually shows** — the entry WAS being selected, but inside a
   collapsed picker group, which reads as nothing happening. Preselect expands
   the ancestor chain, runs after the popup settles (carried via the picker

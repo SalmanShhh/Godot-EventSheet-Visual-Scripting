@@ -107,6 +107,30 @@ static func run() -> bool:
 	all_passed = _check("dead private variable is the only note",
 		findings.size() == 1 and str(findings[0].get("message")).contains("dead_var"), true) and all_passed
 
+	# Shadowed variables: a name colliding with a host member breaks the generated
+	# script at load AND blinds expression lint — error tier, with prevention in the
+	# variable dialog sharing the same rule.
+	var shadow_sheet: EventSheetResource = EventSheetResource.new()
+	shadow_sheet.host_class = "CharacterBody2D"
+	shadow_sheet.variables = {"velocity": {"type": "float", "default": 0.0, "exported": true}}
+	all_passed = _check("host-member shadows are detected",
+		EventSheetProjectDoctor.shadowed_member_class(shadow_sheet, "velocity"), "CharacterBody2D") and all_passed
+	all_passed = _check("free names pass",
+		EventSheetProjectDoctor.shadowed_member_class(shadow_sheet, "hp"), "") and all_passed
+	var behavior_scope: EventSheetResource = EventSheetResource.new()
+	behavior_scope.behavior_mode = true
+	behavior_scope.host_class = "CharacterBody2D"
+	all_passed = _check("behaviors scope to Node (host members live behind host.)",
+		EventSheetProjectDoctor.shadowed_member_class(behavior_scope, "velocity") == ""
+		and EventSheetProjectDoctor.shadowed_member_class(behavior_scope, "name") == "Node", true) and all_passed
+	ResourceSaver.save(shadow_sheet, "user://doctor_shadow.tres")
+	findings = []
+	EventSheetProjectDoctor.check_shadowed_variables(PackedStringArray(["user://doctor_shadow.tres"]), findings)
+	all_passed = _check("shadowing is an error pointing at Rename Everywhere",
+		_has(findings, "error", "shadowed-variable")
+		and str(findings[0].get("message")).contains("Rename Everywhere"), true) and all_passed
+	DirAccess.remove_absolute("user://doctor_shadow.tres")
+
 	# The repo gate: this repository must be doctor-clean at the error level — the
 	# byte-identity contract pack goldens pin, generalized to every committed sheet.
 	var report: Dictionary = EventSheetProjectDoctor.run()
