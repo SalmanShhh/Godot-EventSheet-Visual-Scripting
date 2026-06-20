@@ -21,8 +21,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "SetParticleAmount", "Set Amount", ACEDescriptor.ACEType.ACTION, "amount = {amount}", "", [F.make_param("amount", "String", "8", "Amount", "Number of particles.", "expression")], "Particles", "Set amount to {amount}", "GPUParticles2D"))
 	descriptors.append(F.make_descriptor("Core", "IsEmitting", "Is Emitting", ACEDescriptor.ACEType.CONDITION, "emitting", "", [], "Particles", "Is emitting", "GPUParticles2D"))
 	descriptors.append(F.make_descriptor("Core", "GetParticleAmount", "Amount", ACEDescriptor.ACEType.EXPRESSION, "amount", "", [], "Particles", "particle amount", "GPUParticles2D"))
+	descriptors.append(F.make_descriptor("Core", "SetParticleSpeedScale", "Set Speed Scale", ACEDescriptor.ACEType.ACTION, "speed_scale = {scale}", "", [F.make_param("scale", "String", "1.0", "Scale", "1 = normal, 0.5 = slow, 0 = frozen, 2 = double speed.", "expression")], "Particles", "Set speed scale to {scale}", "GPUParticles2D"))
 	# CPUParticles2D parallel (distinct class — same member names, separate picker section).
 	descriptors.append(F.make_descriptor("Core", "SetEmittingCPU", "Set Emitting (CPU)", ACEDescriptor.ACEType.ACTION, "emitting = {emitting}", "", [F.make_param("emitting", "String", "true", "Emitting", "Start / stop emitting.", "", ["true", "false"])], "Particles", "Set emitting {emitting}", "CPUParticles2D"))
 	descriptors.append(F.make_descriptor("Core", "RestartParticlesCPU", "Restart / Burst (CPU)", ACEDescriptor.ACEType.ACTION, "restart()", "", [], "Particles", "Restart particles", "CPUParticles2D"))
+	descriptors.append(F.make_descriptor("Core", "SetParticleSpeedScaleCPU", "Set Speed Scale (CPU)", ACEDescriptor.ACEType.ACTION, "speed_scale = {scale}", "", [F.make_param("scale", "String", "1.0", "Scale", "1 = normal, 0.5 = slow, 0 = frozen, 2 = double speed.", "expression")], "Particles", "Set speed scale to {scale}", "CPUParticles2D"))
 
 	return descriptors

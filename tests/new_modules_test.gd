@@ -41,10 +41,24 @@ static func run() -> bool:
 		["ActionAddEvent", ""], ["SetJointBodyA", "Joint2D"], ["BreakJoint3D", "Joint3D"],
 		["IsOnWall", "CharacterBody2D"], ["GetOverlappingBodies", "Area2D"],
 		["SetCollisionLayerBit", "CollisionObject2D"], ["DisableCollisionShape", "CollisionShape2D"],
+		["SetAnchorsPreset", "Control"], ["SetThemeColorOverride", "Control"], ["FileExists", ""],
+		["SetSelfModulate", "CanvasItem"], ["ApplyCentralForce2D", "RigidBody2D"],
+		["ApplyTorqueImpulse2D", "RigidBody2D"], ["RotateNode3D", "Node3D"],
+		["SetParticleSpeedScale", "GPUParticles2D"], ["SetParticleSpeedScaleCPU", "CPUParticles2D"],
 	]:
 		var ace_id: String = str(expected[0])
 		all_passed = _check("%s registered" % ace_id, ids.has(ace_id), true) and all_passed
 		all_passed = _check("%s scoped to %s" % [ace_id, str(expected[1])], str(node_types.get(ace_id, "<missing>")), str(expected[1])) and all_passed
+	# Fresh-ACE method-call templates are valid Godot 4.7 GDScript on their node types.
+	var ctrl_script: GDScript = GDScript.new()
+	ctrl_script.source_code = "extends Control\nfunc _t() -> void:\n\tset_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)\n\tadd_theme_color_override(&\"font_color\", Color(1, 1, 1, 1))\n\tself_modulate = Color(1, 1, 1, 1)\n"
+	all_passed = _check("Control fresh-ACE templates parse", ctrl_script.reload() == OK, true) and all_passed
+	var phys_script: GDScript = GDScript.new()
+	phys_script.source_code = "extends RigidBody2D\nfunc _t() -> void:\n\tapply_central_force(Vector2(0, 0))\n\tapply_torque_impulse(0.0)\n"
+	all_passed = _check("RigidBody2D force ACEs parse", phys_script.reload() == OK, true) and all_passed
+	var n3d_script: GDScript = GDScript.new()
+	n3d_script.source_code = "extends Node3D\nfunc _t() -> void:\n\trotate(Vector3.UP, 0.0)\n"
+	all_passed = _check("Node3D rotate ACE parses", n3d_script.reload() == OK, true) and all_passed
 
 	# ── Dev helper ACEs (Debug / Groups / Metadata) register with their categories ──
 	var categories: Dictionary = {}
