@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-06-20 — "The Team & AI Update"
+
 ### Team & navigation — merge driver, Find References, includes manager + provenance
 - **Semantic 3-way git merge driver** (`tools/sheet_merge`) — merges sheets at the row level
   keyed on the now-stable UIDs: two people editing different rows merge cleanly; a genuine
@@ -19,6 +21,11 @@
 - **AI-assisted event generation** is enabled through the MCP server today (ground via
   `list_aces`/`read_sheet` → the model writes GDScript → `apply_snippet` lifts it losslessly
   into editable events, with `dry_run` preview) — see `docs/MCP-SERVER.md`.
+- **In-editor AI generation + a live MCP on/off switch** — **Edit ▸ Generate from Description
+  (AI)…** turns plain English into editable event rows in the editor (opt-in via an
+  `eventsheets/ai/api_key` setting), and **View ▸ MCP Server (AI tools)** is a checkbox that
+  activates/deactivates the MCP server at will: off → connected AI clients see no tools and
+  can't read or change your sheets, live, without reconnecting.
 
 ### HTN Agent behavior — utility-driven planning (port of the custom C3 DHTN addons)
 - A new **HTN Agent** pack: a world-state blackboard + a task network of primitive and

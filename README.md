@@ -179,18 +179,19 @@ Conditions                        | Actions
 
 ## Current status
 
-- **Version**: **`v0.7.0` — “The Native Workflow Update”**: EventSheets meets you
-  where you work. Tedium killers (**Rename Everywhere**, row **snippets**, bulk
-  selection ops, **session restore**, asset drops with intent, one-click **attach**
-  and **Run Scene**), Godot-native entry points (right-click a node → **Attach
-  Event Sheet**, the Inspector's **Edit Event Sheet** button, Open-as-Event-Sheet
-  in FileSystem/script editor, discoverable Project Settings, **rebindable
-  shortcuts**, **Go to Sheet Row** from the script editor, View-in-Godot-Docs,
-  first-run welcome), and a GDScript bridge that explains itself (**if/elif/else
-  reverse-lift** into sub-events + the **Lift Report**). Playable showcases:
-  `demo/showcase/showcase_carousel.tscn` (flagship), plus `starfall.tscn` (arcade
-  enum/match + pick-filter game), `quest_fsm.tscn` (collections + signals FSM), and
-  `platformer_shooter.tscn` (the Platformer + Weapon Kit packs together). See
+- **Version**: **`v0.8.0` — “The Team & AI Update”**: EventSheets that scale to teams
+  and growing projects. Collaboration & navigation — a **semantic 3-way git merge
+  driver** (row-level, UID-keyed, no more unmergeable `.tres`), symbol-aware **Find
+  References** + Go-to-Definition, an **includes manager** with **Extract Selection to
+  Include** and read-only **provenance**, and **byte-stable regeneration** so diffs stay
+  small. AI in the loop — **describe → events** generation both in-editor (**Edit ▸
+  Generate from Description (AI)…**) and via the MCP server, with a live **View ▸ MCP
+  Server** on/off switch you flip at will. And a bigger behavior library — **C3-addon
+  parity** packs (Platformer juice: coyote/buffer/variable-jump/wall-jump, Spring colour
+  springs, **Weapon Kit**, utility-driven **HTN Agent** — 26 total), richer
+  Array/Dict/Vector/String **Helper ACEs**, behavior-declared **autocomplete**, and
+  theme-editor **Quick Style**. Playable showcases: `showcase_carousel.tscn` (flagship),
+  `starfall.tscn`, `quest_fsm.tscn`, and `platformer_shooter.tscn`. See
   [CHANGELOG.md](CHANGELOG.md).
 - **Quality**: 2,000+ test assertions, all green, CI-gated on every push (any `[FAIL]`
   fails the build, and the Project Doctor gate fails it on sheet/output drift);
@@ -212,8 +213,8 @@ Conditions                        | Actions
 | `v0.6.1` — maintenance: dock decomposed into subsystems, module split completed, repo hygiene (no behavior changes) | ✅ shipped |
 | `v0.6.2` — project usability: compile-on-save, sheet diffs (textconv), Project Doctor (dock/CLI/CI), vocabulary doc, sheet backups + restore, project templates; C3 param parity completed; per-pack builders; issue templates | ✅ shipped |
 | `v0.7.0` — **The Native Workflow Update**: Rename Everywhere, snippets, bulk ops, session restore, asset drops, attach + Run Scene; Godot-native entry points (Scene-dock attach, Inspector button, settings, rebindable shortcuts, go-to-sheet-row, docs links, welcome); if/elif/else reverse-lift + Lift Report | ✅ shipped |
-| _Unreleased_ — **Godot 4.7 support** + Modern-theme visuals & onboarding declutter (Simple Mode, Command Palette, Export-GDScript eject); new packs (event-driven Drag & Drop, Virtual Cursor, Health with Health Pools, Line of Sight 3D); **3D raycast/world-query ACEs** + 3D starters; **Helper ACEs** (structured escape hatch) + import "why-it-stayed-code" hints; clean-removal guide + gate; **C3-addon parity** — Platformer juice (coyote/buffer/variable-jump/wall-jump), Spring colour springs + lifecycle, **Weapon Kit** + utility-driven **HTN Agent** packs (26 total); richer Array/Dict/Vector/String Helper ACEs; behavior-declared **autocomplete**; theme-editor **Quick Style**; **byte-stable pack regeneration** (no more diff churn); platformer-shooter showcase | 🚧 in progress |
-| Community feedback rounds, inline live-values overlay polish | 🗺 planned |
+| `v0.8.0` — **The Team & AI Update**: Godot 4.7 support + Modern-theme visuals & onboarding declutter (Simple Mode, Command Palette, Export-GDScript eject); **team/VCS** — semantic 3-way **merge driver**, symbol-aware **Find References** + Go-to-Definition, **includes manager** + Extract-to-Include + **provenance**, **byte-stable regeneration**; **AI** — describe-→-events in-editor + via MCP, live MCP on/off switch; new packs (Drag & Drop, Virtual Cursor, Health, Line of Sight 3D, **Weapon Kit**, utility-driven **HTN Agent** — 26 total) + **C3-addon parity** (Platformer juice, Spring colour springs); **3D raycast/world-query ACEs** + 3D starters; richer Array/Dict/Vector/String **Helper ACEs** + import "why-it-stayed-code" hints; behavior-declared **autocomplete**; theme **Quick Style**; clean-removal guide + gate; platformer-shooter showcase | ✅ shipped |
+| _Unreleased_ — community feedback rounds, inline live-values overlay polish | 🗺 planned |
 
 Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
 
