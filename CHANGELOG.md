@@ -66,6 +66,11 @@
 - **On Body Exited / On Area Exited** triggers (Area2D) — the *entered* triggers existed but not
   *exited* (detecting something leaving a zone). Wired through the resolver and the importer so they
   codegen to a real `body_exited`/`area_exited` connection and round-trip byte-identically.
+- **Project utility ACEs** (`utility_aces`) — the broad non-gameplay glue most games need:
+  **Settings** (save/load values to a `ConfigFile` in `user://`), **Window** (set title, window /
+  screen size, clipboard get/set), **Debug** (read live `Performance` monitors, static memory),
+  **Time** (format seconds as `mm:ss`, system time/date strings), and **Reparent To**. Each compiles
+  to the native call; the multi-line and formatting templates are parse-checked.
 - **Shift-range row selection** — Shift+click extends a whole-row selection from the anchor to the
   clicked row, and Shift+↑/↓ grows or shrinks that range from the same origin. The anchor is
   preserved across moves (so the range can shrink, not just grow), and it's listed in the Keyboard

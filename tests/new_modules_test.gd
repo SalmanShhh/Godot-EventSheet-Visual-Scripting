@@ -155,6 +155,14 @@ static func run() -> bool:
 	var spawn_script: GDScript = GDScript.new()
 	spawn_script.source_code = spawn_output
 	all_passed = _check("Spawn Scene (Full) output parses", spawn_script.reload() == OK, true) and all_passed
+	# Utility ACEs (project toolkit): registry + sub-category, and the multi-line / formatting parse.
+	for util: Array in [["SaveSetting", "Utility: Settings"], ["LoadSettingInto", "Utility: Settings"], ["SetWindowTitle", "Utility: Window"], ["GetPerfMonitor", "Utility: Debug"], ["FormatTime", "Utility: Time"], ["ReparentNode", "Utility: Nodes"]]:
+		var util_id: String = str(util[0])
+		all_passed = _check("%s registered" % util_id, ids.has(util_id), true) and all_passed
+		all_passed = _check("%s in %s" % [util_id, str(util[1])], str(categories.get(util_id, "<missing>")), str(util[1])) and all_passed
+	var util_script: GDScript = GDScript.new()
+	util_script.source_code = "extends Node\nfunc _t() -> void:\n\tvar __cfg_t = ConfigFile.new()\n\t__cfg_t.load(\"user://settings.cfg\")\n\t__cfg_t.set_value(\"audio\", \"volume\", 1.0)\n\t__cfg_t.save(\"user://settings.cfg\")\n\tget_window().title = \"My Game\"\n\tInput.mouse_mode = Input.MOUSE_MODE_VISIBLE\n\tvar t: String = (\"%02d:%02d\" % [int(125.0) / 60, int(125.0) % 60])\n\tprint(Performance.get_monitor(Performance.TIME_FPS), t, DisplayServer.screen_get_size())\n"
+	all_passed = _check("Utility templates parse", util_script.reload() == OK, true) and all_passed
 
 	# ── Button On Pressed trigger compiles to a real signal connection (resolver arm) ──
 	var sheet: EventSheetResource = EventSheetResource.new()
