@@ -31,6 +31,30 @@ static func run() -> bool:
 		all_passed = _check("%s registered" % ace_id, ids.has(ace_id), true) and all_passed
 		all_passed = _check("%s scoped to %s" % [ace_id, str(expected[1])], str(node_types.get(ace_id, "<missing>")), str(expected[1])) and all_passed
 
+	# ── Dev helper ACEs (Debug / Groups / Metadata) register with their categories ──
+	var categories: Dictionary = {}
+	for d2: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		categories[d2.ace_id] = d2.category
+	for dev: Array in [["Print", "Debug"], ["Assert", "Debug"], ["AddToGroup", "Groups"], ["IsInGroup", "Groups"], ["SetMeta", "Metadata"], ["GetMeta", "Metadata"]]:
+		var dev_id: String = str(dev[0])
+		all_passed = _check("%s registered" % dev_id, ids.has(dev_id), true) and all_passed
+		all_passed = _check("%s in %s category" % [dev_id, str(dev[1])], str(categories.get(dev_id, "<missing>")), str(dev[1])) and all_passed
+	# A multi-param dev ACE substitutes into its native one-liner + parses.
+	var dev_sheet: EventSheetResource = EventSheetResource.new()
+	dev_sheet.host_class = "Node"
+	var dev_event: EventRow = EventRow.new()
+	dev_event.trigger_provider_id = "Core"
+	dev_event.trigger_id = "OnReady"
+	var dev_action: ACEAction = ACEAction.new()
+	dev_action.provider_id = "Core"
+	dev_action.ace_id = "AddToGroup"
+	dev_action.codegen_template = "{target}.add_to_group({group})"
+	dev_action.params = {"target": "self", "group": "\"enemies\""}
+	dev_event.actions.append(dev_action)
+	dev_sheet.events.append(dev_event)
+	var dev_output: String = str(SheetCompiler.compile(dev_sheet, "user://eventsheets_dev.gd").get("output", ""))
+	all_passed = _check("Add To Group compiles to the native call", dev_output.contains("self.add_to_group(\"enemies\")"), true) and all_passed
+
 	# ── Button On Pressed trigger compiles to a real signal connection (resolver arm) ──
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Control"

@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Dev helper ACEs — Debug · Groups · Metadata (the everyday tools)
+- **18 developer-helper ACEs** (`dev_aces`) for the native operations you reach for constantly,
+  so common dev/debug chores never force a drop to GDScript. **Debug**: Print, Print Labeled,
+  Print Rich, Push Warning, Push Error, Assert, Print Scene Tree, Frame Count, Breakpoint.
+  **Groups**: Add/Remove/Is-In Group, Get First / Count In Group, Call Method On Group.
+  **Metadata**: Set/Get/Has/Remove Meta. Each compiles to the exact one-liner you'd hand-write
+  (`print(…)`, `add_to_group(…)`, `set_meta(…)`); registry + category + codegen unit-tested.
+
 ### Editor DX — error→row deep-linking, shadow guard, picker polish, watch + event trace, recipes
 - **Live event trace** — Tools ▸ **Event Trace** instruments each event (debug compiles only,
   opt-in behind a new `emit_event_trace` flag so normal output is byte-for-byte untouched) to
