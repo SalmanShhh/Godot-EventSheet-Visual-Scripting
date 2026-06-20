@@ -1,8 +1,8 @@
-# EventForge — Inline editing of comments and group names
+# EventForge — Inline editing of comments + the group editor popup
 #
-# Double-clicking a comment or a group row must start inline editing (even when the click
-# lands on the group's badge/icon rather than the exact label), and committing the edit must
-# update the underlying resource.
+# Double-clicking a comment starts inline editing; double-clicking a group header opens the
+# group editor popup (name + description) via group_edit_requested, NOT an inline title field —
+# so a group's description (rendered only once non-empty) is always reachable.
 @tool
 extends RefCounted
 class_name InlineEditTest
@@ -35,20 +35,24 @@ static func run() -> bool:
 	viewport._apply_span_edit(comment_row, comment_row.spans[0], "new comment")
 	all_passed = _check("comment text updates on commit", comment.text, "new comment") and all_passed
 
-	# Group: double-clicking the (non-editable) badge still starts editing the name.
+	# Group: double-clicking a group header opens the group editor popup (group_edit_requested),
+	# not an inline title field — so the description (only rendered once non-empty) is reachable.
 	var group_index: int = _flat_index(viewport, group)
 	viewport._get_or_build_row_layout(group_index, width, font, font_size)
 	var group_row: EventRowData = viewport._row_at(group_index)
 	var badge_span_index: int = _first_non_editable_span(group_row)
 	all_passed = _check("group has a non-editable badge span to click", badge_span_index >= 0, true) and all_passed
+	var requested_group: Array = [null]
+	viewport.group_edit_requested.connect(func(g: EventGroup) -> void: requested_group[0] = g)
 	_double_click(viewport, group_row.spans[badge_span_index].rect.get_center())
-	var editing_span: int = int(viewport.get_editing_context_for_test().get("span_index", -1))
-	all_passed = _check("double-click group badge edits the name (falls back to editable span)",
-		editing_span >= 0 and viewport._span_is_editable(group_row, editing_span), true) and all_passed
-	viewport._cancel_edit()
-	var title_index: int = viewport._find_first_editable_span(group_row)
-	viewport._apply_span_edit(group_row, group_row.spans[title_index], "NewGroup")
-	all_passed = _check("group name updates on commit", group.group_name, "NewGroup") and all_passed
+	all_passed = _check("double-click a group opens the editor popup, not inline edit",
+		requested_group[0] == group and int(viewport.get_editing_context_for_test().get("span_index", -1)) == -1, true) and all_passed
+	# The popup's mutation (factored static, no dialog needed) maps name -> .name + .group_name.
+	EventSheetDock.set_group_fields(group, "  NewGroup  ", "  the core loop  ")
+	all_passed = _check("group name updates (trimmed, mirrored)", group.group_name == "NewGroup" and group.name == "NewGroup", true) and all_passed
+	all_passed = _check("group description updates (trimmed)", group.description, "the core loop") and all_passed
+	EventSheetDock.set_group_fields(group, "   ", "")
+	all_passed = _check("blank group name falls back to Group", group.group_name, "Group") and all_passed
 
 	viewport.free()
 	return all_passed

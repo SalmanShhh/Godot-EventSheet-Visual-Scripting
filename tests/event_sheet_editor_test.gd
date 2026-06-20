@@ -539,18 +539,22 @@ static func run() -> bool:
     dock_viewport._select_row(1)
     dock._unhandled_key_input(rename_key)
     var editing_context: Dictionary = dock_viewport.get_editing_context_for_test()
-    all_passed = _check("enter on selected group opens rename behavior", editing_context.get("row_index", -1), 1) and all_passed
-    all_passed = _check("group rename starts with current group name", editing_context.get("buffer", ""), "Rename Me") and all_passed
+    # Enter on a group opens the group editor popup (name + description), not an inline title field.
+    all_passed = _check("enter on a group does not start inline editing", editing_context.get("row_index", -1), -1) and all_passed
+    all_passed = _check("enter on a selected group opens the group editor popup", dock._group_edit_target is EventGroup, true) and all_passed
+    all_passed = _check("group editor prefills the current group name", dock._group_name_edit.text, "Rename Me") and all_passed
+    dock._group_edit_dialog.hide()
     dock_viewport._cancel_edit()
-    # Add Group auto-opens the new group's title for editing (so naming a group is immediate
-    # and discoverable, not a hidden double-click). _begin_group_rename re-selects + edits it.
+    # Add Group auto-opens the new group's editor popup (so naming a group is immediate and
+    # discoverable, not a hidden double-click). _begin_group_rename re-selects + opens the popup.
     dock_viewport._select_row(1)
     var auto_rename_group: Variant = dock_viewport.get_selected_context().get("source_resource", null)
     dock_viewport._select_row(0)
     dock_viewport._cancel_edit()
     dock._begin_group_rename(auto_rename_group)
-    all_passed = _check("Add Group auto-opens the new group name for inline editing",
-        dock_viewport.get_editing_context_for_test().get("row_index", -1), 1) and all_passed
+    all_passed = _check("Add Group auto-opens the new group in the editor popup",
+        dock._group_edit_target == auto_rename_group, true) and all_passed
+    dock._group_edit_dialog.hide()
     dock_viewport._cancel_edit()
     dock_viewport._select_row(0)
     dock._unhandled_key_input(rename_key)

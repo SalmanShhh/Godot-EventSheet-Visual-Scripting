@@ -29,6 +29,10 @@ signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
 ## Emitted when a comment needs the dialog editor (multiline comment rows and action-cell
 ## comments; single-line comment rows keep fast inline editing).
 signal comment_edit_requested(comment_row: Resource)
+
+## Emitted when a group header is activated (double-click / slow-click / Enter); the dock opens a
+## popup to edit the group's name + optional description instead of an inline title field.
+signal group_edit_requested(group: EventGroup)
 ## Emitted when a pick-filter row is double-clicked (event + index into pick_filters).
 signal pick_filter_edit_requested(event_row: Resource, pick_index: int)
 ## Emitted when an enum row is double-clicked.
@@ -2847,6 +2851,11 @@ func _begin_edit(row_index: int, span_index: int) -> void:
         return
     var row_data: EventRowData = _row_at(row_index)
     if row_data == null:
+        return
+    # Group headers edit through a popup (name + description), not an inline title field — so the
+    # description, which only renders once non-empty, is always reachable. The dock owns the popup.
+    if row_data.source_resource is EventGroup:
+        group_edit_requested.emit(row_data.source_resource as EventGroup)
         return
     var resolved_span_index: int = span_index
     # Fall back to the row's first editable span whenever the clicked span isn't editable, so

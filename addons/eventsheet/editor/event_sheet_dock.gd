@@ -829,6 +829,7 @@ func _build_ui() -> void:
     _viewport.param_value_edit_requested.connect(_on_param_value_edit_requested)
     _viewport.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
     _viewport.comment_edit_requested.connect(_open_comment_dialog)
+    _viewport.group_edit_requested.connect(_on_group_edit_requested)
     _viewport.pick_filter_edit_requested.connect(_open_pick_filter_dialog)
     _viewport.enum_edit_requested.connect(_open_enum_dialog)
     _viewport.signal_edit_requested.connect(_open_signal_dialog)
@@ -1998,12 +1999,94 @@ func _on_add_group_requested() -> void:
         # just triggered for you. Deferred so it runs after the viewport rebuilds.
         call_deferred("_begin_group_rename", group)
 
-## Selects a group and opens its title for inline editing (used right after Add Group so the
-## user can type the name immediately). Composes the already-tested select + begin-edit path.
+## Selects a group and opens its editor popup (used right after Add Group so the user can name it
+## immediately, and on double-click / slow-click / Enter of an existing group header).
 func _begin_group_rename(group: EventGroup) -> void:
     var view: EventSheetViewport = _active_view()
-    if view != null and view.select_resource(group):
-        view.begin_edit_selected()
+    if view != null:
+        view.select_resource(group)
+    _on_group_edit_requested(group)
+
+var _group_edit_dialog: ConfirmationDialog = null
+var _group_name_edit: LineEdit = null
+var _group_desc_edit: TextEdit = null
+var _group_edit_target: EventGroup = null
+
+## Group editor popup: edit a group's name and (optional) description together. Replaces the old
+## inline title edit — the description renders only as a muted second header line once it is
+## non-empty, so an inline-only flow could never ADD one. Reached by double-click / slow-click /
+## Enter on a group header, and right after Add Group.
+func _on_group_edit_requested(group: EventGroup) -> void:
+    if group == null:
+        return
+    if _group_edit_dialog == null:
+        _group_edit_dialog = ConfirmationDialog.new()
+        _group_edit_dialog.title = "Edit Group"
+        _group_edit_dialog.ok_button_text = "Apply"
+        _group_edit_dialog.min_size = Vector2i(420, 0)
+        var box: VBoxContainer = VBoxContainer.new()
+        box.add_theme_constant_override("separation", 6)
+        var name_label: Label = Label.new()
+        name_label.text = "Name"
+        box.add_child(name_label)
+        _group_name_edit = LineEdit.new()
+        _group_name_edit.placeholder_text = "Group name"
+        # Enter in the name field applies + closes (the LineEdit consumes Enter, so the dialog's
+        # own OK does not also fire); _apply_group_edit is one-shot-guarded regardless.
+        _group_name_edit.text_submitted.connect(func(_submitted: String) -> void:
+            _apply_group_edit()
+            _group_edit_dialog.hide()
+        )
+        box.add_child(_group_name_edit)
+        var desc_label: Label = Label.new()
+        desc_label.text = "Description (optional)"
+        box.add_child(desc_label)
+        _group_desc_edit = TextEdit.new()
+        _group_desc_edit.custom_minimum_size = Vector2(0.0, 90.0)
+        _group_desc_edit.placeholder_text = "Shown as a muted second line on the group header."
+        box.add_child(_group_desc_edit)
+        _group_edit_dialog.add_child(box)
+        _group_edit_dialog.confirmed.connect(_apply_group_edit)
+        add_child(_group_edit_dialog)
+    _group_edit_target = group
+    _group_name_edit.text = group.group_name if not group.group_name.strip_edges().is_empty() else group.name
+    _group_desc_edit.text = group.description
+    _group_edit_dialog.popup_centered()
+    _group_name_edit.grab_focus()
+    _group_name_edit.select_all()
+
+## One-shot apply: nulls the target first so a text-submit + dialog-OK pair can never double-apply.
+func _apply_group_edit() -> void:
+    if _group_edit_target == null:
+        return
+    var target: EventGroup = _group_edit_target
+    _group_edit_target = null
+    apply_group_edit(target, _group_name_edit.text, _group_desc_edit.text)
+
+## Applies a group's name + description undoably. Wraps the pure static mutation so the popup's
+## Apply and tests share one code path.
+func apply_group_edit(group: EventGroup, new_name: String, new_desc: String) -> bool:
+    if group == null:
+        return false
+    var changed: bool = _perform_undoable_sheet_edit("Edit Group", func() -> bool:
+        set_group_fields(group, new_name, new_desc)
+        return true
+    )
+    if changed:
+        _mark_dirty("Updated group: %s" % group.group_name)
+    return changed
+
+## Pure mutation: trims + applies a group's name (mirrored to .name + .group_name) and its
+## description; a blank name falls back to "Group". Static so it is unit-testable without the
+## dialog or a display server. Returns the resolved name.
+static func set_group_fields(group: EventGroup, new_name: String, new_desc: String) -> String:
+    var resolved_name: String = new_name.strip_edges()
+    if resolved_name.is_empty():
+        resolved_name = "Group"
+    group.name = resolved_name
+    group.group_name = resolved_name
+    group.description = new_desc.strip_edges()
+    return resolved_name
 
 func _on_duplicate_requested() -> void:
     if not _ensure_sheet_for_editing():
@@ -3795,6 +3878,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
     view.param_value_edit_requested.connect(_on_param_value_edit_requested)
     view.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
     view.comment_edit_requested.connect(_open_comment_dialog)
+    view.group_edit_requested.connect(_on_group_edit_requested)
     view.pick_filter_edit_requested.connect(_open_pick_filter_dialog)
     view.enum_edit_requested.connect(_open_enum_dialog)
     view.signal_edit_requested.connect(_open_signal_dialog)
