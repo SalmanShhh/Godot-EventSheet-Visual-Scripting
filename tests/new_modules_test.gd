@@ -24,6 +24,8 @@ static func run() -> bool:
 		["TileMapLocalToMap", "TileMapLayer"], ["TravelToState", "AnimationTree"],
 		["GetCurrentState", "AnimationTree"], ["SetShaderMaterial", "CanvasItem"],
 		["ActionAddEvent", ""], ["SetJointBodyA", "Joint2D"], ["BreakJoint3D", "Joint3D"],
+		["IsOnWall", "CharacterBody2D"], ["GetOverlappingBodies", "Area2D"],
+		["SetCollisionLayerBit", "CollisionObject2D"], ["DisableCollisionShape", "CollisionShape2D"],
 	]:
 		var ace_id: String = str(expected[0])
 		all_passed = _check("%s registered" % ace_id, ids.has(ace_id), true) and all_passed
