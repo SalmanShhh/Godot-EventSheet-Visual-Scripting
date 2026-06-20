@@ -87,7 +87,7 @@ initialValue = null
 [sub_resource type="Resource" id="Resource_gbpo2"]
 script = ExtResource("8_7r4xp")
 function_name = "set_noise_type"
-description = "0 Value · 1 Value Cubic · 2 Perlin · 3 Cellular · 4 Simplex · 5 Simplex Smooth (FastNoiseLite.NoiseType)."
+description = "FastNoiseLite.NoiseType: 0 Simplex · 1 Simplex Smooth · 2 Cellular · 3 Perlin · 4 Value Cubic · 5 Value."
 expose_as_ace = true
 ace_display_name = "Set Noise Type"
 ace_category = "Advanced Random: Setup"

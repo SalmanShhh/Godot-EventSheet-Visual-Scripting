@@ -114,6 +114,7 @@ const GodotWorkflowTestScript := preload("res://tests/godot_workflow_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
 const Phase0ACEsTestScript := preload("res://tests/phase0_aces_test.gd")
 const NewModulesTestScript := preload("res://tests/new_modules_test.gd")
+const ExtractToFunctionTestScript := preload("res://tests/extract_to_function_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
 func _init() -> void:
@@ -121,6 +122,7 @@ func _init() -> void:
 	passed = CompileDemoTestScript.run() and passed
 	passed = Phase0ACEsTestScript.run() and passed
 	passed = NewModulesTestScript.run() and passed
+	passed = ExtractToFunctionTestScript.run() and passed
 	passed = DemoResourceReferenceTestScript.run() and passed
 	passed = VariableRowFormatTestScript.run() and passed
 	passed = ACEMetadataTestScript.run() and passed

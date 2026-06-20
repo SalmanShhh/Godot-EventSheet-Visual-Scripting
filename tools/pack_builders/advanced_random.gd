@@ -59,7 +59,7 @@ static func build() -> bool:
 	Lib.append_function(sheet, "randomize_seed", "Randomize Seed", "Advanced Random: Setup", "Picks a fresh, unpredictable seed (non-reproducible).",
 		[],
 		"_rng.randomize()\n_noise.seed = _rng.randi()")
-	Lib.append_function(sheet, "set_noise_type", "Set Noise Type", "Advanced Random: Setup", "0 Value · 1 Value Cubic · 2 Perlin · 3 Cellular · 4 Simplex · 5 Simplex Smooth (FastNoiseLite.NoiseType).",
+	Lib.append_function(sheet, "set_noise_type", "Set Noise Type", "Advanced Random: Setup", "FastNoiseLite.NoiseType: 0 Simplex · 1 Simplex Smooth · 2 Cellular · 3 Perlin · 4 Value Cubic · 5 Value.",
 		[["noise_type", "int"]],
 		"_noise.noise_type = clampi(noise_type, 0, 5)")
 	Lib.append_function(sheet, "set_noise_frequency", "Set Noise Frequency", "Advanced Random: Setup", "Lower = smoother/larger features; higher = noisier (default 0.01).",

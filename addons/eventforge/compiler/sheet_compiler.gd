@@ -1061,7 +1061,10 @@ static func _condition_base_expr(condition: ACECondition) -> String:
 	return ActionCodegen._apply_template(template, params)
 
 ## True when a condition targets the implicit node (node_type set), so in a pick loop it
-## must be scoped to the picked instance.
+## must be scoped to the picked instance. Resolves node_type via the registry; a custom/addon
+## condition carrying ONLY a baked codegen_template with no findable descriptor is treated as
+## non-node-scoped (its base expression still compiles, it just isn't iterator-prefixed).
+## Builtins + registered addons — the common case — resolve correctly.
 static func _condition_is_node_scoped(condition: ACECondition) -> bool:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
 	return descriptor != null and not descriptor.node_type.strip_edges().is_empty()

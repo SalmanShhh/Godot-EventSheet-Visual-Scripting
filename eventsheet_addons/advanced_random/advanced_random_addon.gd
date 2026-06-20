@@ -44,7 +44,7 @@ func randomize_seed() -> void:
 ## @ace_action
 ## @ace_name("Set Noise Type")
 ## @ace_category("Advanced Random: Setup")
-## @ace_description("0 Value · 1 Value Cubic · 2 Perlin · 3 Cellular · 4 Simplex · 5 Simplex Smooth (FastNoiseLite.NoiseType).")
+## @ace_description("FastNoiseLite.NoiseType: 0 Simplex · 1 Simplex Smooth · 2 Cellular · 3 Perlin · 4 Value Cubic · 5 Value.")
 ## @ace_codegen_template("AdvancedRandom.set_noise_type({noise_type})")
 func set_noise_type(noise_type: int) -> void:
 	_noise.noise_type = clampi(noise_type, 0, 5)

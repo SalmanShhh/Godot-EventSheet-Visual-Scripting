@@ -51,6 +51,7 @@ const ROW_MENU_ADD_MATCH := 22
 const ROW_MENU_OPEN_IN_SPLIT := 23
 const ROW_MENU_MAKE_ELSE := 35
 const ROW_MENU_MAKE_ELIF := 36
+const ROW_MENU_EXTRACT_GDSCRIPT_FN := 37
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -1404,6 +1405,85 @@ func _do_extract_to_include(path: String, rows: Array[Resource]) -> void:
     )
     if changed:
         _mark_dirty("Extracted %d row(s) into %s (now included)." % [rows.size(), target.get_file()])
+
+## Extracts an event's inline GDScript actions into a new reusable Function (exposed as an
+## ACE) and replaces them with a single Call to it — turning one-off code into a named,
+## re-callable unit. Static + pure (operates on the passed sheet), so it is headlessly
+## testable; the dock wraps it in an undoable edit. Returns the new function, or null when
+## the event has no inline GDScript action. Order-preserving when those actions are
+## contiguous (the common case — GDScript actions are usually grouped together).
+static func extract_event_gdscript_to_function(sheet: EventSheetResource, event: EventRow) -> EventFunction:
+    if sheet == null or event == null:
+        return null
+    var code_rows: Array[RawCodeRow] = []
+    var first_index: int = -1
+    for index: int in event.actions.size():
+        if event.actions[index] is RawCodeRow:
+            code_rows.append(event.actions[index] as RawCodeRow)
+            if first_index == -1:
+                first_index = index
+    if code_rows.is_empty():
+        return null
+    var function_name: String = _unique_extracted_function_name(sheet, "extracted_action")
+    var code_lines: PackedStringArray = PackedStringArray()
+    for row: RawCodeRow in code_rows:
+        code_lines.append(row.code)
+    var function: EventFunction = EventFunction.new()
+    function.function_name = function_name
+    function.expose_as_ace = true
+    function.ace_display_name = function_name.capitalize()
+    function.ace_category = "Functions"
+    function.description = "Extracted from a GDScript block — reusable as an ACE."
+    var body: RawCodeRow = RawCodeRow.new()
+    body.code = "\n".join(code_lines)
+    function.events.append(body)
+    sheet.functions.append(function)
+    # Remove the extracted rows, then drop a Call to the new function where the first one was.
+    for row: RawCodeRow in code_rows:
+        event.actions.erase(row)
+    var call_action: ACEAction = ACEAction.new()
+    call_action.provider_id = "Core"
+    call_action.ace_id = "CallFunction"
+    call_action.codegen_template = "{function_name}({args})"
+    call_action.params = {"function_name": function_name, "args": ""}
+    event.actions.insert(clampi(first_index, 0, event.actions.size()), call_action)
+    return function
+
+## A function name not already used by the sheet (extracted_action, extracted_action_2, …).
+static func _unique_extracted_function_name(sheet: EventSheetResource, base: String) -> String:
+    var existing: Dictionary = {}
+    for function_resource: Variant in sheet.functions:
+        if function_resource is EventFunction:
+            existing[(function_resource as EventFunction).function_name] = true
+    if not existing.has(base):
+        return base
+    var suffix: int = 2
+    while existing.has("%s_%d" % [base, suffix]):
+        suffix += 1
+    return "%s_%d" % [base, suffix]
+
+## Row "More" menu action: extract the right-clicked event's GDScript actions to a Function.
+func _extract_gdscript_to_function_requested() -> void:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        _set_status("Right-click an event with a GDScript action to extract it.", true)
+        return
+    var event: EventRow = _context_row.source_resource as EventRow
+    var has_code: bool = false
+    for action: Variant in event.actions:
+        if action is RawCodeRow:
+            has_code = true
+            break
+    if not has_code:
+        _set_status("That event has no inline GDScript action to extract.", true)
+        return
+    # The name is deterministic from the current functions (unchanged by the edit), so
+    # compute it here for the status message (GDScript closures can't return it out).
+    var function_name: String = _unique_extracted_function_name(_current_sheet, "extracted_action")
+    var changed: bool = _perform_undoable_sheet_edit("Extract GDScript to Function", func() -> bool:
+        return extract_event_gdscript_to_function(_current_sheet, event) != null
+    )
+    if changed:
+        _mark_dirty("Extracted GDScript into %s() — now callable as an ACE (Functions)." % function_name)
 
 var _find_refs_window: Window = null
 var _find_refs_edit: LineEdit = null
@@ -5137,6 +5217,7 @@ func _build_row_more_submenu(is_event: bool) -> void:
         m.add_item("Add Sub-Condition", ROW_MENU_ADD_SUB_CONDITION)
         m.add_item("Make Else", ROW_MENU_MAKE_ELSE)
         m.add_item("Make Else-If", ROW_MENU_MAKE_ELIF)
+        m.add_item("Extract GDScript to Function", ROW_MENU_EXTRACT_GDSCRIPT_FN)
         m.add_item("Add Comment Sub-Event", ROW_MENU_ADD_COMMENT_SUB_EVENT)
         m.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
         m.add_item("Add Pick Filter (For Each)…", ROW_MENU_ADD_PICK_FILTER)
@@ -5350,6 +5431,8 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
             _set_context_else_mode(EventRow.ElseMode.ELSE)
         ROW_MENU_MAKE_ELIF:
             _set_context_else_mode(EventRow.ElseMode.ELIF)
+        ROW_MENU_EXTRACT_GDSCRIPT_FN:
+            _extract_gdscript_to_function_requested()
         ROW_MENU_TOGGLE_ENABLED:
             _toggle_context_row_enabled()
         ROW_MENU_EDIT_COMMENT:

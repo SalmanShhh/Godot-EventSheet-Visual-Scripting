@@ -629,17 +629,27 @@ func _on_tree_gui_input(input_event: InputEvent) -> void:
 	_refresh_tree()
 
 ## Enter in the search box applies the first concrete match — type-and-Enter, no mouse.
+## Depth-first so sub-category folders (root → parent → sub → entry) are reached too.
 func _activate_first_match() -> void:
-	var group_item: TreeItem = _tree.get_root().get_first_child() if _tree.get_root() != null else null
-	while group_item != null:
-		var entry: TreeItem = group_item.get_first_child()
-		while entry != null:
-			if entry.get_metadata(0) is ACEDefinition:
-				entry.select(0)
-				_on_item_activated()
-				return
-			entry = entry.get_next()
-		group_item = group_item.get_next()
+	var match_item: TreeItem = _first_definition_item(_tree.get_root())
+	if match_item != null:
+		match_item.select(0)
+		_on_item_activated()
+
+## Depth-first search for the first tree item carrying an ACEDefinition (a real ACE row),
+## descending through group / sub-group folders (which carry no metadata of their own).
+func _first_definition_item(item: TreeItem) -> TreeItem:
+	if item == null:
+		return null
+	var child: TreeItem = item.get_first_child()
+	while child != null:
+		if child.get_metadata(0) is ACEDefinition:
+			return child
+		var nested: TreeItem = _first_definition_item(child)
+		if nested != null:
+			return nested
+		child = child.get_next()
+	return null
 
 func _on_item_activated() -> void:
 	var item: TreeItem = _tree.get_selected()
