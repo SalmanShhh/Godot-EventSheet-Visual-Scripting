@@ -704,6 +704,7 @@ func _build_ui() -> void:
     tools_popup.add_item("Lift Report…", 12)
     tools_popup.add_separator()
     tools_popup.add_item("Welcome…", 13)
+    tools_popup.add_item("Keyboard Shortcuts", 16)
     tools_popup.id_pressed.connect(func(id: int) -> void:
         match id:
             0: _toggle_breakpoint_emission()
@@ -721,6 +722,7 @@ func _build_ui() -> void:
             11: _attach_behavior_to_selection()
             12: _open_lift_report()
             13: show_welcome()
+            16: _open_shortcuts_help()
             14: _run_diagnostics_action()
     )
     tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.")
@@ -4462,6 +4464,51 @@ func _run_diagnostics_action() -> void:
         _set_status("%d row(s) need attention — jumped to the first (hover the red rows for details)." % count, true)
     else:
         _set_status("No issues found — every ƒx expression and GDScript block compiles.")
+
+## The keyboard-shortcut reference (Tools ▸ Keyboard Shortcuts) as [section, [[keys, action], …]].
+## A static catalog so the cheat-sheet popup builds from it and it can be unit-tested. The
+## structural keys are confirmed in _unhandled_key_input / the viewport; the file/history ones are
+## Godot's rebindable defaults.
+const SHORTCUTS: Array = [
+    ["Editing", [["Enter / F2", "Edit the selected row"], ["Tab / Shift+Tab", "Nest / un-nest the event"], ["Alt + ↑ / ↓", "Move the row up / down"], ["← / →", "Fold / unfold a group"], ["Delete", "Delete the selection"], ["Ctrl + /", "Toggle row enabled (comment out)"]]],
+    ["Search & navigation", [["Ctrl + F", "Find & Replace"], ["F3 / Shift+F3", "Find next / previous"], ["Ctrl + P", "Command Palette"]]],
+    ["Debug", [["F9  (or Ctrl+B)", "Toggle breakpoint on the row"], ["Ctrl + M", "Toggle bookmark"], ["F4 / Shift+F4", "Jump to next / previous bookmark"]]],
+    ["View", [["Ctrl + +  /  Ctrl + -", "Zoom in / out"], ["Esc", "Close a popup / cancel an edit"]]],
+    ["File & history", [["Ctrl + S", "Save the sheet"], ["Ctrl + Z  /  Ctrl + Y", "Undo / Redo"], ["Ctrl + C  /  Ctrl + V", "Copy / Paste rows"], ["Ctrl + D", "Duplicate the event"]]],
+]
+
+var _shortcuts_dialog: AcceptDialog = null
+
+## Tools ▸ Keyboard Shortcuts — a discoverable in-editor cheat sheet (the shortcuts were
+## previously only learnable from tooltips). Built from the SHORTCUTS catalog.
+func _open_shortcuts_help() -> void:
+    if _shortcuts_dialog == null:
+        _shortcuts_dialog = AcceptDialog.new()
+        _shortcuts_dialog.title = "Keyboard Shortcuts"
+        _shortcuts_dialog.min_size = Vector2i(480, 480)
+        var tree: Tree = Tree.new()
+        tree.hide_root = true
+        tree.columns = 2
+        tree.set_column_title(0, "Shortcut")
+        tree.set_column_title(1, "Action")
+        tree.column_titles_visible = true
+        tree.set_column_expand(0, false)
+        tree.set_column_custom_minimum_width(0, 170)
+        tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        tree.custom_minimum_size = Vector2(0.0, 400.0)
+        var root: TreeItem = tree.create_item()
+        for section: Array in SHORTCUTS:
+            var group: TreeItem = tree.create_item(root)
+            group.set_text(0, str(section[0]))
+            group.set_selectable(0, false)
+            group.set_selectable(1, false)
+            for entry: Array in section[1]:
+                var item: TreeItem = tree.create_item(group)
+                item.set_text(0, str(entry[0]))
+                item.set_text(1, str(entry[1]))
+        _shortcuts_dialog.add_child(EventSheetPopupUI.margined(tree))
+        add_child(_shortcuts_dialog)
+    _shortcuts_dialog.popup_centered()
 
 func _open_project_doctor() -> void:
     if _doctor_window == null:

@@ -34,6 +34,15 @@ static func run() -> bool:
 	all_passed = _check("hint_label is muted", hint.modulate.a < 1.0, true) and all_passed
 	hint.free()
 
+	# Keyboard-shortcuts catalog (Tools ▸ Keyboard Shortcuts) is populated with the core entries.
+	all_passed = _check("shortcut catalog has sections", EventSheetDock.SHORTCUTS.size() >= 4, true) and all_passed
+	var flat: String = ""
+	for section: Array in EventSheetDock.SHORTCUTS:
+		for entry: Array in section[1]:
+			flat += str(entry[0]) + " | " + str(entry[1]) + "\n"
+	all_passed = _check("catalog lists the Command Palette", flat.contains("Ctrl + P") and flat.contains("Command Palette"), true) and all_passed
+	all_passed = _check("catalog lists Find & Replace", flat.contains("Ctrl + F"), true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

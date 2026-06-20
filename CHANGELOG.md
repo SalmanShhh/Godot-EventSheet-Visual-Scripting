@@ -16,6 +16,9 @@
   margins, and muted hint labels — matching the Godot 4.7 editor styling instead of each dialog
   inventing its own. The group-editor and breakpoint-condition popups adopt it (more to follow);
   the factory helpers are unit-tested.
+- **Keyboard Shortcuts cheat sheet** — Tools ▸ **Keyboard Shortcuts** opens an in-editor reference
+  (Editing / Search / Debug / View / File & history) so the ~20 shortcuts are discoverable instead
+  of learnable only from tooltips. Built from a static, unit-tested catalog via the popup helper.
 - **Live event trace** — Tools ▸ **Event Trace** instruments each event (debug compiles only,
   opt-in behind a new `emit_event_trace` flag so normal output is byte-for-byte untouched) to
   stream its UID as it fires over the Live Values channel; the editor **highlights the firing rows
