@@ -601,12 +601,15 @@ func _build_ui() -> void:
     edit_popup.add_separator()
     edit_popup.add_item("Undo", 2)
     edit_popup.add_item("Redo", 3)
+    edit_popup.add_separator()
+    edit_popup.add_item("Extract Selection to Include…", 4)
     edit_popup.id_pressed.connect(func(id: int) -> void:
         match id:
             0: _on_copy_requested()
             1: _on_paste_requested()
             2: _on_undo_requested()
             3: _on_redo_requested()
+            4: _extract_to_include_requested()
     )
     _toolbar.add_child(edit_menu)
     # View ▾ — panels, multi-view, zoom and theming.
@@ -1301,6 +1304,64 @@ func _on_save_as_requested() -> void:
 ## chooses. The output depends on no EventForge/EventSheet class (parity covenant), so this
 ## is the concrete proof a Godot dev can adopt the plugin without lock-in — take the .gd and
 ## go. Distinct from Save (which keeps the paired generated script alongside the .tres).
+## Extract Selection to Include: moves the selected top-level events into a NEW library sheet
+## and wires the current sheet to include it — copy-paste becomes modularization in one step.
+func _extract_to_include_requested() -> void:
+    if _current_sheet == null:
+        _set_status("Open or create a sheet first.", true)
+        return
+    var rows: Array[Resource] = _selected_top_level_rows()
+    if rows.is_empty():
+        _set_status("Select one or more top-level events to extract into a library sheet.", true)
+        return
+    var dialog: FileDialog = FileDialog.new()
+    dialog.title = "Extract %d row(s) to a new included sheet" % rows.size()
+    dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+    dialog.access = FileDialog.ACCESS_RESOURCES
+    dialog.filters = PackedStringArray(["*.tres ; EventSheet library"])
+    dialog.current_path = "res://shared_logic.tres"
+    dialog.file_selected.connect(func(path: String) -> void:
+        _do_extract_to_include(path, rows)
+        dialog.call_deferred("queue_free"))
+    dialog.canceled.connect(func() -> void: dialog.queue_free())
+    add_child(dialog)
+    dialog.popup_centered(Vector2i(860, 580))
+
+## The selection's TOP-LEVEL source rows (extraction operates on whole top-level events).
+func _selected_top_level_rows() -> Array[Resource]:
+    var rows: Array[Resource] = []
+    for row_data: EventRowData in _get_selected_rows_from_context():
+        var resource: Resource = row_data.source_resource
+        if resource != null and _current_sheet.events.has(resource) and not rows.has(resource):
+            rows.append(resource)
+    return rows
+
+func _do_extract_to_include(path: String, rows: Array[Resource]) -> void:
+    var target: String = path if path.get_extension() == "tres" else path + ".tres"
+    # Build + save the library FIRST (duplicating the rows so uids carry over), so a write
+    # failure leaves the current sheet untouched.
+    var library: EventSheetResource = EventSheetResource.new()
+    library.host_class = _current_sheet.host_class
+    library.behavior_mode = _current_sheet.behavior_mode
+    for row: Resource in rows:
+        library.events.append(row.duplicate(true))
+    DirAccess.make_dir_recursive_absolute(target.get_base_dir())
+    if ResourceSaver.save(library, target) != OK:
+        _set_status("Could not write %s." % target.get_file(), true)
+        return
+    # Then remove the originals + add the include, undoably (one snapshot captures both).
+    var changed: bool = _perform_undoable_sheet_edit("Extract to Include", func() -> bool:
+        for row: Resource in rows:
+            var index: int = _current_sheet.events.find(row)
+            if index != -1:
+                _current_sheet.events.remove_at(index)
+        if not _current_sheet.includes.has(target):
+            _current_sheet.includes.append(target)
+        return true
+    )
+    if changed:
+        _mark_dirty("Extracted %d row(s) into %s (now included)." % [rows.size(), target.get_file()])
+
 func _export_gdscript_requested() -> void:
     if _current_sheet == null:
         _set_status("Open or create a sheet first.", true)

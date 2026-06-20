@@ -284,7 +284,7 @@ static func run() -> bool:
 	all_passed = _check("Sheet/Add/Edit/View menus carry the consolidated actions",
 		sheet_menu != null and sheet_menu.get_popup().item_count == 10
 		and add_menu != null and add_menu.get_popup().item_count == 4
-		and edit_menu != null and edit_menu.get_popup().item_count == 5
+		and edit_menu != null and edit_menu.get_popup().item_count == 7
 		and view_menu != null and view_menu.get_popup().item_count == 15, true) and all_passed
 
 	# ── Welcome window: self-sizing dialog, margined, reopenable, checkbox synced ─
