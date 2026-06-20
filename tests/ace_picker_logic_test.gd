@@ -75,6 +75,21 @@ static func run() -> bool:
 	custom.display_name = "Dash"
 	all_passed = _check("item label shows custom provider", picker._item_label(custom), "Dash  ·  Player") and all_passed
 
+	# Create-Node-parity side panes: single-column, root-hidden Favorites/Recent trees.
+	var side_tree: Tree = picker._make_side_tree()
+	all_passed = _check("side pane tree is single column", side_tree.columns, 1) and all_passed
+	all_passed = _check("side pane tree hides its root", side_tree.hide_root, true) and all_passed
+	side_tree.free()
+	# Favorite detection reads the persisted per-project favorites list.
+	var fav_def: ACEDefinition = _make_def(ACEDefinition.ACEType.ACTION)
+	fav_def.id = "FavProbe"
+	ProjectSettings.set_setting("eventsheets/picker/favorites", PackedStringArray(["Core/FavProbe"]))
+	all_passed = _check("favorited ace is detected", picker._is_favorite(fav_def), true) and all_passed
+	var other_def: ACEDefinition = _make_def(ACEDefinition.ACEType.ACTION)
+	other_def.id = "NotFav"
+	all_passed = _check("non-favorited ace is not detected", picker._is_favorite(other_def), false) and all_passed
+	ProjectSettings.set_setting("eventsheets/picker/favorites", null)
+
 	return all_passed
 
 static func _make_def(ace_type: int) -> ACEDefinition:

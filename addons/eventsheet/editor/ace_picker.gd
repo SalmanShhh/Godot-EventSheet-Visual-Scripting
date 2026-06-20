@@ -97,7 +97,14 @@ var _window: Window = null
 var _header: Label = null
 var _search: LineEdit = null
 var _tree: Tree = null
-var _info_label: Label = null
+var _info_label: RichTextLabel = null
+var _info_panel: PanelContainer = null
+var _favorites_list: Tree = null
+var _recent_list: Tree = null
+var _favorite_button: Button = null
+var _add_button: Button = null
+var _cancel_button: Button = null
+var _selected_definition: ACEDefinition = null
 var _hint: Label = null
 var _context: Dictionary = {}
 var _registry: EventSheetACERegistry = null
@@ -131,19 +138,53 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_header.add_theme_font_size_override("font_size", 16)
 	content.add_child(_header)
 
+	# Search row: the field + a ⭐ toggle that pins/unpins the highlighted ACE.
+	var search_row: HBoxContainer = HBoxContainer.new()
+	search_row.add_theme_constant_override("separation", 6)
+	content.add_child(search_row)
 	_search = LineEdit.new()
 	_search.name = "ACEPickerSearch"
 	_search.placeholder_text = "Search actions, conditions, triggers..."
 	_search.clear_button_enabled = true
+	_search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_search.text_changed.connect(func(_text: String) -> void: _refresh_tree())
 	_search.text_submitted.connect(func(_text: String) -> void: _activate_first_match())
-	content.add_child(_search)
+	search_row.add_child(_search)
+	_favorite_button = Button.new()
+	_favorite_button.toggle_mode = true
+	_favorite_button.text = "⭐"
+	_favorite_button.tooltip_text = "Pin the highlighted entry to Favorites (or right-click any entry)."
+	_favorite_button.focus_mode = Control.FOCUS_NONE
+	_favorite_button.pressed.connect(_on_favorite_button_pressed)
+	search_row.add_child(_favorite_button)
 
 	_hint = Label.new()
 	_hint.add_theme_color_override("font_color", GROUP_COLOR_NEUTRAL)
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(_hint)
 
+	# Body: ⭐ Favorites + ★ Recent panes on the left (Create-Node style), category tree right.
+	var split: HSplitContainer = HSplitContainer.new()
+	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	split.split_offset = 200
+	content.add_child(split)
+	var side: VBoxContainer = VBoxContainer.new()
+	side.custom_minimum_size = Vector2(180.0, 0.0)
+	side.add_theme_constant_override("separation", 4)
+	split.add_child(side)
+	var favorites_label: Label = Label.new()
+	favorites_label.text = "⭐ Favorites"
+	favorites_label.add_theme_color_override("font_color", GROUP_COLOR_NEUTRAL)
+	side.add_child(favorites_label)
+	_favorites_list = _make_side_tree()
+	side.add_child(_favorites_list)
+	var recent_label: Label = Label.new()
+	recent_label.text = "★ Recent"
+	recent_label.add_theme_color_override("font_color", GROUP_COLOR_NEUTRAL)
+	side.add_child(recent_label)
+	_recent_list = _make_side_tree()
+	side.add_child(_recent_list)
 	_tree = Tree.new()
 	_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -157,13 +198,37 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_tree.item_activated.connect(_on_item_activated)
 	_tree.item_selected.connect(_on_item_selected_for_info)
 	_tree.gui_input.connect(_on_tree_gui_input)
-	content.add_child(_tree)
-	# C3-style info pane: description + the generated GDScript of the selection.
-	_info_label = Label.new()
+	split.add_child(_tree)
+	# Description panel (Create-Node style): the highlighted ACE's name, type + what it does.
+	_info_panel = PanelContainer.new()
+	_info_panel.custom_minimum_size = Vector2(0.0, 64.0)
+	content.add_child(_info_panel)
+	var info_margin: MarginContainer = MarginContainer.new()
+	info_margin.add_theme_constant_override("margin_left", 8)
+	info_margin.add_theme_constant_override("margin_right", 8)
+	info_margin.add_theme_constant_override("margin_top", 6)
+	info_margin.add_theme_constant_override("margin_bottom", 6)
+	_info_panel.add_child(info_margin)
+	_info_label = RichTextLabel.new()
+	_info_label.bbcode_enabled = true
+	_info_label.fit_content = true
+	_info_label.scroll_active = false
 	_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_info_label.custom_minimum_size = Vector2(0.0, 34.0)
-	_info_label.modulate = Color(1.0, 1.0, 1.0, 0.75)
-	content.add_child(_info_label)
+	info_margin.add_child(_info_label)
+	# Action row: Cancel + Add, alongside the existing double-click / Enter-to-add.
+	var button_row: HBoxContainer = HBoxContainer.new()
+	button_row.alignment = BoxContainer.ALIGNMENT_END
+	button_row.add_theme_constant_override("separation", 6)
+	content.add_child(button_row)
+	_cancel_button = Button.new()
+	_cancel_button.text = "Cancel"
+	_cancel_button.pressed.connect(close)
+	button_row.add_child(_cancel_button)
+	_add_button = Button.new()
+	_add_button.text = "Add"
+	_add_button.disabled = true
+	_add_button.pressed.connect(_on_add_button_pressed)
+	button_row.add_child(_add_button)
 
 ## Update the registry used for searching (e.g. after a hot-reload).
 func set_registry(registry: EventSheetACERegistry) -> void:
@@ -213,7 +278,14 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	_header.text = title
 	_search.text = ""
 	_hint.text = _build_hint_text(mode, signals_only)
+	_selected_definition = null
+	if _add_button != null:
+		_add_button.disabled = true
+	if _favorite_button != null:
+		_favorite_button.set_pressed_no_signal(false)
+	_update_info_panel(null)
 	_refresh_tree()
+	_refresh_side_panes()
 	_window.popup_centered(Vector2i(720, 520))
 	_window.grab_focus()
 	_search.grab_focus()
@@ -345,43 +417,8 @@ func _refresh_tree() -> void:
 		for node_type: String in EVENT_PICKER_GROUPS:
 			group_nodes[node_type] = _make_group_item(root, node_type, true)
 
-	# ⭐ Favorites first (project-pinned), then ★ Recent — while not searching.
-	if not filtering and not favorite_ids().is_empty():
-		var favorites_group: TreeItem = null
-		for favorite_key: String in favorite_ids():
-			for favorite_candidate: ACEDefinition in _registry.get_all_definitions():
-				if "%s/%s" % [favorite_candidate.provider_id, favorite_candidate.id] != favorite_key:
-					continue
-				if not _is_allowed_for_mode(favorite_candidate, mode, signals_only):
-					break
-				if favorites_group == null:
-					favorites_group = _make_group_item(root, "⭐ Favorites", false)
-				var favorite_item: TreeItem = _tree.create_item(favorites_group)
-				favorite_item.set_text(0, _item_label(favorite_candidate))
-				favorite_item.set_custom_color(0, _item_color_for(favorite_candidate.ace_type))
-				favorite_item.set_text(1, _ace_type_label(favorite_candidate.ace_type))
-				favorite_item.set_custom_color(1, _item_color_for(favorite_candidate.ace_type))
-				favorite_item.set_metadata(0, favorite_candidate)
-				break
-
-	# ★ Recent: your last-used ACEs pin to the top while not searching.
-	if not filtering and not _recent_ace_ids.is_empty():
-		var recent_group: TreeItem = null
-		for recent_key: String in _recent_ace_ids:
-			for candidate: ACEDefinition in _registry.get_all_definitions():
-				if "%s/%s" % [candidate.provider_id, candidate.id] != recent_key:
-					continue
-				if not _is_allowed_for_mode(candidate, mode, signals_only):
-					break
-				if recent_group == null:
-					recent_group = _make_group_item(root, "★ Recent", false)
-				var recent_item: TreeItem = _tree.create_item(recent_group)
-				recent_item.set_text(0, _item_label(candidate))
-				recent_item.set_custom_color(0, _item_color_for(candidate.ace_type))
-				recent_item.set_text(1, _ace_type_label(candidate.ace_type))
-				recent_item.set_custom_color(1, _item_color_for(candidate.ace_type))
-				recent_item.set_metadata(0, candidate)
-				break
+	# ⭐ Favorites + ★ Recent now live in dedicated left panes (see _refresh_side_panes), not as
+	# in-tree groups — so they stay visible while you browse categories, Create-Node style.
 
 	var definitions: Array[ACEDefinition] = _registry.search(query)
 	# Construct 3 vocabulary bridge: familiar C3 phrases also find their Godot equivalents.
@@ -601,16 +638,15 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 ## C3-style bottom info pane: selecting an entry shows its description AND the exact
 ## GDScript it will generate — the picker doubles as a teaching surface.
 func _on_item_selected_for_info() -> void:
-	if _info_label == null:
-		return
 	var selected: TreeItem = _tree.get_selected()
 	var definition: ACEDefinition = selected.get_metadata(0) as ACEDefinition if selected != null else null
-	if definition == null:
-		_info_label.text = ""
-		return
-	var template: String = str(definition.metadata.get("codegen_template", ""))
-	var description: String = str(definition.metadata.get("display_template", definition.display_name))
-	_info_label.text = description + ("\n→  " + template if not template.is_empty() else "")
+	# Picking in the main tree clears the side-pane highlight so there is one logical selection.
+	if definition != null:
+		if _favorites_list != null:
+			_favorites_list.deselect_all()
+		if _recent_list != null:
+			_recent_list.deselect_all()
+	_on_definition_selected(definition)
 
 ## Right-click pins/unpins the entry under the cursor as a ⭐ Favorite.
 func _on_tree_gui_input(input_event: InputEvent) -> void:
@@ -626,7 +662,9 @@ func _on_tree_gui_input(input_event: InputEvent) -> void:
 	var pinned: bool = toggle_favorite(definition.provider_id, definition.id)
 	if _info_label != null:
 		_info_label.text = ("⭐ Pinned %s to Favorites" if pinned else "Unpinned %s from Favorites") % definition.display_name
-	_refresh_tree()
+	if _favorite_button != null and _selected_definition == definition:
+		_favorite_button.set_pressed_no_signal(pinned)
+	_refresh_side_panes()
 
 ## Enter in the search box applies the first concrete match — type-and-Enter, no mouse.
 ## Depth-first so sub-category folders (root → parent → sub → entry) are reached too.
@@ -653,9 +691,107 @@ func _first_definition_item(item: TreeItem) -> TreeItem:
 
 func _on_item_activated() -> void:
 	var item: TreeItem = _tree.get_selected()
-	if item == null:
+	_commit_definition(item.get_metadata(0) as ACEDefinition if item != null else null)
+
+## A compact single-column Tree for the ⭐ Favorites / ★ Recent side panes (Create-Node style).
+func _make_side_tree() -> Tree:
+	var tree: Tree = Tree.new()
+	tree.hide_root = true
+	tree.columns = 1
+	tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tree.custom_minimum_size = Vector2(0.0, 90.0)
+	tree.item_selected.connect(_on_side_item_selected.bind(tree))
+	tree.item_activated.connect(_on_side_item_activated.bind(tree))
+	return tree
+
+## Fills the Favorites + Recent panes from the persisted lists, filtered to the current mode.
+func _refresh_side_panes() -> void:
+	if _favorites_list == null or _recent_list == null or _registry == null:
 		return
-	var definition: ACEDefinition = item.get_metadata(0)
+	var mode: String = str(_context.get("mode", "new_event"))
+	var signals_only: bool = bool(_context.get("signals_only", false))
+	_populate_side_pane(_favorites_list, favorite_ids(), mode, signals_only)
+	_populate_side_pane(_recent_list, _recent_ace_ids, mode, signals_only)
+
+func _populate_side_pane(tree: Tree, keys: PackedStringArray, mode: String, signals_only: bool) -> void:
+	tree.clear()
+	var root: TreeItem = tree.create_item()
+	for key: String in keys:
+		for candidate: ACEDefinition in _registry.get_all_definitions():
+			if "%s/%s" % [candidate.provider_id, candidate.id] != key:
+				continue
+			if not _is_allowed_for_mode(candidate, mode, signals_only):
+				break
+			var item: TreeItem = tree.create_item(root)
+			item.set_text(0, _item_label(candidate))
+			var icon: Texture2D = resolve_definition_icon(candidate)
+			if icon != null:
+				item.set_icon(0, icon)
+				item.set_icon_max_width(0, 16)
+			item.set_custom_color(0, _item_color_for(candidate.ace_type))
+			item.set_tooltip_text(0, _item_tooltip(candidate))
+			item.set_metadata(0, candidate)
+			break
+
+func _on_side_item_selected(tree: Tree) -> void:
+	var item: TreeItem = tree.get_selected()
+	var definition: ACEDefinition = item.get_metadata(0) as ACEDefinition if item != null else null
+	if definition == null:
+		return
+	# One logical selection across the three trees: clear the others.
+	if _tree != null:
+		_tree.deselect_all()
+	var other: Tree = _recent_list if tree == _favorites_list else _favorites_list
+	if other != null:
+		other.deselect_all()
+	_on_definition_selected(definition)
+
+func _on_side_item_activated(tree: Tree) -> void:
+	var item: TreeItem = tree.get_selected()
+	_commit_definition(item.get_metadata(0) as ACEDefinition if item != null else null)
+
+## Unified selection: the highlighted ACE (tree or side pane) drives the description panel, the
+## ⭐ button state, and what Add / Enter will insert.
+func _on_definition_selected(definition: ACEDefinition) -> void:
+	_selected_definition = definition
+	_update_info_panel(definition)
+	if _add_button != null:
+		_add_button.disabled = definition == null
+	if _favorite_button != null:
+		_favorite_button.set_pressed_no_signal(definition != null and _is_favorite(definition))
+
+func _is_favorite(definition: ACEDefinition) -> bool:
+	return favorite_ids().has("%s/%s" % [definition.provider_id, definition.id])
+
+## Create-Node-style description panel: name, type + category, what it does, and its codegen.
+func _update_info_panel(definition: ACEDefinition) -> void:
+	if _info_label == null:
+		return
+	if definition == null:
+		_info_label.text = ""
+		return
+	var description: String = definition.description if not definition.description.is_empty() else str(definition.metadata.get("display_template", definition.display_name))
+	var template: String = str(definition.metadata.get("codegen_template", ""))
+	var header_line: String = "[b]%s[/b]  ·  %s  ·  %s" % [definition.display_name, _ace_type_label(definition.ace_type), _category_of(definition)]
+	var body: String = header_line + "\n" + description
+	if not template.is_empty():
+		body += "\n[code]%s[/code]" % template
+	_info_label.text = body
+
+func _on_favorite_button_pressed() -> void:
+	if _selected_definition == null:
+		_favorite_button.set_pressed_no_signal(false)
+		return
+	var pinned: bool = toggle_favorite(_selected_definition.provider_id, _selected_definition.id)
+	_favorite_button.set_pressed_no_signal(pinned)
+	_refresh_side_panes()
+
+func _on_add_button_pressed() -> void:
+	_commit_definition(_selected_definition)
+
+## Single commit path for the tree, the side panes, and the Add button.
+func _commit_definition(definition: ACEDefinition) -> void:
 	if definition == null:
 		return
 	close()
