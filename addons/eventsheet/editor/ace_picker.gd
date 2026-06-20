@@ -147,7 +147,9 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_search.placeholder_text = "Search actions, conditions, triggers..."
 	_search.clear_button_enabled = true
 	_search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_search.text_changed.connect(func(_text: String) -> void: _refresh_tree())
+	_search.text_changed.connect(func(_text: String) -> void:
+		_refresh_tree()
+		_select_first_match())
 	_search.text_submitted.connect(func(_text: String) -> void: _activate_first_match())
 	search_row.add_child(_search)
 	_favorite_button = Button.new()
@@ -286,6 +288,7 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	_update_info_panel(null)
 	_refresh_tree()
 	_refresh_side_panes()
+	_select_first_match()
 	_window.popup_centered(Vector2i(720, 520))
 	_window.grab_focus()
 	_search.grab_focus()
@@ -668,6 +671,16 @@ func _on_tree_gui_input(input_event: InputEvent) -> void:
 
 ## Enter in the search box applies the first concrete match — type-and-Enter, no mouse.
 ## Depth-first so sub-category folders (root → parent → sub → entry) are reached too.
+## Picker speed: pre-select the first concrete ACE so the description panel + Add button
+## populate immediately and arrow/Enter work without a first click (type → glance → Enter).
+func _select_first_match() -> void:
+	if _tree == null:
+		return
+	var first: TreeItem = _first_definition_item(_tree.get_root())
+	if first != null:
+		first.select(0)
+		_tree.scroll_to_item(first)
+
 func _activate_first_match() -> void:
 	var match_item: TreeItem = _first_definition_item(_tree.get_root())
 	if match_item != null:

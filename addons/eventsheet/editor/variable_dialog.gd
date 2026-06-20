@@ -13,6 +13,8 @@ signal variable_confirmed(name: String, type_name: String, default_value: Varian
 var _dialog: ConfirmationDialog = null
 var _scope_label: Label = null
 var _name_edit: LineEdit = null
+var _name_warning: Label = null
+var _sheet_provider: Callable = Callable()
 var _type_option: OptionButton = null
 var _default_edit: LineEdit = null
 var _items_button: Button = null
@@ -85,6 +87,13 @@ func init_dialog(parent_node: Node) -> void:
 	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_row.add_child(_name_edit)
 	form.add_child(name_row)
+	_name_warning = Label.new()
+	_name_warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_name_warning.custom_minimum_size = Vector2(380.0, 0.0)
+	_name_warning.visible = false
+	_name_warning.modulate = Color(1.0, 0.5, 0.5)
+	form.add_child(_name_warning)
+	_name_edit.text_changed.connect(func(_text: String) -> void: _refresh_name_warning())
 
 	var type_row: HBoxContainer = HBoxContainer.new()
 	var type_label: Label = Label.new()
@@ -377,6 +386,7 @@ func open_for_edit(
 	_scope_label.text = "Scope: %s" % scope.capitalize()
 	_dialog.title = title
 	_name_edit.text = name
+	_refresh_name_warning()
 	# Containers display as canonical GDScript literals (str() doesn't escape strings).
 	if default_value is Array or default_value is Dictionary:
 		_default_edit.text = SheetCompiler._to_code_literal(default_value)
@@ -434,6 +444,16 @@ func _close() -> void:
 func _on_confirmed() -> void:
 	var var_name: String = _name_edit.text.strip_edges()
 	if var_name.is_empty():
+		return
+	# Guardrail: a name that shadows a host-class member breaks the generated script (a global
+	# becomes a duplicate member that will not load; a local silently hides the member). Block it.
+	var shadow_owner: String = _shadow_owner(var_name)
+	if not shadow_owner.is_empty():
+		if _name_warning != null:
+			_name_warning.visible = true
+			_name_warning.text = "✗ \"%s\" shadows a %s member — pick another name." % [var_name, shadow_owner]
+		if _dialog.is_inside_tree():
+			_dialog.call_deferred("popup_centered", Vector2i(460, 260))
 		return
 	var type_name: String = _type_option.get_item_text(_type_option.selected)
 	# Guardrail (C3-style): an invalid collection literal never commits — the dialog
@@ -601,6 +621,31 @@ func _refresh_contextual_rows() -> void:
 
 ## Wires the sheet-enum source for the one-click combo fill (returns
 ## Array[Dictionary{name, members}]).
+## The dock injects the active sheet so the name field can check host-member shadowing.
+func set_sheet_provider(provider: Callable) -> void:
+	_sheet_provider = provider
+
+## Owner class if `var_name` shadows a host-class member (method/signal/constant/property),
+## else "". Drives the live name warning + the confirm-time block.
+func _shadow_owner(var_name: String) -> String:
+	if not _sheet_provider.is_valid():
+		return ""
+	var sheet: EventSheetResource = _sheet_provider.call() as EventSheetResource
+	if sheet == null:
+		return ""
+	return EventSheetProjectDoctor.shadowed_member_class(sheet, var_name.strip_edges())
+
+## Live feedback: shows/hides the shadow warning as the user types the name.
+func _refresh_name_warning() -> void:
+	if _name_warning == null:
+		return
+	var owner: String = _shadow_owner(_name_edit.text)
+	if owner.is_empty():
+		_name_warning.visible = false
+	else:
+		_name_warning.visible = true
+		_name_warning.text = "⚠ \"%s\" shadows a %s member — rename to avoid a clash." % [_name_edit.text.strip_edges(), owner]
+
 func set_enum_provider(provider: Callable) -> void:
 	_enum_provider = provider
 

@@ -60,6 +60,23 @@ static func run() -> bool:
 	cond.params = {"code": "true"}
 	all_passed = _check("a valid ƒx expression is clean", EventSheetDiagnostics.analyze(fx_sheet, registry).is_empty(), true) and all_passed
 
+	# A local variable whose name shadows a host-class member is flagged on that variable (#4).
+	var shadow_sheet: EventSheetResource = EventSheetResource.new()
+	shadow_sheet.host_class = "Node2D"
+	var shadow_var: LocalVariable = LocalVariable.new()
+	shadow_var.name = "position"
+	shadow_var.type_name = "Vector2"
+	shadow_sheet.events.append(shadow_var)
+	var shadow_diag: Array = EventSheetDiagnostics.analyze(shadow_sheet, null)
+	all_passed = _check("a shadowing local variable is flagged", shadow_diag.size(), 1) and all_passed
+	if shadow_diag.size() == 1:
+		all_passed = _check("shadow diagnostic targets the variable",
+			str((shadow_diag[0] as Dictionary).get("uid", "")), str(shadow_var.get_instance_id())) and all_passed
+		all_passed = _check("shadow message names the owner class",
+			str((shadow_diag[0] as Dictionary).get("message", "")).contains("Node2D"), true) and all_passed
+	shadow_var.name = "my_custom_thing"
+	all_passed = _check("a non-shadowing local variable is clean", EventSheetDiagnostics.analyze(shadow_sheet, null).is_empty(), true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

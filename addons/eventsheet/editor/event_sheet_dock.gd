@@ -171,6 +171,8 @@ func _ensure_editor_dialogs_initialized() -> void:
     _ace_params.params_confirmed.connect(_on_ace_params_confirmed)
     _ace_params.back_requested.connect(_on_ace_params_back_requested)
     _variable_dlg.init_dialog(self)
+    # Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
+    _variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
     _variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
     # Sheet enums feed the variable dialog's one-click combo fill.
     _variable_dlg.set_enum_provider(func() -> Array:

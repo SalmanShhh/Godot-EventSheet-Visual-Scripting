@@ -33,6 +33,8 @@ static func _scan_entries(entries: Array, sheet: EventSheetResource, registry: E
 			_scan_entries(group.events if not group.events.is_empty() else group.rows, sheet, registry, diagnostics)
 		elif entry is RawCodeRow:
 			_check_raw(entry as RawCodeRow, false, sheet, diagnostics)
+		elif entry is LocalVariable:
+			_check_local_var(entry as LocalVariable, sheet, diagnostics)
 		elif entry is EventRow:
 			_check_event(entry as EventRow, sheet, registry, diagnostics)
 
@@ -51,6 +53,16 @@ static func _check_raw(raw: RawCodeRow, in_flow: bool, sheet: EventSheetResource
 	var verdict: Dictionary = EventSheetGDScriptLint.lint(raw.code, in_flow, sheet)
 	if not bool(verdict.get("ok", true)):
 		diagnostics.append(_make(raw, "GDScript block doesn't compile: %s" % str(verdict.get("error", "")), ""))
+
+## A local variable whose name shadows a host-class member breaks the generated script (the
+## member is hidden / duplicated). The variable dialog blocks this at creation; flagging it here
+## catches ones already on the sheet (e.g. after a host-class change or a paste).
+static func _check_local_var(local: LocalVariable, sheet: EventSheetResource, diagnostics: Array) -> void:
+	if local.name.strip_edges().is_empty():
+		return
+	var owner: String = EventSheetProjectDoctor.shadowed_member_class(sheet, local.name)
+	if not owner.is_empty():
+		diagnostics.append(_make(local, "Variable \"%s\" shadows a %s member — rename it." % [local.name, owner], ""))
 
 ## Lints an ACE's ƒx (expression-hinted) params. Flags the OWNING event row (ACEs render as
 ## spans inside it), with the first offending param's detail + a "did you mean?" for a bare

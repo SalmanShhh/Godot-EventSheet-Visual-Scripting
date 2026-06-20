@@ -2,7 +2,17 @@
 
 ## [Unreleased]
 
-### Error → row deep-linking + group editor popup + Create-Node-parity ACE picker
+### Editor DX — error→row deep-linking, shadow guard, picker polish, recipes/glossary
+- **Shadowing-variable guard** — naming a variable after a host-class member (e.g. `position` on a
+  `Node2D` sheet) breaks the generated script. The variable dialog now **warns live + blocks** it
+  (via `EventSheetProjectDoctor.shadowed_member_class`), and the row diagnostics flag any local
+  variable already on the sheet that shadows a member.
+- **Picker speed — pre-select first match** — the ACE picker now highlights the first result on
+  open + as you type, so the description panel populates and arrow/Enter pick it without a first
+  click (search auto-focus, "Apply & Add Another", and inline value editing were already in place).
+- **Recipes + glossary** — new [`docs/RECIPES.md`](docs/RECIPES.md) (platformer, health, pickups,
+  debugging, custom ACEs, common pitfalls) and a one-page [`docs/GLOSSARY.md`](docs/GLOSSARY.md)
+  C3 ↔ Godot ↔ EventSheets Rosetta Stone, linked from the README quick start.
 - **Error → row deep-linking** — when a ƒx expression or inline GDScript block doesn't compile,
   the editor now flags the **offending row** (a red left-stripe + wash, the message in the row
   tooltip) and jumps to the first one, instead of a status-bar line you have to hunt down. A

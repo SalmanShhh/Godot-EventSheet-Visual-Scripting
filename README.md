@@ -45,6 +45,9 @@ Conditions                        | Actions
    press **Compile**. The generated `.gd` is the script you attach and ship.
 5. Coming from Construct? Read the [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) —
    it maps every C3 concept, behavior, and plugin to its home here.
+6. Learning by building? The [recipes](docs/RECIPES.md) walk through a platformer, health,
+   pickups, and debugging end to end; the [glossary](docs/GLOSSARY.md) is a one-page C3 ↔ Godot
+   ↔ EventSheets Rosetta Stone.
 
 ## Why event sheets in Godot? (the honest pros & cons)
 
