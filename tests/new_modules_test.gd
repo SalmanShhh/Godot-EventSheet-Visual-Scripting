@@ -54,6 +54,11 @@ static func run() -> bool:
 	dev_sheet.events.append(dev_event)
 	var dev_output: String = str(SheetCompiler.compile(dev_sheet, "user://eventsheets_dev.gd").get("output", ""))
 	all_passed = _check("Add To Group compiles to the native call", dev_output.contains("self.add_to_group(\"enemies\")"), true) and all_passed
+	# Additional math idioms register under Math & Random.
+	for math: Array in [["Snapped", "Math & Random"], ["AngleDifference", "Math & Random"], ["IsEqualApprox", "Math & Random"], ["RotateTowardAngle", "Math & Random"], ["LerpAngle", "Math & Random"]]:
+		var math_id: String = str(math[0])
+		all_passed = _check("%s registered" % math_id, ids.has(math_id), true) and all_passed
+		all_passed = _check("%s in %s" % [math_id, str(math[1])], str(categories.get(math_id, "<missing>")), str(math[1])) and all_passed
 
 	# ── Button On Pressed trigger compiles to a real signal connection (resolver arm) ──
 	var sheet: EventSheetResource = EventSheetResource.new()

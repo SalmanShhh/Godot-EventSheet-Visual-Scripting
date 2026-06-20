@@ -11,6 +11,10 @@
   Child, Get Node Or Null, Has Node, Get Scene Owner, Is Ancestor Of — scene-tree navigation that
   was previously uncovered. Each compiles to the exact one-liner you'd hand-write (`print(…)`,
   `add_to_group(…)`, `set_meta(…)`, `get_parent()`); registry + category + codegen unit-tested.
+- **12 more math ACEs** under **Math & Random** — Snap To Step, Inverse Lerp, Smoothstep,
+  Ping-Pong, Angle Difference, Rotate Toward / Lerp Angle, Deg↔Rad, Positive Modulo, and Is
+  Equal / Is Zero (approx) — the movement/animation/AI idioms the existing lerp/clamp/distance set
+  was missing.
 
 ### Editor DX — popup polish, error→row deep-linking, shadow guard, picker, watch + event trace
 - **Consistent popups** — a shared `EventSheetPopupUI` helper gives the plugin's dialogs one look:
