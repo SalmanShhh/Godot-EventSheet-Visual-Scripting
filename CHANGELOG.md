@@ -15,6 +15,10 @@
   Ping-Pong, Angle Difference, Rotate Toward / Lerp Angle, Deg↔Rad, Positive Modulo, and Is
   Equal / Is Zero (approx) — the movement/animation/AI idioms the existing lerp/clamp/distance set
   was missing.
+- **7 Color helper ACEs** under a new **Color** category — Lighten, Darken, Lerp Color, Color With
+  Alpha, Color From HSV, Color From Hex, Invert Color — so hit-flashes, fades, and tints stay
+  code-free (only the `Set Color Tint` action existed before). The colour params are full
+  expressions, so they compose; the generated templates are parse-checked in the suite.
 
 ### Editor DX — popup polish, error→row deep-linking, shadow guard, picker, watch + event trace
 - **Consistent popups** — a shared `EventSheetPopupUI` helper gives the plugin's dialogs one look:

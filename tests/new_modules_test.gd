@@ -59,6 +59,14 @@ static func run() -> bool:
 		var math_id: String = str(math[0])
 		all_passed = _check("%s registered" % math_id, ids.has(math_id), true) and all_passed
 		all_passed = _check("%s in %s" % [math_id, str(math[1])], str(categories.get(math_id, "<missing>")), str(math[1])) and all_passed
+	# Color helper expressions register under Color, and their templates are valid GDScript.
+	for col: Array in [["ColorLighten", "Color"], ["ColorLerp", "Color"], ["ColorFromHSV", "Color"], ["ColorWithAlpha", "Color"]]:
+		var col_id: String = str(col[0])
+		all_passed = _check("%s registered" % col_id, ids.has(col_id), true) and all_passed
+		all_passed = _check("%s in %s" % [col_id, str(col[1])], str(categories.get(col_id, "<missing>")), str(col[1])) and all_passed
+	var color_script: GDScript = GDScript.new()
+	color_script.source_code = "extends Node\nfunc _t() -> void:\n\tvar a: Color = (Color(1, 1, 1, 1)).lightened(0.2)\n\tvar b: Color = (Color(1, 1, 1, 1)).lerp(Color(1, 0, 0, 1), 0.5)\n\tvar c: Color = Color(Color(1, 1, 1, 1), 0.5)\n\tvar d: Color = Color.from_hsv(0.0, 1.0, 1.0, 1.0)\n\tprint(a, b, c, d)\n"
+	all_passed = _check("Color helper templates parse", color_script.reload() == OK, true) and all_passed
 
 	# ── Button On Pressed trigger compiles to a real signal connection (resolver arm) ──
 	var sheet: EventSheetResource = EventSheetResource.new()
