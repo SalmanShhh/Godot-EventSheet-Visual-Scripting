@@ -42,39 +42,24 @@ func init_dialog(parent_node: Node) -> void:
 	_dialog.ok_button_text = "Create Function"
 	_dialog.confirmed.connect(_on_confirmed)
 	parent_node.add_child(_dialog)
-	var form: VBoxContainer = VBoxContainer.new()
+	var form: VBoxContainer = EventSheetPopupUI.form_box()
 	form.custom_minimum_size = Vector2(440.0, 0.0)
-	form.add_theme_constant_override("separation", 8)
-	_dialog.add_child(form)
-	var name_row: HBoxContainer = HBoxContainer.new()
-	var name_label: Label = Label.new()
-	name_label.text = "Name"
-	name_label.custom_minimum_size = Vector2(130.0, 0.0)
-	name_row.add_child(name_label)
+	_dialog.add_child(EventSheetPopupUI.margined(form))
 	_name_edit = LineEdit.new()
 	_name_edit.placeholder_text = "deal_damage"
-	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dialog.register_text_enter(_name_edit)
-	name_row.add_child(_name_edit)
-	form.add_child(name_row)
-	var return_row: HBoxContainer = HBoxContainer.new()
-	var return_label: Label = Label.new()
-	return_label.text = "Returns"
-	return_label.custom_minimum_size = Vector2(130.0, 0.0)
-	return_label.tooltip_text = "void functions become actions; bool functions become conditions when exposed."
-	return_row.add_child(return_label)
+	form.add_child(EventSheetPopupUI.form_row("Name", _name_edit))
 	_return_option = OptionButton.new()
 	for entry: Dictionary in RETURN_TYPES:
 		_return_option.add_item(str(entry.get("label")))
-	_return_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return_row.add_child(_return_option)
-	form.add_child(return_row)
+	_return_option.tooltip_text = "void functions become actions; bool functions become conditions when exposed."
+	form.add_child(EventSheetPopupUI.form_row("Returns", _return_option))
 	# Parameters: the label sits in the 130px column and the param rows + the Add button fill
 	# the field column, so each param's name field lines up with Name/Returns above it.
 	var params_row: HBoxContainer = HBoxContainer.new()
 	var params_label: Label = Label.new()
 	params_label.text = "Parameters"
-	params_label.custom_minimum_size = Vector2(130.0, 0.0)
+	params_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	params_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	params_row.add_child(params_label)
 	var params_col: VBoxContainer = VBoxContainer.new()
@@ -93,32 +78,20 @@ func init_dialog(parent_node: Node) -> void:
 	_expose_check.tooltip_text = "Publishes the function into pickers — as an action (void) or expression (typed return)."
 	_expose_check.toggled.connect(func(on: bool) -> void: _expose_section.visible = on)
 	form.add_child(_expose_check)
-	_expose_section = VBoxContainer.new()
+	_expose_section = EventSheetPopupUI.form_box()
 	_expose_section.visible = false
 	_expose_name_edit = LineEdit.new()
 	_expose_name_edit.placeholder_text = "defaults from the function name"
-	_expose_section.add_child(_labeled_row("Display name", _expose_name_edit))
+	_expose_section.add_child(EventSheetPopupUI.form_row("Display name", _expose_name_edit))
 	_expose_category_edit = LineEdit.new()
 	_expose_category_edit.placeholder_text = "e.g. Combat"
-	_expose_section.add_child(_labeled_row("Picker category", _expose_category_edit))
+	_expose_section.add_child(EventSheetPopupUI.form_row("Picker category", _expose_category_edit))
 	form.add_child(_expose_section)
 	_problem_label = Label.new()
 	_problem_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_problem_label.visible = false
 	_problem_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
 	form.add_child(_problem_label)
-
-## A 130px-label + expanding-field row, matching the main form's columns (so sub-section
-## fields line up with Name/Returns instead of running full-width).
-func _labeled_row(label_text: String, field: Control) -> HBoxContainer:
-	var row: HBoxContainer = HBoxContainer.new()
-	var label: Label = Label.new()
-	label.text = label_text
-	label.custom_minimum_size = Vector2(130.0, 0.0)
-	row.add_child(label)
-	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(field)
-	return row
 
 ## Names already taken on the sheet (functions + variables) — duplicates are refused.
 func set_taken_names_provider(provider: Callable) -> void:
