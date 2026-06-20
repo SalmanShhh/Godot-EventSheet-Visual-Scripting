@@ -1510,6 +1510,8 @@ func _first_color_in_params(ace: Resource) -> Variant:
 # on every rebuild so the marker survives edits/scrolling (the "error → row" deep-link).
 var _row_diagnostics: Dictionary = {}
 var _first_diagnostic_uid: String = ""
+# Live event trace: uid set of events that fired in the latest streamed frame (transient highlight).
+var _fired_uids: Dictionary = {}
 
 func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
     if entry == null:
@@ -1531,6 +1533,8 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
         row_data = _build_event_row(entry as EventRow, indent)
     if row_data != null and not _row_diagnostics.is_empty():
         row_data.error_message = str(_row_diagnostics.get(str(entry.get_instance_id()), ""))
+    if row_data != null and not _fired_uids.is_empty() and entry is EventRow:
+        row_data.firing = _fired_uids.has((entry as EventRow).event_uid)
     return row_data
 
 ## Paints per-row error markers from EventSheetDiagnostics (each: {uid, message, suggestion}).
@@ -1559,6 +1563,18 @@ func clear_row_diagnostics() -> void:
     _row_diagnostics.clear()
     _first_diagnostic_uid = ""
     _refresh_rows()
+
+## Live event trace: highlights the rows whose events fired in the latest streamed frame. Updates
+## the existing rows + redraws (no full rebuild) since it arrives ~every 0.25s during a debug run.
+func set_fired_events(uids: PackedStringArray) -> void:
+    _fired_uids.clear()
+    for uid: String in uids:
+        _fired_uids[uid] = true
+    for entry: Dictionary in get_flat_rows():
+        var row_data: EventRowData = entry.get("row")
+        if row_data != null and row_data.source_resource is EventRow:
+            row_data.firing = _fired_uids.has((row_data.source_resource as EventRow).event_uid)
+    queue_redraw()
 
 ## Reveals (unfolds ancestors) + selects the first flagged row, so a failed compile lands you
 ## straight on the offending event instead of leaving you to hunt. False if nothing is flagged.

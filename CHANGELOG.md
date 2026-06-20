@@ -2,14 +2,20 @@
 
 ## [Unreleased]
 
-### Editor DX — error→row deep-linking, shadow guard, picker polish, watch panel, recipes/glossary
+### Editor DX — error→row deep-linking, shadow guard, picker polish, watch + event trace, recipes
+- **Live event trace** — Tools ▸ **Event Trace** instruments each event (debug compiles only,
+  opt-in behind a new `emit_event_trace` flag so normal output is byte-for-byte untouched) to
+  stream its UID as it fires over the Live Values channel; the editor **highlights the firing rows
+  in real time** (a cyan marker) so you can see which events actually run. Plain core Godot
+  (`EngineDebugger`), piggybacking on the Live Values stream. Compiler emission + the viewport
+  highlight are unit-tested. With conditional breakpoints, editable Live Values, and the Watch
+  panel, this is the step/watch debugging set — automated step-to-next-event (editor-driven
+  pause/step) stays out of reach until Godot exposes debugger step control to plugins.
 - **Watch panel** — the Live Values window gains a **Watch** box: pin any expression over the
   sheet's variables (e.g. `health <= 0`, `score + lives`) and it's evaluated **editor-side**
   against each streamed values frame via `Expression` and shown live — no compiler instrumentation
   and no new debug protocol (reuses the existing Live Values stream). `evaluate_watch()` is pure +
-  unit-tested. Together with conditional breakpoints and editable Live Values, this covers the
-  step/watch debugging need short of automated step-to-next-event (a runtime-instrumentation
-  follow-up).
+  unit-tested.
 - **Shadowing-variable guard** — naming a variable after a host-class member (e.g. `position` on a
   `Node2D` sheet) breaks the generated script. The variable dialog now **warns live + blocks** it
   (via `EventSheetProjectDoctor.shadowed_member_class`), and the row diagnostics flag any local

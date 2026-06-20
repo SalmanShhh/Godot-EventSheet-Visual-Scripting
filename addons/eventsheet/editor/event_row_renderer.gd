@@ -212,6 +212,11 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
         var error_stripe: Color = Color("#ff5555")
         control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), error_stripe, true)
         control.draw_rect(row_rect, Color(error_stripe.r, error_stripe.g, error_stripe.b, 0.08), true)
+    if row_data.firing:
+        # Live event trace: a cyan left stripe + faint wash on events firing right now (debug run).
+        var firing_stripe: Color = Color("#4fd6ff")
+        control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), firing_stripe, true)
+        control.draw_rect(row_rect, Color(firing_stripe.r, firing_stripe.g, firing_stripe.b, 0.10), true)
     if row_data.selected and not has_span_selection:
         # Slightly tempered for single-cell rows (comments especially) — selection
         # stays unmistakable via the outline, without the full-strength flood fill.

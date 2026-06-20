@@ -23,6 +23,7 @@ const VERSION: String = "0.8.0"
 
 # Set per-compile from sheet.emit_breakpoints (single-threaded compiles).
 static var _emit_breakpoints_flag: bool = false
+static var _emit_event_trace_flag: bool = false
 
 # Live-values payload for the current compile (same single-threaded pattern as the
 # breakpoints flag — the trigger-section helper injects it into _process).
@@ -61,6 +62,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		return _compile_external(sheet, result, output_path)
 
 	_emit_breakpoints_flag = sheet.emit_breakpoints
+	_emit_event_trace_flag = false
 	_runtime_group_guards = {}
 	_runtime_group_members = []
 	# C3-style includes: merge included sheets' rows/variables/functions (compile-time
@@ -230,6 +232,9 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			if variable_lines.is_empty() and tree_variables.is_empty():
 				lines.append("")
 			lines.append("var __live_values_timer: float = 0.0")
+		if sheet.emit_event_trace:
+			_emit_event_trace_flag = true
+			lines.append("var __eventsheets_fired: PackedStringArray = PackedStringArray()")
 
 	# Lane B composition (has-a): owned helper instances for the declared addon classes.
 	if not sheet.uses_addons.is_empty():
@@ -339,6 +344,9 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		lines.append("\tif __live_values_timer >= 0.25 and EngineDebugger.is_active():")
 		lines.append("\t\t__live_values_timer = 0.0")
 		lines.append("\t\tEngineDebugger.send_message(\"eventsheets:live_values\", [%s])" % _live_values_payload)
+		if _emit_event_trace_flag:
+			lines.append("\t\tEngineDebugger.send_message(\"eventsheets:fired_events\", __eventsheets_fired)")
+			lines.append("\t\t__eventsheets_fired.clear()")
 		_live_values_payload = ""
 
 	if sheet.emit_live_values and not sheet.variables.is_empty():
@@ -395,6 +403,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 static func _compile_external(sheet: EventSheetResource, result: Dictionary, output_path: String) -> Dictionary:
 	_live_values_receiver_pending = false
 	_emit_breakpoints_flag = sheet.emit_breakpoints
+	_emit_event_trace_flag = false
 	_live_values_payload = ""
 	if not sheet.includes.is_empty() or not sheet.uses_addons.is_empty() or not sheet.requires_behaviors.is_empty():
 		(result["warnings"] as Array).append("GDScript-backed sheets ignore Includes/Uses/Requires — the .gd file is the source of truth (write the equivalent code directly).")
@@ -758,6 +767,9 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			lines.append("\tif __live_values_timer >= 0.25 and EngineDebugger.is_active():")
 			lines.append("\t\t__live_values_timer = 0.0")
 			lines.append("\t\tEngineDebugger.send_message(\"eventsheets:live_values\", [%s])" % _live_values_payload)
+			if _emit_event_trace_flag:
+				lines.append("\t\tEngineDebugger.send_message(\"eventsheets:fired_events\", __eventsheets_fired)")
+				lines.append("\t\t__eventsheets_fired.clear()")
 			had_body = true
 			_live_values_payload = ""
 		if function_name == "_ready" and not ready_connections.is_empty():
@@ -905,6 +917,9 @@ static func _emit_event_body(
 		var emitted_pick_loop: bool = lines.size() > pick_start_size
 		had_body = had_body or emitted_pick_loop
 		var body_indent: String = "\t".repeat(body_depth)
+		if _emit_event_trace_flag:
+			lines.append("%s__eventsheets_fired.append(\"%s\")" % [body_indent, event_row.event_uid])
+			had_body = true
 		if _emit_breakpoints_flag and event_row.debug_break:
 			var break_condition: String = event_row.debug_break_condition.strip_edges()
 			if break_condition.is_empty():

@@ -31,6 +31,11 @@ class_name EventSheetResource
 ## (throttled EngineDebugger messages from _process — plain core-Godot API, debug
 ## compiles only; normal compiles never carry it).
 @export var emit_live_values: bool = false
+## Live event trace (debugging rung 3): with Live Values on, each event appends its UID to a
+## buffer as it fires, streamed each tick over the same channel so the editor can HIGHLIGHT the
+## firing rows in real time. Debug compiles only; plain core-Godot API (EngineDebugger); off in
+## normal compiles. Piggybacks on the Live Values _process, so it needs Live Values + variables.
+@export var emit_event_trace: bool = false
 ## When set, the generated script declares `class_name <this>` — the sheet then defines a
 ## custom node type that appears in Godot's Create Node dialog, exactly like a hand-written
 ## GDScript class. Must be unique across the project (Godot enforces this).

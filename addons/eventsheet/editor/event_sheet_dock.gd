@@ -686,6 +686,7 @@ func _build_ui() -> void:
     var tools_popup: PopupMenu = tools_menu.get_popup()
     tools_popup.add_item("Debug Breakpoints (toggle)", 0)
     tools_popup.add_item("Live Values (toggle)", 1)
+    tools_popup.add_item("Event Trace (live highlight)", 15)
     tools_popup.add_item("Bookmarks…", 2)
     tools_popup.add_separator()
     tools_popup.add_item("Register Autoload", 3)
@@ -707,6 +708,7 @@ func _build_ui() -> void:
         match id:
             0: _toggle_breakpoint_emission()
             1: _toggle_live_values()
+            15: _toggle_event_trace()
             2: _open_bookmarks_panel()
             3: _register_autoload()
             4: _open_publish_preview()
@@ -4102,6 +4104,27 @@ func _ensure_live_values_window() -> void:
 
 func update_live_values(values: Dictionary) -> void:
     _ensure_live_values_panel().update_values(values)
+
+## Live event-trace sink (wired by the plugin): highlight the firing rows in every pane.
+func update_fired_events(uids: PackedStringArray) -> void:
+    for pane: EventSheetViewport in [_viewport, _split_viewport, _detached_viewport]:
+        if pane != null:
+            pane.set_fired_events(uids)
+
+## Tools ▸ Event Trace — highlights the rows whose events fire during a debug run (rung 3). It
+## rides the Live Values stream, so it turns that on too. Recompile + run to start.
+func _toggle_event_trace() -> void:
+    if _current_sheet == null:
+        return
+    _current_sheet.emit_event_trace = not _current_sheet.emit_event_trace
+    if _current_sheet.emit_event_trace:
+        _current_sheet.emit_live_values = true
+        _set_status("Event Trace ON: recompile and run — firing events highlight live (needs variables to stream).")
+    else:
+        for pane: EventSheetViewport in [_viewport, _split_viewport, _detached_viewport]:
+            if pane != null:
+                pane.set_fired_events(PackedStringArray())
+        _set_status("Event Trace OFF (recompile to remove the instrumentation).")
 
 # ── Single-param inline editing (C3's fastest gesture) ───────────────────────────────
 var _param_edit_popup: PopupPanel = null

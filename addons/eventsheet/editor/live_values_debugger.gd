@@ -8,6 +8,9 @@ class_name EventSheetLiveValuesDebugger
 
 ## Emitted on the editor side whenever a running game streams a values frame.
 signal values_received(values: Dictionary)
+## Emitted whenever a running game streams the set of event UIDs that fired since the last tick
+## (debugging rung 3 — live event trace). The editor highlights those rows.
+signal fired_events_received(uids: PackedStringArray)
 
 var _last_session_id: int = -1
 
@@ -15,11 +18,21 @@ func _has_capture(capture: String) -> bool:
 	return capture == "eventsheets"
 
 func _capture(message: String, data: Array, session_id: int) -> bool:
-	if message != "eventsheets:live_values":
-		return false
 	_last_session_id = session_id
-	values_received.emit(parse_payload(data))
-	return true
+	if message == "eventsheets:live_values":
+		values_received.emit(parse_payload(data))
+		return true
+	if message == "eventsheets:fired_events":
+		fired_events_received.emit(parse_fired(data))
+		return true
+	return false
+
+## The fired-events payload is the PackedStringArray of event UIDs (received as an Array).
+static func parse_fired(data: Array) -> PackedStringArray:
+	var uids: PackedStringArray = PackedStringArray()
+	for entry: Variant in data:
+		uids.append(str(entry))
+	return uids
 
 ## Edit-back: pushes a value change into the running game (the streaming session).
 func send_set_value(variable_name: String, value: Variant) -> bool:

@@ -156,6 +156,57 @@ static func run() -> bool:
 	all_passed = _check("watch: a syntax error reports not-ok", bool(EventSheetLiveValuesPanel.evaluate_watch("1 +", {}).get("ok", true)), false) and all_passed
 	all_passed = _check("watch: an unknown identifier reports not-ok", bool(EventSheetLiveValuesPanel.evaluate_watch("nope", {"health": 1}).get("ok", true)), false) and all_passed
 
+	# Live event trace (#2): emit_event_trace instruments each event to stream its UID as it fires.
+	var trace_sheet: EventSheetResource = EventSheetResource.new()
+	trace_sheet.variables = {"hp": {"type": "int", "default": 1}}
+	trace_sheet.emit_live_values = true
+	trace_sheet.emit_event_trace = true
+	var trace_event: EventRow = EventRow.new()
+	trace_event.event_uid = "evt_trace_1"
+	trace_event.trigger_provider_id = "Core"
+	trace_event.trigger_id = "OnReady"
+	var trace_action: ACEAction = ACEAction.new()
+	trace_action.provider_id = "Core"
+	trace_action.ace_id = "X"
+	trace_action.codegen_template = "hp += 1"
+	trace_event.actions.append(trace_action)
+	trace_sheet.events.append(trace_event)
+	var trace_output: String = str(SheetCompiler.compile(trace_sheet, "user://eventsheets_trace.gd").get("output", ""))
+	all_passed = _check("event trace declares the fired buffer", trace_output.contains("var __eventsheets_fired: PackedStringArray"), true) and all_passed
+	all_passed = _check("event trace appends the firing event uid", trace_output.contains("__eventsheets_fired.append(\"evt_trace_1\")"), true) and all_passed
+	all_passed = _check("event trace streams + clears the buffer", trace_output.contains("eventsheets:fired_events") and trace_output.contains("__eventsheets_fired.clear()"), true) and all_passed
+	var trace_script: GDScript = GDScript.new()
+	trace_script.source_code = trace_output
+	all_passed = _check("event-trace output parses", trace_script.reload(true) == OK, true) and all_passed
+	trace_sheet.emit_event_trace = false
+	all_passed = _check("event trace off leaves no instrumentation", str(SheetCompiler.compile(trace_sheet, "user://eventsheets_notrace.gd").get("output", "")).contains("__eventsheets_fired"), false) and all_passed
+	all_passed = _check("parse_fired turns the payload into uids", Array(EventSheetLiveValuesDebugger.parse_fired(["a", "b"])), ["a", "b"]) and all_passed
+
+	# The viewport highlights events that fired (set_fired_events sets a transient firing flag).
+	var fire_viewport: EventSheetViewport = EventSheetViewport.new()
+	var fire_sheet: EventSheetResource = EventSheetResource.new()
+	var fire_event: EventRow = EventRow.new()
+	fire_event.event_uid = "evt_fire_1"
+	fire_event.trigger_provider_id = "Core"
+	fire_event.trigger_id = "OnReady"
+	fire_sheet.events.append(fire_event)
+	fire_viewport.set_sheet(fire_sheet)
+	fire_viewport.set_fired_events(PackedStringArray(["evt_fire_1"]))
+	var fired_flag: bool = false
+	for entry: Dictionary in fire_viewport.get_flat_rows():
+		var rd: EventRowData = entry.get("row")
+		if rd != null and rd.source_resource == fire_event:
+			fired_flag = rd.firing
+	all_passed = _check("set_fired_events highlights the firing event", fired_flag, true) and all_passed
+	fire_viewport.set_fired_events(PackedStringArray())
+	var cleared_flag: bool = true
+	for entry: Dictionary in fire_viewport.get_flat_rows():
+		var rd2: EventRowData = entry.get("row")
+		if rd2 != null and rd2.source_resource == fire_event:
+			cleared_flag = rd2.firing
+	all_passed = _check("clearing fired events un-highlights", cleared_flag, false) and all_passed
+	fire_viewport.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -64,6 +64,9 @@ When something misbehaves, you have three tools — no `print()` required.
   you can *edit* them live to test branches). The **Watch** box in that window evaluates any
   expression over those variables each frame — e.g. `health <= 0` or `score + lives` — so you can
   see a condition flip in real time without adding a label.
+- **Event Trace.** Tools ▸ Event Trace highlights the rows whose events *fire* during a debug run
+  (a cyan marker, updated live) — so "is this event even running?" is answered at a glance. It
+  rides the Live Values stream, so turn that on too.
 
 ---
 
