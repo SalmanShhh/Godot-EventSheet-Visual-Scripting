@@ -1525,18 +1525,53 @@ func _refresh_expression_tree() -> void:
 		if not definition.description.is_empty():
 			item.set_tooltip_text(0, definition.description)
 		item.set_metadata(0, definition)
+	# Visual expression builder: also list the host object's OWN members (reflected),
+	# so any property/method is pickable without typing — not just registered ACEs.
+	var host_class: String = _host_class_for_context()
+	_add_member_expression_group(root, "This Object — Properties", reflected_members(host_class, "property"), false, query)
+	_add_member_expression_group(root, "This Object — Methods", reflected_members(host_class, "method"), true, query)
+
+## Adds a reflected-members group to the expression picker; methods insert as `name()`,
+## properties as `name`. Honors the search query (case-insensitive substring filter).
+func _add_member_expression_group(root: TreeItem, label: String, members: Array, is_method: bool, query: String) -> void:
+	var lowered: String = query.to_lower()
+	var group_item: TreeItem = null
+	for member: Variant in members:
+		var member_name: String = str(member)
+		if not lowered.is_empty() and not member_name.to_lower().contains(lowered):
+			continue
+		if group_item == null:
+			group_item = _expression_tree.create_item(root)
+			group_item.set_text(0, label)
+			group_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NODE_TYPE)
+			group_item.set_selectable(0, false)
+		var fragment: String = member_expression_fragment(member_name, is_method)
+		var item: TreeItem = _expression_tree.create_item(group_item)
+		item.set_text(0, fragment)
+		item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
+		item.set_metadata(0, fragment)
+
+## The insert fragment for a reflected member: `name()` for a method, `name` for a
+## property. Static + pure, so it is unit-testable without a dialog.
+static func member_expression_fragment(member: String, is_method: bool) -> String:
+	return (member + "()") if is_method else member
 
 func _on_expression_activated() -> void:
 	var item: TreeItem = _expression_tree.get_selected()
 	if item == null:
 		return
-	var definition: ACEDefinition = item.get_metadata(0)
-	if definition == null:
+	var metadata: Variant = item.get_metadata(0)
+	var insert_text: String = ""
+	if metadata is ACEDefinition:
+		insert_text = _expression_template(metadata as ACEDefinition)
+	elif metadata is String:
+		insert_text = str(metadata)
+	if insert_text.is_empty():
 		return
 	var target: Control = _fields.get(_expression_target_key, null)
 	if target is LineEdit:
 		var line_edit: LineEdit = target as LineEdit
-		line_edit.text = _expression_template(definition)
+		line_edit.text = insert_text
 		line_edit.grab_focus()
 		line_edit.caret_column = line_edit.text.length()
 	_expression_window.hide()

@@ -122,6 +122,9 @@ static func run() -> bool:
 	var node2d_props: Array = ACEParamsDialog.reflected_members("Node2D", "property")
 	all_passed = _check("reflected properties include position", node2d_props.has("position"), true) and all_passed
 	all_passed = _check("unknown class reflects nothing", ACEParamsDialog.reflected_members("NotARealClass", "method").is_empty(), true) and all_passed
+	# Visual expression builder: a picked member inserts as name() (method) or name (property).
+	all_passed = _check("member fragment: method gets ()", ACEParamsDialog.member_expression_fragment("get_index", true), "get_index()") and all_passed
+	all_passed = _check("member fragment: property is bare", ACEParamsDialog.member_expression_fragment("position", false), "position") and all_passed
 
 	return all_passed
 
