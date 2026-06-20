@@ -95,6 +95,26 @@ No JSON, no boilerplate. Two routes:
 - **Editing the generated `.gd` by hand.** Don't — re-compiling overwrites it. Use a **GDScript
   block** row in the sheet instead (it's emitted verbatim, and round-trips).
 
+## 7. Helper ACEs that save a code drop
+
+The picker has a row for most things you'd otherwise hand-write. A few that come up constantly:
+
+- **HUD text** — `Set Text (formatted)` writes `"Score: %d  Lives: %d" % [score, lives]` to any
+  Label / RichTextLabel in one row (no GDScript block).
+- **Hit flashes & fades** — the **Color** category composes: `Lerp Color`, `Lighten` / `Darken`,
+  `Color With Alpha`, `Color From HSV`. Feed the result straight into `Set Color Tint` (modulate).
+- **Spawning** — `Spawn Scene (Full)` instances a scene and sets position + rotation + an optional
+  group tag in one action; `Spawn Scene At` when you only need a position.
+- **Timing without a Timer node** — `Call After Delay` / `Tween Callback` fire a method after N
+  seconds without suspending the event; `Wait` (await) when you *do* want to suspend it.
+- **Scene-tree queries** — `Get Parent`, `Find Child`, `Has Node`, `Get Child Count`, plus node
+  **Groups** (Add / Is In / Call Method On Group) — no `get_node(...)` boilerplate.
+- **Signals at runtime** — `Connect` / `Disconnect` / `Emit Signal On` / `Signal Is Connected`,
+  without a `_ready` block.
+
+Everything compiles to the exact one-liner you'd type by hand, so it stays a searchable, editable
+row instead of a raw block.
+
 ---
 
 More vocabulary in the generated [EVENTSHEETS-VOCABULARY.md](../EVENTSHEETS-VOCABULARY.md); the

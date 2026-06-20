@@ -10,7 +10,7 @@ project balloons to thousands of events.
 > [!WARNING]
 > **Purely experimental — early, vibecoded, and not yet validated.** This plugin is an
 > experiment, not a production tool: it has been built almost entirely through
-> AI-assisted ("vibe") coding. The test suite is large (2,300+ CI-gated assertions)
+> AI-assisted ("vibe") coding. The test suite is large (2,400+ CI-gated assertions)
 > and every feature ships with regression tests, but the project has **not yet been
 > validated by real-world use**. It is **very early in development** and **subject to
 > large, sweeping changes** between releases — do not build anything you can't afford
@@ -87,7 +87,7 @@ Conditions                        | Actions
 - **Some C3 plugins intentionally have no equivalent** (Multiplayer, Drawing Canvas,
   XML): the migration guide points to the native Godot feature instead — that honesty
   keeps the project maintainable.
-- **Purely experimental, vibecoded project.** Built AI-first with a large CI-gated suite (2,300+
+- **Purely experimental, vibecoded project.** Built AI-first with a large CI-gated suite (2,400+
   assertions) standing in for mileage it hasn't earned yet — real-world validation is
   still ahead, and large sweeping changes between releases are likely (see the warning
   up top).
@@ -119,7 +119,8 @@ still ships as plain GDScript).
 ### The editor (C3-parity UX on a virtualized canvas)
 - Two-lane condition/action rows, object icons + labels, flat cells, whole-cell click
   targets, drag/drop with insertion arrows, groups (with descriptions), comments
-  (multiline, colored, color swatches for Color params), multi-select, copy/paste,
+  (multiline, colored, color swatches for Color params), multi-select (box / Ctrl /
+  Shift-range), copy/paste,
   enable/disable with strikethrough, full undo/redo.
 - **Find & Replace (Ctrl+F)** — one undoable Replace All across comments, params,
   blocks and pick filters; script-editor shortcuts (**F9 real breakpoints** that pause
@@ -153,16 +154,20 @@ still ships as plain GDScript).
   project-wide in one click, their functions callable from everywhere.
 - **Input vocabulary**: InputMap actions with dropdowns, plus **Keyboard / Mouse /
   Gamepad / Touch** groups — key params capture with C3's *press-a-key* workflow.
-- **350+ native ACEs**: Tween (ease/transition combos), Scene flow (incl. multi-line
-  Spawn Scene At), **Audio** (fire-and-forget one-shots, player control, bus mixing —
-  with ▶ sound preview in the dialog), AnimatedSprite2D, Camera2D, Label,
-  NavigationAgent2D, time scale & window control, the C3 System text functions, shader
-  params, date/time/platform info, Math & Random (`choose()` included), **3D raycast /
-  world-query** ACEs, **Collision** (CharacterBody/Area/CollisionObject layer/mask
-  queries, shape enable/disable), and a **Helpers** set — the structured escape hatch (Set/Get
-  Property, Call Method, Run GDScript, Inline If, Is Valid, Connect Signal, and the
-  math/string idioms) so code that doesn't map to a specific ACE still stays an editable
-  row.
+- **400+ native ACEs**: Tween (ease/transition combos, plus inline **Tween Callback**),
+  Scene flow (multi-line **Spawn Scene At / (Full)** — position + rotation + group tag),
+  **Audio** (fire-and-forget one-shots, player control, bus mixing — with ▶ sound preview
+  in the dialog), AnimatedSprite2D, Camera2D (incl. limits), Label (incl. **Set Text
+  formatted**), NavigationAgent2D, time scale & window control, the C3 System text
+  functions, shader params, date/time/platform info, **Math & Random** (`choose()`, lerp /
+  clamp / snapped, angle / rotate-toward, seeded RNG), **Color** (lighten / darken / lerp /
+  HSV / alpha), **3D raycast / world-query** ACEs, **Collision** (CharacterBody/Area/
+  CollisionObject layer/mask queries, shape enable/disable), **Dev helpers** (Debug
+  print/assert, scene-tree Groups, node Metadata, and **scene-tree navigation** —
+  parent / child / find), runtime **signal wiring** (connect / disconnect / emit-on /
+  is-connected), and a **Helpers** set — the structured escape hatch (Set/Get Property,
+  Call Method, Run GDScript, Inline If, Is Valid, and the math/string idioms) so code that
+  doesn't map to a specific ACE still stays an editable row.
 
 ### Behaviors & addons (zero configuration, no JSON)
 - **27 addon packs**, all authored as event sheets: the C3 classics (**Platformer** —
@@ -235,7 +240,7 @@ still ships as plain GDScript).
   events from a description — ships opt-in and off by default.) Playable showcases:
   `showcase_carousel.tscn` (flagship), `starfall.tscn`, `quest_fsm.tscn`, and
   `platformer_shooter.tscn`. See [CHANGELOG.md](CHANGELOG.md).
-- **Quality**: 2,300+ test assertions, all green, CI-gated on every push (any `[FAIL]`
+- **Quality**: 2,400+ test assertions, all green, CI-gated on every push (any `[FAIL]`
   fails the build, and the Project Doctor gate fails it on sheet/output drift);
   byte-exact golden round-trips guard the lossless rules. **Verified on Godot 4.7 stable**
   (full suite + an in-editor smoke run).
