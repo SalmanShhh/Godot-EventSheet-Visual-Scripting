@@ -75,6 +75,11 @@ const EVENT_PICKER_GROUPS: Array[String] = [
 	"CharacterBody2D", "Area2D", "Node2D", "RigidBody2D", "Timer", "AnimationPlayer"
 ]
 
+## Categories nest one level on this separator: "Variables: Array" renders as an Array
+## folder inside the Variables section. Authors get a sub-section just by naming the
+## category "Parent: Sub" — no schema change. Node-type sections never sub-nest.
+const SUBCATEGORY_SEPARATOR: String = ": "
+
 # Group-header colours (by group kind).
 const GROUP_COLOR_NODE_TYPE := Color("#e0b070")  # amber — Godot class sections
 const GROUP_COLOR_TRIGGER := Color("#6fd0b0")     # teal-green — run context / triggers / signals
@@ -402,9 +407,8 @@ func _refresh_tree() -> void:
 		var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()
 		var is_node_type_group: bool = not node_type.is_empty()
 		var group_key: String = node_type if is_node_type_group else _category_of(definition)
-		if not group_nodes.has(group_key):
-			group_nodes[group_key] = _make_group_item(root, group_key, is_node_type_group)
-		var item: TreeItem = _tree.create_item(group_nodes[group_key])
+		var group_item: TreeItem = _resolve_group_item(root, group_nodes, group_key, is_node_type_group)
+		var item: TreeItem = _tree.create_item(group_item)
 		item.set_text(0, _item_label(definition))
 		var item_icon: Texture2D = resolve_definition_icon(definition)
 		if item_icon != null:
@@ -431,6 +435,53 @@ func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> 
 	group_item.set_selectable(0, false)
 	group_item.set_selectable(1, false)
 	return group_item
+
+## Resolves (creating as needed) the tree item a row hangs under. Categories using the
+## "Parent: Sub" separator nest one level — the parent folder is shared with any flat ACEs
+## in the same category, and each distinct sub gets its own folder. Node-type sections and
+## separator-less categories stay flat, exactly as before.
+func _resolve_group_item(root: TreeItem, group_nodes: Dictionary, group_key: String, is_node_type: bool) -> TreeItem:
+	if group_nodes.has(group_key):
+		return group_nodes[group_key]
+	var parts: PackedStringArray = PackedStringArray() if is_node_type else split_subcategory(group_key)
+	if parts.is_empty():
+		var flat_item: TreeItem = _make_group_item(root, group_key, is_node_type)
+		group_nodes[group_key] = flat_item
+		return flat_item
+	var parent_key: String = parts[0]
+	var child_label: String = parts[1]
+	var parent_item: TreeItem
+	if group_nodes.has(parent_key):
+		parent_item = group_nodes[parent_key]
+	else:
+		parent_item = _make_group_item(root, parent_key, false)
+		group_nodes[parent_key] = parent_item
+	var sub_item: TreeItem = _make_sub_group_item(parent_item, child_label)
+	group_nodes[group_key] = sub_item
+	return sub_item
+
+## A nested sub-category folder ("Array" inside "Variables"): same non-selectable folder
+## styling as a top-level group, parented under its category instead of the tree root.
+func _make_sub_group_item(parent_item: TreeItem, child_label: String) -> TreeItem:
+	var sub_item: TreeItem = _tree.create_item(parent_item)
+	sub_item.set_text(0, child_label)
+	sub_item.set_custom_color(0, _group_color_for(child_label, false))
+	sub_item.set_selectable(0, false)
+	sub_item.set_selectable(1, false)
+	return sub_item
+
+## Splits a "Parent: Sub" category into [parent, child] (both stripped). Returns an empty
+## array when there is no sub-category separator, so the category renders as a flat group.
+## Pure + static so the grouping can be unit-tested without a display server.
+static func split_subcategory(group_key: String) -> PackedStringArray:
+	var index: int = group_key.find(SUBCATEGORY_SEPARATOR)
+	if index == -1:
+		return PackedStringArray()
+	var parent_name: String = group_key.substr(0, index).strip_edges()
+	var child_name: String = group_key.substr(index + SUBCATEGORY_SEPARATOR.length()).strip_edges()
+	if parent_name.is_empty() or child_name.is_empty():
+		return PackedStringArray()
+	return PackedStringArray([parent_name, child_name])
 
 ## Resolves an ACE's icon, in C3-familiarity order: an explicit `res://` texture from the
 ## addon's @ace_icon annotation → the node type's editor class icon → a member-kind editor

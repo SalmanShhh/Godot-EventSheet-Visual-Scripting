@@ -37,6 +37,16 @@ static func run() -> bool:
 	all_passed = _check("group colour custom", picker._group_color_for("Custom ACEs", false), ACEPickerDialog.GROUP_COLOR_CUSTOM) and all_passed
 	all_passed = _check("group colour other neutral", picker._group_color_for("General Conditions", false), ACEPickerDialog.GROUP_COLOR_NEUTRAL) and all_passed
 
+	# Sub-category nesting: a "Parent: Sub" category splits into a parent + child folder so
+	# related ACEs (Array/Dictionary/… helpers) cluster under one section instead of a flat list.
+	all_passed = _check("subcategory splits Variables: Array",
+		Array(ACEPickerDialog.split_subcategory("Variables: Array")), ["Variables", "Array"]) and all_passed
+	all_passed = _check("subcategory splits Variables: Dictionary",
+		Array(ACEPickerDialog.split_subcategory("Variables: Dictionary")), ["Variables", "Dictionary"]) and all_passed
+	all_passed = _check("flat category does not split", ACEPickerDialog.split_subcategory("General Actions").is_empty(), true) and all_passed
+	all_passed = _check("node-type-style name does not split", ACEPickerDialog.split_subcategory("CharacterBody2D").is_empty(), true) and all_passed
+	all_passed = _check("trailing separator does not split", ACEPickerDialog.split_subcategory("Variables: ").is_empty(), true) and all_passed
+
 	# Mode filtering.
 	var trigger_def: ACEDefinition = _make_def(ACEDefinition.ACEType.TRIGGER)
 	var condition_def: ACEDefinition = _make_def(ACEDefinition.ACEType.CONDITION)
