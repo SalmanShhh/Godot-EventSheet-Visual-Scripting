@@ -15,6 +15,9 @@ var _scope_label: Label = null
 var _name_edit: LineEdit = null
 var _type_option: OptionButton = null
 var _default_edit: LineEdit = null
+var _items_button: Button = null
+var _items_window: Window = null
+var _items_edit: TextEdit = null
 var _const_check: CheckBox = null
 var _exported_check: CheckBox = null
 var _const_help: Label = null
@@ -96,6 +99,7 @@ func init_dialog(parent_node: Node) -> void:
 		_refresh_const_ui()
 		_refresh_default_hint()
 		_refresh_contextual_rows()
+		_refresh_items_button()
 	)
 	type_row.add_child(_type_option)
 	form.add_child(type_row)
@@ -112,6 +116,12 @@ func init_dialog(parent_node: Node) -> void:
 		_refresh_default_hint()
 	)
 	default_row.add_child(_default_edit)
+	_items_button = Button.new()
+	_items_button.text = "Edit items…"
+	_items_button.tooltip_text = "Edit an Array/Dictionary's items one per line instead of typing a literal."
+	_items_button.pressed.connect(_open_items_editor)
+	default_row.add_child(_items_button)
+	_refresh_items_button()
 	form.add_child(default_row)
 	_options_row = HBoxContainer.new()
 	var options_label: Label = Label.new()
@@ -225,6 +235,115 @@ func init_dialog(parent_node: Node) -> void:
 
 ## A 130px-label + expanding-field row, matching the main form's columns, so the optional
 ## Inspector fields line up with Name/Type/Default above instead of running full-width.
+## ── Structured data editor (Array/Dictionary "Edit items…") ──────────────────
+## True when the chosen type is a collection, so the structured items editor applies.
+func _selected_type_is_collection() -> bool:
+	var type_name: String = _type_option.get_item_text(_type_option.selected) if _type_option != null and _type_option.selected >= 0 else ""
+	return type_name.begins_with("Array") or type_name.begins_with("Dictionary")
+
+func _refresh_items_button() -> void:
+	if _items_button != null:
+		_items_button.visible = _selected_type_is_collection()
+
+## Edit an Array/Dictionary's items one per line (Array: a value per line; Dictionary a
+## "key: value" per line) instead of typing a cramped literal. Round-trips through the
+## literal so the stored default's shape is unchanged.
+func _open_items_editor() -> void:
+	if _items_window == null:
+		_build_items_window()
+	var is_dict: bool = _type_option.get_item_text(_type_option.selected).begins_with("Dictionary")
+	_items_edit.text = "\n".join(collection_literal_items(_default_edit.text))
+	_items_edit.placeholder_text = "one \"key\": value per line" if is_dict else "one value per line"
+	_items_window.title = "Edit Dictionary Items" if is_dict else "Edit Array Items"
+	_items_window.popup_centered(Vector2i(420, 360))
+	_items_edit.grab_focus()
+
+func _build_items_window() -> void:
+	_items_window = Window.new()
+	_items_window.visible = false
+	_items_window.min_size = Vector2i(360, 280)
+	_items_window.close_requested.connect(func() -> void: _items_window.hide())
+	_dialog.add_child(_items_window)
+	var box: VBoxContainer = VBoxContainer.new()
+	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	box.add_theme_constant_override("separation", 6)
+	_items_window.add_child(box)
+	var hint: Label = Label.new()
+	hint.text = "One item per line — each line is a GDScript value expression."
+	box.add_child(hint)
+	_items_edit = TextEdit.new()
+	_items_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(_items_edit)
+	var buttons: HBoxContainer = HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_END
+	var cancel: Button = Button.new()
+	cancel.text = "Cancel"
+	cancel.pressed.connect(func() -> void: _items_window.hide())
+	buttons.add_child(cancel)
+	var apply_button: Button = Button.new()
+	apply_button.text = "Apply"
+	apply_button.pressed.connect(_apply_items_editor)
+	buttons.add_child(apply_button)
+	box.add_child(buttons)
+
+func _apply_items_editor() -> void:
+	var is_dict: bool = _type_option.get_item_text(_type_option.selected).begins_with("Dictionary")
+	var items: PackedStringArray = PackedStringArray()
+	for line: String in _items_edit.text.split("\n"):
+		if not line.strip_edges().is_empty():
+			items.append(line.strip_edges())
+	_default_edit.text = items_to_collection_literal(items, is_dict)
+	_refresh_default_hint()
+	_items_window.hide()
+
+## Splits an Array/Dictionary literal into its top-level entries (bracket- + string-aware):
+## '[1, [2, 3], "a,b"]' -> ['1', '[2, 3]', '"a,b"']. Pure + static, so it is unit-testable.
+static func collection_literal_items(literal: String) -> PackedStringArray:
+	var items: PackedStringArray = PackedStringArray()
+	var trimmed: String = literal.strip_edges()
+	if (trimmed.begins_with("[") and trimmed.ends_with("]")) or (trimmed.begins_with("{") and trimmed.ends_with("}")):
+		trimmed = trimmed.substr(1, trimmed.length() - 2)
+	trimmed = trimmed.strip_edges()
+	if trimmed.is_empty():
+		return items
+	var depth: int = 0
+	var in_string: bool = false
+	var quote: String = ""
+	var current: String = ""
+	for i: int in trimmed.length():
+		var ch: String = trimmed[i]
+		if in_string:
+			current += ch
+			if ch == quote and (i == 0 or trimmed[i - 1] != "\\"):
+				in_string = false
+			continue
+		if ch == "\"" or ch == "'":
+			in_string = true
+			quote = ch
+			current += ch
+		elif ch == "[" or ch == "{" or ch == "(":
+			depth += 1
+			current += ch
+		elif ch == "]" or ch == "}" or ch == ")":
+			depth -= 1
+			current += ch
+		elif ch == "," and depth == 0:
+			items.append(current.strip_edges())
+			current = ""
+		else:
+			current += ch
+	if not current.strip_edges().is_empty():
+		items.append(current.strip_edges())
+	return items
+
+## Wraps item expressions back into an Array literal ("[a, b]") or Dictionary literal
+## ("{k: v, …}"). Empty -> "[]" / "{}".
+static func items_to_collection_literal(items: PackedStringArray, is_dictionary: bool) -> String:
+	if items.is_empty():
+		return "{}" if is_dictionary else "[]"
+	var joined: String = ", ".join(items)
+	return ("{%s}" % joined) if is_dictionary else ("[%s]" % joined)
+
 func _attr_field_row(label_text: String, field: Control) -> HBoxContainer:
 	var row: HBoxContainer = HBoxContainer.new()
 	var label: Label = Label.new()
@@ -269,6 +388,7 @@ func open_for_edit(
 			selected_index = index
 			break
 	_type_option.select(selected_index)
+	_refresh_items_button()
 	_const_check.button_pressed = is_constant
 	# Local variables are inherently private to the script body, so the export toggle only
 	# applies to global (sheet-level) variables.

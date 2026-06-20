@@ -96,6 +96,30 @@ static func run() -> bool:
 	all_passed = _check("template compiles + parses", template_script.reload(true) == OK, true) and all_passed
 	note_editor.free()
 
+	# Conditional breakpoint (#5 visual debugging): a guarded `if <cond>: breakpoint`.
+	var bp_sheet: EventSheetResource = EventSheetResource.new()
+	bp_sheet.emit_breakpoints = true
+	bp_sheet.variables = {"health": {"type": "int", "default": 100}}
+	var bp_event: EventRow = EventRow.new()
+	bp_event.trigger_provider_id = "Core"
+	bp_event.trigger_id = "OnReady"
+	bp_event.debug_break = true
+	bp_event.debug_break_condition = "health <= 0"
+	var bp_action: RawCodeRow = RawCodeRow.new()
+	bp_action.code = "pass"
+	bp_event.actions.append(bp_action)
+	bp_sheet.events.append(bp_event)
+	var bp_output: String = str(SheetCompiler.compile(bp_sheet, "user://eventsheets_bp.gd").get("output", ""))
+	all_passed = _check("conditional breakpoint emits an if-guard", bp_output.contains("if health <= 0:"), true) and all_passed
+	all_passed = _check("conditional breakpoint still emits breakpoint", bp_output.contains("breakpoint"), true) and all_passed
+	var bp_script: GDScript = GDScript.new()
+	bp_script.source_code = bp_output
+	all_passed = _check("conditional breakpoint compiles + parses", bp_script.reload(true) == OK, true) and all_passed
+	# A blank condition falls back to a bare (unguarded) breakpoint.
+	bp_event.debug_break_condition = ""
+	var bare_output: String = str(SheetCompiler.compile(bp_sheet, "user://eventsheets_bp2.gd").get("output", ""))
+	all_passed = _check("blank condition emits a bare breakpoint (no guard)", bare_output.contains("if health <= 0:"), false) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -21,6 +21,10 @@ static var _uid_counter: int = 0
 ## Real breakpoints: when the sheet's emit_breakpoints toggle is on, this event's body
 ## starts with a `breakpoint` statement (pausing the Godot debugger).
 @export var debug_break: bool = false
+## Optional conditional-breakpoint guard: when non-empty, the breakpoint fires only when this
+## GDScript boolean expression is true (compiled as `if <cond>: breakpoint`) — break on the
+## frame that matters instead of every pass.
+@export var debug_break_condition: String = ""
 @export var comment: String = ""
 @export var trigger_provider_id: String = ""
 @export var trigger_id: String = ""

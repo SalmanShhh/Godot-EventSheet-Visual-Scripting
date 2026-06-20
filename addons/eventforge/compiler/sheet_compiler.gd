@@ -906,7 +906,12 @@ static func _emit_event_body(
 		had_body = had_body or emitted_pick_loop
 		var body_indent: String = "\t".repeat(body_depth)
 		if _emit_breakpoints_flag and event_row.debug_break:
-			lines.append(body_indent + "breakpoint")
+			var break_condition: String = event_row.debug_break_condition.strip_edges()
+			if break_condition.is_empty():
+				lines.append(body_indent + "breakpoint")
+			else:
+				lines.append("%sif %s:" % [body_indent, break_condition])
+				lines.append("%s	breakpoint" % body_indent)
 			had_body = true
 		var body_start_size: int = lines.size()
 

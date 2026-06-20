@@ -52,6 +52,7 @@ const ROW_MENU_OPEN_IN_SPLIT := 23
 const ROW_MENU_MAKE_ELSE := 35
 const ROW_MENU_MAKE_ELIF := 36
 const ROW_MENU_EXTRACT_GDSCRIPT_FN := 37
+const ROW_MENU_BREAKPOINT_CONDITION := 38
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -1484,6 +1485,54 @@ func _extract_gdscript_to_function_requested() -> void:
     )
     if changed:
         _mark_dirty("Extracted GDScript into %s() — now callable as an ACE (Functions)." % function_name)
+
+var _breakpoint_condition_dialog: AcceptDialog = null
+var _breakpoint_condition_edit: LineEdit = null
+var _breakpoint_condition_target: EventRow = null
+
+## Visual debugging: a conditional breakpoint. Prompts for a GDScript boolean expression; the
+## breakpoint then fires only when it is true (compiled as `if <cond>: breakpoint`). Sets and
+## enables the row breakpoint; a blank expression clears the guard (break every pass).
+func _set_breakpoint_condition_requested() -> void:
+    if _context_row == null or not (_context_row.source_resource is EventRow):
+        _set_status("Right-click an event to set a breakpoint condition.", true)
+        return
+    var event: EventRow = _context_row.source_resource as EventRow
+    if _breakpoint_condition_dialog == null:
+        _breakpoint_condition_dialog = AcceptDialog.new()
+        _breakpoint_condition_dialog.title = "Conditional Breakpoint"
+        _breakpoint_condition_dialog.ok_button_text = "Set"
+        var box: VBoxContainer = VBoxContainer.new()
+        var hint: Label = Label.new()
+        hint.text = "Break only when this GDScript expression is true.\nLeave blank to break every pass. Enables this event's breakpoint."
+        box.add_child(hint)
+        _breakpoint_condition_edit = LineEdit.new()
+        _breakpoint_condition_edit.placeholder_text = "e.g. health <= 0"
+        _breakpoint_condition_edit.custom_minimum_size = Vector2(360.0, 0.0)
+        box.add_child(_breakpoint_condition_edit)
+        _breakpoint_condition_dialog.add_child(box)
+        _breakpoint_condition_dialog.confirmed.connect(_apply_breakpoint_condition)
+        add_child(_breakpoint_condition_dialog)
+    _breakpoint_condition_target = event
+    _breakpoint_condition_edit.text = event.debug_break_condition
+    _breakpoint_condition_dialog.popup_centered()
+    _breakpoint_condition_edit.grab_focus()
+
+func _apply_breakpoint_condition() -> void:
+    if _breakpoint_condition_target == null:
+        return
+    var event: EventRow = _breakpoint_condition_target
+    var condition: String = _breakpoint_condition_edit.text.strip_edges()
+    var changed: bool = _perform_undoable_sheet_edit("Set Breakpoint Condition", func() -> bool:
+        event.debug_break = true
+        event.debug_break_condition = condition
+        return true
+    )
+    if changed:
+        var note: String = ("Breakpoint will pause when: %s" % condition) if not condition.is_empty() else "Breakpoint will pause every pass."
+        if _current_sheet != null and not _current_sheet.emit_breakpoints:
+            note += "  (enable Tools ▸ Debug Breakpoints to emit.)"
+        _mark_dirty(note)
 
 var _find_refs_window: Window = null
 var _find_refs_edit: LineEdit = null
@@ -5220,6 +5269,7 @@ func _build_row_more_submenu(is_event: bool) -> void:
         m.add_item("Extract GDScript to Function", ROW_MENU_EXTRACT_GDSCRIPT_FN)
         m.add_item("Add Comment Sub-Event", ROW_MENU_ADD_COMMENT_SUB_EVENT)
         m.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
+        m.add_item("Set Breakpoint Condition…", ROW_MENU_BREAKPOINT_CONDITION)
         m.add_item("Add Pick Filter (For Each)…", ROW_MENU_ADD_PICK_FILTER)
         m.add_item("Add Match To Actions…", ROW_MENU_ADD_MATCH)
         m.add_separator()
@@ -5433,6 +5483,8 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
             _set_context_else_mode(EventRow.ElseMode.ELIF)
         ROW_MENU_EXTRACT_GDSCRIPT_FN:
             _extract_gdscript_to_function_requested()
+        ROW_MENU_BREAKPOINT_CONDITION:
+            _set_breakpoint_condition_requested()
         ROW_MENU_TOGGLE_ENABLED:
             _toggle_context_row_enabled()
         ROW_MENU_EDIT_COMMENT:

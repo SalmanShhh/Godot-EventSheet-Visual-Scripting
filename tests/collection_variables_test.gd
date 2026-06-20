@@ -73,6 +73,18 @@ static func run() -> bool:
 	all_passed = _check("scalars skip collection validation",
 		bool(VariableDialog.validate_default("int", "whatever").get("ok", false)), true) and all_passed
 
+	# Structured "Edit items…" data editor: literal <-> one-item-per-line round-trip.
+	all_passed = _check("array literal splits into top-level items (bracket+string aware)",
+		Array(VariableDialog.collection_literal_items("[1, [2, 3], \"a,b\"]")), ["1", "[2, 3]", "\"a,b\""]) and all_passed
+	all_passed = _check("dictionary literal splits into pairs",
+		Array(VariableDialog.collection_literal_items("{\"a\": 1, \"b\": 2}")), ["\"a\": 1", "\"b\": 2"]) and all_passed
+	all_passed = _check("items wrap back into an array literal",
+		VariableDialog.items_to_collection_literal(PackedStringArray(["1", "2"]), false), "[1, 2]") and all_passed
+	all_passed = _check("items wrap back into a dictionary literal",
+		VariableDialog.items_to_collection_literal(PackedStringArray(["\"a\": 1"]), true), "{\"a\": 1}") and all_passed
+	all_passed = _check("empty items -> empty array literal",
+		VariableDialog.items_to_collection_literal(PackedStringArray(), false), "[]") and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
