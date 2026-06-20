@@ -2,13 +2,15 @@
 
 ## [Unreleased]
 
-### Dev helper ACEs — Debug · Groups · Metadata (the everyday tools)
-- **18 developer-helper ACEs** (`dev_aces`) for the native operations you reach for constantly,
+### Dev helper ACEs — Debug · Groups · Metadata · Nodes (the everyday tools)
+- **26 developer-helper ACEs** (`dev_aces`) for the native operations you reach for constantly,
   so common dev/debug chores never force a drop to GDScript. **Debug**: Print, Print Labeled,
   Print Rich, Push Warning, Push Error, Assert, Print Scene Tree, Frame Count, Breakpoint.
   **Groups**: Add/Remove/Is-In Group, Get First / Count In Group, Call Method On Group.
-  **Metadata**: Set/Get/Has/Remove Meta. Each compiles to the exact one-liner you'd hand-write
-  (`print(…)`, `add_to_group(…)`, `set_meta(…)`); registry + category + codegen unit-tested.
+  **Metadata**: Set/Get/Has/Remove Meta. **Nodes**: Get Parent, Get Child / Child Count, Find
+  Child, Get Node Or Null, Has Node, Get Scene Owner, Is Ancestor Of — scene-tree navigation that
+  was previously uncovered. Each compiles to the exact one-liner you'd hand-write (`print(…)`,
+  `add_to_group(…)`, `set_meta(…)`, `get_parent()`); registry + category + codegen unit-tested.
 
 ### Editor DX — popup polish, error→row deep-linking, shadow guard, picker, watch + event trace
 - **Consistent popups** — a shared `EventSheetPopupUI` helper gives the plugin's dialogs one look:

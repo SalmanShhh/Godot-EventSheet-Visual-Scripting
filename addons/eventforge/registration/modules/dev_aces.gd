@@ -1,10 +1,10 @@
 # EventForge module — Developer helper vocabulary (the everyday dev tools).
 #
 # The small native operations a Godot dev reaches for constantly while building + debugging:
-# console output, assertions, scene-tree groups, and node metadata. They compile to the exact
-# one-liners you'd hand-write (print(...), add_to_group(...), set_meta(...)), so picking one
-# keeps logic as an editable row instead of a raw block — and means common dev chores never
-# force a drop to GDScript. Grouped under Debug / Groups / Metadata for discoverability.
+# console output, assertions, scene-tree groups, node metadata, and tree navigation. They compile
+# to the exact one-liners you'd hand-write (print(...), add_to_group(...), set_meta(...),
+# get_parent()), so picking one keeps logic as an editable row instead of a raw block — and means
+# common dev chores never force a drop to GDScript. Grouped under Debug / Groups / Metadata / Nodes.
 @tool
 extends RefCounted
 class_name EventForgeDevACEs
@@ -39,5 +39,15 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "GetMeta", "Get Metadata", ACEDescriptor.ACEType.EXPRESSION, "{target}.get_meta({name})", "", [F.make_param("target", "String", "self", "Target", "Object to read.", "expression"), F.make_param("name", "String", "\"key\"", "Name", "Metadata key.", "expression")], "Metadata", "meta {name}"))
 	descriptors.append(F.make_descriptor("Core", "HasMeta", "Has Metadata", ACEDescriptor.ACEType.CONDITION, "{target}.has_meta({name})", "", [F.make_param("target", "String", "self", "Target", "Object to test.", "expression"), F.make_param("name", "String", "\"key\"", "Name", "Metadata key.", "expression")], "Metadata", "has meta {name}"))
 	descriptors.append(F.make_descriptor("Core", "RemoveMeta", "Remove Metadata", ACEDescriptor.ACEType.ACTION, "{target}.remove_meta({name})", "", [F.make_param("target", "String", "self", "Target", "Object to edit.", "expression"), F.make_param("name", "String", "\"key\"", "Name", "Metadata key.", "expression")], "Metadata", "remove meta {name}"))
+
+	# ── Nodes: scene-tree navigation (parent / child / find / owner), the everyday tree queries ──
+	descriptors.append(F.make_descriptor("Core", "GetParent", "Get Parent", ACEDescriptor.ACEType.EXPRESSION, "{target}.get_parent()", "", [F.make_param("target", "String", "self", "Target", "Node whose parent to get.", "expression")], "Nodes", "{target} parent"))
+	descriptors.append(F.make_descriptor("Core", "GetChildCount", "Get Child Count", ACEDescriptor.ACEType.EXPRESSION, "{target}.get_child_count()", "", [F.make_param("target", "String", "self", "Target", "Node whose children to count.", "expression")], "Nodes", "{target} child count"))
+	descriptors.append(F.make_descriptor("Core", "GetChild", "Get Child (by index)", ACEDescriptor.ACEType.EXPRESSION, "{target}.get_child({index})", "", [F.make_param("target", "String", "self", "Target", "Parent node.", "expression"), F.make_param("index", "String", "0", "Index", "Child index (0-based).", "expression")], "Nodes", "{target} child {index}"))
+	descriptors.append(F.make_descriptor("Core", "FindChild", "Find Child (by name)", ACEDescriptor.ACEType.EXPRESSION, "{target}.find_child({pattern})", "", [F.make_param("target", "String", "self", "Target", "Node to search under.", "expression"), F.make_param("pattern", "String", "\"Enemy*\"", "Pattern", "Name pattern (wildcards allowed).", "expression")], "Nodes", "find {pattern} in {target}"))
+	descriptors.append(F.make_descriptor("Core", "GetNodeOrNull", "Get Node Or Null", ACEDescriptor.ACEType.EXPRESSION, "{target}.get_node_or_null({path})", "", [F.make_param("target", "String", "self", "Target", "Base node.", "expression"), F.make_param("path", "String", "\"Sprite2D\"", "Path", "Node path (returns null if missing).", "expression")], "Nodes", "{target}.{path} or null"))
+	descriptors.append(F.make_descriptor("Core", "HasNode", "Has Node", ACEDescriptor.ACEType.CONDITION, "{target}.has_node({path})", "", [F.make_param("target", "String", "self", "Target", "Base node.", "expression"), F.make_param("path", "String", "\"Sprite2D\"", "Path", "Node path to test.", "expression")], "Nodes", "{target} has {path}"))
+	descriptors.append(F.make_descriptor("Core", "GetOwner", "Get Scene Owner", ACEDescriptor.ACEType.EXPRESSION, "{target}.owner", "", [F.make_param("target", "String", "self", "Target", "Node whose scene owner to get.", "expression")], "Nodes", "{target} owner"))
+	descriptors.append(F.make_descriptor("Core", "IsAncestorOf", "Is Ancestor Of", ACEDescriptor.ACEType.CONDITION, "{target}.is_ancestor_of({node})", "", [F.make_param("target", "String", "self", "Target", "Potential ancestor node.", "expression"), F.make_param("node", "String", "get_node(\"Child\")", "Node", "Node to test for descendancy.", "expression")], "Nodes", "{target} is ancestor of {node}"))
 
 	return descriptors

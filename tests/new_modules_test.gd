@@ -35,7 +35,7 @@ static func run() -> bool:
 	var categories: Dictionary = {}
 	for d2: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
 		categories[d2.ace_id] = d2.category
-	for dev: Array in [["Print", "Debug"], ["Assert", "Debug"], ["AddToGroup", "Groups"], ["IsInGroup", "Groups"], ["SetMeta", "Metadata"], ["GetMeta", "Metadata"]]:
+	for dev: Array in [["Print", "Debug"], ["Assert", "Debug"], ["AddToGroup", "Groups"], ["IsInGroup", "Groups"], ["SetMeta", "Metadata"], ["GetMeta", "Metadata"], ["GetParent", "Nodes"], ["HasNode", "Nodes"], ["FindChild", "Nodes"]]:
 		var dev_id: String = str(dev[0])
 		all_passed = _check("%s registered" % dev_id, ids.has(dev_id), true) and all_passed
 		all_passed = _check("%s in %s category" % [dev_id, str(dev[1])], str(categories.get(dev_id, "<missing>")), str(dev[1])) and all_passed
