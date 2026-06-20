@@ -22,6 +22,9 @@ var children: Array[EventRowData] = []
 var source_resource: Resource = null
 var row_uid: String = ""
 var debug_state: String = ""
+# Set by the viewport from EventSheetDiagnostics: a non-empty message paints a red error
+# marker on the row and shows in its tooltip (the "error → row" deep-link). "" = no error.
+var error_message: String = ""
 var line_number: int = 0
 var breakpoint_enabled: bool = false
 var bookmark_enabled: bool = false

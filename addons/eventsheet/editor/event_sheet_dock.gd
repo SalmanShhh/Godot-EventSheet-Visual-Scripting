@@ -692,6 +692,7 @@ func _build_ui() -> void:
     tools_popup.add_separator()
     tools_popup.add_item("Find in Project…", 6)
     tools_popup.add_item("Project Doctor…", 7)
+    tools_popup.add_item("Check Sheet for Errors", 14)
     tools_popup.add_item("Vocabulary Doc", 8)
     tools_popup.add_separator()
     tools_popup.add_item("Sheet Backups…", 9)
@@ -716,7 +717,9 @@ func _build_ui() -> void:
             11: _attach_behavior_to_selection()
             12: _open_lift_report()
             13: show_welcome()
+            14: _run_diagnostics_action()
     )
+    tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.")
     tools_popup.set_item_tooltip(tools_popup.get_item_index(0), "Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.")
     tools_popup.set_item_tooltip(tools_popup.get_item_index(1), "Toggle Live Values: running sheets stream their variables here (editable).")
     _toolbar.add_child(tools_menu)
@@ -1303,11 +1306,18 @@ func _on_save_requested() -> void:
         if compile_on_save:
             var auto_result: Dictionary = SheetCompiler.compile(_current_sheet, "")
             if not bool(auto_result.get("success", false)):
+                _run_diagnostics()
                 _set_status("Saved, but the sheet doesn't compile: %s" % str(auto_result.get("errors")), true)
                 _refresh_title_strip()
                 return
+        # Row-level lint: flag any bad ƒx expression / GDScript block ON its row + jump to the
+        # first, even when the structural compile passed (the common code-free error case).
+        var issue_count: int = _run_diagnostics()
         _refresh_title_strip()
-        _set_status("Saved: %s" % save_path.get_file())
+        if issue_count > 0:
+            _set_status("Saved: %s — %d row(s) need attention (jumped to the first)." % [save_path.get_file(), issue_count], true)
+        else:
+            _set_status("Saved: %s" % save_path.get_file())
     else:
         _set_status("Save failed (error %d)." % err, true)
 
@@ -4409,6 +4419,33 @@ func _open_project_find(initial_query: String = "") -> void:
 # EventSheetProjectDoctor so the headless CLI and CI run the same checks) ─────────────
 var _doctor_window: Window = null
 var _doctor_tree: Tree = null
+
+## Runs EventSheetDiagnostics over the current sheet, paints per-row error markers on the active
+## view, and jumps to the first flagged row. Returns the flagged-row count. The "error → row"
+## deep-link: a bad ƒx expression or GDScript block lands you ON the offending row, not a status
+## line you then have to hunt down. Clears markers (and returns 0) when the sheet is clean.
+func _run_diagnostics() -> int:
+    if _current_sheet == null:
+        return 0
+    var view: EventSheetViewport = _active_view()
+    if view == null:
+        return 0
+    var diagnostics: Array = EventSheetDiagnostics.analyze(_current_sheet, _ace_registry)
+    var count: int = view.set_row_diagnostics(diagnostics)
+    if count > 0:
+        view.reveal_and_select_first_diagnostic()
+    return count
+
+## Tools ▸ Check Sheet for Errors — run diagnostics on demand and report.
+func _run_diagnostics_action() -> void:
+    if _current_sheet == null:
+        _set_status("Open or create a sheet first.", true)
+        return
+    var count: int = _run_diagnostics()
+    if count > 0:
+        _set_status("%d row(s) need attention — jumped to the first (hover the red rows for details)." % count, true)
+    else:
+        _set_status("No issues found — every ƒx expression and GDScript block compiles.")
 
 func _open_project_doctor() -> void:
     if _doctor_window == null:

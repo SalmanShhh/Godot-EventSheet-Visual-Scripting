@@ -206,6 +206,12 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
         control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, row_rect.size.x, 1.0), block_border, true)
         control.draw_rect(Rect2(row_rect.position.x, row_rect.end.y - 1.0, row_rect.size.x, 1.0), block_border, true)
     _draw_indent_guides(control, row_rect, row_data.indent)
+    if not row_data.error_message.is_empty():
+        # Error → row deep-link: a red left stripe + faint wash flag the offending row (the
+        # message shows in the row tooltip). A fixed error red — not yet a theme token.
+        var error_stripe: Color = Color("#ff5555")
+        control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), error_stripe, true)
+        control.draw_rect(row_rect, Color(error_stripe.r, error_stripe.g, error_stripe.b, 0.08), true)
     if row_data.selected and not has_span_selection:
         # Slightly tempered for single-cell rows (comments especially) — selection
         # stays unmistakable via the outline, without the full-strength flood fill.

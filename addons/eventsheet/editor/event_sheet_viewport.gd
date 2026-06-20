@@ -1506,24 +1506,72 @@ func _first_color_in_params(ace: Resource) -> Variant:
                 return parsed
     return null
 
+# uid (str instance id) -> error message, from set_row_diagnostics(). Re-applied to row_data
+# on every rebuild so the marker survives edits/scrolling (the "error → row" deep-link).
+var _row_diagnostics: Dictionary = {}
+var _first_diagnostic_uid: String = ""
+
 func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
     if entry == null:
         return null
+    var row_data: EventRowData = null
     if entry is EventGroup:
-        return _build_group_row(entry as EventGroup, indent)
-    if entry is CommentRow:
-        return _build_comment_row(entry as CommentRow, indent)
-    if entry is LocalVariable:
-        return _build_tree_variable_row(entry as LocalVariable, indent)
-    if entry is RawCodeRow:
-        return _build_raw_code_row(entry as RawCodeRow, indent)
-    if entry is EnumRow:
-        return _build_enum_row(entry as EnumRow, indent)
-    if entry is SignalRow:
-        return _build_signal_row(entry as SignalRow, indent)
-    if entry is EventRow:
-        return _build_event_row(entry as EventRow, indent)
-    return null
+        row_data = _build_group_row(entry as EventGroup, indent)
+    elif entry is CommentRow:
+        row_data = _build_comment_row(entry as CommentRow, indent)
+    elif entry is LocalVariable:
+        row_data = _build_tree_variable_row(entry as LocalVariable, indent)
+    elif entry is RawCodeRow:
+        row_data = _build_raw_code_row(entry as RawCodeRow, indent)
+    elif entry is EnumRow:
+        row_data = _build_enum_row(entry as EnumRow, indent)
+    elif entry is SignalRow:
+        row_data = _build_signal_row(entry as SignalRow, indent)
+    elif entry is EventRow:
+        row_data = _build_event_row(entry as EventRow, indent)
+    if row_data != null and not _row_diagnostics.is_empty():
+        row_data.error_message = str(_row_diagnostics.get(str(entry.get_instance_id()), ""))
+    return row_data
+
+## Paints per-row error markers from EventSheetDiagnostics (each: {uid, message, suggestion}).
+## Returns the number of distinct flagged rows; re-applied on every rebuild. Replaces the prior
+## set, so passing [] clears it.
+func set_row_diagnostics(diagnostics: Array) -> int:
+    _row_diagnostics.clear()
+    _first_diagnostic_uid = ""
+    for diagnostic in diagnostics:
+        if not (diagnostic is Dictionary):
+            continue
+        var uid: String = str((diagnostic as Dictionary).get("uid", ""))
+        if uid.is_empty() or _row_diagnostics.has(uid):
+            continue
+        var message: String = str((diagnostic as Dictionary).get("message", ""))
+        var suggestion: String = str((diagnostic as Dictionary).get("suggestion", ""))
+        _row_diagnostics[uid] = message + ("  " + suggestion if not suggestion.is_empty() else "")
+        if _first_diagnostic_uid.is_empty():
+            _first_diagnostic_uid = uid
+    _refresh_rows()
+    return _row_diagnostics.size()
+
+func clear_row_diagnostics() -> void:
+    if _row_diagnostics.is_empty():
+        return
+    _row_diagnostics.clear()
+    _first_diagnostic_uid = ""
+    _refresh_rows()
+
+## Reveals (unfolds ancestors) + selects the first flagged row, so a failed compile lands you
+## straight on the offending event instead of leaving you to hunt. False if nothing is flagged.
+func reveal_and_select_first_diagnostic() -> bool:
+    if _first_diagnostic_uid.is_empty():
+        return false
+    for entry: Dictionary in get_flat_rows():
+        var row_data: EventRowData = entry.get("row")
+        if row_data != null and row_data.source_resource != null and str(row_data.source_resource.get_instance_id()) == _first_diagnostic_uid:
+            reveal_resource(row_data.source_resource)
+            select_resource(row_data.source_resource)
+            return true
+    return false
 
 ## An enum row: rendered like a variable declaration ("enum  State { IDLE, RUN }");
 ## double-click opens the enum dialog.
@@ -2967,6 +3015,11 @@ func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String)
 ## the GDScript mapping. Falls back to tooltip_text (drag feedback) otherwise.
 func _get_tooltip(at_position: Vector2) -> String:
     var hit: Dictionary = _hit_test(_to_logical_position(at_position))
+    # Error → row deep-link: a flagged row leads its tooltip with the diagnostic (it matters
+    # more than the codegen preview).
+    var hovered_error_row: EventRowData = _row_at(int(hit.get("row_index", -1)))
+    if hovered_error_row != null and not hovered_error_row.error_message.is_empty():
+        return "⚠ %s" % hovered_error_row.error_message
     var metadata: Dictionary = hit.get("span_metadata", {}) if hit.get("span_metadata", {}) is Dictionary else {}
     var kind: String = str(metadata.get("kind", ""))
     if kind in ["condition", "trigger", "action"]:

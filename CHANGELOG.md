@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Error → row deep-linking + group editor popup + Create-Node-parity ACE picker
+- **Error → row deep-linking** — when a ƒx expression or inline GDScript block doesn't compile,
+  the editor now flags the **offending row** (a red left-stripe + wash, the message in the row
+  tooltip) and jumps to the first one, instead of a status-bar line you have to hunt down. A
+  pure, unit-tested `EventSheetDiagnostics.analyze()` lints every block + expression-hinted
+  param against the sheet context (reusing the GDScript lint), keyed by the row's instance id so
+  the viewport marks it directly — no source-map line mapping needed. Runs on save (the common
+  bad-ƒx case the structural compile misses) and on demand via **Tools ▸ Check Sheet for Errors**;
+  a bare typo'd identifier also gets a "did you mean …?" suggestion.
+- **Group editor popup** — double-click / slow-click / Enter on a group header (and the naming
+  step after Add Group) opens a Name + **Description** popup, replacing the inline title edit
+  that could never *add* a description (it renders only once non-empty).
+- **ACE picker — Create-Node parity** — the Add Action/Condition dialog now mirrors Godot's
+  Create New Node: dedicated **⭐ Favorites + ★ Recent** left panes (same persisted data), a ⭐
+  star toggle, a real description panel (name · type · category + what it does + codegen), and
+  Cancel / Add buttons.
+
 ### Advanced Random addon (C3 parity) + ACE sub-categories + read-only .gd preview
 - **Advanced Random** autoload pack (27th pack) — a faithful port of Construct 3's Advanced
   Random plugin: seeded numbers / range / int / **dice** / **normal (Gaussian)**,
