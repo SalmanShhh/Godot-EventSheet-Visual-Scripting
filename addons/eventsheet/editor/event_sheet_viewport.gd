@@ -941,6 +941,11 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
             _select_from_click(row_index, span_index, false)
             _toggle_row_fold(row_index)
             return
+        if event.shift_pressed and _selection_anchor_index >= 0:
+            # Shift+click extends a whole-row range from the anchor to the clicked row.
+            _select_range(row_index)
+            accept_event()
+            return
         _select_from_click(row_index, span_index, event.ctrl_pressed or event.meta_pressed)
         if event.double_click:
             # In-flow GDScript blocks (actions) open the code dialog, not the ACE editor.
@@ -1332,7 +1337,14 @@ func _handle_key(event: InputEventKey) -> void:
     if _editing_row_index >= 0:
         _handle_editing_key(event)
         return
-    if event.keycode == KEY_UP and not event.alt_pressed:
+    if (event.keycode == KEY_UP or event.keycode == KEY_DOWN) and event.shift_pressed and not event.alt_pressed:
+        # Shift+Arrow grows or shrinks a whole-row range from the selection anchor.
+        var range_step: int = -1 if event.keycode == KEY_UP else 1
+        var range_origin: int = _selected_row_index if _selected_row_index >= 0 else 0
+        _select_range(range_origin + range_step)
+        ensure_selection_visible()
+        accept_event()
+    elif event.keycode == KEY_UP and not event.alt_pressed:
         _select_row(_selected_row_index - 1, _selected_span_index)
         ensure_selection_visible()
         accept_event()
@@ -2828,6 +2840,32 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
     _ensure_event_spans(selected_row)
     _selection_helper.sync_row_selection_flags(_flat_rows, _selected_row_uids)
     selection_changed.emit(selected_row)
+    queue_redraw()
+
+## Select every row between the selection anchor and target_index (inclusive) — the Shift+click /
+## Shift+Arrow range gesture. Preserves _selection_anchor_index so the range can grow or shrink
+## from the same origin, and clears any span-level selection (range selection is whole-row).
+func _select_range(target_index: int) -> void:
+    if _flat_rows.is_empty():
+        return
+    var anchor: int = _selection_anchor_index if _selection_anchor_index >= 0 else _selected_row_index
+    if anchor < 0:
+        anchor = target_index
+    anchor = clampi(anchor, 0, _flat_rows.size() - 1)
+    target_index = clampi(target_index, 0, _flat_rows.size() - 1)
+    _selected_row_uids.clear()
+    _selected_span_indices.clear()
+    for i in range(mini(anchor, target_index), maxi(anchor, target_index) + 1):
+        var range_row: EventRowData = _row_at(i)
+        if range_row != null:
+            _selected_row_uids[range_row.row_uid] = true
+    _selected_row_index = target_index
+    _selected_span_index = -1
+    _selection_anchor_index = anchor
+    var lead_row: EventRowData = _row_at(target_index)
+    _ensure_event_spans(lead_row)
+    _sync_row_selection_flags()
+    selection_changed.emit(lead_row)
     queue_redraw()
 
 func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:

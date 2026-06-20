@@ -39,6 +39,7 @@ const ConditionEditTestScript := preload("res://tests/condition_edit_test.gd")
 const InlineEditTestScript := preload("res://tests/inline_edit_test.gd")
 const DisableSelectionTestScript := preload("res://tests/disable_selection_test.gd")
 const SubeventSelectionTestScript := preload("res://tests/subevent_selection_test.gd")
+const RangeSelectionTestScript := preload("res://tests/range_selection_test.gd")
 const FooterRowsTestScript := preload("res://tests/footer_rows_test.gd")
 const GDScriptPairingTestScript := preload("res://tests/gdscript_pairing_test.gd")
 const ProvenanceTestScript := preload("res://tests/provenance_test.gd")
@@ -155,6 +156,7 @@ func _init() -> void:
 	passed = InlineEditTestScript.run() and passed
 	passed = DisableSelectionTestScript.run() and passed
 	passed = SubeventSelectionTestScript.run() and passed
+	passed = RangeSelectionTestScript.run() and passed
 	passed = FooterRowsTestScript.run() and passed
 	passed = GDScriptPairingTestScript.run() and passed
 	passed = ProvenanceTestScript.run() and passed

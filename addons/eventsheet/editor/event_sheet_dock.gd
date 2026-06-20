@@ -4471,7 +4471,7 @@ func _run_diagnostics_action() -> void:
 ## Godot's rebindable defaults.
 const SHORTCUTS: Array = [
     ["Editing", [["Enter / F2", "Edit the selected row"], ["Tab / Shift+Tab", "Nest / un-nest the event"], ["Alt + ↑ / ↓", "Move the row up / down"], ["← / →", "Fold / unfold a group"], ["Delete", "Delete the selection"], ["Ctrl + /", "Toggle row enabled (comment out)"]]],
-    ["Search & navigation", [["Ctrl + F", "Find & Replace"], ["F3 / Shift+F3", "Find next / previous"], ["Ctrl + P", "Command Palette"]]],
+    ["Search & navigation", [["Ctrl + F", "Find & Replace"], ["F3 / Shift+F3", "Find next / previous"], ["Ctrl + P", "Command Palette"], ["↑ / ↓", "Select previous / next row"], ["Shift + ↑ / ↓ / click", "Extend the row selection (range)"]]],
     ["Debug", [["F9  (or Ctrl+B)", "Toggle breakpoint on the row"], ["Ctrl + M", "Toggle bookmark"], ["F4 / Shift+F4", "Jump to next / previous bookmark"]]],
     ["View", [["Ctrl + +  /  Ctrl + -", "Zoom in / out"], ["Esc", "Close a popup / cancel an edit"]]],
     ["File & history", [["Ctrl + S", "Save the sheet"], ["Ctrl + Z  /  Ctrl + Y", "Undo / Redo"], ["Ctrl + C  /  Ctrl + V", "Copy / Paste rows"], ["Ctrl + D", "Duplicate the event"]]],
