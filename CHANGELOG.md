@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Team & navigation — merge driver, Find References, includes manager + provenance
+- **Semantic 3-way git merge driver** (`tools/sheet_merge`) — merges sheets at the row level
+  keyed on the now-stable UIDs: two people editing different rows merge cleanly; a genuine
+  same-row edit keeps both versions (fenced by ⚠ comment rows) for resolution in the editor,
+  instead of an unmergeable `.tres`. Opt-in per clone — see `docs/VERSION-CONTROL.md`.
+- **Symbol-aware Find References + Go-to-Definition** — whole-symbol matching (`\bname\b`)
+  across params/code/pick/comment/group surfaces, so `speed` finds the variable but never
+  `move_speed`; resolves a symbol to its definition; backs a rename **preview** (count what
+  it'll touch first).
+- **Includes, made usable** — **Edit ▸ Extract Selection to Include…** moves selected events
+  into a new library sheet and wires the include (copy-paste → modularization in one step);
+  a summarize core powers an include-manager preview (events/functions/variables each
+  contributes), with a cycle guard; and a provenance core resolves a sheet's includes into
+  their rows for read-only display.
+- **AI-assisted event generation** is enabled through the MCP server today (ground via
+  `list_aces`/`read_sheet` → the model writes GDScript → `apply_snippet` lifts it losslessly
+  into editable events, with `dry_run` preview) — see `docs/MCP-SERVER.md`.
+
 ### HTN Agent behavior — utility-driven planning (port of the custom C3 DHTN addons)
 - A new **HTN Agent** pack: a world-state blackboard + a task network of primitive and
   compound tasks, where each compound's methods carry preconditions, an ordered subtask list

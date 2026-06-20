@@ -45,6 +45,26 @@ Notes:
 | `lint_block {code, in_flow?, sheet_path?}` | Compile-checks GDScript against a sheet's context (its variables, enums, host class). |
 | `apply_snippet {path, text, dry_run?}` | Appends rows to a `.tres` sheet from EventSheet snippet text **or plain GDScript** (auto-converted through the same lossless lift pipeline the editor's paste uses). `.tres` only — GDScript-backed sheets are edited as code. |
 
+## AI-assisted event generation ("describe → events")
+
+These tools compose into a generation loop, so an MCP-connected AI can turn a plain-English
+request into editable events — grounded in the project, never a black box:
+
+1. **Ground** — `list_aces` for the available vocabulary, `read_sheet` for the current context
+   (host class, variables, existing rows).
+2. **Generate** — the model writes plain **GDScript** for the requested behavior (the thing
+   LLMs are strongest at), referencing the sheet's variables/host.
+3. **Preview** — `apply_snippet {dry_run: true}` runs that GDScript through the **lossless
+   GDScript→events lifter** and reports the row kinds it would add, without touching the file.
+4. **Apply** — `apply_snippet` appends the lifted, fully-editable event rows; `compile_sheet`
+   regenerates the script.
+
+Because generation rides the same lossless lift the editor's paste uses, the AI's output lands
+as ordinary events you can read, tweak, and diff — not opaque generated code. The remaining
+piece for an *in-editor* English prompt (rather than an external MCP client) is a built-in LLM
+call, which is opt-in API configuration rather than new generation plumbing — the plumbing is
+this loop, and it's covered by `mcp_server_test`.
+
 ## Safety model
 
 - Read tools never write anything; `compile_sheet` only writes when explicitly asked.
