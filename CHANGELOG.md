@@ -10,7 +10,12 @@
   **Metadata**: Set/Get/Has/Remove Meta. Each compiles to the exact one-liner you'd hand-write
   (`print(…)`, `add_to_group(…)`, `set_meta(…)`); registry + category + codegen unit-tested.
 
-### Editor DX — error→row deep-linking, shadow guard, picker polish, watch + event trace, recipes
+### Editor DX — popup polish, error→row deep-linking, shadow guard, picker, watch + event trace
+- **Consistent popups** — a shared `EventSheetPopupUI` helper gives the plugin's dialogs one look:
+  aligned **Label  [field]** form rows (fixed label width, fields expand), standard content
+  margins, and muted hint labels — matching the Godot 4.7 editor styling instead of each dialog
+  inventing its own. The group-editor and breakpoint-condition popups adopt it (more to follow);
+  the factory helpers are unit-tested.
 - **Live event trace** — Tools ▸ **Event Trace** instruments each event (debug compiles only,
   opt-in behind a new `emit_event_trace` flag so normal output is byte-for-byte untouched) to
   stream its UID as it fires over the Live Values channel; the editor **highlights the firing rows

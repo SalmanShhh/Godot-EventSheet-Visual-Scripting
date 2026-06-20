@@ -1517,15 +1517,13 @@ func _set_breakpoint_condition_requested() -> void:
         _breakpoint_condition_dialog = AcceptDialog.new()
         _breakpoint_condition_dialog.title = "Conditional Breakpoint"
         _breakpoint_condition_dialog.ok_button_text = "Set"
-        var box: VBoxContainer = VBoxContainer.new()
-        var hint: Label = Label.new()
-        hint.text = "Break only when this GDScript expression is true.\nLeave blank to break every pass. Enables this event's breakpoint."
-        box.add_child(hint)
+        _breakpoint_condition_dialog.min_size = Vector2i(440, 0)
+        var box: VBoxContainer = EventSheetPopupUI.form_box()
+        box.add_child(EventSheetPopupUI.hint_label("Break only when this GDScript expression is true. Leave blank to break every pass — either way, this enables the event's breakpoint."))
         _breakpoint_condition_edit = LineEdit.new()
         _breakpoint_condition_edit.placeholder_text = "e.g. health <= 0"
-        _breakpoint_condition_edit.custom_minimum_size = Vector2(360.0, 0.0)
-        box.add_child(_breakpoint_condition_edit)
-        _breakpoint_condition_dialog.add_child(box)
+        box.add_child(EventSheetPopupUI.form_row("Condition", _breakpoint_condition_edit))
+        _breakpoint_condition_dialog.add_child(EventSheetPopupUI.margined(box))
         _breakpoint_condition_dialog.confirmed.connect(_apply_breakpoint_condition)
         add_child(_breakpoint_condition_dialog)
     _breakpoint_condition_target = event
@@ -2038,11 +2036,7 @@ func _on_group_edit_requested(group: EventGroup) -> void:
         _group_edit_dialog.title = "Edit Group"
         _group_edit_dialog.ok_button_text = "Apply"
         _group_edit_dialog.min_size = Vector2i(420, 0)
-        var box: VBoxContainer = VBoxContainer.new()
-        box.add_theme_constant_override("separation", 6)
-        var name_label: Label = Label.new()
-        name_label.text = "Name"
-        box.add_child(name_label)
+        var box: VBoxContainer = EventSheetPopupUI.form_box()
         _group_name_edit = LineEdit.new()
         _group_name_edit.placeholder_text = "Group name"
         # Enter in the name field applies + closes (the LineEdit consumes Enter, so the dialog's
@@ -2051,15 +2045,12 @@ func _on_group_edit_requested(group: EventGroup) -> void:
             _apply_group_edit()
             _group_edit_dialog.hide()
         )
-        box.add_child(_group_name_edit)
-        var desc_label: Label = Label.new()
-        desc_label.text = "Description (optional)"
-        box.add_child(desc_label)
+        box.add_child(EventSheetPopupUI.form_row("Name", _group_name_edit))
         _group_desc_edit = TextEdit.new()
         _group_desc_edit.custom_minimum_size = Vector2(0.0, 90.0)
         _group_desc_edit.placeholder_text = "Shown as a muted second line on the group header."
-        box.add_child(_group_desc_edit)
-        _group_edit_dialog.add_child(box)
+        box.add_child(EventSheetPopupUI.form_row("Description", _group_desc_edit))
+        _group_edit_dialog.add_child(EventSheetPopupUI.margined(box))
         _group_edit_dialog.confirmed.connect(_apply_group_edit)
         add_child(_group_edit_dialog)
     _group_edit_target = group

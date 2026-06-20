@@ -116,6 +116,7 @@ const Phase0ACEsTestScript := preload("res://tests/phase0_aces_test.gd")
 const NewModulesTestScript := preload("res://tests/new_modules_test.gd")
 const ExtractToFunctionTestScript := preload("res://tests/extract_to_function_test.gd")
 const DiagnosticsTestScript := preload("res://tests/diagnostics_test.gd")
+const PopupUITestScript := preload("res://tests/popup_ui_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
 func _init() -> void:
@@ -125,6 +126,7 @@ func _init() -> void:
 	passed = NewModulesTestScript.run() and passed
 	passed = ExtractToFunctionTestScript.run() and passed
 	passed = DiagnosticsTestScript.run() and passed
+	passed = PopupUITestScript.run() and passed
 	passed = DemoResourceReferenceTestScript.run() and passed
 	passed = VariableRowFormatTestScript.run() and passed
 	passed = ACEMetadataTestScript.run() and passed
