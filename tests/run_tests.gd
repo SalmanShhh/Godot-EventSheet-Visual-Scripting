@@ -85,6 +85,8 @@ const HelperAcesTestScript := preload("res://tests/helper_aces_test.gd")
 const ACEAutocompleteTestScript := preload("res://tests/ace_autocomplete_test.gd")
 const HTNAgentTestScript := preload("res://tests/htn_agent_test.gd")
 const SheetMergeTestScript := preload("res://tests/sheet_merge_test.gd")
+const FindReferencesTestScript := preload("res://tests/find_references_test.gd")
+const SheetIncludesTestScript := preload("res://tests/sheet_includes_test.gd")
 const AddonTagsTestScript := preload("res://tests/addon_tags_test.gd")
 const BBCodeCommentsTestScript := preload("res://tests/bbcode_comments_test.gd")
 const SystemAcesTestScript := preload("res://tests/system_aces_test.gd")
@@ -188,6 +190,8 @@ func _init() -> void:
 	passed = ACEAutocompleteTestScript.run() and passed
 	passed = HTNAgentTestScript.run() and passed
 	passed = SheetMergeTestScript.run() and passed
+	passed = FindReferencesTestScript.run() and passed
+	passed = SheetIncludesTestScript.run() and passed
 	passed = AddonTagsTestScript.run() and passed
 	passed = BBCodeCommentsTestScript.run() and passed
 	passed = SystemAcesTestScript.run() and passed
