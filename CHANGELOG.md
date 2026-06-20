@@ -33,6 +33,11 @@
   Limits** (Camera2D), **Has All Keys** (Dictionary), **Repeat Text** (String), and **Seed Random**
   / **Randomize Seed** (Math & Random). Each compiles to the native one-liner; the multi-line and
   callback templates are parse-checked.
+- **4 more from the audit** — **Signal Is Connected** (condition) and **Emit Signal On** (emit a
+  signal on any target, reusing the existing optional-args idiom), **Set Text (formatted)** (set any
+  node's `text` from a printf template + args in one row — replaces a raw-code block the showcase
+  demos used), and **Move By** for 2D (relative translate; 3D already had it). A compile test proves
+  Emit Signal On drops the trailing comma when there are no args.
 
 ### Editor DX — popup polish, error→row deep-linking, shadow guard, picker, watch + event trace
 - **Consistent popups** — a shared `EventSheetPopupUI` helper gives the plugin's dialogs one look:
