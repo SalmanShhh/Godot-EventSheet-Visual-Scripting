@@ -82,6 +82,14 @@ static func run() -> bool:
 	var color_script: GDScript = GDScript.new()
 	color_script.source_code = "extends Node\nfunc _t() -> void:\n\tvar a: Color = (Color(1, 1, 1, 1)).lightened(0.2)\n\tvar b: Color = (Color(1, 1, 1, 1)).lerp(Color(1, 0, 0, 1), 0.5)\n\tvar c: Color = Color(Color(1, 1, 1, 1), 0.5)\n\tvar d: Color = Color.from_hsv(0.0, 1.0, 1.0, 1.0)\n\tprint(a, b, c, d)\n"
 	all_passed = _check("Color helper templates parse", color_script.reload() == OK, true) and all_passed
+	# Roadmap ACE batch (audit-driven): registry + category, and the trickier templates parse.
+	for r2: Array in [["DictHasAllKeys", "Variables: Dictionary"], ["CallAfterDelay", "Time"], ["TweenCallback", "Tween"], ["SetCameraLimits", "General Actions"], ["StringRepeat", "Variables: String"], ["SeedRandom", "Math & Random"], ["RandomizeSeed", "Math & Random"]]:
+		var r2_id: String = str(r2[0])
+		all_passed = _check("%s registered" % r2_id, ids.has(r2_id), true) and all_passed
+		all_passed = _check("%s in %s" % [r2_id, str(r2[1])], str(categories.get(r2_id, "<missing>")), str(r2[1])) and all_passed
+	var batch_script: GDScript = GDScript.new()
+	batch_script.source_code = "extends Camera2D\nfunc _t() -> void:\n\tlimit_left = 0\n\tlimit_top = 0\n\tlimit_right = 1920\n\tlimit_bottom = 1080\n\tcreate_tween().tween_callback(queue_free).set_delay(1.0)\n\tget_tree().create_timer(1.0).timeout.connect(queue_free)\n\tseed(0)\n\trandomize()\n\tvar d := {\"a\": 1, \"b\": 2}\n\tprint(d.has_all([\"a\", \"b\"]), \"#\".repeat(3))\n"
+	all_passed = _check("Roadmap ACE templates parse", batch_script.reload() == OK, true) and all_passed
 
 	# ── Button On Pressed trigger compiles to a real signal connection (resolver arm) ──
 	var sheet: EventSheetResource = EventSheetResource.new()

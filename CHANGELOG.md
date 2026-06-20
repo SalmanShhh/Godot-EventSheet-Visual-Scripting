@@ -28,6 +28,11 @@
   Alpha, Color From HSV, Color From Hex, Invert Color — so hit-flashes, fades, and tints stay
   code-free (only the `Set Color Tint` action existed before). The colour params are full
   expressions, so they compose; the generated templates are parse-checked in the suite.
+- **7 more helper ACEs** surfaced by a verified gap audit — **Tween Callback** and **Call After
+  Delay** (fire a method after N seconds without a Timer node or a blocking `await`), **Set Camera
+  Limits** (Camera2D), **Has All Keys** (Dictionary), **Repeat Text** (String), and **Seed Random**
+  / **Randomize Seed** (Math & Random). Each compiles to the native one-liner; the multi-line and
+  callback templates are parse-checked.
 
 ### Editor DX — popup polish, error→row deep-linking, shadow guard, picker, watch + event trace
 - **Consistent popups** — a shared `EventSheetPopupUI` helper gives the plugin's dialogs one look:
