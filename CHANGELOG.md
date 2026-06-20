@@ -2,7 +2,14 @@
 
 ## [Unreleased]
 
-### Editor DX — error→row deep-linking, shadow guard, picker polish, recipes/glossary
+### Editor DX — error→row deep-linking, shadow guard, picker polish, watch panel, recipes/glossary
+- **Watch panel** — the Live Values window gains a **Watch** box: pin any expression over the
+  sheet's variables (e.g. `health <= 0`, `score + lives`) and it's evaluated **editor-side**
+  against each streamed values frame via `Expression` and shown live — no compiler instrumentation
+  and no new debug protocol (reuses the existing Live Values stream). `evaluate_watch()` is pure +
+  unit-tested. Together with conditional breakpoints and editable Live Values, this covers the
+  step/watch debugging need short of automated step-to-next-event (a runtime-instrumentation
+  follow-up).
 - **Shadowing-variable guard** — naming a variable after a host-class member (e.g. `position` on a
   `Node2D` sheet) breaks the generated script. The variable dialog now **warns live + blocks** it
   (via `EventSheetProjectDoctor.shadowed_member_class`), and the row diagnostics flag any local

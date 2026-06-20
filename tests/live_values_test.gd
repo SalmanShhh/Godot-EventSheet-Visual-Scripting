@@ -147,6 +147,15 @@ static func run() -> bool:
 		and spawn_copy.codegen_template.count("__spawn_") == 2, true) and all_passed
 	copy_editor.free()
 
+	# Watch panel (#3): evaluate_watch evaluates an expression over the streamed variable values.
+	var w1: Dictionary = EventSheetLiveValuesPanel.evaluate_watch("health + 1", {"health": 5})
+	all_passed = _check("watch: arithmetic over a variable", bool(w1.get("ok")) and w1.get("value") == 6, true) and all_passed
+	var w2: Dictionary = EventSheetLiveValuesPanel.evaluate_watch("health <= 0", {"health": 0})
+	all_passed = _check("watch: a boolean condition", bool(w2.get("ok")) and w2.get("value") == true, true) and all_passed
+	all_passed = _check("watch: product of a variable", EventSheetLiveValuesPanel.evaluate_watch("score * 2", {"score": 10}).get("value"), 20) and all_passed
+	all_passed = _check("watch: a syntax error reports not-ok", bool(EventSheetLiveValuesPanel.evaluate_watch("1 +", {}).get("ok", true)), false) and all_passed
+	all_passed = _check("watch: an unknown identifier reports not-ok", bool(EventSheetLiveValuesPanel.evaluate_watch("nope", {"health": 1}).get("ok", true)), false) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

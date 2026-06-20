@@ -18,6 +18,13 @@ var label: RichTextLabel = null
 var tree: Tree = null
 var debugger: EventSheetLiveValuesDebugger = null
 
+## Watch expressions (session-scoped): evaluated editor-side against each streamed values
+## frame via Expression, so you can watch any expression over the sheet's variables, live.
+var _watches: Array[String] = []
+var _last_values: Dictionary = {}
+var watch_tree: Tree = null
+var watch_input: LineEdit = null
+
 ## Wired by the plugin entry point so value edits can flow back to the running game.
 func setdebugger(debugger: EventSheetLiveValuesDebugger) -> void:
     debugger = debugger
@@ -61,6 +68,29 @@ func ensure_window() -> void:
     tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
     tree.item_edited.connect(_on_live_value_edited)
     live_box.add_child(tree)
+    var watch_header: Label = Label.new()
+    watch_header.text = "Watch — expressions over the variables above (double-click a row to remove)"
+    live_box.add_child(watch_header)
+    var watch_row: HBoxContainer = HBoxContainer.new()
+    watch_input = LineEdit.new()
+    watch_input.placeholder_text = "e.g. health <= 0"
+    watch_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    watch_input.text_submitted.connect(func(_t: String) -> void: _add_watch_from_input())
+    watch_row.add_child(watch_input)
+    var add_watch_button: Button = Button.new()
+    add_watch_button.text = "Watch"
+    add_watch_button.pressed.connect(_add_watch_from_input)
+    watch_row.add_child(add_watch_button)
+    live_box.add_child(watch_row)
+    watch_tree = Tree.new()
+    watch_tree.hide_root = true
+    watch_tree.columns = 2
+    watch_tree.set_column_title(0, "Expression")
+    watch_tree.set_column_title(1, "Value")
+    watch_tree.column_titles_visible = true
+    watch_tree.custom_minimum_size = Vector2(0.0, 110.0)
+    watch_tree.item_activated.connect(_remove_selected_watch)
+    live_box.add_child(watch_tree)
     window.add_child(live_box)
     _dock.add_child(window)
 
@@ -93,6 +123,7 @@ func update_values(values: Dictionary) -> void:
                 _fill_live_value_item(item, values[value_keys[index]])
             item = item.get_next()
             index += 1
+    _refresh_watches(values)
 
 ## One value -> one tree row. Dictionaries/Arrays expand into read-only subtrees
 ## (GDevelop's variables-debugger style); scalars stay editable leaves.
@@ -120,6 +151,70 @@ func _fill_live_value_item(item: TreeItem, value: Variant) -> void:
     else:
         item.set_text(1, str(value))
         item.set_editable(1, true)
+
+## Adds the input expression to the watch list and re-evaluates against the latest frame.
+func _add_watch_from_input() -> void:
+    if watch_input == null:
+        return
+    var expression: String = watch_input.text.strip_edges()
+    if expression.is_empty() or _watches.has(expression):
+        watch_input.clear()
+        return
+    _watches.append(expression)
+    watch_input.clear()
+    _refresh_watches(_last_values)
+
+## Double-click a watch row to remove it.
+func _remove_selected_watch() -> void:
+    if watch_tree == null:
+        return
+    var selected: TreeItem = watch_tree.get_selected()
+    if selected == null:
+        return
+    var expression: Variant = selected.get_metadata(0)
+    if expression is String and _watches.has(expression):
+        _watches.erase(expression)
+        _refresh_watches(_last_values)
+
+## Re-evaluates every watch against the latest values frame (editor-side, via Expression).
+func _refresh_watches(values: Dictionary) -> void:
+    _last_values = values
+    if watch_tree == null:
+        return
+    watch_tree.clear()
+    var root: TreeItem = watch_tree.create_item()
+    for expression: String in _watches:
+        var item: TreeItem = watch_tree.create_item(root)
+        item.set_text(0, expression)
+        item.set_metadata(0, expression)
+        if values.is_empty():
+            item.set_text(1, "—")
+            continue
+        var verdict: Dictionary = evaluate_watch(expression, values)
+        if bool(verdict.get("ok", false)):
+            item.set_text(1, str(verdict.get("value")))
+        else:
+            item.set_text(1, "⚠ %s" % str(verdict.get("error", "error")))
+            item.set_custom_color(1, Color(1.0, 0.5, 0.5))
+
+## Evaluates a watch expression against a streamed values dict (variable name -> value), via
+## Expression. Returns {ok: true, value: Variant} or {ok: false, error: String}. Pure + static,
+## so it is unit-testable without a debug session.
+static func evaluate_watch(expression: String, values: Dictionary) -> Dictionary:
+    if expression.strip_edges().is_empty():
+        return {"ok": false, "error": "empty expression"}
+    var expr: Expression = Expression.new()
+    var names: PackedStringArray = PackedStringArray()
+    var inputs: Array = []
+    for key: Variant in values.keys():
+        names.append(str(key))
+        inputs.append(values[key])
+    if expr.parse(expression, names) != OK:
+        return {"ok": false, "error": expr.get_error_text()}
+    var result: Variant = expr.execute(inputs, null, false)
+    if expr.has_execute_failed():
+        return {"ok": false, "error": expr.get_error_text()}
+    return {"ok": true, "value": result}
 
 ## Tree edit -> typed value -> running game (debug session). C3's editable debugger.
 func _on_live_value_edited() -> void:

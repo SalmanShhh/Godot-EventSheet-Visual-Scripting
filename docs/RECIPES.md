@@ -60,8 +60,10 @@ When something misbehaves, you have three tools — no `print()` required.
 - **Breakpoints.** Click the gutter (or F9) to pause the Godot debugger on a row in a debug run.
   Need it to stop only sometimes? **More ▸ Set Breakpoint Condition…** (e.g. `health <= 0`) — it
   pauses only on the frame that matters.
-- **Live Values.** Tools ▸ Live Values streams the sheet's variables while it runs, and you can
-  *edit* them live to test branches.
+- **Live Values + Watch.** Tools ▸ Live Values streams the sheet's variables while it runs (and
+  you can *edit* them live to test branches). The **Watch** box in that window evaluates any
+  expression over those variables each frame — e.g. `health <= 0` or `score + lives` — so you can
+  see a condition flip in real time without adding a label.
 
 ---
 
