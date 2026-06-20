@@ -22,6 +22,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "OnPhysicsProcess", "On Physics Process", ACEDescriptor.ACEType.TRIGGER, "", "_physics_process", [], "Run Context", "Run on physics process"))
 	descriptors.append(F.make_descriptor("Core", "OnBodyEntered", "On Body Entered", ACEDescriptor.ACEType.TRIGGER, "", "body_entered", [F.make_param("body", "Node")], "Signals / Scene / Input", "On body entered {body}", "Area2D"))
 	descriptors.append(F.make_descriptor("Core", "OnAreaEntered", "On Area Entered", ACEDescriptor.ACEType.TRIGGER, "", "area_entered", [F.make_param("area", "Area2D")], "Signals / Scene / Input", "On area entered {area}", "Area2D"))
+	descriptors.append(F.make_descriptor("Core", "OnBodyExited", "On Body Exited", ACEDescriptor.ACEType.TRIGGER, "", "body_exited", [F.make_param("body", "Node")], "Signals / Scene / Input", "On body exited {body}", "Area2D"))
+	descriptors.append(F.make_descriptor("Core", "OnAreaExited", "On Area Exited", ACEDescriptor.ACEType.TRIGGER, "", "area_exited", [F.make_param("area", "Area2D")], "Signals / Scene / Input", "On area exited {area}", "Area2D"))
 	descriptors.append(F.make_descriptor(
 		"Core",
 		"OnSignal",

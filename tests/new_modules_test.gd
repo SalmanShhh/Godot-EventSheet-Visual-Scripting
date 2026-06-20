@@ -33,6 +33,7 @@ static func run() -> bool:
 	# ── Registry presence + node-type scoping across the five new surfaces ──
 	for expected: Array in [
 		["OnButtonPressed", "BaseButton"], ["OnButtonToggled", "BaseButton"],
+		["OnBodyExited", "Area2D"], ["OnAreaExited", "Area2D"],
 		["GrabFocus", "Control"], ["SetRangeValue", "Range"], ["SetLineEditText", "LineEdit"],
 		["GetButtonText", "Button"], ["SetEmitting", "GPUParticles2D"],
 		["OnParticlesFinished", "GPUParticles2D"], ["TileMapSetCell", "TileMapLayer"],

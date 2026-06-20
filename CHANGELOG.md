@@ -63,6 +63,9 @@
   without affecting its children), **Apply Central Force** + **Apply Torque Impulse** (RigidBody2D),
   **Rotate (3D)** (Node3D), and **Set Speed Scale** for GPU + CPU particles (slow-mo / fast-forward a
   burst). Registry + node-type scoping + method-call templates are all tested.
+- **On Body Exited / On Area Exited** triggers (Area2D) — the *entered* triggers existed but not
+  *exited* (detecting something leaving a zone). Wired through the resolver and the importer so they
+  codegen to a real `body_exited`/`area_exited` connection and round-trip byte-identically.
 - **Shift-range row selection** — Shift+click extends a whole-row selection from the anchor to the
   clicked row, and Shift+↑/↓ grows or shrinks that range from the same origin. The anchor is
   preserved across moves (so the range can shrink, not just grow), and it's listed in the Keyboard

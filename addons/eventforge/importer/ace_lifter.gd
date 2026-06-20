@@ -262,6 +262,8 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 const CORE_SIGNAL_TRIGGERS: Dictionary = {
 	"body_entered": "OnBodyEntered",
 	"area_entered": "OnAreaEntered",
+	"body_exited": "OnBodyExited",
+	"area_exited": "OnAreaExited",
 	"timeout": "OnTimeout",
 	"animation_finished": "OnAnimationFinished"
 }

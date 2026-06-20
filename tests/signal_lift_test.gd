@@ -91,6 +91,35 @@ static func run() -> bool:
 	var unwired_roundtrip: String = str(SheetCompiler.compile(unwired_imported, "user://eventsheets_signal_unwired.gd").get("output", ""))
 	all_passed = _check("unwired file still byte-identical", unwired_roundtrip == unwired, true) and all_passed
 
+	# Exit triggers (On Body / Area Exited): codegen via the new resolver arms + round-trip via the lifter.
+	var exits: EventSheetResource = EventSheetResource.new()
+	exits.host_class = "Area2D"
+	var body_exit: EventRow = EventRow.new()
+	body_exit.trigger_provider_id = "Core"
+	body_exit.trigger_id = "OnBodyExited"
+	body_exit.actions.append(_action("print(\"left\")"))
+	exits.events.append(body_exit)
+	var area_exit: EventRow = EventRow.new()
+	area_exit.trigger_provider_id = "Core"
+	area_exit.trigger_id = "OnAreaExited"
+	area_exit.actions.append(_action("print(\"area left\")"))
+	exits.events.append(area_exit)
+	var exit_source: String = str(SheetCompiler.compile(exits, "user://eventsheets_exits_src.gd").get("output", ""))
+	all_passed = _check("On Body Exited connects body_exited + names the handler",
+		exit_source.contains("body_exited.connect(_on_body_exited)") and exit_source.contains("func _on_body_exited(body: Node) -> void:"), true) and all_passed
+	all_passed = _check("On Area Exited connects area_exited + names the handler",
+		exit_source.contains("area_exited.connect(_on_area_exited)") and exit_source.contains("func _on_area_exited(area: Area2D) -> void:"), true) and all_passed
+	var exit_imported: EventSheetResource = GDScriptImporter.new().import_external_source(exit_source)
+	var exit_ids: Array[String] = []
+	for row in exit_imported.events:
+		if row is EventRow:
+			exit_ids.append((row as EventRow).trigger_id)
+	all_passed = _check("On Body / Area Exited reverse to their trigger ids",
+		exit_ids.has("OnBodyExited") and exit_ids.has("OnAreaExited"), true) and all_passed
+	exit_imported.external_source_path = "user://eventsheets_exits_rt.gd"
+	var exit_roundtrip: String = str(SheetCompiler.compile(exit_imported, "user://eventsheets_exits_rt.gd").get("output", ""))
+	all_passed = _check("exit triggers round-trip byte-identically", exit_roundtrip == exit_source, true) and all_passed
+
 	return all_passed
 
 static func _action(template: String) -> ACEAction:

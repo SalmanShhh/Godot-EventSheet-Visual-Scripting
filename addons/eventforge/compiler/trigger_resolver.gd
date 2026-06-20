@@ -39,6 +39,10 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _signal_backed("_on%s_body_entered" % source_token, "body: Node", "body_entered", source_path)
 		"OnAreaEntered":
 			return _signal_backed("_on%s_area_entered" % source_token, "area: Area2D", "area_entered", source_path)
+		"OnBodyExited":
+			return _signal_backed("_on%s_body_exited" % source_token, "body: Node", "body_exited", source_path)
+		"OnAreaExited":
+			return _signal_backed("_on%s_area_exited" % source_token, "area: Area2D", "area_exited", source_path)
 		"OnTimeout":
 			return _signal_backed("_on%s_timeout" % source_token, "", "timeout", source_path)
 		"OnAnimationFinished":
