@@ -10,7 +10,7 @@ project balloons to thousands of events.
 > [!WARNING]
 > **Purely experimental — early, vibecoded, and not yet validated.** This plugin is an
 > experiment, not a production tool: it has been built almost entirely through
-> AI-assisted ("vibe") coding. The test suite is large (2,000+ CI-gated assertions)
+> AI-assisted ("vibe") coding. The test suite is large (2,300+ CI-gated assertions)
 > and every feature ships with regression tests, but the project has **not yet been
 > validated by real-world use**. It is **very early in development** and **subject to
 > large, sweeping changes** between releases — do not build anything you can't afford
@@ -74,9 +74,11 @@ Conditions                        | Actions
 **Cons (knowing them is part of trusting the tool)**
 
 - **It's a bridge, not a wall.** Complex logic will eventually pull you toward writing
-  GDScript directly — by design. The **Helpers** ACE set softens the cliff (Set/Get
-  Property, Call Method, Run GDScript, ternary, is-valid, connect signal, math/string
-  idioms keep more logic as rows), but if you want to never see code, C3 itself is better
+  GDScript directly — by design. **Code-free authoring** narrows that gap (a visual
+  expression builder, reflection-driven Call Method / Set/Get Property pickers, a visual
+  Array/Dictionary editor, promote-a-block-to-a-Function), and the **Helpers** ACE set
+  softens the rest (Run GDScript, ternary, is-valid, connect signal, math/string idioms keep
+  more logic as rows) — but if you want to *never* see code at all, C3 itself is still better
   at hiding it.
 - **2D-first, but 3D is catching up.** Most behavior packs target 2D; the 3D side has the
   Node3D/CharacterBody3D/RigidBody3D/Camera3D vocabularies, **raycast / world-query ACEs**,
@@ -85,7 +87,7 @@ Conditions                        | Actions
 - **Some C3 plugins intentionally have no equivalent** (Multiplayer, Drawing Canvas,
   XML): the migration guide points to the native Godot feature instead — that honesty
   keeps the project maintainable.
-- **Purely experimental, vibecoded project.** Built AI-first with a large CI-gated suite (2,000+
+- **Purely experimental, vibecoded project.** Built AI-first with a large CI-gated suite (2,300+
   assertions) standing in for mileage it hasn't earned yet — real-world validation is
   still ahead, and large sweeping changes between releases are likely (see the warning
   up top).
@@ -98,11 +100,12 @@ scene flow, and the full math/string/array/dictionary/vector toolkit — all com
 clean typed GDScript. A few engine subsystems are deliberately **not** first-class event
 vocabulary yet, and lean on Helper ACEs / GDScript blocks instead:
 
-- **On the roadmap (escape-hatch for now):** a **UI / menu** vocabulary (only `Label`
-  text is first-class today — no Button/focus-navigation ACEs), **particles**,
-  **tilemap** cell editing, **2D physics queries** (raycast/overlap — the 3D side already
-  has these), **shaders** beyond a single uniform, **dialogue/cutscene** systems, and
-  scene-**transition** helpers.
+- **Now first-class (recently landed):** a **UI / menu** vocabulary (Button On Pressed /
+  Toggled triggers + focus navigation), **particles**, **AnimationTree**, **tilemap** cell
+  editing, **2D raycast** queries, **shader materials**, **physics joints**, **runtime input
+  rebinding**, and a **Collision** query set (CharacterBody / Area / CollisionObject).
+- **Still on the roadmap (escape-hatch for now):** 2D **point / shape overlap** queries
+  (raycast is done), **dialogue / cutscene** systems, and scene-**transition** helpers.
 - **Intentional non-goals** — routed to native Godot, not reimplemented: **networking /
   multiplayer** and **localization (i18n)**. The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md)
   maps each to its native feature.
@@ -150,7 +153,7 @@ still ships as plain GDScript).
   project-wide in one click, their functions callable from everywhere.
 - **Input vocabulary**: InputMap actions with dropdowns, plus **Keyboard / Mouse /
   Gamepad / Touch** groups — key params capture with C3's *press-a-key* workflow.
-- **100+ native ACEs**: Tween (ease/transition combos), Scene flow (incl. multi-line
+- **350+ native ACEs**: Tween (ease/transition combos), Scene flow (incl. multi-line
   Spawn Scene At), **Audio** (fire-and-forget one-shots, player control, bus mixing —
   with ▶ sound preview in the dialog), AnimatedSprite2D, Camera2D, Label,
   NavigationAgent2D, time scale & window control, the C3 System text functions, shader
@@ -232,7 +235,7 @@ still ships as plain GDScript).
   events from a description — ships opt-in and off by default.) Playable showcases:
   `showcase_carousel.tscn` (flagship), `starfall.tscn`, `quest_fsm.tscn`, and
   `platformer_shooter.tscn`. See [CHANGELOG.md](CHANGELOG.md).
-- **Quality**: 2,000+ test assertions, all green, CI-gated on every push (any `[FAIL]`
+- **Quality**: 2,300+ test assertions, all green, CI-gated on every push (any `[FAIL]`
   fails the build, and the Project Doctor gate fails it on sheet/output drift);
   byte-exact golden round-trips guard the lossless rules. **Verified on Godot 4.7 stable**
   (full suite + an in-editor smoke run).
