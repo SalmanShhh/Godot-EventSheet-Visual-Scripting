@@ -551,6 +551,7 @@ func _build_ui() -> void:
     )
     sheet_popup.add_separator()
     sheet_popup.add_item("Sheet Type…", 4)
+    sheet_popup.add_item("Manage Includes…", 8)
     sheet_popup.add_item("Custom Actions…", 5)
     sheet_popup.add_item("Export Addon…", 6)
     sheet_popup.id_pressed.connect(func(id: int) -> void:
@@ -563,6 +564,7 @@ func _build_ui() -> void:
             5: _on_manage_ace_providers_requested()
             6: _export_addon_pack()
             7: _export_gdscript_requested()
+            8: _open_include_manager()
     )
     _toolbar.add_child(sheet_menu)
     _add_toolbar_button("Save", _on_save_requested, "Save the sheet — compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
@@ -603,6 +605,9 @@ func _build_ui() -> void:
     edit_popup.add_item("Redo", 3)
     edit_popup.add_separator()
     edit_popup.add_item("Extract Selection to Include…", 4)
+    edit_popup.add_item("Find References…", 5)
+    edit_popup.add_separator()
+    edit_popup.add_item("Generate from Description (AI)…", 6)
     edit_popup.id_pressed.connect(func(id: int) -> void:
         match id:
             0: _on_copy_requested()
@@ -610,6 +615,8 @@ func _build_ui() -> void:
             2: _on_undo_requested()
             3: _on_redo_requested()
             4: _extract_to_include_requested()
+            5: _find_references_requested()
+            6: _open_ai_generate()
     )
     _toolbar.add_child(edit_menu)
     # View ▾ — panels, multi-view, zoom and theming.
@@ -1361,6 +1368,364 @@ func _do_extract_to_include(path: String, rows: Array[Resource]) -> void:
     )
     if changed:
         _mark_dirty("Extracted %d row(s) into %s (now included)." % [rows.size(), target.get_file()])
+
+var _find_refs_window: Window = null
+var _find_refs_edit: LineEdit = null
+var _find_refs_tree: Tree = null
+
+## Find References: whole-symbol uses of a variable/function/signal across EVERY sheet, with
+## jump-to-sheet — symbol-aware (so `speed` never matches `move_speed`), unlike substring Find.
+func _find_references_requested() -> void:
+    if _find_refs_window == null:
+        _find_refs_window = Window.new()
+        _find_refs_window.title = "Find References (whole symbol)"
+        _find_refs_window.size = Vector2i(640, 460)
+        _find_refs_window.close_requested.connect(func() -> void: _find_refs_window.hide())
+        var box: VBoxContainer = VBoxContainer.new()
+        box.set_anchors_preset(Control.PRESET_FULL_RECT)
+        var row: HBoxContainer = HBoxContainer.new()
+        _find_refs_edit = LineEdit.new()
+        _find_refs_edit.placeholder_text = "Symbol — a variable / function / signal name…"
+        _find_refs_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        _find_refs_edit.text_submitted.connect(func(_t: String) -> void: _run_find_references())
+        row.add_child(_find_refs_edit)
+        var find_button: Button = Button.new()
+        find_button.text = "Find References"
+        find_button.pressed.connect(_run_find_references)
+        row.add_child(find_button)
+        box.add_child(row)
+        _find_refs_tree = Tree.new()
+        _find_refs_tree.hide_root = true
+        _find_refs_tree.columns = 3
+        _find_refs_tree.set_column_title(0, "Sheet")
+        _find_refs_tree.set_column_title(1, "Where")
+        _find_refs_tree.set_column_title(2, "Match")
+        _find_refs_tree.column_titles_visible = true
+        _find_refs_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        _find_refs_tree.item_activated.connect(_on_find_reference_activated)
+        box.add_child(_find_refs_tree)
+        _find_refs_window.add_child(box)
+        add_child(_find_refs_window)
+    var seed: String = _selected_symbol_text()
+    if not seed.is_empty():
+        _find_refs_edit.text = seed
+    _find_refs_window.popup_centered()
+    _find_refs_edit.grab_focus()
+    if not _find_refs_edit.text.strip_edges().is_empty():
+        _run_find_references()
+
+## Populates the references tree. Returns the total count (so it's headlessly testable).
+func _run_find_references() -> int:
+    _find_refs_tree.clear()
+    var root: TreeItem = _find_refs_tree.create_item()
+    var symbol: String = _find_refs_edit.text.strip_edges()
+    if symbol.is_empty():
+        return 0
+    var total: int = 0
+    for entry: Dictionary in EventSheetFindReferences.find_in_project(symbol):
+        var sheet_path: String = str(entry.get("sheet", ""))
+        for reference: Dictionary in (entry.get("references", []) as Array):
+            var item: TreeItem = _find_refs_tree.create_item(root)
+            item.set_text(0, sheet_path.get_file())
+            item.set_text(1, "%s ×%d" % [str(reference.get("kind", "")), int(reference.get("count", 0))])
+            item.set_text(2, str(reference.get("preview", "")))
+            item.set_metadata(0, sheet_path)
+            total += int(reference.get("count", 0))
+    var summary: TreeItem = _find_refs_tree.create_item(root)
+    summary.set_text(0, "%d reference(s)" % total)
+    if total == 0:
+        summary.set_text(1, "no whole-symbol matches")
+    return total
+
+func _on_find_reference_activated() -> void:
+    var item: TreeItem = _find_refs_tree.get_selected()
+    if item == null:
+        return
+    var path: String = str(item.get_metadata(0)) if item.get_metadata(0) != null else ""
+    if not path.is_empty() and ResourceLoader.exists(path):
+        _load_sheet_from_path(path)
+
+## Seeds the search box from a selected local-variable or signal row (a quick "find this").
+func _selected_symbol_text() -> String:
+    var resource: Variant = _active_view().get_selected_context().get("source_resource", null)
+    if resource is LocalVariable:
+        return (resource as LocalVariable).name
+    if resource is SignalRow:
+        return (resource as SignalRow).signal_name
+    return ""
+
+var _ai_window: Window = null
+var _ai_prompt_edit: TextEdit = null
+
+## Generate from Description: plain-English prompt → grounded GDScript (an LLM) → losslessly
+## lifted into editable events. Injected provider in tests; a configured HTTP call live.
+func _open_ai_generate() -> void:
+    if _current_sheet == null:
+        _set_status("Open or create a sheet first.", true)
+        return
+    if _ai_window == null:
+        _ai_window = Window.new()
+        _ai_window.title = "Generate Events from a Description"
+        _ai_window.size = Vector2i(580, 320)
+        _ai_window.close_requested.connect(func() -> void: _ai_window.hide())
+        var box: VBoxContainer = VBoxContainer.new()
+        box.set_anchors_preset(Control.PRESET_FULL_RECT)
+        box.add_theme_constant_override("separation", 8)
+        var hint: Label = Label.new()
+        hint.text = "Describe the behavior in plain English — it becomes GDScript, then editable events you can tweak."
+        hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        box.add_child(hint)
+        _ai_prompt_edit = TextEdit.new()
+        _ai_prompt_edit.placeholder_text = "e.g. When the player presses jump and is on the floor, set velocity.y to -400 and play the jump sound."
+        _ai_prompt_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        box.add_child(_ai_prompt_edit)
+        var buttons: HBoxContainer = HBoxContainer.new()
+        buttons.alignment = BoxContainer.ALIGNMENT_END
+        var generate: Button = Button.new()
+        generate.text = "Generate"
+        generate.pressed.connect(_ai_generate_clicked)
+        buttons.add_child(generate)
+        box.add_child(buttons)
+        _ai_window.add_child(box)
+        add_child(_ai_window)
+    _ai_window.popup_centered()
+    _ai_prompt_edit.grab_focus()
+
+func _ai_generate_clicked() -> void:
+    var description: String = _ai_prompt_edit.text.strip_edges()
+    if description.is_empty():
+        _set_status("Type a description first.", true)
+        return
+    if EventSheetAIGeneration.response_provider.is_valid():
+        _apply_ai_gdscript(EventSheetAIGeneration.resolve_gdscript(description, _current_sheet))
+        return
+    if not EventSheetAIGeneration.is_live_configured():
+        _set_status("Set eventsheets/ai/api_key (+ endpoint, model) in Project Settings to generate in-editor — or use the MCP server (docs/MCP-SERVER.md).", true)
+        return
+    _ai_request_live(description)
+
+## Lifts generated GDScript into events and appends them undoably. Returns rows added (testable).
+func _apply_ai_gdscript(gdscript_text: String) -> int:
+    var outcome: Dictionary = EventSheetAIGeneration.generate_rows("", _current_sheet, gdscript_text)
+    if str(outcome.get("error", "")) != "":
+        _set_status(str(outcome.get("error")), true)
+        return 0
+    var rows: Array = outcome.get("rows", [])
+    if _perform_undoable_sheet_edit("Generate Events (AI)", func() -> bool:
+        for row: Variant in rows:
+            if row is Resource:
+                _current_sheet.events.append(row)
+        return true):
+        _mark_dirty("Generated %d row(s) from your description." % rows.size())
+        if _ai_window != null:
+            _ai_window.hide()
+    return rows.size()
+
+func _ai_request_live(description: String) -> void:
+    var key: String = str(ProjectSettings.get_setting("eventsheets/ai/api_key", "")).strip_edges()
+    var endpoint: String = str(ProjectSettings.get_setting("eventsheets/ai/endpoint", "https://api.anthropic.com/v1/messages"))
+    var model: String = str(ProjectSettings.get_setting("eventsheets/ai/model", "claude-opus-4-8"))
+    var prompt: String = EventSheetAIGeneration.build_prompt(description, _current_sheet)
+    var http: HTTPRequest = HTTPRequest.new()
+    add_child(http)
+    http.request_completed.connect(func(_result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+        _on_ai_live_response(code, body)
+        http.queue_free())
+    var headers: PackedStringArray = PackedStringArray([
+        "content-type: application/json",
+        "x-api-key: %s" % key,
+        "anthropic-version: 2023-06-01"
+    ])
+    var payload: String = JSON.stringify({
+        "model": model, "max_tokens": 1024,
+        "messages": [{"role": "user", "content": prompt}]
+    })
+    _set_status("Generating from your description…")
+    http.request(endpoint, headers, HTTPClient.METHOD_POST, payload)
+
+func _on_ai_live_response(code: int, body: PackedByteArray) -> void:
+    if code != 200:
+        _set_status("AI request failed (HTTP %d). Check eventsheets/ai/* settings." % code, true)
+        return
+    var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+    if not (parsed is Dictionary):
+        _set_status("AI response could not be parsed.", true)
+        return
+    var content: Variant = (parsed as Dictionary).get("content", [])
+    var text: String = ""
+    if content is Array and not (content as Array).is_empty() and (content[0] is Dictionary):
+        text = str((content[0] as Dictionary).get("text", ""))
+    if text.is_empty():
+        _set_status("AI returned no usable text.", true)
+        return
+    _apply_ai_gdscript(text)
+
+var _include_manager_window: Window = null
+var _include_list: ItemList = null
+var _include_preview: RichTextLabel = null
+var _include_preview_viewport: EventSheetViewport = null
+
+## Manage Includes: browse/add/remove/reorder the sheet's included library sheets, with a live
+## preview of what each contributes (events/functions/variables). Every change is undoable.
+func _open_include_manager() -> void:
+    if _current_sheet == null:
+        _set_status("Open or create a sheet first.", true)
+        return
+    if _include_manager_window == null:
+        _build_include_manager()
+    _refresh_include_list()
+    _include_manager_window.popup_centered(Vector2i(720, 480))
+
+func _build_include_manager() -> void:
+    _include_manager_window = Window.new()
+    _include_manager_window.title = "Manage Includes"
+    _include_manager_window.close_requested.connect(func() -> void: _include_manager_window.hide())
+    var split: HSplitContainer = HSplitContainer.new()
+    split.set_anchors_preset(Control.PRESET_FULL_RECT)
+    split.split_offset = 300
+    var left: VBoxContainer = VBoxContainer.new()
+    left.custom_minimum_size = Vector2(300.0, 0.0)
+    _include_list = ItemList.new()
+    _include_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _include_list.item_selected.connect(func(_index: int) -> void: _refresh_include_preview())
+    left.add_child(_include_list)
+    var buttons: HBoxContainer = HBoxContainer.new()
+    var add_button: Button = Button.new(); add_button.text = "Add…"; add_button.pressed.connect(_include_add_requested); buttons.add_child(add_button)
+    var remove_button: Button = Button.new(); remove_button.text = "Remove"; remove_button.pressed.connect(_include_remove_selected); buttons.add_child(remove_button)
+    var up_button: Button = Button.new(); up_button.text = "↑"; up_button.pressed.connect(func() -> void: _include_move(-1)); buttons.add_child(up_button)
+    var down_button: Button = Button.new(); down_button.text = "↓"; down_button.pressed.connect(func() -> void: _include_move(1)); buttons.add_child(down_button)
+    left.add_child(buttons)
+    split.add_child(left)
+    var right: VBoxContainer = VBoxContainer.new()
+    right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _include_preview = RichTextLabel.new()
+    _include_preview.bbcode_enabled = true
+    _include_preview.custom_minimum_size = Vector2(0.0, 76.0)
+    right.add_child(_include_preview)
+    # Provenance view — the included sheet's actual rows, read-only (a preview copy; edits here
+    # never touch the source). "Open Source Sheet" is the jump-to-source.
+    var preview_scroll: ScrollContainer = ScrollContainer.new()
+    preview_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _include_preview_viewport = EventSheetViewport.new()
+    _include_preview_viewport.set_ace_registry(_ace_registry)
+    preview_scroll.add_child(_include_preview_viewport)
+    right.add_child(preview_scroll)
+    var open_source: Button = Button.new()
+    open_source.text = "Open Source Sheet…"
+    open_source.tooltip_text = "Open the included sheet to edit it (changes flow to every sheet that includes it)."
+    open_source.pressed.connect(_open_selected_include_source)
+    right.add_child(open_source)
+    split.add_child(right)
+    _include_manager_window.add_child(split)
+    add_child(_include_manager_window)
+
+func _open_selected_include_source() -> void:
+    var selected: PackedInt32Array = _include_list.get_selected_items()
+    if selected.is_empty():
+        return
+    var path: String = str(_include_list.get_item_metadata(selected[0]))
+    if ResourceLoader.exists(path):
+        _include_manager_window.hide()
+        _load_sheet_from_path(path)
+
+func _refresh_include_list() -> void:
+    if _include_list == null:
+        return
+    _include_list.clear()
+    for path: String in _current_sheet.includes:
+        var summary: Dictionary = EventSheetIncludes.summarize(path)
+        var label: String = path.get_file()
+        if not bool(summary.get("valid", false)):
+            label += "  (⚠ %s)" % str(summary.get("error", ""))
+        _include_list.add_item(label)
+        _include_list.set_item_metadata(_include_list.item_count - 1, path)
+    _refresh_include_preview()
+
+func _refresh_include_preview() -> void:
+    if _include_preview == null:
+        return
+    if _include_preview_viewport != null:
+        _include_preview_viewport.set_sheet(EventSheetResource.new())
+    var selected: PackedInt32Array = _include_list.get_selected_items()
+    if selected.is_empty():
+        _include_preview.text = "Select an include to preview what it contributes."
+        return
+    var path: String = str(_include_list.get_item_metadata(selected[0]))
+    var summary: Dictionary = EventSheetIncludes.summarize(path)
+    if not bool(summary.get("valid", false)):
+        _include_preview.text = "[color=#e88]%s[/color]\n%s" % [path, str(summary.get("error", ""))]
+        return
+    var functions: Array = summary.get("functions", [])
+    var variables: Array = summary.get("variables", [])
+    var class_line: String = ("class %s\n" % str(summary.get("class"))) if str(summary.get("class", "")) != "" else ""
+    _include_preview.text = "[b]%s[/b]\n%s\nEvents: %d\nFunctions: %s\nVariables: %s" % [
+        path, class_line, int(summary.get("events", 0)),
+        ", ".join(_string_list(functions)) if not functions.is_empty() else "(none)",
+        ", ".join(_string_list(variables)) if not variables.is_empty() else "(none)"]
+    var included: EventSheetResource = load(path) as EventSheetResource
+    if _include_preview_viewport != null and included != null:
+        _include_preview_viewport.set_sheet(included)  # read-only provenance view
+
+func _include_add_requested() -> void:
+    var dialog: FileDialog = FileDialog.new()
+    dialog.title = "Add Include Sheet"
+    dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+    dialog.access = FileDialog.ACCESS_RESOURCES
+    dialog.filters = PackedStringArray(["*.tres ; EventSheet"])
+    dialog.file_selected.connect(func(path: String) -> void:
+        _add_include(path)
+        dialog.call_deferred("queue_free"))
+    dialog.canceled.connect(func() -> void: dialog.queue_free())
+    add_child(dialog)
+    dialog.popup_centered(Vector2i(820, 560))
+
+func _add_include(path: String) -> void:
+    if _current_sheet.includes.has(path):
+        _set_status("%s is already included." % path.get_file(), true)
+        return
+    if EventSheetIncludes.would_create_cycle(_current_sheet_path, path):
+        _set_status("Can't add %s — it would create an include cycle." % path.get_file(), true)
+        return
+    if _perform_undoable_sheet_edit("Add Include", func() -> bool:
+        _current_sheet.includes.append(path)
+        return true):
+        _mark_dirty("Added include %s." % path.get_file())
+    _refresh_include_list()
+
+func _include_remove_selected() -> void:
+    var selected: PackedInt32Array = _include_list.get_selected_items()
+    if selected.is_empty():
+        return
+    var path: String = str(_include_list.get_item_metadata(selected[0]))
+    if _perform_undoable_sheet_edit("Remove Include", func() -> bool:
+        _current_sheet.includes.erase(path)
+        return true):
+        _mark_dirty("Removed include %s." % path.get_file())
+    _refresh_include_list()
+
+func _include_move(delta: int) -> void:
+    var selected: PackedInt32Array = _include_list.get_selected_items()
+    if selected.is_empty():
+        return
+    var from_index: int = selected[0]
+    var to_index: int = from_index + delta
+    if to_index < 0 or to_index >= _current_sheet.includes.size():
+        return
+    if _perform_undoable_sheet_edit("Reorder Includes", func() -> bool:
+        var moved: String = _current_sheet.includes[from_index]
+        _current_sheet.includes[from_index] = _current_sheet.includes[to_index]
+        _current_sheet.includes[to_index] = moved
+        return true):
+        _mark_dirty("Reordered includes.")
+    _refresh_include_list()
+    _include_list.select(to_index)
+    _refresh_include_preview()
+
+func _string_list(values: Array) -> PackedStringArray:
+    var out: PackedStringArray = PackedStringArray()
+    for value: Variant in values:
+        out.append(str(value))
+    return out
 
 func _export_gdscript_requested() -> void:
     if _current_sheet == null:
