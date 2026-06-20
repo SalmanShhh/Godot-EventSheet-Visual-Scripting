@@ -28,7 +28,7 @@ script = ExtResource("7_728t8")
 trigger_provider_id = "Core"
 trigger_id = "OnReady"
 actions = Array[Resource]([SubResource("Resource_lp6og")])
-event_uid = "5fd37e"
+event_uid = "dc02fd"
 
 [sub_resource type="Resource" id="Resource_rx6fs"]
 script = ExtResource("8_hoxy2")
@@ -49,7 +49,7 @@ script = ExtResource("7_728t8")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
 actions = Array[Resource]([SubResource("Resource_rx6fs")])
-event_uid = "c4f654"
+event_uid = "8cb2af"
 
 [sub_resource type="Resource" id="Resource_7lipv"]
 script = ExtResource("3_5edww")
@@ -79,7 +79,7 @@ trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
 conditions = Array[ExtResource("4_m4i14")]([SubResource("Resource_u5b3w"), SubResource("Resource_y7qie")])
 actions = Array[Resource]([SubResource("Resource_7lipv")])
-event_uid = "cc7c2c"
+event_uid = "e633c9"
 
 [sub_resource type="Resource" id="Resource_8nddt"]
 script = ExtResource("3_5edww")
@@ -110,7 +110,7 @@ trigger_id = "OnPhysicsProcess"
 conditions = Array[ExtResource("4_m4i14")]([SubResource("Resource_jmsii"), SubResource("Resource_cporf")])
 actions = Array[Resource]([SubResource("Resource_8nddt")])
 else_mode = 2
-event_uid = "3f4376"
+event_uid = "1ee9ab"
 
 [sub_resource type="Resource" id="Resource_acjlm"]
 script = ExtResource("3_5edww")
@@ -121,7 +121,7 @@ script = ExtResource("7_728t8")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
 actions = Array[Resource]([SubResource("Resource_acjlm")])
-event_uid = "d48314"
+event_uid = "b746d0"
 
 [sub_resource type="Resource" id="Resource_o44ja"]
 script = ExtResource("9_133ru")
@@ -158,7 +158,7 @@ trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
 conditions = Array[ExtResource("4_m4i14")]([SubResource("Resource_0u35x"), SubResource("Resource_m0k6e")])
 actions = Array[Resource]([SubResource("Resource_o44ja")])
-event_uid = "03c761"
+event_uid = "c4caa7"
 
 [sub_resource type="Resource" id="Resource_urpaa"]
 script = ExtResource("3_5edww")
@@ -191,7 +191,7 @@ trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
 conditions = Array[ExtResource("4_m4i14")]([SubResource("Resource_86ysx")])
 actions = Array[Resource]([SubResource("Resource_urpaa")])
-event_uid = "b87cf1"
+event_uid = "2f0cb2"
 pick_filters = Array[ExtResource("6_85q7n")]([SubResource("Resource_l0205")])
 
 [sub_resource type="Resource" id="Resource_an8dx"]
@@ -229,7 +229,7 @@ trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
 conditions = Array[ExtResource("4_m4i14")]([SubResource("Resource_w0qmv"), SubResource("Resource_urf47")])
 actions = Array[Resource]([SubResource("Resource_an8dx")])
-event_uid = "2ea0ce"
+event_uid = "3fe242"
 
 [sub_resource type="Resource" id="Resource_af4tc"]
 script = ExtResource("3_5edww")
@@ -240,7 +240,7 @@ script = ExtResource("7_728t8")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_af4tc")])
-event_uid = "e4ff73"
+event_uid = "83c114"
 
 [resource]
 script = ExtResource("10_my76c")

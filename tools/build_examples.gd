@@ -8,11 +8,14 @@
 @tool
 extends SceneTree
 
+const PackLib := preload("res://tools/pack_builders/_lib.gd")
+
 func _init() -> void:
 	var all_ok: bool = true
 	all_ok = _build_carousel() and all_ok
 	all_ok = _build_starfall() and all_ok
 	all_ok = _build_quest_fsm() and all_ok
+	all_ok = _build_platformer_shooter() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -81,6 +84,9 @@ func _attach_behavior(parent: Node, node_name: String, path: String, root: Node,
 
 ## Save sheet -> reload (so it has a real path) -> compile to gd -> assert success.
 func _compile(sheet: EventSheetResource, tres_path: String, gd_path: String) -> bool:
+	# Deterministic row uids so rebuilding an unchanged showcase is byte-identical (no diff
+	# churn) — same fix the behavior-pack builder uses.
+	PackLib._assign_stable_uids(sheet)
 	var save_err: Error = ResourceSaver.save(sheet, tres_path)
 	var saved: EventSheetResource = load(tres_path)
 	if saved == null:
@@ -242,6 +248,8 @@ func _build_carousel() -> bool:
 # ── 2. Starfall (arcade mini-game) ───────────────────────────────────────────
 
 const BULLET := "res://eventsheet_addons/bullet/bullet_behavior.gd"
+const PLATFORMER := "res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd"
+const WEAPON_KIT := "res://eventsheet_addons/weapon_kit/weapon_kit_behavior.gd"
 
 func _build_starfall() -> bool:
 	# Star sub-scene (group-tagged falling sprite, BulletBehavior provides the fall).
@@ -489,3 +497,164 @@ func _build_quest_fsm() -> bool:
 	label.text = "QUEST: OFFERED\nitems: 0   log: 0\nt = 0"
 	root.add_child(label); label.owner = root
 	return _save_scene(root, "res://demo/showcase/quest_fsm.tscn")
+
+# ── 4. Platformer-Shooter (two new behavior packs working together) ──────────
+
+func _build_platformer_shooter() -> bool:
+	var tex: ImageTexture = _make_texture()
+
+	# Bullet the player fires (moves along its rotation via BulletBehavior).
+	var shot: Sprite2D = Sprite2D.new()
+	shot.name = "Shot"
+	shot.texture = tex
+	shot.scale = Vector2(0.22, 0.12)
+	shot.modulate = Color(1.0, 0.95, 0.4, 1.0)
+	_attach_behavior(shot, "BulletBehavior", BULLET, shot, {"speed": 720.0, "align_rotation": false})
+	if not _save_scene(shot, "res://demo/showcase/shot.tscn"):
+		return false
+
+	# Target that drifts in from the right (also a BulletBehavior, slower).
+	var target: Sprite2D = Sprite2D.new()
+	target.name = "Target"
+	target.texture = tex
+	target.scale = Vector2(0.4, 0.4)
+	target.modulate = Color(1.0, 0.4, 0.45, 1.0)
+	_attach_behavior(target, "BulletBehavior", BULLET, target, {"speed": 130.0, "align_rotation": false})
+	if not _save_scene(target, "res://demo/showcase/target.tscn"):
+		return false
+
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "PlatformerShooter"
+	sheet.emit_live_values = true
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Platformer-Shooter[/b] — the new Platformer + Weapon Kit packs working together. Run with A/D, jump with Up (double jump + coyote time + variable height from the Platformer pack), and hold Space to shoot (fire-rate, ammo and auto-reload from the Weapon Kit). Shots destroy the red targets drifting in from the right."
+	sheet.events.append(about)
+
+	sheet.variables = {
+		"score": {"type": "int", "default": 0, "exported": true,
+			"attributes": {"tooltip": "Targets destroyed."}}
+	}
+
+	# Jump (Up): press to jump, release for variable jump height. The Platformer pack's own
+	# _physics_process already runs A/D movement + gravity; we only feed it the jump button.
+	var jump: EventRow = EventRow.new()
+	jump.trigger_provider_id = "Core"; jump.trigger_id = "OnPhysicsProcess"
+	jump.actions.append(_raw("\n".join(PackedStringArray([
+		"if Input.is_action_just_pressed(&\"ui_up\"):",
+		"\t$Player/PlatformerMovement.jump()",
+		"if Input.is_action_just_released(&\"ui_up\"):",
+		"\t$Player/PlatformerMovement.jump_released()"
+	]))))
+	sheet.events.append(jump)
+
+	# Fire (hold Space): the Weapon Kit gates the rate/ammo/reload; we only spawn a bullet on
+	# the frames it actually lets a shot out (can_fire()), aimed by the pack's facing_direction.
+	var fire: EventRow = EventRow.new()
+	fire.trigger_provider_id = "Core"; fire.trigger_id = "OnPhysicsProcess"
+	fire.actions.append(_raw("\n".join(PackedStringArray([
+		"if Input.is_action_pressed(&\"ui_accept\") and $Player/WeaponKit.can_fire():",
+		"\t$Player/WeaponKit.fire()",
+		"\tvar __dir = $Player/PlatformerMovement.facing_direction()",
+		"\tvar __shot = load(\"res://demo/showcase/shot.tscn\").instantiate()",
+		"\t__shot.position = $Player.position + Vector2(32.0 * __dir, -6.0)",
+		"\t__shot.rotation_degrees = 0.0 if __dir >= 0 else 180.0",
+		"\tadd_child(__shot)",
+		"\t__shot.add_to_group(\"shots\")"
+	]))))
+	sheet.events.append(fire)
+
+	# Keep the player on screen.
+	var clamp_row: EventRow = EventRow.new()
+	clamp_row.trigger_provider_id = "Core"; clamp_row.trigger_id = "OnPhysicsProcess"
+	clamp_row.actions.append(_raw("$Player.position.x = clampf($Player.position.x, 40.0, 1112.0)"))
+	sheet.events.append(clamp_row)
+
+	# Spawn a target from the right every 1.5s.
+	var spawn: EventRow = EventRow.new()
+	spawn.trigger_provider_id = "Core"; spawn.trigger_id = "OnPhysicsProcess"
+	spawn.conditions.append(_every("ps_spawn", "1.5"))
+	spawn.actions.append(_raw("\n".join(PackedStringArray([
+		"var __target = load(\"res://demo/showcase/target.tscn\").instantiate()",
+		"__target.position = Vector2(1240.0, randf_range(120.0, 540.0))",
+		"__target.rotation_degrees = 180.0",
+		"add_child(__target)",
+		"__target.add_to_group(\"targets\")"
+	]))))
+	sheet.events.append(spawn)
+
+	# Hit detection (shots x targets) + off-screen culling.
+	var hits: EventRow = EventRow.new()
+	hits.trigger_provider_id = "Core"; hits.trigger_id = "OnPhysicsProcess"
+	hits.actions.append(_raw("\n".join(PackedStringArray([
+		"for __shot in get_tree().get_nodes_in_group(\"shots\"):",
+		"\tfor __target in get_tree().get_nodes_in_group(\"targets\"):",
+		"\t\tif is_instance_valid(__shot) and is_instance_valid(__target) and __shot.global_position.distance_to(__target.global_position) < 42.0:",
+		"\t\t\t__shot.queue_free()",
+		"\t\t\t__target.queue_free()",
+		"\t\t\tscore += 1",
+		"\t\t\tbreak",
+		"for __node in get_tree().get_nodes_in_group(\"shots\") + get_tree().get_nodes_in_group(\"targets\"):",
+		"\tif __node.global_position.x < -60.0 or __node.global_position.x > 1300.0:",
+		"\t\t__node.queue_free()"
+	]))))
+	sheet.events.append(hits)
+
+	# HUD (render-only): score + the Weapon Kit's live ammo/reload state.
+	var hud_row: EventRow = EventRow.new()
+	hud_row.trigger_provider_id = "Core"; hud_row.trigger_id = "OnProcess"
+	hud_row.actions.append(_raw("$Hud.text = \"Score %d    Ammo %d/%d    %s\" % [score, $Player/WeaponKit.current_ammo, $Player/WeaponKit.max_ammo, (\"RELOADING...\" if $Player/WeaponKit.is_reloading() else \"A/D move   Up jump   hold Space fire\")]"))
+	sheet.events.append(hud_row)
+
+	if not _compile(sheet, "res://demo/showcase/platformer_shooter.tres", "res://demo/showcase/platformer_shooter.gd"):
+		return false
+
+	# ── Scene: floor + player (with both behaviors) + HUD ──
+	var root: Node2D = Node2D.new()
+	root.name = "PlatformerShooter"
+	root.set_script(load("res://demo/showcase/platformer_shooter.gd"))
+
+	# Add each container to the tree BEFORE its children set owner = root (owner must be an
+	# ancestor already in the tree, else the node is dropped from the packed scene).
+	var floor_body: StaticBody2D = StaticBody2D.new()
+	floor_body.name = "Floor"
+	floor_body.position = Vector2(576.0, 660.0)
+	root.add_child(floor_body); floor_body.owner = root
+	var floor_shape: CollisionShape2D = CollisionShape2D.new()
+	var floor_rect: RectangleShape2D = RectangleShape2D.new()
+	floor_rect.size = Vector2(1180.0, 48.0)
+	floor_shape.shape = floor_rect
+	floor_body.add_child(floor_shape); floor_shape.owner = root
+	var floor_sprite: Sprite2D = Sprite2D.new()
+	floor_sprite.texture = tex
+	floor_sprite.scale = Vector2(24.6, 1.0)
+	floor_sprite.modulate = Color(0.3, 0.34, 0.4, 1.0)
+	floor_body.add_child(floor_sprite); floor_sprite.owner = root
+
+	var player: CharacterBody2D = CharacterBody2D.new()
+	player.name = "Player"
+	player.position = Vector2(220.0, 540.0)
+	root.add_child(player); player.owner = root
+	var player_shape: CollisionShape2D = CollisionShape2D.new()
+	var player_rect: RectangleShape2D = RectangleShape2D.new()
+	player_rect.size = Vector2(40.0, 48.0)
+	player_shape.shape = player_rect
+	player.add_child(player_shape); player_shape.owner = root
+	var player_sprite: Sprite2D = Sprite2D.new()
+	player_sprite.texture = tex
+	player_sprite.modulate = Color(0.4, 0.9, 1.0, 1.0)
+	player.add_child(player_sprite); player_sprite.owner = root
+	_attach_behavior(player, "PlatformerMovement", PLATFORMER, root,
+		{"move_speed": 280.0, "jump_velocity": -500.0, "max_jumps": 2, "coyote_time": 0.12})
+	_attach_behavior(player, "WeaponKit", WEAPON_KIT, root,
+		{"max_ammo": 8, "current_ammo": 8, "fire_rate": 7.0, "reload_time": 0.8, "fire_mode": 1})
+
+	var hud: Label = Label.new()
+	hud.name = "Hud"
+	hud.position = Vector2(28.0, 22.0)
+	hud.add_theme_font_size_override("font_size", 26)
+	hud.text = "Score 0    Ammo 8/8    A/D move   Up jump   hold Space fire"
+	root.add_child(hud); hud.owner = root
+
+	return _save_scene(root, "res://demo/showcase/platformer_shooter.tscn")

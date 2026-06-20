@@ -56,6 +56,16 @@ static func run() -> bool:
 	all_passed = _check("preset round-trips with the edited token",
 		loaded.event_style.behavior_accent_color if loaded != null and loaded.event_style != null else Color.BLACK, Color.BLUE) and all_passed
 
+	# Quick Style — the no-token-fiddling path: EventSheetGodotTheme.apply regenerates the
+	# entire chrome from base/accent/text, so one colour change re-skins the whole sheet.
+	var quick: EventSheetEditorStyle = EventSheetThemeEditor.duplicate_style(null)
+	var quick_base: Color = Color("#202830")
+	EventSheetGodotTheme.apply(quick, quick_base, quick_base.darkened(0.15), quick_base.darkened(0.25), Color("#ff8800"), Color.WHITE)
+	all_passed = _check("Quick Style spreads the accent across the palette",
+		quick.event_style.group_accent_color, Color("#ff8800")) and all_passed
+	all_passed = _check("Quick Style derives the sheet background from the base tone",
+		quick.event_style.sheet_background_color, quick_base.darkened(0.25)) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

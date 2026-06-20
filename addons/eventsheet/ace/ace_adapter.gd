@@ -49,6 +49,11 @@ static func _map_params(params: Array[ACEParam]) -> Array:
             if option_text.is_empty():
                 continue
             normalized_options.append({"key": option_text, "label": option_text})
+        var autocomplete_values: Array = []
+        for suggestion in param.autocomplete:
+            var suggestion_text: String = str(suggestion)
+            if not suggestion_text.is_empty():
+                autocomplete_values.append(suggestion_text)
         output.append({
             "id": key,
             "display_name": param.display_name if not param.display_name.is_empty() else key,
@@ -57,6 +62,7 @@ static func _map_params(params: Array[ACEParam]) -> Array:
             "type_name": param.type_name,
             "default_value": param.get_initial_value(),
             "hint": param.hint,
-            "options": normalized_options
+            "options": normalized_options,
+            "autocomplete": autocomplete_values
         })
     return output

@@ -14,15 +14,15 @@ data = {
 [sub_resource type="ImageTexture" id="ImageTexture_g6fws"]
 image = SubResource("Image_e6exl")
 
-[node name="Starfall" type="Node2D" unique_id=1157856011]
+[node name="Starfall" type="Node2D" unique_id=1440466102]
 script = ExtResource("1_y7i56")
 
-[node name="Ship" type="Sprite2D" parent="." unique_id=541021338]
+[node name="Ship" type="Sprite2D" parent="." unique_id=1530035759]
 modulate = Color(0.4, 0.9, 1, 1)
 position = Vector2(576, 590)
 texture = SubResource("ImageTexture_g6fws")
 
-[node name="ScoreLabel" type="Label" parent="." unique_id=108085210]
+[node name="ScoreLabel" type="Label" parent="." unique_id=1626033277]
 offset_left = 28.0
 offset_top = 22.0
 offset_right = 28.0

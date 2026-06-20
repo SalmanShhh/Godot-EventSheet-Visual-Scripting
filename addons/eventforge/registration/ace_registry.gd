@@ -158,6 +158,12 @@ static func _normalize_params(raw_params: Variant) -> Array[ACEParam]:
 		if options_data is Array:
 			for option: Variant in options_data:
 				param.options.append(str(option))
+		var autocomplete_data: Variant = data.get("autocomplete", [])
+		if autocomplete_data is Array:
+			for suggestion: Variant in autocomplete_data:
+				var suggestion_text: String = str(suggestion).strip_edges()
+				if not suggestion_text.is_empty():
+					param.autocomplete.append(suggestion_text)
 		_apply_param_aliases(param)
 		output.append(param)
 	return output

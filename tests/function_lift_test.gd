@@ -86,11 +86,17 @@ static func run() -> bool:
 	for row in pack.events:
 		if row is RawCodeRow and (row as RawCodeRow).code.begins_with("func "):
 			pack_function_blocks.append((row as RawCodeRow).code.split("\n")[0])
-	all_passed = _check("behavior pack functions lift", pack.functions.size() >= 2, true) and all_passed
-	# _enter_tree is the behavior host-binding scaffold: external emission keeps the
-	# prelude verbatim (it never synthesizes the host block), so it must stay a block.
-	all_passed = _check("only the host-binding scaffold stays a block",
-		pack_function_blocks, ["func _enter_tree() -> void:"] as Array[String]) and all_passed
+	# The enriched platformer uses the annotated-vocabulary pattern (conditions/expressions/
+	# helpers as @ace_* method blocks, like the spring pack), so external import keeps every
+	# method as its own provenance-preserving block row rather than lifting EventFunctions.
+	# What matters: the exposed ACE methods survive AND the whole file round-trips byte-exact.
+	all_passed = _check("behavior pack keeps its exposed ACE methods (as blocks)",
+		pack_function_blocks.has("func jump() -> void:")
+		and pack_function_blocks.has("func set_move_speed(speed: float) -> void:"), true) and all_passed
+	# _enter_tree is the behavior host-binding scaffold — external emission keeps the prelude
+	# verbatim (it never synthesizes the host block), so it must stay a block.
+	all_passed = _check("the host-binding scaffold stays a block",
+		pack_function_blocks.has("func _enter_tree() -> void:"), true) and all_passed
 	all_passed = _check("behavior identity recovered from the prelude",
 		pack.behavior_mode and pack.custom_class_name == "PlatformerMovement" and pack.host_class == "CharacterBody2D", true) and all_passed
 	pack.external_source_path = "user://eventsheets_pack_lift_rt.gd"

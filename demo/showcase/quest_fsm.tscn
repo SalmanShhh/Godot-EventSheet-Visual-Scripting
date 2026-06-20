@@ -16,22 +16,22 @@ data = {
 [sub_resource type="ImageTexture" id="ImageTexture_e5hks"]
 image = SubResource("Image_72oc5")
 
-[node name="QuestDemo" type="Node2D" unique_id=1895699679]
+[node name="QuestDemo" type="Node2D" unique_id=1857623101]
 script = ExtResource("1_toify")
 
-[node name="Icon" type="Sprite2D" parent="." unique_id=145175606]
+[node name="Icon" type="Sprite2D" parent="." unique_id=2029992262]
 modulate = Color(0.7, 0.85, 1, 1)
 position = Vector2(576, 360)
 scale = Vector2(2, 2)
 texture = SubResource("ImageTexture_e5hks")
 
-[node name="SpringBehavior" type="Node" parent="Icon" unique_id=293334662]
+[node name="SpringBehavior" type="Node" parent="Icon" unique_id=440203197]
 script = ExtResource("2_qf5le")
 
-[node name="TweenBehavior" type="Node" parent="Icon" unique_id=951862690]
+[node name="TweenBehavior" type="Node" parent="Icon" unique_id=1252299696]
 script = ExtResource("3_cj6um")
 
-[node name="Screen" type="Label" parent="." unique_id=1377680524]
+[node name="Screen" type="Label" parent="." unique_id=1946941215]
 offset_left = 40.0
 offset_top = 40.0
 offset_right = 40.0

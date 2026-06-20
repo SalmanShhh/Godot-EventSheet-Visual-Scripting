@@ -100,7 +100,7 @@ trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 conditions = Array[ExtResource("7_smcs3")]([SubResource("Resource_0i65x")])
 actions = Array[Resource]([SubResource("Resource_u1m31"), SubResource("Resource_1qjyp")])
-event_uid = "f67058"
+event_uid = "00b366"
 
 [sub_resource type="Resource" id="Resource_0j44r"]
 script = ExtResource("10_teoow")
@@ -113,7 +113,7 @@ trigger_provider_id = "Core"
 trigger_id = "signal:item_collected"
 trigger_args = "id: String"
 actions = Array[Resource]([SubResource("Resource_0j44r")])
-event_uid = "8b62e1"
+event_uid = "b947da"
 
 [sub_resource type="Resource" id="Resource_0f73a"]
 script = ExtResource("10_teoow")
@@ -126,7 +126,7 @@ trigger_provider_id = "Core"
 trigger_id = "signal:quest_advanced"
 trigger_args = "phase: int"
 actions = Array[Resource]([SubResource("Resource_0f73a")])
-event_uid = "c277ca"
+event_uid = "b14d76"
 
 [sub_resource type="Resource" id="Resource_o1x6f"]
 script = ExtResource("10_teoow")
@@ -139,7 +139,7 @@ script = ExtResource("9_lpwia")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_o1x6f")])
-event_uid = "8908cd"
+event_uid = "24c82a"
 
 [sub_resource type="Resource" id="Resource_ces6m"]
 script = ExtResource("5_bfrky")
@@ -168,7 +168,7 @@ codegen_template = "emit_signal(&\"item_collected\", id)"
 [sub_resource type="Resource" id="Resource_jg684"]
 script = ExtResource("9_lpwia")
 actions = Array[Resource]([SubResource("Resource_ces6m"), SubResource("Resource_v7xv7"), SubResource("Resource_jjoap")])
-event_uid = "a36e1c"
+event_uid = "2bec9e"
 
 [sub_resource type="Resource" id="Resource_3iry7"]
 script = ExtResource("11_ol5sw")

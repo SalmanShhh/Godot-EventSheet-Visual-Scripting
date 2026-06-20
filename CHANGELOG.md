@@ -2,6 +2,87 @@
 
 ## [Unreleased]
 
+### HTN Agent behavior — utility-driven planning (port of the custom C3 DHTN addons)
+- A new **HTN Agent** pack: a world-state blackboard + a task network of primitive and
+  compound tasks, where each compound's methods carry preconditions, an ordered subtask list
+  and a utility score. **Request Plan** decomposes the root task, picking the highest-utility
+  *applicable* method at each compound (with backtracking), and yields a plan of primitive
+  tasks the sheet runs via **Current Task** + **Mark Complete / Mark Failed**. Triggers: On
+  Task Started / On Plan Complete / On Plan Failed. The C3 manager+agent split is collapsed
+  into one per-object behavior (the natural event-sheet fit); squad/slot coordination and
+  decaying alert stimuli are an honest scope cut. **26 behavior packs total.**
+
+### Theme Editor — "Quick Style" (re-skin without learning every token)
+- The visual theme editor gains a **Quick Style** section at the top: pick a **base**,
+  **accent** and **text** colour, click **Generate Theme**, and the whole sheet palette is
+  regenerated via `EventSheetGodotTheme.apply` (the same derivation the editor-theme adapter
+  uses) — plus **Reset To Default**. The full reflective per-token form (every colour/spacing/
+  toggle) still sits below for fine-tuning, and now rebuilds to reflect a just-generated palette.
+
+### Platformer-Shooter showcase
+- A new playable demo (`demo/showcase/platformer_shooter.tscn`) combining the **Platformer**
+  and **Weapon Kit** packs: run + double-jump on a floor, hold to fire (fire-rate + ammo +
+  auto-reload), shots destroy targets drifting in. Verified by `showcase_examples_test`.
+
+### Editor UX — naming a new group is immediate
+- **Add Group** now drops you straight into renaming the group's title inline (the standard
+  "new folder → type its name" flow), instead of leaving a generic "Group" you had to know to
+  double-click. The inline title/description edit was already there; this just makes it obvious.
+
+### Version control — byte-stable pack/showcase regeneration (no more diff churn)
+- Row UIDs (`event_uid`/`group_uid`) used to be **minted at random** every time a resource
+  was created, so rebuilding a single behavior pack rewrote the `.tres` of **every** pack —
+  exploding `git diff` with meaningless UID churn, and meaning the "stable" per-row UIDs were
+  never actually stable. The pack/showcase builders now stamp **deterministic UIDs** derived
+  from each row's structural path, so regenerating unchanged content is **byte-for-byte
+  identical** (verified: two consecutive builds produce zero new diff). Each row also keeps a
+  genuinely stable identity for diff/blame. Scoped to the builders — hand-authored sheets keep
+  the persistent UID assigned when the row was first created.
+- (Already in place, for reference: `.gitattributes` enforces LF and wires a readable
+  `diff=eventsheet` textconv so `git diff` renders `.tres` sheets as legible event text via
+  `tools/sheet_diff.sh` + `EventSheetTextDump`.)
+
+### Behavior packs — C3-addon parity (Platformer juice, Spring colors, new Weapon Kit)
+- **Platformer** rebuilt with the feel features from the author's C3 "Physics Platformer":
+  **coyote time, jump buffering, variable jump height** (Jump Released), **multi/double jump**
+  (max_jumps + Reset Jumps), **wall slide + wall jump**, **acceleration/deceleration** and
+  **terminal velocity** — all kinematic on a CharacterBody2D. New conditions (Is Moving /
+  Jumping / Falling / Wall Sliding / Can Jump), triggers (On Landed / Double Jumped / Wall
+  Jumped) and expressions (Jumps Remaining / Air Time / Facing Direction). The original
+  Jump / Set Move Speed / On Jumped ACEs keep their ids (compatibility covenant).
+- **Spring** gains the missing pieces of the C3 "Simple Spring": **colour springs**
+  (Spring Color / Set Color Value / Color Value — perfect for hit flashes), **spring
+  lifecycle** (Pause / Resume / Remove / Reset All), and an **On Spring Started** trigger.
+  (Mesh deformation stays an honest skip — that's shader/skeleton territory in Godot.)
+- **Weapon Kit** — a new pack ported from the C3 "WeaponKit": ammo + reserve pools,
+  fire-rate cooldown, **single / auto / burst** fire modes, **timed + instant reload** with
+  auto-reload, and a full HUD surface (Ammo % / Reload Progress / Cooldown Progress,
+  Can Fire / Has Ammo / Is Full / Is Reloading, On Fire / Empty / Reload Started / Reload
+  Complete). It owns no projectile — Fire manages state and triggers On Fire, so the sheet
+  spawns the bullet however it likes. **25 behavior packs total.**
+
+### Richer variable helpers — Array, Dictionary, Vector & String manipulation
+- **16 more Array ops** so list work rarely needs a raw block: First/Last item, Index Of,
+  Count Of, Reverse, Push To Front, Pop First/Last, Append Array, Slice, Join To Text,
+  Array Max/Min, Copy, Resize, Fill.
+- **Dictionary**: Copy Dictionary, Has Value (alongside the existing Set/Get/Has Key, Merge,
+  Keys/Values, Size).
+- **New Vector category**: Make Vector2/3, Length, Normalized, Distance Between, Direction
+  To, Angle, Dot Product, Rotated, Lerp, Clamp Length.
+- **New String category**: Text Contains / Begins With / Ends With, Split Text, Text→Int,
+  Text→Float, Pad Number.
+- Every one is a direct GDScript one-liner (parity-safe), so the row doubles as a GDScript
+  lesson — a beginner learns `.front()`, `.distance_to()`, `.split()` by using them.
+
+### Behavior-declared autocomplete for string params (Construct-style editable combo)
+- A behavior/addon can mark a string parameter for **autocomplete** purely from its own
+  code: `## @ace_param_autocomplete(anim "idle", "run", "jump")`. In the params dialog that
+  param becomes an **editable combo** — type any value, or open the ▾ list (Down-arrow also
+  opens it) and **filter/pick** a suggestion. Unlike `@ace_param_options` (a fixed dropdown),
+  free text is always allowed. Toggled entirely by whether the annotation is present.
+- Plumbed end-to-end: annotation → semantic analyzer → generator → adapter → `ACEParam`,
+  with `make_param(..., autocomplete)` available to builtin/Helper ACEs too.
+
 ### Helper ACEs — a structured escape hatch for hard-to-translate GDScript
 - A new **Helpers** vocabulary (24 ACEs) for the GDScript a user would otherwise drop to a
   raw block for, so more logic stays as editable rows that still compile to the exact

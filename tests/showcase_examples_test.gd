@@ -49,6 +49,21 @@ static func run() -> bool:
 	passed = _check_scene("quest_fsm scene has Icon + Screen",
 		"res://demo/showcase/quest_fsm.tscn", ["Icon", "Screen"]) and passed
 
+	# Platformer-Shooter — the new Platformer + Weapon Kit packs combined.
+	passed = _check_sheet("platformer_shooter", "res://demo/showcase/platformer_shooter.tres", [
+		"$Player/PlatformerMovement.jump()",
+		"$Player/PlatformerMovement.jump_released()",
+		"$Player/PlatformerMovement.facing_direction()",
+		"$Player/WeaponKit.can_fire()",
+		"$Player/WeaponKit.fire()",
+		"get_tree().get_nodes_in_group(\"shots\")",
+		"score += 1",
+	]) and passed
+	passed = _check_scene("platformer_shooter scene has Player + Floor + Hud",
+		"res://demo/showcase/platformer_shooter.tscn", ["Player", "Floor", "Hud"]) and passed
+	passed = _check("shot + target sub-scenes exist",
+		ResourceLoader.exists("res://demo/showcase/shot.tscn") and ResourceLoader.exists("res://demo/showcase/target.tscn"), true) and passed
+
 	# Discovery: the flagship is the one the plugin opens; the secondaries never compete.
 	passed = _check("flagship is the discovered showcase",
 		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/showcase_carousel.tscn") and passed

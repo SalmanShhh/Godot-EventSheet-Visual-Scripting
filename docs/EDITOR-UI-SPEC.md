@@ -393,6 +393,29 @@ inside the Construct 3-style sheet established by Phase 8.
 - The shortcuts hint strip in the toolbar now also shows:
   `G Group` · `Ctrl+D Duplicate` · `Esc Deselect`
 
+### 2.14 Godot 4.7 alignment, onboarding declutter, and power-user reflexes
+
+- **4.7 "Modern" theme alignment.** A default sheet inherits the running editor's neutral
+  grayscale chrome rather than a fixed blue-tinted palette. The color math is the pure,
+  testable `EventSheetGodotTheme.apply(style, base, dark_1, dark_2, accent, font_color)`;
+  `adapt_to_editor()` feeds it the live editor theme in-editor, and it tracks light themes
+  and custom accents too (guarded by `event_sheet_style_test`).
+- **Onboarding declutter (getting-started calm).** The empty sheet shows a clear heading +
+  one call-to-action + one muted tip (not a dense run-on of shortcuts); the repeated
+  `System` object label is dimmed so rows read as the action; the `+ Add action` affordance
+  is revealed on hover/selection (events with no actions keep it for discoverability); a
+  **Simple Mode** (View menu, persisted in project metadata) hides the advanced/code-leaning
+  right-click entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums)
+  so a newcomer's surface stays unintimidating while Expert mode keeps everything.
+- **Power-user reflexes.** A **Command Palette (Ctrl+P)** runs any dock action with a fuzzy
+  (prefix › substring › subsequence) filter — the command list + filter are pure/testable
+  (`EventSheetDock.filter_commands`). **Export Generated GDScript…** (Sheet menu) writes the
+  sheet's standalone, plugin-free `.gd` to a chosen path — the concrete "eject anytime"
+  affordance backing the zero-runtime-dependency covenant (see `docs/UNINSTALL.md`).
+- **Affordance toggle.** The trailing C3-style `+ Add event…` rows can be hidden via the
+  View menu (`show_add_event_footers`) for a calmer sheet; headless tests assert raw row
+  counts with the affordance off.
+
 ## 3. Roadmap status (updated 2026-06)
 
 **Every roadmap item from the overhaul plan has shipped** — multi-tab, sub-events (incl.

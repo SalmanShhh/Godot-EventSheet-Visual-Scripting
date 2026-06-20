@@ -135,9 +135,33 @@ static func dot_completion_candidates(token: String, sheet: EventSheetResource) 
 		for entry in sheet.events:
 			if entry is LocalVariable and (entry as LocalVariable).name == token:
 				type_name = (entry as LocalVariable).type_name
-		if ClassDB.class_exists(type_name):
-			_add_class_members(candidates, seen, type_name)
+		# Typed collections (Array[T], Dictionary[K,V]) still complete their CONTAINER
+		# members: strip the generic suffix so `my_list.` resolves.
+		var container_type: String = type_name
+		var generic_index: int = container_type.find("[")
+		if generic_index != -1:
+			container_type = container_type.substr(0, generic_index).strip_edges()
+		if ClassDB.class_exists(container_type):
+			_add_class_members(candidates, seen, container_type)
+		else:
+			# Array/Dictionary/Packed*Array are Variant built-ins, not ClassDB classes, so
+			# ClassDB can't enumerate them — offer a curated method set (the same vocabulary
+			# the collection Helper ACEs wrap, so completion and the picker agree).
+			for member: String in _builtin_collection_members(container_type):
+				_add_candidate(candidates, seen, CodeEdit.KIND_FUNCTION, member)
 	return candidates
+
+## Curated method names for the Variant collection types (which ClassDB does not expose).
+static func _builtin_collection_members(type_name: String) -> PackedStringArray:
+	if type_name == "Dictionary":
+		return PackedStringArray(["has", "get", "set", "erase", "clear", "keys", "values",
+			"size", "is_empty", "merge", "duplicate", "has_all", "get_or_add"])
+	if type_name == "Array" or (type_name.begins_with("Packed") and type_name.ends_with("Array")):
+		return PackedStringArray(["append", "append_array", "push_back", "push_front",
+			"pop_back", "pop_front", "insert", "remove_at", "erase", "clear", "size",
+			"is_empty", "has", "find", "count", "front", "back", "slice", "duplicate",
+			"reverse", "sort", "shuffle", "fill", "resize", "max", "min", "pick_random"])
+	return PackedStringArray()
 
 ## Signature hint for the innermost unclosed call before the caret ("" = none): sheet
 ## functions show their declared params, host/dotted-class methods come from ClassDB.

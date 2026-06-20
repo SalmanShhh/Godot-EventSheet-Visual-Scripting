@@ -191,7 +191,7 @@ script = ExtResource("6_5qxg0")
 trigger_provider_id = "Core"
 trigger_id = "OnReady"
 actions = Array[Resource]([SubResource("Resource_exeo8")])
-event_uid = "276709"
+event_uid = "861622"
 
 [sub_resource type="Resource" id="Resource_viqvc"]
 script = ExtResource("2_0d086")
@@ -213,7 +213,7 @@ script = ExtResource("6_5qxg0")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_viqvc")])
-event_uid = "0b3128"
+event_uid = "7e4242"
 
 [sub_resource type="Resource" id="Resource_4p37g"]
 script = ExtResource("2_0d086")

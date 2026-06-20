@@ -32,7 +32,8 @@ static func run() -> bool:
 	sheet.host_class = "CharacterBody2D"
 	sheet.variables = {
 		"health": {"type": "int", "default": 100, "exported": false},
-		"body": {"type": "Node2D", "default": null, "exported": false}
+		"body": {"type": "Node2D", "default": null, "exported": false},
+		"enemies": {"type": "Array[Node2D]", "default": null, "exported": false}
 	}
 	var reload_fn: EventFunction = EventFunction.new()
 	reload_fn.function_name = "reload"
@@ -48,6 +49,9 @@ static func run() -> bool:
 	all_passed = _check("host. does not offer sheet variables", host_members.has("health"), false) and all_passed
 	var body_members: Array[String] = _labels(EventSheetGDScriptLint.completion_for_context("if body.", sheet))
 	all_passed = _check("typed variable offers its class members", body_members.has("global_position"), true) and all_passed
+	var typed_array_members: Array[String] = _labels(EventSheetGDScriptLint.completion_for_context("enemies.", sheet))
+	all_passed = _check("typed Array[T] variable completes container (Array) members",
+		typed_array_members.has("append") and typed_array_members.has("size"), true) and all_passed
 	var behavior_members: Array[String] = _labels(EventSheetGDScriptLint.completion_for_context("$TimerBehavior.", sheet))
 	all_passed = _check("$Behavior. offers the script class's methods", behavior_members.has("start_timer"), true) and all_passed
 	all_passed = _check("$Behavior. includes base-class members", behavior_members.has("get_child_count"), true) and all_passed

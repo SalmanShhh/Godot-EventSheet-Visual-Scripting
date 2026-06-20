@@ -30,6 +30,8 @@ const PACK_BUILDERS: Array[String] = [
 	"move_to_3d",
 	"health",
 	"virtual_cursor",
+	"weapon_kit",
+	"htn_agent",
 ]
 
 func _init() -> void:

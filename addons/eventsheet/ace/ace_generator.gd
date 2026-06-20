@@ -226,6 +226,7 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
     var param_overrides: Dictionary = overrides.get("params", {})
     var param_hints: Dictionary = overrides.get("param_hints", {})
     var param_options: Dictionary = overrides.get("param_options", {})
+    var param_autocomplete: Dictionary = overrides.get("param_autocomplete", {})
     for argument_info in raw_args:
         if not (argument_info is Dictionary):
             continue
@@ -240,6 +241,9 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
         if param_options.has(argument_name) and not parameter_override.has("options"):
             parameter_override = parameter_override.duplicate()
             parameter_override["options"] = param_options[argument_name]
+        if param_autocomplete.has(argument_name) and not parameter_override.has("autocomplete"):
+            parameter_override = parameter_override.duplicate()
+            parameter_override["autocomplete"] = param_autocomplete[argument_name]
         var param_type: int = int(parameter_override.get("type", argument_dict.get("type", TYPE_NIL)))
         output.append({
             "id": argument_name,
@@ -251,7 +255,8 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
             "hint": str(parameter_override.get("hint", "")),
             "hint_string": str(parameter_override.get("hint_string", "")),
             "widget_hint": str(parameter_override.get("widget_hint", "")),
-            "options": _normalize_options_to_key_label(parameter_override.get("options", []))
+            "options": _normalize_options_to_key_label(parameter_override.get("options", [])),
+            "autocomplete": _normalize_autocomplete(parameter_override.get("autocomplete", []))
         })
     return output
 
@@ -349,4 +354,16 @@ func _normalize_options_to_key_label(raw_options: Variant) -> Array:
         if scalar.is_empty():
             continue
         output.append({"key": scalar, "label": scalar})
+    return output
+
+## Autocomplete suggestions are a flat list of insert-verbatim strings (an editable combo,
+## not a key/label dropdown). Mirrors _normalize_options_to_key_label's tolerance.
+func _normalize_autocomplete(raw_suggestions: Variant) -> Array:
+    var output: Array = []
+    if not (raw_suggestions is Array):
+        return output
+    for suggestion in raw_suggestions:
+        var text: String = str(suggestion).strip_edges()
+        if not text.is_empty():
+            output.append(text)
     return output

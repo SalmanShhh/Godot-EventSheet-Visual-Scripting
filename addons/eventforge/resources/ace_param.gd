@@ -27,6 +27,10 @@ class_name ACEParam
 @export var initial_value: Variant = null
 @export var initialValue: Variant = null # Construct-style alias.
 @export var options: Array[String] = []
+## Suggestions for an EDITABLE autocomplete combo (Construct-style): unlike `options`
+## (a fixed dropdown), the user may type any value AND pick/filter from these. A behavior
+## opts in per-param via `## @ace_param_autocomplete(param "a", "b", …)`; empty = plain field.
+@export var autocomplete: Array[String] = []
 @export var required: bool = false
 ## UI hint for richer control selection.
 ## Use "variable_reference" to show a dropdown of available sheet variables.

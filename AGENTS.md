@@ -2,7 +2,7 @@
 
 ## Repo overview
 
-GodotEventSheet (EventForge) is a Godot 4.x plugin that provides a Construct-style EventSheet editor and compiler pipeline. The active editor pass keeps a custom-rendered viewport, semantic row/span data, and Godot Resource-based authoring for themes and sheet data.
+GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7 stable**) that provides a Construct-style EventSheet editor and compiler pipeline. The active editor pass keeps a custom-rendered viewport, semantic row/span data, and Godot Resource-based authoring for themes and sheet data.
 
 ## Architecture notes
 
@@ -13,9 +13,14 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin that provides a Construct-sty
 - Row chrome/text drawing: `res://addons/eventsheet/editor/event_row_renderer.gd`
 - Compiler (pipeline overview in its header comment): `res://addons/eventforge/compiler/sheet_compiler.gd`
 - Builtin ACE vocabularies: per-module files in `res://addons/eventforge/registration/modules/`
-  built via `ace_factory.gd` (module contract documented there); legacy remainder in
-  `builtin_aces.gd`
-- Importer/lifter (lossless GDScript pairing): `res://addons/eventforge/importer/`
+  (`core`/`system`/`device`/`audio`/`native_3d`/`collection`/`helper`) built via
+  `ace_factory.gd` (module contract documented there); `builtin_aces.gd` concatenates them
+  in registry order. `helper_aces.gd` is the generic "structured escape hatch" vocabulary —
+  registered LAST and excluded from the reverse-lifter so its catch-all templates
+  (`{target}.{method}(…)`, `Run GDScript {code}`) never shadow specific ACEs.
+- Importer/lifter (lossless GDScript pairing): `res://addons/eventforge/importer/` — the
+  lifter sets `RawCodeRow.lift_note` ("no matching ACE template") on lines it can't lift,
+  surfaced as an editor hint.
 - MCP server (AI tooling, policy-aware): `res://addons/eventsheet/mcp/mcp_server.gd`
 - Theme resources: `res://addons/eventsheet/theme/*.gd`
 - Theme/template scenes: `res://addons/eventsheet/elements/*.tscn` (designer previews —
@@ -23,8 +28,9 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin that provides a Construct-sty
 - Headless suites: `res://tests/run_perf.gd` (safe gate) and `res://tests/run_tests.gd`
   (full; a tail segfault AFTER the summary is a known harmless teardown flake — count
   `[FAIL]` lines)
-- Maintenance tools: `tools/` (pack builder, demo-golden regenerator, theme presets +
-  header backfill, addon drift audit)
+- Maintenance tools: `tools/` (per-pack builders in `tools/pack_builders/` run by
+  `build_sample_behaviors.gd`; `build_examples.gd` for the playable showcases;
+  demo-golden regenerator; theme presets + header backfill; `audit_addons.gd` drift gate)
 
 ## EventSheet editor structure
 
@@ -61,6 +67,7 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin that provides a Construct-sty
 - `docs/spec/gdevelop_c3_eventsheet_uiux_spec.md` — GDevelop/C3 row-lane-block interaction model; hover, selection, drag, group, and variable row design spec
 - `docs/C3-MIGRATION-GUIDE.md` — user-facing C3→Godot concept/behavior/plugin map
 - `docs/MCP-SERVER.md` — the AI-tooling protocol (list/read/compile/lint/snippets)
+- `docs/UNINSTALL.md` — clean-removal guide (keep/remove table; the zero-runtime-dependency covenant as a guided teardown)
 - `docs/INSPECTOR-ATTRIBUTES-SPEC.md` — Unity/Odin-style attributes (all tiers shipped)
 - `docs/ADDON-COMPOSITION-SPEC.md` — meta-packs, uses/requires, project policy (shipped)
 - `CONTRIBUTING.md` — dev setup, verification loop, house rules, gotcha list

@@ -145,7 +145,7 @@ static func run() -> bool:
 	all_passed = _check("scene-attached packs count as used",
 		unused_packs.has("res://eventsheet_addons/spring/spring_behavior.gd"), false) and all_passed
 	all_passed = _check("never-referenced packs get an advisory note",
-		unused_packs.has("res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd"), true) and all_passed
+		unused_packs.has("res://eventsheet_addons/car/car_behavior.gd"), true) and all_passed
 
 	DirAccess.remove_absolute(generated_path)
 	DirAccess.remove_absolute(sheet_path)

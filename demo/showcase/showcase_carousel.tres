@@ -51,7 +51,7 @@ trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 conditions = Array[ExtResource("3_kccjq")]([SubResource("Resource_58nhv")])
 actions = Array[Resource]([SubResource("Resource_dd4l4"), SubResource("Resource_k3ipq")])
-event_uid = "3faf2b"
+event_uid = "468482"
 
 [sub_resource type="Resource" id="Resource_x8v5x"]
 script = ExtResource("7_8i5q1")
@@ -75,13 +75,13 @@ trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 conditions = Array[ExtResource("3_kccjq")]([SubResource("Resource_mkpc0")])
 actions = Array[Resource]([SubResource("Resource_x8v5x")])
-event_uid = "b170e6"
+event_uid = "5d627c"
 
 [sub_resource type="Resource" id="Resource_61jcl"]
 script = ExtResource("8_fs8kx")
 group_name = "Juice"
 events = Array[Resource]([SubResource("Resource_7vv6f"), SubResource("Resource_p24di")])
-group_uid = "da7b2b"
+group_uid = "8f2ad3"
 custom_color = Color(0.55, 0.4, 0.85, 1)
 runtime_toggleable = true
 
@@ -122,7 +122,7 @@ trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 conditions = Array[ExtResource("3_kccjq")]([SubResource("Resource_op5bs")])
 actions = Array[Resource]([SubResource("Resource_qyy6o"), SubResource("Resource_q7wiq"), SubResource("Resource_tsy8c")])
-event_uid = "55ef75"
+event_uid = "a527b9"
 
 [sub_resource type="Resource" id="Resource_q64xw"]
 script = ExtResource("2_i1ys7")
@@ -161,7 +161,7 @@ trigger_id = "OnProcess"
 conditions = Array[ExtResource("3_kccjq")]([SubResource("Resource_qtukf")])
 actions = Array[Resource]([SubResource("Resource_q64xw"), SubResource("Resource_sx6jy"), SubResource("Resource_emvao")])
 else_mode = 2
-event_uid = "759b6c"
+event_uid = "36e435"
 
 [sub_resource type="Resource" id="Resource_bb0fg"]
 script = ExtResource("7_8i5q1")
@@ -173,7 +173,7 @@ trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_bb0fg")])
 else_mode = 1
-event_uid = "c2c138"
+event_uid = "526d28"
 
 [sub_resource type="Resource" id="Resource_vxtks"]
 script = ExtResource("7_8i5q1")
@@ -185,7 +185,7 @@ script = ExtResource("6_l76gw")
 trigger_provider_id = "Core"
 trigger_id = "OnReady"
 actions = Array[Resource]([SubResource("Resource_vxtks")])
-event_uid = "4a0214"
+event_uid = "401410"
 
 [sub_resource type="Resource" id="Resource_d20ds"]
 script = ExtResource("7_8i5q1")

@@ -12,23 +12,127 @@
 
 [sub_resource type="Resource" id="Resource_wlsfs"]
 script = ExtResource("1_efx4g")
-text = "Platformer movement behavior: attach under a CharacterBody2D. Move with ui_left/ui_right; call Jump from any sheet."
+text = "Platformer movement: attach under a CharacterBody2D. Run with ui_left/ui_right, call Jump (with coyote time + buffering), and turn on wall slide / wall jump / double jump in the Inspector. Call Jump Released when the player lets go of the jump button for variable jump height."
 
 [sub_resource type="Resource" id="Resource_b2uae"]
 script = ExtResource("2_7fivs")
 code = "## @ace_trigger
 ## @ace_name(\"On Jumped\")
 ## @ace_category(\"Platformer\")
-signal jumped"
+signal jumped
+
+## @ace_trigger
+## @ace_name(\"On Landed\")
+## @ace_category(\"Platformer\")
+signal landed
+
+## @ace_trigger
+## @ace_name(\"On Double Jumped\")
+## @ace_category(\"Platformer\")
+signal double_jumped
+
+## @ace_trigger
+## @ace_name(\"On Wall Jumped\")
+## @ace_category(\"Platformer\")
+signal wall_jumped
+
+## @ace_condition
+## @ace_name(\"Is Moving\")
+## @ace_category(\"Platformer\")
+## @ace_codegen_template(\"$PlatformerMovement.is_moving()\")
+func is_moving() -> bool:
+	return host != null and absf(host.velocity.x) > 1.0
+
+## @ace_condition
+## @ace_name(\"Is Jumping\")
+## @ace_category(\"Platformer\")
+## @ace_codegen_template(\"$PlatformerMovement.is_jumping()\")
+func is_jumping() -> bool:
+	return host != null and not host.is_on_floor() and host.velocity.y < 0.0
+
+## @ace_condition
+## @ace_name(\"Is Falling\")
+## @ace_category(\"Platformer\")
+## @ace_codegen_template(\"$PlatformerMovement.is_falling()\")
+func is_falling() -> bool:
+	return host != null and not host.is_on_floor() and host.velocity.y > 0.0
+
+## @ace_condition
+## @ace_name(\"Is Wall Sliding\")
+## @ace_category(\"Platformer\")
+## @ace_codegen_template(\"$PlatformerMovement.is_wall_sliding()\")
+func is_wall_sliding() -> bool:
+	return _wall_sliding
+
+## @ace_condition
+## @ace_name(\"Can Jump\")
+## @ace_category(\"Platformer\")
+## @ace_codegen_template(\"$PlatformerMovement.can_jump()\")
+func can_jump() -> bool:
+	if host == null:
+		return false
+	return host.is_on_floor() or _coyote_timer > 0.0 or _jumps_left > 0 or (enable_wall_jump and host.is_on_wall())
+
+## @ace_expression
+## @ace_name(\"Jumps Remaining\")
+## @ace_category(\"Platformer\")
+func jumps_remaining() -> int:
+	return _jumps_left
+
+## @ace_expression
+## @ace_name(\"Air Time\")
+## @ace_category(\"Platformer\")
+func air_time() -> float:
+	return _air_time
+
+## @ace_expression
+## @ace_name(\"Facing Direction\")
+## @ace_category(\"Platformer\")
+func facing_direction() -> int:
+	return _facing
+
+# Shared jump kernel: set the rise and spend the coyote window. _jumps_left counts
+# only AIR jumps (it is decremented by the air-jump branch, not here), so falling off
+# a ledge past the coyote window never grants a phantom jump.
+func _perform_jump(velocity_y: float) -> void:
+	if host == null:
+		return
+	host.velocity.y = velocity_y
+	_coyote_timer = 0.0"
 
 [sub_resource type="Resource" id="Resource_3d0wo"]
 script = ExtResource("2_7fivs")
 code = "if host == null:
 	return
+var was_on_floor := _was_on_floor
+var on_floor := host.is_on_floor()
+if not on_floor:
+	host.velocity.y = minf(host.velocity.y + gravity * delta, max_fall_speed)
+	_air_time += delta
+else:
+	_air_time = 0.0
 var direction := Input.get_axis(\"ui_left\", \"ui_right\")
-host.velocity.x = direction * move_speed
-if not host.is_on_floor():
-	host.velocity.y += gravity * delta
+var target_speed := direction * move_speed
+var rate := acceleration if not is_zero_approx(direction) else deceleration
+host.velocity.x = move_toward(host.velocity.x, target_speed, rate * delta)
+if not is_zero_approx(direction):
+	_facing = 1 if direction > 0.0 else -1
+_wall_sliding = false
+if enable_wall_slide and not on_floor and host.is_on_wall() and host.velocity.y > 0.0 and not is_zero_approx(direction):
+	host.velocity.y = minf(host.velocity.y, wall_slide_speed)
+	_wall_sliding = true
+if on_floor:
+	_coyote_timer = coyote_time
+	_jumps_left = maxi(max_jumps - 1, 0)
+else:
+	_coyote_timer = maxf(_coyote_timer - delta, 0.0)
+_buffer_timer = maxf(_buffer_timer - delta, 0.0)
+if on_floor and not was_on_floor:
+	landed.emit()
+_was_on_floor = on_floor
+if _buffer_timer > 0.0 and (on_floor or _coyote_timer > 0.0 or _jumps_left > 0 or (enable_wall_jump and host.is_on_wall())):
+	_buffer_timer = 0.0
+	jump()
 host.move_and_slide()"
 
 [sub_resource type="Resource" id="Resource_4dex6"]
@@ -36,18 +140,32 @@ script = ExtResource("6_wybey")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
 actions = Array[Resource]([SubResource("Resource_3d0wo")])
-event_uid = "a596bc"
+event_uid = "785f8f"
 
 [sub_resource type="Resource" id="Resource_dop18"]
 script = ExtResource("2_7fivs")
-code = "if host != null and host.is_on_floor():
-	host.velocity.y = jump_velocity
-	jumped.emit()"
+code = "if host == null:
+	return
+if host.is_on_floor() or _coyote_timer > 0.0:
+	_perform_jump(jump_velocity)
+	jumped.emit()
+elif enable_wall_jump and host.is_on_wall():
+	host.velocity.y = wall_jump_velocity
+	host.velocity.x = host.get_wall_normal().x * wall_jump_push
+	_coyote_timer = 0.0
+	_facing = 1 if host.get_wall_normal().x > 0.0 else -1
+	wall_jumped.emit()
+elif _jumps_left > 0:
+	_perform_jump(jump_velocity)
+	_jumps_left -= 1
+	double_jumped.emit()
+else:
+	_buffer_timer = jump_buffer_time"
 
 [sub_resource type="Resource" id="Resource_ktl15"]
 script = ExtResource("8_x0bpu")
 function_name = "jump"
-description = "Makes the host jump when it is on the floor."
+description = "Jumps: from the floor or within coyote time, off a wall (if enabled), or a mid-air (double) jump if any remain. If none are available right now, the press is buffered."
 expose_as_ace = true
 ace_display_name = "Jump"
 ace_category = "Platformer"
@@ -55,47 +173,227 @@ events = Array[Resource]([SubResource("Resource_dop18")])
 
 [sub_resource type="Resource" id="Resource_f35s6"]
 script = ExtResource("2_7fivs")
-code = "move_speed = speed"
+code = "if host != null and variable_jump_height and host.velocity.y < 0.0:
+	host.velocity.y *= jump_cut_factor"
 
 [sub_resource type="Resource" id="Resource_7agrn"]
+script = ExtResource("8_x0bpu")
+function_name = "jump_released"
+description = "Call when the jump button is released — cuts the rise short for variable jump height (hold = higher)."
+expose_as_ace = true
+ace_display_name = "Jump Released"
+ace_category = "Platformer"
+events = Array[Resource]([SubResource("Resource_f35s6")])
+
+[sub_resource type="Resource" id="Resource_0mmu2"]
+script = ExtResource("2_7fivs")
+code = "move_speed = speed"
+
+[sub_resource type="Resource" id="Resource_hob2v"]
 script = ExtResource("7_852lf")
 id = "speed"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_0mmu2"]
+[sub_resource type="Resource" id="Resource_6dxvl"]
 script = ExtResource("8_x0bpu")
 function_name = "set_move_speed"
 description = "Changes the horizontal move speed."
 expose_as_ace = true
 ace_display_name = "Set Move Speed"
 ace_category = "Platformer"
-params = Array[ExtResource("7_852lf")]([SubResource("Resource_7agrn")])
-events = Array[Resource]([SubResource("Resource_f35s6")])
+params = Array[ExtResource("7_852lf")]([SubResource("Resource_hob2v")])
+events = Array[Resource]([SubResource("Resource_0mmu2")])
+
+[sub_resource type="Resource" id="Resource_2eah4"]
+script = ExtResource("2_7fivs")
+code = "_jumps_left = maxi(max_jumps - 1, 0)"
+
+[sub_resource type="Resource" id="Resource_lx7gs"]
+script = ExtResource("8_x0bpu")
+function_name = "reset_jumps"
+description = "Refills the air-jump count (e.g. after grabbing a power-up)."
+expose_as_ace = true
+ace_display_name = "Reset Jumps"
+ace_category = "Platformer"
+events = Array[Resource]([SubResource("Resource_2eah4")])
 
 [resource]
 script = ExtResource("9_4680w")
 host_class = "CharacterBody2D"
 behavior_mode = true
 custom_class_name = "PlatformerMovement"
-addon_tags = PackedStringArray()
+addon_tags = PackedStringArray("movement", "platformer")
 events = Array[Resource]([SubResource("Resource_wlsfs"), SubResource("Resource_b2uae"), SubResource("Resource_4dex6")])
 variables = {
+"_air_time": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"_buffer_timer": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"_coyote_timer": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"_facing": {
+"default": 1,
+"exported": false,
+"type": "int"
+},
+"_jumps_left": {
+"default": 0,
+"exported": false,
+"type": "int"
+},
+"_wall_sliding": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"_was_on_floor": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"acceleration": {
+"attributes": {
+"tooltip": "How fast you reach top speed when pressing a direction."
+},
+"default": 1500.0,
+"exported": true,
+"type": "float"
+},
+"coyote_time": {
+"attributes": {
+"tooltip": "Grace window (s) to still jump just after walking off a ledge."
+},
+"default": 0.1,
+"exported": true,
+"type": "float"
+},
+"deceleration": {
+"attributes": {
+"tooltip": "How fast you stop when no direction is pressed."
+},
+"default": 1800.0,
+"exported": true,
+"type": "float"
+},
+"enable_wall_jump": {
+"attributes": {
+"tooltip": "Jump off walls (kicks away from the wall)."
+},
+"default": false,
+"exported": true,
+"type": "bool"
+},
+"enable_wall_slide": {
+"attributes": {
+"tooltip": "Cling and slow your fall when pressing into a wall."
+},
+"default": false,
+"exported": true,
+"type": "bool"
+},
 "gravity": {
+"attributes": {
+"tooltip": "Downward acceleration (px/s²)."
+},
 "default": 980.0,
 "exported": true,
 "type": "float"
 },
+"jump_buffer_time": {
+"attributes": {
+"tooltip": "Press jump this many seconds early and it still fires on landing."
+},
+"default": 0.1,
+"exported": true,
+"type": "float"
+},
+"jump_cut_factor": {
+"attributes": {
+"range": {
+"max": "1",
+"min": "0",
+"step": "0.05"
+},
+"tooltip": "Fraction of upward speed kept when jump is released early."
+},
+"default": 0.45,
+"exported": true,
+"type": "float"
+},
 "jump_velocity": {
+"attributes": {
+"tooltip": "Upward velocity of a jump (negative = up)."
+},
 "default": -400.0,
 "exported": true,
 "type": "float"
 },
+"max_fall_speed": {
+"attributes": {
+"tooltip": "Terminal velocity — gravity never pulls you faster than this."
+},
+"default": 1000.0,
+"exported": true,
+"type": "float"
+},
+"max_jumps": {
+"attributes": {
+"tooltip": "Total jumps before touching ground (2 = double jump)."
+},
+"default": 1,
+"exported": true,
+"type": "int"
+},
 "move_speed": {
+"attributes": {
+"tooltip": "Top horizontal run speed (px/s)."
+},
 "default": 200.0,
+"exported": true,
+"type": "float"
+},
+"variable_jump_height": {
+"attributes": {
+"tooltip": "Releasing jump early cuts the rise (hold = higher)."
+},
+"default": true,
+"exported": true,
+"type": "bool"
+},
+"wall_jump_push": {
+"attributes": {
+"tooltip": "Horizontal kick away from the wall on a wall jump."
+},
+"default": 260.0,
+"exported": true,
+"type": "float"
+},
+"wall_jump_velocity": {
+"attributes": {
+"tooltip": "Upward velocity of a wall jump (negative = up)."
+},
+"default": -380.0,
+"exported": true,
+"type": "float"
+},
+"wall_slide_speed": {
+"attributes": {
+"tooltip": "Max fall speed while wall sliding (px/s)."
+},
+"default": 80.0,
 "exported": true,
 "type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_ktl15"), SubResource("Resource_0mmu2")])
+functions = Array[Resource]([SubResource("Resource_ktl15"), SubResource("Resource_7agrn"), SubResource("Resource_6dxvl"), SubResource("Resource_lx7gs")])

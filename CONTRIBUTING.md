@@ -1,12 +1,13 @@
 # Contributing to Godot EventSheets
 
 Thanks for helping! This file is the distilled institutional knowledge — the rules that
-keep 1,000+ assertions green and users' projects safe. Read it once; it will save you
+keep 2,000+ assertions green and users' projects safe. Read it once; it will save you
 hours.
 
 ## Dev setup
 
-- **Godot 4.5+** (CI uses 4.5.1). Open the repository root as the project.
+- **Godot 4.5+** (CI uses 4.5.1; the full suite is also verified green on **4.7 stable**,
+  the current primary target). Open the repository root as the project.
 - Run the suite before and after every change (see *The verification loop*).
 - Line endings are **LF and load-bearing**: byte-exact golden tests fail on CRLF.
   `.gitattributes` enforces it; if a fresh checkout fails byte tests, run
@@ -24,7 +25,8 @@ godot --headless --path . --script tools/project_doctor.gd  # repo health (CI ga
 
 Quirks worth knowing:
 - The **full suite can segfault on exit AFTER printing its summary** — that's harmless;
-  count `[FAIL]` lines, ignore the exit code. CI does the same.
+  count `[FAIL]` lines, ignore the exit code. CI does the same. (This was a 4.5.1 quirk; on
+  4.7 the suite exits cleanly, but counting `[FAIL]` is still the version-safe habit.)
 - The editor smoke occasionally exits 139 at teardown with zero script errors — re-run;
   clean twice in a row means it's fine.
 
@@ -60,7 +62,8 @@ its lifter counterpart in the same commit and regenerate goldens:
 
 ```text
 godot --headless --script tools/regenerate_demo_golden.gd
-godot --headless --script tools/build_sample_behaviors.gd
+godot --headless --script tools/build_sample_behaviors.gd  # then tools/audit_addons.gd (drifted=0)
+godot --headless --script tools/build_examples.gd          # the playable showcases (carousel/starfall/quest_fsm)
 godot --headless --script tools/build_theme_presets.gd     # after theme-token additions
 ```
 
@@ -70,14 +73,23 @@ Canonical forms live in `sheet_compiler.gd` (`_emit_enum_line`, `_emit_signal_li
 
 ## How to add things
 
-- **A builtin ACE**: `addons/eventforge/registration/builtin_aces.gd` — wrap NATIVE
-  engine features (lane 1: the engine maintains the implementation, we maintain
-  vocabulary). Use `node_type` for picker grouping, C3 names as display names, and add
-  picker synonyms in `ace_picker.gd` if C3 users call it something else.
+- **A builtin ACE**: add it to the right per-vocabulary module in
+  `addons/eventforge/registration/modules/` (`core_aces`, `system_aces`, `device_aces`,
+  `audio_aces`, `native_3d_aces`, `collection_aces`, or `helper_aces`); `builtin_aces.gd`
+  concatenates them **in order** (order is API — the reverse-lifter tries templates in
+  registry order). Wrap NATIVE engine features (lane 1: the engine maintains the
+  implementation, we maintain vocabulary). Use `node_type` for picker grouping, C3 names
+  as display names, and add picker synonyms in `ace_picker.gd` if C3 users call it
+  something else. **Helpers** is the generic "structured escape hatch" module — it stays
+  registered LAST and is excluded from the reverse-lifter (`ace_lifter.gd` skips
+  `category == "Helpers"`) so its catch-all templates never shadow a specific ACE.
 - **An addon**: drop a script in `res://eventsheet_addons/` — see
   `demo_health_addon.gd` and the pack folders for every annotation in use.
-- **A behavior pack**: add a builder to `tools/build_sample_behaviors.gd` (the Timer
-  pack is the canonical template), run it, register the pack path in
+- **A behavior pack**: add a per-pack builder in `tools/pack_builders/<slug>.gd`
+  (mirror `line_of_sight.gd` for conditions or `sine_3d.gd` for `@export` dropdowns +
+  exposed actions; `_lib.gd` has the `save_pack` helper), register the slug in
+  `tools/build_sample_behaviors.gd`, run it, then run `tools/audit_addons.gd` (must report
+  `drifted=0` — the committed `.gd`/`.tres` must match a recompile). Add the pack path to
   `tests/sample_behavior_pack_test.gd` — the generic no-drift/load/publish asserts cover
   it automatically.
 - **A theme preset**: add a palette to `tools/build_theme_presets.gd` and rerun it;

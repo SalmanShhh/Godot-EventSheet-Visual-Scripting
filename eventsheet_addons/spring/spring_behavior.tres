@@ -21,6 +21,17 @@ code = "## @ace_trigger
 ## @ace_category(\"Spring\")
 signal spring_reached(spring_name: String)
 
+## @ace_trigger
+## @ace_name(\"On Spring Started\")
+## @ace_category(\"Spring\")
+signal spring_started(spring_name: String)
+
+## @ace_expression
+## @ace_name(\"Color Value\")
+## @ace_category(\"Spring\")
+func color_value(spring_name: String) -> Color:
+	return color_springs.get(spring_name, {}).get(\"value\", Color.WHITE)
+
 ## @ace_condition
 ## @ace_name(\"Is Springing\")
 ## @ace_category(\"Spring\")
@@ -56,6 +67,12 @@ func _spring_entry(spring_name: String) -> Dictionary:
 			\"stiffness\": default_stiffness, \"damping\": default_damping, \"precision\": default_precision, \"active\": false}
 	return springs[spring_name]
 
+func _color_entry(spring_name: String) -> Dictionary:
+	if not color_springs.has(spring_name):
+		color_springs[spring_name] = {\"value\": Color.WHITE, \"target\": Color.WHITE, \"velocity\": Color(0, 0, 0, 0),
+			\"stiffness\": default_stiffness, \"damping\": default_damping, \"precision\": default_precision, \"active\": false}
+	return color_springs[spring_name]
+
 # Host conveniences: springs with these names write straight onto the parent.
 func _apply_to_host(spring_name: String, value: float) -> void:
 	if host == null:
@@ -82,21 +99,43 @@ for spring_name: Variant in springs.keys():
 		entry[\"velocity\"] = 0.0
 		entry[\"active\"] = false
 		spring_reached.emit(str(spring_name))
-	_apply_to_host(str(spring_name), float(entry[\"value\"]))"
+	_apply_to_host(str(spring_name), float(entry[\"value\"]))
+# Colour springs integrate identically (Color supports +, - and *float component-wise).
+for color_name: Variant in color_springs.keys():
+	var centry: Dictionary = color_springs[color_name]
+	if not bool(centry.get(\"active\", false)):
+		continue
+	var cvel: Color = centry[\"velocity\"]
+	var cval: Color = centry[\"value\"]
+	var ctarget: Color = centry[\"target\"]
+	cvel = cvel + (ctarget - cval) * float(centry[\"stiffness\"]) * delta
+	cvel = cvel * pow(1.0 - float(centry[\"damping\"]), delta)
+	cval = cval + cvel * delta
+	centry[\"velocity\"] = cvel
+	centry[\"value\"] = cval
+	var prec: float = float(centry[\"precision\"])
+	if absf(ctarget.r - cval.r) < prec and absf(ctarget.g - cval.g) < prec and absf(ctarget.b - cval.b) < prec and absf(ctarget.a - cval.a) < prec:
+		centry[\"value\"] = ctarget
+		centry[\"velocity\"] = Color(0, 0, 0, 0)
+		centry[\"active\"] = false
+		spring_reached.emit(str(color_name))"
 
 [sub_resource type="Resource" id="Resource_22bip"]
 script = ExtResource("6_7gr1r")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_m7rga")])
-event_uid = "6068a8"
+event_uid = "5332ef"
 
 [sub_resource type="Resource" id="Resource_dn21t"]
 script = ExtResource("2_xhrlg")
 code = "var entry: Dictionary = _spring_entry(spring_name)
+var was_active := bool(entry[\"active\"])
 entry[\"from\"] = float(entry[\"value\"])
 entry[\"target\"] = target
-entry[\"active\"] = true"
+entry[\"active\"] = true
+if not was_active:
+	spring_started.emit(spring_name)"
 
 [sub_resource type="Resource" id="Resource_iqxm8"]
 script = ExtResource("7_qx3vc")
@@ -390,6 +429,150 @@ ace_category = "Spring"
 params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_eak7h")])
 events = Array[Resource]([SubResource("Resource_0f5e4")])
 
+[sub_resource type="Resource" id="Resource_yp4nv"]
+script = ExtResource("2_xhrlg")
+code = "var entry: Dictionary = _color_entry(spring_name)
+entry[\"value\"] = color
+entry[\"target\"] = color
+entry[\"velocity\"] = Color(0, 0, 0, 0)
+entry[\"active\"] = false"
+
+[sub_resource type="Resource" id="Resource_4twk2"]
+script = ExtResource("7_qx3vc")
+id = "spring_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_yx52s"]
+script = ExtResource("7_qx3vc")
+id = "color"
+type_name = "Color"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_prh0a"]
+script = ExtResource("8_almrk")
+function_name = "set_color"
+description = "Snaps a named colour spring (no motion) — seed it before springing."
+expose_as_ace = true
+ace_display_name = "Set Color Value"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_4twk2"), SubResource("Resource_yx52s")])
+events = Array[Resource]([SubResource("Resource_yp4nv")])
+
+[sub_resource type="Resource" id="Resource_x81aj"]
+script = ExtResource("2_xhrlg")
+code = "var entry: Dictionary = _color_entry(spring_name)
+var was_active := bool(entry[\"active\"])
+entry[\"target\"] = target_color
+entry[\"active\"] = true
+if not was_active:
+	spring_started.emit(spring_name)"
+
+[sub_resource type="Resource" id="Resource_qpwek"]
+script = ExtResource("7_qx3vc")
+id = "spring_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_nrf8s"]
+script = ExtResource("7_qx3vc")
+id = "target_color"
+type_name = "Color"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_x3ya1"]
+script = ExtResource("8_almrk")
+function_name = "spring_color"
+description = "Springs a named colour toward a target (read it back with Color Value — great for hit flashes)."
+expose_as_ace = true
+ace_display_name = "Spring Color"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_qpwek"), SubResource("Resource_nrf8s")])
+events = Array[Resource]([SubResource("Resource_x81aj")])
+
+[sub_resource type="Resource" id="Resource_nf08y"]
+script = ExtResource("2_xhrlg")
+code = "if springs.has(spring_name):
+	springs[spring_name][\"active\"] = false
+if color_springs.has(spring_name):
+	color_springs[spring_name][\"active\"] = false"
+
+[sub_resource type="Resource" id="Resource_pnmyx"]
+script = ExtResource("7_qx3vc")
+id = "spring_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_svd3n"]
+script = ExtResource("8_almrk")
+function_name = "pause_spring"
+description = "Freezes a spring in place (resume continues it)."
+expose_as_ace = true
+ace_display_name = "Pause Spring"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_pnmyx")])
+events = Array[Resource]([SubResource("Resource_nf08y")])
+
+[sub_resource type="Resource" id="Resource_4epxa"]
+script = ExtResource("2_xhrlg")
+code = "if springs.has(spring_name):
+	springs[spring_name][\"active\"] = true
+if color_springs.has(spring_name):
+	color_springs[spring_name][\"active\"] = true"
+
+[sub_resource type="Resource" id="Resource_3km1f"]
+script = ExtResource("7_qx3vc")
+id = "spring_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ipqot"]
+script = ExtResource("8_almrk")
+function_name = "resume_spring"
+description = "Resumes a paused spring toward its target."
+expose_as_ace = true
+ace_display_name = "Resume Spring"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_3km1f")])
+events = Array[Resource]([SubResource("Resource_4epxa")])
+
+[sub_resource type="Resource" id="Resource_3aw34"]
+script = ExtResource("2_xhrlg")
+code = "springs.erase(spring_name)
+color_springs.erase(spring_name)"
+
+[sub_resource type="Resource" id="Resource_ok433"]
+script = ExtResource("7_qx3vc")
+id = "spring_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_hyprm"]
+script = ExtResource("8_almrk")
+function_name = "remove_spring"
+description = "Deletes a named spring (numeric and/or colour)."
+expose_as_ace = true
+ace_display_name = "Remove Spring"
+ace_category = "Spring"
+params = Array[ExtResource("7_qx3vc")]([SubResource("Resource_ok433")])
+events = Array[Resource]([SubResource("Resource_3aw34")])
+
+[sub_resource type="Resource" id="Resource_go7wg"]
+script = ExtResource("2_xhrlg")
+code = "springs.clear()
+color_springs.clear()"
+
+[sub_resource type="Resource" id="Resource_2k8ji"]
+script = ExtResource("8_almrk")
+function_name = "reset_springs"
+description = "Clears every spring on this behavior."
+expose_as_ace = true
+ace_display_name = "Reset All Springs"
+ace_category = "Spring"
+events = Array[Resource]([SubResource("Resource_go7wg")])
+
 [resource]
 script = ExtResource("9_0olq3")
 host_class = "Node2D"
@@ -398,6 +581,11 @@ custom_class_name = "SpringBehavior"
 addon_tags = PackedStringArray("motion", "juice")
 events = Array[Resource]([SubResource("Resource_swf5b"), SubResource("Resource_kefu4"), SubResource("Resource_22bip")])
 variables = {
+"color_springs": {
+"default": {},
+"exported": false,
+"type": "Dictionary"
+},
 "default_damping": {
 "attributes": {
 "range": {
@@ -438,4 +626,4 @@ variables = {
 "type": "Dictionary"
 }
 }
-functions = Array[Resource]([SubResource("Resource_er0il"), SubResource("Resource_0i7ck"), SubResource("Resource_fc7br"), SubResource("Resource_v55em"), SubResource("Resource_yumfq"), SubResource("Resource_cseej"), SubResource("Resource_1s7hb"), SubResource("Resource_yhbyb"), SubResource("Resource_y6r42"), SubResource("Resource_6cyd2")])
+functions = Array[Resource]([SubResource("Resource_er0il"), SubResource("Resource_0i7ck"), SubResource("Resource_fc7br"), SubResource("Resource_v55em"), SubResource("Resource_yumfq"), SubResource("Resource_cseej"), SubResource("Resource_1s7hb"), SubResource("Resource_yhbyb"), SubResource("Resource_y6r42"), SubResource("Resource_6cyd2"), SubResource("Resource_prh0a"), SubResource("Resource_x3ya1"), SubResource("Resource_svd3n"), SubResource("Resource_ipqot"), SubResource("Resource_hyprm"), SubResource("Resource_2k8ji")])

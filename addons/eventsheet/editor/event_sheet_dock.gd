@@ -1402,6 +1402,17 @@ func _on_add_group_requested() -> void:
     )
     if changed:
         _mark_dirty("Added group.")
+        # Drop straight into renaming the new group so naming it is obvious and immediate —
+        # the same inline title edit you'd reach by double-clicking it or pressing Enter,
+        # just triggered for you. Deferred so it runs after the viewport rebuilds.
+        call_deferred("_begin_group_rename", group)
+
+## Selects a group and opens its title for inline editing (used right after Add Group so the
+## user can type the name immediately). Composes the already-tested select + begin-edit path.
+func _begin_group_rename(group: EventGroup) -> void:
+    var view: EventSheetViewport = _active_view()
+    if view != null and view.select_resource(group):
+        view.begin_edit_selected()
 
 func _on_duplicate_requested() -> void:
     if not _ensure_sheet_for_editing():

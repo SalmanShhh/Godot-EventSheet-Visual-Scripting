@@ -1,0 +1,408 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_7u428"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_q5lps"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_204sl"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_lrrm4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_73t63"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_turmm"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_gljvp"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_l8tj8"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_m4533"]
+
+[sub_resource type="Resource" id="Resource_bhjv5"]
+script = ExtResource("1_7u428")
+text = "Weapon Kit: ammo + reserve, fire-rate cooldown, single/auto/burst modes, and timed/instant reload. Call Fire (it manages ammo + cooldown and triggers On Fire — you spawn the bullet); call Reload. Read Ammo %, Reload Progress, etc. for HUD."
+
+[sub_resource type="Resource" id="Resource_61vf4"]
+script = ExtResource("2_q5lps")
+code = "## @ace_trigger
+## @ace_name(\"On Fire\")
+## @ace_category(\"Weapon\")
+signal fired
+
+## @ace_trigger
+## @ace_name(\"On Empty\")
+## @ace_category(\"Weapon\")
+signal emptied
+
+## @ace_trigger
+## @ace_name(\"On Reload Started\")
+## @ace_category(\"Weapon\")
+signal reload_started
+
+## @ace_trigger
+## @ace_name(\"On Reload Complete\")
+## @ace_category(\"Weapon\")
+signal reload_completed
+
+## @ace_condition
+## @ace_name(\"Can Fire\")
+## @ace_category(\"Weapon\")
+## @ace_codegen_template(\"$WeaponKit.can_fire()\")
+func can_fire() -> bool:
+	return not _reloading and _cooldown <= 0.0 and current_ammo > 0 and _burst_left <= 0
+
+## @ace_condition
+## @ace_name(\"Has Ammo\")
+## @ace_category(\"Weapon\")
+## @ace_codegen_template(\"$WeaponKit.has_ammo()\")
+func has_ammo() -> bool:
+	return current_ammo > 0
+
+## @ace_condition
+## @ace_name(\"Is Full\")
+## @ace_category(\"Weapon\")
+## @ace_codegen_template(\"$WeaponKit.is_full()\")
+func is_full() -> bool:
+	return current_ammo >= max_ammo
+
+## @ace_condition
+## @ace_name(\"Is Reloading\")
+## @ace_category(\"Weapon\")
+## @ace_codegen_template(\"$WeaponKit.is_reloading()\")
+func is_reloading() -> bool:
+	return _reloading
+
+## @ace_expression
+## @ace_name(\"Ammo Percent\")
+## @ace_category(\"Weapon\")
+func ammo_percent() -> float:
+	return (float(current_ammo) / float(maxi(max_ammo, 1))) * 100.0
+
+## @ace_expression
+## @ace_name(\"Reload Progress\")
+## @ace_category(\"Weapon\")
+func reload_progress() -> float:
+	if not _reloading:
+		return 1.0
+	return clampf(1.0 - _reload_timer / maxf(reload_time, 0.01), 0.0, 1.0)
+
+## @ace_expression
+## @ace_name(\"Cooldown Progress\")
+## @ace_category(\"Weapon\")
+func cooldown_progress() -> float:
+	return clampf(1.0 - _cooldown * maxf(fire_rate, 0.01), 0.0, 1.0)
+
+# One round leaves the barrel: spend ammo, start the cooldown, trigger On Fire, and
+# fall through to empty/auto-reload when the magazine runs dry.
+func _fire_one() -> void:
+	current_ammo -= 1
+	_cooldown = 1.0 / maxf(fire_rate, 0.01)
+	fired.emit()
+	if current_ammo <= 0:
+		_burst_left = 0
+		emptied.emit()
+		if auto_reload:
+			reload()
+
+# Move rounds from the reserve into the magazine (capped by reserve unless infinite).
+func _complete_reload() -> void:
+	var needed: int = max_ammo - current_ammo
+	var taken: int = needed if infinite_reserve else mini(needed, reserve_ammo)
+	current_ammo += taken
+	if not infinite_reserve:
+		reserve_ammo -= taken
+	_reloading = false
+	_reload_timer = 0.0
+	reload_completed.emit()"
+
+[sub_resource type="Resource" id="Resource_cwid0"]
+script = ExtResource("2_q5lps")
+code = "_cooldown = maxf(_cooldown - delta, 0.0)
+if _reloading:
+	_reload_timer = maxf(_reload_timer - delta, 0.0)
+	if _reload_timer <= 0.0:
+		_complete_reload()
+elif _burst_left > 0 and _cooldown <= 0.0:
+	if current_ammo > 0:
+		_burst_left -= 1
+		_fire_one()
+	else:
+		_burst_left = 0"
+
+[sub_resource type="Resource" id="Resource_itgvj"]
+script = ExtResource("6_turmm")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_cwid0")])
+event_uid = "bbcb95"
+
+[sub_resource type="Resource" id="Resource_jx5ja"]
+script = ExtResource("2_q5lps")
+code = "if _reloading or _cooldown > 0.0 or _burst_left > 0:
+	return
+if current_ammo <= 0:
+	emptied.emit()
+	if auto_reload:
+		reload()
+	return
+if fire_mode == 2:
+	_burst_left = maxi(burst_count, 1)
+	_burst_left -= 1
+_fire_one()"
+
+[sub_resource type="Resource" id="Resource_rwa0o"]
+script = ExtResource("8_l8tj8")
+function_name = "fire"
+description = "Fires if ready (not reloading, off cooldown, has ammo). In burst mode it kicks off a burst; if the magazine is empty it triggers On Empty (and auto-reloads when enabled)."
+expose_as_ace = true
+ace_display_name = "Fire"
+ace_category = "Weapon"
+events = Array[Resource]([SubResource("Resource_jx5ja")])
+
+[sub_resource type="Resource" id="Resource_bc3rm"]
+script = ExtResource("2_q5lps")
+code = "if _reloading or current_ammo >= max_ammo:
+	return
+if not infinite_reserve and reserve_ammo <= 0:
+	return
+_reloading = true
+_reload_timer = reload_time
+_burst_left = 0
+reload_started.emit()"
+
+[sub_resource type="Resource" id="Resource_tnug7"]
+script = ExtResource("8_l8tj8")
+function_name = "reload"
+description = "Starts a timed reload (if not full and reserve has rounds)."
+expose_as_ace = true
+ace_display_name = "Reload"
+ace_category = "Weapon"
+events = Array[Resource]([SubResource("Resource_bc3rm")])
+
+[sub_resource type="Resource" id="Resource_rkgk7"]
+script = ExtResource("2_q5lps")
+code = "_reloading = false
+_reload_timer = 0.0"
+
+[sub_resource type="Resource" id="Resource_40oqk"]
+script = ExtResource("8_l8tj8")
+function_name = "cancel_reload"
+description = "Aborts an in-progress reload (no ammo gained)."
+expose_as_ace = true
+ace_display_name = "Cancel Reload"
+ace_category = "Weapon"
+events = Array[Resource]([SubResource("Resource_rkgk7")])
+
+[sub_resource type="Resource" id="Resource_qxhv0"]
+script = ExtResource("2_q5lps")
+code = "_reloading = false
+_complete_reload()"
+
+[sub_resource type="Resource" id="Resource_juwkg"]
+script = ExtResource("8_l8tj8")
+function_name = "instant_reload"
+description = "Refills the magazine immediately (no reload time)."
+expose_as_ace = true
+ace_display_name = "Instant Reload"
+ace_category = "Weapon"
+events = Array[Resource]([SubResource("Resource_qxhv0")])
+
+[sub_resource type="Resource" id="Resource_w3r36"]
+script = ExtResource("2_q5lps")
+code = "current_ammo = mini(current_ammo + amount, max_ammo)"
+
+[sub_resource type="Resource" id="Resource_255iv"]
+script = ExtResource("7_gljvp")
+id = "amount"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_pqx3t"]
+script = ExtResource("8_l8tj8")
+function_name = "add_ammo"
+description = "Adds rounds straight to the magazine (capped at the magazine size)."
+expose_as_ace = true
+ace_display_name = "Add Ammo"
+ace_category = "Weapon"
+params = Array[ExtResource("7_gljvp")]([SubResource("Resource_255iv")])
+events = Array[Resource]([SubResource("Resource_w3r36")])
+
+[sub_resource type="Resource" id="Resource_hnxl2"]
+script = ExtResource("2_q5lps")
+code = "reserve_ammo += amount"
+
+[sub_resource type="Resource" id="Resource_ebvhh"]
+script = ExtResource("7_gljvp")
+id = "amount"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_4makl"]
+script = ExtResource("8_l8tj8")
+function_name = "add_reserve"
+description = "Adds spare rounds to the reserve pool (e.g. an ammo pickup)."
+expose_as_ace = true
+ace_display_name = "Add Reserve Ammo"
+ace_category = "Weapon"
+params = Array[ExtResource("7_gljvp")]([SubResource("Resource_ebvhh")])
+events = Array[Resource]([SubResource("Resource_hnxl2")])
+
+[sub_resource type="Resource" id="Resource_rbsjj"]
+script = ExtResource("2_q5lps")
+code = "fire_rate = rate"
+
+[sub_resource type="Resource" id="Resource_6hdaa"]
+script = ExtResource("7_gljvp")
+id = "rate"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ntqov"]
+script = ExtResource("8_l8tj8")
+function_name = "set_fire_rate"
+description = "Changes the shots-per-second."
+expose_as_ace = true
+ace_display_name = "Set Fire Rate"
+ace_category = "Weapon"
+params = Array[ExtResource("7_gljvp")]([SubResource("Resource_6hdaa")])
+events = Array[Resource]([SubResource("Resource_rbsjj")])
+
+[sub_resource type="Resource" id="Resource_gyquj"]
+script = ExtResource("2_q5lps")
+code = "fire_mode = mode"
+
+[sub_resource type="Resource" id="Resource_p56ui"]
+script = ExtResource("7_gljvp")
+id = "mode"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_hm5ns"]
+script = ExtResource("8_l8tj8")
+function_name = "set_fire_mode"
+description = "0 = single, 1 = auto, 2 = burst."
+expose_as_ace = true
+ace_display_name = "Set Fire Mode"
+ace_category = "Weapon"
+params = Array[ExtResource("7_gljvp")]([SubResource("Resource_p56ui")])
+events = Array[Resource]([SubResource("Resource_gyquj")])
+
+[sub_resource type="Resource" id="Resource_hg5vn"]
+script = ExtResource("2_q5lps")
+code = "max_ammo = maxi(size, 0)"
+
+[sub_resource type="Resource" id="Resource_wedpr"]
+script = ExtResource("7_gljvp")
+id = "size"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_uvlb7"]
+script = ExtResource("8_l8tj8")
+function_name = "set_max_ammo"
+description = "Changes the magazine size."
+expose_as_ace = true
+ace_display_name = "Set Magazine Size"
+ace_category = "Weapon"
+params = Array[ExtResource("7_gljvp")]([SubResource("Resource_wedpr")])
+events = Array[Resource]([SubResource("Resource_hg5vn")])
+
+[resource]
+script = ExtResource("9_m4533")
+host_class = "Node2D"
+behavior_mode = true
+custom_class_name = "WeaponKit"
+addon_tags = PackedStringArray("combat", "shooter")
+events = Array[Resource]([SubResource("Resource_bhjv5"), SubResource("Resource_61vf4"), SubResource("Resource_itgvj")])
+variables = {
+"_burst_left": {
+"default": 0,
+"exported": false,
+"type": "int"
+},
+"_cooldown": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"_reload_timer": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"_reloading": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"auto_reload": {
+"attributes": {
+"tooltip": "Reload automatically when the magazine runs dry."
+},
+"default": true,
+"exported": true,
+"type": "bool"
+},
+"burst_count": {
+"attributes": {
+"tooltip": "Shots per burst when fire_mode = 2."
+},
+"default": 3,
+"exported": true,
+"type": "int"
+},
+"current_ammo": {
+"attributes": {
+"tooltip": "Rounds loaded right now (set to your magazine size to start full)."
+},
+"default": 12,
+"exported": true,
+"type": "int"
+},
+"fire_mode": {
+"attributes": {
+"tooltip": "0 = single, 1 = auto (both cooldown-gated), 2 = burst."
+},
+"default": 0,
+"exported": true,
+"type": "int"
+},
+"fire_rate": {
+"attributes": {
+"tooltip": "Shots per second (the cooldown between shots is 1 / fire_rate)."
+},
+"default": 8.0,
+"exported": true,
+"type": "float"
+},
+"infinite_reserve": {
+"attributes": {
+"tooltip": "Reloads never spend reserve ammo."
+},
+"default": false,
+"exported": true,
+"type": "bool"
+},
+"max_ammo": {
+"attributes": {
+"tooltip": "Magazine size (rounds before a reload)."
+},
+"default": 12,
+"exported": true,
+"type": "int"
+},
+"reload_time": {
+"attributes": {
+"tooltip": "Seconds a reload takes."
+},
+"default": 1.2,
+"exported": true,
+"type": "float"
+},
+"reserve_ammo": {
+"attributes": {
+"tooltip": "Spare rounds a reload draws from."
+},
+"default": 96,
+"exported": true,
+"type": "int"
+}
+}
+functions = Array[Resource]([SubResource("Resource_rwa0o"), SubResource("Resource_tnug7"), SubResource("Resource_40oqk"), SubResource("Resource_juwkg"), SubResource("Resource_pqx3t"), SubResource("Resource_4makl"), SubResource("Resource_ntqov"), SubResource("Resource_hm5ns"), SubResource("Resource_uvlb7")])

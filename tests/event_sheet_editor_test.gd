@@ -542,6 +542,16 @@ static func run() -> bool:
     all_passed = _check("enter on selected group opens rename behavior", editing_context.get("row_index", -1), 1) and all_passed
     all_passed = _check("group rename starts with current group name", editing_context.get("buffer", ""), "Rename Me") and all_passed
     dock_viewport._cancel_edit()
+    # Add Group auto-opens the new group's title for editing (so naming a group is immediate
+    # and discoverable, not a hidden double-click). _begin_group_rename re-selects + edits it.
+    dock_viewport._select_row(1)
+    var auto_rename_group: Variant = dock_viewport.get_selected_context().get("source_resource", null)
+    dock_viewport._select_row(0)
+    dock_viewport._cancel_edit()
+    dock._begin_group_rename(auto_rename_group)
+    all_passed = _check("Add Group auto-opens the new group name for inline editing",
+        dock_viewport.get_editing_context_for_test().get("row_index", -1), 1) and all_passed
+    dock_viewport._cancel_edit()
     dock_viewport._select_row(0)
     dock._unhandled_key_input(rename_key)
     editing_context = dock_viewport.get_editing_context_for_test()

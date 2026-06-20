@@ -214,6 +214,7 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 	var field_type: int = int(param_dict.get("type", TYPE_NIL))
 	var default_value: Variant = initial_values.get(key, param_dict.get("default_value", ""))
 	var options: Array = param_dict.get("options", [])
+	var autocomplete: Array = param_dict.get("autocomplete", [])
 
 	# A lone Vector2/Vector3 param (positions, sizes…) splits into per-axis fields —
 	# each axis is still a full GDScript expression (user call: "when setting
@@ -238,6 +239,10 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 		return _create_color_field(key, default_value)
 	if hint == EXPRESSION_HINT:
 		return _create_expression_field(key, default_value)
+	# Editable autocomplete combo (Construct-style): type any value, or filter/pick from
+	# the behavior-declared suggestions. Takes priority over a fixed dropdown.
+	if autocomplete is Array and not autocomplete.is_empty():
+		return _create_autocomplete_field(key, autocomplete, default_value)
 	if options is Array and not options.is_empty():
 		return _create_options_field(key, options, default_value)
 	if field_type == TYPE_BOOL:
@@ -281,6 +286,78 @@ func _create_options_field(key: String, options: Array, default_value: Variant) 
 			dropdown.select(index)
 	_fields[key] = dropdown
 	return dropdown
+
+## Editable autocomplete combo (Construct-style "Combo" with free text): a LineEdit the
+## user types into, plus a ▾ button whose popup lists the behavior-declared suggestions
+## filtered by what's already typed. Picking inserts a suggestion verbatim; typing any
+## other value is still allowed. The LineEdit IS the value-bearing field (read like text).
+func _create_autocomplete_field(key: String, suggestions: Array, default_value: Variant) -> Control:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	var edit: LineEdit = LineEdit.new()
+	edit.text = str(default_value)
+	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	edit.placeholder_text = "type or pick…"
+	# Enter still presses OK (keyboard flow stays identical to a plain field).
+	if _dialog is AcceptDialog:
+		(_dialog as AcceptDialog).register_text_enter(edit)
+	row.add_child(edit)
+
+	var suggestion_texts: PackedStringArray = PackedStringArray()
+	for suggestion: Variant in suggestions:
+		var suggestion_text: String = str(suggestion).strip_edges()
+		if not suggestion_text.is_empty() and not suggestion_texts.has(suggestion_text):
+			suggestion_texts.append(suggestion_text)
+
+	var picker: MenuButton = MenuButton.new()
+	picker.text = "▾"
+	picker.tooltip_text = "Suggestions (you can still type any value)"
+	var popup: PopupMenu = picker.get_popup()
+	# Rebuild the (filtered) list each time it opens so what's typed narrows the choices.
+	popup.about_to_popup.connect(func() -> void:
+		_rebuild_autocomplete_popup(popup, suggestion_texts, edit.text))
+	# Whenever the suggestion popup closes (pick, Escape, click-away), return the caret to
+	# the field so Enter still confirms the dialog and typing continues seamlessly.
+	popup.popup_hide.connect(func() -> void: edit.grab_focus())
+	popup.id_pressed.connect(func(picked_id: int) -> void:
+		if picked_id >= 0 and picked_id < suggestion_texts.size():
+			edit.text = suggestion_texts[picked_id]
+			edit.caret_column = edit.text.length()
+			edit.grab_focus())
+	# Down-arrow from the field opens the suggestions (keyboard-first authoring).
+	# accept_event() (a Control method) stops the key here — this dialog is a RefCounted
+	# wrapper, so there is no get_viewport()/set_input_as_handled() to reach for.
+	edit.gui_input.connect(func(event: InputEvent) -> void:
+		var key_event: InputEventKey = event as InputEventKey
+		if key_event != null and key_event.pressed and key_event.keycode == KEY_DOWN:
+			_rebuild_autocomplete_popup(popup, suggestion_texts, edit.text)
+			# Don't pop a dead, disabled-only "(no match)" menu — keep the caret in the field.
+			if popup.item_count == 1 and popup.is_item_disabled(0):
+				edit.accept_event()
+				return
+			popup.position = Vector2i(edit.get_screen_position() + Vector2(0.0, edit.size.y))
+			popup.reset_size()
+			popup.popup()
+			edit.accept_event())
+	row.add_child(picker)
+	_fields[key] = edit
+	return row
+
+## Fills `popup` with the suggestions whose text contains `filter_text` (case-insensitive;
+## empty filter shows all). Each item's id is its index into the FULL list, so a pick maps
+## back correctly even when filtered. Pure enough to unit-test directly.
+func _rebuild_autocomplete_popup(popup: PopupMenu, suggestions: PackedStringArray, filter_text: String) -> void:
+	popup.clear()
+	var needle: String = filter_text.strip_edges().to_lower()
+	var any_added: bool = false
+	for index: int in range(suggestions.size()):
+		var suggestion: String = suggestions[index]
+		if needle.is_empty() or suggestion.to_lower().contains(needle):
+			popup.add_item(suggestion, index)
+			any_added = true
+	if not any_added:
+		popup.add_item("(no match — keep typing)", -1)
+		popup.set_item_disabled(popup.item_count - 1, true)
 
 ## hint may carry a required base type ("variable_reference:Array") — the dropdown then
 ## offers only variables of that container type (Variant/untyped always qualify).

@@ -41,7 +41,9 @@ const PACKS: Array[String] = [
 	"res://eventsheet_addons/bullet_3d/bullet_3d_behavior",
 	"res://eventsheet_addons/move_to_3d/move_to_3d_behavior",
 	"res://eventsheet_addons/health/health_behavior",
-	"res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior"
+	"res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior",
+	"res://eventsheet_addons/weapon_kit/weapon_kit_behavior",
+	"res://eventsheet_addons/htn_agent/htn_agent_behavior"
 ]
 
 static func run() -> bool:

@@ -81,10 +81,20 @@ it), and anything not covered is one ƒx expression away.
 | Solid / Jump-thru behaviors | Godot collision layers + one-way collision shapes (scene setup, not events) |
 | Physics behavior | RigidBody2D + the existing impulse/velocity ACEs |
 
-**Lane 2 — portable behaviors** ship as event-sheet packs — all fourteen are bundled:
+**Lane 2 — portable behaviors** ship as event-sheet packs — **24 are bundled**:
 Platformer, 8-Direction, Timer, Flash, State Machine, **Sine, Orbit, Bullet, Move To,
-Follow, Drag & Drop, Car, Tile Movement, and Line of Sight**. Attach as a child node;
-properties live in the Inspector; their ACEs appear in the picker automatically.
+Follow, Car, Tile Movement, Line of Sight (2D & 3D)**, the juice duo (**Spring** + **Tween**),
+the **Save System** singleton, a 3D quartet (Sine/Orbit/Bullet/Move To 3D), and faithful
+ports of custom C3 addons:
+
+| Construct 3 addon | Godot EventSheets pack |
+| --- | --- |
+| Drag & Drop | **Drag & Drop** (event-driven: Start Drag / Set Drag Point / Drop, follow-speed lag, direction lock, break-distance auto-drop, measured throw velocity, snap/magnet targets — input-agnostic, so a controller or the Virtual Cursor can drive it) |
+| Virtual Cursor | **Virtual Cursor** (axis/mouse-driven cursor with homing, solids, bounce, constraints — drives the Drag & Drop pack for gamepad/touch) |
+| (Simple) Health | **Health** (current/max HP, damage-absorption resistance, named **Health Pools** = decaying shields that intercept damage in priority order, death/revive/invulnerability, On Damaged/Death/Healed/Revived triggers) |
+
+Attach as a child node; properties live in the Inspector; their ACEs appear in the picker
+automatically.
 
 **Families** → Godot **node groups** + behaviors-as-components: put nodes in a group
 (`add_to_group`), pick them with the group pick filter, and attach shared behavior packs

@@ -15,6 +15,11 @@ var _preview_viewport: EventSheetViewport = null
 var _working_style: EventSheetEditorStyle = null
 var _dock: Control = null
 var _save_dialog: FileDialog = null
+# Quick Style: derive the whole palette from a few colours (no token-by-token tweaking).
+var _detail_form: VBoxContainer = null
+var _quick_base: ColorPickerButton = null
+var _quick_accent: ColorPickerButton = null
+var _quick_font: ColorPickerButton = null
 
 ## Opens the theme editor seeded from the dock's active style (or defaults).
 func open(dock: Control, base_style: EventSheetEditorStyle) -> void:
@@ -159,11 +164,12 @@ func _ensure_dialog() -> void:
 	form_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var form: VBoxContainer = VBoxContainer.new()
 	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# Editor-level tokens first — hover/selection strength lives here.
-	_build_section(form, "Editor (hover, selection, lanes)", _working_style)
-	_build_section(form, "Sheet & rows (event style)", _working_style.event_style)
-	_build_section(form, "Condition cells", _working_style.condition_style)
-	_build_section(form, "Action cells", _working_style.action_style)
+	# Quick Style (whole-palette recolour) on top, then the per-token detail form below it.
+	_build_quick_style(form)
+	_detail_form = VBoxContainer.new()
+	_detail_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	form.add_child(_detail_form)
+	_rebuild_detail_form()
 	var buttons: HBoxContainer = HBoxContainer.new()
 	var apply_button: Button = Button.new()
 	apply_button.text = "Apply To Current Sheet"
@@ -178,6 +184,83 @@ func _ensure_dialog() -> void:
 	split.add_child(form_scroll)
 	_dialog.add_child(split)
 	_dock.add_child(_dialog)
+
+## Quick Style — three colours drive the whole palette (base tone, accent, text). One
+## button regenerates every colour token via EventSheetGodotTheme.apply, so re-skinning is
+## "pick a colour, click Generate" instead of tuning thirty fields by hand.
+func _build_quick_style(form: VBoxContainer) -> void:
+	var header: Label = Label.new()
+	header.text = "Quick Style — recolour everything at once"
+	header.add_theme_font_size_override("font_size", 15)
+	form.add_child(header)
+	var hint: Label = Label.new()
+	hint.text = "Pick a base + accent, then Generate. Fine-tune individual tokens below."
+	hint.add_theme_color_override("font_color", Color(0.8, 0.85, 0.95, 0.7))
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	form.add_child(hint)
+	_quick_base = _quick_color_row(form, "Base (background tone)", Color("#252525"))
+	_quick_accent = _quick_color_row(form, "Accent (groups, selection)", Color("#569eff"))
+	_quick_font = _quick_color_row(form, "Text", Color("#ced0d2"))
+	var buttons: HBoxContainer = HBoxContainer.new()
+	var generate: Button = Button.new()
+	generate.text = "Generate Theme"
+	generate.tooltip_text = "Rebuild every colour token from the three colours above."
+	generate.pressed.connect(_generate_quick_style)
+	buttons.add_child(generate)
+	var reset: Button = Button.new()
+	reset.text = "Reset To Default"
+	reset.tooltip_text = "Restore the bundled default look."
+	reset.pressed.connect(_reset_to_default)
+	buttons.add_child(reset)
+	form.add_child(buttons)
+	form.add_child(HSeparator.new())
+
+## One labelled colour picker, returned so Quick Style can read it back on Generate.
+func _quick_color_row(form: VBoxContainer, label_text: String, default_color: Color) -> ColorPickerButton:
+	var row: HBoxContainer = HBoxContainer.new()
+	var label: Label = Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(230.0, 0.0)
+	row.add_child(label)
+	var picker: ColorPickerButton = ColorPickerButton.new()
+	picker.color = default_color
+	picker.custom_minimum_size = Vector2(72.0, 0.0)
+	row.add_child(picker)
+	form.add_child(row)
+	return picker
+
+## Derives the two dark tones from the base, regenerates the whole sheet palette, and
+## refreshes the detail form + live preview.
+func _generate_quick_style() -> void:
+	if _working_style == null:
+		return
+	var base: Color = _quick_base.color
+	EventSheetGodotTheme.apply(_working_style, base, base.darkened(0.15), base.darkened(0.25), _quick_accent.color, _quick_font.color)
+	_rebuild_detail_form()
+	if _preview_viewport != null:
+		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+
+## Restores the bundled default look — a clean starting point.
+func _reset_to_default() -> void:
+	_working_style = duplicate_style(null)
+	if _working_style.has_method("ensure_defaults"):
+		_working_style.call("ensure_defaults")
+	_rebuild_detail_form()
+	if _preview_viewport != null:
+		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+
+## (Re)builds the reflective per-token form into _detail_form, clearing any prior fields so
+## the spinboxes/pickers always reflect the current (possibly just-regenerated) style.
+func _rebuild_detail_form() -> void:
+	if _detail_form == null:
+		return
+	for child: Node in _detail_form.get_children():
+		_detail_form.remove_child(child)
+		child.queue_free()
+	_build_section(_detail_form, "Editor (hover, selection, lanes)", _working_style)
+	_build_section(_detail_form, "Sheet & rows (event style)", _working_style.event_style)
+	_build_section(_detail_form, "Condition cells", _working_style.condition_style)
+	_build_section(_detail_form, "Action cells", _working_style.action_style)
 
 ## One labeled control per editable token, reflectively.
 func _build_section(form: VBoxContainer, title: String, style_resource: Resource) -> void:

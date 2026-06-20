@@ -1,0 +1,501 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_unvju"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_7bl26"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="3_y8koh"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="4_njcsg"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="5_aigr4"]
+
+[sub_resource type="Resource" id="Resource_q5b8g"]
+script = ExtResource("1_unvju")
+text = "Utility-driven HTN planner. In On Ready build a task network (Add Primitive / Add Compound / Add Method / Add Method Condition / Add Method Subtask) and set the Root Task. Feed facts with Set World State, call Request Plan, run the Current Task in your sheet, and call Mark Complete / Mark Failed. Highest-utility applicable method wins at each compound (with backtracking). Triggers: On Task Started, On Plan Complete, On Plan Failed."
+
+[sub_resource type="Resource" id="Resource_loqp0"]
+script = ExtResource("2_7bl26")
+code = "## @ace_trigger
+## @ace_name(\"On Task Started\")
+## @ace_category(\"HTN\")
+signal task_started(task_name: String)
+
+## @ace_trigger
+## @ace_name(\"On Plan Complete\")
+## @ace_category(\"HTN\")
+signal plan_complete
+
+## @ace_trigger
+## @ace_name(\"On Plan Failed\")
+## @ace_category(\"HTN\")
+signal plan_failed
+
+## @ace_condition
+## @ace_name(\"Has Plan\")
+## @ace_category(\"HTN\")
+## @ace_codegen_template(\"$HTNAgent.has_plan()\")
+func has_plan() -> bool:
+	return plan_index < plan.size()
+
+## @ace_condition
+## @ace_name(\"Current Task Is\")
+## @ace_category(\"HTN\")
+## @ace_codegen_template(\"$HTNAgent.current_task_is({task_name})\")
+func current_task_is(task_name: String) -> bool:
+	return current_task() == task_name
+
+## @ace_expression
+## @ace_name(\"Current Task\")
+## @ace_category(\"HTN\")
+func current_task() -> String:
+	return str(plan[plan_index]) if plan_index < plan.size() else \"\"
+
+## @ace_expression
+## @ace_name(\"Plan Length\")
+## @ace_category(\"HTN\")
+func plan_length() -> int:
+	return plan.size()
+
+## @ace_expression
+## @ace_name(\"World Value\")
+## @ace_category(\"HTN\")
+func world_value(key: String) -> Variant:
+	return world_state.get(key, 0)
+
+# ── Planner internals ──
+func _find_method(task_name: String, method_id: String) -> Dictionary:
+	for method: Dictionary in compounds.get(task_name, []):
+		if str(method.get(\"id\", \"\")) == method_id:
+			return method
+	return {}
+
+func _to_number(value: Variant) -> float:
+	if value is float or value is int:
+		return float(value)
+	return str(value).to_float()
+
+func _loose_equal(a: Variant, b: Variant) -> bool:
+	if (a is float or a is int) and (b is float or b is int):
+		return is_equal_approx(float(a), float(b))
+	return str(a) == str(b)
+
+func _compare_values(a: Variant, op: String, b: Variant) -> bool:
+	if op == \"==\": return _loose_equal(a, b)
+	if op == \"!=\": return not _loose_equal(a, b)
+	if op == \"<\": return _to_number(a) < _to_number(b)
+	if op == \"<=\": return _to_number(a) <= _to_number(b)
+	if op == \">\": return _to_number(a) > _to_number(b)
+	if op == \">=\": return _to_number(a) >= _to_number(b)
+	return false
+
+func _conditions_hold(conditions: Array) -> bool:
+	for condition: Dictionary in conditions:
+		var actual: Variant = world_state.get(str(condition.get(\"key\", \"\")), null)
+		if not _compare_values(actual, str(condition.get(\"op\", \"==\")), condition.get(\"value\")):
+			return false
+	return true
+
+# Decompose a task into an ordered list of primitive task names. At each compound the
+# applicable methods (preconditions satisfied) are tried in descending utility order,
+# backtracking to the next method when a subtask cannot be decomposed.
+func _decompose(task_name: String, depth: int) -> Array:
+	if depth > 64:
+		return []
+	if primitives.has(task_name):
+		return [task_name]
+	if not compounds.has(task_name):
+		return []
+	var applicable: Array = []
+	for method: Dictionary in compounds[task_name]:
+		if _conditions_hold(method.get(\"conditions\", [])):
+			applicable.append(method)
+	applicable.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a.get(\"utility\", 0.0)) > float(b.get(\"utility\", 0.0)))
+	for method: Dictionary in applicable:
+		var result: Array = []
+		var ok: bool = true
+		for subtask: Variant in method.get(\"subtasks\", []):
+			var sub: Array = _decompose(str(subtask), depth + 1)
+			if sub.is_empty():
+				ok = false
+				break
+			result.append_array(sub)
+		if ok:
+			return result
+	return []"
+
+[sub_resource type="Resource" id="Resource_s8dy0"]
+script = ExtResource("2_7bl26")
+code = "world_state[key] = value"
+
+[sub_resource type="Resource" id="Resource_2sslc"]
+script = ExtResource("3_y8koh")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_s4esc"]
+script = ExtResource("3_y8koh")
+id = "value"
+type_name = "Variant"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_1iywo"]
+script = ExtResource("4_njcsg")
+function_name = "set_world_state"
+description = "Writes a fact the planner reads in method preconditions."
+expose_as_ace = true
+ace_display_name = "Set World State"
+ace_category = "HTN"
+params = Array[ExtResource("3_y8koh")]([SubResource("Resource_2sslc"), SubResource("Resource_s4esc")])
+events = Array[Resource]([SubResource("Resource_s8dy0")])
+
+[sub_resource type="Resource" id="Resource_8gaed"]
+script = ExtResource("2_7bl26")
+code = "world_state.erase(key)"
+
+[sub_resource type="Resource" id="Resource_4rc60"]
+script = ExtResource("3_y8koh")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_obmvm"]
+script = ExtResource("4_njcsg")
+function_name = "clear_world_state"
+description = "Removes a world-state key."
+expose_as_ace = true
+ace_display_name = "Clear World State"
+ace_category = "HTN"
+params = Array[ExtResource("3_y8koh")]([SubResource("Resource_4rc60")])
+events = Array[Resource]([SubResource("Resource_8gaed")])
+
+[sub_resource type="Resource" id="Resource_j4fh5"]
+script = ExtResource("2_7bl26")
+code = "primitives[task_name] = true"
+
+[sub_resource type="Resource" id="Resource_ixx0h"]
+script = ExtResource("3_y8koh")
+id = "task_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_6kwa2"]
+script = ExtResource("4_njcsg")
+function_name = "add_primitive"
+description = "Registers a leaf task your sheet executes directly."
+expose_as_ace = true
+ace_display_name = "Add Primitive Task"
+ace_category = "HTN"
+params = Array[ExtResource("3_y8koh")]([SubResource("Resource_ixx0h")])
+events = Array[Resource]([SubResource("Resource_j4fh5")])
+
+[sub_resource type="Resource" id="Resource_6drcv"]
+script = ExtResource("2_7bl26")
+code = "if not compounds.has(task_name):
+	compounds[task_name] = []"
+
+[sub_resource type="Resource" id="Resource_n0rjc"]
+script = ExtResource("3_y8koh")
+id = "task_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ei1jl"]
+script = ExtResource("4_njcsg")
+function_name = "add_compound"
+description = "Registers a task that decomposes via methods."
+expose_as_ace = true
+ace_display_name = "Add Compound Task"
+ace_category = "HTN"
+params = Array[ExtResource("3_y8koh")]([SubResource("Resource_n0rjc")])
+events = Array[Resource]([SubResource("Resource_6drcv")])
+
+[sub_resource type="Resource" id="Resource_870ed"]
+script = ExtResource("2_7bl26")
+code = "if not compounds.has(task_name):
+	compounds[task_name] = []
+var method: Dictionary = _find_method(task_name, method_id)
+if method.is_empty():
+	compounds[task_name].append({\"id\": method_id, \"utility\": utility, \"conditions\": [], \"subtasks\": []})
+else:
+	method[\"utility\"] = utility"
+
+[sub_resource type="Resource" id="Resource_qgett"]
+script = ExtResource("3_y8koh")
+id = "task_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_jqvex"]
+script = ExtResource("3_y8koh")
+id = "method_id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_dvrh6"]
+script = ExtResource("3_y8koh")
+id = "utility"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_t0ymc"]
+script = ExtResource("4_njcsg")
+function_name = "add_method"
+description = "Adds (or re-scores) a way to accomplish a compound task; highest utility wins."
+expose_as_ace = true
+ace_display_name = "Add Method"
+ace_category = "HTN"
+params = Array[ExtResource("3_y8koh")]([SubResource("Resource_qgett"), SubResource("Resource_jqvex"), SubResource("Resource_dvrh6")])
+events = Array[Resource]([SubResource("Resource_870ed")])
+
+[sub_resource type="Resource" id="Resource_v0l1y"]
+script = ExtResource("2_7bl26")
+code = "var method: Dictionary = _find_method(task_name, method_id)
+if not method.is_empty():
+	method[\"conditions\"].append({\"key\": key, \"op\": op, \"value\": value})"
+
+[sub_resource type="Resource" id="Resource_gi242"]
+script = ExtResource("3_y8koh")
+id = "task_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_qts4m"]
+script = ExtResource("3_y8koh")
+id = "method_id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_1fu5h"]
+script = ExtResource("3_y8koh")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_jrpre"]
+script = ExtResource("3_y8koh")
+id = "op"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_po5ib"]
+script = ExtResource("3_y8koh")
+id = "value"
+type_name = "Variant"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_s2r8e"]
+script = ExtResource("4_njcsg")
+function_name = "add_method_condition"
+description = "A precondition (world-state key, operator, value) the method needs to be chosen."
+expose_as_ace = true
+ace_display_name = "Add Method Condition"
+ace_category = "HTN"
+params = Array[ExtResource("3_y8koh")]([SubResource("Resource_gi242"), SubResource("Resource_qts4m"), SubResource("Resource_1fu5h"), SubResource("Resource_jrpre"), SubResource("Resource_po5ib")])
+events = Array[Resource]([SubResource("Resource_v0l1y")])
+
+[sub_resource type="Resource" id="Resource_e3edj"]
+script = ExtResource("2_7bl26")
+code = "var method: Dictionary = _find_method(task_name, method_id)
+if not method.is_empty():
+	method[\"subtasks\"].append(subtask)"
+
+[sub_resource type="Resource" id="Resource_e648a"]
+script = ExtResource("3_y8koh")
+id = "task_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_6e2s1"]
+script = ExtResource("3_y8koh")
+id = "method_id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ye0qa"]
+script = ExtResource("3_y8koh")
+id = "subtask"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_vtrvb"]
+script = ExtResource("4_njcsg")
+function_name = "add_method_subtask"
+description = "Appends a subtask (primitive or compound) to a method, in order."
+expose_as_ace = true
+ace_display_name = "Add Method Subtask"
+ace_category = "HTN"
+params = Array[ExtResource("3_y8koh")]([SubResource("Resource_e648a"), SubResource("Resource_6e2s1"), SubResource("Resource_ye0qa")])
+events = Array[Resource]([SubResource("Resource_e3edj")])
+
+[sub_resource type="Resource" id="Resource_s6kpb"]
+script = ExtResource("2_7bl26")
+code = "var method: Dictionary = _find_method(task_name, method_id)
+if not method.is_empty():
+	method[\"utility\"] = utility"
+
+[sub_resource type="Resource" id="Resource_3vsqo"]
+script = ExtResource("3_y8koh")
+id = "task_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_gnq4j"]
+script = ExtResource("3_y8koh")
+id = "method_id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_1wylv"]
+script = ExtResource("3_y8koh")
+id = "utility"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_hdh3k"]
+script = ExtResource("4_njcsg")
+function_name = "set_method_utility"
+description = "Updates a method's utility at runtime (utility-driven re-prioritising)."
+expose_as_ace = true
+ace_display_name = "Set Method Utility"
+ace_category = "HTN"
+params = Array[ExtResource("3_y8koh")]([SubResource("Resource_3vsqo"), SubResource("Resource_gnq4j"), SubResource("Resource_1wylv")])
+events = Array[Resource]([SubResource("Resource_s6kpb")])
+
+[sub_resource type="Resource" id="Resource_as1ka"]
+script = ExtResource("2_7bl26")
+code = "primitives.clear()
+compounds.clear()"
+
+[sub_resource type="Resource" id="Resource_13wyb"]
+script = ExtResource("4_njcsg")
+function_name = "clear_network"
+description = "Wipes all tasks/methods (keeps world state)."
+expose_as_ace = true
+ace_display_name = "Clear Task Network"
+ace_category = "HTN"
+events = Array[Resource]([SubResource("Resource_as1ka")])
+
+[sub_resource type="Resource" id="Resource_vdsu5"]
+script = ExtResource("2_7bl26")
+code = "plan = _decompose(root_task, 0)
+plan_index = 0
+if plan.is_empty():
+	plan_failed.emit()
+else:
+	task_started.emit(str(plan[0]))"
+
+[sub_resource type="Resource" id="Resource_ux87y"]
+script = ExtResource("4_njcsg")
+function_name = "request_plan"
+description = "Decomposes the root task into a plan and starts the first task."
+expose_as_ace = true
+ace_display_name = "Request Plan"
+ace_category = "HTN"
+events = Array[Resource]([SubResource("Resource_vdsu5")])
+
+[sub_resource type="Resource" id="Resource_5kdvo"]
+script = ExtResource("2_7bl26")
+code = "if plan_index >= plan.size():
+	return
+plan_index += 1
+if plan_index >= plan.size():
+	plan = []
+	plan_index = 0
+	plan_complete.emit()
+else:
+	task_started.emit(str(plan[plan_index]))"
+
+[sub_resource type="Resource" id="Resource_617yk"]
+script = ExtResource("4_njcsg")
+function_name = "mark_complete"
+description = "Advances to the next task, or fires On Plan Complete at the end."
+expose_as_ace = true
+ace_display_name = "Mark Task Complete"
+ace_category = "HTN"
+events = Array[Resource]([SubResource("Resource_5kdvo")])
+
+[sub_resource type="Resource" id="Resource_s8cxo"]
+script = ExtResource("2_7bl26")
+code = "if auto_replan_on_fail:
+	request_plan()
+else:
+	plan = []
+	plan_index = 0
+	plan_failed.emit()"
+
+[sub_resource type="Resource" id="Resource_6rxx7"]
+script = ExtResource("4_njcsg")
+function_name = "mark_failed"
+description = "Re-plans from the root (or fires On Plan Failed if auto-replan is off)."
+expose_as_ace = true
+ace_display_name = "Mark Task Failed"
+ace_category = "HTN"
+events = Array[Resource]([SubResource("Resource_s8cxo")])
+
+[sub_resource type="Resource" id="Resource_5ieev"]
+script = ExtResource("2_7bl26")
+code = "plan = []
+plan_index = 0"
+
+[sub_resource type="Resource" id="Resource_n4cpw"]
+script = ExtResource("4_njcsg")
+function_name = "invalidate_plan"
+description = "Drops the current plan so the next Request Plan rebuilds it."
+expose_as_ace = true
+ace_display_name = "Invalidate Plan"
+ace_category = "HTN"
+events = Array[Resource]([SubResource("Resource_5ieev")])
+
+[resource]
+script = ExtResource("5_aigr4")
+host_class = "Node2D"
+behavior_mode = true
+custom_class_name = "HTNAgent"
+addon_tags = PackedStringArray("ai", "planning")
+events = Array[Resource]([SubResource("Resource_q5b8g"), SubResource("Resource_loqp0")])
+variables = {
+"auto_replan_on_fail": {
+"attributes": {
+"tooltip": "Mark Failed re-plans from the root instead of giving up."
+},
+"default": true,
+"exported": true,
+"type": "bool"
+},
+"compounds": {
+"default": {},
+"exported": false,
+"type": "Dictionary"
+},
+"plan": {
+"default": [],
+"exported": false,
+"type": "Array"
+},
+"plan_index": {
+"default": 0,
+"exported": false,
+"type": "int"
+},
+"primitives": {
+"default": {},
+"exported": false,
+"type": "Dictionary"
+},
+"root_task": {
+"attributes": {
+"tooltip": "Goal to plan for — a compound or primitive task name."
+},
+"default": "",
+"exported": true,
+"type": "String"
+},
+"world_state": {
+"default": {},
+"exported": false,
+"type": "Dictionary"
+}
+}
+functions = Array[Resource]([SubResource("Resource_1iywo"), SubResource("Resource_obmvm"), SubResource("Resource_6kwa2"), SubResource("Resource_ei1jl"), SubResource("Resource_t0ymc"), SubResource("Resource_s2r8e"), SubResource("Resource_vtrvb"), SubResource("Resource_hdh3k"), SubResource("Resource_13wyb"), SubResource("Resource_ux87y"), SubResource("Resource_617yk"), SubResource("Resource_6rxx7"), SubResource("Resource_n4cpw")])

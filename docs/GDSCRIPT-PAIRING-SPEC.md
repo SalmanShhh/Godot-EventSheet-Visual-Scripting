@@ -54,7 +54,11 @@ additive — never displacing the default vocabulary or per-sheet providers). Al
 derives from the script itself: provider name from `class_name`, addon description from
 the top `##` doc comment, and per-ACE customization via annotations — including
 `@ace_display_template("Heal {amount} HP")`, `@ace_codegen_template("health += {amount}")`,
-and `@ace_param_hint(amount expression)`. Codegen templates are **baked onto created
+`@ace_param_hint(amount expression)`, `@ace_param_options(dir north, south)` (a fixed
+dropdown), and `@ace_param_autocomplete(anim "idle", "run")` (an **editable** type-or-pick
+combo — Construct-style autocomplete the behavior toggles purely from its own code; free
+text is always allowed, the ▾/Down-arrow popup filters the suggestions by what's typed).
+Codegen templates are **baked onto created
 conditions/actions** (`ACECondition`/`ACEAction.codegen_template`) and honored by
 `ConditionCodegen`/`ActionCodegen`, so addon ACEs genuinely compile (previously custom
 ACEs had no codegen path). See `res://eventsheet_addons/demo_health_addon.gd` — the
@@ -266,6 +270,33 @@ Resolution order: `ACEDefinition.metadata.codegen_template`, then the base
 Expression parameter fields are labeled and tooltipped as plain GDScript
 (`ace_params_dialog.gd`); the `ƒx` picker inserts expression templates. There is no
 expression DSL to learn or to lock users in.
+
+### Helper ACEs (structured escape hatch)
+
+The **Helpers** vocabulary (`registration/modules/helper_aces.gd`, category `"Helpers"`)
+exists for the GDScript a user would otherwise drop to a raw block for, so more logic stays
+as an editable, searchable, codegen-tooltipped row while compiling to the exact one-line
+GDScript you'd hand-write (parity contract — single direct line, no indirection): **Set/Get
+Property**, **Call Method** (action + value), **Get Node**, **Run GDScript** / **Evaluate
+GDScript** / **Evaluate Expression** (a raw statement/expression as a real ACE), **Inline If
+(ternary)**, **Toggle Boolean**, **Set Local Variable**, **Is Valid** / **Is Null**,
+**Connect/Disconnect Signal**, and the math/string idioms not already in Core
+(Abs/Min/Max/Round/Sign/Move Toward/Wrap/Remap/Format String). Because the templates are
+deliberately generic, the module is registered **last** and is **excluded from the
+reverse-lifter** (`ace_lifter.gd` skips `category == "Helpers"`) so a helper never shadows a
+specific ACE on import or swallows a line that should stay a verbatim block — they're a
+forward-authoring convenience, not a reverse-match target.
+
+### Escape-hatch provenance (note + import "why-it-stayed-code")
+
+`RawCodeRow` carries two **non-emitted** (never compiled, no round-trip impact) editor
+fields: an optional `note` (a human label surfaced on hover) and an importer-set `lift_note`.
+When the lifter can't model a line it stays verbatim and records `lift_note = "no matching
+ACE template"`; the viewport's verbatim-codegen tooltip (`EventSheetViewport._get_tooltip`)
+shows it, turning an opaque wall of imported blocks into an actionable "this is why it stayed
+code" triage list. Together with the Helper ACEs (fewer blocks needed) and the
+emitted-verbatim tooltip (the block compiles to itself, transparently), the escape hatch is
+first-class, not a fallback.
 
 ### C3 vocabulary bridge
 

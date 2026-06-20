@@ -147,6 +147,27 @@ func _build_overrides(directives: Array[String], exported: bool = false) -> Dict
                         option_values.append(raw_option.strip_edges())
                 param_options[options_split[0].strip_edges()] = option_values
                 overrides["param_options"] = param_options
+        elif directive.begins_with("@ace_param_autocomplete"):
+            # `@ace_param_autocomplete(anim "idle", "run", "jump")` -> the param renders as
+            # an EDITABLE suggest combo (C3 autocomplete): the user may type any value AND
+            # filter/pick from these. Toggled purely by the behavior's own code (present =
+            # on). Values are inserted verbatim, so quote string suggestions in the source.
+            # Extract the parens content RAW (unlike _extract_annotation_value, which would
+            # strip the trailing quote off the last suggestion).
+            var auto_open: int = directive.find("(")
+            var auto_close: int = directive.rfind(")")
+            var auto_value: String = ""
+            if auto_open != -1 and auto_close > auto_open:
+                auto_value = directive.substr(auto_open + 1, auto_close - auto_open - 1).strip_edges()
+            var auto_split: PackedStringArray = auto_value.split(" ", false, 1)
+            if auto_split.size() == 2:
+                var param_autocomplete: Dictionary = overrides.get("param_autocomplete", {})
+                var auto_values: Array = []
+                for raw_suggestion in auto_split[1].split(","):
+                    if not raw_suggestion.strip_edges().is_empty():
+                        auto_values.append(raw_suggestion.strip_edges())
+                param_autocomplete[auto_split[0].strip_edges()] = auto_values
+                overrides["param_autocomplete"] = param_autocomplete
         elif directive.begins_with("@ace_param_hint"):
             # `@ace_param_hint(amount expression)` → param "amount" gets hint "expression"
             # (drives the params dialog: expression ƒx field, variable_reference dropdown…).
