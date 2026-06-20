@@ -62,4 +62,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "SetGroupActive", "Set Group Active", ACEDescriptor.ACEType.ACTION, "set(\"__group_\" + {group} + \"_active\", {active})", "", [F.make_param("group", "String", "\"combat\"", "Group", "Snake-cased group name (runtime-toggleable groups only).", "expression"), F.make_param("active", "String", "true", "Active", "true / false.", "", ["true", "false"])], "General Actions", "Set group {group} active: {active}"))
 	descriptors.append(F.make_descriptor("Core", "IsGroupActive", "Is Group Active", ACEDescriptor.ACEType.CONDITION, "bool(get(\"__group_\" + {group} + \"_active\"))", "", [F.make_param("group", "String", "\"combat\"", "Group", "Snake-cased group name.", "expression")], "General Conditions", "group {group} is active"))
 
+	# Shader materials (assign / swap / clear / read uniforms — completes the one-uniform
+	# SetShaderParameter above into a usable visual-effects surface).
+	descriptors.append(F.make_descriptor("Core", "SetShaderMaterial", "Set Material", ACEDescriptor.ACEType.ACTION, "material = {material}", "", [F.make_param("material", "String", "preload(\"res://effect_material.tres\")", "Material", "ShaderMaterial / CanvasItemMaterial resource expression.", "expression")], "Rendering", "Set material to {material}", "CanvasItem"))
+	descriptors.append(F.make_descriptor("Core", "ClearMaterial", "Clear Material", ACEDescriptor.ACEType.ACTION, "material = null", "", [], "Rendering", "Clear material", "CanvasItem"))
+	descriptors.append(F.make_descriptor("Core", "GetShaderParameter", "Shader Parameter", ACEDescriptor.ACEType.EXPRESSION, "material.get_shader_parameter(&{param})", "", [F.make_param("param", "String", "\"strength\"", "Parameter", "Shader uniform name.")], "Rendering", "shader param {param}", "CanvasItem"))
+
 	return descriptors

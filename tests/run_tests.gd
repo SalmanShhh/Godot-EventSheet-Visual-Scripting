@@ -112,11 +112,15 @@ const SheetBackupsTemplatesTestScript := preload("res://tests/sheet_backups_temp
 const TediumTestScript := preload("res://tests/tedium_test.gd")
 const GodotWorkflowTestScript := preload("res://tests/godot_workflow_test.gd")
 const PerfSmokeTestScript := preload("res://tests/perf_smoke_test.gd")
+const Phase0ACEsTestScript := preload("res://tests/phase0_aces_test.gd")
+const NewModulesTestScript := preload("res://tests/new_modules_test.gd")
 
 ## Executes all EventForge tests and exits with status code.
 func _init() -> void:
 	var passed: bool = true
 	passed = CompileDemoTestScript.run() and passed
+	passed = Phase0ACEsTestScript.run() and passed
+	passed = NewModulesTestScript.run() and passed
 	passed = DemoResourceReferenceTestScript.run() and passed
 	passed = VariableRowFormatTestScript.run() and passed
 	passed = ACEMetadataTestScript.run() and passed

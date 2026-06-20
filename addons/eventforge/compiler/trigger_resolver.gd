@@ -43,6 +43,12 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _signal_backed("_on%s_timeout" % source_token, "", "timeout", source_path)
 		"OnAnimationFinished":
 			return _signal_backed("_on%s_animation_finished" % source_token, "anim_name: StringName", "animation_finished", source_path)
+		"OnButtonPressed":
+			return _signal_backed("_on%s_pressed" % source_token, "", "pressed", source_path)
+		"OnButtonToggled":
+			return _signal_backed("_on%s_toggled" % source_token, "toggled_on: bool", "toggled", source_path)
+		"OnParticlesFinished":
+			return _signal_backed("_on%s_finished" % source_token, "", "finished", source_path)
 		"OnSignal":
 			var signal_name: String = str(event.trigger_params.get("signal_name", "eventforge_signal"))
 			return _signal_backed("_on%s_%s" % [source_token, signal_name], "", signal_name, source_path)

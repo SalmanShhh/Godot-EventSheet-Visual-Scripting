@@ -495,6 +495,10 @@ static func _build_reverse_entries() -> Array:
 			# match almost anything, so reverse-lifting through them would shadow specific ACEs
 			# and swallow lines that should stay verbatim blocks — keep them out of the index.
 			continue
+		if template in ["break", "continue", "pass"]:
+			# Bare loop-control keywords also appear in generated pick-loop bodies, so
+			# reverse-lifting them would mis-claim the compiler's own break/continue lines.
+			continue
 		var kind: String = ""
 		match descriptor.ace_type:
 			ACEDescriptor.ACEType.CONDITION:

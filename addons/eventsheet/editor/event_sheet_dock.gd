@@ -49,6 +49,8 @@ const ROW_MENU_BULK_GROUP := 34
 const ROW_MENU_ADD_SIGNAL := 21
 const ROW_MENU_ADD_MATCH := 22
 const ROW_MENU_OPEN_IN_SPLIT := 23
+const ROW_MENU_MAKE_ELSE := 35
+const ROW_MENU_MAKE_ELIF := 36
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -5111,6 +5113,8 @@ func _build_row_more_submenu(is_event: bool) -> void:
     # and snippet reuse so a beginner's right-click stays short and unintimidating.
     if is_event and not _simple_mode:
         m.add_item("Add Sub-Condition", ROW_MENU_ADD_SUB_CONDITION)
+        m.add_item("Make Else", ROW_MENU_MAKE_ELSE)
+        m.add_item("Make Else-If", ROW_MENU_MAKE_ELIF)
         m.add_item("Add Comment Sub-Event", ROW_MENU_ADD_COMMENT_SUB_EVENT)
         m.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
         m.add_item("Add Pick Filter (For Each)…", ROW_MENU_ADD_PICK_FILTER)
@@ -5320,6 +5324,10 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
             _toggle_context_group_fold()
         ROW_MENU_ADD_SUB_CONDITION:
             _open_sub_condition_picker_for_context_row()
+        ROW_MENU_MAKE_ELSE:
+            _set_context_else_mode(EventRow.ElseMode.ELSE)
+        ROW_MENU_MAKE_ELIF:
+            _set_context_else_mode(EventRow.ElseMode.ELIF)
         ROW_MENU_TOGGLE_ENABLED:
             _toggle_context_row_enabled()
         ROW_MENU_EDIT_COMMENT:
@@ -6470,6 +6478,27 @@ func _toggle_context_condition_block() -> void:
     )
     if toggled:
         _mark_dirty("Updated condition block.")
+
+## Sets (or toggles off) Else / Else-If chaining on the selected events. They compile to
+## `else:` / `elif:` chained onto the previous sibling's `if` (sheet_compiler ~873) and the
+## viewport prefixes them with "Else"/"Else if". Clicking the active mode again clears it.
+func _set_context_else_mode(mode: int) -> void:
+    var selected_events: Array[EventRow] = _get_selected_event_rows_from_context()
+    if selected_events.is_empty():
+        return
+    var all_already: bool = true
+    for event_row in selected_events:
+        if event_row.else_mode != mode:
+            all_already = false
+            break
+    var target_mode: int = EventRow.ElseMode.NONE if all_already else mode
+    var changed: bool = _perform_undoable_sheet_edit("Set Else Mode", func() -> bool:
+        for event_row in selected_events:
+            event_row.else_mode = target_mode
+        return true
+    )
+    if changed:
+        _mark_dirty("Updated Else mode.")
 
 func _toggle_context_group_fold() -> void:
     if _context_row == null or not (_context_row.source_resource is EventGroup):

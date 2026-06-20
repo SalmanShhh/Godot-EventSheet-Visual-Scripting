@@ -987,8 +987,6 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 		if collection.is_empty():
 			warnings.append("Pick filter skipped: no collection for kind %d (set collection_value)." % pick.collection_kind)
 			continue
-		if not pick.filter_conditions.is_empty():
-			warnings.append("Pick filter conditions are not compiled yet; use predicate_expression (iterator-scoped GDScript).")
 		var iterator: String = pick.iterator_name.strip_edges()
 		if iterator.is_empty():
 			iterator = "item"
@@ -1018,12 +1016,55 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 		if not predicate.is_empty():
 			lines.append("%sif not (%s):" % [indent, predicate])
 			lines.append("%s\tcontinue" % indent)
+		var filter_guard: String = _compile_filter_conditions(pick, iterator)
+		if not filter_guard.is_empty():
+			lines.append("%sif not (%s):" % [indent, filter_guard])
+			lines.append("%s\tcontinue" % indent)
 		if pick.pick_first_n > 0:
 			lines.append("%s%s += 1" % [indent, counter_name])
 			lines.append("%sif %s > %d:" % [indent, counter_name, pick.pick_first_n])
 			lines.append("%s\tbreak" % indent)
 		loop_index += 1
 	return body_depth
+
+## Compiles a pick filter's structured conditions into one iterator-scoped boolean guard.
+## Node-typed conditions are called on the picked instance ({iterator}.<expr>); global
+## templates (Input.*, variable compares) stay as-is. AND (filter_mode 0) or OR (1).
+static func _compile_filter_conditions(pick: PickFilter, iterator: String) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for entry: Variant in pick.filter_conditions:
+		if not (entry is ACECondition) or not (entry as ACECondition).enabled:
+			continue
+		var cond: ACECondition = entry as ACECondition
+		var base: String = _condition_base_expr(cond)
+		if base.strip_edges().is_empty():
+			continue
+		if _condition_is_node_scoped(cond):
+			base = "%s.%s" % [iterator, base]
+		var part: String = "not (%s)" % base if cond.negated else base
+		parts.append("(%s)" % part)
+	if parts.is_empty():
+		return ""
+	var joiner: String = " or " if pick.filter_mode == 1 else " and "
+	return joiner.join(parts)
+
+## The condition's boolean template with params applied, WITHOUT negation (so a node scope
+## can be inserted before the `not`). Mirrors ConditionCodegen.generate_condition lookup.
+static func _condition_base_expr(condition: ACECondition) -> String:
+	var template: String = condition.codegen_template.strip_edges()
+	if template.is_empty():
+		var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
+		if descriptor == null:
+			return ""
+		template = descriptor.codegen_template
+	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+	return ActionCodegen._apply_template(template, params)
+
+## True when a condition targets the implicit node (node_type set), so in a pick loop it
+## must be scoped to the picked instance.
+static func _condition_is_node_scoped(condition: ACECondition) -> bool:
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
+	return descriptor != null and not descriptor.node_type.strip_edges().is_empty()
 
 ## The GDScript iterable a pick filter loops over ("" = unsupported configuration).
 static func _pick_collection_expression(pick: PickFilter) -> String:

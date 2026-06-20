@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+### New ACE vocabulary — UI, particles, tilemaps, animation, shaders, input rebinding, joints, 2D raycast, loops
+First-class events for the biggest gaps from the capability audit (roadmap Phases 0/1/2/4/5):
+- **UI & menus** (`ui_aces`) — Button **On Pressed** / **On Toggled** triggers (real signal
+  connections via new `trigger_resolver` arms), focus navigation (grab / next / previous /
+  neighbor), and Range / LineEdit / BaseButton get-set.
+- **2D physics queries** — `RayCast2D` + host-agnostic `Node2D` world raycasts
+  (`intersect_ray`), mirroring the existing 3D set.
+- **Particles** (`particle_aces`) — emit / restart / one-shot / amount + **On Particles
+  Finished**, for GPU and CPU particles.
+- **AnimationTree** — travel-to-state, set/get tree params, is-in-state, current state.
+- **Tilemaps** (`tilemap_aces`) — TileMapLayer set / erase / clear / get-cell + local↔map
+  coordinate conversion.
+- **Shader materials** — assign / swap / clear a material + read a uniform (completes the
+  one-uniform `SetShaderParameter`).
+- **Runtime input remapping** — bind / clear / query InputMap action events (settings-menu
+  rebinding), built on the captured `event` from On Input.
+- **Physics joints** (`physics_aces`) — wire Joint2D/3D bodies, tune pin/spring params,
+  break at runtime.
+- **Loop control** (`loop_aces`) — Break / Continue / Current Item.
+- **Else / Else-If authoring** — a row right-click menu sets the chaining the compiler
+  already emitted; **Pick-Filter conditions** now compile (iterator-scoped, AND/OR) instead
+  of warning.
+
+All compile to plain typed GDScript (parity contract); covered by `phase0_aces_test` and
+`new_modules_test`. Bare loop keywords are excluded from the reverse-lifter so generated
+`break`/`continue` stay verbatim. (Deferred: a Menu/HUD behavior pack + UI starter demo,
+2D point/shape overlap queries, and the Phase-3 dialogue/transition packs.)
+
 ## [0.8.0] - 2026-06-20 — "The Team & Scale Update"
 
 ### Team & navigation — merge driver, Find References, includes manager + provenance

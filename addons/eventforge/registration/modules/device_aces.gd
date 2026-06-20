@@ -31,4 +31,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "TouchEventReleased", "On Touch Released (event)", ACEDescriptor.ACEType.CONDITION, "(event is InputEventScreenTouch and not event.pressed)", "", [], "Touch", "On touch released"))
 	descriptors.append(F.make_descriptor("Core", "GetTouchPosition", "Touch Position (event)", ACEDescriptor.ACEType.EXPRESSION, "event.position", "", [], "Touch", "touch position"))
 
+	# Runtime input remapping (settings-menu rebinding). Capture an event in On Input (the
+	# in-scope `event`), Erase then Add to rebind — two visual steps, no multi-statement
+	# template. The action param reuses the InputMap dropdown like the polling ACEs above.
+	descriptors.append(F.make_descriptor("Core", "ActionAddEvent", "Bind Event To Action", ACEDescriptor.ACEType.ACTION, "InputMap.action_add_event(&{action}, {event})", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action to bind to.", "", F.input_action_options()), F.make_param("event", "String", "event", "Event", "InputEvent to add (e.g. the captured `event`).", "expression")], "InputMap", "Bind {event} to {action}"))
+	descriptors.append(F.make_descriptor("Core", "ActionEraseEvents", "Clear Action Bindings", ACEDescriptor.ACEType.ACTION, "InputMap.action_erase_events(&{action})", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action to clear.", "", F.input_action_options())], "InputMap", "Clear bindings for {action}"))
+	descriptors.append(F.make_descriptor("Core", "ActionHasEvents", "Action Is Bound", ACEDescriptor.ACEType.CONDITION, "not InputMap.action_get_events(&{action}).is_empty()", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action to test.", "", F.input_action_options())], "InputMap", "{action} is bound"))
+	descriptors.append(F.make_descriptor("Core", "ActionEventCount", "Action Binding Count", ACEDescriptor.ACEType.EXPRESSION, "InputMap.action_get_events(&{action}).size()", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action.", "", F.input_action_options())], "InputMap", "{action} binding count"))
+	descriptors.append(F.make_descriptor("Core", "EventMatchesAction", "Event Matches Action", ACEDescriptor.ACEType.CONDITION, "{event}.is_action(&{action})", "", [F.make_param("event", "String", "event", "Event", "InputEvent to test.", "expression"), F.make_param("action", "String", F.default_input_action(), "Action", "Input action.", "", F.input_action_options())], "InputMap", "{event} matches {action}"))
+	descriptors.append(F.make_descriptor("Core", "EventAsText", "Event As Text", ACEDescriptor.ACEType.EXPRESSION, "{event}.as_text()", "", [F.make_param("event", "String", "event", "Event", "InputEvent to describe.", "expression")], "InputMap", "{event} as text"))
+
 	return descriptors
