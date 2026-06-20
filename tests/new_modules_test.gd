@@ -113,6 +113,33 @@ static func run() -> bool:
 	var hc_script: GDScript = GDScript.new()
 	hc_script.source_code = "extends Label\nsignal died\nfunc _t() -> void:\n\tposition += Vector2(0, 0)\n\ttext = \"Score: %d\" % [0]\n\tprint(self.died.is_connected(_t))\n"
 	all_passed = _check("Move By / Set Text / Is Connected templates parse", hc_script.reload() == OK, true) and all_passed
+	# Spawn Scene (Full): the {uid} local, the multi-line template, and the optional-group guard
+	# compile, and the whole emitted script parses.
+	var spawn_sheet: EventSheetResource = EventSheetResource.new()
+	spawn_sheet.host_class = "Node2D"
+	var spawn_event: EventRow = EventRow.new()
+	spawn_event.trigger_provider_id = "Core"
+	spawn_event.trigger_id = "OnReady"
+	var spawn_action: ACEAction = ACEAction.new()
+	spawn_action.provider_id = "Core"
+	spawn_action.ace_id = "SpawnSceneFull"
+	all_passed = _check("SpawnSceneFull registered", ids.has("SpawnSceneFull"), true) and all_passed
+	all_passed = _check("SpawnSceneFull in Scene", str(categories.get("SpawnSceneFull", "<missing>")), "Scene") and all_passed
+	var spawn_template: String = ""
+	for d4: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		if d4.ace_id == "SpawnSceneFull":
+			spawn_template = d4.codegen_template
+	all_passed = _check("SpawnSceneFull template uses a {uid} local", spawn_template.contains("{uid}"), true) and all_passed
+	# The dock bakes {uid} into a unique token at apply time (event_sheet_dock.gd) — mirror that.
+	spawn_action.codegen_template = spawn_template.replace("{uid}", "t1")
+	spawn_action.params = {"path": "\"res://enemy.tscn\"", "position": "Vector2(8, 0)", "rotation": "180.0", "group": "\"targets\""}
+	spawn_event.actions.append(spawn_action)
+	spawn_sheet.events.append(spawn_event)
+	var spawn_output: String = str(SheetCompiler.compile(spawn_sheet, "user://eventsheets_spawn.gd").get("output", ""))
+	all_passed = _check("Spawn Scene (Full) wires rotation + group", spawn_output.contains(".rotation_degrees = 180.0") and spawn_output.contains(".add_to_group(\"targets\")"), true) and all_passed
+	var spawn_script: GDScript = GDScript.new()
+	spawn_script.source_code = spawn_output
+	all_passed = _check("Spawn Scene (Full) output parses", spawn_script.reload() == OK, true) and all_passed
 
 	# ── Button On Pressed trigger compiles to a real signal connection (resolver arm) ──
 	var sheet: EventSheetResource = EventSheetResource.new()

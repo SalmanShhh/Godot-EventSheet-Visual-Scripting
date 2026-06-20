@@ -38,6 +38,9 @@
   node's `text` from a printf template + args in one row — replaces a raw-code block the showcase
   demos used), and **Move By** for 2D (relative translate; 3D already had it). A compile test proves
   Emit Signal On drops the trailing comma when there are no args.
+- **Spawn Scene (Full)** — instance a scene with position, rotation, and an optional group tag in
+  one row (a per-instance `{uid}` local, like Spawn Scene At). Replaces the raw `load().instantiate()`
+  block the showcase demos used. A compile+parse test bakes the `{uid}` the way the dock does.
 
 ### Editor DX — popup polish, error→row deep-linking, shadow guard, picker, watch + event trace
 - **Consistent popups** — a shared `EventSheetPopupUI` helper gives the plugin's dialogs one look:
