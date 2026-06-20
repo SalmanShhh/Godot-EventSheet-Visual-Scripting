@@ -17,3 +17,12 @@
 *.ttf binary
 *.zip binary
 *.tres diff=eventsheet
+
+# Semantic 3-way merge for event-sheet .tres (uid-keyed) — see docs/VERSION-CONTROL.md.
+# Opt-in per clone (merge drivers live in .git/config, which isn't committed):
+#   git config merge.eventsheet.driver "tools/sheet_merge.sh %O %A %B %P"
+# Harmless until configured — git falls back to its default merge. Scoped to sheet folders so
+# non-sheet .tres keep the default driver; add your own project's sheet folder the same way.
+demo/sheets/**.tres merge=eventsheet
+demo/showcase/*.tres merge=eventsheet
+eventsheet_addons/**.tres merge=eventsheet
