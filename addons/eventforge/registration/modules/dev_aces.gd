@@ -22,7 +22,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "PushError", "Push Error", ACEDescriptor.ACEType.ACTION, "push_error({message})", "", [F.make_param("message", "String", "\"bad state\"", "Message", "Error text (shows in the debugger).", "expression")], "Debug", "error {message}"))
 	descriptors.append(F.make_descriptor("Core", "Assert", "Assert", ACEDescriptor.ACEType.ACTION, "assert({condition}, {message})", "", [F.make_param("condition", "String", "true", "Condition", "Boolean that must hold (stripped from release builds).", "expression"), F.make_param("message", "String", "\"assertion failed\"", "Message", "Message if it fails.", "expression")], "Debug", "assert {condition}"))
 	descriptors.append(F.make_descriptor("Core", "PrintTree", "Print Scene Tree", ACEDescriptor.ACEType.ACTION, "print_tree_pretty()", "", [], "Debug", "print scene tree"))
-	descriptors.append(F.make_descriptor("Core", "GetFrameCount", "Frame Count", ACEDescriptor.ACEType.EXPRESSION, "Engine.get_process_frames()", "", [], "Debug", "frame count"))
+	# (Frame Count lives in system_aces.gd under "Time" — no duplicate "Core::GetFrameCount" here.)
 	# A manual debugger pause as a pickable row (complements the F9 gutter breakpoints).
 	descriptors.append(F.make_descriptor("Core", "Breakpoint", "Breakpoint (pause debugger)", ACEDescriptor.ACEType.ACTION, "breakpoint", "", [], "Debug", "breakpoint"))
 

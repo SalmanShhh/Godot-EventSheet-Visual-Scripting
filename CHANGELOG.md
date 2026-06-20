@@ -2,10 +2,19 @@
 
 ## [Unreleased]
 
+### Fixed
+- **Duplicate `Core::GetFrameCount`** — the dev-helper "Frame Count" reused the same provider+id as
+  the canonical Time-category one, so the registry index silently overwrote one entry. Removed the
+  duplicate (Frame Count stays under **Time**), and added a suite guard that fails on any repeated
+  `provider::ace_id` so this can't regress.
+- **Alt+Up / Alt+Down row reordering** — the plain arrow-key selection branches matched first and
+  swallowed the modifier, leaving the advertised "move row up/down" shortcut as dead code. The
+  selection branches now require Alt to be up, so the move shortcut fires as documented.
+
 ### Dev helper ACEs — Debug · Groups · Metadata · Nodes (the everyday tools)
-- **26 developer-helper ACEs** (`dev_aces`) for the native operations you reach for constantly,
+- **25 developer-helper ACEs** (`dev_aces`) for the native operations you reach for constantly,
   so common dev/debug chores never force a drop to GDScript. **Debug**: Print, Print Labeled,
-  Print Rich, Push Warning, Push Error, Assert, Print Scene Tree, Frame Count, Breakpoint.
+  Print Rich, Push Warning, Push Error, Assert, Print Scene Tree, Breakpoint.
   **Groups**: Add/Remove/Is-In Group, Get First / Count In Group, Call Method On Group.
   **Metadata**: Set/Get/Has/Remove Meta. **Nodes**: Get Parent, Get Child / Child Count, Find
   Child, Get Node Or Null, Has Node, Get Scene Owner, Is Ancestor Of — scene-tree navigation that

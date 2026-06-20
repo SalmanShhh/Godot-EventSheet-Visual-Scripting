@@ -15,6 +15,21 @@ static func run() -> bool:
 		ids[d.ace_id] = true
 		node_types[d.ace_id] = d.node_type
 
+	# ── Registry identity: no two builtin descriptors may share provider_id::ace_id ──
+	# A collision silently overwrites one entry in the registry index (ace_registry.gd), so the
+	# picker shows a stray category or a row resolves to the wrong codegen. This guards against
+	# regressions like the duplicate "Core::GetFrameCount" a parallel audit caught in this loop.
+	var seen_keys: Dictionary = {}
+	var duplicate_keys: Array[String] = []
+	for dk: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		var reg_key: String = "%s::%s" % [dk.provider_id, dk.ace_id]
+		if seen_keys.has(reg_key):
+			if not duplicate_keys.has(reg_key):
+				duplicate_keys.append(reg_key)
+		else:
+			seen_keys[reg_key] = true
+	all_passed = _check("no duplicate provider::ace_id in builtin descriptors", ", ".join(duplicate_keys) if not duplicate_keys.is_empty() else "(none)", "(none)") and all_passed
+
 	# ── Registry presence + node-type scoping across the five new surfaces ──
 	for expected: Array in [
 		["OnButtonPressed", "BaseButton"], ["OnButtonToggled", "BaseButton"],

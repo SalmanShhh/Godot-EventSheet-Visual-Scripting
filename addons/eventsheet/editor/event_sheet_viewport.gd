@@ -1332,11 +1332,11 @@ func _handle_key(event: InputEventKey) -> void:
     if _editing_row_index >= 0:
         _handle_editing_key(event)
         return
-    if event.keycode == KEY_UP:
+    if event.keycode == KEY_UP and not event.alt_pressed:
         _select_row(_selected_row_index - 1, _selected_span_index)
         ensure_selection_visible()
         accept_event()
-    elif event.keycode == KEY_DOWN:
+    elif event.keycode == KEY_DOWN and not event.alt_pressed:
         _select_row(_selected_row_index + 1, _selected_span_index)
         ensure_selection_visible()
         accept_event()
