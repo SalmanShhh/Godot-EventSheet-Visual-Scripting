@@ -46,6 +46,26 @@ static func run() -> bool:
     passed = _check("extracting nothing is rejected",
         str(EventSheetIncludes.extract_to_include(source, [], "res://x.tres").get("error", "")) != "", true) and passed
 
+    # ── provenance: included_rows resolves what each include contributes ────────────
+    var prov_lib: EventSheetResource = EventSheetResource.new()
+    prov_lib.events.append(EventRow.new())
+    prov_lib.events.append(EventRow.new())
+    var prov_fn: EventFunction = EventFunction.new()
+    prov_fn.function_name = "shared_helper"
+    prov_lib.functions.append(prov_fn)
+    prov_lib.variables = {"shared_var": {"type": "int", "default": 0}}
+    var prov_path: String = "user://_includes_test_prov.tres"
+    ResourceSaver.save(prov_lib, prov_path)
+    var including: EventSheetResource = EventSheetResource.new()
+    including.includes.append(prov_path)
+    var provenance: Array = EventSheetIncludes.included_rows(including)
+    passed = _check("included_rows resolves the include", provenance.size(), 1) and passed
+    passed = _check("included_rows returns the included events (for read-only display)",
+        (provenance[0].get("events", []) as Array).size() if not provenance.is_empty() else -1, 2) and passed
+    passed = _check("included_rows lists the included functions",
+        (provenance[0].get("functions", []) as Array).has("shared_helper") if not provenance.is_empty() else false, true) and passed
+    DirAccess.remove_absolute(prov_path)
+
     # ── cycle guard ────────────────────────────────────────────────────────────────
     passed = _check("a sheet including itself is a cycle",
         EventSheetIncludes.would_create_cycle("res://a.tres", "res://a.tres"), true) and passed

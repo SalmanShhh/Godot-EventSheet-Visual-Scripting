@@ -82,6 +82,35 @@ static func extract_to_include(source: EventSheetResource, rows: Array, new_path
 		source.includes.append(new_path)
 	return {"library": library, "error": ""}
 
+## Resolves the sheet's includes (transitively) into what each contributes — the backbone of
+## include PROVENANCE in the editor: [{include, class, events: [Resource…], functions: [name…],
+## variables: [name…]}]. The events are the actual rows from the included sheet; the editor
+## renders them READ-ONLY (with jump-to-source), so a merged sheet reads as one whole.
+static func included_rows(sheet: EventSheetResource, visited: Dictionary = {}) -> Array:
+	var result: Array = []
+	if sheet == null:
+		return result
+	for include_path: String in sheet.includes:
+		if visited.has(include_path) or not ResourceLoader.exists(include_path):
+			continue
+		visited[include_path] = true
+		var included: EventSheetResource = load(include_path) as EventSheetResource
+		if included == null:
+			continue
+		var functions: Array = []
+		for function_entry: Variant in included.functions:
+			if function_entry is EventFunction:
+				functions.append((function_entry as EventFunction).function_name)
+		result.append({
+			"include": include_path,
+			"class": included.custom_class_name,
+			"events": included.events.duplicate(),
+			"functions": functions,
+			"variables": included.variables.keys()
+		})
+		result.append_array(included_rows(included, visited))  # transitive includes
+	return result
+
 static func _count_rows(rows: Array) -> int:
 	var total: int = rows.size()
 	for row: Variant in rows:
