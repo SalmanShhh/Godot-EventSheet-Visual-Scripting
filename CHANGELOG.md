@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.8.0] - 2026-06-20 — "The Team & AI Update"
+## [0.8.0] - 2026-06-20 — "The Team & Scale Update"
 
 ### Team & navigation — merge driver, Find References, includes manager + provenance
 - **Semantic 3-way git merge driver** (`tools/sheet_merge`) — merges sheets at the row level
