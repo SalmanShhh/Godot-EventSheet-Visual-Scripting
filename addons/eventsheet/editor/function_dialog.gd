@@ -49,7 +49,7 @@ func init_dialog(parent_node: Node) -> void:
 	var name_row: HBoxContainer = HBoxContainer.new()
 	var name_label: Label = Label.new()
 	name_label.text = "Name"
-	name_label.custom_minimum_size = Vector2(120.0, 0.0)
+	name_label.custom_minimum_size = Vector2(130.0, 0.0)
 	name_row.add_child(name_label)
 	_name_edit = LineEdit.new()
 	_name_edit.placeholder_text = "deal_damage"
@@ -60,7 +60,7 @@ func init_dialog(parent_node: Node) -> void:
 	var return_row: HBoxContainer = HBoxContainer.new()
 	var return_label: Label = Label.new()
 	return_label.text = "Returns"
-	return_label.custom_minimum_size = Vector2(120.0, 0.0)
+	return_label.custom_minimum_size = Vector2(130.0, 0.0)
 	return_label.tooltip_text = "void functions become actions; bool functions become conditions when exposed."
 	return_row.add_child(return_label)
 	_return_option = OptionButton.new()
@@ -69,16 +69,25 @@ func init_dialog(parent_node: Node) -> void:
 	_return_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return_row.add_child(_return_option)
 	form.add_child(return_row)
+	# Parameters: the label sits in the 130px column and the param rows + the Add button fill
+	# the field column, so each param's name field lines up with Name/Returns above it.
+	var params_row: HBoxContainer = HBoxContainer.new()
 	var params_label: Label = Label.new()
 	params_label.text = "Parameters"
-	form.add_child(params_label)
+	params_label.custom_minimum_size = Vector2(130.0, 0.0)
+	params_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	params_row.add_child(params_label)
+	var params_col: VBoxContainer = VBoxContainer.new()
+	params_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_params_box = VBoxContainer.new()
-	form.add_child(_params_box)
+	params_col.add_child(_params_box)
 	var add_param_button: Button = Button.new()
 	add_param_button.text = "+ Add parameter"
 	add_param_button.tooltip_text = "Each parameter gets a name and a type; names auto-suggest and stay unique."
 	add_param_button.pressed.connect(func() -> void: add_param_row())
-	form.add_child(add_param_button)
+	params_col.add_child(add_param_button)
+	params_row.add_child(params_col)
+	form.add_child(params_row)
 	_expose_check = CheckBox.new()
 	_expose_check.text = "Expose as a reusable action (other sheets can pick it)"
 	_expose_check.tooltip_text = "Publishes the function into pickers — as an action (void) or expression (typed return)."
@@ -87,17 +96,29 @@ func init_dialog(parent_node: Node) -> void:
 	_expose_section = VBoxContainer.new()
 	_expose_section.visible = false
 	_expose_name_edit = LineEdit.new()
-	_expose_name_edit.placeholder_text = "Display name (e.g. Deal Damage) — defaults from the function name"
-	_expose_section.add_child(_expose_name_edit)
+	_expose_name_edit.placeholder_text = "defaults from the function name"
+	_expose_section.add_child(_labeled_row("Display name", _expose_name_edit))
 	_expose_category_edit = LineEdit.new()
-	_expose_category_edit.placeholder_text = "Picker category (e.g. Combat)"
-	_expose_section.add_child(_expose_category_edit)
+	_expose_category_edit.placeholder_text = "e.g. Combat"
+	_expose_section.add_child(_labeled_row("Picker category", _expose_category_edit))
 	form.add_child(_expose_section)
 	_problem_label = Label.new()
 	_problem_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_problem_label.visible = false
 	_problem_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
 	form.add_child(_problem_label)
+
+## A 130px-label + expanding-field row, matching the main form's columns (so sub-section
+## fields line up with Name/Returns instead of running full-width).
+func _labeled_row(label_text: String, field: Control) -> HBoxContainer:
+	var row: HBoxContainer = HBoxContainer.new()
+	var label: Label = Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(130.0, 0.0)
+	row.add_child(label)
+	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(field)
+	return row
 
 ## Names already taken on the sheet (functions + variables) — duplicates are refused.
 func set_taken_names_provider(provider: Callable) -> void:
