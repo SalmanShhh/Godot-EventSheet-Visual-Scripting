@@ -285,7 +285,12 @@ static func _test_exposed_node_scope_and_undo() -> bool:
 		break
 	passed = _check("exposed node has at least one dynamic property", first_property.is_empty(), false) and passed
 	if not first_property.is_empty():
-		var undo_redo := UndoRedo.new()
+		# The undo adapter speaks EditorUndoRedoManager's positional add_do_method(obj,
+		# method, ...args) contract — which is what production always uses. A plain
+		# UndoRedo takes a single Callable, so its add_do_method rejects the positional
+		# call (Godot 4.7 errors instead of silently no-op'ing), and the store never
+		# updates. Use the editor-shaped fake here to exercise the real code path.
+		var undo_redo := FakeEditorUndoRedoManager.new()
 		exposed.set_undo_redo(undo_redo)
 		passed = _check("setting exposed property succeeds", exposed._set(first_property, 33), true) and passed
 		passed = _check("store updated from exposed property", store.override_count() > 0, true) and passed

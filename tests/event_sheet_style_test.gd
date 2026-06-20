@@ -255,6 +255,54 @@ static func run() -> bool:
 		passed = _check("designer theme manifest references style resource", manifest_text.contains("designer_template_theme.tres"), true) and passed
 		passed = _check("designer theme manifest lists tokens section", manifest_text.contains("[tokens]"), true) and passed
 
+	# Godot 4.7 "Modern" editor-theme adaptation: a default sheet must inherit the editor's
+	# neutral grayscale chrome (not the blue-tinted palette fallback) while keeping the
+	# functional ACE accents. EventSheetGodotTheme.apply() is the pure mapping used in-editor.
+	var modern_base := Color("#252525")
+	var modern_accent := Color("#569eff")
+	var modern_font := Color("#ced0d2")
+	var adapted := EventSheetEditorStyle.new()
+	adapted.ensure_defaults()
+	EventSheetGodotTheme.apply(
+		adapted, modern_base, modern_base.darkened(0.15), modern_base.darkened(0.25), modern_accent, modern_font
+	)
+	var adapted_event_style: EventSheetEventStyle = adapted.get_event_style()
+	passed = _check(
+		"modern adaptation keeps sheet chrome neutral (low saturation)",
+		adapted_event_style.sheet_background_color.s < 0.12 and adapted_event_style.row_background_color.s < 0.12,
+		true
+	) and passed
+	passed = _check(
+		"modern adaptation derives selection fill from editor accent",
+		is_equal_approx(adapted_event_style.selection_fill_color.r, modern_accent.r)
+			and is_equal_approx(adapted_event_style.selection_fill_color.g, modern_accent.g)
+			and is_equal_approx(adapted_event_style.selection_fill_color.b, modern_accent.b)
+			and adapted_event_style.selection_fill_color.a < 1.0,
+		true
+	) and passed
+	passed = _check(
+		"modern adaptation uses editor accent for the trigger badge",
+		adapted_event_style.trigger_badge_background_color.is_equal_approx(modern_accent),
+		true
+	) and passed
+	passed = _check(
+		"modern adaptation keeps condition/action lane tints subtle",
+		adapted_event_style.condition_lane_color.a < 0.06 and adapted_event_style.action_lane_color.a < 0.06,
+		true
+	) and passed
+	# A light editor theme must flip the chrome light too (proves it tracks the theme, not a constant).
+	var light_adapted := EventSheetEditorStyle.new()
+	light_adapted.ensure_defaults()
+	var light_base := Color("#e8e8e8")
+	EventSheetGodotTheme.apply(
+		light_adapted, light_base, light_base.darkened(0.06), light_base.darkened(0.12), Color("#3a7bd5"), Color("#202020")
+	)
+	passed = _check(
+		"light editor theme produces light sheet chrome",
+		light_adapted.get_event_style().sheet_background_color.v > 0.5,
+		true
+	) and passed
+
 	dock.free()
 	return passed
 

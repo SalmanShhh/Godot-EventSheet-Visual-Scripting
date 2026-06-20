@@ -12,8 +12,18 @@ func _init() -> void:
 	root.title = "EventForge Render Preview"
 	root.size = Vector2i(1320, 760)
 
+	# Simulate Godot 4.7's neutral grayscale "Modern" editor theme (base #252525, accent
+	# #569eff) so this out-of-editor render matches the in-editor adapted look instead of the
+	# raw palette fallback. Set EVENTFORGE_PREVIEW_RAW=1 to see the un-adapted fallback.
+	var preview_modern: bool = OS.get_environment("EVENTFORGE_PREVIEW_RAW") != "1"
+	var modern_base := Color("#252525")
+	var modern_dark_1 := modern_base.darkened(0.15)
+	var modern_dark_2 := modern_base.darkened(0.25)
+	var modern_accent := Color("#569eff")
+	var modern_font := Color("#ced0d2")
+
 	var background: ColorRect = ColorRect.new()
-	background.color = Color("#1e1f24")
+	background.color = modern_dark_2 if preview_modern else Color("#1e1f24")
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(background)
 
@@ -29,7 +39,13 @@ func _init() -> void:
 	_viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_viewport.set_ace_registry(EventSheetACERegistry.new())
 	scroll.add_child(_viewport)
-	_viewport.set_sheet(_build_sheet())
+	var sheet: EventSheetResource = _build_sheet()
+	if preview_modern:
+		var modern_style := EventSheetEditorStyle.new()
+		modern_style.ensure_defaults()
+		EventSheetGodotTheme.apply(modern_style, modern_base, modern_dark_1, modern_dark_2, modern_accent, modern_font)
+		sheet.editor_style = modern_style
+	_viewport.set_sheet(sheet)
 
 	process_frame.connect(_on_frame)
 

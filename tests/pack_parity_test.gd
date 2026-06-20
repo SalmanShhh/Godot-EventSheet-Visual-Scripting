@@ -53,9 +53,14 @@ static func run() -> bool:
 	all_passed = _check("follow has smooth + delayed modes",
 		follow_source.contains("@export_enum(\"smooth\", \"delayed\") var mode") and follow_source.contains("history.append"), true) and all_passed
 
-	# Drag & Drop: axis locking combo.
-	all_passed = _check("drag axes combo",
-		FileAccess.get_file_as_string("res://eventsheet_addons/drag_drop/drag_drop_behavior.gd").contains("@export_enum(\"both\", \"horizontal\", \"vertical\") var axes"), true) and all_passed
+	# Drag & Drop: event-driven surface (author feeds the drag point; never polls Input).
+	var drag_source: String = FileAccess.get_file_as_string("res://eventsheet_addons/drag_drop/drag_drop_behavior.gd")
+	all_passed = _check("drag is event-driven (start/set-point/drop + direction lock + throw)",
+		drag_source.contains("@export_enum(\"free\", \"up_down\", \"left_right\", \"four_dir\", \"eight_dir\") var directions")
+			and drag_source.contains("func start_drag(")
+			and drag_source.contains("func set_drag_point(")
+			and drag_source.contains("func drop_drag(")
+			and drag_source.contains("var throw_history"), true) and all_passed
 
 	# Car: drift + turn-while-stopped.
 	var car = (load("res://eventsheet_addons/car/car_behavior.gd") as GDScript).new()

@@ -1,0 +1,780 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_fn1et"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_0d086"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_6c2vf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_soq11"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_dlhhf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_5qxg0"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_tvvp6"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_kursp"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_c4a7h"]
+
+[sub_resource type="Resource" id="Resource_qhshe"]
+script = ExtResource("1_fn1et")
+text = "Simple Health behavior (C3 parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. current_health seeds to max_health On Ready."
+
+[sub_resource type="Resource" id="Resource_o4pmk"]
+script = ExtResource("2_0d086")
+code = "## @ace_trigger
+## @ace_name(\"On Damaged\")
+## @ace_category(\"Health\")
+signal on_damaged
+
+## @ace_trigger
+## @ace_name(\"On Death\")
+## @ace_category(\"Health\")
+signal on_death
+
+## @ace_trigger
+## @ace_name(\"On Healed\")
+## @ace_category(\"Health\")
+signal on_healed
+
+## @ace_trigger
+## @ace_name(\"On Health Changed\")
+## @ace_category(\"Health\")
+signal on_health_changed
+
+## @ace_trigger
+## @ace_name(\"On Revived\")
+## @ace_category(\"Health\")
+signal on_revived
+
+## @ace_trigger
+## @ace_name(\"On Health Pool Added\")
+## @ace_category(\"Health\")
+signal on_health_pool_added
+
+## @ace_trigger
+## @ace_name(\"On Health Pool Absorbed\")
+## @ace_category(\"Health\")
+signal on_health_pool_absorbed
+
+## @ace_trigger
+## @ace_name(\"On Health Pool Depleted\")
+## @ace_category(\"Health\")
+signal on_health_pool_depleted
+
+## @ace_condition
+## @ace_name(\"Is Dead\")
+## @ace_category(\"Health\")
+## @ace_codegen_template(\"$SimpleHealthBehavior.is_dead()\")
+func is_dead() -> bool:
+	return is_dead_flag
+
+## @ace_condition
+## @ace_name(\"Is Invulnerable\")
+## @ace_category(\"Health\")
+## @ace_codegen_template(\"$SimpleHealthBehavior.is_invulnerable()\")
+func is_invulnerable() -> bool:
+	return invulnerable
+
+## @ace_condition
+## @ace_name(\"Has Any Health Pool\")
+## @ace_category(\"Health\")
+## @ace_codegen_template(\"$SimpleHealthBehavior.has_any_health_pool()\")
+func has_any_health_pool() -> bool:
+	for pool_name: String in health_pools.keys():
+		if float(health_pools[pool_name].amount) > 0.0:
+			return true
+	return false
+
+## @ace_condition
+## @ace_name(\"Has Health Pool\")
+## @ace_category(\"Health\")
+## @ace_codegen_template(\"$SimpleHealthBehavior.has_health_pool({type})\")
+func has_health_pool(type: String) -> bool:
+	return health_pools.has(type) and float(health_pools[type].amount) > 0.0
+
+## @ace_condition
+## @ace_name(\"Health Pool Is Type\")
+## @ace_category(\"Health\")
+## @ace_codegen_template(\"$SimpleHealthBehavior.is_health_pool_type({type})\")
+func is_health_pool_type(type: String) -> bool:
+	return last_trigger_pool_type == type
+
+## @ace_expression
+## @ace_name(\"Current Health\")
+## @ace_category(\"Health\")
+func current_health_value() -> float:
+	return current_health
+
+## @ace_expression
+## @ace_name(\"Max Health\")
+## @ace_category(\"Health\")
+func max_health_value() -> float:
+	return max_health
+
+## @ace_expression
+## @ace_name(\"Health Percent\")
+## @ace_category(\"Health\")
+func health_percent() -> float:
+	return (current_health / max_health) * 100.0 if max_health != 0.0 else 0.0
+
+## @ace_expression
+## @ace_name(\"Health Absorption Rate\")
+## @ace_category(\"Health\")
+func health_absorption_rate_value() -> float:
+	return health_absorption_rate
+
+## @ace_expression
+## @ace_name(\"Last Damage\")
+## @ace_category(\"Health\")
+func last_damage_value() -> float:
+	return last_damage
+
+## @ace_expression
+## @ace_name(\"Last Heal\")
+## @ace_category(\"Health\")
+func last_heal_value() -> float:
+	return last_heal
+
+## @ace_expression
+## @ace_name(\"Health Pool\")
+## @ace_category(\"Health\")
+func health_pool_value(type: String) -> float:
+	return float(health_pools[type].amount) if health_pools.has(type) else 0.0
+
+## @ace_expression
+## @ace_name(\"Health Pool Decay Rate\")
+## @ace_category(\"Health\")
+func health_pool_decay_rate_value(type: String) -> float:
+	return float(health_pools[type].decay_rate) if health_pools.has(type) else 0.0
+
+## @ace_expression
+## @ace_name(\"Health Pool Absorption Rate\")
+## @ace_category(\"Health\")
+func health_pool_absorption_rate_value(type: String) -> float:
+	return float(health_pools[type].absorption_rate) if health_pools.has(type) else 1.0
+
+## @ace_expression
+## @ace_name(\"Health Pool Priority\")
+## @ace_category(\"Health\")
+func health_pool_priority_value(type: String) -> float:
+	return float(health_pools[type].priority) if health_pools.has(type) else 0.0
+
+## @ace_expression
+## @ace_name(\"Last Pool Damage Absorbed\")
+## @ace_category(\"Health\")
+func last_pool_damage_absorbed_value() -> float:
+	return last_pool_damage_absorbed
+
+## @ace_expression
+## @ace_name(\"Last Health Pool Type\")
+## @ace_category(\"Health\")
+func last_health_pool_type_value() -> String:
+	return last_trigger_pool_type
+
+func _get_pool(type: String) -> Dictionary:
+	if not health_pools.has(type):
+		health_pools[type] = {\"amount\": 0.0, \"decay_rate\": 0.0, \"absorption_rate\": 1.0, \"last_absorbed\": 0.0, \"priority\": 0.0}
+	return health_pools[type]
+
+func _sorted_pool_keys() -> Array:
+	var keys: Array = health_pools.keys()
+	var indexed: Array = []
+	for i: int in keys.size():
+		indexed.append([keys[i], float(health_pools[keys[i]].priority), i])
+	indexed.sort_custom(func(a, b): return a[1] < b[1] if a[1] != b[1] else a[2] < b[2])
+	var out: Array = []
+	for entry: Array in indexed:
+		out.append(entry[0])
+	return out"
+
+[sub_resource type="Resource" id="Resource_exeo8"]
+script = ExtResource("2_0d086")
+code = "current_health = max_health"
+
+[sub_resource type="Resource" id="Resource_xmwhe"]
+script = ExtResource("6_5qxg0")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_exeo8")])
+event_uid = "276709"
+
+[sub_resource type="Resource" id="Resource_viqvc"]
+script = ExtResource("2_0d086")
+code = "if health_pools.is_empty():
+	return
+var depleted: Array = []
+for pool_name in _sorted_pool_keys():
+	var pool: Dictionary = health_pools[pool_name]
+	if float(pool.amount) > 0.0 and float(pool.decay_rate) > 0.0:
+		pool.amount = maxf(0.0, float(pool.amount) - float(pool.decay_rate) * delta)
+		if float(pool.amount) <= 0.0:
+			depleted.append(pool_name)
+for pool_name in depleted:
+	last_trigger_pool_type = pool_name
+	on_health_pool_depleted.emit()"
+
+[sub_resource type="Resource" id="Resource_oglca"]
+script = ExtResource("6_5qxg0")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_viqvc")])
+event_uid = "0b3128"
+
+[sub_resource type="Resource" id="Resource_4p37g"]
+script = ExtResource("2_0d086")
+code = "if amount <= 0.0 or invulnerable or is_dead_flag:
+	return
+var remaining: float = amount
+for pool_name: String in _sorted_pool_keys():
+	if remaining <= 0.0:
+		break
+	var pool: Dictionary = health_pools[pool_name]
+	if float(pool.amount) <= 0.0:
+		continue
+	var absorption: float = float(pool.absorption_rate)
+	var max_absorbable: float = (float(pool.amount) / absorption) if absorption > 0.0 else INF
+	var absorbed: float = minf(remaining, max_absorbable)
+	pool.amount = maxf(0.0, float(pool.amount) - absorbed * absorption)
+	pool.last_absorbed = absorbed
+	remaining -= absorbed
+	last_trigger_pool_type = pool_name
+	last_pool_damage_absorbed = absorbed
+	on_health_pool_absorbed.emit()
+	if float(pool.amount) <= 0.0:
+		on_health_pool_depleted.emit()
+if remaining <= 0.0:
+	return
+var real_damage: float = remaining * health_absorption_rate
+last_damage = real_damage
+current_health -= real_damage
+if current_health <= 0.0:
+	current_health = 0.0
+	is_dead_flag = true
+	on_death.emit()
+	on_health_changed.emit()
+	if destroy_on_death and host != null:
+		host.call_deferred(\"queue_free\")
+else:
+	on_damaged.emit()
+	on_health_changed.emit()"
+
+[sub_resource type="Resource" id="Resource_v4c4a"]
+script = ExtResource("7_tvvp6")
+id = "amount"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_wud42"]
+script = ExtResource("8_kursp")
+function_name = "take_damage"
+description = "Applies damage; health pools absorb in ascending-priority order before real HP."
+expose_as_ace = true
+ace_display_name = "Take Damage"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_v4c4a")])
+events = Array[Resource]([SubResource("Resource_4p37g")])
+
+[sub_resource type="Resource" id="Resource_n2jsx"]
+script = ExtResource("2_0d086")
+code = "if is_dead_flag:
+	return
+last_heal = amount
+current_health = minf(current_health + amount, max_health)
+on_healed.emit()
+on_health_changed.emit()"
+
+[sub_resource type="Resource" id="Resource_pvtbx"]
+script = ExtResource("7_tvvp6")
+id = "amount"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_8hjsl"]
+script = ExtResource("8_kursp")
+function_name = "heal"
+description = "Restores health up to max_health."
+expose_as_ace = true
+ace_display_name = "Heal"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_pvtbx")])
+events = Array[Resource]([SubResource("Resource_n2jsx")])
+
+[sub_resource type="Resource" id="Resource_p42iu"]
+script = ExtResource("2_0d086")
+code = "if is_dead_flag:
+	return
+var new_value: float = maxf(0.0, minf(amount, max_health))
+var old_value: float = current_health
+if new_value == old_value:
+	return
+current_health = new_value
+if new_value <= 0.0:
+	is_dead_flag = true
+	last_damage = old_value - new_value
+	on_death.emit()
+	on_health_changed.emit()
+	if destroy_on_death and host != null:
+		host.call_deferred(\"queue_free\")
+elif new_value < old_value:
+	last_damage = old_value - new_value
+	on_damaged.emit()
+	on_health_changed.emit()
+else:
+	last_heal = new_value - old_value
+	on_healed.emit()
+	on_health_changed.emit()"
+
+[sub_resource type="Resource" id="Resource_aoxyt"]
+script = ExtResource("7_tvvp6")
+id = "amount"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_u0l2y"]
+script = ExtResource("8_kursp")
+function_name = "set_health_value"
+description = "Sets current health directly, firing damage/heal/death as appropriate."
+expose_as_ace = true
+ace_display_name = "Set Health"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_aoxyt")])
+events = Array[Resource]([SubResource("Resource_p42iu")])
+
+[sub_resource type="Resource" id="Resource_talm0"]
+script = ExtResource("2_0d086")
+code = "max_health = maxf(1.0, amount)
+if current_health > max_health:
+	current_health = max_health
+	on_health_changed.emit()"
+
+[sub_resource type="Resource" id="Resource_qek63"]
+script = ExtResource("7_tvvp6")
+id = "amount"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_214nj"]
+script = ExtResource("8_kursp")
+function_name = "set_max_health_value"
+description = "Sets max health (clamps current down if needed)."
+expose_as_ace = true
+ace_display_name = "Set Max Health"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_qek63")])
+events = Array[Resource]([SubResource("Resource_talm0")])
+
+[sub_resource type="Resource" id="Resource_0okqa"]
+script = ExtResource("2_0d086")
+code = "invulnerable = state"
+
+[sub_resource type="Resource" id="Resource_tu7nc"]
+script = ExtResource("7_tvvp6")
+id = "state"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_0xygm"]
+script = ExtResource("8_kursp")
+function_name = "set_invulnerable"
+description = "Toggles invulnerability (takeDamage no-op while true)."
+expose_as_ace = true
+ace_display_name = "Set Invulnerable"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_tu7nc")])
+events = Array[Resource]([SubResource("Resource_0okqa")])
+
+[sub_resource type="Resource" id="Resource_53gcj"]
+script = ExtResource("2_0d086")
+code = "health_absorption_rate = maxf(0.0, rate)
+invulnerable = (rate == 0.0)"
+
+[sub_resource type="Resource" id="Resource_d26s7"]
+script = ExtResource("7_tvvp6")
+id = "rate"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_glsaf"]
+script = ExtResource("8_kursp")
+function_name = "set_health_absorption_rate"
+description = "Damage multiplier for real HP (resistance); 0 = invulnerable."
+expose_as_ace = true
+ace_display_name = "Set Health Absorption Rate"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_d26s7")])
+events = Array[Resource]([SubResource("Resource_53gcj")])
+
+[sub_resource type="Resource" id="Resource_s2mfr"]
+script = ExtResource("2_0d086")
+code = "if amount <= 0.0:
+	return
+var pool: Dictionary = _get_pool(type)
+pool.amount = float(pool.amount) + amount
+last_trigger_pool_type = type
+on_health_pool_added.emit()"
+
+[sub_resource type="Resource" id="Resource_e1m4c"]
+script = ExtResource("7_tvvp6")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_plpqp"]
+script = ExtResource("7_tvvp6")
+id = "amount"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_h1yyi"]
+script = ExtResource("8_kursp")
+function_name = "add_health_pool"
+description = "Adds to a named health pool (shield/armour)."
+expose_as_ace = true
+ace_display_name = "Add Health Pool"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_e1m4c"), SubResource("Resource_plpqp")])
+events = Array[Resource]([SubResource("Resource_s2mfr")])
+
+[sub_resource type="Resource" id="Resource_wux60"]
+script = ExtResource("2_0d086")
+code = "var pool: Dictionary = _get_pool(type)
+var new_amount: float = maxf(0.0, amount)
+if new_amount > float(pool.amount):
+	pool.amount = new_amount
+	last_trigger_pool_type = type
+	on_health_pool_added.emit()
+else:
+	pool.amount = new_amount"
+
+[sub_resource type="Resource" id="Resource_3ua5v"]
+script = ExtResource("7_tvvp6")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_xdmrg"]
+script = ExtResource("7_tvvp6")
+id = "amount"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_fa4fd"]
+script = ExtResource("8_kursp")
+function_name = "set_health_pool"
+description = "Sets a health pool amount (fires Added only when it increases)."
+expose_as_ace = true
+ace_display_name = "Set Health Pool"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_3ua5v"), SubResource("Resource_xdmrg")])
+events = Array[Resource]([SubResource("Resource_wux60")])
+
+[sub_resource type="Resource" id="Resource_q0rwn"]
+script = ExtResource("2_0d086")
+code = "if health_pools.has(type):
+	health_pools[type].amount = 0.0"
+
+[sub_resource type="Resource" id="Resource_aq0xw"]
+script = ExtResource("7_tvvp6")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_1kd8o"]
+script = ExtResource("8_kursp")
+function_name = "clear_health_pool"
+description = "Zeroes one named health pool."
+expose_as_ace = true
+ace_display_name = "Clear Health Pool"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_aq0xw")])
+events = Array[Resource]([SubResource("Resource_q0rwn")])
+
+[sub_resource type="Resource" id="Resource_kxgvi"]
+script = ExtResource("2_0d086")
+code = "for pool_name: String in health_pools.keys():
+	health_pools[pool_name].amount = 0.0"
+
+[sub_resource type="Resource" id="Resource_tr6oo"]
+script = ExtResource("8_kursp")
+function_name = "clear_all_health_pools"
+description = "Zeroes every health pool."
+expose_as_ace = true
+ace_display_name = "Clear All Health Pools"
+ace_category = "Health"
+events = Array[Resource]([SubResource("Resource_kxgvi")])
+
+[sub_resource type="Resource" id="Resource_eqm23"]
+script = ExtResource("2_0d086")
+code = "_get_pool(type).decay_rate = maxf(0.0, rate)"
+
+[sub_resource type="Resource" id="Resource_y1yil"]
+script = ExtResource("7_tvvp6")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_wwgye"]
+script = ExtResource("7_tvvp6")
+id = "rate"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_avs7t"]
+script = ExtResource("8_kursp")
+function_name = "set_health_pool_decay_rate"
+description = "Sets a pool's per-second decay rate."
+expose_as_ace = true
+ace_display_name = "Set Health Pool Decay Rate"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_y1yil"), SubResource("Resource_wwgye")])
+events = Array[Resource]([SubResource("Resource_eqm23")])
+
+[sub_resource type="Resource" id="Resource_7xno8"]
+script = ExtResource("2_0d086")
+code = "_get_pool(type).absorption_rate = maxf(0.0, rate)"
+
+[sub_resource type="Resource" id="Resource_4261k"]
+script = ExtResource("7_tvvp6")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_smirm"]
+script = ExtResource("7_tvvp6")
+id = "rate"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_seaeg"]
+script = ExtResource("8_kursp")
+function_name = "set_health_pool_absorption_rate"
+description = "Sets a pool's absorption multiplier (how hard it spends to soak damage)."
+expose_as_ace = true
+ace_display_name = "Set Health Pool Absorption Rate"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_4261k"), SubResource("Resource_smirm")])
+events = Array[Resource]([SubResource("Resource_7xno8")])
+
+[sub_resource type="Resource" id="Resource_ld32o"]
+script = ExtResource("2_0d086")
+code = "var pool: Dictionary = _get_pool(type)
+pool.decay_rate = maxf(0.0, decay_rate)
+pool.absorption_rate = maxf(0.0, absorption_rate)"
+
+[sub_resource type="Resource" id="Resource_7ngjv"]
+script = ExtResource("7_tvvp6")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_vip8q"]
+script = ExtResource("7_tvvp6")
+id = "decay_rate"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_p3h2n"]
+script = ExtResource("7_tvvp6")
+id = "absorption_rate"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_tm63j"]
+script = ExtResource("8_kursp")
+function_name = "set_health_pool_rates"
+description = "Sets a pool's decay and absorption rates at once."
+expose_as_ace = true
+ace_display_name = "Set Health Pool Rates"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_7ngjv"), SubResource("Resource_vip8q"), SubResource("Resource_p3h2n")])
+events = Array[Resource]([SubResource("Resource_ld32o")])
+
+[sub_resource type="Resource" id="Resource_l5wa3"]
+script = ExtResource("2_0d086")
+code = "_get_pool(type).priority = priority"
+
+[sub_resource type="Resource" id="Resource_q2xee"]
+script = ExtResource("7_tvvp6")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_pdf27"]
+script = ExtResource("7_tvvp6")
+id = "priority"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_3774a"]
+script = ExtResource("8_kursp")
+function_name = "set_health_pool_priority"
+description = "Sets a pool's absorption priority (lower absorbs first)."
+expose_as_ace = true
+ace_display_name = "Set Health Pool Priority"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_q2xee"), SubResource("Resource_pdf27")])
+events = Array[Resource]([SubResource("Resource_l5wa3")])
+
+[sub_resource type="Resource" id="Resource_osh1d"]
+script = ExtResource("2_0d086")
+code = "var pool: Dictionary = _get_pool(type)
+pool.amount = maxf(0.0, amount)
+pool.decay_rate = maxf(0.0, decay_rate)
+pool.absorption_rate = maxf(0.0, absorption_rate)
+pool.priority = priority"
+
+[sub_resource type="Resource" id="Resource_rlpks"]
+script = ExtResource("7_tvvp6")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_il0k0"]
+script = ExtResource("7_tvvp6")
+id = "amount"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_o2anx"]
+script = ExtResource("7_tvvp6")
+id = "decay_rate"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_daach"]
+script = ExtResource("7_tvvp6")
+id = "absorption_rate"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ie2tm"]
+script = ExtResource("7_tvvp6")
+id = "priority"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_rkoro"]
+script = ExtResource("8_kursp")
+function_name = "setup_health_pool"
+description = "Creates/configures a health pool in one call."
+expose_as_ace = true
+ace_display_name = "Setup Health Pool"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_rlpks"), SubResource("Resource_il0k0"), SubResource("Resource_o2anx"), SubResource("Resource_daach"), SubResource("Resource_ie2tm")])
+events = Array[Resource]([SubResource("Resource_osh1d")])
+
+[sub_resource type="Resource" id="Resource_y43xe"]
+script = ExtResource("2_0d086")
+code = "is_dead_flag = false
+current_health = minf(amount, max_health) if amount > 0.0 else max_health
+on_revived.emit()
+on_health_changed.emit()"
+
+[sub_resource type="Resource" id="Resource_ymgcx"]
+script = ExtResource("7_tvvp6")
+id = "amount"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_wvq40"]
+script = ExtResource("8_kursp")
+function_name = "revive"
+description = "Clears death and restores health (amount<=0 → full)."
+expose_as_ace = true
+ace_display_name = "Revive"
+ace_category = "Health"
+params = Array[ExtResource("7_tvvp6")]([SubResource("Resource_ymgcx")])
+events = Array[Resource]([SubResource("Resource_y43xe")])
+
+[resource]
+script = ExtResource("9_c4a7h")
+host_class = "Node2D"
+behavior_mode = true
+custom_class_name = "SimpleHealthBehavior"
+addon_tags = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_qhshe"), SubResource("Resource_o4pmk"), SubResource("Resource_xmwhe"), SubResource("Resource_oglca")])
+variables = {
+"current_health": {
+"default": 100.0,
+"exported": false,
+"type": "float"
+},
+"destroy_on_death": {
+"attributes": {
+"tooltip": "queue_free the host the moment health reaches 0 (after On Death fires)."
+},
+"default": false,
+"exported": true,
+"type": "bool"
+},
+"health_absorption_rate": {
+"default": 1.0,
+"exported": false,
+"type": "float"
+},
+"health_pools": {
+"default": {},
+"exported": false,
+"type": "Dictionary"
+},
+"invulnerable": {
+"attributes": {
+"tooltip": "Start invulnerable: takeDamage is a no-op while true."
+},
+"default": false,
+"exported": true,
+"type": "bool"
+},
+"is_dead_flag": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"last_damage": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"last_heal": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"last_pool_damage_absorbed": {
+"default": 0.0,
+"exported": false,
+"type": "float"
+},
+"last_trigger_pool_type": {
+"default": "",
+"exported": false,
+"type": "String"
+},
+"max_health": {
+"attributes": {
+"range": {
+"max": "10000",
+"min": "1",
+"step": "1"
+},
+"tooltip": "Starting max HP; current_health initialises to this."
+},
+"default": 100.0,
+"exported": true,
+"type": "float"
+}
+}
+functions = Array[Resource]([SubResource("Resource_wud42"), SubResource("Resource_8hjsl"), SubResource("Resource_u0l2y"), SubResource("Resource_214nj"), SubResource("Resource_0xygm"), SubResource("Resource_glsaf"), SubResource("Resource_h1yyi"), SubResource("Resource_fa4fd"), SubResource("Resource_1kd8o"), SubResource("Resource_tr6oo"), SubResource("Resource_avs7t"), SubResource("Resource_seaeg"), SubResource("Resource_tm63j"), SubResource("Resource_3774a"), SubResource("Resource_rkoro"), SubResource("Resource_wvq40")])

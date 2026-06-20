@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EventSheetResource" load_steps=15 format=3]
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
 [ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_phgd3"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_cb0ow"]
@@ -37,7 +37,7 @@ script = ExtResource("6_8vblq")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
 actions = Array[Resource]([SubResource("Resource_bb4cx")])
-event_uid = "2a335f"
+event_uid = "d2de90"
 
 [sub_resource type="Resource" id="Resource_8htxg"]
 script = ExtResource("2_cb0ow")

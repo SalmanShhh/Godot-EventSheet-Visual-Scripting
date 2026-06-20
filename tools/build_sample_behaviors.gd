@@ -23,10 +23,13 @@ const PACK_BUILDERS: Array[String] = [
 	"car",
 	"tile_movement",
 	"line_of_sight",
+	"line_of_sight_3d",
 	"sine_3d",
 	"orbit_3d",
 	"bullet_3d",
 	"move_to_3d",
+	"health",
+	"virtual_cursor",
 ]
 
 func _init() -> void:

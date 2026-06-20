@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EventSheetResource" load_steps=24 format=3]
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
 [ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_gfj36"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_q7uqc"]
@@ -41,7 +41,7 @@ script = ExtResource("6_2l66c")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_f2y24")])
-event_uid = "28074d"
+event_uid = "0ab357"
 
 [sub_resource type="Resource" id="Resource_kd6xl"]
 script = ExtResource("2_q7uqc")

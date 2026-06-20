@@ -61,7 +61,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry = null, vari
 	if _dialog != null:
 		return
 	_dialog = ConfirmationDialog.new()
-	_dialog.title = "ACE Parameters"
+	_dialog.title = "Parameters"
 	_dialog.visible = false
 	_dialog.confirmed.connect(_on_confirmed)
 	_dialog.close_requested.connect(_close)
@@ -975,10 +975,20 @@ func _validate_expression_field(edit: Control) -> void:
 		edit.remove_theme_color_override("font_color")
 		edit.tooltip_text = "Plain GDScript — anything valid in an expression works here."
 		_update_quickfix_button(edit, "")
+		_update_didyoumean_button(edit, "", "")
 	else:
 		edit.add_theme_color_override("font_color", Color(0.96, 0.45, 0.45))
-		edit.tooltip_text = "✗ Not a valid GDScript expression for this sheet."
-		_update_quickfix_button(edit, undeclared_identifier_in_expression(str(edit.get("text")), sheet))
+		var undeclared: String = undeclared_identifier_in_expression(str(edit.get("text")), sheet)
+		# Typo path first: if the unknown identifier is one edit away from something the sheet
+		# DOES know, offer a one-click "Use it" before the create-new-variable fallback — far
+		# friendlier than a red squiggle for a non-coder who fat-fingered a name.
+		var suggestion: String = closest_known_identifier(undeclared, sheet)
+		if suggestion.is_empty():
+			edit.tooltip_text = "✗ Not a valid GDScript expression for this sheet."
+		else:
+			edit.tooltip_text = "✗ Unknown \"%s\". Did you mean \"%s\"?" % [undeclared, suggestion]
+		_update_quickfix_button(edit, undeclared)
+		_update_didyoumean_button(edit, undeclared, suggestion)
 
 ## Wires the sheet-context source for expression validation (returns EventSheetResource).
 func set_lint_context_provider(provider: Callable) -> void:
@@ -999,6 +1009,57 @@ static func open_class_docs(docs_class: String) -> String:
 # The dialog stays dock-agnostic: the dock injects a creator Callable(name) -> bool.
 var _variable_creator: Callable = Callable()
 var _quickfix_buttons: Dictionary = {}
+var _didyoumean_buttons: Dictionary = {}
+
+## The closest name the sheet already knows (variable / tree var / sheet function / host
+## member) to an unknown identifier, within a small edit distance — powers the "Did you
+## mean …?" typo quick-fix. "" when nothing is close enough (avoid nonsense suggestions).
+static func closest_known_identifier(identifier: String, sheet: EventSheetResource) -> String:
+	if identifier.length() < 2:
+		return ""
+	var candidates: Array[String] = []
+	if sheet != null:
+		for var_name: Variant in sheet.variables.keys():
+			candidates.append(str(var_name))
+		for row: Variant in sheet.events:
+			if row is LocalVariable:
+				candidates.append((row as LocalVariable).name)
+		for function_entry: Variant in sheet.functions:
+			if function_entry is EventFunction:
+				candidates.append((function_entry as EventFunction).function_name)
+	var host_class: String = sheet.host_class if sheet != null and ClassDB.class_exists(sheet.host_class) else "Node"
+	for property: Dictionary in ClassDB.class_get_property_list(host_class):
+		candidates.append(str(property.get("name")))
+	var best: String = ""
+	var best_distance: int = 3  # only suggest within 2 edits (strictly < 3)
+	for candidate: String in candidates:
+		if candidate.is_empty() or candidate == identifier:
+			continue
+		var distance: int = _edit_distance(identifier.to_lower(), candidate.to_lower())
+		if distance < best_distance:
+			best_distance = distance
+			best = candidate
+	return best
+
+## Levenshtein distance (small strings — identifiers), used only by closest_known_identifier.
+static func _edit_distance(a: String, b: String) -> int:
+	var n: int = a.length()
+	var m: int = b.length()
+	if n == 0:
+		return m
+	if m == 0:
+		return n
+	var previous: Array[int] = []
+	for j: int in range(m + 1):
+		previous.append(j)
+	for i: int in range(1, n + 1):
+		var current: Array[int] = [i]
+		current.resize(m + 1)
+		for j: int in range(1, m + 1):
+			var cost: int = 0 if a[i - 1] == b[j - 1] else 1
+			current[j] = min(min(previous[j] + 1, current[j - 1] + 1), previous[j - 1] + cost)
+		previous = current
+	return previous[m]
 
 func set_variable_creator(creator: Callable) -> void:
 	_variable_creator = creator
@@ -1071,6 +1132,42 @@ func _on_quickfix_pressed(edit: Control) -> void:
 		return
 	if bool(_variable_creator.call(str(button.get_meta("identifier", "")))):
 		_validate_expression_field(edit)
+
+## "Did you mean …?" typo quick-fix: a one-click button that swaps the unknown identifier
+## for the closest name the sheet knows, then re-validates. Distinct from the create-var
+## button, which the user wants when the name is genuinely new.
+func _update_didyoumean_button(edit: Control, identifier: String, suggestion: String) -> void:
+	var button: Button = _didyoumean_buttons.get(edit) as Button
+	if identifier.is_empty() or suggestion.is_empty():
+		if button != null:
+			button.visible = false
+		return
+	if button == null or not is_instance_valid(button):
+		button = Button.new()
+		button.pressed.connect(_on_didyoumean_pressed.bind(edit))
+		var parent: Node = edit.get_parent()
+		if parent == null:
+			return
+		parent.add_child(button)
+		_didyoumean_buttons[edit] = button
+	button.text = "Use \"%s\"" % suggestion
+	button.tooltip_text = "Replace \"%s\" with \"%s\" in this expression." % [identifier, suggestion]
+	button.set_meta("identifier", identifier)
+	button.set_meta("suggestion", suggestion)
+	button.visible = true
+
+func _on_didyoumean_pressed(edit: Control) -> void:
+	var button: Button = _didyoumean_buttons.get(edit) as Button
+	if button == null:
+		return
+	var identifier: String = str(button.get_meta("identifier", ""))
+	var suggestion: String = str(button.get_meta("suggestion", ""))
+	if identifier.is_empty() or suggestion.is_empty():
+		return
+	# Whole-word replace so "hp" inside "shparrow" is never touched.
+	var replaced: String = RegEx.create_from_string("\\b%s\\b" % RegEx.create_from_string("[^A-Za-z0-9_]").sub(identifier, "", true)).sub(str(edit.get("text")), suggestion, true)
+	edit.set("text", replaced)
+	_validate_expression_field(edit)
 
 ## Fills the completion popup with sheet variables/functions + host members (same source
 ## as the GDScript-block editor, so the vocabulary matches everywhere).

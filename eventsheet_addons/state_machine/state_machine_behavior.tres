@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EventSheetResource" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
 [ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_5r6i7"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_q66f6"]

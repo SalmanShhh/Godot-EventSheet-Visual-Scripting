@@ -20,7 +20,23 @@ static func adapt_to_editor(style: EventSheetEditorStyle) -> EventSheetEditorSty
 	var dark_2: Color = theme.get_color("dark_color_2", "Editor") if theme.has_color("dark_color_2", "Editor") else base.darkened(0.25)
 	var accent: Color = theme.get_color("accent_color", "Editor") if theme.has_color("accent_color", "Editor") else Color("#699ce8")
 	var font_color: Color = theme.get_color("font_color", "Editor") if theme.has_color("font_color", "Editor") else Color(0.9, 0.9, 0.9)
+	return apply(style, base, dark_1, dark_2, accent, font_color)
 
+## Pure color-mapping core (no editor access) — derives the sheet's chrome from the five
+## colors every Godot editor theme hinges on, so the look tracks the user's theme (the
+## neutral grayscale "Modern" 4.6+ default, light themes, custom accents). Extracted from
+## adapt_to_editor so the render harness and headless tests can preview/verify the adapted
+## look without a live editor.
+static func apply(
+	style: EventSheetEditorStyle,
+	base: Color,
+	dark_1: Color,
+	dark_2: Color,
+	accent: Color,
+	font_color: Color
+) -> EventSheetEditorStyle:
+	if style == null:
+		return style
 	var event_style: EventSheetEventStyle = style.get_event_style()
 	event_style.sheet_background_color = dark_2
 	event_style.row_background_color = dark_1

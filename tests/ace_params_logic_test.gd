@@ -104,6 +104,17 @@ static func run() -> bool:
 		chained[0], true) and all_passed
 	host.free()
 
+	# "Did you mean …?" typo quick-fix: a fat-fingered variable name resolves to the closest
+	# real one; an unrelated name suggests nothing (no nonsense fixes).
+	var typo_sheet := EventSheetResource.new()
+	typo_sheet.variables = {"health": {"type": "int", "default": 100}, "speed": {"type": "float", "default": 50.0}}
+	all_passed = _check("did-you-mean catches a one-letter typo",
+		ACEParamsDialog.closest_known_identifier("helth", typo_sheet), "health") and all_passed
+	all_passed = _check("did-you-mean catches a transposition",
+		ACEParamsDialog.closest_known_identifier("sped", typo_sheet), "speed") and all_passed
+	all_passed = _check("did-you-mean stays silent for an unrelated name",
+		ACEParamsDialog.closest_known_identifier("xyzzy", typo_sheet), "") and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

@@ -18,6 +18,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append_array(EventForgeDeviceACEs.get_descriptors())
 	descriptors.append_array(EventForge3DACEs.get_descriptors())
 	descriptors.append_array(EventForgeCollectionACEs.get_descriptors())
+	# Helpers LAST on purpose: their templates are deliberately generic ({target}.{method}(…),
+	# {target}.{property} = …), so the reverse-lifter must try every specific ACE before falling
+	# back to a generic helper — registry order is the priority order.
+	descriptors.append_array(EventForgeHelperACEs.get_descriptors())
 	return descriptors
 
 # ── Legacy helper API (kept for external callers; the modules use the factory) ──

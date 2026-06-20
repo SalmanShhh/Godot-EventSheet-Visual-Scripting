@@ -2,6 +2,117 @@
 
 ## [Unreleased]
 
+### Helper ACEs — a structured escape hatch for hard-to-translate GDScript
+- A new **Helpers** vocabulary (24 ACEs) for the GDScript a user would otherwise drop to a
+  raw block for, so more logic stays as editable rows that still compile to the exact
+  one-line GDScript you'd hand-write: **Set/Get Property**, **Call Method** (action +
+  value), **Get Node**, **Run GDScript** / **Evaluate GDScript** / **Evaluate Expression**
+  (a raw statement/expression as a real ACE), **Inline If (ternary)**, **Toggle Boolean**,
+  **Set Local Variable**, **Is Valid** / **Is Null**, **Connect/Disconnect Signal**, and the
+  math/string idioms not already covered (**Abs/Min/Max/Round/Sign/Move Toward/Wrap/Remap/
+  Format String**).
+- The Helper templates are deliberately generic, so they're registered **last** and
+  **excluded from the reverse-lifter** — they never shadow a specific ACE on import or
+  swallow a line that should stay a verbatim block.
+- **Escape-hatch provenance, working together:** raw GDScript blocks now carry an optional
+  `note` (a human label, shown on hover) and an importer-set `lift_note` — when a line
+  couldn't lift into a structured ACE, hovering the block says *why* ("no matching ACE
+  template"), turning an opaque wall of code into an actionable triage list. Both are
+  non-emitted (no codegen / round-trip impact) and complement the verbatim-codegen tooltip.
+
+### Health pack
+- Renamed **Temporary Health → Health Pools** throughout the Health behavior addon (ACE
+  names and the generated API: `add_health_pool`, `on_health_pool_*`, `clear_all_health_pools`).
+
+### New behavior packs + C3-addon parity (24 packs total)
+- **Line of Sight 3D** — the 3D twin of the LoS pack (Node3D host, `PhysicsRayQueryParameters3D`
+  raycasts, cone-of-view from the host's -Z forward).
+- **Health** — a faithful port of the Simple Health C3 addon: max/current HP, damage with a
+  resistance/absorption multiplier, **named temporary-health pools** (shields/armour that
+  intercept damage in priority order and decay over time), heal/revive/invulnerability, and
+  `On Damaged/Death/Healed/Revived/Health Changed` + temp-pool triggers.
+- **Virtual Cursor** — a port of the custom C3 Virtual Cursor addon (axis/mouse-driven cursor
+  with homing, solids, bounce, constraints) that can **drive the Drag & Drop pack** for
+  gamepad/touch dragging.
+- **Drag & Drop, rewritten event-driven** — replaces the old mouse-only poller with the C3
+  surface (Start Drag / Set Drag Point / Drop, follow-speed lag, direction lock, break-distance
+  auto-drop, measured throw velocity, snap/magnet targets) so any input source can drive it.
+- All packs stay faithfulness-gated (`audit_addons` drifted=0) and covered by
+  `sample_behavior_pack_test` (load-as-behavior, no-drift golden, instantiation).
+
+### 3D, GDScript-escape & install/uninstall improvements
+- **3D spatial-query ACEs** — a RayCast3D node set (Is Colliding / Collider / Hit Point /
+  Hit Normal / Force Update) plus host-agnostic Node3D **world raycasts** (single-line direct
+  space-state queries), closing the biggest functional 3D gap.
+- **3D starter templates** — "First-Person Controller (3D)" and "Third-Person Mover (3D)" in
+  the New Sheet menu (CharacterBody3D, `Input.get_vector` planar movement + gravity).
+- **Raw-block codegen tooltip** — hovering a GDScript block now advertises that it compiles
+  verbatim into the generated script (the escape hatch is transparent, not a black box).
+- **Clean removal made provable** — [docs/UNINSTALL.md](docs/UNINSTALL.md) (keep/remove table),
+  a `clean_removal_test` that parses every generated/pack script with no plugin classes on the
+  path and forbids any `EventForge*`/`EventSheet*` reference, and a `plugin_teardown_test`
+  asserting every `_enter_tree` `add_*` has a paired `_exit_tree` `remove_*`.
+
+### Showcases refreshed — three playable demos for complex tasks
+- Replaced the single version-pinned showcase (`showcase_v070.*`) with **three** playable
+  demos in `demo/showcase/`, each authored as event sheets and compiled to plain GDScript:
+  - **`showcase_carousel.*` — Carousel of Juice (flagship):** a rainbow ring driven by a
+	reused `juice_tile()` function, a runtime-toggleable group, an if/elif/else keypress
+	chain, and four behaviors (Spring/Tween/Sine/Flash). Streams to Live Values.
+  - **`starfall.*` (+ `star.tscn`) — arcade game:** an enum+match state machine
+	(PLAYING/GAME_OVER), a group pick-filter that scores & culls falling stars, an Every-2s
+	spawner instancing a sub-scene, and if/elif input branches.
+  - **`quest_fsm.*` — software-logic FSM:** a self-driving quest engine using a Dictionary
+	inventory + Array quest log, signals (`item_collected`/`quest_advanced`), a reused
+	`grant_item()` function, and match dispatch.
+- **Stable, un-versioned names** end the per-release churn: only the flagship matches the
+  `showcase_*` discovery prefix (so `EventForgePlugin._find_showcase_scene` returns it
+  deterministically — no plugin edit), and the two secondaries can never go stale via the
+  version-pin smell. Future refreshes regenerate in place via the new single builder,
+  `tools/build_examples.gd` (replaces `tools/build_showcase.gd`).
+- New `tests/showcase_examples_test.gd` guards all three: each compiles, parses, contains
+  its advertised power-feature constructs, and instantiates.
+
+### Adoption: friendlier for newcomers, faster for power users
+- **Simple Mode (View menu)** — progressive disclosure for artist-first / first-time users:
+  hides the advanced/code-leaning right-click entries (GDScript blocks, sub-conditions, pick
+  filters, match, signals/enums) so the everyday authoring verbs stand alone. Persists
+  per-project; Expert mode (default) is unchanged.
+- **Command Palette (Ctrl+P)** — keyboard-first access to every dock action with a fuzzy
+  (prefix › substring › subsequence) filter.
+- **Export Generated GDScript… (Sheet menu)** — writes the sheet's standalone, plugin-free
+  GDScript to a file you choose: concrete proof you can leave the addon with your code.
+- **"Did you mean …?" quick-fix** — an unknown identifier in an expression field that's one
+  or two edits from a name the sheet knows offers a one-click swap (alongside the existing
+  create-variable fix).
+- **Less jargon in the UI** — the C3-internal term "ACE" no longer leaks into the core
+  authoring loop ("Add Action / Condition" picker, "Parameters" dialog, "Custom Actions…",
+  "Edit Note…", "Expose as a reusable action"); the beginner empty-state drops "host accessor"
+  wording.
+
+### Godot 4.7 support
+- **Verified on Godot 4.7 stable** — the full headless suite (1869 assertions) and an
+  editor smoke run are green on 4.7. Fixed the cases 4.7's stricter `set_script` typing and
+  detached-Control theme access exposed (dialog init now also runs from `setup()`, not only
+  `_ready()`, so headless paths initialize correctly).
+- **Fixed a live-values crash** — the dock called `ensure_window()` but the panel defined
+  `_ensurewindow()`; opening Live Values would error. Names now match.
+
+### 4.7 "Modern" theme alignment
+- The editor-theme adapter's color math is extracted into a pure `EventSheetGodotTheme.apply()`
+  so the sheet's neutral grayscale chrome (4.6+ "Modern" default), light themes, and custom
+  accents are now preview-able in the render harness and covered by regression tests.
+
+### Less clutter when getting started
+- **Calmer empty sheet** — the dense one-line wall of shortcuts is replaced with a clear
+  heading, one call to action, and a single muted tip. It now also shows when the sheet holds
+  only the "+ Add event…" footer (previously the footer suppressed it).
+- **"Add-Event Rows" toggle** in the View menu hides the trailing "+ Add event…" affordances.
+- **"System" object labels are dimmed** — kept (C3 always shows the object) but de-emphasized
+  so rows read as the action, not a column of identical "System" labels.
+- **"+ Add action" is revealed on hover/selection** instead of repeating under every event
+  (events with no actions yet keep it visible for discoverability).
+
 ### Context menu, truncated
 - **The row right-click menu is rebuilt per click for the row you clicked** — it
   used to be one flat ~30-item list shown for everything (an event right-click

@@ -475,6 +475,10 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray) -> void:
 		return
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(pending_raw)
+	# Import triage: these lines matched no ACE template, so they stayed verbatim. Record why
+	# (non-emitted — never affects the byte-exact round-trip) so the editor can show an
+	# actionable "stayed as code" hint instead of an opaque block. See RawCodeRow.lift_note.
+	block.lift_note = "no matching ACE template"
 	event.actions.append(block)
 	pending_raw.clear()
 
@@ -485,6 +489,12 @@ static func _build_reverse_entries() -> Array:
 		var template: String = descriptor.codegen_template.strip_edges()
 		if template.is_empty() or template.contains("{,"):
 			continue  # optional-segment templates are not reversible (v1)
+		if descriptor.category == "Helpers":
+			# Helper ACEs are FORWARD-authoring conveniences whose templates are deliberately
+			# generic ({code}, {target}.{method}({args}), {target}.{property} = {value}). They
+			# match almost anything, so reverse-lifting through them would shadow specific ACEs
+			# and swallow lines that should stay verbatim blocks — keep them out of the index.
+			continue
 		var kind: String = ""
 		match descriptor.ace_type:
 			ACEDescriptor.ACEType.CONDITION:

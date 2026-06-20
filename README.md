@@ -10,7 +10,7 @@ project balloons to thousands of events.
 > [!WARNING]
 > **Purely experimental — early, vibecoded, and not yet validated.** This plugin is an
 > experiment, not a production tool: it has been built almost entirely through
-> AI-assisted ("vibe") coding. The test suite is large (1,200+ CI-gated assertions)
+> AI-assisted ("vibe") coding. The test suite is large (2,000+ CI-gated assertions)
 > and every feature ships with regression tests, but the project has **not yet been
 > validated by real-world use**. It is **very early in development** and **subject to
 > large, sweeping changes** between releases — do not build anything you can't afford
@@ -35,7 +35,9 @@ Conditions                        | Actions
 ## Quick start
 
 1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project
-   (optional: `eventsheet_addons/` for the 21 addon packs and demo ACEs).
+   (tested through **Godot 4.7 stable**; 4.6+ recommended for the native "Modern" theme look).
+   Optional: `eventsheet_addons/` for the 24 behavior packs and demo ACEs. Removing the
+   plugin later is clean and reversible — see the [uninstall guide](docs/UNINSTALL.md).
 2. **Project → Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
 4. **New…** → *Platformer Starter* (or open `demo/sheets/player.tres`), add events —
@@ -49,8 +51,9 @@ Conditions                        | Actions
 **Pros**
 
 - **You ship GDScript, not a black box.** Delete the plugin and your game still runs —
-  generated scripts are plain code with no runtime hooks. Performance parity with
-  hand-written GDScript is a permanent, test-enforced contract.
+  generated scripts are plain code with no runtime hooks ([clean-removal guide](docs/UNINSTALL.md),
+  gated by `clean_removal_test`). Performance parity with hand-written GDScript is a
+  permanent, test-enforced contract.
 - **It teaches Godot while you use it.** Every action's tooltip shows the GDScript it
   generates; ƒx expressions *are* GDScript with live validation and autocomplete; the
   GDScript panel maps every row to its generated lines (and back).
@@ -58,23 +61,28 @@ Conditions                        | Actions
   round-trips), paste GDScript and it converts to events, write GDScript that calls
   sheet-built classes like any other class.
 - **C3 muscle memory works.** The grammar, the picker, behaviors-as-components, combos,
-  waits, press-a-key capture, the 21-pack addon set, System/Keyboard/Mouse/Gamepad/
-  Touch/Audio vocabularies — designed against C3 conventions on purpose.
+  waits, press-a-key capture, the 24-pack addon set (including ports of custom C3 addons —
+  Virtual Cursor, an event-driven Drag & Drop, a Health pack with absorption + shield
+  pools), System/Keyboard/Mouse/Gamepad/Touch/Audio vocabularies — designed against C3
+  conventions on purpose.
 - **Scales.** The custom-drawn virtualized viewport keeps 10,000+ rows fluid (no
   per-row widgets — a measured ~490 ms build for a 10k sheet, 8-row draw window).
 
 **Cons (knowing them is part of trusting the tool)**
 
 - **It's a bridge, not a wall.** Complex logic will eventually pull you toward writing
-  GDScript directly — by design. If you want to never see code, C3 itself is better at
-  hiding it.
-- **2D-first.** Most behavior packs target 2D; a 3D starter exists (Node3D/
-  CharacterBody3D/RigidBody3D/Camera3D vocabularies + Sine/Orbit/Bullet/Move To 3D
-  packs) but 3D depth still comes from ƒx/GDScript blocks.
+  GDScript directly — by design. The **Helpers** ACE set softens the cliff (Set/Get
+  Property, Call Method, Run GDScript, ternary, is-valid, connect signal, math/string
+  idioms keep more logic as rows), but if you want to never see code, C3 itself is better
+  at hiding it.
+- **2D-first, but 3D is catching up.** Most behavior packs target 2D; the 3D side has the
+  Node3D/CharacterBody3D/RigidBody3D/Camera3D vocabularies, **raycast / world-query ACEs**,
+  First-Person & Third-Person starter templates, and the Sine/Orbit/Bullet/Move To/Line of
+  Sight 3D packs — deeper 3D still reaches for ƒx/GDScript blocks.
 - **Some C3 plugins intentionally have no equivalent** (Multiplayer, Drawing Canvas,
   XML): the migration guide points to the native Godot feature instead — that honesty
   keeps the project maintainable.
-- **Purely experimental, vibecoded project.** Built AI-first with a large CI-gated suite (1,200+
+- **Purely experimental, vibecoded project.** Built AI-first with a large CI-gated suite (2,000+
   assertions) standing in for mileage it hasn't earned yet — real-world validation is
   still ahead, and large sweeping changes between releases are likely (see the warning
   up top).
@@ -91,7 +99,9 @@ Conditions                        | Actions
   the Godot debugger in debug compiles, **Ctrl+/** to toggle rows, Alt+Up/Down to move
   rows), slow-double-click rename, quick-add bar ("type to insert" with C3 synonyms),
   **BBCode comments** (`[b]`/`[i]`/`[color]`), per-ACE notes, **starter templates**
-  (Platformer / Top-down), multi-view (split / detached / linked panes).
+  (Platformer / Top-down / First-Person 3D / Third-Person 3D), a **Command Palette
+  (Ctrl+P)**, a **Simple Mode** that hides advanced rows for newcomers, and multi-view
+  (split / detached / linked panes).
 - **Theming**: every color/metric is a token; bundled presets include **Dracula, Nord,
   Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha**, plus a Godot-adaptive
   default derived from *your* editor theme. A live visual theme editor is built in.
@@ -114,19 +124,27 @@ Conditions                        | Actions
   project-wide in one click, their functions callable from everywhere.
 - **Input vocabulary**: InputMap actions with dropdowns, plus **Keyboard / Mouse /
   Gamepad / Touch** groups — key params capture with C3's *press-a-key* workflow.
-- **75+ native ACEs**: Tween (ease/transition combos), Scene flow (incl. multi-line
+- **100+ native ACEs**: Tween (ease/transition combos), Scene flow (incl. multi-line
   Spawn Scene At), **Audio** (fire-and-forget one-shots, player control, bus mixing —
   with ▶ sound preview in the dialog), AnimatedSprite2D, Camera2D, Label,
   NavigationAgent2D, time scale & window control, the C3 System text functions, shader
-  params, date/time/platform info, Math & Random (`choose()` included).
+  params, date/time/platform info, Math & Random (`choose()` included), **3D raycast /
+  world-query** ACEs, and a **Helpers** set — the structured escape hatch (Set/Get
+  Property, Call Method, Run GDScript, Inline If, Is Valid, Connect Signal, and the
+  math/string idioms) so code that doesn't map to a specific ACE still stays an editable
+  row.
 
 ### Behaviors & addons (zero configuration, no JSON)
-- **21 addon packs**, all authored as event sheets: the C3 classics (Platformer,
+- **24 addon packs**, all authored as event sheets: the C3 classics (Platformer,
   8-Direction, Timer, Flash, State Machine, Sine with wave shapes, Orbit, Bullet,
-  Move To, Follow, Drag & Drop, Car, Tile Movement, Line of Sight), a 3D quartet
+  Move To, Follow, Car, Tile Movement, Line of Sight **2D & 3D**), a 3D quartet
   (Sine/Orbit/Bullet/Move To), the juice duo (**Spring** — named numeric springs,
-  squash & stretch in one action — and **Tween** with Inspector combos), and the
-  **Save System** singleton (slots, formats, encryption, lifecycle broadcasts).
+  squash & stretch in one action — and **Tween** with Inspector combos), the
+  **Save System** singleton, and three ports of custom C3 addons: an **event-driven
+  Drag & Drop** (Start/Set Drag Point/Drop with follow-speed, direction lock, throw and
+  snapping), a **Virtual Cursor** that can drive it for gamepad/touch, and a **Health**
+  pack (current/max HP, damage absorption, named **Health Pools** = decaying shields,
+  death/revive).
 - **Custom ACE addons**: drop a script in `res://eventsheet_addons/` — `class_name` is
   the provider, `@ace_*` annotations shape everything (`@ace_param_options` for combos,
   `@ace_param_hint` for ƒx/color/signal pickers). Annotated signals become triggers.
@@ -162,11 +180,14 @@ Conditions                        | Actions
   in FileSystem/script editor, discoverable Project Settings, **rebindable
   shortcuts**, **Go to Sheet Row** from the script editor, View-in-Godot-Docs,
   first-run welcome), and a GDScript bridge that explains itself (**if/elif/else
-  reverse-lift** into sub-events + the **Lift Report**). New interactive showcase:
-  `demo/showcase/showcase_v070.tscn`. See [CHANGELOG.md](CHANGELOG.md).
-- **Quality**: 1,400+ test assertions, all green, CI-gated on every push (any `[FAIL]`
+  reverse-lift** into sub-events + the **Lift Report**). Playable showcases:
+  `demo/showcase/showcase_carousel.tscn` (flagship), plus `starfall.tscn` (arcade
+  enum/match + pick-filter game) and `quest_fsm.tscn` (collections + signals FSM).
+  See [CHANGELOG.md](CHANGELOG.md).
+- **Quality**: 2,000+ test assertions, all green, CI-gated on every push (any `[FAIL]`
   fails the build, and the Project Doctor gate fails it on sheet/output drift);
-  byte-exact golden round-trips guard the lossless rules.
+  byte-exact golden round-trips guard the lossless rules. **Verified on Godot 4.7 stable**
+  (full suite + an in-editor smoke run).
 - **Compatibility covenant**: generated code never depends on the plugin; templates bake
   at apply (updates never rewrite your sheets); upgrades can never corrupt a file.
 
@@ -183,6 +204,7 @@ Conditions                        | Actions
 | `v0.6.1` — maintenance: dock decomposed into subsystems, module split completed, repo hygiene (no behavior changes) | ✅ shipped |
 | `v0.6.2` — project usability: compile-on-save, sheet diffs (textconv), Project Doctor (dock/CLI/CI), vocabulary doc, sheet backups + restore, project templates; C3 param parity completed; per-pack builders; issue templates | ✅ shipped |
 | `v0.7.0` — **The Native Workflow Update**: Rename Everywhere, snippets, bulk ops, session restore, asset drops, attach + Run Scene; Godot-native entry points (Scene-dock attach, Inspector button, settings, rebindable shortcuts, go-to-sheet-row, docs links, welcome); if/elif/else reverse-lift + Lift Report | ✅ shipped |
+| _Unreleased_ — **Godot 4.7 support** + Modern-theme visuals & onboarding declutter (Simple Mode, Command Palette, Export-GDScript eject); new packs (event-driven Drag & Drop, Virtual Cursor, Health with Health Pools, Line of Sight 3D); **3D raycast/world-query ACEs** + 3D starters; **Helper ACEs** (structured escape hatch) + import "why-it-stayed-code" hints; clean-removal guide + gate | 🚧 in progress |
 | Community feedback rounds, inline live-values overlay polish | 🗺 planned |
 
 Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
@@ -193,7 +215,7 @@ Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
 |---|---|
 | `addons/eventforge/` | Data model, compiler, importer, builtin ACEs, runtime bridge |
 | `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, MCP server |
-| `eventsheet_addons/` | Zero-config ACE addons + the 21 addon packs |
+| `eventsheet_addons/` | Zero-config ACE addons + the 24 behavior packs |
 | `demo/` | Demo sheets, themes, and the golden compiled output |
 | `tests/` | Headless suite — `tests/run_tests.gd` (full) and `tests/run_perf.gd` (headless-safe gate) |
 | `docs/` | Specs: GDScript pairing, editor UI, theme tokens, MCP, C3 migration |

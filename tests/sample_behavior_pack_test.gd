@@ -35,10 +35,13 @@ const PACKS: Array[String] = [
 	"res://eventsheet_addons/car/car_behavior",
 	"res://eventsheet_addons/tile_movement/tile_movement_behavior",
 	"res://eventsheet_addons/line_of_sight/line_of_sight_behavior",
+	"res://eventsheet_addons/line_of_sight_3d/line_of_sight_3d_behavior",
 	"res://eventsheet_addons/sine_3d/sine_3d_behavior",
 	"res://eventsheet_addons/orbit_3d/orbit_3d_behavior",
 	"res://eventsheet_addons/bullet_3d/bullet_3d_behavior",
-	"res://eventsheet_addons/move_to_3d/move_to_3d_behavior"
+	"res://eventsheet_addons/move_to_3d/move_to_3d_behavior",
+	"res://eventsheet_addons/health/health_behavior",
+	"res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior"
 ]
 
 static func run() -> bool:

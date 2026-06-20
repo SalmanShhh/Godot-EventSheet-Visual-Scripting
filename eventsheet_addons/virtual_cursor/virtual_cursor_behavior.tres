@@ -1,0 +1,1343 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_npbkl"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_jstna"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_1th2w"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_tmuc2"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_3k06i"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_v4dpl"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_mwbwx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_fu2bx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_8p8d4"]
+
+[sub_resource type="Resource" id="Resource_dwkn7"]
+script = ExtResource("1_npbkl")
+text = "Virtual Cursor behavior (C3 parity): input-agnostic controllable cursor on a CharacterBody2D — event-driven/axis/mouse-follow movement with accel/decel and direction modes, homing magnet, solid push-out via move_and_slide with sliding, lossless bounce, layout/viewport constraints, hover detection, and named interact buttons. Drives the Drag N Drop pack."
+
+[sub_resource type="Resource" id="Resource_3d4q0"]
+script = ExtResource("2_jstna")
+code = "## Movement axis constraint.
+@export_enum(\"up_down\", \"left_right\", \"four\", \"eight\") var direction_mode: int = 3
+## Point = origin inside shape; Overlap = shapes overlap.
+@export_enum(\"point\", \"overlap\") var hover_mode: int = 0
+## Which surfaces reflect the cursor losslessly.
+@export_enum(\"none\", \"solids\", \"constraints\", \"both\") var bounce_mode: int = 0
+var vel: Vector2 = Vector2.ZERO
+var report_vel: Vector2 = Vector2.ZERO
+var axis: Vector2 = Vector2.ZERO
+var simulated_axis: Vector2 = Vector2.ZERO
+var mouse_target: Vector2 = Vector2.ZERO
+var constraint_bounds: Rect2 = Rect2()"
+
+[sub_resource type="Resource" id="Resource_rhot5"]
+script = ExtResource("2_jstna")
+code = "## @ace_trigger
+## @ace_name(\"On Interact Pressed\")
+## @ace_category(\"Virtual Cursor\")
+signal interact_pressed(id: String)
+
+## @ace_trigger
+## @ace_name(\"On Interact Released\")
+## @ace_category(\"Virtual Cursor\")
+signal interact_released(id: String)
+
+## @ace_trigger
+## @ace_name(\"On Layout Edge Hit\")
+## @ace_category(\"Virtual Cursor\")
+signal layout_edge_hit
+
+## @ace_trigger
+## @ace_name(\"On Homing Target Entered\")
+## @ace_category(\"Virtual Cursor\")
+signal homing_target_entered
+
+## @ace_trigger
+## @ace_name(\"On Homing Target Exited\")
+## @ace_category(\"Virtual Cursor\")
+signal homing_target_exited
+
+## @ace_trigger
+## @ace_name(\"On Homing Snapped\")
+## @ace_category(\"Virtual Cursor\")
+signal homing_snapped
+
+## @ace_trigger
+## @ace_name(\"On Solid Hit\")
+## @ace_category(\"Virtual Cursor\")
+signal solid_hit
+
+## @ace_trigger
+## @ace_name(\"On Bounce\")
+## @ace_category(\"Virtual Cursor\")
+signal bounce_triggered
+
+## @ace_condition
+## @ace_name(\"Is Interact Held\")
+## @ace_category(\"Virtual Cursor\")
+## @ace_codegen_template(\"$VirtualCursor.is_interact_held({id})\")
+func is_interact_held(id: String) -> bool:
+	if id == \"\":
+		for key in interact_states:
+			if bool(interact_states[key]):
+				return true
+		return false
+	return bool(interact_states.get(id, false))
+
+## @ace_condition
+## @ace_name(\"Is Moving\")
+## @ace_category(\"Virtual Cursor\")
+## @ace_codegen_template(\"$VirtualCursor.is_moving()\")
+func is_moving() -> bool:
+	return report_vel.length() > 0.0
+
+## @ace_condition
+## @ace_name(\"Is In Homing Range\")
+## @ace_category(\"Virtual Cursor\")
+## @ace_codegen_template(\"$VirtualCursor.is_in_homing_range()\")
+func is_in_homing_range() -> bool:
+	return in_homing_range
+
+## @ace_condition
+## @ace_name(\"Is Blocked\")
+## @ace_category(\"Virtual Cursor\")
+## @ace_codegen_template(\"$VirtualCursor.is_blocked()\")
+func is_blocked() -> bool:
+	return blocked_this_tick
+
+## @ace_condition
+## @ace_name(\"Is Enabled\")
+## @ace_category(\"Virtual Cursor\")
+## @ace_codegen_template(\"$VirtualCursor.is_cursor_enabled()\")
+func is_cursor_enabled() -> bool:
+	return enabled
+
+## @ace_condition
+## @ace_name(\"Is Ignoring Input\")
+## @ace_category(\"Virtual Cursor\")
+## @ace_codegen_template(\"$VirtualCursor.is_ignoring_input()\")
+func is_ignoring_input() -> bool:
+	return ignoring_input
+
+## @ace_condition
+## @ace_name(\"Is Hovering\")
+## @ace_category(\"Virtual Cursor\")
+## @ace_codegen_template(\"$VirtualCursor.is_hovering({target})\")
+func is_hovering(target: Node2D) -> bool:
+	hovered_uid = -1
+	if host == null or target == null or target == host or not target.visible:
+		return false
+	var hit := false
+	if hover_mode == 0:
+		var shape := target.get_node_or_null(\"CollisionShape2D\") as CollisionShape2D
+		if shape != null and shape.shape != null:
+			hit = shape.shape.collide(shape.global_transform, _point_shape(), Transform2D(0.0, host.global_position))
+		elif target.has_method(\"get_global_rect\"):
+			hit = target.call(\"get_global_rect\").has_point(host.global_position)
+		else:
+			# Robust fallback for plain Sprite2D/CanvasItem (no CollisionShape2D, no
+			# get_global_rect): derive a world rect from get_rect(), else distance check.
+			var info := _target_world_rect(target)
+			if bool(info[\"has_area\"]):
+				hit = (info[\"rect\"] as Rect2).has_point(host.global_position)
+			else:
+				hit = host.global_position.distance_to(target.global_position) <= _target_extent(target)
+	else:
+		var host_node: Node = host
+		if host_node is Area2D:
+			var area := host_node as Area2D
+			hit = area.get_overlapping_bodies().has(target) or area.get_overlapping_areas().has(target)
+		else:
+			# CharacterBody2D host never overlaps as an Area2D — gate on the target's
+			# derived extent instead of a fixed 32px so size is respected.
+			hit = host.global_position.distance_to(target.global_position) <= _target_extent(target)
+	if hit:
+		hovered_uid = target.get_instance_id()
+	return hit
+
+## @ace_expression
+## @ace_name(\"Cursor X\")
+## @ace_category(\"Virtual Cursor\")
+func cursor_x() -> float:
+	return host.global_position.x if host != null else 0.0
+
+## @ace_expression
+## @ace_name(\"Cursor Y\")
+## @ace_category(\"Virtual Cursor\")
+func cursor_y() -> float:
+	return host.global_position.y if host != null else 0.0
+
+## @ace_expression
+## @ace_name(\"Speed\")
+## @ace_category(\"Virtual Cursor\")
+func speed() -> float:
+	return report_vel.length()
+
+## @ace_expression
+## @ace_name(\"Velocity X\")
+## @ace_category(\"Virtual Cursor\")
+func velocity_x() -> float:
+	return report_vel.x
+
+## @ace_expression
+## @ace_name(\"Velocity Y\")
+## @ace_category(\"Virtual Cursor\")
+func velocity_y() -> float:
+	return report_vel.y
+
+## @ace_expression
+## @ace_name(\"Moving Angle\")
+## @ace_category(\"Virtual Cursor\")
+func moving_angle() -> float:
+	return fposmod(rad_to_deg(report_vel.angle()), 360.0)
+
+## @ace_expression
+## @ace_name(\"Axis X\")
+## @ace_category(\"Virtual Cursor\")
+func axis_x() -> float:
+	return axis.x
+
+## @ace_expression
+## @ace_name(\"Axis Y\")
+## @ace_category(\"Virtual Cursor\")
+func axis_y() -> float:
+	return axis.y
+
+## @ace_expression
+## @ace_name(\"Max Speed\")
+## @ace_category(\"Virtual Cursor\")
+func max_speed_value() -> float:
+	return max_speed
+
+## @ace_expression
+## @ace_name(\"Hovered UID\")
+## @ace_category(\"Virtual Cursor\")
+func hovered_uid_value() -> int:
+	return hovered_uid
+
+## @ace_expression
+## @ace_name(\"Homing Target UID\")
+## @ace_category(\"Virtual Cursor\")
+func homing_target_uid_value() -> int:
+	return nearest_homing_uid
+
+## @ace_expression
+## @ace_name(\"Homing Target Dist\")
+## @ace_category(\"Virtual Cursor\")
+func homing_target_dist_value() -> float:
+	return nearest_homing_dist
+
+## @ace_expression
+## @ace_name(\"Count Homing Targets\")
+## @ace_category(\"Virtual Cursor\")
+func count_homing_targets() -> int:
+	return homing_targets.size()
+
+## @ace_expression
+## @ace_name(\"Bounce Mode\")
+## @ace_category(\"Virtual Cursor\")
+func bounce_mode_token() -> String:
+	return [\"none\", \"solids\", \"constraints\", \"both\"][bounce_mode]
+
+func _point_shape() -> Shape2D:
+	var s := CircleShape2D.new()
+	s.radius = 0.5
+	return s
+
+## Best-effort world-space AABB for a target that has no usable CollisionShape2D.
+## Sprite2D/CanvasItem expose a LOCAL get_rect(); we transform its centre + half-size
+## through global_transform so hover works on plain sprites. Returns has_area=false when
+## nothing usable is found (caller then falls back to a distance/extent check).
+func _target_world_rect(target: Node2D) -> Dictionary:
+	var shape := target.get_node_or_null(\"CollisionShape2D\") as CollisionShape2D
+	if shape != null and shape.shape != null:
+		var lr: Rect2 = shape.shape.get_rect()
+		return {\"has_area\": true, \"rect\": _xform_rect(shape.global_transform, lr)}
+	if target.has_method(\"get_rect\"):
+		var r: Rect2 = target.call(\"get_rect\")
+		return {\"has_area\": true, \"rect\": _xform_rect(target.global_transform, r)}
+	return {\"has_area\": false, \"rect\": Rect2()}
+
+## Transform a local-space Rect2 into a world-space AABB by mapping its four corners.
+func _xform_rect(xform: Transform2D, r: Rect2) -> Rect2:
+	var p0 := xform * r.position
+	var out := Rect2(p0, Vector2.ZERO)
+	out = out.expand(xform * Vector2(r.position.x + r.size.x, r.position.y))
+	out = out.expand(xform * Vector2(r.position.x, r.position.y + r.size.y))
+	out = out.expand(xform * (r.position + r.size))
+	return out
+
+## A representative world-space proximity radius for a target: half the larger side of
+## its derived world rect, else 32px. Used by overlap-mode hover so the gate tracks the
+## actual target size instead of a fixed constant.
+func _target_extent(target: Node2D) -> float:
+	var info := _target_world_rect(target)
+	if bool(info[\"has_area\"]):
+		var r: Rect2 = info[\"rect\"]
+		var e := maxf(r.size.x, r.size.y) * 0.5
+		if e > 0.0:
+			return e
+	return 32.0
+
+func _resolve_bounds() -> Rect2:
+	if has_constraint_bounds:
+		return constraint_bounds
+	if host != null and host.get_viewport() != null:
+		return host.get_viewport().get_visible_rect()
+	return Rect2(0, 0, 1920, 1080)"
+
+[sub_resource type="Resource" id="Resource_jx54r"]
+script = ExtResource("2_jstna")
+code = "if not enabled or host == null:
+	report_vel = Vector2.ZERO
+	return
+# 1) VELOCITY: resolve axis.
+if ignoring_input:
+	axis = Vector2.ZERO
+elif has_simulated_axis:
+	axis = simulated_axis.limit_length(1.0)
+	simulated_axis = Vector2.ZERO
+	has_simulated_axis = false
+elif default_controls:
+	axis = Input.get_vector(\"ui_left\", \"ui_right\", \"ui_up\", \"ui_down\")
+else:
+	axis = Vector2.ZERO
+if direction_mode == 0:
+	axis.x = 0.0
+elif direction_mode == 1:
+	axis.y = 0.0
+elif direction_mode == 2:
+	if absf(axis.x) >= absf(axis.y):
+		axis.y = 0.0
+	else:
+		axis.x = 0.0
+if has_mouse_target:
+	var lerp_t := 1.0 - pow(1.0 - mouse_smoothing, delta * 60.0)
+	var to := mouse_target - host.global_position
+	var target_speed := minf(to.length() * mouse_smoothing * 60.0, max_speed)
+	vel = vel.lerp(to.normalized() * target_speed, lerp_t)
+	if to.length() < 0.5:
+		vel *= 0.5
+		has_mouse_target = false
+elif axis != Vector2.ZERO:
+	var dir := axis.normalized()
+	var spd := minf(vel.length() + acceleration * delta, max_speed)
+	vel = dir * spd
+else:
+	var spd := maxf(vel.length() - deceleration * delta, 0.0)
+	vel = vel.normalized() * spd if vel.length() > 0.0 else Vector2.ZERO
+# 2) HOMING (steer/snap, pre-move).
+if homing_enabled and not homing_targets.is_empty():
+	var pruned: Array = []
+	for id in homing_targets:
+		if is_instance_valid(instance_from_id(id)):
+			pruned.append(id)
+	homing_targets = pruned
+	var best_uid := -1
+	var best_dist := -1.0
+	var best_pos := host.global_position
+	for id in homing_targets:
+		var n := instance_from_id(id) as Node2D
+		if n == null:
+			continue
+		var d: float = host.global_position.distance_to(n.global_position)
+		if best_dist < 0.0 or d < best_dist:
+			best_dist = d
+			best_uid = id
+			best_pos = n.global_position
+	var within := best_uid != -1 and best_dist <= homing_radius
+	if within and not in_homing_range:
+		homing_target_entered.emit()
+	elif not within and in_homing_range:
+		homing_target_exited.emit()
+	in_homing_range = within
+	nearest_homing_uid = best_uid if within else -1
+	nearest_homing_dist = best_dist if within else -1.0
+	if within:
+		var dir_to := (best_pos - host.global_position).normalized()
+		if homing_mode == 0:
+			homing_snapped_uid = -1
+			vel = vel.lerp(dir_to * max_speed * homing_strength, minf(1.0, homing_strength * 6.0 * delta))
+		else:
+			if axis != Vector2.ZERO:
+				homing_snapped_uid = -1
+				vel += dir_to * max_speed * homing_strength * 4.0 * delta
+				vel = vel.limit_length(max_speed)
+			else:
+				host.global_position = best_pos
+				vel = Vector2.ZERO
+				report_vel = Vector2.ZERO
+				# Latch: emit once on a fresh snap, not every frame the cursor rests here.
+				if homing_snapped_uid != best_uid:
+					homing_snapped_uid = best_uid
+					homing_snapped.emit()
+	else:
+		homing_snapped_uid = -1
+else:
+	if in_homing_range:
+		homing_target_exited.emit()
+	in_homing_range = false
+	nearest_homing_uid = -1
+	nearest_homing_dist = -1.0
+	homing_snapped_uid = -1
+# 3) MOVE + SOLIDS.
+host.velocity = vel
+host.move_and_slide()
+blocked_this_tick = host.get_slide_collision_count() > 0
+if blocked_this_tick:
+	var col := host.get_last_slide_collision()
+	solid_uid = col.get_collider().get_instance_id() if col != null and col.get_collider() != null else -1
+	solid_hit.emit()
+	if bounce_mode == 1 or bounce_mode == 3:
+		for i in host.get_slide_collision_count():
+			vel = vel.bounce(host.get_slide_collision(i).get_normal())
+		bounce_triggered.emit()
+	if not allow_sliding:
+		vel = Vector2.ZERO
+	else:
+		vel = host.velocity
+# 4) CONSTRAIN.
+if constrain_to_layout:
+	var b := _resolve_bounds()
+	var p := host.global_position
+	var cp := Vector2(clampf(p.x, b.position.x, b.end.x), clampf(p.y, b.position.y, b.end.y))
+	var edge := cp != p
+	if edge:
+		host.global_position = cp
+		if bounce_mode == 2 or bounce_mode == 3:
+			if cp.x != p.x:
+				vel.x = -vel.x
+			if cp.y != p.y:
+				vel.y = -vel.y
+			bounce_triggered.emit()
+		else:
+			if cp.x != p.x:
+				vel.x = 0.0
+			if cp.y != p.y:
+				vel.y = 0.0
+	if edge and not edge_hit_prev:
+		layout_edge_hit.emit()
+	edge_hit_prev = edge
+# 5) report.
+report_vel = vel"
+
+[sub_resource type="Resource" id="Resource_44tmr"]
+script = ExtResource("6_v4dpl")
+trigger_provider_id = "Core"
+trigger_id = "OnPhysicsProcess"
+actions = Array[Resource]([SubResource("Resource_jx54r")])
+event_uid = "749efa"
+
+[sub_resource type="Resource" id="Resource_iq5m5"]
+script = ExtResource("2_jstna")
+code = "interact_states[id] = true
+last_pressed_id = id
+interact_pressed.emit(id)"
+
+[sub_resource type="Resource" id="Resource_oc0dh"]
+script = ExtResource("7_mwbwx")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_20f11"]
+script = ExtResource("8_fu2bx")
+function_name = "press_interact"
+description = "Marks a named interact button held and fires On Interact Pressed."
+expose_as_ace = true
+ace_display_name = "Press Interact"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_oc0dh")])
+events = Array[Resource]([SubResource("Resource_iq5m5")])
+
+[sub_resource type="Resource" id="Resource_85ps5"]
+script = ExtResource("2_jstna")
+code = "interact_states[id] = false
+last_released_id = id
+interact_released.emit(id)"
+
+[sub_resource type="Resource" id="Resource_1nbe7"]
+script = ExtResource("7_mwbwx")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ho1id"]
+script = ExtResource("8_fu2bx")
+function_name = "release_interact"
+description = "Marks a named interact button released and fires On Interact Released."
+expose_as_ace = true
+ace_display_name = "Release Interact"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_1nbe7")])
+events = Array[Resource]([SubResource("Resource_85ps5")])
+
+[sub_resource type="Resource" id="Resource_wu0ng"]
+script = ExtResource("2_jstna")
+code = "if ignoring_input:
+	return
+last_pressed_id = id
+last_released_id = id
+interact_pressed.emit(id)
+interact_released.emit(id)"
+
+[sub_resource type="Resource" id="Resource_kofvj"]
+script = ExtResource("7_mwbwx")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_66wol"]
+script = ExtResource("8_fu2bx")
+function_name = "simulate_interact"
+description = "Fires a press+release of a named button in one tick."
+expose_as_ace = true
+ace_display_name = "Simulate Interact"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_kofvj")])
+events = Array[Resource]([SubResource("Resource_wu0ng")])
+
+[sub_resource type="Resource" id="Resource_18c8k"]
+script = ExtResource("2_jstna")
+code = "max_speed = speed"
+
+[sub_resource type="Resource" id="Resource_oquf3"]
+script = ExtResource("7_mwbwx")
+id = "speed"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_kuuts"]
+script = ExtResource("8_fu2bx")
+function_name = "set_max_speed"
+description = "Sets the max cursor speed (px/s)."
+expose_as_ace = true
+ace_display_name = "Set Max Speed"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_oquf3")])
+events = Array[Resource]([SubResource("Resource_18c8k")])
+
+[sub_resource type="Resource" id="Resource_7l4al"]
+script = ExtResource("2_jstna")
+code = "acceleration = rate"
+
+[sub_resource type="Resource" id="Resource_e0w66"]
+script = ExtResource("7_mwbwx")
+id = "rate"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_cpnum"]
+script = ExtResource("8_fu2bx")
+function_name = "set_acceleration"
+description = "Sets the speed-up rate while an axis is held."
+expose_as_ace = true
+ace_display_name = "Set Acceleration"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_e0w66")])
+events = Array[Resource]([SubResource("Resource_7l4al")])
+
+[sub_resource type="Resource" id="Resource_3xhw6"]
+script = ExtResource("2_jstna")
+code = "deceleration = rate"
+
+[sub_resource type="Resource" id="Resource_nu7tl"]
+script = ExtResource("7_mwbwx")
+id = "rate"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_juucx"]
+script = ExtResource("8_fu2bx")
+function_name = "set_deceleration"
+description = "Sets the slow-down rate when the axis is released."
+expose_as_ace = true
+ace_display_name = "Set Deceleration"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_nu7tl")])
+events = Array[Resource]([SubResource("Resource_3xhw6")])
+
+[sub_resource type="Resource" id="Resource_dib3x"]
+script = ExtResource("2_jstna")
+code = "vel = Vector2(vel_x, vel_y)
+report_vel = vel"
+
+[sub_resource type="Resource" id="Resource_mwdat"]
+script = ExtResource("7_mwbwx")
+id = "vel_x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ri1f7"]
+script = ExtResource("7_mwbwx")
+id = "vel_y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_js7xq"]
+script = ExtResource("8_fu2bx")
+function_name = "set_cursor_velocity"
+description = "Sets the cursor velocity directly."
+expose_as_ace = true
+ace_display_name = "Set Velocity"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_mwdat"), SubResource("Resource_ri1f7")])
+events = Array[Resource]([SubResource("Resource_dib3x")])
+
+[sub_resource type="Resource" id="Resource_nor7m"]
+script = ExtResource("2_jstna")
+code = "if ignoring_input or host == null:
+	return
+var dt: float = get_physics_process_delta_time()
+var new_pos := Vector2(target_x, target_y)
+if dt > 0.0:
+	report_vel = (new_pos - host.global_position) / dt
+host.global_position = new_pos
+vel = Vector2.ZERO"
+
+[sub_resource type="Resource" id="Resource_4tc0m"]
+script = ExtResource("7_mwbwx")
+id = "target_x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_4mcq6"]
+script = ExtResource("7_mwbwx")
+id = "target_y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_055pe"]
+script = ExtResource("8_fu2bx")
+function_name = "simulate_direct_mouse_position"
+description = "Teleports the cursor to a position, reporting the implied velocity."
+expose_as_ace = true
+ace_display_name = "Simulate Direct Mouse Position"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_4tc0m"), SubResource("Resource_4mcq6")])
+events = Array[Resource]([SubResource("Resource_nor7m")])
+
+[sub_resource type="Resource" id="Resource_ve1bo"]
+script = ExtResource("2_jstna")
+code = "if ignoring_input:
+	return
+mouse_target = Vector2(target_x, target_y)
+mouse_smoothing = clampf(smoothing, 0.0, 1.0)
+has_mouse_target = true"
+
+[sub_resource type="Resource" id="Resource_c5kvy"]
+script = ExtResource("7_mwbwx")
+id = "target_x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_41mco"]
+script = ExtResource("7_mwbwx")
+id = "target_y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_3eqdu"]
+script = ExtResource("7_mwbwx")
+id = "smoothing"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_adk8i"]
+script = ExtResource("8_fu2bx")
+function_name = "simulate_mouse"
+description = "Drives the cursor toward a target with smoothing (mouse-follow)."
+expose_as_ace = true
+ace_display_name = "Simulate Mouse"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_c5kvy"), SubResource("Resource_41mco"), SubResource("Resource_3eqdu")])
+events = Array[Resource]([SubResource("Resource_ve1bo")])
+
+[sub_resource type="Resource" id="Resource_qc17x"]
+script = ExtResource("2_jstna")
+code = "if ignoring_input:
+	return
+simulated_axis += Vector2(x, y)
+has_simulated_axis = true"
+
+[sub_resource type="Resource" id="Resource_7fvfe"]
+script = ExtResource("7_mwbwx")
+id = "x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_47oao"]
+script = ExtResource("7_mwbwx")
+id = "y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_oc1vl"]
+script = ExtResource("8_fu2bx")
+function_name = "simulate_axis"
+description = "Feeds an analog axis for this tick (accel/decel applies)."
+expose_as_ace = true
+ace_display_name = "Simulate Axis"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_7fvfe"), SubResource("Resource_47oao")])
+events = Array[Resource]([SubResource("Resource_qc17x")])
+
+[sub_resource type="Resource" id="Resource_y4i1d"]
+script = ExtResource("2_jstna")
+code = "if ignoring_input:
+	return
+var dirs := [Vector2(0, -1), Vector2(0, 1), Vector2(-1, 0), Vector2(1, 0)]
+if direction >= 0 and direction < 4:
+	simulated_axis += dirs[direction]
+	has_simulated_axis = true"
+
+[sub_resource type="Resource" id="Resource_w422i"]
+script = ExtResource("7_mwbwx")
+id = "direction"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_tv272"]
+script = ExtResource("8_fu2bx")
+function_name = "simulate_control"
+description = "Feeds a cardinal direction (0 up, 1 down, 2 left, 3 right) for this tick."
+expose_as_ace = true
+ace_display_name = "Simulate Control"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_w422i")])
+events = Array[Resource]([SubResource("Resource_y4i1d")])
+
+[sub_resource type="Resource" id="Resource_sfm2k"]
+script = ExtResource("2_jstna")
+code = "homing_enabled = is_enabled"
+
+[sub_resource type="Resource" id="Resource_c7867"]
+script = ExtResource("7_mwbwx")
+id = "is_enabled"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_2vtot"]
+script = ExtResource("8_fu2bx")
+function_name = "set_homing_enabled"
+description = "Turns the homing magnet on/off."
+expose_as_ace = true
+ace_display_name = "Set Homing Enabled"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_c7867")])
+events = Array[Resource]([SubResource("Resource_sfm2k")])
+
+[sub_resource type="Resource" id="Resource_82utc"]
+script = ExtResource("2_jstna")
+code = "homing_mode = clampi(mode, 0, 2)"
+
+[sub_resource type="Resource" id="Resource_3f2x0"]
+script = ExtResource("7_mwbwx")
+id = "mode"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_au54m"]
+script = ExtResource("8_fu2bx")
+function_name = "set_homing_mode"
+description = "0 steer, 1 snap-radius, 2 snap-overlap."
+expose_as_ace = true
+ace_display_name = "Set Homing Mode"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_3f2x0")])
+events = Array[Resource]([SubResource("Resource_82utc")])
+
+[sub_resource type="Resource" id="Resource_2232y"]
+script = ExtResource("2_jstna")
+code = "homing_radius = maxf(0.0, radius)"
+
+[sub_resource type="Resource" id="Resource_1kser"]
+script = ExtResource("7_mwbwx")
+id = "radius"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_gb0sy"]
+script = ExtResource("8_fu2bx")
+function_name = "set_homing_radius"
+description = "Sets the homing engagement radius."
+expose_as_ace = true
+ace_display_name = "Set Homing Radius"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_1kser")])
+events = Array[Resource]([SubResource("Resource_2232y")])
+
+[sub_resource type="Resource" id="Resource_pnvss"]
+script = ExtResource("2_jstna")
+code = "homing_strength = clampf(strength, 0.0, 1.0)"
+
+[sub_resource type="Resource" id="Resource_32pak"]
+script = ExtResource("7_mwbwx")
+id = "strength"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_dxjo4"]
+script = ExtResource("8_fu2bx")
+function_name = "set_homing_strength"
+description = "How strongly the cursor is pulled toward a homing target (0..1)."
+expose_as_ace = true
+ace_display_name = "Set Homing Strength"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_32pak")])
+events = Array[Resource]([SubResource("Resource_pnvss")])
+
+[sub_resource type="Resource" id="Resource_x5rvg"]
+script = ExtResource("2_jstna")
+code = "if target != null:
+	var id := target.get_instance_id()
+	if not homing_targets.has(id):
+		homing_targets.append(id)"
+
+[sub_resource type="Resource" id="Resource_je470"]
+script = ExtResource("7_mwbwx")
+id = "target"
+type_name = "Node2D"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_nep1k"]
+script = ExtResource("8_fu2bx")
+function_name = "add_homing_target"
+description = "Registers a node as a homing target."
+expose_as_ace = true
+ace_display_name = "Add Homing Target"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_je470")])
+events = Array[Resource]([SubResource("Resource_x5rvg")])
+
+[sub_resource type="Resource" id="Resource_ftinm"]
+script = ExtResource("2_jstna")
+code = "if target != null:
+	homing_targets.erase(target.get_instance_id())"
+
+[sub_resource type="Resource" id="Resource_o4urk"]
+script = ExtResource("7_mwbwx")
+id = "target"
+type_name = "Node2D"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ib61g"]
+script = ExtResource("8_fu2bx")
+function_name = "remove_homing_target"
+description = "Unregisters a homing target."
+expose_as_ace = true
+ace_display_name = "Remove Homing Target"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_o4urk")])
+events = Array[Resource]([SubResource("Resource_ftinm")])
+
+[sub_resource type="Resource" id="Resource_mvb2w"]
+script = ExtResource("2_jstna")
+code = "homing_targets.clear()
+in_homing_range = false
+nearest_homing_uid = -1
+nearest_homing_dist = -1.0
+homing_snapped_uid = -1"
+
+[sub_resource type="Resource" id="Resource_qt6ic"]
+script = ExtResource("8_fu2bx")
+function_name = "clear_homing_targets"
+description = "Removes every homing target."
+expose_as_ace = true
+ace_display_name = "Clear Homing Targets"
+ace_category = "Virtual Cursor"
+events = Array[Resource]([SubResource("Resource_mvb2w")])
+
+[sub_resource type="Resource" id="Resource_hff7v"]
+script = ExtResource("2_jstna")
+code = "if target != null:
+	var id := target.get_instance_id()
+	if not solids.has(id):
+		solids.append(id)"
+
+[sub_resource type="Resource" id="Resource_vr732"]
+script = ExtResource("7_mwbwx")
+id = "target"
+type_name = "Node2D"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_6on3v"]
+script = ExtResource("8_fu2bx")
+function_name = "add_solid"
+description = "Registers a node as a tracked solid (for SolidUID reporting)."
+expose_as_ace = true
+ace_display_name = "Add Solid"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_vr732")])
+events = Array[Resource]([SubResource("Resource_hff7v")])
+
+[sub_resource type="Resource" id="Resource_fxkml"]
+script = ExtResource("2_jstna")
+code = "if target != null:
+	solids.erase(target.get_instance_id())"
+
+[sub_resource type="Resource" id="Resource_o2hch"]
+script = ExtResource("7_mwbwx")
+id = "target"
+type_name = "Node2D"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_rbnpe"]
+script = ExtResource("8_fu2bx")
+function_name = "remove_solid"
+description = "Unregisters a tracked solid."
+expose_as_ace = true
+ace_display_name = "Remove Solid"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_o2hch")])
+events = Array[Resource]([SubResource("Resource_fxkml")])
+
+[sub_resource type="Resource" id="Resource_p50mr"]
+script = ExtResource("2_jstna")
+code = "solids.clear()"
+
+[sub_resource type="Resource" id="Resource_0f1i8"]
+script = ExtResource("8_fu2bx")
+function_name = "clear_solids"
+description = "Clears the tracked-solids list."
+expose_as_ace = true
+ace_display_name = "Clear Solids"
+ace_category = "Virtual Cursor"
+events = Array[Resource]([SubResource("Resource_p50mr")])
+
+[sub_resource type="Resource" id="Resource_pmp27"]
+script = ExtResource("2_jstna")
+code = "solid_collision = is_enabled"
+
+[sub_resource type="Resource" id="Resource_v1rmu"]
+script = ExtResource("7_mwbwx")
+id = "is_enabled"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_4h7bh"]
+script = ExtResource("8_fu2bx")
+function_name = "set_solid_collision"
+description = "Toggles solid push-out via move_and_slide."
+expose_as_ace = true
+ace_display_name = "Set Solid Collision"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_v1rmu")])
+events = Array[Resource]([SubResource("Resource_pmp27")])
+
+[sub_resource type="Resource" id="Resource_mxhhe"]
+script = ExtResource("2_jstna")
+code = "allow_sliding = state"
+
+[sub_resource type="Resource" id="Resource_d04q3"]
+script = ExtResource("7_mwbwx")
+id = "state"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_1erpr"]
+script = ExtResource("8_fu2bx")
+function_name = "set_allow_sliding"
+description = "Slide along solids (true) or hard-stop (false)."
+expose_as_ace = true
+ace_display_name = "Set Allow Sliding"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_d04q3")])
+events = Array[Resource]([SubResource("Resource_mxhhe")])
+
+[sub_resource type="Resource" id="Resource_bq5c6"]
+script = ExtResource("2_jstna")
+code = "bounce_mode = clampi(mode, 0, 3)"
+
+[sub_resource type="Resource" id="Resource_i20kq"]
+script = ExtResource("7_mwbwx")
+id = "mode"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_wgjhg"]
+script = ExtResource("8_fu2bx")
+function_name = "set_bounce"
+description = "0 none, 1 solids, 2 constraints, 3 both."
+expose_as_ace = true
+ace_display_name = "Set Bounce"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_i20kq")])
+events = Array[Resource]([SubResource("Resource_bq5c6")])
+
+[sub_resource type="Resource" id="Resource_1v70k"]
+script = ExtResource("2_jstna")
+code = "direction_mode = clampi(mode, 0, 3)"
+
+[sub_resource type="Resource" id="Resource_2lguv"]
+script = ExtResource("7_mwbwx")
+id = "mode"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_8o50v"]
+script = ExtResource("8_fu2bx")
+function_name = "set_direction_mode"
+description = "0 up/down, 1 left/right, 2 four-way, 3 eight-way."
+expose_as_ace = true
+ace_display_name = "Set Direction Mode"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_2lguv")])
+events = Array[Resource]([SubResource("Resource_1v70k")])
+
+[sub_resource type="Resource" id="Resource_63oj3"]
+script = ExtResource("2_jstna")
+code = "default_controls = state"
+
+[sub_resource type="Resource" id="Resource_euh3c"]
+script = ExtResource("7_mwbwx")
+id = "state"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_2n2m0"]
+script = ExtResource("8_fu2bx")
+function_name = "set_default_controls"
+description = "Read ui_left/right/up/down each tick."
+expose_as_ace = true
+ace_display_name = "Set Default Controls"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_euh3c")])
+events = Array[Resource]([SubResource("Resource_63oj3")])
+
+[sub_resource type="Resource" id="Resource_0aarx"]
+script = ExtResource("2_jstna")
+code = "enabled = is_enabled"
+
+[sub_resource type="Resource" id="Resource_u7jy1"]
+script = ExtResource("7_mwbwx")
+id = "is_enabled"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_2oxbf"]
+script = ExtResource("8_fu2bx")
+function_name = "set_cursor_enabled"
+description = "Master on/off."
+expose_as_ace = true
+ace_display_name = "Set Enabled"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_u7jy1")])
+events = Array[Resource]([SubResource("Resource_0aarx")])
+
+[sub_resource type="Resource" id="Resource_u11vt"]
+script = ExtResource("2_jstna")
+code = "ignoring_input = state"
+
+[sub_resource type="Resource" id="Resource_gvxr3"]
+script = ExtResource("7_mwbwx")
+id = "state"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_6yc2x"]
+script = ExtResource("8_fu2bx")
+function_name = "set_ignoring_input"
+description = "Ignore all input while true (movement decays to zero)."
+expose_as_ace = true
+ace_display_name = "Set Ignoring Input"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_gvxr3")])
+events = Array[Resource]([SubResource("Resource_u11vt")])
+
+[sub_resource type="Resource" id="Resource_5rsjp"]
+script = ExtResource("2_jstna")
+code = "constrain_to_layout = is_enabled"
+
+[sub_resource type="Resource" id="Resource_23uuh"]
+script = ExtResource("7_mwbwx")
+id = "is_enabled"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_t7mot"]
+script = ExtResource("8_fu2bx")
+function_name = "set_constrain_to_layout"
+description = "Clamp the cursor inside the bounds."
+expose_as_ace = true
+ace_display_name = "Set Constrain To Layout"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_23uuh")])
+events = Array[Resource]([SubResource("Resource_5rsjp")])
+
+[sub_resource type="Resource" id="Resource_nyg7v"]
+script = ExtResource("2_jstna")
+code = "if left == 0.0 and top == 0.0 and right == 0.0 and bottom == 0.0:
+	has_constraint_bounds = false
+else:
+	constraint_bounds = Rect2(left, top, right - left, bottom - top)
+	has_constraint_bounds = true"
+
+[sub_resource type="Resource" id="Resource_xv5we"]
+script = ExtResource("7_mwbwx")
+id = "left"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_sfe4q"]
+script = ExtResource("7_mwbwx")
+id = "top"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_c0geo"]
+script = ExtResource("7_mwbwx")
+id = "right"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_7bve5"]
+script = ExtResource("7_mwbwx")
+id = "bottom"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_odhse"]
+script = ExtResource("8_fu2bx")
+function_name = "set_constraint_bounds"
+description = "Sets explicit clamp bounds (all-zero clears them, falling back to the viewport)."
+expose_as_ace = true
+ace_display_name = "Set Constraint Bounds"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_xv5we"), SubResource("Resource_sfe4q"), SubResource("Resource_c0geo"), SubResource("Resource_7bve5")])
+events = Array[Resource]([SubResource("Resource_nyg7v")])
+
+[sub_resource type="Resource" id="Resource_8i3tt"]
+script = ExtResource("2_jstna")
+code = "hover_mode = clampi(mode, 0, 1)"
+
+[sub_resource type="Resource" id="Resource_wngax"]
+script = ExtResource("7_mwbwx")
+id = "mode"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_adyjs"]
+script = ExtResource("8_fu2bx")
+function_name = "set_hover_mode"
+description = "0 point (origin inside shape), 1 overlap (shapes overlap)."
+expose_as_ace = true
+ace_display_name = "Set Hover Mode"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_wngax")])
+events = Array[Resource]([SubResource("Resource_8i3tt")])
+
+[resource]
+script = ExtResource("9_8p8d4")
+host_class = "CharacterBody2D"
+behavior_mode = true
+custom_class_name = "VirtualCursor"
+addon_tags = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_dwkn7"), SubResource("Resource_3d4q0"), SubResource("Resource_rhot5"), SubResource("Resource_44tmr")])
+variables = {
+"acceleration": {
+"attributes": {
+"tooltip": "Speed-up rate while axis held (px/s^2)."
+},
+"default": 1800.0,
+"exported": true,
+"type": "float"
+},
+"allow_sliding": {
+"attributes": {
+"tooltip": "Slide along solids instead of hard-stop."
+},
+"default": true,
+"exported": true,
+"type": "bool"
+},
+"blocked_this_tick": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"constrain_to_layout": {
+"attributes": {
+"tooltip": "Clamp inside the viewport/constraint bounds."
+},
+"default": false,
+"exported": true,
+"type": "bool"
+},
+"deceleration": {
+"attributes": {
+"tooltip": "Slow-down rate when axis released (px/s^2)."
+},
+"default": 2400.0,
+"exported": true,
+"type": "float"
+},
+"default_controls": {
+"attributes": {
+"tooltip": "Read ui_left/right/up/down each tick (keyboard+gamepad)."
+},
+"default": true,
+"exported": true,
+"type": "bool"
+},
+"edge_hit_prev": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"enabled": {
+"attributes": {
+"tooltip": "Master on/off."
+},
+"default": true,
+"exported": true,
+"type": "bool"
+},
+"has_constraint_bounds": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"has_mouse_target": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"has_simulated_axis": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"homing_enabled": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"homing_mode": {
+"default": 0,
+"exported": false,
+"type": "int"
+},
+"homing_radius": {
+"default": 120.0,
+"exported": false,
+"type": "float"
+},
+"homing_snapped_uid": {
+"default": -1,
+"exported": false,
+"type": "int"
+},
+"homing_strength": {
+"default": 0.5,
+"exported": false,
+"type": "float"
+},
+"homing_targets": {
+"default": [],
+"exported": false,
+"type": "Array"
+},
+"hovered_uid": {
+"default": -1,
+"exported": false,
+"type": "int"
+},
+"ignoring_input": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"in_homing_range": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"interact_states": {
+"default": {},
+"exported": false,
+"type": "Dictionary"
+},
+"last_pressed_id": {
+"default": "",
+"exported": false,
+"type": "String"
+},
+"last_released_id": {
+"default": "",
+"exported": false,
+"type": "String"
+},
+"max_speed": {
+"attributes": {
+"tooltip": "Max cursor speed (px/s)."
+},
+"default": 600.0,
+"exported": true,
+"type": "float"
+},
+"mouse_smoothing": {
+"default": 0.15,
+"exported": false,
+"type": "float"
+},
+"nearest_homing_dist": {
+"default": -1.0,
+"exported": false,
+"type": "float"
+},
+"nearest_homing_uid": {
+"default": -1,
+"exported": false,
+"type": "int"
+},
+"solid_collision": {
+"default": true,
+"exported": false,
+"type": "bool"
+},
+"solid_uid": {
+"default": -1,
+"exported": false,
+"type": "int"
+},
+"solids": {
+"default": [],
+"exported": false,
+"type": "Array"
+}
+}
+functions = Array[Resource]([SubResource("Resource_20f11"), SubResource("Resource_ho1id"), SubResource("Resource_66wol"), SubResource("Resource_kuuts"), SubResource("Resource_cpnum"), SubResource("Resource_juucx"), SubResource("Resource_js7xq"), SubResource("Resource_055pe"), SubResource("Resource_adk8i"), SubResource("Resource_oc1vl"), SubResource("Resource_tv272"), SubResource("Resource_2vtot"), SubResource("Resource_au54m"), SubResource("Resource_gb0sy"), SubResource("Resource_dxjo4"), SubResource("Resource_nep1k"), SubResource("Resource_ib61g"), SubResource("Resource_qt6ic"), SubResource("Resource_6on3v"), SubResource("Resource_rbnpe"), SubResource("Resource_0f1i8"), SubResource("Resource_4h7bh"), SubResource("Resource_1erpr"), SubResource("Resource_wgjhg"), SubResource("Resource_8o50v"), SubResource("Resource_2n2m0"), SubResource("Resource_2oxbf"), SubResource("Resource_6yc2x"), SubResource("Resource_t7mot"), SubResource("Resource_odhse"), SubResource("Resource_adyjs")])

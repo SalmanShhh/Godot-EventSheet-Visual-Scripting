@@ -12,12 +12,28 @@ Node script extending `CharacterBody2D`.
 - `health: int` (default `100`)
 - `speed: float` (default `200.0`)
 
-### ShowcaseV070 (`res://demo/showcase/showcase_v070.tres`)
+### QuestFsm (`res://demo/showcase/quest_fsm.tres`)
 Node script extending `Node2D`.
 
 #### Properties
-- `pulse_scale: float` (default `1.35`) — How hard the spring kicks.
-- `pulses: int` (default `0`) — How many juice pulses have fired (watch it in Live Values — and edit it!).
+- `quest_state: int` (default `0`) — 0=OFFERED, 1=ACTIVE, 2=COMPLETE.
+
+### CarouselOfJuice (`res://demo/showcase/showcase_carousel.tres`)
+Node script extending `Node2D`.
+
+#### Properties
+- `beat: int` (default `0`) — Beats elapsed.
+- `intensity: float` (default `1.4`) — Spring kick strength.
+- `party_on: bool` (default `true`) — Is the Juice group running.
+
+### Starfall (`res://demo/showcase/starfall.tres`)
+Node script extending `Node2D`.
+
+#### Properties
+- `lives: int` (default `3`) — Misses remaining.
+- `score: int` (default `0`) — Stars caught.
+- `ship_speed: float` (default `320.0`) — Ship move speed (px/s).
+- `state: int` (default `0`) — 0=PLAYING, 1=GAME_OVER.
 
 ### BulletBehavior (`res://eventsheet_addons/bullet/bullet_behavior.tres`)
 Behavior — attach under any `Node2D` node.
@@ -63,15 +79,51 @@ Behavior — attach under any `CharacterBody2D` node.
 Behavior — attach under any `Node2D` node.
 
 #### Properties
-- `axes: String` (default `both`)
-- `grab_radius: float` (default `48.0`)
+- `break_distance: float` (default `0.0`) — Gap that auto-ends the drag; 0 disables.
+- `enabled: bool` (default `true`) — Active at start; disabling mid-drag cancels silently.
+- `follow_speed: float` (default `0.0`) — Max catch-up speed (px/s); 0 = instant snap each tick.
 
 #### Triggers
-- **On Drag Start**
+- **On Drag Started**
 - **On Dropped**
+- **On Drag Cancelled**
+- **On Snapped**
+
+#### Conditions
+- **Is Dragging**
+- **Is Enabled**
+- **Is Snapping**
 
 #### Actions
-- **Drop Now** — Releases the drag immediately.
+- **Start Drag** (`drag_point_x: float, drag_point_y: float, grab_mode: int`) — Begins a drag at a point. grab_mode 0 = keep offset from the host; 1 = centre on the point.
+- **Start Drag At Object** (`target: Node2D, grab_mode: int`) — Begins a drag that follows the given object each tick.
+- **Drop** (`how: int`) — Ends the drag. how 0 = apply throw/snap; 1 = cancel silently.
+- **Set Drag Point** (`x: float, y: float`) — Updates the drag point (call each tick from your input source).
+- **Set Drag Point To Object** (`target: Node2D`) — Sets the drag point to an object's current position (one-shot).
+- **Set Follow Speed** (`speed: float`) — Max catch-up speed (px/s); 0 = instant snap each tick.
+- **Set Directions** (`dirs: int`) — Direction lock: 0 free, 1 up/down, 2 left/right, 3 four-dir, 4 eight-dir.
+- **Set Break Distance** (`distance: float, action: int`) — Auto-end the drag past this gap; action 0 = drop, 1 = cancel. 0 distance disables.
+- **Set Throw Velocity** (`velocity_x: float, velocity_y: float`) — Overrides the auto-measured throw velocity for the next drop.
+- **Set Enabled** (`is_enabled: bool`) — Enables/disables; disabling mid-drag cancels silently.
+- **Add Snap Position** (`x: float, y: float`) — Registers a fixed snap/magnet position.
+- **Add Snap Object** (`target: Node2D`) — Registers an object whose position is a live snap/magnet target.
+- **Clear Snap Targets** — Removes every snap position and object.
+- **Set Snap Radius** (`radius: float`) — Distance within which snapping/magnetism engages.
+- **Set Snap Mode** (`mode: int`) — 0 = host-position proximity; 1 = drag-point overlap (v1 radius approximation).
+- **Set Magnet Strength** (`strength: float`) — How strongly the drag is pulled toward a nearby snap target (0..1).
+
+#### Expressions
+- **Drag Point X**
+- **Drag Point Y**
+- **Drag Point Object UID**
+- **Distance From Point**
+- **Throw Velocity X**
+- **Throw Velocity Y**
+- **Throw Speed**
+- **Drop Reason**
+- **Snap Target X**
+- **Snap Target Y**
+- **Snapped Object UID**
 
 ### EightDirectionMovement (`res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.tres`)
 Behavior — attach under any `CharacterBody2D` node.
@@ -110,6 +162,63 @@ Behavior — attach under any `Node2D` node.
 - **Start Following** (`path: String`) — Follows the node at the given path.
 - **Stop Following** — Stops trailing the target.
 
+### SimpleHealthBehavior (`res://eventsheet_addons/health/health_behavior.tres`)
+Behavior — attach under any `Node2D` node.
+
+#### Properties
+- `destroy_on_death: bool` (default `false`) — queue_free the host the moment health reaches 0 (after On Death fires).
+- `invulnerable: bool` (default `false`) — Start invulnerable: takeDamage is a no-op while true.
+- `max_health: float` (default `100.0`) — Starting max HP; current_health initialises to this.
+
+#### Triggers
+- **On Damaged**
+- **On Death**
+- **On Healed**
+- **On Health Changed**
+- **On Revived**
+- **On Health Pool Added**
+- **On Health Pool Absorbed**
+- **On Health Pool Depleted**
+
+#### Conditions
+- **Is Dead**
+- **Is Invulnerable**
+- **Has Any Health Pool**
+- **Has Health Pool**
+- **Health Pool Is Type**
+
+#### Actions
+- **Take Damage** (`amount: float`) — Applies damage; health pools absorb in ascending-priority order before real HP.
+- **Heal** (`amount: float`) — Restores health up to max_health.
+- **Set Health** (`amount: float`) — Sets current health directly, firing damage/heal/death as appropriate.
+- **Set Max Health** (`amount: float`) — Sets max health (clamps current down if needed).
+- **Set Invulnerable** (`state: bool`) — Toggles invulnerability (takeDamage no-op while true).
+- **Set Health Absorption Rate** (`rate: float`) — Damage multiplier for real HP (resistance); 0 = invulnerable.
+- **Add Health Pool** (`type: String, amount: float`) — Adds to a named health pool (shield/armour).
+- **Set Health Pool** (`type: String, amount: float`) — Sets a health pool amount (fires Added only when it increases).
+- **Clear Health Pool** (`type: String`) — Zeroes one named health pool.
+- **Clear All Health Pools** — Zeroes every health pool.
+- **Set Health Pool Decay Rate** (`type: String, rate: float`) — Sets a pool's per-second decay rate.
+- **Set Health Pool Absorption Rate** (`type: String, rate: float`) — Sets a pool's absorption multiplier (how hard it spends to soak damage).
+- **Set Health Pool Rates** (`type: String, decay_rate: float, absorption_rate: float`) — Sets a pool's decay and absorption rates at once.
+- **Set Health Pool Priority** (`type: String, priority: float`) — Sets a pool's absorption priority (lower absorbs first).
+- **Setup Health Pool** (`type: String, amount: float, decay_rate: float, absorption_rate: float, priority: float`) — Creates/configures a health pool in one call.
+- **Revive** (`amount: float`) — Clears death and restores health (amount<=0 → full).
+
+#### Expressions
+- **Current Health**
+- **Max Health**
+- **Health Percent**
+- **Health Absorption Rate**
+- **Last Damage**
+- **Last Heal**
+- **Health Pool**
+- **Health Pool Decay Rate**
+- **Health Pool Absorption Rate**
+- **Health Pool Priority**
+- **Last Pool Damage Absorbed**
+- **Last Health Pool Type**
+
 ### LOSBehavior (`res://eventsheet_addons/line_of_sight/line_of_sight_behavior.tres`)
 Behavior — attach under any `Node2D` node.
 
@@ -117,6 +226,18 @@ Behavior — attach under any `Node2D` node.
 - `collision_mask: int` (default `1`)
 - `cone_of_view_degrees: float` (default `360.0`)
 - `sight_range: float` (default `400.0`)
+
+#### Conditions
+- **Has Line Of Sight To**
+- **Has LOS Between**
+
+### LOS3DBehavior (`res://eventsheet_addons/line_of_sight_3d/line_of_sight_3d_behavior.tres`)
+Behavior — attach under any `Node3D` node.
+
+#### Properties
+- `collision_mask: int` (default `1`)
+- `cone_of_view_degrees: float` (default `360.0`)
+- `sight_range: float` (default `1000.0`)
 
 #### Conditions
 - **Has Line Of Sight To**
@@ -352,6 +473,86 @@ Behavior — attach under any `Node2D` node.
 - **Tween Rotation** (`degrees: float, duration: float`) — Rotates the host to the given degrees.
 - **Tween Alpha** (`alpha: float, duration: float`) — Fades the host's modulate alpha.
 - **Stop Tweens** — Kills the running tween (host stays where it is).
+
+### VirtualCursor (`res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior.tres`)
+Behavior — attach under any `CharacterBody2D` node.
+
+#### Properties
+- `acceleration: float` (default `1800.0`) — Speed-up rate while axis held (px/s^2).
+- `allow_sliding: bool` (default `true`) — Slide along solids instead of hard-stop.
+- `constrain_to_layout: bool` (default `false`) — Clamp inside the viewport/constraint bounds.
+- `deceleration: float` (default `2400.0`) — Slow-down rate when axis released (px/s^2).
+- `default_controls: bool` (default `true`) — Read ui_left/right/up/down each tick (keyboard+gamepad).
+- `enabled: bool` (default `true`) — Master on/off.
+- `max_speed: float` (default `600.0`) — Max cursor speed (px/s).
+
+#### Triggers
+- **On Interact Pressed**
+- **On Interact Released**
+- **On Layout Edge Hit**
+- **On Homing Target Entered**
+- **On Homing Target Exited**
+- **On Homing Snapped**
+- **On Solid Hit**
+- **On Bounce**
+
+#### Conditions
+- **Is Interact Held**
+- **Is Moving**
+- **Is In Homing Range**
+- **Is Blocked**
+- **Is Enabled**
+- **Is Ignoring Input**
+- **Is Hovering**
+
+#### Actions
+- **Press Interact** (`id: String`) — Marks a named interact button held and fires On Interact Pressed.
+- **Release Interact** (`id: String`) — Marks a named interact button released and fires On Interact Released.
+- **Simulate Interact** (`id: String`) — Fires a press+release of a named button in one tick.
+- **Set Max Speed** (`speed: float`) — Sets the max cursor speed (px/s).
+- **Set Acceleration** (`rate: float`) — Sets the speed-up rate while an axis is held.
+- **Set Deceleration** (`rate: float`) — Sets the slow-down rate when the axis is released.
+- **Set Velocity** (`vel_x: float, vel_y: float`) — Sets the cursor velocity directly.
+- **Simulate Direct Mouse Position** (`target_x: float, target_y: float`) — Teleports the cursor to a position, reporting the implied velocity.
+- **Simulate Mouse** (`target_x: float, target_y: float, smoothing: float`) — Drives the cursor toward a target with smoothing (mouse-follow).
+- **Simulate Axis** (`x: float, y: float`) — Feeds an analog axis for this tick (accel/decel applies).
+- **Simulate Control** (`direction: int`) — Feeds a cardinal direction (0 up, 1 down, 2 left, 3 right) for this tick.
+- **Set Homing Enabled** (`is_enabled: bool`) — Turns the homing magnet on/off.
+- **Set Homing Mode** (`mode: int`) — 0 steer, 1 snap-radius, 2 snap-overlap.
+- **Set Homing Radius** (`radius: float`) — Sets the homing engagement radius.
+- **Set Homing Strength** (`strength: float`) — How strongly the cursor is pulled toward a homing target (0..1).
+- **Add Homing Target** (`target: Node2D`) — Registers a node as a homing target.
+- **Remove Homing Target** (`target: Node2D`) — Unregisters a homing target.
+- **Clear Homing Targets** — Removes every homing target.
+- **Add Solid** (`target: Node2D`) — Registers a node as a tracked solid (for SolidUID reporting).
+- **Remove Solid** (`target: Node2D`) — Unregisters a tracked solid.
+- **Clear Solids** — Clears the tracked-solids list.
+- **Set Solid Collision** (`is_enabled: bool`) — Toggles solid push-out via move_and_slide.
+- **Set Allow Sliding** (`state: bool`) — Slide along solids (true) or hard-stop (false).
+- **Set Bounce** (`mode: int`) — 0 none, 1 solids, 2 constraints, 3 both.
+- **Set Direction Mode** (`mode: int`) — 0 up/down, 1 left/right, 2 four-way, 3 eight-way.
+- **Set Default Controls** (`state: bool`) — Read ui_left/right/up/down each tick.
+- **Set Enabled** (`is_enabled: bool`) — Master on/off.
+- **Set Ignoring Input** (`state: bool`) — Ignore all input while true (movement decays to zero).
+- **Set Constrain To Layout** (`is_enabled: bool`) — Clamp the cursor inside the bounds.
+- **Set Constraint Bounds** (`left: float, top: float, right: float, bottom: float`) — Sets explicit clamp bounds (all-zero clears them, falling back to the viewport).
+- **Set Hover Mode** (`mode: int`) — 0 point (origin inside shape), 1 overlap (shapes overlap).
+
+#### Expressions
+- **Cursor X**
+- **Cursor Y**
+- **Speed**
+- **Velocity X**
+- **Velocity Y**
+- **Moving Angle**
+- **Axis X**
+- **Axis Y**
+- **Max Speed**
+- **Hovered UID**
+- **Homing Target UID**
+- **Homing Target Dist**
+- **Count Homing Targets**
+- **Bounce Mode**
 
 ## Script packs
 

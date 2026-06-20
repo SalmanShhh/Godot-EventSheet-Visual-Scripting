@@ -20,6 +20,15 @@ static func run() -> bool:
 	all_passed = _check("input vector registered with StringName idiom",
 		str(by_id["GetInputVector"].codegen_template).contains("Input.get_vector(&{left}"), true) and all_passed
 	all_passed = _check("3D groups by node type", str(by_id["MoveAndSlide3D"].node_type), "CharacterBody3D") and all_passed
+	# 3D spatial queries: RayCast3D node set + Node3D world-space ray.
+	all_passed = _check("RayCast3D node ACEs registered",
+		by_id.has("RayCast3DIsColliding") and by_id.has("RayCast3DGetCollider") and by_id.has("RayCast3DGetPoint"), true) and all_passed
+	all_passed = _check("RayCast3D ACEs target the RayCast3D host",
+		str(by_id["RayCast3DIsColliding"].node_type), "RayCast3D") and all_passed
+	all_passed = _check("world raycast ACEs registered (Node3D host)",
+		by_id.has("WorldRaycastHit3D") and by_id.has("WorldRaycastPoint3D"), true) and all_passed
+	all_passed = _check("world raycast uses a single-line direct-space query",
+		str(by_id["WorldRaycastHit3D"].codegen_template).contains("direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create({from}, {to}))"), true) and all_passed
 
 	# Compile a 3D movement event end to end.
 	var sheet: EventSheetResource = EventSheetResource.new()

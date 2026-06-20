@@ -1,0 +1,76 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_xo0ic"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_e70dw"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_mcfg8"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_wa7cv"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_1idfc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_8v0r7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="7_wh4he"]
+
+[sub_resource type="Resource" id="Resource_s6joc"]
+script = ExtResource("1_xo0ic")
+text = "Line of Sight 3D behavior (C3 parity): raycast LOS in 3D with range and an optional cone of view (degrees; 360 = all around, measured from the host's -Z forward). Conditions: Has Line Of Sight To, Has LOS Between positions."
+
+[sub_resource type="Resource" id="Resource_eemov"]
+script = ExtResource("2_e70dw")
+code = "## @ace_condition
+## @ace_name(\"Has Line Of Sight To\")
+## @ace_category(\"Line Of Sight 3D\")
+## @ace_codegen_template(\"$LOS3DBehavior.has_los_to({point})\")
+func has_los_to(point: Vector3) -> bool:
+	if host == null or host.global_position.distance_to(point) > sight_range:
+		return false
+	if cone_of_view_degrees < 360.0:
+		var forward := -host.global_transform.basis.z
+		var to_target := point - host.global_position
+		if to_target.length() > 0.0001 and forward.angle_to(to_target) > deg_to_rad(cone_of_view_degrees) * 0.5:
+			return false
+	return has_los_between(host.global_position, point)
+
+## @ace_condition
+## @ace_name(\"Has LOS Between\")
+## @ace_category(\"Line Of Sight 3D\")
+## @ace_codegen_template(\"$LOS3DBehavior.has_los_between({from_point}, {to_point})\")
+func has_los_between(from_point: Vector3, to_point: Vector3) -> bool:
+	if host == null:
+		return false
+	var query := PhysicsRayQueryParameters3D.create(from_point, to_point)
+	query.collision_mask = collision_mask
+	return host.get_world_3d().direct_space_state.intersect_ray(query).is_empty()"
+
+[sub_resource type="Resource" id="Resource_w4ol3"]
+script = ExtResource("2_e70dw")
+code = "pass"
+
+[sub_resource type="Resource" id="Resource_ttxwp"]
+script = ExtResource("6_8v0r7")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_w4ol3")])
+event_uid = "b8e694"
+
+[resource]
+script = ExtResource("7_wh4he")
+host_class = "Node3D"
+behavior_mode = true
+custom_class_name = "LOS3DBehavior"
+addon_tags = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_s6joc"), SubResource("Resource_eemov"), SubResource("Resource_ttxwp")])
+variables = {
+"collision_mask": {
+"default": 1,
+"exported": true,
+"type": "int"
+},
+"cone_of_view_degrees": {
+"default": 360.0,
+"exported": true,
+"type": "float"
+},
+"sight_range": {
+"default": 1000.0,
+"exported": true,
+"type": "float"
+}
+}

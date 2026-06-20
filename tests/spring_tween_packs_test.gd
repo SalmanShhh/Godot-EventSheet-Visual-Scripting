@@ -107,12 +107,12 @@ static func run() -> bool:
 	save_instance.free()
 
 	# Release showcase (the release ritual): loads, parses, scene instantiates.
-	var showcase_sheet: EventSheetResource = load("res://demo/showcase/showcase_v070.tres")
+	var showcase_sheet: EventSheetResource = load("res://demo/showcase/showcase_carousel.tres")
 	all_passed = _check("showcase sheet loads with Live Values on",
 		showcase_sheet != null and showcase_sheet.emit_live_values, true) and all_passed
 	all_passed = _check("showcase script loads",
-		load("res://demo/showcase/showcase_v070.gd") != null, true) and all_passed
-	var showcase_scene: PackedScene = load("res://demo/showcase/showcase_v070.tscn")
+		load("res://demo/showcase/showcase_carousel.gd") != null, true) and all_passed
+	var showcase_scene: PackedScene = load("res://demo/showcase/showcase_carousel.tscn")
 	var showcase_root: Node = showcase_scene.instantiate()
 	all_passed = _check("showcase scene wires Spring + Tween behaviors",
 		showcase_root.get_node_or_null("SpringBehavior") != null and showcase_root.get_node_or_null("TweenBehavior") != null, true) and all_passed

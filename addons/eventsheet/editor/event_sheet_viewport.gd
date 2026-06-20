@@ -154,6 +154,10 @@ var _zoom_factor: float = 1.0
 var _layout_style_signature: String = ""
 var _dragging_lane_divider: bool = false
 const LANE_DIVIDER_GRAB_TOLERANCE := 5.0
+## C3-style trailing "Add event…" footer rows (sheet-end and per-group). On by default;
+## settable so headless tests can assert raw row counts/indices without the affordance
+## shifting them, and so the dock can offer a "hide add-event rows" declutter option.
+var show_add_event_footers: bool = true
 ## C3-style drag ghost: a faint label of the dragged content following the cursor.
 var _drag_ghost_label: String = ""
 var _drag_pointer_position: Vector2 = Vector2.ZERO
@@ -775,7 +779,7 @@ func _draw() -> void:
         background_color,
         true
     )
-    if _flat_rows.is_empty():
+    if _is_sheet_visually_empty():
         _draw_empty_state(width)
         return
     var visible_range: Vector2i = get_visible_row_range()
@@ -1453,7 +1457,8 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
         if row_data != null:
             root_rows.append(row_data)
     # C3-style trailing "Add event…" footer at the end of the sheet.
-    root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
+    if show_add_event_footers:
+        root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
     return root_rows
 
 ## A clickable footer row that appends a new event into owner_resource (a group or the
@@ -1680,9 +1685,10 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
         if child_row != null:
             row_data.children.append(child_row)
     # C3-style per-group footer: always the group's last child, one level deeper.
-    row_data.children.append(
-        _build_add_event_footer_row(group, indent + 1, "+ Add event to '%s'…" % _group_name(group))
-    )
+    if show_add_event_footers:
+        row_data.children.append(
+            _build_add_event_footer_row(group, indent + 1, "+ Add event to '%s'…" % _group_name(group))
+        )
     return row_data
 
 func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
@@ -2662,22 +2668,39 @@ func _draw_live_value_chip(row_data: EventRowData, row_top: float, row_height: f
     draw_string(font, Vector2(chip_x, row_top + row_height * 0.5 + font_size * 0.35), chip_text,
         HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, get_event_style().value_highlight_color if get_event_style() != null else EventSheetPalette.COLOR_VALUE)
 
+## True when the sheet has no authored rows — either genuinely empty, or holding only the
+## trailing "+ Add event…" footer affordance(s). Drives the getting-started empty state so a
+## brand-new sheet shows guidance instead of a lone footer row.
+func _is_sheet_visually_empty() -> bool:
+    for entry: Dictionary in _flat_rows:
+        var row_data: EventRowData = entry.get("row")
+        if row_data != null and not _row_is_add_event_footer(row_data):
+            return false
+    return true
+
+## Calm getting-started state for an empty sheet: one clear heading, one primary call to
+## action, and a single de-emphasized tip — instead of a dense run-on of shortcuts that
+## reads as clutter the moment a new user opens a sheet.
 func _draw_empty_state(width: float) -> void:
     var font: Font = _get_font()
     var font_size: int = _get_font_size()
-    var text: String = "Empty sheet — press E (event), C (condition), A (action), Q (comment), or double-click to start. The picker speaks Construct: try \"every tick\"."
+    var heading: String = "This event sheet is empty"
+    var primary: String = "Double-click anywhere — or press E — to add your first event."
+    var tip: String = "Tip: the picker understands plain language. Try typing \"every tick\"."
     if _sheet != null and _sheet.behavior_mode:
-        text = "This behavior runs on its parent node (host: %s). Add events — actions can use the typed `host` accessor." % _sheet.host_class
-    var text_size: Vector2 = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size)
-    draw_string(
-        font,
-        Vector2(16.0, 40.0 + text_size.y),
-        text,
-        HORIZONTAL_ALIGNMENT_LEFT,
-        max(width - 32.0, 1.0),
-        font_size,
-        EventSheetPalette.TEXT_MUTED
-    )
+        heading = "Empty behavior sheet"
+        primary = "Add events to drive the node this attaches to (a %s)." % _sheet.host_class
+        tip = "Double-click anywhere — or press E — to add your first event."
+    var left: float = 18.0
+    var max_w: float = max(width - 36.0, 1.0)
+    var heading_size: int = EventSheetPalette.resolve_font_size(font_size, 0, 2)
+    var line_gap: float = 8.0
+    var y: float = 36.0 + float(heading_size)
+    draw_string(font, Vector2(left, y), heading, HORIZONTAL_ALIGNMENT_LEFT, max_w, heading_size, EventSheetPalette.TEXT_PRIMARY)
+    y += float(font_size) + line_gap + 6.0
+    draw_string(font, Vector2(left, y), primary, HORIZONTAL_ALIGNMENT_LEFT, max_w, font_size, EventSheetPalette.TEXT_SECONDARY)
+    y += float(font_size) + line_gap
+    draw_string(font, Vector2(left, y), tip, HORIZONTAL_ALIGNMENT_LEFT, max_w, EventSheetPalette.resolve_font_size(font_size, -1), EventSheetPalette.TEXT_MUTED)
 
 func _update_canvas_min_size() -> void:
     var zoom: float = max(_zoom_factor, 0.001)
@@ -2950,6 +2973,19 @@ func _get_tooltip(at_position: Vector2) -> String:
                 code = _codegen_preview_for(action.provider_id, action.ace_id, action.params if not action.params.is_empty() else action.parameters)
             if not code.strip_edges().is_empty():
                 return "GDScript:\n%s" % code
+    # Raw GDScript blocks are the one row whose codegen is literally themselves — advertise
+    # that the block compiles verbatim (the escape hatch is transparent, not a black box).
+    var raw_row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+    if raw_row_data != null and raw_row_data.source_resource is RawCodeRow:
+        var raw_block: RawCodeRow = raw_row_data.source_resource as RawCodeRow
+        var first_line: String = raw_block.code.split("\n")[0] if not raw_block.code.is_empty() else ""
+        var tip: String = "GDScript (verbatim):\n%s\nEmitted as-is into the generated script — select to highlight its lines in the GDScript panel." % first_line
+        if not raw_block.note.strip_edges().is_empty():
+            tip = "%s — %s\n%s" % [raw_block.note, "GDScript (verbatim)", tip.split("\n", true, 1)[1] if tip.contains("\n") else tip]
+        # Import triage: when a line couldn't lift into a structured ACE, say why right here.
+        if not raw_block.lift_note.strip_edges().is_empty():
+            tip += "\n⚠ Stayed as code: %s" % raw_block.lift_note
+        return tip
     return tooltip_text
 
 ## The GDScript snippet an ACE compiles to: its codegen template with parameter values

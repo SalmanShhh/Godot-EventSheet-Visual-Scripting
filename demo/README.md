@@ -8,9 +8,12 @@ plain GDScript fall out of it. This folder is the guided tour.
 **If you're coming from Construct 3:** events read exactly like home — two-lane rows,
 a searchable picker that understands your vocabulary ("every tick", "go to layout",
 "choose"), behaviors that attach to objects, Wait actions, combo dropdowns, color
-pickers with swatches. **Twenty behavior packs** ship in the box — the C3 classics (Platformer,
+pickers with swatches. **Twenty-four behavior packs** ship in the box — the C3 classics (Platformer,
 8-Direction, Sine with wave types, Orbit ellipses, Bullet, Move To with waypoints,
-Follow with delay mode, Drag & Drop, Car with drift, Tile Movement, Line of Sight,
+Follow with delay mode, **Drag & Drop** (event-driven: Start Drag / Set Drag Point / Drop
+with follow-speed, direction lock, throw and snapping — drivable by the **Virtual Cursor**
+pack for gamepad/touch), **Health** (max/current HP, damage absorption, temporary-health
+shield pools, death/revive), Car with drift, Tile Movement, **Line of Sight (2D & 3D)**,
 Timer, Flash, State Machine), a 3D starter quartet (Sine, Orbit, Bullet, Move To), and
 the juice duo: **Spring** (named numeric springs — squash & stretch in one action) and
 **Tween** (Godot Tweens with Inspector combos).
@@ -27,15 +30,31 @@ Ctrl+F finds rows even inside folded groups. Split the editor (or detach a pane 
 second monitor) like VSCode. An MCP server lets AI assistants read, lint, compile, and
 extend your sheets.
 
-## The v0.6.0 showcase (one minute)
+## The interactive showcases (three minutes)
 
-Open `demo/showcase/showcase_v070.tscn` and run it **with Live Values on**: a
-runtime-toggleable *Juice* group pulses the icon every 2 seconds through the Spring
-behavior while Tween spins it. Watch `pulses` climb in the Live Values window — then
-double-click the value and rewrite it in the running game. Open
-`showcase_v070.tres` to see the whole thing as a handful of event rows — press
-ui_accept for a manual pulse, ui_cancel to tween home (an if/elif chain authored
-as Else rows), and open `showcase_v070.gd` as a sheet for the Lift Report.
+Three playable demos live in `demo/showcase/`, each authored entirely as event sheets and
+compiled to plain GDScript. The dock's **Open the playable showcase scene** button (and the
+plugin's discovery) opens the flagship; the other two are right there in the folder.
+
+- **`showcase_carousel.tscn` — Carousel of Juice (flagship).** A ring of eight rainbow
+  tiles that sine-sway and spring-pop on the beat through one reused `juice_tile()` function;
+  a runtime-toggleable *Juice* group plus an if/elif/else keypress chain re-skin the board
+  (**ui_accept** starts the party, **ui_cancel** calms it). Run it with **Live Values on**
+  and watch `beat`/`intensity` stream — then edit them in the running game. Shows: reused
+  functions, runtime groups, if/elif/else, Spring + Tween + Sine + Flash behaviors.
+- **`starfall.tscn` — Starfall (arcade game).** A complete restartable mini-game: move the
+  ship (ui_left/ui_right) to catch falling stars. Shows an **enum + match** state machine
+  (PLAYING/GAME_OVER), a **group pick-filter** that scores & culls stars, an Every-2s
+  spawner instancing `star.tscn`, and if/elif input branches. Miss three → GAME OVER,
+  ui_accept restarts.
+- **`quest_fsm.tscn` — Quest & Inventory FSM (software logic).** A self-driving quest engine
+  (no input): the FSM walks OFFERED → ACTIVE → COMPLETE, a reused `grant_item()` fills a
+  **Dictionary** inventory + **Array** quest log and emits **signals** that spring/tween the
+  icon. Proof the sheet compiles real software logic — collections, signals, functions,
+  match — not just movement.
+
+Open any of the `.tres` files as a sheet to see the whole thing as a handful of event rows.
+Regenerate the trio with `godot --headless --script tools/build_examples.gd`.
 
 ## Try it (five minutes)
 
@@ -60,6 +79,9 @@ as Else rows), and open `showcase_v070.gd` as a sheet for the Lift Report.
 | `sheets/player.tres` | The demo event sheet (variables, triggers, conditions, actions) |
 | `sheets/player_generated.gd` | Its compiled output — also the **golden file** the test suite byte-checks *and parses* |
 | `scenes/player.tscn` | A minimal CharacterBody2D with the generated script attached |
+| `showcase/showcase_carousel.{tscn,tres,gd}` | **Flagship** — Carousel of Juice (functions, runtime group, if/elif/else, four behaviors) |
+| `showcase/starfall.{tscn,tres,gd}` + `star.tscn` | Starfall arcade game (enum/match FSM, pick-filter, spawner, Bullet behavior) |
+| `showcase/quest_fsm.{tscn,tres,gd}` | Quest & Inventory FSM (Dictionary/Array collections, signals, reused function, match) |
 | `themes/` | Ten bundled themes: Dracula, Nord, Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha, high-contrast, soft-light, Construct3-stacked, + the designer template |
 | `demo_project.godot` | Rename to `project.godot` only for standalone use (rename back afterwards) |
 

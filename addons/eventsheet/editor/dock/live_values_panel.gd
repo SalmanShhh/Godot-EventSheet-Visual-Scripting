@@ -29,7 +29,7 @@ func toggle() -> void:
         return
     _dock._current_sheet.emit_live_values = not _dock._current_sheet.emit_live_values
     if _dock._current_sheet.emit_live_values:
-        _ensurewindow()
+        ensure_window()
         window.popup_centered()
         _dock._set_status("Live Values ON: recompile and run — variables stream every 0.25s while the debugger is attached.")
     else:
@@ -37,7 +37,9 @@ func toggle() -> void:
             window.hide()
         _dock._set_status("Live Values OFF (recompile to remove the stream).")
 
-func _ensurewindow() -> void:
+## Lazily builds the floating Live Values window the first time it's needed. Named to match
+## the dock's call site (event_sheet_dock.gd: _ensure_live_values_panel().ensure_window()).
+func ensure_window() -> void:
     if window != null:
         return
     window = Window.new()
@@ -68,7 +70,7 @@ func update_values(values: Dictionary) -> void:
     for pane: EventSheetViewport in [_dock._viewport, _dock._split_viewport, _dock._detached_viewport]:
         if pane != null:
             pane.set_live_values(values)
-    _ensurewindow()
+    ensure_window()
     label.text = "Streaming — double-click a value to edit it in the running game."
     var value_keys: Array = values.keys()
     value_keys.sort()

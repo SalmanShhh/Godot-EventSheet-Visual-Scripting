@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EventSheetResource" load_steps=12 format=3]
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
 [ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_ny82h"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_0y3wa"]
@@ -47,7 +47,7 @@ script = ExtResource("6_wmmtp")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
 actions = Array[Resource]([SubResource("Resource_ljcjg")])
-event_uid = "a3b61d"
+event_uid = "dad91b"
 
 [resource]
 script = ExtResource("7_vegns")

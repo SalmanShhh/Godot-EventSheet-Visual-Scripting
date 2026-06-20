@@ -365,11 +365,23 @@ func _draw_spans(
     # member line is the selected/hovered one (a single click selects only the clicked
     # line's span, often not the head — guarding on the head dropped the highlight).
     var drawn_block_selection: Dictionary = {}
+    # Declutter: the "+ Add action" affordance is hidden at rest and revealed when the row is
+    # hovered or selected, so a populated sheet reads calmly instead of repeating "+ Add action"
+    # under every event. Events that have NO actions yet keep it visible so newcomers can still
+    # discover it. The span stays in the layout model regardless (hit-testing + tests rely on it).
+    var row_has_action: bool = false
+    for probe_span: SemanticSpan in row_data.spans:
+        if probe_span != null and probe_span.metadata is Dictionary and str((probe_span.metadata as Dictionary).get("kind", "")) == "action":
+            row_has_action = true
+            break
+    var reveal_add_action: bool = row_data.hovered or row_data.selected or not row_has_action
     for span_index: int in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null:
             continue
         var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+        if str(metadata.get("kind", "")) == "add_action" and not reveal_add_action:
+            continue
         var in_block: bool = block_heads.has(span_index)
         var is_block_head: bool = in_block and int(block_heads[span_index]) == span_index
         if bool(metadata.get("chip", false)):
@@ -443,6 +455,11 @@ func _draw_spans(
         var object_label: String = str(metadata.get("object_label", ""))
         if not object_label.is_empty():
             var object_color: Color = event_style.object_label_color if event_style != null else COLOR_OBJECT
+            # "System" is the catch-all object for engine/Core ACEs, so it repeats on nearly
+            # every row. Keep it (C3 always shows the object) but dim it so the eye reads the
+            # actual condition/action, not a column of identical "System" labels.
+            if object_label == "System":
+                object_color.a *= 0.5
             _draw_text(control, Vector2(text_x, baseline_y), object_label, text_width, font, draw_font_size, object_color)
             var label_advance: float = font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
             text_x += label_advance

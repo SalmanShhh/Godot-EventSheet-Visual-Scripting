@@ -104,7 +104,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	if _window != null:
 		return
 	_window = Window.new()
-	_window.title = "Select ACE"
+	_window.title = "Add Action / Condition"
 	_window.visible = false
 	_window.min_size = Vector2i(640, 420)
 	_window.close_requested.connect(close)
@@ -144,7 +144,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_tree.hide_root = true
 	_tree.columns = 2
-	_tree.set_column_title(0, "ACE")
+	_tree.set_column_title(0, "Action / Condition")
 	_tree.set_column_title(1, "Type")
 	_tree.set_column_expand(1, false)
 	_tree.set_column_custom_minimum_width(1, 96)

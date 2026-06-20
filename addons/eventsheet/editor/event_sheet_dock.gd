@@ -125,14 +125,37 @@ var _context_variable: Dictionary = {}
 var _global_variable_entries: Array[Dictionary] = []
 var _local_variable_entries: Array[Dictionary] = []
 var _active_theme_style: EventSheetEditorStyle = null
+## Simple mode (progressive disclosure for artist-first / first-time users): trims the
+## right-click menus to the everyday authoring verbs and hides the advanced/code-leaning
+## entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums). Persisted
+## per-project in editor metadata; defaults off so existing/expert users are unaffected.
+var _simple_mode: bool = false
+var _view_popup: PopupMenu = null
+# Command palette (Ctrl+P): keyboard-first access to every dock action — the affordance
+# power users reach for first. The command list + fuzzy filter are pure/testable; the popup
+# is the GUI shell built lazily.
+var _command_palette_window: Window = null
+var _command_palette_search: LineEdit = null
+var _command_palette_list: ItemList = null
+var _command_palette_matches: Array = []
 
 func _init() -> void:
     if not _undo_redo_adapter.has_manager():
         _undo_redo_adapter.set_manager(UndoRedo.new())
     _build_ui()
 
-func _ready() -> void:
-    _build_ui()
+var _editor_dialogs_initialized: bool = false
+
+# Initializes the picker/params/variable dialogs and wires their signals + providers.
+# Idempotent (guarded by _editor_dialogs_initialized) and safe to run detached: it only
+# touches dialog init + signal connections + provider wiring — nothing tree-bound. Called
+# from _ready() in the real editor AND from setup() so headless tests (which never enter
+# the tree, so _ready never fires) still get initialized dialogs.
+func _ensure_editor_dialogs_initialized() -> void:
+    if _editor_dialogs_initialized:
+        return
+    _editor_dialogs_initialized = true
+    _load_simple_mode_preference()
     _param_resolver.set_param_store(_editor_param_store)
     _ace_picker.init_dialog(self, _ace_registry)
     _ace_picker.ace_selected.connect(_on_ace_picker_selected)
@@ -151,6 +174,10 @@ func _ready() -> void:
                 if row is EnumRow and (row as EnumRow).enabled:
                     sheet_enums.append({"name": (row as EnumRow).enum_name, "members": (row as EnumRow).members})
         return sheet_enums)
+
+func _ready() -> void:
+    _build_ui()
+    _ensure_editor_dialogs_initialized()
     _refresh_ace_registry()
     if _current_sheet == null:
         _current_sheet = _build_demo_sheet()
@@ -163,6 +190,7 @@ func _ready() -> void:
 
 func setup(sheet: EventSheetResource = null) -> void:
     _build_ui()
+    _ensure_editor_dialogs_initialized()
     var target_sheet: EventSheetResource = sheet if sheet != null else _build_demo_sheet()
     var target_path: String = sheet.resource_path if sheet != null else ""
     _open_sheet_in_tab(target_sheet, target_path)
@@ -516,8 +544,14 @@ func _build_ui() -> void:
     sheet_popup.add_item("Save", 2)
     sheet_popup.add_item("Save As…", 3)
     sheet_popup.add_separator()
+    sheet_popup.add_item("Export GDScript…", 7)
+    sheet_popup.set_item_tooltip(
+        sheet_popup.get_item_index(7),
+        "Write this sheet's plain, standalone GDScript to a file you own. No plugin dependency — proof you can leave the addon anytime."
+    )
+    sheet_popup.add_separator()
     sheet_popup.add_item("Sheet Type…", 4)
-    sheet_popup.add_item("ACE Providers…", 5)
+    sheet_popup.add_item("Custom Actions…", 5)
     sheet_popup.add_item("Export Addon…", 6)
     sheet_popup.id_pressed.connect(func(id: int) -> void:
         match id:
@@ -528,6 +562,7 @@ func _build_ui() -> void:
             4: _open_sheet_type_dialog()
             5: _on_manage_ace_providers_requested()
             6: _export_addon_pack()
+            7: _export_gdscript_requested()
     )
     _toolbar.add_child(sheet_menu)
     _add_toolbar_button("Save", _on_save_requested, "Save the sheet — compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
@@ -580,7 +615,13 @@ func _build_ui() -> void:
     view_menu.text = "View"
     view_menu.flat = false
     var view_popup: PopupMenu = view_menu.get_popup()
+    _view_popup = view_popup
+    view_popup.add_check_item("Simple Mode (beginner-friendly)", 11)
+    view_popup.set_item_checked(view_popup.get_item_index(11), _simple_mode)
+    view_popup.add_separator()
     view_popup.add_item("GDScript Panel (toggle)", 0)
+    view_popup.add_check_item("Add-Event Rows", 9)
+    view_popup.set_item_checked(view_popup.get_item_index(9), true)
     view_popup.add_separator()
     view_popup.add_item("Split View (toggle)", 1)
     view_popup.add_item("Detached View (toggle)", 2)
@@ -603,10 +644,14 @@ func _build_ui() -> void:
             6: _on_load_theme_requested()
             7: _on_reload_theme_requested()
             8: _open_theme_editor()
+            9: _toggle_add_event_rows(view_popup)
+            11: set_simple_mode(not _simple_mode)
     )
     # Toggles say what they toggle on hover (user call: hovering a toggle should
     # explain it).
     view_popup.set_item_tooltip(view_popup.get_item_index(0), "Show/hide the generated-GDScript panel beside the sheet.")
+    view_popup.set_item_tooltip(view_popup.get_item_index(9), "Show/hide the trailing \"+ Add event…\" rows. Turn off for a cleaner, calmer sheet.")
+    view_popup.set_item_tooltip(view_popup.get_item_index(11), "Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.")
     view_popup.set_item_tooltip(view_popup.get_item_index(1), "Show/hide a second synchronized view of this sheet, side by side.")
     view_popup.set_item_tooltip(view_popup.get_item_index(2), "Pop the sheet view out into its own window / bring it back.")
     view_popup.set_item_tooltip(view_popup.get_item_index(3), "Link/unlink scrolling between the split views.")
@@ -900,7 +945,7 @@ func _build_context_menus() -> void:
     _condition_context_menu.add_separator()
     _condition_context_menu.add_item("Invert Condition", CONDITION_MENU_INVERT)
     _condition_context_menu.add_item("Disable Condition", CONDITION_MENU_TOGGLE_ENABLED)
-    _condition_context_menu.add_item("Edit ACE Comment…", CONDITION_MENU_EDIT_ACE_COMMENT)
+    _condition_context_menu.add_item("Edit Note…", CONDITION_MENU_EDIT_ACE_COMMENT)
     _condition_context_menu.add_separator()
     _condition_context_menu.add_item("Delete Condition", CONDITION_MENU_DELETE)
     _condition_context_menu.id_pressed.connect(_on_condition_context_menu_id_pressed)
@@ -912,7 +957,7 @@ func _build_context_menus() -> void:
     _action_context_menu.add_item("Replace Action", ACTION_MENU_REPLACE)
     _action_context_menu.add_separator()
     _action_context_menu.add_item("Disable Action", ACTION_MENU_TOGGLE_ENABLED)
-    _action_context_menu.add_item("Edit ACE Comment…", ACTION_MENU_EDIT_ACE_COMMENT)
+    _action_context_menu.add_item("Edit Note…", ACTION_MENU_EDIT_ACE_COMMENT)
     _action_context_menu.add_item("Detach Comment To Row", ACTION_MENU_DETACH_COMMENT)
     _action_context_menu.add_item("Delete Action", ACTION_MENU_DELETE)
     _action_context_menu.id_pressed.connect(_on_action_context_menu_id_pressed)
@@ -1018,7 +1063,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
     # Fixed alternates + structural keys (grammar, not preference — never rebindable):
     # Ctrl+Y redo, Ctrl+± zoom, Tab nesting, Delete, Enter/F2 inline edit.
     if key_event.ctrl_pressed or key_event.meta_pressed:
-        if key_event.keycode == KEY_Y:
+        if key_event.keycode == KEY_P:
+            _open_command_palette()
+            accept_event()
+        elif key_event.keycode == KEY_Y:
             _on_redo_requested()
             accept_event()
         elif key_event.keycode in [KEY_EQUAL, KEY_PLUS, KEY_KP_ADD]:
@@ -1248,6 +1296,44 @@ func _on_save_as_requested() -> void:
     dialog.canceled.connect(func() -> void: dialog.queue_free())
     add_child(dialog)
     dialog.popup_centered(Vector2i(860, 580))
+
+## "Eject" affordance: writes the sheet's compiled, standalone GDScript to a file the user
+## chooses. The output depends on no EventForge/EventSheet class (parity covenant), so this
+## is the concrete proof a Godot dev can adopt the plugin without lock-in — take the .gd and
+## go. Distinct from Save (which keeps the paired generated script alongside the .tres).
+func _export_gdscript_requested() -> void:
+    if _current_sheet == null:
+        _set_status("Open or create a sheet first.", true)
+        return
+    var dialog: FileDialog = FileDialog.new()
+    dialog.title = "Export Generated GDScript"
+    dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+    dialog.access = FileDialog.ACCESS_RESOURCES
+    dialog.filters = PackedStringArray(["*.gd ; GDScript"])
+    dialog.current_path = "res://%s.gd" % _exported_script_basename()
+    dialog.file_selected.connect(func(path: String) -> void:
+        _write_exported_gdscript(path)
+        dialog.call_deferred("queue_free")
+    )
+    dialog.canceled.connect(func() -> void: dialog.queue_free())
+    add_child(dialog)
+    dialog.popup_centered(Vector2i(860, 580))
+
+func _exported_script_basename() -> String:
+    if _current_sheet != null and not _current_sheet.custom_class_name.strip_edges().is_empty():
+        return _current_sheet.custom_class_name.to_snake_case()
+    if not _current_sheet_path.is_empty():
+        return _current_sheet_path.get_file().get_basename()
+    return "event_sheet"
+
+func _write_exported_gdscript(path: String) -> void:
+    var target: String = path if path.get_extension() == "gd" else path + ".gd"
+    var result: Dictionary = SheetCompiler.compile(_current_sheet, target)
+    var errors: Array = result.get("errors", [])
+    if not errors.is_empty():
+        _set_status("Export failed: %s" % str(errors[0]), true)
+        return
+    _set_status("Exported standalone GDScript to %s — no plugin dependency." % target.get_file())
 
 func _save_sheet_to_path(path: String) -> void:
     if _current_sheet == null:
@@ -2863,6 +2949,189 @@ func _active_view() -> EventSheetViewport:
 ## Toggles a second, read/navigate-only pane over the SAME sheet (debugging, reading,
 ## comparing distant regions). Breakpoints/bookmarks/disabled state are shared by
 ## reference; scroll/zoom/selection/folds are per-pane. See EDITOR-UI-SPEC "Multi-view".
+## Every command the palette can run: {title, run}. Kept in one place so the palette,
+## (future) menus, and tests share the same source of truth.
+func _command_palette_commands() -> Array[Dictionary]:
+    return [
+        {"title": "New Sheet…", "run": _open_template_menu},
+        {"title": "Open Sheet…", "run": _on_open_requested},
+        {"title": "Save Sheet", "run": _on_save_requested},
+        {"title": "Save Sheet As…", "run": _on_save_as_requested},
+        {"title": "Export Generated GDScript…", "run": _export_gdscript_requested},
+        {"title": "Run Scene", "run": _run_from_sheet},
+        {"title": "Add Event", "run": _on_add_event_requested},
+        {"title": "Add Condition", "run": _on_add_condition_requested},
+        {"title": "Add Action", "run": _on_add_action_requested},
+        {"title": "Add Global Variable…", "run": _on_add_global_variable_requested},
+        {"title": "Add Function…", "run": _open_function_dialog},
+        {"title": "Toggle GDScript Panel", "run": _toggle_code_panel},
+        {"title": "Toggle Simple Mode", "run": func() -> void: set_simple_mode(not _simple_mode)},
+        {"title": "Zoom In", "run": _on_zoom_in_requested},
+        {"title": "Zoom Out", "run": _on_zoom_out_requested},
+        {"title": "Sheet Type…", "run": _open_sheet_type_dialog},
+        {"title": "Export Addon Pack…", "run": _export_addon_pack},
+        {"title": "Open Welcome", "run": show_welcome},
+    ]
+
+## Pure fuzzy filter (testable): returns the commands whose title matches `query` as a
+## prefix > substring > subsequence, best first. Empty query returns everything in order.
+static func filter_commands(commands: Array, query: String) -> Array:
+    var q: String = query.strip_edges().to_lower()
+    if q.is_empty():
+        return commands.duplicate()
+    var scored: Array = []
+    for index: int in range(commands.size()):
+        var title: String = str((commands[index] as Dictionary).get("title", "")).to_lower()
+        var score: int = _command_match_score(title, q)
+        if score >= 0:
+            scored.append({"cmd": commands[index], "score": score, "index": index})
+    scored.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+        if a["score"] != b["score"]:
+            return a["score"] < b["score"]
+        return a["index"] < b["index"])
+    var result: Array = []
+    for entry: Dictionary in scored:
+        result.append(entry["cmd"])
+    return result
+
+static func _command_match_score(title: String, q: String) -> int:
+    if title.begins_with(q):
+        return 0
+    if title.contains(q):
+        return 1
+    # Subsequence: every query char appears in order (typo-tolerant "ae" → "Add Event").
+    var ti: int = 0
+    for qi: int in range(q.length()):
+        var found: bool = false
+        while ti < title.length():
+            if title[ti] == q[qi]:
+                found = true
+                ti += 1
+                break
+            ti += 1
+        if not found:
+            return -1
+    return 2
+
+func _open_command_palette() -> void:
+    if not Engine.is_editor_hint() and DisplayServer.get_name() == "headless":
+        return
+    if _command_palette_window == null:
+        _build_command_palette_window()
+    _command_palette_search.text = ""
+    _refresh_command_palette("")
+    _command_palette_window.popup_centered(Vector2i(520, 420))
+    _command_palette_search.grab_focus()
+
+func _build_command_palette_window() -> void:
+    _command_palette_window = Window.new()
+    _command_palette_window.title = "Command Palette"
+    _command_palette_window.transient = true
+    _command_palette_window.exclusive = false
+    _command_palette_window.close_requested.connect(func() -> void: _command_palette_window.hide())
+    var margin := MarginContainer.new()
+    margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    for side: String in ["left", "right", "top", "bottom"]:
+        margin.add_theme_constant_override("margin_%s" % side, 8)
+    _command_palette_window.add_child(margin)
+    var box := VBoxContainer.new()
+    margin.add_child(box)
+    _command_palette_search = LineEdit.new()
+    _command_palette_search.placeholder_text = "Type a command…  (↑/↓ to choose, Enter to run, Esc to close)"
+    _command_palette_search.clear_button_enabled = true
+    _command_palette_search.text_changed.connect(_refresh_command_palette)
+    _command_palette_search.gui_input.connect(_on_command_palette_search_input)
+    box.add_child(_command_palette_search)
+    _command_palette_list = ItemList.new()
+    _command_palette_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _command_palette_list.item_activated.connect(func(idx: int) -> void: _run_command_palette_index(idx))
+    box.add_child(_command_palette_list)
+    add_child(_command_palette_window)
+
+func _refresh_command_palette(query: String) -> void:
+    _command_palette_matches = filter_commands(_command_palette_commands(), query)
+    if _command_palette_list == null:
+        return
+    _command_palette_list.clear()
+    for cmd: Dictionary in _command_palette_matches:
+        _command_palette_list.add_item(str(cmd.get("title", "")))
+    if _command_palette_list.item_count > 0:
+        _command_palette_list.select(0)
+
+func _on_command_palette_search_input(event: InputEvent) -> void:
+    if not (event is InputEventKey) or not (event as InputEventKey).pressed:
+        return
+    var key: InputEventKey = event as InputEventKey
+    match key.keycode:
+        KEY_ESCAPE:
+            _command_palette_window.hide()
+        KEY_ENTER, KEY_KP_ENTER:
+            var sel: PackedInt32Array = _command_palette_list.get_selected_items()
+            _run_command_palette_index(sel[0] if sel.size() > 0 else 0)
+        KEY_DOWN:
+            _move_command_palette_selection(1)
+        KEY_UP:
+            _move_command_palette_selection(-1)
+
+func _move_command_palette_selection(delta: int) -> void:
+    if _command_palette_list == null or _command_palette_list.item_count == 0:
+        return
+    var sel: PackedInt32Array = _command_palette_list.get_selected_items()
+    var current: int = sel[0] if sel.size() > 0 else 0
+    var next: int = clampi(current + delta, 0, _command_palette_list.item_count - 1)
+    _command_palette_list.select(next)
+    _command_palette_list.ensure_current_is_visible()
+
+func _run_command_palette_index(index: int) -> void:
+    if index < 0 or index >= _command_palette_matches.size():
+        return
+    var run: Callable = (_command_palette_matches[index] as Dictionary).get("run", Callable())
+    if _command_palette_window != null:
+        _command_palette_window.hide()
+    if run.is_valid():
+        run.call()
+
+## True when beginner-friendly Simple mode is active (advanced/code menu entries hidden).
+func is_simple_mode() -> bool:
+    return _simple_mode
+
+## Toggle/set Simple mode: persists the choice per-project, updates the View-menu check,
+## and rebuilds the context menus so the next right-click reflects the new surface.
+func set_simple_mode(enabled: bool) -> void:
+    _simple_mode = enabled
+    if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+        var settings: EditorSettings = EditorInterface.get_editor_settings()
+        if settings != null:
+            settings.set_project_metadata("eventsheets", "simple_mode", enabled)
+    if _view_popup != null:
+        var idx: int = _view_popup.get_item_index(11)
+        if idx >= 0:
+            _view_popup.set_item_checked(idx, enabled)
+    _set_status("Simple mode ON — advanced entries hidden." if enabled else "Expert mode — all entries shown.")
+
+func _load_simple_mode_preference() -> void:
+    if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+        return
+    var settings: EditorSettings = EditorInterface.get_editor_settings()
+    if settings != null:
+        _simple_mode = bool(settings.get_project_metadata("eventsheets", "simple_mode", false))
+
+## Declutter toggle: show/hide the trailing "+ Add event…" affordance rows across every
+## live view, and reflect the new state in the View menu checkbox.
+func _toggle_add_event_rows(view_popup: PopupMenu) -> void:
+    var show_rows: bool = true
+    for view: EventSheetViewport in [_viewport, _split_viewport, _detached_viewport]:
+        if view == null:
+            continue
+        view.show_add_event_footers = not view.show_add_event_footers
+        show_rows = view.show_add_event_footers
+        view.set_sheet(_current_sheet)
+    if view_popup != null:
+        var idx: int = view_popup.get_item_index(9)
+        if idx >= 0:
+            view_popup.set_item_checked(idx, show_rows)
+    _set_status("Add-event rows shown." if show_rows else "Add-event rows hidden for a cleaner sheet.")
+
 func _toggle_split_view() -> void:
     if _split_viewport != null:
         _close_split_view()
@@ -4367,6 +4636,10 @@ func _build_row_insert_submenu() -> void:
     m.add_item("Group", ROW_MENU_ADD_GROUP_BELOW)
     m.add_item("Comment", ROW_MENU_ADD_COMMENT_BELOW)
     m.add_item("Variable", ROW_MENU_ADD_VARIABLE_BELOW)
+    if _simple_mode:
+        # Simple mode keeps Insert to the four everyday row types; the code-leaning ones
+        # (raw GDScript, signal handlers, enums) stay available in Expert mode.
+        return
     m.add_item("GDScript Block", ROW_MENU_ADD_GDSCRIPT_BELOW)
     m.add_item("Signal Handler", ROW_MENU_ADD_SIGNAL)
     m.add_item("Enum", ROW_MENU_ADD_ENUM)
@@ -4375,7 +4648,9 @@ func _build_row_insert_submenu() -> void:
 func _build_row_more_submenu(is_event: bool) -> void:
     var m: PopupMenu = _row_more_submenu
     m.clear()
-    if is_event:
+    # Advanced/code-leaning authoring is Expert-only; Simple mode keeps More to navigation
+    # and snippet reuse so a beginner's right-click stays short and unintimidating.
+    if is_event and not _simple_mode:
         m.add_item("Add Sub-Condition", ROW_MENU_ADD_SUB_CONDITION)
         m.add_item("Add Comment Sub-Event", ROW_MENU_ADD_COMMENT_SUB_EVENT)
         m.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
@@ -5349,6 +5624,8 @@ func _build_template_menu_items() -> void:
     _template_menu.add_item("Blank Sheet", 0)
     _template_menu.add_item("Platformer Starter", 1)
     _template_menu.add_item("Top-down Starter", 2)
+    _template_menu.add_item("First-Person Controller (3D)", 6)
+    _template_menu.add_item("Third-Person Mover (3D)", 7)
     _template_menu.add_item("Game State (Autoload)", 3)
     _template_menu.add_item("Event Bus (Autoload)", 4)
     _template_menu.add_item("Save System (Autoload)", 5)
@@ -5422,6 +5699,56 @@ func _new_sheet_from_template(template_id: int) -> void:
             move2.code = "velocity = Input.get_vector(&\"ui_left\", &\"ui_right\", &\"ui_up\", &\"ui_down\") * 200.0\nmove_and_slide()"
             tick2.actions.append(move2)
             sheet.events.append(tick2)
+        6:
+            sheet.host_class = "CharacterBody3D"
+            var note6: CommentRow = CommentRow.new()
+            note6.text = "[b]First-Person Controller (3D)[/b] — WASD/arrows to move (relative to a child Camera3D's facing), Space to jump.\nAdd a Camera3D child named \"Camera3D\", then Compile and attach the script."
+            sheet.events.append(note6)
+            var tick6: EventRow = EventRow.new()
+            tick6.trigger_provider_id = "Core"
+            tick6.trigger_id = "OnPhysicsProcess"
+            var move6: RawCodeRow = RawCodeRow.new()
+            move6.code = "\n".join(PackedStringArray([
+                "var input_2d := Input.get_vector(&\"ui_left\", &\"ui_right\", &\"ui_up\", &\"ui_down\")",
+                "var basis_node: Node3D = get_node_or_null(\"Camera3D\")",
+                "var dir_basis := basis_node.global_transform.basis if basis_node != null else global_transform.basis",
+                "var move_vec := dir_basis * Vector3(input_2d.x, 0.0, input_2d.y)",
+                "move_vec.y = 0.0  # project onto the ground plane so look-pitch never changes speed",
+                "var direction := move_vec.normalized()",
+                "velocity.x = direction.x * 6.0",
+                "velocity.z = direction.z * 6.0",
+                "if not is_on_floor():",
+                "\tvelocity.y -= 18.0 * delta",
+                "elif Input.is_action_just_pressed(&\"ui_accept\"):",
+                "\tvelocity.y = 7.0",
+                "move_and_slide()"
+            ]))
+            tick6.actions.append(move6)
+            sheet.events.append(tick6)
+        7:
+            sheet.host_class = "CharacterBody3D"
+            var note7: CommentRow = CommentRow.new()
+            note7.text = "[b]Third-Person Mover (3D)[/b] — WASD/arrows move on the ground plane and the body turns to face its motion. Space jumps."
+            sheet.events.append(note7)
+            var tick7: EventRow = EventRow.new()
+            tick7.trigger_provider_id = "Core"
+            tick7.trigger_id = "OnPhysicsProcess"
+            var move7: RawCodeRow = RawCodeRow.new()
+            move7.code = "\n".join(PackedStringArray([
+                "var input_2d := Input.get_vector(&\"ui_left\", &\"ui_right\", &\"ui_up\", &\"ui_down\")",
+                "var direction := Vector3(input_2d.x, 0.0, input_2d.y)",
+                "velocity.x = direction.x * 6.0",
+                "velocity.z = direction.z * 6.0",
+                "if direction.length() > 0.1:",
+                "\trotation.y = lerp_angle(rotation.y, atan2(direction.x, direction.z), delta * 10.0)",
+                "if not is_on_floor():",
+                "\tvelocity.y -= 18.0 * delta",
+                "elif Input.is_action_just_pressed(&\"ui_accept\"):",
+                "\tvelocity.y = 7.0",
+                "move_and_slide()"
+            ]))
+            tick7.actions.append(move7)
+            sheet.events.append(tick7)
         3:
             sheet.autoload_mode = true
             sheet.autoload_name = "GameState"

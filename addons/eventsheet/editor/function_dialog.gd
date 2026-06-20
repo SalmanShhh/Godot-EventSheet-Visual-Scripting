@@ -80,7 +80,7 @@ func init_dialog(parent_node: Node) -> void:
 	add_param_button.pressed.connect(func() -> void: add_param_row())
 	form.add_child(add_param_button)
 	_expose_check = CheckBox.new()
-	_expose_check.text = "Expose as ACE (other sheets can pick it)"
+	_expose_check.text = "Expose as a reusable action (other sheets can pick it)"
 	_expose_check.tooltip_text = "Publishes the function into pickers — as an action (void) or expression (typed return)."
 	_expose_check.toggled.connect(func(on: bool) -> void: _expose_section.visible = on)
 	form.add_child(_expose_check)

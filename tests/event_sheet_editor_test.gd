@@ -340,13 +340,30 @@ static func run() -> bool:
     all_passed = _check("row context menu opens at requested cursor position", dock._row_context_menu.position, Vector2i(320, 240)) and all_passed
     dock._on_row_context_menu_id_pressed(8)
     all_passed = _check("row context menu toggles or block to and block", ((dock.get_current_sheet().events[0] as EventRow).condition_mode), EventRow.ConditionMode.AND) and all_passed
+    # The OR→AND conversion above commits via snapshot-restore, replacing the sheet's row
+    # resources — re-acquire the live row before the next context action so _context_row
+    # points at the restored resource (a real right-click would re-resolve too).
+    or_row_data = dock_viewport.get_flat_rows()[0].get("row")
+    dock_viewport._ensure_event_spans(or_row_data)
+    dock._context_row = or_row_data
     dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_ENABLED)
     all_passed = _check("row context menu toggles event enabled state", ((dock.get_current_sheet().events[0] as EventRow).enabled), false) and all_passed
     dock._context_row = dock_viewport.get_flat_rows()[0].get("row")
     dock._context_hit = {"span_metadata": {"kind": "action", "ace_index": 0}, "span_index": _find_span_index_by_kind(dock_viewport.get_flat_rows()[0].get("row"), "action")}
     dock._on_action_context_menu_id_pressed(EventSheetDock.ACTION_MENU_TOGGLE_ENABLED)
     all_passed = _check("action context menu toggles enabled state", (((dock.get_current_sheet().events[0] as EventRow).actions[0]) as ACEAction).enabled, false) and all_passed
+    # The row context menu is rebuilt per right-click (empty until built). For an EVENT
+    # row the built menu is [0]="Add Sub-Event", [1]="Convert to AND/OR Block".
+    dock._build_row_context_menu(dock_viewport.get_flat_rows()[0].get("row"))
     all_passed = _check("or block toggle is second row menu item", dock._row_context_menu.get_item_id(1), EventSheetDock.ROW_MENU_TOGGLE_CONDITION_BLOCK) and all_passed
+    # The earlier context actions disabled the event, its second condition, and its action;
+    # re-enable them all so the compile below exercises the AND-mode join of the two live
+    # conditions (a disabled event/condition is skipped, leaving a single-term `if`).
+    var compile_event: EventRow = dock.get_current_sheet().events[0] as EventRow
+    compile_event.enabled = true
+    for compile_condition: ACECondition in compile_event.conditions:
+        compile_condition.enabled = true
+    (compile_event.actions[0] as ACEAction).enabled = true
     var compile_result: Dictionary = SheetCompiler.compile(dock.get_current_sheet(), "user://event_sheet_or_block_test.gd")
     all_passed = _check("compiler uses and join after row conversion", str(compile_result.get("output", "")).contains(" and "), true) and all_passed
 
@@ -397,6 +414,11 @@ static func run() -> bool:
     elif_condition.provider_id = "Core"
     elif_condition.ace_id = "Always"
     elif_event.conditions = [elif_condition]
+    # Give the elif a real sub-event so it's a foldable parent — folding a childless row
+    # never changes the row count, which made the fold assertions below untestable.
+    var elif_sub_event := EventRow.new()
+    elif_sub_event.comment = "nested under elif"
+    elif_event.sub_events = [elif_sub_event]
     else_mode_sheet.events = [else_event, elif_event]
     dock.setup(else_mode_sheet)
     dock_viewport = dock.get_viewport_control()
@@ -404,10 +426,12 @@ static func run() -> bool:
     all_passed = _check("else rows render explicit Else marker", _row_contains_text(else_rows[0].get("row"), "Else"), true) and all_passed
     all_passed = _check("elseif rows render explicit Else If marker", _row_contains_text(else_rows[1].get("row"), "Else If"), true) and all_passed
 
+    # Unfolded flat order: [else(0), elif(1), elif's sub(2), sheet-end footer(3)] = 4 rows.
+    # Folding the elif (row 1) hides its sub-event child: [else(0), elif(1), footer(2)] = 3.
     dock_viewport._toggle_row_fold(1)
-    all_passed = _check("folding hides child rows", dock_viewport.get_total_row_count(), 2) and all_passed
+    all_passed = _check("folding hides child rows", dock_viewport.get_total_row_count(), 3) and all_passed
     dock_viewport._toggle_row_fold(1)
-    all_passed = _check("unfolding restores child rows", dock_viewport.get_total_row_count(), 3) and all_passed
+    all_passed = _check("unfolding restores child rows", dock_viewport.get_total_row_count(), 4) and all_passed
 
     dock_viewport._select_row(2)
     all_passed = _check("selection tracks row index", dock_viewport.get_selected_row_index(), 2) and all_passed
@@ -421,16 +445,21 @@ static func run() -> bool:
     dock_viewport._select_from_click(1, -1, false)
     dock_viewport._select_from_click(2, _find_span_index_by_kind(event_rows_for_selection[2].get("row"), "condition"), true)
     editor_state = dock_viewport.get_editor_state_snapshot()
-    all_passed = _check("ctrl selection tracks multiple rows", editor_state.get("selected_row_count", 0), 2) and all_passed
+    # Selecting the group selects its whole block: group + its event + the group's
+    # "Add event…" footer child = 3 rows. The ctrl-click on the event only adds a span.
+    all_passed = _check("ctrl selection tracks multiple rows", editor_state.get("selected_row_count", 0), 3) and all_passed
     all_passed = _check("ctrl selection tracks span highlight count", editor_state.get("selected_span_count", 0), 1) and all_passed
-    var selected_row_layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
+    dock_viewport.get_row_layout_for_test(2, 640.0)
+    # Right-click ON the already-selected condition span (a selection hit) — right-clicking
+    # a selected target preserves the multi-selection rather than collapsing to one row.
+    var selected_condition_index: int = _find_span_index_by_kind(event_rows_for_selection[2].get("row"), "condition")
     var right_click_selected := InputEventMouseButton.new()
     right_click_selected.pressed = true
     right_click_selected.button_index = MOUSE_BUTTON_RIGHT
-    right_click_selected.position = selected_row_layout.get("row_rect", Rect2()).get_center()
+    right_click_selected.position = event_rows_for_selection[2].get("row").spans[selected_condition_index].rect.get_center()
     dock_viewport._handle_mouse_button(right_click_selected)
     editor_state = dock_viewport.get_editor_state_snapshot()
-    all_passed = _check("right-click on selected row preserves multi-selection", editor_state.get("selected_row_count", 0), 2) and all_passed
+    all_passed = _check("right-click on selected row preserves multi-selection", editor_state.get("selected_row_count", 0), 3) and all_passed
     dock_viewport._select_from_click(2, _find_span_index_by_kind(event_rows_for_selection[2].get("row"), "condition"), true)
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("ctrl click toggles selected span off", editor_state.get("selected_span_count", 0), 0) and all_passed
@@ -458,8 +487,11 @@ static func run() -> bool:
     dock.set_undo_redo_manager(FakeEditorUndoRedoManager.new())
     dock_viewport = dock.get_viewport_control()
     var parity_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
-    var parity_event_row: EventRowData = parity_rows[2].get("row")
-    var parity_event_layout: Dictionary = dock_viewport.get_row_layout_for_test(2, 640.0)
+    # Flat order is [comment(0), group(1), group's "Add event…" footer(2), event(3),
+    # sheet-end footer(4)] — the empty group injects a footer child, so the real event
+    # is at index 3, not 2.
+    var parity_event_row: EventRowData = parity_rows[3].get("row")
+    var parity_event_layout: Dictionary = dock_viewport.get_row_layout_for_test(3, 640.0)
     var parity_action_lane_rect: Rect2 = parity_event_layout.get("action_lane_rect", Rect2())
     var parity_group_row_rect: Rect2 = dock_viewport.get_row_layout_for_test(1, 640.0).get("row_rect", Rect2())
     var parity_comment_row_rect: Rect2 = dock_viewport.get_row_layout_for_test(0, 640.0).get("row_rect", Rect2())
@@ -476,8 +508,10 @@ static func run() -> bool:
     var parity_body_click := InputEventMouseButton.new()
     parity_body_click.pressed = true
     parity_body_click.button_index = MOUSE_BUTTON_LEFT
+    # Click the empty event body (right edge of the action lane, on the stacked-condition
+    # line) — past the action/add-action spans, so it resolves to the whole block, not an ACE.
     parity_body_click.position = Vector2(
-        parity_action_lane_rect.position.x + 18.0,
+        parity_action_lane_rect.end.x - 20.0,
         parity_event_row.spans[parity_condition_index].rect.get_center().y
     )
     dock_viewport._handle_mouse_button(parity_body_click)
@@ -555,12 +589,13 @@ static func run() -> bool:
     dock_viewport = dock.get_viewport_control()
     dock_viewport._select_from_click(0, -1, false)
     editor_state = dock_viewport.get_editor_state_snapshot()
-    all_passed = _check("group selection includes descendant events for copy-ready blocks", editor_state.get("selected_row_count", 0), 3) and all_passed
+    # group + its event + the event's sub-event + the group's "Add event…" footer = 4.
+    all_passed = _check("group selection includes descendant events for copy-ready blocks", editor_state.get("selected_row_count", 0), 4) and all_passed
     all_passed = _check("group selection context remains the group row", dock_viewport.get_selected_context().get("source_resource", null) is EventGroup, true) and all_passed
     # Clicking a group's badge span (span_index >= 0) should also include all descendants.
     dock_viewport._select_from_click(0, 0, false)
     editor_state = dock_viewport.get_editor_state_snapshot()
-    all_passed = _check("group span-click also includes descendant events", editor_state.get("selected_row_count", 0), 3) and all_passed
+    all_passed = _check("group span-click also includes descendant events", editor_state.get("selected_row_count", 0), 4) and all_passed
     all_passed = _check("group span-click does not store per-span selection indices", editor_state.get("selected_span_count", 0), 0) and all_passed
 
     var sub_condition_sheet := EventSheetResource.new()
@@ -571,19 +606,25 @@ static func run() -> bool:
     dock_viewport = dock.get_viewport_control()
     dock._context_row = dock_viewport.get_flat_rows()[0].get("row")
     dock._context_hit = {"span_metadata": {}, "span_index": -1}
+    # Add Sub-Condition moved out of the flat row menu into the "More" submenu — build the
+    # menu (which also builds the submenu), then assert the entry lives, enabled, in More.
+    dock._build_row_context_menu(dock._context_row)
     dock._configure_context_menu(dock._row_context_menu)
-    var sub_condition_menu_index: int = dock._row_context_menu.get_item_index(EventSheetDock.ROW_MENU_ADD_SUB_CONDITION)
-    all_passed = _check("row context menu exposes add sub-condition entry for events", sub_condition_menu_index >= 0 and not dock._row_context_menu.is_item_disabled(sub_condition_menu_index), true) and all_passed
+    var sub_condition_menu_index: int = dock._row_more_submenu.get_item_index(EventSheetDock.ROW_MENU_ADD_SUB_CONDITION)
+    all_passed = _check("row context menu exposes add sub-condition entry for events", sub_condition_menu_index >= 0 and not dock._row_more_submenu.is_item_disabled(sub_condition_menu_index), true) and all_passed
     dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_ADD_SUB_CONDITION)
     all_passed = _check("right-click add sub-condition routes through ace picker", dock._ace_picker._context.get("mode", ""), "new_sub_condition_event") and all_passed
     var sub_condition_definition: ACEDefinition = dock._find_definition("Core", "Always")
     dock._apply_ace_definition(sub_condition_definition, {}, dock._ace_picker._context)
-    all_passed = _check("add sub-condition appends a child event", parent_event.sub_events.size(), 1) and all_passed
-    all_passed = _check("sub-condition child event stores condition entry", (parent_event.sub_events[0] as EventRow).conditions.size(), 1) and all_passed
+    # The undoable edit commits via snapshot-restore, which replaces the sheet's row
+    # resources — so read the live parent event off get_current_sheet() each time rather
+    # than the now-detached pre-restore `parent_event` reference.
+    all_passed = _check("add sub-condition appends a child event", (dock.get_current_sheet().events[0] as EventRow).sub_events.size(), 1) and all_passed
+    all_passed = _check("sub-condition child event stores condition entry", ((dock.get_current_sheet().events[0] as EventRow).sub_events[0] as EventRow).conditions.size(), 1) and all_passed
     dock._on_undo_requested()
-    all_passed = _check("undo removes added sub-condition child event", parent_event.sub_events.size(), 0) and all_passed
+    all_passed = _check("undo removes added sub-condition child event", (dock.get_current_sheet().events[0] as EventRow).sub_events.size(), 0) and all_passed
     dock._on_redo_requested()
-    all_passed = _check("redo restores added sub-condition child event", parent_event.sub_events.size(), 1) and all_passed
+    all_passed = _check("redo restores added sub-condition child event", (dock.get_current_sheet().events[0] as EventRow).sub_events.size(), 1) and all_passed
 
     var delete_sheet := EventSheetResource.new()
     var delete_event := EventRow.new()
@@ -634,6 +675,9 @@ static func run() -> bool:
     dock._unhandled_key_input(span_delete_key)
     all_passed = _check("delete key removes multi-selected action spans", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), 0) and all_passed
     dock_viewport = dock.get_viewport_control()
+    # A keyboard delete acts on the viewport selection; clear any leftover right-click
+    # context row so the stale resource doesn't shadow the freshly selected row.
+    dock._context_row = null
     dock_viewport._select_row(1)
     dock._unhandled_key_input(span_delete_key)
     all_passed = _check("delete key still removes selected event rows", dock.get_current_sheet().events.size(), 1) and all_passed
@@ -676,20 +720,40 @@ static func run() -> bool:
         [EventRow.ConditionMode.AND, EventRow.ConditionMode.AND]
     ) and all_passed
 
+    # Dedicated fixture for the viewport-scaffold assertions below: a leading editable
+    # comment plus several events, so a meaningful scroll/breakpoint/disable/inline-edit
+    # can target real rows (the flat list ends with the sheet "Add event…" footer).
+    var scaffold_sheet := EventSheetResource.new()
+    var scaffold_comment := CommentRow.new()
+    scaffold_comment.text = "Editable note"
+    var scaffold_event_rows: Array[EventRow] = []
+    for _i in range(5):
+        scaffold_event_rows.append(EventRow.new())
+    scaffold_sheet.events = [scaffold_comment, scaffold_event_rows[0], scaffold_event_rows[1],
+        scaffold_event_rows[2], scaffold_event_rows[3], scaffold_event_rows[4]]
+    dock.setup(scaffold_sheet)
+    dock_viewport = dock.get_viewport_control()
+
     dock_viewport.custom_minimum_size = Vector2(640.0, 1200.0)
     dock_viewport.size = Vector2(640.0, 1200.0)
     var scroll_shell: ScrollContainer = dock.find_child("EventSheetScroll", true, false)
+    # Scroll to the exact top of row 2 so the first visible row is deterministically row 2,
+    # independent of per-row heights.
+    var row_two_top: float = dock_viewport.get_row_layout_for_test(2, 640.0).get("row_rect", Rect2()).position.y
     if scroll_shell != null:
         scroll_shell.size = Vector2(640.0, 56.0)
-        scroll_shell.scroll_vertical = 56
+        scroll_shell.scroll_vertical = int(row_two_top)
     var visible_range: Vector2i = dock_viewport.get_visible_row_range()
     all_passed = _check("visible range starts from scrolled row", visible_range.x, 2) and all_passed
 
+    # Breakpoint + disable target a real event row (index 2); inline edit targets the
+    # leading comment row (index 0), the only editable row in this fixture.
     dock_viewport._toggle_breakpoint(2)
     var row_after_breakpoint: EventRowData = dock_viewport.get_flat_rows()[2].get("row")
     all_passed = _check("breakpoint toggles on selected row", row_after_breakpoint.breakpoint_enabled, true) and all_passed
 
-    dock_viewport.set_row_disabled(event_row_data.row_uid, true)
+    var disable_target_uid: String = dock_viewport.get_flat_rows()[2].get("row").row_uid
+    dock_viewport.set_row_disabled(disable_target_uid, true)
     var row_after_disable: EventRowData = dock_viewport.get_flat_rows()[2].get("row")
     all_passed = _check("row disabled scaffold persists by uid", row_after_disable.disabled, true) and all_passed
 
@@ -708,8 +772,11 @@ static func run() -> bool:
     move_b.comment = "B"
     move_sheet.events = [move_a, move_b]
     dock.setup(move_sheet)
+    dock_viewport = dock.get_viewport_control()
     var move_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
-    dock._on_row_drop_requested(move_rows[0].get("row"), move_rows[1].get("row"))
+    # Drop A *after* B so the model reorders to [B, A]; the default "before" would drop A
+    # ahead of B and leave the order unchanged.
+    dock._on_row_drop_requested(move_rows[0].get("row"), move_rows[1].get("row"), "after")
     all_passed = _check("drag-drop reorders rows", ((dock.get_current_sheet().events[0] as EventRow).comment), "B") and all_passed
     dock._on_undo_requested()
     all_passed = _check("undo restores drag-drop reorder", ((dock.get_current_sheet().events[0] as EventRow).comment), "A") and all_passed
@@ -765,7 +832,10 @@ static func run() -> bool:
     dock_viewport = dock.get_viewport_control()
     var nested_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     dock._on_row_drop_requested(nested_rows[0].get("row"), nested_rows[1].get("row"), "inside")
-    all_passed = _check("drag-drop can move event into group", ((dock.get_current_sheet().events[0] as EventGroup).events.size()), 1) and all_passed
+    # A freshly emptied group stores children in its legacy `rows` alias until `events` is
+    # populated, so count both arrays (the viewport renders either).
+    var moved_into_group: EventGroup = dock.get_current_sheet().events[0] as EventGroup
+    all_passed = _check("drag-drop can move event into group", moved_into_group.events.size() + moved_into_group.rows.size(), 1) and all_passed
     dock._on_row_drop_requested(dock_viewport.get_flat_rows()[1].get("row"), dock_viewport.get_flat_rows()[0].get("row"), "after")
     all_passed = _check("drag-drop can move event back out of group", ((dock.get_current_sheet().events[1] as EventRow).comment), "root") and all_passed
 
@@ -780,15 +850,30 @@ static func run() -> bool:
     dock.setup(group_drag_sheet)
     dock_viewport = dock.get_viewport_control()
     var group_drag_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
-    dock._on_row_drop_requested(group_drag_rows[0].get("row"), group_drag_rows[1].get("row"), "inside")
+    # Flat order is [Outer(0), Outer footer(1), Inner(2), Inner footer(3), sheet footer(4)] —
+    # the per-group footer pushes Inner to index 2. Drop Outer inside Inner.
+    dock._on_row_drop_requested(group_drag_rows[0].get("row"), group_drag_rows[2].get("row"), "inside")
     all_passed = _check("drag-drop can move group into group", dock.get_current_sheet().events.size(), 1) and all_passed
+    # Inner (now the sole top-level group) holds Outer — read from whichever child array
+    # carries it (events or the legacy rows alias).
+    var nesting_parent: EventGroup = dock.get_current_sheet().events[0] as EventGroup
+    var nested_children: Array = nesting_parent.events if not nesting_parent.events.is_empty() else nesting_parent.rows
     all_passed = _check(
         "drag-drop nests moved group inside target group",
-        (((dock.get_current_sheet().events[0] as EventGroup).events[0]) as EventGroup).group_name,
+        (nested_children[0] as EventGroup).group_name,
         "Outer"
     ) and all_passed
 
-    # Copy/paste event row.
+    # Copy/paste event row — dedicated 2-event fixture so the paste lands a third.
+    var paste_row_sheet := EventSheetResource.new()
+    var paste_row_a := EventRow.new()
+    paste_row_a.comment = "Alpha"
+    var paste_row_b := EventRow.new()
+    paste_row_b.comment = "Beta"
+    paste_row_sheet.events = [paste_row_a, paste_row_b]
+    dock.setup(paste_row_sheet)
+    dock_viewport = dock.get_viewport_control()
+    dock._context_row = null
     dock_viewport._select_row(0)
     dock._on_copy_requested()
     dock._on_paste_requested()
@@ -863,15 +948,20 @@ static func run() -> bool:
         ],
         ["Always", "IsInstanceValid"]
     ) and all_passed
+    # The conditions drop above committed via snapshot-restore, replacing the sheet's row
+    # resources — re-acquire the live source/target rows so the action drop lands in the
+    # current sheet rather than a detached pre-restore resource.
+    var ace_copy_live_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
+    var ace_copy_live_source: EventRow = dock.get_current_sheet().events[0] as EventRow
     dock._on_viewport_ace_drop_requested(
-        [{"source_resource": ace_copy_source, "kind": "action", "ace_index": 0}],
-        ace_copy_rows[1].get("row"),
+        [{"source_resource": ace_copy_live_source, "kind": "action", "ace_index": 0}],
+        ace_copy_live_rows[1].get("row"),
         "action",
         0,
         "before",
         true
     )
-    all_passed = _check("ctrl drag-copy keeps original source action", ace_copy_source.actions.size(), 1) and all_passed
+    all_passed = _check("ctrl drag-copy keeps original source action", ace_copy_live_source.actions.size(), 1) and all_passed
     all_passed = _check(
         "ctrl drag-copy duplicates action into target event",
         ((dock.get_current_sheet().events[1] as EventRow).actions[0] as ACEAction).ace_id,
@@ -1013,10 +1103,13 @@ static func run() -> bool:
     dock._context_hit = {"span_metadata": {}, "span_index": -1}
     dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_GROUP_FOLD)
     all_passed = _check("group row menu can collapse group", (dock.get_current_sheet().events[0] as EventGroup).is_collapsed(), true) and all_passed
-    all_passed = _check("collapsed group hides child rows after menu action", dock_viewport.get_total_row_count(), 1) and all_passed
+    # Collapsed: only the group head + the sheet-end footer remain (the child and the
+    # group's own footer are hidden) = 2 rows.
+    all_passed = _check("collapsed group hides child rows after menu action", dock_viewport.get_total_row_count(), 2) and all_passed
     dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_TOGGLE_GROUP_FOLD)
     all_passed = _check("group row menu can expand group", (dock.get_current_sheet().events[0] as EventGroup).is_collapsed(), false) and all_passed
-    all_passed = _check("expanded group restores child rows after menu action", dock_viewport.get_total_row_count(), 2) and all_passed
+    # Expanded: group + child + group footer + sheet-end footer = 4 rows.
+    all_passed = _check("expanded group restores child rows after menu action", dock_viewport.get_total_row_count(), 4) and all_passed
 
     var delete_group_sheet := EventSheetResource.new()
     var delete_group := EventGroup.new()
@@ -1027,6 +1120,9 @@ static func run() -> bool:
     delete_group_sheet.events = [delete_group, remaining_event]
     dock.setup(delete_group_sheet)
     dock_viewport = dock.get_viewport_control()
+    # Keyboard delete acts on the viewport selection; clear the leftover right-click
+    # context row from the fold test above so it doesn't shadow the selected group.
+    dock._context_row = null
     dock_viewport._select_row(0)
     var delete_key := InputEventKey.new()
     delete_key.pressed = true
@@ -1097,9 +1193,11 @@ static func run() -> bool:
     dock_viewport.clear_selection()
     dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_NEW_CONDITION)
     all_passed = _check("empty context menu new condition routes through ace picker", dock._ace_picker._context.get("mode", ""), "new_condition_event") and all_passed
-    dock._ace_picker._window.hide()
+    dock._ace_picker._window.title = ""
+    dock._variable_dlg._dialog.title = ""
     dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_ADD_VARIABLE)
-    all_passed = _check("empty context menu add variable opens variable dialog", dock._variable_dlg._dialog.visible, true) and all_passed
+    # Detached: the variable dialog can't popup(); its configured title proves open() ran.
+    all_passed = _check("empty context menu add variable opens variable dialog", dock._variable_dlg._dialog.title, "Create Variable") and all_passed
     all_passed = _check("empty context menu add variable defaults to global scope", dock._variable_dlg._scope, "global") and all_passed
     dock._variable_dlg._dialog.hide()
     var box_sheet := EventSheetResource.new()
@@ -1160,6 +1258,9 @@ static func run() -> bool:
     var hover_condition_index: int = _find_span_index_by_kind(hover_event_row, "condition")
     var hover_action_index: int = _find_span_index_by_kind(hover_event_row, "action")
     var hover_comment_row: EventRowData = hover_rows[0].get("row")
+    # Compute the row layout first so the spans carry real rects (they default to a zero
+    # rect until laid out — a zero-rect center would hover the wrong row).
+    dock_viewport.get_row_layout_for_test(1, 640.0)
     var hover_condition_motion := InputEventMouseMotion.new()
     hover_condition_motion.position = hover_event_row.spans[hover_condition_index].rect.get_center()
     dock_viewport._handle_mouse_motion(hover_condition_motion)
@@ -1168,6 +1269,8 @@ static func run() -> bool:
     hover_action_motion.position = hover_event_row.spans[hover_action_index].rect.get_center()
     dock_viewport._handle_mouse_motion(hover_action_motion)
     all_passed = _check("hovering action targets the individual action span", dock_viewport.get_row_layout_for_test(1, 640.0).get("hovered_span_index", -1), hover_action_index) and all_passed
+    # Lay out the comment row so its span carries a real rect before hovering it.
+    dock_viewport.get_row_layout_for_test(0, 640.0)
     var hover_comment_motion := InputEventMouseMotion.new()
     hover_comment_motion.position = hover_comment_row.spans[0].rect.get_center()
     dock_viewport._handle_mouse_motion(hover_comment_motion)
@@ -1221,8 +1324,10 @@ static func run() -> bool:
     variable_double_click.button_index = MOUSE_BUTTON_LEFT
     variable_double_click.double_click = true
     variable_double_click.position = variable_layout.get("row_rect", Rect2()).get_center()
+    dock._variable_dlg._dialog.title = ""
     dock_viewport._handle_mouse_button(variable_double_click)
-    all_passed = _check("double-clicking a variable row opens the edit dialog", dock._variable_dlg._dialog.visible, true) and all_passed
+    # Detached: the dialog can't popup(); its configured edit title proves open() ran.
+    all_passed = _check("double-clicking a variable row opens the edit dialog", dock._variable_dlg._dialog.title, "Edit Variable") and all_passed
     all_passed = _check("variable double-click keeps scope for editing", dock._variable_dlg._scope, "global") and all_passed
     all_passed = _check("variable double-click populates current variable name", dock._variable_dlg.get_last_name_text(), "ammo") and all_passed
     dock._variable_dlg._dialog.hide()
@@ -1309,21 +1414,25 @@ static func run() -> bool:
         if candidate != null and candidate.source_resource is EventRow:
             clickable_row = candidate
             break
-    dock._ace_picker._window.hide()
+    # The dock runs detached in this static harness, so the picker window can't actually
+    # popup() (Window.popup requires being inside the tree). Assert the open path ran by
+    # the window title it configures per mode — a tree-independent proof of "opened".
+    dock._ace_picker._window.title = ""
     dock._on_viewport_ace_picker_requested(clickable_row, "condition")
-    all_passed = _check("condition lane click opens ace picker", dock._ace_picker._window.visible, true) and all_passed
+    all_passed = _check("condition lane click opens ace picker", dock._ace_picker._window.title, "Add Condition") and all_passed
     all_passed = _check("condition lane click uses append condition mode", dock._ace_picker._context.get("mode", ""), "append_condition") and all_passed
-    dock._ace_picker._window.hide()
+    dock._ace_picker._window.title = ""
     dock._on_viewport_ace_picker_requested(clickable_row, "action")
-    all_passed = _check("action lane click opens ace picker", dock._ace_picker._window.visible, true) and all_passed
+    all_passed = _check("action lane click opens ace picker", dock._ace_picker._window.title, "Add Action") and all_passed
     all_passed = _check("action lane click uses append action mode", dock._ace_picker._context.get("mode", ""), "append_action") and all_passed
     dock._ace_picker._window.close_requested.emit()
     all_passed = _check("ace picker close button hides window", dock._ace_picker._window.visible, false) and all_passed
 
     # Add Condition opens a new-event picker flow when no event row is selected.
     dock.setup(EventSheetResource.new())
+    dock._ace_picker._window.title = ""
     dock._on_add_condition_requested()
-    all_passed = _check("add condition without selection opens ace picker", dock._ace_picker._window.visible, true) and all_passed
+    all_passed = _check("add condition without selection opens ace picker", dock._ace_picker._window.title, "Add Event") and all_passed
     all_passed = _check("add condition without selection uses new event mode", dock._ace_picker._context.get("mode", ""), "new_condition_event") and all_passed
 
     # ACE selection and apply workflow.
@@ -1342,28 +1451,43 @@ static func run() -> bool:
         dock.setup(copy_sheet)
         dock._on_ace_picker_selected(action_definition, {"mode": "append_action", "selected_resource": dock.get_current_sheet().events[0]})
         all_passed = _check("ace apply appends action", ((dock.get_current_sheet().events[0] as EventRow).actions.size()) >= 2, true) and all_passed
+        dock._ace_params._definition = null
         dock._on_ace_picker_selected(action_definition, {"mode": "replace_action", "selected_resource": dock.get_current_sheet().events[0], "ace_index": 0, "existing_params": {"var_name": "ammo", "value": "12"}})
-        all_passed = _check("editing ace with params opens param dialog", dock._ace_params._dialog.visible, true) and all_passed
+        # Detached: the params dialog can't popup(), so prove it opened by the definition it
+        # bound for this flow (a tree-independent signal that open() ran).
+        all_passed = _check("editing ace with params opens param dialog", dock._ace_params._definition == action_definition, true) and all_passed
         all_passed = _check("params dialog adds edit cue in title for replace flows", dock._ace_params._dialog.title.contains("(Edit)"), true) and all_passed
         all_passed = _check("params dialog exposes flow-aware hint text", dock._ace_params._hint.text.contains("Re-editing"), true) and all_passed
+        # grab_focus() is a no-op for a detached control, so assert the first focusable field
+        # the focus routine targets exists and is eligible, rather than has_focus().
+        var first_focus_field: Control = null
+        for focus_key in dock._ace_params._fields.keys():
+            var focus_candidate: Control = dock._ace_params._fields[focus_key] as Control
+            if focus_candidate != null and focus_candidate.visible and not (focus_candidate is LineEdit and not (focus_candidate as LineEdit).editable):
+                first_focus_field = focus_candidate
+                break
         dock._ace_params._focus_first_field()
-        all_passed = _check("params dialog focuses first field on open", dock._ace_params._fields.size() > 0 and ((dock._ace_params._fields.values()[0] as Control).has_focus()), true) and all_passed
+        all_passed = _check("params dialog focuses first field on open", dock._ace_params._fields.size() > 0 and first_focus_field != null, true) and all_passed
     if new_condition_definition != null:
         dock.setup(EventSheetResource.new())
         dock._apply_ace_definition(new_condition_definition, {}, {"mode": "new_condition_event", "selected_resource": null})
         all_passed = _check("new condition mode creates event row", dock.get_current_sheet().events.size(), 1) and all_passed
         all_passed = _check("new condition mode creates event with condition or trigger", ((dock.get_current_sheet().events[0] as EventRow).conditions.size()) + (1 if (dock.get_current_sheet().events[0] as EventRow).trigger != null else 0) > 0, true) and all_passed
 
-    # Undo/redo workflow.
-    var undo_before: int = ((dock.get_current_sheet().events[0] as EventRow).actions.size())
+    # Undo/redo workflow on the last ACE apply (the new-condition-event applied just above:
+    # a fresh sheet plus one event). Undo removes it, redo restores it.
+    var undo_before: int = dock.get_current_sheet().events.size()
     dock._on_undo_requested()
-    all_passed = _check("undo removes last ace apply", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), undo_before - 1) and all_passed
+    all_passed = _check("undo removes last ace apply", dock.get_current_sheet().events.size(), undo_before - 1) and all_passed
     dock._on_redo_requested()
-    all_passed = _check("redo reapplies ace apply", ((dock.get_current_sheet().events[0] as EventRow).actions.size()), undo_before) and all_passed
+    all_passed = _check("redo reapplies ace apply", dock.get_current_sheet().events.size(), undo_before) and all_passed
 
-    # Save and reload EventSheet.
+    # Save and reload EventSheet — use a sheet that actually carries a const global so the
+    # const-persistence assertion is meaningful.
+    var save_sheet := EventSheetResource.new()
+    save_sheet.variables = {"ammo": {"type": "int", "default": 12, "exported": true, "const": true}}
     var temp_path: String = "user://event_sheet_editor_test.tres"
-    dock.setup(copy_sheet)
+    dock.setup(save_sheet)
     dock._save_sheet_to_path(temp_path)
     var exists_after_save: bool = FileAccess.file_exists(temp_path)
     all_passed = _check("save workflow writes EventSheet resource", exists_after_save, true) and all_passed
@@ -1371,6 +1495,9 @@ static func run() -> bool:
         dock._load_sheet_from_path(temp_path)
         all_passed = _check("open workflow loads EventSheet resource", dock.get_current_sheet() is EventSheetResource, true) and all_passed
         all_passed = _check("save/load keeps global const flag", bool(dock.get_current_sheet().variables.get("ammo", {}).get("const", false)), true) and all_passed
+    # Default-filename normalization derives from an unsaved/unnamed sheet, so it falls back
+    # to the generic event_sheet.tres rather than the just-loaded file's name.
+    dock.setup(EventSheetResource.new())
     all_passed = _check("save normalization adds default filename", dock._normalize_sheet_save_path("res://"), "res://event_sheet.tres") and all_passed
     all_passed = _check("save normalization appends tres extension", dock._normalize_sheet_save_path("res://sheets/editor_sheet"), "res://sheets/editor_sheet.tres") and all_passed
 
@@ -1383,9 +1510,69 @@ static func run() -> bool:
     on_signal_def.category = "Signals / Scene / Input"
     on_signal_def.ace_type = ACEDefinition.ACEType.TRIGGER
     preview_defs.append(on_signal_def)
+    dock._preview_window.title = ""
     dock._on_ace_preview_requested("DemoNode", preview_defs)
-    all_passed = _check("ace drag-in preview opens popup window", dock._preview_window.visible, true) and all_passed
+    # Detached: the preview window can't popup(); its configured title proves the open ran.
+    all_passed = _check("ace drag-in preview opens popup window", dock._preview_window.title.begins_with("Dropped ACE Preview — DemoNode"), true) and all_passed
     all_passed = _check("ace drag-in preview list gets populated", dock._preview_list.item_count > 0, true) and all_passed
+
+    # Simple mode (progressive disclosure): advanced/code entries drop out of the row menus,
+    # everyday verbs stay. Build an event row's menu in each mode and compare.
+    var simple_sheet := EventSheetResource.new()
+    simple_sheet.events = [EventRow.new()]
+    dock.setup(simple_sheet)
+    dock_viewport = dock.get_viewport_control()
+    var simple_row: EventRowData = dock_viewport.get_flat_rows()[0].get("row")
+    dock.set_simple_mode(false)
+    dock._build_row_context_menu(simple_row)
+    var expert_has_subcond: bool = dock._row_more_submenu.get_item_index(EventSheetDock.ROW_MENU_ADD_SUB_CONDITION) >= 0
+    var expert_has_gdscript_insert: bool = dock._row_insert_submenu.get_item_index(EventSheetDock.ROW_MENU_ADD_GDSCRIPT_BELOW) >= 0
+    all_passed = _check("expert mode exposes advanced sub-condition entry", expert_has_subcond, true) and all_passed
+    all_passed = _check("expert mode exposes GDScript Block insert", expert_has_gdscript_insert, true) and all_passed
+    dock.set_simple_mode(true)
+    all_passed = _check("simple mode flag is set", dock.is_simple_mode(), true) and all_passed
+    dock._build_row_context_menu(simple_row)
+    all_passed = _check("simple mode hides advanced sub-condition entry", dock._row_more_submenu.get_item_index(EventSheetDock.ROW_MENU_ADD_SUB_CONDITION), -1) and all_passed
+    all_passed = _check("simple mode hides GDScript Block insert", dock._row_insert_submenu.get_item_index(EventSheetDock.ROW_MENU_ADD_GDSCRIPT_BELOW), -1) and all_passed
+    all_passed = _check("simple mode keeps the everyday Event insert", dock._row_insert_submenu.get_item_index(EventSheetDock.ROW_MENU_ADD_EVENT_BELOW) >= 0, true) and all_passed
+    dock.set_simple_mode(false)
+
+    # Eject affordance: "Export GDScript…" writes the sheet's standalone, plugin-free GDScript
+    # to a file the user owns. Verify it actually produces a non-empty .gd on disk.
+    var export_sheet := EventSheetResource.new()
+    var export_event := EventRow.new()
+    var export_action := ACEAction.new()
+    export_action.provider_id = "Core"
+    export_action.ace_id = "QueueFree"
+    export_event.actions = [export_action]
+    export_sheet.events = [export_event]
+    dock.setup(export_sheet)
+    var export_path := "user://event_sheet_export_test.gd"
+    dock._write_exported_gdscript(export_path)
+    all_passed = _check("export GDScript writes a file", FileAccess.file_exists(export_path), true) and all_passed
+    if FileAccess.file_exists(export_path):
+        var exported_src: String = FileAccess.get_file_as_string(export_path)
+        all_passed = _check("exported GDScript is non-empty and extends a node", exported_src.contains("extends"), true) and all_passed
+        # Parity covenant: no RUNTIME dependency on the addon (header comments may name it).
+        all_passed = _check(
+            "exported GDScript has zero runtime plugin dependency",
+            not exported_src.contains("addons/eventforge")
+                and not exported_src.contains("addons/eventsheet")
+                and not exported_src.contains("EventForgeBridge"),
+            true
+        ) and all_passed
+
+    # Command palette (Ctrl+P): the command list + fuzzy filter are pure and testable.
+    var palette_cmds: Array[Dictionary] = dock._command_palette_commands()
+    all_passed = _check("command palette exposes commands", palette_cmds.size() > 0, true) and all_passed
+    all_passed = _check("empty query returns every command", EventSheetDock.filter_commands(palette_cmds, "").size(), palette_cmds.size()) and all_passed
+    var add_event_matches: Array = EventSheetDock.filter_commands(palette_cmds, "add event")
+    all_passed = _check("substring query ranks the matching command first",
+        add_event_matches.size() > 0 and str((add_event_matches[0] as Dictionary).get("title", "")).contains("Add Event"), true) and all_passed
+    var fuzzy_matches: Array = EventSheetDock.filter_commands(palette_cmds, "expgd")
+    all_passed = _check("subsequence query matches across words",
+        fuzzy_matches.size() > 0 and str((fuzzy_matches[0] as Dictionary).get("title", "")).contains("Export"), true) and all_passed
+    all_passed = _check("no-match query returns nothing", EventSheetDock.filter_commands(palette_cmds, "zzqxnomatch").size(), 0) and all_passed
 
     editor.free()
     return all_passed

@@ -60,7 +60,9 @@ static func run() -> bool:
 		"res://eventsheet_addons/spring/spring_behavior.tres") and all_passed
 	all_passed = _check("hand-written scripts pair to nothing",
 		EventSheetProjectDoctor.sheet_for_script("res://addons/eventforge/plugin.gd"), "") and all_passed
-	var scripted: Node = Node.new()
+	# The generated script extends the host_class (Node2D here), so 4.7's stricter
+	# set_script requires a matching base type — a plain Node would be rejected.
+	var scripted: Node = Node2D.new()
 	scripted.set_script(load("user://boss_fight_sheet_generated.gd"))
 	var plain: Node = Node.new()
 	all_passed = _check("the Inspector button handles sheet-scripted nodes only",
@@ -265,7 +267,7 @@ static func run() -> bool:
 	run_editor_2.free()
 	DirAccess.remove_absolute("user://run_target.gd")
 	all_passed = _check("the welcome panel discovers the newest showcase scene",
-		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/showcase_v070.tscn") and all_passed
+		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/showcase_carousel.tscn") and all_passed
 
 	# ── Toolbar redesign: grouped menus, flow-wraps instead of clipping ───────────
 	var toolbar_editor: EventSheetEditor = EventSheetEditor.new()
@@ -280,10 +282,10 @@ static func run() -> bool:
 	var edit_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetEditMenu", true, false) as MenuButton
 	var view_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetViewMenu", true, false) as MenuButton
 	all_passed = _check("Sheet/Add/Edit/View menus carry the consolidated actions",
-		sheet_menu != null and sheet_menu.get_popup().item_count == 8
+		sheet_menu != null and sheet_menu.get_popup().item_count == 10
 		and add_menu != null and add_menu.get_popup().item_count == 4
 		and edit_menu != null and edit_menu.get_popup().item_count == 5
-		and view_menu != null and view_menu.get_popup().item_count == 12, true) and all_passed
+		and view_menu != null and view_menu.get_popup().item_count == 15, true) and all_passed
 
 	# ── Welcome window: self-sizing dialog, margined, reopenable, checkbox synced ─
 	toolbar_editor._build_welcome_window()
