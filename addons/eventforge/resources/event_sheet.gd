@@ -68,3 +68,8 @@ class_name EventSheetResource
 ## no generated header), and no .tres exists unless the user saves-as. See
 ## docs/GDSCRIPT-PAIRING-SPEC.md "Open any GDScript as a sheet".
 @export var external_source_path: String = ""
+## When true this sheet is a read-only PREVIEW (e.g. a .gd opened just to look at it): the
+## editor blocks all mutations and refuses to save back over the source file. Clearing it
+## (the banner's "Edit Events" button) re-enables normal editing. Preview is the safe default
+## when opening a .gd, so a casual look can never overwrite a hand-written script.
+@export var read_only: bool = false

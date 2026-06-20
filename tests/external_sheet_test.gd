@@ -91,9 +91,21 @@ static func run() -> bool:
 	editor._load_sheet_from_path(sample_path)
 	all_passed = _check("dock opens .gd as a GDScript-backed sheet",
 		editor._current_sheet != null and editor._current_sheet.external_source_path == sample_path, true) and all_passed
+	# Opening a .gd is a SAFE read-only PREVIEW by default — a casual look never overwrites it.
+	all_passed = _check("opening a .gd is a read-only preview", editor._current_sheet.read_only, true) and all_passed
+	# Modify a lifted variable, then a preview-save must NOT write it back over the source.
+	for preview_entry in editor._current_sheet.events:
+		if preview_entry is LocalVariable and (preview_entry as LocalVariable).name == "hp":
+			(preview_entry as LocalVariable).default_value = 999
 	editor._on_save_requested()
-	all_passed = _check("dock save reproduces the file on disk",
+	all_passed = _check("preview save does not overwrite the source file",
 		FileAccess.get_file_as_string(sample_path) == SAMPLE_SOURCE, true) and all_passed
+	# "Edit Events" unlocks editing; the two-way GDScript-backed save then writes the change.
+	editor._on_preview_edit_requested()
+	all_passed = _check("Edit Events unlocks editing", editor._current_sheet.read_only, false) and all_passed
+	editor._on_save_requested()
+	all_passed = _check("dock save writes the edit back to disk after unlock",
+		FileAccess.get_file_as_string(sample_path).contains("var hp: int = 999"), true) and all_passed
 	editor.free()
 
 	return all_passed
