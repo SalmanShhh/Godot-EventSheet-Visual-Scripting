@@ -2113,6 +2113,20 @@ func _on_duplicate_requested() -> void:
 
 ## Recursively assigns fresh event UIDs to a cloned event row and its sub-events so the
 ## duplicate does not share selection/fold identity with the source.
+## A fresh 8-hex-digit token for a baked `{uid}` local. The previous random-only draw could repeat
+## within one event body (two ACEs → two identical locals → invalid GDScript); this tracks every
+## token minted this session and re-draws on a clash, so two mints never collide. Full 32-bit (no
+## top-bit mask) keeps the keyspace whole for cross-session distinctness, and the 8-hex width
+## matches the re-bake regex `__[a-z_]+_([0-9a-f]{8})`.
+static var _minted_uid_tokens: Dictionary = {}
+
+static func _fresh_uid_token() -> String:
+    var token: String = "%08x" % randi()
+    while _minted_uid_tokens.has(token):
+        token = "%08x" % randi()
+    _minted_uid_tokens[token] = true
+    return token
+
 func _assign_fresh_event_uids(row: EventRow) -> void:
     row.event_uid = EventRow._generate_short_uid()
     # Stateful conditions (Every X Seconds…): the COPY must own its own accumulator —
@@ -2127,7 +2141,7 @@ func _assign_fresh_event_uids(row: EventRow) -> void:
             if uid_match == null:
                 continue
             var old_uid: String = uid_match.get_string(1)
-            var new_uid: String = "%08x" % (randi() & 0x7fffffff)
+            var new_uid: String = _fresh_uid_token()
             stateful.member_declaration = stateful.member_declaration.replace(old_uid, new_uid)
             stateful.codegen_template = stateful.codegen_template.replace(old_uid, new_uid)
             stateful.codegen_prelude = stateful.codegen_prelude.replace(old_uid, new_uid)
@@ -2144,7 +2158,7 @@ func _assign_fresh_event_uids(row: EventRow) -> void:
             for action_match: RegExMatch in action_uid_regex.search_all(baked.codegen_template):
                 seen_uids[action_match.get_string(1)] = true
             for stale_uid: Variant in seen_uids.keys():
-                baked.codegen_template = baked.codegen_template.replace(str(stale_uid), "%08x" % (randi() & 0x7fffffff))
+                baked.codegen_template = baked.codegen_template.replace(str(stale_uid), _fresh_uid_token())
     for sub_event in row.sub_events:
         if sub_event is EventRow:
             _assign_fresh_event_uids(sub_event as EventRow)
@@ -2578,7 +2592,7 @@ func _create_condition_from_definition(definition: ACEDefinition, params: Dictio
     # on-true/template so every applied instance owns its own state.
     var member_template: String = str(definition.metadata.get("member_template", ""))
     if not member_template.is_empty():
-        var stateful_uid: String = "%08x" % (randi() & 0x7fffffff)
+        var stateful_uid: String = _fresh_uid_token()
         condition.member_declaration = member_template.replace("{uid}", stateful_uid)
         condition.codegen_prelude = str(definition.metadata.get("codegen_prelude", "")).replace("{uid}", stateful_uid)
         condition.codegen_on_true = str(definition.metadata.get("codegen_on_true", "")).replace("{uid}", stateful_uid)
@@ -2594,7 +2608,7 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
     action.codegen_template = _baked_template_for(definition)
     # Multi-statement action templates declare locals — bake a fresh uid per instance.
     if action.codegen_template.contains("{uid}"):
-        action.codegen_template = action.codegen_template.replace("{uid}", "%08x" % (randi() & 0x7fffffff))
+        action.codegen_template = action.codegen_template.replace("{uid}", _fresh_uid_token())
     return action
 
 ## The codegen template baked onto applied ACEs. Explicit @ace_codegen_template wins; addon
@@ -5953,7 +5967,7 @@ func _action_for_asset(asset_path: String) -> ACEAction:
             action.params = params
             action.codegen_template = str(descriptor.codegen_template)
             if action.codegen_template.contains("{uid}"):
-                action.codegen_template = action.codegen_template.replace("{uid}", "%08x" % (randi() & 0x7fffffff))
+                action.codegen_template = action.codegen_template.replace("{uid}", _fresh_uid_token())
             return action
     return null
 

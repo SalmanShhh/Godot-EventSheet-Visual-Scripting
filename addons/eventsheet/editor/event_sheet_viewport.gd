@@ -1338,10 +1338,12 @@ func _handle_key(event: InputEventKey) -> void:
         _handle_editing_key(event)
         return
     if (event.keycode == KEY_UP or event.keycode == KEY_DOWN) and event.shift_pressed and not event.alt_pressed:
-        # Shift+Arrow grows or shrinks a whole-row range from the selection anchor.
-        var range_step: int = -1 if event.keycode == KEY_UP else 1
-        var range_origin: int = _selected_row_index if _selected_row_index >= 0 else 0
-        _select_range(range_origin + range_step)
+        # Shift+Arrow grows or shrinks a whole-row range from the selection anchor. From an empty
+        # selection it lands on the first row (Shift+Down used to skip past row 0 to row 1).
+        if _selected_row_index < 0:
+            _select_range(0)
+        else:
+            _select_range(_selected_row_index + (-1 if event.keycode == KEY_UP else 1))
         ensure_selection_visible()
         accept_event()
     elif event.keycode == KEY_UP and not event.alt_pressed:

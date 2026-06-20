@@ -146,6 +146,16 @@ static func run() -> bool:
 		not spawn_copy.codegen_template.contains("bbbb2222")
 		and spawn_copy.codegen_template.count("__spawn_") == 2, true) and all_passed
 	copy_editor.free()
+	# Baked {uid} tokens never collide within a session (regression: the random-only draw could
+	# repeat, so two {uid} ACEs in one event body declared the same local — invalid GDScript).
+	var uid_seen: Dictionary = {}
+	var uid_ok: bool = true
+	for _uid_i in range(4000):
+		var tok: String = EventSheetDock._fresh_uid_token()
+		if uid_seen.has(tok) or tok.length() != 8:
+			uid_ok = false
+		uid_seen[tok] = true
+	all_passed = _check("minted {uid} tokens are unique + 8 hex digits", uid_ok, true) and all_passed
 
 	# Watch panel (#3): evaluate_watch evaluates an expression over the streamed variable values.
 	var w1: Dictionary = EventSheetLiveValuesPanel.evaluate_watch("health + 1", {"health": 5})

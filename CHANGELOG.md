@@ -20,6 +20,13 @@
   alone produced no instrumentation. The trace now rides the same throttled `_process` independently
   (a shared "throttle emitted" flag keeps the synthesized and injected `_process` from duplicating);
   trace-only compiles stream `eventsheets:fired_events` correctly. Live-values output is unchanged.
+- **Baked `{uid}` locals could collide** — the per-instance token for multi-line ACEs (Spawn Scene,
+  Wait, Every-X-Seconds…) was a masked random draw, so two such ACEs in one event body could (very
+  rarely) bake the same local and produce invalid GDScript. A central minting helper now tracks
+  every token issued this session and re-draws on a clash, guaranteeing distinct locals; the 8-hex
+  format is unchanged.
+- **Shift+Down from an empty selection** skipped the first row (landed on row 2). It now starts the
+  range on the first row, matching Shift+Up.
 
 ### Dev helper ACEs — Debug · Groups · Metadata · Nodes (the everyday tools)
 - **25 developer-helper ACEs** (`dev_aces`) for the native operations you reach for constantly,
