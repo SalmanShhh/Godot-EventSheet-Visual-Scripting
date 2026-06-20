@@ -36,7 +36,7 @@ Conditions                        | Actions
 
 1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project
    (tested through **Godot 4.7 stable**; 4.6+ recommended for the native "Modern" theme look).
-   Optional: `eventsheet_addons/` for the 26 behavior packs and demo ACEs. Removing the
+   Optional: `eventsheet_addons/` for the 27 behavior packs and demo ACEs. Removing the
    plugin later is clean and reversible — see the [uninstall guide](docs/UNINSTALL.md).
 2. **Project → Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
@@ -61,7 +61,7 @@ Conditions                        | Actions
   round-trips), paste GDScript and it converts to events, write GDScript that calls
   sheet-built classes like any other class.
 - **C3 muscle memory works.** The grammar, the picker, behaviors-as-components, combos,
-  waits, press-a-key capture, the 26-pack addon set (including ports of custom C3 addons —
+  waits, press-a-key capture, the 27-pack addon set (including ports of custom C3 addons —
   Virtual Cursor, an event-driven Drag & Drop, a Health pack with absorption + shield
   pools, a Weapon Kit, and a utility-driven HTN planner), System/Keyboard/Mouse/Gamepad/
   Touch/Audio vocabularies — designed against C3 conventions on purpose.
@@ -247,7 +247,7 @@ Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
 |---|---|
 | `addons/eventforge/` | Data model, compiler, importer, builtin ACEs, runtime bridge |
 | `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, MCP server |
-| `eventsheet_addons/` | Zero-config ACE addons + the 26 behavior packs |
+| `eventsheet_addons/` | Zero-config ACE addons + the 27 behavior packs |
 | `demo/` | Demo sheets, themes, and the golden compiled output |
 | `tests/` | Headless suite — `tests/run_tests.gd` (full) and `tests/run_perf.gd` (headless-safe gate) |
 | `docs/` | Specs: GDScript pairing, editor UI, theme tokens, MCP, C3 migration |

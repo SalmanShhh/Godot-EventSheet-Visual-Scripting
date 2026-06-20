@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Advanced Random addon (C3 parity) + ACE sub-categories + read-only .gd preview
+- **Advanced Random** autoload pack (27th pack) — a faithful port of Construct 3's Advanced
+  Random plugin: seeded numbers / range / int / **dice** / **normal (Gaussian)**,
+  **Perlin/Simplex noise** (1D/2D/3D with fractal octaves, via `FastNoiseLite`),
+  **permutation tables**, **shuffle bags** (pick without repeats), **weighted** + uniform
+  picks, and a **Chance(%)** condition. One shared seed = reproducible runs; 22 ACEs under a
+  nested "Advanced Random" picker section.
+- **ACE sub-categories** — the picker nests `"Parent: Sub"` categories one level, so related
+  ACEs cluster (e.g. the Array/Dictionary/Vector/String helpers under **Variables**).
+- **Read-only `.gd` preview** — opening a GDScript file as a sheet defaults to a safe
+  read-only preview (gated edits + save, a plain-language banner with Edit Events / Open in
+  Script Editor, inline lift-fidelity), so a casual look never overwrites a hand-written script.
+
 ### New ACE vocabulary — UI, particles, tilemaps, animation, shaders, input rebinding, joints, 2D raycast, loops
 First-class events for the biggest gaps from the capability audit (roadmap Phases 0/1/2/4/5):
 - **UI & menus** (`ui_aces`) — Button **On Pressed** / **On Toggled** triggers (real signal

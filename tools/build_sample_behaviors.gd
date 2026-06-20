@@ -32,6 +32,7 @@ const PACK_BUILDERS: Array[String] = [
 	"virtual_cursor",
 	"weapon_kit",
 	"htn_agent",
+	"advanced_random",
 ]
 
 func _init() -> void:

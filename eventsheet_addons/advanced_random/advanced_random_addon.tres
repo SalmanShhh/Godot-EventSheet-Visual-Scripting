@@ -1,0 +1,589 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_af8dx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_76egj"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_nixkk"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_8jgwv"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_k5cjq"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_53lfu"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_58wby"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_7r4xp"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_i8nbd"]
+
+[sub_resource type="Resource" id="Resource_odpv0"]
+script = ExtResource("1_af8dx")
+text = "Advanced Random (autoload): register as the AdvancedRandom autoload, then call its ACEs from any sheet — seeded numbers/dice/normal, Perlin/Simplex noise, permutation tables, shuffle bags, weighted picks, and a Chance(%) condition. Set seed_on_start in the Inspector for reproducible runs. This pack is an event sheet — extend it by editing it."
+
+[sub_resource type="Resource" id="Resource_fwfqp"]
+script = ExtResource("2_76egj")
+code = "var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var _noise: FastNoiseLite = FastNoiseLite.new()
+var _perm: PackedInt32Array = PackedInt32Array()
+var _bags: Dictionary = {}"
+
+[sub_resource type="Resource" id="Resource_j6grk"]
+script = ExtResource("2_76egj")
+code = "if seed_on_start != 0:
+	_rng.seed = seed_on_start
+	_noise.seed = seed_on_start
+else:
+	_rng.randomize()
+	_noise.seed = _rng.randi()"
+
+[sub_resource type="Resource" id="Resource_2h5wo"]
+script = ExtResource("6_53lfu")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_j6grk")])
+event_uid = "fb5db0"
+
+[sub_resource type="Resource" id="Resource_7bkr4"]
+script = ExtResource("2_76egj")
+code = "_rng.seed = seed_value
+_noise.seed = seed_value"
+
+[sub_resource type="Resource" id="Resource_gfdsw"]
+script = ExtResource("7_58wby")
+id = "seed_value"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_4vbhd"]
+script = ExtResource("8_7r4xp")
+function_name = "set_random_seed"
+description = "Sets the seed for BOTH numbers and noise — same seed reproduces the same sequence."
+expose_as_ace = true
+ace_display_name = "Set Seed"
+ace_category = "Advanced Random: Setup"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_gfdsw")])
+events = Array[Resource]([SubResource("Resource_7bkr4")])
+
+[sub_resource type="Resource" id="Resource_vh58q"]
+script = ExtResource("2_76egj")
+code = "_rng.randomize()
+_noise.seed = _rng.randi()"
+
+[sub_resource type="Resource" id="Resource_xsona"]
+script = ExtResource("8_7r4xp")
+function_name = "randomize_seed"
+description = "Picks a fresh, unpredictable seed (non-reproducible)."
+expose_as_ace = true
+ace_display_name = "Randomize Seed"
+ace_category = "Advanced Random: Setup"
+events = Array[Resource]([SubResource("Resource_vh58q")])
+
+[sub_resource type="Resource" id="Resource_j1q40"]
+script = ExtResource("2_76egj")
+code = "_noise.noise_type = clampi(noise_type, 0, 5)"
+
+[sub_resource type="Resource" id="Resource_m2a6w"]
+script = ExtResource("7_58wby")
+id = "noise_type"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_gbpo2"]
+script = ExtResource("8_7r4xp")
+function_name = "set_noise_type"
+description = "0 Value · 1 Value Cubic · 2 Perlin · 3 Cellular · 4 Simplex · 5 Simplex Smooth (FastNoiseLite.NoiseType)."
+expose_as_ace = true
+ace_display_name = "Set Noise Type"
+ace_category = "Advanced Random: Setup"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_m2a6w")])
+events = Array[Resource]([SubResource("Resource_j1q40")])
+
+[sub_resource type="Resource" id="Resource_lwfes"]
+script = ExtResource("2_76egj")
+code = "_noise.frequency = frequency"
+
+[sub_resource type="Resource" id="Resource_k68sl"]
+script = ExtResource("7_58wby")
+id = "frequency"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_6g5sd"]
+script = ExtResource("8_7r4xp")
+function_name = "set_noise_frequency"
+description = "Lower = smoother/larger features; higher = noisier (default 0.01)."
+expose_as_ace = true
+ace_display_name = "Set Noise Frequency"
+ace_category = "Advanced Random: Setup"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_k68sl")])
+events = Array[Resource]([SubResource("Resource_lwfes")])
+
+[sub_resource type="Resource" id="Resource_qp8un"]
+script = ExtResource("2_76egj")
+code = "_noise.fractal_octaves = maxi(octaves, 1)"
+
+[sub_resource type="Resource" id="Resource_hrf36"]
+script = ExtResource("7_58wby")
+id = "octaves"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_yy1wj"]
+script = ExtResource("8_7r4xp")
+function_name = "set_noise_octaves"
+description = "Fractal detail layers — more octaves add fine detail (fractal/fBm noise)."
+expose_as_ace = true
+ace_display_name = "Set Noise Octaves"
+ace_category = "Advanced Random: Setup"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_hrf36")])
+events = Array[Resource]([SubResource("Resource_qp8un")])
+
+[sub_resource type="Resource" id="Resource_1dnqy"]
+script = ExtResource("2_76egj")
+code = "var values: Array = range(maxi(size, 0))
+for i: int in range(values.size() - 1, 0, -1):
+	var j: int = _rng.randi_range(0, i)
+	var swap: Variant = values[i]
+	values[i] = values[j]
+	values[j] = swap
+_perm = PackedInt32Array(values)"
+
+[sub_resource type="Resource" id="Resource_31y7y"]
+script = ExtResource("7_58wby")
+id = "size"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_mt2or"]
+script = ExtResource("8_7r4xp")
+function_name = "generate_permutation"
+description = "Builds a shuffled 0..size-1 table (read with the Permutation expression) — a fixed deck order."
+expose_as_ace = true
+ace_display_name = "Generate Permutation Table"
+ace_category = "Advanced Random: Setup"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_31y7y")])
+events = Array[Resource]([SubResource("Resource_1dnqy")])
+
+[sub_resource type="Resource" id="Resource_iv8hh"]
+script = ExtResource("2_76egj")
+code = "_bags[bag_name] = {\"items\": items.duplicate(), \"pile\": []}"
+
+[sub_resource type="Resource" id="Resource_ajf8p"]
+script = ExtResource("7_58wby")
+id = "bag_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_rsm1q"]
+script = ExtResource("7_58wby")
+id = "items"
+type_name = "Array"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_pxoww"]
+script = ExtResource("8_7r4xp")
+function_name = "make_shuffle_bag"
+description = "Creates a named bag of items — Shuffle Bag Pick draws each once before any repeats."
+expose_as_ace = true
+ace_display_name = "Make Shuffle Bag"
+ace_category = "Advanced Random: Setup"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_ajf8p"), SubResource("Resource_rsm1q")])
+events = Array[Resource]([SubResource("Resource_iv8hh")])
+
+[sub_resource type="Resource" id="Resource_bbiui"]
+script = ExtResource("2_76egj")
+code = "return _rng.randf()"
+
+[sub_resource type="Resource" id="Resource_dbisu"]
+script = ExtResource("8_7r4xp")
+function_name = "random_value"
+description = "A uniform float in [0, 1)."
+expose_as_ace = true
+ace_display_name = "Random (0-1)"
+ace_category = "Advanced Random: Numbers"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_bbiui")])
+
+[sub_resource type="Resource" id="Resource_jq2kn"]
+script = ExtResource("2_76egj")
+code = "return _rng.randf_range(minimum, maximum)"
+
+[sub_resource type="Resource" id="Resource_gn0ks"]
+script = ExtResource("7_58wby")
+id = "minimum"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_d6q0b"]
+script = ExtResource("7_58wby")
+id = "maximum"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_pcvoj"]
+script = ExtResource("8_7r4xp")
+function_name = "random_range"
+description = "A uniform float between min and max."
+expose_as_ace = true
+ace_display_name = "Random Range"
+ace_category = "Advanced Random: Numbers"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_gn0ks"), SubResource("Resource_d6q0b")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_jq2kn")])
+
+[sub_resource type="Resource" id="Resource_hgofr"]
+script = ExtResource("2_76egj")
+code = "return _rng.randi_range(minimum, maximum)"
+
+[sub_resource type="Resource" id="Resource_kenel"]
+script = ExtResource("7_58wby")
+id = "minimum"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_fbqdg"]
+script = ExtResource("7_58wby")
+id = "maximum"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_mw8ky"]
+script = ExtResource("8_7r4xp")
+function_name = "random_int"
+description = "A uniform integer between min and max (inclusive)."
+expose_as_ace = true
+ace_display_name = "Random Int"
+ace_category = "Advanced Random: Numbers"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_kenel"), SubResource("Resource_fbqdg")])
+return_type = 2
+events = Array[Resource]([SubResource("Resource_hgofr")])
+
+[sub_resource type="Resource" id="Resource_mspw2"]
+script = ExtResource("2_76egj")
+code = "return _rng.randi_range(1, maxi(sides, 1))"
+
+[sub_resource type="Resource" id="Resource_aatc0"]
+script = ExtResource("7_58wby")
+id = "sides"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_eo3db"]
+script = ExtResource("8_7r4xp")
+function_name = "dice"
+description = "Rolls a die with the given number of sides (1..sides)."
+expose_as_ace = true
+ace_display_name = "Roll Dice"
+ace_category = "Advanced Random: Numbers"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_aatc0")])
+return_type = 2
+events = Array[Resource]([SubResource("Resource_mspw2")])
+
+[sub_resource type="Resource" id="Resource_jg561"]
+script = ExtResource("2_76egj")
+code = "return -1 if _rng.randf() < 0.5 else 1"
+
+[sub_resource type="Resource" id="Resource_wybxx"]
+script = ExtResource("8_7r4xp")
+function_name = "random_sign"
+description = "Either -1 or +1."
+expose_as_ace = true
+ace_display_name = "Random Sign"
+ace_category = "Advanced Random: Numbers"
+return_type = 2
+events = Array[Resource]([SubResource("Resource_jg561")])
+
+[sub_resource type="Resource" id="Resource_cbc1c"]
+script = ExtResource("2_76egj")
+code = "return _rng.randfn(mean, deviation)"
+
+[sub_resource type="Resource" id="Resource_a2lif"]
+script = ExtResource("7_58wby")
+id = "mean"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_61p4h"]
+script = ExtResource("7_58wby")
+id = "deviation"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_d5s60"]
+script = ExtResource("8_7r4xp")
+function_name = "normal"
+description = "A normally-distributed float around mean with the given deviation."
+expose_as_ace = true
+ace_display_name = "Normal (Gaussian)"
+ace_category = "Advanced Random: Numbers"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_a2lif"), SubResource("Resource_61p4h")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_cbc1c")])
+
+[sub_resource type="Resource" id="Resource_gxpk2"]
+script = ExtResource("2_76egj")
+code = "return _noise.get_noise_1d(x)"
+
+[sub_resource type="Resource" id="Resource_gh2ao"]
+script = ExtResource("7_58wby")
+id = "x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ncq7c"]
+script = ExtResource("8_7r4xp")
+function_name = "noise_1d"
+description = "Smooth noise along a line at x — returns [-1, 1]."
+expose_as_ace = true
+ace_display_name = "Noise 1D"
+ace_category = "Advanced Random: Noise"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_gh2ao")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_gxpk2")])
+
+[sub_resource type="Resource" id="Resource_wqe8k"]
+script = ExtResource("2_76egj")
+code = "return _noise.get_noise_2d(x, y)"
+
+[sub_resource type="Resource" id="Resource_t2bu3"]
+script = ExtResource("7_58wby")
+id = "x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_nosbe"]
+script = ExtResource("7_58wby")
+id = "y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_rlkk1"]
+script = ExtResource("8_7r4xp")
+function_name = "noise_2d"
+description = "Smooth noise at (x, y) — great for terrain/heightmaps; returns [-1, 1]."
+expose_as_ace = true
+ace_display_name = "Noise 2D"
+ace_category = "Advanced Random: Noise"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_t2bu3"), SubResource("Resource_nosbe")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_wqe8k")])
+
+[sub_resource type="Resource" id="Resource_b5rry"]
+script = ExtResource("2_76egj")
+code = "return _noise.get_noise_3d(x, y, z)"
+
+[sub_resource type="Resource" id="Resource_p7x7s"]
+script = ExtResource("7_58wby")
+id = "x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_1ix1e"]
+script = ExtResource("7_58wby")
+id = "y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ipb3n"]
+script = ExtResource("7_58wby")
+id = "z"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_pv3v8"]
+script = ExtResource("8_7r4xp")
+function_name = "noise_3d"
+description = "Smooth noise at (x, y, z) — returns [-1, 1]."
+expose_as_ace = true
+ace_display_name = "Noise 3D"
+ace_category = "Advanced Random: Noise"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_p7x7s"), SubResource("Resource_1ix1e"), SubResource("Resource_ipb3n")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_b5rry")])
+
+[sub_resource type="Resource" id="Resource_lsuux"]
+script = ExtResource("2_76egj")
+code = "return _perm[posmod(index, _perm.size())] if not _perm.is_empty() else 0"
+
+[sub_resource type="Resource" id="Resource_3h0ov"]
+script = ExtResource("7_58wby")
+id = "index"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_chx0v"]
+script = ExtResource("8_7r4xp")
+function_name = "permutation"
+description = "Reads index (wrapped) from the permutation table — generate it first."
+expose_as_ace = true
+ace_display_name = "Permutation Value"
+ace_category = "Advanced Random: Picking"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_3h0ov")])
+return_type = 2
+events = Array[Resource]([SubResource("Resource_lsuux")])
+
+[sub_resource type="Resource" id="Resource_qucth"]
+script = ExtResource("2_76egj")
+code = "return options[_rng.randi_range(0, options.size() - 1)] if not options.is_empty() else null"
+
+[sub_resource type="Resource" id="Resource_vohg4"]
+script = ExtResource("7_58wby")
+id = "options"
+type_name = "Array"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_oqypj"]
+script = ExtResource("8_7r4xp")
+function_name = "pick"
+description = "A uniformly-random element of the array (null if empty)."
+expose_as_ace = true
+ace_display_name = "Pick From"
+ace_category = "Advanced Random: Picking"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_vohg4")])
+return_type = 39
+events = Array[Resource]([SubResource("Resource_qucth")])
+
+[sub_resource type="Resource" id="Resource_m0ehy"]
+script = ExtResource("2_76egj")
+code = "var total: float = 0.0
+for weight: Variant in weights:
+	total += maxf(float(weight), 0.0)
+if total <= 0.0:
+	return 0
+var roll: float = _rng.randf() * total
+var running: float = 0.0
+for i: int in weights.size():
+	running += maxf(float(weights[i]), 0.0)
+	if roll < running:
+		return i
+return weights.size() - 1"
+
+[sub_resource type="Resource" id="Resource_qu4a5"]
+script = ExtResource("7_58wby")
+id = "weights"
+type_name = "Array"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_4hp6l"]
+script = ExtResource("8_7r4xp")
+function_name = "weighted_index"
+description = "An index chosen in proportion to the weights array (heavier = likelier)."
+expose_as_ace = true
+ace_display_name = "Weighted Index"
+ace_category = "Advanced Random: Picking"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_qu4a5")])
+return_type = 2
+events = Array[Resource]([SubResource("Resource_m0ehy")])
+
+[sub_resource type="Resource" id="Resource_c341o"]
+script = ExtResource("2_76egj")
+code = "if not _bags.has(bag_name):
+	return null
+var bag: Dictionary = _bags[bag_name]
+var pile: Array = bag[\"pile\"]
+if pile.is_empty():
+	pile = (bag[\"items\"] as Array).duplicate()
+	bag[\"pile\"] = pile
+if pile.is_empty():
+	return null
+var drawn: int = _rng.randi_range(0, pile.size() - 1)
+var value: Variant = pile[drawn]
+pile.remove_at(drawn)
+return value"
+
+[sub_resource type="Resource" id="Resource_4d2sk"]
+script = ExtResource("7_58wby")
+id = "bag_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_xjica"]
+script = ExtResource("8_7r4xp")
+function_name = "shuffle_bag_pick"
+description = "Draws the next item from a named bag — every item appears once before any repeat."
+expose_as_ace = true
+ace_display_name = "Shuffle Bag Pick"
+ace_category = "Advanced Random: Picking"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_4d2sk")])
+return_type = 39
+events = Array[Resource]([SubResource("Resource_c341o")])
+
+[sub_resource type="Resource" id="Resource_ti0by"]
+script = ExtResource("2_76egj")
+code = "return _rng.randf() * 100.0 < percent"
+
+[sub_resource type="Resource" id="Resource_nky2a"]
+script = ExtResource("7_58wby")
+id = "percent"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_228s8"]
+script = ExtResource("8_7r4xp")
+function_name = "chance"
+description = "True roughly percent of the time (0-100) — e.g. Chance(5) for a 5% event."
+expose_as_ace = true
+ace_display_name = "Chance"
+ace_category = "Advanced Random: Chance"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_nky2a")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_ti0by")])
+
+[sub_resource type="Resource" id="Resource_admvo"]
+script = ExtResource("2_76egj")
+code = "return _rng.randi_range(1, maxi(n, 1)) == 1"
+
+[sub_resource type="Resource" id="Resource_dcygj"]
+script = ExtResource("7_58wby")
+id = "n"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_8w3o7"]
+script = ExtResource("8_7r4xp")
+function_name = "one_in"
+description = "True with a 1-in-n probability."
+expose_as_ace = true
+ace_display_name = "One In"
+ace_category = "Advanced Random: Chance"
+params = Array[ExtResource("7_58wby")]([SubResource("Resource_dcygj")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_admvo")])
+
+[resource]
+script = ExtResource("9_i8nbd")
+autoload_mode = true
+autoload_name = "AdvancedRandom"
+custom_class_name = "AdvancedRandomAddon"
+addon_tags = PackedStringArray("random", "noise", "procedural")
+events = Array[Resource]([SubResource("Resource_odpv0"), SubResource("Resource_fwfqp"), SubResource("Resource_2h5wo")])
+variables = {
+"seed_on_start": {
+"attributes": {
+"group": "Advanced Random",
+"tooltip": "Seed applied on _ready (0 = a fresh random seed each run; any other value = reproducible runs)."
+},
+"default": 0,
+"exported": true,
+"type": "int"
+}
+}
+functions = Array[Resource]([SubResource("Resource_4vbhd"), SubResource("Resource_xsona"), SubResource("Resource_gbpo2"), SubResource("Resource_6g5sd"), SubResource("Resource_yy1wj"), SubResource("Resource_mt2or"), SubResource("Resource_pxoww"), SubResource("Resource_dbisu"), SubResource("Resource_pcvoj"), SubResource("Resource_mw8ky"), SubResource("Resource_eo3db"), SubResource("Resource_wybxx"), SubResource("Resource_d5s60"), SubResource("Resource_ncq7c"), SubResource("Resource_rlkk1"), SubResource("Resource_pv3v8"), SubResource("Resource_chx0v"), SubResource("Resource_oqypj"), SubResource("Resource_4hp6l"), SubResource("Resource_xjica"), SubResource("Resource_228s8"), SubResource("Resource_8w3o7")])
