@@ -643,6 +643,9 @@ func _build_ui() -> void:
     view_popup.add_item("Load Theme…", 6)
     view_popup.add_item("Reload Theme", 7)
     view_popup.add_item("Theme Editor…", 8)
+    view_popup.add_separator()
+    view_popup.add_check_item("MCP Server (AI tools)", 12)
+    view_popup.set_item_checked(view_popup.get_item_index(12), EventSheetMCPServer.is_enabled())
     view_popup.id_pressed.connect(func(id: int) -> void:
         match id:
             0: _toggle_code_panel()
@@ -656,12 +659,14 @@ func _build_ui() -> void:
             8: _open_theme_editor()
             9: _toggle_add_event_rows(view_popup)
             11: set_simple_mode(not _simple_mode)
+            12: _toggle_mcp_server(view_popup)
     )
     # Toggles say what they toggle on hover (user call: hovering a toggle should
     # explain it).
     view_popup.set_item_tooltip(view_popup.get_item_index(0), "Show/hide the generated-GDScript panel beside the sheet.")
     view_popup.set_item_tooltip(view_popup.get_item_index(9), "Show/hide the trailing \"+ Add event…\" rows. Turn off for a cleaner, calmer sheet.")
     view_popup.set_item_tooltip(view_popup.get_item_index(11), "Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.")
+    view_popup.set_item_tooltip(view_popup.get_item_index(12), "Turn the MCP server (AI-assistant tools) on/off. When off, connected AI clients see no tools and can't read or change your sheets. Takes effect live — no reconnect needed.")
     view_popup.set_item_tooltip(view_popup.get_item_index(1), "Show/hide a second synchronized view of this sheet, side by side.")
     view_popup.set_item_tooltip(view_popup.get_item_index(2), "Pop the sheet view out into its own window / bring it back.")
     view_popup.set_item_tooltip(view_popup.get_item_index(3), "Link/unlink scrolling between the split views.")
@@ -1311,6 +1316,23 @@ func _on_save_as_requested() -> void:
 ## chooses. The output depends on no EventForge/EventSheet class (parity covenant), so this
 ## is the concrete proof a Godot dev can adopt the plugin without lock-in — take the .gd and
 ## go. Distinct from Save (which keeps the paired generated script alongside the .tres).
+## Activate/deactivate the MCP server (AI tools) at will. The server is a separate process,
+## so we flip a marker file it re-checks live — toggling off makes a connected AI client's
+## tools vanish (and any in-flight call refuse) without a reconnect. Per-machine, uncommitted.
+func _toggle_mcp_server(view_popup: PopupMenu) -> void:
+    var marker: String = EventSheetMCPServer.DISABLED_MARKER
+    if FileAccess.file_exists(marker):
+        DirAccess.remove_absolute(marker)  # was off → turn on
+    else:
+        var file: FileAccess = FileAccess.open(marker, FileAccess.WRITE)  # turn off
+        if file != null:
+            file.store_string("MCP server disabled via the EventSheets dock (View ▸ MCP Server). Delete to re-enable.")
+            file.close()
+    var enabled: bool = EventSheetMCPServer.is_enabled()
+    if view_popup != null:
+        view_popup.set_item_checked(view_popup.get_item_index(12), enabled)
+    _set_status("MCP server (AI tools) is now %s." % ("ON" if enabled else "OFF"))
+
 ## Extract Selection to Include: moves the selected top-level events into a NEW library sheet
 ## and wires the current sheet to include it — copy-paste becomes modularization in one step.
 func _extract_to_include_requested() -> void:

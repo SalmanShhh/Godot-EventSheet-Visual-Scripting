@@ -10,8 +10,24 @@ class_name EventSheetMCPServer
 
 const PROTOCOL_VERSION := "2024-11-05"
 
+## Off-switch marker. The editor (View ▸ MCP Server) creates/removes this; the server is a
+## SEPARATE long-lived process, so it re-checks the file live per request rather than caching
+## a setting. `user://` resolves to the same place for editor + server (same project), and
+## the file is per-machine + uncommitted. Absent = ON (the default).
+const DISABLED_MARKER := "user://eventsheets_mcp_disabled"
+
+## Test/override hook: null = consult the live marker; true/false force the state.
+static var enabled_override: Variant = null
+
 var _registry_editor: EventSheetEditor = null
 var _registry: EventSheetACERegistry = null
+
+## Whether the server is currently allowed to serve tools. Live (re-read each call) so the
+## editor toggle takes effect without the AI client reconnecting.
+static func is_enabled() -> bool:
+	if enabled_override != null:
+		return bool(enabled_override)
+	return not FileAccess.file_exists(DISABLED_MARKER)
 
 ## Handles one JSON-RPC message. Returns the response Dictionary, or null for
 ## notifications (which never get responses).
@@ -30,8 +46,16 @@ func handle_message(message: Dictionary) -> Variant:
 		"ping":
 			return _result(message, {})
 		"tools/list":
+			# Turned off → expose no tools (the AI sees nothing it can do).
+			if not is_enabled():
+				return _result(message, {"tools": []})
 			return _result(message, {"tools": _tool_descriptors()})
 		"tools/call":
+			if not is_enabled():
+				return _result(message, {
+					"content": [{"type": "text", "text": "The EventSheets MCP server is turned OFF. Re-enable it in the EventSheets dock (View ▸ MCP Server (AI tools)), or delete user://eventsheets_mcp_disabled."}],
+					"isError": true
+				})
 			return _handle_tool_call(message)
 	if has_id:
 		return _error(message, -32601, "Method not found: %s" % method)

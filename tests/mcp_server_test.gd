@@ -26,6 +26,20 @@ static func run() -> bool:
 	all_passed = _check("core tools present",
 		tool_names.has("read_sheet") and tool_names.has("list_aces") and tool_names.has("compile_sheet") and tool_names.has("apply_snippet"), true) and all_passed
 
+	# Activation gate: turned OFF, the server lists no tools and refuses any call; back ON, the
+	# tools return — so the editor can activate/deactivate the MCP server at will, live.
+	EventSheetMCPServer.enabled_override = false
+	var off_list: Dictionary = server.handle_message({"jsonrpc": "2.0", "id": 31, "method": "tools/list"})
+	all_passed = _check("disabled server lists no tools",
+		((off_list.get("result", {}) as Dictionary).get("tools", []) as Array).size(), 0) and all_passed
+	var off_call: Dictionary = server.handle_message({"jsonrpc": "2.0", "id": 32, "method": "tools/call", "params": {"name": "list_sheets", "arguments": {}}})
+	all_passed = _check("disabled server refuses tool calls",
+		bool((off_call.get("result", {}) as Dictionary).get("isError", false)), true) and all_passed
+	EventSheetMCPServer.enabled_override = true
+	all_passed = _check("re-enabled server lists tools again",
+		((server.handle_message({"jsonrpc": "2.0", "id": 33, "method": "tools/list"}).get("result", {}) as Dictionary).get("tools", []) as Array).size(), 6) and all_passed
+	EventSheetMCPServer.enabled_override = null
+
 	# Fixture sheet on disk.
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "CharacterBody2D"

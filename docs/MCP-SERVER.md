@@ -65,6 +65,21 @@ piece for an *in-editor* English prompt (rather than an external MCP client) is 
 call, which is opt-in API configuration rather than new generation plumbing — the plumbing is
 this loop, and it's covered by `mcp_server_test`.
 
+## Turning it on/off (activate / deactivate at will)
+
+The MCP server is a process your AI **client** launches, so the editor can't start or stop it
+— but it can **gate** it, live. In the EventSheets dock, **View ▸ MCP Server (AI tools)** is a
+checkbox:
+
+- **On (default):** tools are served normally.
+- **Off:** the server returns an **empty tool list** and refuses every `tools/call` with a
+  clear "turned off" message — so a connected AI can't read or change your sheets.
+
+It works by toggling a marker file (`user://eventsheets_mcp_disabled`) that the running server
+re-checks on each request, so flipping it takes effect **without reconnecting** the client. The
+marker is per-machine and not committed; delete it (or re-check the box) to re-enable. To keep
+the server off entirely, just leave it out of your client's `.mcp.json`.
+
 ## Safety model
 
 - Read tools never write anything; `compile_sheet` only writes when explicitly asked.

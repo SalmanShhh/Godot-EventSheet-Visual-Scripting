@@ -285,7 +285,7 @@ static func run() -> bool:
 		sheet_menu != null and sheet_menu.get_popup().item_count == 11
 		and add_menu != null and add_menu.get_popup().item_count == 4
 		and edit_menu != null and edit_menu.get_popup().item_count == 10
-		and view_menu != null and view_menu.get_popup().item_count == 15, true) and all_passed
+		and view_menu != null and view_menu.get_popup().item_count == 17, true) and all_passed
 
 	# ── Welcome window: self-sizing dialog, margined, reopenable, checkbox synced ─
 	toolbar_editor._build_welcome_window()
