@@ -169,25 +169,25 @@ func init_dialog(parent_node: Node) -> void:
 	form.add_child(_attr_section)
 	_attr_tooltip_edit = LineEdit.new()
 	_attr_tooltip_edit.placeholder_text = "shown when hovering the property"
-	_attr_section.add_child(_attr_field_row("Tooltip", _attr_tooltip_edit))
+	_attr_section.add_child(EventSheetPopupUI.form_row("Tooltip", _attr_tooltip_edit, 130.0))
 	_attr_group_edit = LineEdit.new()
 	_attr_group_edit.placeholder_text = "Inspector section header (e.g. Combat)"
-	_attr_section.add_child(_attr_field_row("Inspector group", _attr_group_edit))
+	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector group", _attr_group_edit, 130.0))
 	_attr_range_edit = LineEdit.new()
 	_attr_range_edit.placeholder_text = "min, max, step (numeric: slider)"
-	_attr_section.add_child(_attr_field_row("Range", _attr_range_edit))
+	_attr_section.add_child(EventSheetPopupUI.form_row("Range", _attr_range_edit, 130.0))
 	_attr_multiline_check = CheckBox.new()
 	_attr_multiline_check.text = "Multiline (String: big text box)"
 	_attr_section.add_child(_attr_multiline_check)
 	_attr_show_if_edit = LineEdit.new()
 	_attr_show_if_edit.placeholder_text = "bool variable (hidden when false)"
-	_attr_section.add_child(_attr_field_row("Show if", _attr_show_if_edit))
+	_attr_section.add_child(EventSheetPopupUI.form_row("Show if", _attr_show_if_edit, 130.0))
 	_attr_lock_unless_edit = LineEdit.new()
 	_attr_lock_unless_edit.placeholder_text = "bool variable (read-only when false)"
-	_attr_section.add_child(_attr_field_row("Lock unless", _attr_lock_unless_edit))
+	_attr_section.add_child(EventSheetPopupUI.form_row("Lock unless", _attr_lock_unless_edit, 130.0))
 	_attr_on_changed_edit = LineEdit.new()
 	_attr_on_changed_edit.placeholder_text = "sheet function called after assignment"
-	_attr_section.add_child(_attr_field_row("On changed", _attr_on_changed_edit))
+	_attr_section.add_child(EventSheetPopupUI.form_row("On changed", _attr_on_changed_edit, 130.0))
 	var attr_checks: HBoxContainer = HBoxContainer.new()
 	_attr_clamp_check = CheckBox.new()
 	_attr_clamp_check.text = "Clamp to range"
@@ -352,16 +352,6 @@ static func items_to_collection_literal(items: PackedStringArray, is_dictionary:
 		return "{}" if is_dictionary else "[]"
 	var joined: String = ", ".join(items)
 	return ("{%s}" % joined) if is_dictionary else ("[%s]" % joined)
-
-func _attr_field_row(label_text: String, field: Control) -> HBoxContainer:
-	var row: HBoxContainer = HBoxContainer.new()
-	var label: Label = Label.new()
-	label.text = label_text
-	label.custom_minimum_size = Vector2(130.0, 0.0)
-	row.add_child(label)
-	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(field)
-	return row
 
 ## Open the dialog for the given scope ("global" or "local").
 func open(scope: String) -> void:

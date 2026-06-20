@@ -43,8 +43,10 @@
 - **Consistent popups** — a shared `EventSheetPopupUI` helper gives the plugin's dialogs one look:
   aligned **Label  [field]** form rows (fixed label width, fields expand), standard content
   margins, and muted hint labels — matching the Godot 4.7 editor styling instead of each dialog
-  inventing its own. The group-editor, breakpoint-condition, and function-definition popups adopt
-  it (the function dialog also drops its duplicate local form-row helper); helpers are unit-tested.
+  inventing its own. The group-editor, breakpoint-condition, function-definition, and
+  variable-definition popups adopt it — and the function and variable dialogs each drop a private,
+  duplicate form-row helper (`_labeled_row` / `_attr_field_row`) in favour of the shared one. The
+  factory helpers are unit-tested.
 - **Keyboard Shortcuts cheat sheet** — Tools ▸ **Keyboard Shortcuts** opens an in-editor reference
   (Editing / Search / Debug / View / File & history) so the ~20 shortcuts are discoverable instead
   of learnable only from tooltips. Built from a static, unit-tested catalog via the popup helper.
