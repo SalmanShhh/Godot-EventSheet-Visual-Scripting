@@ -12,6 +12,12 @@ Node script extending `CharacterBody2D`.
 - `health: int` (default `100`)
 - `speed: float` (default `200.0`)
 
+### PlatformerShooter (`res://demo/showcase/platformer_shooter.tres`)
+Node script extending `Node2D`.
+
+#### Properties
+- `score: int` (default `0`) — Targets destroyed.
+
 ### QuestFsm (`res://demo/showcase/quest_fsm.tres`)
 Node script extending `Node2D`.
 
@@ -34,6 +40,38 @@ Node script extending `Node2D`.
 - `score: int` (default `0`) — Stars caught.
 - `ship_speed: float` (default `320.0`) — Ship move speed (px/s).
 - `state: int` (default `0`) — 0=PLAYING, 1=GAME_OVER.
+
+### AdvancedRandomAddon (`res://eventsheet_addons/advanced_random/advanced_random_addon.tres`)
+Autoload singleton `AdvancedRandom` — its ACEs are project-wide.
+
+#### Properties
+- `seed_on_start: int` (default `0`) — Seed applied on _ready (0 = a fresh random seed each run; any other value = reproducible runs).
+
+#### Actions
+- **Set Seed** (`seed_value: int`) — Sets the seed for BOTH numbers and noise — same seed reproduces the same sequence.
+- **Randomize Seed** — Picks a fresh, unpredictable seed (non-reproducible).
+- **Set Noise Type** (`noise_type: int`) — FastNoiseLite.NoiseType: 0 Simplex · 1 Simplex Smooth · 2 Cellular · 3 Perlin · 4 Value Cubic · 5 Value.
+- **Set Noise Frequency** (`frequency: float`) — Lower = smoother/larger features; higher = noisier (default 0.01).
+- **Set Noise Octaves** (`octaves: int`) — Fractal detail layers — more octaves add fine detail (fractal/fBm noise).
+- **Generate Permutation Table** (`size: int`) — Builds a shuffled 0..size-1 table (read with the Permutation expression) — a fixed deck order.
+- **Make Shuffle Bag** (`bag_name: String, items: Array`) — Creates a named bag of items — Shuffle Bag Pick draws each once before any repeats.
+
+#### Expressions
+- **Random (0-1)** — A uniform float in [0, 1).
+- **Random Range** (`minimum: float, maximum: float`) — A uniform float between min and max.
+- **Random Int** (`minimum: int, maximum: int`) — A uniform integer between min and max (inclusive).
+- **Roll Dice** (`sides: int`) — Rolls a die with the given number of sides (1..sides).
+- **Random Sign** — Either -1 or +1.
+- **Normal (Gaussian)** (`mean: float, deviation: float`) — A normally-distributed float around mean with the given deviation.
+- **Noise 1D** (`x: float`) — Smooth noise along a line at x — returns [-1, 1].
+- **Noise 2D** (`x: float, y: float`) — Smooth noise at (x, y) — great for terrain/heightmaps; returns [-1, 1].
+- **Noise 3D** (`x: float, y: float, z: float`) — Smooth noise at (x, y, z) — returns [-1, 1].
+- **Permutation Value** (`index: int`) — Reads index (wrapped) from the permutation table — generate it first.
+- **Pick From** (`options: Array`) — A uniformly-random element of the array (null if empty).
+- **Weighted Index** (`weights: Array`) — An index chosen in proportion to the weights array (heavier = likelier).
+- **Shuffle Bag Pick** (`bag_name: String`) — Draws the next item from a named bag — every item appears once before any repeat.
+- **Chance** (`percent: float`) — True roughly percent of the time (0-100) — e.g. Chance(5) for a 5% event.
+- **One In** (`n: int`) — True with a 1-in-n probability.
 
 ### BulletBehavior (`res://eventsheet_addons/bullet/bullet_behavior.tres`)
 Behavior — attach under any `Node2D` node.
@@ -219,6 +257,42 @@ Behavior — attach under any `Node2D` node.
 - **Last Pool Damage Absorbed**
 - **Last Health Pool Type**
 
+### HTNAgent (`res://eventsheet_addons/htn_agent/htn_agent_behavior.tres`)
+Behavior — attach under any `Node2D` node.
+
+#### Properties
+- `auto_replan_on_fail: bool` (default `true`) — Mark Failed re-plans from the root instead of giving up.
+- `root_task: String` (default ``) — Goal to plan for — a compound or primitive task name.
+
+#### Triggers
+- **On Task Started**
+- **On Plan Complete**
+- **On Plan Failed**
+
+#### Conditions
+- **Has Plan**
+- **Current Task Is**
+
+#### Actions
+- **Set World State** (`key: String, value: Variant`) — Writes a fact the planner reads in method preconditions.
+- **Clear World State** (`key: String`) — Removes a world-state key.
+- **Add Primitive Task** (`task_name: String`) — Registers a leaf task your sheet executes directly.
+- **Add Compound Task** (`task_name: String`) — Registers a task that decomposes via methods.
+- **Add Method** (`task_name: String, method_id: String, utility: float`) — Adds (or re-scores) a way to accomplish a compound task; highest utility wins.
+- **Add Method Condition** (`task_name: String, method_id: String, key: String, op: String, value: Variant`) — A precondition (world-state key, operator, value) the method needs to be chosen.
+- **Add Method Subtask** (`task_name: String, method_id: String, subtask: String`) — Appends a subtask (primitive or compound) to a method, in order.
+- **Set Method Utility** (`task_name: String, method_id: String, utility: float`) — Updates a method's utility at runtime (utility-driven re-prioritising).
+- **Clear Task Network** — Wipes all tasks/methods (keeps world state).
+- **Request Plan** — Decomposes the root task into a plan and starts the first task.
+- **Mark Task Complete** — Advances to the next task, or fires On Plan Complete at the end.
+- **Mark Task Failed** — Re-plans from the root (or fires On Plan Failed if auto-replan is off).
+- **Invalidate Plan** — Drops the current plan so the next Request Plan rebuilds it.
+
+#### Expressions
+- **Current Task**
+- **Plan Length**
+- **World Value**
+
 ### LOSBehavior (`res://eventsheet_addons/line_of_sight/line_of_sight_behavior.tres`)
 Behavior — attach under any `Node2D` node.
 
@@ -301,16 +375,46 @@ Behavior — attach under any `Node3D` node.
 Behavior — attach under any `CharacterBody2D` node.
 
 #### Properties
-- `gravity: float` (default `980.0`)
-- `jump_velocity: float` (default `-400.0`)
-- `move_speed: float` (default `200.0`)
+- `acceleration: float` (default `1500.0`) — How fast you reach top speed when pressing a direction.
+- `coyote_time: float` (default `0.1`) — Grace window (s) to still jump just after walking off a ledge.
+- `deceleration: float` (default `1800.0`) — How fast you stop when no direction is pressed.
+- `enable_wall_jump: bool` (default `false`) — Jump off walls (kicks away from the wall).
+- `enable_wall_slide: bool` (default `false`) — Cling and slow your fall when pressing into a wall.
+- `gravity: float` (default `980.0`) — Downward acceleration (px/s²).
+- `jump_buffer_time: float` (default `0.1`) — Press jump this many seconds early and it still fires on landing.
+- `jump_cut_factor: float` (default `0.45`) — Fraction of upward speed kept when jump is released early.
+- `jump_velocity: float` (default `-400.0`) — Upward velocity of a jump (negative = up).
+- `max_fall_speed: float` (default `1000.0`) — Terminal velocity — gravity never pulls you faster than this.
+- `max_jumps: int` (default `1`) — Total jumps before touching ground (2 = double jump).
+- `move_speed: float` (default `200.0`) — Top horizontal run speed (px/s).
+- `variable_jump_height: bool` (default `true`) — Releasing jump early cuts the rise (hold = higher).
+- `wall_jump_push: float` (default `260.0`) — Horizontal kick away from the wall on a wall jump.
+- `wall_jump_velocity: float` (default `-380.0`) — Upward velocity of a wall jump (negative = up).
+- `wall_slide_speed: float` (default `80.0`) — Max fall speed while wall sliding (px/s).
 
 #### Triggers
 - **On Jumped**
+- **On Landed**
+- **On Double Jumped**
+- **On Wall Jumped**
+
+#### Conditions
+- **Is Moving**
+- **Is Jumping**
+- **Is Falling**
+- **Is Wall Sliding**
+- **Can Jump**
 
 #### Actions
-- **Jump** — Makes the host jump when it is on the floor.
+- **Jump** — Jumps: from the floor or within coyote time, off a wall (if enabled), or a mid-air (double) jump if any remain. If none are available right now, the press is buffered.
+- **Jump Released** — Call when the jump button is released — cuts the rise short for variable jump height (hold = higher).
 - **Set Move Speed** (`speed: float`) — Changes the horizontal move speed.
+- **Reset Jumps** — Refills the air-jump count (e.g. after grabbing a power-up).
+
+#### Expressions
+- **Jumps Remaining**
+- **Air Time**
+- **Facing Direction**
 
 ### SaveSystemAddon (`res://eventsheet_addons/save_system/save_system_addon.tres`)
 Autoload singleton `SaveSystem` — its ACEs are project-wide.
@@ -387,6 +491,7 @@ Behavior — attach under any `Node2D` node.
 
 #### Triggers
 - **On Spring Reached**
+- **On Spring Started**
 
 #### Conditions
 - **Is Springing**
@@ -402,8 +507,15 @@ Behavior — attach under any `Node2D` node.
 - **Spring Host Y** (`target: float`) — Springs the host's Y position.
 - **Spring Host Angle** (`degrees: float`) — Springs the host's rotation (degrees).
 - **Spring Host Scale** (`target: float`) — Springs the host's uniform scale (squash & stretch!).
+- **Set Color Value** (`spring_name: String, color: Color`) — Snaps a named colour spring (no motion) — seed it before springing.
+- **Spring Color** (`spring_name: String, target_color: Color`) — Springs a named colour toward a target (read it back with Color Value — great for hit flashes).
+- **Pause Spring** (`spring_name: String`) — Freezes a spring in place (resume continues it).
+- **Resume Spring** (`spring_name: String`) — Resumes a paused spring toward its target.
+- **Remove Spring** (`spring_name: String`) — Deletes a named spring (numeric and/or colour).
+- **Reset All Springs** — Clears every spring on this behavior.
 
 #### Expressions
+- **Color Value**
 - **Spring Value**
 - **Spring Velocity**
 - **Spring Progress**
@@ -553,6 +665,48 @@ Behavior — attach under any `CharacterBody2D` node.
 - **Homing Target Dist**
 - **Count Homing Targets**
 - **Bounce Mode**
+
+### WeaponKit (`res://eventsheet_addons/weapon_kit/weapon_kit_behavior.tres`)
+Behavior — attach under any `Node2D` node.
+
+#### Properties
+- `auto_reload: bool` (default `true`) — Reload automatically when the magazine runs dry.
+- `burst_count: int` (default `3`) — Shots per burst when fire_mode = 2.
+- `current_ammo: int` (default `12`) — Rounds loaded right now (set to your magazine size to start full).
+- `fire_mode: int` (default `0`) — 0 = single, 1 = auto (both cooldown-gated), 2 = burst.
+- `fire_rate: float` (default `8.0`) — Shots per second (the cooldown between shots is 1 / fire_rate).
+- `infinite_reserve: bool` (default `false`) — Reloads never spend reserve ammo.
+- `max_ammo: int` (default `12`) — Magazine size (rounds before a reload).
+- `reload_time: float` (default `1.2`) — Seconds a reload takes.
+- `reserve_ammo: int` (default `96`) — Spare rounds a reload draws from.
+
+#### Triggers
+- **On Fire**
+- **On Empty**
+- **On Reload Started**
+- **On Reload Complete**
+
+#### Conditions
+- **Can Fire**
+- **Has Ammo**
+- **Is Full**
+- **Is Reloading**
+
+#### Actions
+- **Fire** — Fires if ready (not reloading, off cooldown, has ammo). In burst mode it kicks off a burst; if the magazine is empty it triggers On Empty (and auto-reloads when enabled).
+- **Reload** — Starts a timed reload (if not full and reserve has rounds).
+- **Cancel Reload** — Aborts an in-progress reload (no ammo gained).
+- **Instant Reload** — Refills the magazine immediately (no reload time).
+- **Add Ammo** (`amount: int`) — Adds rounds straight to the magazine (capped at the magazine size).
+- **Add Reserve Ammo** (`amount: int`) — Adds spare rounds to the reserve pool (e.g. an ammo pickup).
+- **Set Fire Rate** (`rate: float`) — Changes the shots-per-second.
+- **Set Fire Mode** (`mode: int`) — 0 = single, 1 = auto, 2 = burst.
+- **Set Magazine Size** (`size: int`) — Changes the magazine size.
+
+#### Expressions
+- **Ammo Percent**
+- **Reload Progress**
+- **Cooldown Progress**
 
 ## Script packs
 

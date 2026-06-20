@@ -16,7 +16,11 @@ This doc specs five features that plug those leaks. Status: ✅ shipped · 🟡 
 
 ---
 
-## 1. Visual expression builder 📋 (the single biggest lever)
+## 1. Visual expression builder ✅ (the single biggest lever)
+
+**Shipped:** the `ƒx` "Insert Expression" picker now also lists the sheet host class's own
+reflected members under **This Object — Properties** and **This Object — Methods**; picking one
+inserts `name` (property) or `name()` (method). (commit fb9acdd)
 
 **Problem.** The `ƒx` fields are text boxes with autocomplete + a node picker — you still *type*
 `node.property` / `node.method()`. Most "code" in a visual sheet lives here.
@@ -30,12 +34,16 @@ expression param:
   experts can still type. The builder is a *front-end* to the text — it never replaces it.
 - Operator palette (`+ - * / and or not < > ==`) + literal entry for the leaf values.
 
-**Where.** New `addons/eventsheet/editor/expression_builder_dialog.gd`; hook into
-`ace_params_dialog.gd` where the `expression` hint renders the `ƒx` button (the same place the
-node picker is wired). Reflection mirrors `ace_picker.gd::editor_icon` / the addon reflection
-path. **Effort: L.** This is the highest-value item; build it first when tackling the big three.
+**Where (as shipped).** No separate dialog was needed — the host-member groups render inside
+`ace_params_dialog.gd`'s existing expression picker, alongside the expression templates on the
+`ƒx` button, and reflection reuses the `reflected_members` helper. The operator-palette /
+pick-chaining / signal-filtering sketched in the design above remain future polish.
 
-## 2. Reflection-to-ACE + Call Method / Set Property pickers 📋
+## 2. Reflection-to-ACE + Call Method / Set Property pickers ✅
+
+**Shipped:** the Helper ACEs **Call Method**, **Call Method (value)**, **Set Property**, and
+**Get Property** now offer the host class's real members as an editable suggest-combo — pick from
+real members, or still type one reflection misses. (commit 5f16deb)
 
 **Problem.** Helper ACEs (Call Method, Set Property, Run GDScript) are the "anything" valve but
 require typing code-shaped strings.
@@ -53,7 +61,11 @@ require typing code-shaped strings.
 ACEs from reflection — `_resolve_method_ace_type`), `ace_params_dialog.gd` (new hint field types
 next to the existing `signal_reference` / `animation_reference` pickers). **Effort: M.**
 
-## 3. Promote block → reusable Function / ACE  🟡
+## 3. Promote block → reusable Function / ACE  ✅
+
+**Shipped:** a row's **More ▸ Extract GDScript to Function** gathers that event's inline GDScript
+(RawCode) actions into a new reusable `EventFunction` (auto-exposed as an ACE under the Functions
+category) and replaces them with a call. (commit 9a6da84)
 
 **Problem.** A one-off GDScript block stays a one-off; the code surface never shrinks.
 
@@ -66,7 +78,11 @@ once, then it's a click forever.
 `EventFunction` already supports `expose_as_ace`. **Effort: M.** *(First implementation of this
 lever — see the matching commit.)*
 
-## 4. Visual data editors 📋
+## 4. Visual data editors ✅
+
+**Shipped:** Array / Dictionary variable defaults get an **Edit items…** button in the Variable
+dialog that opens a one-item-per-line editor instead of forcing a literal like `[1, 2, 3]`; it
+round-trips losslessly through the literal. (commit a181a77)
 
 **Problem.** Complex data still means typed `[...]` / `{...}` literals.
 
@@ -77,30 +93,58 @@ sheets** (behavior packs already prove the mechanism — surface it in New… an
 **Where.** `variable_dialog.gd` (a structured editor for Array/Dictionary defaults instead of a
 text field). **Effort: M–L.**
 
-## 5. Visual step / watch debugging 📋
+## 5. Visual step / watch debugging ✅ (conditional breakpoints) · 📋 (rest)
 
 **Problem.** Code-free authoring only works if code-free *debugging* does too.
 
-**Design.** Build on the existing real breakpoints + Live Values: **event-level step-through**,
-**watch expressions** (pin an `ƒx` expression and see its live value), and **conditional
-breakpoints**. Surface plain-language errors ("`position` needs a Node2D") instead of raw
-GDScript parse errors.
+This section is a bounded slice: **conditional breakpoints** shipped; event-level step-through
+and watch expressions remain spec.
 
-**Where.** The Live Values + breakpoint plumbing in `event_sheet_dock.gd` / the debugger bridge;
-a new watch panel. **Effort: L.**
+### Conditional breakpoints ✅ SHIPPED (commit a181a77)
+
+A row's **More** menu gains **Set Breakpoint Condition…**: it stores a GDScript boolean
+expression, and the compiler emits `if <cond>: breakpoint` instead of a bare breakpoint, so you
+pause only on the frame that matters (e.g. `health <= 0`) rather than every pass. Blank clears
+the guard. Builds on the existing F9 real breakpoints + the Tools menu Debug Breakpoints toggle +
+editable Live Values. This is conditional breakpoints only — **not** step-through or watch
+expressions.
+
+**Where.** `addons/eventforge/resources/event_row.gd`,
+`addons/eventforge/compiler/sheet_compiler.gd`, `event_sheet_dock.gd`.
+
+### Event-level step-through 📋
+
+**Design.** Step the sheet event-by-event on top of the existing breakpoint plumbing.
+
+### Watch expressions 📋
+
+**Design.** Pin an `ƒx` expression and see its live value; surface plain-language errors
+("`position` needs a Node2D") instead of raw GDScript parse errors. **Effort: L.**
 
 ---
 
 ## Suggested sequence
 
+All five items have shipped. (#5 shipped as a bounded slice — conditional breakpoints only;
+event-level step-through and watch expressions remain spec.)
+
 | Priority | Item | Effort | Notes |
 |---|---|---|---|
-| 1 | Visual expression builder (#1) | L | 80% of the "code-free" win; most-typed code becomes clicks |
-| 2 | Reflection pickers (#2) | M | removes the escape-hatch typing |
-| 3 | Promote block → Function (#3) | M | shrinks the block surface permanently |
-| 4 | Visual data editors (#4) | M–L | removes typed literals/state |
-| 5 | Visual step / watch debugging (#5) | L | code-free *debugging*, not just authoring |
+| 1 | Visual expression builder (#1) | L | ✅ shipped — most-typed code becomes clicks |
+| 2 | Reflection pickers (#2) | M | ✅ shipped — removes the escape-hatch typing |
+| 3 | Promote block → Function (#3) | M | ✅ shipped — shrinks the block surface permanently |
+| 4 | Visual data editors (#4) | M–L | ✅ shipped — removes typed literals/state |
+| 5 | Visual step / watch debugging (#5) | L | ✅ conditional breakpoints shipped; step-through + watch still spec |
+
+## Collision Helper ACEs ✅
+
+**NEW: Collision Helper ACEs** (commit baae1a2) — 24 new ACEs. **CharacterBody2D** (Is On Wall,
+Is On Ceiling, Get Wall Normal, Get Floor Normal, Get Slide Collision Count, Get Last Slide
+Collider, Get Last Slide Normal), with **CharacterBody3D** carrying the wall/ceiling/normal
+subset. **Area2D** (Overlaps Body, Overlaps Area, Has Overlapping Bodies/Areas, Get Overlapping
+Bodies/Areas), with **Area3D** Has/Get Overlapping Bodies. **CollisionObject2D** (Set Collision
+Layer Bit, Set Collision Mask Bit, Is On Collision Layer). **CollisionShape2D** (Enable Shape /
+Disable Shape). All compile to plain GDScript.
 
 Plus continuously: **close the remaining vocabulary gaps** (dialogue, transitions, 2D
-point/shape overlap, loop-index) so fewer things ever need a block — and the new **Collision
-Helper ACEs** are part of that ongoing work.
+point/shape overlap, loop-index) so fewer things ever need a block.

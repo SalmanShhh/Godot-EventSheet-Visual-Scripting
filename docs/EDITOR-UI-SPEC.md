@@ -424,8 +424,16 @@ addon providers + code registration, GDScript blocks (class-level and in-flow, w
 completion), the structural + ACE-level importer (open/paste any GDScript), shareable
 snippets, object icons, multiline/colored comments with comment↔action conversion,
 eventsheet-authored behaviors + sample packs, sheet-type identity UX, the export-integrity
-hook, and the visual theme editor. Authoritative per-feature detail:
-`docs/GDSCRIPT-PAIRING-SPEC.md` (compiler/pairing/addons/behaviors) and the sections below
+hook, the visual theme editor, the code-free authoring set (visual expression builder that
+also lists the sheet host class's own reflected members; reflection-driven method/property
+pickers on the Helpers Call/Set/Get ACEs; **Extract GDScript to Function** to promote a
+row's inline RawCode into a reusable function-ACE; a visual Array/Dictionary data editor
+that round-trips losslessly through the literal; and conditional breakpoints — a stored
+boolean guard so a row pauses only on the frame that matters), and the Collision Helper ACEs
+(24 ACEs compiling to plain GDScript for CharacterBody2D/3D, Area2D/3D, CollisionObject2D,
+and CollisionShape2D). Authoritative per-feature detail:
+`docs/GDSCRIPT-PAIRING-SPEC.md` (compiler/pairing/addons/behaviors),
+`docs/CODE-FREE-ROADMAP.md` (the five code-free items), and the sections below
 (UX contracts).
 
 Still open (post-1.0 polish):

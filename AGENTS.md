@@ -13,7 +13,7 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - Row chrome/text drawing: `res://addons/eventsheet/editor/event_row_renderer.gd`
 - Compiler (pipeline overview in its header comment): `res://addons/eventforge/compiler/sheet_compiler.gd`
 - Builtin ACE vocabularies: per-module files in `res://addons/eventforge/registration/modules/`
-  (`core`/`system`/`device`/`audio`/`native_3d`/`collection`/`helper`) built via
+  (`core`/`system`/`device`/`audio`/`native_3d`/`collection`/`collision`/`ui`/`particle`/`tilemap`/`physics`/`loop`/`helper`) built via
   `ace_factory.gd` (module contract documented there); `builtin_aces.gd` concatenates them
   in registry order. `helper_aces.gd` is the generic "structured escape hatch" vocabulary —
   registered LAST and excluded from the reverse-lifter so its catch-all templates

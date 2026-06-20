@@ -152,13 +152,14 @@ still ships as plain GDScript).
   with ▶ sound preview in the dialog), AnimatedSprite2D, Camera2D, Label,
   NavigationAgent2D, time scale & window control, the C3 System text functions, shader
   params, date/time/platform info, Math & Random (`choose()` included), **3D raycast /
-  world-query** ACEs, and a **Helpers** set — the structured escape hatch (Set/Get
+  world-query** ACEs, **Collision** (CharacterBody/Area/CollisionObject layer/mask
+  queries, shape enable/disable), and a **Helpers** set — the structured escape hatch (Set/Get
   Property, Call Method, Run GDScript, Inline If, Is Valid, Connect Signal, and the
   math/string idioms) so code that doesn't map to a specific ACE still stays an editable
   row.
 
 ### Behaviors & addons (zero configuration, no JSON)
-- **26 addon packs**, all authored as event sheets: the C3 classics (**Platformer** —
+- **27 addon packs**, all authored as event sheets: the C3 classics (**Platformer** —
   coyote time, jump buffering, variable jump height, double jump, wall slide + wall jump,
   accel/decel — 8-Direction, Timer, Flash, State Machine, Sine with wave shapes, Orbit,
   Bullet, Move To, Follow, Car, Tile Movement, Line of Sight **2D & 3D**), a 3D quartet
@@ -209,7 +210,15 @@ still ships as plain GDScript).
   small. A bigger behavior library — **C3-addon parity** packs (Platformer juice:
   coyote/buffer/variable-jump/wall-jump, Spring colour springs, **Weapon Kit**,
   utility-driven **HTN Agent** — 26 total), richer Array/Dict/Vector/String **Helper
-  ACEs**, behavior-declared **autocomplete**, and theme-editor **Quick Style**. (An
+  ACEs**, behavior-declared **autocomplete**, and theme-editor **Quick Style**.
+  **Code-free authoring** — five editor features that keep logic in the event sheet
+  instead of dropping to raw GDScript: a visual expression builder for picking the host
+  class's own members in ƒx expressions, reflection-driven pickers for the Helpers ACEs
+  (Call Method / Set/Get Property stay editable, not raw code), Promote-Block-to-Function
+  (extract a row's inline GDScript into a reusable EventFunction), a visual data editor for
+  Array/Dictionary defaults (edit one item per line instead of typing a literal), and
+  conditional breakpoints (guard an F9 breakpoint with a GDScript boolean so you pause only
+  on the frame that matters, e.g. `health <= 0`). (An
   optional scripting/automation integration — the MCP server, which can also generate
   events from a description — ships opt-in and off by default.) Playable showcases:
   `showcase_carousel.tscn` (flagship), `starfall.tscn`, `quest_fsm.tscn`, and
@@ -236,7 +245,7 @@ still ships as plain GDScript).
 | `v0.6.2` — project usability: compile-on-save, sheet diffs (textconv), Project Doctor (dock/CLI/CI), vocabulary doc, sheet backups + restore, project templates; C3 param parity completed; per-pack builders; issue templates | ✅ shipped |
 | `v0.7.0` — **The Native Workflow Update**: Rename Everywhere, snippets, bulk ops, session restore, asset drops, attach + Run Scene; Godot-native entry points (Scene-dock attach, Inspector button, settings, rebindable shortcuts, go-to-sheet-row, docs links, welcome); if/elif/else reverse-lift + Lift Report | ✅ shipped |
 | `v0.8.0` — **The Team & Scale Update**: Godot 4.7 support + Modern-theme visuals & onboarding declutter (Simple Mode, Command Palette, Export-GDScript eject); **team/VCS** — semantic 3-way **merge driver**, symbol-aware **Find References** + Go-to-Definition, **includes manager** + Extract-to-Include + **provenance**, **byte-stable regeneration**; new packs (Drag & Drop, Virtual Cursor, Health, Line of Sight 3D, **Weapon Kit**, utility-driven **HTN Agent** — 26 total) + **C3-addon parity** (Platformer juice, Spring colour springs); **3D raycast/world-query ACEs** + 3D starters; richer Array/Dict/Vector/String **Helper ACEs** + import "why-it-stayed-code" hints; behavior-declared **autocomplete**; theme **Quick Style**; clean-removal guide + gate; platformer-shooter showcase; opt-in MCP scripting/automation (off by default) | ✅ shipped |
-| `Unreleased` — first-class **UI/menu vocabulary** (Button On Pressed/Toggled + focus navigation), native **2D raycast** ACEs, **particles**, **AnimationTree**, **tilemaps**, **shader materials**, **runtime input rebinding**, **physics joints**, **loop** Break/Continue/Current-Item, **Else/Else-If** authoring + compiled Pick-Filter conditions | ✅ shipped |
+| `Unreleased` — **code-free authoring** (visual expression builder, reflection method/property pickers, Promote-Block-to-Function, visual Array/Dictionary data editor, conditional breakpoints); first-class **UI/menu vocabulary** (Button On Pressed/Toggled + focus navigation), native **2D raycast** ACEs, **particles**, **AnimationTree**, **tilemaps**, **shader materials**, **runtime input rebinding**, **physics joints**, **24 Collision ACEs**, **loop** Break/Continue/Current-Item, **Else/Else-If** authoring + compiled Pick-Filter conditions; **Advanced Random** pack (27th), **ACE sub-categories**, read-only **.gd preview** | ✅ shipped |
 | _Roadmap_ — a Menu/HUD behavior pack + UI starter demo; 2D **point/shape overlap** queries; **scene-transition** + **dialogue** packs; a **loop-index** expression; community feedback rounds | 🗺 planned |
 
 Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).

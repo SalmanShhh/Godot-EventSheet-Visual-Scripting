@@ -75,7 +75,8 @@ Canonical forms live in `sheet_compiler.gd` (`_emit_enum_line`, `_emit_signal_li
 
 - **A builtin ACE**: add it to the right per-vocabulary module in
   `addons/eventforge/registration/modules/` (`core_aces`, `system_aces`, `device_aces`,
-  `audio_aces`, `native_3d_aces`, `collection_aces`, or `helper_aces`); `builtin_aces.gd`
+  `audio_aces`, `native_3d_aces`, `collection_aces`, `collision_aces`, `ui_aces`, `particle_aces`,
+  `tilemap_aces`, `physics_aces`, `loop_aces`, or `helper_aces`); `builtin_aces.gd`
   concatenates them **in order** (order is API — the reverse-lifter tries templates in
   registry order). Wrap NATIVE engine features (lane 1: the engine maintains the
   implementation, we maintain vocabulary). Use `node_type` for picker grouping, C3 names

@@ -15,6 +15,28 @@
   read-only preview (gated edits + save, a plain-language banner with Edit Events / Open in
   Script Editor, inline lift-fidelity), so a casual look never overwrites a hand-written script.
 
+### Code-free authoring — stay in the event sheet
+Five editor-only conveniences that keep authoring in the sheet instead of dropping to a raw
+GDScript block; each reuses the reflection helper or compiles to the same GDScript unchanged.
+- **Visual expression builder** — the Insert Expression picker now also lists the sheet host
+  class's own reflected members under **This Object — Properties** and **This Object —
+  Methods**; picking one inserts `name` (property) or `name()` (method). Editor-only.
+- **Reflection-driven method / property pickers** — the Helpers ACEs **Call Method**, **Call
+  Method (value)**, **Set Property** and **Get Property** offer the host class's real members
+  as an editable suggest-combo (pick a real member, or still type one reflection misses).
+  Editor-only; generated code unchanged.
+- **Promote block to Function** — a row's More menu gains **Extract GDScript to Function**: it
+  gathers that event's inline GDScript (RawCode) actions into a new reusable EventFunction
+  (auto-exposed as an ACE under Functions) and replaces them with a call.
+- **Visual data editor** — Array / Dictionary variable defaults get an **Edit items…** button
+  in the Variable dialog: a one-item-per-line editor instead of typing a literal like
+  `[1, 2, 3]` by hand. Round-trips losslessly through the literal.
+- **Conditional breakpoints** — a row's More menu gains **Set Breakpoint Condition…**: it
+  stores a GDScript boolean expression and the compiler emits `if <cond>: breakpoint` instead
+  of a bare breakpoint, so you pause only on the frame that matters (e.g. `health <= 0`)
+  rather than every pass; blank clears the guard. Builds on the existing F9 breakpoints, the
+  Tools-menu Debug Breakpoints toggle and editable Live Values.
+
 ### New ACE vocabulary — UI, particles, tilemaps, animation, shaders, input rebinding, joints, 2D raycast, loops
 First-class events for the biggest gaps from the capability audit (roadmap Phases 0/1/2/4/5):
 - **UI & menus** (`ui_aces`) — Button **On Pressed** / **On Toggled** triggers (real signal
@@ -37,6 +59,14 @@ First-class events for the biggest gaps from the capability audit (roadmap Phase
 - **Else / Else-If authoring** — a row right-click menu sets the chaining the compiler
   already emitted; **Pick-Filter conditions** now compile (iterator-scoped, AND/OR) instead
   of warning.
+- **Collision helpers** (`collision_aces`) — 24 ACEs for body/area physics queries:
+  **CharacterBody2D** on-wall / on-ceiling, wall / floor normals, and slide info (Get Slide
+  Collision Count, Get Last Slide Collider, Get Last Slide Normal), with **CharacterBody3D**
+  carrying the on-wall / on-ceiling / wall / floor-normal subset; **Area2D** overlaps (Overlaps
+  Body, Overlaps Area, Has Overlapping Bodies / Areas, Get Overlapping Bodies / Areas), with
+  **Area3D** Has / Get Overlapping Bodies; **CollisionObject2D** layer/mask bits (Set Collision
+  Layer Bit, Set Collision Mask Bit, Is On Collision Layer); and **CollisionShape2D** Enable /
+  Disable Shape (via `set_deferred`).
 
 All compile to plain typed GDScript (parity contract); covered by `phase0_aces_test` and
 `new_modules_test`. Bare loop keywords are excluded from the reverse-lifter so generated

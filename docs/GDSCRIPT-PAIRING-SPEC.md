@@ -246,6 +246,51 @@ Resolution order: `ACEDefinition.metadata.codegen_template`, then the base
 `ACERegistry` descriptor. Implemented in `EventSheetViewport._get_tooltip` /
 `_codegen_preview_for` / `fill_codegen_template`.
 
+### Visual expression builder (ƒx picker lists the host's own members)
+
+The ƒx **Insert Expression** picker also lists the sheet host class's own reflected
+members, grouped as **This Object — Properties** and **This Object — Methods** (alongside
+the existing expression templates). Picking a property inserts `name`, a method inserts
+`name()` — so referencing `host.position` or calling a host method is point-and-click
+rather than recalling the API by hand. Editor-only: it reuses the same reflection helper
+the pickers do and changes nothing about the emitted expression (`ace_params_dialog.gd`).
+
+### Reflection-driven ACE pickers (real members as editable suggest-combos)
+
+The **Helpers** ACEs **Call Method**, **Call Method (value)**, **Set Property**, and
+**Get Property** now offer the host class's *real* members as an editable suggest-combo:
+you pick from members reflection actually found, but you can still type a name reflection
+misses (no member is ever locked out). This keeps the structured escape hatch usable
+without leaving the row for a raw block, and generated code is unchanged — the combo only
+fills the same parameter the ACE always took (`ace_params_dialog.gd`,
+`registration/modules/helper_aces.gd`).
+
+### Extract GDScript to Function (promote a block to a reusable ACE)
+
+A row's **More** menu gains **Extract GDScript to Function**: it gathers that event's
+inline GDScript (`RawCode`) actions into a new reusable `EventFunction` and replaces them
+with a call to it. The new function is auto-exposed as an ACE under the **Functions**
+category, so logic that started as a one-off block becomes a named, searchable,
+re-pickable action — promoted entirely inside the sheet (`event_sheet_dock.gd`).
+
+### Visual collection editor (Array/Dictionary defaults, one item per line)
+
+Array / Dictionary variable defaults get an **Edit items…** button in the Variable dialog
+that opens a one-item-per-line editor instead of forcing you to type a literal like
+`[1, 2, 3]`. The editor round-trips losslessly through the literal, so you can author or
+revise a collection's contents without writing collection syntax by hand and without
+leaving the dialog (`variable_dialog.gd`).
+
+### Conditional breakpoints (a slice of visual debugging)
+
+A row's **More** menu gains **Set Breakpoint Condition…**: it stores a GDScript boolean
+expression and the compiler emits `if <cond>: breakpoint` instead of a bare `breakpoint`,
+so you pause only on the frame that matters (e.g. `health <= 0`) rather than on every pass;
+a blank condition clears the guard. This builds on the existing F9 real breakpoints, the
+Tools-menu Debug Breakpoints toggle, and editable Live Values — it is a bounded slice of
+visual debugging, conditional breakpoints specifically, not a full step-through/watch
+debugger (`event_row.gd`, `sheet_compiler.gd`, `event_sheet_dock.gd`).
+
 ### Inline GDScript blocks (class-level and in-flow)
 
 `RawCodeRow` resources are first-class in two placements:
