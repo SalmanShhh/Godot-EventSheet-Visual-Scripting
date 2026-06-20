@@ -47,6 +47,7 @@ const ACEAddonTestScript := preload("res://tests/ace_addon_test.gd")
 const InflowGDScriptTestScript := preload("res://tests/inflow_gdscript_test.gd")
 const SnippetShareTestScript := preload("res://tests/snippet_share_test.gd")
 const CodegenParityTestScript := preload("res://tests/codegen_parity_test.gd")
+const TemplateSubstitutionTestScript := preload("res://tests/template_substitution_test.gd")
 const ExternalSheetTestScript := preload("res://tests/external_sheet_test.gd")
 const SubeventCompileTestScript := preload("res://tests/subevent_compile_test.gd")
 const CustomNodeClassTestScript := preload("res://tests/custom_node_class_test.gd")
@@ -164,6 +165,7 @@ func _init() -> void:
 	passed = InflowGDScriptTestScript.run() and passed
 	passed = SnippetShareTestScript.run() and passed
 	passed = CodegenParityTestScript.run() and passed
+	passed = TemplateSubstitutionTestScript.run() and passed
 	passed = ExternalSheetTestScript.run() and passed
 	passed = SubeventCompileTestScript.run() and passed
 	passed = CustomNodeClassTestScript.run() and passed

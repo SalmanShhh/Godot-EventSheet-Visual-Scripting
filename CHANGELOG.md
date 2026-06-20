@@ -10,6 +10,11 @@
 - **Alt+Up / Alt+Down row reordering** — the plain arrow-key selection branches matched first and
   swallowed the modifier, leaving the advertised "move row up/down" shortcut as dead code. The
   selection branches now require Alt to be up, so the move shortcut fires as documented.
+- **Param values containing `{…}` were re-substituted** — `_apply_template` replaced placeholders
+  iteratively per key, so a param value that itself contained `{anotherparam}` got expanded by the
+  later key (e.g. `{a}-{b}` with `a="{b}"` produced `X-X` instead of `{b}-X`). It now runs a single
+  left-to-right pass with **opaque** values — your input is emitted verbatim. Behaviour is identical
+  on every existing template (golden/parity green, drift = 0); a new test pins the edge cases.
 
 ### Dev helper ACEs — Debug · Groups · Metadata · Nodes (the everyday tools)
 - **25 developer-helper ACEs** (`dev_aces`) for the native operations you reach for constantly,

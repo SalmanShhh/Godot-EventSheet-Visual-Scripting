@@ -20,31 +20,34 @@ static func generate_action(action: ACEAction) -> String:
 
 	return _apply_template(descriptor.codegen_template, _get_params(action))
 
-## Applies `{param}` and optional `{, param}` substitutions.
+## Applies `{param}` and optional `{, param}` substitutions in a SINGLE left-to-right pass.
+## Param VALUES are opaque — a value that itself contains `{...}` is emitted verbatim and never
+## re-scanned (an earlier iterative replace() pass corrupted such values, e.g. "{a}-{b}" with
+## a="{b}", b="X" produced "X-X" instead of "{b}-X"). Unknown plain `{key}` placeholders are kept
+## literal; an unresolved optional `{, key}` is dropped (matching the old trailing strip).
+static var _template_re: RegEx
+
 static func _apply_template(template: String, params: Dictionary) -> String:
-	var output: String = template
-	var keys: Array = params.keys()
-	keys.sort()
-
-	for key: Variant in keys:
-		var key_name: String = str(key)
-		var value: String = str(params[key])
-		var optional_token: String = "{, %s}" % key_name
-		if output.contains(optional_token):
-			if value.is_empty():
-				output = output.replace(optional_token, "")
+	if _template_re == null:
+		_template_re = RegEx.new()
+		_template_re.compile("\\{(,?)\\s*([A-Za-z_][A-Za-z0-9_]*)\\}")
+	var result: String = ""
+	var cursor: int = 0
+	for hit: RegExMatch in _template_re.search_all(template):
+		result += template.substr(cursor, hit.get_start() - cursor)
+		var is_optional: bool = hit.get_string(1) == ","
+		var key_name: String = hit.get_string(2)
+		if params.has(key_name):
+			var value: String = str(params[key_name])
+			if is_optional:
+				result += "" if value.is_empty() else ", " + value
 			else:
-				output = output.replace(optional_token, ", %s" % value)
-		output = output.replace("{%s}" % key_name, value)
-
-	while output.contains("{,"):
-		var start: int = output.find("{,")
-		var finish: int = output.find("}", start)
-		if finish == -1:
-			break
-		output = output.substr(0, start) + output.substr(finish + 1)
-
-	return output
+				result += value
+		elif not is_optional:
+			result += hit.get_string(0)  # leave an unknown plain {key} literal
+		cursor = hit.get_end()
+	result += template.substr(cursor)
+	return result
 
 ## Returns action params while preserving backwards compatibility with the first PR scaffold.
 static func _get_params(action: ACEAction) -> Dictionary:
