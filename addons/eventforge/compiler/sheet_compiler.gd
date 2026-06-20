@@ -31,6 +31,10 @@ static var _live_values_payload: String = ""
 # Whether the current debug compile still needs the edit-back receiver emitted (the
 # Live Values window's value edits arrive through it). Cleared once injected.
 static var _live_values_receiver_pending: bool = false
+# Whether the throttled _process (live-values and/or event-trace senders) has been emitted yet,
+# so the synthesized _process and the user-_process injection never both emit it. This is the
+# coordination signal that lets the event trace run WITHOUT live values (empty payload).
+static var _throttle_process_emitted: bool = false
 
 # Runtime-toggleable groups: event -> "__group_<snake>_active" guard (per-compile).
 static var _runtime_group_guards: Dictionary = {}
@@ -63,6 +67,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 
 	_emit_breakpoints_flag = sheet.emit_breakpoints
 	_emit_event_trace_flag = false
+	_throttle_process_emitted = false
 	_runtime_group_guards = {}
 	_runtime_group_members = []
 	# C3-style includes: merge included sheets' rows/variables/functions (compile-time
@@ -229,11 +234,16 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		else:
 			_live_values_payload = ", ".join(payload_parts)
 			_live_values_receiver_pending = true
-			if variable_lines.is_empty() and tree_variables.is_empty():
-				lines.append("")
-			lines.append("var __live_values_timer: float = 0.0")
-		if sheet.emit_event_trace:
-			_emit_event_trace_flag = true
+	if sheet.emit_event_trace:
+		_emit_event_trace_flag = true
+	# Live values and the event trace share one throttled _process, so they share the timer member;
+	# the trace also needs its per-frame buffer. Declared whenever either is enabled — the trace can
+	# run on its own (without live values), so this is no longer gated behind emit_live_values.
+	if _live_values_receiver_pending or _emit_event_trace_flag:
+		if variable_lines.is_empty() and tree_variables.is_empty():
+			lines.append("")
+		lines.append("var __live_values_timer: float = 0.0")
+		if _emit_event_trace_flag:
 			lines.append("var __eventsheets_fired: PackedStringArray = PackedStringArray()")
 
 	# Lane B composition (has-a): owned helper instances for the declared addon classes.
@@ -337,16 +347,18 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 	for group_comment_line: String in group_comment_lines:
 		deferred_rows.append("# %s" % group_comment_line)
 
-	if not _live_values_payload.is_empty():
+	if not _throttle_process_emitted and (not _live_values_payload.is_empty() or _emit_event_trace_flag):
 		lines.append("")
 		lines.append("func _process(delta: float) -> void:")
 		lines.append("\t__live_values_timer += delta")
 		lines.append("\tif __live_values_timer >= 0.25 and EngineDebugger.is_active():")
 		lines.append("\t\t__live_values_timer = 0.0")
-		lines.append("\t\tEngineDebugger.send_message(\"eventsheets:live_values\", [%s])" % _live_values_payload)
+		if not _live_values_payload.is_empty():
+			lines.append("\t\tEngineDebugger.send_message(\"eventsheets:live_values\", [%s])" % _live_values_payload)
 		if _emit_event_trace_flag:
 			lines.append("\t\tEngineDebugger.send_message(\"eventsheets:fired_events\", __eventsheets_fired)")
 			lines.append("\t\t__eventsheets_fired.clear()")
+		_throttle_process_emitted = true
 		_live_values_payload = ""
 
 	if sheet.emit_live_values and not sheet.variables.is_empty():
@@ -405,6 +417,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	_emit_breakpoints_flag = sheet.emit_breakpoints
 	_emit_event_trace_flag = false
 	_live_values_payload = ""
+	_throttle_process_emitted = false
 	if not sheet.includes.is_empty() or not sheet.uses_addons.is_empty() or not sheet.requires_behaviors.is_empty():
 		(result["warnings"] as Array).append("GDScript-backed sheets ignore Includes/Uses/Requires — the .gd file is the source of truth (write the equivalent code directly).")
 	var lines: PackedStringArray = PackedStringArray()
@@ -761,16 +774,18 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			lines.append("\t\tEngineDebugger.register_message_capture(&\"eventsheets\", _eventsheets_debug_set)")
 			had_body = true
 			_live_values_receiver_pending = false
-		if function_name == "_process" and not _live_values_payload.is_empty():
-			# Live-values stream: throttled, debug-session-only, before user logic.
+		if function_name == "_process" and not _throttle_process_emitted and (not _live_values_payload.is_empty() or _emit_event_trace_flag):
+			# Live-values stream and/or the event trace: throttled, debug-session-only, before user logic.
 			lines.append("\t__live_values_timer += delta")
 			lines.append("\tif __live_values_timer >= 0.25 and EngineDebugger.is_active():")
 			lines.append("\t\t__live_values_timer = 0.0")
-			lines.append("\t\tEngineDebugger.send_message(\"eventsheets:live_values\", [%s])" % _live_values_payload)
+			if not _live_values_payload.is_empty():
+				lines.append("\t\tEngineDebugger.send_message(\"eventsheets:live_values\", [%s])" % _live_values_payload)
 			if _emit_event_trace_flag:
 				lines.append("\t\tEngineDebugger.send_message(\"eventsheets:fired_events\", __eventsheets_fired)")
 				lines.append("\t\t__eventsheets_fired.clear()")
 			had_body = true
+			_throttle_process_emitted = true
 			_live_values_payload = ""
 		if function_name == "_ready" and not ready_connections.is_empty():
 			# Signal connections run before the user's OnReady logic.

@@ -182,6 +182,51 @@ static func run() -> bool:
 	all_passed = _check("event trace off leaves no instrumentation", str(SheetCompiler.compile(trace_sheet, "user://eventsheets_notrace.gd").get("output", "")).contains("__eventsheets_fired"), false) and all_passed
 	all_passed = _check("parse_fired turns the payload into uids", Array(EventSheetLiveValuesDebugger.parse_fired(["a", "b"])), ["a", "b"]) and all_passed
 
+	# Regression: the event trace must work WITHOUT live values (the member + send used to be gated
+	# behind emit_live_values, so a trace-only compile was silently dead). Injection path (user _process):
+	var trace_only: EventSheetResource = EventSheetResource.new()
+	trace_only.emit_event_trace = true  # emit_live_values stays FALSE
+	trace_only.host_class = "Node2D"
+	var to_event: EventRow = EventRow.new()
+	to_event.event_uid = "evt_only_1"
+	to_event.trigger_provider_id = "Core"
+	to_event.trigger_id = "OnProcess"
+	var to_action: ACEAction = ACEAction.new()
+	to_action.provider_id = "Core"
+	to_action.ace_id = "X"
+	to_action.codegen_template = "rotation += delta"
+	to_event.actions.append(to_action)
+	trace_only.events.append(to_event)
+	var to_output: String = str(SheetCompiler.compile(trace_only, "user://eventsheets_traceonly.gd").get("output", ""))
+	all_passed = _check("trace-only declares the fired buffer + timer",
+		to_output.contains("var __eventsheets_fired: PackedStringArray") and to_output.contains("var __live_values_timer"), true) and all_passed
+	all_passed = _check("trace-only appends the firing uid", to_output.contains("__eventsheets_fired.append(\"evt_only_1\")"), true) and all_passed
+	all_passed = _check("trace-only streams fired_events but NOT live_values",
+		to_output.contains("eventsheets:fired_events") and not to_output.contains("eventsheets:live_values"), true) and all_passed
+	all_passed = _check("trace-only emits exactly one _process", to_output.count("func _process") == 1, true) and all_passed
+	var to_script: GDScript = GDScript.new()
+	to_script.source_code = to_output
+	all_passed = _check("trace-only output parses", to_script.reload(true) == OK, true) and all_passed
+	# Synthesis path (no user _process): a standalone _process is created for the trace alone.
+	var trace_idle: EventSheetResource = EventSheetResource.new()
+	trace_idle.emit_event_trace = true
+	var ti_event: EventRow = EventRow.new()
+	ti_event.event_uid = "evt_idle_1"
+	ti_event.trigger_provider_id = "Core"
+	ti_event.trigger_id = "OnReady"
+	var ti_action: ACEAction = ACEAction.new()
+	ti_action.provider_id = "Core"
+	ti_action.ace_id = "X"
+	ti_action.codegen_template = "pass"
+	ti_event.actions.append(ti_action)
+	trace_idle.events.append(ti_event)
+	var ti_output: String = str(SheetCompiler.compile(trace_idle, "user://eventsheets_traceidle.gd").get("output", ""))
+	all_passed = _check("trace-only without a process trigger synthesizes one _process",
+		ti_output.contains("func _process(delta: float) -> void:") and ti_output.contains("eventsheets:fired_events") and ti_output.count("func _process") == 1, true) and all_passed
+	var ti_script: GDScript = GDScript.new()
+	ti_script.source_code = ti_output
+	all_passed = _check("trace-only standalone output parses", ti_script.reload(true) == OK, true) and all_passed
+
 	# The viewport highlights events that fired (set_fired_events sets a transient firing flag).
 	var fire_viewport: EventSheetViewport = EventSheetViewport.new()
 	var fire_sheet: EventSheetResource = EventSheetResource.new()
