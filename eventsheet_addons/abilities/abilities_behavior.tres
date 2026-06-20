@@ -1,0 +1,981 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_o2qng"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_vnapg"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_hl760"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_erm4e"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_uv7j2"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_2qok2"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_mdlaa"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_nccum"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_ugumu"]
+
+[sub_resource type="Resource" id="Resource_mng6w"]
+script = ExtResource("1_o2qng")
+text = "Simple Abilities (C3 parity + Godot extras): grant abilities by id, cooldowns, stack charges that auto-regen, temporary abilities that auto-expire, per-ability custom data, and tags for bulk operations. Triggers fire for ANY ability; read Current Ability ID (or the Current Ability Is condition) to tell which one fired."
+
+[sub_resource type="Resource" id="Resource_44b4b"]
+script = ExtResource("2_vnapg")
+code = "## @ace_trigger
+## @ace_name(\"On Ability Activated\")
+## @ace_category(\"Abilities\")
+signal on_ability_activated
+
+## @ace_trigger
+## @ace_name(\"On Ability Ready\")
+## @ace_category(\"Abilities\")
+signal on_ability_ready
+
+## @ace_trigger
+## @ace_name(\"On Ability Created\")
+## @ace_category(\"Abilities\")
+signal on_ability_created
+
+## @ace_trigger
+## @ace_name(\"On Ability Removed\")
+## @ace_category(\"Abilities\")
+signal on_ability_removed
+
+## @ace_trigger
+## @ace_name(\"On Stack Consumed\")
+## @ace_category(\"Abilities\")
+signal on_stack_consumed
+
+## @ace_trigger
+## @ace_name(\"On Stack Gained\")
+## @ace_category(\"Abilities\")
+signal on_stack_gained
+
+## @ace_trigger
+## @ace_name(\"On Max Stacks Reached\")
+## @ace_category(\"Abilities\")
+signal on_max_stacks_reached
+
+## @ace_condition
+## @ace_name(\"Has Ability\")
+## @ace_category(\"Abilities\")
+## @ace_codegen_template(\"$SimpleAbilitiesBehavior.has_ability({id})\")
+func has_ability(id: String) -> bool:
+	return abilities.has(id)
+
+## @ace_condition
+## @ace_name(\"Is Ability Ready\")
+## @ace_category(\"Abilities\")
+## @ace_codegen_template(\"$SimpleAbilitiesBehavior.is_ready({id})\")
+func is_ready(id: String) -> bool:
+	if not abilities.has(id):
+		return false
+	var a: Dictionary = abilities[id]
+	return float(a.cooldown) <= 0.0 and bool(a.enabled) and int(a.stacks) > 0
+
+## @ace_condition
+## @ace_name(\"Is Ability Active\")
+## @ace_category(\"Abilities\")
+## @ace_codegen_template(\"$SimpleAbilitiesBehavior.is_active({id})\")
+func is_active(id: String) -> bool:
+	return abilities.has(id) and bool(abilities[id].active)
+
+## @ace_condition
+## @ace_name(\"Is Ability Enabled\")
+## @ace_category(\"Abilities\")
+## @ace_codegen_template(\"$SimpleAbilitiesBehavior.is_enabled({id})\")
+func is_enabled(id: String) -> bool:
+	return abilities.has(id) and bool(abilities[id].enabled)
+
+## @ace_condition
+## @ace_name(\"Has Stacks Available\")
+## @ace_category(\"Abilities\")
+## @ace_codegen_template(\"$SimpleAbilitiesBehavior.has_stacks({id})\")
+func has_stacks(id: String) -> bool:
+	return abilities.has(id) and int(abilities[id].stacks) > 0
+
+## @ace_condition
+## @ace_name(\"Ability Has Tag\")
+## @ace_category(\"Abilities\")
+## @ace_codegen_template(\"$SimpleAbilitiesBehavior.ability_has_tag({id}, {tag})\")
+func ability_has_tag(id: String, tag: String) -> bool:
+	return abilities.has(id) and (abilities[id].tags as Array).has(tag)
+
+## @ace_condition
+## @ace_name(\"Current Ability Is\")
+## @ace_category(\"Abilities\")
+## @ace_codegen_template(\"$SimpleAbilitiesBehavior.current_ability_is({id})\")
+func current_ability_is(id: String) -> bool:
+	return current_ability_id == id
+
+## @ace_expression
+## @ace_name(\"Current Ability ID\")
+## @ace_category(\"Abilities\")
+func current_ability() -> String:
+	return current_ability_id
+
+## @ace_expression
+## @ace_name(\"Cooldown Remaining\")
+## @ace_category(\"Abilities\")
+func get_cooldown_remaining(id: String) -> float:
+	return float(abilities[id].cooldown) if abilities.has(id) else 0.0
+
+## @ace_expression
+## @ace_name(\"Cooldown Progress\")
+## @ace_category(\"Abilities\")
+func get_cooldown_progress(id: String) -> float:
+	if not abilities.has(id) or float(abilities[id].max_cooldown) <= 0.0:
+		return 0.0
+	return clampf(float(abilities[id].cooldown) / float(abilities[id].max_cooldown), 0.0, 1.0)
+
+## @ace_expression
+## @ace_name(\"Stacks\")
+## @ace_category(\"Abilities\")
+func get_stacks(id: String) -> int:
+	return int(abilities[id].stacks) if abilities.has(id) else 0
+
+## @ace_expression
+## @ace_name(\"Max Stacks\")
+## @ace_category(\"Abilities\")
+func get_max_stacks(id: String) -> int:
+	return int(abilities[id].max_stacks) if abilities.has(id) else 0
+
+## @ace_expression
+## @ace_name(\"Stack Cooldown Remaining\")
+## @ace_category(\"Abilities\")
+func get_stack_cooldown_remaining(id: String) -> float:
+	return float(abilities[id].cooldown) if abilities.has(id) else 0.0
+
+## @ace_expression
+## @ace_name(\"Stack Progress\")
+## @ace_category(\"Abilities\")
+func get_stack_progress(id: String) -> float:
+	return get_cooldown_progress(id)
+
+## @ace_expression
+## @ace_name(\"Expiration Time\")
+## @ace_category(\"Abilities\")
+func get_expiration_time(id: String) -> float:
+	return float(abilities[id].expiration) if abilities.has(id) else 0.0
+
+## @ace_expression
+## @ace_name(\"Expiration Progress\")
+## @ace_category(\"Abilities\")
+func get_expiration_progress(id: String) -> float:
+	if not abilities.has(id) or float(abilities[id].max_expiration) <= 0.0:
+		return 0.0
+	return clampf(1.0 - float(abilities[id].expiration) / float(abilities[id].max_expiration), 0.0, 1.0)
+
+## @ace_expression
+## @ace_name(\"Max Expiration Time\")
+## @ace_category(\"Abilities\")
+func get_max_expiration_time(id: String) -> float:
+	return float(abilities[id].max_expiration) if abilities.has(id) else 0.0
+
+## @ace_expression
+## @ace_name(\"Ability Count\")
+## @ace_category(\"Abilities\")
+func get_ability_count() -> int:
+	return abilities.size()
+
+## @ace_expression
+## @ace_name(\"List Active Abilities\")
+## @ace_category(\"Abilities\")
+func list_active_abilities() -> String:
+	return \",\".join(abilities.keys())
+
+## @ace_expression
+## @ace_name(\"Ready Abilities\")
+## @ace_category(\"Abilities\")
+func get_ready_abilities() -> String:
+	var out: PackedStringArray = PackedStringArray()
+	for id: String in abilities.keys():
+		if is_ready(id):
+			out.append(id)
+	return \",\".join(out)
+
+## @ace_expression
+## @ace_name(\"Ability Data\")
+## @ace_category(\"Abilities\")
+func get_ability_data(id: String, key: String) -> String:
+	if not abilities.has(id):
+		return \"\"
+	return str((abilities[id].data as Dictionary).get(key, \"\"))
+
+## @ace_expression
+## @ace_name(\"Count Abilities By Tag\")
+## @ace_category(\"Abilities\")
+func count_abilities_by_tag(tag: String) -> int:
+	return _ids_with_tag(tag).size()
+
+## @ace_expression
+## @ace_name(\"Ability By Tag Index\")
+## @ace_category(\"Abilities\")
+func get_ability_by_tag_index(tag: String, index: int) -> String:
+	var ids: Array = _ids_with_tag(tag)
+	return str(ids[index]) if index >= 0 and index < ids.size() else \"\"
+
+## @ace_expression
+## @ace_name(\"List Abilities By Tag\")
+## @ace_category(\"Abilities\")
+func list_abilities_by_tag(tag: String) -> String:
+	return \",\".join(_ids_with_tag(tag))
+
+func _ensure_ability(id: String) -> Dictionary:
+	if not abilities.has(id):
+		abilities[id] = {\"cooldown\": 0.0, \"max_cooldown\": 0.0, \"stacks\": 1, \"max_stacks\": 1, \"enabled\": true, \"active\": false, \"data\": {}, \"tags\": [], \"expiration\": 0.0, \"max_expiration\": 0.0}
+	return abilities[id]
+
+func _ids_with_tag(tag: String) -> Array:
+	var out: Array = []
+	for id: String in abilities.keys():
+		if (abilities[id].tags as Array).has(tag):
+			out.append(id)
+	return out"
+
+[sub_resource type="Resource" id="Resource_geuiw"]
+script = ExtResource("2_vnapg")
+code = "if abilities.is_empty():
+	return
+var expired: Array = []
+for id: String in abilities.keys():
+	var a: Dictionary = abilities[id]
+	if float(a.cooldown) > 0.0:
+		a.cooldown = maxf(0.0, float(a.cooldown) - delta)
+		if float(a.cooldown) <= 0.0:
+			if int(a.stacks) < int(a.max_stacks):
+				a.stacks = int(a.stacks) + 1
+				current_ability_id = id
+				on_stack_gained.emit()
+				if int(a.stacks) < int(a.max_stacks) and float(a.max_cooldown) > 0.0:
+					a.cooldown = float(a.max_cooldown)
+			current_ability_id = id
+			on_ability_ready.emit()
+	if float(a.max_expiration) > 0.0:
+		a.expiration = maxf(0.0, float(a.expiration) - delta)
+		if float(a.expiration) <= 0.0:
+			expired.append(id)
+for id: String in expired:
+	abilities.erase(id)
+	current_ability_id = id
+	on_ability_removed.emit()"
+
+[sub_resource type="Resource" id="Resource_n4pln"]
+script = ExtResource("6_2qok2")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_geuiw")])
+event_uid = "916728"
+
+[sub_resource type="Resource" id="Resource_0c4bb"]
+script = ExtResource("2_vnapg")
+code = "if abilities.has(id):
+	return
+_ensure_ability(id)
+current_ability_id = id
+on_ability_created.emit()"
+
+[sub_resource type="Resource" id="Resource_uco02"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_gf5l5"]
+script = ExtResource("8_nccum")
+function_name = "create_ability"
+description = "Grants an empty ability (no cooldown, 1 stack, enabled). Fires On Ability Created if new."
+expose_as_ace = true
+ace_display_name = "Create Ability"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_uco02")])
+events = Array[Resource]([SubResource("Resource_0c4bb")])
+
+[sub_resource type="Resource" id="Resource_l20oa"]
+script = ExtResource("2_vnapg")
+code = "var is_new: bool = not abilities.has(id)
+var a: Dictionary = _ensure_ability(id)
+a.max_cooldown = maxf(0.0, seconds)
+a.cooldown = 0.0 if reset_instantly else maxf(0.0, seconds)
+if is_new:
+	current_ability_id = id
+	on_ability_created.emit()"
+
+[sub_resource type="Resource" id="Resource_wph4b"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_f7itn"]
+script = ExtResource("7_mdlaa")
+id = "seconds"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_3m6jb"]
+script = ExtResource("7_mdlaa")
+id = "reset_instantly"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_0qtj0"]
+script = ExtResource("8_nccum")
+function_name = "create_ability_with_cooldown"
+description = "Grants an ability and sets its cooldown. reset_instantly=true starts it ready."
+expose_as_ace = true
+ace_display_name = "Create Ability With Cooldown"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_wph4b"), SubResource("Resource_f7itn"), SubResource("Resource_3m6jb")])
+events = Array[Resource]([SubResource("Resource_l20oa")])
+
+[sub_resource type="Resource" id="Resource_ou4if"]
+script = ExtResource("2_vnapg")
+code = "var is_new: bool = not abilities.has(id)
+var a: Dictionary = _ensure_ability(id)
+a.max_cooldown = maxf(0.0, seconds)
+a.max_stacks = maxi(1, max_stacks)
+a.stacks = int(a.max_stacks) if reset_instantly else 0
+a.cooldown = 0.0 if reset_instantly else maxf(0.0, seconds)
+if is_new:
+	current_ability_id = id
+	on_ability_created.emit()"
+
+[sub_resource type="Resource" id="Resource_bssia"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_kbvg2"]
+script = ExtResource("7_mdlaa")
+id = "seconds"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ngics"]
+script = ExtResource("7_mdlaa")
+id = "max_stacks"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_hm77x"]
+script = ExtResource("7_mdlaa")
+id = "reset_instantly"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_fuji0"]
+script = ExtResource("8_nccum")
+function_name = "create_ability_with_stacks"
+description = "Grants a charge-based ability; each stack regenerates over `seconds`. reset_instantly=true starts full."
+expose_as_ace = true
+ace_display_name = "Create Ability With Cooldown And Stacks"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_bssia"), SubResource("Resource_kbvg2"), SubResource("Resource_ngics"), SubResource("Resource_hm77x")])
+events = Array[Resource]([SubResource("Resource_ou4if")])
+
+[sub_resource type="Resource" id="Resource_u3ear"]
+script = ExtResource("2_vnapg")
+code = "var is_new: bool = not abilities.has(id)
+var a: Dictionary = _ensure_ability(id)
+a.max_expiration = maxf(0.0, seconds)
+a.expiration = maxf(0.0, seconds)
+if is_new:
+	current_ability_id = id
+	on_ability_created.emit()"
+
+[sub_resource type="Resource" id="Resource_xnhgr"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ymee4"]
+script = ExtResource("7_mdlaa")
+id = "seconds"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_y8jyx"]
+script = ExtResource("8_nccum")
+function_name = "create_temporary_ability"
+description = "Grants an ability that auto-removes after `seconds`. Calling again refreshes the timer."
+expose_as_ace = true
+ace_display_name = "Create Temporary Ability"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_xnhgr"), SubResource("Resource_ymee4")])
+events = Array[Resource]([SubResource("Resource_u3ear")])
+
+[sub_resource type="Resource" id="Resource_mu2vr"]
+script = ExtResource("2_vnapg")
+code = "if not abilities.has(id):
+	return
+abilities[id].max_expiration = maxf(0.0, seconds)
+abilities[id].expiration = maxf(0.0, seconds)"
+
+[sub_resource type="Resource" id="Resource_no1nt"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_bv8ro"]
+script = ExtResource("7_mdlaa")
+id = "seconds"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_j4w1m"]
+script = ExtResource("8_nccum")
+function_name = "remove_ability_after"
+description = "Schedules removal of an existing ability after `seconds`."
+expose_as_ace = true
+ace_display_name = "Remove Ability After Duration"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_no1nt"), SubResource("Resource_bv8ro")])
+events = Array[Resource]([SubResource("Resource_mu2vr")])
+
+[sub_resource type="Resource" id="Resource_tphqt"]
+script = ExtResource("2_vnapg")
+code = "if not abilities.has(id):
+	return
+abilities.erase(id)
+current_ability_id = id
+on_ability_removed.emit()"
+
+[sub_resource type="Resource" id="Resource_cpskq"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_mnshf"]
+script = ExtResource("8_nccum")
+function_name = "remove_ability"
+description = "Deletes an ability and all its data. Fires On Ability Removed."
+expose_as_ace = true
+ace_display_name = "Remove Ability"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_cpskq")])
+events = Array[Resource]([SubResource("Resource_tphqt")])
+
+[sub_resource type="Resource" id="Resource_58jbp"]
+script = ExtResource("2_vnapg")
+code = "for id: String in abilities.keys():
+	current_ability_id = id
+	on_ability_removed.emit()
+abilities.clear()"
+
+[sub_resource type="Resource" id="Resource_60i8h"]
+script = ExtResource("8_nccum")
+function_name = "clear_all_abilities"
+description = "Removes every ability. Fires On Ability Removed for each."
+expose_as_ace = true
+ace_display_name = "Clear All Abilities"
+ace_category = "Abilities"
+events = Array[Resource]([SubResource("Resource_58jbp")])
+
+[sub_resource type="Resource" id="Resource_ujlqa"]
+script = ExtResource("2_vnapg")
+code = "if not abilities.has(id):
+	return
+var a: Dictionary = abilities[id]
+if float(a.cooldown) > 0.0 or not bool(a.enabled) or int(a.stacks) <= 0:
+	return
+a.stacks = int(a.stacks) - 1
+current_ability_id = id
+on_stack_consumed.emit()
+if int(a.stacks) < int(a.max_stacks) and float(a.cooldown) <= 0.0 and float(a.max_cooldown) > 0.0:
+	a.cooldown = float(a.max_cooldown)
+current_ability_id = id
+on_ability_activated.emit()"
+
+[sub_resource type="Resource" id="Resource_6vjts"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_q1w0d"]
+script = ExtResource("8_nccum")
+function_name = "activate_ability"
+description = "Activates an ability if it is ready: consumes a stack, starts regen, fires On Ability Activated."
+expose_as_ace = true
+ace_display_name = "Activate Ability"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_6vjts")])
+events = Array[Resource]([SubResource("Resource_ujlqa")])
+
+[sub_resource type="Resource" id="Resource_8s5ka"]
+script = ExtResource("2_vnapg")
+code = "if not abilities.has(id):
+	return
+var cd: float = maxf(0.0, seconds * cooldown_multiplier)
+abilities[id].cooldown = cd
+abilities[id].max_cooldown = cd"
+
+[sub_resource type="Resource" id="Resource_kxri8"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_4jhhf"]
+script = ExtResource("7_mdlaa")
+id = "seconds"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_wgamr"]
+script = ExtResource("8_nccum")
+function_name = "set_cooldown"
+description = "Puts an ability on cooldown (scaled by the global cooldown multiplier)."
+expose_as_ace = true
+ace_display_name = "Set Ability Cooldown"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_kxri8"), SubResource("Resource_4jhhf")])
+events = Array[Resource]([SubResource("Resource_8s5ka")])
+
+[sub_resource type="Resource" id="Resource_f1334"]
+script = ExtResource("2_vnapg")
+code = "if abilities.has(id):
+	abilities[id].cooldown = 0.0"
+
+[sub_resource type="Resource" id="Resource_m2s0k"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_uyi55"]
+script = ExtResource("8_nccum")
+function_name = "reset_cooldown"
+description = "Sets an ability's cooldown to 0 (instantly ready)."
+expose_as_ace = true
+ace_display_name = "Reset Cooldown"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_m2s0k")])
+events = Array[Resource]([SubResource("Resource_f1334")])
+
+[sub_resource type="Resource" id="Resource_lgign"]
+script = ExtResource("2_vnapg")
+code = "if not abilities.has(id):
+	return
+var a: Dictionary = abilities[id]
+a.max_stacks = maxi(1, max_stacks)
+a.stacks = mini(int(a.stacks), int(a.max_stacks))"
+
+[sub_resource type="Resource" id="Resource_xyl57"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_aimsg"]
+script = ExtResource("7_mdlaa")
+id = "max_stacks"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_4sqo8"]
+script = ExtResource("8_nccum")
+function_name = "set_max_stacks"
+description = "Changes max charges (current stacks clamp down)."
+expose_as_ace = true
+ace_display_name = "Set Max Stacks"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_xyl57"), SubResource("Resource_aimsg")])
+events = Array[Resource]([SubResource("Resource_lgign")])
+
+[sub_resource type="Resource" id="Resource_0gvy4"]
+script = ExtResource("2_vnapg")
+code = "if not abilities.has(id):
+	return
+abilities[id].stacks = clampi(stacks, 0, int(abilities[id].max_stacks))"
+
+[sub_resource type="Resource" id="Resource_gs0cq"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_p5h1q"]
+script = ExtResource("7_mdlaa")
+id = "stacks"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_awnw3"]
+script = ExtResource("8_nccum")
+function_name = "set_stacks"
+description = "Sets current charges (clamped 0..max)."
+expose_as_ace = true
+ace_display_name = "Set Stacks"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_gs0cq"), SubResource("Resource_p5h1q")])
+events = Array[Resource]([SubResource("Resource_0gvy4")])
+
+[sub_resource type="Resource" id="Resource_i58ax"]
+script = ExtResource("2_vnapg")
+code = "if not abilities.has(id):
+	return
+var a: Dictionary = abilities[id]
+var before: int = int(a.stacks)
+a.stacks = mini(int(a.max_stacks), before + count)
+if int(a.stacks) > before:
+	current_ability_id = id
+	on_stack_gained.emit()
+if before + count > int(a.max_stacks):
+	current_ability_id = id
+	on_max_stacks_reached.emit()"
+
+[sub_resource type="Resource" id="Resource_tdiol"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ryapg"]
+script = ExtResource("7_mdlaa")
+id = "count"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_d1oml"]
+script = ExtResource("8_nccum")
+function_name = "add_stacks"
+description = "Adds charges up to max. Fires On Stack Gained, and On Max Stacks Reached if it would overflow."
+expose_as_ace = true
+ace_display_name = "Add Stacks"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_tdiol"), SubResource("Resource_ryapg")])
+events = Array[Resource]([SubResource("Resource_i58ax")])
+
+[sub_resource type="Resource" id="Resource_kj7wo"]
+script = ExtResource("2_vnapg")
+code = "if not abilities.has(id):
+	return
+var a: Dictionary = abilities[id]
+if int(a.stacks) <= 0:
+	return
+a.stacks = int(a.stacks) - 1
+current_ability_id = id
+on_stack_consumed.emit()
+if int(a.stacks) < int(a.max_stacks) and float(a.cooldown) <= 0.0 and float(a.max_cooldown) > 0.0:
+	a.cooldown = float(a.max_cooldown)"
+
+[sub_resource type="Resource" id="Resource_03mxf"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_vm1ej"]
+script = ExtResource("8_nccum")
+function_name = "consume_stack"
+description = "Removes one charge without activating; starts regen if needed."
+expose_as_ace = true
+ace_display_name = "Consume Ability Stack"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_03mxf")])
+events = Array[Resource]([SubResource("Resource_kj7wo")])
+
+[sub_resource type="Resource" id="Resource_now3l"]
+script = ExtResource("2_vnapg")
+code = "if abilities.has(id):
+	abilities[id].enabled = enabled"
+
+[sub_resource type="Resource" id="Resource_o8r4g"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_asuwn"]
+script = ExtResource("7_mdlaa")
+id = "enabled"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_nb4wx"]
+script = ExtResource("8_nccum")
+function_name = "set_enabled"
+description = "Enables or disables activation."
+expose_as_ace = true
+ace_display_name = "Set Ability Enabled"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_o8r4g"), SubResource("Resource_asuwn")])
+events = Array[Resource]([SubResource("Resource_now3l")])
+
+[sub_resource type="Resource" id="Resource_nmg4c"]
+script = ExtResource("2_vnapg")
+code = "if abilities.has(id):
+	abilities[id].active = active"
+
+[sub_resource type="Resource" id="Resource_lccvh"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_1h8k4"]
+script = ExtResource("7_mdlaa")
+id = "active"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ab5qp"]
+script = ExtResource("8_nccum")
+function_name = "set_active"
+description = "Sets the active flag (for channeled / toggle abilities)."
+expose_as_ace = true
+ace_display_name = "Set Ability Active"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_lccvh"), SubResource("Resource_1h8k4")])
+events = Array[Resource]([SubResource("Resource_nmg4c")])
+
+[sub_resource type="Resource" id="Resource_qas7i"]
+script = ExtResource("2_vnapg")
+code = "if abilities.has(id):
+	(abilities[id].data as Dictionary)[key] = str(value)"
+
+[sub_resource type="Resource" id="Resource_a5pjh"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_1fh0h"]
+script = ExtResource("7_mdlaa")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_q7swk"]
+script = ExtResource("7_mdlaa")
+id = "value"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_gyoir"]
+script = ExtResource("8_nccum")
+function_name = "set_ability_data"
+description = "Stores a custom key/value (string) on an ability."
+expose_as_ace = true
+ace_display_name = "Set Ability Data"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_a5pjh"), SubResource("Resource_1fh0h"), SubResource("Resource_q7swk")])
+events = Array[Resource]([SubResource("Resource_qas7i")])
+
+[sub_resource type="Resource" id="Resource_duwhk"]
+script = ExtResource("2_vnapg")
+code = "if not abilities.has(id):
+	return
+var tags: Array = abilities[id].tags
+if not tags.has(tag):
+	tags.append(tag)"
+
+[sub_resource type="Resource" id="Resource_3kc4v"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ll60d"]
+script = ExtResource("7_mdlaa")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_rn4g5"]
+script = ExtResource("8_nccum")
+function_name = "add_tag"
+description = "Tags an ability (safe if it already has the tag)."
+expose_as_ace = true
+ace_display_name = "Add Tag"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_3kc4v"), SubResource("Resource_ll60d")])
+events = Array[Resource]([SubResource("Resource_duwhk")])
+
+[sub_resource type="Resource" id="Resource_4wj6s"]
+script = ExtResource("2_vnapg")
+code = "if abilities.has(id):
+	(abilities[id].tags as Array).erase(tag)"
+
+[sub_resource type="Resource" id="Resource_ityyj"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_gbkuu"]
+script = ExtResource("7_mdlaa")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_tqqew"]
+script = ExtResource("8_nccum")
+function_name = "remove_tag"
+description = "Removes a tag from an ability."
+expose_as_ace = true
+ace_display_name = "Remove Tag"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_ityyj"), SubResource("Resource_gbkuu")])
+events = Array[Resource]([SubResource("Resource_4wj6s")])
+
+[sub_resource type="Resource" id="Resource_alk3k"]
+script = ExtResource("2_vnapg")
+code = "if abilities.has(id):
+	(abilities[id].tags as Array).clear()"
+
+[sub_resource type="Resource" id="Resource_5vrpg"]
+script = ExtResource("7_mdlaa")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_l4gpe"]
+script = ExtResource("8_nccum")
+function_name = "clear_tags"
+description = "Removes every tag from an ability."
+expose_as_ace = true
+ace_display_name = "Clear All Tags"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_5vrpg")])
+events = Array[Resource]([SubResource("Resource_alk3k")])
+
+[sub_resource type="Resource" id="Resource_wqvko"]
+script = ExtResource("2_vnapg")
+code = "for id: String in _ids_with_tag(tag):
+	abilities[id].enabled = enabled"
+
+[sub_resource type="Resource" id="Resource_ww1lv"]
+script = ExtResource("7_mdlaa")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_kk4gx"]
+script = ExtResource("7_mdlaa")
+id = "enabled"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_cr3j0"]
+script = ExtResource("8_nccum")
+function_name = "set_tag_enabled"
+description = "Enables/disables every ability carrying a tag."
+expose_as_ace = true
+ace_display_name = "Set Abilities With Tag Enabled"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_ww1lv"), SubResource("Resource_kk4gx")])
+events = Array[Resource]([SubResource("Resource_wqvko")])
+
+[sub_resource type="Resource" id="Resource_7dbhs"]
+script = ExtResource("2_vnapg")
+code = "for id: String in _ids_with_tag(tag):
+	abilities.erase(id)
+	current_ability_id = id
+	on_ability_removed.emit()"
+
+[sub_resource type="Resource" id="Resource_4cisc"]
+script = ExtResource("7_mdlaa")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_pipgo"]
+script = ExtResource("8_nccum")
+function_name = "remove_abilities_with_tag"
+description = "Deletes every ability with a tag. Fires On Ability Removed for each."
+expose_as_ace = true
+ace_display_name = "Remove All Abilities With Tag"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_4cisc")])
+events = Array[Resource]([SubResource("Resource_7dbhs")])
+
+[sub_resource type="Resource" id="Resource_eo5hw"]
+script = ExtResource("2_vnapg")
+code = "for id: String in _ids_with_tag(tag):
+	abilities[id].cooldown = 0.0"
+
+[sub_resource type="Resource" id="Resource_0bg57"]
+script = ExtResource("7_mdlaa")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_3ta1j"]
+script = ExtResource("8_nccum")
+function_name = "reset_cooldown_for_tag"
+description = "Sets cooldown to 0 for every ability with a tag."
+expose_as_ace = true
+ace_display_name = "Reset Cooldown For Abilities With Tag"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_0bg57")])
+events = Array[Resource]([SubResource("Resource_eo5hw")])
+
+[sub_resource type="Resource" id="Resource_g43vd"]
+script = ExtResource("2_vnapg")
+code = "cooldown_multiplier = maxf(0.0, multiplier)"
+
+[sub_resource type="Resource" id="Resource_pkjvh"]
+script = ExtResource("7_mdlaa")
+id = "multiplier"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_rks7t"]
+script = ExtResource("8_nccum")
+function_name = "set_cooldown_multiplier"
+description = "Global cooldown scaling for all future Set Cooldown calls (0.8 = 20% cooldown reduction)."
+expose_as_ace = true
+ace_display_name = "Set Cooldown Multiplier"
+ace_category = "Abilities"
+params = Array[ExtResource("7_mdlaa")]([SubResource("Resource_pkjvh")])
+events = Array[Resource]([SubResource("Resource_g43vd")])
+
+[resource]
+script = ExtResource("9_ugumu")
+behavior_mode = true
+custom_class_name = "SimpleAbilitiesBehavior"
+addon_tags = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_mng6w"), SubResource("Resource_44b4b"), SubResource("Resource_n4pln")])
+variables = {
+"abilities": {
+"default": {},
+"exported": false,
+"type": "Dictionary"
+},
+"cooldown_multiplier": {
+"attributes": {
+"range": {
+"max": "10",
+"min": "0",
+"step": "0.05"
+},
+"tooltip": "Global multiplier applied to every Set Cooldown (0.8 = 20% cooldown reduction)."
+},
+"default": 1.0,
+"exported": true,
+"type": "float"
+},
+"current_ability_id": {
+"default": "",
+"exported": false,
+"type": "String"
+}
+}
+functions = Array[Resource]([SubResource("Resource_gf5l5"), SubResource("Resource_0qtj0"), SubResource("Resource_fuji0"), SubResource("Resource_y8jyx"), SubResource("Resource_j4w1m"), SubResource("Resource_mnshf"), SubResource("Resource_60i8h"), SubResource("Resource_q1w0d"), SubResource("Resource_wgamr"), SubResource("Resource_uyi55"), SubResource("Resource_4sqo8"), SubResource("Resource_awnw3"), SubResource("Resource_d1oml"), SubResource("Resource_vm1ej"), SubResource("Resource_nb4wx"), SubResource("Resource_ab5qp"), SubResource("Resource_gyoir"), SubResource("Resource_rn4g5"), SubResource("Resource_tqqew"), SubResource("Resource_l4gpe"), SubResource("Resource_cr3j0"), SubResource("Resource_pipgo"), SubResource("Resource_3ta1j"), SubResource("Resource_rks7t")])

@@ -43,7 +43,8 @@ const PACKS: Array[String] = [
 	"res://eventsheet_addons/health/health_behavior",
 	"res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior",
 	"res://eventsheet_addons/weapon_kit/weapon_kit_behavior",
-	"res://eventsheet_addons/htn_agent/htn_agent_behavior"
+	"res://eventsheet_addons/htn_agent/htn_agent_behavior",
+	"res://eventsheet_addons/abilities/abilities_behavior"
 ]
 
 static func run() -> bool:
@@ -99,6 +100,20 @@ static func run() -> bool:
 		is_in_state != null and str(is_in_state.metadata.get("codegen_template", "")) == "$StateMachineBehavior.state == {state_name}", true) and all_passed
 	all_passed = _check("block condition is typed as a condition",
 		is_in_state != null and is_in_state.ace_type == ACEDefinition.ACEType.CONDITION, true) and all_passed
+	# Abilities pack: an action, a trigger, a condition (with its template), and the
+	# CurrentAbilityID expression (the Godot-suited reader the C3 original lacked).
+	var ab_activate: ACEDefinition = editor._ace_registry.find_definition("SimpleAbilitiesBehavior", "method:activate_ability")
+	var ab_on_activated: ACEDefinition = editor._ace_registry.find_definition("SimpleAbilitiesBehavior", "signal:on_ability_activated")
+	var ab_is_ready: ACEDefinition = editor._ace_registry.find_definition("SimpleAbilitiesBehavior", "method:is_ready")
+	var ab_current: ACEDefinition = editor._ace_registry.find_definition("SimpleAbilitiesBehavior", "method:current_ability")
+	all_passed = _check("abilities pack publishes Activate Ability",
+		ab_activate != null and ab_activate.category == "Abilities", true) and all_passed
+	all_passed = _check("abilities pack publishes the On Ability Activated trigger",
+		ab_on_activated != null and ab_on_activated.display_name == "On Ability Activated", true) and all_passed
+	all_passed = _check("abilities Is Ready is a condition with its template",
+		ab_is_ready != null and ab_is_ready.ace_type == ACEDefinition.ACEType.CONDITION and str(ab_is_ready.metadata.get("codegen_template", "")) == "$SimpleAbilitiesBehavior.is_ready({id})", true) and all_passed
+	all_passed = _check("abilities Current Ability ID is an expression",
+		ab_current != null and ab_current.ace_type == ACEDefinition.ACEType.EXPRESSION, true) and all_passed
 	editor.free()
 
 	# The movement block lints against the behavior context (host accessor + sheet vars).

@@ -33,6 +33,7 @@ const PACK_BUILDERS: Array[String] = [
 	"weapon_kit",
 	"htn_agent",
 	"advanced_random",
+	"abilities",
 ]
 
 func _init() -> void:

@@ -71,6 +71,19 @@
   screen size, clipboard get/set), **Debug** (read live `Performance` monitors, static memory),
   **Time** (format seconds as `mm:ss`, system time/date strings), and **Reparent To**. Each compiles
   to the native call; the multi-line and formatting templates are parse-checked.
+
+### Simple Abilities behavior pack (the 28th addon)
+- A per-instance **ability manager**, authored as an event sheet and compiled to a plain
+  `SimpleAbilitiesBehavior` (`extends Node`, zero runtime dependency) — ported from the Simple
+  Abilities C3 addon and expanded for Godot. Grant abilities by string id; **cooldowns**; **stack
+  charges** that auto-regenerate; **temporary** abilities that auto-expire; per-ability **custom
+  data**; and **tags** for bulk enable/remove/reset. 7 triggers (activated / ready / created /
+  removed / stack consumed / gained / max reached), 7 conditions, 16 expressions, and 24 actions.
+- **Godot-suited extras over the C3 original**: a **Current Ability ID** expression (the C3
+  `_currentAbilityID` had no reader — the guide flagged it as missing), an exported global
+  **cooldown multiplier** (built-in cooldown reduction the original did by hand), a **Current Ability
+  Is** condition for per-id trigger filtering, and a **Ready Abilities** list. The pack rebuilds
+  byte-identically (no-drift covenant) and its ACEs are registration-tested.
 - **Shift-range row selection** — Shift+click extends a whole-row selection from the anchor to the
   clicked row, and Shift+↑/↓ grows or shrinks that range from the same origin. The anchor is
   preserved across moves (so the range can shrink, not just grow), and it's listed in the Keyboard
