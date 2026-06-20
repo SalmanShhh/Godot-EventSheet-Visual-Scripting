@@ -115,6 +115,14 @@ static func run() -> bool:
 	all_passed = _check("did-you-mean stays silent for an unrelated name",
 		ACEParamsDialog.closest_known_identifier("xyzzy", typo_sheet), "") and all_passed
 
+	# Reflection pickers (Call Method / Set Property): a class's real members, ClassDB-sorted.
+	var node2d_methods: Array = ACEParamsDialog.reflected_members("Node2D", "method")
+	all_passed = _check("reflected methods include set_position", node2d_methods.has("set_position"), true) and all_passed
+	all_passed = _check("reflected methods exclude private _ready", node2d_methods.has("_ready"), false) and all_passed
+	var node2d_props: Array = ACEParamsDialog.reflected_members("Node2D", "property")
+	all_passed = _check("reflected properties include position", node2d_props.has("position"), true) and all_passed
+	all_passed = _check("unknown class reflects nothing", ACEParamsDialog.reflected_members("NotARealClass", "method").is_empty(), true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

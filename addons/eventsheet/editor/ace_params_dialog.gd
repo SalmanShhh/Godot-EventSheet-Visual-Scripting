@@ -208,6 +208,8 @@ func _ensure_hint_factories() -> void:
 			"audio_path": _create_audio_path_field,
 			"scene_path": _create_scene_path_field,
 			"animation_reference": _create_animation_field,
+			"method_reference": _create_method_reference_field,
+			"property_reference": _create_property_reference_field,
 		}
 
 func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: String, hint: String) -> Control:
@@ -361,6 +363,39 @@ func _rebuild_autocomplete_popup(popup: PopupMenu, suggestions: PackedStringArra
 
 ## hint may carry a required base type ("variable_reference:Array") — the dropdown then
 ## offers only variables of that container type (Variant/untyped always qualify).
+## Reflection pickers for the Helper ACEs' method/property params: an editable suggest-combo
+## of the sheet host class's members (reflected from ClassDB), so Call Method / Set Property
+## become pick-don't-type. Editable, so an expert can still type a member reflection misses.
+func _create_method_reference_field(key: String, default_value: Variant) -> Control:
+	return _create_autocomplete_field(key, reflected_members(_host_class_for_context(), "method"), default_value)
+
+func _create_property_reference_field(key: String, default_value: Variant) -> Control:
+	return _create_autocomplete_field(key, reflected_members(_host_class_for_context(), "property"), default_value)
+
+## The sheet's host class (or Node) — the default Call Method / Set Property target (`self`).
+func _host_class_for_context() -> String:
+	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
+	return sheet.host_class if sheet != null and not sheet.host_class.strip_edges().is_empty() else "Node"
+
+## Public method / property names declared on a class (reflected from ClassDB, sorted, no
+## private `_`-prefixed members). Static + pure, so it is unit-testable without a dialog.
+static func reflected_members(host_class: String, kind: String) -> Array:
+	var names: Array = []
+	if host_class.is_empty() or not ClassDB.class_exists(host_class):
+		return names
+	if kind == "property":
+		for info: Dictionary in ClassDB.class_get_property_list(host_class):
+			var member: String = str(info.get("name", ""))
+			if not member.is_empty() and not member.begins_with("_") and not member.contains("/") and not names.has(member):
+				names.append(member)
+	else:
+		for info: Dictionary in ClassDB.class_get_method_list(host_class):
+			var member: String = str(info.get("name", ""))
+			if not member.is_empty() and not member.begins_with("_") and not names.has(member):
+				names.append(member)
+	names.sort()
+	return names
+
 func _create_variable_reference_field(key: String, default_value: Variant, hint: String = VARIABLE_REFERENCE_HINT) -> Control:
 	var required_type: String = hint.get_slice(":", 1) if hint.contains(":") else ""
 	var offered_names: Array = []
