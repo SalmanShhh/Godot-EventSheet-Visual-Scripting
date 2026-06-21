@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Added
+- **JSON is its own module now, with two new ACEs.** The JSON vocabulary (To / From JSON Text, JSON
+  Is Valid, Save / Load JSON File) was consolidated out of the Collections module into a dedicated
+  **JSON** category, and gained **To JSON Text (pretty)** (indented, human-readable output) and
+  **Parse JSON Into Variable** (parse JSON text — a server response, the clipboard — straight into a
+  variable). The five moved ACEs keep their ace_ids and codegen templates, so existing sheets are
+  unaffected; only the picker category changed (from "Variables: JSON"). Once parsed the value is a
+  normal Dictionary / Array, so the Variables: Dictionary / Array ACEs read and edit it.
 - **File-management ACEs** — a **Files** vocabulary so save systems, config files and level data never
   force a drop to GDScript: **Read Text File**, **Write Text File**, **Append To File**, **File Size**,
   **File Exists**, plus **Delete / Copy / Move-or-Rename** a file, and a **Files: Directories** set

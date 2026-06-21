@@ -18,6 +18,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append_array(EventForgeDeviceACEs.get_descriptors())
 	descriptors.append_array(EventForge3DACEs.get_descriptors())
 	descriptors.append_array(EventForgeCollectionACEs.get_descriptors())
+	descriptors.append_array(EventForgeJsonACEs.get_descriptors())
 	descriptors.append_array(EventForgeLoopACEs.get_descriptors())
 	descriptors.append_array(EventForgeUIACEs.get_descriptors())
 	descriptors.append_array(EventForgeParticleACEs.get_descriptors())

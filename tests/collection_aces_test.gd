@@ -17,10 +17,8 @@ static func run() -> bool:
 		by_id.has("DictSetKey") and by_id.has("DictHasKey") and by_id.has("DictGet") and by_id.has("DictKeys"), true) and all_passed
 	all_passed = _check("array ops registered",
 		by_id.has("ArrayAppend") and by_id.has("ArrayContains") and by_id.has("ArrayAt") and by_id.has("ArrayPickRandom"), true) and all_passed
-	all_passed = _check("json ops registered",
-		by_id.has("JsonStringify") and by_id.has("JsonParse") and by_id.has("JsonSaveFile") and by_id.has("JsonLoadFile") and by_id.has("JsonIsValid"), true) and all_passed
 	all_passed = _check("collection ops group under Variables pickers",
-		str(by_id["DictSetKey"].category) == "Variables: Dictionary" and str(by_id["ArrayAppend"].category) == "Variables: Array" and str(by_id["JsonParse"].category) == "Variables: JSON", true) and all_passed
+		str(by_id["DictSetKey"].category) == "Variables: Dictionary" and str(by_id["ArrayAppend"].category) == "Variables: Array", true) and all_passed
 	all_passed = _check("codegen is a direct one-liner",
 		str(by_id["DictSetKey"].codegen_template), "{var_name}[{key}] = {value}") and all_passed
 	all_passed = _check("variable params carry the typed hint",
@@ -54,19 +52,11 @@ static func run() -> bool:
 	append_score.codegen_template = str(by_id["ArrayAppend"].codegen_template)
 	append_score.params = {"var_name": "scores", "value": "10"}
 	event.actions.append(append_score)
-	var load_json: ACEAction = ACEAction.new()
-	load_json.provider_id = "Core"
-	load_json.ace_id = "JsonLoadFile"
-	load_json.codegen_template = str(by_id["JsonLoadFile"].codegen_template)
-	load_json.params = {"var_name": "save_data", "path": "\"user://save.json\""}
-	event.actions.append(load_json)
 	sheet.events.append(event)
 	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_coll_aces.gd").get("output", ""))
 	all_passed = _check("dictionary condition compiles", output.contains("if inventory.has(\"sword\"):"), true) and all_passed
 	all_passed = _check("dictionary action compiles", output.contains("inventory[\"sword\"] = 1"), true) and all_passed
 	all_passed = _check("array action compiles", output.contains("scores.append(10)"), true) and all_passed
-	all_passed = _check("json load compiles",
-		output.contains("save_data = JSON.parse_string(FileAccess.get_file_as_string(\"user://save.json\"))"), true) and all_passed
 	var generated: GDScript = GDScript.new()
 	generated.source_code = output
 	all_passed = _check("collection ACE output parses", generated.reload(true) == OK, true) and all_passed
