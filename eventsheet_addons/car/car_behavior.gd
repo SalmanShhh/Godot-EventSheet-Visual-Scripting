@@ -13,13 +13,25 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("CarBehavior behavior requires a CharacterBody2D parent.")
 
+var _drifting: bool = false
 @export var acceleration: float = 300.0
 @export var deceleration: float = 400.0
+@export var drift_angle_threshold: float = 15.0
 @export var drift_recover: float = 0.15
 @export var max_speed: float = 400.0
 var speed: float = 0.0
 @export var steer_degrees: float = 180.0
 @export var turn_while_stopped: bool = false
+
+## @ace_trigger
+## @ace_name("On Drift Started")
+## @ace_category("Car")
+signal drift_started
+
+## @ace_trigger
+## @ace_name("On Drift Recovered")
+## @ace_category("Car")
+signal drift_recovered
 
 func _physics_process(delta: float) -> void:
 	if host == null:
@@ -36,6 +48,14 @@ func _physics_process(delta: float) -> void:
 	host.rotation += deg_to_rad(steer_degrees) * steer * delta * steer_scale
 	var heading := Vector2.from_angle(host.rotation) * speed
 	host.velocity = host.velocity.lerp(heading, clampf(drift_recover, 0.01, 1.0))
+	# Drift = the velocity has slid away from the heading; edge-triggered so each slide fires once.
+	var drifting := absf(speed) > 20.0 and host.velocity.length() > 20.0 and absf(host.velocity.angle_to(heading)) > deg_to_rad(drift_angle_threshold)
+	if drifting and not _drifting:
+		_drifting = true
+		drift_started.emit()
+	elif not drifting and _drifting:
+		_drifting = false
+		drift_recovered.emit()
 	host.move_and_slide()
 
 ## @ace_action

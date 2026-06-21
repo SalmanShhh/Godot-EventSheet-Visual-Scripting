@@ -16,6 +16,13 @@ text = "Follow behavior (C3 parity): trails another node. mode smooth = lerp cha
 
 [sub_resource type="Resource" id="Resource_bov8v"]
 script = ExtResource("2_me8t3")
+code = "## @ace_trigger
+## @ace_name(\"On Reached Target\")
+## @ace_category(\"Follow\")
+signal reached_target"
+
+[sub_resource type="Resource" id="Resource_c7vdw"]
+script = ExtResource("2_me8t3")
 code = "if host == null or target_path == \"\":
 	return
 var target := host.get_node_or_null(NodePath(target_path))
@@ -35,50 +42,54 @@ if mode == \"delayed\":
 			break
 	return
 if host.position.distance_to(target.position) <= min_distance:
+	if not _reached:
+		_reached = true
+		reached_target.emit()
 	return
+_reached = false
 host.position = host.position.lerp(target.position, clampf(follow_speed * delta, 0.0, 1.0))"
 
-[sub_resource type="Resource" id="Resource_c7vdw"]
+[sub_resource type="Resource" id="Resource_na37c"]
 script = ExtResource("6_jjqsf")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_bov8v")])
-event_uid = "c3846f"
+actions = Array[Resource]([SubResource("Resource_c7vdw")])
+event_uid = "3bb3c2"
 
-[sub_resource type="Resource" id="Resource_na37c"]
+[sub_resource type="Resource" id="Resource_5y2vt"]
 script = ExtResource("2_me8t3")
 code = "target_path = path
 following = true
 history = []"
 
-[sub_resource type="Resource" id="Resource_5y2vt"]
+[sub_resource type="Resource" id="Resource_eu4p6"]
 script = ExtResource("7_l3qb0")
 id = "path"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_eu4p6"]
+[sub_resource type="Resource" id="Resource_r3cqn"]
 script = ExtResource("8_oywdo")
 function_name = "start_following"
 description = "Follows the node at the given path."
 expose_as_ace = true
 ace_display_name = "Start Following"
 ace_category = "Follow"
-params = Array[ExtResource("7_l3qb0")]([SubResource("Resource_5y2vt")])
-events = Array[Resource]([SubResource("Resource_na37c")])
+params = Array[ExtResource("7_l3qb0")]([SubResource("Resource_eu4p6")])
+events = Array[Resource]([SubResource("Resource_5y2vt")])
 
-[sub_resource type="Resource" id="Resource_r3cqn"]
+[sub_resource type="Resource" id="Resource_k8t8f"]
 script = ExtResource("2_me8t3")
 code = "following = false"
 
-[sub_resource type="Resource" id="Resource_k8t8f"]
+[sub_resource type="Resource" id="Resource_mavc5"]
 script = ExtResource("8_oywdo")
 function_name = "stop_following"
 description = "Stops trailing the target."
 expose_as_ace = true
 ace_display_name = "Stop Following"
 ace_category = "Follow"
-events = Array[Resource]([SubResource("Resource_r3cqn")])
+events = Array[Resource]([SubResource("Resource_k8t8f")])
 
 [resource]
 script = ExtResource("9_8eb11")
@@ -86,8 +97,13 @@ host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "FollowBehavior"
 addon_tags = PackedStringArray()
-events = Array[Resource]([SubResource("Resource_ycohw"), SubResource("Resource_c7vdw")])
+events = Array[Resource]([SubResource("Resource_ycohw"), SubResource("Resource_bov8v"), SubResource("Resource_na37c")])
 variables = {
+"_reached": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
 "clock": {
 "default": 0.0,
 "exported": false,
@@ -105,7 +121,7 @@ variables = {
 },
 "following": {
 "default": true,
-"exported": true,
+"exported": false,
 "type": "bool"
 },
 "history": {
@@ -130,4 +146,4 @@ variables = {
 "type": "String"
 }
 }
-functions = Array[Resource]([SubResource("Resource_eu4p6"), SubResource("Resource_k8t8f")])
+functions = Array[Resource]([SubResource("Resource_r3cqn"), SubResource("Resource_mavc5")])

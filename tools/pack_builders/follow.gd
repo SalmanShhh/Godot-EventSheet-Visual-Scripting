@@ -15,13 +15,22 @@ static func build() -> bool:
 		"follow_speed": {"type": "float", "default": 5.0, "exported": true},
 		"delay": {"type": "float", "default": 0.4, "exported": true},
 		"min_distance": {"type": "float", "default": 0.0, "exported": true},
-		"following": {"type": "bool", "default": true, "exported": true},
+		"following": {"type": "bool", "default": true, "exported": false},
 		"history": {"type": "Array", "default": [], "exported": false},
-		"clock": {"type": "float", "default": 0.0, "exported": false}
+		"clock": {"type": "float", "default": 0.0, "exported": false},
+		"_reached": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Follow behavior (C3 parity): trails another node. mode smooth = lerp chase; mode delayed = replay the target's position history after a delay (C3's Follow)."
 	sheet.events.append(about)
+	var signal_block: RawCodeRow = RawCodeRow.new()
+	signal_block.code = "\n".join(PackedStringArray([
+		"## @ace_trigger",
+		"## @ace_name(\"On Reached Target\")",
+		"## @ace_category(\"Follow\")",
+		"signal reached_target"
+	]))
+	sheet.events.append(signal_block)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
@@ -46,7 +55,11 @@ static func build() -> bool:
 		"\t\t\tbreak",
 		"\treturn",
 		"if host.position.distance_to(target.position) <= min_distance:",
+		"\tif not _reached:",
+		"\t\t_reached = true",
+		"\t\treached_target.emit()",
 		"\treturn",
+		"_reached = false",
 		"host.position = host.position.lerp(target.position, clampf(follow_speed * delta, 0.0, 1.0))"
 	]))
 	tick.actions.append(tick_body)

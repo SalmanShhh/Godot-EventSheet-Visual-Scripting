@@ -16,6 +16,18 @@ text = "Car behavior (C3 parity): accelerate/brake with up/down, steer with left
 
 [sub_resource type="Resource" id="Resource_bb4cx"]
 script = ExtResource("2_cb0ow")
+code = "## @ace_trigger
+## @ace_name(\"On Drift Started\")
+## @ace_category(\"Car\")
+signal drift_started
+
+## @ace_trigger
+## @ace_name(\"On Drift Recovered\")
+## @ace_category(\"Car\")
+signal drift_recovered"
+
+[sub_resource type="Resource" id="Resource_pbr7j"]
+script = ExtResource("2_cb0ow")
 code = "if host == null:
 	return
 var throttle := Input.get_axis(&\"ui_down\", &\"ui_up\")
@@ -30,29 +42,37 @@ var steer_scale := 1.0 if (turn_while_stopped and absf(speed) < 1.0) else clampf
 host.rotation += deg_to_rad(steer_degrees) * steer * delta * steer_scale
 var heading := Vector2.from_angle(host.rotation) * speed
 host.velocity = host.velocity.lerp(heading, clampf(drift_recover, 0.01, 1.0))
+# Drift = the velocity has slid away from the heading; edge-triggered so each slide fires once.
+var drifting := absf(speed) > 20.0 and host.velocity.length() > 20.0 and absf(host.velocity.angle_to(heading)) > deg_to_rad(drift_angle_threshold)
+if drifting and not _drifting:
+	_drifting = true
+	drift_started.emit()
+elif not drifting and _drifting:
+	_drifting = false
+	drift_recovered.emit()
 host.move_and_slide()"
 
-[sub_resource type="Resource" id="Resource_pbr7j"]
+[sub_resource type="Resource" id="Resource_8htxg"]
 script = ExtResource("6_8vblq")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
-actions = Array[Resource]([SubResource("Resource_bb4cx")])
-event_uid = "be8d9c"
+actions = Array[Resource]([SubResource("Resource_pbr7j")])
+event_uid = "c2469a"
 
-[sub_resource type="Resource" id="Resource_8htxg"]
+[sub_resource type="Resource" id="Resource_3ywck"]
 script = ExtResource("2_cb0ow")
 code = "speed = 0.0
 if host != null:
 	host.velocity = Vector2.ZERO"
 
-[sub_resource type="Resource" id="Resource_3ywck"]
+[sub_resource type="Resource" id="Resource_66i7s"]
 script = ExtResource("8_s1mgl")
 function_name = "stop_car"
 description = "Kills all momentum."
 expose_as_ace = true
 ace_display_name = "Stop Car"
 ace_category = "Car"
-events = Array[Resource]([SubResource("Resource_8htxg")])
+events = Array[Resource]([SubResource("Resource_3ywck")])
 
 [resource]
 script = ExtResource("9_1hj83")
@@ -60,8 +80,13 @@ host_class = "CharacterBody2D"
 behavior_mode = true
 custom_class_name = "CarBehavior"
 addon_tags = PackedStringArray()
-events = Array[Resource]([SubResource("Resource_1707f"), SubResource("Resource_pbr7j")])
+events = Array[Resource]([SubResource("Resource_1707f"), SubResource("Resource_bb4cx"), SubResource("Resource_8htxg")])
 variables = {
+"_drifting": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
 "acceleration": {
 "default": 300.0,
 "exported": true,
@@ -69,6 +94,11 @@ variables = {
 },
 "deceleration": {
 "default": 400.0,
+"exported": true,
+"type": "float"
+},
+"drift_angle_threshold": {
+"default": 15.0,
 "exported": true,
 "type": "float"
 },
@@ -98,4 +128,4 @@ variables = {
 "type": "bool"
 }
 }
-functions = Array[Resource]([SubResource("Resource_3ywck")])
+functions = Array[Resource]([SubResource("Resource_66i7s")])
