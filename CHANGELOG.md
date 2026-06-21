@@ -26,11 +26,25 @@
   Inspector-tunable fade-in/out curves), plus a **Spring Squash** variant that springs the scale back with
   a real per-frame spring integrator (stiffness/damping, organic overshoot) instead of the elastic tween,
   and a **Clear Slowmo** reset.
-- **The Spring pack now uses typed inner classes.** Its per-frame integrator read an untyped `Dictionary`
-  with `float()`/`bool()` casts at ~40 sites; it now stores typed **SpringEntry / ColorSpringEntry** objects
-  (each with an `integrate(delta)` method), so a field typo fails at compile and the hot loop is cast-free.
-  Behavior is unchanged — a new runtime test drives the real integrator to prove a spring still settles to
-  its target with zero residual velocity.
+- **Four stateful packs now use typed inner classes instead of `float()`/`int()`/`bool()`-cast
+  Dictionaries.** **Spring** (`SpringEntry` / `ColorSpringEntry`, each with an `integrate(delta)`),
+  **Health** (`HealthPool`), **Simple Abilities** (`AbilityData`), and the **HTN Agent** (`HTNMethod` /
+  `HTNCondition`). Their hot paths — the spring integrator, damage absorption + pool decay, cooldown /
+  stack / expiry regen, and the planner's utility sort + precondition checks — now read typed fields, so a
+  field typo fails at compile and the casts are gone. Behavior is unchanged: each pack ships a runtime test
+  that drives its real logic (spring settling, damage/decay/death/revive, cooldown regen + temporary
+  expiry, HTN decomposition with precondition gating + utility ordering) to prove byte-for-byte equivalence.
+- **Discrete transition signals on the Car and Follow packs.** **Car** edge-fires **On Drift Started /
+  On Drift Recovered** when its velocity slides off the heading past a `drift_angle_threshold` knob;
+  **Follow** edge-fires **On Reached Target** at the `min_distance` boundary (mirroring Move To's On
+  Arrived). Follow's `following` flag is now internal state driven by Start/Stop Following, not a stray
+  exported designer knob.
+- **Pack polish.** **Tile Movement**'s *Simulate Step* `direction` is now a left/right/up/down dropdown
+  (was free text); **Sine 3D** gains `phase_degrees` parity with the 2D Sine pack (exported knob + a *Set
+  Phase* action that offsets the wave time); **Drag & Drop**'s `snap_uids` is a typed `Array[int]`; and the
+  **Save System**'s *On Save Written* is now **truthful** — `_write_all` captures the FileAccess /
+  ConfigFile write error and *Save Game* emits the signal only on a genuinely successful write, instead of
+  optimistically on every *Save Value*.
 - **Tree-membership triggers — react to a node entering/leaving, don't poll.** Five new signal triggers
   — **On Tree Entered / Tree Exiting / Tree Exited / Renamed / Child Entered Tree** — so "when this
   *other* node enters or leaves the scene" is a reactive event, not a per-frame `IsInsideTree` check
