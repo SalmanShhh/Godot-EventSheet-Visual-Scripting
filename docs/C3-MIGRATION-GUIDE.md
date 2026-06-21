@@ -33,7 +33,7 @@ event flow, or write the expression directly — `ƒx` fields are plain GDScript
 
 | Construct 3 | Godot EventSheets / generated GDScript |
 |---|---|
-| Every tick | `On Process` trigger (`_process(delta)`) |
+| Every tick | `On Process` trigger (`_process(delta)`) — but if you're checking for an *event* (a collision, a timer ending, a key press), prefer the matching **signal** trigger instead; see [Polling vs reacting](#polling-vs-reacting--the-biggest-shift-from-c3) |
 | On start of layout | `On Ready` trigger (`_ready()`) |
 | Compare variable | Expression condition, e.g. `health < 50` (plain GDScript) |
 | Set variable / Add to | `Set Variable` / `Add To Variable` actions, or `health += 10` in ƒx |
@@ -50,6 +50,41 @@ event flow, or write the expression directly — `ƒx` fields are plain GDScript
 
 The picker's search understands C3 phrasing ("every tick", "on created", "spawn"…) via
 synonym aliases, so type what you know and the Godot equivalent surfaces.
+
+## Polling vs reacting — the biggest shift from C3
+
+In Construct 3 the bread-and-butter pattern is **"every tick, check if X"** — one big event sheet
+asking questions 60 times a second. Godot can do exactly that (`On Process` + a condition), but its
+*native* habit is the opposite: **react to a signal** — the engine tells you the moment something
+happens, so you don't have to keep asking. For a migrating C3 user this is the single biggest mental
+adjustment, and it's the one that makes a Godot project feel clean instead of like a polling soup.
+
+**The rule of thumb:** is the thing you're checking an **event** (it *happens at a moment*) or a
+**continuous value** (it's *true/changing over time*)?
+
+- **Event → use a signal trigger.** Collisions, a timer finishing, a button press, an animation
+  ending, a node entering the tree — Godot emits a signal for these, so react to it once instead of
+  re-checking every frame.
+
+  ```text
+  C3 reflex (polling):    On Process  →  if Player overlaps Coin  →  collect    (runs 60×/sec)
+  Godot idiom (reacting):  On Body Entered (Coin's Area2D)        →  collect    (fires once, on contact)
+  ```
+
+  Both compile to valid GDScript; the second is cheaper, clearer, and the way Godot is built to work.
+  The picker increasingly nudges you here — when you reach for a polling condition that has a signal
+  twin, it surfaces the reactive trigger first.
+
+- **Continuous value → polling in `On Process` is correct — don't contort it into a signal.** Camera
+  follow, smoothing a position toward a target, reading the movement axis each frame, or
+  `is_on_floor()` (Godot deliberately has *no* "landed" signal) are all genuinely per-frame work.
+  `On Process` is the right, idiomatic home for them. Per-frame is not a smell; *re-checking for an
+  event that already has a signal* is.
+
+**`On Process` vs `On Physics Process` (`_process` vs `_physics_process`):** if the logic moves a body
+or touches physics (velocity, `move_and_slide`, raycasts), put it in **On Physics Process** — it runs
+on a fixed timestep so physics stays stable. Visual-only, UI, and non-physics logic belong in **On
+Process** (every rendered frame). When in doubt for *movement*, choose Physics Process.
 
 ## Data plugins (Dictionary / Array / JSON / XML)
 

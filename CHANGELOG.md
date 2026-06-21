@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Added
+- **Migration guide: a "Polling vs reacting" section** — the biggest mental shift from Construct 3 (one
+  big *every-tick* sheet → *react to a signal*), with a polling/reacting before-after, the
+  `_process` vs `_physics_process` rule of thumb, and — crucially — an explicit "when polling **is**
+  correct" carve-out (continuous values: camera follow, smoothing, axis input, `is_on_floor`) so
+  readers don't over-correct into contorted signal usage. The "Every tick → On Process" mapping keeps
+  its literal translation but now points at the signal-first reflex.
 - **Unique-name (`%Name`) references are validated + autocompleted** — Godot's stable, refactor-proof
   way to reach a node, and the closest thing to a Construct *object name*: mark a node **Access as
   Unique Name** in the scene tree and `%ScoreLabel` then resolves no matter where you move it (unlike a
