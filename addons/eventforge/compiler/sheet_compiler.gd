@@ -816,7 +816,8 @@ static func _emit_event_body(
 	lines: PackedStringArray,
 	source_map: Array = [],
 	depth: int = 1,
-	warnings: Array = []
+	warnings: Array = [],
+	inherited_node_target: String = ""
 ) -> bool:
 	var had_body: bool = false
 	var indent: String = "\t".repeat(depth)
@@ -862,6 +863,11 @@ static func _emit_event_body(
 		var event_row: EventRow = event_item as EventRow
 		if not event_row.enabled:
 			continue
+		# "With node X:" scope: this row's own target (if set) wins, otherwise it inherits an enclosing
+		# With-node block's. Threaded into action codegen (blank/self targets inline to X) and down to
+		# sub-events. Empty = host-scoped, exactly as before.
+		var own_node_target: String = event_row.with_node_target.strip_edges()
+		var effective_node_target: String = own_node_target if not own_node_target.is_empty() else inherited_node_target
 		var event_start_line: int = lines.size() + 1
 		var condition_texts: PackedStringArray = PackedStringArray()
 		var runtime_group_guard: String = str(_runtime_group_guards.get(event_row, ""))
@@ -954,7 +960,7 @@ static func _emit_event_body(
 
 		for action_item: Variant in event_row.actions:
 			if action_item is ACEAction:
-				var action_line: String = ActionCodegen.generate_action(action_item)
+				var action_line: String = ActionCodegen.generate_action(action_item, effective_node_target)
 				if action_line.is_empty():
 					continue
 				# Multi-statement templates (Spawn Scene At…) emit one line each; an awaited action
@@ -1005,7 +1011,7 @@ static func _emit_event_body(
 
 		# Sub-events run inside the parent's block (under its conditions).
 		if not event_row.sub_events.is_empty():
-			had_body = _emit_event_body(event_row.sub_events, lines, source_map, body_depth, warnings) or had_body
+			had_body = _emit_event_body(event_row.sub_events, lines, source_map, body_depth, warnings, effective_node_target) or had_body
 
 		# An if/elif/else block (or pick loop) whose body emitted nothing needs `pass` to
 		# stay valid GDScript (e.g. a condition-only event, or one whose actions all

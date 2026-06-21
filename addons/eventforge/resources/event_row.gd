@@ -46,6 +46,15 @@ static var _uid_counter: int = 0
 @export var event_uid: String = ""
 @export var local_variables: Array[LocalVariable] = []
 @export var pick_filters: Array[PickFilter] = []
+## "With node X:" scope (Construct-style pick-once). When non-empty, this row's actions — and those of
+## its descendant sub-events — that leave their "On node" target blank/self act on this node instead of
+## the host (the target is inlined per action: $Enemy.play()). Empty = a normal host-scoped row.
+@export var with_node_target: String = ""
+
+## True when this row is purely a "With node X:" scope: it carries a target but no trigger and no
+## conditions, so the editor renders it as a scope block rather than a conditioned event.
+func is_with_node_scope() -> bool:
+	return not with_node_target.strip_edges().is_empty() and trigger_id.is_empty() and conditions.is_empty()
 
 func _init() -> void:
 	if event_uid.is_empty():
