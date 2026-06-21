@@ -163,6 +163,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 		_refresh_tree()
 		_select_first_match())
 	_search.text_submitted.connect(func(_text: String) -> void: _activate_first_match())
+	_search.gui_input.connect(_on_search_gui_input)
 	search_row.add_child(_search)
 	_favorite_button = Button.new()
 	_favorite_button.toggle_mode = true
@@ -479,6 +480,15 @@ func _refresh_tree() -> void:
 		item.set_tooltip_text(1, _item_tooltip(definition))
 		item.set_metadata(0, definition)
 
+	# No-match guidance: a blank tree leaves a newcomer stuck wondering if the picker is broken.
+	# Nudge the C3 vocabulary bridge (plain phrases find Godot equivalents) instead of silence.
+	if filtering and root.get_child_count() == 0:
+		var empty_item: TreeItem = _tree.create_item(root)
+		empty_item.set_text(0, "No matches for \"%s\" — try a plainer word like \"move\", \"spawn\", or \"hide\"." % query)
+		empty_item.set_selectable(0, false)
+		empty_item.set_selectable(1, false)
+		empty_item.set_custom_color(0, GROUP_COLOR_NEUTRAL)
+
 func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> TreeItem:
 	var group_item: TreeItem = _tree.create_item(root)
 	group_item.set_text(0, group_key)
@@ -673,7 +683,36 @@ func _on_item_selected_for_info() -> void:
 	_on_definition_selected(definition)
 
 ## Right-click pins/unpins the entry under the cursor as a ⭐ Favorite.
+## Keyboard bridge out of the search box: Down hands focus to the result tree (its native arrow
+## navigation then takes over from the pre-selected first match), Escape closes the picker. Without
+## this the caret is trapped in the search field and only the mouse can reach the 2nd+ result.
+func _on_search_gui_input(input_event: InputEvent) -> void:
+	if not (input_event is InputEventKey):
+		return
+	var key_event: InputEventKey = input_event
+	if not key_event.pressed or key_event.echo:
+		return
+	if key_event.keycode == KEY_DOWN:
+		if _tree != null and _tree.get_root() != null:
+			# Ensure a row is selected (the first match) before handing over, so the tree gains
+			# focus on a real item and subsequent arrows navigate predictably.
+			if _tree.get_selected() == null:
+				_select_first_match()
+			_tree.grab_focus()
+			_search.accept_event()
+	elif key_event.keycode == KEY_ESCAPE:
+		close()
+		_search.accept_event()
+
 func _on_tree_gui_input(input_event: InputEvent) -> void:
+	# Escape closes the picker from the tree too (parity with the search box), so a keyboard user
+	# browsing results never has to reach for the mouse or the Cancel button.
+	if input_event is InputEventKey:
+		var key_event: InputEventKey = input_event
+		if key_event.pressed and not key_event.echo and key_event.keycode == KEY_ESCAPE:
+			close()
+			_tree.accept_event()
+		return
 	if not (input_event is InputEventMouseButton):
 		return
 	var mouse_event: InputEventMouseButton = input_event

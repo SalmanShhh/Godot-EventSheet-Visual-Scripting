@@ -85,6 +85,8 @@ func init_dialog(parent_node: Node) -> void:
 	_name_edit = LineEdit.new()
 	_name_edit.placeholder_text = "health"
 	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Enter in the Name field confirms the dialog (parity with function_dialog / the ACE picker).
+	_dialog.register_text_enter(_name_edit)
 	name_row.add_child(_name_edit)
 	form.add_child(name_row)
 	_name_warning = Label.new()
@@ -426,6 +428,10 @@ func open_for_edit(
 	_type_help.text = "Type is locked because this variable is already in use."
 	if _dialog.is_inside_tree():
 		_dialog.popup_centered(Vector2i(440, 220))
+		# Land focus on the Name field so creating/editing a variable is keyboard-first (parity with
+		# function_dialog / the ACE picker); select_all lets edit-mode immediately overtype the name.
+		_name_edit.grab_focus()
+		_name_edit.select_all()
 
 func _close() -> void:
 	if _dialog != null:

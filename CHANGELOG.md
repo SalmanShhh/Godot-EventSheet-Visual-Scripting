@@ -2,17 +2,33 @@
 
 ## [Unreleased]
 
+### Editor UX — keyboard-first dialogs & picker polish (UI-audit pass)
+A multi-agent audit of the editor UI found it broadly healthy; the gaps clustered in keyboard/focus
+mechanics and the ACE picker. This pass ships the narrow, low-risk wins:
+- **Variable dialog is now keyboard-first** — opening it focuses the Name field (and selects it for
+  quick overtype when editing), and Enter confirms, matching function_dialog and the ACE picker.
+- **ACE picker: Down from the search box enters the results, Escape closes** — typing then pressing
+  Down hands focus to the result tree (its native arrow navigation takes over from the pre-selected
+  first match), and Escape closes the picker from either the search box or the tree, so the whole
+  pick is keyboard-only (the code's prior "arrow/Enter work" claim is now actually true).
+- **No-match search now guides instead of going blank** — a search that finds nothing nudges the C3
+  vocabulary bridge ("try a plainer word like move, spawn, or hide") rather than showing an empty tree.
+- **Node & expression sub-pickers honour Enter** — type-and-Enter commits the first result, matching
+  the main picker (those two search boxes previously swallowed Enter).
+- **Add Condition / Add Action toolbar buttons now carry editor icons** (MemberConstant / MemberMethod),
+  finishing a primary toolbar that previously left two of five buttons text-only.
+
 ### Fixed
 - **Silent-bug sweep — six defects that shipped invalid or wrong behaviour without ever crashing at
   compile time** (each reproduced by an adversarial sweep, now pinned by `silent_bug_regression_test`):
   - **Awaited multi-statement actions emitted `await var …`.** Marking a multi-line ACE (Spawn Scene
-    At…) as awaited prefixed `await` onto the whole joined template, so it landed on the `var`
-    declaration line — a parse error that only surfaced at reload. `await` now wraps only the
-    trailing statement of a multi-line template.
+	At…) as awaited prefixed `await` onto the whole joined template, so it landed on the `var`
+	declaration line — a parse error that only surfaced at reload. `await` now wraps only the
+	trailing statement of a multi-line template.
   - **Distinct trigger sources could collide into one handler.** Two sources that normalised to the
-    same token (`A/B` and `A_B` both → `_a_b`) emitted two same-named `func _on_…` handlers (a parse
-    error). The token is now injective — an illegal-char path gets a short stable hash suffix — while
-    legitimate snake_cased autoload names (`event_bus`) keep their readable handler names unchanged.
+	same token (`A/B` and `A_B` both → `_a_b`) emitted two same-named `func _on_…` handlers (a parse
+	error). The token is now injective — an illegal-char path gets a short stable hash suffix — while
+	legitimate snake_cased autoload names (`event_bus`) keep their readable handler names unchanged.
   - **Unresolvable conditions silently OPENED the gate.** A condition whose ACE couldn't be resolved
     (addon uninstalled / stale id) was dropped, so the event body ran unconditionally every tick. It
     now fails **closed** (`if false`) with a warning — a vanished gate can never run.

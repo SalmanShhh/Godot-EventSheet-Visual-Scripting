@@ -581,8 +581,8 @@ func _build_ui() -> void:
     _add_toolbar_separator()
     # The C3 reflexes stay one click (E / C / A on the keyboard).
     _add_toolbar_button("Add Event", _on_add_event_requested, "Add an event (E).", "Add")
-    _add_toolbar_button("Add Condition", _on_add_condition_requested, "Add a condition to the selected event (C).")
-    _add_toolbar_button("Add Action", _on_add_action_requested, "Add an action to the selected event (A).")
+    _add_toolbar_button("Add Condition", _on_add_condition_requested, "Add a condition to the selected event (C).", "MemberConstant")
+    _add_toolbar_button("Add Action", _on_add_action_requested, "Add an action to the selected event (A).", "MemberMethod")
     # Add ▾ — the rest of the authoring vocabulary.
     var add_menu: MenuButton = MenuButton.new()
     add_menu.name = "EventSheetAddMenu"

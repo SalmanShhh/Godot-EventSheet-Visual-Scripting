@@ -859,6 +859,8 @@ func _ensure_node_picker_ui() -> void:
 		_node_picker_search = LineEdit.new()
 		_node_picker_search.placeholder_text = "Search…  (also group:enemies, script:Enemy, scene:Coin)"
 		_node_picker_search.text_changed.connect(func(_t: String) -> void: _populate_node_picker())
+		# Enter commits the first result (parity with the main ACE picker's type-and-Enter).
+		_node_picker_search.text_submitted.connect(func(_t: String) -> void: _activate_first_node_picker_match())
 		box.add_child(_node_picker_search)
 		var chip_row: HBoxContainer = HBoxContainer.new()
 		for chip_label: String in NODE_PICKER_CHIP_CLASSES.keys():
@@ -1051,6 +1053,36 @@ static func scan_scene_files(query: String, base_dir: String = "res://") -> Arra
 							break
 			entry = directory.get_next()
 	return hits
+
+## Depth-first: the first tree item carrying metadata — a real result row, skipping non-selectable
+## group folders and empty-state placeholders. Lets Enter in the sub-picker search boxes commit the
+## top match the way the main ACE picker's type-and-Enter does.
+func _first_metadata_row(item: TreeItem) -> TreeItem:
+	if item == null:
+		return null
+	var child: TreeItem = item.get_first_child()
+	while child != null:
+		if child.get_metadata(0) != null:
+			return child
+		var nested: TreeItem = _first_metadata_row(child)
+		if nested != null:
+			return nested
+		child = child.get_next()
+	return null
+
+## Enter in the node-picker search box commits the first matching node.
+func _activate_first_node_picker_match() -> void:
+	var first: TreeItem = _first_metadata_row(_node_picker_tree.get_root()) if _node_picker_tree != null else null
+	if first != null:
+		first.select(0)
+		_on_node_picker_activated()
+
+## Enter in the expression-picker search box commits the first matching expression.
+func _activate_first_expression_match() -> void:
+	var first: TreeItem = _first_metadata_row(_expression_tree.get_root()) if _expression_tree != null else null
+	if first != null:
+		first.select(0)
+		_on_expression_activated()
 
 func _on_node_picker_activated() -> void:
 	var selected: TreeItem = _node_picker_tree.get_selected()
@@ -1493,6 +1525,8 @@ func _ensure_expression_window() -> void:
 	_expression_search.placeholder_text = "Search expressions..."
 	_expression_search.clear_button_enabled = true
 	_expression_search.text_changed.connect(func(_text: String) -> void: _refresh_expression_tree())
+	# Enter commits the first result (parity with the main ACE picker's type-and-Enter).
+	_expression_search.text_submitted.connect(func(_text: String) -> void: _activate_first_expression_match())
 	content.add_child(_expression_search)
 
 	_expression_tree = Tree.new()

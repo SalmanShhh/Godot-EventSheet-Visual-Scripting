@@ -137,6 +137,29 @@ static func run() -> bool:
 	all_passed = _check("member fragment: method gets ()", ACEParamsDialog.member_expression_fragment("get_index", true), "get_index()") and all_passed
 	all_passed = _check("member fragment: property is bare", ACEParamsDialog.member_expression_fragment("position", false), "position") and all_passed
 
+	# First-result-row helper (powers Enter-to-confirm in the node + expression sub-pickers): depth-
+	# first, skips non-selectable group folders and empty-state rows (no metadata), returns the first
+	# row carrying metadata — so type-and-Enter commits the topmost real match, not a folder header.
+	var probe_tree: Tree = Tree.new()
+	var probe_root: TreeItem = probe_tree.create_item()
+	var placeholder: TreeItem = probe_tree.create_item(probe_root)
+	placeholder.set_text(0, "No matches")  # empty-state row: no metadata
+	var folder: TreeItem = probe_tree.create_item(probe_root)
+	folder.set_text(0, "Group")  # group folder: no metadata
+	var leaf: TreeItem = probe_tree.create_item(folder)
+	leaf.set_metadata(0, "the_target")  # first real result, nested under the folder
+	var second_leaf: TreeItem = probe_tree.create_item(folder)
+	second_leaf.set_metadata(0, "other")
+	var first_row: TreeItem = dialog._first_metadata_row(probe_root)
+	all_passed = _check("first metadata row skips placeholder + folder to the first real result",
+		str(first_row.get_metadata(0)) if first_row != null else "<null>", "the_target") and all_passed
+	probe_tree.free()
+	var empty_tree: Tree = Tree.new()
+	var empty_root: TreeItem = empty_tree.create_item()
+	all_passed = _check("first metadata row returns null when no row carries metadata",
+		dialog._first_metadata_row(empty_root) == null, true) and all_passed
+	empty_tree.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
