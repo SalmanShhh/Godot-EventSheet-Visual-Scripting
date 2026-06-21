@@ -167,7 +167,9 @@ still ships as plain GDScript).
   print/assert, scene-tree Groups, node Metadata), **Nodes** (navigation — parent / child /
   find — plus manipulation + picking: add / remove / move child, free, duplicate, rename,
   find children, nodes-in-group), **Project utilities** (config-file settings, window /
-  screen / clipboard, performance monitors, time formatting), runtime **signal wiring**
+  screen / clipboard, performance monitors, time formatting), **File management** (read /
+  write / append text, file size / exists, copy / move / delete, plus make / remove / list
+  directories — null-safe reads, guarded writes), runtime **signal wiring**
   (connect / disconnect / emit-on / is-connected), and a **Helpers** set — the structured
   escape hatch (Set/Get Property, Call Method, Run GDScript, Inline If, Is Valid, and the
   math/string idioms) so code that doesn't map to a specific ACE still stays an editable row.

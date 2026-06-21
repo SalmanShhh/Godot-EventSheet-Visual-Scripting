@@ -26,6 +26,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append_array(EventForgeCollisionACEs.get_descriptors())
 	descriptors.append_array(EventForgeDevACEs.get_descriptors())
 	descriptors.append_array(EventForgeNodeACEs.get_descriptors())
+	descriptors.append_array(EventForgeFileACEs.get_descriptors())
 	# Helpers LAST on purpose: their templates are deliberately generic ({target}.{method}(…),
 	# {target}.{property} = …), so the reverse-lifter must try every specific ACE before falling
 	# back to a generic helper — registry order is the priority order.

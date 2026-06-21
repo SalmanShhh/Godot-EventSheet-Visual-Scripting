@@ -3,6 +3,15 @@
 ## [Unreleased]
 
 ### Added
+- **File-management ACEs** — a **Files** vocabulary so save systems, config files and level data never
+  force a drop to GDScript: **Read Text File**, **Write Text File**, **Append To File**, **File Size**,
+  **File Exists**, plus **Delete / Copy / Move-or-Rename** a file, and a **Files: Directories** set
+  (**Make / Remove / Exists**, **List Files / Subdirectories**). Each compiles to the exact native
+  FileAccess / DirAccess call: reads use the null-safe static accessors (return "" / [] on error
+  instead of crashing) and writes guard the handle *and close it* (so a later op on the same file
+  isn't blocked by a still-open write — caught by a runtime round-trip test). Path hints nudge user://
+  (res:// is read-only in an exported game). FileExists moved here from the JSON set; JSON file
+  save/load stay under Variables: JSON.
 - **Remappable keyboard shortcuts** — Tools ▸ Keyboard Shortcuts is now an *editor*, not just a cheat
   sheet: click any of the ~18 authoring shortcuts (Add Event / Condition / Action, Save, Duplicate,
   Copy / Paste, Undo / Redo, …) and press a new combination to rebind it. Clashes are flagged inline
