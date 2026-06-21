@@ -1451,11 +1451,14 @@ static func run() -> bool:
     all_passed = _check("add condition without selection uses new event mode", dock._ace_picker._context.get("mode", ""), "new_condition_event") and all_passed
 
     # ACE selection and apply workflow.
-    var action_definition: ACEDefinition = null
+    # Pin to a stable, generic param'd action (the re-edit below feeds SetVar-shaped var_name/value
+    # params), so these assertions stay deterministic regardless of module registry order — which is
+    # now alphabetical from the module auto-discovery in builtin_aces.
+    var action_definition: ACEDefinition = ace_registry.find_definition("Core", "SetVar")
     var new_condition_definition: ACEDefinition = null
-    for definition in ace_registry.search("set variable"):
-        if definition.ace_type == ACEDefinition.ACEType.ACTION:
-            action_definition = definition
+    for definition in ace_registry.search("always"):
+        if definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]:
+            new_condition_definition = definition
             break
     for definition in ace_registry.search("always"):
         if definition.ace_type in [ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.TRIGGER]:

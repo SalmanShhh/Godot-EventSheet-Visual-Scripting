@@ -337,17 +337,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
     return descriptors
 ```
 
-Register the module in `builtin_aces.gd`, in order:
+That is all there is to it. The module is **auto-discovered**: `builtin_aces.gd` scans
+`registration/modules/` and registers any file that exposes `get_descriptors()`, so there is no list
+to edit. Files load in a stable sorted order with the generic `helper_aces` module kept last (its
+catch-all templates must come after specific ACEs for the reverse-lifter), so just keep your own
+templates specific and you are fine.
 
-```gdscript
-descriptors.append_array(EventForgeMyACEs.get_descriptors())
-# Helpers stay LAST on purpose: their templates are generic, so the importer must try
-# every specific ACE before falling back to a generic helper.
-descriptors.append_array(EventForgeHelperACEs.get_descriptors())
-```
-
-Order matters for the importer (round-trip): more specific ACEs must come before generic ones. In
-practice, keep the generic Helpers module last and you are fine.
+(If you also add a test, the test runner currently still needs the test registered in
+`tests/run_tests.gd`. The module itself works the moment the file exists.)
 
 ---
 

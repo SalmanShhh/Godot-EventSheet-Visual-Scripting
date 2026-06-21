@@ -30,6 +30,16 @@ static func run() -> bool:
 			seen_keys[reg_key] = true
 	all_passed = _check("no duplicate provider::ace_id in builtin descriptors", ", ".join(duplicate_keys) if not duplicate_keys.is_empty() else "(none)", "(none)") and all_passed
 
+	# Module auto-discovery: builtin_aces scans registration/modules/ instead of a hand-edited list,
+	# so dropping a module file registers its ACEs with no wiring. Confirm the scan finds the modules,
+	# orders the generic helper_aces module LAST (so its catch-all templates never shadow specific ACEs
+	# in the reverse-lifter), and yields a full vocabulary.
+	var module_files: PackedStringArray = EventForgeBuiltinACEs._module_files()
+	all_passed = _check("module scan discovers the modules", module_files.size() >= 15, true) and all_passed
+	all_passed = _check("helper_aces module is ordered last",
+		not module_files.is_empty() and module_files[module_files.size() - 1] == "helper_aces.gd", true) and all_passed
+	all_passed = _check("auto-discovered vocabulary is substantial", EventForgeBuiltinACEs.get_descriptors().size() >= 400, true) and all_passed
+
 	# ── Registry presence + node-type scoping across the five new surfaces ──
 	for expected: Array in [
 		["OnButtonPressed", "BaseButton"], ["OnButtonToggled", "BaseButton"],

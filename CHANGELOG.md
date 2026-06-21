@@ -35,6 +35,12 @@
   behind ProjectSettings; this adds the UI and moves persistence to per-user storage.)
 
 ### Changed
+- **Built-in ACE modules are auto-discovered.** Adding a vocabulary module no longer means editing
+  `builtin_aces.gd`: any script in `addons/eventforge/registration/modules/` that exposes
+  `static func get_descriptors() -> Array[ACEDescriptor]` is now loaded and registered automatically
+  (in a stable sorted order, with the generic `helper_aces` module kept last so its catch-all
+  templates never shadow a specific ACE in the reverse-lifter). Drop a module file and its ACEs
+  appear on the next load. ace_ids and templates remain the compatibility covenant.
 - **Plainer wording for beginners.** The dock no longer surfaces the insider acronym "ACE" in
   beginner-facing places: the node-drop preview reads "Dropped Node Preview", the row-comment dialog is
   "Row Comment", and the "couldn't edit this row" / "nothing found on this node" messages use plain
