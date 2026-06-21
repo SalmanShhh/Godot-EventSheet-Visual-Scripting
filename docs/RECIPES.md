@@ -117,5 +117,43 @@ row instead of a raw block.
 
 ---
 
+## 8. Coordinating many nodes — `With node`, groups & aggregates
+
+A boss enrages: flash it, then sound the retreat if the wave it commands is nearly dead. One event,
+three Godot idioms — react to a **signal**, scope to a **node**, query a **group** with no loop.
+
+**Setup:** enemies are nodes in the `"enemies"` group (each with a `health`); a `Boss` node with an
+`enraged` signal; a HUD `Label` at `$HUD/Label`.
+
+1. **React to the signal, don't poll.** Event → trigger **On Signal** `enraged`, source `Boss`. The
+   compiler wires the `_ready` connection for you — no per-frame check.
+2. **Scope the boss's actions once.** Right-click the event → **Scope Actions To Node… → `$Boss`**. A
+   `With node  $Boss` chip appears in the condition lane. Add **Play Animation** `"roar"` and **Set
+   Color Tint** red — you set the target *once*, not on every action. (Need one action on a *different*
+   node? Give just that action an explicit **On node** — it wins over the scope.)
+3. **Show the wave's average HP** (no loop): a HUD event → **Set Text (formatted)** on `$HUD/Label`,
+   value `"Avg HP: %d"` with the **Average In Group** expression (`"enemies"`, `health`) as the arg.
+4. **Broadcast a retreat** when the weakest is nearly dead: a sub-event → condition **Lowest In Group**
+   `"enemies"` `health` `< 10` → action **Call Method On Group** `"enemies"` → `retreat`.
+
+Compiles to plain, readable GDScript — exactly what you'd hand-write:
+
+```gdscript
+func _ready() -> void:
+    get_node("Boss").enraged.connect(_on_boss_enraged)
+
+func _on_boss_enraged() -> void:
+    $Boss.play(&"roar")            # both lines scoped by "With node $Boss"
+    $Boss.modulate = Color.RED
+    $HUD/Label.text = "Avg HP: %d" % [get_tree().get_nodes_in_group("enemies").reduce(func(__acc, __n): return __acc + __n.health, 0.0) / maxf(float(get_tree().get_nodes_in_group("enemies").size()), 1.0)]
+    if get_tree().get_nodes_in_group("enemies").reduce(func(__acc, __n): return min(__acc, __n.health), INF) < 10:
+        get_tree().call_group("enemies", "retreat")
+```
+
+No god-object reaching out every frame, no manual node lists — a signal handler, a scoped target, and
+two group queries, all as editable rows.
+
+---
+
 More vocabulary in the generated [EVENTSHEETS-VOCABULARY.md](../EVENTSHEETS-VOCABULARY.md); the
 honest pros/cons + scope are in the [README](../README.md).
