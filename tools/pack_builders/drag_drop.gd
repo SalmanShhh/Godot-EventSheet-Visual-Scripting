@@ -26,7 +26,7 @@ static func build() -> bool:
 		"drop_reason": {"type": "String", "default": "manual", "exported": false},
 		"break_action": {"type": "int", "default": 0, "exported": false},
 		"snap_positions": {"type": "Array", "default": [], "exported": false},
-		"snap_uids": {"type": "Array", "default": [], "exported": false},
+		"snap_uids": {"type": "Array[int]", "default": [], "exported": false},
 		"snap_radius": {"type": "float", "default": 0.0, "exported": false},
 		"snap_mode": {"type": "int", "default": 0, "exported": false},
 		"magnet_strength": {"type": "float", "default": 0.0, "exported": false},

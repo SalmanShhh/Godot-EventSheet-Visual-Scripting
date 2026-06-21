@@ -785,7 +785,7 @@ variables = {
 "snap_uids": {
 "default": [],
 "exported": false,
-"type": "Array"
+"type": "Array[int]"
 },
 "snapped_uid": {
 "default": -1,

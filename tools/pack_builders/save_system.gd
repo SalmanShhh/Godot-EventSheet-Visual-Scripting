@@ -78,22 +78,29 @@ static func build() -> bool:
 		"\t\tdata[key] = config.get_value(section, key)",
 		"\treturn data",
 		"",
-		"func _write_all(data: Dictionary) -> void:",
+		"func _write_all(data: Dictionary) -> bool:",
 		"\tvar path: String = _slot_path()",
 		"\tif format == \"json\":",
 		"\t\tvar file: FileAccess = FileAccess.open_encrypted_with_pass(path, FileAccess.WRITE, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.WRITE)",
-		"\t\tif file != null:",
-		"\t\t\tfile.store_string(JSON.stringify({section: data}, \"\\t\"))",
-		"\t\t\tfile.close()",
+		"\t\tif file == null:",
+		"\t\t\treturn false",
+		"\t\tfile.store_string(JSON.stringify({section: data}, \"\\t\"))",
+		"\t\tif file.get_error() != Error.OK:",
+		"\t\t\treturn false",
+		"\t\tfile.close()",
+		"\t\treturn true",
 		"\telse:",
 		"\t\tvar config: ConfigFile = ConfigFile.new()",
 		"\t\tfor key: Variant in data.keys():",
 		"\t\t\tconfig.set_value(section, str(key), data[key])",
+		"\t\tvar err: Error",
 		"\t\tif encryption_key.is_empty():",
-		"\t\t\tconfig.save(path)",
+		"\t\t\terr = config.save(path)",
 		"\t\telse:",
-		"\t\t\tconfig.save_encrypted_pass(path, encryption_key)",
-		"\tsave_written.emit(slot)"
+		"\t\t\terr = config.save_encrypted_pass(path, encryption_key)",
+		"\t\tif err != Error.OK:",
+		"\t\t\treturn false",
+		"\t\treturn true"
 	]))
 	sheet.events.append(helpers)
 	var autosave_tick: EventRow = EventRow.new()
@@ -144,7 +151,7 @@ static func build() -> bool:
 	# Lifecycle orchestration: other sheets contribute state via On Before Save.
 	Lib.append_function(sheet, "save_game", "Save Game", "Save System", "Broadcasts On Before Save (every sheet writes its state), then On Save Written.",
 		[],
-		"before_save.emit(slot)\nsave_written.emit(slot)")
+		"before_save.emit(slot)\nvar data: Dictionary = _read_all()\nif _write_all(data):\n\tsave_written.emit(slot)")
 	Lib.append_function(sheet, "load_game", "Load Game", "Save System", "Broadcasts On After Load — every sheet reads its state back.",
 		[],
 		"after_load.emit(slot)")

@@ -60,22 +60,29 @@ func _read_all() -> Dictionary:
 		data[key] = config.get_value(section, key)
 	return data
 
-func _write_all(data: Dictionary) -> void:
+func _write_all(data: Dictionary) -> bool:
 	var path: String = _slot_path()
 	if format == "json":
 		var file: FileAccess = FileAccess.open_encrypted_with_pass(path, FileAccess.WRITE, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.WRITE)
-		if file != null:
-			file.store_string(JSON.stringify({section: data}, "\t"))
-			file.close()
+		if file == null:
+			return false
+		file.store_string(JSON.stringify({section: data}, "\t"))
+		if file.get_error() != Error.OK:
+			return false
+		file.close()
+		return true
 	else:
 		var config: ConfigFile = ConfigFile.new()
 		for key: Variant in data.keys():
 			config.set_value(section, str(key), data[key])
+		var err: Error
 		if encryption_key.is_empty():
-			config.save(path)
+			err = config.save(path)
 		else:
-			config.save_encrypted_pass(path, encryption_key)
-	save_written.emit(slot)
+			err = config.save_encrypted_pass(path, encryption_key)
+		if err != Error.OK:
+			return false
+		return true
 
 func _process(delta: float) -> void:
 	if autosave_interval <= 0.0:
@@ -159,7 +166,9 @@ func delete_slot() -> void:
 ## @ace_codegen_template("SaveSystem.save_game()")
 func save_game() -> void:
 	before_save.emit(slot)
-	save_written.emit(slot)
+	var data: Dictionary = _read_all()
+	if _write_all(data):
+		save_written.emit(slot)
 
 ## @ace_action
 ## @ace_name("Load Game")

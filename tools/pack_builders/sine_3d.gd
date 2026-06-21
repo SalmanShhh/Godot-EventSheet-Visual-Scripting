@@ -14,6 +14,7 @@ static func build() -> bool:
 		"wave": {"type": "String", "default": "sine", "exported": true, "options": ["sine", "triangle", "sawtooth", "reverse-sawtooth", "square"]},
 		"period": {"type": "float", "default": 4.0, "exported": true},
 		"magnitude": {"type": "float", "default": 2.0, "exported": true},
+		"phase_degrees": {"type": "float", "default": 0.0, "exported": true},
 		"active": {"type": "bool", "default": true, "exported": true},
 		"time": {"type": "float", "default": 0.0, "exported": false},
 		"base_x": {"type": "float", "default": 0.0, "exported": false},
@@ -56,7 +57,8 @@ static func build() -> bool:
 		"\tbase_rot_y = host.rotation.y",
 		"\tbase_captured = true",
 		"time += delta",
-		"var offset := _wave(time / maxf(period, 0.001)) * magnitude",
+		"var t := time / maxf(period, 0.001) + phase_degrees / 360.0",
+		"var offset := _wave(t) * magnitude",
 		"if movement == \"x\":",
 		"\thost.position.x = base_x + offset",
 		"elif movement == \"y\":",
@@ -85,6 +87,23 @@ static func build() -> bool:
 	]))
 	set_sine3d_active_fn.events.append(set_sine3d_active_fn_body)
 	sheet.functions.append(set_sine3d_active_fn)
+
+	var set_sine3d_phase_fn: EventFunction = EventFunction.new()
+	set_sine3d_phase_fn.function_name = "set_sine3d_phase"
+	set_sine3d_phase_fn.expose_as_ace = true
+	set_sine3d_phase_fn.ace_display_name = "Set Phase"
+	set_sine3d_phase_fn.ace_category = "Sine 3D"
+	set_sine3d_phase_fn.description = "Phase offset in degrees."
+	var set_sine3d_phase_fn_degrees: ACEParam = ACEParam.new()
+	set_sine3d_phase_fn_degrees.id = "degrees"
+	set_sine3d_phase_fn_degrees.type_name = "float"
+	set_sine3d_phase_fn.params.append(set_sine3d_phase_fn_degrees)
+	var set_sine3d_phase_fn_body: RawCodeRow = RawCodeRow.new()
+	set_sine3d_phase_fn_body.code = "\n".join(PackedStringArray([
+		"phase_degrees = degrees"
+	]))
+	set_sine3d_phase_fn.events.append(set_sine3d_phase_fn_body)
+	sheet.functions.append(set_sine3d_phase_fn)
 
 	var reset_sine3d_fn: EventFunction = EventFunction.new()
 	reset_sine3d_fn.function_name = "reset_sine3d"

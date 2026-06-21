@@ -22,6 +22,7 @@ var base_z: float = 0.0
 @export var magnitude: float = 2.0
 @export_enum("x", "y", "z", "rotation-y") var movement: String = "y"
 @export var period: float = 4.0
+@export var phase_degrees: float = 0.0
 var time: float = 0.0
 @export_enum("sine", "triangle", "sawtooth", "reverse-sawtooth", "square") var wave: String = "sine"
 
@@ -49,7 +50,8 @@ func _process(delta: float) -> void:
 		base_rot_y = host.rotation.y
 		base_captured = true
 	time += delta
-	var offset := _wave(time / maxf(period, 0.001)) * magnitude
+	var t := time / maxf(period, 0.001) + phase_degrees / 360.0
+	var offset := _wave(t) * magnitude
 	if movement == "x":
 		host.position.x = base_x + offset
 	elif movement == "y":
@@ -66,6 +68,14 @@ func _process(delta: float) -> void:
 ## @ace_codegen_template("$Sine3DBehavior.set_sine3d_active({is_active})")
 func set_sine3d_active(is_active: bool) -> void:
 	active = is_active
+
+## @ace_action
+## @ace_name("Set Phase")
+## @ace_category("Sine 3D")
+## @ace_description("Phase offset in degrees.")
+## @ace_codegen_template("$Sine3DBehavior.set_sine3d_phase({degrees})")
+func set_sine3d_phase(degrees: float) -> void:
+	phase_degrees = degrees
 
 ## @ace_action
 ## @ace_name("Reset Sine 3D")

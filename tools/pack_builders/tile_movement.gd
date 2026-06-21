@@ -101,6 +101,7 @@ static func build() -> bool:
 	]))
 	simulate_step_fn.events.append(simulate_step_fn_body)
 	sheet.functions.append(simulate_step_fn)
+	_param_options(sheet, "direction", ["left", "right", "up", "down"])
 
 	var teleport_to_tile_fn: EventFunction = EventFunction.new()
 	teleport_to_tile_fn.function_name = "teleport_to_tile"
@@ -126,3 +127,15 @@ static func build() -> bool:
 	sheet.functions.append(teleport_to_tile_fn)
 
 	return Lib.save_pack(sheet, "res://eventsheet_addons/tile_movement/tile_movement_behavior")
+
+
+## Sets the dropdown options[] on the last-appended ACE's parameter (append_function only sets id+type),
+## so e.g. direction becomes a left/right/up/down picker instead of a free-text field.
+static func _param_options(sheet: EventSheetResource, param_id: String, choices: Array) -> void:
+	var typed: Array[String] = []
+	for choice: Variant in choices:
+		typed.append(str(choice))
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.options = typed

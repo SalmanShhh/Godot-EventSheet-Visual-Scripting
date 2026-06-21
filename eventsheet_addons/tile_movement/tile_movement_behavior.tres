@@ -82,6 +82,7 @@ script = ExtResource("7_f5eri")
 id = "direction"
 initial_value = null
 initialValue = null
+options = Array[String](["left", "right", "up", "down"])
 
 [sub_resource type="Resource" id="Resource_bxm2s"]
 script = ExtResource("8_g5l8f")

@@ -41,7 +41,8 @@ if not base_captured:
 	base_rot_y = host.rotation.y
 	base_captured = true
 time += delta
-var offset := _wave(time / maxf(period, 0.001)) * magnitude
+var t := time / maxf(period, 0.001) + phase_degrees / 360.0
+var offset := _wave(t) * magnitude
 if movement == \"x\":
 	host.position.x = base_x + offset
 elif movement == \"y\":
@@ -81,17 +82,38 @@ events = Array[Resource]([SubResource("Resource_ol3o0")])
 
 [sub_resource type="Resource" id="Resource_dwdnu"]
 script = ExtResource("2_p4ivb")
+code = "phase_degrees = degrees"
+
+[sub_resource type="Resource" id="Resource_ipr4t"]
+script = ExtResource("7_whq3n")
+id = "degrees"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_wk035"]
+script = ExtResource("8_bff3u")
+function_name = "set_sine3d_phase"
+description = "Phase offset in degrees."
+expose_as_ace = true
+ace_display_name = "Set Phase"
+ace_category = "Sine 3D"
+params = Array[ExtResource("7_whq3n")]([SubResource("Resource_ipr4t")])
+events = Array[Resource]([SubResource("Resource_dwdnu")])
+
+[sub_resource type="Resource" id="Resource_5q4sb"]
+script = ExtResource("2_p4ivb")
 code = "time = 0.0
 base_captured = false"
 
-[sub_resource type="Resource" id="Resource_ipr4t"]
+[sub_resource type="Resource" id="Resource_o0enn"]
 script = ExtResource("8_bff3u")
 function_name = "reset_sine3d"
 description = "Restarts the wave from the current state."
 expose_as_ace = true
 ace_display_name = "Reset Sine 3D"
 ace_category = "Sine 3D"
-events = Array[Resource]([SubResource("Resource_dwdnu")])
+events = Array[Resource]([SubResource("Resource_5q4sb")])
 
 [resource]
 script = ExtResource("9_6c0uw")
@@ -147,6 +169,11 @@ variables = {
 "exported": true,
 "type": "float"
 },
+"phase_degrees": {
+"default": 0.0,
+"exported": true,
+"type": "float"
+},
 "time": {
 "default": 0.0,
 "exported": false,
@@ -159,4 +186,4 @@ variables = {
 "type": "String"
 }
 }
-functions = Array[Resource]([SubResource("Resource_mvta1"), SubResource("Resource_ipr4t")])
+functions = Array[Resource]([SubResource("Resource_mvta1"), SubResource("Resource_wk035"), SubResource("Resource_o0enn")])
