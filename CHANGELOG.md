@@ -3,6 +3,14 @@
 ## [Unreleased]
 
 ### Added
+- **Node-scoped ACEs can target another node now.** Every host-scoped node ACE (Set Modulate, Set
+  Volume, Play Animation, Set Camera Zoom, Set Label Text, the particle/joint/range/button setters — 180+
+  in all) gained an optional **"On node"** field: leave it blank to act on this node as before, or pick a
+  node / type a path (`$Enemy`, `get_node("UI/Score")`) to redirect the whole operation to another node.
+  This is powered by a new covenant-safe codegen idiom, the optional-prefix `{target.}` (a blank value
+  emits nothing, so existing sheets compile **byte-for-byte unchanged** — verified by the drift audit),
+  and the importer round-trips both shapes (`play()` and `$Enemy.play()`) back to the same ACE. The
+  spawn-a-new-node and already-targeted ACEs (e.g. Play Sound At, the Joint body setters) are left as-is.
 - **Group aggregate expressions** — roll a numeric member up across a whole group with no loop: **Sum
   In Group**, **Average In Group**, **Lowest In Group**, **Highest In Group** (joining the existing
   Count Nodes In Group, under the **Groups** category). The "average health of all enemies" case is now

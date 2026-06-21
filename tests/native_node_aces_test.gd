@@ -38,7 +38,7 @@ static func run() -> bool:
 	all_passed = _check("choose is C3's choose() over pick_random",
 		str(by_id["Choose"].codegen_template), "[{values}].pick_random()") and all_passed
 	all_passed = _check("sprite play uses the StringName idiom",
-		str(by_id["PlaySpriteAnimation"].codegen_template), "play(&{anim})") and all_passed
+		str(by_id["PlaySpriteAnimation"].codegen_template).contains("play(&{anim})"), true) and all_passed
 
 	# Compile: one event exercising tween, scene flow, label and choose.
 	var sheet: EventSheetResource = EventSheetResource.new()

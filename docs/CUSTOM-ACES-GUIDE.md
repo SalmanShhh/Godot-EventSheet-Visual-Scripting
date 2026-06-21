@@ -400,6 +400,26 @@ Note that `{, args}` drops only when the value is the empty string. A value of `
 still emits the comma. Optional-comma segments do not reverse-lift, so avoid them if a perfect import
 round-trip matters to you.
 
+### The optional-prefix idiom: `{target.}`
+
+`{target.}` (note the dot INSIDE the braces) emits the value followed by a `.` only when the value is
+non-empty, otherwise nothing. It is how a host-scoped operation becomes optionally retargetable to
+another node.
+
+```gdscript
+# template: {target.}play(&{anim})
+# target = ""        -> play(&"walk")            # acts on the host
+# target = "$Enemy"  -> $Enemy.play(&"walk")     # acts on another node
+```
+
+Every built-in node-scoped ACE (one that declares a `node_type`) is given this prefix and an optional
+"On node" `target` param automatically, so you rarely write it by hand — but it is available for your
+own templates. A blank target compiles to the original host call byte-for-byte, so adding it never
+changes existing output. The dot lives inside the braces precisely so it cannot collide with the
+ordinary `{target}.member` pattern (dot outside). Unlike `{, args}`, the optional-prefix idiom **does**
+reverse-lift: the importer matches both the blank-target (`play(...)`) and set-target
+(`$Enemy.play(...)`) shapes back to your ACE.
+
 ### What the template means per type
 
 | ace_type | The template is | Example |

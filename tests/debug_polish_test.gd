@@ -69,7 +69,7 @@ static func run() -> bool:
 	all_passed = _check("platform feature is a dropdown",
 		((by_id["HasOSFeature"].params[0] as ACEParam).options as Array).size() >= 6, true) and all_passed
 	all_passed = _check("shader template uses the StringName idiom",
-		str(by_id["SetShaderParameter"].codegen_template), "material.set_shader_parameter(&{param}, {value})") and all_passed
+		str(by_id["SetShaderParameter"].codegen_template).contains("material.set_shader_parameter(&{param}, {value})"), true) and all_passed
 
 	# Stage 3: ACE comments + starter templates.
 	var note_editor: EventSheetEditor = EventSheetEditor.new()

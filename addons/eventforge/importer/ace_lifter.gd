@@ -511,11 +511,14 @@ static func _build_reverse_entries() -> Array:
 				kind = "action"
 			_:
 				continue
-		var regex: RegEx = _template_to_regex(template)
-		if regex == null:
-			continue
-		var literal_len: int = brace_regex.sub(template, "", true).length()
-		entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size()})
+		# Optional-prefix `{target.}` templates compile to two shapes — the blank-target host form
+		# (`play()`) and the set-target form (`$Enemy.play()`) — so register a reverse entry for each.
+		for variant: String in _optional_prefix_variants(template):
+			var regex: RegEx = _template_to_regex(variant)
+			if regex == null:
+				continue
+			var literal_len: int = brace_regex.sub(variant, "", true).length()
+			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size()})
 	# Try SPECIFIC templates before generic catch-alls. The Core generics (SetVar `{var_name} = {value}`,
 	# CallFunction `{function_name}({args})`, …) use lazy `.+?` captures that match almost any
 	# assignment/call, so in raw registry order they SHADOW every specific node ACE (`position = …`
@@ -538,6 +541,21 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String) -> 
 			params[group_name] = regex_match.get_string(group_name)
 		return {"provider": (entry as Dictionary).get("provider"), "ace_id": (entry as Dictionary).get("ace_id"), "params": params}
 	return {}
+
+## Expands an optional-prefix template `{name.}foo` into the two shapes it can compile to, so both
+## round-trip: the blank-target form (`foo`) and the set-target form (`{name}.foo`, where `{name}`
+## reverses to a named capture). Templates without `{name.}` pass through as a one-element list.
+## (Multi-line `{name.}` templates also expand, but stay single-line-unmatchable like every multi-line
+## template — harmless; they were never line-reversible.)
+static func _optional_prefix_variants(template: String) -> Array:
+	var prefix_re: RegEx = RegEx.new()
+	prefix_re.compile("\\{([A-Za-z_][A-Za-z0-9_]*)\\.\\}")
+	var hit: RegExMatch = prefix_re.search(template)
+	if hit == null:
+		return [template]
+	var placeholder: String = hit.get_string(0)  # e.g. "{target.}"
+	var capture_name: String = hit.get_string(1)  # e.g. "target"
+	return [template.replace(placeholder, ""), template.replace(placeholder, "{%s}." % capture_name)]
 
 ## "{amount}" placeholders become lazy named captures; everything else matches literally.
 static func _template_to_regex(template: String) -> RegEx:
