@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Added
+- **Custom ACEs guide** ([docs/CUSTOM-ACES-GUIDE.md](docs/CUSTOM-ACES-GUIDE.md)) — a complete how-to
+  for authoring your own Actions / Conditions / Expressions / Triggers: the three extension paths
+  (auto-ACE provider scripts, custom descriptors via the EventForgeBridge autoload, and built-in
+  modules), the codegen-template language (`{param}`, `{uid}`, multi-line, optional-comma, stateful
+  conditions), full descriptor + parameter + widget-hint reference tables, the picker / category /
+  Simple-Mode rules, and a compile-and-run testing recipe. Linked from the README.
 - **JSON is its own module now, with two new ACEs.** The JSON vocabulary (To / From JSON Text, JSON
   Is Valid, Save / Load JSON File) was consolidated out of the Collections module into a dedicated
   **JSON** category, and gained **To JSON Text (pretty)** (indented, human-readable output) and

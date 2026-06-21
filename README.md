@@ -196,7 +196,9 @@ still ships as plain GDScript).
 - **Custom ACE addons**: drop a script in `res://eventsheet_addons/` — `class_name` is
   the provider, `@ace_*` annotations shape everything (`@ace_param_options` for fixed
   combos, `@ace_param_autocomplete` for an editable type-or-pick combo, `@ace_param_hint`
-  for ƒx/color/signal pickers). Annotated signals become triggers.
+  for ƒx/color/signal pickers). Annotated signals become triggers. Full how-to (all three
+  authoring paths, the template language, schema + widget tables, testing): the
+  [Custom ACEs guide](docs/CUSTOM-ACES-GUIDE.md).
 - **Export Addon…** turns the current behavior sheet into a published pack folder with
   one click. Custom node types (`class_name` + `@icon`) appear in Godot's Create Node
   dialog.
