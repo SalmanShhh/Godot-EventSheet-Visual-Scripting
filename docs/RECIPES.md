@@ -155,5 +155,64 @@ two group queries, all as editable rows.
 
 ---
 
+## 9. Building the Godot way — a steering tour
+
+The plugin actively *nudges* a Construct user toward Godot idioms (signals over polling, small
+scenes-as-components, the Inspector, one source of truth) — always as suggestions with the old path one
+click away. This tour builds a tiny coin game using each nudge. New to why these are "the Godot way"?
+The [migration guide's *Polling vs reacting*](C3-MIGRATION-GUIDE.md#polling-vs-reacting--the-biggest-shift-from-c3)
+section is the one-page version.
+
+**1. A coin is a behavior component, not a god-sheet.** New Sheet → **Behavior Component (signal-driven)**.
+You get a `PickupBehavior` you attach as a *child* of each Coin's `Area2D` (the Godot answer to a C3
+behavior). It *reacts* to the host's `body_entered` signal — no per-frame overlap check — and *emits*
+`collected`; `value` is an exported knob you tune per coin in the Inspector. It compiles to:
+
+```gdscript
+extends Node
+class_name PickupBehavior
+
+@export var value: int = 1
+signal collected(by: Node, amount: int)
+var host: Area2D = null
+
+func _ready() -> void:
+    host = get_parent() as Area2D
+    if host != null:
+        host.body_entered.connect(func(body: Node) -> void:
+            collected.emit(body, value)
+            host.queue_free())
+```
+
+**2. The score lives in one place — an autoload.** Don't declare `score` in five sheets. New Sheet →
+**Game State (Autoload)**, add `score`, register it (Tools → Register Autoload). If you *do* sprinkle it
+around, the **Project Doctor** (Tools → Check Project) flags it: *"Global 'score' is declared in 3
+sheets — promote it to an autoload (one source of truth)."*
+
+**3. Internal state vs designer knobs.** When you add a variable, the **"Designer-tweakable in the
+Inspector (@export)"** box is *off* by default — so an internal `_combo_count` stays a private `var`,
+and you tick the box only for values a designer should tune. Your Inspector stays a clean panel of real
+knobs, not an everything-bucket.
+
+**4. React, and reference by name.** On a Game sheet: trigger **On Signal** `collected` (source: a coin)
+→ `GameState.score += amount`. Update the HUD without a brittle path: in the scene tree mark the deep
+`ScoreLabel` **Access as Unique Name**, then write `%ScoreLabel` — type `%` in a ƒx field and it
+autocompletes; typo it and it warns amber. And when you reach for a polling condition like *Overlaps
+Body*, the picker tips you toward **On Body Entered** and lands "overlap" + Enter on the reactive
+trigger by default.
+
+**5. React to coins *appearing*, don't poll.** Spawning coins at runtime? Instead of checking
+`IsInsideTree` every frame, use **On Child Entered Tree** (source: the coins container) to act the
+moment a coin is added.
+
+**6. Stay composed.** If a sheet starts reaching into a dozen different nodes, the Doctor's *fan-out*
+advisory suggests splitting into per-node behaviors or naming it a coordinator — flagged by **node
+count, never row count** (a long, focused state machine on one host is fine).
+
+Every step has an escape hatch: the polling condition, the global, the deep `$path`, the one big sheet
+all still compile and work. The plugin just makes the Godot way the *easy default*.
+
+---
+
 More vocabulary in the generated [EVENTSHEETS-VOCABULARY.md](../EVENTSHEETS-VOCABULARY.md); the
 honest pros/cons + scope are in the [README](../README.md).
