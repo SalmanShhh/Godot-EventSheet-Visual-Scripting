@@ -18,6 +18,20 @@ var abilities: Dictionary = {}
 @export_range(0, 10, 0.05) var cooldown_multiplier: float = 1.0
 var current_ability_id: String = ""
 
+## One ability's runtime state — typed so the cooldown / stack / expiration hot paths read
+## fields directly instead of float()/int()/bool()-casting an untyped Dictionary every frame.
+class AbilityData:
+	var cooldown: float = 0.0
+	var max_cooldown: float = 0.0
+	var stacks: int = 1
+	var max_stacks: int = 1
+	var enabled: bool = true
+	var active: bool = false
+	var data: Dictionary = {}
+	var tags: Array = []
+	var expiration: float = 0.0
+	var max_expiration: float = 0.0
+
 ## @ace_trigger
 ## @ace_name("On Ability Activated")
 ## @ace_category("Abilities")
@@ -67,36 +81,36 @@ func has_ability(id: String) -> bool:
 func is_ready(id: String) -> bool:
 	if not abilities.has(id):
 		return false
-	var a: Dictionary = abilities[id]
-	return bool(a.enabled) and int(a.stacks) > 0
+	var a: AbilityData = abilities[id]
+	return a.enabled and a.stacks > 0
 
 ## @ace_condition
 ## @ace_name("Is Ability Active")
 ## @ace_category("Abilities")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.is_active({id})")
 func is_active(id: String) -> bool:
-	return abilities.has(id) and bool(abilities[id].active)
+	return abilities.has(id) and (abilities[id] as AbilityData).active
 
 ## @ace_condition
 ## @ace_name("Is Ability Enabled")
 ## @ace_category("Abilities")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.is_enabled({id})")
 func is_enabled(id: String) -> bool:
-	return abilities.has(id) and bool(abilities[id].enabled)
+	return abilities.has(id) and (abilities[id] as AbilityData).enabled
 
 ## @ace_condition
 ## @ace_name("Has Stacks Available")
 ## @ace_category("Abilities")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.has_stacks({id})")
 func has_stacks(id: String) -> bool:
-	return abilities.has(id) and int(abilities[id].stacks) > 0
+	return abilities.has(id) and (abilities[id] as AbilityData).stacks > 0
 
 ## @ace_condition
 ## @ace_name("Ability Has Tag")
 ## @ace_category("Abilities")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.ability_has_tag({id}, {tag})")
 func ability_has_tag(id: String, tag: String) -> bool:
-	return abilities.has(id) and (abilities[id].tags as Array).has(tag)
+	return abilities.has(id) and (abilities[id] as AbilityData).tags.has(tag)
 
 ## @ace_condition
 ## @ace_name("Current Ability Is")
@@ -115,33 +129,33 @@ func current_ability() -> String:
 ## @ace_name("Cooldown Remaining")
 ## @ace_category("Abilities")
 func get_cooldown_remaining(id: String) -> float:
-	return float(abilities[id].cooldown) if abilities.has(id) else 0.0
+	return (abilities[id] as AbilityData).cooldown if abilities.has(id) else 0.0
 
 ## @ace_expression
 ## @ace_name("Cooldown Progress")
 ## @ace_category("Abilities")
 func get_cooldown_progress(id: String) -> float:
-	if not abilities.has(id) or float(abilities[id].max_cooldown) <= 0.0:
+	if not abilities.has(id) or (abilities[id] as AbilityData).max_cooldown <= 0.0:
 		return 0.0
-	return clampf(float(abilities[id].cooldown) / float(abilities[id].max_cooldown), 0.0, 1.0)
+	return clampf((abilities[id] as AbilityData).cooldown / (abilities[id] as AbilityData).max_cooldown, 0.0, 1.0)
 
 ## @ace_expression
 ## @ace_name("Stacks")
 ## @ace_category("Abilities")
 func get_stacks(id: String) -> int:
-	return int(abilities[id].stacks) if abilities.has(id) else 0
+	return (abilities[id] as AbilityData).stacks if abilities.has(id) else 0
 
 ## @ace_expression
 ## @ace_name("Max Stacks")
 ## @ace_category("Abilities")
 func get_max_stacks(id: String) -> int:
-	return int(abilities[id].max_stacks) if abilities.has(id) else 0
+	return (abilities[id] as AbilityData).max_stacks if abilities.has(id) else 0
 
 ## @ace_expression
 ## @ace_name("Stack Cooldown Remaining")
 ## @ace_category("Abilities")
 func get_stack_cooldown_remaining(id: String) -> float:
-	return float(abilities[id].cooldown) if abilities.has(id) else 0.0
+	return (abilities[id] as AbilityData).cooldown if abilities.has(id) else 0.0
 
 ## @ace_expression
 ## @ace_name("Stack Progress")
@@ -153,21 +167,21 @@ func get_stack_progress(id: String) -> float:
 ## @ace_name("Expiration Time")
 ## @ace_category("Abilities")
 func get_expiration_time(id: String) -> float:
-	return float(abilities[id].expiration) if abilities.has(id) else 0.0
+	return (abilities[id] as AbilityData).expiration if abilities.has(id) else 0.0
 
 ## @ace_expression
 ## @ace_name("Expiration Progress")
 ## @ace_category("Abilities")
 func get_expiration_progress(id: String) -> float:
-	if not abilities.has(id) or float(abilities[id].max_expiration) <= 0.0:
+	if not abilities.has(id) or (abilities[id] as AbilityData).max_expiration <= 0.0:
 		return 0.0
-	return clampf(1.0 - float(abilities[id].expiration) / float(abilities[id].max_expiration), 0.0, 1.0)
+	return clampf(1.0 - (abilities[id] as AbilityData).expiration / (abilities[id] as AbilityData).max_expiration, 0.0, 1.0)
 
 ## @ace_expression
 ## @ace_name("Max Expiration Time")
 ## @ace_category("Abilities")
 func get_max_expiration_time(id: String) -> float:
-	return float(abilities[id].max_expiration) if abilities.has(id) else 0.0
+	return (abilities[id] as AbilityData).max_expiration if abilities.has(id) else 0.0
 
 ## @ace_expression
 ## @ace_name("Ability Count")
@@ -197,7 +211,7 @@ func get_ready_abilities() -> String:
 func get_ability_data(id: String, key: String) -> String:
 	if not abilities.has(id):
 		return ""
-	return str((abilities[id].data as Dictionary).get(key, ""))
+	return str((abilities[id] as AbilityData).data.get(key, ""))
 
 ## @ace_expression
 ## @ace_name("Count Abilities By Tag")
@@ -218,15 +232,15 @@ func get_ability_by_tag_index(tag: String, index: int) -> String:
 func list_abilities_by_tag(tag: String) -> String:
 	return ",".join(_ids_with_tag(tag))
 
-func _ensure_ability(id: String) -> Dictionary:
+func _ensure_ability(id: String) -> AbilityData:
 	if not abilities.has(id):
-		abilities[id] = {"cooldown": 0.0, "max_cooldown": 0.0, "stacks": 1, "max_stacks": 1, "enabled": true, "active": false, "data": {}, "tags": [], "expiration": 0.0, "max_expiration": 0.0}
+		abilities[id] = AbilityData.new()
 	return abilities[id]
 
 func _ids_with_tag(tag: String) -> Array:
 	var out: Array = []
 	for id: String in abilities.keys():
-		if (abilities[id].tags as Array).has(tag):
+		if (abilities[id] as AbilityData).tags.has(tag):
 			out.append(id)
 	return out
 
@@ -235,21 +249,21 @@ func _process(delta: float) -> void:
 		return
 	var expired: Array = []
 	for id: String in abilities.keys():
-		var a: Dictionary = abilities[id]
-		if float(a.cooldown) > 0.0:
-			a.cooldown = maxf(0.0, float(a.cooldown) - delta)
-			if float(a.cooldown) <= 0.0:
-				if int(a.stacks) < int(a.max_stacks):
-					a.stacks = int(a.stacks) + 1
+		var a: AbilityData = abilities[id]
+		if a.cooldown > 0.0:
+			a.cooldown = maxf(0.0, a.cooldown - delta)
+			if a.cooldown <= 0.0:
+				if a.stacks < a.max_stacks:
+					a.stacks = a.stacks + 1
 					current_ability_id = id
 					on_stack_gained.emit()
-					if int(a.stacks) < int(a.max_stacks) and float(a.max_cooldown) > 0.0:
-						a.cooldown = float(a.max_cooldown)
+					if a.stacks < a.max_stacks and a.max_cooldown > 0.0:
+						a.cooldown = a.max_cooldown
 				current_ability_id = id
 				on_ability_ready.emit()
-		if float(a.max_expiration) > 0.0:
-			a.expiration = maxf(0.0, float(a.expiration) - delta)
-			if float(a.expiration) <= 0.0:
+		if a.max_expiration > 0.0:
+			a.expiration = maxf(0.0, a.expiration - delta)
+			if a.expiration <= 0.0:
 				expired.append(id)
 	for id: String in expired:
 		abilities.erase(id)
@@ -275,7 +289,7 @@ func create_ability(id: String) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.create_ability_with_cooldown({id}, {seconds}, {reset_instantly})")
 func create_ability_with_cooldown(id: String, seconds: float, reset_instantly: bool) -> void:
 	var is_new: bool = not abilities.has(id)
-	var a: Dictionary = _ensure_ability(id)
+	var a: AbilityData = _ensure_ability(id)
 	a.max_cooldown = maxf(0.0, seconds)
 	a.cooldown = 0.0 if reset_instantly else maxf(0.0, seconds)
 	if is_new:
@@ -289,10 +303,10 @@ func create_ability_with_cooldown(id: String, seconds: float, reset_instantly: b
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.create_ability_with_stacks({id}, {seconds}, {max_stacks}, {reset_instantly})")
 func create_ability_with_stacks(id: String, seconds: float, max_stacks: int, reset_instantly: bool) -> void:
 	var is_new: bool = not abilities.has(id)
-	var a: Dictionary = _ensure_ability(id)
+	var a: AbilityData = _ensure_ability(id)
 	a.max_cooldown = maxf(0.0, seconds)
 	a.max_stacks = maxi(1, max_stacks)
-	a.stacks = int(a.max_stacks) if reset_instantly else 0
+	a.stacks = a.max_stacks if reset_instantly else 0
 	a.cooldown = 0.0 if reset_instantly else maxf(0.0, seconds)
 	if is_new:
 		current_ability_id = id
@@ -305,7 +319,7 @@ func create_ability_with_stacks(id: String, seconds: float, max_stacks: int, res
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.create_temporary_ability({id}, {seconds})")
 func create_temporary_ability(id: String, seconds: float) -> void:
 	var is_new: bool = not abilities.has(id)
-	var a: Dictionary = _ensure_ability(id)
+	var a: AbilityData = _ensure_ability(id)
 	a.max_expiration = maxf(0.0, seconds)
 	a.expiration = maxf(0.0, seconds)
 	if is_new:
@@ -354,14 +368,14 @@ func clear_all_abilities() -> void:
 func activate_ability(id: String) -> void:
 	if not abilities.has(id):
 		return
-	var a: Dictionary = abilities[id]
-	if not bool(a.enabled) or int(a.stacks) <= 0:
+	var a: AbilityData = abilities[id]
+	if not a.enabled or a.stacks <= 0:
 		return
-	a.stacks = int(a.stacks) - 1
+	a.stacks = a.stacks - 1
 	current_ability_id = id
 	on_stack_consumed.emit()
-	if int(a.stacks) < int(a.max_stacks) and float(a.cooldown) <= 0.0 and float(a.max_cooldown) > 0.0:
-		a.cooldown = float(a.max_cooldown)
+	if a.stacks < a.max_stacks and a.cooldown <= 0.0 and a.max_cooldown > 0.0:
+		a.cooldown = a.max_cooldown
 	current_ability_id = id
 	on_ability_activated.emit()
 
@@ -394,9 +408,9 @@ func reset_cooldown(id: String) -> void:
 func set_max_stacks(id: String, max_stacks: int) -> void:
 	if not abilities.has(id):
 		return
-	var a: Dictionary = abilities[id]
+	var a: AbilityData = abilities[id]
 	a.max_stacks = maxi(1, max_stacks)
-	a.stacks = mini(int(a.stacks), int(a.max_stacks))
+	a.stacks = mini(a.stacks, a.max_stacks)
 
 ## @ace_action
 ## @ace_name("Set Stacks")
@@ -406,7 +420,7 @@ func set_max_stacks(id: String, max_stacks: int) -> void:
 func set_stacks(id: String, stacks: int) -> void:
 	if not abilities.has(id):
 		return
-	abilities[id].stacks = clampi(stacks, 0, int(abilities[id].max_stacks))
+	abilities[id].stacks = clampi(stacks, 0, (abilities[id] as AbilityData).max_stacks)
 
 ## @ace_action
 ## @ace_name("Add Stacks")
@@ -416,13 +430,13 @@ func set_stacks(id: String, stacks: int) -> void:
 func add_stacks(id: String, count: int) -> void:
 	if not abilities.has(id):
 		return
-	var a: Dictionary = abilities[id]
-	var before: int = int(a.stacks)
-	a.stacks = mini(int(a.max_stacks), before + count)
-	if int(a.stacks) > before:
+	var a: AbilityData = abilities[id]
+	var before: int = a.stacks
+	a.stacks = mini(a.max_stacks, before + count)
+	if a.stacks > before:
 		current_ability_id = id
 		on_stack_gained.emit()
-	if before + count > int(a.max_stacks):
+	if before + count > a.max_stacks:
 		current_ability_id = id
 		on_max_stacks_reached.emit()
 
@@ -434,14 +448,14 @@ func add_stacks(id: String, count: int) -> void:
 func consume_stack(id: String) -> void:
 	if not abilities.has(id):
 		return
-	var a: Dictionary = abilities[id]
-	if int(a.stacks) <= 0:
+	var a: AbilityData = abilities[id]
+	if a.stacks <= 0:
 		return
-	a.stacks = int(a.stacks) - 1
+	a.stacks = a.stacks - 1
 	current_ability_id = id
 	on_stack_consumed.emit()
-	if int(a.stacks) < int(a.max_stacks) and float(a.cooldown) <= 0.0 and float(a.max_cooldown) > 0.0:
-		a.cooldown = float(a.max_cooldown)
+	if a.stacks < a.max_stacks and a.cooldown <= 0.0 and a.max_cooldown > 0.0:
+		a.cooldown = a.max_cooldown
 
 ## @ace_action
 ## @ace_name("Set Ability Enabled")
@@ -468,7 +482,7 @@ func set_active(id: String, active: bool) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_ability_data({id}, {key}, {value})")
 func set_ability_data(id: String, key: String, value: String) -> void:
 	if abilities.has(id):
-		(abilities[id].data as Dictionary)[key] = str(value)
+		(abilities[id] as AbilityData).data[key] = str(value)
 
 ## @ace_action
 ## @ace_name("Add Tag")
@@ -489,7 +503,7 @@ func add_tag(id: String, tag: String) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.remove_tag({id}, {tag})")
 func remove_tag(id: String, tag: String) -> void:
 	if abilities.has(id):
-		(abilities[id].tags as Array).erase(tag)
+		(abilities[id] as AbilityData).tags.erase(tag)
 
 ## @ace_action
 ## @ace_name("Clear All Tags")
@@ -498,7 +512,7 @@ func remove_tag(id: String, tag: String) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.clear_tags({id})")
 func clear_tags(id: String) -> void:
 	if abilities.has(id):
-		(abilities[id].tags as Array).clear()
+		(abilities[id] as AbilityData).tags.clear()
 
 ## @ace_action
 ## @ace_name("Set Abilities With Tag Enabled")
