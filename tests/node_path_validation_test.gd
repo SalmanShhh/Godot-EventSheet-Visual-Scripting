@@ -18,6 +18,12 @@ static func run() -> bool:
 	var player: Node = Node.new(); player.name = "Player"; root.add_child(player)
 	var ui: Node = Node.new(); ui.name = "UI"; root.add_child(ui)
 	var score: Node = Node.new(); score.name = "Score"; ui.add_child(score)
+	# Mark Player and Score as Godot unique names (%Player, %Score). owner must be the scene root for the
+	# % to be reachable from the scene (the editor sets owner; here we set it explicitly). UI stays normal.
+	for node: Node in [player, ui, score]:
+		node.owner = root
+	player.unique_name_in_owner = true
+	score.unique_name_in_owner = true
 
 	# Extraction: bare / slashed / quoted $ refs and get_node("…").
 	all_passed = _check("extracts a bare $ ref", ACEParamsDialog.node_references_in_expression("$Player"), PackedStringArray(["Player"])) and all_passed
@@ -40,6 +46,28 @@ static func run() -> bool:
 	all_passed = _check("autocomplete lists Player", paths.has("Player"), true) and all_passed
 	all_passed = _check("autocomplete lists nested UI/Score", paths.has("UI/Score"), true) and all_passed
 	all_passed = _check("autocomplete is empty for a null scene", ACEParamsDialog.scene_node_paths(null).size(), 0) and all_passed
+
+	# Unique names (%Name) — Godot's stable, refactor-proof references (C3-style "reference by name").
+	# Extraction skips %d / %s format specifiers that live inside a string literal.
+	all_passed = _check("extracts a bare %ref", ACEParamsDialog.unique_names_in_expression("%Player.health"), PackedStringArray(["Player"])) and all_passed
+	all_passed = _check("extracts a quoted %ref", ACEParamsDialog.unique_names_in_expression("%\"Boss Health\""), PackedStringArray(["Boss Health"])) and all_passed
+	all_passed = _check("%d in a string is not a node ref", ACEParamsDialog.unique_names_in_expression("\"%d HP\" % hp").size(), 0) and all_passed
+
+	# Owner-scoped collection: Player + Score are unique; UI is not.
+	var uniques: PackedStringArray = ACEParamsDialog.scene_unique_names(root)
+	all_passed = _check("collects unique Player", uniques.has("Player"), true) and all_passed
+	all_passed = _check("collects unique Score", uniques.has("Score"), true) and all_passed
+	all_passed = _check("does not collect non-unique UI", uniques.has("UI"), false) and all_passed
+
+	# Validation: a marked %name resolves silently; an unmarked one warns (returned with its %); a
+	# printf-style format string is never flagged.
+	all_passed = _check("resolved %name → no warning", ACEParamsDialog.unresolved_node_reference("%Player.health", root), "") and all_passed
+	all_passed = _check("unmarked %name → warns with the %", ACEParamsDialog.unresolved_node_reference("%Ghost", root), "%Ghost") and all_passed
+	all_passed = _check("a format string is not flagged as a bad node", ACEParamsDialog.unresolved_node_reference("\"Avg: %d\" % avg", root), "") and all_passed
+
+	# The modulo/format guard for the `%` autocomplete trigger (a % b vs a fresh %Name).
+	all_passed = _check("trailing % after a value reads as modulo", ACEParamsDialog._looks_like_modulo("health %"), true) and all_passed
+	all_passed = _check("trailing % after = reads as a ref start", ACEParamsDialog._looks_like_modulo("target = %"), false) and all_passed
 
 	root.free()
 	return all_passed

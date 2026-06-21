@@ -1109,8 +1109,8 @@ func _on_node_picker_activated() -> void:
 	_node_picker_window.hide()
 
 ## Literal node-path references in an expression that can be checked against a scene: bare `$Name`,
-## `$"Quoted/Path"`, and `get_node("Path")`. Skips %unique names and dynamic get_node(expr), which are
-## not statically resolvable.
+## `$"Quoted/Path"`, and `get_node("Path")`. Unique-name (`%Name`) refs are handled separately by
+## unique_names_in_expression(); dynamic get_node(expr) is not statically resolvable and is skipped.
 static func node_references_in_expression(expression: String) -> PackedStringArray:
 	var references: PackedStringArray = PackedStringArray()
 	var dollar_re: RegEx = RegEx.new()
@@ -1124,9 +1124,46 @@ static func node_references_in_expression(expression: String) -> PackedStringArr
 		references.append(hit.get_string(1))
 	return references
 
-## The first literal node reference in `expression` that is absent from `scene_root`, or "" when every
-## reference resolves (or there are none / no scene to check). Absolute paths are skipped — they address
-## the running tree, not the edited scene. Used to surface a typo'd path as an author-time warning.
+## Unique-name references (Godot 4's `%Name` — the stable, refactor-proof way to reach a node, like a
+## Construct object name): bare `%Name` and `%"Quoted Name"`. A `%` that sits INSIDE a string literal is
+## a printf-style format specifier (`"%d"`, `"%.2f"`) and is NOT a node reference, so it is skipped.
+static func unique_names_in_expression(expression: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var quoted_re: RegEx = RegEx.new()
+	quoted_re.compile("%\"([^\"]+)\"")
+	for hit: RegExMatch in quoted_re.search_all(expression):
+		names.append(hit.get_string(1))
+	var bare_re: RegEx = RegEx.new()
+	bare_re.compile("%([A-Za-z_][A-Za-z0-9_]*)")
+	for hit: RegExMatch in bare_re.search_all(expression):
+		if _is_inside_string_literal(expression, hit.get_start()):
+			continue  # "%d" / "%s" format specifier, not a node ref
+		names.append(hit.get_string(1))
+	return names
+
+## Whether `index` falls inside a "…" string literal (odd number of double-quotes before it). Cheap
+## heuristic — enough to tell a `%d` format specifier from a real `%Name` node reference.
+static func _is_inside_string_literal(text: String, index: int) -> bool:
+	var quotes: int = 0
+	for i: int in range(mini(index, text.length())):
+		if text[i] == "\"":
+			quotes += 1
+	return quotes % 2 == 1
+
+## True when a trailing `%` is the modulo / string-format operator (preceded by a value: an
+## identifier, number, `)`, `]`, or a closing quote) rather than the start of a `%Name` reference.
+static func _looks_like_modulo(before_caret: String) -> bool:
+	var stem: String = before_caret.substr(0, before_caret.length() - 1).rstrip(" 	")
+	if stem.is_empty():
+		return false
+	var last: String = stem.substr(stem.length() - 1)
+	return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_)]\"'".contains(last)
+
+## The first node reference in `expression` that does NOT resolve in `scene_root`, or "" when every
+## reference resolves (or there are none / no scene to check). Checks both `$path`/get_node refs (via
+## has_node) and `%Name` unique refs (via the scene's unique-name set); a `%`-ref is returned with its
+## `%` so the warning reads back as `%Foo`. Absolute paths are skipped — they address the running tree,
+## not the edited scene. Used to surface a typo'd reference as an author-time warning.
 static func unresolved_node_reference(expression: String, scene_root: Node) -> String:
 	if scene_root == null:
 		return ""
@@ -1135,6 +1172,12 @@ static func unresolved_node_reference(expression: String, scene_root: Node) -> S
 			continue
 		if not scene_root.has_node(NodePath(reference)):
 			return reference
+	var unique_refs: PackedStringArray = unique_names_in_expression(expression)
+	if not unique_refs.is_empty():
+		var known: PackedStringArray = scene_unique_names(scene_root)
+		for name: String in unique_refs:
+			if not name.is_empty() and not known.has(name):
+				return "%" + name
 	return ""
 
 ## Every node under `scene_root` as a relative path (Player, UI, UI/Score, …), capped, for `$` node
@@ -1151,6 +1194,23 @@ static func _collect_node_paths(node: Node, scene_root: Node, paths: PackedStrin
 			return
 		paths.append(str(scene_root.get_path_to(child)))
 		_collect_node_paths(child, scene_root, paths, limit)
+
+## The unique names (`%Name`) reachable from anywhere in `scene_root`: nodes flagged
+## unique_name_in_owner whose owner is the scene root (owner-scoped — an instanced sub-scene's own
+## uniques are encapsulated and not reachable via `%` here). Drives `%` validation + autocomplete.
+static func scene_unique_names(scene_root: Node, limit: int = 200) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	if scene_root != null:
+		_collect_unique_names(scene_root, scene_root, names, limit)
+	return names
+
+static func _collect_unique_names(node: Node, scene_root: Node, names: PackedStringArray, limit: int) -> void:
+	for child: Node in node.get_children():
+		if names.size() >= limit:
+			return
+		if child.unique_name_in_owner and child.owner == scene_root:
+			names.append(child.name)
+		_collect_unique_names(child, scene_root, names, limit)
 
 ## The scene to validate node paths against: a test-injected tree, else the edited scene (editor only).
 var node_validation_scene_override: Node = null  # tests inject a tree here
@@ -1178,7 +1238,11 @@ func _validate_expression_field(edit: Control) -> void:
 			edit.tooltip_text = "Plain GDScript — anything valid in an expression works here."
 		else:
 			edit.add_theme_color_override("font_color", Color(0.92, 0.72, 0.35))
-			edit.tooltip_text = "⚠ No node \"%s\" in this scene yet — fine if it is spawned at runtime, otherwise check the path." % unresolved
+			if unresolved.begins_with("%"):
+				# Teach the unique-name idiom: % resolves only once a node is marked unique in the scene.
+				edit.tooltip_text = "⚠ No node named \"%s\" in this scene — right-click the node in the scene tree ▸ Access as Unique Name (or it may be spawned at runtime)." % unresolved
+			else:
+				edit.tooltip_text = "⚠ No node \"%s\" in this scene yet — fine if it is spawned at runtime, otherwise check the path." % unresolved
 		_update_quickfix_button(edit, "")
 		_update_didyoumean_button(edit, "", "")
 	else:
@@ -1393,6 +1457,11 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 	if before_caret.ends_with("$") and Engine.is_editor_hint():
 		for node_path: String in scene_node_paths(EditorInterface.get_edited_scene_root()):
 			edit.add_code_completion_option(CodeEdit.KIND_NODE_PATH, "$" + node_path, node_path)
+	# Right after a `%`, offer the scene's unique names (the stable, refactor-proof references) — unless
+	# the `%` is the modulo / string-format operator (a % b, "%d" % x).
+	if before_caret.ends_with("%") and Engine.is_editor_hint() and not _looks_like_modulo(before_caret):
+		for unique_name: String in scene_unique_names(EditorInterface.get_edited_scene_root()):
+			edit.add_code_completion_option(CodeEdit.KIND_NODE_PATH, "%" + unique_name, unique_name)
 	edit.update_code_completion_options(true)
 	edit.set_code_hint(EventSheetGDScriptLint.signature_hint(before_caret, sheet))
 

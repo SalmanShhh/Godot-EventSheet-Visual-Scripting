@@ -3,6 +3,15 @@
 ## [Unreleased]
 
 ### Added
+- **Unique-name (`%Name`) references are validated + autocompleted** — Godot's stable, refactor-proof
+  way to reach a node, and the closest thing to a Construct *object name*: mark a node **Access as
+  Unique Name** in the scene tree and `%ScoreLabel` then resolves no matter where you move it (unlike a
+  brittle `$HUD/Margin/VBox/ScoreLabel` path). The editor used to ignore `%` refs entirely — so reaching
+  for the *stabler* reference got you no help. Now `%Name` and `%"Quoted Name"` get the same amber
+  "no such node" warning as `$paths` (with a tooltip pointing you at "Access as Unique Name"), and
+  typing `%` lists the scene's unique nodes as completions. Printf-style format specifiers (`"%d"`,
+  `"%.2f"`) and the modulo operator (`a % b`) are left alone, and resolution is owner-scoped (an
+  instanced sub-scene's own uniques stay encapsulated). Same warning-not-error policy as `$`.
 - **"With node X:" scope blocks (Construct-style "pick once, act many").** Right-click an event →
   **Scope Actions To Node…** and give a node ($Enemy, get_node("…"), a variable): every action in that
   event — and in its sub-events — that leaves its "On node" target on the host now acts on X instead, so
