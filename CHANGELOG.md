@@ -3,6 +3,15 @@
 ## [Unreleased]
 
 ### Added
+- **"Designer-tweakable (Inspector)" is now a separate choice from "global", and off by default.** In
+  Construct, a global variable is just global; Godot has two distinct things a value can be — a *designer
+  knob* you tweak per-instance in the Inspector (`@export var speed`), or *internal script state* (a
+  counter/timer the script just manages). The plugin used to auto-`@export` **every** new global, leaking
+  internal state onto the Inspector. Now the Access checkbox reads **"Designer-tweakable in the Inspector
+  (@export)"** and a new variable defaults **off** — a plain private `var` — so you opt into Inspector
+  exposure deliberately. The Inspector-options disclosure (tooltip / range / show-if…) stays hidden until
+  you tick it, so you can't set attributes that would silently no-op. Existing variables keep their
+  exported flag (sheets untouched).
 - **The picker nudges you from polling toward signals.** When you look at a polling condition that has a
   clean reactive twin — Overlaps Body / Area, Is Timer Stopped, Is Animation Playing, Is Button Pressed —
   the picker's info panel now shows a one-line tip pointing at the signal trigger that reacts *once*

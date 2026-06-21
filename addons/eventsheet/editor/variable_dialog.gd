@@ -225,8 +225,9 @@ func init_dialog(parent_node: Node) -> void:
 	access_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	access_row.add_child(access_label)
 	_exported_check = CheckBox.new()
-	_exported_check.text = "Global (@export — usable outside the script)"
-	_exported_check.tooltip_text = "On: emitted as @export var (other scripts / the inspector can read it).\nOff: emitted as a plain var, private to this event sheet's script."
+	_exported_check.text = "Designer-tweakable in the Inspector (@export)"
+	_exported_check.tooltip_text = "On: a designer can tweak this per-instance in the Inspector (@export var).\nOff: internal script state — a plain private var (the default for a new variable)."
+	_exported_check.toggled.connect(func(_pressed: bool) -> void: _update_attr_gating())
 	access_row.add_child(_exported_check)
 	form.add_child(access_row)
 
@@ -357,7 +358,23 @@ static func items_to_collection_literal(items: PackedStringArray, is_dictionary:
 
 ## Open the dialog for the given scope ("global" or "local").
 func open(scope: String) -> void:
-	open_for_edit(scope, {}, "", "int", "", false, "Create Variable", false, scope == "global")
+	# A new variable is internal script state by DEFAULT (a plain private var) — the user opts into
+	# "Designer-tweakable (@export)" deliberately, instead of every global leaking onto the Inspector.
+	open_for_edit(scope, {}, "", "int", "", false, "Create Variable", false, false)
+
+## Inspector attributes (range, group, show-if…) only mean anything on an @export var, so their
+## disclosure shows only when "Designer-tweakable" is on (and the variable can export). With it off the
+## section is hidden + collapsed, so a user never sets attributes that would silently no-op.
+func _update_attr_gating() -> void:
+	if _attr_toggle == null:
+		return
+	var can_export: bool = _exported_check != null and _exported_check.button_pressed and not _exported_check.disabled
+	_attr_toggle.visible = can_export
+	if not can_export:
+		_attr_toggle.set_pressed_no_signal(false)
+		_attr_toggle.text = "▸" + _attr_toggle.text.substr(1)
+		if _attr_section != null:
+			_attr_section.visible = false
 
 func open_for_edit(
 	scope: String,
@@ -400,7 +417,7 @@ func open_for_edit(
 	_exported_check.tooltip_text = (
 		"Local variables are always private to the script."
 		if is_local
-		else "On: emitted as @export var (readable outside the script).\nOff: a plain private var."
+		else "On: a designer tweaks this per-instance in the Inspector (@export var).\nOff: internal script state — a plain private var."
 	)
 	var existing_attributes: Dictionary = context.get("attributes") if context.get("attributes") is Dictionary else {}
 	_attr_tooltip_edit.text = str(existing_attributes.get("tooltip", ""))
@@ -420,6 +437,8 @@ func open_for_edit(
 		_attr_toggle.button_pressed = not existing_attributes.is_empty()
 		_attr_section.visible = not existing_attributes.is_empty()
 		_attr_toggle.text = ("▾" if _attr_section.visible else "▸") + _attr_toggle.text.substr(1)
+	# Inspector attributes only apply to an exported var, so gate their disclosure on the toggle.
+	_update_attr_gating()
 	_refresh_const_ui()
 	_refresh_default_hint()
 	_refresh_contextual_rows()

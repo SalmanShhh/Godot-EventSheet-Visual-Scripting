@@ -80,6 +80,21 @@ static func run() -> bool:
 	all_passed = _check("edit prefills range as min, max, step", prefill_dialog._attr_range_edit.text, "0, 9, 1") and all_passed
 	prefill_host.free()
 
+	# Data/state steering: a NEW variable defaults to internal state (NOT exported), so it doesn't leak
+	# onto the Inspector; the Inspector-attribute disclosure is gated on the "Designer-tweakable" toggle.
+	var split_dialog: VariableDialog = VariableDialog.new()
+	var split_host: Node = Node.new()
+	split_dialog.init_dialog(split_host)
+	split_dialog.open("global")
+	all_passed = _check("a new global is NOT exported by default", split_dialog._exported_check.button_pressed, false) and all_passed
+	all_passed = _check("attr disclosure hidden when not designer-tweakable", split_dialog._attr_toggle.visible, false) and all_passed
+	split_dialog._exported_check.button_pressed = true
+	split_dialog._update_attr_gating()
+	all_passed = _check("attr disclosure appears once designer-tweakable", split_dialog._attr_toggle.visible, true) and all_passed
+	split_dialog.open_for_edit("global", {}, "hp", "int", 5, false, "Edit", false, true)
+	all_passed = _check("an existing exported variable stays exported (sheets untouched)", split_dialog._exported_check.button_pressed, true) and all_passed
+	split_host.free()
+
 	# ── Tier 2: setters, conditions, read-only ──
 	var t2: EventSheetResource = EventSheetResource.new()
 	var notify_fn: EventFunction = EventFunction.new()
