@@ -6695,6 +6695,7 @@ func _build_template_menu_items() -> void:
     _template_menu.add_item("Blank Sheet", 0)
     _template_menu.add_item("Platformer Starter", 1)
     _template_menu.add_item("Top-down Starter", 2)
+    _template_menu.add_item("Behavior Component (signal-driven)", 8)
     _template_menu.add_item("First-Person Controller (3D)", 6)
     _template_menu.add_item("Third-Person Mover (3D)", 7)
     _template_menu.add_item("Game State (Autoload)", 3)
@@ -6705,6 +6706,31 @@ func _build_template_menu_items() -> void:
         _template_menu.add_separator("Project templates")
         for index in _project_template_paths.size():
             _template_menu.add_item(_project_template_paths[index].get_file().get_basename().capitalize(), 100 + index)
+
+## A signal-driven BEHAVIOR COMPONENT starter — the Godot composition idiom modelled by example, so a
+## newcomer's first copy is NOT a monolithic god-sheet. It compiles to an attachable Node with a typed
+## `host` accessor (its parent), reacts to the host's body_entered SIGNAL (no per-frame polling), and
+## emits its own (On Collected) so other sheets stay decoupled. `value` is an exported designer knob.
+static func _build_behavior_component_starter() -> EventSheetResource:
+    var sheet: EventSheetResource = EventSheetResource.new()
+    sheet.behavior_mode = true
+    sheet.host_class = "Area2D"
+    sheet.custom_class_name = "PickupBehavior"
+    sheet.variables = {"value": {"type": "int", "default": 1, "exported": true}}
+    var about: CommentRow = CommentRow.new()
+    about.text = "[b]Behavior Component[/b] — Godot's answer to a Construct behavior. Instead of one big sheet on the root, this is a small reusable piece you ATTACH as a child of the node it controls (here, an Area2D pickup); it compiles to a Node, and [code]host[/code] is the node it is attached to.\nIt REACTS to a signal (the host's body_entered) instead of checking every frame, and EMITS its own (On Collected) so other sheets stay decoupled. [code]value[/code] is a designer knob in the Inspector."
+    sheet.events.append(about)
+    var declared_signal: RawCodeRow = RawCodeRow.new()
+    declared_signal.code = "## @ace_trigger\n## @ace_name(\"On Collected\")\n## @ace_category(\"Pickup\")\nsignal collected(by: Node, amount: int)"
+    sheet.events.append(declared_signal)
+    var on_ready: EventRow = EventRow.new()
+    on_ready.trigger_provider_id = "Core"
+    on_ready.trigger_id = "OnReady"
+    var connect_signal: RawCodeRow = RawCodeRow.new()
+    connect_signal.code = "if host != null:\n\thost.body_entered.connect(func(body: Node) -> void:\n\t\tcollected.emit(body, value)\n\t\thost.queue_free()\n\t)"
+    on_ready.actions.append(connect_signal)
+    sheet.events.append(on_ready)
+    return sheet
 
 ## Builds a fresh sheet from a starter template and adopts it (unsaved; Save As to keep).
 func _new_sheet_from_template(template_id: int) -> void:
@@ -6770,6 +6796,8 @@ func _new_sheet_from_template(template_id: int) -> void:
             move2.code = "velocity = Input.get_vector(&\"ui_left\", &\"ui_right\", &\"ui_up\", &\"ui_down\") * 200.0\nmove_and_slide()"
             tick2.actions.append(move2)
             sheet.events.append(tick2)
+        8:
+            sheet = _build_behavior_component_starter()
         6:
             sheet.host_class = "CharacterBody3D"
             var note6: CommentRow = CommentRow.new()

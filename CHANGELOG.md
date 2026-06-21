@@ -3,6 +3,15 @@
 ## [Unreleased]
 
 ### Added
+- **A "Behavior Component" starter teaches composition by example.** The bundled gameplay starters
+  (Platformer, Top-down…) are one big sheet on the root node that polls every physics frame — so the
+  first thing a newcomer copies models the Construct god-sheet habit. The New Sheet menu now also offers
+  **Behavior Component (signal-driven)**: a small **Pickup** behavior you attach as a *child* of the node
+  it controls (the Godot answer to a Construct behavior). It compiles to an attachable Node with a typed
+  `host` accessor (its parent), **reacts to the host's `body_entered` signal** instead of checking every
+  frame, and **emits its own** (On Collected) so other sheets stay decoupled — with `value` an exported
+  designer knob. Composition + reactivity + the Inspector, in one copyable artifact. (The existing
+  monolithic starters stay; this is purely an addition.)
 - **"Designer-tweakable (Inspector)" is now a separate choice from "global", and off by default.** In
   Construct, a global variable is just global; Godot has two distinct things a value can be — a *designer
   knob* you tweak per-instance in the Inspector (`@export var speed`), or *internal script state* (a

@@ -97,7 +97,7 @@ static func run() -> bool:
 	# the template copy in as an unsaved sheet.
 	editor._build_template_menu_items()
 	all_passed = _check("template menu lists built-ins and the project template",
-		editor._template_menu.item_count == 10
+		editor._template_menu.item_count == 11
 		and editor._project_template_paths == PackedStringArray(["user://tpl_dir/boss_fight.tres"]), true) and all_passed
 	editor._new_sheet_from_template(100)
 	all_passed = _check("adopting a project template starts an unsaved copy",
