@@ -546,6 +546,7 @@ func _build_ui() -> void:
     var sheet_menu: MenuButton = MenuButton.new()
     sheet_menu.name = "EventSheetSheetMenu"
     sheet_menu.text = "Sheet"
+    sheet_menu.tooltip_text = "Create, open, save, and configure this event sheet."
     sheet_menu.flat = false
     var sheet_popup: PopupMenu = sheet_menu.get_popup()
     sheet_popup.add_item("New…", 0)
@@ -632,6 +633,7 @@ func _build_ui() -> void:
     var view_menu: MenuButton = MenuButton.new()
     view_menu.name = "EventSheetViewMenu"
     view_menu.text = "View"
+    view_menu.tooltip_text = "Panels, multi-view panes, theme, live values, and zoom."
     view_menu.flat = false
     var view_popup: PopupMenu = view_menu.get_popup()
     _view_popup = view_popup
@@ -683,6 +685,7 @@ func _build_ui() -> void:
     # Tools ▾ — debug + project workflow tools (the UX-audit consolidation).
     var tools_menu: MenuButton = MenuButton.new()
     tools_menu.text = "Tools"
+    tools_menu.tooltip_text = "Debug tools, validation, import, and project workflow."
     tools_menu.flat = false
     var tools_popup: PopupMenu = tools_menu.get_popup()
     tools_popup.add_item("Debug Breakpoints (toggle)", 0)
@@ -3055,6 +3058,12 @@ func _ensure_code_panel() -> void:
     close_button.pressed.connect(_toggle_code_panel)
     header.add_child(close_button)
     _side_panel.add_child(header)
+    # Orientation for non-programmers: say what this panel even is before the code scares them off.
+    var code_hint: Label = Label.new()
+    code_hint.text = "The plain GDScript your sheet compiles to — read-only, refreshed on save. Your game ships this, with no runtime dependency."
+    code_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    code_hint.modulate = Color(1.0, 1.0, 1.0, 0.6)
+    _side_panel.add_child(code_hint)
     _code_edit = CodeEdit.new()
     _code_edit.editable = false
     _code_edit.gutters_draw_line_numbers = true

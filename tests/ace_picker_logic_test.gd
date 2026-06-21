@@ -102,6 +102,29 @@ static func run() -> bool:
 	all_passed = _check("non-favorited ace is not detected", picker._is_favorite(other_def), false) and all_passed
 	ProjectSettings.set_setting("eventsheets/picker/favorites", null)
 
+	# De-jargoned hints: the user-facing picker hint must not surface the insider acronym "ACE"
+	# (Construct 3 / GDevelop never show it — newcomers read "condition / action / trigger").
+	for hint_mode: String in ["new_condition_event", "append_condition", "append_action", "replace_trigger", "other"]:
+		all_passed = _check("picker hint for %s drops the ACE jargon" % hint_mode,
+			picker._build_hint_text(hint_mode, false).contains("ACE"), false) and all_passed
+	all_passed = _check("signal-only picker hint drops the ACE jargon",
+		picker._build_hint_text("new_condition_event", true).contains("ACE"), false) and all_passed
+
+	# Relevance scoring — type-and-Enter must target the BEST match, not first-in-tree order. Tiers:
+	# exact name > name prefix > word-start in name > substring in name > substring elsewhere.
+	var s_exact: ACEDefinition = _make_def(ACEDefinition.ACEType.ACTION); s_exact.display_name = "Hide"
+	var s_prefix: ACEDefinition = _make_def(ACEDefinition.ACEType.ACTION); s_prefix.display_name = "Hide Player"
+	var s_word: ACEDefinition = _make_def(ACEDefinition.ACEType.ACTION); s_word.display_name = "Quick Hide"
+	var s_sub: ACEDefinition = _make_def(ACEDefinition.ACEType.ACTION); s_sub.display_name = "Unhide All"
+	all_passed = _check("score: exact name beats prefix",
+		ACEPickerDialog._score_match("hide", s_exact) > ACEPickerDialog._score_match("hide", s_prefix), true) and all_passed
+	all_passed = _check("score: prefix beats word-start",
+		ACEPickerDialog._score_match("hide", s_prefix) > ACEPickerDialog._score_match("hide", s_word), true) and all_passed
+	all_passed = _check("score: word-start beats mid-word substring",
+		ACEPickerDialog._score_match("hide", s_word) > ACEPickerDialog._score_match("hide", s_sub), true) and all_passed
+	all_passed = _check("score: any textual match outscores none, empty query scores 0",
+		ACEPickerDialog._score_match("hide", s_sub) > 0 and ACEPickerDialog._score_match("", s_exact) == 0, true) and all_passed
+
 	return all_passed
 
 static func _make_def(ace_type: int) -> ACEDefinition:

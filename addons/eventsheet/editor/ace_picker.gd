@@ -19,9 +19,13 @@ extends RefCounted
 ## context is the same dictionary passed to open().
 signal ace_selected(definition: ACEDefinition, context: Dictionary)
 
-## Session-recents (C3 surfaces familiar ACEs first): last-used ACE ids, newest first.
+## Recents (C3 surfaces familiar ACEs first): last-used ACE ids, newest first. Persisted PER-USER and
+## PER-PROJECT in a user:// file — NOT project.godot: recents change on every ACE use and would churn
+## the version-controlled file constantly (Favorites live in ProjectSettings because they change rarely).
 static var _recent_ace_ids: PackedStringArray = PackedStringArray()
+static var _recents_loaded: bool = false
 const RECENT_ACES_CAP := 8
+const RECENTS_FILE := "user://eventforge_picker_recents.cfg"
 
 ## ⭐ Favorites persist in ProjectSettings — per-project and PR-shareable, like the
 ## composition policy. Right-click a picker entry to pin/unpin.
@@ -72,8 +76,10 @@ static func fuzzy_match(query: String, text: String) -> bool:
 		position += 1
 	return true
 
-## Records a use (newest first, deduped, capped) — drives the ★ Recent picker section.
+## Records a use (newest first, deduped, capped) — drives the ★ Recent picker section, and survives
+## an editor restart (persisted to the per-user recents file).
 static func note_recent(provider_id: String, ace_id: String) -> void:
+	load_recents()
 	var recent_key: String = "%s/%s" % [provider_id, ace_id]
 	var existing_recent: int = _recent_ace_ids.find(recent_key)
 	if existing_recent >= 0:
@@ -81,6 +87,35 @@ static func note_recent(provider_id: String, ace_id: String) -> void:
 	_recent_ace_ids.insert(0, recent_key)
 	if _recent_ace_ids.size() > RECENT_ACES_CAP:
 		_recent_ace_ids.resize(RECENT_ACES_CAP)
+	_save_recents()
+
+## One recents entry per project, keyed by a hash of the project path, so a single editor's recents
+## file never leaks ACEs between projects.
+static func _recents_project_key() -> String:
+	return ProjectSettings.globalize_path("res://").sha1_text()
+
+## Hydrates this project's recents from the user:// file once per session (a no-op afterwards, and
+## outside the editor where persistence is meaningless — keeps the headless suite side-effect-free).
+static func load_recents() -> void:
+	if _recents_loaded:
+		return
+	_recents_loaded = true
+	if not Engine.is_editor_hint():
+		return
+	var config: ConfigFile = ConfigFile.new()
+	if config.load(RECENTS_FILE) != OK:
+		return
+	var stored: Variant = config.get_value("recents", _recents_project_key(), PackedStringArray())
+	if stored is PackedStringArray:
+		_recent_ace_ids = stored
+
+static func _save_recents() -> void:
+	if not Engine.is_editor_hint():
+		return
+	var config: ConfigFile = ConfigFile.new()
+	config.load(RECENTS_FILE)  # preserve other projects' recents already in the file
+	config.set_value("recents", _recents_project_key(), _recent_ace_ids)
+	config.save(RECENTS_FILE)
 
 ## Node-type sections pre-declared at the top of the "Add Event" picker, in order.
 const EVENT_PICKER_GROUPS: Array[String] = [
@@ -125,6 +160,7 @@ var _registry: EventSheetACERegistry = null
 ## Must be called before open().
 func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_registry = registry
+	load_recents()  # hydrate this project's persisted recents before the ★ Recent pane first draws
 	if _window != null:
 		return
 	_window = Window.new()
@@ -339,24 +375,24 @@ func _title_for_mode(mode: String, signals_only: bool) -> String:
 
 func _build_hint_text(mode: String, signals_only: bool) -> String:
 	if signals_only:
-		return "Select a signal trigger ACE to create a signal event."
+		return "Select a signal trigger to create a signal event."
 	match mode:
 		"new_condition_event":
-			return "Select a condition or trigger ACE to create a new event."
+			return "Select a condition or trigger to create a new event."
 		"new_sub_condition_event":
-			return "Select a condition or trigger ACE to create a nested sub-condition event."
+			return "Select a condition or trigger to create a nested sub-condition event."
 		"append_condition":
-			return "Select a condition or trigger ACE to append to the selected event."
+			return "Select a condition or trigger to append to the selected event."
 		"append_action":
-			return "Select an action ACE to append to the selected event."
+			return "Select an action to append to the selected event."
 		"replace_condition":
-			return "Select a condition ACE to replace the current condition."
+			return "Select a condition to replace the current condition."
 		"replace_trigger":
-			return "Select a trigger ACE to replace the current trigger."
+			return "Select a trigger to replace the current trigger."
 		"replace_action":
-			return "Select an action ACE to replace the current action."
+			return "Select an action to replace the current action."
 		_:
-			return "Select an ACE to create a new event."
+			return "Select a condition, action, or trigger to create a new event."
 
 ## Construct 3 phrase → Godot search-term bridge, so C3 users typing their old vocabulary
 ## still find the right ACE (e.g. "on start of layout" finds _ready-based triggers).
@@ -736,15 +772,15 @@ func _on_tree_gui_input(input_event: InputEvent) -> void:
 func _select_first_match() -> void:
 	if _tree == null:
 		return
-	var first: TreeItem = _first_definition_item(_tree.get_root())
-	if first != null:
-		first.select(0)
-		_tree.scroll_to_item(first)
+	var best: TreeItem = _best_match_item()
+	if best != null:
+		best.select(0)
+		_tree.scroll_to_item(best)
 
 func _activate_first_match() -> void:
-	var match_item: TreeItem = _first_definition_item(_tree.get_root())
-	if match_item != null:
-		match_item.select(0)
+	var best: TreeItem = _best_match_item()
+	if best != null:
+		best.select(0)
 		_on_item_activated()
 
 ## Depth-first search for the first tree item carrying an ACEDefinition (a real ACE row),
@@ -761,6 +797,68 @@ func _first_definition_item(item: TreeItem) -> TreeItem:
 			return nested
 		child = child.get_next()
 	return null
+
+## The type-and-Enter target: the highest RELEVANCE-scored row for the current query, not merely the
+## first row in tree order (which, under category grouping, can bury the obvious match — typing "hide"
+## should pre-select Hide). Falls back to the first definition row when the query is empty or nothing
+## scores textually (a pure synonym/fuzzy hit), so behaviour is unchanged for empty/loose queries.
+func _best_match_item() -> TreeItem:
+	if _tree == null:
+		return null
+	var first: TreeItem = _first_definition_item(_tree.get_root())
+	var query: String = _search.text.strip_edges() if _search != null else ""
+	if query.is_empty():
+		return first
+	var best: TreeItem = null
+	var best_score: int = 0
+	var stack: Array = [_tree.get_root()]
+	while not stack.is_empty():
+		var node: TreeItem = stack.pop_back()
+		var child: TreeItem = node.get_first_child()
+		while child != null:
+			var definition: ACEDefinition = child.get_metadata(0) as ACEDefinition
+			if definition != null:
+				var score: int = _score_match(query, definition)
+				if score > best_score:
+					best_score = score
+					best = child
+			stack.push_back(child)
+			child = child.get_next()
+	return best if best != null else first
+
+## Relevance score of a definition against a search query (higher = better), so type-and-Enter targets
+## the best match. Tiers: exact display name > name prefix > a name word starting with the query >
+## substring in the name > substring elsewhere in the search text (category / keywords). A small length
+## penalty breaks ties toward the shorter, more specific name ("Hide" over "Hide And Disable"). A score
+## of 0 means no textual hit (the row matched only via synonym/fuzzy expansion).
+static func _score_match(query: String, definition: ACEDefinition) -> int:
+	if definition == null:
+		return 0
+	var q: String = query.to_lower().strip_edges()
+	if q.is_empty():
+		return 0
+	var name: String = definition.display_name.to_lower()
+	var score: int = 0
+	if name == q:
+		score = 1000
+	elif name.begins_with(q):
+		score = 600
+	elif _word_starts_with(name, q):
+		score = 400
+	elif name.find(q) != -1:
+		score = 250
+	elif definition.get_search_text().to_lower().find(q) != -1:
+		score = 100
+	if score > 0:
+		score -= mini(name.length(), 99)
+	return score
+
+## True when any whitespace-separated word of `text` begins with `prefix` (a word-start match).
+static func _word_starts_with(text: String, prefix: String) -> bool:
+	for word: String in text.split(" ", false):
+		if word.begins_with(prefix):
+			return true
+	return false
 
 func _on_item_activated() -> void:
 	var item: TreeItem = _tree.get_selected()

@@ -2779,8 +2779,8 @@ func _draw_empty_state(width: float) -> void:
     var tip: String = "Tip: the picker understands plain language. Try typing \"every tick\"."
     if _sheet != null and _sheet.behavior_mode:
         heading = "Empty behavior sheet"
-        primary = "Add events to drive the node this attaches to (a %s)." % _sheet.host_class
-        tip = "Double-click anywhere — or press E — to add your first event."
+        primary = "Double-click anywhere — or press E — to add an event that drives the %s this attaches to." % _sheet.host_class
+        # Keep the default plain-language picker tip — behavior sheets benefit from it just as much.
     var left: float = 18.0
     var max_w: float = max(width - 36.0, 1.0)
     var heading_size: int = EventSheetPalette.resolve_font_size(font_size, 0, 2)

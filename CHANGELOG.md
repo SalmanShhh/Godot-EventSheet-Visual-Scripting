@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Editor UX — plain-language picker, relevance ranking, dialog consistency (UI-audit pass 2)
+The user-approved wide clusters from the UI audit:
+- **Picker de-jargoned for newcomers** — the picker hints no longer surface the insider acronym
+  "ACE"; they read in plain *condition / action / trigger* language (Construct 3 / GDevelop never
+  show "ACE" to users). The Sheet / View / Tools menus gained tooltips, the GDScript panel opens with
+  a one-line orientation ("the plain GDScript your sheet compiles to — read-only, no runtime"), and
+  the behavior-sheet empty state keeps the plain-language search tip it previously dropped.
+- **Picker relevance ranking** — type-and-Enter now commits the *best* match instead of "first in the
+  grouped tree": matches are scored (exact name > prefix > word-start > substring in name > substring
+  elsewhere) so typing "hide" pre-selects **Hide**. The grouped tree is unchanged — only the
+  pre-selected target is smarter; a small length penalty favours the shorter, more specific name.
+- **Recents persist across editor restarts** — last-used ACEs save per-user and per-project to a
+  `user://` file (deliberately **not** project.godot, which would churn on every ACE use), so the
+  ★ Recent pane survives a restart the way ⭐ Favorites already do.
+- **Variable dialog matches the shared form styling** — it now uses the standard content margin and
+  the shared 120px label column (it previously hand-rolled 130px rows and added its form flush).
+
 ### Editor UX — keyboard-first dialogs & picker polish (UI-audit pass)
 A multi-agent audit of the editor UI found it broadly healthy; the gaps clustered in keyboard/focus
 mechanics and the ACE picker. This pass ships the narrow, low-risk wins:
@@ -30,22 +47,22 @@ mechanics and the ACE picker. This pass ships the narrow, low-risk wins:
 	error). The token is now injective — an illegal-char path gets a short stable hash suffix — while
 	legitimate snake_cased autoload names (`event_bus`) keep their readable handler names unchanged.
   - **Unresolvable conditions silently OPENED the gate.** A condition whose ACE couldn't be resolved
-    (addon uninstalled / stale id) was dropped, so the event body ran unconditionally every tick. It
-    now fails **closed** (`if false`) with a warning — a vanished gate can never run.
+	(addon uninstalled / stale id) was dropped, so the event body ran unconditionally every tick. It
+	now fails **closed** (`if false`) with a warning — a vanished gate can never run.
   - **Negating "Every X Seconds…" broke the interval.** Inverting a stateful condition wrapped its
-    header in `not (…)`, leaving the timer reset to run in the wrong branch (it fired nearly every
-    frame, then went silent). Stateful conditions now refuse the negation, with a warning.
+	header in `not (…)`, leaving the timer reset to run in the wrong branch (it fired nearly every
+	frame, then went silent). Stateful conditions now refuse the negation, with a warning.
   - **Reverse-lift shadowed specific ACEs with generic catch-alls.** Importing generated GDScript
-    matched the generic Core ACEs (SetVar, Call Function…) before specific ones, so `position = …`
-    lifted as **Set Variable**, `add_child(…)` as **Call Function**, etc. Reverse entries are now
-    tried most-specific-first (by literal-char count), so the round-trip preserves the real ACE id.
-    (The byte-roundtrip gate never caught this — the generic re-emits the identical line.)
+	matched the generic Core ACEs (SetVar, Call Function…) before specific ones, so `position = …`
+	lifted as **Set Variable**, `add_child(…)` as **Call Function**, etc. Reverse entries are now
+	tried most-specific-first (by literal-char count), so the round-trip preserves the real ACE id.
+	(The byte-roundtrip gate never caught this — the generic re-emits the identical line.)
   - **Charge abilities spent only one stack per regen cycle.** The Simple Abilities pack gated
-    activation on the per-stack regen cooldown, so a 3-charge dash used 1 of 3. Activation now gates
-    on available stacks alone; the per-stack cooldown stays the regen timer.
+	activation on the per-stack regen cooldown, so a 3-charge dash used 1 of 3. Activation now gates
+	on available stacks alone; the per-stack cooldown stays the regen timer.
   - **Phantom row selection from a span toggle.** Ctrl-toggling an ACE span on then off on a
-    previously-unselected row left the row highlighted and drag/delete/edit-eligible. The viewport
-    now tracks span-only selection provenance and releases the row when its last span is toggled off.
+	previously-unselected row left the row highlighted and drag/delete/edit-eligible. The viewport
+	now tracks span-only selection provenance and releases the row when its last span is toggled off.
 - **Duplicate `Core::GetFrameCount`** — the dev-helper "Frame Count" reused the same provider+id as
   the canonical Time-category one, so the registry index silently overwrote one entry. Removed the
   duplicate (Frame Count stays under **Time**), and added a suite guard that fails on any repeated

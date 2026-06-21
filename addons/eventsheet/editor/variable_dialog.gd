@@ -72,7 +72,7 @@ func init_dialog(parent_node: Node) -> void:
 	form.custom_minimum_size = Vector2(420.0, 180.0)
 	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	form.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_dialog.add_child(form)
+	_dialog.add_child(EventSheetPopupUI.margined(form))
 
 	_scope_label = Label.new()
 	form.add_child(_scope_label)
@@ -80,7 +80,7 @@ func init_dialog(parent_node: Node) -> void:
 	var name_row: HBoxContainer = HBoxContainer.new()
 	var name_label: Label = Label.new()
 	name_label.text = "Name"
-	name_label.custom_minimum_size = Vector2(130.0, 0.0)
+	name_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	name_row.add_child(name_label)
 	_name_edit = LineEdit.new()
 	_name_edit.placeholder_text = "health"
@@ -100,7 +100,7 @@ func init_dialog(parent_node: Node) -> void:
 	var type_row: HBoxContainer = HBoxContainer.new()
 	var type_label: Label = Label.new()
 	type_label.text = "Type"
-	type_label.custom_minimum_size = Vector2(130.0, 0.0)
+	type_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	type_row.add_child(type_label)
 	_type_option = OptionButton.new()
 	for option: String in TYPE_OPTIONS:
@@ -118,7 +118,7 @@ func init_dialog(parent_node: Node) -> void:
 	var default_row: HBoxContainer = HBoxContainer.new()
 	var default_label: Label = Label.new()
 	default_label.text = "Default"
-	default_label.custom_minimum_size = Vector2(130.0, 0.0)
+	default_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	default_row.add_child(default_label)
 	_default_edit = LineEdit.new()
 	_default_edit.placeholder_text = "0"
@@ -137,7 +137,7 @@ func init_dialog(parent_node: Node) -> void:
 	_options_row = HBoxContainer.new()
 	var options_label: Label = Label.new()
 	options_label.text = "Options (combo)"
-	options_label.custom_minimum_size = Vector2(130.0, 0.0)
+	options_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	_options_row.add_child(options_label)
 	_options_edit = LineEdit.new()
 	_options_edit.placeholder_text = "comma-separated, e.g. easy, normal, hard (String only)"
@@ -171,25 +171,25 @@ func init_dialog(parent_node: Node) -> void:
 	form.add_child(_attr_section)
 	_attr_tooltip_edit = LineEdit.new()
 	_attr_tooltip_edit.placeholder_text = "shown when hovering the property"
-	_attr_section.add_child(EventSheetPopupUI.form_row("Tooltip", _attr_tooltip_edit, 130.0))
+	_attr_section.add_child(EventSheetPopupUI.form_row("Tooltip", _attr_tooltip_edit))
 	_attr_group_edit = LineEdit.new()
 	_attr_group_edit.placeholder_text = "Inspector section header (e.g. Combat)"
-	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector group", _attr_group_edit, 130.0))
+	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector group", _attr_group_edit))
 	_attr_range_edit = LineEdit.new()
 	_attr_range_edit.placeholder_text = "min, max, step (numeric: slider)"
-	_attr_section.add_child(EventSheetPopupUI.form_row("Range", _attr_range_edit, 130.0))
+	_attr_section.add_child(EventSheetPopupUI.form_row("Range", _attr_range_edit))
 	_attr_multiline_check = CheckBox.new()
 	_attr_multiline_check.text = "Multiline (String: big text box)"
 	_attr_section.add_child(_attr_multiline_check)
 	_attr_show_if_edit = LineEdit.new()
 	_attr_show_if_edit.placeholder_text = "bool variable (hidden when false)"
-	_attr_section.add_child(EventSheetPopupUI.form_row("Show if", _attr_show_if_edit, 130.0))
+	_attr_section.add_child(EventSheetPopupUI.form_row("Show if", _attr_show_if_edit))
 	_attr_lock_unless_edit = LineEdit.new()
 	_attr_lock_unless_edit.placeholder_text = "bool variable (read-only when false)"
-	_attr_section.add_child(EventSheetPopupUI.form_row("Lock unless", _attr_lock_unless_edit, 130.0))
+	_attr_section.add_child(EventSheetPopupUI.form_row("Lock unless", _attr_lock_unless_edit))
 	_attr_on_changed_edit = LineEdit.new()
 	_attr_on_changed_edit.placeholder_text = "sheet function called after assignment"
-	_attr_section.add_child(EventSheetPopupUI.form_row("On changed", _attr_on_changed_edit, 130.0))
+	_attr_section.add_child(EventSheetPopupUI.form_row("On changed", _attr_on_changed_edit))
 	var attr_checks: HBoxContainer = HBoxContainer.new()
 	_attr_clamp_check = CheckBox.new()
 	_attr_clamp_check.text = "Clamp to range"
@@ -212,7 +212,7 @@ func init_dialog(parent_node: Node) -> void:
 	var const_row: HBoxContainer = HBoxContainer.new()
 	var const_label: Label = Label.new()
 	const_label.text = "Flags"
-	const_label.custom_minimum_size = Vector2(130.0, 0.0)
+	const_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	const_row.add_child(const_label)
 	_const_check = CheckBox.new()
 	_const_check.text = "Constant (const)"
@@ -222,7 +222,7 @@ func init_dialog(parent_node: Node) -> void:
 	var access_row: HBoxContainer = HBoxContainer.new()
 	var access_label: Label = Label.new()
 	access_label.text = "Access"
-	access_label.custom_minimum_size = Vector2(130.0, 0.0)
+	access_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	access_row.add_child(access_label)
 	_exported_check = CheckBox.new()
 	_exported_check.text = "Global (@export — usable outside the script)"
@@ -427,7 +427,7 @@ func open_for_edit(
 	_type_help.visible = lock_type
 	_type_help.text = "Type is locked because this variable is already in use."
 	if _dialog.is_inside_tree():
-		_dialog.popup_centered(Vector2i(440, 220))
+		_dialog.popup_centered(Vector2i(468, 248))
 		# Land focus on the Name field so creating/editing a variable is keyboard-first (parity with
 		# function_dialog / the ACE picker); select_all lets edit-mode immediately overtype the name.
 		_name_edit.grab_focus()
