@@ -61,6 +61,14 @@ static func run() -> bool:
 	all_passed = _check("clearing the target removes the scope", event.with_node_target, "") and all_passed
 	all_passed = _check("a cleared row is no longer a With-node scope", event.is_with_node_scope(), false) and all_passed
 
+	# Find/replace reaches into the scope target, so a renamed node/variable updates it (not a stale
+	# silent reference). Mirrors the pick-filter expression handling.
+	event.with_node_target = "$enemies_root"
+	var counter: Dictionary = {"count": 0}
+	editor._replace_in_rows([event], "enemies_root", "foes_root", counter)
+	all_passed = _check("find/replace updates the scope target", event.with_node_target, "$foes_root") and all_passed
+	all_passed = _check("find/replace counts the scope-target hit", int(counter.get("count", 0)) >= 1, true) and all_passed
+
 	editor.free()
 	return all_passed
 

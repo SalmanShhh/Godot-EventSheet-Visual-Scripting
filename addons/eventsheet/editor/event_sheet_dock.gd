@@ -3491,6 +3491,8 @@ func _rename_in_rows(rows: Array, regex: RegEx, new_name: String, counter: Dicti
                 if pick is PickFilter:
                     (pick as PickFilter).collection_value = _regex_rename(regex, (pick as PickFilter).collection_value, new_name, counter)
                     (pick as PickFilter).predicate_expression = _regex_rename(regex, (pick as PickFilter).predicate_expression, new_name, counter)
+            if not event_row.with_node_target.is_empty():
+                event_row.with_node_target = _regex_rename(regex, event_row.with_node_target, new_name, counter)
             _rename_in_rows(event_row.sub_events, regex, new_name, counter)
 
 ## String params hold GDScript expressions / variable references — rename inside them.
@@ -4330,6 +4332,9 @@ func _replace_in_rows(rows: Array, find_text: String, replace_text: String, coun
                     (pick as PickFilter).collection_value = (pick as PickFilter).collection_value.replace(find_text, replace_text)
                     (pick as PickFilter).predicate_expression = (pick as PickFilter).predicate_expression.replace(find_text, replace_text)
                     (pick as PickFilter).order_by_expression = (pick as PickFilter).order_by_expression.replace(find_text, replace_text)
+            if not event_row.with_node_target.is_empty():
+                counter["count"] = int(counter.get("count", 0)) + event_row.with_node_target.count(find_text)
+                event_row.with_node_target = event_row.with_node_target.replace(find_text, replace_text)
             _replace_in_rows(event_row.sub_events, find_text, replace_text, counter)
 
 # ── Group color tags ──────────────────────────────────────────────────────────────────
