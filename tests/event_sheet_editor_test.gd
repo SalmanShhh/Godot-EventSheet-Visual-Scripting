@@ -162,9 +162,10 @@ static func run() -> bool:
     var group_row: EventRowData = flat_rows[1].get("row")
     var event_row_data: EventRowData = flat_rows[2].get("row")
     all_passed = _check("comment rows render a single editable label span", comment_row_data.spans.size(), 1) and all_passed
-    all_passed = _check("group rows render badge and editable title spans", group_row.spans.size() >= 2, true) and all_passed
+    all_passed = _check("group row renders a single editable title span (no redundant Group badge)", group_row.spans.size(), 1) and all_passed
     all_passed = _check("group row tagged correctly", group_row.row_type, EventRowData.RowType.GROUP) and all_passed
-    all_passed = _check("group row includes explicit group badge text", _row_contains_text(group_row, "Group"), true) and all_passed
+    all_passed = _check("group row no longer renders the redundant 'Group' badge text", _row_contains_text(group_row, "Group"), false) and all_passed
+    all_passed = _check("group row shows its title", _row_contains_text(group_row, "Rules"), true) and all_passed
     all_passed = _check("event row inherits indent", event_row_data.indent, 1) and all_passed
     all_passed = _check("event row action span exists", _row_contains_text(event_row_data, "Queue free"), true) and all_passed
     all_passed = _check("event row includes lane metadata spans", _row_has_lane(event_row_data, "condition") and _row_has_lane(event_row_data, "action"), true) and all_passed
@@ -606,7 +607,7 @@ static func run() -> bool:
     # group + its event + the event's sub-event + the group's "Add event…" footer = 4.
     all_passed = _check("group selection includes descendant events for copy-ready blocks", editor_state.get("selected_row_count", 0), 4) and all_passed
     all_passed = _check("group selection context remains the group row", dock_viewport.get_selected_context().get("source_resource", null) is EventGroup, true) and all_passed
-    # Clicking a group's badge span (span_index >= 0) should also include all descendants.
+    # Clicking a group's span (span_index >= 0, the title) should also include all descendants.
     dock_viewport._select_from_click(0, 0, false)
     editor_state = dock_viewport.get_editor_state_snapshot()
     all_passed = _check("group span-click also includes descendant events", editor_state.get("selected_row_count", 0), 4) and all_passed

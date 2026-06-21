@@ -162,13 +162,10 @@ static func run() -> bool:
 	passed = _check("styled event row height expands for custom chip sizing", float(event_layout.get("row_height", 0.0)) > float(EventSheetViewport.ROW_HEIGHT), true) and passed
 	passed = _check("adjacent styled rows do not overlap vertically", _rows_are_stacked_without_overlap(viewport, rows, 780.0), true) and passed
 
-	var group_badge_index: int = _find_span_index_by_text(group_row, "Group")
 	var group_title_index: int = _find_span_index_by_text(group_row, "Styled Group")
 	passed = _check(
-		"group badge stays before the styled title",
-		group_badge_index >= 0
-			and group_title_index >= 0
-			and group_row.spans[group_badge_index].rect.end.x < group_row.spans[group_title_index].rect.position.x,
+		"group row renders its styled title (the redundant 'Group' badge is gone)",
+		group_title_index >= 0,
 		true
 	) and passed
 

@@ -46,7 +46,10 @@ static func run() -> bool:
 				if prev != null and span.rect.position.x < prev.rect.end.x - 0.5:
 					overlapped = true
 		var kind: String = "variable" if row_data.row_type == EventRowData.RowType.SECTION else "group"
-		all_passed = _check("%s row has multiple laid-out spans" % kind, spans_with_width >= 2, true) and all_passed
+		# Group headers are now a single title span (the redundant "Group" badge was removed); variable
+		# (section) rows still carry several (scope / name / value).
+		var min_spans: int = 1 if row_data.row_type == EventRowData.RowType.GROUP else 2
+		all_passed = _check("%s row lays out its spans with width" % kind, spans_with_width >= min_spans, true) and all_passed
 		all_passed = _check("%s row spans do not overlap" % kind, overlapped, false) and all_passed
 		if row_data.row_type == EventRowData.RowType.SECTION:
 			saw_section = true

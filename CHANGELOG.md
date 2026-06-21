@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Changed
+- **Removed the redundant "Group" badge on group headers** — a group's accent bar + tinted background
+  already read unmistakably as a group, so the leading "Group" text badge was just visual clutter.
+  Headers now show only the inline-editable title (and its optional description); selection, the
+  group-editor popup, and descendant-block selection are all unchanged.
+
 ### Editor UX — plain-language picker, relevance ranking, dialog consistency (UI-audit pass 2)
 The user-approved wide clusters from the UI audit:
 - **Picker de-jargoned for newcomers** — the picker hints no longer surface the insider acronym

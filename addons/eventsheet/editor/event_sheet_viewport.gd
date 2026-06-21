@@ -1731,19 +1731,10 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
     row_data.debug_state = str(_debug_rows.get(row_data.row_uid, ""))
     row_data.disabled = not group.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
     row_data.breakpoint_enabled = bool(_breakpoint_rows.get(row_data.row_uid, false))
+    # The group's distinctive chrome (accent bar + tinted background, drawn from row_type == GROUP)
+    # already reads unmistakably as a group, so the old leading "Group" text badge was pure clutter —
+    # the header is now just the inline-editable title (plus an optional description line).
     row_data.spans = [
-        _make_span(
-            "Group",
-            SemanticSpan.SpanType.KEYWORD,
-            {
-                "editable": false,
-                "badge": true,
-                "badge_style": "group",
-                "badge_bg": event_style.group_badge_background_color,
-                "badge_fg": event_style.group_badge_foreground_color,
-                "group_badge": true
-            }
-        ),
         _make_span(
             _group_name(group),
             SemanticSpan.SpanType.OBJECT,
@@ -2738,7 +2729,9 @@ func live_value_chip_for(row_data: EventRowData) -> String:
     var variable_name: String = ""
     if row_data.source_resource is LocalVariable:
         variable_name = (row_data.source_resource as LocalVariable).name
-    elif not row_data.spans.is_empty():
+    elif row_data.row_type != EventRowData.RowType.GROUP and not row_data.spans.is_empty():
+        # Group headers expose their name as spans[0] (the "Group" badge that used to shield it is
+        # gone), but a group is organizational, not a variable — never read its name as a live value.
         var first_word: String = str(row_data.spans[0].text).get_slice(":", 0).strip_edges()
         if _live_values.has(first_word):
             variable_name = first_word

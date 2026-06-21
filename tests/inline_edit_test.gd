@@ -40,11 +40,12 @@ static func run() -> bool:
 	var group_index: int = _flat_index(viewport, group)
 	viewport._get_or_build_row_layout(group_index, width, font, font_size)
 	var group_row: EventRowData = viewport._row_at(group_index)
-	var badge_span_index: int = _first_non_editable_span(group_row)
-	all_passed = _check("group has a non-editable badge span to click", badge_span_index >= 0, true) and all_passed
+	all_passed = _check("group header renders its title span", group_row.spans.size() >= 1, true) and all_passed
 	var requested_group: Array = [null]
 	viewport.group_edit_requested.connect(func(g: EventGroup) -> void: requested_group[0] = g)
-	_double_click(viewport, group_row.spans[badge_span_index].rect.get_center())
+	# Double-clicking the group title (the only span now the redundant badge is gone) must still open
+	# the group editor popup, not start an inline title field — _begin_edit routes groups to the popup.
+	_double_click(viewport, group_row.spans[0].rect.get_center())
 	all_passed = _check("double-click a group opens the editor popup, not inline edit",
 		requested_group[0] == group and int(viewport.get_editing_context_for_test().get("span_index", -1)) == -1, true) and all_passed
 	# The popup's mutation (factored static, no dialog needed) maps name -> .name + .group_name.
@@ -69,13 +70,6 @@ static func _button(at: Vector2, pressed: bool, double_click: bool) -> InputEven
 	event.double_click = double_click
 	event.position = at
 	return event
-
-static func _first_non_editable_span(row_data: EventRowData) -> int:
-	for index in range(row_data.spans.size()):
-		var span: SemanticSpan = row_data.spans[index]
-		if span != null and span.metadata is Dictionary and not bool((span.metadata as Dictionary).get("editable", false)):
-			return index
-	return -1
 
 static func _flat_index(viewport: EventSheetViewport, resource: Resource) -> int:
 	var flat: Array[Dictionary] = viewport.get_flat_rows()
