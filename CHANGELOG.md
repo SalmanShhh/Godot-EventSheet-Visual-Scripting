@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Added
+- **The Project Doctor nudges duplicated globals toward an autoload.** In Construct, a global is just
+  global; in Godot, the same value declared in several scripts is N copies of one truth, and the idiom is
+  a single **autoload** (a Game State singleton). The Doctor (Tools → Check Project) now adds an advisory
+  when the same global name appears across two or more sheets — listing them and pointing at New Sheet →
+  Game State (Autoload). Info-tier only (never fails CI); autoload sheets and packs are skipped, and a
+  name a GameState autoload already publishes is exempt (the solved case).
 - **A "Behavior Component" starter teaches composition by example.** The bundled gameplay starters
   (Platformer, Top-down…) are one big sheet on the root node that polls every physics frame — so the
   first thing a newcomer copies models the Construct god-sheet habit. The New Sheet menu now also offers

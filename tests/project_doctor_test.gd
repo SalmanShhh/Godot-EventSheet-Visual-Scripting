@@ -131,6 +131,31 @@ static func run() -> bool:
 		and str(findings[0].get("message")).contains("Rename Everywhere"), true) and all_passed
 	DirAccess.remove_absolute("user://doctor_shadow.tres")
 
+	# Duplicated-global → autoload nudge: the same name across 2 sheets advises promoting it to an
+	# autoload; a single-sheet name stays quiet, and a name a GameState autoload already publishes
+	# is exempt (the solved case).
+	var dup_a: EventSheetResource = EventSheetResource.new()
+	dup_a.variables = {"score": {"type": "int", "default": 0, "exported": false}, "only_a": {"type": "int", "default": 0, "exported": false}}
+	var dup_b: EventSheetResource = EventSheetResource.new()
+	dup_b.variables = {"score": {"type": "int", "default": 0, "exported": false}}
+	ResourceSaver.save(dup_a, "user://doctor_dup_a.tres")
+	ResourceSaver.save(dup_b, "user://doctor_dup_b.tres")
+	findings = []
+	EventSheetProjectDoctor.check_duplicated_globals(PackedStringArray(["user://doctor_dup_a.tres", "user://doctor_dup_b.tres"]), findings)
+	all_passed = _check("a global in 2 sheets is flagged for an autoload",
+		_has(findings, "info", "duplicated-global") and str(findings[0].get("message")).contains("score"), true) and all_passed
+	all_passed = _check("only the shared name is flagged (single-sheet stays quiet)", findings.size(), 1) and all_passed
+	var dup_auto: EventSheetResource = EventSheetResource.new()
+	dup_auto.autoload_mode = true
+	dup_auto.variables = {"score": {"type": "int", "default": 0, "exported": false}}
+	ResourceSaver.save(dup_auto, "user://doctor_dup_auto.tres")
+	findings = []
+	EventSheetProjectDoctor.check_duplicated_globals(PackedStringArray(["user://doctor_dup_a.tres", "user://doctor_dup_b.tres", "user://doctor_dup_auto.tres"]), findings)
+	all_passed = _check("a name a GameState autoload publishes is exempt", _has(findings, "info", "duplicated-global"), false) and all_passed
+	DirAccess.remove_absolute("user://doctor_dup_a.tres")
+	DirAccess.remove_absolute("user://doctor_dup_b.tres")
+	DirAccess.remove_absolute("user://doctor_dup_auto.tres")
+
 	# The repo gate: this repository must be doctor-clean at the error level — the
 	# byte-identity contract pack goldens pin, generalized to every committed sheet.
 	var report: Dictionary = EventSheetProjectDoctor.run()

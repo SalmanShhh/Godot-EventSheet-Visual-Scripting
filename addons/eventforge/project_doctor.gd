@@ -28,6 +28,7 @@ static func run() -> Dictionary:
 	check_autoload_registration(sheet_paths, findings)
 	check_scene_attachment(sheet_paths, findings)
 	check_unused_variables(sheet_paths, findings)
+	check_duplicated_globals(sheet_paths, findings)
 	check_unused_packs(sheet_paths, findings)
 	check_shadowed_variables(sheet_paths, findings)
 	check_vocabulary_doc(findings)
@@ -180,6 +181,40 @@ static func check_unused_variables(sheet_paths: PackedStringArray, findings: Arr
 			if RegEx.create_from_string("\\b%s\\b" % str(variable_name)).search(corpus) == null:
 				_add(findings, "info", "unused-variable", sheet_path,
 					"Private variable \"%s\" is never referenced — dead vocabulary?" % str(variable_name))
+
+## The same global declared across several sheets is N copies of one truth; Godot's answer is a single
+## autoload (a Game State singleton). Advisory: lists the sheets sharing a name and points at the
+## autoload starter. Skips packs (vocabulary, not project state) and autoload sheets - an autoload IS
+## the fix - and exempts a name a GameState autoload already publishes (the solved case).
+static func check_duplicated_globals(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	var name_to_sheets: Dictionary = {}
+	var autoload_published: Dictionary = {}
+	for sheet_path: String in sheet_paths:
+		if sheet_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null:
+			continue
+		if sheet.autoload_mode:
+			for variable_name: Variant in sheet.variables:
+				autoload_published[str(variable_name)] = true
+			continue
+		for variable_name: Variant in sheet.variables:
+			var name_key: String = str(variable_name)
+			var sheets_for_name: PackedStringArray = name_to_sheets.get(name_key, PackedStringArray())
+			sheets_for_name.append(sheet_path)
+			name_to_sheets[name_key] = sheets_for_name
+	var ordered_names: Array = name_to_sheets.keys()
+	ordered_names.sort()
+	for name_key: String in ordered_names:
+		var sheets_for_name: PackedStringArray = name_to_sheets[name_key]
+		if sheets_for_name.size() < 2 or autoload_published.has(name_key):
+			continue
+		var file_names: PackedStringArray = PackedStringArray()
+		for sheet_path: String in sheets_for_name:
+			file_names.append(sheet_path.get_file())
+		_add(findings, "info", "duplicated-global", sheets_for_name[0],
+			"Global \"%s\" is declared in %d sheets (%s) - if it's shared state, promote it to an autoload (one source of truth): New Sheet -> Game State (Autoload)." % [name_key, sheets_for_name.size(), ", ".join(file_names)])
 
 ## Packs no sheet, scene or autoload references are removal candidates — advisory,
 ## because a pack is also legitimately used from hand-written GDScript only.
