@@ -214,5 +214,53 @@ all still compile and work. The plugin just makes the Godot way the *easy defaul
 
 ---
 
+## 10. Auto-attack with game feel — picking, Line of Sight & the Juice pack
+
+A top-down shooter that auto-fires at the closest enemy it can actually *see*, and makes every hit land:
+the screen kicks, the kill drops into slow motion, and the player squashes on recoil. Every piece here
+shipped together — the **Nearest** picking expressions, the **Line of Sight** pack's occlusion-correct
+target, and the **Juice** behavior (whose camera effects auto-find the active camera, so nothing is wired).
+
+**Setup:** enemies are `Area2D`s in the `"enemies"` group (each with a **Health** behavior); the player
+has a **Line of Sight** and a **Juice** behavior attached as children.
+
+1. **Target only what you can see.** On a 0.2s Timer → set a local `target` = **Nearest Visible In Group**
+   `"enemies"`. The LoS pack scans the group and range/cone/raycasts each candidate, so a closer enemy
+   *behind a wall* is skipped in favour of a visible farther one — exactly what auto-attack AI wants. (No
+   LoS behavior? Compose it: **Nearest Node In Group** then a **Has Line Of Sight To** condition on it.)
+2. **Fire at it.** Sub-event `if target != null` → spawn a bullet toward `target.global_position`.
+3. **Kick the screen on each hit.** On the bullet's **On Body Entered** → **Shake** `0.3`. Trauma *stacks*,
+   so a burst of hits builds a bigger shake, then decays on its own.
+4. **Slow-mo the kill.** On the enemy Health's **On Death** → **Slowmo** `target_scale 0.15`, `hold 0.12`,
+   clock **realtime** — a 120 ms hit-stop that makes the kill land. The fade curves are tuned once in the
+   Inspector, not per call.
+5. **Squash the player on recoil.** On fire → **Spring Squash** `-0.2` (a quick wide squash that springs
+   back bouncily), or **Squash & Stretch** `-0.2, 0.15` for the tween version.
+6. **Punch in on the boss.** When the boss spawns → **Zoom To Position** `boss.global_position, 130, 0.4`
+   to frame it; pull back with **Zoom By Percent** `100, 0.3` when it dies.
+
+It compiles to plain, readable GDScript — the pick is a one-line `reduce`, the camera is found for you:
+
+```gdscript
+func _on_attack_timer_timeout() -> void:
+    var target = $LOSBehavior.nearest_visible_in_group("enemies")
+    if target != null:
+        _fire_at(target.global_position)
+        $JuiceBehavior.spring_squash(-0.2)          # recoil
+
+func _on_bullet_body_entered(body: Node) -> void:
+    $JuiceBehavior.shake(0.3)                        # screen kick (stacks + decays)
+    body.take_damage(10.0)
+
+func _on_enemy_died() -> void:
+    $JuiceBehavior.slowmo(0.15, 0.12, "realtime")   # 120 ms hit-stop
+```
+
+No per-frame target scan, no camera wiring, no hand-rolled tweens — a loop-free pick, an auto-found
+camera, and a handful of fire-and-forget juice calls. Want it bouncier or snappier? Every feel knob
+(shake decay, slowmo curves, squash stiffness) lives in the Inspector.
+
+---
+
 More vocabulary in the generated [EVENTSHEETS-VOCABULARY.md](../EVENTSHEETS-VOCABULARY.md); the
 honest pros/cons + scope are in the [README](../README.md).
