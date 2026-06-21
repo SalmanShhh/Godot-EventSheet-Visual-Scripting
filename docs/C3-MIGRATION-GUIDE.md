@@ -110,17 +110,18 @@ it), and anything not covered is one ƒx expression away.
 | Sprite animations | **AnimatedSprite2D** group (Play/Stop Animation, Set Frame, Set Mirrored) |
 | Pathfinding behavior | **NavigationAgent2D** group (Find Path To, Has Arrived, Next Path Position) |
 | Text object | **Label** group (Set/Append/Get Text) |
-| Scroll To behavior | **Camera2D** group (Make Current, Set Zoom/Offset) |
+| Scroll To behavior (incl. camera shaking) | **Camera2D** group (Make Current, Set Zoom/Offset) + the **Juice** pack (trauma screenshake, smooth zoom, squash & stretch — auto-finds the camera) |
 | Set visible/invisible, opacity | **CanvasItem** group (Show, Hide, Set Color Tint, Is Visible) |
 | System: `random()`, `choose()`, `clamp()`, `lerp()`, `distance()`, `angle()` | **Math & Random** expressions (Choose is literally `[…].pick_random()`) |
 | Solid / Jump-thru behaviors | Godot collision layers + one-way collision shapes (scene setup, not events) |
 | Physics behavior | RigidBody2D + the existing impulse/velocity ACEs |
 
-**Lane 2 — portable behaviors** ship as event-sheet packs — **27 are bundled**:
+**Lane 2 — portable behaviors** ship as event-sheet packs — **29 are bundled**:
 Platformer, 8-Direction, Timer, Flash, State Machine, **Sine, Orbit, Bullet, Move To,
-Follow, Car, Tile Movement, Line of Sight (2D & 3D)**, the juice duo (**Spring** + **Tween**),
-the **Save System** singleton, a 3D quartet (Sine/Orbit/Bullet/Move To 3D), and faithful
-ports of custom C3 addons:
+Follow, Car, Tile Movement, Line of Sight (2D & 3D)** (Follow now emits On Reached Target, Car On
+Drift Started / Recovered), the motion packs (**Spring**, **Tween**, and **Juice** for camera/game-feel —
+trauma screenshake, smooth zoom, squash & stretch), the **Save System** singleton, a 3D quartet
+(Sine/Orbit/Bullet/Move To 3D), and faithful ports of custom C3 addons:
 
 | Construct 3 addon | Godot EventSheets pack |
 | --- | --- |
@@ -129,6 +130,7 @@ ports of custom C3 addons:
 | (Simple) Health | **Health** (current/max HP, damage-absorption resistance, named **Health Pools** = decaying shields that intercept damage in priority order, death/revive/invulnerability, On Damaged/Death/Healed/Revived triggers) |
 | Weapon (custom addon) | **Weapon Kit** (ammo + reserve, fire-rate cooldown, single/auto/burst fire modes, timed + instant reload — Fire triggers; you spawn the bullet) |
 | HTN planner (custom addon) | **HTN Agent** (utility-driven Hierarchical Task Network — world-state blackboard + primitive/compound tasks whose methods carry preconditions, subtasks, and a utility score) |
+| (Simple) Abilities (custom addon) | **Simple Abilities** (grant abilities by id, cooldowns, stack charges with auto-regen, temporary auto-expiring abilities, custom data + tags for bulk ops) |
 
 Attach as a child node; properties live in the Inspector; their ACEs appear in the picker
 automatically.
@@ -155,8 +157,11 @@ i18n (Godot translations).
 - **There is no runtime**: your sheet *is* GDScript after compiling. Read the generated
   script in the GDScript panel — selection highlights both ways. Performance equals
   hand-written code (a tested contract).
-- **No object picking**: Godot addresses nodes explicitly (paths, groups, signals). Most
-  C3 "pick" logic becomes a `for` loop block or a signal connection.
+- **No object picking** (mostly): Godot addresses nodes explicitly (paths, groups, signals), so most
+  C3 "pick" logic becomes a `for` loop block or a signal connection. *But* the common auto-targeting
+  case needs no loop — **Nearest Node In Group** / **Furthest Node In Group** pick the closest/farthest
+  group member by distance, and the Line of Sight packs add **Nearest Visible In Group** for
+  occlusion-correct "attack the nearest enemy I can actually see."
 - **Scenes replace layouts** and instancing replaces "create object by name" — spawn via
   `preload("res://enemy.tscn").instantiate()` in a block or action.
 
