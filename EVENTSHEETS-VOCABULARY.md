@@ -41,6 +41,75 @@ Node script extending `Node2D`.
 - `ship_speed: float` (default `320.0`) — Ship move speed (px/s).
 - `state: int` (default `0`) — 0=PLAYING, 1=GAME_OVER.
 
+### SimpleAbilitiesBehavior (`res://eventsheet_addons/abilities/abilities_behavior.tres`)
+Behavior — attach under any `Node` node.
+
+#### Properties
+- `cooldown_multiplier: float` (default `1.0`) — Global multiplier applied to every Set Cooldown (0.8 = 20% cooldown reduction).
+
+#### Triggers
+- **On Ability Activated**
+- **On Ability Ready**
+- **On Ability Created**
+- **On Ability Removed**
+- **On Stack Consumed**
+- **On Stack Gained**
+- **On Max Stacks Reached**
+
+#### Conditions
+- **Has Ability**
+- **Is Ability Ready**
+- **Is Ability Active**
+- **Is Ability Enabled**
+- **Has Stacks Available**
+- **Ability Has Tag**
+- **Current Ability Is**
+
+#### Actions
+- **Create Ability** (`id: String`) — Grants an empty ability (no cooldown, 1 stack, enabled). Fires On Ability Created if new.
+- **Create Ability With Cooldown** (`id: String, seconds: float, reset_instantly: bool`) — Grants an ability and sets its cooldown. reset_instantly=true starts it ready.
+- **Create Ability With Cooldown And Stacks** (`id: String, seconds: float, max_stacks: int, reset_instantly: bool`) — Grants a charge-based ability; each stack regenerates over `seconds`. reset_instantly=true starts full.
+- **Create Temporary Ability** (`id: String, seconds: float`) — Grants an ability that auto-removes after `seconds`. Calling again refreshes the timer.
+- **Remove Ability After Duration** (`id: String, seconds: float`) — Schedules removal of an existing ability after `seconds`.
+- **Remove Ability** (`id: String`) — Deletes an ability and all its data. Fires On Ability Removed.
+- **Clear All Abilities** — Removes every ability. Fires On Ability Removed for each.
+- **Activate Ability** (`id: String`) — Activates an ability if it is ready: consumes a stack, starts regen, fires On Ability Activated.
+- **Set Ability Cooldown** (`id: String, seconds: float`) — Puts an ability on cooldown (scaled by the global cooldown multiplier).
+- **Reset Cooldown** (`id: String`) — Sets an ability's cooldown to 0 (instantly ready).
+- **Set Max Stacks** (`id: String, max_stacks: int`) — Changes max charges (current stacks clamp down).
+- **Set Stacks** (`id: String, stacks: int`) — Sets current charges (clamped 0..max).
+- **Add Stacks** (`id: String, count: int`) — Adds charges up to max. Fires On Stack Gained, and On Max Stacks Reached if it would overflow.
+- **Consume Ability Stack** (`id: String`) — Removes one charge without activating; starts regen if needed.
+- **Set Ability Enabled** (`id: String, enabled: bool`) — Enables or disables activation.
+- **Set Ability Active** (`id: String, active: bool`) — Sets the active flag (for channeled / toggle abilities).
+- **Set Ability Data** (`id: String, key: String, value: String`) — Stores a custom key/value (string) on an ability.
+- **Add Tag** (`id: String, tag: String`) — Tags an ability (safe if it already has the tag).
+- **Remove Tag** (`id: String, tag: String`) — Removes a tag from an ability.
+- **Clear All Tags** (`id: String`) — Removes every tag from an ability.
+- **Set Abilities With Tag Enabled** (`tag: String, enabled: bool`) — Enables/disables every ability carrying a tag.
+- **Remove All Abilities With Tag** (`tag: String`) — Deletes every ability with a tag. Fires On Ability Removed for each.
+- **Reset Cooldown For Abilities With Tag** (`tag: String`) — Sets cooldown to 0 for every ability with a tag.
+- **Set Cooldown Multiplier** (`multiplier: float`) — Global cooldown scaling for all future Set Cooldown calls (0.8 = 20% cooldown reduction).
+
+#### Expressions
+- **Current Ability ID**
+- **Cooldown Remaining**
+- **Cooldown Progress**
+- **Stacks**
+- **Max Stacks**
+- **Stack Cooldown Remaining**
+- **Stack Progress**
+- **Expiration Time**
+- **Expiration Progress**
+- **Max Expiration Time**
+- **Ability Count**
+- **List Active Abilities**
+- **Ready Abilities**
+- **Ability Data**
+- **Count Abilities By Tag**
+- **Ability By Tag Index**
+- **List Abilities By Tag**
+
 ### AdvancedRandomAddon (`res://eventsheet_addons/advanced_random/advanced_random_addon.tres`)
 Autoload singleton `AdvancedRandom` — its ACEs are project-wide.
 
@@ -105,10 +174,15 @@ Behavior — attach under any `CharacterBody2D` node.
 #### Properties
 - `acceleration: float` (default `300.0`)
 - `deceleration: float` (default `400.0`)
+- `drift_angle_threshold: float` (default `15.0`)
 - `drift_recover: float` (default `0.15`)
 - `max_speed: float` (default `400.0`)
 - `steer_degrees: float` (default `180.0`)
 - `turn_while_stopped: bool` (default `false`)
+
+#### Triggers
+- **On Drift Started**
+- **On Drift Recovered**
 
 #### Actions
 - **Stop Car** — Kills all momentum.
@@ -191,10 +265,12 @@ Behavior — attach under any `Node2D` node.
 #### Properties
 - `delay: float` (default `0.4`)
 - `follow_speed: float` (default `5.0`)
-- `following: bool` (default `true`)
 - `min_distance: float` (default `0.0`)
 - `mode: String` (default `smooth`)
 - `target_path: String` (default ``)
+
+#### Triggers
+- **On Reached Target**
 
 #### Actions
 - **Start Following** (`path: String`) — Follows the node at the given path.
@@ -293,6 +369,33 @@ Behavior — attach under any `Node2D` node.
 - **Plan Length**
 - **World Value**
 
+### JuiceBehavior (`res://eventsheet_addons/juice/juice_behavior.tres`)
+Behavior — attach under any `CanvasItem` node.
+
+#### Triggers
+- **On Shake Stopped**
+- **On Zoom Finished**
+- **On Squash Finished**
+- **On Slowmo Finished**
+
+#### Conditions
+- **Is Shaking**
+
+#### Actions
+- **Shake** (`strength: float`) — Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically — fire it on every hit.
+- **Stop Shake** — Cancels any shake and restores the camera to rest immediately.
+- **Use Camera** (`camera_path: NodePath`) — Pin the effects to a specific Camera2D (by path). Leave it unused to auto-target whichever camera is active.
+- **Zoom By Percent** (`percent: float, duration: float`) — Smoothly zooms the camera (100 = no change, 150 = zoom in 1.5x, 50 = zoom out). Clamped to the min/max zoom knobs.
+- **Zoom To Position** (`world_position: Vector2, percent: float, duration: float`) — Zooms in while gliding the camera so a world position becomes the screen CENTRE — frame a spot in one action.
+- **Zoom Toward Point** (`world_position: Vector2, percent: float, duration: float`) — Zooms while keeping a world position pinned under the same screen spot (mouse-wheel-to-cursor style) — great for strategy/map zoom.
+- **Squash & Stretch** (`stretch: float, duration: float`) — Pops the host (Node2D or Control) with a volume-preserving stretch that springs back elastically. Positive = stretch tall (a jump), negative = squash wide (a landing).
+- **Spring Squash** (`stretch: float`) — Pops the host (Node2D or Control) with a volume-preserving stretch that springs back via a real spring (the stiffness/damping knobs) — bouncier + more organic than the tween Squash & Stretch. Positive = stretch tall (a jump), negative = squash wide (a landing).
+- **Slowmo** (`target_scale: float, hold_duration: float, duration_clock: String`) — Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished.
+- **Clear Slowmo** — Cancels any slowmo and snaps Engine.time_scale back to 1.0 immediately (call on scene exit if a slowmo might still be running).
+
+#### Expressions
+- **Trauma**
+
 ### LOSBehavior (`res://eventsheet_addons/line_of_sight/line_of_sight_behavior.tres`)
 Behavior — attach under any `Node2D` node.
 
@@ -305,6 +408,9 @@ Behavior — attach under any `Node2D` node.
 - **Has Line Of Sight To**
 - **Has LOS Between**
 
+#### Expressions
+- **Nearest Visible In Group**
+
 ### LOS3DBehavior (`res://eventsheet_addons/line_of_sight_3d/line_of_sight_3d_behavior.tres`)
 Behavior — attach under any `Node3D` node.
 
@@ -316,6 +422,9 @@ Behavior — attach under any `Node3D` node.
 #### Conditions
 - **Has Line Of Sight To**
 - **Has LOS Between**
+
+#### Expressions
+- **Nearest Visible In Group**
 
 ### MoveToBehavior (`res://eventsheet_addons/move_to/move_to_behavior.tres`)
 Behavior — attach under any `Node2D` node.
@@ -475,10 +584,12 @@ Behavior — attach under any `Node3D` node.
 - `magnitude: float` (default `2.0`)
 - `movement: String` (default `y`)
 - `period: float` (default `4.0`)
+- `phase_degrees: float` (default `0.0`)
 - `wave: String` (default `sine`)
 
 #### Actions
 - **Set Sine 3D Active** (`is_active: bool`) — Pauses or resumes the oscillation.
+- **Set Phase** (`degrees: float`) — Phase offset in degrees.
 - **Reset Sine 3D** — Restarts the wave from the current state.
 
 ### SpringBehavior (`res://eventsheet_addons/spring/spring_behavior.tres`)
