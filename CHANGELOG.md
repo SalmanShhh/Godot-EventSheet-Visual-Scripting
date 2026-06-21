@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Added
+- **Group aggregate expressions** — roll a numeric member up across a whole group with no loop: **Sum
+  In Group**, **Average In Group**, **Lowest In Group**, **Highest In Group** (joining the existing
+  Count Nodes In Group, under the **Groups** category). The "average health of all enemies" case is now
+  one expression instead of an accumulator loop. Each compiles to a bare `reduce` one-liner over
+  `get_tree().get_nodes_in_group(...)` (zero runtime); Sum/Average seed at 0, Min/Max seed at +/-INF so
+  an empty group returns the sentinel rather than crashing. A runtime test exercises the reduce math.
 - **Custom ACEs guide** ([docs/CUSTOM-ACES-GUIDE.md](docs/CUSTOM-ACES-GUIDE.md)) — a complete how-to
   for authoring your own Actions / Conditions / Expressions / Triggers: the three extension paths
   (auto-ACE provider scripts, custom descriptors via the EventForgeBridge autoload, and built-in
