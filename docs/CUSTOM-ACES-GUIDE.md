@@ -343,8 +343,9 @@ to edit. Files load in a stable sorted order with the generic `helper_aces` modu
 catch-all templates must come after specific ACEs for the reverse-lifter), so just keep your own
 templates specific and you are fine.
 
-(If you also add a test, the test runner currently still needs the test registered in
-`tests/run_tests.gd`. The module itself works the moment the file exists.)
+(If you also add a test, the runner auto-discovers it too: any `tests/*.gd` exposing
+`static func run() -> bool` is found and run automatically, so there is nothing to register there
+either. Drop the module and its test; that is all.)
 
 ---
 

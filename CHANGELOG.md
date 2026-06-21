@@ -40,7 +40,10 @@
   `static func get_descriptors() -> Array[ACEDescriptor]` is now loaded and registered automatically
   (in a stable sorted order, with the generic `helper_aces` module kept last so its catch-all
   templates never shadow a specific ACE in the reverse-lifter). Drop a module file and its ACEs
-  appear on the next load. ace_ids and templates remain the compatibility covenant.
+  appear on the next load. ace_ids and templates remain the compatibility covenant. The **test runner
+  auto-discovers tests the same way** (any `tests/*.gd` with `static func run() -> bool`, with the
+  shared-state teardown tests forced to run last), so adding a built-in module plus its test is now
+  **zero registration edits** — just drop the files.
 - **Plainer wording for beginners.** The dock no longer surfaces the insider acronym "ACE" in
   beginner-facing places: the node-drop preview reads "Dropped Node Preview", the row-comment dialog is
   "Row Comment", and the "couldn't edit this row" / "nothing found on this node" messages use plain
