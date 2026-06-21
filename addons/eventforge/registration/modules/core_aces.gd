@@ -40,6 +40,15 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "OnUnhandledInput", "On Unhandled Input", ACEDescriptor.ACEType.TRIGGER, "", "_unhandled_input", [], "Input", "On unhandled input event"))
 	descriptors.append(F.make_descriptor("Core", "OnTimeout", "On Timeout", ACEDescriptor.ACEType.TRIGGER, "", "timeout", [], "Signals / Scene / Input", "On timeout", "Timer"))
 	descriptors.append(F.make_descriptor("Core", "OnAnimationFinished", "On Animation Finished", ACEDescriptor.ACEType.TRIGGER, "", "animation_finished", [F.make_param("anim_name", "String", "", "Animation", "Name of the animation that finished.")], "Signals / Scene / Input", "On animation finished {anim_name}", "AnimationPlayer"))
+	# Scene-tree membership signals (every Node) — REACT to a node entering/leaving instead of polling
+	# IsInsideTree in On Process. Surface as SOURCE-node triggers (another node); for the host's OWN
+	# first entry, On Ready is the idiomatic answer. tree_exiting fires while still in-tree, tree_exited
+	# after removal.
+	descriptors.append(F.make_descriptor("Core", "OnTreeEntered", "On Tree Entered", ACEDescriptor.ACEType.TRIGGER, "", "tree_entered", [], "Signals / Scene / Input", "On tree entered", "Node"))
+	descriptors.append(F.make_descriptor("Core", "OnTreeExiting", "On Tree Exiting", ACEDescriptor.ACEType.TRIGGER, "", "tree_exiting", [], "Signals / Scene / Input", "On tree exiting (still in tree)", "Node"))
+	descriptors.append(F.make_descriptor("Core", "OnTreeExited", "On Tree Exited", ACEDescriptor.ACEType.TRIGGER, "", "tree_exited", [], "Signals / Scene / Input", "On tree exited (removed)", "Node"))
+	descriptors.append(F.make_descriptor("Core", "OnRenamed", "On Renamed", ACEDescriptor.ACEType.TRIGGER, "", "renamed", [], "Signals / Scene / Input", "On renamed", "Node"))
+	descriptors.append(F.make_descriptor("Core", "OnChildEnteredTree", "On Child Entered Tree", ACEDescriptor.ACEType.TRIGGER, "", "child_entered_tree", [F.make_param("node", "Node")], "Signals / Scene / Input", "On child entered {node}", "Node"))
 
 	# HIDDEN-OPTIMIZATION RULE: templates may use expert idioms a beginner wouldn't type
 	# (&"name" StringName literals below skip the per-call String->StringName hash in hot

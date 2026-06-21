@@ -53,6 +53,16 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _signal_backed("_on%s_toggled" % source_token, "toggled_on: bool", "toggled", source_path)
 		"OnParticlesFinished":
 			return _signal_backed("_on%s_finished" % source_token, "", "finished", source_path)
+		"OnTreeEntered":
+			return _signal_backed("_on%s_tree_entered" % source_token, "", "tree_entered", source_path)
+		"OnTreeExiting":
+			return _signal_backed("_on%s_tree_exiting" % source_token, "", "tree_exiting", source_path)
+		"OnTreeExited":
+			return _signal_backed("_on%s_tree_exited" % source_token, "", "tree_exited", source_path)
+		"OnRenamed":
+			return _signal_backed("_on%s_renamed" % source_token, "", "renamed", source_path)
+		"OnChildEnteredTree":
+			return _signal_backed("_on%s_child_entered_tree" % source_token, "node: Node", "child_entered_tree", source_path)
 		"OnSignal":
 			var signal_name: String = str(event.trigger_params.get("signal_name", "eventforge_signal"))
 			return _signal_backed("_on%s_%s" % [source_token, signal_name], "", signal_name, source_path)

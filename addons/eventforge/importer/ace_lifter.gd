@@ -265,7 +265,12 @@ const CORE_SIGNAL_TRIGGERS: Dictionary = {
 	"body_exited": "OnBodyExited",
 	"area_exited": "OnAreaExited",
 	"timeout": "OnTimeout",
-	"animation_finished": "OnAnimationFinished"
+	"animation_finished": "OnAnimationFinished",
+	"tree_entered": "OnTreeEntered",
+	"tree_exiting": "OnTreeExiting",
+	"tree_exited": "OnTreeExited",
+	"renamed": "OnRenamed",
+	"child_entered_tree": "OnChildEnteredTree"
 }
 
 ## Parses `_ready`'s leading connect lines into {handler_name: {signal, source}}.

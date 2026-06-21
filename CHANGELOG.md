@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Added
+- **Tree-membership triggers — react to a node entering/leaving, don't poll.** Five new signal triggers
+  — **On Tree Entered / Tree Exiting / Tree Exited / Renamed / Child Entered Tree** — so "when this
+  *other* node enters or leaves the scene" is a reactive event, not a per-frame `IsInsideTree` check
+  inside On Process (the Construct poll habit). Surface them as *source-node* triggers (react to another
+  node); for the host's own first entry, On Ready stays the idiomatic answer. Tree Exiting fires while
+  the node is still in the tree, Tree Exited after removal; Child Entered Tree hands you the entering
+  child. They compile to a `_ready` connection and round-trip back to the named trigger.
 - **The Project Doctor flags a fan-out god-sheet — by node count, not row count.** A common Construct
   habit is one big event sheet doing everything; in Godot, a sheet reaching into *many different nodes*
   is usually several nodes' jobs crammed together. The Doctor now adds an advisory when a plain sheet
