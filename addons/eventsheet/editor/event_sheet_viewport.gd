@@ -35,6 +35,8 @@ signal comment_edit_requested(comment_row: Resource)
 signal group_edit_requested(group: EventGroup)
 ## Emitted when a pick-filter row is double-clicked (event + index into pick_filters).
 signal pick_filter_edit_requested(event_row: Resource, pick_index: int)
+## Emitted when a "With node X:" scope chip is double-clicked (the scoped event row).
+signal with_node_edit_requested(event_row: Resource)
 ## Emitted when an enum row is double-clicked.
 signal enum_edit_requested(enum_row: Resource)
 ## Emitted when a signal row is double-clicked.
@@ -987,6 +989,11 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
             # Pick-filter rows open the pick-filter dialog.
             if str(double_click_meta.get("kind", "")) == "pick_filter" and row_data != null and row_data.source_resource is EventRow:
                 pick_filter_edit_requested.emit(row_data.source_resource, int(double_click_meta.get("pick_index", -1)))
+                accept_event()
+                return
+            # "With node X:" scope chip opens the target editor.
+            if str(double_click_meta.get("kind", "")) == "with_node" and row_data != null and row_data.source_resource is EventRow:
+                with_node_edit_requested.emit(row_data.source_resource)
                 accept_event()
                 return
             # Single-param inline editing: a double-click landing on a highlighted VALUE
@@ -2109,6 +2116,22 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 )
             )
             condition_line_index += 1
+    # "With node X:" scope renders as a chip in the condition lane (it scopes the row's actions to a
+    # node); double-click opens the target editor.
+    if not event_row.with_node_target.strip_edges().is_empty():
+        spans.append(
+            _make_span(
+                _format_with_node(event_row),
+                SemanticSpan.SpanType.CONDITION,
+                {
+                    "lane": "condition",
+                    "kind": "with_node",
+                    "chip": true,
+                    "line_index": condition_line_index
+                }.merged(condition_style_meta, true)
+            )
+        )
+        condition_line_index += 1
     # Pick filters render as "For each …" lines below the conditions (C3's picking rows);
     # double-click opens the pick-filter dialog.
     for pick_index in range(event_row.pick_filters.size()):
@@ -2313,6 +2336,8 @@ func _count_event_lines(event_row: EventRow) -> int:
             continue
         if event_row.conditions[condition_index] == null:
             continue
+        condition_lines += 1
+    if not event_row.with_node_target.strip_edges().is_empty():
         condition_lines += 1
     for pick_entry in event_row.pick_filters:
         if pick_entry is PickFilter and (pick_entry as PickFilter).enabled:
@@ -2685,6 +2710,10 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
     return layout
 
 ## Display text for a pick-filter row: "For each item in group \"enemies\" (first 3)".
+## Chip text for a "With node X:" scope (the row's actions act on this node).
+func _format_with_node(event_row: EventRow) -> String:
+    return "With node  %s" % event_row.with_node_target.strip_edges()
+
 func _format_pick_filter(pick: PickFilter) -> String:
     var iterator: String = pick.iterator_name.strip_edges()
     if iterator.is_empty():

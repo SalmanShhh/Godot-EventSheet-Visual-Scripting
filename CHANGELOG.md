@@ -3,6 +3,15 @@
 ## [Unreleased]
 
 ### Added
+- **"With node X:" scope blocks (Construct-style "pick once, act many").** Right-click an event →
+  **Scope Actions To Node…** and give a node ($Enemy, get_node("…"), a variable): every action in that
+  event — and in its sub-events — that leaves its "On node" target on the host now acts on X instead, so
+  you write the target once rather than on every action. It renders as a "With node  X" chip in the
+  condition lane (double-click to edit), composes with conditions and nesting, and leaves
+  non-targetable actions (Print, Wait) and any action you explicitly targeted untouched. Compiles
+  inline per action ($Enemy.play(); $Enemy.modulate = …), so the generated GDScript stays readable and
+  a re-imported .gd lifts each line back to an individual targeted ACE. Clearing the field drops the
+  scope. The target field defaults empty, so existing sheets are byte-for-byte unchanged.
 - **Node paths are validated as you type, with `$` autocomplete.** Expression fields (every node-reference
   param, including the new "On node" target) now flag a node reference that does not exist in the edited
   scene — `$Enmy`, `get_node("UI/Scrore")` — in amber with a "no node here yet" tooltip, so a typo is

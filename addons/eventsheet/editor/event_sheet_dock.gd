@@ -53,6 +53,7 @@ const ROW_MENU_MAKE_ELSE := 35
 const ROW_MENU_MAKE_ELIF := 36
 const ROW_MENU_EXTRACT_GDSCRIPT_FN := 37
 const ROW_MENU_BREAKPOINT_CONDITION := 38
+const ROW_MENU_SCOPE_TO_NODE := 39
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -844,6 +845,7 @@ func _build_ui() -> void:
     _viewport.comment_edit_requested.connect(_open_comment_dialog)
     _viewport.group_edit_requested.connect(_on_group_edit_requested)
     _viewport.pick_filter_edit_requested.connect(_open_pick_filter_dialog)
+    _viewport.with_node_edit_requested.connect(_open_with_node_dialog)
     _viewport.enum_edit_requested.connect(_open_enum_dialog)
     _viewport.signal_edit_requested.connect(_open_signal_dialog)
     _viewport.match_edit_requested.connect(_open_match_dialog)
@@ -3915,6 +3917,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
     view.comment_edit_requested.connect(_open_comment_dialog)
     view.group_edit_requested.connect(_on_group_edit_requested)
     view.pick_filter_edit_requested.connect(_open_pick_filter_dialog)
+    view.with_node_edit_requested.connect(_open_with_node_dialog)
     view.enum_edit_requested.connect(_open_enum_dialog)
     view.signal_edit_requested.connect(_open_signal_dialog)
     view.match_edit_requested.connect(_open_match_dialog)
@@ -5213,6 +5216,60 @@ func _on_comment_dialog_confirmed() -> void:
         _refresh_after_edit()
         _mark_dirty("Comment updated.")
 
+# ── With-node scope dialog ("With node X:" — scope a row's actions to another node) ──
+var _with_node_dialog: ConfirmationDialog = null
+var _with_node_target_edit: LineEdit = null
+var _with_node_dialog_target: EventRow = null
+
+## Opens the editor for a row's "With node X:" scope. The target is a node expression ($Enemy,
+## get_node("…"), a variable); blank removes the scope so the row's actions act on the host again.
+func _open_with_node_dialog(event_resource: Resource) -> void:
+    var event_row: EventRow = event_resource as EventRow
+    if event_row == null:
+        return
+    _ensure_with_node_dialog()
+    _with_node_dialog_target = event_row
+    _with_node_target_edit.text = event_row.with_node_target
+    _with_node_dialog.popup_centered(Vector2i(460, 160))
+    _with_node_target_edit.grab_focus()
+    _with_node_target_edit.select_all()
+
+func _ensure_with_node_dialog() -> void:
+    if _with_node_dialog != null:
+        return
+    _with_node_dialog = ConfirmationDialog.new()
+    _with_node_dialog.title = "Scope Actions To Node"
+    var form: VBoxContainer = VBoxContainer.new()
+    form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    var hint: Label = Label.new()
+    hint.text = "Actions in this event act on this node instead of the host.\nUse $Enemy, get_node(\"UI/Score\"), or a variable. Leave blank to act on this node."
+    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    form.add_child(hint)
+    _with_node_target_edit = LineEdit.new()
+    _with_node_target_edit.placeholder_text = "$Enemy"
+    _with_node_target_edit.custom_minimum_size = Vector2(420.0, 0.0)
+    _with_node_target_edit.text_submitted.connect(func(_submitted: String) -> void:
+        _with_node_dialog.hide()
+        _on_with_node_dialog_confirmed()
+    )
+    form.add_child(_with_node_target_edit)
+    _with_node_dialog.add_child(form)
+    _with_node_dialog.confirmed.connect(_on_with_node_dialog_confirmed)
+    add_child(_with_node_dialog)
+
+func _on_with_node_dialog_confirmed() -> void:
+    if _with_node_dialog_target == null:
+        return
+    var target: EventRow = _with_node_dialog_target
+    var new_target: String = _with_node_target_edit.text.strip_edges()
+    var changed: bool = _perform_undoable_sheet_edit("Scope To Node", func() -> bool:
+        target.with_node_target = new_target
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Scoped actions to %s." % (new_target if not new_target.is_empty() else "this node (host)"))
+
 # ── Comment ↔ action-cell conversion ─────────────────────────────────────────
 
 ## Finds the array + index holding `target` among sheet rows (recursing into groups and
@@ -5577,6 +5634,7 @@ func _build_row_more_submenu(is_event: bool) -> void:
         m.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
         m.add_item("Set Breakpoint Condition…", ROW_MENU_BREAKPOINT_CONDITION)
         m.add_item("Add Pick Filter (For Each)…", ROW_MENU_ADD_PICK_FILTER)
+        m.add_item("Scope Actions To Node…", ROW_MENU_SCOPE_TO_NODE)
         m.add_item("Add Match To Actions…", ROW_MENU_ADD_MATCH)
         m.add_separator()
     m.add_item("Find Usages (project)", ROW_MENU_FIND_USAGES)
@@ -5805,6 +5863,9 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
                 _set_status("Only comment rows can attach to an event.", true)
         ROW_MENU_ADD_PICK_FILTER:
             _open_pick_filter_dialog(_context_row.source_resource, -1)
+        ROW_MENU_SCOPE_TO_NODE:
+            if _context_row != null and _context_row.source_resource is EventRow:
+                _open_with_node_dialog(_context_row.source_resource)
         ROW_MENU_ADD_ENUM:
             var new_enum: EnumRow = EnumRow.new()
             _insert_context_row_below(new_enum, "Added enum.")
