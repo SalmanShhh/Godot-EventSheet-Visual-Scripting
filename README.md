@@ -175,11 +175,11 @@ still ships as plain GDScript).
   math/string idioms) so code that doesn't map to a specific ACE still stays an editable row.
 
 ### Behaviors & addons (zero configuration, no JSON)
-- **28 addon packs**, all authored as event sheets: the C3 classics (**Platformer** —
+- **29 addon packs**, all authored as event sheets: the C3 classics (**Platformer** —
   coyote time, jump buffering, variable jump height, double jump, wall slide + wall jump,
   accel/decel — 8-Direction, Timer, Flash, State Machine, Sine with wave shapes, Orbit,
   Bullet, Move To, Follow, Car, Tile Movement, Line of Sight **2D & 3D**), a 3D quartet
-  (Sine/Orbit/Bullet/Move To), the juice duo (**Spring** — named numeric **and colour**
+  (Sine/Orbit/Bullet/Move To), the motion duo (**Spring** — named numeric **and colour**
   springs, squash & stretch in one action — and **Tween** with Inspector combos), the
   **Save System** singleton, and five ports of custom C3 addons: an **event-driven
   Drag & Drop** (Start/Set Drag Point/Drop with follow-speed, direction lock, throw and
@@ -192,7 +192,9 @@ still ships as plain GDScript).
   **Simple Abilities** manager (grant abilities by id, cooldowns, stack charges that auto-regen,
   temporary auto-expiring abilities, custom data, and tags for bulk ops — ported from the C3 addon
   with Godot extras: a Current Ability ID expression, a global cooldown multiplier, and a Ready
-  Abilities list).
+  Abilities list), and a **Juice** pack (trauma-based **screenshake**, smooth **zoom** by percent
+  and zoom-onto-a-world-point, and volume-preserving **squash & stretch** — the camera is auto-found
+  from the active viewport, so Shake/Zoom work from anywhere with no wiring).
 - **Custom ACE addons**: drop a script in `res://eventsheet_addons/` — `class_name` is
   the provider, `@ace_*` annotations shape everything (`@ace_param_options` for fixed
   combos, `@ace_param_autocomplete` for an editable type-or-pick combo, `@ace_param_hint`

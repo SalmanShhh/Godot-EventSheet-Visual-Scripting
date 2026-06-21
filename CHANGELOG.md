@@ -3,6 +3,21 @@
 ## [Unreleased]
 
 ### Added
+- **A "Juice" pack — game feel in one behavior (the 29th addon).** Trauma-based **screenshake** (the
+  C3 scroll-behavior idea, but additive on the camera's `offset`/`rotation` so it composes with camera
+  follow instead of fighting it; squared-trauma ramp, FastNoiseLite for organic motion, stacks + decays
+  on its own), smooth **zoom** in three flavours — by percent, **Zoom To Position** (glide so a point
+  becomes the screen centre) and **Zoom Toward Point** (keep a world point pinned under the same screen
+  spot, mouse-wheel-to-cursor style) — and volume-preserving **Squash & Stretch** that springs back
+  elastically, on a **Node2D *or* a Control** (UI juice too). The camera is **auto-found** from the active
+  viewport, so Shake/Zoom work from anywhere with no wiring; every effect is fire-and-forget (Tween-driven),
+  pre-filled with sensible defaults, exposes its feel as Inspector knobs, and emits an **On Shake Stopped /
+  Zoom Finished / Squash Finished / Slowmo Finished** trigger to chain the next beat. It also does
+  **Slowmo** (eases `Engine.time_scale` to a target, holds for a duration, eases back — with a toggle for
+  whether the hold counts in realtime or scaled game time via `Tween.set_ignore_time_scale`, and
+  Inspector-tunable fade-in/out curves), plus a **Spring Squash** variant that springs the scale back with
+  a real per-frame spring integrator (stiffness/damping, organic overshoot) instead of the elastic tween,
+  and a **Clear Slowmo** reset.
 - **The Spring pack now uses typed inner classes.** Its per-frame integrator read an untyped `Dictionary`
   with `float()`/`bool()` casts at ~40 sites; it now stores typed **SpringEntry / ColorSpringEntry** objects
   (each with an `integrate(delta)` method), so a field typo fails at compile and the hot loop is cast-free.
