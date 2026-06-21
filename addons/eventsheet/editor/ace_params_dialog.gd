@@ -1108,6 +1108,58 @@ func _on_node_picker_activated() -> void:
 		(field as LineEdit).insert_text_at_caret(reference)
 	_node_picker_window.hide()
 
+## Literal node-path references in an expression that can be checked against a scene: bare `$Name`,
+## `$"Quoted/Path"`, and `get_node("Path")`. Skips %unique names and dynamic get_node(expr), which are
+## not statically resolvable.
+static func node_references_in_expression(expression: String) -> PackedStringArray:
+	var references: PackedStringArray = PackedStringArray()
+	var dollar_re: RegEx = RegEx.new()
+	dollar_re.compile("\\$(?:\"([^\"]+)\"|([A-Za-z_][A-Za-z0-9_/]*))")
+	for hit: RegExMatch in dollar_re.search_all(expression):
+		var quoted: String = hit.get_string(1)
+		references.append(quoted if not quoted.is_empty() else hit.get_string(2))
+	var get_node_re: RegEx = RegEx.new()
+	get_node_re.compile("get_node\\(\"([^\"]+)\"\\)")
+	for hit: RegExMatch in get_node_re.search_all(expression):
+		references.append(hit.get_string(1))
+	return references
+
+## The first literal node reference in `expression` that is absent from `scene_root`, or "" when every
+## reference resolves (or there are none / no scene to check). Absolute paths are skipped — they address
+## the running tree, not the edited scene. Used to surface a typo'd path as an author-time warning.
+static func unresolved_node_reference(expression: String, scene_root: Node) -> String:
+	if scene_root == null:
+		return ""
+	for reference: String in node_references_in_expression(expression):
+		if reference.is_empty() or reference.begins_with("/"):
+			continue
+		if not scene_root.has_node(NodePath(reference)):
+			return reference
+	return ""
+
+## Every node under `scene_root` as a relative path (Player, UI, UI/Score, …), capped, for `$` node
+## autocomplete. Depth-first so siblings stay grouped under their parent.
+static func scene_node_paths(scene_root: Node, limit: int = 200) -> PackedStringArray:
+	var paths: PackedStringArray = PackedStringArray()
+	if scene_root != null:
+		_collect_node_paths(scene_root, scene_root, paths, limit)
+	return paths
+
+static func _collect_node_paths(node: Node, scene_root: Node, paths: PackedStringArray, limit: int) -> void:
+	for child: Node in node.get_children():
+		if paths.size() >= limit:
+			return
+		paths.append(str(scene_root.get_path_to(child)))
+		_collect_node_paths(child, scene_root, paths, limit)
+
+## The scene to validate node paths against: a test-injected tree, else the edited scene (editor only).
+var node_validation_scene_override: Node = null  # tests inject a tree here
+
+func _validation_scene_root() -> Node:
+	if node_validation_scene_override != null:
+		return node_validation_scene_override
+	return EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
+
 ## Live expression validation: compile-checks the field against the sheet context
 ## (variables, host members) and tints the text red when it would not compile. The lint
 ## context provider is optional — without it the field stays unvalidated.
@@ -1117,8 +1169,16 @@ func _validate_expression_field(edit: Control) -> void:
 	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
 	var lint_result: Dictionary = EventSheetGDScriptLint.lint_expression(str(edit.get("text")), sheet)
 	if bool(lint_result.get("ok", true)):
-		edit.remove_theme_color_override("font_color")
-		edit.tooltip_text = "Plain GDScript — anything valid in an expression works here."
+		# Valid GDScript — but a literal $node / get_node("…") path that does NOT exist in the edited
+		# scene is almost always a typo. Flag it amber (a warning, not a red error: the node may be
+		# spawned at runtime) so "$Enmy" is caught at author time instead of failing silently in game.
+		var unresolved: String = unresolved_node_reference(str(edit.get("text")), _validation_scene_root())
+		if unresolved.is_empty():
+			edit.remove_theme_color_override("font_color")
+			edit.tooltip_text = "Plain GDScript — anything valid in an expression works here."
+		else:
+			edit.add_theme_color_override("font_color", Color(0.92, 0.72, 0.35))
+			edit.tooltip_text = "⚠ No node \"%s\" in this scene yet — fine if it is spawned at runtime, otherwise check the path." % unresolved
 		_update_quickfix_button(edit, "")
 		_update_didyoumean_button(edit, "", "")
 	else:
@@ -1328,6 +1388,11 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 			str(candidate.get("label", "")),
 			str(candidate.get("label", ""))
 		)
+	# Right after a `$`, offer the edited scene's node paths so a path can be typed-and-picked, not only
+	# selected through the 🔍 picker. The `$` is already typed, so the inserted text is the bare path.
+	if before_caret.ends_with("$") and Engine.is_editor_hint():
+		for node_path: String in scene_node_paths(EditorInterface.get_edited_scene_root()):
+			edit.add_code_completion_option(CodeEdit.KIND_NODE_PATH, "$" + node_path, node_path)
 	edit.update_code_completion_options(true)
 	edit.set_code_hint(EventSheetGDScriptLint.signature_hint(before_caret, sheet))
 

@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Added
+- **Node paths are validated as you type, with `$` autocomplete.** Expression fields (every node-reference
+  param, including the new "On node" target) now flag a node reference that does not exist in the edited
+  scene — `$Enmy`, `get_node("UI/Scrore")` — in amber with a "no node here yet" tooltip, so a typo is
+  caught at author time instead of failing silently in the running game. It is a *warning*, not an error:
+  a path may legitimately point at a node spawned at runtime. Typing `$` also offers the scene's node
+  paths as completions, so a path can be typed-and-picked, not only chosen through the 🔍 picker.
 - **Node-scoped ACEs can target another node now.** Every host-scoped node ACE (Set Modulate, Set
   Volume, Play Animation, Set Camera Zoom, Set Label Text, the particle/joint/range/button setters — 180+
   in all) gained an optional **"On node"** field: leave it blank to act on this node as before, or pick a
