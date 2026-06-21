@@ -28,6 +28,15 @@ var last_trigger_pool_type: String = ""
 ## Starting max HP; current_health initialises to this.
 @export_range(1, 10000, 1) var max_health: float = 100.0
 
+## A named health pool (shield / armour) — typed so the absorption + decay hot paths read
+## fields directly instead of float()-casting an untyped Dictionary entry every frame.
+class HealthPool:
+	var amount: float = 0.0
+	var decay_rate: float = 0.0
+	var absorption_rate: float = 1.0
+	var last_absorbed: float = 0.0
+	var priority: float = 0.0
+
 ## @ace_trigger
 ## @ace_name("On Damaged")
 ## @ace_category("Health")
@@ -88,7 +97,7 @@ func is_invulnerable() -> bool:
 ## @ace_codegen_template("$SimpleHealthBehavior.has_any_health_pool()")
 func has_any_health_pool() -> bool:
 	for pool_name: String in health_pools.keys():
-		if float(health_pools[pool_name].amount) > 0.0:
+		if (health_pools[pool_name] as HealthPool).amount > 0.0:
 			return true
 	return false
 
@@ -97,7 +106,7 @@ func has_any_health_pool() -> bool:
 ## @ace_category("Health")
 ## @ace_codegen_template("$SimpleHealthBehavior.has_health_pool({type})")
 func has_health_pool(type: String) -> bool:
-	return health_pools.has(type) and float(health_pools[type].amount) > 0.0
+	return health_pools.has(type) and (health_pools[type] as HealthPool).amount > 0.0
 
 ## @ace_condition
 ## @ace_name("Health Pool Is Type")
@@ -146,25 +155,25 @@ func last_heal_value() -> float:
 ## @ace_name("Health Pool")
 ## @ace_category("Health")
 func health_pool_value(type: String) -> float:
-	return float(health_pools[type].amount) if health_pools.has(type) else 0.0
+	return (health_pools[type] as HealthPool).amount if health_pools.has(type) else 0.0
 
 ## @ace_expression
 ## @ace_name("Health Pool Decay Rate")
 ## @ace_category("Health")
 func health_pool_decay_rate_value(type: String) -> float:
-	return float(health_pools[type].decay_rate) if health_pools.has(type) else 0.0
+	return (health_pools[type] as HealthPool).decay_rate if health_pools.has(type) else 0.0
 
 ## @ace_expression
 ## @ace_name("Health Pool Absorption Rate")
 ## @ace_category("Health")
 func health_pool_absorption_rate_value(type: String) -> float:
-	return float(health_pools[type].absorption_rate) if health_pools.has(type) else 1.0
+	return (health_pools[type] as HealthPool).absorption_rate if health_pools.has(type) else 1.0
 
 ## @ace_expression
 ## @ace_name("Health Pool Priority")
 ## @ace_category("Health")
 func health_pool_priority_value(type: String) -> float:
-	return float(health_pools[type].priority) if health_pools.has(type) else 0.0
+	return (health_pools[type] as HealthPool).priority if health_pools.has(type) else 0.0
 
 ## @ace_expression
 ## @ace_name("Last Pool Damage Absorbed")
@@ -178,16 +187,16 @@ func last_pool_damage_absorbed_value() -> float:
 func last_health_pool_type_value() -> String:
 	return last_trigger_pool_type
 
-func _get_pool(type: String) -> Dictionary:
+func _get_pool(type: String) -> HealthPool:
 	if not health_pools.has(type):
-		health_pools[type] = {"amount": 0.0, "decay_rate": 0.0, "absorption_rate": 1.0, "last_absorbed": 0.0, "priority": 0.0}
+		health_pools[type] = HealthPool.new()
 	return health_pools[type]
 
 func _sorted_pool_keys() -> Array:
 	var keys: Array = health_pools.keys()
 	var indexed: Array = []
 	for i: int in keys.size():
-		indexed.append([keys[i], float(health_pools[keys[i]].priority), i])
+		indexed.append([keys[i], (health_pools[keys[i]] as HealthPool).priority, i])
 	indexed.sort_custom(func(a, b): return a[1] < b[1] if a[1] != b[1] else a[2] < b[2])
 	var out: Array = []
 	for entry: Array in indexed:
@@ -202,10 +211,10 @@ func _process(delta: float) -> void:
 		return
 	var depleted: Array = []
 	for pool_name in _sorted_pool_keys():
-		var pool: Dictionary = health_pools[pool_name]
-		if float(pool.amount) > 0.0 and float(pool.decay_rate) > 0.0:
-			pool.amount = maxf(0.0, float(pool.amount) - float(pool.decay_rate) * delta)
-			if float(pool.amount) <= 0.0:
+		var pool: HealthPool = health_pools[pool_name]
+		if pool.amount > 0.0 and pool.decay_rate > 0.0:
+			pool.amount = maxf(0.0, pool.amount - pool.decay_rate * delta)
+			if pool.amount <= 0.0:
 				depleted.append(pool_name)
 	for pool_name in depleted:
 		last_trigger_pool_type = pool_name
@@ -223,19 +232,19 @@ func take_damage(amount: float) -> void:
 	for pool_name: String in _sorted_pool_keys():
 		if remaining <= 0.0:
 			break
-		var pool: Dictionary = health_pools[pool_name]
-		if float(pool.amount) <= 0.0:
+		var pool: HealthPool = health_pools[pool_name]
+		if pool.amount <= 0.0:
 			continue
-		var absorption: float = float(pool.absorption_rate)
-		var max_absorbable: float = (float(pool.amount) / absorption) if absorption > 0.0 else INF
+		var absorption: float = pool.absorption_rate
+		var max_absorbable: float = (pool.amount / absorption) if absorption > 0.0 else INF
 		var absorbed: float = minf(remaining, max_absorbable)
-		pool.amount = maxf(0.0, float(pool.amount) - absorbed * absorption)
+		pool.amount = maxf(0.0, pool.amount - absorbed * absorption)
 		pool.last_absorbed = absorbed
 		remaining -= absorbed
 		last_trigger_pool_type = pool_name
 		last_pool_damage_absorbed = absorbed
 		on_health_pool_absorbed.emit()
-		if float(pool.amount) <= 0.0:
+		if pool.amount <= 0.0:
 			on_health_pool_depleted.emit()
 	if remaining <= 0.0:
 		return
@@ -331,8 +340,8 @@ func set_health_absorption_rate(rate: float) -> void:
 func add_health_pool(type: String, amount: float) -> void:
 	if amount <= 0.0:
 		return
-	var pool: Dictionary = _get_pool(type)
-	pool.amount = float(pool.amount) + amount
+	var pool: HealthPool = _get_pool(type)
+	pool.amount = pool.amount + amount
 	last_trigger_pool_type = type
 	on_health_pool_added.emit()
 
@@ -342,9 +351,9 @@ func add_health_pool(type: String, amount: float) -> void:
 ## @ace_description("Sets a health pool amount (fires Added only when it increases).")
 ## @ace_codegen_template("$SimpleHealthBehavior.set_health_pool({type}, {amount})")
 func set_health_pool(type: String, amount: float) -> void:
-	var pool: Dictionary = _get_pool(type)
+	var pool: HealthPool = _get_pool(type)
 	var new_amount: float = maxf(0.0, amount)
-	if new_amount > float(pool.amount):
+	if new_amount > pool.amount:
 		pool.amount = new_amount
 		last_trigger_pool_type = type
 		on_health_pool_added.emit()
@@ -391,7 +400,7 @@ func set_health_pool_absorption_rate(type: String, rate: float) -> void:
 ## @ace_description("Sets a pool's decay and absorption rates at once.")
 ## @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_rates({type}, {decay_rate}, {absorption_rate})")
 func set_health_pool_rates(type: String, decay_rate: float, absorption_rate: float) -> void:
-	var pool: Dictionary = _get_pool(type)
+	var pool: HealthPool = _get_pool(type)
 	pool.decay_rate = maxf(0.0, decay_rate)
 	pool.absorption_rate = maxf(0.0, absorption_rate)
 
@@ -409,7 +418,7 @@ func set_health_pool_priority(type: String, priority: float) -> void:
 ## @ace_description("Creates/configures a health pool in one call.")
 ## @ace_codegen_template("$SimpleHealthBehavior.setup_health_pool({type}, {amount}, {decay_rate}, {absorption_rate}, {priority})")
 func setup_health_pool(type: String, amount: float, decay_rate: float, absorption_rate: float, priority: float) -> void:
-	var pool: Dictionary = _get_pool(type)
+	var pool: HealthPool = _get_pool(type)
 	pool.amount = maxf(0.0, amount)
 	pool.decay_rate = maxf(0.0, decay_rate)
 	pool.absorption_rate = maxf(0.0, absorption_rate)
