@@ -164,6 +164,7 @@ func _ensure_editor_dialogs_initialized() -> void:
     _load_simple_mode_preference()
     _param_resolver.set_param_store(_editor_param_store)
     _ace_picker.init_dialog(self, _ace_registry)
+    _ace_picker.set_simple_mode_provider(func() -> bool: return _simple_mode)
     _ace_picker.ace_selected.connect(_on_ace_picker_selected)
     _ace_params.init_dialog(self, _ace_registry, _collect_sheet_variable_names)
     _ace_params.set_lint_context_provider(func() -> EventSheetResource: return _current_sheet)

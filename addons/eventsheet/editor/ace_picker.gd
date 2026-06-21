@@ -27,6 +27,18 @@ const RECENT_ACES_CAP := 8
 ## composition policy. Right-click a picker entry to pin/unpin.
 const FAVORITES_SETTING := "eventsheets/picker/favorites"
 
+## Simple Mode (the newcomer view) hides the advanced "drop to code" + debug ACEs from the picker,
+## so beginners aren't shown Run GDScript / Evaluate / Breakpoint / Assert / Print Rich. Keyed by
+## "provider_id::ace_id" (definition.id == the descriptor's ace_id — see ace_adapter.gd).
+const _SIMPLE_MODE_DENYLIST := {
+	"Core::RunGDScript": true,
+	"Core::EvaluateGDScript": true,
+	"Core::EvaluateExpression": true,
+	"Core::Breakpoint": true,
+	"Core::Assert": true,
+	"Core::PrintRich": true,
+}
+
 static func favorite_ids() -> PackedStringArray:
 	if ProjectSettings.has_setting(FAVORITES_SETTING):
 		return PackedStringArray(ProjectSettings.get_setting(FAVORITES_SETTING))
@@ -231,6 +243,12 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_add_button.disabled = true
 	_add_button.pressed.connect(_on_add_button_pressed)
 	button_row.add_child(_add_button)
+
+## Provider returning true when Simple Mode is on (wired by the dock) — gates the denylist below.
+var _simple_mode_provider: Callable = Callable()
+
+func set_simple_mode_provider(provider: Callable) -> void:
+	_simple_mode_provider = provider
 
 ## Update the registry used for searching (e.g. after a hot-reload).
 func set_registry(registry: EventSheetACERegistry) -> void:
@@ -613,6 +631,9 @@ func _group_color_for(group_key: String, is_node_type: bool) -> Color:
 
 func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:
 	if definition == null:
+		return false
+	# Simple Mode hides the advanced / code-drop ACEs (Run GDScript, Evaluate, Breakpoint, …).
+	if _simple_mode_provider.is_valid() and bool(_simple_mode_provider.call()) and _SIMPLE_MODE_DENYLIST.has(definition.provider_id + "::" + definition.id):
 		return false
 	if signals_only:
 		# Use source_kind metadata for precise signal detection (set by the generator).

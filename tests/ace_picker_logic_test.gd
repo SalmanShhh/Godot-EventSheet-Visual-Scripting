@@ -58,6 +58,18 @@ static func run() -> bool:
 	all_passed = _check("append_action rejects condition", picker._is_allowed_for_mode(condition_def, "append_action", false), false) and all_passed
 	all_passed = _check("replace_trigger allows only trigger", picker._is_allowed_for_mode(trigger_def, "replace_trigger", false) and not picker._is_allowed_for_mode(action_def, "replace_trigger", false), true) and all_passed
 
+	# Simple Mode hides the advanced / code-drop ACEs (Run GDScript, Evaluate, Breakpoint, …) while
+	# keeping everyday ACEs. The picker reads a provider the dock wires to its simple-mode flag.
+	var run_gd: ACEDefinition = _make_def(ACEDefinition.ACEType.ACTION)
+	run_gd.id = "RunGDScript"
+	var everyday: ACEDefinition = _make_def(ACEDefinition.ACEType.ACTION)
+	everyday.id = "SetVar"
+	all_passed = _check("simple mode off: Run GDScript is allowed", picker._is_allowed_for_mode(run_gd, "append_action", false), true) and all_passed
+	picker.set_simple_mode_provider(func() -> bool: return true)
+	all_passed = _check("simple mode on: Run GDScript is hidden", picker._is_allowed_for_mode(run_gd, "append_action", false), false) and all_passed
+	all_passed = _check("simple mode on: an everyday action is still shown", picker._is_allowed_for_mode(everyday, "append_action", false), true) and all_passed
+	picker.set_simple_mode_provider(Callable())
+
 	# Grouping key prefers node_type over category.
 	var node_typed: ACEDefinition = _make_def(ACEDefinition.ACEType.CONDITION)
 	node_typed.category = "General Conditions"

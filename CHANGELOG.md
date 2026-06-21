@@ -93,6 +93,11 @@
   clicked row, and Shift+↑/↓ grows or shrinks that range from the same origin. The anchor is
   preserved across moves (so the range can shrink, not just grow), and it's listed in the Keyboard
   Shortcuts cheat sheet.
+- **Simple Mode now filters the ACE picker** — with Simple Mode on (View ▸ Simple Mode), the
+  picker hides the advanced "drop to code" + debug rows (Run GDScript, Evaluate GDScript / Expression,
+  Breakpoint, Assert, Print Rich) so newcomers see only the friendly, code-free vocabulary. Turning
+  Simple Mode off restores everything. Previously Simple Mode only hid advanced *rows*, not picker
+  entries.
 
 ### Editor DX — popup polish, error→row deep-linking, shadow guard, picker, watch + event trace
 - **Consistent popups** — a shared `EventSheetPopupUI` helper gives the plugin's dialogs one look:
