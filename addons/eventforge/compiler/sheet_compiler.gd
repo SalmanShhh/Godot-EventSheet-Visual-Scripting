@@ -869,6 +869,11 @@ static func _emit_event_body(
 			var condition_line: String = ConditionCodegen.generate_condition(condition)
 			if not condition_line.is_empty():
 				condition_texts.append(condition_line)
+			elif condition != null and condition.enabled and condition.codegen_template.strip_edges().is_empty() and (not condition.ace_id.is_empty() or not condition.provider_id.is_empty()):
+				# Unresolvable ACE (addon uninstalled / stale provider_id|ace_id). Fail CLOSED so a
+				# vanished gate can never silently run the event body unconditionally every tick.
+				warnings.append("Condition %s/%s could not be resolved (addon missing or stale) \u2014 gate forced closed (if false)." % [condition.provider_id, condition.ace_id])
+				condition_texts.append("false")
 		var joiner: String = " or " if event_row.condition_mode == EventRow.ConditionMode.OR else " and "
 		var joined_conditions: String = joiner.join(condition_texts)
 		# Runtime-group guards AND-wrap the whole condition — joining a guard into an
@@ -892,6 +897,8 @@ static func _emit_event_body(
 			if not condition.codegen_prelude.is_empty():
 				stateful_preludes.append(_substitute_params(condition.codegen_prelude, condition.params))
 			if not condition.codegen_on_true.is_empty():
+				if condition.negated:
+					warnings.append("Stateful conditions (Every X Seconds\u2026) can not be inverted; ignoring the negation.")
 				stateful_on_true.append(_substitute_params(condition.codegen_on_true, condition.params))
 		for prelude_line: String in stateful_preludes:
 			lines.append(indent + prelude_line)
@@ -950,11 +957,15 @@ static func _emit_event_body(
 				var action_line: String = ActionCodegen.generate_action(action_item)
 				if action_line.is_empty():
 					continue
-				if action_item.is_awaited or action_item.await_call:
-					action_line = "await %s" % action_line
-				# Multi-statement templates (Spawn Scene At…) emit one line each.
-				for action_template_line: String in action_line.split("\n"):
-					lines.append(body_indent + action_template_line)
+				# Multi-statement templates (Spawn Scene At…) emit one line each; an awaited action
+				# awaits only its LAST statement (the actual call) — prefixing `await` onto the joined
+				# multi-line string would land it on a `var … =` declaration line (a parse error).
+				var action_lines: PackedStringArray = action_line.split("\n")
+				for line_index: int in action_lines.size():
+					var emitted_line: String = action_lines[line_index]
+					if (action_item.is_awaited or action_item.await_call) and line_index == action_lines.size() - 1:
+						emitted_line = "await %s" % emitted_line
+					lines.append(body_indent + emitted_line)
 				had_body = true
 			elif action_item is RawCodeRow:
 				# In-flow GDScript block (C3 inline scripting): emitted verbatim inside the

@@ -3,6 +3,33 @@
 ## [Unreleased]
 
 ### Fixed
+- **Silent-bug sweep — six defects that shipped invalid or wrong behaviour without ever crashing at
+  compile time** (each reproduced by an adversarial sweep, now pinned by `silent_bug_regression_test`):
+  - **Awaited multi-statement actions emitted `await var …`.** Marking a multi-line ACE (Spawn Scene
+    At…) as awaited prefixed `await` onto the whole joined template, so it landed on the `var`
+    declaration line — a parse error that only surfaced at reload. `await` now wraps only the
+    trailing statement of a multi-line template.
+  - **Distinct trigger sources could collide into one handler.** Two sources that normalised to the
+    same token (`A/B` and `A_B` both → `_a_b`) emitted two same-named `func _on_…` handlers (a parse
+    error). The token is now injective — an illegal-char path gets a short stable hash suffix — while
+    legitimate snake_cased autoload names (`event_bus`) keep their readable handler names unchanged.
+  - **Unresolvable conditions silently OPENED the gate.** A condition whose ACE couldn't be resolved
+    (addon uninstalled / stale id) was dropped, so the event body ran unconditionally every tick. It
+    now fails **closed** (`if false`) with a warning — a vanished gate can never run.
+  - **Negating "Every X Seconds…" broke the interval.** Inverting a stateful condition wrapped its
+    header in `not (…)`, leaving the timer reset to run in the wrong branch (it fired nearly every
+    frame, then went silent). Stateful conditions now refuse the negation, with a warning.
+  - **Reverse-lift shadowed specific ACEs with generic catch-alls.** Importing generated GDScript
+    matched the generic Core ACEs (SetVar, Call Function…) before specific ones, so `position = …`
+    lifted as **Set Variable**, `add_child(…)` as **Call Function**, etc. Reverse entries are now
+    tried most-specific-first (by literal-char count), so the round-trip preserves the real ACE id.
+    (The byte-roundtrip gate never caught this — the generic re-emits the identical line.)
+  - **Charge abilities spent only one stack per regen cycle.** The Simple Abilities pack gated
+    activation on the per-stack regen cooldown, so a 3-charge dash used 1 of 3. Activation now gates
+    on available stacks alone; the per-stack cooldown stays the regen timer.
+  - **Phantom row selection from a span toggle.** Ctrl-toggling an ACE span on then off on a
+    previously-unselected row left the row highlighted and drag/delete/edit-eligible. The viewport
+    now tracks span-only selection provenance and releases the row when its last span is toggled off.
 - **Duplicate `Core::GetFrameCount`** — the dev-helper "Frame Count" reused the same provider+id as
   the canonical Time-category one, so the registry index silently overwrote one entry. Removed the
   duplicate (Frame Count stays under **Time**), and added a suite guard that fails on any repeated

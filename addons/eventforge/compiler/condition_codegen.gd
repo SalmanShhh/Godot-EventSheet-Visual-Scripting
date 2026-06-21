@@ -19,6 +19,9 @@ static func generate_condition(condition: ACECondition) -> String:
 
 	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
 	var output: String = ActionCodegen._apply_template(template, params)
-	if condition.negated and not output.is_empty():
+	# Stateful conditions (Every X Seconds\u2026) have no meaningful inverse: their codegen_on_true
+	# reset must run WHEN the interval elapses, so a `not (...)` header would run the reset in the
+	# wrong branch (the compiler also warns). Refuse the negation for stateful terms.
+	if condition.negated and condition.codegen_on_true.is_empty() and not output.is_empty():
 		return "not (%s)" % output
 	return output

@@ -56,6 +56,7 @@ const BehaviorAuthoringTestScript := preload("res://tests/behavior_authoring_tes
 const SampleBehaviorPackTestScript := preload("res://tests/sample_behavior_pack_test.gd")
 const PairingPolishTestScript := preload("res://tests/pairing_polish_test.gd")
 const ACELiftTestScript := preload("res://tests/ace_lift_test.gd")
+const SilentBugRegressionTestScript := preload("res://tests/silent_bug_regression_test.gd")
 const RuntimeProviderTestScript := preload("res://tests/runtime_provider_test.gd")
 const VisualCompletenessTestScript := preload("res://tests/visual_completeness_test.gd")
 const ReleaseHardeningTestScript := preload("res://tests/release_hardening_test.gd")
@@ -174,6 +175,7 @@ func _init() -> void:
 	passed = SampleBehaviorPackTestScript.run() and passed
 	passed = PairingPolishTestScript.run() and passed
 	passed = ACELiftTestScript.run() and passed
+	passed = SilentBugRegressionTestScript.run() and passed
 	passed = RuntimeProviderTestScript.run() and passed
 	passed = VisualCompletenessTestScript.run() and passed
 	passed = ReleaseHardeningTestScript.run() and passed

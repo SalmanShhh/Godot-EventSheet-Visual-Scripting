@@ -79,6 +79,19 @@ static func _identifier_for_source(source_path: String) -> String:
 	if source_path.begins_with("autoload:"):
 		source_path = source_path.trim_prefix("autoload:").to_snake_case()
 	var token: String = ""
+	var normalized: bool = false
 	for character in source_path.to_lower():
-		token += character if (character >= "a" and character <= "z") or (character >= "0" and character <= "9") else "_"
+		# Underscores are legitimate identifier chars (snake_cased autoloads like `event_bus`), so
+		# they pass through WITHOUT counting as normalization — only genuinely illegal chars do.
+		if (character >= "a" and character <= "z") or (character >= "0" and character <= "9") or character == "_":
+			token += character
+		else:
+			token += "_"
+			normalized = true
+	# A path with illegal chars can collapse onto a clean token ("A/B" and "A_B" both -> "_a_b"),
+	# which would emit two same-named handler funcs (a parse error). Disambiguate ONLY the
+	# illegal-char path with a short stable suffix of the raw path, so the clean source keeps its
+	# readable handler name and distinct sources never collide.
+	if normalized:
+		token += "_" + str(abs(hash(source_path))).substr(0, 4)
 	return "_" + token

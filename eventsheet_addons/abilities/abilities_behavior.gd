@@ -68,7 +68,7 @@ func is_ready(id: String) -> bool:
 	if not abilities.has(id):
 		return false
 	var a: Dictionary = abilities[id]
-	return float(a.cooldown) <= 0.0 and bool(a.enabled) and int(a.stacks) > 0
+	return bool(a.enabled) and int(a.stacks) > 0
 
 ## @ace_condition
 ## @ace_name("Is Ability Active")
@@ -355,7 +355,7 @@ func activate_ability(id: String) -> void:
 	if not abilities.has(id):
 		return
 	var a: Dictionary = abilities[id]
-	if float(a.cooldown) > 0.0 or not bool(a.enabled) or int(a.stacks) <= 0:
+	if not bool(a.enabled) or int(a.stacks) <= 0:
 		return
 	a.stacks = int(a.stacks) - 1
 	current_ability_id = id

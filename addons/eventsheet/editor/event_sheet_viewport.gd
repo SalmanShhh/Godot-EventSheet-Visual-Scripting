@@ -117,6 +117,11 @@ var _selected_row_index: int = -1
 var _selected_span_index: int = -1
 var _selected_row_uids: Dictionary = {}
 var _selected_span_indices: Dictionary = {}
+## Rows that landed in `_selected_row_uids` purely because a span of theirs was Ctrl-toggled
+## on (not via a whole-row select). Tracks selection provenance so that toggling the last span
+## of such a row back off also releases the row from the row-selection set — otherwise the row
+## stays phantom-selected (highlighted, drag/delete/edit-eligible) after the user deselects it.
+var _span_only_row_uids: Dictionary = {}
 var _hovered_row_index: int = -1
 var _hovered_span_index: int = -1
 var _editing_row_index: int = -1
@@ -1099,6 +1104,7 @@ func _apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
     if not additive:
         _selected_row_uids.clear()
         _selected_span_indices.clear()
+        _span_only_row_uids.clear()
         _selected_row_index = -1
         _selected_span_index = -1
     var selected_any: bool = false
@@ -1127,6 +1133,8 @@ func _apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
         if not row_rect.intersects(selection_rect):
             continue
         _selected_row_uids[row_data.row_uid] = true
+        # Box selection selects the whole row, so it is no longer span-only provenance.
+        _span_only_row_uids.erase(row_data.row_uid)
         _selected_row_index = row_index
         _selected_span_index = -1
         selected_any = true
@@ -2832,6 +2840,9 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
     )
     _selected_row_uids = selection_state.get("selected_row_uids", {}).duplicate(true)
     _selected_span_indices = selection_state.get("selected_span_indices", {}).duplicate(true)
+    # Non-toggle single selection replaces the whole selection set, so any span-only
+    # provenance from a prior Ctrl-toggle is no longer meaningful.
+    _span_only_row_uids.clear()
     _selected_row_index = int(selection_state.get("selected_row_index", -1))
     _selected_span_index = int(selection_state.get("selected_span_index", -1))
     _selection_anchor_index = int(selection_state.get("selection_anchor_index", -1))
@@ -2857,6 +2868,7 @@ func _select_range(target_index: int) -> void:
     target_index = clampi(target_index, 0, _flat_rows.size() - 1)
     _selected_row_uids.clear()
     _selected_span_indices.clear()
+    _span_only_row_uids.clear()
     for i in range(mini(anchor, target_index), maxi(anchor, target_index) + 1):
         var range_row: EventRowData = _row_at(i)
         if range_row != null:
@@ -2893,11 +2905,22 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
             changed = true
         if indices.is_empty():
             _selected_span_indices.erase(row_uid)
+            # If the row was pulled into the selection set only by a span toggle (never
+            # whole-row selected), removing its last span must release the row too —
+            # otherwise it stays phantom-selected. Whole-row-selected rows are left intact.
+            if _span_only_row_uids.has(row_uid):
+                _span_only_row_uids.erase(row_uid)
+                _selected_row_uids.erase(row_uid)
             if not _selected_row_uids.has(row_uid):
-                _selected_row_index = -1
-                _selected_span_index = -1
+                if _selected_row_index == row_index:
+                    _selected_row_index = -1
+                    _selected_span_index = -1
         else:
             _selected_span_indices[row_uid] = indices
+            # Record provenance only when the span add is what introduces this row to the
+            # row-selection set; do not downgrade a genuinely whole-row-selected row.
+            if not _selected_row_uids.has(row_uid):
+                _span_only_row_uids[row_uid] = true
             _selected_row_uids[row_uid] = true
             _selected_row_index = row_index
             _selected_span_index = span_index
@@ -2905,14 +2928,19 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
     else:
         if _selected_row_uids.has(row_uid) and not _selected_span_indices.has(row_uid):
             _selected_row_uids.erase(row_uid)
+            _span_only_row_uids.erase(row_uid)
             if _selected_row_index == row_index:
                 _selected_row_index = -1
                 _selected_span_index = -1
         else:
+            # Whole-row select: this row (and any descendants) are now genuinely selected,
+            # so drop any span-only provenance — they must survive a later span on/off toggle.
             _selected_row_uids[row_uid] = true
+            _span_only_row_uids.erase(row_uid)
             if not row_data.children.is_empty():
                 for descendant_uid in _collect_descendant_row_uids(row_data):
                     _selected_row_uids[str(descendant_uid)] = true
+                    _span_only_row_uids.erase(str(descendant_uid))
             _selected_row_index = row_index
             _selected_span_index = -1
             changed = true
@@ -2926,6 +2954,7 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
 func _clear_selection() -> void:
     _selected_row_uids.clear()
     _selected_span_indices.clear()
+    _span_only_row_uids.clear()
     _selected_row_index = -1
     _selected_span_index = -1
     _selection_anchor_index = -1

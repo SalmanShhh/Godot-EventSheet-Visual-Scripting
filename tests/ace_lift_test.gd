@@ -81,6 +81,11 @@ static func run() -> bool:
 		if row is EventRow and not (row as EventRow).actions.is_empty():
 			reversed_action = (row as EventRow).actions[0] as ACEAction
 	all_passed = _check("template params are captured", reversed_action != null and not reversed_action.params.is_empty(), true) and all_passed
+	# Specific ACEs must win over the generic Core catch-alls: `velocity = {vel}` (SetVelocity2D) must
+	# not reverse-lift to the generic `{var_name} = {value}` (SetVar). Pins the specificity-sort fix —
+	# the byte-roundtrip alone never caught this (SetVar re-emits the identical line).
+	all_passed = _check("specific ACE wins over the generic SetVar catch-all",
+		reversed_action != null and reversed_action.ace_id == "SetVelocity2D", true) and all_passed
 	param_imported.external_source_path = "user://eventforge_lift_params_rt.gd"
 	var param_roundtrip: String = str(SheetCompiler.compile(param_imported, "user://eventforge_lift_params_rt.gd").get("output", ""))
 	all_passed = _check("captured params re-emit identically", param_roundtrip == param_source, true) and all_passed

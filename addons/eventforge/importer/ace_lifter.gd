@@ -487,6 +487,8 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray) -> void:
 ## Reverse index over builtin descriptors: template → anchored regex with named captures.
 static func _build_reverse_entries() -> Array:
 	var entries: Array = []
+	var brace_regex: RegEx = RegEx.new()
+	brace_regex.compile("\\{[^}]*\\}")
 	for descriptor: ACEDescriptor in ACERegistry.get_all_descriptors():
 		var template: String = descriptor.codegen_template.strip_edges()
 		if template.is_empty() or template.contains("{,"):
@@ -512,7 +514,15 @@ static func _build_reverse_entries() -> Array:
 		var regex: RegEx = _template_to_regex(template)
 		if regex == null:
 			continue
-		entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex})
+		var literal_len: int = brace_regex.sub(template, "", true).length()
+		entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size()})
+	# Try SPECIFIC templates before generic catch-alls. The Core generics (SetVar `{var_name} = {value}`,
+	# CallFunction `{function_name}({args})`, …) use lazy `.+?` captures that match almost any
+	# assignment/call, so in raw registry order they SHADOW every specific node ACE (`position = …`
+	# would reverse-lift as SetVar). _match_entry is first-match, so stable-sort by literal-char count
+	# (descending) — `velocity = {vel}` outranks `{var_name} = {value}`; the `order` tiebreaker keeps
+	# registry order among equal-specificity twins (sort_custom is not guaranteed stable).
+	entries.sort_custom(func(a, b): return a["literal_len"] > b["literal_len"] if a["literal_len"] != b["literal_len"] else a["order"] < b["order"])
 	return entries
 
 static func _match_entry(line: String, reverse_entries: Array, kind: String) -> Dictionary:
