@@ -71,6 +71,11 @@
   screen size, clipboard get/set), **Debug** (read live `Performance` monitors, static memory),
   **Time** (format seconds as `mm:ss`, system time/date strings), and **Reparent To**. Each compiles
   to the native call; the multi-line and formatting templates are parse-checked.
+- **Node manipulation + picking ACEs** (`node_aces`) — build, rearrange, and select scene-tree
+  nodes. **Nodes**: Add / Remove / Move Child, Free Node, Duplicate Node, Set / Get Node Name, Node
+  Path, Index In Parent, Is Inside Tree, Current Scene Root. **Nodes: Picking**: Get Children, Find
+  Children (by name), Nodes In Group, Random Node In Group. Complements the existing Node-navigation
+  (Get Parent / Child / Find Child) and Groups sets.
 
 ### Simple Abilities behavior pack (the 28th addon)
 - A per-instance **ability manager**, authored as an event sheet and compiled to a plain

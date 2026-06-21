@@ -163,6 +163,14 @@ static func run() -> bool:
 	var util_script: GDScript = GDScript.new()
 	util_script.source_code = "extends Node\nfunc _t() -> void:\n\tvar __cfg_t = ConfigFile.new()\n\t__cfg_t.load(\"user://settings.cfg\")\n\t__cfg_t.set_value(\"audio\", \"volume\", 1.0)\n\t__cfg_t.save(\"user://settings.cfg\")\n\tget_window().title = \"My Game\"\n\tInput.mouse_mode = Input.MOUSE_MODE_VISIBLE\n\tvar t: String = (\"%02d:%02d\" % [int(125.0) / 60, int(125.0) % 60])\n\tprint(Performance.get_monitor(Performance.TIME_FPS), t, DisplayServer.screen_get_size())\n"
 	all_passed = _check("Utility templates parse", util_script.reload() == OK, true) and all_passed
+	# Node manipulation / picking ACEs: registry + (sub)category, and the native templates parse.
+	for nd: Array in [["AddChild", "Nodes"], ["QueueFreeNode", "Nodes"], ["DuplicateNode", "Nodes"], ["IsInsideTree", "Nodes"], ["GetChildren", "Nodes: Picking"], ["GetNodesInGroup", "Nodes: Picking"], ["GetRandomNodeInGroup", "Nodes: Picking"]]:
+		var nd_id: String = str(nd[0])
+		all_passed = _check("%s registered" % nd_id, ids.has(nd_id), true) and all_passed
+		all_passed = _check("%s in %s" % [nd_id, str(nd[1])], str(categories.get(nd_id, "<missing>")), str(nd[1])) and all_passed
+	var node_script: GDScript = GDScript.new()
+	node_script.source_code = "extends Node\nfunc _t() -> void:\n\tadd_child(Node.new())\n\tmove_child(get_node(\"Child\"), 0)\n\tself.name = \"Renamed\"\n\tprint(self.duplicate(), self.get_index(), self.is_inside_tree(), get_tree().current_scene, self.get_children(), find_children(\"E*\"), get_tree().get_nodes_in_group(\"enemies\").pick_random())\n"
+	all_passed = _check("Node manipulation/picking templates parse", node_script.reload() == OK, true) and all_passed
 
 	# ── Button On Pressed trigger compiles to a real signal connection (resolver arm) ──
 	var sheet: EventSheetResource = EventSheetResource.new()

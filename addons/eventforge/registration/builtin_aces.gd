@@ -25,6 +25,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append_array(EventForgePhysicsACEs.get_descriptors())
 	descriptors.append_array(EventForgeCollisionACEs.get_descriptors())
 	descriptors.append_array(EventForgeDevACEs.get_descriptors())
+	descriptors.append_array(EventForgeNodeACEs.get_descriptors())
 	descriptors.append_array(EventForgeUtilityACEs.get_descriptors())
 	# Helpers LAST on purpose: their templates are deliberately generic ({target}.{method}(…),
 	# {target}.{property} = …), so the reverse-lifter must try every specific ACE before falling
