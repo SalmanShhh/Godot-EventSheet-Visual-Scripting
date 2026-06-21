@@ -16,7 +16,50 @@ text = "Numeric springing: snappy, physical motion for ANY number. Name a spring
 
 [sub_resource type="Resource" id="Resource_kefu4"]
 script = ExtResource("2_xhrlg")
-code = "## @ace_trigger
+code = "## A single numeric spring's state, integrated each frame (typed — no dict casts in the hot loop).
+class SpringEntry:
+	var value: float = 0.0
+	var from_value: float = 0.0
+	var target: float = 0.0
+	var velocity: float = 0.0
+	var stiffness: float = 0.0
+	var damping: float = 0.0
+	var precision: float = 0.0
+	var active: bool = false
+	## Semi-implicit, framerate-independent step; returns true on the frame it settles.
+	func integrate(delta: float) -> bool:
+		velocity += (target - value) * stiffness * delta
+		# Damping is the fraction of velocity LOST PER SECOND (framerate-independent).
+		velocity *= pow(1.0 - damping, delta)
+		value += velocity * delta
+		if absf(target - value) < precision and absf(velocity) < precision:
+			value = target
+			velocity = 0.0
+			active = false
+			return true
+		return false
+
+## A named colour spring (each channel springs component-wise).
+class ColorSpringEntry:
+	var value: Color = Color.WHITE
+	var target: Color = Color.WHITE
+	var velocity: Color = Color(0, 0, 0, 0)
+	var stiffness: float = 0.0
+	var damping: float = 0.0
+	var precision: float = 0.0
+	var active: bool = false
+	func integrate(delta: float) -> bool:
+		velocity = velocity + (target - value) * stiffness * delta
+		velocity = velocity * pow(1.0 - damping, delta)
+		value = value + velocity * delta
+		if absf(target.r - value.r) < precision and absf(target.g - value.g) < precision and absf(target.b - value.b) < precision and absf(target.a - value.a) < precision:
+			value = target
+			velocity = Color(0, 0, 0, 0)
+			active = false
+			return true
+		return false
+
+## @ace_trigger
 ## @ace_name(\"On Spring Reached\")
 ## @ace_category(\"Spring\")
 signal spring_reached(spring_name: String)
@@ -30,47 +73,61 @@ signal spring_started(spring_name: String)
 ## @ace_name(\"Color Value\")
 ## @ace_category(\"Spring\")
 func color_value(spring_name: String) -> Color:
-	return color_springs.get(spring_name, {}).get(\"value\", Color.WHITE)
+	if not color_springs.has(spring_name):
+		return Color.WHITE
+	return (color_springs[spring_name] as ColorSpringEntry).value
 
 ## @ace_condition
 ## @ace_name(\"Is Springing\")
 ## @ace_category(\"Spring\")
 ## @ace_codegen_template(\"$SpringBehavior.is_springing({spring_name})\")
 func is_springing(spring_name: String) -> bool:
-	return springs.has(spring_name) and bool(springs[spring_name].get(\"active\", false))
+	return springs.has(spring_name) and (springs[spring_name] as SpringEntry).active
 
 ## @ace_expression
 ## @ace_name(\"Spring Value\")
 ## @ace_category(\"Spring\")
 func spring_value(spring_name: String) -> float:
-	return float(springs.get(spring_name, {}).get(\"value\", 0.0))
+	if not springs.has(spring_name):
+		return 0.0
+	return (springs[spring_name] as SpringEntry).value
 
 ## @ace_expression
 ## @ace_name(\"Spring Velocity\")
 ## @ace_category(\"Spring\")
 func spring_velocity(spring_name: String) -> float:
-	return float(springs.get(spring_name, {}).get(\"velocity\", 0.0))
+	if not springs.has(spring_name):
+		return 0.0
+	return (springs[spring_name] as SpringEntry).velocity
 
 ## @ace_expression
 ## @ace_name(\"Spring Progress\")
 ## @ace_category(\"Spring\")
 func spring_progress(spring_name: String) -> float:
-	var entry: Dictionary = springs.get(spring_name, {})
-	var span: float = absf(float(entry.get(\"target\", 0.0)) - float(entry.get(\"from\", 0.0)))
+	if not springs.has(spring_name):
+		return 1.0
+	var entry: SpringEntry = springs[spring_name]
+	var span: float = absf(entry.target - entry.from_value)
 	if span <= 0.0:
 		return 1.0
-	return clampf(1.0 - absf(float(entry.get(\"target\", 0.0)) - float(entry.get(\"value\", 0.0))) / span, 0.0, 1.0)
+	return clampf(1.0 - absf(entry.target - entry.value) / span, 0.0, 1.0)
 
-func _spring_entry(spring_name: String) -> Dictionary:
+func _spring_entry(spring_name: String) -> SpringEntry:
 	if not springs.has(spring_name):
-		springs[spring_name] = {\"value\": 0.0, \"from\": 0.0, \"target\": 0.0, \"velocity\": 0.0,
-			\"stiffness\": default_stiffness, \"damping\": default_damping, \"precision\": default_precision, \"active\": false}
+		var entry := SpringEntry.new()
+		entry.stiffness = default_stiffness
+		entry.damping = default_damping
+		entry.precision = default_precision
+		springs[spring_name] = entry
 	return springs[spring_name]
 
-func _color_entry(spring_name: String) -> Dictionary:
+func _color_entry(spring_name: String) -> ColorSpringEntry:
 	if not color_springs.has(spring_name):
-		color_springs[spring_name] = {\"value\": Color.WHITE, \"target\": Color.WHITE, \"velocity\": Color(0, 0, 0, 0),
-			\"stiffness\": default_stiffness, \"damping\": default_damping, \"precision\": default_precision, \"active\": false}
+		var entry := ColorSpringEntry.new()
+		entry.stiffness = default_stiffness
+		entry.damping = default_damping
+		entry.precision = default_precision
+		color_springs[spring_name] = entry
 	return color_springs[spring_name]
 
 # Host conveniences: springs with these names write straight onto the parent.
@@ -85,39 +142,20 @@ func _apply_to_host(spring_name: String, value: float) -> void:
 
 [sub_resource type="Resource" id="Resource_m7rga"]
 script = ExtResource("2_xhrlg")
-code = "# Semi-implicit integration; damping uses pow() so motion is framerate-independent.
+code = "# Each spring integrates itself (framerate-independent); host springs write to the parent.
 for spring_name: Variant in springs.keys():
-	var entry: Dictionary = springs[spring_name]
-	if not bool(entry.get(\"active\", false)):
+	var entry: SpringEntry = springs[spring_name]
+	if not entry.active:
 		continue
-	entry[\"velocity\"] = float(entry[\"velocity\"]) + (float(entry[\"target\"]) - float(entry[\"value\"])) * float(entry[\"stiffness\"]) * delta
-	# Damping is the fraction of velocity LOST PER SECOND (framerate-independent).
-	entry[\"velocity\"] = float(entry[\"velocity\"]) * pow(1.0 - float(entry[\"damping\"]), delta)
-	entry[\"value\"] = float(entry[\"value\"]) + float(entry[\"velocity\"]) * delta
-	if absf(float(entry[\"target\"]) - float(entry[\"value\"])) < float(entry[\"precision\"]) and absf(float(entry[\"velocity\"])) < float(entry[\"precision\"]):
-		entry[\"value\"] = float(entry[\"target\"])
-		entry[\"velocity\"] = 0.0
-		entry[\"active\"] = false
+	if entry.integrate(delta):
 		spring_reached.emit(str(spring_name))
-	_apply_to_host(str(spring_name), float(entry[\"value\"]))
+	_apply_to_host(str(spring_name), entry.value)
 # Colour springs integrate identically (Color supports +, - and *float component-wise).
 for color_name: Variant in color_springs.keys():
-	var centry: Dictionary = color_springs[color_name]
-	if not bool(centry.get(\"active\", false)):
+	var centry: ColorSpringEntry = color_springs[color_name]
+	if not centry.active:
 		continue
-	var cvel: Color = centry[\"velocity\"]
-	var cval: Color = centry[\"value\"]
-	var ctarget: Color = centry[\"target\"]
-	cvel = cvel + (ctarget - cval) * float(centry[\"stiffness\"]) * delta
-	cvel = cvel * pow(1.0 - float(centry[\"damping\"]), delta)
-	cval = cval + cvel * delta
-	centry[\"velocity\"] = cvel
-	centry[\"value\"] = cval
-	var prec: float = float(centry[\"precision\"])
-	if absf(ctarget.r - cval.r) < prec and absf(ctarget.g - cval.g) < prec and absf(ctarget.b - cval.b) < prec and absf(ctarget.a - cval.a) < prec:
-		centry[\"value\"] = ctarget
-		centry[\"velocity\"] = Color(0, 0, 0, 0)
-		centry[\"active\"] = false
+	if centry.integrate(delta):
 		spring_reached.emit(str(color_name))"
 
 [sub_resource type="Resource" id="Resource_22bip"]
@@ -129,11 +167,11 @@ event_uid = "5332ef"
 
 [sub_resource type="Resource" id="Resource_dn21t"]
 script = ExtResource("2_xhrlg")
-code = "var entry: Dictionary = _spring_entry(spring_name)
-var was_active := bool(entry[\"active\"])
-entry[\"from\"] = float(entry[\"value\"])
-entry[\"target\"] = target
-entry[\"active\"] = true
+code = "var entry: SpringEntry = _spring_entry(spring_name)
+var was_active := entry.active
+entry.from_value = entry.value
+entry.target = target
+entry.active = true
 if not was_active:
 	spring_started.emit(spring_name)"
 
@@ -162,12 +200,12 @@ events = Array[Resource]([SubResource("Resource_dn21t")])
 
 [sub_resource type="Resource" id="Resource_dl1ol"]
 script = ExtResource("2_xhrlg")
-code = "var entry: Dictionary = _spring_entry(spring_name)
-entry[\"value\"] = from_value
-entry[\"from\"] = from_value
-entry[\"velocity\"] = 0.0
-entry[\"target\"] = to_value
-entry[\"active\"] = true"
+code = "var entry: SpringEntry = _spring_entry(spring_name)
+entry.value = from_value
+entry.from_value = from_value
+entry.velocity = 0.0
+entry.target = to_value
+entry.active = true"
 
 [sub_resource type="Resource" id="Resource_552gn"]
 script = ExtResource("7_qx3vc")
@@ -201,12 +239,12 @@ events = Array[Resource]([SubResource("Resource_dl1ol")])
 
 [sub_resource type="Resource" id="Resource_27kfm"]
 script = ExtResource("2_xhrlg")
-code = "var entry: Dictionary = _spring_entry(spring_name)
-entry[\"value\"] = value
-entry[\"from\"] = value
-entry[\"target\"] = value
-entry[\"velocity\"] = 0.0
-entry[\"active\"] = false"
+code = "var entry: SpringEntry = _spring_entry(spring_name)
+entry.value = value
+entry.from_value = value
+entry.target = value
+entry.velocity = 0.0
+entry.active = false"
 
 [sub_resource type="Resource" id="Resource_8fecb"]
 script = ExtResource("7_qx3vc")
@@ -233,9 +271,9 @@ events = Array[Resource]([SubResource("Resource_27kfm")])
 
 [sub_resource type="Resource" id="Resource_hd6c3"]
 script = ExtResource("2_xhrlg")
-code = "var entry: Dictionary = _spring_entry(spring_name)
-entry[\"velocity\"] = float(entry[\"velocity\"]) + amount
-entry[\"active\"] = true"
+code = "var entry: SpringEntry = _spring_entry(spring_name)
+entry.velocity += amount
+entry.active = true"
 
 [sub_resource type="Resource" id="Resource_hw21p"]
 script = ExtResource("7_qx3vc")
@@ -263,7 +301,7 @@ events = Array[Resource]([SubResource("Resource_hd6c3")])
 [sub_resource type="Resource" id="Resource_n8tm2"]
 script = ExtResource("2_xhrlg")
 code = "if springs.has(spring_name):
-	springs[spring_name][\"active\"] = false"
+	(springs[spring_name] as SpringEntry).active = false"
 
 [sub_resource type="Resource" id="Resource_vhsbd"]
 script = ExtResource("7_qx3vc")
@@ -283,10 +321,10 @@ events = Array[Resource]([SubResource("Resource_n8tm2")])
 
 [sub_resource type="Resource" id="Resource_rugel"]
 script = ExtResource("2_xhrlg")
-code = "var entry: Dictionary = _spring_entry(spring_name)
-entry[\"stiffness\"] = stiffness
-entry[\"damping\"] = clampf(damping, 0.0, 1.0)
-entry[\"precision\"] = precision"
+code = "var entry: SpringEntry = _spring_entry(spring_name)
+entry.stiffness = stiffness
+entry.damping = clampf(damping, 0.0, 1.0)
+entry.precision = precision"
 
 [sub_resource type="Resource" id="Resource_i4cst"]
 script = ExtResource("7_qx3vc")
@@ -327,12 +365,12 @@ events = Array[Resource]([SubResource("Resource_rugel")])
 
 [sub_resource type="Resource" id="Resource_u3qhl"]
 script = ExtResource("2_xhrlg")
-code = "var entry: Dictionary = _spring_entry(\"__x\")
-if not bool(entry[\"active\"]) and host != null:
-	entry[\"value\"] = host.position.x
-entry[\"from\"] = float(entry[\"value\"])
-entry[\"target\"] = target
-entry[\"active\"] = true"
+code = "var entry: SpringEntry = _spring_entry(\"__x\")
+if not entry.active and host != null:
+	entry.value = host.position.x
+entry.from_value = entry.value
+entry.target = target
+entry.active = true"
 
 [sub_resource type="Resource" id="Resource_yfwlq"]
 script = ExtResource("7_qx3vc")
@@ -353,12 +391,12 @@ events = Array[Resource]([SubResource("Resource_u3qhl")])
 
 [sub_resource type="Resource" id="Resource_sevdf"]
 script = ExtResource("2_xhrlg")
-code = "var entry: Dictionary = _spring_entry(\"__y\")
-if not bool(entry[\"active\"]) and host != null:
-	entry[\"value\"] = host.position.y
-entry[\"from\"] = float(entry[\"value\"])
-entry[\"target\"] = target
-entry[\"active\"] = true"
+code = "var entry: SpringEntry = _spring_entry(\"__y\")
+if not entry.active and host != null:
+	entry.value = host.position.y
+entry.from_value = entry.value
+entry.target = target
+entry.active = true"
 
 [sub_resource type="Resource" id="Resource_6hdki"]
 script = ExtResource("7_qx3vc")
@@ -379,12 +417,12 @@ events = Array[Resource]([SubResource("Resource_sevdf")])
 
 [sub_resource type="Resource" id="Resource_vy162"]
 script = ExtResource("2_xhrlg")
-code = "var entry: Dictionary = _spring_entry(\"__angle\")
-if not bool(entry[\"active\"]) and host != null:
-	entry[\"value\"] = host.rotation_degrees
-entry[\"from\"] = float(entry[\"value\"])
-entry[\"target\"] = degrees
-entry[\"active\"] = true"
+code = "var entry: SpringEntry = _spring_entry(\"__angle\")
+if not entry.active and host != null:
+	entry.value = host.rotation_degrees
+entry.from_value = entry.value
+entry.target = degrees
+entry.active = true"
 
 [sub_resource type="Resource" id="Resource_bvlsq"]
 script = ExtResource("7_qx3vc")
@@ -405,12 +443,12 @@ events = Array[Resource]([SubResource("Resource_vy162")])
 
 [sub_resource type="Resource" id="Resource_0f5e4"]
 script = ExtResource("2_xhrlg")
-code = "var entry: Dictionary = _spring_entry(\"__scale\")
-if not bool(entry[\"active\"]) and host != null:
-	entry[\"value\"] = host.scale.x
-entry[\"from\"] = float(entry[\"value\"])
-entry[\"target\"] = target
-entry[\"active\"] = true"
+code = "var entry: SpringEntry = _spring_entry(\"__scale\")
+if not entry.active and host != null:
+	entry.value = host.scale.x
+entry.from_value = entry.value
+entry.target = target
+entry.active = true"
 
 [sub_resource type="Resource" id="Resource_eak7h"]
 script = ExtResource("7_qx3vc")
@@ -431,11 +469,11 @@ events = Array[Resource]([SubResource("Resource_0f5e4")])
 
 [sub_resource type="Resource" id="Resource_yp4nv"]
 script = ExtResource("2_xhrlg")
-code = "var entry: Dictionary = _color_entry(spring_name)
-entry[\"value\"] = color
-entry[\"target\"] = color
-entry[\"velocity\"] = Color(0, 0, 0, 0)
-entry[\"active\"] = false"
+code = "var entry: ColorSpringEntry = _color_entry(spring_name)
+entry.value = color
+entry.target = color
+entry.velocity = Color(0, 0, 0, 0)
+entry.active = false"
 
 [sub_resource type="Resource" id="Resource_4twk2"]
 script = ExtResource("7_qx3vc")
@@ -462,10 +500,10 @@ events = Array[Resource]([SubResource("Resource_yp4nv")])
 
 [sub_resource type="Resource" id="Resource_x81aj"]
 script = ExtResource("2_xhrlg")
-code = "var entry: Dictionary = _color_entry(spring_name)
-var was_active := bool(entry[\"active\"])
-entry[\"target\"] = target_color
-entry[\"active\"] = true
+code = "var entry: ColorSpringEntry = _color_entry(spring_name)
+var was_active := entry.active
+entry.target = target_color
+entry.active = true
 if not was_active:
 	spring_started.emit(spring_name)"
 
@@ -495,9 +533,9 @@ events = Array[Resource]([SubResource("Resource_x81aj")])
 [sub_resource type="Resource" id="Resource_nf08y"]
 script = ExtResource("2_xhrlg")
 code = "if springs.has(spring_name):
-	springs[spring_name][\"active\"] = false
+	(springs[spring_name] as SpringEntry).active = false
 if color_springs.has(spring_name):
-	color_springs[spring_name][\"active\"] = false"
+	(color_springs[spring_name] as ColorSpringEntry).active = false"
 
 [sub_resource type="Resource" id="Resource_pnmyx"]
 script = ExtResource("7_qx3vc")
@@ -518,9 +556,9 @@ events = Array[Resource]([SubResource("Resource_nf08y")])
 [sub_resource type="Resource" id="Resource_4epxa"]
 script = ExtResource("2_xhrlg")
 code = "if springs.has(spring_name):
-	springs[spring_name][\"active\"] = true
+	(springs[spring_name] as SpringEntry).active = true
 if color_springs.has(spring_name):
-	color_springs[spring_name][\"active\"] = true"
+	(color_springs[spring_name] as ColorSpringEntry).active = true"
 
 [sub_resource type="Resource" id="Resource_3km1f"]
 script = ExtResource("7_qx3vc")

@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Added
+- **The Spring pack now uses typed inner classes.** Its per-frame integrator read an untyped `Dictionary`
+  with `float()`/`bool()` casts at ~40 sites; it now stores typed **SpringEntry / ColorSpringEntry** objects
+  (each with an `integrate(delta)` method), so a field typo fails at compile and the hot loop is cast-free.
+  Behavior is unchanged — a new runtime test drives the real integrator to prove a spring still settles to
+  its target with zero residual velocity.
 - **Tree-membership triggers — react to a node entering/leaving, don't poll.** Five new signal triggers
   — **On Tree Entered / Tree Exiting / Tree Exited / Renamed / Child Entered Tree** — so "when this
   *other* node enters or leaves the scene" is a reactive event, not a per-frame `IsInsideTree` check

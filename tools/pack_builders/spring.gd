@@ -8,6 +8,8 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## impulses, reached-triggers and host-transform conveniences. Mesh deformation from the
 ## C3 original is an honest skip (that's shader/skeleton territory in Godot). Exported
 ## properties showcase Inspector attributes (ranges + tooltips) in a shipped pack.
+## Backed by typed inner classes (SpringEntry / ColorSpringEntry) so the hot integrator
+## reads typed fields instead of float()-casting an untyped Dictionary every spring, every frame.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -29,6 +31,49 @@ static func build() -> bool:
 	sheet.events.append(about)
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
+		"## A single numeric spring's state, integrated each frame (typed — no dict casts in the hot loop).",
+		"class SpringEntry:",
+		"\tvar value: float = 0.0",
+		"\tvar from_value: float = 0.0",
+		"\tvar target: float = 0.0",
+		"\tvar velocity: float = 0.0",
+		"\tvar stiffness: float = 0.0",
+		"\tvar damping: float = 0.0",
+		"\tvar precision: float = 0.0",
+		"\tvar active: bool = false",
+		"\t## Semi-implicit, framerate-independent step; returns true on the frame it settles.",
+		"\tfunc integrate(delta: float) -> bool:",
+		"\t\tvelocity += (target - value) * stiffness * delta",
+		"\t\t# Damping is the fraction of velocity LOST PER SECOND (framerate-independent).",
+		"\t\tvelocity *= pow(1.0 - damping, delta)",
+		"\t\tvalue += velocity * delta",
+		"\t\tif absf(target - value) < precision and absf(velocity) < precision:",
+		"\t\t\tvalue = target",
+		"\t\t\tvelocity = 0.0",
+		"\t\t\tactive = false",
+		"\t\t\treturn true",
+		"\t\treturn false",
+		"",
+		"## A named colour spring (each channel springs component-wise).",
+		"class ColorSpringEntry:",
+		"\tvar value: Color = Color.WHITE",
+		"\tvar target: Color = Color.WHITE",
+		"\tvar velocity: Color = Color(0, 0, 0, 0)",
+		"\tvar stiffness: float = 0.0",
+		"\tvar damping: float = 0.0",
+		"\tvar precision: float = 0.0",
+		"\tvar active: bool = false",
+		"\tfunc integrate(delta: float) -> bool:",
+		"\t\tvelocity = velocity + (target - value) * stiffness * delta",
+		"\t\tvelocity = velocity * pow(1.0 - damping, delta)",
+		"\t\tvalue = value + velocity * delta",
+		"\t\tif absf(target.r - value.r) < precision and absf(target.g - value.g) < precision and absf(target.b - value.b) < precision and absf(target.a - value.a) < precision:",
+		"\t\t\tvalue = target",
+		"\t\t\tvelocity = Color(0, 0, 0, 0)",
+		"\t\t\tactive = false",
+		"\t\t\treturn true",
+		"\t\treturn false",
+		"",
 		"## @ace_trigger",
 		"## @ace_name(\"On Spring Reached\")",
 		"## @ace_category(\"Spring\")",
@@ -43,47 +88,61 @@ static func build() -> bool:
 		"## @ace_name(\"Color Value\")",
 		"## @ace_category(\"Spring\")",
 		"func color_value(spring_name: String) -> Color:",
-		"\treturn color_springs.get(spring_name, {}).get(\"value\", Color.WHITE)",
+		"\tif not color_springs.has(spring_name):",
+		"\t\treturn Color.WHITE",
+		"\treturn (color_springs[spring_name] as ColorSpringEntry).value",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Springing\")",
 		"## @ace_category(\"Spring\")",
 		"## @ace_codegen_template(\"$SpringBehavior.is_springing({spring_name})\")",
 		"func is_springing(spring_name: String) -> bool:",
-		"\treturn springs.has(spring_name) and bool(springs[spring_name].get(\"active\", false))",
+		"\treturn springs.has(spring_name) and (springs[spring_name] as SpringEntry).active",
 		"",
 		"## @ace_expression",
 		"## @ace_name(\"Spring Value\")",
 		"## @ace_category(\"Spring\")",
 		"func spring_value(spring_name: String) -> float:",
-		"\treturn float(springs.get(spring_name, {}).get(\"value\", 0.0))",
+		"\tif not springs.has(spring_name):",
+		"\t\treturn 0.0",
+		"\treturn (springs[spring_name] as SpringEntry).value",
 		"",
 		"## @ace_expression",
 		"## @ace_name(\"Spring Velocity\")",
 		"## @ace_category(\"Spring\")",
 		"func spring_velocity(spring_name: String) -> float:",
-		"\treturn float(springs.get(spring_name, {}).get(\"velocity\", 0.0))",
+		"\tif not springs.has(spring_name):",
+		"\t\treturn 0.0",
+		"\treturn (springs[spring_name] as SpringEntry).velocity",
 		"",
 		"## @ace_expression",
 		"## @ace_name(\"Spring Progress\")",
 		"## @ace_category(\"Spring\")",
 		"func spring_progress(spring_name: String) -> float:",
-		"\tvar entry: Dictionary = springs.get(spring_name, {})",
-		"\tvar span: float = absf(float(entry.get(\"target\", 0.0)) - float(entry.get(\"from\", 0.0)))",
+		"\tif not springs.has(spring_name):",
+		"\t\treturn 1.0",
+		"\tvar entry: SpringEntry = springs[spring_name]",
+		"\tvar span: float = absf(entry.target - entry.from_value)",
 		"\tif span <= 0.0:",
 		"\t\treturn 1.0",
-		"\treturn clampf(1.0 - absf(float(entry.get(\"target\", 0.0)) - float(entry.get(\"value\", 0.0))) / span, 0.0, 1.0)",
+		"\treturn clampf(1.0 - absf(entry.target - entry.value) / span, 0.0, 1.0)",
 		"",
-		"func _spring_entry(spring_name: String) -> Dictionary:",
+		"func _spring_entry(spring_name: String) -> SpringEntry:",
 		"\tif not springs.has(spring_name):",
-		"\t\tsprings[spring_name] = {\"value\": 0.0, \"from\": 0.0, \"target\": 0.0, \"velocity\": 0.0,",
-		"\t\t\t\"stiffness\": default_stiffness, \"damping\": default_damping, \"precision\": default_precision, \"active\": false}",
+		"\t\tvar entry := SpringEntry.new()",
+		"\t\tentry.stiffness = default_stiffness",
+		"\t\tentry.damping = default_damping",
+		"\t\tentry.precision = default_precision",
+		"\t\tsprings[spring_name] = entry",
 		"\treturn springs[spring_name]",
 		"",
-		"func _color_entry(spring_name: String) -> Dictionary:",
+		"func _color_entry(spring_name: String) -> ColorSpringEntry:",
 		"\tif not color_springs.has(spring_name):",
-		"\t\tcolor_springs[spring_name] = {\"value\": Color.WHITE, \"target\": Color.WHITE, \"velocity\": Color(0, 0, 0, 0),",
-		"\t\t\t\"stiffness\": default_stiffness, \"damping\": default_damping, \"precision\": default_precision, \"active\": false}",
+		"\t\tvar entry := ColorSpringEntry.new()",
+		"\t\tentry.stiffness = default_stiffness",
+		"\t\tentry.damping = default_damping",
+		"\t\tentry.precision = default_precision",
+		"\t\tcolor_springs[spring_name] = entry",
 		"\treturn color_springs[spring_name]",
 		"",
 		"# Host conveniences: springs with these names write straight onto the parent.",
@@ -102,85 +161,66 @@ static func build() -> bool:
 	tick.trigger_id = "OnProcess"
 	var simulate: RawCodeRow = RawCodeRow.new()
 	simulate.code = "\n".join(PackedStringArray([
-		"# Semi-implicit integration; damping uses pow() so motion is framerate-independent.",
+		"# Each spring integrates itself (framerate-independent); host springs write to the parent.",
 		"for spring_name: Variant in springs.keys():",
-		"\tvar entry: Dictionary = springs[spring_name]",
-		"\tif not bool(entry.get(\"active\", false)):",
+		"\tvar entry: SpringEntry = springs[spring_name]",
+		"\tif not entry.active:",
 		"\t\tcontinue",
-		"\tentry[\"velocity\"] = float(entry[\"velocity\"]) + (float(entry[\"target\"]) - float(entry[\"value\"])) * float(entry[\"stiffness\"]) * delta",
-		"\t# Damping is the fraction of velocity LOST PER SECOND (framerate-independent).",
-		"\tentry[\"velocity\"] = float(entry[\"velocity\"]) * pow(1.0 - float(entry[\"damping\"]), delta)",
-		"\tentry[\"value\"] = float(entry[\"value\"]) + float(entry[\"velocity\"]) * delta",
-		"\tif absf(float(entry[\"target\"]) - float(entry[\"value\"])) < float(entry[\"precision\"]) and absf(float(entry[\"velocity\"])) < float(entry[\"precision\"]):",
-		"\t\tentry[\"value\"] = float(entry[\"target\"])",
-		"\t\tentry[\"velocity\"] = 0.0",
-		"\t\tentry[\"active\"] = false",
+		"\tif entry.integrate(delta):",
 		"\t\tspring_reached.emit(str(spring_name))",
-		"\t_apply_to_host(str(spring_name), float(entry[\"value\"]))",
+		"\t_apply_to_host(str(spring_name), entry.value)",
 		"# Colour springs integrate identically (Color supports +, - and *float component-wise).",
 		"for color_name: Variant in color_springs.keys():",
-		"\tvar centry: Dictionary = color_springs[color_name]",
-		"\tif not bool(centry.get(\"active\", false)):",
+		"\tvar centry: ColorSpringEntry = color_springs[color_name]",
+		"\tif not centry.active:",
 		"\t\tcontinue",
-		"\tvar cvel: Color = centry[\"velocity\"]",
-		"\tvar cval: Color = centry[\"value\"]",
-		"\tvar ctarget: Color = centry[\"target\"]",
-		"\tcvel = cvel + (ctarget - cval) * float(centry[\"stiffness\"]) * delta",
-		"\tcvel = cvel * pow(1.0 - float(centry[\"damping\"]), delta)",
-		"\tcval = cval + cvel * delta",
-		"\tcentry[\"velocity\"] = cvel",
-		"\tcentry[\"value\"] = cval",
-		"\tvar prec: float = float(centry[\"precision\"])",
-		"\tif absf(ctarget.r - cval.r) < prec and absf(ctarget.g - cval.g) < prec and absf(ctarget.b - cval.b) < prec and absf(ctarget.a - cval.a) < prec:",
-		"\t\tcentry[\"value\"] = ctarget",
-		"\t\tcentry[\"velocity\"] = Color(0, 0, 0, 0)",
-		"\t\tcentry[\"active\"] = false",
+		"\tif centry.integrate(delta):",
 		"\t\tspring_reached.emit(str(color_name))"
 	]))
 	tick.actions.append(simulate)
 	sheet.events.append(tick)
 	Lib.append_function(sheet, "spring_to", "Spring To", "Spring", "Springs the named value toward a target.",
 		[["spring_name", "String"], ["target", "float"]],
-		"var entry: Dictionary = _spring_entry(spring_name)\nvar was_active := bool(entry[\"active\"])\nentry[\"from\"] = float(entry[\"value\"])\nentry[\"target\"] = target\nentry[\"active\"] = true\nif not was_active:\n\tspring_started.emit(spring_name)")
+		"var entry: SpringEntry = _spring_entry(spring_name)\nvar was_active := entry.active\nentry.from_value = entry.value\nentry.target = target\nentry.active = true\nif not was_active:\n\tspring_started.emit(spring_name)")
 	Lib.append_function(sheet, "spring_between", "Spring Between", "Spring", "Snaps to a start value, then springs to the end value.",
 		[["spring_name", "String"], ["from_value", "float"], ["to_value", "float"]],
-		"var entry: Dictionary = _spring_entry(spring_name)\nentry[\"value\"] = from_value\nentry[\"from\"] = from_value\nentry[\"velocity\"] = 0.0\nentry[\"target\"] = to_value\nentry[\"active\"] = true")
+		"var entry: SpringEntry = _spring_entry(spring_name)\nentry.value = from_value\nentry.from_value = from_value\nentry.velocity = 0.0\nentry.target = to_value\nentry.active = true")
 	Lib.append_function(sheet, "set_spring", "Set Spring Value", "Spring", "Snaps the named spring (no motion).",
 		[["spring_name", "String"], ["value", "float"]],
-		"var entry: Dictionary = _spring_entry(spring_name)\nentry[\"value\"] = value\nentry[\"from\"] = value\nentry[\"target\"] = value\nentry[\"velocity\"] = 0.0\nentry[\"active\"] = false")
+		"var entry: SpringEntry = _spring_entry(spring_name)\nentry.value = value\nentry.from_value = value\nentry.target = value\nentry.velocity = 0.0\nentry.active = false")
 	Lib.append_function(sheet, "add_impulse", "Add Impulse", "Spring", "Kicks the named spring's velocity (instant juice).",
 		[["spring_name", "String"], ["amount", "float"]],
-		"var entry: Dictionary = _spring_entry(spring_name)\nentry[\"velocity\"] = float(entry[\"velocity\"]) + amount\nentry[\"active\"] = true")
+		"var entry: SpringEntry = _spring_entry(spring_name)\nentry.velocity += amount\nentry.active = true")
 	Lib.append_function(sheet, "stop_spring", "Stop Spring", "Spring", "Freezes the named spring where it is.",
 		[["spring_name", "String"]],
-		"if springs.has(spring_name):\n\tsprings[spring_name][\"active\"] = false")
+		"if springs.has(spring_name):\n\t(springs[spring_name] as SpringEntry).active = false")
 	Lib.append_function(sheet, "configure_spring", "Configure Spring", "Spring", "Per-spring stiffness/damping/precision overrides.",
 		[["spring_name", "String"], ["stiffness", "float"], ["damping", "float"], ["precision", "float"]],
-		"var entry: Dictionary = _spring_entry(spring_name)\nentry[\"stiffness\"] = stiffness\nentry[\"damping\"] = clampf(damping, 0.0, 1.0)\nentry[\"precision\"] = precision")
+		"var entry: SpringEntry = _spring_entry(spring_name)\nentry.stiffness = stiffness\nentry.damping = clampf(damping, 0.0, 1.0)\nentry.precision = precision")
 	Lib.append_function(sheet, "spring_host_x", "Spring Host X", "Spring", "Springs the host's X position.",
 		[["target", "float"]],
-		"var entry: Dictionary = _spring_entry(\"__x\")\nif not bool(entry[\"active\"]) and host != null:\n\tentry[\"value\"] = host.position.x\nentry[\"from\"] = float(entry[\"value\"])\nentry[\"target\"] = target\nentry[\"active\"] = true")
+		"var entry: SpringEntry = _spring_entry(\"__x\")\nif not entry.active and host != null:\n\tentry.value = host.position.x\nentry.from_value = entry.value\nentry.target = target\nentry.active = true")
 	Lib.append_function(sheet, "spring_host_y", "Spring Host Y", "Spring", "Springs the host's Y position.",
 		[["target", "float"]],
-		"var entry: Dictionary = _spring_entry(\"__y\")\nif not bool(entry[\"active\"]) and host != null:\n\tentry[\"value\"] = host.position.y\nentry[\"from\"] = float(entry[\"value\"])\nentry[\"target\"] = target\nentry[\"active\"] = true")
+		"var entry: SpringEntry = _spring_entry(\"__y\")\nif not entry.active and host != null:\n\tentry.value = host.position.y\nentry.from_value = entry.value\nentry.target = target\nentry.active = true")
 	Lib.append_function(sheet, "spring_host_angle", "Spring Host Angle", "Spring", "Springs the host's rotation (degrees).",
 		[["degrees", "float"]],
-		"var entry: Dictionary = _spring_entry(\"__angle\")\nif not bool(entry[\"active\"]) and host != null:\n\tentry[\"value\"] = host.rotation_degrees\nentry[\"from\"] = float(entry[\"value\"])\nentry[\"target\"] = degrees\nentry[\"active\"] = true")
+		"var entry: SpringEntry = _spring_entry(\"__angle\")\nif not entry.active and host != null:\n\tentry.value = host.rotation_degrees\nentry.from_value = entry.value\nentry.target = degrees\nentry.active = true")
 	Lib.append_function(sheet, "spring_host_scale", "Spring Host Scale", "Spring", "Springs the host's uniform scale (squash & stretch!).",
 		[["target", "float"]],
-		"var entry: Dictionary = _spring_entry(\"__scale\")\nif not bool(entry[\"active\"]) and host != null:\n\tentry[\"value\"] = host.scale.x\nentry[\"from\"] = float(entry[\"value\"])\nentry[\"target\"] = target\nentry[\"active\"] = true")
+		"var entry: SpringEntry = _spring_entry(\"__scale\")\nif not entry.active and host != null:\n\tentry.value = host.scale.x\nentry.from_value = entry.value\nentry.target = target\nentry.active = true")
 	Lib.append_function(sheet, "set_color", "Set Color Value", "Spring", "Snaps a named colour spring (no motion) — seed it before springing.",
 		[["spring_name", "String"], ["color", "Color"]],
-		"var entry: Dictionary = _color_entry(spring_name)\nentry[\"value\"] = color\nentry[\"target\"] = color\nentry[\"velocity\"] = Color(0, 0, 0, 0)\nentry[\"active\"] = false")
+		"var entry: ColorSpringEntry = _color_entry(spring_name)\nentry.value = color\nentry.target = color\nentry.velocity = Color(0, 0, 0, 0)\nentry.active = false")
 	Lib.append_function(sheet, "spring_color", "Spring Color", "Spring", "Springs a named colour toward a target (read it back with Color Value — great for hit flashes).",
 		[["spring_name", "String"], ["target_color", "Color"]],
-		"var entry: Dictionary = _color_entry(spring_name)\nvar was_active := bool(entry[\"active\"])\nentry[\"target\"] = target_color\nentry[\"active\"] = true\nif not was_active:\n\tspring_started.emit(spring_name)")
+		"var entry: ColorSpringEntry = _color_entry(spring_name)\nvar was_active := entry.active\nentry.target = target_color\nentry.active = true\nif not was_active:\n\tspring_started.emit(spring_name)")
 	Lib.append_function(sheet, "pause_spring", "Pause Spring", "Spring", "Freezes a spring in place (resume continues it).",
 		[["spring_name", "String"]],
-		"if springs.has(spring_name):\n\tsprings[spring_name][\"active\"] = false\nif color_springs.has(spring_name):\n\tcolor_springs[spring_name][\"active\"] = false")
+		"if springs.has(spring_name):\n\t(springs[spring_name] as SpringEntry).active = false\nif color_springs.has(spring_name):\n\t(color_springs[spring_name] as ColorSpringEntry).active = false")
 	Lib.append_function(sheet, "resume_spring", "Resume Spring", "Spring", "Resumes a paused spring toward its target.",
 		[["spring_name", "String"]],
-		"if springs.has(spring_name):\n\tsprings[spring_name][\"active\"] = true\nif color_springs.has(spring_name):\n\tcolor_springs[spring_name][\"active\"] = true")
+		"if springs.has(spring_name):\n\t(springs[spring_name] as SpringEntry).active = true\nif color_springs.has(spring_name):\n\t(color_springs[spring_name] as ColorSpringEntry).active = true")
 	Lib.append_function(sheet, "remove_spring", "Remove Spring", "Spring", "Deletes a named spring (numeric and/or colour).",
 		[["spring_name", "String"]],
 		"springs.erase(spring_name)\ncolor_springs.erase(spring_name)")

@@ -23,6 +23,49 @@ var color_springs: Dictionary = {}
 @export_range(1, 1000, 1) var default_stiffness: float = 170.0
 var springs: Dictionary = {}
 
+## A single numeric spring's state, integrated each frame (typed — no dict casts in the hot loop).
+class SpringEntry:
+	var value: float = 0.0
+	var from_value: float = 0.0
+	var target: float = 0.0
+	var velocity: float = 0.0
+	var stiffness: float = 0.0
+	var damping: float = 0.0
+	var precision: float = 0.0
+	var active: bool = false
+	## Semi-implicit, framerate-independent step; returns true on the frame it settles.
+	func integrate(delta: float) -> bool:
+		velocity += (target - value) * stiffness * delta
+		# Damping is the fraction of velocity LOST PER SECOND (framerate-independent).
+		velocity *= pow(1.0 - damping, delta)
+		value += velocity * delta
+		if absf(target - value) < precision and absf(velocity) < precision:
+			value = target
+			velocity = 0.0
+			active = false
+			return true
+		return false
+
+## A named colour spring (each channel springs component-wise).
+class ColorSpringEntry:
+	var value: Color = Color.WHITE
+	var target: Color = Color.WHITE
+	var velocity: Color = Color(0, 0, 0, 0)
+	var stiffness: float = 0.0
+	var damping: float = 0.0
+	var precision: float = 0.0
+	var active: bool = false
+	func integrate(delta: float) -> bool:
+		velocity = velocity + (target - value) * stiffness * delta
+		velocity = velocity * pow(1.0 - damping, delta)
+		value = value + velocity * delta
+		if absf(target.r - value.r) < precision and absf(target.g - value.g) < precision and absf(target.b - value.b) < precision and absf(target.a - value.a) < precision:
+			value = target
+			velocity = Color(0, 0, 0, 0)
+			active = false
+			return true
+		return false
+
 ## @ace_trigger
 ## @ace_name("On Spring Reached")
 ## @ace_category("Spring")
@@ -37,47 +80,61 @@ signal spring_started(spring_name: String)
 ## @ace_name("Color Value")
 ## @ace_category("Spring")
 func color_value(spring_name: String) -> Color:
-	return color_springs.get(spring_name, {}).get("value", Color.WHITE)
+	if not color_springs.has(spring_name):
+		return Color.WHITE
+	return (color_springs[spring_name] as ColorSpringEntry).value
 
 ## @ace_condition
 ## @ace_name("Is Springing")
 ## @ace_category("Spring")
 ## @ace_codegen_template("$SpringBehavior.is_springing({spring_name})")
 func is_springing(spring_name: String) -> bool:
-	return springs.has(spring_name) and bool(springs[spring_name].get("active", false))
+	return springs.has(spring_name) and (springs[spring_name] as SpringEntry).active
 
 ## @ace_expression
 ## @ace_name("Spring Value")
 ## @ace_category("Spring")
 func spring_value(spring_name: String) -> float:
-	return float(springs.get(spring_name, {}).get("value", 0.0))
+	if not springs.has(spring_name):
+		return 0.0
+	return (springs[spring_name] as SpringEntry).value
 
 ## @ace_expression
 ## @ace_name("Spring Velocity")
 ## @ace_category("Spring")
 func spring_velocity(spring_name: String) -> float:
-	return float(springs.get(spring_name, {}).get("velocity", 0.0))
+	if not springs.has(spring_name):
+		return 0.0
+	return (springs[spring_name] as SpringEntry).velocity
 
 ## @ace_expression
 ## @ace_name("Spring Progress")
 ## @ace_category("Spring")
 func spring_progress(spring_name: String) -> float:
-	var entry: Dictionary = springs.get(spring_name, {})
-	var span: float = absf(float(entry.get("target", 0.0)) - float(entry.get("from", 0.0)))
+	if not springs.has(spring_name):
+		return 1.0
+	var entry: SpringEntry = springs[spring_name]
+	var span: float = absf(entry.target - entry.from_value)
 	if span <= 0.0:
 		return 1.0
-	return clampf(1.0 - absf(float(entry.get("target", 0.0)) - float(entry.get("value", 0.0))) / span, 0.0, 1.0)
+	return clampf(1.0 - absf(entry.target - entry.value) / span, 0.0, 1.0)
 
-func _spring_entry(spring_name: String) -> Dictionary:
+func _spring_entry(spring_name: String) -> SpringEntry:
 	if not springs.has(spring_name):
-		springs[spring_name] = {"value": 0.0, "from": 0.0, "target": 0.0, "velocity": 0.0,
-			"stiffness": default_stiffness, "damping": default_damping, "precision": default_precision, "active": false}
+		var entry := SpringEntry.new()
+		entry.stiffness = default_stiffness
+		entry.damping = default_damping
+		entry.precision = default_precision
+		springs[spring_name] = entry
 	return springs[spring_name]
 
-func _color_entry(spring_name: String) -> Dictionary:
+func _color_entry(spring_name: String) -> ColorSpringEntry:
 	if not color_springs.has(spring_name):
-		color_springs[spring_name] = {"value": Color.WHITE, "target": Color.WHITE, "velocity": Color(0, 0, 0, 0),
-			"stiffness": default_stiffness, "damping": default_damping, "precision": default_precision, "active": false}
+		var entry := ColorSpringEntry.new()
+		entry.stiffness = default_stiffness
+		entry.damping = default_damping
+		entry.precision = default_precision
+		color_springs[spring_name] = entry
 	return color_springs[spring_name]
 
 # Host conveniences: springs with these names write straight onto the parent.
@@ -91,39 +148,20 @@ func _apply_to_host(spring_name: String, value: float) -> void:
 		"__scale": host.scale = Vector2(value, value)
 
 func _process(delta: float) -> void:
-	# Semi-implicit integration; damping uses pow() so motion is framerate-independent.
+	# Each spring integrates itself (framerate-independent); host springs write to the parent.
 	for spring_name: Variant in springs.keys():
-		var entry: Dictionary = springs[spring_name]
-		if not bool(entry.get("active", false)):
+		var entry: SpringEntry = springs[spring_name]
+		if not entry.active:
 			continue
-		entry["velocity"] = float(entry["velocity"]) + (float(entry["target"]) - float(entry["value"])) * float(entry["stiffness"]) * delta
-		# Damping is the fraction of velocity LOST PER SECOND (framerate-independent).
-		entry["velocity"] = float(entry["velocity"]) * pow(1.0 - float(entry["damping"]), delta)
-		entry["value"] = float(entry["value"]) + float(entry["velocity"]) * delta
-		if absf(float(entry["target"]) - float(entry["value"])) < float(entry["precision"]) and absf(float(entry["velocity"])) < float(entry["precision"]):
-			entry["value"] = float(entry["target"])
-			entry["velocity"] = 0.0
-			entry["active"] = false
+		if entry.integrate(delta):
 			spring_reached.emit(str(spring_name))
-		_apply_to_host(str(spring_name), float(entry["value"]))
+		_apply_to_host(str(spring_name), entry.value)
 	# Colour springs integrate identically (Color supports +, - and *float component-wise).
 	for color_name: Variant in color_springs.keys():
-		var centry: Dictionary = color_springs[color_name]
-		if not bool(centry.get("active", false)):
+		var centry: ColorSpringEntry = color_springs[color_name]
+		if not centry.active:
 			continue
-		var cvel: Color = centry["velocity"]
-		var cval: Color = centry["value"]
-		var ctarget: Color = centry["target"]
-		cvel = cvel + (ctarget - cval) * float(centry["stiffness"]) * delta
-		cvel = cvel * pow(1.0 - float(centry["damping"]), delta)
-		cval = cval + cvel * delta
-		centry["velocity"] = cvel
-		centry["value"] = cval
-		var prec: float = float(centry["precision"])
-		if absf(ctarget.r - cval.r) < prec and absf(ctarget.g - cval.g) < prec and absf(ctarget.b - cval.b) < prec and absf(ctarget.a - cval.a) < prec:
-			centry["value"] = ctarget
-			centry["velocity"] = Color(0, 0, 0, 0)
-			centry["active"] = false
+		if centry.integrate(delta):
 			spring_reached.emit(str(color_name))
 
 ## @ace_action
@@ -132,11 +170,11 @@ func _process(delta: float) -> void:
 ## @ace_description("Springs the named value toward a target.")
 ## @ace_codegen_template("$SpringBehavior.spring_to({spring_name}, {target})")
 func spring_to(spring_name: String, target: float) -> void:
-	var entry: Dictionary = _spring_entry(spring_name)
-	var was_active := bool(entry["active"])
-	entry["from"] = float(entry["value"])
-	entry["target"] = target
-	entry["active"] = true
+	var entry: SpringEntry = _spring_entry(spring_name)
+	var was_active := entry.active
+	entry.from_value = entry.value
+	entry.target = target
+	entry.active = true
 	if not was_active:
 		spring_started.emit(spring_name)
 
@@ -146,12 +184,12 @@ func spring_to(spring_name: String, target: float) -> void:
 ## @ace_description("Snaps to a start value, then springs to the end value.")
 ## @ace_codegen_template("$SpringBehavior.spring_between({spring_name}, {from_value}, {to_value})")
 func spring_between(spring_name: String, from_value: float, to_value: float) -> void:
-	var entry: Dictionary = _spring_entry(spring_name)
-	entry["value"] = from_value
-	entry["from"] = from_value
-	entry["velocity"] = 0.0
-	entry["target"] = to_value
-	entry["active"] = true
+	var entry: SpringEntry = _spring_entry(spring_name)
+	entry.value = from_value
+	entry.from_value = from_value
+	entry.velocity = 0.0
+	entry.target = to_value
+	entry.active = true
 
 ## @ace_action
 ## @ace_name("Set Spring Value")
@@ -159,12 +197,12 @@ func spring_between(spring_name: String, from_value: float, to_value: float) -> 
 ## @ace_description("Snaps the named spring (no motion).")
 ## @ace_codegen_template("$SpringBehavior.set_spring({spring_name}, {value})")
 func set_spring(spring_name: String, value: float) -> void:
-	var entry: Dictionary = _spring_entry(spring_name)
-	entry["value"] = value
-	entry["from"] = value
-	entry["target"] = value
-	entry["velocity"] = 0.0
-	entry["active"] = false
+	var entry: SpringEntry = _spring_entry(spring_name)
+	entry.value = value
+	entry.from_value = value
+	entry.target = value
+	entry.velocity = 0.0
+	entry.active = false
 
 ## @ace_action
 ## @ace_name("Add Impulse")
@@ -172,9 +210,9 @@ func set_spring(spring_name: String, value: float) -> void:
 ## @ace_description("Kicks the named spring's velocity (instant juice).")
 ## @ace_codegen_template("$SpringBehavior.add_impulse({spring_name}, {amount})")
 func add_impulse(spring_name: String, amount: float) -> void:
-	var entry: Dictionary = _spring_entry(spring_name)
-	entry["velocity"] = float(entry["velocity"]) + amount
-	entry["active"] = true
+	var entry: SpringEntry = _spring_entry(spring_name)
+	entry.velocity += amount
+	entry.active = true
 
 ## @ace_action
 ## @ace_name("Stop Spring")
@@ -183,7 +221,7 @@ func add_impulse(spring_name: String, amount: float) -> void:
 ## @ace_codegen_template("$SpringBehavior.stop_spring({spring_name})")
 func stop_spring(spring_name: String) -> void:
 	if springs.has(spring_name):
-		springs[spring_name]["active"] = false
+		(springs[spring_name] as SpringEntry).active = false
 
 ## @ace_action
 ## @ace_name("Configure Spring")
@@ -191,10 +229,10 @@ func stop_spring(spring_name: String) -> void:
 ## @ace_description("Per-spring stiffness/damping/precision overrides.")
 ## @ace_codegen_template("$SpringBehavior.configure_spring({spring_name}, {stiffness}, {damping}, {precision})")
 func configure_spring(spring_name: String, stiffness: float, damping: float, precision: float) -> void:
-	var entry: Dictionary = _spring_entry(spring_name)
-	entry["stiffness"] = stiffness
-	entry["damping"] = clampf(damping, 0.0, 1.0)
-	entry["precision"] = precision
+	var entry: SpringEntry = _spring_entry(spring_name)
+	entry.stiffness = stiffness
+	entry.damping = clampf(damping, 0.0, 1.0)
+	entry.precision = precision
 
 ## @ace_action
 ## @ace_name("Spring Host X")
@@ -202,12 +240,12 @@ func configure_spring(spring_name: String, stiffness: float, damping: float, pre
 ## @ace_description("Springs the host's X position.")
 ## @ace_codegen_template("$SpringBehavior.spring_host_x({target})")
 func spring_host_x(target: float) -> void:
-	var entry: Dictionary = _spring_entry("__x")
-	if not bool(entry["active"]) and host != null:
-		entry["value"] = host.position.x
-	entry["from"] = float(entry["value"])
-	entry["target"] = target
-	entry["active"] = true
+	var entry: SpringEntry = _spring_entry("__x")
+	if not entry.active and host != null:
+		entry.value = host.position.x
+	entry.from_value = entry.value
+	entry.target = target
+	entry.active = true
 
 ## @ace_action
 ## @ace_name("Spring Host Y")
@@ -215,12 +253,12 @@ func spring_host_x(target: float) -> void:
 ## @ace_description("Springs the host's Y position.")
 ## @ace_codegen_template("$SpringBehavior.spring_host_y({target})")
 func spring_host_y(target: float) -> void:
-	var entry: Dictionary = _spring_entry("__y")
-	if not bool(entry["active"]) and host != null:
-		entry["value"] = host.position.y
-	entry["from"] = float(entry["value"])
-	entry["target"] = target
-	entry["active"] = true
+	var entry: SpringEntry = _spring_entry("__y")
+	if not entry.active and host != null:
+		entry.value = host.position.y
+	entry.from_value = entry.value
+	entry.target = target
+	entry.active = true
 
 ## @ace_action
 ## @ace_name("Spring Host Angle")
@@ -228,12 +266,12 @@ func spring_host_y(target: float) -> void:
 ## @ace_description("Springs the host's rotation (degrees).")
 ## @ace_codegen_template("$SpringBehavior.spring_host_angle({degrees})")
 func spring_host_angle(degrees: float) -> void:
-	var entry: Dictionary = _spring_entry("__angle")
-	if not bool(entry["active"]) and host != null:
-		entry["value"] = host.rotation_degrees
-	entry["from"] = float(entry["value"])
-	entry["target"] = degrees
-	entry["active"] = true
+	var entry: SpringEntry = _spring_entry("__angle")
+	if not entry.active and host != null:
+		entry.value = host.rotation_degrees
+	entry.from_value = entry.value
+	entry.target = degrees
+	entry.active = true
 
 ## @ace_action
 ## @ace_name("Spring Host Scale")
@@ -241,12 +279,12 @@ func spring_host_angle(degrees: float) -> void:
 ## @ace_description("Springs the host's uniform scale (squash & stretch!).")
 ## @ace_codegen_template("$SpringBehavior.spring_host_scale({target})")
 func spring_host_scale(target: float) -> void:
-	var entry: Dictionary = _spring_entry("__scale")
-	if not bool(entry["active"]) and host != null:
-		entry["value"] = host.scale.x
-	entry["from"] = float(entry["value"])
-	entry["target"] = target
-	entry["active"] = true
+	var entry: SpringEntry = _spring_entry("__scale")
+	if not entry.active and host != null:
+		entry.value = host.scale.x
+	entry.from_value = entry.value
+	entry.target = target
+	entry.active = true
 
 ## @ace_action
 ## @ace_name("Set Color Value")
@@ -254,11 +292,11 @@ func spring_host_scale(target: float) -> void:
 ## @ace_description("Snaps a named colour spring (no motion) — seed it before springing.")
 ## @ace_codegen_template("$SpringBehavior.set_color({spring_name}, {color})")
 func set_color(spring_name: String, color: Color) -> void:
-	var entry: Dictionary = _color_entry(spring_name)
-	entry["value"] = color
-	entry["target"] = color
-	entry["velocity"] = Color(0, 0, 0, 0)
-	entry["active"] = false
+	var entry: ColorSpringEntry = _color_entry(spring_name)
+	entry.value = color
+	entry.target = color
+	entry.velocity = Color(0, 0, 0, 0)
+	entry.active = false
 
 ## @ace_action
 ## @ace_name("Spring Color")
@@ -266,10 +304,10 @@ func set_color(spring_name: String, color: Color) -> void:
 ## @ace_description("Springs a named colour toward a target (read it back with Color Value — great for hit flashes).")
 ## @ace_codegen_template("$SpringBehavior.spring_color({spring_name}, {target_color})")
 func spring_color(spring_name: String, target_color: Color) -> void:
-	var entry: Dictionary = _color_entry(spring_name)
-	var was_active := bool(entry["active"])
-	entry["target"] = target_color
-	entry["active"] = true
+	var entry: ColorSpringEntry = _color_entry(spring_name)
+	var was_active := entry.active
+	entry.target = target_color
+	entry.active = true
 	if not was_active:
 		spring_started.emit(spring_name)
 
@@ -280,9 +318,9 @@ func spring_color(spring_name: String, target_color: Color) -> void:
 ## @ace_codegen_template("$SpringBehavior.pause_spring({spring_name})")
 func pause_spring(spring_name: String) -> void:
 	if springs.has(spring_name):
-		springs[spring_name]["active"] = false
+		(springs[spring_name] as SpringEntry).active = false
 	if color_springs.has(spring_name):
-		color_springs[spring_name]["active"] = false
+		(color_springs[spring_name] as ColorSpringEntry).active = false
 
 ## @ace_action
 ## @ace_name("Resume Spring")
@@ -291,9 +329,9 @@ func pause_spring(spring_name: String) -> void:
 ## @ace_codegen_template("$SpringBehavior.resume_spring({spring_name})")
 func resume_spring(spring_name: String) -> void:
 	if springs.has(spring_name):
-		springs[spring_name]["active"] = true
+		(springs[spring_name] as SpringEntry).active = true
 	if color_springs.has(spring_name):
-		color_springs[spring_name]["active"] = true
+		(color_springs[spring_name] as ColorSpringEntry).active = true
 
 ## @ace_action
 ## @ace_name("Remove Spring")
