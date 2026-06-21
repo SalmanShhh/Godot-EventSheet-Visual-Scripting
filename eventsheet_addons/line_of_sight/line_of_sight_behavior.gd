@@ -41,6 +41,25 @@ func has_los_between(from_point: Vector2, to_point: Vector2) -> bool:
 	query.collision_mask = collision_mask
 	return host.get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
+## @ace_expression
+## @ace_name("Nearest Visible In Group")
+## @ace_category("Line Of Sight")
+## @ace_codegen_template("$LOSBehavior.nearest_visible_in_group({group})")
+## The closest group member this node can actually SEE (range + cone + raycast) — scans every
+## candidate and skips occluded ones, so a nearer-but-blocked enemy can't shadow a visible farther
+## one. Returns null if none are visible. The targeting primitive for auto-attack AI.
+func nearest_visible_in_group(group: String) -> Node2D:
+	var best: Node2D = null
+	for n: Node in get_tree().get_nodes_in_group(group):
+		var candidate: Node2D = n as Node2D
+		if candidate == null or candidate == host:
+			continue
+		if not has_los_to(candidate.global_position):
+			continue
+		if best == null or host.global_position.distance_to(candidate.global_position) < host.global_position.distance_to(best.global_position):
+			best = candidate
+	return best
+
 func _process(delta: float) -> void:
 	pass
 

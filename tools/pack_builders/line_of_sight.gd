@@ -41,7 +41,26 @@ static func build() -> bool:
 		"\t\treturn false",
 		"\tvar query := PhysicsRayQueryParameters2D.create(from_point, to_point)",
 		"\tquery.collision_mask = collision_mask",
-		"\treturn host.get_world_2d().direct_space_state.intersect_ray(query).is_empty()"
+		"\treturn host.get_world_2d().direct_space_state.intersect_ray(query).is_empty()",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Nearest Visible In Group\")",
+		"## @ace_category(\"Line Of Sight\")",
+		"## @ace_codegen_template(\"$LOSBehavior.nearest_visible_in_group({group})\")",
+		"## The closest group member this node can actually SEE (range + cone + raycast) — scans every",
+		"## candidate and skips occluded ones, so a nearer-but-blocked enemy can't shadow a visible farther",
+		"## one. Returns null if none are visible. The targeting primitive for auto-attack AI.",
+		"func nearest_visible_in_group(group: String) -> Node2D:",
+		"\tvar best: Node2D = null",
+		"\tfor n: Node in get_tree().get_nodes_in_group(group):",
+		"\t\tvar candidate: Node2D = n as Node2D",
+		"\t\tif candidate == null or candidate == host:",
+		"\t\t\tcontinue",
+		"\t\tif not has_los_to(candidate.global_position):",
+		"\t\t\tcontinue",
+		"\t\tif best == null or host.global_position.distance_to(candidate.global_position) < host.global_position.distance_to(best.global_position):",
+		"\t\t\tbest = candidate",
+		"\treturn best"
 	]))
 	sheet.events.append(extra_block_0)
 	var tick: EventRow = EventRow.new()

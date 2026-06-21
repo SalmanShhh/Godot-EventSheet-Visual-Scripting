@@ -3,6 +3,14 @@
 ## [Unreleased]
 
 ### Added
+- **Nearest / Furthest node picking — auto-attack targeting with no loop.** Two project-level expressions
+  in the *Nodes: Picking* row — **Nearest Node In Group** / **Furthest Node In Group** — pick the closest
+  or farthest member of a group by distance to the calling node (the `reduce()` idiom, since Godot 4 has
+  no `Array.min_by`; one expression serves both 2D and 3D via `global_position.distance_to`; empty group →
+  `null`). Pair them with a *Has Line Of Sight To* condition for "attack the nearest enemy I can see," or
+  use the new occlusion-correct **Nearest Visible In Group** expression added to both Line of Sight packs
+  (2D + 3D), which scans the group and skips a nearer-but-blocked target so a wall can't shadow a visible
+  farther enemy.
 - **A "Juice" pack — game feel in one behavior (the 29th addon).** Trauma-based **screenshake** (the
   C3 scroll-behavior idea, but additive on the camera's `offset`/`rotation` so it composes with camera
   follow instead of fighting it; squared-trauma ramp, FastNoiseLite for organic motion, stacks + decays
