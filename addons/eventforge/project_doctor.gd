@@ -29,6 +29,7 @@ static func run() -> Dictionary:
 	check_scene_attachment(sheet_paths, findings)
 	check_unused_variables(sheet_paths, findings)
 	check_duplicated_globals(sheet_paths, findings)
+	check_fanout_god_sheets(sheet_paths, findings)
 	check_unused_packs(sheet_paths, findings)
 	check_shadowed_variables(sheet_paths, findings)
 	check_vocabulary_doc(findings)
@@ -215,6 +216,65 @@ static func check_duplicated_globals(sheet_paths: PackedStringArray, findings: A
 			file_names.append(sheet_path.get_file())
 		_add(findings, "info", "duplicated-global", sheets_for_name[0],
 			"Global \"%s\" is declared in %d sheets (%s) - if it's shared state, promote it to an autoload (one source of truth): New Sheet -> Game State (Autoload)." % [name_key, sheets_for_name.size(), ", ".join(file_names)])
+
+## A plain sheet that reaches into MANY distinct OTHER nodes is a god-sheet doing several nodes' jobs;
+## the Godot answer is a behavior component per node, or a deliberately-named coordinator. Counts
+## DISTINCT external node targets (the With-node scope, node-targeted ACEs, and $path / %unique refs
+## in params and raw code) via the node-path parser - NOT row count (a long coherent state machine on
+## one host is fine). Skips behavior + autoload sheets (a coordinator IS a valid choice). Info-tier.
+const DEFAULT_FANOUT_THRESHOLD := 6
+
+static func _fanout_threshold() -> int:
+	return int(ProjectSettings.get_setting("eventsheets/doctor/fanout_threshold", DEFAULT_FANOUT_THRESHOLD))
+
+static func check_fanout_god_sheets(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		if sheet_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null or sheet.behavior_mode or sheet.autoload_mode:
+			continue
+		var targets: Dictionary = {}
+		_collect_external_targets(sheet.events, targets)
+		for function_entry: Variant in sheet.functions:
+			if function_entry is EventFunction:
+				var event_function: EventFunction = function_entry
+				_collect_external_targets(event_function.events if not event_function.events.is_empty() else event_function.rows, targets)
+		if targets.size() >= _fanout_threshold():
+			var names: Array = targets.keys()
+			names.sort()
+			_add(findings, "info", "fanout-god-sheet", sheet_path,
+				"This sheet drives %d different nodes (%s) - consider a behavior component per node, or a deliberately-named coordinator, instead of one sheet reaching across the scene." % [targets.size(), ", ".join(PackedStringArray(names))])
+
+## Walks a sheet's rows collecting DISTINCT external node references (normalised: $path / %unique,
+## get_node folds into $path), from With-node scopes, ACE param values and raw GDScript. self/host,
+## variables and absolute paths are not external targets.
+static func _collect_external_targets(rows: Array, targets: Dictionary) -> void:
+	for row: Variant in rows:
+		if row is RawCodeRow:
+			_note_node_refs((row as RawCodeRow).code, targets)
+		elif row is EventGroup:
+			var group: EventGroup = row
+			_collect_external_targets(group.events if not group.events.is_empty() else group.rows, targets)
+		elif row is EventRow:
+			var event: EventRow = row
+			_note_node_refs(event.with_node_target, targets)
+			for ace: Variant in event.conditions + event.actions:
+				if ace is RawCodeRow:
+					_note_node_refs((ace as RawCodeRow).code, targets)
+				elif ace is Resource and ace.get("params") is Dictionary:
+					for value: Variant in (ace.get("params") as Dictionary).values():
+						_note_node_refs(str(value), targets)
+			_collect_external_targets(event.sub_events, targets)
+
+static func _note_node_refs(text: String, targets: Dictionary) -> void:
+	if text.strip_edges().is_empty():
+		return
+	for reference: String in ACEParamsDialog.node_references_in_expression(text):
+		if not reference.begins_with("/"):
+			targets["$" + reference] = true
+	for unique_name: String in ACEParamsDialog.unique_names_in_expression(text):
+		targets["%" + unique_name] = true
 
 ## Packs no sheet, scene or autoload references are removal candidates — advisory,
 ## because a pack is also legitimately used from hand-written GDScript only.

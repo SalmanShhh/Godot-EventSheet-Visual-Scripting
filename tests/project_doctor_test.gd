@@ -156,6 +156,42 @@ static func run() -> bool:
 	DirAccess.remove_absolute("user://doctor_dup_b.tres")
 	DirAccess.remove_absolute("user://doctor_dup_auto.tres")
 
+	# Fan-out god-sheet nudge: a plain sheet reaching into many DISTINCT external nodes is flagged (by
+	# node count, NOT row count); a behavior sheet is exempt; below the threshold stays quiet.
+	ProjectSettings.set_setting("eventsheets/doctor/fanout_threshold", 3)
+	var fan_sheet: EventSheetResource = EventSheetResource.new()
+	var fan_event: EventRow = EventRow.new()
+	fan_event.trigger_provider_id = "Core"
+	fan_event.trigger_id = "OnReady"
+	var fan_code: RawCodeRow = RawCodeRow.new()
+	fan_code.code = "$Player.x = 1\n$Enemy.x = 1\n$Boss.x = 1\n$HUD/Score.text = \"\""
+	fan_event.actions.append(fan_code)
+	fan_sheet.events.append(fan_event)
+	ResourceSaver.save(fan_sheet, "user://doctor_fan.tres")
+	findings = []
+	EventSheetProjectDoctor.check_fanout_god_sheets(PackedStringArray(["user://doctor_fan.tres"]), findings)
+	all_passed = _check("a sheet reaching into many distinct nodes is flagged", _has(findings, "info", "fanout-god-sheet"), true) and all_passed
+	fan_sheet.behavior_mode = true
+	ResourceSaver.save(fan_sheet, "user://doctor_fan.tres")
+	findings = []
+	EventSheetProjectDoctor.check_fanout_god_sheets(PackedStringArray(["user://doctor_fan.tres"]), findings)
+	all_passed = _check("a behavior sheet is exempt (a coordinator is a valid choice)", _has(findings, "info", "fanout-god-sheet"), false) and all_passed
+	var small_sheet: EventSheetResource = EventSheetResource.new()
+	var small_event: EventRow = EventRow.new()
+	small_event.trigger_provider_id = "Core"
+	small_event.trigger_id = "OnReady"
+	var small_code: RawCodeRow = RawCodeRow.new()
+	small_code.code = "$Player.x = 1\n$Enemy.x = 1"
+	small_event.actions.append(small_code)
+	small_sheet.events.append(small_event)
+	ResourceSaver.save(small_sheet, "user://doctor_small.tres")
+	findings = []
+	EventSheetProjectDoctor.check_fanout_god_sheets(PackedStringArray(["user://doctor_small.tres"]), findings)
+	all_passed = _check("a sheet touching few nodes is not flagged (rows aren't the trigger)", _has(findings, "info", "fanout-god-sheet"), false) and all_passed
+	ProjectSettings.set_setting("eventsheets/doctor/fanout_threshold", null)
+	DirAccess.remove_absolute("user://doctor_fan.tres")
+	DirAccess.remove_absolute("user://doctor_small.tres")
+
 	# The repo gate: this repository must be doctor-clean at the error level — the
 	# byte-identity contract pack goldens pin, generalized to every committed sheet.
 	var report: Dictionary = EventSheetProjectDoctor.run()

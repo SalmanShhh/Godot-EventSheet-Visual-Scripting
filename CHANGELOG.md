@@ -3,6 +3,14 @@
 ## [Unreleased]
 
 ### Added
+- **The Project Doctor flags a fan-out god-sheet — by node count, not row count.** A common Construct
+  habit is one big event sheet doing everything; in Godot, a sheet reaching into *many different nodes*
+  is usually several nodes' jobs crammed together. The Doctor now adds an advisory when a plain sheet
+  targets ≥ N distinct external nodes — counted by the same node-path parser that powers `$`-validation
+  (the With-node scope, "On node" targets, `$path` / `%unique` refs, raw GDScript), **not** row count,
+  since a long coherent state machine on one host is perfectly fine — pointing at a behavior-per-node
+  split or a deliberately-named coordinator. Info-tier; behavior + autoload sheets are exempt; threshold
+  via `eventsheets/doctor/fanout_threshold` (default 6).
 - **The Project Doctor nudges duplicated globals toward an autoload.** In Construct, a global is just
   global; in Godot, the same value declared in several scripts is N copies of one truth, and the idiom is
   a single **autoload** (a Game State singleton). The Doctor (Tools → Check Project) now adds an advisory
