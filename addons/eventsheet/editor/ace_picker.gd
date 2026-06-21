@@ -496,6 +496,19 @@ func _refresh_tree() -> void:
 			if fuzzy_match(query, candidate.display_name):
 				definitions.append(candidate)
 				fuzzy_added += 1
+	# Reactivity steering: surface a polling condition's reactive twin beside it (off the shared
+	# ACEDescriptor.REACTS_TO map), so "react instead?" is one keystroke away; _best_match_item then
+	# pre-selects it, and the mode filter below drops the trigger where it is not a valid choice.
+	if filtering:
+		var reactive_twins: Array[ACEDefinition] = []
+		for matched: ACEDefinition in definitions:
+			var twin_id: String = _reactive_twin_id(matched)
+			if twin_id.is_empty():
+				continue
+			var twin_def: ACEDefinition = _registry.find_definition(matched.provider_id, twin_id)
+			if twin_def != null and not definitions.has(twin_def) and not reactive_twins.has(twin_def):
+				reactive_twins.append(twin_def)
+		definitions.append_array(reactive_twins)
 	for definition: ACEDefinition in definitions:
 		if not _is_allowed_for_mode(definition, mode, signals_only):
 			continue
@@ -824,7 +837,47 @@ func _best_match_item() -> TreeItem:
 					best = child
 			stack.push_back(child)
 			child = child.get_next()
+	# Reactivity steering: pre-select a polling condition's reactive twin (when it was surfaced in the
+	# list) instead of the poll — unless the user typed the condition's exact name. Ties the Enter-target
+	# to the Godot idiom (overlap -> On Body Entered) without touching the visible list order.
+	if best != null:
+		var best_definition: ACEDefinition = best.get_metadata(0) as ACEDefinition
+		if _prefer_reactive_twin(query, best_definition):
+			var twin_item: TreeItem = _find_definition_item(best_definition.provider_id, _reactive_twin_id(best_definition))
+			if twin_item != null:
+				return twin_item
 	return best if best != null else first
+
+## The reactive trigger id that replaces a polling condition (from the shared ACEDescriptor.REACTS_TO
+## map), or "" if the condition has no clean signal twin.
+static func _reactive_twin_id(definition: ACEDefinition) -> String:
+	if definition == null:
+		return ""
+	return str(ACEDescriptor.reactive_alternative(definition.provider_id, definition.id).get("trigger_id", ""))
+
+## True when the picker should pre-select a condition's reactive twin instead of the condition: it has
+## a twin AND the user did not type the condition's exact display name — so an explicit pick of the
+## poll is respected, while a concept query ("overlap") lands on the reactive trigger.
+static func _prefer_reactive_twin(query: String, definition: ACEDefinition) -> bool:
+	if definition == null or _reactive_twin_id(definition).is_empty():
+		return false
+	return query.to_lower().strip_edges() != definition.display_name.to_lower().strip_edges()
+
+## The tree item whose definition matches provider+id (the surfaced reactive twin), or null.
+func _find_definition_item(provider_id: String, ace_id: String) -> TreeItem:
+	if _tree == null:
+		return null
+	var stack: Array = [_tree.get_root()]
+	while not stack.is_empty():
+		var node: TreeItem = stack.pop_back()
+		var child: TreeItem = node.get_first_child()
+		while child != null:
+			var definition: ACEDefinition = child.get_metadata(0) as ACEDefinition
+			if definition != null and definition.provider_id == provider_id and definition.id == ace_id:
+				return child
+			stack.push_back(child)
+			child = child.get_next()
+	return null
 
 ## Relevance score of a definition against a search query (higher = better), so type-and-Enter targets
 ## the best match. Tiers: exact display name > name prefix > a name word starting with the query >

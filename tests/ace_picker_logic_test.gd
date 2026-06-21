@@ -125,6 +125,26 @@ static func run() -> bool:
 	all_passed = _check("score: any textual match outscores none, empty query scores 0",
 		ACEPickerDialog._score_match("hide", s_sub) > 0 and ACEPickerDialog._score_match("", s_exact) == 0, true) and all_passed
 
+	# Reactivity steering: a polling condition with a signal twin pre-selects the reactive TRIGGER on a
+	# concept query, but keeps the condition when the user typed its exact name; an ACE with no twin is
+	# never swapped. (The surfacing + tree pre-selection are exercised by the editor import.)
+	var overlap_cond: ACEDefinition = _make_def(ACEDefinition.ACEType.CONDITION)
+	overlap_cond.id = "OverlapsBody"
+	overlap_cond.display_name = "Overlaps Body"
+	all_passed = _check("reactive twin id resolves for a polling condition",
+		ACEPickerDialog._reactive_twin_id(overlap_cond), "OnBodyEntered") and all_passed
+	all_passed = _check("a concept query prefers the reactive twin",
+		ACEPickerDialog._prefer_reactive_twin("overlap", overlap_cond), true) and all_passed
+	all_passed = _check("the exact condition name keeps the condition",
+		ACEPickerDialog._prefer_reactive_twin("Overlaps Body", overlap_cond), false) and all_passed
+	var no_twin: ACEDefinition = _make_def(ACEDefinition.ACEType.ACTION)
+	no_twin.id = "Print"
+	no_twin.display_name = "Print"
+	all_passed = _check("an ACE with no twin is never swapped",
+		ACEPickerDialog._prefer_reactive_twin("print", no_twin), false) and all_passed
+	all_passed = _check("no twin id for a non-mapped ACE",
+		ACEPickerDialog._reactive_twin_id(no_twin).is_empty(), true) and all_passed
+
 	return all_passed
 
 static func _make_def(ace_type: int) -> ACEDefinition:

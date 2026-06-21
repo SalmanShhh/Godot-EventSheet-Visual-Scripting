@@ -10,7 +10,11 @@
   condition stays fully pickable — and is driven by a small, curated, shared poll→signal map
   (`ACEDescriptor.REACTS_TO`) that deliberately omits conditions with no real signal (is_on_floor, held
   input-action checks) so it never suggests a cargo-cult signal. The Construct "check every tick" reflex
-  meets Godot's "react to it" idiom at the moment you're choosing.
+  meets Godot's "react to it" idiom at the moment you're choosing. **And it's the default now:** when a
+  search surfaces a polling condition that has a twin, the reactive trigger is shown right beside it and
+  becomes the type-and-Enter pre-selection (so "overlap" lands on **On Body Entered**) — unless you type
+  the condition's exact name, which always keeps the condition. The visible list and its order are
+  unchanged; only which item is highlighted shifts, and every condition stays one keystroke away.
 - **Migration guide: a "Polling vs reacting" section** — the biggest mental shift from Construct 3 (one
   big *every-tick* sheet → *react to a signal*), with a polling/reacting before-after, the
   `_process` vs `_physics_process` rule of thumb, and — crucially — an explicit "when polling **is**
