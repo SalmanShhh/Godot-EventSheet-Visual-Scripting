@@ -105,13 +105,19 @@ static func run() -> bool:
 	chord.shift_pressed = true
 	all_passed = _check("chords never shadow their plain form",
 		EventSheetShortcuts.matches(chord, "add_condition_chord") and not EventSheetShortcuts.matches(chord, "copy"), true) and all_passed
-	ProjectSettings.set_setting("eventsheets/editor/shortcuts/duplicate", "Alt+D")
+	EventSheetShortcuts.set_binding("duplicate", "Alt+D")
 	var rebound: InputEventKey = InputEventKey.new()
 	rebound.keycode = KEY_D
 	rebound.alt_pressed = true
-	all_passed = _check("Project Settings rebinds win over defaults",
+	all_passed = _check("custom rebinds win over defaults",
 		EventSheetShortcuts.matches(rebound, "duplicate") and not EventSheetShortcuts.matches(combo, "duplicate"), true) and all_passed
-	ProjectSettings.set_setting("eventsheets/editor/shortcuts/duplicate", null)
+	all_passed = _check("format_event round-trips a captured chord",
+		EventSheetShortcuts.format_event(rebound), "Alt+D") and all_passed
+	all_passed = _check("conflicting_action flags a clash with another action's binding",
+		EventSheetShortcuts.conflicting_action("copy", "Alt+D"), "duplicate") and all_passed
+	EventSheetShortcuts.reset("duplicate")
+	all_passed = _check("reset restores the default binding",
+		EventSheetShortcuts.binding_for("duplicate"), "Ctrl+D") and all_passed
 
 	# ── Go to Sheet Row + docs links ──────────────────────────────────────────────
 	all_passed = _check("class docs resolve to the engine help topic",

@@ -34,14 +34,15 @@ static func run() -> bool:
 	all_passed = _check("hint_label is muted", hint.modulate.a < 1.0, true) and all_passed
 	hint.free()
 
-	# Keyboard-shortcuts catalog (Tools ▸ Keyboard Shortcuts) is populated with the core entries.
-	all_passed = _check("shortcut catalog has sections", EventSheetDock.SHORTCUTS.size() >= 4, true) and all_passed
+	# Keyboard Shortcuts editor (Tools ▸ Keyboard Shortcuts): the rebindable action list + the
+	# read-only fixed-keys reference are both populated.
+	all_passed = _check("rebindable shortcut list is populated", EventSheetShortcuts.ORDER.size() >= 4, true) and all_passed
+	all_passed = _check("rebindable action labels resolve", EventSheetShortcuts.label_for("add_event"), "Add event") and all_passed
 	var flat: String = ""
-	for section: Array in EventSheetDock.SHORTCUTS:
-		for entry: Array in section[1]:
-			flat += str(entry[0]) + " | " + str(entry[1]) + "\n"
-	all_passed = _check("catalog lists the Command Palette", flat.contains("Ctrl + P") and flat.contains("Command Palette"), true) and all_passed
-	all_passed = _check("catalog lists Find & Replace", flat.contains("Ctrl + F"), true) and all_passed
+	for pair: Array in EventSheetDock.FIXED_KEYS:
+		flat += str(pair[0]) + " | " + str(pair[1]) + "\n"
+	all_passed = _check("fixed-keys reference lists the Command Palette", flat.contains("Ctrl + P") and flat.contains("Command Palette"), true) and all_passed
+	all_passed = _check("fixed-keys reference lists Find & Replace", flat.contains("Ctrl + F"), true) and all_passed
 
 	return all_passed
 

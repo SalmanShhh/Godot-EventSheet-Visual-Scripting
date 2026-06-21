@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added
+- **Remappable keyboard shortcuts** — Tools ▸ Keyboard Shortcuts is now an *editor*, not just a cheat
+  sheet: click any of the ~18 authoring shortcuts (Add Event / Condition / Action, Save, Duplicate,
+  Copy / Paste, Undo / Redo, …) and press a new combination to rebind it. Clashes are flagged inline
+  but allowed (you resolve them); per-action and "Reset all" restore the defaults; the fixed
+  structural keys (Tab nesting, Delete, Enter/F2, Escape, Command Palette, zoom) stay read-only for
+  reference. Custom bindings save **per-user** to a `user://` file — local to each developer,
+  consistent across projects, and never committed to git. (The rebinding backend already existed
+  behind ProjectSettings; this adds the UI and moves persistence to per-user storage.)
+
 ### Changed
 - **Removed the redundant "Group" badge on group headers** — a group's accent bar + tinted background
   already read unmistakably as a group, so the leading "Group" text badge was just visual clutter.
