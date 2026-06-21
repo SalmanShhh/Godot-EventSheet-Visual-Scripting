@@ -245,7 +245,7 @@ static func build() -> bool:
 		"func _ensure_ability(id: String) -> AbilityData:",
 		"\tif not abilities.has(id):",
 		"\t\tabilities[id] = AbilityData.new()",
-		"\treturn abilities[id]",
+		"\treturn abilities[id] as AbilityData",
 		"",
 		"func _ids_with_tag(tag: String) -> Array:",
 		"\tvar out: Array = []",
@@ -344,8 +344,8 @@ static func build() -> bool:
 		[["id", "String"], ["seconds", "float"]], "\n".join(PackedStringArray([
 		"if not abilities.has(id):",
 		"\treturn",
-		"abilities[id].max_expiration = maxf(0.0, seconds)",
-		"abilities[id].expiration = maxf(0.0, seconds)"
+		"(abilities[id] as AbilityData).max_expiration = maxf(0.0, seconds)",
+		"(abilities[id] as AbilityData).expiration = maxf(0.0, seconds)"
 	])))
 
 	Lib.append_function(sheet, "remove_ability", "Remove Ability", "Abilities",
@@ -390,15 +390,15 @@ static func build() -> bool:
 		"if not abilities.has(id):",
 		"\treturn",
 		"var cd: float = maxf(0.0, seconds * cooldown_multiplier)",
-		"abilities[id].cooldown = cd",
-		"abilities[id].max_cooldown = cd"
+		"(abilities[id] as AbilityData).cooldown = cd",
+		"(abilities[id] as AbilityData).max_cooldown = cd"
 	])))
 
 	Lib.append_function(sheet, "reset_cooldown", "Reset Cooldown", "Abilities",
 		"Sets an ability's cooldown to 0 (instantly ready).",
 		[["id", "String"]], "\n".join(PackedStringArray([
 		"if abilities.has(id):",
-		"\tabilities[id].cooldown = 0.0"
+		"\t(abilities[id] as AbilityData).cooldown = 0.0"
 	])))
 
 	Lib.append_function(sheet, "set_max_stacks", "Set Max Stacks", "Abilities",
@@ -416,7 +416,7 @@ static func build() -> bool:
 		[["id", "String"], ["stacks", "int"]], "\n".join(PackedStringArray([
 		"if not abilities.has(id):",
 		"\treturn",
-		"abilities[id].stacks = clampi(stacks, 0, (abilities[id] as AbilityData).max_stacks)"
+		"(abilities[id] as AbilityData).stacks = clampi(stacks, 0, (abilities[id] as AbilityData).max_stacks)"
 	])))
 
 	Lib.append_function(sheet, "add_stacks", "Add Stacks", "Abilities",
@@ -454,14 +454,14 @@ static func build() -> bool:
 		"Enables or disables activation.",
 		[["id", "String"], ["enabled", "bool"]], "\n".join(PackedStringArray([
 		"if abilities.has(id):",
-		"\tabilities[id].enabled = enabled"
+		"\t(abilities[id] as AbilityData).enabled = enabled"
 	])))
 
 	Lib.append_function(sheet, "set_active", "Set Ability Active", "Abilities",
 		"Sets the active flag (for channeled / toggle abilities).",
 		[["id", "String"], ["active", "bool"]], "\n".join(PackedStringArray([
 		"if abilities.has(id):",
-		"\tabilities[id].active = active"
+		"\t(abilities[id] as AbilityData).active = active"
 	])))
 
 	Lib.append_function(sheet, "set_ability_data", "Set Ability Data", "Abilities",
@@ -476,7 +476,7 @@ static func build() -> bool:
 		[["id", "String"], ["tag", "String"]], "\n".join(PackedStringArray([
 		"if not abilities.has(id):",
 		"\treturn",
-		"var tags: Array = abilities[id].tags",
+		"var tags: Array = (abilities[id] as AbilityData).tags",
 		"if not tags.has(tag):",
 		"\ttags.append(tag)"
 	])))
@@ -499,7 +499,7 @@ static func build() -> bool:
 		"Enables/disables every ability carrying a tag.",
 		[["tag", "String"], ["enabled", "bool"]], "\n".join(PackedStringArray([
 		"for id: String in _ids_with_tag(tag):",
-		"\tabilities[id].enabled = enabled"
+		"\t(abilities[id] as AbilityData).enabled = enabled"
 	])))
 
 	Lib.append_function(sheet, "remove_abilities_with_tag", "Remove All Abilities With Tag", "Abilities",
@@ -515,7 +515,7 @@ static func build() -> bool:
 		"Sets cooldown to 0 for every ability with a tag.",
 		[["tag", "String"]], "\n".join(PackedStringArray([
 		"for id: String in _ids_with_tag(tag):",
-		"\tabilities[id].cooldown = 0.0"
+		"\t(abilities[id] as AbilityData).cooldown = 0.0"
 	])))
 
 	Lib.append_function(sheet, "set_cooldown_multiplier", "Set Cooldown Multiplier", "Abilities",

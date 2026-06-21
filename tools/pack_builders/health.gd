@@ -370,14 +370,14 @@ static func build() -> bool:
 		"Zeroes one named health pool.",
 		[["type", "String"]], "\n".join(PackedStringArray([
 		"if health_pools.has(type):",
-		"\thealth_pools[type].amount = 0.0"
+		"\t(health_pools[type] as HealthPool).amount = 0.0"
 	])))
 
 	Lib.append_function(sheet, "clear_all_health_pools", "Clear All Health Pools", "Health",
 		"Zeroes every health pool.",
 		[], "\n".join(PackedStringArray([
 		"for pool_name: String in health_pools.keys():",
-		"\thealth_pools[pool_name].amount = 0.0"
+		"\t(health_pools[pool_name] as HealthPool).amount = 0.0"
 	])))
 
 	Lib.append_function(sheet, "set_health_pool_decay_rate", "Set Health Pool Decay Rate", "Health",

@@ -367,7 +367,7 @@ func set_health_pool(type: String, amount: float) -> void:
 ## @ace_codegen_template("$SimpleHealthBehavior.clear_health_pool({type})")
 func clear_health_pool(type: String) -> void:
 	if health_pools.has(type):
-		health_pools[type].amount = 0.0
+		(health_pools[type] as HealthPool).amount = 0.0
 
 ## @ace_action
 ## @ace_name("Clear All Health Pools")
@@ -376,7 +376,7 @@ func clear_health_pool(type: String) -> void:
 ## @ace_codegen_template("$SimpleHealthBehavior.clear_all_health_pools()")
 func clear_all_health_pools() -> void:
 	for pool_name: String in health_pools.keys():
-		health_pools[pool_name].amount = 0.0
+		(health_pools[pool_name] as HealthPool).amount = 0.0
 
 ## @ace_action
 ## @ace_name("Set Health Pool Decay Rate")

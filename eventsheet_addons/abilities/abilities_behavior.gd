@@ -235,7 +235,7 @@ func list_abilities_by_tag(tag: String) -> String:
 func _ensure_ability(id: String) -> AbilityData:
 	if not abilities.has(id):
 		abilities[id] = AbilityData.new()
-	return abilities[id]
+	return abilities[id] as AbilityData
 
 func _ids_with_tag(tag: String) -> Array:
 	var out: Array = []
@@ -334,8 +334,8 @@ func create_temporary_ability(id: String, seconds: float) -> void:
 func remove_ability_after(id: String, seconds: float) -> void:
 	if not abilities.has(id):
 		return
-	abilities[id].max_expiration = maxf(0.0, seconds)
-	abilities[id].expiration = maxf(0.0, seconds)
+	(abilities[id] as AbilityData).max_expiration = maxf(0.0, seconds)
+	(abilities[id] as AbilityData).expiration = maxf(0.0, seconds)
 
 ## @ace_action
 ## @ace_name("Remove Ability")
@@ -388,8 +388,8 @@ func set_cooldown(id: String, seconds: float) -> void:
 	if not abilities.has(id):
 		return
 	var cd: float = maxf(0.0, seconds * cooldown_multiplier)
-	abilities[id].cooldown = cd
-	abilities[id].max_cooldown = cd
+	(abilities[id] as AbilityData).cooldown = cd
+	(abilities[id] as AbilityData).max_cooldown = cd
 
 ## @ace_action
 ## @ace_name("Reset Cooldown")
@@ -398,7 +398,7 @@ func set_cooldown(id: String, seconds: float) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.reset_cooldown({id})")
 func reset_cooldown(id: String) -> void:
 	if abilities.has(id):
-		abilities[id].cooldown = 0.0
+		(abilities[id] as AbilityData).cooldown = 0.0
 
 ## @ace_action
 ## @ace_name("Set Max Stacks")
@@ -420,7 +420,7 @@ func set_max_stacks(id: String, max_stacks: int) -> void:
 func set_stacks(id: String, stacks: int) -> void:
 	if not abilities.has(id):
 		return
-	abilities[id].stacks = clampi(stacks, 0, (abilities[id] as AbilityData).max_stacks)
+	(abilities[id] as AbilityData).stacks = clampi(stacks, 0, (abilities[id] as AbilityData).max_stacks)
 
 ## @ace_action
 ## @ace_name("Add Stacks")
@@ -464,7 +464,7 @@ func consume_stack(id: String) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_enabled({id}, {enabled})")
 func set_enabled(id: String, enabled: bool) -> void:
 	if abilities.has(id):
-		abilities[id].enabled = enabled
+		(abilities[id] as AbilityData).enabled = enabled
 
 ## @ace_action
 ## @ace_name("Set Ability Active")
@@ -473,7 +473,7 @@ func set_enabled(id: String, enabled: bool) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_active({id}, {active})")
 func set_active(id: String, active: bool) -> void:
 	if abilities.has(id):
-		abilities[id].active = active
+		(abilities[id] as AbilityData).active = active
 
 ## @ace_action
 ## @ace_name("Set Ability Data")
@@ -492,7 +492,7 @@ func set_ability_data(id: String, key: String, value: String) -> void:
 func add_tag(id: String, tag: String) -> void:
 	if not abilities.has(id):
 		return
-	var tags: Array = abilities[id].tags
+	var tags: Array = (abilities[id] as AbilityData).tags
 	if not tags.has(tag):
 		tags.append(tag)
 
@@ -521,7 +521,7 @@ func clear_tags(id: String) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_tag_enabled({tag}, {enabled})")
 func set_tag_enabled(tag: String, enabled: bool) -> void:
 	for id: String in _ids_with_tag(tag):
-		abilities[id].enabled = enabled
+		(abilities[id] as AbilityData).enabled = enabled
 
 ## @ace_action
 ## @ace_name("Remove All Abilities With Tag")
@@ -541,7 +541,7 @@ func remove_abilities_with_tag(tag: String) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.reset_cooldown_for_tag({tag})")
 func reset_cooldown_for_tag(tag: String) -> void:
 	for id: String in _ids_with_tag(tag):
-		abilities[id].cooldown = 0.0
+		(abilities[id] as AbilityData).cooldown = 0.0
 
 ## @ace_action
 ## @ace_name("Set Cooldown Multiplier")

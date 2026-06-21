@@ -106,6 +106,8 @@ static func build() -> bool:
 		"\tif cam == null:",
 		"\t\treturn",
 		"\tvar z: Vector2 = _zoom_from.lerp(_zoom_to, f)",
+		"\tz.x = maxf(z.x, 0.001)",
+		"\tz.y = maxf(z.y, 0.001)",
 		"\tcam.zoom = z",
 		"\tcam.global_position = _zoom_anchor - (_zoom_anchor - _zoom_cam_from) * (_zoom_from / z)",
 		"",

@@ -100,6 +100,8 @@ func _zoom_anchored_step(f: float) -> void:
 	if cam == null:
 		return
 	var z: Vector2 = _zoom_from.lerp(_zoom_to, f)
+	z.x = maxf(z.x, 0.001)
+	z.y = maxf(z.y, 0.001)
 	cam.zoom = z
 	cam.global_position = _zoom_anchor - (_zoom_anchor - _zoom_cam_from) * (_zoom_from / z)
 

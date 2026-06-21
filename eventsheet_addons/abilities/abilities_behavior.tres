@@ -233,7 +233,7 @@ func list_abilities_by_tag(tag: String) -> String:
 func _ensure_ability(id: String) -> AbilityData:
 	if not abilities.has(id):
 		abilities[id] = AbilityData.new()
-	return abilities[id]
+	return abilities[id] as AbilityData
 
 func _ids_with_tag(tag: String) -> Array:
 	var out: Array = []
@@ -426,8 +426,8 @@ events = Array[Resource]([SubResource("Resource_u3ear")])
 script = ExtResource("2_vnapg")
 code = "if not abilities.has(id):
 	return
-abilities[id].max_expiration = maxf(0.0, seconds)
-abilities[id].expiration = maxf(0.0, seconds)"
+(abilities[id] as AbilityData).max_expiration = maxf(0.0, seconds)
+(abilities[id] as AbilityData).expiration = maxf(0.0, seconds)"
 
 [sub_resource type="Resource" id="Resource_no1nt"]
 script = ExtResource("7_mdlaa")
@@ -528,8 +528,8 @@ script = ExtResource("2_vnapg")
 code = "if not abilities.has(id):
 	return
 var cd: float = maxf(0.0, seconds * cooldown_multiplier)
-abilities[id].cooldown = cd
-abilities[id].max_cooldown = cd"
+(abilities[id] as AbilityData).cooldown = cd
+(abilities[id] as AbilityData).max_cooldown = cd"
 
 [sub_resource type="Resource" id="Resource_kxri8"]
 script = ExtResource("7_mdlaa")
@@ -557,7 +557,7 @@ events = Array[Resource]([SubResource("Resource_8s5ka")])
 [sub_resource type="Resource" id="Resource_f1334"]
 script = ExtResource("2_vnapg")
 code = "if abilities.has(id):
-	abilities[id].cooldown = 0.0"
+	(abilities[id] as AbilityData).cooldown = 0.0"
 
 [sub_resource type="Resource" id="Resource_m2s0k"]
 script = ExtResource("7_mdlaa")
@@ -610,7 +610,7 @@ events = Array[Resource]([SubResource("Resource_lgign")])
 script = ExtResource("2_vnapg")
 code = "if not abilities.has(id):
 	return
-abilities[id].stacks = clampi(stacks, 0, (abilities[id] as AbilityData).max_stacks)"
+(abilities[id] as AbilityData).stacks = clampi(stacks, 0, (abilities[id] as AbilityData).max_stacks)"
 
 [sub_resource type="Resource" id="Resource_gs0cq"]
 script = ExtResource("7_mdlaa")
@@ -704,7 +704,7 @@ events = Array[Resource]([SubResource("Resource_kj7wo")])
 [sub_resource type="Resource" id="Resource_now3l"]
 script = ExtResource("2_vnapg")
 code = "if abilities.has(id):
-	abilities[id].enabled = enabled"
+	(abilities[id] as AbilityData).enabled = enabled"
 
 [sub_resource type="Resource" id="Resource_o8r4g"]
 script = ExtResource("7_mdlaa")
@@ -732,7 +732,7 @@ events = Array[Resource]([SubResource("Resource_now3l")])
 [sub_resource type="Resource" id="Resource_nmg4c"]
 script = ExtResource("2_vnapg")
 code = "if abilities.has(id):
-	abilities[id].active = active"
+	(abilities[id] as AbilityData).active = active"
 
 [sub_resource type="Resource" id="Resource_lccvh"]
 script = ExtResource("7_mdlaa")
@@ -794,7 +794,7 @@ events = Array[Resource]([SubResource("Resource_qas7i")])
 script = ExtResource("2_vnapg")
 code = "if not abilities.has(id):
 	return
-var tags: Array = abilities[id].tags
+var tags: Array = (abilities[id] as AbilityData).tags
 if not tags.has(tag):
 	tags.append(tag)"
 
@@ -871,7 +871,7 @@ events = Array[Resource]([SubResource("Resource_alk3k")])
 [sub_resource type="Resource" id="Resource_wqvko"]
 script = ExtResource("2_vnapg")
 code = "for id: String in _ids_with_tag(tag):
-	abilities[id].enabled = enabled"
+	(abilities[id] as AbilityData).enabled = enabled"
 
 [sub_resource type="Resource" id="Resource_ww1lv"]
 script = ExtResource("7_mdlaa")
@@ -922,7 +922,7 @@ events = Array[Resource]([SubResource("Resource_7dbhs")])
 [sub_resource type="Resource" id="Resource_eo5hw"]
 script = ExtResource("2_vnapg")
 code = "for id: String in _ids_with_tag(tag):
-	abilities[id].cooldown = 0.0"
+	(abilities[id] as AbilityData).cooldown = 0.0"
 
 [sub_resource type="Resource" id="Resource_0bg57"]
 script = ExtResource("7_mdlaa")

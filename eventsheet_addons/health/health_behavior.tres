@@ -483,7 +483,7 @@ events = Array[Resource]([SubResource("Resource_wux60")])
 [sub_resource type="Resource" id="Resource_q0rwn"]
 script = ExtResource("2_0d086")
 code = "if health_pools.has(type):
-	health_pools[type].amount = 0.0"
+	(health_pools[type] as HealthPool).amount = 0.0"
 
 [sub_resource type="Resource" id="Resource_aq0xw"]
 script = ExtResource("7_tvvp6")
@@ -504,7 +504,7 @@ events = Array[Resource]([SubResource("Resource_q0rwn")])
 [sub_resource type="Resource" id="Resource_kxgvi"]
 script = ExtResource("2_0d086")
 code = "for pool_name: String in health_pools.keys():
-	health_pools[pool_name].amount = 0.0"
+	(health_pools[pool_name] as HealthPool).amount = 0.0"
 
 [sub_resource type="Resource" id="Resource_tr6oo"]
 script = ExtResource("8_kursp")
