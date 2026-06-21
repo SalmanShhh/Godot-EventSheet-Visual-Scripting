@@ -71,12 +71,25 @@ func plan_length() -> int:
 func world_value(key: String) -> Variant:
 	return world_state.get(key, 0)
 
+## An HTN method — a way to accomplish a compound task, with preconditions + an ordered subtask list.
+class HTNMethod:
+	var id: String = ""
+	var utility: float = 0.0
+	var conditions: Array = []
+	var subtasks: Array = []
+
+## A precondition (world-state key, operator, expected value) a method needs to be chosen.
+class HTNCondition:
+	var key: String = ""
+	var op: String = "=="
+	var value: Variant = null
+
 # ── Planner internals ──
-func _find_method(task_name: String, method_id: String) -> Dictionary:
-	for method: Dictionary in compounds.get(task_name, []):
-		if str(method.get("id", "")) == method_id:
+func _find_method(task_name: String, method_id: String) -> HTNMethod:
+	for method: HTNMethod in compounds.get(task_name, []):
+		if method.id == method_id:
 			return method
-	return {}
+	return null
 
 func _to_number(value: Variant) -> float:
 	if value is float or value is int:
@@ -98,9 +111,9 @@ func _compare_values(a: Variant, op: String, b: Variant) -> bool:
 	return false
 
 func _conditions_hold(conditions: Array) -> bool:
-	for condition: Dictionary in conditions:
-		var actual: Variant = world_state.get(str(condition.get("key", "")), null)
-		if not _compare_values(actual, str(condition.get("op", "==")), condition.get("value")):
+	for condition: HTNCondition in conditions:
+		var actual: Variant = world_state.get(condition.key, null)
+		if not _compare_values(actual, condition.op, condition.value):
 			return false
 	return true
 
@@ -115,15 +128,15 @@ func _decompose(task_name: String, depth: int) -> Array:
 	if not compounds.has(task_name):
 		return []
 	var applicable: Array = []
-	for method: Dictionary in compounds[task_name]:
-		if _conditions_hold(method.get("conditions", [])):
+	for method: HTNMethod in compounds[task_name]:
+		if _conditions_hold(method.conditions):
 			applicable.append(method)
-	applicable.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a.get("utility", 0.0)) > float(b.get("utility", 0.0)))
-	for method: Dictionary in applicable:
+	applicable.sort_custom(func(a: HTNMethod, b: HTNMethod) -> bool: return a.utility > b.utility)
+	for method: HTNMethod in applicable:
 		var result: Array = []
 		var ok: bool = true
-		for subtask: Variant in method.get("subtasks", []):
-			var sub: Array = _decompose(str(subtask), depth + 1)
+		for subtask: String in method.subtasks:
+			var sub: Array = _decompose(subtask, depth + 1)
 			if sub.is_empty():
 				ok = false
 				break
@@ -173,11 +186,14 @@ func add_compound(task_name: String) -> void:
 func add_method(task_name: String, method_id: String, utility: float) -> void:
 	if not compounds.has(task_name):
 		compounds[task_name] = []
-	var method: Dictionary = _find_method(task_name, method_id)
-	if method.is_empty():
-		compounds[task_name].append({"id": method_id, "utility": utility, "conditions": [], "subtasks": []})
+	var method: HTNMethod = _find_method(task_name, method_id)
+	if method == null:
+		var m: HTNMethod = HTNMethod.new()
+		m.id = method_id
+		m.utility = utility
+		compounds[task_name].append(m)
 	else:
-		method["utility"] = utility
+		method.utility = utility
 
 ## @ace_action
 ## @ace_name("Add Method Condition")
@@ -185,9 +201,13 @@ func add_method(task_name: String, method_id: String, utility: float) -> void:
 ## @ace_description("A precondition (world-state key, operator, value) the method needs to be chosen.")
 ## @ace_codegen_template("$HTNAgent.add_method_condition({task_name}, {method_id}, {key}, {op}, {value})")
 func add_method_condition(task_name: String, method_id: String, key: String, op: String, value) -> void:
-	var method: Dictionary = _find_method(task_name, method_id)
-	if not method.is_empty():
-		method["conditions"].append({"key": key, "op": op, "value": value})
+	var method: HTNMethod = _find_method(task_name, method_id)
+	if method != null:
+		var c: HTNCondition = HTNCondition.new()
+		c.key = key
+		c.op = op
+		c.value = value
+		method.conditions.append(c)
 
 ## @ace_action
 ## @ace_name("Add Method Subtask")
@@ -195,9 +215,9 @@ func add_method_condition(task_name: String, method_id: String, key: String, op:
 ## @ace_description("Appends a subtask (primitive or compound) to a method, in order.")
 ## @ace_codegen_template("$HTNAgent.add_method_subtask({task_name}, {method_id}, {subtask})")
 func add_method_subtask(task_name: String, method_id: String, subtask: String) -> void:
-	var method: Dictionary = _find_method(task_name, method_id)
-	if not method.is_empty():
-		method["subtasks"].append(subtask)
+	var method: HTNMethod = _find_method(task_name, method_id)
+	if method != null:
+		method.subtasks.append(subtask)
 
 ## @ace_action
 ## @ace_name("Set Method Utility")
@@ -205,9 +225,9 @@ func add_method_subtask(task_name: String, method_id: String, subtask: String) -
 ## @ace_description("Updates a method's utility at runtime (utility-driven re-prioritising).")
 ## @ace_codegen_template("$HTNAgent.set_method_utility({task_name}, {method_id}, {utility})")
 func set_method_utility(task_name: String, method_id: String, utility: float) -> void:
-	var method: Dictionary = _find_method(task_name, method_id)
-	if not method.is_empty():
-		method["utility"] = utility
+	var method: HTNMethod = _find_method(task_name, method_id)
+	if method != null:
+		method.utility = utility
 
 ## @ace_action
 ## @ace_name("Clear Task Network")
