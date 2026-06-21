@@ -10,7 +10,7 @@ project balloons to thousands of events.
 > [!WARNING]
 > **Purely experimental — early, vibecoded, and not yet validated.** This plugin is an
 > experiment, not a production tool: it has been built almost entirely through
-> AI-assisted ("vibe") coding. The test suite is large (2,400+ CI-gated assertions)
+> AI-assisted ("vibe") coding. The test suite is large (2,500+ CI-gated assertions)
 > and every feature ships with regression tests, but the project has **not yet been
 > validated by real-world use**. It is **very early in development** and **subject to
 > large, sweeping changes** between releases — do not build anything you can't afford
@@ -87,7 +87,7 @@ Conditions                        | Actions
 - **Some C3 plugins intentionally have no equivalent** (Multiplayer, Drawing Canvas,
   XML): the migration guide points to the native Godot feature instead — that honesty
   keeps the project maintainable.
-- **Purely experimental, vibecoded project.** Built AI-first with a large CI-gated suite (2,400+
+- **Purely experimental, vibecoded project.** Built AI-first with a large CI-gated suite (2,500+
   assertions) standing in for mileage it hasn't earned yet — real-world validation is
   still ahead, and large sweeping changes between releases are likely (see the warning
   up top).
@@ -128,7 +128,8 @@ still ships as plain GDScript).
   rows), slow-double-click rename, quick-add bar ("type to insert" with C3 synonyms),
   **BBCode comments** (`[b]`/`[i]`/`[color]`), per-ACE notes, **starter templates**
   (Platformer / Top-down / First-Person 3D / Third-Person 3D), a **Command Palette
-  (Ctrl+P)**, a **Simple Mode** that hides advanced rows for newcomers, and multi-view
+  (Ctrl+P)**, a **Simple Mode** that hides advanced rows *and the advanced picker entries*
+  (Run GDScript / Evaluate / Breakpoint / Assert) for newcomers, and multi-view
   (split / detached / linked panes).
 - **Theming**: every color/metric is a token; bundled presets include **Dracula, Nord,
   Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha**, plus a Godot-adaptive
@@ -154,7 +155,7 @@ still ships as plain GDScript).
   project-wide in one click, their functions callable from everywhere.
 - **Input vocabulary**: InputMap actions with dropdowns, plus **Keyboard / Mouse /
   Gamepad / Touch** groups — key params capture with C3's *press-a-key* workflow.
-- **400+ native ACEs**: Tween (ease/transition combos, plus inline **Tween Callback**),
+- **450+ native ACEs**: Tween (ease/transition combos, plus inline **Tween Callback**),
   Scene flow (multi-line **Spawn Scene At / (Full)** — position + rotation + group tag),
   **Audio** (fire-and-forget one-shots, player control, bus mixing — with ▶ sound preview
   in the dialog), AnimatedSprite2D, Camera2D (incl. limits), Label (incl. **Set Text
@@ -163,11 +164,13 @@ still ships as plain GDScript).
   clamp / snapped, angle / rotate-toward, seeded RNG), **Color** (lighten / darken / lerp /
   HSV / alpha), **3D raycast / world-query** ACEs, **Collision** (CharacterBody/Area/
   CollisionObject layer/mask queries, shape enable/disable), **Dev helpers** (Debug
-  print/assert, scene-tree Groups, node Metadata, and **scene-tree navigation** —
-  parent / child / find), runtime **signal wiring** (connect / disconnect / emit-on /
-  is-connected), and a **Helpers** set — the structured escape hatch (Set/Get Property,
-  Call Method, Run GDScript, Inline If, Is Valid, and the math/string idioms) so code that
-  doesn't map to a specific ACE still stays an editable row.
+  print/assert, scene-tree Groups, node Metadata), **Nodes** (navigation — parent / child /
+  find — plus manipulation + picking: add / remove / move child, free, duplicate, rename,
+  find children, nodes-in-group), **Project utilities** (config-file settings, window /
+  screen / clipboard, performance monitors, time formatting), runtime **signal wiring**
+  (connect / disconnect / emit-on / is-connected), and a **Helpers** set — the structured
+  escape hatch (Set/Get Property, Call Method, Run GDScript, Inline If, Is Valid, and the
+  math/string idioms) so code that doesn't map to a specific ACE still stays an editable row.
 
 ### Behaviors & addons (zero configuration, no JSON)
 - **28 addon packs**, all authored as event sheets: the C3 classics (**Platformer** —
@@ -244,7 +247,7 @@ still ships as plain GDScript).
   events from a description — ships opt-in and off by default.) Playable showcases:
   `showcase_carousel.tscn` (flagship), `starfall.tscn`, `quest_fsm.tscn`, and
   `platformer_shooter.tscn`. See [CHANGELOG.md](CHANGELOG.md).
-- **Quality**: 2,400+ test assertions, all green, CI-gated on every push (any `[FAIL]`
+- **Quality**: 2,500+ test assertions, all green, CI-gated on every push (any `[FAIL]`
   fails the build, and the Project Doctor gate fails it on sheet/output drift);
   byte-exact golden round-trips guard the lossless rules. **Verified on Godot 4.7 stable**
   (full suite + an in-editor smoke run).
