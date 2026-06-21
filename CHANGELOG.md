@@ -98,6 +98,11 @@
   Breakpoint, Assert, Print Rich) so newcomers see only the friendly, code-free vocabulary. Turning
   Simple Mode off restores everything. Previously Simple Mode only hid advanced *rows*, not picker
   entries.
+- **Go back to re-pick an ACE while editing (C3-style)** — the `◀ Back` button in the params dialog
+  now appears when editing *any* existing ACE (previously only when adding), and Back re-opens the
+  picker **preselected on the current ACE** — so editing an action or expression can go back and
+  swap it, exactly like editing a condition already did. Closes the one gap in the existing
+  back-navigation flow.
 
 ### Editor DX — popup polish, error→row deep-linking, shadow guard, picker, watch + event trace
 - **Consistent popups** — a shared `EventSheetPopupUI` helper gives the plugin's dialogs one look:

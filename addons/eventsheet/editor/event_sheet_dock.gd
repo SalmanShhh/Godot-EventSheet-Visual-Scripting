@@ -2383,10 +2383,14 @@ func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> 
     _ace_params.open_with_values(definition, context, initial_values)
 
 ## Re-opens the ACE picker when the params dialog requests Back.
-func _on_ace_params_back_requested(_definition: ACEDefinition, context: Dictionary) -> void:
+func _on_ace_params_back_requested(definition: ACEDefinition, context: Dictionary) -> void:
     var mode: String = str(context.get("mode", "new_event"))
     var signals_only: bool = bool(context.get("signals_only", false))
     var selected_resource: Resource = context.get("selected_resource", null)
+    # Preselect the ACE you were editing so Back lands on it in the picker (swap it, or re-pick the
+    # same one to tweak params) — matching C3's edit-and-swap.
+    if definition != null:
+        context["preselect_ace_id"] = definition.id
     _ace_picker.open(mode, signals_only, selected_resource, context)
 
 ## Returns the sheet's variable names for variable-reference parameter dropdowns.

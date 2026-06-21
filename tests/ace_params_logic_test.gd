@@ -42,6 +42,17 @@ static func run() -> bool:
 	dialog._context = {"mode": "append_action"}
 	all_passed = _check("append mode is not re-edit", dialog._is_reedit_flow(), false) and all_passed
 
+	# Back-to-picker: shown from the add flow (from_picker) AND when editing an existing ACE (a
+	# replace_* mode), so editing an action/expression can go back and swap — not just conditions.
+	dialog._context = {"from_picker": true}
+	all_passed = _check("from_picker can return to picker", dialog._can_return_to_picker(), true) and all_passed
+	dialog._context = {"mode": "replace_action"}
+	all_passed = _check("editing an action can return to picker (gap fix)", dialog._can_return_to_picker(), true) and all_passed
+	dialog._context = {"mode": "replace_condition"}
+	all_passed = _check("editing a condition can return to picker", dialog._can_return_to_picker(), true) and all_passed
+	dialog._context = {}
+	all_passed = _check("no picker context hides back", dialog._can_return_to_picker(), false) and all_passed
+
 	# Hint text: blocked apply explains the missing-variable situation.
 	dialog._apply_blocked = true
 	all_passed = _check("blocked hint mentions adding a variable", dialog._build_hint_text().to_lower().contains("add a variable"), true) and all_passed

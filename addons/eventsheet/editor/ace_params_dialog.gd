@@ -119,8 +119,9 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 		" (Edit)" if _is_reedit_flow() else ""
 	]
 	_dialog.get_ok_button().disabled = _apply_blocked
-	# Back only makes sense when this dialog was opened from the picker flow.
-	_set_back_visible(_came_from_picker())
+	# Back returns to the picker — from the add flow OR a row edit (which opens in a replace_* mode),
+	# so editing any ACE (action/expression too, not just conditions) can go back and swap.
+	_set_back_visible(_can_return_to_picker())
 	if _add_another_button != null:
 		_add_another_button.visible = str(_context.get("mode", "")) in ["append_condition", "append_action"]
 	_dialog.popup_centered(Vector2i(560, 380))
@@ -1611,9 +1612,16 @@ func _resolve_variable_names() -> PackedStringArray:
 	return names
 
 func _came_from_picker() -> bool:
-	# The dock sets from_picker when this dialog is opened from a picker selection;
-	# direct row edits (double-click an ACE) open it without a picker to return to.
+	# The dock sets from_picker when this dialog is opened from a picker selection.
 	return bool(_context.get("from_picker", false))
+
+## Whether Back can return to a picker: the add flow (from_picker) OR a row edit, which opens in a
+## replace_* mode the picker understands — so editing an action/expression can also go back to swap
+## the ACE, exactly like editing a condition already does (it routes through the replace-picker).
+func _can_return_to_picker() -> bool:
+	if _came_from_picker():
+		return true
+	return str(_context.get("mode", "")) in ["replace_condition", "replace_action", "replace_trigger"]
 
 func _close() -> void:
 	if _dialog != null:
