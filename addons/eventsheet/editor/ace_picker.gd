@@ -948,6 +948,11 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 	var body: String = header_line + "\n" + description
 	if not template.is_empty():
 		body += "\n[code]%s[/code]" % template
+	# Reactivity nudge: a polling condition that has a clean signal twin gets a one-line tip pointing at
+	# the reactive trigger (the Godot idiom). Informational only — the condition stays fully pickable.
+	var reactive: Dictionary = ACEDescriptor.reactive_alternative(definition.provider_id, definition.id)
+	if not reactive.is_empty():
+		body += "\n[color=#e0b050]💡 Reactive alternative: [b]%s[/b] — reacts once when it happens, instead of checking every frame.[/color]" % str(reactive.get("trigger_name", ""))
 	_info_label.text = body
 
 func _on_favorite_button_pressed() -> void:

@@ -37,6 +37,27 @@ var codegen_on_true: String = ""
 @export var return_type: int = TYPE_NIL
 @export var codegen_template: String = ""
 
+## Curated poll -> signal-twin map (the shared "reactivity" datum): the handful of polling CONDITIONS
+## that have a clean reactive trigger, so the editor can nudge "react to a signal instead of checking
+## this every frame". Keyed "<provider>::<ace_id>" -> {trigger_id, trigger_name}. Deliberately omits
+## conditions with NO real signal twin — is_on_floor (Godot has no floor signal) and held input-action
+## polls (no per-action signal) — because suggesting one there would be cargo-cult, not idiomatic.
+const REACTS_TO: Dictionary = {
+	"Core::IsTimerStopped": {"trigger_id": "OnTimeout", "trigger_name": "On Timeout"},
+	"Core::OverlapsBody": {"trigger_id": "OnBodyEntered", "trigger_name": "On Body Entered"},
+	"Core::OverlapsArea": {"trigger_id": "OnAreaEntered", "trigger_name": "On Area Entered"},
+	"Core::HasOverlappingBodies": {"trigger_id": "OnBodyEntered", "trigger_name": "On Body Entered"},
+	"Core::HasOverlappingAreas": {"trigger_id": "OnAreaEntered", "trigger_name": "On Area Entered"},
+	"Core::IsAnimationPlaying": {"trigger_id": "OnAnimationFinished", "trigger_name": "On Animation Finished"},
+	"Core::IsSpriteAnimationPlaying": {"trigger_id": "OnAnimationFinished", "trigger_name": "On Animation Finished"},
+	"Core::IsButtonPressed": {"trigger_id": "OnButtonPressed", "trigger_name": "On Pressed"},
+}
+
+## The reactive trigger that replaces a polling condition, or {} if none. The single lookup the picker
+## tip — and later the Project Doctor / inline hint — all read, so the nudge is defined once.
+static func reactive_alternative(provider_id: String, ace_id: String) -> Dictionary:
+	return REACTS_TO.get("%s::%s" % [provider_id, ace_id], {})
+
 ## Returns the display label used in ACE pickers.
 func get_list_name() -> String:
 	if not list_name.is_empty():

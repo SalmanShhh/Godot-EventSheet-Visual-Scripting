@@ -3,6 +3,14 @@
 ## [Unreleased]
 
 ### Added
+- **The picker nudges you from polling toward signals.** When you look at a polling condition that has a
+  clean reactive twin — Overlaps Body / Area, Is Timer Stopped, Is Animation Playing, Is Button Pressed —
+  the picker's info panel now shows a one-line tip pointing at the signal trigger that reacts *once*
+  instead (On Body Entered, On Timeout, On Animation Finished, On Pressed). It's informational only — the
+  condition stays fully pickable — and is driven by a small, curated, shared poll→signal map
+  (`ACEDescriptor.REACTS_TO`) that deliberately omits conditions with no real signal (is_on_floor, held
+  input-action checks) so it never suggests a cargo-cult signal. The Construct "check every tick" reflex
+  meets Godot's "react to it" idiom at the moment you're choosing.
 - **Migration guide: a "Polling vs reacting" section** — the biggest mental shift from Construct 3 (one
   big *every-tick* sheet → *react to a signal*), with a polling/reacting before-after, the
   `_process` vs `_physics_process` rule of thumb, and — crucially — an explicit "when polling **is**
