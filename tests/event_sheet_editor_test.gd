@@ -1528,7 +1528,7 @@ static func run() -> bool:
     dock._preview_window.title = ""
     dock._on_ace_preview_requested("DemoNode", preview_defs)
     # Detached: the preview window can't popup(); its configured title proves the open ran.
-    all_passed = _check("ace drag-in preview opens popup window", dock._preview_window.title.begins_with("Dropped ACE Preview — DemoNode"), true) and all_passed
+    all_passed = _check("node drag-in preview opens popup window", dock._preview_window.title.begins_with("Dropped Node Preview — DemoNode"), true) and all_passed
     all_passed = _check("ace drag-in preview list gets populated", dock._preview_list.item_count > 0, true) and all_passed
 
     # Simple mode (progressive disclosure): advanced/code entries drop out of the row menus,

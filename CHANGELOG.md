@@ -35,6 +35,11 @@
   behind ProjectSettings; this adds the UI and moves persistence to per-user storage.)
 
 ### Changed
+- **Plainer wording for beginners.** The dock no longer surfaces the insider acronym "ACE" in
+  beginner-facing places: the node-drop preview reads "Dropped Node Preview", the row-comment dialog is
+  "Row Comment", and the "couldn't edit this row" / "nothing found on this node" messages use plain
+  "actions and conditions" language. The advanced custom-ACE provider and export features keep the term
+  (it matches the Custom ACEs guide).
 - **Removed the redundant "Group" badge on group headers** — a group's accent bar + tinted background
   already read unmistakably as a group, so the leading "Group" text badge was just visual clutter.
   Headers now show only the inline-editable title (and its optional description); selection, the

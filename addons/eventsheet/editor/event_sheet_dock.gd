@@ -936,7 +936,7 @@ func _build_preview_window() -> void:
         return
     _preview_window = Window.new()
     _preview_window.name = "ACEPreviewWindow"
-    _preview_window.title = "Dropped ACE Preview"
+    _preview_window.title = "Dropped Node Preview"
     _preview_window.visible = false
     _preview_window.min_size = Vector2i(480, 280)
     _preview_window.close_requested.connect(func() -> void:
@@ -953,7 +953,7 @@ func _build_preview_window() -> void:
 
     _preview_title = Label.new()
     _preview_title.name = "ACEPreviewTitle"
-    _preview_title.text = "Dropped ACE Preview"
+    _preview_title.text = "Dropped Node Preview"
     content.add_child(_preview_title)
 
     _preview_list = ItemList.new()
@@ -2440,7 +2440,7 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
         return
     var definition: ACEDefinition = edit_context.get("definition", null)
     if definition == null:
-        _set_status("ACE metadata could not be resolved for editing.", true)
+        _set_status("Couldn't load this row for editing (its action or condition definition is missing).", true)
         return
     if definition.parameters.is_empty():
         _ace_picker.open(str(edit_context.get("mode", "")), false, event_row, edit_context)
@@ -2968,13 +2968,13 @@ func _resolve_event_ace_resource(event_row: EventRow, lane: String, ace_index: i
 func _on_ace_preview_requested(source_label: String, definitions: Array[ACEDefinition]) -> void:
     if _preview_window == null or _preview_list == null:
         return
-    _preview_window.title = "Dropped ACE Preview — %s (%d)" % [source_label, definitions.size()]
-    _preview_title.text = "Dropped ACE Preview — %s (%d)" % [source_label, definitions.size()]
+    _preview_window.title = "Dropped Node Preview — %s (%d)" % [source_label, definitions.size()]
+    _preview_title.text = "Dropped Node Preview — %s (%d)" % [source_label, definitions.size()]
     _preview_list.clear()
     for definition in definitions:
         _preview_list.add_item("[%s] %s" % [_ace_type_label(definition.ace_type), definition.format_display()])
     if definitions.is_empty():
-        _preview_list.add_item("No ACE definitions were generated from this drop payload.")
+        _preview_list.add_item("No actions or conditions were found on the dropped node.")
     _preview_window.popup_centered(Vector2i(560, 320))
 
 func _ace_type_label(ace_type: int) -> String:
@@ -6584,7 +6584,7 @@ func _open_ace_comment_dialog(target: Resource) -> void:
         return
     if _ace_comment_dialog == null:
         _ace_comment_dialog = ConfirmationDialog.new()
-        _ace_comment_dialog.title = "ACE Comment"
+        _ace_comment_dialog.title = "Row Comment"
         _ace_comment_edit = LineEdit.new()
         _ace_comment_edit.placeholder_text = "Why this condition/action exists…"
         _ace_comment_edit.custom_minimum_size = Vector2(360.0, 0.0)
@@ -8236,7 +8236,7 @@ func _build_demo_sheet() -> EventSheetResource:
     sheet.variables["score"] = {"type": "int", "default": 0}
 
     var intro_comment := CommentRow.new()
-    intro_comment.text = "Drag a node into the viewport to preview reflected ACEs."
+    intro_comment.text = "Drag a node into the viewport to preview the actions and conditions it offers."
     sheet.events.append(intro_comment)
 
     var encounter_group := EventGroup.new()
