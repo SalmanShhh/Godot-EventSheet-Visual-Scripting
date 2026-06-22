@@ -45,6 +45,34 @@ static func run() -> bool:
 	for banned: String in CodegenParityTest.BANNED_PATTERNS:
 		all_passed = _check("Emit Signal On output is parity-clean (no '%s')" % banned, body.contains(banned), false) and all_passed
 
+	# The Core (host-scoped) "Emit Signal" ACE must stay modern + parity-clean too.
+	var core: ACEDescriptor = null
+	for d: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		if d.ace_id == "EmitSignal":
+			core = d
+			break
+	all_passed = _check("Core EmitSignal is registered", core != null, true) and all_passed
+	if core != null:
+		var core_template: String = str(core.codegen_template)
+		all_passed = _check("Core EmitSignal uses the modern .emit() template", core_template, "{signal_name}.emit({args})") and all_passed
+		all_passed = _check("Core EmitSignal no longer uses legacy emit_signal", core_template.contains("emit_signal"), false) and all_passed
+		var core_action: ACEAction = ACEAction.new()
+		core_action.provider_id = "Core"
+		core_action.ace_id = "EmitSignal"
+		core_action.params = {"signal_name": "damage_taken", "args": "10"}
+		var core_sheet: EventSheetResource = EventSheetResource.new()
+		core_sheet.host_class = "Node"
+		var core_event: EventRow = EventRow.new()
+		core_event.trigger_provider_id = "Core"
+		core_event.trigger_id = "OnReady"
+		core_event.actions.append(core_action)
+		core_sheet.events.append(core_event)
+		var core_out: String = str(SheetCompiler.compile(core_sheet, "user://eventsheets_emit_core.gd").get("output", ""))
+		all_passed = _check("Core EmitSignal compiles to signal.emit(args)", core_out.contains("damage_taken.emit(10)"), true) and all_passed
+		var core_body: String = core_out.substr(maxi(core_out.find("extends "), 0))
+		for banned: String in CodegenParityTest.BANNED_PATTERNS:
+			all_passed = _check("Core EmitSignal output is parity-clean (no '%s')" % banned, core_body.contains(banned), false) and all_passed
+
 	return all_passed
 
 static func _emit(template: String, target: String, signal_name: String, args: String) -> ACEAction:

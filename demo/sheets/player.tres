@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EventSheetResource" load_steps=17 format=3 uid="uid://uewp5fqfnf6a"]
+[gd_resource type="Resource" script_class="EventSheetResource" load_steps=19 format=3 uid="uid://uewp5fqfnf6a"]
 
 [ext_resource type="Script" uid="uid://das1ks7khoh18" path="res://addons/eventforge/resources/event_sheet.gd" id="1_event_sheet"]
 [ext_resource type="Script" uid="uid://b7h46xqcnqmkv" path="res://addons/eventforge/resources/event_row.gd" id="2_event_row"]
@@ -6,6 +6,12 @@
 [ext_resource type="Script" uid="uid://cqf5u07am3jvp" path="res://addons/eventforge/resources/ace_action.gd" id="3_ace_action"]
 [ext_resource type="Script" uid="uid://k7isxxi2kcg2" path="res://addons/eventforge/resources/ace_condition.gd" id="4_ace_condition"]
 [ext_resource type="Script" uid="uid://c50gq4i8jk85y" path="res://addons/eventforge/resources/pick_filter.gd" id="4_engxs"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="5_signalrow"]
+
+[sub_resource type="Resource" id="SignalRow_damage"]
+script = ExtResource("5_signalrow")
+signal_name = "damage_taken"
+params = PackedStringArray("amount: int")
 
 [sub_resource type="Resource" id="ACEAction_ready_log"]
 script = ExtResource("3_ace_action")
@@ -66,7 +72,7 @@ script = ExtResource("3_ace_action")
 ace_id = "EmitSignal"
 parameters = {
 "args": "10",
-"signal_name": "\"damage_taken\""
+"signal_name": "damage_taken"
 }
 
 [sub_resource type="Resource" id="ACECondition_enemy_group"]
@@ -89,7 +95,7 @@ event_uid = "a7648e"
 script = ExtResource("1_event_sheet")
 host_class = "CharacterBody2D"
 addon_tags = PackedStringArray()
-events = Array[Resource]([SubResource("EventRow_ready"), SubResource("EventRow_process_low_health"), SubResource("EventRow_body_entered")])
+events = Array[Resource]([SubResource("SignalRow_damage"), SubResource("EventRow_ready"), SubResource("EventRow_process_low_health"), SubResource("EventRow_body_entered")])
 variables = {
 "health": {
 "default": 100,

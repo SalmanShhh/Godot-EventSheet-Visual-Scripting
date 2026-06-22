@@ -20,9 +20,9 @@
   - **Every X Seconds** accumulates with `get_process_delta_time()` instead of a bare `delta`, so it
     compiles under any trigger, not only `_process` / `_physics_process`.
   - **Look At (3D)** defaults its target to `Vector3(0, 0, -1)` rather than the node's own origin, which
-    otherwise error-spammed "look_at() failed" every call on a node at the world origin.
+	otherwise error-spammed "look_at() failed" every call on a node at the world origin.
   - **Play Sound / Play Sound At** free the throwaway one-shot player when the stream fails to load,
-    instead of leaking it while waiting on a `finished` signal that never fires.
+	instead of leaking it while waiting on a `finished` signal that never fires.
 - **The "Set Material" ACE's default no longer breaks the build.** Its placeholder was
   `preload("res://effect_material.tres")`, and `preload` resolves at compile time — so a freshly-added
   Set Material wouldn't compile until you pointed it at a real material. The default is now `null`; the
@@ -54,6 +54,15 @@
   even though only the helper itself, never a bundled pack, used it). The signal parameter is now a bare
   identifier rather than a quoted string. New `emit_signal_modern_test` pulls the live descriptor and runs
   its output through the project's own `BANNED_PATTERNS` scan so the helper can't regress to the legacy form.
+- **The Core "Emit Signal" ACE now emits the modern `signal.emit()` form too** — matching the "Emit Signal On"
+  helper. `emit_signal(&"name", args)` becomes `name.emit(args)`; the signal parameter is a bare identifier, so
+  the signal must be declared (the Quick-Start player demo now declares `signal damage_taken(amount: int)` via a
+  Signal row). `emit_signal_modern_test` was extended to pull the live Core descriptor and scan its compiled
+  output through the parity `BANNED_PATTERNS`, so neither signal ACE can regress to the legacy form.
+- **Internal development-scaffolding docs moved out of the user-facing `docs/` folder** into `docs/internal/`:
+  seven status / progress-report / alignment-status / adapter-design notes (`*_STATUS`, `*_PROGRESS_REPORT`,
+  `Auto_ACE_Adapter_*`, …). A newcomer browsing `docs/` now finds guides and contract specs, not dev
+  scaffolding; the user-facing Layout/Alignment **guide** and the blessed architecture-slices tracker stay put.
 
 ### Added
 - **The Pick Filter (For Each) dialog blocks saving a loop whose collection / where / order-by doesn't compile.**

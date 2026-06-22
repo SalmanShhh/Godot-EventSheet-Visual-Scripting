@@ -19,19 +19,19 @@ const REQUIRED_DOCS := {
 		"Construct 3-like tuning recipe",
 		"Theme token cross-reference"
 	],
-	"res://docs/EVENTSHEET_EDITOR_PROGRESS_REPORT.md": [
+	"res://docs/internal/EVENTSHEET_EDITOR_PROGRESS_REPORT.md": [
 		"# EventSheet Editor Progress Report",
 		"Completed in this branch",
 		"Gaps / partial",
 		"Next steps"
 	],
-	"res://docs/EVENTSHEET_C3_WORKFLOW_ALIGNMENT_STATUS.md": [
+	"res://docs/internal/EVENTSHEET_C3_WORKFLOW_ALIGNMENT_STATUS.md": [
 		"# C3 Workflow Alignment Status",
 		"Aligned",
 		"Partial",
 		"Missing"
 	],
-	"res://docs/EVENTSHEET_AUTO_ACE_ALIGNMENT_STATUS.md": [
+	"res://docs/internal/EVENTSHEET_AUTO_ACE_ALIGNMENT_STATUS.md": [
 		"# Auto-ACE Alignment Status",
 		"Implemented",
 		"Partial",

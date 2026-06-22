@@ -4,6 +4,8 @@
 
 extends CharacterBody2D
 
+signal damage_taken(amount: int)
+
 @export var health: int = 100
 @export var speed: float = 200.0
 
@@ -18,4 +20,4 @@ func _process(delta: float) -> void:
 func _on_body_entered(body: Node) -> void:
 	if body.is_in_group("enemy"):
 		health += -10
-		emit_signal(&"damage_taken", 10)
+		damage_taken.emit(10)

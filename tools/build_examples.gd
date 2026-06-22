@@ -442,7 +442,7 @@ func _build_quest_fsm() -> bool:
 	var grant_body: EventRow = EventRow.new()
 	grant_body.actions.append(_action("Core", "DictSetKey", "{var_name}[{key}] = {value}", {"var_name": "inventory", "key": "id", "value": "inventory.get(id, 0) + qty"}))
 	grant_body.actions.append(_action("Core", "ArrayAppend", "{var_name}.append({value})", {"var_name": "quest_log", "value": "id"}))
-	grant_body.actions.append(_action("Core", "EmitSignal", "emit_signal(&\"item_collected\", id)", {}))
+	grant_body.actions.append(_action("Core", "EmitSignal", "item_collected.emit(id)", {}))
 	fn.events = [grant_body]
 	sheet.functions.append(fn)
 

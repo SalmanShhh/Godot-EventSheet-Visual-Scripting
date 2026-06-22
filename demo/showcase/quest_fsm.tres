@@ -163,7 +163,7 @@ codegen_template = "{var_name}.append({value})"
 [sub_resource type="Resource" id="Resource_jjoap"]
 script = ExtResource("5_bfrky")
 ace_id = "EmitSignal"
-codegen_template = "emit_signal(&\"item_collected\", id)"
+codegen_template = "item_collected.emit(id)"
 
 [sub_resource type="Resource" id="Resource_jg684"]
 script = ExtResource("9_lpwia")

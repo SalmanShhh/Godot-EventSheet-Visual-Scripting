@@ -42,16 +42,16 @@ static func run() -> bool:
 		(field as OptionButton).get_item_text(0), "my_legacy_signal") and all_passed
 	field.free()
 
-	# Descriptors: OnSignal/EmitSignal carry the picker hint; EmitSignal emits &"name".
+	# Descriptors: OnSignal/EmitSignal carry the signal picker hint; EmitSignal emits the modern signal.emit() form.
 	var by_id: Dictionary = {}
 	for descriptor in EventForgeBuiltinACEs.get_descriptors():
 		by_id[descriptor.ace_id] = descriptor
 	all_passed = _check("OnSignal uses the signal picker",
 		str((by_id["OnSignal"].params[0] as ACEParam).hint), "signal_reference") and all_passed
-	all_passed = _check("EmitSignal emits a StringName literal (quoted param values)",
-		str(by_id["EmitSignal"].codegen_template).contains("emit_signal(&{signal_name}"), true) and all_passed
-	all_passed = _check("EmitSignal stores quoted values",
-		str((by_id["EmitSignal"].params[0] as ACEParam).hint), "signal_reference:quoted") and all_passed
+	all_passed = _check("EmitSignal emits the modern signal.emit() form",
+		str(by_id["EmitSignal"].codegen_template).contains("{signal_name}.emit("), true) and all_passed
+	all_passed = _check("EmitSignal stores a bare signal identifier",
+		str((by_id["EmitSignal"].params[0] as ACEParam).hint), "signal_reference") and all_passed
 	var quoted_field: Control = dialog._create_signal_reference_field("signal_name", "\"custom_hit\"", true)
 	all_passed = _check("quoted picker shows raw names but stores literals",
 		(quoted_field as OptionButton).get_item_metadata((quoted_field as OptionButton).selected), "\"custom_hit\"") and all_passed
