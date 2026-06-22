@@ -3,6 +3,14 @@
 ## [Unreleased]
 
 ### Added
+- **The Project Doctor flags an unbounded loop that runs every frame.** A heavy **For Each** under On
+  Process / On Physics Process that's neither capped (pick first N) nor budgeted hitches the game; the
+  Doctor (Tools → Check Project) now adds an info-tier advisory when such a loop carries ≥ N actions,
+  pointing at the Time Slicer pack or a Budgeted For Each. It flags the *pattern*, not a cost estimate (so
+  it never alert-fatigues); threshold via `eventsheets/doctor/loop_cost_threshold` (default 3); bundled
+  packs and While/Repeat loops are exempt. Adds the `PickFilter.frame_spread_count` /
+  `frame_spread_budget_ms` fields (the Budgeted For Each schema — the loop codegen is a follow-up).
+  (Frame-spreading Solution 5.)
 - **Budget ACEs — hand-rolled frame-spreading (advanced).** Three Performance actions for power users:
   **Await Next Frame** (`await get_tree().process_frame`), **Begin Frame Budget(ms)** (arms a per-frame
   fence), and **Await If Over Budget(ms)** (drop it at the bottom of a `For Each` body; it yields + re-arms

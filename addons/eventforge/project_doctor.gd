@@ -30,6 +30,7 @@ static func run() -> Dictionary:
 	check_unused_variables(sheet_paths, findings)
 	check_duplicated_globals(sheet_paths, findings)
 	check_fanout_god_sheets(sheet_paths, findings)
+	check_unbounded_loops(sheet_paths, findings)
 	check_unused_packs(sheet_paths, findings)
 	check_shadowed_variables(sheet_paths, findings)
 	check_vocabulary_doc(findings)
@@ -245,6 +246,51 @@ static func check_fanout_god_sheets(sheet_paths: PackedStringArray, findings: Ar
 			names.sort()
 			_add(findings, "info", "fanout-god-sheet", sheet_path,
 				"This sheet drives %d different nodes (%s) - consider a behavior component per node, or a deliberately-named coordinator, instead of one sheet reaching across the scene." % [targets.size(), ", ".join(PackedStringArray(names))])
+
+## A heavy For Each that runs EVERY frame (under On Process / On Physics Process) and is neither capped
+## (pick_first_n) nor budgeted (frame_spread) can hitch the game. Flags the PATTERN - a collection loop
+## with >= N actions under a per-frame trigger - NOT a cost estimate (so it never alert-fatigues), and
+## points at the Time Slicer pack / Budgeted For Each. Info-tier; skips bundled packs and the WHILE/
+## REPEAT kinds; threshold via eventsheets/doctor/loop_cost_threshold (default 3).
+const DEFAULT_LOOP_COST_THRESHOLD := 3
+
+static func _loop_cost_threshold() -> int:
+	return int(ProjectSettings.get_setting("eventsheets/doctor/loop_cost_threshold", DEFAULT_LOOP_COST_THRESHOLD))
+
+static func check_unbounded_loops(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	var threshold: int = _loop_cost_threshold()
+	for sheet_path: String in sheet_paths:
+		if sheet_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null:
+			continue
+		for entry: Variant in sheet.events:
+			if entry is EventRow and _is_per_frame_trigger((entry as EventRow).trigger_id):
+				_scan_unbounded_loops(entry as EventRow, sheet_path, threshold, findings)
+
+static func _is_per_frame_trigger(trigger_id: String) -> bool:
+	return trigger_id == "OnProcess" or trigger_id == "OnPhysicsProcess"
+
+## Walks an event + its sub-events for unbounded, unbudgeted For Each loops with >= threshold actions.
+static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold: int, findings: Array[Dictionary]) -> void:
+	for filter_entry: Variant in event.pick_filters:
+		if not (filter_entry is PickFilter):
+			continue
+		var pick: PickFilter = filter_entry
+		if not pick.enabled:
+			continue
+		if pick.collection_kind == PickFilter.CollectionKind.WHILE or pick.collection_kind == PickFilter.CollectionKind.REPEAT:
+			continue
+		if pick.pick_first_n > 0 or pick.frame_spread_count > 0 or pick.frame_spread_budget_ms > 0.0:
+			continue
+		if event.actions.size() >= threshold:
+			_add(findings, "info", "unbounded-loop", sheet_path,
+				"A per-frame For Each here loops over '%s' with %d actions, uncapped and unbudgeted - if it's slow, spread it across frames with the Time Slicer pack or a Budgeted For Each. See docs/PERFORMANCE.md." % [pick.iterator_name, event.actions.size()])
+			break
+	for sub: Variant in event.sub_events:
+		if sub is EventRow:
+			_scan_unbounded_loops(sub as EventRow, sheet_path, threshold, findings)
 
 ## Walks a sheet's rows collecting DISTINCT external node references (normalised: $path / %unique,
 ## get_node folds into $path), from With-node scopes, ACE param values and raw GDScript. self/host,
