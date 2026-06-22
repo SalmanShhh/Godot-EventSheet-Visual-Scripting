@@ -65,7 +65,7 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _signal_backed("_on%s_child_entered_tree" % source_token, "node: Node", "child_entered_tree", source_path)
 		"OnSignal":
 			var signal_name: String = str(event.trigger_params.get("signal_name", "eventforge_signal"))
-			return _signal_backed("_on%s_%s" % [source_token, signal_name], "", signal_name, source_path)
+			return _signal_backed("_on%s_%s" % [source_token, signal_name], str(event.trigger_params.get("args", "")).strip_edges(), signal_name, source_path)
 		_:
 			# Custom signal triggers from reflection providers/addons ("signal:<name>").
 			if event.trigger_id.begins_with("signal:"):

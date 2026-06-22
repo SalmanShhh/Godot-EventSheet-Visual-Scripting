@@ -31,7 +31,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		ACEDescriptor.ACEType.TRIGGER,
 		"",
 		"",
-		[F.make_param("signal_name", "String", "eventforge_signal", "Signal Name", "Signal to listen for.", "signal_reference")],
+		[F.make_param("signal_name", "String", "eventforge_signal", "Signal Name", "Signal to listen for.", "signal_reference"), F.make_param("args", "String", "", "Arguments", "Optional — the signal's argument signature so this event receives its parameters, e.g. \"amount: int\" or \"x: float, y: float\". Leave empty for a signal with no arguments.", "expression")],
 		"Signals / Scene / Input",
 		"On signal {signal_name}"
 	))

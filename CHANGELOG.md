@@ -11,6 +11,12 @@
   its output through the project's own `BANNED_PATTERNS` scan so the helper can't regress to the legacy form.
 
 ### Added
+- **On Signal can now receive the signal's parameters.** The generic **On Signal** trigger (react to any
+  signal by name — on self, a node path, or an autoload) gained an optional **Arguments** field: type the
+  signal's signature (e.g. `amount: int`) and the generated handler takes those typed parameters, so the
+  event's conditions and actions can use them — the same typed-args capability the reflected `signal:NAME`
+  triggers already had, now for hand-typed signals too. Empty = a no-argument handler (unchanged). New
+  `on_signal_args_test`.
 - **A runnable "Swarm" showcase — frame-spreading you can watch** (`demo/showcase/swarm.tscn`). Open and
   run it: 800 sprites spawn into a group and a single **Budgeted For Each** (90/frame) wobbles them, so the
   colour refresh visibly *sweeps* through the crowd while the FPS stays pinned — the frame-spreading made

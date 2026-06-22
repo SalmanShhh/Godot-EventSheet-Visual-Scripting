@@ -41,6 +41,12 @@ Node script extending `Node2D`.
 - `ship_speed: float` (default `320.0`) — Ship move speed (px/s).
 - `state: int` (default `0`) — 0=PLAYING, 1=GAME_OVER.
 
+### Swarm (`res://demo/showcase/swarm.tres`)
+Node script extending `Node2D`.
+
+#### Properties
+- `count: int` (default `800`) — How many sprites to spawn.
+
 ### SimpleAbilitiesBehavior (`res://eventsheet_addons/abilities/abilities_behavior.tres`)
 Behavior — attach under any `Node` node.
 
