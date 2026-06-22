@@ -115,6 +115,10 @@ it), and anything not covered is one ƒx expression away.
 | System: `random()`, `choose()`, `clamp()`, `lerp()`, `distance()`, `angle()` | **Math & Random** expressions (Choose is literally `[…].pick_random()`) |
 | Solid / Jump-thru behaviors | Godot collision layers + one-way collision shapes (scene setup, not events) |
 | Physics behavior | RigidBody2D + the existing impulse/velocity ACEs |
+| Particles plugin | **GPUParticles2D / CPUParticles2D** group (control emission + one-shot bursts) |
+| Tilemap / Tiled Background | **TileMapLayer** group (read / write / erase cells from events) |
+| Timeline (keyframe animation) | **AnimationPlayer** + **AnimationTree** vocabulary (play, travel to state, set blend params, is playing) |
+| Persist behavior | the **Save System** pack (save / load game state), or Godot's `ConfigFile` / `ResourceSaver` directly |
 
 **Lane 2 — portable behaviors** ship as event-sheet packs — **31 are bundled**:
 Platformer, 8-Direction, Timer, Flash, State Machine, **Sine, Orbit, Bullet, Move To,

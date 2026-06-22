@@ -95,6 +95,10 @@ for a full, regenerated example.
 - **It teaches Godot while you use it.** Every action's tooltip shows the GDScript it
   generates; ƒx expressions *are* GDScript with live validation and autocomplete; the
   GDScript panel maps every row to its generated lines (and back).
+- **Debug it like any GDScript.** Because the output is plain code, you set breakpoints and step
+  through the generated `.gd` in Godot's own debugger — no bespoke runtime to learn. F9 conditional
+  breakpoints work from the sheet, and the in-editor Live Values / Event Trace are an optional
+  convenience layered on top, not the only way in.
 - **Two-way street.** Open *any* `.gd` file as a sheet (lossless, byte-identical
   round-trips), paste GDScript and it converts to events, write GDScript that calls
   sheet-built classes like any other class.
