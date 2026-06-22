@@ -8,7 +8,7 @@ plain GDScript fall out of it. This folder is the guided tour.
 **If you're coming from Construct 3:** events read exactly like home — two-lane rows,
 a searchable picker that understands your vocabulary ("every tick", "go to layout",
 "choose"), behaviors that attach to objects, Wait actions, combo dropdowns, color
-pickers with swatches. **Twenty-four behavior packs** ship in the box — the C3 classics (Platformer,
+pickers with swatches. **31 behavior packs** ship in the box — the C3 classics (Platformer,
 8-Direction, Sine with wave types, Orbit ellipses, Bullet, Move To with waypoints,
 Follow with delay mode, **Drag & Drop** (event-driven: Start Drag / Set Drag Point / Drop
 with follow-speed, direction lock, throw and snapping — drivable by the **Virtual Cursor**
@@ -16,7 +16,9 @@ pack for gamepad/touch), **Health** (max/current HP, damage absorption, temporar
 shield pools, death/revive), Car with drift, Tile Movement, **Line of Sight (2D & 3D)**,
 Timer, Flash, State Machine), a 3D starter quartet (Sine, Orbit, Bullet, Move To), and
 the juice duo: **Spring** (named numeric springs — squash & stretch in one action) and
-**Tween** (Godot Tweens with Inspector combos).
+**Tween** (Godot Tweens with Inspector combos) — plus the 0.9.0 additions: **Juice** (screenshake /
+zoom / squash & stretch / slow-mo), **Time Slicer** + **Run In Background** (frame-spreading), **Weapon
+Kit**, **HTN Agent**, **Simple Abilities**, and **Advanced Random**.
 
 **If you're a Godot user:** there is no runtime, no interpreter, no lock-in. Every sheet
 compiles to **typed, idiomatic GDScript** you could have written yourself — delete the
@@ -91,7 +93,7 @@ Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 | `showcase/quest_fsm.{tscn,tres,gd}` | Quest & Inventory FSM (Dictionary/Array collections, signals, reused function, match) |
 | `showcase/platformer_shooter.{tscn,tres,gd}` + `shot.tscn` + `target.tscn` | Platformer + Weapon Kit packs combined (coyote-time jump, hold-fire, group cull) |
 | `showcase/swarm.{tscn,tres,gd}` + `dot.tscn` | **Swarm** — frame-spreading: a Budgeted For Each sweeping a spawned crowd |
-| `themes/` | Ten bundled themes: Dracula, Nord, Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha, high-contrast, soft-light, Construct3-stacked, + the designer template |
+| `themes/` | Nine bundled themes: Dracula, Nord, Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha, high-contrast, soft-light, + the designer template |
 | `demo_project.godot` | Rename to `project.godot` only for standalone use (rename back afterwards) |
 
 The **behavior packs** live in `res://eventsheet_addons/` — each one is an editable
@@ -121,15 +123,9 @@ What they're for:
 
 ## Milestones at a glance
 
-| | |
-|---|---|
-| ✅ `v0.1.0` | The editor + compiler + lossless GDScript pairing |
-| ✅ `v0.2.0` | Rich variables (enums/collections/combos), C3 coverage (38 native ACEs + 14 packs), input/Wait, MCP server, find bar, iconic themes |
-| ✅ `v0.3.0` | Multi-view (split / detached / linked panes), tool sheets (experimental) |
-| ✅ `v0.4.0` | 3D vocabulary, addon tags, folded-group find, hardening sweeps, contributor docs |
-| ✅ `v0.5.0` | C3 System coverage (Every X Seconds!), full loops & picking, function returns, real breakpoints, Find & Replace, Keyboard/Mouse/Gamepad/Touch with press-a-key, the Audio module (▶ preview), starter templates, the searchable node picker, Inspector attributes Tier 1 |
-| ✅ `v0.6.0` | Inspector attributes (all tiers + tool buttons), addon composition + project policy + MCP enforcement, Live Values (window + inline chips), device input with press-a-key, Audio module, the node-picker kit, **Spring & Tween packs**, **Autoload/Singleton sheets + event-bus triggers**, the addon-author loop (Publish Preview / auto-READMEs / Test Bench), and the full C3-reflex UX arc |
-| 🗺 planned | community feedback rounds |
+The release history runs through **v0.9.0** (Performance & Game Feel, plus the ACE-safety pass). To keep
+this page from drifting, the milestone table now lives in one place — the
+[root README](../README.md#milestones) — with the feature-by-feature detail in the [CHANGELOG](../CHANGELOG.md).
 
 Full ledger: [CHANGELOG.md](../CHANGELOG.md) · honest pros & cons: [README.md](../README.md)
 

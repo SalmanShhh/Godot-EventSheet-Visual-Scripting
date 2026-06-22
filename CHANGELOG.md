@@ -27,6 +27,13 @@
   `preload("res://effect_material.tres")`, and `preload` resolves at compile time — so a freshly-added
   Set Material wouldn't compile until you pointed it at a real material. The default is now `null`; the
   description shows the `preload(...)` form for when your material exists.
+- **The Quick-Start demo and bundled showcases were sharpened for the release (release-readiness review).**
+  The `player` sheet's On-Body-Entered check now tests the *colliding body* (`body.is_in_group("enemy")`)
+  instead of the host node — the headline demo previously compiled a handler with a dead `body` parameter
+  and an inverted group test. The five showcases now ship with Live Values **off**, so their generated
+  `.gd` are clean, hook-free GDScript (the "it's just GDScript" proof artifacts a skeptic opens first;
+  Live Values stays a toggle on your own sheets). Doc counts/links reconciled across the README, demo
+  README, glossary, and this file (pack count 24→31, ACE count, a dead spec link, a phantom theme).
 - **The Juice pack restores `Engine.time_scale` when it leaves the tree.** A scene change *during* a slow-mo
   used to leave the whole game running slow (the global `time_scale` was never reset); the behavior now
   calls `clear_slowmo()` on `tree_exiting`.
@@ -133,7 +140,7 @@
   re-entrancy warning in the new [docs/PERFORMANCE.md](docs/PERFORMANCE.md)). The easy path stays the Time
   Slicer pack. (Frame-spreading Solution 3.)
 - **A "Time Slicer" pack — spread heavy work across frames (the 30th addon).** The first of the
-  frame-spreading tools (see [docs/FRAME-SPREADING-SPEC.md](docs/FRAME-SPREADING-SPEC.md)): a managed
+  frame-spreading tools (see [docs/PERFORMANCE.md](docs/PERFORMANCE.md)): a managed
   work queue that drains within a per-frame budget — **time (ms)**, **count**, or both. Enqueue items
   (or a whole group) in one event and react to **On Process Item(item)** in another, like reacting to a
   signal; heavy work (spawning hundreds of objects, updating thousands of entities) self-spreads across
