@@ -24,6 +24,10 @@ into **typed, idiomatic GDScript** — no runtime interpreter, no plugin depende
 exported game, and **zero performance difference from hand-written code** (a guarded,
 tested contract).
 
+![The event sheet editor: two-lane condition/action rows, type-badged global and local variables, trigger arrows, an inline GDScript block, and a sheet-built heal() function.](docs/previews/editor-event-sheet.png)
+
+![The ACE picker: search actions, conditions, and triggers by their Construct-style vocabulary, with Favorites and Recent panes and the generated GDScript shown live in the description panel.](docs/previews/editor-ace-picker.png)
+
 ```text
 Conditions                        | Actions
 ----------------------------------+--------------------------------
