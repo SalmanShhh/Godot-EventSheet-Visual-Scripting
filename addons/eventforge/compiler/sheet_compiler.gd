@@ -397,16 +397,33 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 	result["output"] = output
 
 	var final_output_path: String = _resolve_output_path(sheet, output_path)
-	var file: FileAccess = FileAccess.open(final_output_path, FileAccess.WRITE)
-	if file == null:
+	if not _write_output_if_changed(final_output_path, output):
 		result["success"] = false
 		(result["errors"] as Array[String]).append("Failed to open output path: %s" % final_output_path)
 		return result
+	return result
 
+## True when the file at `path` already holds exactly `output` — used to skip no-op rewrites.
+## Rewriting a byte-identical file bumps its mtime, which makes the Godot editor prompt
+## "Files have been modified outside Godot" on the next scene open/close — even though the
+## generated code is byte-stable (the drift audit proves it) and nothing actually changed.
+static func _output_is_current(path: String, output: String) -> bool:
+	return FileAccess.file_exists(path) and FileAccess.get_file_as_string(path) == output
+
+## Writes `output` to `path` only when it differs from what is already on disk, so an unchanged
+## recompile (sheet save, Attach to Node, Test Bench, export — all funnel through compile()) never
+## touches the file and never trips Godot's external-change watcher. Returns true on success,
+## including the "already up to date" no-op; false only if a genuinely-needed write could not open.
+static func _write_output_if_changed(path: String, output: String) -> bool:
+	if _output_is_current(path, output):
+		return true
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return false
 	file.store_string(output)
 	file.flush()
 	file.close()
-	return result
+	return true
 
 ## Order-preserving emission for GDScript-backed sheets: rows reproduce the original file
 ## (verbatim blocks + verify-lifted variables) in sheet order; events/groups the user adds
@@ -483,14 +500,10 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
 	var final_output_path: String = output_path if not output_path.is_empty() else sheet.external_source_path
-	var file: FileAccess = FileAccess.open(final_output_path, FileAccess.WRITE)
-	if file == null:
+	if not _write_output_if_changed(final_output_path, output):
 		result["success"] = false
 		(result["errors"] as Array[String]).append("Failed to open output path: %s" % final_output_path)
 		return result
-	file.store_string(output)
-	file.flush()
-	file.close()
 	return result
 
 ## Instance-backed addon ACEs: baked templates may call through a per-provider member

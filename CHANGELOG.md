@@ -3,6 +3,15 @@
 ## [0.9.0] - 2026-06-22 - Performance & Game Feel
 
 ### Fixed
+- **The generated `.gd` is now only rewritten when its content actually changed**, so the Godot
+  editor stops prompting *"Files have been modified outside Godot"* every time you open, close, or
+  test a scene. `SheetCompiler.compile()` rewrote the output file unconditionally on every recompile
+  (sheet save, Attach to Node, Test Bench, export — all funnel through it); because the generated
+  code is byte-stable, that bumped the file's mtime without changing a byte and tripped Godot's
+  external-change watcher, alarming users into thinking they had broken something. The compiler now
+  compares the fresh output against what is already on disk and skips the write when identical
+  (`_output_is_current` / `_write_output_if_changed`), pinned by `write_if_changed_test`. Resolves
+  the long-deferred post-save reload-prompt item.
 - **The ACE parameter dialog no longer errors with "Trying to cast a freed object" when focusing its first field.**
   `_focus_first_field` cast every entry in its field map to `Control` guarded only by `!= null`, which doesn't
   catch a *freed* widget (the dialog can close before the deferred focus runs). It now skips freed entries via
