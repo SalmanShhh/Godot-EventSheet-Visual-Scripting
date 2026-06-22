@@ -81,8 +81,10 @@ static func run() -> bool:
 			jumped_trigger = definition
 	all_passed = _check("Jump publishes from the pack", jump_definition != null, true) and all_passed
 	if jump_definition != null:
-		all_passed = _check("Jump carries the child-node codegen template",
-			str(jump_definition.metadata.get("codegen_template", "")), "$PlatformerMovement.jump()") and all_passed
+		all_passed = _check("Jump carries the node-targetable codegen template",
+			str(jump_definition.metadata.get("codegen_template", "")), "{target}.jump()") and all_passed
+		all_passed = _check("Jump gained an On node target defaulting to the conventional path",
+			jump_definition.parameters.size() >= 1 and str(jump_definition.parameters[0].get("id", "")) == "target" and str(jump_definition.parameters[0].get("default_value", "")) == "$PlatformerMovement", true) and all_passed
 		all_passed = _check("Jump categorized for the picker", jump_definition.category, "Platformer") and all_passed
 	all_passed = _check("On Jumped trigger publishes from the block annotation",
 		jumped_trigger != null and jumped_trigger.display_name == "On Jumped", true) and all_passed
@@ -97,7 +99,7 @@ static func run() -> bool:
 		on_timer != null and on_timer.display_name == "On Timer", true) and all_passed
 	all_passed = _check("Flash pack publishes Flash", flash_action != null, true) and all_passed
 	all_passed = _check("state machine block-condition publishes with its template",
-		is_in_state != null and str(is_in_state.metadata.get("codegen_template", "")) == "$StateMachineBehavior.state == {state_name}", true) and all_passed
+		is_in_state != null and str(is_in_state.metadata.get("codegen_template", "")) == "{target}.state == {state_name}", true) and all_passed
 	all_passed = _check("block condition is typed as a condition",
 		is_in_state != null and is_in_state.ace_type == ACEDefinition.ACEType.CONDITION, true) and all_passed
 	# Abilities pack: an action, a trigger, a condition (with its template), and the
@@ -111,7 +113,7 @@ static func run() -> bool:
 	all_passed = _check("abilities pack publishes the On Ability Activated trigger",
 		ab_on_activated != null and ab_on_activated.display_name == "On Ability Activated", true) and all_passed
 	all_passed = _check("abilities Is Ready is a condition with its template",
-		ab_is_ready != null and ab_is_ready.ace_type == ACEDefinition.ACEType.CONDITION and str(ab_is_ready.metadata.get("codegen_template", "")) == "$SimpleAbilitiesBehavior.is_ready({id})", true) and all_passed
+		ab_is_ready != null and ab_is_ready.ace_type == ACEDefinition.ACEType.CONDITION and str(ab_is_ready.metadata.get("codegen_template", "")) == "{target}.is_ready({id})", true) and all_passed
 	all_passed = _check("abilities Current Ability ID is an expression",
 		ab_current != null and ab_current.ace_type == ACEDefinition.ACEType.EXPRESSION, true) and all_passed
 	editor.free()

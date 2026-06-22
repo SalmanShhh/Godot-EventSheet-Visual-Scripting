@@ -82,6 +82,49 @@ static func _apply_template_overrides(definition: ACEDefinition, overrides: Dict
     var codegen_template: String = str(overrides.get("codegen_template", ""))
     if not codegen_template.is_empty():
         definition.metadata["codegen_template"] = codegen_template
+    _parameterize_node_target(definition)
+
+## Behavior-pack ACEs author their codegen as "$<Node>.method()" — the conventional behavior-node
+## path. To let a sheet target the SAME behavior wherever it actually lives (e.g. $Player/WeaponKit,
+## not only a direct child literally named WeaponKit), turn that leading "$<Node>." into a
+## configurable {target} param defaulting to the authored path. The default substitutes back to the
+## identical string, so existing sheets are byte-for-byte unchanged (drift stays 0); the user retargets
+## via $-autocomplete. This is Construct's "the ACE acts on the object instance you picked" model,
+## expressed as a Godot node path. Only a bare $Identifier prefix is parameterized — $"Quoted",
+## %Unique, and multi-segment $A/B paths are already explicit and stay verbatim.
+static func _parameterize_node_target(definition: ACEDefinition) -> void:
+    if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
+        return
+    var template: String = str(definition.metadata.get("codegen_template", ""))
+    if not template.begins_with("$") or template.contains("{target}"):
+        return
+    var dot: int = template.find(".")
+    if dot < 2:
+        return
+    var node_ref: String = template.substr(0, dot)
+    var bare: String = node_ref.substr(1)
+    if bare.is_empty() or bare.contains("/") or bare.contains("\"") or bare.contains(" ") or bare.contains("%"):
+        return
+    var first_char: String = bare.substr(0, 1)
+    if not (first_char == "_" or first_char.to_lower() != first_char.to_upper()):
+        return
+    definition.metadata["codegen_template"] = "{target}.%s" % template.substr(dot + 1)
+    var target_param: Dictionary = {
+        "id": "target",
+        "display_name": "On node",
+        "description": "Which node carries this behavior (default %s). Pick or type a node path — e.g. $Player/WeaponKit." % node_ref,
+        "type": TYPE_STRING,
+        "default_value": node_ref,
+        "property_hint": PROPERTY_HINT_NONE,
+        "hint": "expression",
+        "hint_string": "",
+        "widget_hint": "",
+        "options": [],
+        "autocomplete": []
+    }
+    var reordered: Array = [target_param]
+    reordered.append_array(definition.parameters)
+    definition.parameters = reordered
 
 func _build_signal_definition(provider_id: String, signal_name: String, signal_info: Dictionary, overrides: Dictionary) -> ACEDefinition:
     var definition := ACEDefinition.new()

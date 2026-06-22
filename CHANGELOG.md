@@ -74,6 +74,16 @@
   scaffolding; the user-facing Layout/Alignment **guide** and the blessed architecture-slices tracker stay put.
 
 ### Added
+- **Every behavior-pack ACE is now node-targetable** — pick *which* node carries the behavior
+  instead of being locked to a direct child literally named after the pack. A pack ACE authored as
+  `$WeaponKit.can_fire()` now exposes an editable **"On node"** field defaulting to the conventional
+  path (so existing sheets compile byte-for-byte identically — drift stays 0), retargetable with
+  `$`-autocomplete to `$Player/WeaponKit`, `%Weapon`, or any node path. This is Construct's "the ACE
+  acts on the object instance you picked" model in Godot terms — and it's *why* a pack condition like
+  **Weapon Kit → Can Fire** can now be used on a sheet whose behavior lives under another node, instead
+  of forcing a raw GDScript block to write the correct path. One change in the auto-ACE generator
+  (`ace_generator._parameterize_node_target`) covers all packs at once; only a bare `$Identifier`
+  prefix is parameterized — `$"Quoted"`, `%Unique`, and multi-segment `$A/B` paths stay verbatim.
 - **A generic "Expression Is True" condition** — the code-free escape hatch for a boolean
   expression. Use any GDScript that returns a bool (a behavior method like
   `$Player/WeaponKit.can_fire()`, `health > 0 and shielded`, `%Door.is_open()`) directly as a
