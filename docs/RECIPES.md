@@ -262,5 +262,77 @@ camera, and a handful of fire-and-forget juice calls. Want it bouncier or snappi
 
 ---
 
+## 11. Crowds without the hitch — frame-spreading
+
+A wave of 800 enemies all recomputing their AI on one frame, a big level streaming in, a navmesh baking —
+do it all in a single frame and the game **stutters**. The fix is to spread the work across frames within a
+per-frame **budget**. Three tools, easiest first; pick by how heavy the work is. (Not sure a loop needs it?
+**Tools ▸ Check Project** flags a heavy For Each running every frame that isn't capped or budgeted.)
+
+**The easy path — the Time Slicer pack (no loop, no `await`).** Attach **Time Slicer** as a child (or make
+it an autoload for one global slicer). It owns a queue and drains it within a per-frame budget:
+
+1. **Enqueue** the work in one event — **Enqueue Group** `"enemies"` (every node in a group), **Enqueue
+   Items** (an array), or **Enqueue Item** (one).
+2. **React** to **On Process Item(item)** in another event and do the per-item work — like reacting to a
+   signal. The slicer hands you items only as fast as the budget allows.
+3. **On Drained** fires the frame the queue empties.
+
+Tune `frame_budget_ms` / `max_items_per_frame` / `mode` (ms, count, or both) in the Inspector. An 800-item
+queue self-spreads across as many frames as the budget needs, no hitch — the right tool for ~90% of cases.
+
+```gdscript
+# Enqueue once, then react per item — the slicer paces it to the budget:
+func _ready() -> void:
+    $TimeSlicer.enqueue_group("enemies")
+
+func _on_time_slicer_process_item(item) -> void:
+    item.recalculate_ai()        # runs for only as many enemies as fit this frame's budget
+```
+
+**The one-liner — Budgeted For Each.** Already have a **For Each** loop? Don't attach anything — on the
+loop's pick filter set **frame_spread_count** (items/frame) and/or **frame_spread_budget_ms** (a wall-clock
+fence) in the Inspector. The loop then does a slice each frame and resumes on the next, over a snapshot
+taken once per pass, skipping anything freed mid-pass. Drive it from **On Process** (that's what re-enters
+the loop each frame to continue the pass):
+
+```gdscript
+# A For Each over "enemies" with frame_spread_count = 50 compiles to a self-pacing loop —
+# ~50 per frame, resuming next frame (the cursor + snapshot persist as members):
+while __loop_cursor < __loop_items.size():
+    if __done > 0 and __done >= 50:
+        break
+    var enemy = __loop_items[__loop_cursor]
+    __loop_cursor += 1
+    __done += 1
+    ...                          # your loop body
+```
+
+**Too heavy even to spread — Run In Background.** When the work is pure CPU crunching (procedural
+generation, a pathfinding bake), spreading still blocks the main thread each frame. **Run In Background**
+hands a **pure** function to a worker thread; **On Done(result)** fires on the main thread when it finishes:
+
+```gdscript
+# On Ready: kick off the bake off-thread
+run_in_background(_bake_navmesh.bind(grid))   # _bake_navmesh touches NO nodes — data in, data out
+
+# On Done(result): apply it on the main thread (safe to touch the scene here)
+$NavRegion.navigation_polygon = result
+```
+
+> The background callable must be **pure** — no scene-tree / node access, since it runs off the main
+> thread. Compute off-thread, then apply the result in the On Done handler.
+
+**Which one?**
+
+| The work | Reach for |
+| --- | --- |
+| Touch many nodes, spread over frames | **Time Slicer**, or tick a **Budgeted For Each** |
+| An existing For Each that hitches | **Budgeted For Each** (one Inspector tick) |
+| Pure number-crunching, no nodes | **Run In Background** |
+| A hand-rolled loop, want raw control | **Begin Frame Budget** + **Await If Over Budget** (advanced) |
+
+---
+
 More vocabulary in the generated [EVENTSHEETS-VOCABULARY.md](../EVENTSHEETS-VOCABULARY.md); the
 honest pros/cons + scope are in the [README](../README.md).

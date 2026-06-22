@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 ### Added
+- **Recipe 11 — "Crowds without the hitch"** (`docs/RECIPES.md`): a self-contained, end-to-end showcase of
+  the frame-spreading stack — the Time Slicer pack (enqueue + On Process Item), the Budgeted For Each
+  Inspector tick, and Run In Background for pure off-thread compute — with a "which one?" table.
 - **A "Using EventSheets with your existing code" guide** (`docs/USING-WITH-EXISTING-CODE.md`). Answers the
   common adoption question — *does it work with code that has no ACEs?* — and is self-contained: calling
   existing GDScript / autoloads / host members from a sheet (verbatim ƒx expressions + the Helpers ACEs +
