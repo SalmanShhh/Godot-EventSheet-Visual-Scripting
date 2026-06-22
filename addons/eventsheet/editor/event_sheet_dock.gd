@@ -6339,7 +6339,7 @@ func _build_welcome_window() -> void:
     box.add_theme_constant_override("separation", 10)
     var blurb: Label = Label.new()
     blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    blurb.text = "Construct 3-style event sheets that compile to plain GDScript — zero runtime, performance parity, and every sheet shows you its honest generated code."
+    blurb.text = "Event sheets that compile to plain GDScript — zero runtime, performance parity, and every sheet shows you its honest generated code."
     box.add_child(blurb)
     var showcase_button: Button = Button.new()
     showcase_button.text = "Open the playable showcase scene"

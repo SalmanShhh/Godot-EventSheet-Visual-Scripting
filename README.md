@@ -1,6 +1,6 @@
 # Godot EventSheets
 
-**Construct 3-style event sheets for Godot 4 that compile to plain, readable GDScript.**
+**Visual event sheets for Godot 4 that compile to plain, readable GDScript.**
 
 **The point is speed-to-game.** Whether you've never written a line of code, you're an
 experienced dev who wants game logic to pour out faster, or you're 6 hours into a 48-hour
@@ -36,7 +36,7 @@ Conditions                        | Actions
 
 1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project
    (tested through **Godot 4.7 stable**; 4.6+ recommended for the native "Modern" theme look).
-   Optional: `eventsheet_addons/` for the 27 behavior packs and demo ACEs. Removing the
+   Optional: `eventsheet_addons/` for the 31 behavior packs and demo ACEs. Removing the
    plugin later is clean and reversible — see the [uninstall guide](docs/UNINSTALL.md).
 2. **Project → Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
@@ -67,7 +67,7 @@ Conditions                        | Actions
   round-trips), paste GDScript and it converts to events, write GDScript that calls
   sheet-built classes like any other class.
 - **C3 muscle memory works.** The grammar, the picker, behaviors-as-components, combos,
-  waits, press-a-key capture, the 27-pack addon set (including ports of custom C3 addons —
+  waits, press-a-key capture, the 31-pack addon set (including ports of custom C3 addons —
   Virtual Cursor, an event-driven Drag & Drop, a Health pack with absorption + shield
   pools, a Weapon Kit, and a utility-driven HTN planner), System/Keyboard/Mouse/Gamepad/
   Touch/Audio vocabularies — designed against C3 conventions on purpose.
@@ -239,27 +239,24 @@ still ships as plain GDScript).
 
 ## Current status
 
-- **Version**: **`v0.8.0` — “The Team & Scale Update”**: EventSheets built to survive
-  growing projects and teams. Collaboration & navigation — a **semantic 3-way git merge
-  driver** (row-level, UID-keyed, no more unmergeable `.tres`), symbol-aware **Find
-  References** + Go-to-Definition, an **includes manager** with **Extract Selection to
-  Include** and read-only **provenance**, and **byte-stable regeneration** so diffs stay
-  small. A bigger behavior library — **C3-addon parity** packs (Platformer juice:
-  coyote/buffer/variable-jump/wall-jump, Spring colour springs, **Weapon Kit**,
-  utility-driven **HTN Agent** — 26 total), richer Array/Dict/Vector/String **Helper
-  ACEs**, behavior-declared **autocomplete**, and theme-editor **Quick Style**.
-  **Code-free authoring** — five editor features that keep logic in the event sheet
-  instead of dropping to raw GDScript: a visual expression builder for picking the host
-  class's own members in ƒx expressions, reflection-driven pickers for the Helpers ACEs
-  (Call Method / Set/Get Property stay editable, not raw code), Promote-Block-to-Function
-  (extract a row's inline GDScript into a reusable EventFunction), a visual data editor for
-  Array/Dictionary defaults (edit one item per line instead of typing a literal), and
-  conditional breakpoints (guard an F9 breakpoint with a GDScript boolean so you pause only
-  on the frame that matters, e.g. `health <= 0`). (An
-  optional scripting/automation integration — the MCP server, which can also generate
-  events from a description — ships opt-in and off by default.) Playable showcases:
-  `showcase_carousel.tscn` (flagship), `starfall.tscn`, `quest_fsm.tscn`, and
-  `platformer_shooter.tscn`. See [CHANGELOG.md](CHANGELOG.md).
+- **Version**: **`v0.9.0` — “Performance & Game Feel”**: making games that **scale** and
+  **feel good**. **Frame-spreading & time-budgeting** — a **Time Slicer** behavior (a managed work
+  queue that drains within a per-frame ms/count budget — enqueue, react to *On Process Item*, no loop
+  or `await`), an in-place **Budgeted For Each** (tick a budget on a loop and it spreads itself across
+  frames), raw budget/coroutine ACEs, a **Run In Background** pack (off-thread pure compute via
+  `WorkerThreadPool` → *On Done*), and a Project Doctor unbounded-loop advisory — with a runnable
+  **Swarm** demo you can *watch* the spreading in. **Game feel** — a **Juice** pack: trauma
+  **screenshake**, smooth/anchored **zoom**, volume-preserving **squash & stretch** (tween + spring),
+  and **slow-mo** with easing, all auto-finding the camera. **AI/combat** — **Nearest/Furthest** picking
+  that composes with **Line of Sight** for see-it-first auto-attack. **Adoption** — a self-contained
+  *“Using EventSheets with your existing code”* guide: call your GDScript / autoloads / signals from
+  sheets (and the reverse), no ACEs required. **Fewer errors** — on-save linting now covers For Each
+  fields, the Doctor flags coroutines under *On Process*, *On Signal* can carry typed parameters, and
+  the Juice pack restores `time_scale` on exit — on top of the editor-DX batch (error → row
+  deep-linking, a Create-Node-parity **ACE picker**, a live **event-trace**, a shadowing-variable guard)
+  and the code-free authoring set. **31 behavior packs.** Playable showcases: `showcase_carousel.tscn`
+  (flagship), `starfall.tscn`, `quest_fsm.tscn`, `platformer_shooter.tscn`, and `swarm.tscn`.
+  See [CHANGELOG.md](CHANGELOG.md).
 - **Quality**: 2,500+ test assertions, all green, CI-gated on every push (any `[FAIL]`
   fails the build, and the Project Doctor gate fails it on sheet/output drift);
   byte-exact golden round-trips guard the lossless rules. **Verified on Godot 4.7 stable**
@@ -282,7 +279,7 @@ still ships as plain GDScript).
 | `v0.6.2` — project usability: compile-on-save, sheet diffs (textconv), Project Doctor (dock/CLI/CI), vocabulary doc, sheet backups + restore, project templates; C3 param parity completed; per-pack builders; issue templates | ✅ shipped |
 | `v0.7.0` — **The Native Workflow Update**: Rename Everywhere, snippets, bulk ops, session restore, asset drops, attach + Run Scene; Godot-native entry points (Scene-dock attach, Inspector button, settings, rebindable shortcuts, go-to-sheet-row, docs links, welcome); if/elif/else reverse-lift + Lift Report | ✅ shipped |
 | `v0.8.0` — **The Team & Scale Update**: Godot 4.7 support + Modern-theme visuals & onboarding declutter (Simple Mode, Command Palette, Export-GDScript eject); **team/VCS** — semantic 3-way **merge driver**, symbol-aware **Find References** + Go-to-Definition, **includes manager** + Extract-to-Include + **provenance**, **byte-stable regeneration**; new packs (Drag & Drop, Virtual Cursor, Health, Line of Sight 3D, **Weapon Kit**, utility-driven **HTN Agent** — 26 total) + **C3-addon parity** (Platformer juice, Spring colour springs); **3D raycast/world-query ACEs** + 3D starters; richer Array/Dict/Vector/String **Helper ACEs** + import "why-it-stayed-code" hints; behavior-declared **autocomplete**; theme **Quick Style**; clean-removal guide + gate; platformer-shooter showcase; opt-in MCP scripting/automation (off by default) | ✅ shipped |
-| `Unreleased` — **editor DX**: **error → row deep-linking** (jump to + mark the offending row), a **group editor popup** (name + description), a **Create-Node-parity ACE picker** (Favorites/Recent panes + description panel), a **Watch** box + **live event-trace** row highlighting, and a **shadowing-variable guard**; **code-free authoring** (visual expression builder, reflection method/property pickers, Promote-Block-to-Function, visual Array/Dictionary data editor, conditional breakpoints); first-class **UI/menu vocabulary** (Button On Pressed/Toggled + focus navigation), native **2D raycast** ACEs, **particles**, **AnimationTree**, **tilemaps**, **shader materials**, **runtime input rebinding**, **physics joints**, **24 Collision ACEs**, **loop** Break/Continue/Current-Item, **Else/Else-If** authoring + compiled Pick-Filter conditions; **Advanced Random** pack (27th), **ACE sub-categories**, read-only **.gd preview** | ✅ shipped |
+| `v0.9.0` — **Performance & Game Feel**: frame-spreading & time-budgeting (**Time Slicer** pack, in-place **Budgeted For Each**, budget/coroutine ACEs, **Run In Background** off-thread pack, Doctor unbounded-loop advisory) + a runnable **Swarm** demo; a **Juice** pack (trauma screenshake, smooth/anchored zoom, squash & stretch tween+spring, **slow-mo** with easing); **Nearest/Furthest** picking (composes with Line of Sight); a self-contained **“using EventSheets with your existing code”** guide; **On Signal** typed parameters; an **error-prevention sweep** (on-save For-Each linting, coroutine-under-On-Process Doctor check, Juice `time_scale` teardown); plus the editor-DX batch — **error → row deep-linking** (jump to + mark the offending row), a **group editor popup** (name + description), a **Create-Node-parity ACE picker** (Favorites/Recent panes + description panel), a **Watch** box + **live event-trace** row highlighting, and a **shadowing-variable guard**; **code-free authoring** (visual expression builder, reflection method/property pickers, Promote-Block-to-Function, visual Array/Dictionary data editor, conditional breakpoints); first-class **UI/menu vocabulary** (Button On Pressed/Toggled + focus navigation), native **2D raycast** ACEs, **particles**, **AnimationTree**, **tilemaps**, **shader materials**, **runtime input rebinding**, **physics joints**, **24 Collision ACEs**, **loop** Break/Continue/Current-Item, **Else/Else-If** authoring + compiled Pick-Filter conditions; **Advanced Random** pack (27th), **ACE sub-categories**, read-only **.gd preview** | ✅ shipped |
 | _Roadmap_ — a Menu/HUD behavior pack + UI starter demo; 2D **point/shape overlap** queries; **scene-transition** + **dialogue** packs; a **loop-index** expression; community feedback rounds | 🗺 planned |
 
 Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
@@ -293,7 +290,7 @@ Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
 |---|---|
 | `addons/eventforge/` | Data model, compiler, importer, builtin ACEs, runtime bridge |
 | `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, MCP server |
-| `eventsheet_addons/` | Zero-config ACE addons + the 27 behavior packs |
+| `eventsheet_addons/` | Zero-config ACE addons + the 31 behavior packs |
 | `demo/` | Demo sheets, themes, and the golden compiled output |
 | `tests/` | Headless suite — `tests/run_tests.gd` (full) and `tests/run_perf.gd` (headless-safe gate) |
 | `docs/` | Specs: GDScript pairing, editor UI, theme tokens, MCP, C3 migration |

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-06-22 - Performance & Game Feel
+
 ### Fixed
 - **The Juice pack restores `Engine.time_scale` when it leaves the tree.** A scene change *during* a slow-mo
   used to leave the whole game running slow (the global `time_scale` was never reset); the behavior now
