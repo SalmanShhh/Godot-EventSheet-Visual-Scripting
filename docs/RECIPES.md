@@ -159,9 +159,10 @@ two group queries, all as editable rows.
 
 The plugin actively *nudges* a Construct user toward Godot idioms (signals over polling, small
 scenes-as-components, the Inspector, one source of truth) — always as suggestions with the old path one
-click away. This tour builds a tiny coin game using each nudge. New to why these are "the Godot way"?
-The [migration guide's *Polling vs reacting*](C3-MIGRATION-GUIDE.md#polling-vs-reacting--the-biggest-shift-from-c3)
-section is the one-page version.
+click away. This tour builds a tiny coin game using each nudge. The biggest shift from C3 is *reacting*
+instead of *polling*: rather than checking a condition every tick (a per-frame `for`/overlap scan), you
+connect to a signal that fires only when the thing actually happens — fewer wasted checks, and the intent
+reads straight off the event row.
 
 **1. A coin is a behavior component, not a god-sheet.** New Sheet → **Behavior Component (signal-driven)**.
 You get a `PickupBehavior` you attach as a *child* of each Coin's `Area2D` (the Godot answer to a C3

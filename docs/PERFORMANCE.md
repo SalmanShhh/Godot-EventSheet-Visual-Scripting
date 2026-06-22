@@ -110,5 +110,5 @@ $NavRegion.navigation_polygon = result
 - **Spread when one frame's worth of the work would be felt** — a visible stutter, not a few items.
 - **Budget in milliseconds, not item counts,** when per-item cost varies (a raycast vs a `Set Variable`):
   the ms fence adapts; a fixed count doesn't.
-- **Reacting beats polling.** Prefer signals/triggers over per-frame `for` scans; see the
-  [migration guide](C3-MIGRATION-GUIDE.md#polling-vs-reacting--the-biggest-shift-from-c3).
+- **Reacting beats polling.** Prefer signals/triggers over per-frame `for` scans: a signal fires only when
+  the event happens, so the work — and its frame cost — only occurs when it has to, instead of every tick.
