@@ -32,6 +32,38 @@ Conditions                        | Actions
 								  | GDScript  health -= 1
 ```
 
+## What it compiles to
+
+That sheet isn't interpreted at runtime — it **compiles to a plain `.gd` script** you attach and ship.
+A handful of rows like:
+
+- **On Ready** → *Print* `"Spawned"`
+- **Every tick** · *Is action pressed* `"ui_right"` → *Move by* `Vector2(speed * delta, 0)`
+- **On Body Entered** *(body)* · *body is in group* `"enemy"` → *Add* `-10` *to health*
+
+become exactly this — typed, idiomatic GDScript with zero references to the plugin:
+
+```gdscript
+extends CharacterBody2D
+
+@export var speed: float = 200.0
+@export var health: int = 100
+
+func _ready() -> void:
+	print("Spawned")
+
+func _process(delta: float) -> void:
+	if Input.is_action_pressed(&"ui_right"):
+		position += Vector2(speed * delta, 0)
+
+func _on_body_entered(body: Node) -> void:
+	if body.is_in_group("enemy"):
+		health += -10
+```
+
+Delete the plugin and this script still runs — see [`demo/sheets/player_generated.gd`](demo/sheets/player_generated.gd)
+for a full, regenerated example.
+
 ## Quick start
 
 1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project
@@ -296,7 +328,7 @@ Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
 | `eventsheet_addons/` | Zero-config ACE addons + the 31 behavior packs |
 | `demo/` | Demo sheets, themes, and the golden compiled output |
 | `tests/` | Headless suite — `tests/run_tests.gd` (full) and `tests/run_perf.gd` (headless-safe gate) |
-| `docs/` | Specs: GDScript pairing, editor UI, theme tokens, MCP, C3 migration |
+| `docs/` | Contract specs (GDScript pairing, inspector attributes, addon composition) + guides (C3 migration, recipes, performance, MCP, glossary, uninstall) |
 
 ## Verifying a change
 
