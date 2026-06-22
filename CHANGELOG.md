@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed
+- **The Juice pack restores `Engine.time_scale` when it leaves the tree.** A scene change *during* a slow-mo
+  used to leave the whole game running slow (the global `time_scale` was never reset); the behavior now
+  calls `clear_slowmo()` on `tree_exiting`.
+
 ### Removed
 - **Seven design/UX spec docs — development scaffolding now redundant with the feature documentation:**
   `SPEC.md`, `EDITOR-UI-SPEC.md`, `EventSheet_EditorParam_Exposure_Spec.md`, `FRAME-SPREADING-SPEC.md`,
@@ -20,6 +25,11 @@
   its output through the project's own `BANNED_PATTERNS` scan so the helper can't regress to the legacy form.
 
 ### Added
+- **The Project Doctor flags a coroutine under a per-frame trigger.** A `Wait` / `Wait For Signal` /
+  `Await Next Frame` / `Await If Over Budget` action (or a raw `await`) under On Process / On Physics Process
+  overlaps itself — the next tick fires while the previous run is still suspended, double-processing. The
+  Doctor (Tools → Check Project) now warns and points to a one-shot trigger or the Time Slicer pack (the
+  codebase documented this footgun but shipped no detector).
 - **On Signal can now receive the signal's parameters.** The generic **On Signal** trigger (react to any
   signal by name — on self, a node path, or an autoload) gained an optional **Arguments** field: type the
   signal's signature (e.g. `amount: int`) and the generated handler takes those typed parameters, so the

@@ -173,6 +173,15 @@ static func build() -> bool:
 	]))
 	on_ready.actions.append(ready_body)
 	sheet.events.append(on_ready)
+	# Safety: if the host leaves the tree mid-slowmo, restore the GLOBAL Engine.time_scale — otherwise a
+	# scene change during slow motion would leave the entire game running in slow motion.
+	var teardown: EventRow = EventRow.new()
+	teardown.trigger_provider_id = "Core"
+	teardown.trigger_id = "OnTreeExiting"
+	var teardown_body: RawCodeRow = RawCodeRow.new()
+	teardown_body.code = "clear_slowmo()"
+	teardown.actions.append(teardown_body)
+	sheet.events.append(teardown)
 	# Per-frame: decay trauma and drive the camera offset/roll from squared trauma (perceptual ramp).
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"

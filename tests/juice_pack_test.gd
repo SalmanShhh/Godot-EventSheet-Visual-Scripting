@@ -49,6 +49,13 @@ static func run() -> bool:
 	all_passed = _check("slowmo + clear_slowmo + spring_squash actions exist", behavior.has_method("slowmo") and behavior.has_method("clear_slowmo") and behavior.has_method("spring_squash"), true) and all_passed
 	all_passed = _check("slowmo helpers + On Slowmo Finished signal exist", behavior.has_method("_set_time_scale") and behavior.has_method("_slowmo_trans") and behavior.has_method("_apply_host_scale") and behavior.has_signal("slowmo_finished"), true) and all_passed
 
+	# Teardown safety (D1): leaving the tree mid-slowmo restores the GLOBAL Engine.time_scale, so a scene
+	# change during slow motion can't leave the whole game running slow.
+	all_passed = _check("a tree-exit teardown handler exists", behavior.has_method("_on_tree_exiting"), true) and all_passed
+	Engine.time_scale = 0.25
+	behavior._on_tree_exiting()
+	all_passed = _check("tree-exit teardown restores Engine.time_scale", is_equal_approx(Engine.time_scale, 1.0), true) and all_passed
+
 	# The spring-squash integrator springs the scale back to rest (the math runs in the tick; no live host needed).
 	behavior.squash_damping = 0.9
 	behavior._base_scale = Vector2.ONE

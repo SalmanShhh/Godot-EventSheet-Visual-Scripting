@@ -31,6 +31,7 @@ static func run() -> Dictionary:
 	check_duplicated_globals(sheet_paths, findings)
 	check_fanout_god_sheets(sheet_paths, findings)
 	check_unbounded_loops(sheet_paths, findings)
+	check_coroutine_in_per_frame_trigger(sheet_paths, findings)
 	check_unused_packs(sheet_paths, findings)
 	check_shadowed_variables(sheet_paths, findings)
 	check_vocabulary_doc(findings)
@@ -291,6 +292,38 @@ static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold
 	for sub: Variant in event.sub_events:
 		if sub is EventRow:
 			_scan_unbounded_loops(sub as EventRow, sheet_path, threshold, findings)
+
+## ACE ids whose codegen `await`s — they suspend the handler into a coroutine (Begin Frame Budget alone
+## does not await, so it is intentionally absent).
+const COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget"]
+
+## Flags a coroutine action (await / Wait / budget-yield) under a per-frame trigger: the next tick fires
+## while the previous run may still be suspended, so the handler overlaps itself and double-processes.
+static func check_coroutine_in_per_frame_trigger(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		if sheet_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null:
+			continue
+		for entry: Variant in sheet.events:
+			if entry is EventRow and _is_per_frame_trigger((entry as EventRow).trigger_id):
+				_scan_coroutine_misuse(entry as EventRow, sheet_path, findings)
+
+static func _scan_coroutine_misuse(event: EventRow, sheet_path: String, findings: Array[Dictionary]) -> void:
+	for action: Variant in event.actions:
+		var flagged: String = ""
+		if action is ACEAction and COROUTINE_ACE_IDS.has((action as ACEAction).ace_id):
+			flagged = (action as ACEAction).ace_id
+		elif action is RawCodeRow and (action as RawCodeRow).code.contains("await "):
+			flagged = "await"
+		if not flagged.is_empty():
+			_add(findings, "warning", "coroutine-in-per-frame", sheet_path,
+				"A coroutine action ('%s') runs under a per-frame trigger (On Process / On Physics Process). The next tick fires while the previous run may still be suspended, so the handler overlaps itself and double-processes. Move it to a one-shot trigger (On Ready / On Signal / a custom function), or use the Time Slicer pack. See docs/PERFORMANCE.md." % flagged)
+			break
+	for sub: Variant in event.sub_events:
+		if sub is EventRow:
+			_scan_coroutine_misuse(sub as EventRow, sheet_path, findings)
 
 ## Walks a sheet's rows collecting DISTINCT external node references (normalised: $path / %unique,
 ## get_node folds into $path), from With-node scopes, ACE param values and raw GDScript. self/host,

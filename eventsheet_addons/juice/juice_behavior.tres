@@ -169,6 +169,17 @@ event_uid = "8a4ff0"
 
 [sub_resource type="Resource" id="Resource_8fvqu"]
 script = ExtResource("2_pl37x")
+code = "clear_slowmo()"
+
+[sub_resource type="Resource" id="Resource_215nc"]
+script = ExtResource("6_m121v")
+trigger_provider_id = "Core"
+trigger_id = "OnTreeExiting"
+actions = Array[Resource]([SubResource("Resource_8fvqu")])
+event_uid = "2f1a6a"
+
+[sub_resource type="Resource" id="Resource_u2h56"]
+script = ExtResource("2_pl37x")
 code = "if trauma > 0.0:
 	trauma = maxf(trauma - shake_decay * delta, 0.0)
 	var cam: Camera2D = _camera()
@@ -205,18 +216,18 @@ if _squash_spring_active:
 	else:
 		_apply_host_scale(_squash_value)"
 
-[sub_resource type="Resource" id="Resource_215nc"]
+[sub_resource type="Resource" id="Resource_smfhv"]
 script = ExtResource("6_m121v")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_8fvqu")])
-event_uid = "2f1a6a"
+actions = Array[Resource]([SubResource("Resource_u2h56")])
+event_uid = "913d35"
 
-[sub_resource type="Resource" id="Resource_u2h56"]
+[sub_resource type="Resource" id="Resource_pe501"]
 script = ExtResource("2_pl37x")
 code = "trauma = clampf(trauma + strength, 0.0, 1.0)"
 
-[sub_resource type="Resource" id="Resource_smfhv"]
+[sub_resource type="Resource" id="Resource_ffaey"]
 script = ExtResource("7_yqweo")
 id = "strength"
 type_name = "float"
@@ -224,17 +235,17 @@ default_value = "0.4"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_pe501"]
+[sub_resource type="Resource" id="Resource_dp0f6"]
 script = ExtResource("8_5xkvr")
 function_name = "shake"
 description = "Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically — fire it on every hit."
 expose_as_ace = true
 ace_display_name = "Shake"
 ace_category = "Juice"
-params = Array[ExtResource("7_yqweo")]([SubResource("Resource_smfhv")])
-events = Array[Resource]([SubResource("Resource_u2h56")])
+params = Array[ExtResource("7_yqweo")]([SubResource("Resource_ffaey")])
+events = Array[Resource]([SubResource("Resource_pe501")])
 
-[sub_resource type="Resource" id="Resource_ffaey"]
+[sub_resource type="Resource" id="Resource_timcu"]
 script = ExtResource("2_pl37x")
 code = "trauma = 0.0
 shake_time = 0.0
@@ -244,37 +255,37 @@ if cam != null and _shaking:
 	cam.rotation = _base_rotation
 _shaking = false"
 
-[sub_resource type="Resource" id="Resource_dp0f6"]
+[sub_resource type="Resource" id="Resource_c7w01"]
 script = ExtResource("8_5xkvr")
 function_name = "stop_shake"
 description = "Cancels any shake and restores the camera to rest immediately."
 expose_as_ace = true
 ace_display_name = "Stop Shake"
 ace_category = "Juice"
-events = Array[Resource]([SubResource("Resource_ffaey")])
+events = Array[Resource]([SubResource("Resource_timcu")])
 
-[sub_resource type="Resource" id="Resource_timcu"]
+[sub_resource type="Resource" id="Resource_flw5d"]
 script = ExtResource("2_pl37x")
 code = "_camera_override = get_node_or_null(camera_path) as Camera2D"
 
-[sub_resource type="Resource" id="Resource_c7w01"]
+[sub_resource type="Resource" id="Resource_1d8tj"]
 script = ExtResource("7_yqweo")
 id = "camera_path"
 type_name = "NodePath"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_flw5d"]
+[sub_resource type="Resource" id="Resource_sk1ln"]
 script = ExtResource("8_5xkvr")
 function_name = "use_camera"
 description = "Pin the effects to a specific Camera2D (by path). Leave it unused to auto-target whichever camera is active."
 expose_as_ace = true
 ace_display_name = "Use Camera"
 ace_category = "Juice"
-params = Array[ExtResource("7_yqweo")]([SubResource("Resource_c7w01")])
-events = Array[Resource]([SubResource("Resource_timcu")])
+params = Array[ExtResource("7_yqweo")]([SubResource("Resource_1d8tj")])
+events = Array[Resource]([SubResource("Resource_flw5d")])
 
-[sub_resource type="Resource" id="Resource_1d8tj"]
+[sub_resource type="Resource" id="Resource_exiid"]
 script = ExtResource("2_pl37x")
 code = "var cam: Camera2D = _camera()
 if cam == null:
@@ -285,7 +296,7 @@ var tw: Tween = create_tween()
 tw.tween_property(cam, \"zoom\", target_zoom, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 tw.finished.connect(func() -> void: zoom_finished.emit())"
 
-[sub_resource type="Resource" id="Resource_sk1ln"]
+[sub_resource type="Resource" id="Resource_7b1it"]
 script = ExtResource("7_yqweo")
 id = "percent"
 type_name = "float"
@@ -293,7 +304,7 @@ default_value = "150"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_exiid"]
+[sub_resource type="Resource" id="Resource_y8i3a"]
 script = ExtResource("7_yqweo")
 id = "duration"
 type_name = "float"
@@ -301,17 +312,17 @@ default_value = "0.4"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_7b1it"]
+[sub_resource type="Resource" id="Resource_mx66i"]
 script = ExtResource("8_5xkvr")
 function_name = "zoom_by_percent"
 description = "Smoothly zooms the camera (100 = no change, 150 = zoom in 1.5x, 50 = zoom out). Clamped to the min/max zoom knobs."
 expose_as_ace = true
 ace_display_name = "Zoom By Percent"
 ace_category = "Juice"
-params = Array[ExtResource("7_yqweo")]([SubResource("Resource_sk1ln"), SubResource("Resource_exiid")])
-events = Array[Resource]([SubResource("Resource_1d8tj")])
+params = Array[ExtResource("7_yqweo")]([SubResource("Resource_7b1it"), SubResource("Resource_y8i3a")])
+events = Array[Resource]([SubResource("Resource_exiid")])
 
-[sub_resource type="Resource" id="Resource_y8i3a"]
+[sub_resource type="Resource" id="Resource_8i2fn"]
 script = ExtResource("2_pl37x")
 code = "var cam: Camera2D = _camera()
 if cam == null:
@@ -324,14 +335,14 @@ tw.tween_property(cam, \"zoom\", target_zoom, seconds).set_trans(Tween.TRANS_SIN
 tw.tween_property(cam, \"global_position\", world_position, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 tw.finished.connect(func() -> void: zoom_finished.emit())"
 
-[sub_resource type="Resource" id="Resource_mx66i"]
+[sub_resource type="Resource" id="Resource_3cbs0"]
 script = ExtResource("7_yqweo")
 id = "world_position"
 type_name = "Vector2"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_8i2fn"]
+[sub_resource type="Resource" id="Resource_ehwlx"]
 script = ExtResource("7_yqweo")
 id = "percent"
 type_name = "float"
@@ -339,7 +350,7 @@ default_value = "150"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_3cbs0"]
+[sub_resource type="Resource" id="Resource_cuvq4"]
 script = ExtResource("7_yqweo")
 id = "duration"
 type_name = "float"
@@ -347,17 +358,17 @@ default_value = "0.4"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_ehwlx"]
+[sub_resource type="Resource" id="Resource_4hslg"]
 script = ExtResource("8_5xkvr")
 function_name = "zoom_to_position"
 description = "Zooms in while gliding the camera so a world position becomes the screen CENTRE — frame a spot in one action."
 expose_as_ace = true
 ace_display_name = "Zoom To Position"
 ace_category = "Juice"
-params = Array[ExtResource("7_yqweo")]([SubResource("Resource_mx66i"), SubResource("Resource_8i2fn"), SubResource("Resource_3cbs0")])
-events = Array[Resource]([SubResource("Resource_y8i3a")])
+params = Array[ExtResource("7_yqweo")]([SubResource("Resource_3cbs0"), SubResource("Resource_ehwlx"), SubResource("Resource_cuvq4")])
+events = Array[Resource]([SubResource("Resource_8i2fn")])
 
-[sub_resource type="Resource" id="Resource_cuvq4"]
+[sub_resource type="Resource" id="Resource_7xh2n"]
 script = ExtResource("2_pl37x")
 code = "var cam: Camera2D = _camera()
 if cam == null:
@@ -371,14 +382,14 @@ var tw: Tween = create_tween()
 tw.tween_method(_zoom_anchored_step, 0.0, 1.0, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 tw.finished.connect(func() -> void: zoom_finished.emit())"
 
-[sub_resource type="Resource" id="Resource_4hslg"]
+[sub_resource type="Resource" id="Resource_vutrg"]
 script = ExtResource("7_yqweo")
 id = "world_position"
 type_name = "Vector2"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_7xh2n"]
+[sub_resource type="Resource" id="Resource_7wugj"]
 script = ExtResource("7_yqweo")
 id = "percent"
 type_name = "float"
@@ -386,7 +397,7 @@ default_value = "150"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_vutrg"]
+[sub_resource type="Resource" id="Resource_ewr3c"]
 script = ExtResource("7_yqweo")
 id = "duration"
 type_name = "float"
@@ -394,17 +405,17 @@ default_value = "0.4"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_7wugj"]
+[sub_resource type="Resource" id="Resource_eriro"]
 script = ExtResource("8_5xkvr")
 function_name = "zoom_toward_point"
 description = "Zooms while keeping a world position pinned under the same screen spot (mouse-wheel-to-cursor style) — great for strategy/map zoom."
 expose_as_ace = true
 ace_display_name = "Zoom Toward Point"
 ace_category = "Juice"
-params = Array[ExtResource("7_yqweo")]([SubResource("Resource_4hslg"), SubResource("Resource_7xh2n"), SubResource("Resource_vutrg")])
-events = Array[Resource]([SubResource("Resource_cuvq4")])
+params = Array[ExtResource("7_yqweo")]([SubResource("Resource_vutrg"), SubResource("Resource_7wugj"), SubResource("Resource_ewr3c")])
+events = Array[Resource]([SubResource("Resource_7xh2n")])
 
-[sub_resource type="Resource" id="Resource_ewr3c"]
+[sub_resource type="Resource" id="Resource_eu7pb"]
 script = ExtResource("2_pl37x")
 code = "if host == null:
 	return
@@ -423,7 +434,7 @@ var tw: Tween = create_tween()
 tw.tween_property(host, \"scale\", _base_scale, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 tw.finished.connect(func() -> void: squash_finished.emit())"
 
-[sub_resource type="Resource" id="Resource_eriro"]
+[sub_resource type="Resource" id="Resource_lurb6"]
 script = ExtResource("7_yqweo")
 id = "stretch"
 type_name = "float"
@@ -431,7 +442,7 @@ default_value = "0.3"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_eu7pb"]
+[sub_resource type="Resource" id="Resource_0lco1"]
 script = ExtResource("7_yqweo")
 id = "duration"
 type_name = "float"
@@ -439,17 +450,17 @@ default_value = "0.4"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_lurb6"]
+[sub_resource type="Resource" id="Resource_ofju1"]
 script = ExtResource("8_5xkvr")
 function_name = "squash_and_stretch"
 description = "Pops the host (Node2D or Control) with a volume-preserving stretch that springs back elastically. Positive = stretch tall (a jump), negative = squash wide (a landing)."
 expose_as_ace = true
 ace_display_name = "Squash & Stretch"
 ace_category = "Juice"
-params = Array[ExtResource("7_yqweo")]([SubResource("Resource_eriro"), SubResource("Resource_eu7pb")])
-events = Array[Resource]([SubResource("Resource_ewr3c")])
+params = Array[ExtResource("7_yqweo")]([SubResource("Resource_lurb6"), SubResource("Resource_0lco1")])
+events = Array[Resource]([SubResource("Resource_eu7pb")])
 
-[sub_resource type="Resource" id="Resource_0lco1"]
+[sub_resource type="Resource" id="Resource_q568v"]
 script = ExtResource("2_pl37x")
 code = "if host == null:
 	return
@@ -459,7 +470,7 @@ _squash_velocity = Vector2.ZERO
 _squash_spring_active = true
 _apply_host_scale(_squash_value)"
 
-[sub_resource type="Resource" id="Resource_ofju1"]
+[sub_resource type="Resource" id="Resource_6f2ks"]
 script = ExtResource("7_yqweo")
 id = "stretch"
 type_name = "float"
@@ -467,17 +478,17 @@ default_value = "0.3"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_q568v"]
+[sub_resource type="Resource" id="Resource_50sw7"]
 script = ExtResource("8_5xkvr")
 function_name = "spring_squash"
 description = "Pops the host (Node2D or Control) with a volume-preserving stretch that springs back via a real spring (the stiffness/damping knobs) — bouncier + more organic than the tween Squash & Stretch. Positive = stretch tall (a jump), negative = squash wide (a landing)."
 expose_as_ace = true
 ace_display_name = "Spring Squash"
 ace_category = "Juice"
-params = Array[ExtResource("7_yqweo")]([SubResource("Resource_ofju1")])
-events = Array[Resource]([SubResource("Resource_0lco1")])
+params = Array[ExtResource("7_yqweo")]([SubResource("Resource_6f2ks")])
+events = Array[Resource]([SubResource("Resource_q568v")])
 
-[sub_resource type="Resource" id="Resource_6f2ks"]
+[sub_resource type="Resource" id="Resource_inir4"]
 script = ExtResource("2_pl37x")
 code = "if _slowmo_tween != null:
 	_slowmo_tween.kill()
@@ -490,7 +501,7 @@ tw.tween_method(_set_time_scale, ts, 1.0, maxf(slowmo_fade_out_secs, 0.0001)).se
 tw.finished.connect(func() -> void: slowmo_finished.emit())
 _slowmo_tween = tw"
 
-[sub_resource type="Resource" id="Resource_50sw7"]
+[sub_resource type="Resource" id="Resource_sh2r7"]
 script = ExtResource("7_yqweo")
 id = "target_scale"
 type_name = "float"
@@ -498,7 +509,7 @@ default_value = "0.15"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_inir4"]
+[sub_resource type="Resource" id="Resource_17o54"]
 script = ExtResource("7_yqweo")
 id = "hold_duration"
 type_name = "float"
@@ -506,7 +517,7 @@ default_value = "0.25"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_sh2r7"]
+[sub_resource type="Resource" id="Resource_87bbh"]
 script = ExtResource("7_yqweo")
 id = "duration_clock"
 default_value = "realtime"
@@ -514,31 +525,31 @@ initial_value = null
 initialValue = null
 options = Array[String](["realtime", "gametime"])
 
-[sub_resource type="Resource" id="Resource_17o54"]
+[sub_resource type="Resource" id="Resource_tkhpc"]
 script = ExtResource("8_5xkvr")
 function_name = "slowmo"
 description = "Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished."
 expose_as_ace = true
 ace_display_name = "Slowmo"
 ace_category = "Juice"
-params = Array[ExtResource("7_yqweo")]([SubResource("Resource_50sw7"), SubResource("Resource_inir4"), SubResource("Resource_sh2r7")])
-events = Array[Resource]([SubResource("Resource_6f2ks")])
+params = Array[ExtResource("7_yqweo")]([SubResource("Resource_sh2r7"), SubResource("Resource_17o54"), SubResource("Resource_87bbh")])
+events = Array[Resource]([SubResource("Resource_inir4")])
 
-[sub_resource type="Resource" id="Resource_87bbh"]
+[sub_resource type="Resource" id="Resource_8mvxw"]
 script = ExtResource("2_pl37x")
 code = "if _slowmo_tween != null:
 	_slowmo_tween.kill()
 	_slowmo_tween = null
 Engine.time_scale = 1.0"
 
-[sub_resource type="Resource" id="Resource_tkhpc"]
+[sub_resource type="Resource" id="Resource_clrk7"]
 script = ExtResource("8_5xkvr")
 function_name = "clear_slowmo"
 description = "Cancels any slowmo and snaps Engine.time_scale back to 1.0 immediately (call on scene exit if a slowmo might still be running)."
 expose_as_ace = true
 ace_display_name = "Clear Slowmo"
 ace_category = "Juice"
-events = Array[Resource]([SubResource("Resource_87bbh")])
+events = Array[Resource]([SubResource("Resource_8mvxw")])
 
 [resource]
 script = ExtResource("9_ixhnj")
@@ -546,5 +557,5 @@ host_class = "CanvasItem"
 behavior_mode = true
 custom_class_name = "JuiceBehavior"
 addon_tags = PackedStringArray("camera", "juice")
-events = Array[Resource]([SubResource("Resource_04rea"), SubResource("Resource_yc8eo"), SubResource("Resource_yi7a2"), SubResource("Resource_215nc")])
-functions = Array[Resource]([SubResource("Resource_pe501"), SubResource("Resource_dp0f6"), SubResource("Resource_flw5d"), SubResource("Resource_7b1it"), SubResource("Resource_ehwlx"), SubResource("Resource_7wugj"), SubResource("Resource_lurb6"), SubResource("Resource_q568v"), SubResource("Resource_17o54"), SubResource("Resource_tkhpc")])
+events = Array[Resource]([SubResource("Resource_04rea"), SubResource("Resource_yc8eo"), SubResource("Resource_yi7a2"), SubResource("Resource_215nc"), SubResource("Resource_smfhv")])
+functions = Array[Resource]([SubResource("Resource_dp0f6"), SubResource("Resource_c7w01"), SubResource("Resource_sk1ln"), SubResource("Resource_mx66i"), SubResource("Resource_4hslg"), SubResource("Resource_eriro"), SubResource("Resource_ofju1"), SubResource("Resource_50sw7"), SubResource("Resource_tkhpc"), SubResource("Resource_clrk7")])

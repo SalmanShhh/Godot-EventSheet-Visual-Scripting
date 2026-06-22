@@ -148,6 +148,7 @@ func _apply_host_scale(s: Vector2) -> void:
 		c.scale = s
 
 func _ready() -> void:
+	tree_exiting.connect(_on_tree_exiting)
 	_noise = FastNoiseLite.new()
 	_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	_noise.frequency = 1.0
@@ -156,6 +157,9 @@ func _ready() -> void:
 		_base_scale = (host as Node2D).scale
 	elif host is Control:
 		_base_scale = (host as Control).scale
+
+func _on_tree_exiting() -> void:
+	clear_slowmo()
 
 func _process(delta: float) -> void:
 	if trauma > 0.0:
