@@ -8,11 +8,6 @@ extends Node2D
 ## Targets destroyed.
 @export var score: int = 0
 var __every_ps_spawn: float = 0.0
-var __live_values_timer: float = 0.0
-
-func _ready() -> void:
-	if EngineDebugger.is_active() and not EngineDebugger.has_capture("eventsheets"):
-		EngineDebugger.register_message_capture(&"eventsheets", _eventsheets_debug_set)
 
 func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed(&"ui_up"):
@@ -48,17 +43,6 @@ func _physics_process(delta: float) -> void:
 			__node.queue_free()
 
 func _process(delta: float) -> void:
-	__live_values_timer += delta
-	if __live_values_timer >= 0.25 and EngineDebugger.is_active():
-		__live_values_timer = 0.0
-		EngineDebugger.send_message("eventsheets:live_values", ["score", score])
 	$Hud.text = "Score %d    Ammo %d/%d    %s" % [score, $Player/WeaponKit.current_ammo, $Player/WeaponKit.max_ammo, ("RELOADING..." if $Player/WeaponKit.is_reloading() else "A/D move   Up jump   hold Space fire")]
-
-## Live Values edit-back receiver (debug sessions only).
-func _eventsheets_debug_set(message: String, data: Array) -> bool:
-	if message != "set_value" or data.size() < 2:
-		return false
-	set(str(data[0]), data[1])
-	return true
 
 # [b]Platformer-Shooter[/b] — the new Platformer + Weapon Kit packs working together. Run with A/D, jump with Up (double jump + coyote time + variable height from the Platformer pack), and hold Space to shoot (fire-rate, ammo and auto-reload from the Weapon Kit). Shots destroy the red targets drifting in from the right.

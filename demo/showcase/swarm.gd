@@ -10,11 +10,8 @@ extends Node2D
 var t: float = 0.0
 var __loop_cursor_7647f9_0: int = 0
 var __loop_items_7647f9_0: Array = []
-var __live_values_timer: float = 0.0
 
 func _ready() -> void:
-	if EngineDebugger.is_active() and not EngineDebugger.has_capture("eventsheets"):
-		EngineDebugger.register_message_capture(&"eventsheets", _eventsheets_debug_set)
 	var __cols: int = 40
 	for __i: int in range(count):
 		var __dot: Sprite2D = load("res://demo/showcase/dot.tscn").instantiate()
@@ -22,10 +19,6 @@ func _ready() -> void:
 		add_child(__dot)
 
 func _process(delta: float) -> void:
-	__live_values_timer += delta
-	if __live_values_timer >= 0.25 and EngineDebugger.is_active():
-		__live_values_timer = 0.0
-		EngineDebugger.send_message("eventsheets:live_values", ["count", count, "t", t])
 	t += delta
 	$Info.text = "%d sprites   ·   Budgeted For Each: 90/frame   ·   %d FPS" % [count, Engine.get_frames_per_second()]
 	if __loop_cursor_7647f9_0 >= __loop_items_7647f9_0.size():
@@ -44,12 +37,5 @@ func _process(delta: float) -> void:
 			continue
 		dot.offset = Vector2(sin(t * 2.0 + dot.position.x * 0.02) * 10.0, cos(t * 2.4 + dot.position.y * 0.02) * 10.0)
 		dot.modulate = Color.from_hsv(fmod(t * 0.08 + dot.position.x * 0.0008, 1.0), 0.65, 1.0)
-
-## Live Values edit-back receiver (debug sessions only).
-func _eventsheets_debug_set(message: String, data: Array) -> bool:
-	if message != "set_value" or data.size() < 2:
-		return false
-	set(str(data[0]), data[1])
-	return true
 
 # [b]Swarm[/b] — frame-spreading made visible. On Ready spawns 800 sprites into the "swarm" group; ONE For Each with a frame-spread budget of 90/frame wobbles them, so only a slice updates each frame and the colour refresh SWEEPS through the crowd — that visible wave IS the spreading. The FPS stays pinned even though the loop never touches the whole crowd in a single frame. Tick frame_spread_count on any For Each to get this — no behavior, no await.

@@ -108,10 +108,12 @@ static func run() -> bool:
 
 	# Release showcase (the release ritual): loads, parses, scene instantiates.
 	var showcase_sheet: EventSheetResource = load("res://demo/showcase/showcase_carousel.tres")
-	all_passed = _check("showcase sheet loads with Live Values on",
-		showcase_sheet != null and showcase_sheet.emit_live_values, true) and all_passed
+	all_passed = _check("release showcase ships clean GDScript (Live Values off)",
+		showcase_sheet != null and not showcase_sheet.emit_live_values, true) and all_passed
 	all_passed = _check("showcase script loads",
 		load("res://demo/showcase/showcase_carousel.gd") != null, true) and all_passed
+	all_passed = _check("showcase .gd carries no EngineDebugger / runtime-hook plumbing",
+		not FileAccess.get_file_as_string("res://demo/showcase/showcase_carousel.gd").contains("EngineDebugger"), true) and all_passed
 	var showcase_scene: PackedScene = load("res://demo/showcase/showcase_carousel.tscn")
 	var showcase_root: Node = showcase_scene.instantiate()
 	all_passed = _check("showcase scene wires Spring + Tween behaviors",

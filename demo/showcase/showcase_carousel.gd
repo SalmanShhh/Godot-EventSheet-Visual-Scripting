@@ -16,13 +16,8 @@ extends Node2D
 var __group_juice_active: bool = true
 var __every_beat_caro: float = 0.0
 var __every_spin_caro: float = 0.0
-var __live_values_timer: float = 0.0
 
 func _process(delta: float) -> void:
-	__live_values_timer += delta
-	if __live_values_timer >= 0.25 and EngineDebugger.is_active():
-		__live_values_timer = 0.0
-		EngineDebugger.send_message("eventsheets:live_values", ["beat", beat, "intensity", intensity, "party_on", party_on])
 	__every_beat_caro += delta
 	if __group_juice_active and __every_beat_caro >= maxf(0.5, 0.001):
 		__every_beat_caro = fmod(__every_beat_caro, maxf(0.5, 0.001))
@@ -46,17 +41,8 @@ func _process(delta: float) -> void:
 		$Hero/SpringBehavior.spring_host_scale(1.0 + sin(Time.get_ticks_msec() / 1000.0) * 0.04)
 
 func _ready() -> void:
-	if EngineDebugger.is_active() and not EngineDebugger.has_capture("eventsheets"):
-		EngineDebugger.register_message_capture(&"eventsheets", _eventsheets_debug_set)
 	for c: Node in $Tiles.get_children():
 		c.get_node("SineBehavior").active = true
-
-## Live Values edit-back receiver (debug sessions only).
-func _eventsheets_debug_set(message: String, data: Array) -> bool:
-	if message != "set_value" or data.size() < 2:
-		return false
-	set(str(data[0]), data[1])
-	return true
 
 ## @ace_hidden
 func juice_tile(index: int, kick: float) -> void:

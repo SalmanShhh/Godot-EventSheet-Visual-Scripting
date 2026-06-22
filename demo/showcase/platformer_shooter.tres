@@ -116,7 +116,6 @@ event_uid = "ec03f2"
 [resource]
 script = ExtResource("7_350ct")
 host_class = "Node2D"
-emit_live_values = true
 custom_class_name = "PlatformerShooter"
 addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_vpfg4"), SubResource("Resource_l5ijk"), SubResource("Resource_htagw"), SubResource("Resource_w1hpa"), SubResource("Resource_qvy1r"), SubResource("Resource_xo4xt"), SubResource("Resource_vc2a2")])

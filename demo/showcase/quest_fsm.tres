@@ -193,7 +193,6 @@ events = Array[Resource]([SubResource("Resource_jg684")])
 [resource]
 script = ExtResource("13_aayxw")
 host_class = "Node2D"
-emit_live_values = true
 custom_class_name = "QuestFsm"
 addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_rfbge"), SubResource("Resource_gp27s"), SubResource("Resource_eimtb"), SubResource("Resource_jddtr"), SubResource("Resource_5v2ga"), SubResource("Resource_qfunk"), SubResource("Resource_ietul"), SubResource("Resource_3ypjf"), SubResource("Resource_1w1ep"), SubResource("Resource_22qyo"), SubResource("Resource_ay0qf")])

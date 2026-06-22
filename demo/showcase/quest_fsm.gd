@@ -16,19 +16,12 @@ signal quest_advanced(phase: int)
 @export var quest_log: Array = []
 @export var tick: int = 0
 var __every_quest: float = 0.0
-var __live_values_timer: float = 0.0
 
 func _ready() -> void:
-	if EngineDebugger.is_active() and not EngineDebugger.has_capture("eventsheets"):
-		EngineDebugger.register_message_capture(&"eventsheets", _eventsheets_debug_set)
 	item_collected.connect(_on_item_collected)
 	quest_advanced.connect(_on_quest_advanced)
 
 func _process(delta: float) -> void:
-	__live_values_timer += delta
-	if __live_values_timer >= 0.25 and EngineDebugger.is_active():
-		__live_values_timer = 0.0
-		EngineDebugger.send_message("eventsheets:live_values", ["quest_state", quest_state])
 	__every_quest += delta
 	if __every_quest >= maxf(1.0, 0.001):
 		__every_quest = fmod(__every_quest, maxf(1.0, 0.001))
@@ -55,13 +48,6 @@ func _on_item_collected(id: String) -> void:
 func _on_quest_advanced(phase: int) -> void:
 	$Icon/TweenBehavior.tween_rotation($Icon.rotation_degrees + 120.0, 0.4)
 	$Icon/SpringBehavior.spring_host_scale(1.6)
-
-## Live Values edit-back receiver (debug sessions only).
-func _eventsheets_debug_set(message: String, data: Array) -> bool:
-	if message != "set_value" or data.size() < 2:
-		return false
-	set(str(data[0]), data[1])
-	return true
 
 ## @ace_hidden
 func grant_item(id: String, qty: int) -> void:

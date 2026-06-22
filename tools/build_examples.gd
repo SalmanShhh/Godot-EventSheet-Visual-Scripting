@@ -118,7 +118,7 @@ func _build_carousel() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "CarouselOfJuice"
-	sheet.emit_live_values = true
+	sheet.emit_live_values = false
 	sheet.variables = {
 		"beat": {"type": "int", "default": 0, "exported": true,
 			"attributes": {"tooltip": "Beats elapsed.", "range": {"min": "0", "max": "9999", "step": "1"}}},
@@ -268,7 +268,7 @@ func _build_starfall() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "Starfall"
-	sheet.emit_live_values = true
+	sheet.emit_live_values = false
 
 	var about: CommentRow = CommentRow.new()
 	about.text = "[b]Starfall[/b] — a complete restartable arcade game authored as events: move the ship (ui_left/ui_right) to catch falling stars. Shows an enum+match state machine (PLAYING/GAME_OVER), a group pick-filter that scores & culls stars, an Every-2s spawner, and if/elif input branches. Miss 3 and it's GAME OVER — press ui_accept to restart."
@@ -401,7 +401,7 @@ func _build_quest_fsm() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "QuestFsm"
-	sheet.emit_live_values = true
+	sheet.emit_live_values = false
 
 	var about: CommentRow = CommentRow.new()
 	about.text = "[b]Quest & Inventory FSM[/b] — a self-driving quest engine (no input): an enum+match state machine walks OFFERED -> ACTIVE -> COMPLETE, a reused grant_item() function fills a Dictionary inventory + Array quest log and emits signals, and signal: triggers spring/tween the icon on every beat. Proves the sheet compiles real software logic — collections, signals, functions, match — not just movement."
@@ -527,7 +527,7 @@ func _build_platformer_shooter() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "PlatformerShooter"
-	sheet.emit_live_values = true
+	sheet.emit_live_values = false
 
 	var about: CommentRow = CommentRow.new()
 	about.text = "[b]Platformer-Shooter[/b] — the new Platformer + Weapon Kit packs working together. Run with A/D, jump with Up (double jump + coyote time + variable height from the Platformer pack), and hold Space to shoot (fire-rate, ammo and auto-reload from the Weapon Kit). Shots destroy the red targets drifting in from the right."
@@ -676,7 +676,7 @@ func _build_swarm() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "Swarm"
-	sheet.emit_live_values = true
+	sheet.emit_live_values = false
 
 	var about: CommentRow = CommentRow.new()
 	about.text = "[b]Swarm[/b] — frame-spreading made visible. On Ready spawns 800 sprites into the \"swarm\" group; ONE For Each with a frame-spread budget of 90/frame wobbles them, so only a slice updates each frame and the colour refresh SWEEPS through the crowd — that visible wave IS the spreading. The FPS stays pinned even though the loop never touches the whole crowd in a single frame. Tick frame_spread_count on any For Each to get this — no behavior, no await."

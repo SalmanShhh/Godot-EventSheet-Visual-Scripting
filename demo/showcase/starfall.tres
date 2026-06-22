@@ -245,7 +245,6 @@ event_uid = "83c114"
 [resource]
 script = ExtResource("10_my76c")
 host_class = "Node2D"
-emit_live_values = true
 custom_class_name = "Starfall"
 addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_yej23"), SubResource("Resource_tf8x0"), SubResource("Resource_et5k0"), SubResource("Resource_mij24"), SubResource("Resource_jtxvf"), SubResource("Resource_o1n1x"), SubResource("Resource_o3mj0"), SubResource("Resource_xvmcs"), SubResource("Resource_dmuc6"), SubResource("Resource_wvx1w"), SubResource("Resource_kfb4f")])

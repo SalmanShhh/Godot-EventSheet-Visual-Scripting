@@ -16,6 +16,6 @@ func _process(delta: float) -> void:
 		print("Low health!")
 
 func _on_body_entered(body: Node) -> void:
-	if is_in_group(&"enemy"):
+	if body.is_in_group("enemy"):
 		health += -10
 		emit_signal(&"damage_taken", 10)

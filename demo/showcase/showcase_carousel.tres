@@ -219,7 +219,6 @@ events = Array[Resource]([SubResource("Resource_d20ds")])
 [resource]
 script = ExtResource("11_oan50")
 host_class = "Node2D"
-emit_live_values = true
 custom_class_name = "CarouselOfJuice"
 addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_o38o8"), SubResource("Resource_61jcl"), SubResource("Resource_iu6wy"), SubResource("Resource_cqs37"), SubResource("Resource_arj5u"), SubResource("Resource_8lo4a")])

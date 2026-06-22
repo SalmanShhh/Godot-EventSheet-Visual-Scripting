@@ -65,7 +65,6 @@ pick_filters = Array[ExtResource("5_r4gi0")]([SubResource("Resource_jrn30")])
 [resource]
 script = ExtResource("7_l1bx6")
 host_class = "Node2D"
-emit_live_values = true
 custom_class_name = "Swarm"
 addon_tags = PackedStringArray()
 events = Array[Resource]([SubResource("Resource_v6yy3"), SubResource("Resource_y87b2"), SubResource("Resource_gyuot"), SubResource("Resource_h1s8m")])

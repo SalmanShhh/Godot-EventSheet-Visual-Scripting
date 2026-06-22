@@ -16,11 +16,8 @@ enum State { PLAYING, GAME_OVER }
 ## 0=PLAYING, 1=GAME_OVER.
 @export var state: int = 0
 var __every_spawn_sf: float = 0.0
-var __live_values_timer: float = 0.0
 
 func _ready() -> void:
-	if EngineDebugger.is_active() and not EngineDebugger.has_capture("eventsheets"):
-		EngineDebugger.register_message_capture(&"eventsheets", _eventsheets_debug_set)
 	$Ship.position = Vector2(576, 590)
 
 func _physics_process(delta: float) -> void:
@@ -61,17 +58,6 @@ func _physics_process(delta: float) -> void:
 		state = State.GAME_OVER
 
 func _process(delta: float) -> void:
-	__live_values_timer += delta
-	if __live_values_timer >= 0.25 and EngineDebugger.is_active():
-		__live_values_timer = 0.0
-		EngineDebugger.send_message("eventsheets:live_values", ["lives", lives, "score", score, "ship_speed", ship_speed, "state", state])
 	$ScoreLabel.text = "Score %d    Lives %d    %s" % [score, lives, ("GAME OVER - press Enter" if state == State.GAME_OVER else "PLAYING")]
-
-## Live Values edit-back receiver (debug sessions only).
-func _eventsheets_debug_set(message: String, data: Array) -> bool:
-	if message != "set_value" or data.size() < 2:
-		return false
-	set(str(data[0]), data[1])
-	return true
 
 # [b]Starfall[/b] — a complete restartable arcade game authored as events: move the ship (ui_left/ui_right) to catch falling stars. Shows an enum+match state machine (PLAYING/GAME_OVER), a group pick-filter that scores & culls stars, an Every-2s spawner, and if/elif input branches. Miss 3 and it's GAME OVER — press ui_accept to restart.

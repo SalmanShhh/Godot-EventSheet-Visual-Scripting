@@ -71,9 +71,10 @@ parameters = {
 
 [sub_resource type="Resource" id="ACECondition_enemy_group"]
 script = ExtResource("4_ace_condition")
-ace_id = "HasGroupMember"
+ace_id = "IsInGroup"
 parameters = {
-"group": "\"enemy\""
+"group": "\"enemy\"",
+"target": "body"
 }
 
 [sub_resource type="Resource" id="EventRow_body_entered"]
