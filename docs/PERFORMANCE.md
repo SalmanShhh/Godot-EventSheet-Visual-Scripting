@@ -3,8 +3,8 @@
 Heavy work done all in one frame **hitches** the game: spawning hundreds of objects, updating thousands
 of entities, pathfinding for a crowd. In Construct 3 a `For Each` runs the whole list in one tick; the
 Godot-idiomatic fix is to *spread* the work across frames within a per-frame **budget**. This page covers
-the tools that ship today. The full design (including the in-place Budgeted For Each and the off-thread
-WorkerThreadPool lane) is in [FRAME-SPREADING-SPEC.md](FRAME-SPREADING-SPEC.md).
+the tools that ship today; the full design rationale and the locked decisions are in
+[FRAME-SPREADING-SPEC.md](FRAME-SPREADING-SPEC.md).
 
 Every tool speaks the same budget language: a wall-clock millisecond fence,
 `Time.get_ticks_usec() + int(ms * 1000.0)`, checked as work proceeds.
@@ -25,6 +25,38 @@ Tune `frame_budget_ms` / `max_items_per_frame` / `mode` in the Inspector; `Set F
 at runtime; `Pause`/`Resume` and `Is Busy` / `Items Remaining` round it out. A 50,000-item queue
 self-spreads across as many frames as the budget needs, with no hitch. This is the right tool for ~90% of
 frame-spreading needs.
+
+## The in-place tick-box — Budgeted For Each
+
+Already have a `For Each` loop and just want it to stop hitching? Give the loop a frame-spread budget —
+a per-frame **count** (`frame_spread_count`) and/or a **ms budget** (`frame_spread_budget_ms`) on the pick
+filter — and it processes a slice per frame and resumes on the next. No behavior to attach, no `await`, no
+restructuring. It snapshots the collection once per pass (a persistent cursor survives across frames),
+skips items freed mid-pass (`is_instance_valid`), and starts a fresh pass when it reaches the end.
+
+```gdscript
+# A For Each over "enemies" with frame_spread_count = 50 compiles to roughly:
+if __loop_cursor_<id> >= __loop_items_<id>.size():
+    __loop_cursor_<id> = 0                 # finished a pass — start over next frame
+if __loop_cursor_<id> == 0:
+    __loop_items_<id> = Array(get_tree().get_nodes_in_group("enemies"))   # snapshot once per pass
+var __done_<id> := 0
+while __loop_cursor_<id> < __loop_items_<id>.size():
+    if 50 > 0 and __done_<id> >= 50:       # this frame's slice is done
+        break
+    var enemy = __loop_items_<id>[__loop_cursor_<id>]
+    __loop_cursor_<id> += 1
+    __done_<id> += 1
+    if enemy is Object and not is_instance_valid(enemy):
+        continue                            # snapshot entry was freed since last frame
+    # ... your loop body ...
+```
+
+> [!NOTE]
+> Drive a Budgeted For Each from a **per-frame** trigger (On Process) — that's what re-enters the loop each
+> frame to continue the pass; under a one-shot trigger it would only ever process the first slice. It isn't
+> yet combined with While/Repeat, order-by, or pick-first-N (those emit a normal same-frame loop and a
+> compile warning). The Project Doctor's unbounded-loop nudge goes quiet once a loop is budgeted this way.
 
 ## The power tools — budget ACEs (ADVANCED)
 

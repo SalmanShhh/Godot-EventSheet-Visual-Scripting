@@ -1031,7 +1031,9 @@ static func _emit_event_body(
 ## host-context templates and are likewise warned — write the predicate instead.
 static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, body_depth: int, warnings: Array) -> int:
 	var loop_index: int = 0
+	var pick_idx: int = -1
 	for filter_entry: Variant in event_row.pick_filters:
+		pick_idx += 1
 		if not (filter_entry is PickFilter) or not (filter_entry as PickFilter).enabled:
 			continue
 		var pick: PickFilter = filter_entry as PickFilter
@@ -1044,26 +1046,62 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 			iterator = "item"
 		var indent: String = "\t".repeat(body_depth)
 		var counter_name: String = "__pick_count_%d" % loop_index
-		if pick.pick_first_n > 0:
-			lines.append("%svar %s: int = 0" % [indent, counter_name])
-		if pick.collection_kind == PickFilter.CollectionKind.WHILE:
-			# While loops reuse the picking pipeline (predicate/first-N still apply).
-			lines.append("%swhile %s:" % [indent, collection])
+		# Budgeted For Each (frame-spreading): process a slice per frame over a persistent snapshot, then
+		# resume next frame. The cursor + snapshot are class members (see _collect_stateful_members); BOTH
+		# the budget/count break and the pass-restart sit at the TOP of the loop (the body is emitted by the
+		# caller, so there is no after-body hook). Not yet combined with While/Repeat/order-by/pick-first-N.
+		var is_budgeted: bool = pick.frame_spread_count > 0 or pick.frame_spread_budget_ms > 0.0
+		if is_budgeted and (pick.collection_kind == PickFilter.CollectionKind.WHILE or pick.collection_kind == PickFilter.CollectionKind.REPEAT or not pick.order_by_expression.strip_edges().is_empty() or pick.pick_first_n > 0):
+			warnings.append("Frame-spreading ignored on this loop: not yet supported with While/Repeat, order-by, or pick-first-N - emitting a normal loop.")
+			is_budgeted = false
+		if is_budgeted:
+			var uid: String = "%s_%d" % [event_row.event_uid, pick_idx]
+			# A budgeted loop only resumes because its trigger re-fires every frame. Warn on the common
+			# footgun: a top-level event whose trigger is one-shot would process only the first slice. (A
+			# sub-event has no trigger_id of its own, so it can't be checked here — that's documented.)
+			if not event_row.trigger_id.is_empty() and event_row.trigger_id != "OnProcess" and event_row.trigger_id != "OnPhysicsProcess":
+				warnings.append("Budgeted For Each under a one-shot trigger ('%s') only processes the first slice — drive it from On Process, or clear the frame-spread budget." % event_row.trigger_id)
+			var count_lit: int = pick.frame_spread_count
+			var budget_str: String = str(pick.frame_spread_budget_ms)
+			lines.append("%sif __loop_cursor_%s >= __loop_items_%s.size():" % [indent, uid, uid])
+			lines.append("%s\t__loop_cursor_%s = 0" % [indent, uid])
+			lines.append("%sif __loop_cursor_%s == 0:" % [indent, uid])
+			lines.append("%s\t__loop_items_%s = Array(%s)" % [indent, uid, collection])
+			lines.append("%svar __loop_end_%s: int = Time.get_ticks_usec() + int(%s * 1000.0)" % [indent, uid, budget_str])
+			lines.append("%svar __done_%s: int = 0" % [indent, uid])
+			lines.append("%swhile __loop_cursor_%s < __loop_items_%s.size():" % [indent, uid, uid])
+			body_depth += 1
+			indent = "\t".repeat(body_depth)
+			# Break only AFTER at least one item this frame (__done > 0); otherwise a tiny ms budget that is
+			# already spent at loop entry would break with the cursor unmoved and stall the pass forever.
+			lines.append("%sif __done_%s > 0 and ((%d > 0 and __done_%s >= %d) or (%s > 0.0 and Time.get_ticks_usec() >= __loop_end_%s)):" % [indent, uid, count_lit, uid, count_lit, budget_str, uid])
+			lines.append("%s\tbreak" % indent)
+			lines.append("%svar %s = __loop_items_%s[__loop_cursor_%s]" % [indent, iterator, uid, uid])
+			lines.append("%s__loop_cursor_%s += 1" % [indent, uid])
+			lines.append("%s__done_%s += 1" % [indent, uid])
+			lines.append("%sif %s is Object and not is_instance_valid(%s):" % [indent, iterator, iterator])
+			lines.append("%s\tcontinue" % indent)
 		else:
-			# Ordered picking (C3 pick nearest/furthest): sort a copy by the order
-			# expression (written in terms of the iterator) before looping.
-			if not pick.order_by_expression.strip_edges().is_empty():
-				var sorted_name: String = "__pick_sorted_%d" % loop_index
-				var iterator_regex: RegEx = RegEx.new()
-				iterator_regex.compile("\\b%s\\b" % iterator)
-				var key_a: String = iterator_regex.sub(pick.order_by_expression.strip_edges(), "__pick_a", true)
-				var key_b: String = iterator_regex.sub(pick.order_by_expression.strip_edges(), "__pick_b", true)
-				lines.append("%svar %s: Array = Array(%s)" % [indent, sorted_name, collection])
-				lines.append("%s%s.sort_custom(func(__pick_a, __pick_b): return (%s) %s (%s))" % [indent, sorted_name, key_a, ">" if pick.order_descending else "<", key_b])
-				collection = sorted_name
-			lines.append("%sfor %s in %s:" % [indent, iterator, collection])
-		body_depth += 1
-		indent = "\t".repeat(body_depth)
+			if pick.pick_first_n > 0:
+				lines.append("%svar %s: int = 0" % [indent, counter_name])
+			if pick.collection_kind == PickFilter.CollectionKind.WHILE:
+				# While loops reuse the picking pipeline (predicate/first-N still apply).
+				lines.append("%swhile %s:" % [indent, collection])
+			else:
+				# Ordered picking (C3 pick nearest/furthest): sort a copy by the order
+				# expression (written in terms of the iterator) before looping.
+				if not pick.order_by_expression.strip_edges().is_empty():
+					var sorted_name: String = "__pick_sorted_%d" % loop_index
+					var iterator_regex: RegEx = RegEx.new()
+					iterator_regex.compile("\\b%s\\b" % iterator)
+					var key_a: String = iterator_regex.sub(pick.order_by_expression.strip_edges(), "__pick_a", true)
+					var key_b: String = iterator_regex.sub(pick.order_by_expression.strip_edges(), "__pick_b", true)
+					lines.append("%svar %s: Array = Array(%s)" % [indent, sorted_name, collection])
+					lines.append("%s%s.sort_custom(func(__pick_a, __pick_b): return (%s) %s (%s))" % [indent, sorted_name, key_a, ">" if pick.order_descending else "<", key_b])
+					collection = sorted_name
+				lines.append("%sfor %s in %s:" % [indent, iterator, collection])
+			body_depth += 1
+			indent = "\t".repeat(body_depth)
 		var predicate: String = pick.predicate_expression.strip_edges()
 		if not predicate.is_empty():
 			lines.append("%sif not (%s):" % [indent, predicate])
@@ -1072,7 +1110,7 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 		if not filter_guard.is_empty():
 			lines.append("%sif not (%s):" % [indent, filter_guard])
 			lines.append("%s\tcontinue" % indent)
-		if pick.pick_first_n > 0:
+		if not is_budgeted and pick.pick_first_n > 0:
 			lines.append("%s%s += 1" % [indent, counter_name])
 			lines.append("%sif %s > %d:" % [indent, counter_name, pick.pick_first_n])
 			lines.append("%s\tbreak" % indent)
@@ -1394,11 +1432,31 @@ static func _collect_runtime_group_members(rows: Array) -> void:
 static func _collect_stateful_members(entries: Array, into: Array) -> void:
 	for entry: Variant in entries:
 		if entry is EventRow:
-			for condition: Variant in (entry as EventRow).conditions:
+			var event_row: EventRow = entry as EventRow
+			for condition: Variant in event_row.conditions:
 				if condition is ACECondition and (condition as ACECondition).enabled and not (condition as ACECondition).member_declaration.is_empty():
 					if not into.has((condition as ACECondition).member_declaration):
 						into.append((condition as ACECondition).member_declaration)
-			_collect_stateful_members((entry as EventRow).sub_events, into)
+			# Each Budgeted For Each pick needs a persistent cursor + snapshot so it can resume next frame.
+			# The eligibility test MUST mirror _emit_pick_filters' final is_budgeted (after its fallbacks),
+			# and the uid (event_uid + raw pick index) must match, or the loop and its members won't line up.
+			var pick_idx: int = -1
+			for filter_entry: Variant in event_row.pick_filters:
+				pick_idx += 1
+				if not (filter_entry is PickFilter) or not (filter_entry as PickFilter).enabled:
+					continue
+				var pick: PickFilter = filter_entry as PickFilter
+				if (pick.frame_spread_count > 0 or pick.frame_spread_budget_ms > 0.0) \
+						and pick.collection_kind != PickFilter.CollectionKind.WHILE \
+						and pick.collection_kind != PickFilter.CollectionKind.REPEAT \
+						and pick.order_by_expression.strip_edges().is_empty() \
+						and pick.pick_first_n == 0 \
+						and not _pick_collection_expression(pick).is_empty():
+					var uid: String = "%s_%d" % [event_row.event_uid, pick_idx]
+					for decl: String in ["var __loop_cursor_%s: int = 0" % uid, "var __loop_items_%s: Array = []" % uid]:
+						if not into.has(decl):
+							into.append(decl)
+			_collect_stateful_members(event_row.sub_events, into)
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
 			_collect_stateful_members(group.events if not group.events.is_empty() else group.rows, into)

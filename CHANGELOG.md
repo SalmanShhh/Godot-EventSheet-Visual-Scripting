@@ -3,6 +3,17 @@
 ## [Unreleased]
 
 ### Added
+- **Budgeted For Each — tick a frame-spread budget on a loop and it stops hitching.** Setting
+  `frame_spread_count` (iterations/frame) and/or `frame_spread_budget_ms` (a wall-clock fence) on a pick
+  filter now compiles the `For Each` into an in-place loop that processes a slice per frame and resumes on
+  the next — no behavior to attach, no `await`, no restructuring. It snapshots the collection once per pass
+  (a persistent class-member cursor survives across frames), skips items freed mid-pass
+  (`is_instance_valid`), and restarts a fresh pass at the end; both the budget break and the pass-restart
+  sit at the top of the loop (the body is emitted by the caller). Drive it from a per-frame trigger; not
+  yet combined with While/Repeat, order-by, or pick-first-N (those emit a normal loop + a compile warning).
+  New `budgeted_for_each_test` covers count/ms/fallback/regression shapes and that each output parses; the
+  Doctor's unbounded-loop nudge goes quiet once a loop is budgeted. (Frame-spreading Solution 2 — completes
+  the stack.)
 - **A "Run In Background" pack — off-thread heavy compute (the 31st addon).** The "too heavy even to
   spread across frames" lane: hand a **pure** function to the engine's `WorkerThreadPool` with **Run In
   Background(callable)** (or **Run Batch In Background** to fan an array across threads); the main thread
