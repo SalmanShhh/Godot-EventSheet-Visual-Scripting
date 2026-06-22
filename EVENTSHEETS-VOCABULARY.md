@@ -661,6 +661,34 @@ Behavior — attach under any `Node2D` node.
 - **Simulate Step** (`direction: String`) — Steps one tile in a direction: left, right, up or down (C3 simulate control).
 - **Teleport To Tile** (`tile_x: float, tile_y: float`) — Snaps to a tile coordinate instantly.
 
+### TimeSlicerBehavior (`res://eventsheet_addons/time_slicer/time_slicer_behavior.tres`)
+Behavior — attach under any `Node` node.
+
+#### Properties
+- `frame_budget_ms: float` (default `4.0`) — Max milliseconds per frame spent draining the queue (used when Mode includes ms).
+- `max_items_per_frame: int` (default `64`) — Hard cap on items processed per frame (used when Mode includes count).
+- `mode: String` (default `both`)
+
+#### Triggers
+- **On Process Item**
+- **On Drained**
+
+#### Conditions
+- **Is Busy**
+
+#### Actions
+- **Enqueue Item** (`item: Variant`) — Adds one item to the work queue (processed later within the per-frame budget).
+- **Enqueue Items** (`items: Array`) — Adds every element of an array to the work queue.
+- **Enqueue Group** (`group: String`) — Adds every node in a group to the work queue (e.g. process all enemies, spread over frames).
+- **Clear Queue** — Drops all pending items without processing them.
+- **Set Frame Budget** (`ms: float`) — Sets the per-frame millisecond budget at runtime (dial it down during heavy scenes).
+- **Pause** — Stops draining (items stay queued).
+- **Resume** — Resumes draining the queue.
+
+#### Expressions
+- **Items Remaining**
+- **Last Frame Item Count**
+
 ### TimerBehavior (`res://eventsheet_addons/timer/timer_behavior.tres`)
 Behavior — attach under any `Node` node.
 

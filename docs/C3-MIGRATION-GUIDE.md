@@ -116,7 +116,7 @@ it), and anything not covered is one ƒx expression away.
 | Solid / Jump-thru behaviors | Godot collision layers + one-way collision shapes (scene setup, not events) |
 | Physics behavior | RigidBody2D + the existing impulse/velocity ACEs |
 
-**Lane 2 — portable behaviors** ship as event-sheet packs — **29 are bundled**:
+**Lane 2 — portable behaviors** ship as event-sheet packs — **30 are bundled**:
 Platformer, 8-Direction, Timer, Flash, State Machine, **Sine, Orbit, Bullet, Move To,
 Follow, Car, Tile Movement, Line of Sight (2D & 3D)** (Follow now emits On Reached Target, Car On
 Drift Started / Recovered), the motion packs (**Spring**, **Tween**, and **Juice** for camera/game-feel —

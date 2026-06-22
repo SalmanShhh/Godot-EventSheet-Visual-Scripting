@@ -1,0 +1,245 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_deiv3"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_0gx7i"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_ecg1s"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_xkkd0"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_q274n"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_pap2t"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_mnr22"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_pc2pk"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_uikdf"]
+
+[sub_resource type="Resource" id="Resource_geigq"]
+script = ExtResource("1_deiv3")
+text = "Time Slicer: a managed work queue that drains within a per-frame ms / count budget. Enqueue items, react to On Process Item(item) — heavy work self-spreads across frames with no loop, no await, no hitch."
+
+[sub_resource type="Resource" id="Resource_13vlq"]
+script = ExtResource("2_0gx7i")
+code = "## @ace_trigger
+## @ace_name(\"On Process Item\")
+## @ace_category(\"Time Slicer\")
+signal process_item(item: Variant)
+
+## @ace_trigger
+## @ace_name(\"On Drained\")
+## @ace_category(\"Time Slicer\")
+signal drained
+
+## @ace_condition
+## @ace_name(\"Is Busy\")
+## @ace_category(\"Time Slicer\")
+## @ace_codegen_template(\"$TimeSlicerBehavior.is_busy()\")
+func is_busy() -> bool:
+	return not _queue.is_empty()
+
+## @ace_expression
+## @ace_name(\"Items Remaining\")
+## @ace_category(\"Time Slicer\")
+func items_remaining() -> int:
+	return _queue.size()
+
+## @ace_expression
+## @ace_name(\"Last Frame Item Count\")
+## @ace_category(\"Time Slicer\")
+func last_frame_item_count() -> int:
+	return _last_count"
+
+[sub_resource type="Resource" id="Resource_w6hqk"]
+script = ExtResource("2_0gx7i")
+code = "if _paused or _queue.is_empty():
+	return
+# Wall-clock ms fence — the one budget primitive shared across the frame-spreading tools.
+var __budget_end := Time.get_ticks_usec() + int(frame_budget_ms * 1000.0)
+var __n := 0
+while not _queue.is_empty():
+	process_item.emit(_queue.pop_front())
+	__n += 1
+	if mode != \"count\" and Time.get_ticks_usec() >= __budget_end:
+		break
+	if mode != \"ms\" and __n >= max_items_per_frame:
+		break
+_last_count = __n
+if _queue.is_empty():
+	drained.emit()"
+
+[sub_resource type="Resource" id="Resource_tbyw6"]
+script = ExtResource("6_pap2t")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_w6hqk")])
+event_uid = "012c6b"
+
+[sub_resource type="Resource" id="Resource_0pebw"]
+script = ExtResource("2_0gx7i")
+code = "_queue.append(item)"
+
+[sub_resource type="Resource" id="Resource_ht2af"]
+script = ExtResource("7_mnr22")
+id = "item"
+type_name = "Variant"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_1jdua"]
+script = ExtResource("8_pc2pk")
+function_name = "enqueue_item"
+description = "Adds one item to the work queue (processed later within the per-frame budget)."
+expose_as_ace = true
+ace_display_name = "Enqueue Item"
+ace_category = "Time Slicer"
+params = Array[ExtResource("7_mnr22")]([SubResource("Resource_ht2af")])
+events = Array[Resource]([SubResource("Resource_0pebw")])
+
+[sub_resource type="Resource" id="Resource_84hue"]
+script = ExtResource("2_0gx7i")
+code = "_queue.append_array(items)"
+
+[sub_resource type="Resource" id="Resource_sjsb6"]
+script = ExtResource("7_mnr22")
+id = "items"
+type_name = "Array"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_vijfo"]
+script = ExtResource("8_pc2pk")
+function_name = "enqueue_items"
+description = "Adds every element of an array to the work queue."
+expose_as_ace = true
+ace_display_name = "Enqueue Items"
+ace_category = "Time Slicer"
+params = Array[ExtResource("7_mnr22")]([SubResource("Resource_sjsb6")])
+events = Array[Resource]([SubResource("Resource_84hue")])
+
+[sub_resource type="Resource" id="Resource_ybc4u"]
+script = ExtResource("2_0gx7i")
+code = "_queue.append_array(get_tree().get_nodes_in_group(group))"
+
+[sub_resource type="Resource" id="Resource_r45xq"]
+script = ExtResource("7_mnr22")
+id = "group"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_q4syt"]
+script = ExtResource("8_pc2pk")
+function_name = "enqueue_group"
+description = "Adds every node in a group to the work queue (e.g. process all enemies, spread over frames)."
+expose_as_ace = true
+ace_display_name = "Enqueue Group"
+ace_category = "Time Slicer"
+params = Array[ExtResource("7_mnr22")]([SubResource("Resource_r45xq")])
+events = Array[Resource]([SubResource("Resource_ybc4u")])
+
+[sub_resource type="Resource" id="Resource_e53cp"]
+script = ExtResource("2_0gx7i")
+code = "_queue.clear()"
+
+[sub_resource type="Resource" id="Resource_y4urs"]
+script = ExtResource("8_pc2pk")
+function_name = "clear_queue"
+description = "Drops all pending items without processing them."
+expose_as_ace = true
+ace_display_name = "Clear Queue"
+ace_category = "Time Slicer"
+events = Array[Resource]([SubResource("Resource_e53cp")])
+
+[sub_resource type="Resource" id="Resource_y6j20"]
+script = ExtResource("2_0gx7i")
+code = "frame_budget_ms = maxf(0.0, ms)"
+
+[sub_resource type="Resource" id="Resource_0hl0x"]
+script = ExtResource("7_mnr22")
+id = "ms"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_rryhb"]
+script = ExtResource("8_pc2pk")
+function_name = "set_frame_budget"
+description = "Sets the per-frame millisecond budget at runtime (dial it down during heavy scenes)."
+expose_as_ace = true
+ace_display_name = "Set Frame Budget"
+ace_category = "Time Slicer"
+params = Array[ExtResource("7_mnr22")]([SubResource("Resource_0hl0x")])
+events = Array[Resource]([SubResource("Resource_y6j20")])
+
+[sub_resource type="Resource" id="Resource_3o7pn"]
+script = ExtResource("2_0gx7i")
+code = "_paused = true"
+
+[sub_resource type="Resource" id="Resource_fs2wn"]
+script = ExtResource("8_pc2pk")
+function_name = "pause_slicer"
+description = "Stops draining (items stay queued)."
+expose_as_ace = true
+ace_display_name = "Pause"
+ace_category = "Time Slicer"
+events = Array[Resource]([SubResource("Resource_3o7pn")])
+
+[sub_resource type="Resource" id="Resource_d8iwo"]
+script = ExtResource("2_0gx7i")
+code = "_paused = false"
+
+[sub_resource type="Resource" id="Resource_o6gml"]
+script = ExtResource("8_pc2pk")
+function_name = "resume_slicer"
+description = "Resumes draining the queue."
+expose_as_ace = true
+ace_display_name = "Resume"
+ace_category = "Time Slicer"
+events = Array[Resource]([SubResource("Resource_d8iwo")])
+
+[resource]
+script = ExtResource("9_uikdf")
+behavior_mode = true
+custom_class_name = "TimeSlicerBehavior"
+addon_tags = PackedStringArray("performance", "scheduling")
+events = Array[Resource]([SubResource("Resource_geigq"), SubResource("Resource_13vlq"), SubResource("Resource_tbyw6")])
+variables = {
+"_last_count": {
+"default": 0,
+"exported": false,
+"type": "int"
+},
+"_paused": {
+"default": false,
+"exported": false,
+"type": "bool"
+},
+"_queue": {
+"default": [],
+"exported": false,
+"type": "Array"
+},
+"frame_budget_ms": {
+"attributes": {
+"range": {
+"max": "16",
+"min": "0.1",
+"step": "0.1"
+},
+"tooltip": "Max milliseconds per frame spent draining the queue (used when Mode includes ms)."
+},
+"default": 4.0,
+"exported": true,
+"type": "float"
+},
+"max_items_per_frame": {
+"attributes": {
+"tooltip": "Hard cap on items processed per frame (used when Mode includes count)."
+},
+"default": 64,
+"exported": true,
+"type": "int"
+},
+"mode": {
+"default": "both",
+"exported": true,
+"options": ["both", "ms", "count"],
+"type": "String"
+}
+}
+functions = Array[Resource]([SubResource("Resource_1jdua"), SubResource("Resource_vijfo"), SubResource("Resource_q4syt"), SubResource("Resource_y4urs"), SubResource("Resource_rryhb"), SubResource("Resource_fs2wn"), SubResource("Resource_o6gml")])

@@ -3,6 +3,14 @@
 ## [Unreleased]
 
 ### Added
+- **A "Time Slicer" pack — spread heavy work across frames (the 30th addon).** The first of the
+  frame-spreading tools (see [docs/FRAME-SPREADING-SPEC.md](docs/FRAME-SPREADING-SPEC.md)): a managed
+  work queue that drains within a per-frame budget — **time (ms)**, **count**, or both. Enqueue items
+  (or a whole group) in one event and react to **On Process Item(item)** in another, like reacting to a
+  signal; heavy work (spawning hundreds of objects, updating thousands of entities) self-spreads across
+  as many frames as the budget needs — no loop, no await, no hitch — then fires **On Drained**. Inspector
+  knobs for the ms/count budget; Pause/Resume, Set Frame Budget, Is Busy, Items Remaining. Attach as a
+  component, or register it as an autoload for one global slicer.
 - **Nearest / Furthest node picking — auto-attack targeting with no loop.** Two project-level expressions
   in the *Nodes: Picking* row — **Nearest Node In Group** / **Furthest Node In Group** — pick the closest
   or farthest member of a group by distance to the calling node (the `reduce()` idiom, since Godot 4 has
