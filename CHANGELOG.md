@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added
+- **The Pick Filter (For Each) dialog blocks saving a loop whose collection / where / order-by doesn't compile.**
+  On Save it runs the same lint the on-save "Check Sheet for Errors" pass uses (the collection wrapped per kind,
+  the predicate / order-by with the loop iterator stubbed) and, if an expression is broken, refuses to commit —
+  re-opening the dialog with the exact compile error instead of writing a For Each that fails later at codegen
+  time. Fail-open: if the linter can't run (no active sheet) the save proceeds, so a glitch never traps a valid edit.
+
 ## [0.9.0] - 2026-06-22 - Performance & Game Feel
 
 ### Fixed

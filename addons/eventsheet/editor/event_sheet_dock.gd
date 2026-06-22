@@ -5121,6 +5121,13 @@ func _apply_pick_preset(index: int) -> void:
 func _on_pick_filter_confirmed() -> void:
     if _pick_target_event == null:
         return
+    # Commit guard: refuse to save a For Each whose collection / where / order-by doesn't compile,
+    # and re-open the dialog with the error (reuses the on-save pick-filter linter; fail-open).
+    var __pick_err: String = _pick_dialog_first_error()
+    if not __pick_err.is_empty():
+        _set_status(__pick_err, true)
+        _pick_dialog.popup_centered(Vector2i(520, 300))
+        return
     var event_row: EventRow = _pick_target_event
     var target_index: int = _pick_target_index
     var iterator: String = _pick_iterator_edit.text.strip_edges()
@@ -5144,6 +5151,24 @@ func _on_pick_filter_confirmed() -> void:
     if changed:
         _refresh_after_edit()
         _mark_dirty("Pick filter saved (compiles as a for-each loop).")
+
+## Returns the first diagnostic message if the pick dialog's collection / where / order-by doesn't
+## compile (reusing the on-save pick-filter linter), else "". Fail-open: no sheet -> "" (treated as OK).
+func _pick_dialog_first_error() -> String:
+    if _current_sheet == null:
+        return ""
+    var temp_pick: PickFilter = PickFilter.new()
+    temp_pick.enabled = true
+    temp_pick.collection_kind = _pick_option_to_kind(_pick_kind_option.selected)
+    temp_pick.collection_value = _pick_collection_edit.text.strip_edges()
+    temp_pick.iterator_name = _pick_iterator_edit.text.strip_edges()
+    temp_pick.predicate_expression = _pick_predicate_edit.text.strip_edges()
+    temp_pick.order_by_expression = _pick_order_edit.text.strip_edges()
+    var temp_event: EventRow = EventRow.new()
+    temp_event.pick_filters.append(temp_pick)
+    var diags: Array = []
+    EventSheetDiagnostics._check_pick_filters(temp_event, _current_sheet, diags)
+    return "" if diags.is_empty() else str((diags[0] as Dictionary).get("message", "An expression doesn't compile."))
 
 func _on_pick_filter_deleted() -> void:
     if _pick_target_event == null or _pick_target_index < 0:
