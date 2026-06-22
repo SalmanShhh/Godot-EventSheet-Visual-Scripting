@@ -47,7 +47,36 @@ static func _check_event(event: EventRow, sheet: EventSheetResource, registry: E
 			_check_raw(action as RawCodeRow, true, sheet, diagnostics)
 		elif action is ACEAction:
 			_check_ace(action, event, "Action", sheet, registry, diagnostics)
+	_check_pick_filters(event, sheet, diagnostics)
 	_scan_entries(event.sub_events, sheet, registry, diagnostics)
+
+## Lints a For Each (pick filter): the collection expression (wrapped per kind, so a GROUP name isn't
+## linted as bare GDScript) and the predicate / order-by (the loop iterator is stubbed so a valid
+## `item.field` resolves, but a typo'd identifier still flags). Flags the owning event row.
+static func _check_pick_filters(event: EventRow, sheet: EventSheetResource, diagnostics: Array) -> void:
+	for filter_entry in event.pick_filters:
+		if not (filter_entry is PickFilter) or not (filter_entry as PickFilter).enabled:
+			continue
+		var pick: PickFilter = filter_entry
+		var collection: String = SheetCompiler._pick_collection_expression(pick)
+		if not collection.strip_edges().is_empty():
+			var verdict: Dictionary = EventSheetGDScriptLint.lint(collection, true, sheet)
+			if not bool(verdict.get("ok", true)):
+				diagnostics.append(_make(event, "For Each: the collection doesn't compile (%s)." % collection.strip_edges(), ""))
+				return
+		var iterator: String = pick.iterator_name.strip_edges()
+		if iterator.is_empty():
+			iterator = "item"
+		for field: String in [pick.predicate_expression, pick.order_by_expression]:
+			var expr: String = field.strip_edges()
+			if expr.is_empty():
+				continue
+			# Stub the iterator (untyped) so `item.field` compiles dynamically; a typo'd name still fails.
+			var snippet: String = "var %s = null\nvar __pick_lint = (%s)" % [iterator, expr]
+			var pverdict: Dictionary = EventSheetGDScriptLint.lint(snippet, true, sheet)
+			if not bool(pverdict.get("ok", true)):
+				diagnostics.append(_make(event, "For Each: an expression doesn't compile (%s)." % expr, _suggest(expr, sheet)))
+				return
 
 static func _check_raw(raw: RawCodeRow, in_flow: bool, sheet: EventSheetResource, diagnostics: Array) -> void:
 	var verdict: Dictionary = EventSheetGDScriptLint.lint(raw.code, in_flow, sheet)

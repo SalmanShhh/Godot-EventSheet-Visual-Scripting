@@ -25,6 +25,10 @@
   its output through the project's own `BANNED_PATTERNS` scan so the helper can't regress to the legacy form.
 
 ### Added
+- **On-save linting + "Check Sheet for Errors" now cover For Each (pick filter) fields.** A typo in a
+  loop's collection, predicate, or order-by used to slip past every author-time check; the diagnostics now
+  lint all three — the collection wrapped per kind (so a GROUP name isn't read as bare GDScript) and the
+  predicate / order-by with the loop iterator stubbed (so a valid `item.field` resolves but a typo flags).
 - **The Project Doctor flags a coroutine under a per-frame trigger.** A `Wait` / `Wait For Signal` /
   `Await Next Frame` / `Await If Over Budget` action (or a raw `await`) under On Process / On Physics Process
   overlaps itself — the next tick fires while the previous run is still suspended, double-processing. The
