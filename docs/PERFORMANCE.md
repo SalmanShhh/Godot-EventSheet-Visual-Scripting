@@ -3,8 +3,7 @@
 Heavy work done all in one frame **hitches** the game: spawning hundreds of objects, updating thousands
 of entities, pathfinding for a crowd. In Construct 3 a `For Each` runs the whole list in one tick; the
 Godot-idiomatic fix is to *spread* the work across frames within a per-frame **budget**. This page covers
-the tools that ship today; the full design rationale and the locked decisions are in
-[FRAME-SPREADING-SPEC.md](FRAME-SPREADING-SPEC.md).
+the tools that ship today.
 
 Every tool speaks the same budget language: a wall-clock millisecond fence,
 `Time.get_ticks_usec() + int(ms * 1000.0)`, checked as work proceeds.

@@ -306,8 +306,7 @@ godot --headless --path . --script tests/run_tests.gd   # full suite
 ```
 
 Every feature lands with tests, a CHANGELOG entry, and its spec updated — see
-`docs/GDSCRIPT-PAIRING-SPEC.md` and `docs/EDITOR-UI-SPEC.md` for authoritative
-feature-by-feature status.
+`docs/GDSCRIPT-PAIRING-SPEC.md` for authoritative feature-by-feature status.
 
 ## Releases & CI
 

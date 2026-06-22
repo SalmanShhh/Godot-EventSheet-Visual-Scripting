@@ -3,13 +3,13 @@
 > **Historical record (early era).** This document predates the overhaul arcs and the
 > v0.5/v0.6 feature waves — treat its claims as a design-time snapshot, not current
 > behavior. Current truth: `CHANGELOG.md`, `README.md`, and the maintained specs in
-> `docs/` (EDITOR-UI-SPEC, GDSCRIPT-PAIRING-SPEC, the per-feature specs).
+> `docs/` (GDSCRIPT-PAIRING-SPEC, the per-feature specs).
 
 
 > **Historical snapshot** (early overhaul branch). Class names like `EventRowUI` /
 > `VariableRowUI` refer to the since-removed widget prototype — that behavior now lives in
 > the virtualized viewport/renderer. For current, maintained status see `CHANGELOG.md`
-> (per-phase) and the specs (`EDITOR-UI-SPEC.md`, `GDSCRIPT-PAIRING-SPEC.md`). Kept for
+> (per-phase) and the specs (`GDSCRIPT-PAIRING-SPEC.md`). Kept for
 > the rationale it records (contrast values, selection rules).
 
 ## Completed in this branch
@@ -38,9 +38,6 @@
 - **[This PR]** `VariableRowUI` double-click now emits `variable_edit_requested` signal for immediate edit launch.
 - **[This PR]** `EventRowUI` entry buttons now show clear selected state via `set_selected_condition(index)` and `set_selected_action(index)` with strong fill + left accent border.
 - **[This PR]** `EventRowUI` entry button hover strengthened: alpha raised to 0.52, left accent border added on hover.
-- **[This PR]** Spec documents added:
-  - `docs/spec/construct_3_system_aces_godot_variant_spec.md` — Construct 3 System ACE vocabulary and implementation guide for Godot
-  - `docs/spec/gdevelop_c3_eventsheet_uiux_spec.md` — GDevelop/C3 row-lane-block interaction model reference
 
 ## Gaps / partial
 
@@ -49,7 +46,7 @@
 - Condition/action enable state is represented in editor UX and resources, but full runtime behavior parity is still partial.
 - Expression editing remains integrated into parameter flows, not a dedicated advanced expression editor surface.
 - `EventRowUI` full-width list entry model exists but is not yet wired into the main `EventSheetDock`/`EventSheetViewport` pipeline.
-- System ACE implementation (spec exists, runtime/compiler registration pending).
+- System ACE implementation (runtime/compiler registration pending).
 
 ## Next steps
 
@@ -57,5 +54,5 @@
 2. Add explicit Else/ElseIf creation/edit affordances in picker/row context workflows.
 3. Expand runtime/compiler handling for ACE enabled/disabled and else-mode execution semantics.
 4. Expand expression tooling beyond inline insertion (validation, snippets, richer authoring UX).
-5. Begin implementing System ACEs using `docs/spec/construct_3_system_aces_godot_variant_spec.md` as the vocabulary guide.
+5. Begin implementing System ACEs (Construct 3 System ACE vocabulary as the guide).
 6. Wire `EventRowUI` full-width list entry model into `EventSheetDock`/`EventSheetViewport` pipeline as an alternative rendering mode.

@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Frame-spreading made easy (Solution 1 of docs/FRAME-SPREADING-SPEC.md — the beginner path): a
+## Frame-spreading made easy (Solution 1, see docs/PERFORMANCE.md — the beginner path): a
 ## managed work queue that drains within a per-frame TIME or COUNT budget. Enqueue items in one event,
 ## react to On Process Item(item) in another — like reacting to a signal. Heavy work that would hitch
 ## if done all at once (spawning 500 objects, updating 10k entities) self-spreads across as many frames

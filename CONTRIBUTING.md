@@ -34,8 +34,8 @@ Quirks worth knowing:
 
 1. **Tests + CHANGELOG + spec, always.** A feature lands with a focused test file
    registered in **BOTH** `tests/run_perf.gd` and `tests/run_tests.gd`, a CHANGELOG
-   entry, and its spec updated (`docs/GDSCRIPT-PAIRING-SPEC.md` or
-   `docs/EDITOR-UI-SPEC.md`). The README's status/milestones refresh with major updates.
+   entry, and its spec updated (`docs/GDSCRIPT-PAIRING-SPEC.md`). The README's
+   status/milestones refresh with major updates.
 2. **The compatibility covenant** (binding):
    - Generated GDScript never depends on the plugin at runtime.
    - Codegen templates **bake at apply** — changing a descriptor must never rewrite

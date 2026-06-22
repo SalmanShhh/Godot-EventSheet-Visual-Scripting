@@ -3,13 +3,13 @@
 > **Historical record (early era).** This document predates the overhaul arcs and the
 > v0.5/v0.6 feature waves — treat its claims as a design-time snapshot, not current
 > behavior. Current truth: `CHANGELOG.md`, `README.md`, and the maintained specs in
-> `docs/` (EDITOR-UI-SPEC, GDSCRIPT-PAIRING-SPEC, the per-feature specs).
+> `docs/` (GDSCRIPT-PAIRING-SPEC, the per-feature specs).
 
 
 > Reviewed 2026-06: all items below are implemented (the final two landed with the
 > inspector-polish phase — widget_hint editors and the per-row "Selected ACE" section).
 
-This checklist tracks the current branch against the provided **EventSheet Editor Param Exposure Spec**.
+This checklist tracks the current branch's editor parameter-exposure work.
 
 - [x] Dynamic inspector properties continue to use `_get_property_list()` / `_get()` / `_set()` (`EventSheetExposedNode`)
 - [x] Exposed properties are now scoped to active sheet providers instead of listing the full registry blindly

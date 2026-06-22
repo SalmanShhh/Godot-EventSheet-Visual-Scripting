@@ -49,22 +49,16 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
   - edit the preview scenes in `addons/eventsheet/elements/` and point a style resource at them
 - Theme docs:
   - `docs/EVENTSHEET_THEME_EDITABILITY.md`
-  - `docs/EVENTSHEET_THEME_TOKEN_SPEC.md`
   - `docs/EVENTSHEET_ALIGNMENT_GUIDE.md`
 
 ## Docs map
 
 - `README.md` — install + high-level workflow
-- `docs/SPEC.md` — broader architecture/spec context
-- `docs/EDITOR-UI-SPEC.md` — editor UX details, interaction contract, C3 parity matrix
 - `docs/GDSCRIPT-PAIRING-SPEC.md` — how the sheet pairs with GDScript (blocks, codegen tooltips, expressions, C3 synonyms, importer round-trip)
 - `docs/EVENTSHEET_THEME_EDITABILITY.md` — designer-facing theme workflow
-- `docs/EVENTSHEET_THEME_TOKEN_SPEC.md` — Construct-inspired token naming/mapping
 - `docs/EVENTSHEET_ALIGNMENT_GUIDE.md` — stacked layout tuning
 - `docs/EVENTSHEET_ARCHITECTURE_SLICES.md` — slice-by-slice completion/scaffold/defer tracker
 - `docs/elements/*.md` — template scene guidance
-- `docs/spec/construct_3_system_aces_godot_variant_spec.md` — Construct 3-style System ACE vocabulary (conditions, actions, expressions) for Godot; implementation priority guide
-- `docs/spec/gdevelop_c3_eventsheet_uiux_spec.md` — GDevelop/C3 row-lane-block interaction model; hover, selection, drag, group, and variable row design spec
 - `docs/C3-MIGRATION-GUIDE.md` — user-facing C3→Godot concept/behavior/plugin map
 - `docs/MCP-SERVER.md` — the AI-tooling protocol (list/read/compile/lint/snippets)
 - `docs/UNINSTALL.md` — clean-removal guide (keep/remove table; the zero-runtime-dependency covenant as a guided teardown)
@@ -98,5 +92,3 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - When adding interactions, preserve undo/redo and keep right-click selection preservation intact.
 - When adding theme features, update both docs and bundled example themes together.
 - Add focused tests in `tests/event_sheet_editor_test.gd`, `tests/event_sheet_style_test.gd`, and `tests/docs_integrity_test.gd` when changing editor behavior, theme assets, or documentation contracts.
-- Use `docs/spec/construct_3_system_aces_godot_variant_spec.md` as the definitive vocabulary reference when implementing or extending System ACEs.
-- Use `docs/spec/gdevelop_c3_eventsheet_uiux_spec.md` as the target interaction model when tuning hover/selection/drag/group/variable UX.

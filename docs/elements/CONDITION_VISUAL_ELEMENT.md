@@ -7,9 +7,8 @@ mirror of the stacked Construct-style grammar. The shipping editor does **not**
 instantiate per-row Control scenes: it paints every row through `EventRowRenderer`
 on the virtualized `EventSheetViewport` (10k+ rows stay fluid), reading colors and
 metrics from `EventSheetEditorStyle` / `EventSheetEventStyle` theme tokens. Use these
-scenes to prototype looks; promote final values into theme tokens (see
-`EVENTSHEET_THEME_TOKEN_SPEC.md`), which is what the renderer (and the Theme Editor
-dialog) actually consumes.
+scenes to prototype looks; promote final values into theme tokens, which is what the
+renderer (and the Theme Editor dialog) actually consumes.
 
 The live renderer also draws vocabulary beyond this template: enum/signal/match badge
 rows, BBCode-styled comments, per-ACE `⊳` notes, color-param swatches, breakpoint and

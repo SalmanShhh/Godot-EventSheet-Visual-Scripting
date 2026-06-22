@@ -3682,7 +3682,7 @@ func _active_view() -> EventSheetViewport:
 
 ## Toggles a second, read/navigate-only pane over the SAME sheet (debugging, reading,
 ## comparing distant regions). Breakpoints/bookmarks/disabled state are shared by
-## reference; scroll/zoom/selection/folds are per-pane. See EDITOR-UI-SPEC "Multi-view".
+## reference; scroll/zoom/selection/folds are per-pane.
 ## Every command the palette can run: {title, run}. Kept in one place so the palette,
 ## (future) menus, and tests share the same source of truth.
 func _command_palette_commands() -> Array[Dictionary]:

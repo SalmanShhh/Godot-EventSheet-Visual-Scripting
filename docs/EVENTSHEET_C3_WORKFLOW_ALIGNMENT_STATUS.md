@@ -3,11 +3,10 @@
 > **Historical record (early era).** This document predates the overhaul arcs and the
 > v0.5/v0.6 feature waves — treat its claims as a design-time snapshot, not current
 > behavior. Current truth: `CHANGELOG.md`, `README.md`, and the maintained specs in
-> `docs/` (EDITOR-UI-SPEC, GDSCRIPT-PAIRING-SPEC, the per-feature specs).
+> `docs/` (GDSCRIPT-PAIRING-SPEC, the per-feature specs).
 
 
-> Updated 2026-06. The granular parity matrix lives in `docs/EDITOR-UI-SPEC.md`; this is
-> the workflow-level summary.
+> Updated 2026-06. This is the workflow-level summary.
 
 This status maps current editor behavior to the project's Construct-style event sheet
 workflow goals.

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Removed
+- **Seven design/UX spec docs — development scaffolding now redundant with the feature documentation:**
+  `SPEC.md`, `EDITOR-UI-SPEC.md`, `EventSheet_EditorParam_Exposure_Spec.md`, `FRAME-SPREADING-SPEC.md`,
+  `EVENTSHEET_THEME_TOKEN_SPEC.md`, and both `docs/spec/*` (the folder is gone). The three *contract* specs
+  their feature tests point at as the spec-of-record stay — `GDSCRIPT-PAIRING-SPEC`, `INSPECTOR-ATTRIBUTES-SPEC`,
+  `ADDON-COMPOSITION-SPEC`. Every reference across code comments, docs, README/AGENTS/CONTRIBUTING, and
+  `docs_integrity_test` was scrubbed or retargeted (frame-spreading pointers now go to `PERFORMANCE.md`); the
+  usage docs (`RECIPES`, `PERFORMANCE`, `USING-WITH-EXISTING-CODE`, `GLOSSARY`, `C3-MIGRATION-GUIDE`) cover it.
+
 ### Changed
 - **The "Emit Signal On" helper now emits the modern `signal.emit()` form** instead of the legacy
   `emit_signal("name")`. With a bare signal identifier it compiles to e.g. `enemy.died.emit(payload)` —

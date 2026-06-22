@@ -72,5 +72,5 @@ Token sizing/spacing lives in `EventSheetElementStyle`:
 
 ## Theme token cross-reference
 
-For the full Construct-inspired token list, see `res://docs/EVENTSHEET_THEME_TOKEN_SPEC.md`.
+For the full Construct-inspired token list, browse the **Theme Editor** dialog.
 Structural layout tuning still lives primarily in `EventSheetEventStyle`, while entry visuals live in `EventSheetElementStyle`.

@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Off-thread heavy compute (Solution 4 of docs/FRAME-SPREADING-SPEC.md — the "too heavy for one frame
+## Off-thread heavy compute (Solution 4, see docs/PERFORMANCE.md — the "too heavy for one frame
 ## even spread out" lane). Run In Background hands a PURE function to the engine's WorkerThreadPool; the
 ## main thread only polls, so it never hitches, and On Done(result) fires on the main thread (safe to
 ## touch the scene there). Use it for procedural generation, pathfinding bakes, image/data crunching.

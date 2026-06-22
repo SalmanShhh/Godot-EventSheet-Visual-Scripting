@@ -5,7 +5,6 @@
 # tokens added to the style classes appear here automatically — no editor changes needed.
 # Edits write into a duplicated working style and repaint live; "Apply" assigns it to the
 # current sheet, "Save As Preset…" writes a shareable .tres.
-# Token reference: docs/EVENTSHEET_THEME_TOKEN_SPEC.md.
 @tool
 class_name EventSheetThemeEditor
 extends RefCounted

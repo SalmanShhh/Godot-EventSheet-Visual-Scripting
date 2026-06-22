@@ -1,8 +1,7 @@
 # EventSheet Theme + Editability Guide
 
-> Updated 2026-06. Token reference: `docs/EVENTSHEET_THEME_TOKEN_SPEC.md`. A designer
-> friendly **visual theme editor** (live preview + grouped token controls) is the final
-> planned 1.0 phase.
+> Updated 2026-06. A designer-friendly **visual theme editor** (live preview + grouped
+> token controls) is the final planned 1.0 phase.
 
 This editor uses Godot-native resources/scenes instead of runtime CSS. The goal is still the same as a Construct-style theme.css workflow: designers can duplicate a theme package, tune tokens, reload the editor, and keep shipping reusable presets.
 
@@ -68,9 +67,9 @@ These themes are bundled in `res://demo/themes/`:
 
 ## Theme token spec
 
-For the Construct-inspired token list and field mapping, see:
-
-- `res://docs/EVENTSHEET_THEME_TOKEN_SPEC.md`
+The Construct-inspired token list and field mapping now live in the **Theme Editor**
+dialog (grouped token controls with live preview), which is the canonical reference for
+every named token.
 
 ## Alignment controls
 
