@@ -4950,8 +4950,8 @@ var _pick_dialog: ConfirmationDialog = null
 var _pick_iterator_edit: LineEdit = null
 var _pick_kind_option: OptionButton = null
 var _pick_collection_edit: LineEdit = null
-var _pick_predicate_edit: LineEdit = null
-var _pick_order_edit: LineEdit = null
+var _pick_predicate_edit: CodeEdit = null
+var _pick_order_edit: CodeEdit = null
 var _pick_desc_check: CheckBox = null
 var _pick_preset_option: OptionButton = null
 var _pick_first_n_spin: SpinBox = null
@@ -5004,8 +5004,8 @@ func _ensure_pick_dialog() -> void:
     kind_row.add_child(_pick_kind_option)
     form.add_child(kind_row)
     _pick_collection_edit = _add_sheet_type_field(form, "Group / expression", "enemies   or   range(3)")
-    _pick_predicate_edit = _add_sheet_type_field(form, "Where (GDScript)", "item.health < 50   (optional)")
-    _pick_order_edit = _add_sheet_type_field(form, "Order by (GDScript)", "item.global_position.distance_to(position)   (optional)")
+    _pick_predicate_edit = _add_expression_field(form, "Where (GDScript)", "item.health < 50   (optional)")
+    _pick_order_edit = _add_expression_field(form, "Order by (GDScript)", "item.global_position.distance_to(position)   (optional)")
     _pick_desc_check = CheckBox.new()
     _pick_desc_check.text = "Descending (highest first)"
     form.add_child(_pick_desc_check)
@@ -5467,6 +5467,52 @@ func _add_sheet_type_field(form: VBoxContainer, label_text: String, placeholder:
     row.add_child(edit)
     form.add_child(row)
     return edit
+
+## Like _add_sheet_type_field, but the input is a single-line CodeEdit with live GDScript completion
+## (used for the pick-filter Where / Order-by fields, which take iterator-scoped expressions).
+func _add_expression_field(form: VBoxContainer, label_text: String, placeholder: String) -> CodeEdit:
+    var row: HBoxContainer = HBoxContainer.new()
+    var label: Label = Label.new()
+    label.text = label_text
+    label.custom_minimum_size = Vector2(130.0, 0.0)
+    row.add_child(label)
+    var edit: CodeEdit = CodeEdit.new()
+    edit.placeholder_text = placeholder
+    edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    edit.custom_minimum_size = Vector2(0.0, 31.0)
+    edit.scroll_fit_content_height = true
+    edit.gutters_draw_line_numbers = false
+    edit.code_completion_enabled = true
+    edit.text_changed.connect(func() -> void:
+        # Keep it single-line so Enter confirms the dialog instead of inserting a newline.
+        if edit.text.contains("\n"):
+            var caret: int = edit.get_caret_column()
+            edit.text = edit.text.replace("\n", " ")
+            edit.set_caret_column(mini(caret, edit.text.length()))
+        edit.request_code_completion()
+    )
+    edit.code_completion_requested.connect(_populate_pick_completion.bind(edit))
+    row.add_child(edit)
+    form.add_child(row)
+    return edit
+
+## Completion for the pick-filter Where / Order-by fields: sheet variables / functions / host members
+## (the shared lint symbol provider the on-save check uses) plus the current For-Each iterator name, so
+## "item.health" and distance expressions complete against the same vocabulary they're validated against.
+func _populate_pick_completion(edit: CodeEdit) -> void:
+    if edit == null:
+        return
+    var before: String = _text_before_caret(edit)
+    for candidate: Dictionary in EventSheetGDScriptLint.completion_for_context(before, _current_sheet):
+        var label: String = str(candidate.get("label", ""))
+        edit.add_code_completion_option(int(candidate.get("kind", CodeEdit.KIND_PLAIN_TEXT)), label, label)
+    # The iterator (the loop variable) isn't a sheet symbol — surface it unless we're after a dot.
+    if not before.strip_edges().ends_with("."):
+        var iterator: String = _pick_iterator_edit.text.strip_edges()
+        if iterator.is_empty():
+            iterator = "item"
+        edit.add_code_completion_option(CodeEdit.KIND_VARIABLE, iterator, iterator)
+    edit.update_code_completion_options(true)
 
 func _on_sheet_type_confirmed() -> void:
     _apply_sheet_type_settings(

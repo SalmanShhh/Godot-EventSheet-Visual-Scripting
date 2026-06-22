@@ -13,6 +13,11 @@
   asserts it parses — 446 covered, with the handful that need a loop / return / call-target context listed
   explicitly rather than skipped silently. `ace_safety_test` locks in each of the nine runtime-safety fixes
   below so they can't silently regress.
+- **The Pick Filter (For Each) "Where" and "Order by" fields now autocomplete.** They became single-line
+  GDScript code editors with the same completion the raw-code blocks use — sheet variables / functions,
+  host-class members, `$Child` nodes — plus the loop's own iterator name, so `item.health` and distance
+  expressions complete against the exact vocabulary the on-save linter validates them with. Enter still
+  confirms the dialog (newlines are stripped to keep the field single-line).
 
 ### Fixed
 - **The ACE parameter dialog no longer errors with "Trying to cast a freed object" when focusing its first field.**
