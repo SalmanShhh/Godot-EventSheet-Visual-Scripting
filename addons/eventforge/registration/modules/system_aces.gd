@@ -44,11 +44,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "GetOSName", "OS Name", ACEDescriptor.ACEType.EXPRESSION, "OS.get_name()", "", [], "Platform", "os name"))
 	descriptors.append(F.make_descriptor("Core", "HasOSFeature", "Platform Has Feature", ACEDescriptor.ACEType.CONDITION, "OS.has_feature({feature})", "", [F.make_param("feature", "String", "\"mobile\"", "Feature", "Feature tag to test.", "", ["\"mobile\"", "\"pc\"", "\"web\"", "\"android\"", "\"ios\"", "\"editor\"", "\"debug\"", "\"release\""])], "Platform", "platform has {feature}"))
 	# Stateful conditions (C3's Every X seconds): each applied instance owns a member;
-	# the prelude accumulates delta before the if, on_true rebases inside it. Only valid
-	# in per-frame triggers (Every Frame / On Physics Process), where `delta` exists.
+	# the prelude accumulates frame time (get_process_delta_time, defined on any Node) before the
+	# if, on_true rebases inside it. Compiles under any trigger; best used under a per-frame one.
 	var every_seconds: ACEDescriptor = F.make_descriptor("Core", "EveryXSeconds", "Every X Seconds", ACEDescriptor.ACEType.CONDITION, "__every_{uid} >= maxf({seconds}, 0.001)", "", [F.make_param("seconds", "String", "1.0", "Seconds", "Interval between runs (needs a per-frame trigger).", "expression")], "Time", "Every {seconds} seconds")
 	every_seconds.member_template = "var __every_{uid}: float = 0.0"
-	every_seconds.codegen_prelude = "__every_{uid} += delta"
+	every_seconds.codegen_prelude = "__every_{uid} += get_process_delta_time()"
 	every_seconds.codegen_on_true = "__every_{uid} = fmod(__every_{uid}, maxf({seconds}, 0.001))"
 	descriptors.append(every_seconds)
 	# Multi-statement template: spawns AND positions (locals get a per-instance uid).

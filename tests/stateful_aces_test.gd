@@ -60,7 +60,7 @@ static func run() -> bool:
 	all_passed = _check("member declared at class level",
 		output.contains(condition.member_declaration), true) and all_passed
 	all_passed = _check("prelude accumulates before the if",
-		output.find("%s += delta" % baked_name) < output.find("if %s >= maxf(2.0, 0.001):" % baked_name) and output.find("%s += delta" % baked_name) != -1, true) and all_passed
+		output.find("%s += get_process_delta_time()" % baked_name) < output.find("if %s >= maxf(2.0, 0.001):" % baked_name) and output.find("%s += get_process_delta_time()" % baked_name) != -1, true) and all_passed
 	all_passed = _check("on_true rebases inside the if",
 		output.contains("\t\t%s = fmod(%s, maxf(2.0, 0.001))" % [baked_name, baked_name]), true) and all_passed
 	all_passed = _check("action runs after the rebase",

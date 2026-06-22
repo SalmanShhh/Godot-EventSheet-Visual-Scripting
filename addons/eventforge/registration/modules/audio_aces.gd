@@ -24,14 +24,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	# 1 — Fire-and-forget one-shots (C3 "Play").
 	descriptors.append(F.make_descriptor("Core", "PlaySound", "Play Sound", ACEDescriptor.ACEType.ACTION,
-		"var __sfx_{uid} = AudioStreamPlayer.new()\n__sfx_{uid}.stream = load({path})\n__sfx_{uid}.bus = {bus}\n__sfx_{uid}.volume_db = {volume_db}\nadd_child(__sfx_{uid})\n__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n__sfx_{uid}.play()",
+		"var __sfx_{uid} = AudioStreamPlayer.new()\n__sfx_{uid}.stream = load({path})\nif __sfx_{uid}.stream == null:\n\t__sfx_{uid}.queue_free()\nelse:\n\t__sfx_{uid}.bus = {bus}\n\t__sfx_{uid}.volume_db = {volume_db}\n\tadd_child(__sfx_{uid})\n\t__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n\t__sfx_{uid}.play()",
 		"", [
 			F.make_param("path", "String", "\"res://sound.ogg\"", "Sound", "Audio file to play once.", "audio_path"),
 			F.make_param("bus", "String", "\"Master\"", "Bus", "Audio bus name.", "expression"),
 			F.make_param("volume_db", "String", "0.0", "Volume dB", "0 = full, -80 = silent.", "expression")
 		], "Audio", "Play sound {path}"))
 	descriptors.append(F.make_descriptor("Core", "PlaySoundAt", "Play Sound At (2D)", ACEDescriptor.ACEType.ACTION,
-		"var __sfx_{uid} = AudioStreamPlayer2D.new()\n__sfx_{uid}.stream = load({path})\n__sfx_{uid}.global_position = {position}\nadd_child(__sfx_{uid})\n__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n__sfx_{uid}.play()",
+		"var __sfx_{uid} = AudioStreamPlayer2D.new()\n__sfx_{uid}.stream = load({path})\nif __sfx_{uid}.stream == null:\n\t__sfx_{uid}.queue_free()\nelse:\n\t__sfx_{uid}.global_position = {position}\n\tadd_child(__sfx_{uid})\n\t__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n\t__sfx_{uid}.play()",
 		"", [
 			F.make_param("path", "String", "\"res://sound.ogg\"", "Sound", "Audio file to play once, positionally.", "audio_path"),
 			F.make_param("position", "String", "global_position", "Position", "World position (2D falloff).", "expression")

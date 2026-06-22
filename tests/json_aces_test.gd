@@ -61,12 +61,13 @@ static func run() -> bool:
 	DirAccess.remove_absolute(TEST_FILE)
 	return all_passed
 
-## ACEAction built from the registered template (JSON templates carry no {uid}), as the dock applies it.
+## ACEAction built from the registered template, baking a unique id into the apply-time {uid} token
+## the way the dock does (JsonSaveFile uses __json_{uid} for its guarded, handle-closing multi-line write).
 static func _action(ace_id: String, by_id: Dictionary, params: Dictionary) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"
 	action.ace_id = ace_id
-	action.codegen_template = str(by_id[ace_id].codegen_template)
+	action.codegen_template = str(by_id[ace_id].codegen_template).replace("{uid}", str(abs(action.get_instance_id())))
 	action.params = params
 	return action
 

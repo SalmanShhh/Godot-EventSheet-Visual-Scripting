@@ -14,6 +14,22 @@
   `_focus_first_field` cast every entry in its field map to `Control` guarded only by `!= null`, which doesn't
   catch a *freed* widget (the dialog can close before the deferred focus runs). It now skips freed entries via
   `is_instance_valid` — no more console-error spam when ACE dialogs open and close quickly.
+- **Nine built-in ACEs that compiled but crashed, leaked, or misbehaved at runtime — surfaced by a new
+  compile-coverage test and an adversarial template audit, each reproduced and fixed against Godot 4.7:**
+  - **Save JSON File** guards the `FileAccess` handle (and closes it) instead of chaining `.store_string()`
+    on a possible `null` — a missing parent dir or read-only path crashed the save outright.
+  - **Focus Next / Focus Previous** guard the `null` from `find_next/prev_valid_focus()` before calling
+    `grab_focus()` — single / edge-case menus no longer null-deref.
+  - **Find Children (by name)** passes `owned = false`, so it finds runtime-spawned nodes instead of
+    silently returning `[]` (the `owned` default excluded instantiated enemies — the advertised use case).
+  - **Nearest / Furthest Node In Group** are host-typed to `Node2D` (they read `global_position`), so the
+    picker no longer offers them on plain-Node / Control sheets where they fail to compile.
+  - **Every X Seconds** accumulates with `get_process_delta_time()` instead of a bare `delta`, so it
+    compiles under any trigger, not only `_process` / `_physics_process`.
+  - **Look At (3D)** defaults its target to `Vector3(0, 0, -1)` rather than the node's own origin, which
+    otherwise error-spammed "look_at() failed" every call on a node at the world origin.
+  - **Play Sound / Play Sound At** free the throwaway one-shot player when the stream fails to load,
+    instead of leaking it while waiting on a `finished` signal that never fires.
 
 ## [0.9.0] - 2026-06-22 - Performance & Game Feel
 
