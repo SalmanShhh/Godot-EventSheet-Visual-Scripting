@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Added
+- **A "Using EventSheets with your existing code" guide** (`docs/USING-WITH-EXISTING-CODE.md`). Answers the
+  common adoption question — *does it work with code that has no ACEs?* — and is self-contained: calling
+  existing GDScript / autoloads / host members from a sheet (verbatim ƒx expressions + the Helpers ACEs +
+  RawCode blocks), reacting to your own signals (On Signal / reflected `signal:NAME` / lifecycle triggers),
+  the one-script-per-node rule and the behavior-pack child-node solution for already-scripted nodes, calling
+  a sheet *from* your code via the zero-dependency parity contract, reverse-lift, and the honest
+  stringly/compile-time-validation limitations. Verified against the compiler by a multi-agent investigation.
 - **Budgeted For Each — tick a frame-spread budget on a loop and it stops hitching.** Setting
   `frame_spread_count` (iterations/frame) and/or `frame_spread_budget_ms` (a wall-clock fence) on a pick
   filter now compiles the `For Each` into an in-place loop that processes a slice per frame and resumes on

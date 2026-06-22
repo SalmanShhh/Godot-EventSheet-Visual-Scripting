@@ -48,6 +48,9 @@ Conditions                        | Actions
 6. Learning by building? The [recipes](docs/RECIPES.md) walk through a platformer, health,
    pickups, and debugging end to end; the [glossary](docs/GLOSSARY.md) is a one-page C3 ↔ Godot
    ↔ EventSheets Rosetta Stone.
+7. Already have a Godot project? [Using EventSheets with your existing code](docs/USING-WITH-EXISTING-CODE.md)
+   shows how sheets call (and are called by) the GDScript, autoloads, nodes, and signals you already have —
+   no ACEs required.
 
 ## Why event sheets in Godot? (the honest pros & cons)
 
