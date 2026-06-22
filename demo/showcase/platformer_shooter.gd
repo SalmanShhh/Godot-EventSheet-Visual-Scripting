@@ -16,12 +16,11 @@ func _physics_process(delta: float) -> void:
 		$Player/PlatformerMovement.jump_released()
 	if Input.is_action_pressed(&"ui_accept") and $Player/WeaponKit.can_fire():
 		$Player/WeaponKit.fire()
-		var __dir = $Player/PlatformerMovement.facing_direction()
-		var __shot = load("res://demo/showcase/shot.tscn").instantiate()
-		__shot.position = $Player.position + Vector2(32.0 * __dir, -6.0)
-		__shot.rotation_degrees = 0.0 if __dir >= 0 else 180.0
-		add_child(__shot)
-		__shot.add_to_group("shots")
+		var __spawn_shot = load("res://demo/showcase/shot.tscn").instantiate()
+		__spawn_shot.position = $Player.position + Vector2(32.0 * $Player/PlatformerMovement.facing_direction(), -6.0)
+		__spawn_shot.rotation_degrees = 0.0 if $Player/PlatformerMovement.facing_direction() >= 0 else 180.0
+		add_child(__spawn_shot)
+		if "shots" != "": __spawn_shot.add_to_group("shots")
 	$Player.position.x = clampf($Player.position.x, 40.0, 1112.0)
 	__every_ps_spawn += delta
 	if __every_ps_spawn >= maxf(1.5, 0.001):

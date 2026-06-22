@@ -550,20 +550,16 @@ func _build_platformer_shooter() -> bool:
 	]))))
 	sheet.events.append(jump)
 
-	# Fire (hold Space): the Weapon Kit gates the rate/ammo/reload; we only spawn a bullet on
-	# the frames it actually lets a shot out (can_fire()), aimed by the pack's facing_direction.
+	# Fire (hold Space): FULLY CODE-FREE — conditions on the left (the input + the Weapon Kit's own
+	# Can Fire gate, targeting the behavior at $Player/WeaponKit), actions on the right (the pack's
+	# Fire, then Spawn Scene (Full) aimed by the Platformer pack's facing_direction). This is the row
+	# the node-targetable pack ACEs unlocked — no raw GDScript, the same legibility as Construct.
 	var fire: EventRow = EventRow.new()
 	fire.trigger_provider_id = "Core"; fire.trigger_id = "OnPhysicsProcess"
-	fire.actions.append(_raw("\n".join(PackedStringArray([
-		"if Input.is_action_pressed(&\"ui_accept\") and $Player/WeaponKit.can_fire():",
-		"\t$Player/WeaponKit.fire()",
-		"\tvar __dir = $Player/PlatformerMovement.facing_direction()",
-		"\tvar __shot = load(\"res://demo/showcase/shot.tscn\").instantiate()",
-		"\t__shot.position = $Player.position + Vector2(32.0 * __dir, -6.0)",
-		"\t__shot.rotation_degrees = 0.0 if __dir >= 0 else 180.0",
-		"\tadd_child(__shot)",
-		"\t__shot.add_to_group(\"shots\")"
-	]))))
+	fire.conditions.append(_condition("Core", "IsActionPressed", "Input.is_action_pressed(&{action})", {"action": "\"ui_accept\""}))
+	fire.conditions.append(_condition("WeaponKit", "method:can_fire", "{target}.can_fire()", {"target": "$Player/WeaponKit"}))
+	fire.actions.append(_action("WeaponKit", "method:fire", "{target}.fire()", {"target": "$Player/WeaponKit"}))
+	fire.actions.append(_action("Core", "SpawnSceneFull", "var __spawn_shot = load({path}).instantiate()\n__spawn_shot.position = {position}\n__spawn_shot.rotation_degrees = {rotation}\nadd_child(__spawn_shot)\nif {group} != \"\": __spawn_shot.add_to_group({group})", {"path": "\"res://demo/showcase/shot.tscn\"", "position": "$Player.position + Vector2(32.0 * $Player/PlatformerMovement.facing_direction(), -6.0)", "rotation": "0.0 if $Player/PlatformerMovement.facing_direction() >= 0 else 180.0", "group": "\"shots\""}))
 	sheet.events.append(fire)
 
 	# Keep the player on screen.

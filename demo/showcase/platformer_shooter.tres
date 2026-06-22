@@ -1,70 +1,102 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_28gw5"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_y23yn"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_cdguq"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_sjy6o"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_jmsuo"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_d8wcs"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="7_350ct"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_y23yn"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_cdguq"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_sjy6o"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_jmsuo"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_d8wcs"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_350ct"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_vpfg4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="8_1lxfq"]
 
-[sub_resource type="Resource" id="Resource_vpfg4"]
-script = ExtResource("1_28gw5")
+[sub_resource type="Resource" id="Resource_l5ijk"]
+script = ExtResource("1_y23yn")
 text = "[b]Platformer-Shooter[/b] — the new Platformer + Weapon Kit packs working together. Run with A/D, jump with Up (double jump + coyote time + variable height from the Platformer pack), and hold Space to shoot (fire-rate, ammo and auto-reload from the Weapon Kit). Shots destroy the red targets drifting in from the right."
 
-[sub_resource type="Resource" id="Resource_1lxfq"]
-script = ExtResource("2_y23yn")
+[sub_resource type="Resource" id="Resource_h6ogx"]
+script = ExtResource("2_cdguq")
 code = "if Input.is_action_just_pressed(&\"ui_up\"):
 	$Player/PlatformerMovement.jump()
 if Input.is_action_just_released(&\"ui_up\"):
 	$Player/PlatformerMovement.jump_released()"
 
-[sub_resource type="Resource" id="Resource_l5ijk"]
-script = ExtResource("6_d8wcs")
-trigger_provider_id = "Core"
-trigger_id = "OnPhysicsProcess"
-actions = Array[Resource]([SubResource("Resource_1lxfq")])
-event_uid = "f7b888"
-
-[sub_resource type="Resource" id="Resource_h6ogx"]
-script = ExtResource("2_y23yn")
-code = "if Input.is_action_pressed(&\"ui_accept\") and $Player/WeaponKit.can_fire():
-	$Player/WeaponKit.fire()
-	var __dir = $Player/PlatformerMovement.facing_direction()
-	var __shot = load(\"res://demo/showcase/shot.tscn\").instantiate()
-	__shot.position = $Player.position + Vector2(32.0 * __dir, -6.0)
-	__shot.rotation_degrees = 0.0 if __dir >= 0 else 180.0
-	add_child(__shot)
-	__shot.add_to_group(\"shots\")"
-
 [sub_resource type="Resource" id="Resource_htagw"]
-script = ExtResource("6_d8wcs")
+script = ExtResource("6_350ct")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
 actions = Array[Resource]([SubResource("Resource_h6ogx")])
-event_uid = "9a682f"
+event_uid = "f7b888"
 
 [sub_resource type="Resource" id="Resource_qhtgf"]
-script = ExtResource("2_y23yn")
-code = "$Player.position.x = clampf($Player.position.x, 40.0, 1112.0)"
+script = ExtResource("7_vpfg4")
+provider_id = "WeaponKit"
+ace_id = "method:fire"
+params = {
+"target": "$Player/WeaponKit"
+}
+codegen_template = "{target}.fire()"
 
 [sub_resource type="Resource" id="Resource_w1hpa"]
-script = ExtResource("6_d8wcs")
-trigger_provider_id = "Core"
-trigger_id = "OnPhysicsProcess"
-actions = Array[Resource]([SubResource("Resource_qhtgf")])
-event_uid = "195a24"
+script = ExtResource("7_vpfg4")
+ace_id = "SpawnSceneFull"
+params = {
+"group": "\"shots\"",
+"path": "\"res://demo/showcase/shot.tscn\"",
+"position": "$Player.position + Vector2(32.0 * $Player/PlatformerMovement.facing_direction(), -6.0)",
+"rotation": "0.0 if $Player/PlatformerMovement.facing_direction() >= 0 else 180.0"
+}
+codegen_template = "var __spawn_shot = load({path}).instantiate()
+__spawn_shot.position = {position}
+__spawn_shot.rotation_degrees = {rotation}
+add_child(__spawn_shot)
+if {group} != \"\": __spawn_shot.add_to_group({group})"
 
 [sub_resource type="Resource" id="Resource_o0mqq"]
-script = ExtResource("2_y23yn")
+script = ExtResource("3_sjy6o")
+ace_id = "IsActionPressed"
+params = {
+"action": "\"ui_accept\""
+}
+codegen_template = "Input.is_action_pressed(&{action})"
+
+[sub_resource type="Resource" id="Resource_4b78r"]
+script = ExtResource("3_sjy6o")
+provider_id = "WeaponKit"
+ace_id = "method:can_fire"
+params = {
+"target": "$Player/WeaponKit"
+}
+codegen_template = "{target}.can_fire()"
+
+[sub_resource type="Resource" id="Resource_qvy1r"]
+script = ExtResource("6_350ct")
+trigger_provider_id = "Core"
+trigger_id = "OnPhysicsProcess"
+conditions = Array[ExtResource("3_sjy6o")]([SubResource("Resource_o0mqq"), SubResource("Resource_4b78r")])
+actions = Array[Resource]([SubResource("Resource_qhtgf"), SubResource("Resource_w1hpa")])
+event_uid = "9a682f"
+
+[sub_resource type="Resource" id="Resource_g2xko"]
+script = ExtResource("2_cdguq")
+code = "$Player.position.x = clampf($Player.position.x, 40.0, 1112.0)"
+
+[sub_resource type="Resource" id="Resource_xo4xt"]
+script = ExtResource("6_350ct")
+trigger_provider_id = "Core"
+trigger_id = "OnPhysicsProcess"
+actions = Array[Resource]([SubResource("Resource_g2xko")])
+event_uid = "195a24"
+
+[sub_resource type="Resource" id="Resource_r8eu4"]
+script = ExtResource("2_cdguq")
 code = "var __target = load(\"res://demo/showcase/target.tscn\").instantiate()
 __target.position = Vector2(1240.0, randf_range(120.0, 540.0))
 __target.rotation_degrees = 180.0
 add_child(__target)
 __target.add_to_group(\"targets\")"
 
-[sub_resource type="Resource" id="Resource_4b78r"]
-script = ExtResource("3_cdguq")
+[sub_resource type="Resource" id="Resource_vc2a2"]
+script = ExtResource("3_sjy6o")
 ace_id = "EveryXSeconds"
 params = {
 "seconds": "1.5"
@@ -74,16 +106,16 @@ member_declaration = "var __every_ps_spawn: float = 0.0"
 codegen_prelude = "__every_ps_spawn += delta"
 codegen_on_true = "__every_ps_spawn = fmod(__every_ps_spawn, maxf(1.5, 0.001))"
 
-[sub_resource type="Resource" id="Resource_qvy1r"]
-script = ExtResource("6_d8wcs")
+[sub_resource type="Resource" id="Resource_oidi1"]
+script = ExtResource("6_350ct")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
-conditions = Array[ExtResource("3_cdguq")]([SubResource("Resource_4b78r")])
-actions = Array[Resource]([SubResource("Resource_o0mqq")])
+conditions = Array[ExtResource("3_sjy6o")]([SubResource("Resource_vc2a2")])
+actions = Array[Resource]([SubResource("Resource_r8eu4")])
 event_uid = "8fd01a"
 
-[sub_resource type="Resource" id="Resource_g2xko"]
-script = ExtResource("2_y23yn")
+[sub_resource type="Resource" id="Resource_qj8t7"]
+script = ExtResource("2_cdguq")
 code = "for __shot in get_tree().get_nodes_in_group(\"shots\"):
 	for __target in get_tree().get_nodes_in_group(\"targets\"):
 		if is_instance_valid(__shot) and is_instance_valid(__target) and __shot.global_position.distance_to(__target.global_position) < 42.0:
@@ -95,30 +127,30 @@ for __node in get_tree().get_nodes_in_group(\"shots\") + get_tree().get_nodes_in
 	if __node.global_position.x < -60.0 or __node.global_position.x > 1300.0:
 		__node.queue_free()"
 
-[sub_resource type="Resource" id="Resource_xo4xt"]
-script = ExtResource("6_d8wcs")
+[sub_resource type="Resource" id="Resource_1xblb"]
+script = ExtResource("6_350ct")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
-actions = Array[Resource]([SubResource("Resource_g2xko")])
+actions = Array[Resource]([SubResource("Resource_qj8t7")])
 event_uid = "e7bbd8"
 
-[sub_resource type="Resource" id="Resource_r8eu4"]
-script = ExtResource("2_y23yn")
+[sub_resource type="Resource" id="Resource_24y5q"]
+script = ExtResource("2_cdguq")
 code = "$Hud.text = \"Score %d    Ammo %d/%d    %s\" % [score, $Player/WeaponKit.current_ammo, $Player/WeaponKit.max_ammo, (\"RELOADING...\" if $Player/WeaponKit.is_reloading() else \"A/D move   Up jump   hold Space fire\")]"
 
-[sub_resource type="Resource" id="Resource_vc2a2"]
-script = ExtResource("6_d8wcs")
+[sub_resource type="Resource" id="Resource_4cihy"]
+script = ExtResource("6_350ct")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_r8eu4")])
+actions = Array[Resource]([SubResource("Resource_24y5q")])
 event_uid = "ec03f2"
 
 [resource]
-script = ExtResource("7_350ct")
+script = ExtResource("8_1lxfq")
 host_class = "Node2D"
 custom_class_name = "PlatformerShooter"
 addon_tags = PackedStringArray()
-events = Array[Resource]([SubResource("Resource_vpfg4"), SubResource("Resource_l5ijk"), SubResource("Resource_htagw"), SubResource("Resource_w1hpa"), SubResource("Resource_qvy1r"), SubResource("Resource_xo4xt"), SubResource("Resource_vc2a2")])
+events = Array[Resource]([SubResource("Resource_l5ijk"), SubResource("Resource_htagw"), SubResource("Resource_qvy1r"), SubResource("Resource_xo4xt"), SubResource("Resource_oidi1"), SubResource("Resource_1xblb"), SubResource("Resource_4cihy")])
 variables = {
 "score": {
 "attributes": {
