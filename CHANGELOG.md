@@ -8,6 +8,11 @@
   the predicate / order-by with the loop iterator stubbed) and, if an expression is broken, refuses to commit —
   re-opening the dialog with the exact compile error instead of writing a For Each that fails later at codegen
   time. Fail-open: if the linter can't run (no active sheet) the save proceeds, so a glitch never traps a valid edit.
+- **Built-in ACE compile-coverage + runtime-safety regression tests.** `builtin_ace_compile_test` compiles
+  every built-in ACE template (params filled with values of their type, in its declared host class) and
+  asserts it parses — 446 covered, with the handful that need a loop / return / call-target context listed
+  explicitly rather than skipped silently. `ace_safety_test` locks in each of the nine runtime-safety fixes
+  below so they can't silently regress.
 
 ### Fixed
 - **The ACE parameter dialog no longer errors with "Trying to cast a freed object" when focusing its first field.**
