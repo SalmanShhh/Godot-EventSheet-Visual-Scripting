@@ -1,23 +1,6 @@
 # Changelog
 
-## [Unreleased]
-
-### Added
-- **The Pick Filter (For Each) dialog blocks saving a loop whose collection / where / order-by doesn't compile.**
-  On Save it runs the same lint the on-save "Check Sheet for Errors" pass uses (the collection wrapped per kind,
-  the predicate / order-by with the loop iterator stubbed) and, if an expression is broken, refuses to commit —
-  re-opening the dialog with the exact compile error instead of writing a For Each that fails later at codegen
-  time. Fail-open: if the linter can't run (no active sheet) the save proceeds, so a glitch never traps a valid edit.
-- **Built-in ACE compile-coverage + runtime-safety regression tests.** `builtin_ace_compile_test` compiles
-  every built-in ACE template (params filled with values of their type, in its declared host class) and
-  asserts it parses — 446 covered, with the handful that need a loop / return / call-target context listed
-  explicitly rather than skipped silently. `ace_safety_test` locks in each of the nine runtime-safety fixes
-  below so they can't silently regress.
-- **The Pick Filter (For Each) "Where" and "Order by" fields now autocomplete.** They became single-line
-  GDScript code editors with the same completion the raw-code blocks use — sheet variables / functions,
-  host-class members, `$Child` nodes — plus the loop's own iterator name, so `item.health` and distance
-  expressions complete against the exact vocabulary the on-save linter validates them with. Enter still
-  confirms the dialog (newlines are stripped to keep the field single-line).
+## [0.9.0] - 2026-06-22 - Performance & Game Feel
 
 ### Fixed
 - **The ACE parameter dialog no longer errors with "Trying to cast a freed object" when focusing its first field.**
@@ -40,10 +23,6 @@
     otherwise error-spammed "look_at() failed" every call on a node at the world origin.
   - **Play Sound / Play Sound At** free the throwaway one-shot player when the stream fails to load,
     instead of leaking it while waiting on a `finished` signal that never fires.
-
-## [0.9.0] - 2026-06-22 - Performance & Game Feel
-
-### Fixed
 - **The Juice pack restores `Engine.time_scale` when it leaves the tree.** A scene change *during* a slow-mo
   used to leave the whole game running slow (the global `time_scale` was never reset); the behavior now
   calls `clear_slowmo()` on `tree_exiting`.
@@ -66,6 +45,21 @@
   its output through the project's own `BANNED_PATTERNS` scan so the helper can't regress to the legacy form.
 
 ### Added
+- **The Pick Filter (For Each) dialog blocks saving a loop whose collection / where / order-by doesn't compile.**
+  On Save it runs the same lint the on-save "Check Sheet for Errors" pass uses (the collection wrapped per kind,
+  the predicate / order-by with the loop iterator stubbed) and, if an expression is broken, refuses to commit —
+  re-opening the dialog with the exact compile error instead of writing a For Each that fails later at codegen
+  time. Fail-open: if the linter can't run (no active sheet) the save proceeds, so a glitch never traps a valid edit.
+- **The Pick Filter (For Each) "Where" and "Order by" fields now autocomplete.** They became single-line
+  GDScript code editors with the same completion the raw-code blocks use — sheet variables / functions,
+  host-class members, `$Child` nodes — plus the loop's own iterator name, so `item.health` and distance
+  expressions complete against the exact vocabulary the on-save linter validates them with. Enter still
+  confirms the dialog (newlines are stripped to keep the field single-line).
+- **Built-in ACE compile-coverage + runtime-safety regression tests.** `builtin_ace_compile_test` compiles
+  every built-in ACE template (params filled with values of their type, in its declared host class) and
+  asserts it parses — 446 covered, with the handful that need a loop / return / call-target context listed
+  explicitly rather than skipped silently. `ace_safety_test` locks in each of the nine runtime-safety fixes
+  in this release so they can't silently regress.
 - **On-save linting + "Check Sheet for Errors" now cover For Each (pick filter) fields.** A typo in a
   loop's collection, predicate, or order-by used to slip past every author-time check; the diagnostics now
   lint all three — the collection wrapped per kind (so a GROUP name isn't read as bare GDScript) and the
