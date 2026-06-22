@@ -41,6 +41,9 @@ Operators come from the shared dropdown (`ace_factory.gd:54`). The `starfall` sh
 
 ## 3. Root cause — the one missing condition
 
+> **Update (verified against the packs, post-spec):** the behavior packs *already* expose named boolean conditions — Weapon Kit ships `Can Fire`, `Has Ammo`, `Is Full`, `Is Reloading` (`eventsheet_addons/weapon_kit/weapon_kit_behavior.gd:60-86`), authored via `@ace_condition`. The reason the showcase *still* used raw GDScript is that each pack ACE **hardcodes its node path** in the codegen template (`$WeaponKit.can_fire()`), so it breaks the moment the behavior lives anywhere but a direct child named exactly `WeaponKit` — the showcase's is at `$Player/WeaponKit`. So the **systematic** fix is to give every pack ACE a **configurable node target** (the `{target}` idiom the built-in node ACEs already use, e.g. `dev_aces.gd:32`), not merely to add the generic condition below. The generic **`Expression Is True`** condition (Fix 1) is now **built** (`system_aces.gd`, `expression_is_true_test`) as the escape hatch for arbitrary expressions; the pack node-target sweep is the larger remaining work. The C3 analogy is exact: in Construct you pick the *object instance* an ACE acts on; here the node-target param is that pick.
+
+
 Decompose the shoot block's `if` head:
 
 - `Input.is_action_pressed("ui_accept")` → **has** a condition (Is Action Pressed). ✓

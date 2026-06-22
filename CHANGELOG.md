@@ -74,6 +74,13 @@
   scaffolding; the user-facing Layout/Alignment **guide** and the blessed architecture-slices tracker stay put.
 
 ### Added
+- **A generic "Expression Is True" condition** — the code-free escape hatch for a boolean
+  expression. Use any GDScript that returns a bool (a behavior method like
+  `$Player/WeaponKit.can_fire()`, `health > 0 and shielded`, `%Door.is_open()`) directly as a
+  condition instead of dropping the whole row to a raw GDScript block. Emitted verbatim, inverts to
+  `not (...)` for free, and lives in **General Conditions** beside Compare Values. New
+  `expression_is_true_test`. (Prefer a named pack condition where one exists — see the pack
+  node-target spec.)
 - **The Pick Filter (For Each) dialog blocks saving a loop whose collection / where / order-by doesn't compile.**
   On Save it runs the same lint the on-save "Check Sheet for Errors" pass uses (the collection wrapped per kind,
   the predicate / order-by with the loop iterator stubbed) and, if an expression is broken, refuses to commit —

@@ -58,6 +58,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# Generic comparisons (C3 System: compare two values / is between values)
 	descriptors.append(F.make_descriptor("Core", "CompareValues", "Compare Values", ACEDescriptor.ACEType.CONDITION, "{a} {op} {b}", "", [F.make_param("a", "String", "0", "First", "Left value.", "expression"), F.make_param("op", "String", "==", "Operator", "Comparison.", "", F.COMPARISON_OPERATORS), F.make_param("b", "String", "0", "Second", "Right value.", "expression")], "General Conditions", "{a} {op} {b}"))
 	descriptors.append(F.make_descriptor("Core", "IsBetween", "Is Between Values", ACEDescriptor.ACEType.CONDITION, "({min} <= {value} and {value} <= {max})", "", [F.make_param("value", "String", "0", "Value", "Value to test.", "expression"), F.make_param("min", "String", "0", "Min", "Lower bound (inclusive).", "expression"), F.make_param("max", "String", "10", "Max", "Upper bound (inclusive).", "expression")], "General Conditions", "{value} is between {min} and {max}"))
+	# Generic boolean escape hatch (the code-free fallback): use any GDScript that returns a bool as a
+	# condition — e.g. a behavior method like $Player/WeaponKit.can_fire() — without dropping the whole
+	# row to a raw GDScript block. Emitted verbatim (opaque param), so the expression is the user's to
+	# get right; it inverts to `not (...)` for free. Prefer a named pack condition where one exists.
+	descriptors.append(F.make_descriptor("Core", "ExpressionIsTrue", "Expression Is True", ACEDescriptor.ACEType.CONDITION, "{expr}", "", [F.make_param("expr", "String", "true", "Expression", "Any GDScript boolean expression, e.g. $Player/WeaponKit.can_fire() or health > 0.", "expression")], "General Conditions", "{expr}"))
 
 	# Runtime group toggling (C3 Set Group Active): targets the opt-in "runtime
 	# toggleable" flag members. The group param is the snake-cased group name.
