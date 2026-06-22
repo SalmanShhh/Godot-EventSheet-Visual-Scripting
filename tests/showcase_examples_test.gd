@@ -64,6 +64,17 @@ static func run() -> bool:
 	passed = _check("shot + target sub-scenes exist",
 		ResourceLoader.exists("res://demo/showcase/shot.tscn") and ResourceLoader.exists("res://demo/showcase/target.tscn"), true) and passed
 
+	# Swarm — frame-spreading: a Budgeted For Each over a spawned crowd (the visible-sweep demo).
+	passed = _check_sheet("swarm", "res://demo/showcase/swarm.tres", [
+		"var __loop_cursor_",
+		"Array(get_tree().get_nodes_in_group(\"swarm\"))",
+		"load(\"res://demo/showcase/dot.tscn\").instantiate()",
+		"dot.offset = Vector2(",
+		"Color.from_hsv(",
+	]) and passed
+	passed = _check_scene("swarm scene has Info HUD", "res://demo/showcase/swarm.tscn", ["Info"]) and passed
+	passed = _check("dot sub-scene exists", ResourceLoader.exists("res://demo/showcase/dot.tscn"), true) and passed
+
 	# Discovery: the flagship is the one the plugin opens; the secondaries never compete.
 	passed = _check("flagship is the discovered showcase",
 		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/showcase_carousel.tscn") and passed

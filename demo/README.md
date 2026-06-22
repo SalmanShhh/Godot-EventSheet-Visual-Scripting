@@ -32,9 +32,9 @@ extend your sheets.
 
 ## The interactive showcases (three minutes)
 
-Three playable demos live in `demo/showcase/`, each authored entirely as event sheets and
+Five playable demos live in `demo/showcase/`, each authored entirely as event sheets and
 compiled to plain GDScript. The dock's **Open the playable showcase scene** button (and the
-plugin's discovery) opens the flagship; the other two are right there in the folder.
+plugin's discovery) opens the flagship; the others are right there in the folder.
 
 - **`showcase_carousel.tscn` — Carousel of Juice (flagship).** A ring of eight rainbow
   tiles that sine-sway and spring-pop on the beat through one reused `juice_tile()` function;
@@ -52,9 +52,16 @@ plugin's discovery) opens the flagship; the other two are right there in the fol
   **Dictionary** inventory + **Array** quest log and emits **signals** that spring/tween the
   icon. Proof the sheet compiles real software logic — collections, signals, functions,
   match — not just movement.
+- **`platformer_shooter.tscn` — Platformer Shooter (packs combined).** The **Platformer** and **Weapon
+  Kit** packs on one `CharacterBody2D`: A/D + jump (coyote time, double-jump), hold to fire with
+  auto-reload; shots cull targets via a group pick-filter. Shows two behavior packs composed on one node.
+- **`swarm.tscn` — Swarm (frame-spreading made visible).** 800 sprites spawn into a group; one **Budgeted
+  For Each** (90/frame) wobbles them, so the colour refresh *sweeps* through the crowd — that visible wave
+  **is** the frame-spreading, while the FPS stays pinned. Tick `frame_spread_count` on any For Each and a
+  heavy loop spreads itself across frames — no behavior, no await.
 
 Open any of the `.tres` files as a sheet to see the whole thing as a handful of event rows.
-Regenerate the trio with `godot --headless --script tools/build_examples.gd`.
+Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 
 ## Try it (five minutes)
 
@@ -82,6 +89,8 @@ Regenerate the trio with `godot --headless --script tools/build_examples.gd`.
 | `showcase/showcase_carousel.{tscn,tres,gd}` | **Flagship** — Carousel of Juice (functions, runtime group, if/elif/else, four behaviors) |
 | `showcase/starfall.{tscn,tres,gd}` + `star.tscn` | Starfall arcade game (enum/match FSM, pick-filter, spawner, Bullet behavior) |
 | `showcase/quest_fsm.{tscn,tres,gd}` | Quest & Inventory FSM (Dictionary/Array collections, signals, reused function, match) |
+| `showcase/platformer_shooter.{tscn,tres,gd}` + `shot.tscn` + `target.tscn` | Platformer + Weapon Kit packs combined (coyote-time jump, hold-fire, group cull) |
+| `showcase/swarm.{tscn,tres,gd}` + `dot.tscn` | **Swarm** — frame-spreading: a Budgeted For Each sweeping a spawned crowd |
 | `themes/` | Ten bundled themes: Dracula, Nord, Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha, high-contrast, soft-light, Construct3-stacked, + the designer template |
 | `demo_project.godot` | Rename to `project.godot` only for standalone use (rename back afterwards) |
 

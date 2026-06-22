@@ -1,0 +1,94 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_tt8hc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_d3vt6"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_rager"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_y6fan"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_r4gi0"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_meg26"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="7_l1bx6"]
+
+[sub_resource type="Resource" id="Resource_v6yy3"]
+script = ExtResource("1_tt8hc")
+text = "[b]Swarm[/b] — frame-spreading made visible. On Ready spawns 800 sprites into the \"swarm\" group; ONE For Each with a frame-spread budget of 90/frame wobbles them, so only a slice updates each frame and the colour refresh SWEEPS through the crowd — that visible wave IS the spreading. The FPS stays pinned even though the loop never touches the whole crowd in a single frame. Tick frame_spread_count on any For Each to get this — no behavior, no await."
+
+[sub_resource type="Resource" id="Resource_tbpb0"]
+script = ExtResource("2_d3vt6")
+code = "var __cols: int = 40
+for __i: int in range(count):
+	var __dot: Sprite2D = load(\"res://demo/showcase/dot.tscn\").instantiate()
+	__dot.position = Vector2(48.0 + float(__i % __cols) * 27.0, 70.0 + float(__i / __cols) * 27.0)
+	add_child(__dot)"
+
+[sub_resource type="Resource" id="Resource_y87b2"]
+script = ExtResource("6_meg26")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_tbpb0")])
+event_uid = "d44ddb"
+
+[sub_resource type="Resource" id="Resource_aeoa0"]
+script = ExtResource("2_d3vt6")
+code = "t += delta"
+
+[sub_resource type="Resource" id="Resource_2xjdq"]
+script = ExtResource("2_d3vt6")
+code = "$Info.text = \"%d sprites   ·   Budgeted For Each: 90/frame   ·   %d FPS\" % [count, Engine.get_frames_per_second()]"
+
+[sub_resource type="Resource" id="Resource_gyuot"]
+script = ExtResource("6_meg26")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_aeoa0"), SubResource("Resource_2xjdq")])
+event_uid = "abc0ec"
+
+[sub_resource type="Resource" id="Resource_0p1qc"]
+script = ExtResource("2_d3vt6")
+code = "dot.offset = Vector2(sin(t * 2.0 + dot.position.x * 0.02) * 10.0, cos(t * 2.4 + dot.position.y * 0.02) * 10.0)
+dot.modulate = Color.from_hsv(fmod(t * 0.08 + dot.position.x * 0.0008, 1.0), 0.65, 1.0)"
+
+[sub_resource type="Resource" id="Resource_jrn30"]
+script = ExtResource("5_r4gi0")
+iterator_name = "dot"
+collection_kind = 0
+collection_value = "swarm"
+frame_spread_count = 90
+
+[sub_resource type="Resource" id="Resource_h1s8m"]
+script = ExtResource("6_meg26")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_0p1qc")])
+event_uid = "7647f9"
+pick_filters = Array[ExtResource("5_r4gi0")]([SubResource("Resource_jrn30")])
+
+[resource]
+script = ExtResource("7_l1bx6")
+host_class = "Node2D"
+emit_live_values = true
+custom_class_name = "Swarm"
+addon_tags = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_v6yy3"), SubResource("Resource_y87b2"), SubResource("Resource_gyuot"), SubResource("Resource_h1s8m")])
+variables = {
+"count": {
+"attributes": {
+"range": {
+"max": "2000",
+"min": "100",
+"step": "50"
+},
+"tooltip": "How many sprites to spawn."
+},
+"default": 800,
+"exported": true,
+"type": "int"
+},
+"t": {
+"attributes": {
+"tooltip": "Animation clock (seconds)."
+},
+"default": 0.0,
+"exported": false,
+"type": "float"
+}
+}

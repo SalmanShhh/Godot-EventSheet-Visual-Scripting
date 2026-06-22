@@ -16,6 +16,7 @@ func _init() -> void:
 	all_ok = _build_starfall() and all_ok
 	all_ok = _build_quest_fsm() and all_ok
 	all_ok = _build_platformer_shooter() and all_ok
+	all_ok = _build_swarm() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -658,3 +659,74 @@ func _build_platformer_shooter() -> bool:
 	root.add_child(hud); hud.owner = root
 
 	return _save_scene(root, "res://demo/showcase/platformer_shooter.tscn")
+
+# ── 5. Swarm — frame-spreading crowd (Budgeted For Each) ─────────────────────
+
+func _build_swarm() -> bool:
+	# Dot sub-scene: a small group-tagged sprite the sheet spawns by the hundreds.
+	var tex: ImageTexture = _make_texture()
+	var dot: Sprite2D = Sprite2D.new()
+	dot.name = "Dot"
+	dot.texture = tex
+	dot.scale = Vector2(0.32, 0.32)
+	dot.add_to_group("swarm", true)
+	if not _save_scene(dot, "res://demo/showcase/dot.tscn"):
+		return false
+
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "Swarm"
+	sheet.emit_live_values = true
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Swarm[/b] — frame-spreading made visible. On Ready spawns 800 sprites into the \"swarm\" group; ONE For Each with a frame-spread budget of 90/frame wobbles them, so only a slice updates each frame and the colour refresh SWEEPS through the crowd — that visible wave IS the spreading. The FPS stays pinned even though the loop never touches the whole crowd in a single frame. Tick frame_spread_count on any For Each to get this — no behavior, no await."
+	sheet.events.append(about)
+
+	sheet.variables = {
+		"count": {"type": "int", "default": 800, "exported": true,
+			"attributes": {"tooltip": "How many sprites to spawn.", "range": {"min": "100", "max": "2000", "step": "50"}}},
+		"t": {"type": "float", "default": 0.0, "exported": false,
+			"attributes": {"tooltip": "Animation clock (seconds)."}}
+	}
+
+	# On Ready: spawn the crowd in a 40-wide grid into the "swarm" group.
+	var spawn: EventRow = EventRow.new()
+	spawn.trigger_provider_id = "Core"; spawn.trigger_id = "OnReady"
+	spawn.actions.append(_raw("var __cols: int = 40\nfor __i: int in range(count):\n\tvar __dot: Sprite2D = load(\"res://demo/showcase/dot.tscn\").instantiate()\n\t__dot.position = Vector2(48.0 + float(__i % __cols) * 27.0, 70.0 + float(__i / __cols) * 27.0)\n\tadd_child(__dot)"))
+	sheet.events.append(spawn)
+
+	# On Process: advance the clock + show the live FPS so you can see it stay smooth.
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"; tick.trigger_id = "OnProcess"
+	tick.actions.append(_raw("t += delta"))
+	tick.actions.append(_raw("$Info.text = \"%d sprites   ·   Budgeted For Each: 90/frame   ·   %d FPS\" % [count, Engine.get_frames_per_second()]"))
+	sheet.events.append(tick)
+
+	# On Process: a Budgeted For Each over the crowd — wobble the texture offset + sweep the hue.
+	# frame_spread_count = 90 makes it process only ~90 sprites per frame, resuming next frame.
+	var wobble: EventRow = EventRow.new()
+	wobble.trigger_provider_id = "Core"; wobble.trigger_id = "OnProcess"
+	var pf: PickFilter = PickFilter.new()
+	pf.enabled = true
+	pf.collection_kind = PickFilter.CollectionKind.GROUP
+	pf.collection_value = "swarm"
+	pf.iterator_name = "dot"
+	pf.frame_spread_count = 90
+	wobble.pick_filters.append(pf)
+	wobble.actions.append(_raw("dot.offset = Vector2(sin(t * 2.0 + dot.position.x * 0.02) * 10.0, cos(t * 2.4 + dot.position.y * 0.02) * 10.0)\ndot.modulate = Color.from_hsv(fmod(t * 0.08 + dot.position.x * 0.0008, 1.0), 0.65, 1.0)"))
+	sheet.events.append(wobble)
+
+	if not _compile(sheet, "res://demo/showcase/swarm.tres", "res://demo/showcase/swarm.gd"):
+		return false
+
+	# Scene: the script-bearing root + a HUD label.
+	var root: Node2D = Node2D.new()
+	root.name = "Swarm"
+	root.set_script(load("res://demo/showcase/swarm.gd"))
+	var label: Label = Label.new()
+	label.name = "Info"
+	label.position = Vector2(24, 18)
+	label.add_theme_font_size_override("font_size", 24)
+	label.text = "800 sprites   ·   Budgeted For Each: 90/frame   ·   60 FPS"
+	root.add_child(label); label.owner = root
+	return _save_scene(root, "res://demo/showcase/swarm.tscn")

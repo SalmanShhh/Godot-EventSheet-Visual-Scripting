@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/swarm.gd" id="1_cjiq8"]
+
+[node name="Swarm" type="Node2D" unique_id=860850618]
+script = ExtResource("1_cjiq8")
+
+[node name="Info" type="Label" parent="." unique_id=770224314]
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 24.0
+offset_bottom = 18.0
+theme_override_font_sizes/font_size = 24
+text = "800 sprites   ·   Budgeted For Each: 90/frame   ·   60 FPS"

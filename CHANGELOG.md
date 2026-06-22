@@ -11,6 +11,12 @@
   its output through the project's own `BANNED_PATTERNS` scan so the helper can't regress to the legacy form.
 
 ### Added
+- **A runnable "Swarm" showcase — frame-spreading you can watch** (`demo/showcase/swarm.tscn`). Open and
+  run it: 800 sprites spawn into a group and a single **Budgeted For Each** (90/frame) wobbles them, so the
+  colour refresh visibly *sweeps* through the crowd while the FPS stays pinned — the frame-spreading made
+  literal. Built by `tools/build_examples.gd` (with a new `dot.tscn` sub-scene) and guarded by
+  `showcase_examples_test` (compiles → parses → instantiates). Also refreshes the demo README, which had
+  gone stale on the `platformer_shooter` showcase.
 - **Recipe 12 — "The game-feel toolkit"** (`docs/RECIPES.md`): a self-contained reference for the Juice
   pack's feel actions — hit-stop/slow-mo (with a realtime hold), trauma-based screenshake, squash & stretch
   plus spring squash, and punch-zoom — with exact signatures and how to layer them into one satisfying hit.
