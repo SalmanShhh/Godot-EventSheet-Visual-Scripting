@@ -84,12 +84,14 @@
   of forcing a raw GDScript block to write the correct path. One change in the auto-ACE generator
   (`ace_generator._parameterize_node_target`) covers all packs at once; only a bare `$Identifier`
   prefix is parameterized — `$"Quoted"`, `%Unique`, and multi-segment `$A/B` paths stay verbatim.
-- **The flagship `platformer_shooter` showcase's shoot logic is now fully code-free** — the exact event
+- **The flagship `platformer_shooter` showcase's shoot + jump logic is now fully code-free** — the exact event
   a user pointed at as "dropping to GDScript" is re-authored with its conditions on the left (Is Action
   Pressed + the Weapon Kit's own **Can Fire**, targeting `$Player/WeaponKit`) and its actions on the
   right (the pack's **Fire** + **Spawn Scene (Full)**, aimed by the Platformer pack's facing direction).
   The demo now *teaches* Construct-style legibility instead of a raw `if` block — proof the plugin can
-  author real game logic with zero GDScript. Made possible by the node-targetable pack ACEs above.
+  author real game logic with zero GDScript. Made possible by the node-targetable pack ACEs above. The
+  jump/release handler likewise split into **Is Action Just Pressed/Released** conditions + the Platformer
+  pack's **Jump / Jump Released** actions — byte-identical generated output, drift unchanged.
 - **A generic "Expression Is True" condition** — the code-free escape hatch for a boolean
   expression. Use any GDScript that returns a bool (a behavior method like
   `$Player/WeaponKit.can_fire()`, `health > 0 and shielded`, `%Door.is_open()`) directly as a

@@ -538,17 +538,19 @@ func _build_platformer_shooter() -> bool:
 			"attributes": {"tooltip": "Targets destroyed."}}
 	}
 
-	# Jump (Up): press to jump, release for variable jump height. The Platformer pack's own
-	# _physics_process already runs A/D movement + gravity; we only feed it the jump button.
-	var jump: EventRow = EventRow.new()
-	jump.trigger_provider_id = "Core"; jump.trigger_id = "OnPhysicsProcess"
-	jump.actions.append(_raw("\n".join(PackedStringArray([
-		"if Input.is_action_just_pressed(&\"ui_up\"):",
-		"\t$Player/PlatformerMovement.jump()",
-		"if Input.is_action_just_released(&\"ui_up\"):",
-		"\t$Player/PlatformerMovement.jump_released()"
-	]))))
-	sheet.events.append(jump)
+	# Jump (Up): press to jump, release for variable jump height — fully code-free, one event per
+	# edge. The Platformer pack's own _physics_process already runs A/D movement + gravity; we feed
+	# it the jump button via its node-targeted Jump / Jump Released actions on $Player/PlatformerMovement.
+	var jump_press: EventRow = EventRow.new()
+	jump_press.trigger_provider_id = "Core"; jump_press.trigger_id = "OnPhysicsProcess"
+	jump_press.conditions.append(_condition("Core", "IsActionJustPressed", "Input.is_action_just_pressed(&{action})", {"action": "\"ui_up\""}))
+	jump_press.actions.append(_action("PlatformerMovement", "method:jump", "{target}.jump()", {"target": "$Player/PlatformerMovement"}))
+	sheet.events.append(jump_press)
+	var jump_release: EventRow = EventRow.new()
+	jump_release.trigger_provider_id = "Core"; jump_release.trigger_id = "OnPhysicsProcess"
+	jump_release.conditions.append(_condition("Core", "IsActionJustReleased", "Input.is_action_just_released(&{action})", {"action": "\"ui_up\""}))
+	jump_release.actions.append(_action("PlatformerMovement", "method:jump_released", "{target}.jump_released()", {"target": "$Player/PlatformerMovement"}))
+	sheet.events.append(jump_release)
 
 	# Fire (hold Space): FULLY CODE-FREE — conditions on the left (the input + the Weapon Kit's own
 	# Can Fire gate, targeting the behavior at $Player/WeaponKit), actions on the right (the pack's
