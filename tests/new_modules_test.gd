@@ -115,8 +115,8 @@ static func run() -> bool:
 	var batch_script: GDScript = GDScript.new()
 	batch_script.source_code = "extends Camera2D\nfunc _t() -> void:\n\tlimit_left = 0\n\tlimit_top = 0\n\tlimit_right = 1920\n\tlimit_bottom = 1080\n\tcreate_tween().tween_callback(queue_free).set_delay(1.0)\n\tget_tree().create_timer(1.0).timeout.connect(queue_free)\n\tseed(0)\n\trandomize()\n\tvar d := {\"a\": 1, \"b\": 2}\n\tprint(d.has_all([\"a\", \"b\"]), \"#\".repeat(3))\n"
 	all_passed = _check("Roadmap ACE templates parse", batch_script.reload() == OK, true) and all_passed
-	# helper/core roadmap slice: registry + category, the templates parse, and EmitSignalOn's
-	# {, args} idiom resolves without a dangling comma when args is empty.
+	# helper/core roadmap slice: registry + category, the templates parse, and EmitSignalOn emits
+	# the modern signal.emit() form cleanly (no dangling parens) when args is empty.
 	for r3: Array in [["IsSignalConnected", "Helpers"], ["EmitSignalOn", "Helpers"], ["SetTextFormatted", "Helpers"], ["MoveBy2D", "General Actions"]]:
 		var r3_id: String = str(r3[0])
 		all_passed = _check("%s registered" % r3_id, ids.has(r3_id), true) and all_passed
@@ -129,12 +129,12 @@ static func run() -> bool:
 	var emit_action: ACEAction = ACEAction.new()
 	emit_action.provider_id = "Core"
 	emit_action.ace_id = "EmitSignalOn"
-	emit_action.codegen_template = "{target}.emit_signal({signal}{, args})"
-	emit_action.params = {"target": "self", "signal": "\"died\"", "args": ""}
+	emit_action.codegen_template = "{target}.{signal}.emit({args})"
+	emit_action.params = {"target": "self", "signal": "died", "args": ""}
 	emit_event.actions.append(emit_action)
 	emit_sheet.events.append(emit_event)
 	var emit_output: String = str(SheetCompiler.compile(emit_sheet, "user://eventsheets_emit.gd").get("output", ""))
-	all_passed = _check("Emit Signal On resolves {, args} with no dangling comma", emit_output.contains("self.emit_signal(\"died\")"), true) and all_passed
+	all_passed = _check("Emit Signal On emits the modern .emit() form with clean empty args", emit_output.contains("self.died.emit()"), true) and all_passed
 	var hc_script: GDScript = GDScript.new()
 	hc_script.source_code = "extends Label\nsignal died\nfunc _t() -> void:\n\tposition += Vector2(0, 0)\n\ttext = \"Score: %d\" % [0]\n\tprint(self.died.is_connected(_t))\n"
 	all_passed = _check("Move By / Set Text / Is Connected templates parse", hc_script.reload() == OK, true) and all_passed

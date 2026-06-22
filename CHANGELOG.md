@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed
+- **The "Emit Signal On" helper now emits the modern `signal.emit()` form** instead of the legacy
+  `emit_signal("name")`. With a bare signal identifier it compiles to e.g. `enemy.died.emit(payload)` —
+  idiomatic Godot 4 and parity-clean (the old form matched a banned substring in the codegen parity guard,
+  even though only the helper itself, never a bundled pack, used it). The signal parameter is now a bare
+  identifier rather than a quoted string. New `emit_signal_modern_test` pulls the live descriptor and runs
+  its output through the project's own `BANNED_PATTERNS` scan so the helper can't regress to the legacy form.
+
 ### Added
 - **Recipe 11 — "Crowds without the hitch"** (`docs/RECIPES.md`): a self-contained, end-to-end showcase of
   the frame-spreading stack — the Time Slicer pack (enqueue + On Process Item), the Budgeted For Each
