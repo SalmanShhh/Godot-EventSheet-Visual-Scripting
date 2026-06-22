@@ -1,10 +1,13 @@
 # Frame-Spreading & Time-Budgeting — design spec
 
-**Status: DESIGN ONLY (not yet built).** This is the agreed plan for making "time slicing" /
-"frame spreading" and time-budgeting easy in event-sheet code — for beginners *and* advanced Godot
-users focused on performance. It was investigated against the real compiler and feasibility-vetted;
-nothing here is implemented yet. Build order + open decisions are recorded at the end. When you're
-ready, start at Solution 1.
+**Status: ALL FIVE SOLUTIONS BUILT & SHIPPED.** This was the agreed design for making "time slicing" /
+"frame spreading" and time-budgeting easy in event-sheet code — for beginners *and* advanced Godot users
+focused on performance — and it is now fully implemented. Solution 1 (Time Slicer pack), 3 (budget /
+coroutine ACEs), 4 (Run In Background pack), and 5 (Project Doctor unbounded-loop advisory) ship as
+described; Solution 2 (Budgeted For Each) compiles in-place from a pick filter's `frame_spread_count` /
+`frame_spread_budget_ms`. The user-facing how-to lives in `PERFORMANCE.md` and `RECIPES.md` (Recipe 11),
+and there's a runnable demo at `demo/showcase/swarm.tscn`. This file is kept as the design rationale and
+the record of locked decisions.
 
 ## The problem (and the C3 → Godot framing)
 
