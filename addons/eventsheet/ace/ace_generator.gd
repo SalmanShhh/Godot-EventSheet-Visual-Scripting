@@ -96,7 +96,7 @@ static func _parameterize_node_target(definition: ACEDefinition) -> void:
     if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
         return
     var template: String = str(definition.metadata.get("codegen_template", ""))
-    if not template.begins_with("$") or template.contains("{target}"):
+    if not template.begins_with("$"):
         return
     var dot: int = template.find(".")
     if dot < 2:
@@ -108,9 +108,16 @@ static func _parameterize_node_target(definition: ACEDefinition) -> void:
     var first_char: String = bare.substr(0, 1)
     if not (first_char == "_" or first_char.to_lower() != first_char.to_upper()):
         return
-    definition.metadata["codegen_template"] = "{target}.%s" % template.substr(dot + 1)
+    # Avoid colliding with a method param literally named "target" (e.g. spring_host_scale(target)):
+    # fall back to "on_node" so the injected node path and the method's own arg stay distinct.
+    var node_param_id: String = "target"
+    for existing_param in definition.parameters:
+        if str((existing_param as Dictionary).get("id", "")) == node_param_id:
+            node_param_id = "on_node"
+            break
+    definition.metadata["codegen_template"] = "{%s}.%s" % [node_param_id, template.substr(dot + 1)]
     var target_param: Dictionary = {
-        "id": "target",
+        "id": node_param_id,
         "display_name": "On node",
         "description": "Which node carries this behavior (default %s). Pick or type a node path — e.g. $Player/WeaponKit." % node_ref,
         "type": TYPE_STRING,

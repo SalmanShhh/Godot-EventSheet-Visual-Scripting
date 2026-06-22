@@ -83,7 +83,9 @@
   **Weapon Kit → Can Fire** can now be used on a sheet whose behavior lives under another node, instead
   of forcing a raw GDScript block to write the correct path. One change in the auto-ACE generator
   (`ace_generator._parameterize_node_target`) covers all packs at once; only a bare `$Identifier`
-  prefix is parameterized — `$"Quoted"`, `%Unique`, and multi-segment `$A/B` paths stay verbatim.
+  prefix is parameterized — `$"Quoted"`, `%Unique`, and multi-segment `$A/B` paths stay verbatim, and a
+  method whose own arg is named `target` (e.g. `spring_host_scale(target)`) uses `on_node` for the node
+  field to avoid the clash.
 - **The flagship `platformer_shooter` showcase's shoot + jump logic is now fully code-free** — the exact event
   a user pointed at as "dropping to GDScript" is re-authored with its conditions on the left (Is Action
   Pressed + the Weapon Kit's own **Can Fire**, targeting `$Player/WeaponKit`) and its actions on the
