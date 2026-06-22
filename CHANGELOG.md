@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Added
+- **Budget ACEs — hand-rolled frame-spreading (advanced).** Three Performance actions for power users:
+  **Await Next Frame** (`await get_tree().process_frame`), **Begin Frame Budget(ms)** (arms a per-frame
+  fence), and **Await If Over Budget(ms)** (drop it at the bottom of a `For Each` body; it yields + re-arms
+  when the budget is spent). They reuse the Wait/await machinery, so the handler becomes an implicit
+  coroutine — **advanced-gated**, for one-shot triggers only (never a re-firing On Process; see the
+  re-entrancy warning in the new [docs/PERFORMANCE.md](docs/PERFORMANCE.md)). The easy path stays the Time
+  Slicer pack. (Frame-spreading Solution 3.)
 - **A "Time Slicer" pack — spread heavy work across frames (the 30th addon).** The first of the
   frame-spreading tools (see [docs/FRAME-SPREADING-SPEC.md](docs/FRAME-SPREADING-SPEC.md)): a managed
   work queue that drains within a per-frame budget — **time (ms)**, **count**, or both. Enqueue items
