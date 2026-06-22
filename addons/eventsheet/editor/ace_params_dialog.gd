@@ -1822,6 +1822,10 @@ func _build_hint_text() -> String:
 
 func _focus_first_field() -> void:
 	for key in _fields.keys():
+		# Skip entries whose widget was already freed (the dialog can close before this
+		# deferred focus runs) — casting a freed object would error instead of returning null.
+		if not is_instance_valid(_fields[key]):
+			continue
 		var field: Control = _fields[key] as Control
 		if field != null and field.visible and not (field is LineEdit and not (field as LineEdit).editable):
 			field.grab_focus()

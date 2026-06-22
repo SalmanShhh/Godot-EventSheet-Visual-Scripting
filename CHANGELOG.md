@@ -9,6 +9,12 @@
   re-opening the dialog with the exact compile error instead of writing a For Each that fails later at codegen
   time. Fail-open: if the linter can't run (no active sheet) the save proceeds, so a glitch never traps a valid edit.
 
+### Fixed
+- **The ACE parameter dialog no longer errors with "Trying to cast a freed object" when focusing its first field.**
+  `_focus_first_field` cast every entry in its field map to `Control` guarded only by `!= null`, which doesn't
+  catch a *freed* widget (the dialog can close before the deferred focus runs). It now skips freed entries via
+  `is_instance_valid` — no more console-error spam when ACE dialogs open and close quickly.
+
 ## [0.9.0] - 2026-06-22 - Performance & Game Feel
 
 ### Fixed
