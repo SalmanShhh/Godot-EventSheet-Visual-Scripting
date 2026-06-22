@@ -175,7 +175,7 @@ still ships as plain GDScript).
   math/string idioms) so code that doesn't map to a specific ACE still stays an editable row.
 
 ### Behaviors & addons (zero configuration, no JSON)
-- **30 addon packs**, all authored as event sheets: the C3 classics (**Platformer** —
+- **31 addon packs**, all authored as event sheets: the C3 classics (**Platformer** —
   coyote time, jump buffering, variable jump height, double jump, wall slide + wall jump,
   accel/decel — 8-Direction, Timer, Flash, State Machine, Sine with wave shapes, Orbit,
   Bullet, Move To, Follow, Car, Tile Movement, Line of Sight **2D & 3D**), a 3D quartet
@@ -196,7 +196,9 @@ still ships as plain GDScript).
   and zoom-onto-a-world-point, and volume-preserving **squash & stretch** — the camera is auto-found
   from the active viewport, so Shake/Zoom work from anywhere with no wiring), and a **Time Slicer**
   (a managed work queue that drains within a per-frame ms/count budget — enqueue heavy work, react to
-  *On Process Item*, and it spreads across frames instead of hitching the game).
+  *On Process Item*, and it spreads across frames instead of hitching the game), and a **Run In
+  Background** runner (hands a pure function to a worker thread and fires *On Done* with the result —
+  for compute too heavy to even spread across frames).
 - **Custom ACE addons**: drop a script in `res://eventsheet_addons/` — `class_name` is
   the provider, `@ace_*` annotations shape everything (`@ace_param_options` for fixed
   combos, `@ace_param_autocomplete` for an editable type-or-pick combo, `@ace_param_hint`

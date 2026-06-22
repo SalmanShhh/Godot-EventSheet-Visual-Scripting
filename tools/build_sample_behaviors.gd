@@ -36,6 +36,7 @@ const PACK_BUILDERS: Array[String] = [
 	"abilities",
 	"juice",
 	"time_slicer",
+	"background_runner",
 ]
 
 func _init() -> void:

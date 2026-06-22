@@ -51,6 +51,28 @@ for enemy in get_tree().get_nodes_in_group("enemies"):
 > overlaps itself and double-processes. `Begin Frame Budget` and `Await If Over Budget` must be in the
 > **same** handler (the budget fence is function-local). If you're not sure, use the Time Slicer pack.
 
+## Too heavy even to spread — Run In Background (ADVANCED)
+
+When the work is genuinely CPU-bound (procedural generation, a pathfinding bake, image/data crunching),
+spreading it across frames still blocks the main thread each frame. The **Run In Background** pack hands
+the work to the engine's `WorkerThreadPool` — the main thread only polls, so it never hitches, and
+**On Done(result)** fires on the main thread when the work finishes (safe to apply the result to the scene
+there). *Run Batch In Background* fans an array across worker threads.
+
+> [!WARNING]
+> **The work callable must be PURE.** No scene-tree access, no Node methods, no non-thread-safe Resource
+> touches — data in, data out only. Touching a node off-thread crashes or produces heisenbugs, and nothing
+> enforces this at compile time. Compute off-thread, then apply the result in the On Done handler (which
+> runs on the main thread). To mutate the scene *incrementally*, use the Time Slicer instead.
+
+```gdscript
+# On Ready (or any trigger): kick off a pure computation
+run_in_background(_bake_navmesh.bind(grid))   # _bake_navmesh returns data; touches no nodes
+
+# On Done(result): apply it on the main thread
+$NavRegion.navigation_polygon = result
+```
+
 ## Rules of thumb
 
 - **Spread when one frame's worth of the work would be felt** — a visible stutter, not a few items.

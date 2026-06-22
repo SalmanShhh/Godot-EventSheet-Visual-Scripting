@@ -12,7 +12,7 @@ from **Godot**, read the middle. The right column is what the thing is called *h
 | Expression | GDScript expression | **ƒx expression** | A value typed into a parameter; it *is* plain GDScript, with autocomplete + live validation. |
 | Plugin / Behavior ACEs | engine API | **ACE** (Action / Condition / Expression) | The vocabulary you pick from. ~350 builtin, plus your addons. |
 | Trigger (e.g. *On start of layout*) | signal / `_ready` / `_process` | **Trigger** | The green "On …" row that starts an event (On Ready, On Process, On Pressed, On Input, signals…). |
-| Behavior (Platformer, 8-Direction…) | a script/node component | **Behavior pack** | A reusable event-sheet pack you attach as a child node. 30 bundled. |
+| Behavior (Platformer, 8-Direction…) | a script/node component | **Behavior pack** | A reusable event-sheet pack you attach as a child node. 31 bundled. |
 | Instance variable | member `var` | **Variable** (global) | Compiles to a class member (`var` / `@export var`). |
 | Local variable | local `var` | **Local variable** | Scoped to one event body. |
 | Family | (no direct equal) | **Group** / **Include** | Groups organize rows; Includes are shared library sheets. |

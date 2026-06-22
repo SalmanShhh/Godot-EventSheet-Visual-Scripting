@@ -3,6 +3,14 @@
 ## [Unreleased]
 
 ### Added
+- **A "Run In Background" pack — off-thread heavy compute (the 31st addon).** The "too heavy even to
+  spread across frames" lane: hand a **pure** function to the engine's `WorkerThreadPool` with **Run In
+  Background(callable)** (or **Run Batch In Background** to fan an array across threads); the main thread
+  only polls, so it never hitches, and **On Done(result)** fires on the main thread when the work
+  finishes — for procgen, pathfinding bakes, data crunching that would stutter even spread across frames.
+  Advanced-gated: the callable must touch no nodes / scene tree (unenforceable — see
+  [docs/PERFORMANCE.md](docs/PERFORMANCE.md)). Each call gets a unique id and the worker stores its result
+  in a `Mutex`-guarded slot for the poll to emit. (Frame-spreading Solution 4.)
 - **The Project Doctor flags an unbounded loop that runs every frame.** A heavy **For Each** under On
   Process / On Physics Process that's neither capped (pick first N) nor budgeted hitches the game; the
   Doctor (Tools → Check Project) now adds an info-tier advisory when such a loop carries ≥ N actions,

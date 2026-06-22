@@ -142,6 +142,22 @@ Autoload singleton `AdvancedRandom` — its ACEs are project-wide.
 - **Chance** (`percent: float`) — True roughly percent of the time (0-100) — e.g. Chance(5) for a 5% event.
 - **One In** (`n: int`) — True with a 1-in-n probability.
 
+### BackgroundRunner (`res://eventsheet_addons/background_runner/background_runner_behavior.tres`)
+Behavior — attach under any `Node` node.
+
+#### Triggers
+- **On Done**
+
+#### Conditions
+- **Is Running**
+
+#### Actions
+- **Run In Background** (`work: Callable`) — Runs a PURE callable off the main thread; On Done(result) fires when it finishes. WARNING: the callable must NOT touch nodes / the scene tree / non-thread-safe resources — data in, data out only.
+- **Run Batch In Background** (`items: Array, work: Callable`) — Fans an array across worker threads: runs work.bind(item) for each item (On Done fires per item). The callable must be PURE.
+
+#### Expressions
+- **Tasks Running**
+
 ### BulletBehavior (`res://eventsheet_addons/bullet/bullet_behavior.tres`)
 Behavior — attach under any `Node2D` node.
 
