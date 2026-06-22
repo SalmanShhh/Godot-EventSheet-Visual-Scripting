@@ -334,5 +334,59 @@ $NavRegion.navigation_polygon = result
 
 ---
 
+## 12. The game-feel toolkit — hit-stop, screenshake, squash & punch-zoom
+
+*Game feel* is the difference between a hit that registers and one that *lands*. The **Juice** behavior packs
+the whole toolkit into fire-and-forget actions: attach it as a child (its camera effects **auto-find the
+active camera**, so nothing is wired) and tune every knob — decay, fade curves, spring stiffness — in the
+Inspector. Nothing here needs scheduling or cleanup: the shake decays, the slow-mo eases back, the squash
+springs home on its own.
+
+**Hit-stop / slow motion.** *Slowmo* `target_scale, hold, clock` drops `Engine.time_scale` to `target_scale`
+for `hold` seconds, then eases back (fade curves are Inspector knobs; it emits *On Slowmo Finished*). Set
+`clock` to **realtime** so the hold isn't itself slowed — that's true hit-stop:
+
+```gdscript
+$JuiceBehavior.slowmo(0.05, 0.08, "realtime")   # an 80 ms freeze on a big hit
+```
+
+**Screenshake (trauma-based).** *Shake* `amount` (0–1) adds **trauma**; the shake is trauma-*squared* (small
+= subtle, big = violent), **decays on its own**, and **stacks** — a burst of hits builds a bigger shake. Fire
+it on every hit and forget it:
+
+```gdscript
+$JuiceBehavior.shake(0.4)
+```
+
+**Squash & stretch.** Two flavours, both volume-preserving (negative = squash wide for a landing, positive =
+stretch tall for a jump): *Squash & Stretch* `amount, duration` is a tween; *Spring Squash* `amount` uses a
+real spring (the stiffness/damping knobs) — bouncier and more organic.
+
+```gdscript
+$JuiceBehavior.squash_and_stretch(-0.3, 0.2)   # land: a quick wide squash
+$JuiceBehavior.spring_squash(0.25)             # jump: a bouncy stretch
+```
+
+**Punch-zoom.** *Zoom To Position* `pos, zoom%, duration` glides the camera so a world point becomes screen
+centre; *Zoom By Percent* `%, duration` is relative (100 = no change); *Zoom Toward Point* pins a point under
+the same screen spot (map-zoom style).
+
+```gdscript
+$JuiceBehavior.zoom_to_position(boss.global_position, 130, 0.4)   # frame the boss…
+$JuiceBehavior.zoom_by_percent(100, 0.3)                          # …then pull back
+```
+
+**Layer them.** A satisfying impact is all of these at once, each one fire-and-forget — the only thing you
+tune is *feel*:
+
+```gdscript
+func _on_big_hit() -> void:
+    $JuiceBehavior.shake(0.5)
+    $JuiceBehavior.slowmo(0.05, 0.08, "realtime")
+    $JuiceBehavior.spring_squash(0.3)
+```
+
+---
+
 More vocabulary in the generated [EVENTSHEETS-VOCABULARY.md](../EVENTSHEETS-VOCABULARY.md); the
 honest pros/cons + scope are in the [README](../README.md).

@@ -11,6 +11,9 @@
   its output through the project's own `BANNED_PATTERNS` scan so the helper can't regress to the legacy form.
 
 ### Added
+- **Recipe 12 — "The game-feel toolkit"** (`docs/RECIPES.md`): a self-contained reference for the Juice
+  pack's feel actions — hit-stop/slow-mo (with a realtime hold), trauma-based screenshake, squash & stretch
+  plus spring squash, and punch-zoom — with exact signatures and how to layer them into one satisfying hit.
 - **Recipe 11 — "Crowds without the hitch"** (`docs/RECIPES.md`): a self-contained, end-to-end showcase of
   the frame-spreading stack — the Time Slicer pack (enqueue + On Process Item), the Budgeted For Each
   Inspector tick, and Run In Background for pure off-thread compute — with a "which one?" table.
