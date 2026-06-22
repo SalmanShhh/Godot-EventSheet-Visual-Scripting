@@ -26,7 +26,6 @@ class_name BuiltinACECompileTest
 const NOT_STANDALONE: Array[String] = [
 	"LoopBreak", "LoopContinue", "ReturnValue",
 	"EveryXSeconds", "AwaitIfOverBudget", "BeginFrameBudget", "AwaitNextFrame",
-	"SetShaderMaterial",
 	"CallFunction", "CallMethod", "CallMethodValue", "ConnectSignal", "DisconnectSignal", "IsSignalConnected",
 ]
 

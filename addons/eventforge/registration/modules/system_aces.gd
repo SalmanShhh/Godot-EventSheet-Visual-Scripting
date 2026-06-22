@@ -66,7 +66,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	# Shader materials (assign / swap / clear / read uniforms — completes the one-uniform
 	# SetShaderParameter above into a usable visual-effects surface).
-	descriptors.append(F.make_descriptor("Core", "SetShaderMaterial", "Set Material", ACEDescriptor.ACEType.ACTION, "material = {material}", "", [F.make_param("material", "String", "preload(\"res://effect_material.tres\")", "Material", "ShaderMaterial / CanvasItemMaterial resource expression.", "expression")], "Rendering", "Set material to {material}", "CanvasItem"))
+	descriptors.append(F.make_descriptor("Core", "SetShaderMaterial", "Set Material", ACEDescriptor.ACEType.ACTION, "material = {material}", "", [F.make_param("material", "String", "null", "Material", "ShaderMaterial / CanvasItemMaterial resource — e.g. preload(\"res://your_material.tres\") once that file exists. Defaults to null (no material).", "expression")], "Rendering", "Set material to {material}", "CanvasItem"))
 	descriptors.append(F.make_descriptor("Core", "ClearMaterial", "Clear Material", ACEDescriptor.ACEType.ACTION, "material = null", "", [], "Rendering", "Clear material", "CanvasItem"))
 	descriptors.append(F.make_descriptor("Core", "GetShaderParameter", "Shader Parameter", ACEDescriptor.ACEType.EXPRESSION, "material.get_shader_parameter(&{param})", "", [F.make_param("param", "String", "\"strength\"", "Parameter", "Shader uniform name.")], "Rendering", "shader param {param}", "CanvasItem"))
 

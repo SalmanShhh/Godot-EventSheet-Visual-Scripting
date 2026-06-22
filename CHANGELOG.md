@@ -23,6 +23,10 @@
     otherwise error-spammed "look_at() failed" every call on a node at the world origin.
   - **Play Sound / Play Sound At** free the throwaway one-shot player when the stream fails to load,
     instead of leaking it while waiting on a `finished` signal that never fires.
+- **The "Set Material" ACE's default no longer breaks the build.** Its placeholder was
+  `preload("res://effect_material.tres")`, and `preload` resolves at compile time — so a freshly-added
+  Set Material wouldn't compile until you pointed it at a real material. The default is now `null`; the
+  description shows the `preload(...)` form for when your material exists.
 - **The Juice pack restores `Engine.time_scale` when it leaves the tree.** A scene change *during* a slow-mo
   used to leave the whole game running slow (the global `time_scale` was never reset); the behavior now
   calls `clear_slowmo()` on `tree_exiting`.
