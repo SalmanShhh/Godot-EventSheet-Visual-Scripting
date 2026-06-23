@@ -20,6 +20,10 @@ const COMMON_METHOD_IGNORE := {
 }
 
 var _analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()
+## Set per generate_from_object() call from the provider's @ace_expose_all(node) marker; when "node",
+## un-annotated methods get a synthesized $Provider.method() template (node-targeted) instead of the
+## owned-instance default — so a behavior needs no per-method @ace_codegen_template.
+var _expose_all_mode: String = ""
 
 func generate_from_object(target: Object) -> Array[ACEDefinition]:
     var output: Array[ACEDefinition] = []
@@ -27,6 +31,7 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
         return output
     var script: Script = target.get_script() as Script
     var source_metadata: Dictionary = _analyzer.parse_source_metadata(script)
+    _expose_all_mode = str(source_metadata.get("expose_all_mode", ""))
     var provider_id: String = _analyzer.get_provider_id(target, source_metadata)
     var signal_overrides: Dictionary = source_metadata.get("signals", {})
     var property_overrides: Dictionary = source_metadata.get("properties", {})
@@ -256,6 +261,14 @@ func _build_method_definition(provider_id: String, method_name: String, method_i
     definition.hint_string = _string_override(overrides, "hint_string", "")
     definition.widget_hint = _string_override(overrides, "widget_hint", "")
     definition.category_override = _string_override(overrides, "category_override", "")
+    # @ace_expose_all(node): synthesize the node-targeted call so no per-method @ace_codegen_template is
+    # needed; _parameterize_node_target (inside _apply_template_overrides) then turns the leading
+    # $Provider. into a configurable {target} "On node" param. An explicit override still wins below.
+    if _expose_all_mode == "node" and str(definition.metadata.get("codegen_template", "")).is_empty():
+        var __arg_ids: PackedStringArray = PackedStringArray()
+        for __pd in parameter_definitions:
+            __arg_ids.append("{%s}" % str((__pd as Dictionary).get("id", "")))
+        definition.metadata["codegen_template"] = "$%s.%s(%s)" % [provider_id, method_name, ", ".join(__arg_ids)]
     _apply_template_overrides(definition, overrides)
     return definition
 

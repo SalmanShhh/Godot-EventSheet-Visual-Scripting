@@ -94,6 +94,18 @@
   author real game logic with zero GDScript. Made possible by the node-targetable pack ACEs above. The
   jump/release handler likewise split into **Is Action Just Pressed/Released** conditions + the Platformer
   pack's **Jump / Jump Released** actions — byte-identical generated output, drift unchanged.
+- **`@ace_expose_all` — one-line custom addons, near-zero annotations.** A single class-level
+  `## @ace_expose_all(node)` (or plain `## @ace_expose_all` for an owned RefCounted helper) publishes
+  every own public method/signal of a class as an ACE with **zero per-member annotations**: type inferred
+  from the return type (`bool`→condition, `void`→action, value→expression, `signal`→trigger), name from
+  the identifier, and — under `(node)` — codegen synthesized as the node-targeted `{target}.method(args)`
+  form (reusing the new "On node" param). A behavior no longer needs an
+  `@ace_codegen_template`/`@ace_condition`/`@ace_name` line per method; per-member `@ace_*` annotations
+  stay available as optional overrides, and `_`-prefixed + inherited engine members stay out. Drops into
+  a pre-existing project with one line via the existing per-sheet / `eventsheet_addons/` /
+  annotated-autoload registration surfaces (no project-wide scan, so a big project never floods the
+  picker). New `expose_all_node_test`; existing packs unaffected (drift=0). Properties + the autoload
+  singleton form are documented follow-ups (`docs/internal/SPEC-low-verbosity-custom-addons.md`).
 - **A generic "Expression Is True" condition** — the code-free escape hatch for a boolean
   expression. Use any GDScript that returns a bool (a behavior method like
   `$Player/WeaponKit.can_fire()`, `health > 0 and shielded`, `%Door.is_open()`) directly as a

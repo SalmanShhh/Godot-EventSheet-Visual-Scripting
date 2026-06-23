@@ -7,6 +7,8 @@ func parse_source_metadata(script: Script) -> Dictionary:
         "class_name": "",
         "class_description": "",
         "tags": [],
+        "expose_all": false,
+        "expose_all_mode": "",
         "signals": {},
         "methods": {},
         "properties": {}
@@ -32,6 +34,14 @@ func parse_source_metadata(script: Script) -> Dictionary:
                         for raw_tag in _extract_annotation_value(pending).split(","):
                             if not raw_tag.strip_edges().is_empty():
                                 (metadata["tags"] as Array).append(raw_tag.strip_edges())
+                    elif pending.begins_with("@ace_expose_all"):
+                        # One class-level opt-in: every own public method/signal becomes an ACE with
+                        # zero per-member annotations (type from return type, name from the identifier,
+                        # codegen synthesized). `@ace_expose_all(node)` synthesizes the node-targeted
+                        # $Provider.method() form (vs the owned-instance default) for behaviors.
+                        metadata["expose_all"] = true
+                        if _extract_annotation_value(pending).strip_edges() == "node":
+                            metadata["expose_all_mode"] = "node"
                     elif not pending.begins_with("@ace_"):
                         doc_lines.append(pending)
                 metadata["class_description"] = " ".join(doc_lines).strip_edges()
