@@ -28,9 +28,15 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   entirely from ACE rows — a trigger `SignalRow`, a gated *On Process* tick with sub-events
   (`Expression Is True` / `Is Valid` / `Compare Variable` → `Add/Set Variable`, `Set Property`,
   `Emit Signal`), and two ACE-action function bodies — instead of RawCode. It compiles to GDScript
-  equivalent to the old hand-written version, its demo stays byte-identical, and
-  `flash_pack_zero_rawcode_test` guards that no RawCode creeps back. Proves the behaviour-as-ACEs path
-  end to end; the remaining packs convert next (numeric-kernel packs may keep documented RawCode).
+  equivalent to the old hand-written version and its demo stays byte-identical. Proves the
+  behaviour-as-ACEs path end to end.
+- **A movement behaviour, now code-free.** The **8-Direction Movement** pack (a CharacterBody2D mover —
+  the very "why is movement GDScript?" case) is the second zero-RawCode pack: an *On Physics Process*
+  event reads a typed input-vector local, then **Set Velocity** + **Move And Slide**, all host-targeted.
+  `pack_rawcode_budget_test` ratchets each converted pack — **Flash, 8-Direction, and Timer** so far —
+  at 0 RawCode so a GDScript block can never creep back. Remaining packs convert incrementally;
+  numeric-kernel packs (spring/juice/bullet integrators — continuous `cos`/`sin`/spring math) keep
+  documented RawCode per the spec's honest criterion.
 
 ### Fixed
 

@@ -4,6 +4,7 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 ## C3 "Timer" behavior: attach under any node; Start/Stop ACEs; "On Timer" trigger.
+## Authored entirely as ACE rows (ZERO RawCode) — see docs/internal/SPEC-behaviour-as-aces-parity.md.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -18,51 +19,81 @@ static func build() -> bool:
 	var about: CommentRow = CommentRow.new()
 	about.text = "Timer behavior (C3-style): Start Timer / Stop Timer from any sheet; the On Timer trigger fires when it elapses (repeats when 'repeating')."
 	sheet.events.append(about)
-	var signal_block: RawCodeRow = RawCodeRow.new()
-	signal_block.code = "## @ace_trigger\n## @ace_name(\"On Timer\")\n## @ace_category(\"Timer\")\nsignal timer_finished"
-	sheet.events.append(signal_block)
+
+	var finished_signal: SignalRow = SignalRow.new()
+	finished_signal.signal_name = "timer_finished"
+	finished_signal.trigger = true
+	finished_signal.ace_name = "On Timer"
+	finished_signal.ace_category = "Timer"
+	sheet.events.append(finished_signal)
+
+	# On Process: while running, count down; when it elapses, fire On Timer and repeat or stop.
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
-	var countdown: RawCodeRow = RawCodeRow.new()
-	countdown.code = "\n".join(PackedStringArray([
-		"if not running:",
-		"\treturn",
-		"remaining -= delta",
-		"if remaining > 0.0:",
-		"\treturn",
-		"timer_finished.emit()",
-		"if repeating:",
-		"\tremaining = duration",
-		"else:",
-		"\trunning = false"
-	]))
-	tick.actions.append(countdown)
+	tick.conditions.append(_cond("ExpressionIsTrue", {"expr": "running"}))
+	tick.actions.append(_action("AddVar", {"var_name": "remaining", "amount": "-delta"}))
+
+	var elapsed: EventRow = EventRow.new()
+	elapsed.conditions.append(_cond("CompareVar", {"var_name": "remaining", "op": "<=", "value": "0.0"}))
+	elapsed.actions.append(_action("EmitSignal", {"signal_name": "timer_finished", "args": ""}))
+	var repeat: EventRow = EventRow.new()
+	repeat.conditions.append(_cond("ExpressionIsTrue", {"expr": "repeating"}))
+	repeat.actions.append(_action("SetVar", {"var_name": "remaining", "value": "duration"}))
+	elapsed.sub_events.append(repeat)
+	var no_repeat: EventRow = EventRow.new()
+	no_repeat.else_mode = EventRow.ElseMode.ELSE
+	no_repeat.actions.append(_action("SetVar", {"var_name": "running", "value": "false"}))
+	elapsed.sub_events.append(no_repeat)
+	tick.sub_events.append(elapsed)
 	sheet.events.append(tick)
 
+	# start_timer(seconds): start / restart the countdown.
 	var start_timer: EventFunction = EventFunction.new()
 	start_timer.function_name = "start_timer"
 	start_timer.expose_as_ace = true
 	start_timer.ace_display_name = "Start Timer"
 	start_timer.ace_category = "Timer"
 	start_timer.description = "Starts (or restarts) the countdown with the given duration."
-	var seconds_param: ACEParam = ACEParam.new()
-	seconds_param.id = "seconds"
-	seconds_param.type_name = "float"
-	start_timer.params.append(seconds_param)
-	var start_body: RawCodeRow = RawCodeRow.new()
-	start_body.code = "duration = seconds\nremaining = seconds\nrunning = true"
+	start_timer.params.append(_param("seconds", "float"))
+	var start_body: EventRow = EventRow.new()
+	start_body.actions.append(_action("SetVar", {"var_name": "duration", "value": "seconds"}))
+	start_body.actions.append(_action("SetVar", {"var_name": "remaining", "value": "seconds"}))
+	start_body.actions.append(_action("SetVar", {"var_name": "running", "value": "true"}))
 	start_timer.events.append(start_body)
 	sheet.functions.append(start_timer)
 
+	# stop_timer(): cancel without firing On Timer.
 	var stop_timer: EventFunction = EventFunction.new()
 	stop_timer.function_name = "stop_timer"
 	stop_timer.expose_as_ace = true
 	stop_timer.ace_display_name = "Stop Timer"
 	stop_timer.ace_category = "Timer"
 	stop_timer.description = "Stops the countdown without firing On Timer."
-	var stop_body: RawCodeRow = RawCodeRow.new()
-	stop_body.code = "running = false"
+	var stop_body: EventRow = EventRow.new()
+	stop_body.actions.append(_action("SetVar", {"var_name": "running", "value": "false"}))
 	stop_timer.events.append(stop_body)
 	sheet.functions.append(stop_timer)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/timer/timer_behavior")
+
+## Built-in Core ACE rows; templates resolve from the registry at compile time (no baked template).
+static func _action(ace_id: String, params: Dictionary) -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = ace_id
+	action.params = params
+	return action
+
+static func _cond(ace_id: String, params: Dictionary) -> ACECondition:
+	var condition: ACECondition = ACECondition.new()
+	condition.provider_id = "Core"
+	condition.ace_id = ace_id
+	condition.params = params
+	return condition
+
+static func _param(id: String, type_name: String) -> ACEParam:
+	var param: ACEParam = ACEParam.new()
+	param.id = id
+	param.type_name = type_name
+	return param

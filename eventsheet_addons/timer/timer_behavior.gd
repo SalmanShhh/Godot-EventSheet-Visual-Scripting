@@ -13,27 +13,25 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("TimerBehavior behavior requires a Node parent.")
 
-@export var duration: float = 1.0
-var remaining: float = 0.0
-@export var repeating: bool = false
-var running: bool = false
-
 ## @ace_trigger
 ## @ace_name("On Timer")
 ## @ace_category("Timer")
 signal timer_finished
 
+@export var duration: float = 1.0
+var remaining: float = 0.0
+@export var repeating: bool = false
+var running: bool = false
+
 func _process(delta: float) -> void:
-	if not running:
-		return
-	remaining -= delta
-	if remaining > 0.0:
-		return
-	timer_finished.emit()
-	if repeating:
-		remaining = duration
-	else:
-		running = false
+	if running:
+		remaining += -delta
+		if remaining <= 0.0:
+			timer_finished.emit()
+			if repeating:
+				remaining = duration
+			else:
+				running = false
 
 ## @ace_action
 ## @ace_name("Start Timer")
