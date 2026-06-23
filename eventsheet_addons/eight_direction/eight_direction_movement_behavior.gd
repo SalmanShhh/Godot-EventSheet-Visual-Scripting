@@ -16,11 +16,10 @@ func _enter_tree() -> void:
 @export var move_speed: float = 200.0
 
 func _physics_process(delta: float) -> void:
-	if host == null:
-		return
-	var input_vector := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
-	host.velocity = input_vector * move_speed
-	host.move_and_slide()
+	if is_instance_valid(host):
+		var input_vector: Vector2 = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+		host.velocity = input_vector * move_speed
+		host.move_and_slide()
 
 ## @ace_action
 ## @ace_name("Set Move Speed")

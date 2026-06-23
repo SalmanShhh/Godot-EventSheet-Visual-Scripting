@@ -3,6 +3,10 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+## Top-down 8-direction movement, authored entirely as ACE rows (ZERO RawCode) — the new behaviour
+## physics vocabulary in action: a typed input-vector local, Set Velocity, and Move And Slide, all
+## host-targeted via {host.}. The movement behaviour the user asked to be code-free. See
+## docs/internal/SPEC-behaviour-as-aces-parity.md.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -14,33 +18,48 @@ static func build() -> bool:
 	about.text = "Top-down 8-direction movement: attach under a CharacterBody2D; moves with the ui_* input actions."
 	sheet.events.append(about)
 
+	# On Physics Process: read the input vector, drive velocity, and move — all as ACE rows.
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnPhysicsProcess"
-	var movement: RawCodeRow = RawCodeRow.new()
-	movement.code = "\n".join(PackedStringArray([
-		"if host == null:",
-		"\treturn",
-		"var input_vector := Input.get_vector(\"ui_left\", \"ui_right\", \"ui_up\", \"ui_down\")",
-		"host.velocity = input_vector * move_speed",
-		"host.move_and_slide()"
-	]))
-	tick.actions.append(movement)
+	tick.conditions.append(_cond("IsValid", {"target": "host"}))
+	tick.actions.append(_action("SetLocalVarTyped", {"name": "input_vector", "var_type": "Vector2", "value": "Input.get_vector(\"ui_left\", \"ui_right\", \"ui_up\", \"ui_down\")"}))
+	tick.actions.append(_action("SetVelocity2D", {"vel": "input_vector * move_speed"}))
+	tick.actions.append(_action("MoveAndSlide", {}))
 	sheet.events.append(tick)
 
+	# set_move_speed(speed): retune at runtime.
 	var set_speed: EventFunction = EventFunction.new()
 	set_speed.function_name = "set_move_speed"
 	set_speed.expose_as_ace = true
 	set_speed.ace_display_name = "Set Move Speed"
 	set_speed.ace_category = "Eight Direction"
 	set_speed.description = "Changes the movement speed."
-	var speed_param: ACEParam = ACEParam.new()
-	speed_param.id = "speed"
-	speed_param.type_name = "float"
-	set_speed.params.append(speed_param)
-	var body: RawCodeRow = RawCodeRow.new()
-	body.code = "move_speed = speed"
+	set_speed.params.append(_param("speed", "float"))
+	var body: EventRow = EventRow.new()
+	body.actions.append(_action("SetVar", {"var_name": "move_speed", "value": "speed"}))
 	set_speed.events.append(body)
 	sheet.functions.append(set_speed)
 
 	return Lib.save_pack(sheet, "res://eventsheet_addons/eight_direction/eight_direction_movement_behavior")
+
+## Built-in Core ACE rows; templates resolve from the registry at compile time (no baked template).
+static func _action(ace_id: String, params: Dictionary) -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = ace_id
+	action.params = params
+	return action
+
+static func _cond(ace_id: String, params: Dictionary) -> ACECondition:
+	var condition: ACECondition = ACECondition.new()
+	condition.provider_id = "Core"
+	condition.ace_id = ace_id
+	condition.params = params
+	return condition
+
+static func _param(id: String, type_name: String) -> ACEParam:
+	var param: ACEParam = ACEParam.new()
+	param.id = id
+	param.type_name = type_name
+	return param
