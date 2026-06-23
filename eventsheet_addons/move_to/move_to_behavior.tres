@@ -1,127 +1,287 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_gfj36"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_q7uqc"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_c4ll7"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_jlqat"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_wyhg1"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_2l66c"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_xp0oq"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_28rk4"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_14g6j"]
-
-[sub_resource type="Resource" id="Resource_1q018"]
-script = ExtResource("1_gfj36")
-text = "Move To behavior (C3 parity): glides through a waypoint queue (Move To Position replaces it, Add Waypoint appends) and fires On Arrived at the final stop. rotate_toward_motion faces the travel direction."
-
-[sub_resource type="Resource" id="Resource_k6qdc"]
-script = ExtResource("2_q7uqc")
-code = "## @ace_trigger
-## @ace_name(\"On Arrived\")
-## @ace_category(\"Move To\")
-signal arrived"
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_q7uqc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="2_c4ll7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="3_jlqat"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="4_wyhg1"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="5_2l66c"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="6_xp0oq"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="7_28rk4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_14g6j"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_1q018"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_k6qdc"]
 
 [sub_resource type="Resource" id="Resource_f2y24"]
-script = ExtResource("2_q7uqc")
-code = "if not moving or host == null or waypoints.is_empty():
-	return
-var target: Vector2 = waypoints[0]
-var previous := host.position
-host.position = host.position.move_toward(target, max_speed * delta)
-if rotate_toward_motion and host.position != previous:
-	host.rotation = (host.position - previous).angle()
-if host.position.distance_to(target) < 0.5:
-	waypoints.pop_front()
-	if waypoints.is_empty():
-		moving = false
-		arrived.emit()"
+script = ExtResource("1_q7uqc")
+text = "Move To behavior (C3 parity): glides through a waypoint queue (Move To Position replaces it, Add Waypoint appends) and fires On Arrived at the final stop. rotate_toward_motion faces the travel direction."
 
 [sub_resource type="Resource" id="Resource_2d2na"]
-script = ExtResource("6_2l66c")
-trigger_provider_id = "Core"
-trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_f2y24")])
-event_uid = "989686"
+script = ExtResource("2_c4ll7")
+signal_name = "arrived"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Arrived"
+ace_category = "Move To"
 
 [sub_resource type="Resource" id="Resource_kd6xl"]
-script = ExtResource("2_q7uqc")
-code = "waypoints = [Vector2(x, y)]
-moving = true"
+script = ExtResource("3_jlqat")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "target",
+"value": "waypoints[0]",
+"var_type": "Vector2"
+}
 
 [sub_resource type="Resource" id="Resource_8bsqb"]
-script = ExtResource("7_xp0oq")
+script = ExtResource("3_jlqat")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "previous",
+"value": "host.position",
+"var_type": "Vector2"
+}
+
+[sub_resource type="Resource" id="Resource_xnw0y"]
+script = ExtResource("3_jlqat")
+ace_id = "SetProperty"
+params = {
+"property": "position",
+"target": "host",
+"value": "host.position.move_toward(target, max_speed * delta)"
+}
+
+[sub_resource type="Resource" id="Resource_g487a"]
+script = ExtResource("4_wyhg1")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "moving"
+}
+
+[sub_resource type="Resource" id="Resource_g7ol3"]
+script = ExtResource("4_wyhg1")
+ace_id = "IsValid"
+params = {
+"target": "host"
+}
+
+[sub_resource type="Resource" id="Resource_fsq1l"]
+script = ExtResource("4_wyhg1")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "not waypoints.is_empty()"
+}
+
+[sub_resource type="Resource" id="Resource_78tkt"]
+script = ExtResource("3_jlqat")
+ace_id = "SetProperty"
+params = {
+"property": "rotation",
+"target": "host",
+"value": "(host.position - previous).angle()"
+}
+
+[sub_resource type="Resource" id="Resource_458qb"]
+script = ExtResource("4_wyhg1")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "rotate_toward_motion and host.position != previous"
+}
+
+[sub_resource type="Resource" id="Resource_m8xdk"]
+script = ExtResource("7_28rk4")
+conditions = Array[ExtResource("4_wyhg1")]([SubResource("Resource_458qb")])
+actions = Array[Resource]([SubResource("Resource_78tkt")])
+event_uid = "4a1e95"
+
+[sub_resource type="Resource" id="Resource_ov0s6"]
+script = ExtResource("3_jlqat")
+ace_id = "CallMethod"
+params = {
+"args": "",
+"method": "pop_front",
+"target": "waypoints"
+}
+
+[sub_resource type="Resource" id="Resource_v1dd5"]
+script = ExtResource("4_wyhg1")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "host.position.distance_to(target) < 0.5"
+}
+
+[sub_resource type="Resource" id="Resource_he5tn"]
+script = ExtResource("3_jlqat")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "moving"
+}
+
+[sub_resource type="Resource" id="Resource_3sw2q"]
+script = ExtResource("3_jlqat")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "arrived"
+}
+
+[sub_resource type="Resource" id="Resource_o5sjq"]
+script = ExtResource("4_wyhg1")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "waypoints.is_empty()"
+}
+
+[sub_resource type="Resource" id="Resource_bkejx"]
+script = ExtResource("7_28rk4")
+conditions = Array[ExtResource("4_wyhg1")]([SubResource("Resource_o5sjq")])
+actions = Array[Resource]([SubResource("Resource_he5tn"), SubResource("Resource_3sw2q")])
+event_uid = "758e04"
+
+[sub_resource type="Resource" id="Resource_jdcnf"]
+script = ExtResource("7_28rk4")
+conditions = Array[ExtResource("4_wyhg1")]([SubResource("Resource_v1dd5")])
+actions = Array[Resource]([SubResource("Resource_ov0s6")])
+sub_events = Array[Resource]([SubResource("Resource_bkejx")])
+event_uid = "a95c21"
+
+[sub_resource type="Resource" id="Resource_fjx87"]
+script = ExtResource("7_28rk4")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+conditions = Array[ExtResource("4_wyhg1")]([SubResource("Resource_g487a"), SubResource("Resource_g7ol3"), SubResource("Resource_fsq1l")])
+actions = Array[Resource]([SubResource("Resource_kd6xl"), SubResource("Resource_8bsqb"), SubResource("Resource_xnw0y")])
+sub_events = Array[Resource]([SubResource("Resource_m8xdk"), SubResource("Resource_jdcnf")])
+event_uid = "989686"
+
+[sub_resource type="Resource" id="Resource_m56ec"]
+script = ExtResource("3_jlqat")
+ace_id = "SetVar"
+params = {
+"value": "[Vector2(x, y)]",
+"var_name": "waypoints"
+}
+
+[sub_resource type="Resource" id="Resource_bhwd1"]
+script = ExtResource("3_jlqat")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "moving"
+}
+
+[sub_resource type="Resource" id="Resource_yh4po"]
+script = ExtResource("7_28rk4")
+actions = Array[Resource]([SubResource("Resource_m56ec"), SubResource("Resource_bhwd1")])
+event_uid = "26c422"
+
+[sub_resource type="Resource" id="Resource_tmswm"]
+script = ExtResource("8_14g6j")
 id = "x"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_xnw0y"]
-script = ExtResource("7_xp0oq")
+[sub_resource type="Resource" id="Resource_r42vf"]
+script = ExtResource("8_14g6j")
 id = "y"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_g487a"]
-script = ExtResource("8_28rk4")
+[sub_resource type="Resource" id="Resource_js346"]
+script = ExtResource("9_1q018")
 function_name = "move_to_position"
 description = "Replaces the queue and glides toward the point."
 expose_as_ace = true
 ace_display_name = "Move To Position"
 ace_category = "Move To"
-params = Array[ExtResource("7_xp0oq")]([SubResource("Resource_8bsqb"), SubResource("Resource_xnw0y")])
-events = Array[Resource]([SubResource("Resource_kd6xl")])
+params = Array[ExtResource("8_14g6j")]([SubResource("Resource_tmswm"), SubResource("Resource_r42vf")])
+events = Array[Resource]([SubResource("Resource_yh4po")])
 
-[sub_resource type="Resource" id="Resource_g7ol3"]
-script = ExtResource("2_q7uqc")
-code = "waypoints.append(Vector2(x, y))
-moving = true"
+[sub_resource type="Resource" id="Resource_1uu1p"]
+script = ExtResource("3_jlqat")
+ace_id = "CallMethod"
+params = {
+"args": "Vector2(x, y)",
+"method": "append",
+"target": "waypoints"
+}
 
-[sub_resource type="Resource" id="Resource_fsq1l"]
-script = ExtResource("7_xp0oq")
+[sub_resource type="Resource" id="Resource_aiwp3"]
+script = ExtResource("3_jlqat")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "moving"
+}
+
+[sub_resource type="Resource" id="Resource_tuohb"]
+script = ExtResource("7_28rk4")
+actions = Array[Resource]([SubResource("Resource_1uu1p"), SubResource("Resource_aiwp3")])
+event_uid = "01de12"
+
+[sub_resource type="Resource" id="Resource_2kexp"]
+script = ExtResource("8_14g6j")
 id = "x"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_78tkt"]
-script = ExtResource("7_xp0oq")
+[sub_resource type="Resource" id="Resource_yegpy"]
+script = ExtResource("8_14g6j")
 id = "y"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_458qb"]
-script = ExtResource("8_28rk4")
+[sub_resource type="Resource" id="Resource_aoe7j"]
+script = ExtResource("9_1q018")
 function_name = "add_waypoint"
 description = "Appends a stop to the queue (C3 waypoints)."
 expose_as_ace = true
 ace_display_name = "Add Waypoint"
 ace_category = "Move To"
-params = Array[ExtResource("7_xp0oq")]([SubResource("Resource_fsq1l"), SubResource("Resource_78tkt")])
-events = Array[Resource]([SubResource("Resource_g7ol3")])
+params = Array[ExtResource("8_14g6j")]([SubResource("Resource_2kexp"), SubResource("Resource_yegpy")])
+events = Array[Resource]([SubResource("Resource_tuohb")])
 
-[sub_resource type="Resource" id="Resource_m8xdk"]
-script = ExtResource("2_q7uqc")
-code = "moving = false
-waypoints = []"
+[sub_resource type="Resource" id="Resource_6jbue"]
+script = ExtResource("3_jlqat")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "moving"
+}
 
-[sub_resource type="Resource" id="Resource_ov0s6"]
-script = ExtResource("8_28rk4")
+[sub_resource type="Resource" id="Resource_lkubo"]
+script = ExtResource("3_jlqat")
+ace_id = "SetVar"
+params = {
+"value": "[]",
+"var_name": "waypoints"
+}
+
+[sub_resource type="Resource" id="Resource_anwqg"]
+script = ExtResource("7_28rk4")
+actions = Array[Resource]([SubResource("Resource_6jbue"), SubResource("Resource_lkubo")])
+event_uid = "f23849"
+
+[sub_resource type="Resource" id="Resource_1o43p"]
+script = ExtResource("9_1q018")
 function_name = "stop_moving"
 description = "Clears the queue without firing On Arrived."
 expose_as_ace = true
 ace_display_name = "Stop Moving"
 ace_category = "Move To"
-events = Array[Resource]([SubResource("Resource_m8xdk")])
+events = Array[Resource]([SubResource("Resource_anwqg")])
 
 [resource]
-script = ExtResource("9_14g6j")
+script = ExtResource("10_k6qdc")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "MoveToBehavior"
 addon_tags = PackedStringArray()
-events = Array[Resource]([SubResource("Resource_1q018"), SubResource("Resource_k6qdc"), SubResource("Resource_2d2na")])
+events = Array[Resource]([SubResource("Resource_f2y24"), SubResource("Resource_2d2na"), SubResource("Resource_fjx87")])
 variables = {
 "max_speed": {
 "default": 200.0,
@@ -144,4 +304,4 @@ variables = {
 "type": "Array"
 }
 }
-functions = Array[Resource]([SubResource("Resource_g487a"), SubResource("Resource_458qb"), SubResource("Resource_ov0s6")])
+functions = Array[Resource]([SubResource("Resource_js346"), SubResource("Resource_aoe7j"), SubResource("Resource_1o43p")])

@@ -33,8 +33,8 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
 - **A movement behaviour, now code-free.** The **8-Direction Movement** pack (a CharacterBody2D mover —
   the very "why is movement GDScript?" case) is the second zero-RawCode pack: an *On Physics Process*
   event reads a typed input-vector local, then **Set Velocity** + **Move And Slide**, all host-targeted.
-  `pack_rawcode_budget_test` ratchets each converted pack — **Flash, 8-Direction, Timer, and State
-  Machine** so far — at 0 RawCode so a GDScript block can never creep back. Remaining packs convert incrementally;
+  `pack_rawcode_budget_test` ratchets each converted pack — **Flash, 8-Direction, Timer, State
+  Machine, and Move To** so far — at 0 RawCode so a GDScript block can never creep back. Remaining packs convert incrementally;
   numeric-kernel packs (spring/juice/bullet integrators — continuous `cos`/`sin`/spring math) keep
   documented RawCode per the spec's honest criterion.
 - **Functions publish by return type (C3-style three-way expose).** An exposed sheet function now

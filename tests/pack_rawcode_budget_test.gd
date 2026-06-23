@@ -14,6 +14,7 @@ const BUDGETS := {
 	"res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.tres": 0,
 	"res://eventsheet_addons/timer/timer_behavior.tres": 0,
 	"res://eventsheet_addons/state_machine/state_machine_behavior.tres": 0,
+	"res://eventsheet_addons/move_to/move_to_behavior.tres": 0,
 }
 
 static func run() -> bool:

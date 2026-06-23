@@ -13,29 +13,28 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("MoveToBehavior behavior requires a Node2D parent.")
 
-@export var max_speed: float = 200.0
-var moving: bool = false
-@export var rotate_toward_motion: bool = false
-var waypoints: Array = []
-
 ## @ace_trigger
 ## @ace_name("On Arrived")
 ## @ace_category("Move To")
 signal arrived
 
+@export var max_speed: float = 200.0
+var moving: bool = false
+@export var rotate_toward_motion: bool = false
+var waypoints: Array = []
+
 func _process(delta: float) -> void:
-	if not moving or host == null or waypoints.is_empty():
-		return
-	var target: Vector2 = waypoints[0]
-	var previous := host.position
-	host.position = host.position.move_toward(target, max_speed * delta)
-	if rotate_toward_motion and host.position != previous:
-		host.rotation = (host.position - previous).angle()
-	if host.position.distance_to(target) < 0.5:
-		waypoints.pop_front()
-		if waypoints.is_empty():
-			moving = false
-			arrived.emit()
+	if moving and is_instance_valid(host) and not waypoints.is_empty():
+		var target: Vector2 = waypoints[0]
+		var previous: Vector2 = host.position
+		host.position = host.position.move_toward(target, max_speed * delta)
+		if rotate_toward_motion and host.position != previous:
+			host.rotation = (host.position - previous).angle()
+		if host.position.distance_to(target) < 0.5:
+			waypoints.pop_front()
+			if waypoints.is_empty():
+				moving = false
+				arrived.emit()
 
 ## @ace_action
 ## @ace_name("Move To Position")
