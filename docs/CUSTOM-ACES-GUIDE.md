@@ -172,6 +172,39 @@ prefix is stripped for conditions (`is_dead` becomes `Dead`), and `get_` is stri
 Two filtering rules to know: methods starting with an underscore are skipped, and `@export` is
 required for a variable to surface (a bare `var` is invisible to reflection).
 
+### `@ace_expose_all`: node-targeted in one line
+
+By default the generated call is **instance-backed** — `__eventsheet_provider_<Class>.method(...)`
+against an owned `Class.new()` the sheet creates. That is exactly right for a stateless `RefCounted`
+helper (scoring math, an inventory, a dice roller): drop the script in, call its methods, done.
+
+For a **Node behavior** you attach to a node — where the ACE should act on *that node*
+(`$Enemy/Health.heal()`) and be retargetable per use — add **one class-level line** at the top of the
+script and skip the per-method annotations entirely:
+
+```gdscript
+## @ace_expose_all(node)
+class_name Health
+extends Node
+
+func heal(amount: int) -> void: ...   # -> "Heal" action, node-targeted
+func is_alive() -> bool: ...           # -> "Is Alive" condition
+signal died                           # -> "On Died" trigger
+```
+
+Every method now compiles to the **node-targeted** form `{target}.method(args)` with an **"On node"**
+field defaulting to `$Health` — pick or type any node path to retarget it (Godot's `$`-autocomplete,
+the Construct "act on the object you picked" model). No `@ace_codegen_template`, `@ace_condition`, or
+`@ace_name` per method — reflection derives type, name, and the call.
+
+Plain `## @ace_expose_all` (no `node`) is the explicit "treat me as a provider, expose everything"
+marker that keeps the instance-backed default — best for stateless `RefCounted` helpers. Either way,
+per-member `@ace_*` annotations still override the auto-derived value for that one member, so you only
+annotate the exceptions (a custom name the humanizer can't guess, a dropdown, a description).
+
+> Place the marker **before** `class_name`/`extends` (it is a class-level directive). `_`-prefixed and
+> inherited engine members never surface, so even a big class stays a single tidy picker group.
+
 ### Annotations: refine the automatic mapping
 
 Put `##` doc-comment lines with `@ace_*` directives directly above a member to override what

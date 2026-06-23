@@ -208,3 +208,9 @@ same existing system constantly (your inventory, your dialogue manager), it's wo
 pack** for it: that publishes its methods as real ACEs with proper pickers, parameter hints, and
 autocomplete, turning the stringly *Call Method* calls into first-class, type-safe vocabulary. It's an
 upgrade for ergonomics, not a requirement for interop.
+
+**The one-line version:** if the system is your own class, you don't author a pack at all — add
+`## @ace_expose_all(node)` at the top of the script and register it (`add_ace_provider_script("res://…")`,
+or drop the file in `res://eventsheet_addons/`). Every public method/signal becomes a node-targeted ACE
+with **zero per-member annotations** — see the [Custom ACEs Guide](CUSTOM-ACES-GUIDE.md#5-path-1-auto-ace-provider-scripts).
+For a stateless helper (scoring, inventory math) use plain `## @ace_expose_all` (the owned-instance form).
