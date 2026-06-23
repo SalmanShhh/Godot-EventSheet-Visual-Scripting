@@ -535,8 +535,10 @@ func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary)
     var bg: Color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.035))
     control.draw_rect(span.rect, bg, true)
 
-const CODE_CELL_BG := Color(0.5, 0.65, 0.9, 0.07)
-const CODE_CELL_STRIPE := Color(0.55, 0.7, 0.95, 0.45)
+# Calm, theme-neutral GDScript-cell tint: a very faint desaturated wash + a muted left stripe, so a
+# code cell reads as "this is code" without the saturated blue that fought the editor theme.
+const CODE_CELL_BG := Color(0.62, 0.64, 0.68, 0.05)
+const CODE_CELL_STRIPE := Color(0.56, 0.58, 0.63, 0.38)
 
 ## Groups consecutive multi-line block spans (block_lines>1, starting at block_line 0)
 ## into one visual cell. Returns {"unions": {span_index: Rect2}, "heads":

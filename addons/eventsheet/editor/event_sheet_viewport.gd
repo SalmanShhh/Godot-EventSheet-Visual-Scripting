@@ -1701,8 +1701,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
         "editable": false,
         "badge": true,
         "badge_style": "scope",
-        "badge_bg": Color(0.23, 0.28, 0.38, 0.95),
-        "badge_fg": Color(0.78, 0.86, 1.0, 1.0),
+        "badge_bg": Color(0.2, 0.21, 0.23, 0.9),
+        "badge_fg": Color(0.62, 0.65, 0.7, 1.0),
         "kind": "raw_code",
         "line_index": 0
     }))

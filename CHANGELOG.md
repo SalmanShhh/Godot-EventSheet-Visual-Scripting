@@ -46,6 +46,13 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   all three directives. The **State Machine** pack is now fully converted off RawCode on the strength
   of this — its **Is In State** condition is a bool sheet function (`is_in_state(state_name) -> bool`)
   published as a condition ACE; the health / abilities condition+expression getters follow.
+- **Loops are code-free (and now tested); the collection vocabulary is complete.** A behaviour can
+  loop without a GDScript block — *Add Pick Filter → "While (condition)" or "Repeat N times"* compiles
+  to a real `while` / `for` loop wrapping the event body (pinned by `while_loop_test`). Combined with
+  the existing rich **Array / Dictionary** ACEs (append, pop/push front+back, insert, erase, find,
+  sort, contains, is-empty, size, `get`-with-default, keys/values, …), collection- and loop-driven
+  logic is authorable entirely as ACE rows — the vocabulary needed to build your own behaviours via
+  event sheets.
 
 ### Fixed
 
@@ -63,6 +70,9 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   `provider::ace_id` and silently overwrote on collision (the later one shadowed the earlier, and
   both doubled up in the picker). It now `push_error`s at load time, with
   `ACERegistry.find_duplicate_ids()` as the test hook (`duplicate_ace_id_test`).
+- **The GDScript escape-hatch block is calmer and theme-consistent.** Its badge and cell tint were a
+  saturated blue that fought the editor theme; they're now muted neutral, so a code block still reads
+  as "this is code" without the eye strain.
 
 ## [0.9.0] - 2026-06-22 - Performance & Game Feel
 
