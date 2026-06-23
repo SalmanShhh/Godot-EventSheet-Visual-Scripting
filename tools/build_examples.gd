@@ -164,7 +164,8 @@ func _build_carousel() -> bool:
 	spin_row.trigger_provider_id = "Core"
 	spin_row.trigger_id = "OnProcess"
 	spin_row.conditions.append(_every("spin_caro", "2.0"))
-	spin_row.actions.append(_raw("$TweenBehavior.tween_rotation(rotation_degrees + 360.0, 1.8)\n$FlashBehavior.flash(0.25)"))
+	spin_row.actions.append(_action("TweenBehavior", "method:tween_rotation", "{target}.tween_rotation({degrees}, {duration})", {"target": "$TweenBehavior", "degrees": "rotation_degrees + 360.0", "duration": "1.8"}))
+	spin_row.actions.append(_action("FlashBehavior", "method:flash", "{target}.flash({seconds})", {"target": "$FlashBehavior", "seconds": "0.25"}))
 	juice.events.append(spin_row)
 	sheet.events.append(juice)
 
@@ -175,7 +176,8 @@ func _build_carousel() -> bool:
 	start_row.conditions.append(_condition("Core", "IsActionJustPressed", "Input.is_action_just_pressed(&{action})", {"action": "\"ui_accept\""}))
 	start_row.actions.append(_action("Core", "SetVar", "{var_name} = {value}", {"var_name": "party_on", "value": "true"}))
 	start_row.actions.append(_action("Core", "SetGroupActive", "set(\"__group_\" + {group} + \"_active\", {active})", {"group": "\"juice\"", "active": "true"}))
-	start_row.actions.append(_raw("$Hero/SpringBehavior.add_impulse(\"__scale\", intensity * 6.0)\n$Hero/FlashBehavior.flash(0.4)"))
+	start_row.actions.append(_action("SpringBehavior", "method:add_impulse", "{target}.add_impulse({spring_name}, {amount})", {"target": "$Hero/SpringBehavior", "spring_name": "\"__scale\"", "amount": "intensity * 6.0"}))
+	start_row.actions.append(_action("FlashBehavior", "method:flash", "{target}.flash({seconds})", {"target": "$Hero/FlashBehavior", "seconds": "0.4"}))
 	sheet.events.append(start_row)
 
 	var calm_row: EventRow = EventRow.new()
@@ -185,14 +187,14 @@ func _build_carousel() -> bool:
 	calm_row.conditions.append(_condition("Core", "IsActionJustPressed", "Input.is_action_just_pressed(&{action})", {"action": "\"ui_cancel\""}))
 	calm_row.actions.append(_action("Core", "SetVar", "{var_name} = {value}", {"var_name": "party_on", "value": "false"}))
 	calm_row.actions.append(_action("Core", "SetGroupActive", "set(\"__group_\" + {group} + \"_active\", {active})", {"group": "\"juice\"", "active": "false"}))
-	calm_row.actions.append(_raw("$Hero/TweenBehavior.tween_rotation(0.0, 0.4)"))
+	calm_row.actions.append(_action("TweenBehavior", "method:tween_rotation", "{target}.tween_rotation({degrees}, {duration})", {"target": "$Hero/TweenBehavior", "degrees": "0.0", "duration": "0.4"}))
 	sheet.events.append(calm_row)
 
 	var idle_row: EventRow = EventRow.new()
 	idle_row.trigger_provider_id = "Core"
 	idle_row.trigger_id = "OnProcess"
 	idle_row.else_mode = EventRow.ElseMode.ELSE
-	idle_row.actions.append(_raw("$Hero/SpringBehavior.spring_host_scale(1.0 + sin(Time.get_ticks_msec() / 1000.0) * 0.04)"))
+	idle_row.actions.append(_action("SpringBehavior", "method:spring_host_scale", "{on_node}.spring_host_scale({target})", {"on_node": "$Hero/SpringBehavior", "target": "1.0 + sin(Time.get_ticks_msec() / 1000.0) * 0.04"}))
 	sheet.events.append(idle_row)
 
 	var seed_row: EventRow = EventRow.new()
