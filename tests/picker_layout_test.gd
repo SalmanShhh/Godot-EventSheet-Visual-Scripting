@@ -24,6 +24,13 @@ static func run() -> bool:
 	var first: TreeItem = picker._first_definition_item(picker._tree.get_root())
 	ok = _check("rows populate and carry their ACEDefinition metadata", first != null and first.get_metadata(0) is ACEDefinition, true) and ok
 
+	# Codegen panel is visible-but-muted: a built-in ACE's template is shown color-wrapped, not raw [code].
+	if first != null and first.get_metadata(0) is ACEDefinition:
+		var def: ACEDefinition = first.get_metadata(0)
+		picker._update_info_panel(def)
+		if not str(def.metadata.get("codegen_template", "")).is_empty():
+			ok = _check("codegen in the description is muted (color-wrapped)", picker._info_label.text.contains("[color=#") and picker._info_label.text.contains("[code]"), true) and ok
+
 	parent.free()
 	return ok
 

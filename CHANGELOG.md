@@ -111,8 +111,10 @@
   an ACE's type is conveyed by its row **icon**, its tooltip, and the description panel instead.
   Presentation-only — search, relevance ranking, Favorites/Recent, and keyboard nav are unchanged —
   and pinned by `picker_layout_test` (the tree has one column and populating it no longer touches a
-  removed column). First step of the picker cleanup; muted category colors, a quieter codegen panel,
-  and featured-ACE bolding follow (`docs/internal/SPEC-ace-picker-visual-cleanup.md`).
+  removed column). The bright per-kind category colours are also muted to one theme-driven "quiet
+  divider" colour (the node-type distinction is carried by the section's class icon), and the codegen
+  in the description panel is now **visible-but-muted** (kept for the "it's just GDScript" value, just
+  de-emphasized). Featured-ACE bolding still follows (`docs/internal/SPEC-ace-picker-visual-cleanup.md`).
 - **A generic "Expression Is True" condition** — the code-free escape hatch for a boolean
   expression. Use any GDScript that returns a bool (a behavior method like
   `$Player/WeaponKit.can_fire()`, `health > 0 and shielded`, `%Door.is_open()`) directly as a

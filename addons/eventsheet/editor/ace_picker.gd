@@ -667,16 +667,21 @@ func _item_color_for(ace_type: int) -> Color:
 		_:
 			return ITEM_COLOR_ACTION
 
-func _group_color_for(group_key: String, is_node_type: bool) -> Color:
-	if is_node_type:
-		return GROUP_COLOR_NODE_TYPE
-	var key: String = group_key.to_lower()
-	if key.contains("run context") or key.contains("trigger") or key.contains("signal"):
-		return GROUP_COLOR_TRIGGER
-	if key.contains("variable"):
-		return GROUP_COLOR_VARIABLE
-	if key.contains("custom"):
-		return GROUP_COLOR_CUSTOM
+func _group_color_for(_group_key: String, _is_node_type: bool) -> Color:
+	# Muted, uniform category headers (Create-New-Node style): the node-type distinction is carried by
+	# each section's class icon, so a quiet divider colour reads cleaner than the old bright per-kind
+	# amber/teal/blue/purple. Theme-driven in the editor, with a neutral fallback when headless.
+	return _muted_header_color()
+
+## The editor's muted "disabled font" colour for quiet category dividers / de-emphasized codegen;
+## GROUP_COLOR_NEUTRAL when there is no editor theme (headless tests, non-editor runtime).
+func _muted_header_color() -> Color:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var editor_interface: Object = Engine.get_singleton("EditorInterface")
+		if editor_interface != null and editor_interface.has_method("get_editor_theme"):
+			var theme: Theme = editor_interface.get_editor_theme()
+			if theme != null and theme.has_color("font_disabled_color", "Editor"):
+				return theme.get_color("font_disabled_color", "Editor")
 	return GROUP_COLOR_NEUTRAL
 
 func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:
@@ -991,7 +996,8 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 	var header_line: String = "[b]%s[/b]  ·  %s  ·  %s" % [definition.display_name, _ace_type_label(definition.ace_type), _category_of(definition)]
 	var body: String = header_line + "\n" + description
 	if not template.is_empty():
-		body += "\n[code]%s[/code]" % template
+		# Visible-but-muted: keep the "it's just GDScript" codegen, de-emphasized below the description.
+		body += "\n[color=#%s]→ [code]%s[/code][/color]" % [_muted_header_color().to_html(false), template]
 	# Reactivity nudge: a polling condition that has a clean signal twin gets a one-line tip pointing at
 	# the reactive trigger (the Godot idiom). Informational only — the condition stays fully pickable.
 	var reactive: Dictionary = ACEDescriptor.reactive_alternative(definition.provider_id, definition.id)

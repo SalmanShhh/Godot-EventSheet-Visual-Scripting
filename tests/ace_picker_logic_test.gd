@@ -29,13 +29,15 @@ static func run() -> bool:
 	all_passed = _check("item colour action", picker._item_color_for(ACEDefinition.ACEType.ACTION), ACEPickerDialog.ITEM_COLOR_ACTION) and all_passed
 	all_passed = _check("item colour expression", picker._item_color_for(ACEDefinition.ACEType.EXPRESSION), ACEPickerDialog.ITEM_COLOR_EXPRESSION) and all_passed
 
-	# Group-header colours by kind.
-	all_passed = _check("group colour node-type", picker._group_color_for("CharacterBody2D", true), ACEPickerDialog.GROUP_COLOR_NODE_TYPE) and all_passed
-	all_passed = _check("group colour run context", picker._group_color_for("Run Context", false), ACEPickerDialog.GROUP_COLOR_TRIGGER) and all_passed
-	all_passed = _check("group colour signals", picker._group_color_for("Signals / Scene / Input", false), ACEPickerDialog.GROUP_COLOR_TRIGGER) and all_passed
-	all_passed = _check("group colour variables", picker._group_color_for("Variables", false), ACEPickerDialog.GROUP_COLOR_VARIABLE) and all_passed
-	all_passed = _check("group colour custom", picker._group_color_for("Custom ACEs", false), ACEPickerDialog.GROUP_COLOR_CUSTOM) and all_passed
-	all_passed = _check("group colour other neutral", picker._group_color_for("General Conditions", false), ACEPickerDialog.GROUP_COLOR_NEUTRAL) and all_passed
+	# Category headers are now a single muted "quiet divider" colour for every kind — the node-type
+	# distinction is carried by the section's class icon, not a bright per-kind amber/teal/blue/purple.
+	var muted: Color = picker._muted_header_color()
+	all_passed = _check("category header muted: node-type", picker._group_color_for("CharacterBody2D", true), muted) and all_passed
+	all_passed = _check("category header muted: run context", picker._group_color_for("Run Context", false), muted) and all_passed
+	all_passed = _check("category header muted: signals", picker._group_color_for("Signals / Scene / Input", false), muted) and all_passed
+	all_passed = _check("category header muted: variables", picker._group_color_for("Variables", false), muted) and all_passed
+	all_passed = _check("category header muted: custom", picker._group_color_for("Custom ACEs", false), muted) and all_passed
+	all_passed = _check("category header muted: other", picker._group_color_for("General Conditions", false), muted) and all_passed
 
 	# Sub-category nesting: a "Parent: Sub" category splits into a parent + child folder so
 	# related ACEs (Array/Dictionary/… helpers) cluster under one section instead of a flat list.
