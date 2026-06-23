@@ -18,8 +18,35 @@ static func _ensure_builtin_cache() -> void:
 	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
 		var normalized: ACEDescriptor = _normalize_descriptor(descriptor)
 		if normalized != null:
+			var key: String = "%s::%s" % [normalized.provider_id, normalized.ace_id]
+			# A duplicate id silently shadows the earlier descriptor in the index (and
+			# doubles up in the picker). Surface it loudly at load time; find_duplicate_ids()
+			# is the test hook that fails the suite if a new ACE collides with an existing id.
+			if _builtin_index.has(key):
+				push_error("EventForge: duplicate built-in ACE id '%s' — rename one; the later descriptor shadows the earlier in the picker index." % key)
 			_builtin_cache.append(normalized)
-			_builtin_index["%s::%s" % [normalized.provider_id, normalized.ace_id]] = normalized
+			_builtin_index[key] = normalized
+
+## Returns the set of "provider::ace_id" keys appearing more than once in the given
+## descriptor list (defaults to the built-in set). A non-empty result means a later
+## descriptor silently shadows an earlier one in the picker index — rename one.
+static func find_duplicate_ids(descriptors: Array = []) -> PackedStringArray:
+	var source: Array = descriptors
+	if source.is_empty():
+		source = EventForgeBuiltinACEs.get_descriptors()
+	var seen: Dictionary = {}
+	var dupes: PackedStringArray = PackedStringArray()
+	for entry: Variant in source:
+		var normalized: ACEDescriptor = _normalize_descriptor(entry)
+		if normalized == null:
+			continue
+		var key: String = "%s::%s" % [normalized.provider_id, normalized.ace_id]
+		if seen.has(key):
+			if not dupes.has(key):
+				dupes.append(key)
+		else:
+			seen[key] = true
+	return dupes
 
 ## Clears the builtin cache (call if the builtin set ever changes at runtime).
 static func clear_cache() -> void:
