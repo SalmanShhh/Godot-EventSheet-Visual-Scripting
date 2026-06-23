@@ -88,8 +88,8 @@ static func run() -> bool:
 		all_passed = _check("Jump categorized for the picker", jump_definition.category, "Platformer") and all_passed
 	all_passed = _check("On Jumped trigger publishes from the block annotation",
 		jumped_trigger != null and jumped_trigger.display_name == "On Jumped", true) and all_passed
-	# New packs: Timer/Flash actions, the On Timer trigger, and the state-machine CONDITION
-	# authored as an annotated class-level block (with its own codegen template).
+	# New packs: Timer/Flash actions, the On Timer trigger, and the state-machine CONDITION,
+	# now a bool sheet function (three-way expose: bool -> condition, default method-call template).
 	var start_timer: ACEDefinition = editor._ace_registry.find_definition("TimerBehavior", "method:start_timer")
 	var on_timer: ACEDefinition = editor._ace_registry.find_definition("TimerBehavior", "signal:timer_finished")
 	var flash_action: ACEDefinition = editor._ace_registry.find_definition("FlashBehavior", "method:flash")
@@ -98,9 +98,9 @@ static func run() -> bool:
 	all_passed = _check("Timer pack publishes the On Timer trigger",
 		on_timer != null and on_timer.display_name == "On Timer", true) and all_passed
 	all_passed = _check("Flash pack publishes Flash", flash_action != null, true) and all_passed
-	all_passed = _check("state machine block-condition publishes with its template",
-		is_in_state != null and str(is_in_state.metadata.get("codegen_template", "")) == "{target}.state == {state_name}", true) and all_passed
-	all_passed = _check("block condition is typed as a condition",
+	all_passed = _check("state machine Is In State publishes as a condition (method-call template)",
+		is_in_state != null and str(is_in_state.metadata.get("codegen_template", "")) == "{target}.is_in_state({state_name})", true) and all_passed
+	all_passed = _check("Is In State is typed as a condition",
 		is_in_state != null and is_in_state.ace_type == ACEDefinition.ACEType.CONDITION, true) and all_passed
 	# Abilities pack: an action, a trigger, a condition (with its template), and the
 	# CurrentAbilityID expression (the Godot-suited reader the C3 original lacked).

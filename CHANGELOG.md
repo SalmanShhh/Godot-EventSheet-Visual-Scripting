@@ -33,8 +33,8 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
 - **A movement behaviour, now code-free.** The **8-Direction Movement** pack (a CharacterBody2D mover —
   the very "why is movement GDScript?" case) is the second zero-RawCode pack: an *On Physics Process*
   event reads a typed input-vector local, then **Set Velocity** + **Move And Slide**, all host-targeted.
-  `pack_rawcode_budget_test` ratchets each converted pack — **Flash, 8-Direction, and Timer** so far —
-  at 0 RawCode so a GDScript block can never creep back. Remaining packs convert incrementally;
+  `pack_rawcode_budget_test` ratchets each converted pack — **Flash, 8-Direction, Timer, and State
+  Machine** so far — at 0 RawCode so a GDScript block can never creep back. Remaining packs convert incrementally;
   numeric-kernel packs (spring/juice/bullet integrators — continuous `cos`/`sin`/spring math) keep
   documented RawCode per the spec's honest criterion.
 - **Functions publish by return type (C3-style three-way expose).** An exposed sheet function now
@@ -43,8 +43,9 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   behaviour function (e.g. `load_value`, `random_range`, `has_save_key`) is usable directly in ƒx
   fields and conditions instead of being mis-published as a call-and-discard action. The Save System
   and Advanced Random packs' getters/queries are correctly typed now, and the reverse-lift round-trips
-  all three directives. Foundation for authoring condition/expression functions as pure ACE rows
-  (unblocks converting the state-machine / health / abilities packs).
+  all three directives. The **State Machine** pack is now fully converted off RawCode on the strength
+  of this — its **Is In State** condition is a bool sheet function (`is_in_state(state_name) -> bool`)
+  published as a condition ACE; the health / abilities condition+expression getters follow.
 
 ### Fixed
 
