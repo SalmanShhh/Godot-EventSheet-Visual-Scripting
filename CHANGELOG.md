@@ -1,5 +1,33 @@
 # Changelog
 
+## [Unreleased]
+
+### Added — Behaviour-as-ACEs parity (foundation)
+
+Toward authoring whole behaviour packs as event sheets with **no GDScript blocks** — so a behaviour
+like Platformer Movement can be built from ACEs instead of RawCode (`docs/internal/SPEC-behaviour-as-aces-parity.md`):
+
+- **Node-scoped ACEs now work inside a behaviour.** A behaviour sheet compiles to `extends Node`
+  with a `host` member (its parent), but ACEs like **Move And Slide**, **Is On Floor**, **Set
+  Velocity**, and the wall/floor/ceiling slide queries emitted *bare* calls that hit the behaviour
+  Node itself — useless on a host, forcing a RawCode block. They now use a `{host.}` idiom that
+  targets the parent host inside a behaviour and stays bare on a normal CharacterBody2D sheet
+  (byte-identical output — no regeneration churn). Reverse-lift round-trips it unchanged.
+- **A movement vocabulary so a CharacterBody2D behaviour needs no GDScript:** **Set Velocity X/Y**,
+  **Add To Velocity**, **Apply Gravity** (with a baked terminal-velocity clamp) and a simple
+  variant, **Accelerate Velocity X/Y Toward** (`move_toward` on a component), and the **Velocity
+  X/Y** reads — all host-targeted, filed under a new **Movement** picker category.
+- **Read Input Axis Into** — the consuming action for the existing Input Axis expression, so "read
+  input, then move" is two ACE rows, not a RawCode line. **Set Local Variable (typed)** declares a
+  statically-typed event-local, so dense typed temporaries stop forcing RawCode.
+
+### Fixed
+
+- **Duplicate built-in ACE ids are now caught.** The registry indexed descriptors by
+  `provider::ace_id` and silently overwrote on collision (the later one shadowed the earlier, and
+  both doubled up in the picker). It now `push_error`s at load time, with
+  `ACERegistry.find_duplicate_ids()` as the test hook (`duplicate_ace_id_test`).
+
 ## [0.9.0] - 2026-06-22 - Performance & Game Feel
 
 ### Fixed

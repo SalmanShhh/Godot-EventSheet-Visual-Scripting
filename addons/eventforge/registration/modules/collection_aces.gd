@@ -58,6 +58,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# Input expressions
 	descriptors.append(F.make_descriptor("Core", "GetActionStrength", "Action Strength", ACEDescriptor.ACEType.EXPRESSION, "Input.get_action_strength(&{action})", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action (analog strength 0..1).", "", F.input_action_options())], "Input", "strength of {action}"))
 	descriptors.append(F.make_descriptor("Core", "GetInputAxis", "Input Axis", ACEDescriptor.ACEType.EXPRESSION, "Input.get_axis(&{negative}, &{positive})", "", [F.make_param("negative", "String", "\"ui_left\"", "Negative", "Action for the negative direction.", "", F.input_action_options()), F.make_param("positive", "String", "\"ui_right\"", "Positive", "Action for the positive direction.", "", F.input_action_options())], "Input", "axis {negative}/{positive}"))
+	# The consuming ACTION for the axis above: read input into a typed float local in one row, so
+	# "read input, then move" is two ACE rows instead of a RawCode block (closes the input gap).
+	descriptors.append(F.make_descriptor("Core", "SetLocalFromAxis", "Read Input Axis Into", ACEDescriptor.ACEType.ACTION, "var {name}: float = Input.get_axis(&{negative}, &{positive})", "", [F.make_param("name", "String", "direction", "Name", "Local variable name (scoped to this event body)."), F.make_param("negative", "String", "\"ui_left\"", "Negative", "Action for the negative direction.", "", F.input_action_options()), F.make_param("positive", "String", "\"ui_right\"", "Positive", "Action for the positive direction.", "", F.input_action_options())], "Input", "read axis {negative}/{positive} into {name}"))
 	# ── Native-node providers (C3 coverage Lane 1: wrap NATIVE Godot features; the
 	# engine maintains the implementation, we only maintain vocabulary). C3 names are
 	# the display names; see docs/C3-MIGRATION-GUIDE.md for the lane mapping.

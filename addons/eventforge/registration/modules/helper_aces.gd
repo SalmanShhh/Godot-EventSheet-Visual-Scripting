@@ -48,6 +48,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "ToggleBool", "Toggle Boolean", ACEDescriptor.ACEType.ACTION, "{var_name} = not {var_name}", "", [F.make_param("var_name", "String", "var", "Variable", "Boolean variable to flip.", "variable_reference")], CAT, "toggle {var_name}"))
 	# Declares an event-local temp later actions in the same event body can reference.
 	descriptors.append(F.make_descriptor("Core", "SetLocalVar", "Set Local Variable", ACEDescriptor.ACEType.ACTION, "var {name} = {value}", "", [F.make_param("name", "String", "temp", "Name", "Local variable name (scoped to this event body)."), F.make_param("value", "String", "0", "Value", "Initial value expression.", "expression")], CAT, "var {name} = {value}"))
+	# Typed sibling: a statically-typed local, so dense interleaved typed temporaries (the kind that
+	# force RawCode in a behaviour tick) stay expressible as ACE rows.
+	descriptors.append(F.make_descriptor("Core", "SetLocalVarTyped", "Set Local Variable (typed)", ACEDescriptor.ACEType.ACTION, "var {name}: {var_type} = {value}", "", [F.make_param("name", "String", "temp", "Name", "Local variable name (scoped to this event body)."), F.make_param("var_type", "String", "float", "Type", "Static type for the local.", "", ["float", "int", "bool", "String", "Vector2", "Vector3"]), F.make_param("value", "String", "0.0", "Value", "Initial value expression.", "expression")], CAT, "var {name}: {var_type} = {value}"))
 
 	# ── Validity / null (freed-instance safety, the classic source of crashes) ──
 	descriptors.append(F.make_descriptor("Core", "IsValid", "Is Valid", ACEDescriptor.ACEType.CONDITION, "is_instance_valid({target})", "", [F.make_param("target", "String", "self", "Target", "Object expression to test.", "expression")], CAT, "{target} is valid"))
