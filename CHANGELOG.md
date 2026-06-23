@@ -106,6 +106,13 @@
   annotated-autoload registration surfaces (no project-wide scan, so a big project never floods the
   picker). New `expose_all_node_test`; existing packs unaffected (drift=0). Properties + the autoload
   singleton form are documented follow-ups (`docs/internal/SPEC-low-verbosity-custom-addons.md`).
+- **The ACE picker reads cleaner — a single muted column** (Godot "Create New Node" style). The
+  redundant **"Type" column** and the per-row type **tint** that made the picker visually busy are gone;
+  an ACE's type is conveyed by its row **icon**, its tooltip, and the description panel instead.
+  Presentation-only — search, relevance ranking, Favorites/Recent, and keyboard nav are unchanged —
+  and pinned by `picker_layout_test` (the tree has one column and populating it no longer touches a
+  removed column). First step of the picker cleanup; muted category colors, a quieter codegen panel,
+  and featured-ACE bolding follow (`docs/internal/SPEC-ace-picker-visual-cleanup.md`).
 - **A generic "Expression Is True" condition** — the code-free escape hatch for a boolean
   expression. Use any GDScript that returns a bool (a behavior method like
   `$Player/WeaponKit.can_fire()`, `health > 0 and shielded`, `%Door.is_open()`) directly as a

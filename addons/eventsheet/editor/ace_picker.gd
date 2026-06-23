@@ -240,12 +240,10 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_tree.hide_root = true
-	_tree.columns = 2
-	_tree.set_column_title(0, "Action / Condition")
-	_tree.set_column_title(1, "Type")
-	_tree.set_column_expand(1, false)
-	_tree.set_column_custom_minimum_width(1, 96)
-	_tree.set_column_titles_visible(true)
+	# Single muted column (Godot Create-New-Node style): type is conveyed by the per-row icon + the
+	# tooltip + the description panel, so the old "Type" column and per-row type tint were redundant noise.
+	_tree.columns = 1
+	_tree.set_column_titles_visible(false)
 	_tree.item_activated.connect(_on_item_activated)
 	_tree.item_selected.connect(_on_item_selected_for_info)
 	_tree.gui_input.connect(_on_tree_gui_input)
@@ -522,11 +520,7 @@ func _refresh_tree() -> void:
 		if item_icon != null:
 			item.set_icon(0, item_icon)
 			item.set_icon_max_width(0, 16)
-		item.set_custom_color(0, _item_color_for(definition.ace_type))
-		item.set_text(1, _ace_type_label(definition.ace_type))
-		item.set_custom_color(1, _item_color_for(definition.ace_type))
 		item.set_tooltip_text(0, _item_tooltip(definition))
-		item.set_tooltip_text(1, _item_tooltip(definition))
 		item.set_metadata(0, definition)
 
 	# No-match guidance: a blank tree leaves a newcomer stuck wondering if the picker is broken.
@@ -535,7 +529,6 @@ func _refresh_tree() -> void:
 		var empty_item: TreeItem = _tree.create_item(root)
 		empty_item.set_text(0, "No matches for \"%s\" — try a plainer word like \"move\", \"spawn\", or \"hide\"." % query)
 		empty_item.set_selectable(0, false)
-		empty_item.set_selectable(1, false)
 		empty_item.set_custom_color(0, GROUP_COLOR_NEUTRAL)
 
 func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> TreeItem:
@@ -550,7 +543,6 @@ func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> 
 			group_item.set_icon_max_width(0, 16)
 	group_item.set_custom_color(0, _group_color_for(group_key, is_node_type))
 	group_item.set_selectable(0, false)
-	group_item.set_selectable(1, false)
 	return group_item
 
 ## Resolves (creating as needed) the tree item a row hangs under. Categories using the
@@ -584,7 +576,6 @@ func _make_sub_group_item(parent_item: TreeItem, child_label: String) -> TreeIte
 	sub_item.set_text(0, child_label)
 	sub_item.set_custom_color(0, _group_color_for(child_label, false))
 	sub_item.set_selectable(0, false)
-	sub_item.set_selectable(1, false)
 	return sub_item
 
 ## Splits a "Parent: Sub" category into [parent, child] (both stripped). Returns an empty
