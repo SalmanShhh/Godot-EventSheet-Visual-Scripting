@@ -16,10 +16,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# ── CharacterBody2D: slide results (valid after Move And Slide) ──
-	descriptors.append(F.make_descriptor("Core", "IsOnWall", "Is On Wall", ACEDescriptor.ACEType.CONDITION, "is_on_wall()", "", [], "Collisions", "Is on wall", "CharacterBody2D"))
-	descriptors.append(F.make_descriptor("Core", "IsOnCeiling", "Is On Ceiling", ACEDescriptor.ACEType.CONDITION, "is_on_ceiling()", "", [], "Collisions", "Is on ceiling", "CharacterBody2D"))
-	descriptors.append(F.make_descriptor("Core", "GetWallNormal", "Wall Normal", ACEDescriptor.ACEType.EXPRESSION, "get_wall_normal()", "", [], "Collisions", "wall normal", "CharacterBody2D"))
-	descriptors.append(F.make_descriptor("Core", "GetFloorNormal", "Floor Normal", ACEDescriptor.ACEType.EXPRESSION, "get_floor_normal()", "", [], "Collisions", "floor normal", "CharacterBody2D"))
+	descriptors.append(F.make_descriptor("Core", "IsOnWall", "Is On Wall", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_wall()", "", [], "Collisions", "Is on wall", "CharacterBody2D"))
+	descriptors.append(F.make_descriptor("Core", "IsOnCeiling", "Is On Ceiling", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_ceiling()", "", [], "Collisions", "Is on ceiling", "CharacterBody2D"))
+	descriptors.append(F.make_descriptor("Core", "GetWallNormal", "Wall Normal", ACEDescriptor.ACEType.EXPRESSION, "{host.}get_wall_normal()", "", [], "Collisions", "wall normal", "CharacterBody2D"))
+	descriptors.append(F.make_descriptor("Core", "GetFloorNormal", "Floor Normal", ACEDescriptor.ACEType.EXPRESSION, "{host.}get_floor_normal()", "", [], "Collisions", "floor normal", "CharacterBody2D"))
 	descriptors.append(F.make_descriptor("Core", "GetSlideCount", "Slide Collision Count", ACEDescriptor.ACEType.EXPRESSION, "get_slide_collision_count()", "", [], "Collisions", "slide collision count", "CharacterBody2D"))
 	descriptors.append(F.make_descriptor("Core", "GetLastSlideCollider", "Last Slide Collider", ACEDescriptor.ACEType.EXPRESSION, "(get_last_slide_collision().get_collider() if get_slide_collision_count() > 0 else null)", "", [], "Collisions", "last slide collider", "CharacterBody2D"))
 	descriptors.append(F.make_descriptor("Core", "GetLastSlideNormal", "Last Slide Normal", ACEDescriptor.ACEType.EXPRESSION, "(get_last_slide_collision().get_normal() if get_slide_collision_count() > 0 else Vector2.ZERO)", "", [], "Collisions", "last slide normal", "CharacterBody2D"))
@@ -42,10 +42,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "DisableCollisionShape", "Disable Collision Shape", ACEDescriptor.ACEType.ACTION, "set_deferred(&\"disabled\", true)", "", [], "Collisions", "Disable collision shape", "CollisionShape2D"))
 
 	# ── 3D parity (CharacterBody3D slide + Area3D overlap) ──
-	descriptors.append(F.make_descriptor("Core", "IsOnWall3D", "Is On Wall (3D)", ACEDescriptor.ACEType.CONDITION, "is_on_wall()", "", [], "Collisions", "Is on wall", "CharacterBody3D"))
-	descriptors.append(F.make_descriptor("Core", "IsOnCeiling3D", "Is On Ceiling (3D)", ACEDescriptor.ACEType.CONDITION, "is_on_ceiling()", "", [], "Collisions", "Is on ceiling", "CharacterBody3D"))
-	descriptors.append(F.make_descriptor("Core", "GetWallNormal3D", "Wall Normal (3D)", ACEDescriptor.ACEType.EXPRESSION, "get_wall_normal()", "", [], "Collisions", "wall normal", "CharacterBody3D"))
-	descriptors.append(F.make_descriptor("Core", "GetFloorNormal3D", "Floor Normal (3D)", ACEDescriptor.ACEType.EXPRESSION, "get_floor_normal()", "", [], "Collisions", "floor normal", "CharacterBody3D"))
+	descriptors.append(F.make_descriptor("Core", "IsOnWall3D", "Is On Wall (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_wall()", "", [], "Collisions", "Is on wall", "CharacterBody3D"))
+	descriptors.append(F.make_descriptor("Core", "IsOnCeiling3D", "Is On Ceiling (3D)", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_ceiling()", "", [], "Collisions", "Is on ceiling", "CharacterBody3D"))
+	descriptors.append(F.make_descriptor("Core", "GetWallNormal3D", "Wall Normal (3D)", ACEDescriptor.ACEType.EXPRESSION, "{host.}get_wall_normal()", "", [], "Collisions", "wall normal", "CharacterBody3D"))
+	descriptors.append(F.make_descriptor("Core", "GetFloorNormal3D", "Floor Normal (3D)", ACEDescriptor.ACEType.EXPRESSION, "{host.}get_floor_normal()", "", [], "Collisions", "floor normal", "CharacterBody3D"))
 	descriptors.append(F.make_descriptor("Core", "HasOverlappingBodies3D", "Has Overlapping Bodies (3D)", ACEDescriptor.ACEType.CONDITION, "has_overlapping_bodies()", "", [], "Collisions", "has overlapping bodies", "Area3D"))
 	descriptors.append(F.make_descriptor("Core", "GetOverlappingBodies3D", "Overlapping Bodies (3D)", ACEDescriptor.ACEType.EXPRESSION, "get_overlapping_bodies()", "", [], "Collisions", "overlapping bodies", "Area3D"))
 

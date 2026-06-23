@@ -7,7 +7,7 @@ class_name ActionCodegen
 ## Generates one action statement from an ACE action. target_default is an enclosing "With node X:"
 ## scope (see SheetCompiler): when set, it fills the action's "On node" target if the author left it on
 ## the host, so a scoped action inlines to that node.
-static func generate_action(action: ACEAction, target_default: String = "") -> String:
+static func generate_action(action: ACEAction, target_default: String = "", host_default: String = "") -> String:
 	if action == null or not action.enabled:
 		return ""
 
@@ -20,7 +20,9 @@ static func generate_action(action: ACEAction, target_default: String = "") -> S
 			return ""
 		template = descriptor.codegen_template
 
-	return _apply_template(template, _params_with_scope_target(action, target_default, template))
+	var params: Dictionary = _params_with_scope_target(action, target_default, template)
+	params = _params_with_host(params, host_default, template)
+	return _apply_template(template, params)
 
 ## Returns the action's params, with a "With node X:" scope's target folded in when applicable: the
 ## scope is active (target_default set), the template actually has a `{target.}` / `{target}` slot, and
@@ -38,6 +40,23 @@ static func _params_with_scope_target(action: ACEAction, target_default: String,
 		return params
 	var injected: Dictionary = params.duplicate()
 	injected["target"] = target_default
+	return injected
+
+## Folds the behavior-mode host accessor into the params for templates using the {host.}/{host}
+## idiom, so a node-scoped ACE authored in a behavior calls on the parent host (e.g.
+## `{host.}move_and_slide()` -> `host.move_and_slide()`). An empty host_default (every non-behavior
+## sheet) leaves the key absent, so {host.} drops to nothing and the call stays bare — byte-stable.
+## An author-supplied "host" param (none of the built-ins define one) is never overridden. The lifter
+## already round-trips this idiom (ace_lifter._optional_prefix_variants), exactly as for {target.}.
+static func _params_with_host(params: Dictionary, host_default: String, template: String) -> Dictionary:
+	if host_default.strip_edges().is_empty():
+		return params
+	if not (template.contains("{host.}") or template.contains("{host}")):
+		return params
+	if params.has("host"):
+		return params
+	var injected: Dictionary = params.duplicate()
+	injected["host"] = host_default
 	return injected
 
 ## Applies `{param}`, optional-comma `{, param}`, and optional-prefix `{param.}` substitutions in a

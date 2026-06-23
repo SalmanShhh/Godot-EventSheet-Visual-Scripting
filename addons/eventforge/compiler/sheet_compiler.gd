@@ -40,6 +40,9 @@ static var _throttle_process_emitted: bool = false
 static var _runtime_group_guards: Dictionary = {}
 # [group snake-name, initially_active] pairs for member emission, in encounter order.
 static var _runtime_group_members: Array = []
+# Host-targeting prefix for {host.} ACE templates: "host" inside a behavior sheet (where node-scoped
+# ACEs must call on the parent host, not the behavior Node itself), "" everywhere else. Per-compile.
+static var _behavior_host_default: String = ""
 
 ## Compiles an event sheet resource to a GDScript output file.
 static func compile(sheet: EventSheetResource, output_path: String = "") -> Dictionary:
@@ -58,6 +61,10 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		result["success"] = false
 		(result["errors"] as Array[String]).append("Sheet is null")
 		return result
+
+	# Host-targeting default for {host.} templates — reset before the external-source path so a
+	# prior behavior compile never leaks "host" into a later non-behavior compile.
+	_behavior_host_default = ""
 
 	# GDScript-backed sheets (opened FROM a .gd file) compile via the order-preserving
 	# external path: no generated header, no synthesized extends, rows emit in sheet order
@@ -104,6 +111,8 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 	# host) — Godot's component idiom standing in for Construct 3 behaviors. host_class is
 	# the declared required host type, not the script's base.
 	if sheet.behavior_mode:
+		# Node-scoped ACEs ({host.} templates) target the parent host, not the behavior Node.
+		_behavior_host_default = "host"
 		lines.append("extends Node")
 	else:
 		lines.append("extends %s" % sheet.host_class)
@@ -885,7 +894,7 @@ static func _emit_event_body(
 		var condition_texts: PackedStringArray = PackedStringArray()
 		var runtime_group_guard: String = str(_runtime_group_guards.get(event_row, ""))
 		for condition: ACECondition in event_row.conditions:
-			var condition_line: String = ConditionCodegen.generate_condition(condition)
+			var condition_line: String = ConditionCodegen.generate_condition(condition, _behavior_host_default)
 			if not condition_line.is_empty():
 				condition_texts.append(condition_line)
 			elif condition != null and condition.enabled and condition.codegen_template.strip_edges().is_empty() and (not condition.ace_id.is_empty() or not condition.provider_id.is_empty()):
@@ -973,7 +982,7 @@ static func _emit_event_body(
 
 		for action_item: Variant in event_row.actions:
 			if action_item is ACEAction:
-				var action_line: String = ActionCodegen.generate_action(action_item, effective_node_target)
+				var action_line: String = ActionCodegen.generate_action(action_item, effective_node_target, _behavior_host_default)
 				if action_line.is_empty():
 					continue
 				# Multi-statement templates (Spawn Scene At…) emit one line each; an awaited action

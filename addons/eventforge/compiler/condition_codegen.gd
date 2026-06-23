@@ -5,7 +5,7 @@ extends RefCounted
 class_name ConditionCodegen
 
 ## Generates one condition expression from an ACE condition.
-static func generate_condition(condition: ACECondition) -> String:
+static func generate_condition(condition: ACECondition, host_default: String = "") -> String:
 	if condition == null or not condition.enabled:
 		return ""
 
@@ -18,6 +18,12 @@ static func generate_condition(condition: ACECondition) -> String:
 		template = descriptor.codegen_template
 
 	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+	# Fold the behavior-mode host accessor into {host.}/{host} templates (e.g. {host.}is_on_floor()
+	# -> host.is_on_floor()) BEFORE the negation wrap, so a negated host condition becomes
+	# `not (host.is_on_floor())`. Empty host_default leaves the call bare (byte-stable, non-behavior).
+	if not host_default.strip_edges().is_empty() and (template.contains("{host.}") or template.contains("{host}")) and not params.has("host"):
+		params = params.duplicate()
+		params["host"] = host_default
 	var output: String = ActionCodegen._apply_template(template, params)
 	# Stateful conditions (Every X Seconds\u2026) have no meaningful inverse: their codegen_on_true
 	# reset must run WHEN the interval elapses, so a `not (...)` header would run the reset in the
