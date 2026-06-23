@@ -109,10 +109,26 @@ Stays a code cell **by nature** (and that's correct): typed **inner classes** wi
    on re-emit (byte-different → revert). The lift must PRESERVE intra-body blanks — a blank-marker row,
    or fold them into a surrounding in-flow RawCode span — so the recompile reproduces them exactly.
 
-**Phase 1 sequencing note:** items 8 and 9 mean Stage A is entangled — the decouple-from-layout, the
-annotation relaxation, the emit-side suppress flag, and blank-line preservation must land together (or
-behind a feature gate) for the round-trip to hold, with a new round-trip test for an un-annotated,
-blank-containing, arbitrary-position function. It is a focused effort, not a one-line change.
+10. **(THE core blocker — confirmed by a built-then-reverted attempt) Lifting functions breaks the
+    append-stability contract.** Lifting an un-annotated function moves it from `sheet.events` (a block
+    row, in source position) to `sheet.functions` (the functions section, emitted AFTER all events). The
+    untouched round-trip stays byte-identical, BUT it violates the GDScript-backed-sheet workflow's
+    documented contract (`external_sheet_test.gd:6`: *"Events added later append as standard trigger
+    functions"*): a newly-added event emits in the events section, **before** the now-lifted functions,
+    so the original file is no longer a byte-prefix of the saved result — a mid-file insert, not a clean
+    append. A full attempt confirmed this: the `lifted_unannotated` flag + suppress-emit + relaxed bail
+    all worked and round-tripped, but `external_sheet_test`'s append-prefix + `function_blocks==2`
+    assertions failed, so it was reverted. **This is the real Phase-1 decision, not a test wart:** either
+    (a) emit lifted functions in their SOURCE POSITION (interleave functions with events — a significant
+    change to the compiler's section ordering in `_compile_external`) to preserve append-stability, or
+    (b) accept the events-then-functions reordering and rewrite the contract + `external_sheet_test`.
+
+**Phase 1 sequencing note:** items 8, 9, and especially **10** mean Stage A is entangled — the
+decouple-from-layout, the annotation relaxation, the emit-side suppress flag, blank-line preservation,
+**and the function-emission-ordering decision** must be resolved together for the round-trip *and* the
+append-stability to hold. It is a focused architectural effort, not a one-line change. Recommended
+first sub-decision: resolve item 10 (source-position function emission vs accepted reordering) before
+writing any lifter code, since it dictates the rest.
 
 ## Files to touch
 - `ace_lifter.gd` — Stage A (drop trailing-run binding `:38-49`; relax annotation bail `:226-227`; skip blanks `:363-364`); Stage B (reverse-eligible whitelist into `_build_reverse_entries` `:503-508` at sort tail `:535`); Stage C (for/while/match branches in `_parse_body` `:361-413`, sentinel guards); rule 14 (no-paren condition in `_parse_conditions` `:450-466`); contextual break/continue `:509-512`.
