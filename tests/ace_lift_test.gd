@@ -28,8 +28,11 @@ static func run() -> bool:
 	vanish.ace_id = "QueueFree"
 	event.actions.append(vanish)
 	var custom_line: RawCodeRow = RawCodeRow.new()
-	custom_line.code = "health -= 1"
+	custom_line.code = "health -= 1"  # now reverse-lifts to SubtractVar (Phase 0 compound-assign ACE)
 	event.actions.append(custom_line)
+	var irreducible_line: RawCodeRow = RawCodeRow.new()
+	irreducible_line.code = "health %= 3"  # %= has no ACE (and isn't a `x = y` SetVar) -> in-flow code cell
+	event.actions.append(irreducible_line)
 	authored.events.append(event)
 	var source: String = str(SheetCompiler.compile(authored, "user://eventforge_lift_source.gd").get("output", ""))
 
@@ -47,15 +50,15 @@ static func run() -> bool:
 		all_passed = _check("trigger reverses to OnProcess", lifted_event.trigger_id, "OnProcess") and all_passed
 		all_passed = _check("condition reverse-matches its template",
 			lifted_event.conditions.size() == 1 and lifted_event.conditions[0].ace_id == "IsOnFloor", true) and all_passed
-		var lifted_action: ACEAction = null
+		var lifted_action_ids: Array = []
 		var inflow_blocks: int = 0
 		for entry in lifted_event.actions:
 			if entry is ACEAction:
-				lifted_action = entry
+				lifted_action_ids.append((entry as ACEAction).ace_id)
 			elif entry is RawCodeRow:
 				inflow_blocks += 1
-		all_passed = _check("action reverse-matches its template",
-			lifted_action != null and lifted_action.ace_id == "QueueFree", true) and all_passed
+		all_passed = _check("QueueFree action reverse-matches its template", lifted_action_ids.has("QueueFree"), true) and all_passed
+		all_passed = _check("compound-assign reverse-matches (health -= 1 -> SubtractVar)", lifted_action_ids.has("SubtractVar"), true) and all_passed
 		all_passed = _check("unmatched statement becomes an in-flow block", inflow_blocks, 1) and all_passed
 
 	# The contract: the lifted sheet recompiles byte-identically.

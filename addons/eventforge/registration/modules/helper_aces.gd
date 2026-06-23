@@ -55,6 +55,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# ── Validity / null (freed-instance safety, the classic source of crashes) ──
 	descriptors.append(F.make_descriptor("Core", "IsValid", "Is Valid", ACEDescriptor.ACEType.CONDITION, "is_instance_valid({target})", "", [F.make_param("target", "String", "self", "Target", "Object expression to test.", "expression")], CAT, "{target} is valid"))
 	descriptors.append(F.make_descriptor("Core", "IsNull", "Is Null", ACEDescriptor.ACEType.CONDITION, "{target} == null", "", [F.make_param("target", "String", "self", "Target", "Expression to test for null.", "expression")], CAT, "{target} is null"))
+	# Type-of (the typeof gap). For an `is` class check, use Expression Is True with e.g. `self is Area2D`.
+	descriptors.append(F.make_descriptor("Core", "TypeOf", "Type Of", ACEDescriptor.ACEType.EXPRESSION, "typeof({value})", "", [F.make_param("value", "String", "0", "Value", "Value whose Variant.Type (an int) to read.", "expression")], CAT, "typeof({value})"))
 
 	# ── Runtime signal wiring (connect/disconnect without a _ready block) ──
 	descriptors.append(F.make_descriptor("Core", "ConnectSignal", "Connect Signal", ACEDescriptor.ACEType.ACTION, "{source}.{signal}.connect({callable})", "", [F.make_param("source", "String", "self", "Source", "Object emitting the signal.", "expression"), F.make_param("signal", "String", "pressed", "Signal", "Signal name."), F.make_param("callable", "String", "_on_pressed", "Callable", "Method/Callable to connect.", "expression")], CAT, "connect {source}.{signal} -> {callable}"))

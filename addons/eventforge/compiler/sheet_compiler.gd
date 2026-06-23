@@ -1546,6 +1546,10 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 		return ""
 	if local_var.is_constant:
 		return "const %s: %s = %s" % [local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+	# @onready: deferred init (node refs like $Path). The default is a raw EXPRESSION, emitted
+	# verbatim (not a quoted literal) so `$Sprite2D` / `get_node(...)` stay code, not strings.
+	if local_var.onready:
+		return "@onready var %s: %s = %s" % [local_var.name, local_var.type_name, str(local_var.default_value)]
 	# Combo (C3): exported String with options -> @export_enum dropdown in the Inspector.
 	if local_var.exported and local_var.type_name == "String" and not local_var.options.is_empty():
 		return "%s var %s: String = %s" % [_export_enum_prefix(local_var.options), local_var.name, _to_code_literal(local_var.default_value)]

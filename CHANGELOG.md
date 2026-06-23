@@ -53,6 +53,13 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   sort, contains, is-empty, size, `get`-with-default, keys/values, …), collection- and loop-driven
   logic is authorable entirely as ACE rows — the vocabulary needed to build your own behaviours via
   event sheets.
+- **Fewer raw blocks when authoring (near-zero-RawCode roadmap, Phase 0).** New everyday ACEs that
+  previously forced a GDScript block: **Subtract / Multiply / Divide Variable** (the `-=` / `*=` / `/=`
+  siblings to Add Variable), **Type Of** (`typeof`), and an **`@onready var`** declaration row for node
+  refs (`@onready var sprite: Sprite2D = $Sprite2D`, the default emitted verbatim). The compound-assigns
+  also **reverse-lift**, so `health -= 1` in a hand-written `.gd` opens as a *Subtract Variable* row
+  instead of a code cell. (For an `is` class check, use *Expression Is True* with `self is Area2D`.)
+  Roadmap: `docs/internal/SPEC-near-zero-rawcode-roadmap.md`.
 
 ### Fixed
 
