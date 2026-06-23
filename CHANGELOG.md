@@ -20,6 +20,10 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
 - **Read Input Axis Into** — the consuming action for the existing Input Axis expression, so "read
   input, then move" is two ACE rows, not a RawCode line. **Set Local Variable (typed)** declares a
   statically-typed event-local, so dense typed temporaries stop forcing RawCode.
+- **Trigger signals as rows.** A signal row can publish itself as a trigger ACE (`## @ace_trigger`,
+  with optional name/category), so a behaviour declares a code-free trigger signal instead of a
+  hand-written GDScript block — the last primitive needed for a signal-emitting behaviour with zero
+  RawCode.
 
 ### Fixed
 

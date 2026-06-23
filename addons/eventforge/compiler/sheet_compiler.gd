@@ -168,11 +168,17 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 	if not signal_rows.is_empty():
 		lines.append("")
 		for signal_entry: Variant in signal_rows:
-			var signal_line: String = _emit_signal_line(signal_entry as SignalRow)
+			var signal_row: SignalRow = signal_entry as SignalRow
+			var signal_line: String = _emit_signal_line(signal_row)
 			if signal_line.is_empty():
 				continue
+			# Trigger signals carry a `## @ace_*` annotation block above the declaration; plain
+			# signals emit none (byte-identical). The source-map span covers the whole block.
+			var signal_start: int = lines.size() + 1
+			for annotation_line: String in _emit_signal_annotations(signal_row):
+				lines.append(annotation_line)
 			lines.append(signal_line)
-			source_map.append({"uid": str((signal_entry as SignalRow).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "signal"})
+			source_map.append({"uid": str(signal_row.get_instance_id()), "start": signal_start, "end": lines.size(), "kind": "signal"})
 	var tree_variables: Array = []
 	_collect_tree_variables(all_events, tree_variables)
 	var sheet_function_names: Dictionary = {}
@@ -1401,6 +1407,20 @@ static func _emit_signal_line(signal_row: SignalRow) -> String:
 	if params.is_empty():
 		return "signal %s" % signal_row.signal_name.strip_edges()
 	return "signal %s(%s)" % [signal_row.signal_name.strip_edges(), ", ".join(params)]
+
+## Trigger-ACE annotation lines emitted ABOVE a trigger SignalRow's `signal` declaration, so the
+## signal publishes as a trigger ACE (a code-free alternative to a hand-written @ace_trigger block).
+## Empty for a plain signal — byte-identical to before, so existing signals never change.
+static func _emit_signal_annotations(signal_row: SignalRow) -> PackedStringArray:
+	var annotations: PackedStringArray = PackedStringArray()
+	if signal_row == null or not signal_row.enabled or not signal_row.trigger:
+		return annotations
+	annotations.append("## @ace_trigger")
+	if not signal_row.ace_name.strip_edges().is_empty():
+		annotations.append("## @ace_name(%s)" % signal_row.ace_name.strip_edges())
+	if not signal_row.ace_category.strip_edges().is_empty():
+		annotations.append("## @ace_category(%s)" % signal_row.ace_category.strip_edges())
+	return annotations
 
 ## Recursively gathers SignalRow rows (top level and inside groups).
 static func _collect_signal_rows(entries: Array, into: Array) -> void:
