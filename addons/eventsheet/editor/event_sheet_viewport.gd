@@ -47,6 +47,10 @@ signal match_edit_requested(match_row: Resource)
 signal row_disable_toggle_requested()
 ## Emitted on Alt+Up/Down — the dock moves the selected row (direction -1 = up).
 signal row_move_requested(direction: int)
+# Delete / Backspace on the focused viewport. Emitted so the dock removes the selected rows / ACEs.
+# Handled in _gui_input (not only the dock's _unhandled_key_input) so it wins Godot's input ordering
+# and can never fall through to the editor's Scene-tree "delete node" shortcut.
+signal delete_requested()
 ## Emitted on Ctrl+F — the dock shows the find bar.
 signal find_requested()
 ## Emitted on F3 / Shift+F3 — the dock steps through find matches.
@@ -1407,6 +1411,12 @@ func _handle_key(event: InputEventKey) -> void:
         accept_event()
     elif event.keycode == KEY_F3:
         find_step_requested.emit(-1 if event.shift_pressed else 1)
+        accept_event()
+    elif event.keycode in [KEY_DELETE, KEY_BACKSPACE]:
+        # Consume here (the focused viewport) so Delete acts on the event sheet and can NEVER reach
+        # the editor's Scene-tree dock, which would delete the selected scene node. The dock does the
+        # actual removal via _delete_selected_content (same as its _unhandled_key_input fallback).
+        delete_requested.emit()
         accept_event()
     elif event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_F2]:
         _begin_edit(_selected_row_index, _selected_span_index)
@@ -3349,12 +3359,21 @@ func _get_row_height(index: int) -> float:
     return float(_row_metrics[index].get("height", ROW_HEIGHT))
 
 func _find_row_index_at_y(y: float) -> int:
-    if _row_metrics.is_empty():
+    return _row_index_at_y(_row_metrics, y)
+
+## Resolves a vertical position to a row index. A click in the small inter-block GAP before a row
+## (dead space not covered by any row band, EVENT_BLOCK_GAP) resolves to the PRECEDING event, so
+## clicking just outside / below an event block still selects it instead of clearing the selection
+## — the dead zone that let Delete fall through to the editor's scene tree. Static + pure = testable.
+static func _row_index_at_y(metrics: Array, y: float) -> int:
+    if metrics.is_empty() or y < 0.0:
         return -1
-    for index in range(_row_metrics.size()):
-        var top: float = float(_row_metrics[index].get("top", 0.0))
-        var height: float = float(_row_metrics[index].get("height", ROW_HEIGHT))
-        if y >= top and y < top + height:
+    for index in range(metrics.size()):
+        var top: float = float(metrics[index].get("top", 0.0))
+        var height: float = float(metrics[index].get("height", ROW_HEIGHT))
+        if y < top:
+            return index - 1
+        if y < top + height:
             return index
     return -1
 

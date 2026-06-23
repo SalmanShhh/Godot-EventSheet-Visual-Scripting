@@ -23,6 +23,16 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
 
 ### Fixed
 
+- **Pressing Delete in the event sheet no longer deletes a node from the open scene.** The dock
+  handled Delete only in `_unhandled_key_input`, which runs *after* the editor's Scene-tree dock's
+  delete shortcut — so with the event sheet focused, Delete could remove the selected scene node
+  instead of the selected event/ACE. The focused viewport now consumes Delete/Backspace in
+  `_gui_input` (emitting `delete_requested` to the dock), winning Godot's input ordering so it can
+  never reach the scene tree.
+- **Clicking just outside an event block now selects that event instead of clearing the selection.**
+  The inter-block separator gap was dead space — `_find_row_index_at_y` returned -1 there — so a click
+  "outside the condition cell" deselected everything (and, with nothing selected, Delete fell through
+  to the scene tree). A gap click now resolves to the adjacent event (`viewport_hit_select_test`).
 - **Duplicate built-in ACE ids are now caught.** The registry indexed descriptors by
   `provider::ace_id` and silently overwrote on collision (the later one shadowed the earlier, and
   both doubled up in the picker). It now `push_error`s at load time, with
