@@ -103,45 +103,77 @@ actions = Array[Resource]([SubResource("Resource_u1m31"), SubResource("Resource_
 event_uid = "00b366"
 
 [sub_resource type="Resource" id="Resource_0j44r"]
-script = ExtResource("10_teoow")
-code = "$Icon/SpringBehavior.spring_host_scale(1.0)
-$Icon/SpringBehavior.add_impulse(\"__scale\", 6.0)"
+script = ExtResource("5_bfrky")
+provider_id = "SpringBehavior"
+ace_id = "method:spring_host_scale"
+params = {
+"on_node": "$Icon/SpringBehavior",
+"target": "1.0"
+}
+codegen_template = "{on_node}.spring_host_scale({target})"
 
 [sub_resource type="Resource" id="Resource_1w1ep"]
+script = ExtResource("5_bfrky")
+provider_id = "SpringBehavior"
+ace_id = "method:add_impulse"
+params = {
+"amount": "6.0",
+"spring_name": "\"__scale\"",
+"target": "$Icon/SpringBehavior"
+}
+codegen_template = "{target}.add_impulse({spring_name}, {amount})"
+
+[sub_resource type="Resource" id="Resource_0f73a"]
 script = ExtResource("9_lpwia")
 trigger_provider_id = "Core"
 trigger_id = "signal:item_collected"
 trigger_args = "id: String"
-actions = Array[Resource]([SubResource("Resource_0j44r")])
+actions = Array[Resource]([SubResource("Resource_0j44r"), SubResource("Resource_1w1ep")])
 event_uid = "b947da"
 
-[sub_resource type="Resource" id="Resource_0f73a"]
-script = ExtResource("10_teoow")
-code = "$Icon/TweenBehavior.tween_rotation($Icon.rotation_degrees + 120.0, 0.4)
-$Icon/SpringBehavior.spring_host_scale(1.6)"
-
 [sub_resource type="Resource" id="Resource_22qyo"]
+script = ExtResource("5_bfrky")
+provider_id = "TweenBehavior"
+ace_id = "method:tween_rotation"
+params = {
+"degrees": "$Icon.rotation_degrees + 120.0",
+"duration": "0.4",
+"target": "$Icon/TweenBehavior"
+}
+codegen_template = "{target}.tween_rotation({degrees}, {duration})"
+
+[sub_resource type="Resource" id="Resource_o1x6f"]
+script = ExtResource("5_bfrky")
+provider_id = "SpringBehavior"
+ace_id = "method:spring_host_scale"
+params = {
+"on_node": "$Icon/SpringBehavior",
+"target": "1.6"
+}
+codegen_template = "{on_node}.spring_host_scale({target})"
+
+[sub_resource type="Resource" id="Resource_ay0qf"]
 script = ExtResource("9_lpwia")
 trigger_provider_id = "Core"
 trigger_id = "signal:quest_advanced"
 trigger_args = "phase: int"
-actions = Array[Resource]([SubResource("Resource_0f73a")])
+actions = Array[Resource]([SubResource("Resource_22qyo"), SubResource("Resource_o1x6f")])
 event_uid = "b14d76"
 
-[sub_resource type="Resource" id="Resource_o1x6f"]
+[sub_resource type="Resource" id="Resource_ces6m"]
 script = ExtResource("10_teoow")
 code = "$Screen.text = \"QUEST: %s
 items: %d   log: %d
 t = %d\" % [[\"OFFERED\", \"ACTIVE\", \"COMPLETE\"][quest_state], inventory.size(), quest_log.size(), tick]"
 
-[sub_resource type="Resource" id="Resource_ay0qf"]
+[sub_resource type="Resource" id="Resource_v7xv7"]
 script = ExtResource("9_lpwia")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_o1x6f")])
+actions = Array[Resource]([SubResource("Resource_ces6m")])
 event_uid = "24c82a"
 
-[sub_resource type="Resource" id="Resource_ces6m"]
+[sub_resource type="Resource" id="Resource_jjoap"]
 script = ExtResource("5_bfrky")
 ace_id = "DictSetKey"
 params = {
@@ -151,7 +183,7 @@ params = {
 }
 codegen_template = "{var_name}[{key}] = {value}"
 
-[sub_resource type="Resource" id="Resource_v7xv7"]
+[sub_resource type="Resource" id="Resource_jg684"]
 script = ExtResource("5_bfrky")
 ace_id = "ArrayAppend"
 params = {
@@ -160,23 +192,23 @@ params = {
 }
 codegen_template = "{var_name}.append({value})"
 
-[sub_resource type="Resource" id="Resource_jjoap"]
+[sub_resource type="Resource" id="Resource_3iry7"]
 script = ExtResource("5_bfrky")
 ace_id = "EmitSignal"
 codegen_template = "item_collected.emit(id)"
 
-[sub_resource type="Resource" id="Resource_jg684"]
+[sub_resource type="Resource" id="Resource_t8sa1"]
 script = ExtResource("9_lpwia")
-actions = Array[Resource]([SubResource("Resource_ces6m"), SubResource("Resource_v7xv7"), SubResource("Resource_jjoap")])
+actions = Array[Resource]([SubResource("Resource_jjoap"), SubResource("Resource_jg684"), SubResource("Resource_3iry7")])
 event_uid = "2bec9e"
 
-[sub_resource type="Resource" id="Resource_3iry7"]
+[sub_resource type="Resource" id="Resource_nxvij"]
 script = ExtResource("11_ol5sw")
 id = "id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_t8sa1"]
+[sub_resource type="Resource" id="Resource_4t3xl"]
 script = ExtResource("11_ol5sw")
 id = "qty"
 type = 2
@@ -184,18 +216,18 @@ type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_nxvij"]
+[sub_resource type="Resource" id="Resource_vn3va"]
 script = ExtResource("12_pq7vv")
 function_name = "grant_item"
-params = Array[ExtResource("11_ol5sw")]([SubResource("Resource_3iry7"), SubResource("Resource_t8sa1")])
-events = Array[Resource]([SubResource("Resource_jg684")])
+params = Array[ExtResource("11_ol5sw")]([SubResource("Resource_nxvij"), SubResource("Resource_4t3xl")])
+events = Array[Resource]([SubResource("Resource_t8sa1")])
 
 [resource]
 script = ExtResource("13_aayxw")
 host_class = "Node2D"
 custom_class_name = "QuestFsm"
 addon_tags = PackedStringArray()
-events = Array[Resource]([SubResource("Resource_rfbge"), SubResource("Resource_gp27s"), SubResource("Resource_eimtb"), SubResource("Resource_jddtr"), SubResource("Resource_5v2ga"), SubResource("Resource_qfunk"), SubResource("Resource_ietul"), SubResource("Resource_3ypjf"), SubResource("Resource_1w1ep"), SubResource("Resource_22qyo"), SubResource("Resource_ay0qf")])
+events = Array[Resource]([SubResource("Resource_rfbge"), SubResource("Resource_gp27s"), SubResource("Resource_eimtb"), SubResource("Resource_jddtr"), SubResource("Resource_5v2ga"), SubResource("Resource_qfunk"), SubResource("Resource_ietul"), SubResource("Resource_3ypjf"), SubResource("Resource_0f73a"), SubResource("Resource_ay0qf"), SubResource("Resource_v7xv7")])
 variables = {
 "quest_state": {
 "attributes": {
@@ -206,4 +238,4 @@ variables = {
 "type": "int"
 }
 }
-functions = Array[Resource]([SubResource("Resource_nxvij")])
+functions = Array[Resource]([SubResource("Resource_vn3va")])

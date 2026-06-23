@@ -462,12 +462,14 @@ func _build_quest_fsm() -> bool:
 	# signal: triggers — react to the sheet's own signals (auto-connected in _ready).
 	var on_item: EventRow = EventRow.new()
 	on_item.trigger_provider_id = "Core"; on_item.trigger_id = "signal:item_collected"; on_item.trigger_args = "id: String"
-	on_item.actions.append(_raw("$Icon/SpringBehavior.spring_host_scale(1.0)\n$Icon/SpringBehavior.add_impulse(\"__scale\", 6.0)"))
+	on_item.actions.append(_action("SpringBehavior", "method:spring_host_scale", "{on_node}.spring_host_scale({target})", {"on_node": "$Icon/SpringBehavior", "target": "1.0"}))
+	on_item.actions.append(_action("SpringBehavior", "method:add_impulse", "{target}.add_impulse({spring_name}, {amount})", {"target": "$Icon/SpringBehavior", "spring_name": "\"__scale\"", "amount": "6.0"}))
 	sheet.events.append(on_item)
 
 	var on_quest: EventRow = EventRow.new()
 	on_quest.trigger_provider_id = "Core"; on_quest.trigger_id = "signal:quest_advanced"; on_quest.trigger_args = "phase: int"
-	on_quest.actions.append(_raw("$Icon/TweenBehavior.tween_rotation($Icon.rotation_degrees + 120.0, 0.4)\n$Icon/SpringBehavior.spring_host_scale(1.6)"))
+	on_quest.actions.append(_action("TweenBehavior", "method:tween_rotation", "{target}.tween_rotation({degrees}, {duration})", {"target": "$Icon/TweenBehavior", "degrees": "$Icon.rotation_degrees + 120.0", "duration": "0.4"}))
+	on_quest.actions.append(_action("SpringBehavior", "method:spring_host_scale", "{on_node}.spring_host_scale({target})", {"on_node": "$Icon/SpringBehavior", "target": "1.6"}))
 	sheet.events.append(on_quest)
 
 	# HUD.
