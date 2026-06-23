@@ -96,6 +96,23 @@ Stays a code cell **by nature** (and that's correct): typed **inner classes** wi
 5. **Keep the single whole-sheet byte gate** (it already tolerates per-statement RawCode); do not build a per-statement gate (§medium-4).
 6. **`return` already reverses** — verify, don't re-add (§low-6). **SetLocalVarTyped is a Helper** — whitelist it or use the LocalVariable path (§low-7).
 7. **The "C3 has no reverse import" claim is positioning**, not verifiable from this repo — frame it as such.
+8. **(Confirmed while starting Phase 1) Un-annotated function lift re-emits `## @ace_hidden`.** An
+   un-exposed `EventFunction` emits `## @ace_hidden` (`sheet_compiler.gd:1234`); lifting a hand-written
+   function that had NO annotation re-adds it → byte-different → the whole-sheet gate reverts. Relaxing
+   `_lift_sheet_function`'s annotation bail (`ace_lifter.gd:226`, §high-2) is **necessary but not
+   sufficient** — `EventFunction` needs a `lifted_unannotated`/`suppress_annotations` flag the lifter
+   sets, so a function lifted from un-annotated source re-emits with NO annotation block. The bail's own
+   doc comment (`ace_lifter.gd:224`) states the buried assumption: "every generated sheet function has
+   one." Phase 1 must break that assumption on BOTH the import and the emit side together.
+9. **(Confirmed while starting Phase 1) Blank lines inside a function body must round-trip.**
+   `_parse_body` bails on blank lines today (`ace_lifter.gd:363-364`); making it *skip* them loses them
+   on re-emit (byte-different → revert). The lift must PRESERVE intra-body blanks — a blank-marker row,
+   or fold them into a surrounding in-flow RawCode span — so the recompile reproduces them exactly.
+
+**Phase 1 sequencing note:** items 8 and 9 mean Stage A is entangled — the decouple-from-layout, the
+annotation relaxation, the emit-side suppress flag, and blank-line preservation must land together (or
+behind a feature gate) for the round-trip to hold, with a new round-trip test for an un-annotated,
+blank-containing, arbitrary-position function. It is a focused effort, not a one-line change.
 
 ## Files to touch
 - `ace_lifter.gd` — Stage A (drop trailing-run binding `:38-49`; relax annotation bail `:226-227`; skip blanks `:363-364`); Stage B (reverse-eligible whitelist into `_build_reverse_entries` `:503-508` at sort tail `:535`); Stage C (for/while/match branches in `_parse_body` `:361-413`, sentinel guards); rule 14 (no-paren condition in `_parse_conditions` `:450-466`); contextual break/continue `:509-512`.
