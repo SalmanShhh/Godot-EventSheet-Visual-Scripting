@@ -102,7 +102,7 @@ func save_value(key: String, value) -> void:
 	data[key] = value
 	_write_all(data)
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Load Value")
 ## @ace_category("Save System")
 ## @ace_description("Reads any value (your default when missing).")
@@ -118,7 +118,7 @@ func load_value(key: String, default_value) -> Variant:
 func save_number(key: String, value: float) -> void:
 	save_value(key, value)
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Load Number")
 ## @ace_category("Save System")
 ## @ace_description("Reads a number (0 when missing).")
@@ -134,7 +134,7 @@ func load_number(key: String) -> float:
 func save_text(key: String, value: String) -> void:
 	save_value(key, value)
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Load Text")
 ## @ace_category("Save System")
 ## @ace_description("Reads a string ("" when missing).")
@@ -142,7 +142,7 @@ func save_text(key: String, value: String) -> void:
 func load_text(key: String) -> String:
 	return str(load_value(key, ""))
 
-## @ace_action
+## @ace_condition
 ## @ace_name("Has Save Key")
 ## @ace_category("Save System")
 ## @ace_description("Whether the key exists in the active slot.")
@@ -178,7 +178,7 @@ func save_game() -> void:
 func load_game() -> void:
 	after_load.emit(slot)
 
-## @ace_action
+## @ace_condition
 ## @ace_name("Slot Exists")
 ## @ace_category("Save System")
 ## @ace_description("Whether the slot has a save file.")
@@ -186,7 +186,7 @@ func load_game() -> void:
 func slot_exists(slot_index: int) -> bool:
 	return FileAccess.file_exists(_slot_path(slot_index))
 
-## @ace_action
+## @ace_expression
 ## @ace_name("List Slots")
 ## @ace_category("Save System")
 ## @ace_description("Slot numbers that have save files (for menus).")
@@ -198,7 +198,7 @@ func list_slots() -> Array:
 			found.append(candidate)
 	return found
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Slot Modified Time")
 ## @ace_category("Save System")
 ## @ace_description("Unix mtime of the slot's file (0 when missing).")

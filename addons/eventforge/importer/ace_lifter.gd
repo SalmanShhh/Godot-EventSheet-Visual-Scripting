@@ -200,7 +200,9 @@ static func _parse_annotations(code: String) -> Dictionary:
 			continue
 		if text == "## @ace_hidden":
 			recognized = true
-		elif text == "## @ace_action":
+		elif text == "## @ace_action" or text == "## @ace_condition" or text == "## @ace_expression":
+			# Three-way expose (action / condition / expression). The exposed TYPE is re-derived from the
+			# function's return type on emit, so all three directives simply mark the function exposed.
 			fields["expose"] = true
 			recognized = true
 		elif text.begins_with("## @ace_name(\"") and text.ends_with("\")"):

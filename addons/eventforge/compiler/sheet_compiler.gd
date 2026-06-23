@@ -1233,7 +1233,17 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 		# functions are explicitly hidden — expose_as_ace is the single publication switch.
 		lines.append("## @ace_hidden")
 		return
-	lines.append("## @ace_action")
+	# Three-way expose: the return type picks the directive — void = action, bool = condition, any
+	# other value = expression (one method → one ACE, so exactly ONE directive). The shared
+	# @ace_codegen_template ($Class.fn(args)) serves all three: a method call returning bool/value is a
+	# valid condition/expression. The lifter re-derives the type from the return type on round-trip.
+	match event_function.return_type:
+		TYPE_NIL:
+			lines.append("## @ace_action")
+		TYPE_BOOL:
+			lines.append("## @ace_condition")
+		_:
+			lines.append("## @ace_expression")
 	var display_name: String = event_function.ace_display_name.strip_edges()
 	if not display_name.is_empty():
 		lines.append("## @ace_name(\"%s\")" % display_name)

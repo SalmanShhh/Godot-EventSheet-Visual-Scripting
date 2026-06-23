@@ -37,6 +37,14 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   at 0 RawCode so a GDScript block can never creep back. Remaining packs convert incrementally;
   numeric-kernel packs (spring/juice/bullet integrators — continuous `cos`/`sin`/spring math) keep
   documented RawCode per the spec's honest criterion.
+- **Functions publish by return type (C3-style three-way expose).** An exposed sheet function now
+  becomes the right kind of ACE automatically: a **void** function is an **action**, a **bool**
+  function is a **condition**, and any other return is an **expression** — so a value-returning
+  behaviour function (e.g. `load_value`, `random_range`, `has_save_key`) is usable directly in ƒx
+  fields and conditions instead of being mis-published as a call-and-discard action. The Save System
+  and Advanced Random packs' getters/queries are correctly typed now, and the reverse-lift round-trips
+  all three directives. Foundation for authoring condition/expression functions as pure ACE rows
+  (unblocks converting the state-machine / health / abilities packs).
 
 ### Fixed
 

@@ -87,7 +87,7 @@ func generate_permutation(size: int) -> void:
 func make_shuffle_bag(bag_name: String, items: Array) -> void:
 	_bags[bag_name] = {"items": items.duplicate(), "pile": []}
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Random (0-1)")
 ## @ace_category("Advanced Random: Numbers")
 ## @ace_description("A uniform float in [0, 1).")
@@ -95,7 +95,7 @@ func make_shuffle_bag(bag_name: String, items: Array) -> void:
 func random_value() -> float:
 	return _rng.randf()
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Random Range")
 ## @ace_category("Advanced Random: Numbers")
 ## @ace_description("A uniform float between min and max.")
@@ -103,7 +103,7 @@ func random_value() -> float:
 func random_range(minimum: float, maximum: float) -> float:
 	return _rng.randf_range(minimum, maximum)
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Random Int")
 ## @ace_category("Advanced Random: Numbers")
 ## @ace_description("A uniform integer between min and max (inclusive).")
@@ -111,7 +111,7 @@ func random_range(minimum: float, maximum: float) -> float:
 func random_int(minimum: int, maximum: int) -> int:
 	return _rng.randi_range(minimum, maximum)
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Roll Dice")
 ## @ace_category("Advanced Random: Numbers")
 ## @ace_description("Rolls a die with the given number of sides (1..sides).")
@@ -119,7 +119,7 @@ func random_int(minimum: int, maximum: int) -> int:
 func dice(sides: int) -> int:
 	return _rng.randi_range(1, maxi(sides, 1))
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Random Sign")
 ## @ace_category("Advanced Random: Numbers")
 ## @ace_description("Either -1 or +1.")
@@ -127,7 +127,7 @@ func dice(sides: int) -> int:
 func random_sign() -> int:
 	return -1 if _rng.randf() < 0.5 else 1
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Normal (Gaussian)")
 ## @ace_category("Advanced Random: Numbers")
 ## @ace_description("A normally-distributed float around mean with the given deviation.")
@@ -135,7 +135,7 @@ func random_sign() -> int:
 func normal(mean: float, deviation: float) -> float:
 	return _rng.randfn(mean, deviation)
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Noise 1D")
 ## @ace_category("Advanced Random: Noise")
 ## @ace_description("Smooth noise along a line at x — returns [-1, 1].")
@@ -143,7 +143,7 @@ func normal(mean: float, deviation: float) -> float:
 func noise_1d(x: float) -> float:
 	return _noise.get_noise_1d(x)
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Noise 2D")
 ## @ace_category("Advanced Random: Noise")
 ## @ace_description("Smooth noise at (x, y) — great for terrain/heightmaps; returns [-1, 1].")
@@ -151,7 +151,7 @@ func noise_1d(x: float) -> float:
 func noise_2d(x: float, y: float) -> float:
 	return _noise.get_noise_2d(x, y)
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Noise 3D")
 ## @ace_category("Advanced Random: Noise")
 ## @ace_description("Smooth noise at (x, y, z) — returns [-1, 1].")
@@ -159,7 +159,7 @@ func noise_2d(x: float, y: float) -> float:
 func noise_3d(x: float, y: float, z: float) -> float:
 	return _noise.get_noise_3d(x, y, z)
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Permutation Value")
 ## @ace_category("Advanced Random: Picking")
 ## @ace_description("Reads index (wrapped) from the permutation table — generate it first.")
@@ -167,7 +167,7 @@ func noise_3d(x: float, y: float, z: float) -> float:
 func permutation(index: int) -> int:
 	return _perm[posmod(index, _perm.size())] if not _perm.is_empty() else 0
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Pick From")
 ## @ace_category("Advanced Random: Picking")
 ## @ace_description("A uniformly-random element of the array (null if empty).")
@@ -175,7 +175,7 @@ func permutation(index: int) -> int:
 func pick(options: Array) -> Variant:
 	return options[_rng.randi_range(0, options.size() - 1)] if not options.is_empty() else null
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Weighted Index")
 ## @ace_category("Advanced Random: Picking")
 ## @ace_description("An index chosen in proportion to the weights array (heavier = likelier).")
@@ -194,7 +194,7 @@ func weighted_index(weights: Array) -> int:
 			return i
 	return weights.size() - 1
 
-## @ace_action
+## @ace_expression
 ## @ace_name("Shuffle Bag Pick")
 ## @ace_category("Advanced Random: Picking")
 ## @ace_description("Draws the next item from a named bag — every item appears once before any repeat.")
@@ -214,7 +214,7 @@ func shuffle_bag_pick(bag_name: String) -> Variant:
 	pile.remove_at(drawn)
 	return value
 
-## @ace_action
+## @ace_condition
 ## @ace_name("Chance")
 ## @ace_category("Advanced Random: Chance")
 ## @ace_description("True roughly percent of the time (0-100) — e.g. Chance(5) for a 5% event.")
@@ -222,7 +222,7 @@ func shuffle_bag_pick(bag_name: String) -> Variant:
 func chance(percent: float) -> bool:
 	return _rng.randf() * 100.0 < percent
 
-## @ace_action
+## @ace_condition
 ## @ace_name("One In")
 ## @ace_category("Advanced Random: Chance")
 ## @ace_description("True with a 1-in-n probability.")
