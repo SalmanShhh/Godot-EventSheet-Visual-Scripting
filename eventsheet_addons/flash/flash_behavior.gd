@@ -13,28 +13,27 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("FlashBehavior behavior requires a CanvasItem parent.")
 
-var accumulator: float = 0.0
-var flashing: bool = false
-@export var interval: float = 0.1
-var remaining: float = 0.0
-
 ## @ace_trigger
 ## @ace_name("On Flash Finished")
 ## @ace_category("Flash")
 signal flash_finished
 
+var accumulator: float = 0.0
+var flashing: bool = false
+@export var interval: float = 0.1
+var remaining: float = 0.0
+
 func _process(delta: float) -> void:
-	if not flashing or host == null:
-		return
-	remaining -= delta
-	accumulator += delta
-	if accumulator >= interval:
-		accumulator = 0.0
-		host.visible = not host.visible
-	if remaining <= 0.0:
-		flashing = false
-		host.visible = true
-		flash_finished.emit()
+	if flashing and is_instance_valid(host):
+		remaining += -delta
+		accumulator += delta
+		if accumulator >= interval:
+			accumulator = 0.0
+			host.visible = not host.visible
+		if remaining <= 0.0:
+			flashing = false
+			host.visible = true
+			flash_finished.emit()
 
 ## @ace_action
 ## @ace_name("Flash")
@@ -53,7 +52,7 @@ func flash(seconds: float) -> void:
 ## @ace_codegen_template("$FlashBehavior.stop_flash()")
 func stop_flash() -> void:
 	flashing = false
-	if host != null:
+	if is_instance_valid(host):
 		host.visible = true
 
 # Flash behavior (C3-style): blinks the host's visibility for a duration, then restores it and fires On Flash Finished.

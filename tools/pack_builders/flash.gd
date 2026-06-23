@@ -4,6 +4,12 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 ## C3 "Flash" behavior: toggles host visibility at an interval for a duration.
+##
+## Authored entirely as ACE rows — ZERO RawCode — the first bundled pack to prove the
+## behaviour-as-ACEs path end to end (docs/internal/SPEC-behaviour-as-aces-parity.md). The signal is a
+## trigger SignalRow; the tick is a gated On Process event with sub-events; the two exposed functions
+## are ACE-action bodies. Node-scoped writes target the parent host via the {host.} / explicit-target
+## idiom. Guarded by flash_pack_zero_rawcode_test.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -18,52 +24,89 @@ static func build() -> bool:
 	var about: CommentRow = CommentRow.new()
 	about.text = "Flash behavior (C3-style): blinks the host's visibility for a duration, then restores it and fires On Flash Finished."
 	sheet.events.append(about)
-	var signal_block: RawCodeRow = RawCodeRow.new()
-	signal_block.code = "## @ace_trigger\n## @ace_name(\"On Flash Finished\")\n## @ace_category(\"Flash\")\nsignal flash_finished"
-	sheet.events.append(signal_block)
+
+	# Trigger signal as a ROW (replaces the hand-written @ace_trigger GDScript block).
+	var finished_signal: SignalRow = SignalRow.new()
+	finished_signal.signal_name = "flash_finished"
+	finished_signal.trigger = true
+	finished_signal.ace_name = "On Flash Finished"
+	finished_signal.ace_category = "Flash"
+	sheet.events.append(finished_signal)
+
+	# On Process: while flashing on a live host, blink at the interval and finish when the timer ends.
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
-	var blink: RawCodeRow = RawCodeRow.new()
-	blink.code = "\n".join(PackedStringArray([
-		"if not flashing or host == null:",
-		"\treturn",
-		"remaining -= delta",
-		"accumulator += delta",
-		"if accumulator >= interval:",
-		"\taccumulator = 0.0",
-		"\thost.visible = not host.visible",
-		"if remaining <= 0.0:",
-		"\tflashing = false",
-		"\thost.visible = true",
-		"\tflash_finished.emit()"
-	]))
-	tick.actions.append(blink)
+	tick.conditions.append(_cond("ExpressionIsTrue", {"expr": "flashing"}))
+	tick.conditions.append(_cond("IsValid", {"target": "host"}))
+	tick.actions.append(_action("AddVar", {"var_name": "remaining", "amount": "-delta"}))
+	tick.actions.append(_action("AddVar", {"var_name": "accumulator", "amount": "delta"}))
+
+	var blink: EventRow = EventRow.new()
+	blink.conditions.append(_cond("CompareVar", {"var_name": "accumulator", "op": ">=", "value": "interval"}))
+	blink.actions.append(_action("SetVar", {"var_name": "accumulator", "value": "0.0"}))
+	blink.actions.append(_action("SetProperty", {"target": "host", "property": "visible", "value": "not host.visible"}))
+	tick.sub_events.append(blink)
+
+	var finish: EventRow = EventRow.new()
+	finish.conditions.append(_cond("CompareVar", {"var_name": "remaining", "op": "<=", "value": "0.0"}))
+	finish.actions.append(_action("SetVar", {"var_name": "flashing", "value": "false"}))
+	finish.actions.append(_action("SetProperty", {"target": "host", "property": "visible", "value": "true"}))
+	finish.actions.append(_action("EmitSignal", {"signal_name": "flash_finished", "args": ""}))
+	tick.sub_events.append(finish)
 	sheet.events.append(tick)
 
+	# flash(seconds): start a flash burst.
 	var flash: EventFunction = EventFunction.new()
 	flash.function_name = "flash"
 	flash.expose_as_ace = true
 	flash.ace_display_name = "Flash"
 	flash.ace_category = "Flash"
 	flash.description = "Blinks the host for the given number of seconds."
-	var flash_seconds: ACEParam = ACEParam.new()
-	flash_seconds.id = "seconds"
-	flash_seconds.type_name = "float"
-	flash.params.append(flash_seconds)
-	var flash_body: RawCodeRow = RawCodeRow.new()
-	flash_body.code = "remaining = seconds\naccumulator = 0.0\nflashing = true"
+	flash.params.append(_param("seconds", "float"))
+	var flash_body: EventRow = EventRow.new()
+	flash_body.actions.append(_action("SetVar", {"var_name": "remaining", "value": "seconds"}))
+	flash_body.actions.append(_action("SetVar", {"var_name": "accumulator", "value": "0.0"}))
+	flash_body.actions.append(_action("SetVar", {"var_name": "flashing", "value": "true"}))
 	flash.events.append(flash_body)
 	sheet.functions.append(flash)
 
+	# stop_flash(): cancel and restore visibility.
 	var stop_flash: EventFunction = EventFunction.new()
 	stop_flash.function_name = "stop_flash"
 	stop_flash.expose_as_ace = true
 	stop_flash.ace_display_name = "Stop Flash"
 	stop_flash.ace_category = "Flash"
 	stop_flash.description = "Stops flashing and restores visibility."
-	var stop_flash_body: RawCodeRow = RawCodeRow.new()
-	stop_flash_body.code = "flashing = false\nif host != null:\n\thost.visible = true"
-	stop_flash.events.append(stop_flash_body)
+	var stop_set: EventRow = EventRow.new()
+	stop_set.actions.append(_action("SetVar", {"var_name": "flashing", "value": "false"}))
+	stop_flash.events.append(stop_set)
+	var stop_restore: EventRow = EventRow.new()
+	stop_restore.conditions.append(_cond("IsValid", {"target": "host"}))
+	stop_restore.actions.append(_action("SetProperty", {"target": "host", "property": "visible", "value": "true"}))
+	stop_flash.events.append(stop_restore)
 	sheet.functions.append(stop_flash)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/flash/flash_behavior")
+
+## Builds a built-in Core ACE action row; the codegen template is resolved from the registry at
+## compile time (no baked template needed for built-ins).
+static func _action(ace_id: String, params: Dictionary) -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = ace_id
+	action.params = params
+	return action
+
+static func _cond(ace_id: String, params: Dictionary) -> ACECondition:
+	var condition: ACECondition = ACECondition.new()
+	condition.provider_id = "Core"
+	condition.ace_id = ace_id
+	condition.params = params
+	return condition
+
+static func _param(id: String, type_name: String) -> ACEParam:
+	var param: ACEParam = ACEParam.new()
+	param.id = id
+	param.type_name = type_name
+	return param

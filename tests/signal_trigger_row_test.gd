@@ -16,7 +16,7 @@ static func run() -> bool:
 	trig.ace_name = "Flash Finished"
 	trig.ace_category = "Juice"
 	var ann: PackedStringArray = SheetCompiler._emit_signal_annotations(trig)
-	ok = _check("trigger annotation block", "\n".join(ann), "## @ace_trigger\n## @ace_name(Flash Finished)\n## @ace_category(Juice)") and ok
+	ok = _check("trigger annotation block", "\n".join(ann), "## @ace_trigger\n## @ace_name(\"Flash Finished\")\n## @ace_category(\"Juice\")") and ok
 	ok = _check("trigger signal line is the plain declaration", SheetCompiler._emit_signal_line(trig), "signal flash_finished") and ok
 
 	# Name/category are optional — bare @ace_trigger when omitted.

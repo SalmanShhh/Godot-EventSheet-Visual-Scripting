@@ -24,6 +24,13 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   with optional name/category), so a behaviour declares a code-free trigger signal instead of a
   hand-written GDScript block — the last primitive needed for a signal-emitting behaviour with zero
   RawCode.
+- **The first bundled behaviour authored with ZERO GDScript blocks.** The **Flash** pack is now built
+  entirely from ACE rows — a trigger `SignalRow`, a gated *On Process* tick with sub-events
+  (`Expression Is True` / `Is Valid` / `Compare Variable` → `Add/Set Variable`, `Set Property`,
+  `Emit Signal`), and two ACE-action function bodies — instead of RawCode. It compiles to GDScript
+  equivalent to the old hand-written version, its demo stays byte-identical, and
+  `flash_pack_zero_rawcode_test` guards that no RawCode creeps back. Proves the behaviour-as-ACEs path
+  end to end; the remaining packs convert next (numeric-kernel packs may keep documented RawCode).
 
 ### Fixed
 

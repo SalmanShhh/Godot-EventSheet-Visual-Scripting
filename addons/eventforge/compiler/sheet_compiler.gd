@@ -1417,9 +1417,9 @@ static func _emit_signal_annotations(signal_row: SignalRow) -> PackedStringArray
 		return annotations
 	annotations.append("## @ace_trigger")
 	if not signal_row.ace_name.strip_edges().is_empty():
-		annotations.append("## @ace_name(%s)" % signal_row.ace_name.strip_edges())
+		annotations.append("## @ace_name(\"%s\")" % signal_row.ace_name.strip_edges())
 	if not signal_row.ace_category.strip_edges().is_empty():
-		annotations.append("## @ace_category(%s)" % signal_row.ace_category.strip_edges())
+		annotations.append("## @ace_category(\"%s\")" % signal_row.ace_category.strip_edges())
 	return annotations
 
 ## Recursively gathers SignalRow rows (top level and inside groups).
