@@ -39,6 +39,14 @@ static func run() -> bool:
 	all_passed = _check("category header muted: custom", picker._group_color_for("Custom ACEs", false), muted) and all_passed
 	all_passed = _check("category header muted: other", picker._group_color_for("General Conditions", false), muted) and all_passed
 
+	# Featured verbs (C3-style highlight) are recognized for bolding + floating to the top of their group.
+	var feat_def: ACEDefinition = ACEDefinition.new()
+	feat_def.provider_id = "Core"; feat_def.id = "SetVar"
+	all_passed = _check("featured: Core/SetVar is featured", picker._is_featured(feat_def), true) and all_passed
+	var plain_def: ACEDefinition = ACEDefinition.new()
+	plain_def.provider_id = "Core"; plain_def.id = "ZzNotAFeaturedAce"
+	all_passed = _check("featured: an unlisted ace is not featured", picker._is_featured(plain_def), false) and all_passed
+
 	# Sub-category nesting: a "Parent: Sub" category splits into a parent + child folder so
 	# related ACEs (Array/Dictionary/… helpers) cluster under one section instead of a flat list.
 	all_passed = _check("subcategory splits Variables: Array",

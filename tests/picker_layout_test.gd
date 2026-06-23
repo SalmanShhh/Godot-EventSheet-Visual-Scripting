@@ -23,6 +23,8 @@ static func run() -> bool:
 	picker._refresh_tree()
 	var first: TreeItem = picker._first_definition_item(picker._tree.get_root())
 	ok = _check("rows populate and carry their ACEDefinition metadata", first != null and first.get_metadata(0) is ACEDefinition, true) and ok
+	# Featured verbs float to the top: in append_action mode the very first row is a featured action.
+	ok = _check("a featured verb floats to the top of the list", first != null and picker._is_featured(first.get_metadata(0)), true) and ok
 
 	# Codegen panel is visible-but-muted: a built-in ACE's template is shown color-wrapped, not raw [code].
 	if first != null and first.get_metadata(0) is ACEDefinition:

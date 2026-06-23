@@ -507,6 +507,17 @@ func _refresh_tree() -> void:
 			if twin_def != null and not definitions.has(twin_def) and not reactive_twins.has(twin_def):
 				reactive_twins.append(twin_def)
 		definitions.append_array(reactive_twins)
+	# Featured ACEs (the everyday verbs) float to the top of their group + render bold below — C3 "highlight".
+	if not definitions.is_empty():
+		var __featured: Array[ACEDefinition] = []
+		var __rest: Array[ACEDefinition] = []
+		for __d: ACEDefinition in definitions:
+			if _is_featured(__d):
+				__featured.append(__d)
+			else:
+				__rest.append(__d)
+		definitions = __featured
+		definitions.append_array(__rest)
 	for definition: ACEDefinition in definitions:
 		if not _is_allowed_for_mode(definition, mode, signals_only):
 			continue
@@ -522,6 +533,10 @@ func _refresh_tree() -> void:
 			item.set_icon_max_width(0, 16)
 		item.set_tooltip_text(0, _item_tooltip(definition))
 		item.set_metadata(0, definition)
+		if _is_featured(definition):
+			var __bold: Font = _bold_font()
+			if __bold != null:
+				item.set_custom_font(0, __bold)
 
 	# No-match guidance: a blank tree leaves a newcomer stuck wondering if the picker is broken.
 	# Nudge the C3 vocabulary bridge (plain phrases find Godot equivalents) instead of silence.
@@ -683,6 +698,24 @@ func _muted_header_color() -> Color:
 			if theme != null and theme.has_color("font_disabled_color", "Editor"):
 				return theme.get_color("font_disabled_color", "Editor")
 	return GROUP_COLOR_NEUTRAL
+
+## The everyday "featured" verbs (C3-style highlight): rendered bold and floated to the top of their
+## group so the common picks stand out. Curated default; keys are "provider_id/ace_id".
+const FEATURED := {
+	"Core/OnReady": true, "Core/OnProcess": true, "Core/OnPhysicsProcess": true,
+	"Core/IsActionPressed": true, "Core/CompareVar": true, "Core/CompareValues": true,
+	"Core/SetVar": true, "Core/AddVar": true, "Core/PrintLog": true,
+	"Core/CallFunction": true, "Core/SpawnSceneFull": true,
+}
+
+func _is_featured(definition: ACEDefinition) -> bool:
+	return definition != null and FEATURED.has("%s/%s" % [definition.provider_id, definition.id])
+
+## The editor's bold font for featured rows; null when there is no editor theme (headless / fallback).
+func _bold_font() -> Font:
+	if _tree != null:
+		return _tree.get_theme_font("bold", "EditorFonts")
+	return null
 
 func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:
 	if definition == null:
