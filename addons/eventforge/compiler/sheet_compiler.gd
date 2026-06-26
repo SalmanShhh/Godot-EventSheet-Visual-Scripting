@@ -1557,6 +1557,9 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# Combo (C3): exported String with options -> @export_enum dropdown in the Inspector.
 	if local_var.exported and local_var.type_name == "String" and not local_var.options.is_empty():
 		return "%s var %s: String = %s" % [_export_enum_prefix(local_var.options), local_var.name, _to_code_literal(local_var.default_value)]
+	# Hinted export (@export_range / @export_file / @export_flags / …): the annotation is kept verbatim.
+	if not local_var.export_hint.strip_edges().is_empty():
+		return "%s var %s: %s = %s" % [local_var.export_hint, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
 	var export_prefix: String = "@export " if local_var.exported else ""
 	return "%svar %s: %s = %s" % [export_prefix, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
 

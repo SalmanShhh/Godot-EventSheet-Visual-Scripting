@@ -13,6 +13,10 @@ class_name LocalVariable
 ## When true and placed in the event tree, compiles to `@export var` (usable outside the
 ## script); otherwise a plain private `var`.
 @export var exported: bool = false
+## A hinted export annotation kept VERBATIM (e.g. `@export_range(0, 100)`, `@export_file`,
+## `@export_flags("A", "B")`) for inspector-tuned scripts. When set it replaces the plain `@export `
+## prefix on emit, so an opened `.gd`'s hinted exports round-trip byte-identically. Empty = none.
+@export var export_hint: String = ""
 ## When true, compiles to `@onready var` (deferred init — for node refs like $Path that are not
 ## ready at construction). default_value is emitted VERBATIM as an expression, not a quoted literal.
 @export var onready: bool = false

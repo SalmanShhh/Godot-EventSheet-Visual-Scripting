@@ -101,6 +101,11 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   A new **fidelity ratchet** test proves a representative hand-written script lifts *completely* — every
   variable, statement, loop, condition, and helper function becomes a row (only the `extends` prelude
   stays verbatim) and round-trips byte-identically; the ratchet can only tighten, never silently loosen.
+- **Hinted exports open as variable rows (Phase 4).** Inspector-tuned declarations — `@export_range(0,
+  100)`, `@export_file`, `@export_flags("A", "B")`, and any other `@export_*` variant — now lift to a
+  variable **row** with the annotation kept verbatim (a new `export_hint`), instead of staying a RawCode
+  block. So a real tuned script renders as a sheet and round-trips byte-identically; the per-line
+  verify-lift gate rejects any annotation it can't reproduce exactly (those stay blocks).
 
 ### Fixed
 

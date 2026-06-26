@@ -14,6 +14,7 @@ func parse(source: String) -> Dictionary:
 			continue
 		var line: String = raw_line.strip_edges()
 		var exported: bool = false
+		var hint: String = ""
 		var combo_options: PackedStringArray = PackedStringArray()
 		if line.begins_with("@export_enum(") and line.find(") ") != -1:
 			exported = true
@@ -21,6 +22,13 @@ func parse(source: String) -> Dictionary:
 			for raw_option: String in line.substr("@export_enum(".length(), close_index - "@export_enum(".length()).split(", "):
 				combo_options.append(raw_option.strip_edges().trim_prefix("\"").trim_suffix("\""))
 			line = line.substr(close_index + 2).strip_edges()
+		elif line.begins_with("@export_") and line.find(" var ") != -1:
+			# Generic hinted export (@export_range / @export_file / @export_flags / …): keep the whole
+			# annotation up to " var " verbatim so it round-trips; _try_lift_variable's byte-verify gates it.
+			exported = true
+			var var_index: int = line.find(" var ")
+			hint = line.substr(0, var_index)
+			line = line.substr(var_index + 1).strip_edges()
 		elif line.begins_with("@export "):
 			exported = true
 			line = line.substr("@export ".length()).strip_edges()
@@ -42,7 +50,8 @@ func parse(source: String) -> Dictionary:
 			"type": type_name,
 			"default": _parse_literal(default_text),
 			"exported": exported,
-			"options": combo_options
+			"options": combo_options,
+			"hint": hint
 		}
 	return variables
 
