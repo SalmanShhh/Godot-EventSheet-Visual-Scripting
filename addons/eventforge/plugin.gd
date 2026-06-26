@@ -36,9 +36,13 @@ func _make_visible(visible: bool) -> void:
 
 ## Checks whether the selected object can be edited by this plugin.
 func _handles(object: Object) -> bool:
-	return is_event_sheet_resource(object)
+	if is_event_sheet_resource(object):
+		return true
+	# Auto-preview toggle (OFF by default): when on, selecting a sheet-liftable .gd routes here so it
+	# opens as a read-only EVENTS preview instead of the script editor. Limited to liftable game scripts.
+	return _auto_preview_gd_enabled() and object is Script and EventSheetWorkflow.is_openable_as_sheet((object as Script).resource_path)
 
-## Loads the selected EventSheet into the workspace editor.
+## Loads the selected EventSheet (or, with the toggle on, a .gd) into the workspace editor.
 func _edit(object: Object) -> void:
 	if _event_sheet_editor == null:
 		return
@@ -48,6 +52,13 @@ func _edit(object: Object) -> void:
 			var exposed_node: Variant = _event_sheet_editor.call("get_exposed_node")
 			if exposed_node is Object:
 				get_editor_interface().inspect_object(exposed_node)
+	elif object is Script:
+		# Auto-preview path: open the selected script's file as a read-only events preview.
+		_open_sheet_in_workspace((object as Script).resource_path)
+
+## True when the "auto-preview a selected .gd as events" project setting is enabled.
+static func _auto_preview_gd_enabled() -> bool:
+	return bool(ProjectSettings.get_setting("eventsheets/editor/auto_preview_gd_on_select", false))
 
 ## Shared object guard used by plugin handlers and tests.
 static func is_event_sheet_resource(object: Object) -> bool:

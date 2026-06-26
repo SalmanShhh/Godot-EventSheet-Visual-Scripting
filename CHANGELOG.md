@@ -121,6 +121,13 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
 - **ACE picker matches the native node dialog.** Favorites/Recent rows no longer tint their label by ACE
   type; they render plain like the main category tree and Godot's Create-New-Node dialog (the per-row
   icon carries the type).
+- **Preview any `.gd` as an event sheet, automatically.** Right-click a `.gd` in the FileSystem (or
+  script editor) → "Open as Event Sheet" renders it as rows; a new **Auto-preview** project setting
+  (`eventsheets/editor/auto_preview_gd_on_select`, off by default) makes *selecting* a liftable `.gd`
+  open it straight into the Event Sheets workspace as a read-only preview. And the preview now
+  **re-renders live** — a read-only `.gd` preview silently re-imports the moment the file changes on
+  disk (edit it in the script editor, refocus the Event Sheets tab, the rows track it). Design +
+  rationale in `docs/internal/SPEC-preview-gd-as-eventsheets.md`.
 
 ### Fixed
 

@@ -921,6 +921,12 @@ func _reload_external_sheet() -> void:
 func _prompt_external_reload_if_changed() -> void:
     if not _external_sheet_changed_on_disk():
         return
+    # A read-only PREVIEW has no editor changes to lose, so it re-renders LIVE: silently re-import the
+    # file the moment it changes on disk (edit the .gd in the script editor, refocus the Event Sheets
+    # tab, and the rows track it). The confirm dialog is only for an unlocked, editable sheet.
+    if _current_sheet != null and _current_sheet.read_only:
+        _reload_external_sheet()
+        return
     if _external_reload_dialog == null:
         _external_reload_dialog = ConfirmationDialog.new()
         _external_reload_dialog.title = "File Changed On Disk"
