@@ -488,8 +488,11 @@ static func _adopt_block_body(block_event: EventRow, inner_rows: Array) -> bool:
 		cursor += 1
 	return true
 
+## A "plain collector" holds only the loose statements between blocks — no conditions, no loop
+## wrapper, no else-chain. A pick_filter-bearing loop row is NOT plain (its body belongs in
+## sub_events, and its wrapper must survive _adopt_block_body / the _lift_function empty-row drop).
 static func _is_plain_collector(event: EventRow) -> bool:
-	return event != null and event.conditions.is_empty() and event.else_mode == EventRow.ElseMode.NONE
+	return event != null and event.conditions.is_empty() and event.pick_filters.is_empty() and event.else_mode == EventRow.ElseMode.NONE
 
 ## Builds the PickFilter for a `for`/`while` header (already stripped to this depth, trailing `:`).
 ## `while EXPR:` → WHILE (no loop variable). `for X in EXPR:` → REPEAT when EXPR is a pure
@@ -518,7 +521,9 @@ static func _loop_pick_filter(rest: String, is_while: bool) -> PickFilter:
 ## True only when EXPR is exactly a `range(...)` call whose opening paren closes at the final
 ## character, so it round-trips through REPEAT. `range(5) + 1` is NOT pure (stays EXPRESSION).
 static func _is_pure_range(expr: String) -> bool:
-	if not (expr.begins_with("range(") and expr.ends_with(")")):
+	# Needs at least one char between the parens — a bare `range()` is invalid GDScript and would
+	# classify as a Repeat with an empty count; let it stay EXPRESSION (still round-trips verbatim).
+	if expr.length() <= 7 or not expr.begins_with("range(") or not expr.ends_with(")"):
 		return false
 	var depth: int = 0
 	for i in range(5, expr.length()):

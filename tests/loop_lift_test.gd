@@ -37,6 +37,29 @@ static func run() -> bool:
 	if roundtrip != source:
 		print("  --- source ---\n%s\n  --- roundtrip ---\n%s" % [source, roundtrip])
 
+	# Nested control flow: a `for` containing an `if` containing a `while` must lift to NESTED loop
+	# rows (regression pin for _is_plain_collector — a loop child must not be mistaken for a plain
+	# statement collector, which would drop its pick_filter and force a raw fallback).
+	var nested: EventSheetResource = EventSheetResource.new()
+	nested.host_class = "Node2D"
+	var nevent: EventRow = EventRow.new()
+	nevent.trigger_provider_id = "Core"
+	nevent.trigger_id = "OnProcess"
+	var nraw: RawCodeRow = RawCodeRow.new()
+	nraw.code = "for x in a:\n\tif c:\n\t\twhile d:\n\t\t\tbar()"
+	nevent.actions.append(nraw)
+	nested.events.append(nevent)
+	var nsource: String = str(SheetCompiler.compile(nested, "user://nest_source.gd").get("output", ""))
+	var nimported: EventSheetResource = GDScriptImporter.new().import_external_source(nsource)
+	var nkinds: Array = _collect_pick_kinds(nimported.events)
+	ok = _check("nested: outer for lifts to an EXPRESSION row", nkinds.has(PickFilter.CollectionKind.EXPRESSION), true) and ok
+	ok = _check("nested: inner while lifts (through the if)", nkinds.has(PickFilter.CollectionKind.WHILE), true) and ok
+	nimported.external_source_path = "user://nest_rt.gd"
+	var nroundtrip: String = str(SheetCompiler.compile(nimported, "user://nest_rt.gd").get("output", ""))
+	ok = _check("nested control flow round-trips byte-identically", nroundtrip == nsource, true) and ok
+	if nroundtrip != nsource:
+		print("  --- nsource ---\n%s\n  --- nroundtrip ---\n%s" % [nsource, nroundtrip])
+
 	return ok
 
 ## Walks events + their sub_events, collecting every PickFilter's collection_kind.
