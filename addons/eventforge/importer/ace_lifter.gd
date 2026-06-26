@@ -548,10 +548,49 @@ static func _make_event(trigger_id: String, trigger_provider: String = "Core", t
 	event.trigger_source_path = trigger_source
 	return event
 
-## Splits a joined condition expression on " and " and reverse-matches every term
-## (supporting `not (...)` negation). All terms must match or the lift fails.
+## Splits a joined condition on TOP-LEVEL " and " only — ignoring " and " inside (), [], {} or a
+## string literal — so a compound term like `f(a and b)`, `x == "a and b"`, or `not (a and b)` stays
+## ONE condition. The naive String.split(" and ") fragmented these into garbage Expression-Is-True
+## rows ("f(a", "b)"); each piece still round-tripped when rejoined, but the structure was nonsense.
+static func _split_top_level_and(expression: String) -> PackedStringArray:
+	var parts: PackedStringArray = PackedStringArray()
+	var depth: int = 0
+	var in_string: bool = false
+	var quote: String = ""
+	var start: int = 0
+	var i: int = 0
+	var n: int = expression.length()
+	while i < n:
+		var c: String = expression[i]
+		if in_string:
+			if c == "\\":
+				i += 2  # skip the escaped char, whatever it is
+				continue
+			if c == quote:
+				in_string = false
+			i += 1
+			continue
+		if c == "\"" or c == "'":
+			in_string = true
+			quote = c
+		elif c == "(" or c == "[" or c == "{":
+			depth += 1
+		elif c == ")" or c == "]" or c == "}":
+			depth -= 1
+		elif depth == 0 and c == " " and expression.substr(i, 5) == " and ":
+			parts.append(expression.substr(start, i - start))
+			i += 5
+			start = i
+			continue
+		i += 1
+	parts.append(expression.substr(start))
+	return parts
+
+## Splits a joined condition expression on top-level " and " and reverse-matches every term
+## (supporting `not (...)` negation). All terms must match or the lift fails — though the generic
+## Expression Is True condition (bare {expr}) catches any term no specific ACE claims.
 static func _parse_conditions(expression: String, event: EventRow, reverse_entries: Array) -> bool:
-	for term: String in expression.split(" and "):
+	for term: String in _split_top_level_and(expression):
 		var negated: bool = false
 		var candidate: String = term
 		if candidate.begins_with("not (") and candidate.ends_with(")"):

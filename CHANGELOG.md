@@ -76,6 +76,14 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   / frame-spread) round-trips byte-identically; anything richer — or a statement after a nested block
   inside the loop, or a blank line inside a `match` — safely stays a code cell. The byte-identical
   recompile gates every lift, and no functions move, so the "events append" contract is untouched.
+- **Unusual `if` conditions stay real events (near-zero-RawCode roadmap, Phase 3.5).** When a
+  reverse-lifted `if` has a term no specific condition ACE claims, it becomes an **Expression Is True**
+  condition (a bare boolean expression) — so the branch stays a real event with sub-events instead of
+  collapsing to a code cell, and matched + expression terms mix freely (e.g. `if health > 100 and
+  is_ready:` → *Compare Variable* + *Expression Is True*). The corrected part: `and`-splitting is now
+  **top-level only** — an `and` inside parentheses, brackets, or a string literal no longer fragments a
+  compound term, so `if f(a and b):` lifts to one clean condition instead of the nonsensical `"f(a"` +
+  `"b)"`. Negation (`not (…)`) and the byte-identical round-trip are preserved.
 
 ### Fixed
 
