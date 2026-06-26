@@ -241,6 +241,9 @@ func _activate_tab(index: int) -> void:
     # along with every sheet, so the honest output is always in view.
     if bool(ProjectSettings.get_setting("eventsheets/editor/open_code_panel_by_default", false)) and not is_code_panel_visible():
         _toggle_code_panel()
+    # If the GDScript panel is already open, recompile it for the sheet we just switched to so it
+    # never shows the previous sheet's output. Self-guards on visibility, so it's a no-op when hidden.
+    _refresh_code_panel()
     var label: String = _current_sheet_path.get_file() if not _current_sheet_path.is_empty() else "(unsaved EventSheet)"
     _set_status("Loaded: %s" % label)
     _persist_session()
@@ -3063,7 +3066,7 @@ func _ensure_code_panel() -> void:
     _side_panel.add_child(header)
     # Orientation for non-programmers: say what this panel even is before the code scares them off.
     var code_hint: Label = Label.new()
-    code_hint.text = "The plain GDScript your sheet compiles to — read-only, refreshed on save. Your game ships this, with no runtime dependency."
+    code_hint.text = "The plain GDScript your sheet compiles to — read-only, refreshed live as you edit. Your game ships this, with no runtime dependency."
     code_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     code_hint.modulate = Color(1.0, 1.0, 1.0, 0.6)
     _side_panel.add_child(code_hint)

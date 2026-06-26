@@ -19,15 +19,12 @@ static func run() -> bool:
 	all_passed = _check("title: replace action", picker._title_for_mode("replace_action", false), "Replace Action") and all_passed
 	all_passed = _check("title: replace trigger", picker._title_for_mode("replace_trigger", false), "Replace Trigger") and all_passed
 
-	# Per-item type labels + colours.
+	# Per-item type labels (the type tint was removed — Favorites/Recent now render plain like the
+	# main tree and the native Create-New-Node dialog; the per-row icon carries the type).
 	all_passed = _check("type label trigger", picker._ace_type_label(ACEDefinition.ACEType.TRIGGER), "Trigger") and all_passed
 	all_passed = _check("type label condition", picker._ace_type_label(ACEDefinition.ACEType.CONDITION), "Condition") and all_passed
 	all_passed = _check("type label action", picker._ace_type_label(ACEDefinition.ACEType.ACTION), "Action") and all_passed
 	all_passed = _check("type label expression", picker._ace_type_label(ACEDefinition.ACEType.EXPRESSION), "Expression") and all_passed
-	all_passed = _check("item colour trigger", picker._item_color_for(ACEDefinition.ACEType.TRIGGER), ACEPickerDialog.ITEM_COLOR_TRIGGER) and all_passed
-	all_passed = _check("item colour condition", picker._item_color_for(ACEDefinition.ACEType.CONDITION), ACEPickerDialog.ITEM_COLOR_CONDITION) and all_passed
-	all_passed = _check("item colour action", picker._item_color_for(ACEDefinition.ACEType.ACTION), ACEPickerDialog.ITEM_COLOR_ACTION) and all_passed
-	all_passed = _check("item colour expression", picker._item_color_for(ACEDefinition.ACEType.EXPRESSION), ACEPickerDialog.ITEM_COLOR_EXPRESSION) and all_passed
 
 	# Category headers are now a single muted "quiet divider" colour for every kind — the node-type
 	# distinction is carried by the section's class icon, not a bright per-kind amber/teal/blue/purple.

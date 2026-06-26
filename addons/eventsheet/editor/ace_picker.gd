@@ -133,11 +133,8 @@ const GROUP_COLOR_TRIGGER := Color("#6fd0b0")     # teal-green — run context /
 const GROUP_COLOR_VARIABLE := Color("#8fb4e0")    # muted blue — variables
 const GROUP_COLOR_CUSTOM := Color("#c79bf0")      # purple — custom / runtime providers
 const GROUP_COLOR_NEUTRAL := Color("#9aa1ad")     # neutral muted — other categories
-
-# Per-item colours (by ACE type).
-const ITEM_COLOR_TRIGGER := Color("#7ee787")    # soft green
-const ITEM_COLOR_CONDITION := Color("#7fb0ff")  # soft blue
-const ITEM_COLOR_ACTION := Color("#5fd0c0")     # soft teal
+# Used by the ƒx expression autocomplete (ace_params_dialog) to tint expression fragments. The ACE
+# picker itself no longer tints rows by type (Create-New-Node style — the per-row icon carries that).
 const ITEM_COLOR_EXPRESSION := Color("#c79bf0") # soft purple
 
 var _window: Window = null
@@ -671,17 +668,6 @@ func _ace_type_label(ace_type: int) -> String:
 		_:
 			return "Action"
 
-func _item_color_for(ace_type: int) -> Color:
-	match ace_type:
-		ACEDefinition.ACEType.TRIGGER:
-			return ITEM_COLOR_TRIGGER
-		ACEDefinition.ACEType.CONDITION:
-			return ITEM_COLOR_CONDITION
-		ACEDefinition.ACEType.EXPRESSION:
-			return ITEM_COLOR_EXPRESSION
-		_:
-			return ITEM_COLOR_ACTION
-
 func _group_color_for(_group_key: String, _is_node_type: bool) -> Color:
 	# Muted, uniform category headers (Create-New-Node style): the node-type distinction is carried by
 	# each section's class icon, so a quiet divider colour reads cleaner than the old bright per-kind
@@ -982,7 +968,8 @@ func _populate_side_pane(tree: Tree, keys: PackedStringArray, mode: String, sign
 			if icon != null:
 				item.set_icon(0, icon)
 				item.set_icon_max_width(0, 16)
-			item.set_custom_color(0, _item_color_for(candidate.ace_type))
+			# Favorites/Recent render plain like the main tree (Create-New-Node style): the per-row
+			# icon carries the type, so no foreground tint on the label — consistent with the node picker.
 			item.set_tooltip_text(0, _item_tooltip(candidate))
 			item.set_metadata(0, candidate)
 			break
