@@ -2,6 +2,7 @@
 # Source: res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.tres
 # DO NOT EDIT — this file is regenerated on every compile.
 
+@icon("res://eventsheet_addons/behavior.svg")
 class_name EightDirectionMovement
 extends Node
 
@@ -25,6 +26,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Set Move Speed")
 ## @ace_category("Eight Direction")
 ## @ace_description("Changes the movement speed.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$EightDirectionMovement.set_move_speed({speed})")
 func set_move_speed(speed: float) -> void:
 	move_speed = speed

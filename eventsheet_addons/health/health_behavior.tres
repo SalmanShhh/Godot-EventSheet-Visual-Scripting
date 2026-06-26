@@ -714,6 +714,7 @@ host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "SimpleHealthBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_qhshe"), SubResource("Resource_o4pmk"), SubResource("Resource_xmwhe"), SubResource("Resource_oglca")])
 variables = {
 "current_health": {

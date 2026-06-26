@@ -3,6 +3,7 @@
 # DO NOT EDIT — this file is regenerated on every compile.
 
 ## @ace_tags(performance, threading)
+@icon("res://eventsheet_addons/behavior.svg")
 class_name BackgroundRunner
 extends Node
 
@@ -66,6 +67,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Run In Background")
 ## @ace_category("Background")
 ## @ace_description("Runs a PURE callable off the main thread; On Done(result) fires when it finishes. WARNING: the callable must NOT touch nodes / the scene tree / non-thread-safe resources — data in, data out only.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$BackgroundRunner.run_in_background({work})")
 func run_in_background(work: Callable) -> void:
 	if _mutex == null:
@@ -79,6 +81,7 @@ func run_in_background(work: Callable) -> void:
 ## @ace_name("Run Batch In Background")
 ## @ace_category("Background")
 ## @ace_description("Fans an array across worker threads: runs work.bind(item) for each item (On Done fires per item). The callable must be PURE.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$BackgroundRunner.run_batch_in_background({items}, {work})")
 func run_batch_in_background(items: Array, work: Callable) -> void:
 	for __item: Variant in items:

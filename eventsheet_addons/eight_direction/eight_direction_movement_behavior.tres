@@ -85,6 +85,7 @@ host_class = "CharacterBody2D"
 behavior_mode = true
 custom_class_name = "EightDirectionMovement"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_mcrq6"), SubResource("Resource_qp3ot")])
 variables = {
 "move_speed": {

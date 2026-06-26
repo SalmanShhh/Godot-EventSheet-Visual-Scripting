@@ -3,6 +3,7 @@
 # DO NOT EDIT — this file is regenerated on every compile.
 
 ## @ace_tags(combat, shooter)
+@icon("res://eventsheet_addons/behavior.svg")
 class_name WeaponKit
 extends Node
 
@@ -145,6 +146,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Fire")
 ## @ace_category("Weapon")
 ## @ace_description("Fires if ready (not reloading, off cooldown, has ammo). In burst mode it kicks off a burst; if the magazine is empty it triggers On Empty (and auto-reloads when enabled).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$WeaponKit.fire()")
 func fire() -> void:
 	if _reloading or _cooldown > 0.0 or _burst_left > 0:
@@ -163,6 +165,7 @@ func fire() -> void:
 ## @ace_name("Reload")
 ## @ace_category("Weapon")
 ## @ace_description("Starts a timed reload (if not full and reserve has rounds).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$WeaponKit.reload()")
 func reload() -> void:
 	if _reloading or current_ammo >= max_ammo:
@@ -178,6 +181,7 @@ func reload() -> void:
 ## @ace_name("Cancel Reload")
 ## @ace_category("Weapon")
 ## @ace_description("Aborts an in-progress reload (no ammo gained).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$WeaponKit.cancel_reload()")
 func cancel_reload() -> void:
 	_reloading = false
@@ -187,6 +191,7 @@ func cancel_reload() -> void:
 ## @ace_name("Instant Reload")
 ## @ace_category("Weapon")
 ## @ace_description("Refills the magazine immediately (no reload time).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$WeaponKit.instant_reload()")
 func instant_reload() -> void:
 	_reloading = false
@@ -196,6 +201,7 @@ func instant_reload() -> void:
 ## @ace_name("Add Ammo")
 ## @ace_category("Weapon")
 ## @ace_description("Adds rounds straight to the magazine (capped at the magazine size).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$WeaponKit.add_ammo({amount})")
 func add_ammo(amount: int) -> void:
 	current_ammo = mini(current_ammo + amount, max_ammo)
@@ -204,6 +210,7 @@ func add_ammo(amount: int) -> void:
 ## @ace_name("Add Reserve Ammo")
 ## @ace_category("Weapon")
 ## @ace_description("Adds spare rounds to the reserve pool (e.g. an ammo pickup).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$WeaponKit.add_reserve({amount})")
 func add_reserve(amount: int) -> void:
 	reserve_ammo += amount
@@ -212,6 +219,7 @@ func add_reserve(amount: int) -> void:
 ## @ace_name("Set Fire Rate")
 ## @ace_category("Weapon")
 ## @ace_description("Changes the shots-per-second.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$WeaponKit.set_fire_rate({rate})")
 func set_fire_rate(rate: float) -> void:
 	fire_rate = rate
@@ -220,6 +228,7 @@ func set_fire_rate(rate: float) -> void:
 ## @ace_name("Set Fire Mode")
 ## @ace_category("Weapon")
 ## @ace_description("0 = single, 1 = auto, 2 = burst.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$WeaponKit.set_fire_mode({mode})")
 func set_fire_mode(mode: int) -> void:
 	fire_mode = mode
@@ -228,6 +237,7 @@ func set_fire_mode(mode: int) -> void:
 ## @ace_name("Set Magazine Size")
 ## @ace_category("Weapon")
 ## @ace_description("Changes the magazine size.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$WeaponKit.set_max_ammo({size})")
 func set_max_ammo(size: int) -> void:
 	max_ammo = maxi(size, 0)

@@ -132,6 +132,7 @@ host_class = "Node3D"
 behavior_mode = true
 custom_class_name = "MoveTo3DBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_1pom0"), SubResource("Resource_fkxun"), SubResource("Resource_6db6m")])
 variables = {
 "max_speed": {

@@ -125,6 +125,7 @@ host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "OrbitBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_c3hde"), SubResource("Resource_u8wjc")])
 variables = {
 "angle": {

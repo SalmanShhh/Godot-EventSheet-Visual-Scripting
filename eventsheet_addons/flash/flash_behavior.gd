@@ -2,6 +2,7 @@
 # Source: res://eventsheet_addons/flash/flash_behavior.tres
 # DO NOT EDIT — this file is regenerated on every compile.
 
+@icon("res://eventsheet_addons/behavior.svg")
 class_name FlashBehavior
 extends Node
 
@@ -39,6 +40,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Flash")
 ## @ace_category("Flash")
 ## @ace_description("Blinks the host for the given number of seconds.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$FlashBehavior.flash({seconds})")
 func flash(seconds: float) -> void:
 	remaining = seconds
@@ -49,6 +51,7 @@ func flash(seconds: float) -> void:
 ## @ace_name("Stop Flash")
 ## @ace_category("Flash")
 ## @ace_description("Stops flashing and restores visibility.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$FlashBehavior.stop_flash()")
 func stop_flash() -> void:
 	flashing = false

@@ -474,6 +474,7 @@ host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "HTNAgent"
 addon_tags = PackedStringArray("ai", "planning")
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_q5b8g"), SubResource("Resource_loqp0")])
 variables = {
 "auto_replan_on_fail": {

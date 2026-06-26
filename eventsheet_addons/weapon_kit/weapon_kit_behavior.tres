@@ -310,6 +310,7 @@ host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "WeaponKit"
 addon_tags = PackedStringArray("combat", "shooter")
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_bhjv5"), SubResource("Resource_61vf4"), SubResource("Resource_itgvj")])
 variables = {
 "_burst_left": {

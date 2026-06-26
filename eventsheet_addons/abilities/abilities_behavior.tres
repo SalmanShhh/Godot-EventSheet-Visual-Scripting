@@ -966,6 +966,7 @@ script = ExtResource("9_ugumu")
 behavior_mode = true
 custom_class_name = "SimpleAbilitiesBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_mng6w"), SubResource("Resource_44b4b"), SubResource("Resource_n4pln")])
 variables = {
 "abilities": {

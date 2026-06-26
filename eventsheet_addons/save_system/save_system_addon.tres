@@ -378,6 +378,7 @@ autoload_mode = true
 autoload_name = "SaveSystem"
 custom_class_name = "SaveSystemAddon"
 addon_tags = PackedStringArray("persistence")
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_n23dw"), SubResource("Resource_amh6u"), SubResource("Resource_h03nn")])
 variables = {
 "autosave_accumulator": {

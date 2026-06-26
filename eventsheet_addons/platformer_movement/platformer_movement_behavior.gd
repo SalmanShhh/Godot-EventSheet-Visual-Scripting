@@ -3,6 +3,7 @@
 # DO NOT EDIT — this file is regenerated on every compile.
 
 ## @ace_tags(movement, platformer)
+@icon("res://eventsheet_addons/behavior.svg")
 class_name PlatformerMovement
 extends Node
 
@@ -176,6 +177,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Jump")
 ## @ace_category("Platformer")
 ## @ace_description("Jumps: from the floor or within coyote time, off a wall (if enabled), or a mid-air (double) jump if any remain. If none are available right now, the press is buffered.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerMovement.jump()")
 func jump() -> void:
 	if host == null:
@@ -200,6 +202,7 @@ func jump() -> void:
 ## @ace_name("Jump Released")
 ## @ace_category("Platformer")
 ## @ace_description("Call when the jump button is released — cuts the rise short for variable jump height (hold = higher).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerMovement.jump_released()")
 func jump_released() -> void:
 	if host != null and variable_jump_height and host.velocity.y < 0.0:
@@ -209,6 +212,7 @@ func jump_released() -> void:
 ## @ace_name("Set Move Speed")
 ## @ace_category("Platformer")
 ## @ace_description("Changes the horizontal move speed.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerMovement.set_move_speed({speed})")
 func set_move_speed(speed: float) -> void:
 	move_speed = speed
@@ -217,6 +221,7 @@ func set_move_speed(speed: float) -> void:
 ## @ace_name("Reset Jumps")
 ## @ace_category("Platformer")
 ## @ace_description("Refills the air-jump count (e.g. after grabbing a power-up).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerMovement.reset_jumps()")
 func reset_jumps() -> void:
 	_jumps_left = maxi(max_jumps - 1, 0)

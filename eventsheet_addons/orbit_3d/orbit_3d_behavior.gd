@@ -2,6 +2,7 @@
 # Source: res://eventsheet_addons/orbit_3d/orbit_3d_behavior.tres
 # DO NOT EDIT — this file is regenerated on every compile.
 
+@icon("res://eventsheet_addons/behavior.svg")
 class_name Orbit3DBehavior
 extends Node
 
@@ -36,6 +37,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Set Orbit 3D Center")
 ## @ace_category("Orbit 3D")
 ## @ace_description("Orbits around the given point from now on.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$Orbit3DBehavior.set_orbit3d_center({x}, {y}, {z})")
 func set_orbit3d_center(x: float, y: float, z: float) -> void:
 	center_x = x

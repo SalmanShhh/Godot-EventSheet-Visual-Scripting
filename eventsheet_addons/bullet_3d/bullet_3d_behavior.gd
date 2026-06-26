@@ -2,6 +2,7 @@
 # Source: res://eventsheet_addons/bullet_3d/bullet_3d_behavior.tres
 # DO NOT EDIT — this file is regenerated on every compile.
 
+@icon("res://eventsheet_addons/behavior.svg")
 class_name Bullet3DBehavior
 extends Node
 
@@ -35,6 +36,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Launch Forward")
 ## @ace_category("Bullet 3D")
 ## @ace_description("(Re)launches along the host's current forward direction.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$Bullet3DBehavior.launch_forward()")
 func launch_forward() -> void:
 	if host == null:
@@ -49,6 +51,7 @@ func launch_forward() -> void:
 ## @ace_name("Set Bullet 3D Speed")
 ## @ace_category("Bullet 3D")
 ## @ace_description("Changes speed, keeping the current direction.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$Bullet3DBehavior.set_bullet3d_speed({value})")
 func set_bullet3d_speed(value: float) -> void:
 	speed = value

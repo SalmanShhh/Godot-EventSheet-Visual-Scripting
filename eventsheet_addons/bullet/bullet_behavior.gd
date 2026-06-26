@@ -2,6 +2,7 @@
 # Source: res://eventsheet_addons/bullet/bullet_behavior.tres
 # DO NOT EDIT — this file is regenerated on every compile.
 
+@icon("res://eventsheet_addons/behavior.svg")
 class_name BulletBehavior
 extends Node
 
@@ -44,6 +45,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Set Bullet Speed")
 ## @ace_category("Bullet")
 ## @ace_description("Changes speed, keeping the current direction.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$BulletBehavior.set_bullet_speed({value})")
 func set_bullet_speed(value: float) -> void:
 	speed = value
@@ -58,6 +60,7 @@ func set_bullet_speed(value: float) -> void:
 ## @ace_name("Set Angle Of Motion")
 ## @ace_category("Bullet")
 ## @ace_description("Redirects the bullet (degrees).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$BulletBehavior.set_angle_of_motion({degrees})")
 func set_angle_of_motion(degrees: float) -> void:
 	vel_x = cos(deg_to_rad(degrees)) * speed
@@ -68,6 +71,7 @@ func set_angle_of_motion(degrees: float) -> void:
 ## @ace_name("Set Bullet Enabled")
 ## @ace_category("Bullet")
 ## @ace_description("Pauses or resumes the movement.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$BulletBehavior.set_bullet_enabled({is_enabled})")
 func set_bullet_enabled(is_enabled: bool) -> void:
 	enabled_movement = is_enabled

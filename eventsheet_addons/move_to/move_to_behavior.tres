@@ -281,6 +281,7 @@ host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "MoveToBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_f2y24"), SubResource("Resource_2d2na"), SubResource("Resource_fjx87")])
 variables = {
 "max_speed": {

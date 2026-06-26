@@ -77,6 +77,7 @@ host_class = "Node3D"
 behavior_mode = true
 custom_class_name = "Orbit3DBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_i0mc6"), SubResource("Resource_5urnx")])
 variables = {
 "angle": {

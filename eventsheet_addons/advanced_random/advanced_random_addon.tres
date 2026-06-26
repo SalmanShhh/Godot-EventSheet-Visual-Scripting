@@ -574,6 +574,7 @@ autoload_mode = true
 autoload_name = "AdvancedRandom"
 custom_class_name = "AdvancedRandomAddon"
 addon_tags = PackedStringArray("random", "noise", "procedural")
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_odpv0"), SubResource("Resource_fwfqp"), SubResource("Resource_2h5wo")])
 variables = {
 "seed_on_start": {

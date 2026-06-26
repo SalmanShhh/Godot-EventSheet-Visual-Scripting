@@ -140,5 +140,6 @@ script = ExtResource("9_03u21")
 behavior_mode = true
 custom_class_name = "BackgroundRunner"
 addon_tags = PackedStringArray("performance", "threading")
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_dkcia"), SubResource("Resource_rwyty"), SubResource("Resource_x2pyo"), SubResource("Resource_k4g2r")])
 functions = Array[Resource]([SubResource("Resource_owgv0"), SubResource("Resource_ubdru")])

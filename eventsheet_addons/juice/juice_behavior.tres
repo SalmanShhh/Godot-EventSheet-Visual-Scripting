@@ -557,5 +557,6 @@ host_class = "CanvasItem"
 behavior_mode = true
 custom_class_name = "JuiceBehavior"
 addon_tags = PackedStringArray("camera", "juice")
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_04rea"), SubResource("Resource_yc8eo"), SubResource("Resource_yi7a2"), SubResource("Resource_215nc"), SubResource("Resource_smfhv")])
 functions = Array[Resource]([SubResource("Resource_dp0f6"), SubResource("Resource_c7w01"), SubResource("Resource_sk1ln"), SubResource("Resource_mx66i"), SubResource("Resource_4hslg"), SubResource("Resource_eriro"), SubResource("Resource_ofju1"), SubResource("Resource_50sw7"), SubResource("Resource_tkhpc"), SubResource("Resource_clrk7")])

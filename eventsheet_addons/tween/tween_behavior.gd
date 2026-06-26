@@ -3,6 +3,7 @@
 # DO NOT EDIT — this file is regenerated on every compile.
 
 ## @ace_tags(motion, juice)
+@icon("res://eventsheet_addons/behavior.svg")
 class_name TweenBehavior
 extends Node
 
@@ -67,6 +68,7 @@ func _start_tween(property_path: String, final_value: Variant, duration: float) 
 ## @ace_name("Tween Property")
 ## @ace_category("Tween")
 ## @ace_description("Tweens any host property (e.g. position:x) to a value.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TweenBehavior.tween_property_to({property_path}, {final_value}, {duration})")
 func tween_property_to(property_path: String, final_value: float, duration: float) -> void:
 	_start_tween(property_path, final_value, duration)
@@ -75,6 +77,7 @@ func tween_property_to(property_path: String, final_value: float, duration: floa
 ## @ace_name("Tween Position")
 ## @ace_category("Tween")
 ## @ace_description("Moves the host to (x, y).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TweenBehavior.tween_position({x}, {y}, {duration})")
 func tween_position(x: float, y: float, duration: float) -> void:
 	_start_tween("position", Vector2(x, y), duration)
@@ -83,6 +86,7 @@ func tween_position(x: float, y: float, duration: float) -> void:
 ## @ace_name("Tween Scale")
 ## @ace_category("Tween")
 ## @ace_description("Scales the host uniformly.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TweenBehavior.tween_scale({amount}, {duration})")
 func tween_scale(amount: float, duration: float) -> void:
 	_start_tween("scale", Vector2(amount, amount), duration)
@@ -91,6 +95,7 @@ func tween_scale(amount: float, duration: float) -> void:
 ## @ace_name("Tween Rotation")
 ## @ace_category("Tween")
 ## @ace_description("Rotates the host to the given degrees.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TweenBehavior.tween_rotation({degrees}, {duration})")
 func tween_rotation(degrees: float, duration: float) -> void:
 	_start_tween("rotation_degrees", degrees, duration)
@@ -99,6 +104,7 @@ func tween_rotation(degrees: float, duration: float) -> void:
 ## @ace_name("Tween Alpha")
 ## @ace_category("Tween")
 ## @ace_description("Fades the host's modulate alpha.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TweenBehavior.tween_alpha({alpha}, {duration})")
 func tween_alpha(alpha: float, duration: float) -> void:
 	_start_tween("modulate:a", clampf(alpha, 0.0, 1.0), duration)
@@ -107,6 +113,7 @@ func tween_alpha(alpha: float, duration: float) -> void:
 ## @ace_name("Stop Tweens")
 ## @ace_category("Tween")
 ## @ace_description("Kills the running tween (host stays where it is).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TweenBehavior.stop_tweens()")
 func stop_tweens() -> void:
 	if _active_tween != null:

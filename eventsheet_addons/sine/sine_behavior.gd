@@ -2,6 +2,7 @@
 # Source: res://eventsheet_addons/sine/sine_behavior.tres
 # DO NOT EDIT — this file is regenerated on every compile.
 
+@icon("res://eventsheet_addons/behavior.svg")
 class_name SineBehavior
 extends Node
 
@@ -69,6 +70,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Set Sine Active")
 ## @ace_category("Sine")
 ## @ace_description("Pauses or resumes the oscillation.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SineBehavior.set_sine_active({is_active})")
 func set_sine_active(is_active: bool) -> void:
 	active = is_active
@@ -77,6 +79,7 @@ func set_sine_active(is_active: bool) -> void:
 ## @ace_name("Update Initial State")
 ## @ace_category("Sine")
 ## @ace_description("Re-captures the host's current position/scale/angle/opacity as the wave's base (C3 updateInitialState).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SineBehavior.update_initial_state()")
 func update_initial_state() -> void:
 	if host == null:
@@ -93,6 +96,7 @@ func update_initial_state() -> void:
 ## @ace_name("Set Phase")
 ## @ace_category("Sine")
 ## @ace_description("Phase offset in degrees.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SineBehavior.set_sine_phase({degrees})")
 func set_sine_phase(degrees: float) -> void:
 	phase_degrees = degrees
@@ -101,6 +105,7 @@ func set_sine_phase(degrees: float) -> void:
 ## @ace_name("Reset Sine")
 ## @ace_category("Sine")
 ## @ace_description("Restarts the wave from the current state.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SineBehavior.reset_sine()")
 func reset_sine() -> void:
 	time = 0.0

@@ -230,6 +230,7 @@ host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "TweenBehavior"
 addon_tags = PackedStringArray("motion", "juice")
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_gnvbk"), SubResource("Resource_hlhhl")])
 variables = {
 "default_duration": {

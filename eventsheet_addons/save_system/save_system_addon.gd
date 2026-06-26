@@ -3,6 +3,7 @@
 # DO NOT EDIT — this file is regenerated on every compile.
 
 ## @ace_tags(persistence)
+@icon("res://eventsheet_addons/behavior.svg")
 class_name SaveSystemAddon
 extends Node
 
@@ -96,6 +97,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Save Value")
 ## @ace_category("Save System")
 ## @ace_description("Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.save_value({key}, {value})")
 func save_value(key: String, value) -> void:
 	var data: Dictionary = _read_all()
@@ -106,6 +108,7 @@ func save_value(key: String, value) -> void:
 ## @ace_name("Load Value")
 ## @ace_category("Save System")
 ## @ace_description("Reads any value (your default when missing).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.load_value({key}, {default_value})")
 func load_value(key: String, default_value) -> Variant:
 	return _read_all().get(key, default_value)
@@ -114,6 +117,7 @@ func load_value(key: String, default_value) -> Variant:
 ## @ace_name("Save Number")
 ## @ace_category("Save System")
 ## @ace_description("Writes a number under the key (active slot).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.save_number({key}, {value})")
 func save_number(key: String, value: float) -> void:
 	save_value(key, value)
@@ -122,6 +126,7 @@ func save_number(key: String, value: float) -> void:
 ## @ace_name("Load Number")
 ## @ace_category("Save System")
 ## @ace_description("Reads a number (0 when missing).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.load_number({key})")
 func load_number(key: String) -> float:
 	return float(load_value(key, 0.0))
@@ -130,6 +135,7 @@ func load_number(key: String) -> float:
 ## @ace_name("Save Text")
 ## @ace_category("Save System")
 ## @ace_description("Writes a string under the key (active slot).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.save_text({key}, {value})")
 func save_text(key: String, value: String) -> void:
 	save_value(key, value)
@@ -138,6 +144,7 @@ func save_text(key: String, value: String) -> void:
 ## @ace_name("Load Text")
 ## @ace_category("Save System")
 ## @ace_description("Reads a string ("" when missing).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.load_text({key})")
 func load_text(key: String) -> String:
 	return str(load_value(key, ""))
@@ -146,6 +153,7 @@ func load_text(key: String) -> String:
 ## @ace_name("Has Save Key")
 ## @ace_category("Save System")
 ## @ace_description("Whether the key exists in the active slot.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.has_save_key({key})")
 func has_save_key(key: String) -> bool:
 	return _read_all().has(key)
@@ -154,6 +162,7 @@ func has_save_key(key: String) -> bool:
 ## @ace_name("Delete Slot")
 ## @ace_category("Save System")
 ## @ace_description("Removes the active slot's save file.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.delete_slot()")
 func delete_slot() -> void:
 	if FileAccess.file_exists(_slot_path()):
@@ -163,6 +172,7 @@ func delete_slot() -> void:
 ## @ace_name("Save Game")
 ## @ace_category("Save System")
 ## @ace_description("Broadcasts On Before Save (every sheet writes its state), then On Save Written.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.save_game()")
 func save_game() -> void:
 	before_save.emit(slot)
@@ -174,6 +184,7 @@ func save_game() -> void:
 ## @ace_name("Load Game")
 ## @ace_category("Save System")
 ## @ace_description("Broadcasts On After Load — every sheet reads its state back.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.load_game()")
 func load_game() -> void:
 	after_load.emit(slot)
@@ -182,6 +193,7 @@ func load_game() -> void:
 ## @ace_name("Slot Exists")
 ## @ace_category("Save System")
 ## @ace_description("Whether the slot has a save file.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.slot_exists({slot_index})")
 func slot_exists(slot_index: int) -> bool:
 	return FileAccess.file_exists(_slot_path(slot_index))
@@ -190,6 +202,7 @@ func slot_exists(slot_index: int) -> bool:
 ## @ace_name("List Slots")
 ## @ace_category("Save System")
 ## @ace_description("Slot numbers that have save files (for menus).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.list_slots()")
 func list_slots() -> Array:
 	var found: Array = []
@@ -202,6 +215,7 @@ func list_slots() -> Array:
 ## @ace_name("Slot Modified Time")
 ## @ace_category("Save System")
 ## @ace_description("Unix mtime of the slot's file (0 when missing).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.slot_modified_time({slot_index})")
 func slot_modified_time(slot_index: int) -> int:
 	return FileAccess.get_modified_time(_slot_path(slot_index)) if FileAccess.file_exists(_slot_path(slot_index)) else 0

@@ -74,6 +74,7 @@ host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "LOSBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_mnxbw"), SubResource("Resource_yeela"), SubResource("Resource_454na")])
 variables = {
 "collision_mask": {

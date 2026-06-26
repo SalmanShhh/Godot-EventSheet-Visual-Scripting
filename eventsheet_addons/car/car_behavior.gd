@@ -2,6 +2,7 @@
 # Source: res://eventsheet_addons/car/car_behavior.tres
 # DO NOT EDIT — this file is regenerated on every compile.
 
+@icon("res://eventsheet_addons/behavior.svg")
 class_name CarBehavior
 extends Node
 
@@ -62,6 +63,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Stop Car")
 ## @ace_category("Car")
 ## @ace_description("Kills all momentum.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$CarBehavior.stop_car()")
 func stop_car() -> void:
 	speed = 0.0

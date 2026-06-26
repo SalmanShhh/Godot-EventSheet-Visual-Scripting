@@ -130,6 +130,7 @@ host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "TileMovementBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_0b1ao"), SubResource("Resource_gl44j"), SubResource("Resource_s6njm"), SubResource("Resource_6dtgv")])
 variables = {
 "default_controls": {

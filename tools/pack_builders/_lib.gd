@@ -3,7 +3,16 @@
 # the generated "# Source:" header matches a recompile of the shipped .tres.
 @tool
 
-static func save_pack(sheet: EventSheetResource, base_path: String) -> bool:
+# Lives WITH the shipped packs (eventsheet_addons/), not the editor addon (addons/eventsheet/), so a
+# generated pack stays self-contained — removing the editor never dangles its @icon (clean_removal_test).
+const BEHAVIOR_ICON := "res://eventsheet_addons/behavior.svg"
+
+static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: String = BEHAVIOR_ICON) -> bool:
+	# Behaviour icon: every pack shows a recognizable EventForge behaviour icon in Godot's Create New
+	# Node dialog (emitted as `@icon` before class_name) and the sheet banner. A builder can pass its
+	# own icon, or set sheet.custom_class_icon before calling — an already-set icon is never overwritten.
+	if not icon_path.strip_edges().is_empty() and sheet.custom_class_icon.strip_edges().is_empty():
+		sheet.custom_class_icon = icon_path
 	# Stamp DETERMINISTIC row UIDs before saving. EventRow/EventGroup otherwise mint a random
 	# uid in _init(), so every regeneration churns the .tres of EVERY pack — exploding git
 	# diffs even for packs that did not change. Deriving the uid from the row's structural

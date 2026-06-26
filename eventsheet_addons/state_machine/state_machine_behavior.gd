@@ -2,6 +2,7 @@
 # Source: res://eventsheet_addons/state_machine/state_machine_behavior.tres
 # DO NOT EDIT — this file is regenerated on every compile.
 
+@icon("res://eventsheet_addons/behavior.svg")
 class_name StateMachineBehavior
 extends Node
 
@@ -24,6 +25,7 @@ signal state_changed(previous: String, next: String)
 ## @ace_name("Is In State")
 ## @ace_category("State Machine")
 ## @ace_description("True while the machine is in the given state.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$StateMachineBehavior.is_in_state({state_name})")
 func is_in_state(state_name: String) -> bool:
 	return state == state_name
@@ -32,6 +34,7 @@ func is_in_state(state_name: String) -> bool:
 ## @ace_name("Set State")
 ## @ace_category("State Machine")
 ## @ace_description("Switches to the given state and fires On State Changed.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$StateMachineBehavior.set_state({next})")
 func set_state(next: String) -> void:
 	if state != next:

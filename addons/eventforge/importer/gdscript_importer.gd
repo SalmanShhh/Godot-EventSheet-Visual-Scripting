@@ -95,6 +95,14 @@ func import_external_source(source: String) -> EventSheetResource:
 		var class_match: RegExMatch = class_name_regex.search(source)
 		if class_match != null:
 			sheet.custom_class_name = class_match.get_string(1)
+	# Recover the custom node icon (`@icon("res://…")`) so the sheet banner shows it and a re-save
+	# regenerates it. The annotation line itself stays in the verbatim prelude block, so this is
+	# metadata only — no double-emit.
+	var icon_regex: RegEx = RegEx.new()
+	if icon_regex.compile("(?m)^@icon\\(\"([^\"]+)\"\\)") == OK:
+		var icon_match: RegExMatch = icon_regex.search(source)
+		if icon_match != null:
+			sheet.custom_class_icon = icon_match.get_string(1)
 	var host_regex: RegEx = RegEx.new()
 	if source.contains("\nextends Node\n") and host_regex.compile("(?m)^var host: ([A-Za-z_][A-Za-z0-9_]*) = null$") == OK:
 		var host_match: RegExMatch = host_regex.search(source)

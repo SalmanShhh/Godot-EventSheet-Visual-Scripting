@@ -80,6 +80,7 @@ host_class = "CharacterBody2D"
 behavior_mode = true
 custom_class_name = "CarBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_1707f"), SubResource("Resource_bb4cx"), SubResource("Resource_8htxg")])
 variables = {
 "_drifting": {

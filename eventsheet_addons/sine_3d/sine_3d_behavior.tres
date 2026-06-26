@@ -121,6 +121,7 @@ host_class = "Node3D"
 behavior_mode = true
 custom_class_name = "Sine3DBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_526kk"), SubResource("Resource_w5wfh"), SubResource("Resource_wu8f5")])
 variables = {
 "active": {

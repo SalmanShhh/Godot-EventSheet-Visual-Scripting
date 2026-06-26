@@ -2,6 +2,7 @@
 # Source: res://eventsheet_addons/timer/timer_behavior.tres
 # DO NOT EDIT — this file is regenerated on every compile.
 
+@icon("res://eventsheet_addons/behavior.svg")
 class_name TimerBehavior
 extends Node
 
@@ -37,6 +38,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Start Timer")
 ## @ace_category("Timer")
 ## @ace_description("Starts (or restarts) the countdown with the given duration.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TimerBehavior.start_timer({seconds})")
 func start_timer(seconds: float) -> void:
 	duration = seconds
@@ -47,6 +49,7 @@ func start_timer(seconds: float) -> void:
 ## @ace_name("Stop Timer")
 ## @ace_category("Timer")
 ## @ace_description("Stops the countdown without firing On Timer.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TimerBehavior.stop_timer()")
 func stop_timer() -> void:
 	running = false

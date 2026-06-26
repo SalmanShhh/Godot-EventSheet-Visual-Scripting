@@ -2,6 +2,7 @@
 # Source: res://eventsheet_addons/tile_movement/tile_movement_behavior.tres
 # DO NOT EDIT — this file is regenerated on every compile.
 
+@icon("res://eventsheet_addons/behavior.svg")
 class_name TileMovementBehavior
 extends Node
 
@@ -69,6 +70,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Simulate Step")
 ## @ace_category("Tile Movement")
 ## @ace_description("Steps one tile in a direction: left, right, up or down (C3 simulate control).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TileMovementBehavior.simulate_step({direction})")
 func simulate_step(direction: String) -> void:
 	if direction == "left":
@@ -84,6 +86,7 @@ func simulate_step(direction: String) -> void:
 ## @ace_name("Teleport To Tile")
 ## @ace_category("Tile Movement")
 ## @ace_description("Snaps to a tile coordinate instantly.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TileMovementBehavior.teleport_to_tile({tile_x}, {tile_y})")
 func teleport_to_tile(tile_x: float, tile_y: float) -> void:
 	if host != null:

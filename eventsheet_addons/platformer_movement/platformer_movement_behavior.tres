@@ -225,6 +225,7 @@ host_class = "CharacterBody2D"
 behavior_mode = true
 custom_class_name = "PlatformerMovement"
 addon_tags = PackedStringArray("movement", "platformer")
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_wlsfs"), SubResource("Resource_b2uae"), SubResource("Resource_4dex6")])
 variables = {
 "_air_time": {

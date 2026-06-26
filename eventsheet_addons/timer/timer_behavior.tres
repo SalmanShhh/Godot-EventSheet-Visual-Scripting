@@ -179,6 +179,7 @@ script = ExtResource("10_whix2")
 behavior_mode = true
 custom_class_name = "TimerBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_xncmq"), SubResource("Resource_pt8bp"), SubResource("Resource_y7dsd")])
 variables = {
 "duration": {

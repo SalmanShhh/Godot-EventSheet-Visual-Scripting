@@ -107,7 +107,26 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   block. So a real tuned script renders as a sheet and round-trips byte-identically; the per-line
   verify-lift gate rejects any annotation it can't reproduce exactly (those stay blocks).
 
+### Editor UX + behaviour icons
+
+- **Behaviour addons now carry an icon.** Every generated behaviour pack emits `@icon(...)` before its
+  `class_name`, so it shows a recognizable EventForge behaviour icon in Godot's **Create New Node**
+  dialog and the sheet banner (instead of the generic script icon). The icon ships *with* the packs
+  (`res://eventsheet_addons/behavior.svg`), never the editor addon, so a behaviour stays self-contained
+  (clean-removal verified). A pack builder can pass its own icon to `save_pack`, and opening a generated
+  `.gd` recovers the icon back into `custom_class_icon` (round-trips byte-identically).
+- **Generated-GDScript preview refreshes live.** The preview panel now recompiles when you open a sheet
+  or switch tabs — not only on edit — so it never shows the previous sheet's output. Hint text corrected
+  to "refreshed live as you edit".
+- **ACE picker matches the native node dialog.** Favorites/Recent rows no longer tint their label by ACE
+  type; they render plain like the main category tree and Godot's Create-New-Node dialog (the per-row
+  icon carries the type).
+
 ### Fixed
+
+- **Selecting an event block by clicking outside the condition cell** is pinned: a click in a block's
+  empty lane or the left gutter resolves to a whole-row selection (so the block selects, and Delete acts
+  on it rather than falling through to the scene tree).
 
 - **Pressing Delete in the event sheet no longer deletes a node from the open scene.** The dock
   handled Delete only in `_unhandled_key_input`, which runs *after* the editor's Scene-tree dock's

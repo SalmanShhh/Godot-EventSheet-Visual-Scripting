@@ -230,6 +230,7 @@ host_class = "CanvasItem"
 behavior_mode = true
 custom_class_name = "FlashBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_y7j0k"), SubResource("Resource_dftwn"), SubResource("Resource_874q3")])
 variables = {
 "accumulator": {

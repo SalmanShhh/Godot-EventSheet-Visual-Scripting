@@ -111,6 +111,7 @@ script = ExtResource("10_tns7c")
 behavior_mode = true
 custom_class_name = "StateMachineBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_uuu4y"), SubResource("Resource_8ogfh")])
 variables = {
 "state": {

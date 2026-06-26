@@ -2,6 +2,7 @@
 # Source: res://eventsheet_addons/line_of_sight_3d/line_of_sight_3d_behavior.tres
 # DO NOT EDIT — this file is regenerated on every compile.
 
+@icon("res://eventsheet_addons/behavior.svg")
 class_name LOS3DBehavior
 extends Node
 

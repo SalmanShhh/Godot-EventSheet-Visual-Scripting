@@ -97,6 +97,7 @@ host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "FollowBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_ycohw"), SubResource("Resource_bov8v"), SubResource("Resource_na37c")])
 variables = {
 "_reached": {

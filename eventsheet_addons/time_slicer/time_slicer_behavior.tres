@@ -197,6 +197,7 @@ script = ExtResource("9_uikdf")
 behavior_mode = true
 custom_class_name = "TimeSlicerBehavior"
 addon_tags = PackedStringArray("performance", "scheduling")
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_geigq"), SubResource("Resource_13vlq"), SubResource("Resource_tbyw6")])
 variables = {
 "_last_count": {

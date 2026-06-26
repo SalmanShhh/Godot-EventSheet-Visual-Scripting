@@ -3,6 +3,7 @@
 # DO NOT EDIT — this file is regenerated on every compile.
 
 ## @ace_tags(motion, juice)
+@icon("res://eventsheet_addons/behavior.svg")
 class_name SpringBehavior
 extends Node
 
@@ -168,6 +169,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Spring To")
 ## @ace_category("Spring")
 ## @ace_description("Springs the named value toward a target.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.spring_to({spring_name}, {target})")
 func spring_to(spring_name: String, target: float) -> void:
 	var entry: SpringEntry = _spring_entry(spring_name)
@@ -182,6 +184,7 @@ func spring_to(spring_name: String, target: float) -> void:
 ## @ace_name("Spring Between")
 ## @ace_category("Spring")
 ## @ace_description("Snaps to a start value, then springs to the end value.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.spring_between({spring_name}, {from_value}, {to_value})")
 func spring_between(spring_name: String, from_value: float, to_value: float) -> void:
 	var entry: SpringEntry = _spring_entry(spring_name)
@@ -195,6 +198,7 @@ func spring_between(spring_name: String, from_value: float, to_value: float) -> 
 ## @ace_name("Set Spring Value")
 ## @ace_category("Spring")
 ## @ace_description("Snaps the named spring (no motion).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.set_spring({spring_name}, {value})")
 func set_spring(spring_name: String, value: float) -> void:
 	var entry: SpringEntry = _spring_entry(spring_name)
@@ -208,6 +212,7 @@ func set_spring(spring_name: String, value: float) -> void:
 ## @ace_name("Add Impulse")
 ## @ace_category("Spring")
 ## @ace_description("Kicks the named spring's velocity (instant juice).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.add_impulse({spring_name}, {amount})")
 func add_impulse(spring_name: String, amount: float) -> void:
 	var entry: SpringEntry = _spring_entry(spring_name)
@@ -218,6 +223,7 @@ func add_impulse(spring_name: String, amount: float) -> void:
 ## @ace_name("Stop Spring")
 ## @ace_category("Spring")
 ## @ace_description("Freezes the named spring where it is.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.stop_spring({spring_name})")
 func stop_spring(spring_name: String) -> void:
 	if springs.has(spring_name):
@@ -227,6 +233,7 @@ func stop_spring(spring_name: String) -> void:
 ## @ace_name("Configure Spring")
 ## @ace_category("Spring")
 ## @ace_description("Per-spring stiffness/damping/precision overrides.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.configure_spring({spring_name}, {stiffness}, {damping}, {precision})")
 func configure_spring(spring_name: String, stiffness: float, damping: float, precision: float) -> void:
 	var entry: SpringEntry = _spring_entry(spring_name)
@@ -238,6 +245,7 @@ func configure_spring(spring_name: String, stiffness: float, damping: float, pre
 ## @ace_name("Spring Host X")
 ## @ace_category("Spring")
 ## @ace_description("Springs the host's X position.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.spring_host_x({target})")
 func spring_host_x(target: float) -> void:
 	var entry: SpringEntry = _spring_entry("__x")
@@ -251,6 +259,7 @@ func spring_host_x(target: float) -> void:
 ## @ace_name("Spring Host Y")
 ## @ace_category("Spring")
 ## @ace_description("Springs the host's Y position.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.spring_host_y({target})")
 func spring_host_y(target: float) -> void:
 	var entry: SpringEntry = _spring_entry("__y")
@@ -264,6 +273,7 @@ func spring_host_y(target: float) -> void:
 ## @ace_name("Spring Host Angle")
 ## @ace_category("Spring")
 ## @ace_description("Springs the host's rotation (degrees).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.spring_host_angle({degrees})")
 func spring_host_angle(degrees: float) -> void:
 	var entry: SpringEntry = _spring_entry("__angle")
@@ -277,6 +287,7 @@ func spring_host_angle(degrees: float) -> void:
 ## @ace_name("Spring Host Scale")
 ## @ace_category("Spring")
 ## @ace_description("Springs the host's uniform scale (squash & stretch!).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.spring_host_scale({target})")
 func spring_host_scale(target: float) -> void:
 	var entry: SpringEntry = _spring_entry("__scale")
@@ -290,6 +301,7 @@ func spring_host_scale(target: float) -> void:
 ## @ace_name("Set Color Value")
 ## @ace_category("Spring")
 ## @ace_description("Snaps a named colour spring (no motion) — seed it before springing.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.set_color({spring_name}, {color})")
 func set_color(spring_name: String, color: Color) -> void:
 	var entry: ColorSpringEntry = _color_entry(spring_name)
@@ -302,6 +314,7 @@ func set_color(spring_name: String, color: Color) -> void:
 ## @ace_name("Spring Color")
 ## @ace_category("Spring")
 ## @ace_description("Springs a named colour toward a target (read it back with Color Value — great for hit flashes).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.spring_color({spring_name}, {target_color})")
 func spring_color(spring_name: String, target_color: Color) -> void:
 	var entry: ColorSpringEntry = _color_entry(spring_name)
@@ -315,6 +328,7 @@ func spring_color(spring_name: String, target_color: Color) -> void:
 ## @ace_name("Pause Spring")
 ## @ace_category("Spring")
 ## @ace_description("Freezes a spring in place (resume continues it).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.pause_spring({spring_name})")
 func pause_spring(spring_name: String) -> void:
 	if springs.has(spring_name):
@@ -326,6 +340,7 @@ func pause_spring(spring_name: String) -> void:
 ## @ace_name("Resume Spring")
 ## @ace_category("Spring")
 ## @ace_description("Resumes a paused spring toward its target.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.resume_spring({spring_name})")
 func resume_spring(spring_name: String) -> void:
 	if springs.has(spring_name):
@@ -337,6 +352,7 @@ func resume_spring(spring_name: String) -> void:
 ## @ace_name("Remove Spring")
 ## @ace_category("Spring")
 ## @ace_description("Deletes a named spring (numeric and/or colour).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.remove_spring({spring_name})")
 func remove_spring(spring_name: String) -> void:
 	springs.erase(spring_name)
@@ -346,6 +362,7 @@ func remove_spring(spring_name: String) -> void:
 ## @ace_name("Reset All Springs")
 ## @ace_category("Spring")
 ## @ace_description("Clears every spring on this behavior.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.reset_springs()")
 func reset_springs() -> void:
 	springs.clear()

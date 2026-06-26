@@ -1166,6 +1166,7 @@ host_class = "CharacterBody2D"
 behavior_mode = true
 custom_class_name = "VirtualCursor"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_dwkn7"), SubResource("Resource_3d4q0"), SubResource("Resource_rhot5"), SubResource("Resource_44tmr")])
 variables = {
 "acceleration": {

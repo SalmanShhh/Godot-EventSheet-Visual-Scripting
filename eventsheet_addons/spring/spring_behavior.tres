@@ -617,6 +617,7 @@ host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "SpringBehavior"
 addon_tags = PackedStringArray("motion", "juice")
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_swf5b"), SubResource("Resource_kefu4"), SubResource("Resource_22bip")])
 variables = {
 "color_springs": {

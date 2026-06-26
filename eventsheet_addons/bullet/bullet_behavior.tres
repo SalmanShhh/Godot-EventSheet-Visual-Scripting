@@ -116,6 +116,7 @@ host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "BulletBehavior"
 addon_tags = PackedStringArray()
+custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_dbolv"), SubResource("Resource_2c7to")])
 variables = {
 "acceleration": {
