@@ -1228,6 +1228,10 @@ static func _indent_raw_lines(code: String, depth: int) -> PackedStringArray:
 ## provider (drop it into res://eventsheet_addons/), publishing the function as an ACE in
 ## every sheet — the sheet → script → addon loop behaviors and custom nodes build on.
 static func _emit_expose_annotations(event_function: EventFunction, sheet: EventSheetResource, lines: PackedStringArray) -> void:
+	if event_function.lifted_unannotated:
+		# Reverse-lifted from a hand-written helper with no annotation block — the source had no
+		# `## @ace_hidden`, so emit none (keeps the opened .gd byte-identical on save).
+		return
 	if not event_function.expose_as_ace:
 		# Reflection publishes any public method of a provider script, so unexposed sheet
 		# functions are explicitly hidden — expose_as_ace is the single publication switch.

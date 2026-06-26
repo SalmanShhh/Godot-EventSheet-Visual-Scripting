@@ -103,11 +103,15 @@ static func run() -> bool:
 	var pack_roundtrip: String = str(SheetCompiler.compile(pack, "user://eventsheets_pack_lift_rt.gd").get("output", ""))
 	all_passed = _check("behavior pack round-trips byte-identically", pack_roundtrip == pack_source, true) and all_passed
 
-	# Two-pass safety: an unannotated handwritten function keeps the file as blocks,
-	# byte-identical (no regression, no corruption).
+	# Phase 1: an unannotated hand-written function reverse-lifts to an un-exposed sheet function
+	# (lifted_unannotated suppresses the @ace_hidden emission), still byte-identical.
 	var handwritten: String = "extends Node\n\nfunc helper() -> void:\n\tprint(\"hi\")\n"
 	var handwritten_imported: EventSheetResource = GDScriptImporter.new().import_external_source(handwritten)
-	all_passed = _check("unannotated functions stay blocks", handwritten_imported.functions.is_empty(), true) and all_passed
+	all_passed = _check("unannotated function lifts to one un-exposed sheet function",
+		handwritten_imported.functions.size() == 1
+		and (handwritten_imported.functions[0] as EventFunction).function_name == "helper"
+		and not (handwritten_imported.functions[0] as EventFunction).expose_as_ace
+		and (handwritten_imported.functions[0] as EventFunction).lifted_unannotated, true) and all_passed
 	handwritten_imported.external_source_path = "user://eventsheets_hand_rt.gd"
 	var handwritten_roundtrip: String = str(SheetCompiler.compile(handwritten_imported, "user://eventsheets_hand_rt.gd").get("output", ""))
 	all_passed = _check("handwritten file stays byte-identical", handwritten_roundtrip == handwritten, true) and all_passed

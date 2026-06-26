@@ -3,7 +3,8 @@
 # THE CONTRACT (GDSCRIPT-PAIRING-SPEC): importing a GDScript file and saving it untouched
 # reproduces the file byte-identically. Declarations lift to first-class rows only when
 # canonical re-emission matches the source exactly (verify-lift); everything else is kept
-# verbatim as ordered block rows. Events added later append as standard trigger functions.
+# verbatim as ordered block rows. Hand-written helper functions reverse-lift to un-exposed sheet
+# functions (Phase 1); events added later land in the events section (standard sheet layout).
 @tool
 extends RefCounted
 class_name ExternalSheetTest
@@ -55,7 +56,12 @@ static func run() -> bool:
 		elif entry is RawCodeRow and (entry as RawCodeRow).code.begins_with("func "):
 			function_blocks += 1
 	all_passed = _check("canonical var lifted to a variable row", lifted_names, ["hp"] as Array[String]) and all_passed
-	all_passed = _check("each function becomes its own block row", function_blocks, 2) and all_passed
+	# Phase 1: hand-written helper functions reverse-lift to un-exposed sheet functions, not blocks.
+	all_passed = _check("plain functions lift to sheet functions, not blocks", function_blocks, 0) and all_passed
+	var helper_names: Array[String] = []
+	for fn in sheet.functions:
+		helper_names.append((fn as EventFunction).function_name)
+	all_passed = _check("both helper functions lifted as sheet functions", helper_names, ["get_mode", "reset"] as Array[String]) and all_passed
 
 	# Editing a lifted variable changes exactly that line on save.
 	for entry in sheet.events:
@@ -66,8 +72,9 @@ static func run() -> bool:
 	all_passed = _check("everything else is untouched by the edit",
 		edited_output.replace("var hp: int = 150", "var hp: int = 100") == SAMPLE_SOURCE, true) and all_passed
 
-	# Adding an event appends a standard trigger function at the end; the original text
-	# remains an exact prefix (modulo the edited var line, reverted above).
+	# Adding an event puts it in the events section (standard sheet layout) — before the lifted
+	# helper functions. The prelude stays a prefix, both helpers survive intact, and the diff is a
+	# single clean insert. (The untouched round-trip above already proved byte-identity.)
 	var event: EventRow = EventRow.new()
 	event.trigger_provider_id = "Core"
 	event.trigger_id = "OnProcess"
@@ -77,10 +84,15 @@ static func run() -> bool:
 	event.actions.append(action)
 	sheet.events.append(event)
 	var with_event: String = str(SheetCompiler.compile(sheet, "user://external_sample.gd").get("output", ""))
-	all_passed = _check("added event compiles as an appended trigger function",
+	all_passed = _check("added event compiles as a trigger function",
 		with_event.contains("func _process(") and with_event.contains("queue_free()"), true) and all_passed
-	all_passed = _check("original content stays a prefix when events are added",
-		with_event.begins_with(edited_output.trim_suffix("\n")), true) and all_passed
+	all_passed = _check("prelude stays a prefix when an event is added",
+		with_event.begins_with("@tool\nclass_name ExternalSample\nextends CharacterBody2D"), true) and all_passed
+	all_passed = _check("lifted helper functions survive the added event",
+		with_event.contains("func get_mode() -> int:\n\treturn Mode.IDLE")
+		and with_event.contains("func reset(to_full: bool = true) -> void:"), true) and all_passed
+	all_passed = _check("added event sits in the events section, before the helpers",
+		with_event.find("func _process(") < with_event.find("func get_mode("), true) and all_passed
 
 	# Dock flow: open a real file as a sheet, save back, confirm identical on disk.
 	var sample_path: String = "user://external_dock_sample.gd"

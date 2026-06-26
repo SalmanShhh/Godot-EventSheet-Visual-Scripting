@@ -223,14 +223,19 @@ static func _parse_annotations(code: String) -> Dictionary:
 ## grammar as event bodies (events without triggers). {} fields come from the preceding
 ## annotation block (every generated sheet function has one: @ace_action… or @ace_hidden).
 static func _lift_sheet_function(function_lines: PackedStringArray, annotations: Dictionary) -> Dictionary:
-	if annotations.is_empty():
-		return {"ok": false}  # generated sheet functions always carry an annotation block
+	# A generated sheet function always carries an annotation block (@ace_action… or @ace_hidden); a
+	# hand-written helper in an opened .gd has none. Both lift — the un-annotated one becomes an
+	# un-exposed function whose @ace_hidden emission is suppressed (lifted_unannotated), so it
+	# round-trips byte-identically. Needs an explicit `-> Type:` header (the regex below); a
+	# return-type-less `func foo():` still falls back to a verbatim block.
+	var unannotated: bool = annotations.is_empty()
 	var header_regex: RegEx = RegEx.new()
 	header_regex.compile("^func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\) -> ([A-Za-z_][A-Za-z0-9_]*):$")
 	var header_match: RegExMatch = header_regex.search(function_lines[0])
 	if header_match == null:
 		return {"ok": false}
 	var event_function: EventFunction = EventFunction.new()
+	event_function.lifted_unannotated = unannotated
 	event_function.function_name = header_match.get_string(1)
 	var return_name: String = header_match.get_string(3) if header_match.get_group_count() >= 3 else "void"
 	var return_types: Dictionary = {"void": TYPE_NIL, "bool": TYPE_BOOL, "int": TYPE_INT, "float": TYPE_FLOAT, "String": TYPE_STRING, "Vector2": TYPE_VECTOR2, "Vector3": TYPE_VECTOR3, "Color": TYPE_COLOR, "Array": TYPE_ARRAY, "Dictionary": TYPE_DICTIONARY, "Variant": TYPE_MAX}

@@ -84,6 +84,15 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   **top-level only** — an `and` inside parentheses, brackets, or a string literal no longer fragments a
   compound term, so `if f(a and b):` lifts to one clean condition instead of the nonsensical `"f(a"` +
   `"b)"`. Negation (`not (…)`) and the byte-identical round-trip are preserved.
+- **Hand-written helper functions open as sheet functions (near-zero-RawCode roadmap, Phase 1 — the
+  unlock).** A plain `func foo(args) -> Type:` in an opened `.gd` — with no `## @ace_*` annotation —
+  now reverse-lifts to an **un-exposed sheet function** (its body rendered as event rows: statements,
+  loops, and branches via Phases 2-3) instead of staying one opaque code block. The `@ace_hidden`
+  marker the source never had is suppressed (a new `lifted_unannotated` flag), so the file round-trips
+  byte-identically; generated `@ace_hidden` functions keep their marker untouched. A function with no
+  return type, or a blank line in its body, safely stays a block. Opening + saving a `.gd` untouched
+  stays byte-identical; an event added afterward lands in the events section (standard sheet layout) —
+  before any lifted helper functions, a clean single-insert diff.
 
 ### Fixed
 

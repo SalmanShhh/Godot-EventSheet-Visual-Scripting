@@ -11,6 +11,11 @@ class_name EventFunction
 ## script into res://eventsheet_addons/ publishes this function as an ACE in every sheet —
 ## the sheet → script → addon loop that makes behaviors/custom nodes extend the vocabulary.
 @export var expose_as_ace: bool = false
+## Set when this function was reverse-lifted from a hand-written body that had NO `## @ace_*`
+## annotation block (a plain helper in an opened .gd). Suppresses the `## @ace_hidden` emission the
+## un-exposed path would otherwise add, so the source round-trips byte-identically. `expose_as_ace`
+## stays false — re-exposing it (editing the function) clears this and restores normal annotations.
+@export var lifted_unannotated: bool = false
 ## Odin-style [Button]: a non-empty label emits
 ## `@export_tool_button("Label") var _btn_<name>: Callable = <name>` so the Inspector
 ## shows a clickable button running this function. Needs a @tool sheet to act in-editor
