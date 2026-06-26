@@ -649,12 +649,12 @@ static func _build_reverse_entries() -> Array:
 			continue  # optional-segment templates are not reversible (v1)
 		# Helper ACEs are mostly forward-authoring conveniences with deliberately generic templates
 		# ({code}, math expressions) that would shadow specific ACEs — kept out of the reverse index.
-		# EXCEPT the two statement catch-alls Set Property (`{target}.{property} = {value}`) and Call
-		# Method (`{target}.{method}({args})`): admitted at LOWEST specificity (the literal_len sort at
-		# the bottom puts them after every specific ACE), they reverse-lift an `a.b = c` / `a.b()` that
-		# no specific ACE claims into a ROW instead of an in-flow code cell (Stage B of the
-		# near-zero-RawCode roadmap). The byte-identical recompile still gates every match.
-		if descriptor.category == "Helpers" and not (descriptor.ace_id in ["SetProperty", "CallMethod"]):
+		# EXCEPT four statement catch-alls, admitted at LOWEST specificity (the literal_len sort at the
+		# bottom puts them after every specific ACE) so they reverse-lift only what nothing else claims:
+		# Set Property (`{target}.{property} = {value}`) and Call Method (`{target}.{method}({args})`)
+		# (Stage B), plus Set Local Variable (`var {name} = {value}`) and its typed sibling (Stage D),
+		# so a local declaration in a hand-written body becomes a row, not a code cell. Byte-verify gates.
+		if descriptor.category == "Helpers" and not (descriptor.ace_id in ["SetProperty", "CallMethod", "SetLocalVar", "SetLocalVarTyped"]):
 			continue
 		if template in ["break", "continue", "pass"]:
 			# Bare loop-control keywords also appear in generated pick-loop bodies, so

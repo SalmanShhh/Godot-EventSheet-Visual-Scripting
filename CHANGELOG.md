@@ -93,6 +93,14 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   return type, or a blank line in its body, safely stays a block. Opening + saving a `.gd` untouched
   stays byte-identical; an event added afterward lands in the events section (standard sheet layout) —
   before any lifted helper functions, a clean single-insert diff.
+- **Math expression vocabulary + local-variable lift (near-zero-RawCode roadmap, Phase 4 — polish).**
+  New ƒx-field expressions sit beside Abs/Min/Max: **Square Root**, **Power**, **Floor**, **Ceil**,
+  **Float Modulo**, **Ease**, **Snapped**, and **Load Resource** (`load(path)`) — the common one-liners
+  that used to need a RawCode expression. And **Set Local Variable** (`var x = …`) and its typed sibling
+  now reverse-lift, so a local declaration in a hand-written body opens as a row instead of a code cell.
+  A new **fidelity ratchet** test proves a representative hand-written script lifts *completely* — every
+  variable, statement, loop, condition, and helper function becomes a row (only the `extends` prelude
+  stays verbatim) and round-trips byte-identically; the ratchet can only tighten, never silently loosen.
 
 ### Fixed
 
