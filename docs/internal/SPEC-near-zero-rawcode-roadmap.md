@@ -79,11 +79,11 @@ Stays a code cell **by nature** (and that's correct): typed **inner classes** wi
 ---
 
 ## Phased plan (most fidelity per unit effort first)
-0. **Phase 0** (cheap authoring wins): `@onready` row, `SubtractVar/MultiplyVar/DivideVar`, `IsType/TypeOf`. ~½ day each; also seeds reverse-lift.
-1. **Phase 1 (the unlock):** Stage A — decouple from the trailing-run layout, **relax the annotation requirement**, **handle blank lines**, per-statement fallback granularity. Biggest fidelity jump.
-2. **Phase 2 (statements):** Stage B — the reverse-eligible whitelist (SetProperty/CallMethod/GetProperty/SetLocalVar*), compound-assign, verify return/local-var reversal.
-3. **Phase 3 (control flow):** Stage C — `for`→For-Each (EXPRESSION-pinned), `while`→While, `match`→MatchRow, contextual `break`/`continue`.
-4. **Phase 3.5:** Stage D — the corrected bare-expression condition fallback.
+0. **Phase 0 — ✅ SHIPPED** (`deab37d`): `@onready` row, `SubtractVar/MultiplyVar/DivideVar`, `TypeOf` (IsType dropped — `is` operator auto-fill conflict), compound-assign reverse-lift.
+1. **Phase 1 (the unlock) — ⏸ PARKED on guardrail 10:** Stage A — decouple from the trailing-run layout, **relax the annotation requirement**, **handle blank lines**, per-statement fallback granularity. Built + reverted (`4ee58db`): lifting un-annotated functions moves them from `sheet.events` to `sheet.functions`, breaking the "events append" prefix contract (`external_sheet_test`). Needs the source-position-emission vs accepted-reordering decision before retrying.
+2. **Phase 2 (statements) — ✅ SHIPPED** (`3803863`): Stage B — `SetProperty`/`CallMethod` admitted to the reverse index at lowest specificity (the literal_len sort keeps specific ACEs ahead), so `a.b = c`→Set Property and `a.b()`→Call Method when nothing specific claims them. `statement_lift_test`. (GetProperty is an expression — not statement-reverse-matched; SetLocalVar* deferred to Stage D.)
+3. **Phase 3 (control flow) — ✅ SHIPPED** (`c5c1ff6` for/while/repeat, `72a42d7` match, `472c795` nested fix): Stage C — `for X in EXPR:`→For-Each (EXPRESSION; REPEAT only for a *pure* `range(...)`), `while`→While, `match`→MatchRow. Body folds via `_adopt_block_body` into `sub_events`, so loops nest if/elif/else **and each other** (fixed `_is_plain_collector`: a pick_filter-bearing row is not a plain collector). `loop_lift_test` + `match_lift_test`; adversarially reviewed (20-case round-trip probe + 4-agent code review). Deferred within Stage C: contextual `break`/`continue` (kept out of the reverse index — they appear in generated pick-loop bodies), order-by/predicate/pick-first-N pick reconstruction (re-opening one's own such pick stays raw — round-trips, lower fidelity), and budgeted-loop scaffolding (stays raw).
+4. **Phase 3.5:** Stage D — the corrected bare-expression condition fallback (+ `SetLocalVar*` typed-local reversal).
 5. **Phase 4 (polish):** Pillar-1 Med/Low rows, the fidelity ratchet test, lift-report/calm-cell pass.
 
 ---
