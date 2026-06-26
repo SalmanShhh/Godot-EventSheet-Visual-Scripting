@@ -431,6 +431,34 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			index = int(loop_inner.get("next"))
 			chain_open = false  # a loop never opens an if/elif/else chain
 			continue
+		# Match (Construct "switch"): `match EXPR:` at this depth plus its arm lines (one level deeper)
+		# become a MatchRow ACTION — subject + verbatim branch text, exactly as the emitter re-prefixes
+		# body_indent+tab onto each line. A blank inside the arms (the lifter's hand-written-code signal)
+		# ends collection, so the whole function safely stays blocks; byte-verify gates the rebuild.
+		var is_match: bool = at_this_depth and rest.begins_with("match ") and rest.ends_with(":")
+		if is_match:
+			var branch_indent: String = "\t".repeat(depth + 1)
+			var branch_lines: PackedStringArray = PackedStringArray()
+			var scan: int = index + 1
+			while scan < lines.size():
+				var branch_line: String = lines[scan]
+				if branch_line.strip_edges().is_empty() or not branch_line.begins_with(branch_indent):
+					break  # dedent (or a blank) closes the match block
+				branch_lines.append(branch_line.substr(depth + 1))  # strip body_indent + the arm tab
+				scan += 1
+			if not branch_lines.is_empty():
+				if current == null:
+					current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+					rows.append(current)
+				_flush_raw(current, pending_raw)  # any raw before the match emits before it (order)
+				var match_row: MatchRow = MatchRow.new()
+				match_row.match_expression = rest.substr(6, rest.length() - 7)  # strip "match " and ":"
+				match_row.branches_text = "\n".join(branch_lines)
+				current.actions.append(match_row)
+				index = scan
+				chain_open = false
+				continue
+			# An empty arm list isn't our shape — fall through and treat `match …:` as a raw line.
 		# Statement at this depth (or deeper, inside an unlifted block): collect with
 		# relative indentation intact.
 		if current == null:
