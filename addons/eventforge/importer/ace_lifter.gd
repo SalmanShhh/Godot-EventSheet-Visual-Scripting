@@ -401,6 +401,36 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			index = int(inner.get("next"))
 			chain_open = true
 			continue
+		# Loops (Construct "For Each" / repeat / while): `for X in EXPR:` or `while EXPR:` at this
+		# depth opens a pick-filter row whose body parses one level deeper — exactly the if/elif/else
+		# grammar above, but the wrapper is a PickFilter, not conditions. _adopt_block_body folds the
+		# body (leading statements → actions, nested blocks → sub_events); a statement AFTER a nested
+		# block is unrepresentable (actions emit before sub-events) and falls to the lenient raw path.
+		var is_for: bool = at_this_depth and rest.begins_with("for ") and rest.contains(" in ") and rest.ends_with(":")
+		var is_while: bool = at_this_depth and rest.begins_with("while ") and rest.ends_with(":")
+		if is_for or is_while:
+			var loop_event: EventRow = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+			loop_event.pick_filters.append(_loop_pick_filter(rest, is_while))
+			var loop_inner: Dictionary = _parse_body(lines, index + 1, depth + 1, "", "", "", "", reverse_entries, lenient_ifs)
+			var loop_ok: bool = bool(loop_inner.get("ok", false)) and _adopt_block_body(loop_event, loop_inner.get("rows", []))
+			if not loop_ok:
+				if not lenient_ifs:
+					return {"ok": false}
+				# Raw fallback: the header joins the open collector; its deeper lines arrive
+				# through the statement branch below, tabs preserved (same as if/elif/else).
+				if current == null:
+					current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+					rows.append(current)
+				pending_raw.append(rest)
+				index += 1
+				chain_open = false
+				continue
+			_flush_raw(current, pending_raw)
+			current = null
+			rows.append(loop_event)
+			index = int(loop_inner.get("next"))
+			chain_open = false  # a loop never opens an if/elif/else chain
+			continue
 		# Statement at this depth (or deeper, inside an unlifted block): collect with
 		# relative indentation intact.
 		if current == null:
@@ -432,6 +462,46 @@ static func _adopt_block_body(block_event: EventRow, inner_rows: Array) -> bool:
 
 static func _is_plain_collector(event: EventRow) -> bool:
 	return event != null and event.conditions.is_empty() and event.else_mode == EventRow.ElseMode.NONE
+
+## Builds the PickFilter for a `for`/`while` header (already stripped to this depth, trailing `:`).
+## `while EXPR:` → WHILE (no loop variable). `for X in EXPR:` → REPEAT when EXPR is a pure
+## `range(...)` call, else EXPRESSION (`X` is kept verbatim, so tuple targets like `k, v` survive).
+## Mirrors _emit_pick_filters / _pick_collection_expression so the minimal loop (predicate, order-by,
+## first-N and frame-spread all left at their empty/zero defaults) round-trips byte-identically.
+static func _loop_pick_filter(rest: String, is_while: bool) -> PickFilter:
+	var pick: PickFilter = PickFilter.new()
+	if is_while:
+		pick.collection_kind = PickFilter.CollectionKind.WHILE
+		pick.collection_value = rest.substr(6, rest.length() - 7)  # strip "while " and trailing ":"
+		pick.iterator_name = ""  # a while loop has no loop variable (the emitter ignores it)
+		return pick
+	var header: String = rest.substr(4, rest.length() - 5)  # strip "for " and ":" -> "X in EXPR"
+	var split_at: int = header.find(" in ")
+	pick.iterator_name = header.substr(0, split_at)
+	var collection: String = header.substr(split_at + 4)
+	if _is_pure_range(collection):
+		pick.collection_kind = PickFilter.CollectionKind.REPEAT
+		pick.collection_value = collection.substr(6, collection.length() - 7)  # the args inside range(...)
+	else:
+		pick.collection_kind = PickFilter.CollectionKind.EXPRESSION
+		pick.collection_value = collection
+	return pick
+
+## True only when EXPR is exactly a `range(...)` call whose opening paren closes at the final
+## character, so it round-trips through REPEAT. `range(5) + 1` is NOT pure (stays EXPRESSION).
+static func _is_pure_range(expr: String) -> bool:
+	if not (expr.begins_with("range(") and expr.ends_with(")")):
+		return false
+	var depth: int = 0
+	for i in range(5, expr.length()):
+		var c: String = expr[i]
+		if c == "(":
+			depth += 1
+		elif c == ")":
+			depth -= 1
+			if depth == 0:
+				return i == expr.length() - 1
+	return false
 
 ## True for a `_ready` body line that is a regenerated signal connection.
 static func _is_connect_line(line: String) -> bool:

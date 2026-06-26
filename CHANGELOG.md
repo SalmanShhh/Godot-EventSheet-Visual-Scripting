@@ -67,6 +67,14 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   *Play*); only what no ACE claims falls to the generic catch-alls, admitted at lowest specificity. The
   byte-identical recompile gates every match, and no functions move, so the GDScript-backed-sheet
   "events append" contract is untouched.
+- **Loops open as loop rows (near-zero-RawCode roadmap, Phase 3 — control flow).** When a trigger
+  body is reverse-lifted, a `for X in EXPR:` becomes a **For-Each** loop row, `for i in range(N):` a
+  **Repeat** row, and `while COND:` a **While** row — each with its body nested as sub-rows, instead of
+  the whole loop staying an in-flow GDScript cell. Built on the same nesting the editor already used
+  for `if`/`elif`/`else`, so a loop can hold conditioned sub-events too. The minimal loop shape (no
+  predicate / order-by / first-N / frame-spread) round-trips byte-identically; anything richer — or a
+  statement after a nested block inside the loop — safely stays a code cell. The byte-identical
+  recompile gates every lift, and no functions move, so the "events append" contract is untouched.
 
 ### Fixed
 
