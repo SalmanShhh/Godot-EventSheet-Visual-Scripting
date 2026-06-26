@@ -1,21 +1,22 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_7th43"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_25dsr"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_mcy0o"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_0j3rh"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_elqwn"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_n4o3h"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_l86d7"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_r04y7"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_nss1k"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_25dsr"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_mcy0o"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_0j3rh"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_elqwn"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_n4o3h"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_l86d7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_r04y7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_nss1k"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_fp4pu"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_iaqmi"]
 
-[sub_resource type="Resource" id="Resource_fp4pu"]
-script = ExtResource("1_7th43")
+[sub_resource type="Resource" id="Resource_wrg6a"]
+script = ExtResource("1_25dsr")
 text = "Bullet 3D behavior (C3-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled."
 
-[sub_resource type="Resource" id="Resource_iaqmi"]
-script = ExtResource("2_25dsr")
+[sub_resource type="Resource" id="Resource_5m1b1"]
+script = ExtResource("2_mcy0o")
 code = "if host == null:
 	return
 if not launched:
@@ -25,68 +26,198 @@ var motion := Vector3(vel_x, vel_y, vel_z) * delta
 host.position += motion
 distance_travelled += motion.length()"
 
-[sub_resource type="Resource" id="Resource_wrg6a"]
-script = ExtResource("6_n4o3h")
+[sub_resource type="Resource" id="Resource_5abs4"]
+script = ExtResource("6_l86d7")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_iaqmi")])
+actions = Array[Resource]([SubResource("Resource_5m1b1")])
 event_uid = "140500"
 
-[sub_resource type="Resource" id="Resource_5m1b1"]
-script = ExtResource("2_25dsr")
-code = "if host == null:
-	return
-var forward := -host.global_transform.basis.z * speed
-vel_x = forward.x
-vel_y = forward.y
-vel_z = forward.z
-launched = true"
+[sub_resource type="Resource" id="Resource_qs7cs"]
+script = ExtResource("7_r04y7")
+ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_5abs4"]
-script = ExtResource("8_r04y7")
+[sub_resource type="Resource" id="Resource_i2vrm"]
+script = ExtResource("3_0j3rh")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "null",
+"var_name": "host"
+}
+
+[sub_resource type="Resource" id="Resource_gbdrp"]
+script = ExtResource("6_l86d7")
+conditions = Array[ExtResource("3_0j3rh")]([SubResource("Resource_i2vrm")])
+actions = Array[Resource]([SubResource("Resource_qs7cs")])
+event_uid = "04cb94"
+
+[sub_resource type="Resource" id="Resource_frt6g"]
+script = ExtResource("2_mcy0o")
+code = "var forward := -host.global_transform.basis.z * speed"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_djup5"]
+script = ExtResource("7_r04y7")
+ace_id = "SetVar"
+params = {
+"value": "forward.x",
+"var_name": "vel_x"
+}
+
+[sub_resource type="Resource" id="Resource_34qr1"]
+script = ExtResource("7_r04y7")
+ace_id = "SetVar"
+params = {
+"value": "forward.y",
+"var_name": "vel_y"
+}
+
+[sub_resource type="Resource" id="Resource_1235k"]
+script = ExtResource("7_r04y7")
+ace_id = "SetVar"
+params = {
+"value": "forward.z",
+"var_name": "vel_z"
+}
+
+[sub_resource type="Resource" id="Resource_0ftvu"]
+script = ExtResource("7_r04y7")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "launched"
+}
+
+[sub_resource type="Resource" id="Resource_d0fq5"]
+script = ExtResource("6_l86d7")
+actions = Array[Resource]([SubResource("Resource_frt6g"), SubResource("Resource_djup5"), SubResource("Resource_34qr1"), SubResource("Resource_1235k"), SubResource("Resource_0ftvu")])
+event_uid = "5c7602"
+
+[sub_resource type="Resource" id="Resource_d3gnp"]
+script = ExtResource("9_fp4pu")
 function_name = "launch_forward"
 description = "(Re)launches along the host's current forward direction."
 expose_as_ace = true
 ace_display_name = "Launch Forward"
 ace_category = "Bullet 3D"
-events = Array[Resource]([SubResource("Resource_5m1b1")])
+events = Array[Resource]([SubResource("Resource_gbdrp"), SubResource("Resource_d0fq5")])
 
-[sub_resource type="Resource" id="Resource_qs7cs"]
-script = ExtResource("2_25dsr")
-code = "speed = value
-var direction := Vector3(vel_x, vel_y, vel_z).normalized()
-if direction == Vector3.ZERO and host != null:
-	direction = -host.global_transform.basis.z
-vel_x = direction.x * value
-vel_y = direction.y * value
-vel_z = direction.z * value
-launched = true"
+[sub_resource type="Resource" id="Resource_dpstr"]
+script = ExtResource("7_r04y7")
+ace_id = "SetVar"
+params = {
+"value": "value",
+"var_name": "speed"
+}
 
-[sub_resource type="Resource" id="Resource_i2vrm"]
-script = ExtResource("7_l86d7")
+[sub_resource type="Resource" id="Resource_ublkq"]
+script = ExtResource("7_r04y7")
+ace_id = "CallFunction"
+params = {
+"args": "vel_x, vel_y, vel_z).normalized(",
+"function_name": "var direction := Vector3"
+}
+
+[sub_resource type="Resource" id="Resource_hlja7"]
+script = ExtResource("6_l86d7")
+actions = Array[Resource]([SubResource("Resource_dpstr"), SubResource("Resource_ublkq")])
+event_uid = "11dbdb"
+
+[sub_resource type="Resource" id="Resource_n1tj5"]
+script = ExtResource("7_r04y7")
+ace_id = "SetVar"
+params = {
+"value": "-host.global_transform.basis.z",
+"var_name": "direction"
+}
+
+[sub_resource type="Resource" id="Resource_p2xyd"]
+script = ExtResource("3_0j3rh")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "Vector3.ZERO",
+"var_name": "direction"
+}
+
+[sub_resource type="Resource" id="Resource_m8uf3"]
+script = ExtResource("3_0j3rh")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "host"
+}
+
+[sub_resource type="Resource" id="Resource_217e4"]
+script = ExtResource("6_l86d7")
+conditions = Array[ExtResource("3_0j3rh")]([SubResource("Resource_p2xyd"), SubResource("Resource_m8uf3")])
+actions = Array[Resource]([SubResource("Resource_n1tj5")])
+event_uid = "554233"
+
+[sub_resource type="Resource" id="Resource_ijvk6"]
+script = ExtResource("7_r04y7")
+ace_id = "SetVar"
+params = {
+"value": "direction.x * value",
+"var_name": "vel_x"
+}
+
+[sub_resource type="Resource" id="Resource_o4eib"]
+script = ExtResource("7_r04y7")
+ace_id = "SetVar"
+params = {
+"value": "direction.y * value",
+"var_name": "vel_y"
+}
+
+[sub_resource type="Resource" id="Resource_8ek4r"]
+script = ExtResource("7_r04y7")
+ace_id = "SetVar"
+params = {
+"value": "direction.z * value",
+"var_name": "vel_z"
+}
+
+[sub_resource type="Resource" id="Resource_56ejy"]
+script = ExtResource("7_r04y7")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "launched"
+}
+
+[sub_resource type="Resource" id="Resource_iip6r"]
+script = ExtResource("6_l86d7")
+actions = Array[Resource]([SubResource("Resource_ijvk6"), SubResource("Resource_o4eib"), SubResource("Resource_8ek4r"), SubResource("Resource_56ejy")])
+event_uid = "7e46c4"
+
+[sub_resource type="Resource" id="Resource_xsnux"]
+script = ExtResource("8_nss1k")
 id = "value"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_gbdrp"]
-script = ExtResource("8_r04y7")
+[sub_resource type="Resource" id="Resource_8sdwv"]
+script = ExtResource("9_fp4pu")
 function_name = "set_bullet3d_speed"
 description = "Changes speed, keeping the current direction."
 expose_as_ace = true
 ace_display_name = "Set Bullet 3D Speed"
 ace_category = "Bullet 3D"
-params = Array[ExtResource("7_l86d7")]([SubResource("Resource_i2vrm")])
-events = Array[Resource]([SubResource("Resource_qs7cs")])
+params = Array[ExtResource("8_nss1k")]([SubResource("Resource_xsnux")])
+events = Array[Resource]([SubResource("Resource_hlja7"), SubResource("Resource_217e4"), SubResource("Resource_iip6r")])
 
 [resource]
-script = ExtResource("9_nss1k")
+script = ExtResource("10_iaqmi")
 host_class = "Node3D"
 behavior_mode = true
 custom_class_name = "Bullet3DBehavior"
 addon_tags = PackedStringArray()
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_fp4pu"), SubResource("Resource_wrg6a")])
+events = Array[Resource]([SubResource("Resource_wrg6a"), SubResource("Resource_5abs4")])
 variables = {
 "distance_travelled": {
 "default": 0.0,
@@ -124,4 +255,4 @@ variables = {
 "type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_5abs4"), SubResource("Resource_gbdrp")])
+functions = Array[Resource]([SubResource("Resource_d3gnp"), SubResource("Resource_8sdwv")])

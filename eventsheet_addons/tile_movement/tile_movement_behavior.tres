@@ -1,28 +1,29 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_vgvrg"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_8yhrj"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_tqv7t"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_m4uii"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_gml7f"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_g35kp"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_f5eri"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_g5l8f"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_63fav"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_8yhrj"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_tqv7t"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_m4uii"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_gml7f"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_g35kp"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_f5eri"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_g5l8f"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_63fav"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_0b1ao"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_gl44j"]
 
-[sub_resource type="Resource" id="Resource_0b1ao"]
-script = ExtResource("1_vgvrg")
+[sub_resource type="Resource" id="Resource_s6njm"]
+script = ExtResource("1_8yhrj")
 text = "Tile Movement behavior (C3 parity): grid-locked stepping (arrow keys or Simulate Step); grid-space helpers convert between tiles and pixels. Fires On Step Finished per tile."
 
-[sub_resource type="Resource" id="Resource_gl44j"]
-script = ExtResource("2_8yhrj")
+[sub_resource type="Resource" id="Resource_svak1"]
+script = ExtResource("2_tqv7t")
 code = "## @ace_trigger
 ## @ace_name(\"On Step Finished\")
 ## @ace_category(\"Tile Movement\")
 signal step_finished"
 
-[sub_resource type="Resource" id="Resource_s6njm"]
-script = ExtResource("2_8yhrj")
+[sub_resource type="Resource" id="Resource_6dtgv"]
+script = ExtResource("2_tqv7t")
 code = "## @ace_hidden
 func to_grid(pixel: Vector2) -> Vector2i:
 	return Vector2i(roundi(pixel.x / tile_size), roundi(pixel.y / tile_size))
@@ -31,8 +32,8 @@ func to_grid(pixel: Vector2) -> Vector2i:
 func from_grid(tile: Vector2i) -> Vector2:
 	return Vector2(tile) * tile_size"
 
-[sub_resource type="Resource" id="Resource_svak1"]
-script = ExtResource("2_8yhrj")
+[sub_resource type="Resource" id="Resource_joxbd"]
+script = ExtResource("2_tqv7t")
 code = "if host == null:
 	return
 if moving:
@@ -59,79 +60,193 @@ if step != Vector2.ZERO:
 	progress = 0.0
 	moving = true"
 
-[sub_resource type="Resource" id="Resource_6dtgv"]
-script = ExtResource("6_g35kp")
+[sub_resource type="Resource" id="Resource_u0ahq"]
+script = ExtResource("6_f5eri")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_svak1")])
+actions = Array[Resource]([SubResource("Resource_joxbd")])
 event_uid = "a09c00"
 
-[sub_resource type="Resource" id="Resource_joxbd"]
-script = ExtResource("2_8yhrj")
-code = "if direction == \"left\":
-	pending_x = -1.0
-elif direction == \"right\":
-	pending_x = 1.0
-elif direction == \"up\":
-	pending_y = -1.0
-elif direction == \"down\":
-	pending_y = 1.0"
+[sub_resource type="Resource" id="Resource_bxm2s"]
+script = ExtResource("7_g5l8f")
+ace_id = "SetVar"
+params = {
+"value": "-1.0",
+"var_name": "pending_x"
+}
 
-[sub_resource type="Resource" id="Resource_u0ahq"]
-script = ExtResource("7_f5eri")
+[sub_resource type="Resource" id="Resource_n1dyx"]
+script = ExtResource("3_m4uii")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "\"left\"",
+"var_name": "direction"
+}
+
+[sub_resource type="Resource" id="Resource_6q6ui"]
+script = ExtResource("6_f5eri")
+conditions = Array[ExtResource("3_m4uii")]([SubResource("Resource_n1dyx")])
+actions = Array[Resource]([SubResource("Resource_bxm2s")])
+event_uid = "78c1a3"
+
+[sub_resource type="Resource" id="Resource_ikoe6"]
+script = ExtResource("7_g5l8f")
+ace_id = "SetVar"
+params = {
+"value": "1.0",
+"var_name": "pending_x"
+}
+
+[sub_resource type="Resource" id="Resource_xrmfr"]
+script = ExtResource("3_m4uii")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "\"right\"",
+"var_name": "direction"
+}
+
+[sub_resource type="Resource" id="Resource_bbr1a"]
+script = ExtResource("6_f5eri")
+conditions = Array[ExtResource("3_m4uii")]([SubResource("Resource_xrmfr")])
+actions = Array[Resource]([SubResource("Resource_ikoe6")])
+else_mode = 1
+event_uid = "bc14ca"
+
+[sub_resource type="Resource" id="Resource_jybjk"]
+script = ExtResource("7_g5l8f")
+ace_id = "SetVar"
+params = {
+"value": "-1.0",
+"var_name": "pending_y"
+}
+
+[sub_resource type="Resource" id="Resource_clewl"]
+script = ExtResource("3_m4uii")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "\"up\"",
+"var_name": "direction"
+}
+
+[sub_resource type="Resource" id="Resource_shn1u"]
+script = ExtResource("6_f5eri")
+conditions = Array[ExtResource("3_m4uii")]([SubResource("Resource_clewl")])
+actions = Array[Resource]([SubResource("Resource_jybjk")])
+else_mode = 1
+event_uid = "11fa6e"
+
+[sub_resource type="Resource" id="Resource_6xgjv"]
+script = ExtResource("7_g5l8f")
+ace_id = "SetVar"
+params = {
+"value": "1.0",
+"var_name": "pending_y"
+}
+
+[sub_resource type="Resource" id="Resource_v5tvy"]
+script = ExtResource("3_m4uii")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "\"down\"",
+"var_name": "direction"
+}
+
+[sub_resource type="Resource" id="Resource_3yvqm"]
+script = ExtResource("6_f5eri")
+conditions = Array[ExtResource("3_m4uii")]([SubResource("Resource_v5tvy")])
+actions = Array[Resource]([SubResource("Resource_6xgjv")])
+else_mode = 1
+event_uid = "d8adad"
+
+[sub_resource type="Resource" id="Resource_5boy6"]
+script = ExtResource("8_63fav")
 id = "direction"
 initial_value = null
 initialValue = null
 options = Array[String](["left", "right", "up", "down"])
 
-[sub_resource type="Resource" id="Resource_bxm2s"]
-script = ExtResource("8_g5l8f")
+[sub_resource type="Resource" id="Resource_hp81s"]
+script = ExtResource("9_0b1ao")
 function_name = "simulate_step"
 description = "Steps one tile in a direction: left, right, up or down (C3 simulate control)."
 expose_as_ace = true
 ace_display_name = "Simulate Step"
 ace_category = "Tile Movement"
-params = Array[ExtResource("7_f5eri")]([SubResource("Resource_u0ahq")])
-events = Array[Resource]([SubResource("Resource_joxbd")])
+params = Array[ExtResource("8_63fav")]([SubResource("Resource_5boy6")])
+events = Array[Resource]([SubResource("Resource_6q6ui"), SubResource("Resource_bbr1a"), SubResource("Resource_shn1u"), SubResource("Resource_3yvqm")])
 
-[sub_resource type="Resource" id="Resource_n1dyx"]
-script = ExtResource("2_8yhrj")
-code = "if host != null:
-	host.position = Vector2(tile_x, tile_y) * tile_size
-moving = false"
+[sub_resource type="Resource" id="Resource_ubvqi"]
+script = ExtResource("7_g5l8f")
+ace_id = "SetPosition2D"
+params = {
+"pos": "Vector2(tile_x, tile_y) * tile_size",
+"target": "host"
+}
 
-[sub_resource type="Resource" id="Resource_6q6ui"]
-script = ExtResource("7_f5eri")
+[sub_resource type="Resource" id="Resource_kqe0l"]
+script = ExtResource("3_m4uii")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "host"
+}
+
+[sub_resource type="Resource" id="Resource_x8us0"]
+script = ExtResource("6_f5eri")
+conditions = Array[ExtResource("3_m4uii")]([SubResource("Resource_kqe0l")])
+actions = Array[Resource]([SubResource("Resource_ubvqi")])
+event_uid = "eba648"
+
+[sub_resource type="Resource" id="Resource_fxvsq"]
+script = ExtResource("7_g5l8f")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "moving"
+}
+
+[sub_resource type="Resource" id="Resource_f5jcc"]
+script = ExtResource("6_f5eri")
+actions = Array[Resource]([SubResource("Resource_fxvsq")])
+event_uid = "1e372e"
+
+[sub_resource type="Resource" id="Resource_h8pnv"]
+script = ExtResource("8_63fav")
 id = "tile_x"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_ikoe6"]
-script = ExtResource("7_f5eri")
+[sub_resource type="Resource" id="Resource_6xokh"]
+script = ExtResource("8_63fav")
 id = "tile_y"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_xrmfr"]
-script = ExtResource("8_g5l8f")
+[sub_resource type="Resource" id="Resource_216b8"]
+script = ExtResource("9_0b1ao")
 function_name = "teleport_to_tile"
 description = "Snaps to a tile coordinate instantly."
 expose_as_ace = true
 ace_display_name = "Teleport To Tile"
 ace_category = "Tile Movement"
-params = Array[ExtResource("7_f5eri")]([SubResource("Resource_6q6ui"), SubResource("Resource_ikoe6")])
-events = Array[Resource]([SubResource("Resource_n1dyx")])
+params = Array[ExtResource("8_63fav")]([SubResource("Resource_h8pnv"), SubResource("Resource_6xokh")])
+events = Array[Resource]([SubResource("Resource_x8us0"), SubResource("Resource_f5jcc")])
 
 [resource]
-script = ExtResource("9_63fav")
+script = ExtResource("10_gl44j")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "TileMovementBehavior"
 addon_tags = PackedStringArray()
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_0b1ao"), SubResource("Resource_gl44j"), SubResource("Resource_s6njm"), SubResource("Resource_6dtgv")])
+events = Array[Resource]([SubResource("Resource_s6njm"), SubResource("Resource_svak1"), SubResource("Resource_6dtgv"), SubResource("Resource_u0ahq")])
 variables = {
 "default_controls": {
 "default": true,
@@ -189,4 +304,4 @@ variables = {
 "type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_bxm2s"), SubResource("Resource_xrmfr")])
+functions = Array[Resource]([SubResource("Resource_hp81s"), SubResource("Resource_216b8")])

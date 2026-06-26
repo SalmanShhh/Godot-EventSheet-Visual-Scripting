@@ -13,6 +13,11 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 	# own icon, or set sheet.custom_class_icon before calling — an already-set icon is never overwritten.
 	if not icon_path.strip_edges().is_empty() and sheet.custom_class_icon.strip_edges().is_empty():
 		sheet.custom_class_icon = icon_path
+	# Code-free by default: reverse-lift each function's RawCode body into ACE rows where it recompiles
+	# byte-identically (per-function gated). The pack ships the SAME GDScript, but the .tres reads as
+	# events — algorithmic kernels (spring/sine/physics) become Set/Add/Set-Property rows, not code
+	# blocks. Bodies that can't round-trip (inner classes, exotic flow) keep their RawCode. Deterministic.
+	EventSheetACELifter.lift_function_bodies(sheet)
 	# Stamp DETERMINISTIC row UIDs before saving. EventRow/EventGroup otherwise mint a random
 	# uid in _init(), so every regeneration churns the .tres of EVERY pack — exploding git
 	# diffs even for packs that did not change. Deriving the uid from the row's structural

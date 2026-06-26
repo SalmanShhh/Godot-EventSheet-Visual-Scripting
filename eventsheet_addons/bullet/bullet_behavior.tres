@@ -1,21 +1,22 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_tbxl6"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_urm38"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_1dpa7"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_cwajh"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_jkean"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_eoq7w"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_h0i2u"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_0amdn"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_q1rqs"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_urm38"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_1dpa7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_cwajh"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_jkean"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_eoq7w"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_h0i2u"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_0amdn"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_q1rqs"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_dbolv"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_a26d5"]
 
-[sub_resource type="Resource" id="Resource_dbolv"]
-script = ExtResource("1_tbxl6")
+[sub_resource type="Resource" id="Resource_2c7to"]
+script = ExtResource("1_urm38")
 text = "Bullet behavior (C3 parity): angle-of-motion movement with acceleration and gravity; tracks distance travelled (read $BulletBehavior.distance_travelled)."
 
-[sub_resource type="Resource" id="Resource_a26d5"]
-script = ExtResource("2_urm38")
+[sub_resource type="Resource" id="Resource_bw4ti"]
+script = ExtResource("2_1dpa7")
 code = "if host == null or not enabled_movement:
 	return
 if not launched:
@@ -32,92 +33,196 @@ distance_travelled += motion.length()
 if align_rotation and motion != Vector2.ZERO:
 	host.rotation = motion.angle()"
 
-[sub_resource type="Resource" id="Resource_2c7to"]
-script = ExtResource("6_eoq7w")
+[sub_resource type="Resource" id="Resource_5780g"]
+script = ExtResource("6_h0i2u")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_a26d5")])
+actions = Array[Resource]([SubResource("Resource_bw4ti")])
 event_uid = "059197"
 
-[sub_resource type="Resource" id="Resource_bw4ti"]
-script = ExtResource("2_urm38")
-code = "speed = value
-var direction := Vector2(vel_x, vel_y).normalized()
-if direction == Vector2.ZERO and host != null:
-	direction = Vector2.from_angle(host.rotation)
-vel_x = direction.x * value
-vel_y = direction.y * value
-launched = true"
+[sub_resource type="Resource" id="Resource_m8wb2"]
+script = ExtResource("7_0amdn")
+ace_id = "SetVar"
+params = {
+"value": "value",
+"var_name": "speed"
+}
 
-[sub_resource type="Resource" id="Resource_5780g"]
-script = ExtResource("7_h0i2u")
+[sub_resource type="Resource" id="Resource_av21u"]
+script = ExtResource("7_0amdn")
+ace_id = "CallFunction"
+params = {
+"args": "vel_x, vel_y).normalized(",
+"function_name": "var direction := Vector2"
+}
+
+[sub_resource type="Resource" id="Resource_qvkgn"]
+script = ExtResource("6_h0i2u")
+actions = Array[Resource]([SubResource("Resource_m8wb2"), SubResource("Resource_av21u")])
+event_uid = "08d8eb"
+
+[sub_resource type="Resource" id="Resource_hud1t"]
+script = ExtResource("7_0amdn")
+ace_id = "SetVar"
+params = {
+"value": "Vector2.from_angle(host.rotation)",
+"var_name": "direction"
+}
+
+[sub_resource type="Resource" id="Resource_6l45u"]
+script = ExtResource("3_cwajh")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "Vector2.ZERO",
+"var_name": "direction"
+}
+
+[sub_resource type="Resource" id="Resource_sjods"]
+script = ExtResource("3_cwajh")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "host"
+}
+
+[sub_resource type="Resource" id="Resource_6r2ci"]
+script = ExtResource("6_h0i2u")
+conditions = Array[ExtResource("3_cwajh")]([SubResource("Resource_6l45u"), SubResource("Resource_sjods")])
+actions = Array[Resource]([SubResource("Resource_hud1t")])
+event_uid = "23aa78"
+
+[sub_resource type="Resource" id="Resource_1kfv6"]
+script = ExtResource("7_0amdn")
+ace_id = "SetVar"
+params = {
+"value": "direction.x * value",
+"var_name": "vel_x"
+}
+
+[sub_resource type="Resource" id="Resource_vneae"]
+script = ExtResource("7_0amdn")
+ace_id = "SetVar"
+params = {
+"value": "direction.y * value",
+"var_name": "vel_y"
+}
+
+[sub_resource type="Resource" id="Resource_iurpu"]
+script = ExtResource("7_0amdn")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "launched"
+}
+
+[sub_resource type="Resource" id="Resource_0g47t"]
+script = ExtResource("6_h0i2u")
+actions = Array[Resource]([SubResource("Resource_1kfv6"), SubResource("Resource_vneae"), SubResource("Resource_iurpu")])
+event_uid = "76d32b"
+
+[sub_resource type="Resource" id="Resource_dioae"]
+script = ExtResource("8_q1rqs")
 id = "value"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_m8wb2"]
-script = ExtResource("8_0amdn")
+[sub_resource type="Resource" id="Resource_6biil"]
+script = ExtResource("9_dbolv")
 function_name = "set_bullet_speed"
 description = "Changes speed, keeping the current direction."
 expose_as_ace = true
 ace_display_name = "Set Bullet Speed"
 ace_category = "Bullet"
-params = Array[ExtResource("7_h0i2u")]([SubResource("Resource_5780g")])
-events = Array[Resource]([SubResource("Resource_bw4ti")])
+params = Array[ExtResource("8_q1rqs")]([SubResource("Resource_dioae")])
+events = Array[Resource]([SubResource("Resource_qvkgn"), SubResource("Resource_6r2ci"), SubResource("Resource_0g47t")])
 
-[sub_resource type="Resource" id="Resource_av21u"]
-script = ExtResource("2_urm38")
-code = "vel_x = cos(deg_to_rad(degrees)) * speed
-vel_y = sin(deg_to_rad(degrees)) * speed
-launched = true"
+[sub_resource type="Resource" id="Resource_tplby"]
+script = ExtResource("7_0amdn")
+ace_id = "SetVar"
+params = {
+"value": "cos(deg_to_rad(degrees)) * speed",
+"var_name": "vel_x"
+}
 
-[sub_resource type="Resource" id="Resource_qvkgn"]
-script = ExtResource("7_h0i2u")
+[sub_resource type="Resource" id="Resource_f4cxh"]
+script = ExtResource("7_0amdn")
+ace_id = "SetVar"
+params = {
+"value": "sin(deg_to_rad(degrees)) * speed",
+"var_name": "vel_y"
+}
+
+[sub_resource type="Resource" id="Resource_ncd1w"]
+script = ExtResource("7_0amdn")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "launched"
+}
+
+[sub_resource type="Resource" id="Resource_ct6fo"]
+script = ExtResource("6_h0i2u")
+actions = Array[Resource]([SubResource("Resource_tplby"), SubResource("Resource_f4cxh"), SubResource("Resource_ncd1w")])
+event_uid = "0ebdec"
+
+[sub_resource type="Resource" id="Resource_6xocv"]
+script = ExtResource("8_q1rqs")
 id = "degrees"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_hud1t"]
-script = ExtResource("8_0amdn")
+[sub_resource type="Resource" id="Resource_3xib3"]
+script = ExtResource("9_dbolv")
 function_name = "set_angle_of_motion"
 description = "Redirects the bullet (degrees)."
 expose_as_ace = true
 ace_display_name = "Set Angle Of Motion"
 ace_category = "Bullet"
-params = Array[ExtResource("7_h0i2u")]([SubResource("Resource_qvkgn")])
-events = Array[Resource]([SubResource("Resource_av21u")])
+params = Array[ExtResource("8_q1rqs")]([SubResource("Resource_6xocv")])
+events = Array[Resource]([SubResource("Resource_ct6fo")])
 
-[sub_resource type="Resource" id="Resource_6l45u"]
-script = ExtResource("2_urm38")
-code = "enabled_movement = is_enabled"
+[sub_resource type="Resource" id="Resource_w368u"]
+script = ExtResource("7_0amdn")
+ace_id = "SetVar"
+params = {
+"value": "is_enabled",
+"var_name": "enabled_movement"
+}
 
-[sub_resource type="Resource" id="Resource_sjods"]
-script = ExtResource("7_h0i2u")
+[sub_resource type="Resource" id="Resource_tjln4"]
+script = ExtResource("6_h0i2u")
+actions = Array[Resource]([SubResource("Resource_w368u")])
+event_uid = "c47d26"
+
+[sub_resource type="Resource" id="Resource_txbdv"]
+script = ExtResource("8_q1rqs")
 id = "is_enabled"
 type_name = "bool"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_6r2ci"]
-script = ExtResource("8_0amdn")
+[sub_resource type="Resource" id="Resource_4uwjs"]
+script = ExtResource("9_dbolv")
 function_name = "set_bullet_enabled"
 description = "Pauses or resumes the movement."
 expose_as_ace = true
 ace_display_name = "Set Bullet Enabled"
 ace_category = "Bullet"
-params = Array[ExtResource("7_h0i2u")]([SubResource("Resource_sjods")])
-events = Array[Resource]([SubResource("Resource_6l45u")])
+params = Array[ExtResource("8_q1rqs")]([SubResource("Resource_txbdv")])
+events = Array[Resource]([SubResource("Resource_tjln4")])
 
 [resource]
-script = ExtResource("9_q1rqs")
+script = ExtResource("10_a26d5")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "BulletBehavior"
 addon_tags = PackedStringArray()
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_dbolv"), SubResource("Resource_2c7to")])
+events = Array[Resource]([SubResource("Resource_2c7to"), SubResource("Resource_5780g")])
 variables = {
 "acceleration": {
 "default": 0.0,
@@ -165,4 +270,4 @@ variables = {
 "type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_m8wb2"), SubResource("Resource_hud1t"), SubResource("Resource_6r2ci")])
+functions = Array[Resource]([SubResource("Resource_6biil"), SubResource("Resource_3xib3"), SubResource("Resource_4uwjs")])

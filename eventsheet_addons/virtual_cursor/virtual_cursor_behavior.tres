@@ -1,21 +1,22 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_npbkl"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_jstna"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_1th2w"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_tmuc2"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_3k06i"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_v4dpl"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_mwbwx"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_fu2bx"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_8p8d4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_jstna"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_1th2w"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_tmuc2"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_3k06i"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_v4dpl"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_mwbwx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_fu2bx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_8p8d4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_dwkn7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_3d4q0"]
 
-[sub_resource type="Resource" id="Resource_dwkn7"]
-script = ExtResource("1_npbkl")
+[sub_resource type="Resource" id="Resource_rhot5"]
+script = ExtResource("1_jstna")
 text = "Virtual Cursor behavior (C3 parity): input-agnostic controllable cursor on a CharacterBody2D — event-driven/axis/mouse-follow movement with accel/decel and direction modes, homing magnet, solid push-out via move_and_slide with sliding, lossless bounce, layout/viewport constraints, hover detection, and named interact buttons. Drives the Drag N Drop pack."
 
-[sub_resource type="Resource" id="Resource_3d4q0"]
-script = ExtResource("2_jstna")
+[sub_resource type="Resource" id="Resource_jx54r"]
+script = ExtResource("2_1th2w")
 code = "## Movement axis constraint.
 @export_enum(\"up_down\", \"left_right\", \"four\", \"eight\") var direction_mode: int = 3
 ## Point = origin inside shape; Overlap = shapes overlap.
@@ -29,8 +30,8 @@ var simulated_axis: Vector2 = Vector2.ZERO
 var mouse_target: Vector2 = Vector2.ZERO
 var constraint_bounds: Rect2 = Rect2()"
 
-[sub_resource type="Resource" id="Resource_rhot5"]
-script = ExtResource("2_jstna")
+[sub_resource type="Resource" id="Resource_44tmr"]
+script = ExtResource("2_1th2w")
 code = "## @ace_trigger
 ## @ace_name(\"On Interact Pressed\")
 ## @ace_category(\"Virtual Cursor\")
@@ -285,8 +286,8 @@ func _resolve_bounds() -> Rect2:
 		return host.get_viewport().get_visible_rect()
 	return Rect2(0, 0, 1920, 1080)"
 
-[sub_resource type="Resource" id="Resource_jx54r"]
-script = ExtResource("2_jstna")
+[sub_resource type="Resource" id="Resource_iq5m5"]
+script = ExtResource("2_1th2w")
 code = "if not enabled or host == null:
 	report_vel = Vector2.ZERO
 	return
@@ -420,754 +421,1425 @@ if constrain_to_layout:
 # 5) report.
 report_vel = vel"
 
-[sub_resource type="Resource" id="Resource_44tmr"]
-script = ExtResource("6_v4dpl")
+[sub_resource type="Resource" id="Resource_oc0dh"]
+script = ExtResource("6_mwbwx")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
-actions = Array[Resource]([SubResource("Resource_jx54r")])
+actions = Array[Resource]([SubResource("Resource_iq5m5")])
 event_uid = "d73d3f"
 
-[sub_resource type="Resource" id="Resource_iq5m5"]
-script = ExtResource("2_jstna")
-code = "interact_states[id] = true
-last_pressed_id = id
-interact_pressed.emit(id)"
+[sub_resource type="Resource" id="Resource_20f11"]
+script = ExtResource("7_fu2bx")
+ace_id = "DictSetKey"
+params = {
+"key": "id",
+"value": "true",
+"var_name": "interact_states"
+}
 
-[sub_resource type="Resource" id="Resource_oc0dh"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_85ps5"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "id",
+"var_name": "last_pressed_id"
+}
+
+[sub_resource type="Resource" id="Resource_1nbe7"]
+script = ExtResource("7_fu2bx")
+ace_id = "EmitSignal"
+params = {
+"args": "id",
+"signal_name": "interact_pressed"
+}
+
+[sub_resource type="Resource" id="Resource_ho1id"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_20f11"), SubResource("Resource_85ps5"), SubResource("Resource_1nbe7")])
+event_uid = "0bb60d"
+
+[sub_resource type="Resource" id="Resource_wu0ng"]
+script = ExtResource("8_8p8d4")
 id = "id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_20f11"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_kofvj"]
+script = ExtResource("9_dwkn7")
 function_name = "press_interact"
 description = "Marks a named interact button held and fires On Interact Pressed."
 expose_as_ace = true
 ace_display_name = "Press Interact"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_oc0dh")])
-events = Array[Resource]([SubResource("Resource_iq5m5")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_wu0ng")])
+events = Array[Resource]([SubResource("Resource_ho1id")])
 
-[sub_resource type="Resource" id="Resource_85ps5"]
-script = ExtResource("2_jstna")
-code = "interact_states[id] = false
-last_released_id = id
-interact_released.emit(id)"
+[sub_resource type="Resource" id="Resource_66wol"]
+script = ExtResource("7_fu2bx")
+ace_id = "DictSetKey"
+params = {
+"key": "id",
+"value": "false",
+"var_name": "interact_states"
+}
 
-[sub_resource type="Resource" id="Resource_1nbe7"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_18c8k"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "id",
+"var_name": "last_released_id"
+}
+
+[sub_resource type="Resource" id="Resource_oquf3"]
+script = ExtResource("7_fu2bx")
+ace_id = "EmitSignal"
+params = {
+"args": "id",
+"signal_name": "interact_released"
+}
+
+[sub_resource type="Resource" id="Resource_kuuts"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_66wol"), SubResource("Resource_18c8k"), SubResource("Resource_oquf3")])
+event_uid = "79de51"
+
+[sub_resource type="Resource" id="Resource_7l4al"]
+script = ExtResource("8_8p8d4")
 id = "id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_ho1id"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_e0w66"]
+script = ExtResource("9_dwkn7")
 function_name = "release_interact"
 description = "Marks a named interact button released and fires On Interact Released."
 expose_as_ace = true
 ace_display_name = "Release Interact"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_1nbe7")])
-events = Array[Resource]([SubResource("Resource_85ps5")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_7l4al")])
+events = Array[Resource]([SubResource("Resource_kuuts")])
 
-[sub_resource type="Resource" id="Resource_wu0ng"]
-script = ExtResource("2_jstna")
-code = "if ignoring_input:
-	return
-last_pressed_id = id
-last_released_id = id
-interact_pressed.emit(id)
-interact_released.emit(id)"
+[sub_resource type="Resource" id="Resource_cpnum"]
+script = ExtResource("7_fu2bx")
+ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_kofvj"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_3xhw6"]
+script = ExtResource("3_tmuc2")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "ignoring_input"
+}
+
+[sub_resource type="Resource" id="Resource_nu7tl"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_3xhw6")])
+actions = Array[Resource]([SubResource("Resource_cpnum")])
+event_uid = "ea41ed"
+
+[sub_resource type="Resource" id="Resource_juucx"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "id",
+"var_name": "last_pressed_id"
+}
+
+[sub_resource type="Resource" id="Resource_dib3x"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "id",
+"var_name": "last_released_id"
+}
+
+[sub_resource type="Resource" id="Resource_mwdat"]
+script = ExtResource("7_fu2bx")
+ace_id = "EmitSignal"
+params = {
+"args": "id",
+"signal_name": "interact_pressed"
+}
+
+[sub_resource type="Resource" id="Resource_ri1f7"]
+script = ExtResource("7_fu2bx")
+ace_id = "EmitSignal"
+params = {
+"args": "id",
+"signal_name": "interact_released"
+}
+
+[sub_resource type="Resource" id="Resource_js7xq"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_juucx"), SubResource("Resource_dib3x"), SubResource("Resource_mwdat"), SubResource("Resource_ri1f7")])
+event_uid = "cc2488"
+
+[sub_resource type="Resource" id="Resource_nor7m"]
+script = ExtResource("8_8p8d4")
 id = "id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_66wol"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_4tc0m"]
+script = ExtResource("9_dwkn7")
 function_name = "simulate_interact"
 description = "Fires a press+release of a named button in one tick."
 expose_as_ace = true
 ace_display_name = "Simulate Interact"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_kofvj")])
-events = Array[Resource]([SubResource("Resource_wu0ng")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_nor7m")])
+events = Array[Resource]([SubResource("Resource_nu7tl"), SubResource("Resource_js7xq")])
 
-[sub_resource type="Resource" id="Resource_18c8k"]
-script = ExtResource("2_jstna")
-code = "max_speed = speed"
+[sub_resource type="Resource" id="Resource_4mcq6"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "speed",
+"var_name": "max_speed"
+}
 
-[sub_resource type="Resource" id="Resource_oquf3"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_055pe"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_4mcq6")])
+event_uid = "7dced2"
+
+[sub_resource type="Resource" id="Resource_ve1bo"]
+script = ExtResource("8_8p8d4")
 id = "speed"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_kuuts"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_c5kvy"]
+script = ExtResource("9_dwkn7")
 function_name = "set_max_speed"
 description = "Sets the max cursor speed (px/s)."
 expose_as_ace = true
 ace_display_name = "Set Max Speed"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_oquf3")])
-events = Array[Resource]([SubResource("Resource_18c8k")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_ve1bo")])
+events = Array[Resource]([SubResource("Resource_055pe")])
 
-[sub_resource type="Resource" id="Resource_7l4al"]
-script = ExtResource("2_jstna")
-code = "acceleration = rate"
+[sub_resource type="Resource" id="Resource_41mco"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "rate",
+"var_name": "acceleration"
+}
 
-[sub_resource type="Resource" id="Resource_e0w66"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_3eqdu"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_41mco")])
+event_uid = "139e48"
+
+[sub_resource type="Resource" id="Resource_adk8i"]
+script = ExtResource("8_8p8d4")
 id = "rate"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_cpnum"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_qc17x"]
+script = ExtResource("9_dwkn7")
 function_name = "set_acceleration"
 description = "Sets the speed-up rate while an axis is held."
 expose_as_ace = true
 ace_display_name = "Set Acceleration"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_e0w66")])
-events = Array[Resource]([SubResource("Resource_7l4al")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_adk8i")])
+events = Array[Resource]([SubResource("Resource_3eqdu")])
 
-[sub_resource type="Resource" id="Resource_3xhw6"]
-script = ExtResource("2_jstna")
-code = "deceleration = rate"
+[sub_resource type="Resource" id="Resource_7fvfe"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "rate",
+"var_name": "deceleration"
+}
 
-[sub_resource type="Resource" id="Resource_nu7tl"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_47oao"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_7fvfe")])
+event_uid = "55704e"
+
+[sub_resource type="Resource" id="Resource_oc1vl"]
+script = ExtResource("8_8p8d4")
 id = "rate"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_juucx"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_y4i1d"]
+script = ExtResource("9_dwkn7")
 function_name = "set_deceleration"
 description = "Sets the slow-down rate when the axis is released."
 expose_as_ace = true
 ace_display_name = "Set Deceleration"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_nu7tl")])
-events = Array[Resource]([SubResource("Resource_3xhw6")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_oc1vl")])
+events = Array[Resource]([SubResource("Resource_47oao")])
 
-[sub_resource type="Resource" id="Resource_dib3x"]
-script = ExtResource("2_jstna")
-code = "vel = Vector2(vel_x, vel_y)
-report_vel = vel"
+[sub_resource type="Resource" id="Resource_w422i"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "Vector2(vel_x, vel_y)",
+"var_name": "vel"
+}
 
-[sub_resource type="Resource" id="Resource_mwdat"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_tv272"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "vel",
+"var_name": "report_vel"
+}
+
+[sub_resource type="Resource" id="Resource_sfm2k"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_w422i"), SubResource("Resource_tv272")])
+event_uid = "9f146d"
+
+[sub_resource type="Resource" id="Resource_c7867"]
+script = ExtResource("8_8p8d4")
 id = "vel_x"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_ri1f7"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_2vtot"]
+script = ExtResource("8_8p8d4")
 id = "vel_y"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_js7xq"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_82utc"]
+script = ExtResource("9_dwkn7")
 function_name = "set_cursor_velocity"
 description = "Sets the cursor velocity directly."
 expose_as_ace = true
 ace_display_name = "Set Velocity"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_mwdat"), SubResource("Resource_ri1f7")])
-events = Array[Resource]([SubResource("Resource_dib3x")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_c7867"), SubResource("Resource_2vtot")])
+events = Array[Resource]([SubResource("Resource_sfm2k")])
 
-[sub_resource type="Resource" id="Resource_nor7m"]
-script = ExtResource("2_jstna")
-code = "if ignoring_input or host == null:
-	return
-var dt: float = get_physics_process_delta_time()
-var new_pos := Vector2(target_x, target_y)
-if dt > 0.0:
-	report_vel = (new_pos - host.global_position) / dt
-host.global_position = new_pos
-vel = Vector2.ZERO"
+[sub_resource type="Resource" id="Resource_3f2x0"]
+script = ExtResource("7_fu2bx")
+ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_4tc0m"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_au54m"]
+script = ExtResource("3_tmuc2")
+ace_id = "CompareVar"
+params = {
+"op": "or",
+"value": "host == null",
+"var_name": "ignoring_input"
+}
+
+[sub_resource type="Resource" id="Resource_2232y"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_au54m")])
+actions = Array[Resource]([SubResource("Resource_3f2x0")])
+event_uid = "c386d2"
+
+[sub_resource type="Resource" id="Resource_1kser"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "dt",
+"value": "get_physics_process_delta_time()",
+"var_type": "float"
+}
+
+[sub_resource type="Resource" id="Resource_gb0sy"]
+script = ExtResource("7_fu2bx")
+ace_id = "CallFunction"
+params = {
+"args": "target_x, target_y",
+"function_name": "var new_pos := Vector2"
+}
+
+[sub_resource type="Resource" id="Resource_pnvss"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_1kser"), SubResource("Resource_gb0sy")])
+event_uid = "6ce80b"
+
+[sub_resource type="Resource" id="Resource_32pak"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "(new_pos - host.global_position) / dt",
+"var_name": "report_vel"
+}
+
+[sub_resource type="Resource" id="Resource_dxjo4"]
+script = ExtResource("3_tmuc2")
+ace_id = "CompareVar"
+params = {
+"op": ">",
+"value": "0.0",
+"var_name": "dt"
+}
+
+[sub_resource type="Resource" id="Resource_x5rvg"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_dxjo4")])
+actions = Array[Resource]([SubResource("Resource_32pak")])
+event_uid = "165b44"
+
+[sub_resource type="Resource" id="Resource_je470"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetProperty"
+params = {
+"property": "global_position",
+"target": "host",
+"value": "new_pos"
+}
+
+[sub_resource type="Resource" id="Resource_nep1k"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "Vector2.ZERO",
+"var_name": "vel"
+}
+
+[sub_resource type="Resource" id="Resource_ftinm"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_je470"), SubResource("Resource_nep1k")])
+event_uid = "86a1b5"
+
+[sub_resource type="Resource" id="Resource_o4urk"]
+script = ExtResource("8_8p8d4")
 id = "target_x"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_4mcq6"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_ib61g"]
+script = ExtResource("8_8p8d4")
 id = "target_y"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_055pe"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_mvb2w"]
+script = ExtResource("9_dwkn7")
 function_name = "simulate_direct_mouse_position"
 description = "Teleports the cursor to a position, reporting the implied velocity."
 expose_as_ace = true
 ace_display_name = "Simulate Direct Mouse Position"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_4tc0m"), SubResource("Resource_4mcq6")])
-events = Array[Resource]([SubResource("Resource_nor7m")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_o4urk"), SubResource("Resource_ib61g")])
+events = Array[Resource]([SubResource("Resource_2232y"), SubResource("Resource_pnvss"), SubResource("Resource_x5rvg"), SubResource("Resource_ftinm")])
 
-[sub_resource type="Resource" id="Resource_ve1bo"]
-script = ExtResource("2_jstna")
-code = "if ignoring_input:
-	return
-mouse_target = Vector2(target_x, target_y)
-mouse_smoothing = clampf(smoothing, 0.0, 1.0)
-has_mouse_target = true"
+[sub_resource type="Resource" id="Resource_qt6ic"]
+script = ExtResource("7_fu2bx")
+ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_c5kvy"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_hff7v"]
+script = ExtResource("3_tmuc2")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "ignoring_input"
+}
+
+[sub_resource type="Resource" id="Resource_vr732"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_hff7v")])
+actions = Array[Resource]([SubResource("Resource_qt6ic")])
+event_uid = "c23a20"
+
+[sub_resource type="Resource" id="Resource_6on3v"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "Vector2(target_x, target_y)",
+"var_name": "mouse_target"
+}
+
+[sub_resource type="Resource" id="Resource_fxkml"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "clampf(smoothing, 0.0, 1.0)",
+"var_name": "mouse_smoothing"
+}
+
+[sub_resource type="Resource" id="Resource_o2hch"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "has_mouse_target"
+}
+
+[sub_resource type="Resource" id="Resource_rbnpe"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_6on3v"), SubResource("Resource_fxkml"), SubResource("Resource_o2hch")])
+event_uid = "87e20f"
+
+[sub_resource type="Resource" id="Resource_p50mr"]
+script = ExtResource("8_8p8d4")
 id = "target_x"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_41mco"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_0f1i8"]
+script = ExtResource("8_8p8d4")
 id = "target_y"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_3eqdu"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_pmp27"]
+script = ExtResource("8_8p8d4")
 id = "smoothing"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_adk8i"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_v1rmu"]
+script = ExtResource("9_dwkn7")
 function_name = "simulate_mouse"
 description = "Drives the cursor toward a target with smoothing (mouse-follow)."
 expose_as_ace = true
 ace_display_name = "Simulate Mouse"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_c5kvy"), SubResource("Resource_41mco"), SubResource("Resource_3eqdu")])
-events = Array[Resource]([SubResource("Resource_ve1bo")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_p50mr"), SubResource("Resource_0f1i8"), SubResource("Resource_pmp27")])
+events = Array[Resource]([SubResource("Resource_vr732"), SubResource("Resource_rbnpe")])
 
-[sub_resource type="Resource" id="Resource_qc17x"]
-script = ExtResource("2_jstna")
-code = "if ignoring_input:
-	return
-simulated_axis += Vector2(x, y)
-has_simulated_axis = true"
+[sub_resource type="Resource" id="Resource_4h7bh"]
+script = ExtResource("7_fu2bx")
+ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_7fvfe"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_mxhhe"]
+script = ExtResource("3_tmuc2")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "ignoring_input"
+}
+
+[sub_resource type="Resource" id="Resource_d04q3"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_mxhhe")])
+actions = Array[Resource]([SubResource("Resource_4h7bh")])
+event_uid = "0f851c"
+
+[sub_resource type="Resource" id="Resource_1erpr"]
+script = ExtResource("7_fu2bx")
+ace_id = "AddVar"
+params = {
+"amount": "Vector2(x, y)",
+"var_name": "simulated_axis"
+}
+
+[sub_resource type="Resource" id="Resource_bq5c6"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "has_simulated_axis"
+}
+
+[sub_resource type="Resource" id="Resource_i20kq"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_1erpr"), SubResource("Resource_bq5c6")])
+event_uid = "b0e242"
+
+[sub_resource type="Resource" id="Resource_wgjhg"]
+script = ExtResource("8_8p8d4")
 id = "x"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_47oao"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_1v70k"]
+script = ExtResource("8_8p8d4")
 id = "y"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_oc1vl"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_2lguv"]
+script = ExtResource("9_dwkn7")
 function_name = "simulate_axis"
 description = "Feeds an analog axis for this tick (accel/decel applies)."
 expose_as_ace = true
 ace_display_name = "Simulate Axis"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_7fvfe"), SubResource("Resource_47oao")])
-events = Array[Resource]([SubResource("Resource_qc17x")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_wgjhg"), SubResource("Resource_1v70k")])
+events = Array[Resource]([SubResource("Resource_d04q3"), SubResource("Resource_i20kq")])
 
-[sub_resource type="Resource" id="Resource_y4i1d"]
-script = ExtResource("2_jstna")
-code = "if ignoring_input:
-	return
-var dirs := [Vector2(0, -1), Vector2(0, 1), Vector2(-1, 0), Vector2(1, 0)]
-if direction >= 0 and direction < 4:
-	simulated_axis += dirs[direction]
-	has_simulated_axis = true"
+[sub_resource type="Resource" id="Resource_8o50v"]
+script = ExtResource("7_fu2bx")
+ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_w422i"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_63oj3"]
+script = ExtResource("3_tmuc2")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "ignoring_input"
+}
+
+[sub_resource type="Resource" id="Resource_euh3c"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_63oj3")])
+actions = Array[Resource]([SubResource("Resource_8o50v")])
+event_uid = "984c6d"
+
+[sub_resource type="Resource" id="Resource_2n2m0"]
+script = ExtResource("2_1th2w")
+code = "var dirs := [Vector2(0, -1), Vector2(0, 1), Vector2(-1, 0), Vector2(1, 0)]"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_0aarx"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_2n2m0")])
+event_uid = "0c05ed"
+
+[sub_resource type="Resource" id="Resource_u7jy1"]
+script = ExtResource("7_fu2bx")
+ace_id = "AddVar"
+params = {
+"amount": "dirs[direction]",
+"var_name": "simulated_axis"
+}
+
+[sub_resource type="Resource" id="Resource_2oxbf"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "has_simulated_axis"
+}
+
+[sub_resource type="Resource" id="Resource_u11vt"]
+script = ExtResource("3_tmuc2")
+ace_id = "CompareVar"
+params = {
+"op": ">=",
+"value": "0",
+"var_name": "direction"
+}
+
+[sub_resource type="Resource" id="Resource_gvxr3"]
+script = ExtResource("3_tmuc2")
+ace_id = "CompareVar"
+params = {
+"op": "<",
+"value": "4",
+"var_name": "direction"
+}
+
+[sub_resource type="Resource" id="Resource_6yc2x"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_u11vt"), SubResource("Resource_gvxr3")])
+actions = Array[Resource]([SubResource("Resource_u7jy1"), SubResource("Resource_2oxbf")])
+event_uid = "27a357"
+
+[sub_resource type="Resource" id="Resource_5rsjp"]
+script = ExtResource("8_8p8d4")
 id = "direction"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_tv272"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_23uuh"]
+script = ExtResource("9_dwkn7")
 function_name = "simulate_control"
 description = "Feeds a cardinal direction (0 up, 1 down, 2 left, 3 right) for this tick."
 expose_as_ace = true
 ace_display_name = "Simulate Control"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_w422i")])
-events = Array[Resource]([SubResource("Resource_y4i1d")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_5rsjp")])
+events = Array[Resource]([SubResource("Resource_euh3c"), SubResource("Resource_0aarx"), SubResource("Resource_6yc2x")])
 
-[sub_resource type="Resource" id="Resource_sfm2k"]
-script = ExtResource("2_jstna")
-code = "homing_enabled = is_enabled"
+[sub_resource type="Resource" id="Resource_t7mot"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "is_enabled",
+"var_name": "homing_enabled"
+}
 
-[sub_resource type="Resource" id="Resource_c7867"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_nyg7v"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_t7mot")])
+event_uid = "1cea1d"
+
+[sub_resource type="Resource" id="Resource_xv5we"]
+script = ExtResource("8_8p8d4")
 id = "is_enabled"
 type_name = "bool"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_2vtot"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_sfe4q"]
+script = ExtResource("9_dwkn7")
 function_name = "set_homing_enabled"
 description = "Turns the homing magnet on/off."
 expose_as_ace = true
 ace_display_name = "Set Homing Enabled"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_c7867")])
-events = Array[Resource]([SubResource("Resource_sfm2k")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_xv5we")])
+events = Array[Resource]([SubResource("Resource_nyg7v")])
 
-[sub_resource type="Resource" id="Resource_82utc"]
-script = ExtResource("2_jstna")
-code = "homing_mode = clampi(mode, 0, 2)"
+[sub_resource type="Resource" id="Resource_c0geo"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "clampi(mode, 0, 2)",
+"var_name": "homing_mode"
+}
 
-[sub_resource type="Resource" id="Resource_3f2x0"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_7bve5"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_c0geo")])
+event_uid = "ffc6a5"
+
+[sub_resource type="Resource" id="Resource_odhse"]
+script = ExtResource("8_8p8d4")
 id = "mode"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_au54m"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_8i3tt"]
+script = ExtResource("9_dwkn7")
 function_name = "set_homing_mode"
 description = "0 steer, 1 snap-radius, 2 snap-overlap."
 expose_as_ace = true
 ace_display_name = "Set Homing Mode"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_3f2x0")])
-events = Array[Resource]([SubResource("Resource_82utc")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_odhse")])
+events = Array[Resource]([SubResource("Resource_7bve5")])
 
-[sub_resource type="Resource" id="Resource_2232y"]
-script = ExtResource("2_jstna")
-code = "homing_radius = maxf(0.0, radius)"
+[sub_resource type="Resource" id="Resource_wngax"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "maxf(0.0, radius)",
+"var_name": "homing_radius"
+}
 
-[sub_resource type="Resource" id="Resource_1kser"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_adyjs"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_wngax")])
+event_uid = "9a72cf"
+
+[sub_resource type="Resource" id="Resource_ts5wt"]
+script = ExtResource("8_8p8d4")
 id = "radius"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_gb0sy"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_lgccr"]
+script = ExtResource("9_dwkn7")
 function_name = "set_homing_radius"
 description = "Sets the homing engagement radius."
 expose_as_ace = true
 ace_display_name = "Set Homing Radius"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_1kser")])
-events = Array[Resource]([SubResource("Resource_2232y")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_ts5wt")])
+events = Array[Resource]([SubResource("Resource_adyjs")])
 
-[sub_resource type="Resource" id="Resource_pnvss"]
-script = ExtResource("2_jstna")
-code = "homing_strength = clampf(strength, 0.0, 1.0)"
+[sub_resource type="Resource" id="Resource_eo0fw"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "clampf(strength, 0.0, 1.0)",
+"var_name": "homing_strength"
+}
 
-[sub_resource type="Resource" id="Resource_32pak"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_qbtq8"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_eo0fw")])
+event_uid = "c638ee"
+
+[sub_resource type="Resource" id="Resource_vfid3"]
+script = ExtResource("8_8p8d4")
 id = "strength"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_dxjo4"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_opmhw"]
+script = ExtResource("9_dwkn7")
 function_name = "set_homing_strength"
 description = "How strongly the cursor is pulled toward a homing target (0..1)."
 expose_as_ace = true
 ace_display_name = "Set Homing Strength"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_32pak")])
-events = Array[Resource]([SubResource("Resource_pnvss")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_vfid3")])
+events = Array[Resource]([SubResource("Resource_qbtq8")])
 
-[sub_resource type="Resource" id="Resource_x5rvg"]
-script = ExtResource("2_jstna")
-code = "if target != null:
-	var id := target.get_instance_id()
-	if not homing_targets.has(id):
-		homing_targets.append(id)"
+[sub_resource type="Resource" id="Resource_pcrek"]
+script = ExtResource("2_1th2w")
+code = "var id := target.get_instance_id()"
+lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_je470"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_flbxu"]
+script = ExtResource("3_tmuc2")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "target"
+}
+
+[sub_resource type="Resource" id="Resource_rxkq0"]
+script = ExtResource("7_fu2bx")
+ace_id = "ArrayAppend"
+params = {
+"value": "id",
+"var_name": "homing_targets"
+}
+
+[sub_resource type="Resource" id="Resource_3ewlg"]
+script = ExtResource("3_tmuc2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "not homing_targets"
+}
+
+[sub_resource type="Resource" id="Resource_53qyy"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_3ewlg")])
+actions = Array[Resource]([SubResource("Resource_rxkq0")])
+event_uid = "e86111"
+
+[sub_resource type="Resource" id="Resource_gauo7"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_flbxu")])
+actions = Array[Resource]([SubResource("Resource_pcrek")])
+sub_events = Array[Resource]([SubResource("Resource_53qyy")])
+event_uid = "3d3670"
+
+[sub_resource type="Resource" id="Resource_hb251"]
+script = ExtResource("8_8p8d4")
 id = "target"
 type_name = "Node2D"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_nep1k"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_0lp5i"]
+script = ExtResource("9_dwkn7")
 function_name = "add_homing_target"
 description = "Registers a node as a homing target."
 expose_as_ace = true
 ace_display_name = "Add Homing Target"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_je470")])
-events = Array[Resource]([SubResource("Resource_x5rvg")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_hb251")])
+events = Array[Resource]([SubResource("Resource_gauo7")])
 
-[sub_resource type="Resource" id="Resource_ftinm"]
-script = ExtResource("2_jstna")
-code = "if target != null:
-	homing_targets.erase(target.get_instance_id())"
+[sub_resource type="Resource" id="Resource_ea4sl"]
+script = ExtResource("7_fu2bx")
+ace_id = "DictDeleteKey"
+params = {
+"key": "target.get_instance_id()",
+"var_name": "homing_targets"
+}
 
-[sub_resource type="Resource" id="Resource_o4urk"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_o3ls4"]
+script = ExtResource("3_tmuc2")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "target"
+}
+
+[sub_resource type="Resource" id="Resource_yxugr"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_o3ls4")])
+actions = Array[Resource]([SubResource("Resource_ea4sl")])
+event_uid = "fd11eb"
+
+[sub_resource type="Resource" id="Resource_4x25p"]
+script = ExtResource("8_8p8d4")
 id = "target"
 type_name = "Node2D"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_ib61g"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_gvomc"]
+script = ExtResource("9_dwkn7")
 function_name = "remove_homing_target"
 description = "Unregisters a homing target."
 expose_as_ace = true
 ace_display_name = "Remove Homing Target"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_o4urk")])
-events = Array[Resource]([SubResource("Resource_ftinm")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_4x25p")])
+events = Array[Resource]([SubResource("Resource_yxugr")])
 
-[sub_resource type="Resource" id="Resource_mvb2w"]
-script = ExtResource("2_jstna")
-code = "homing_targets.clear()
-in_homing_range = false
-nearest_homing_uid = -1
-nearest_homing_dist = -1.0
-homing_snapped_uid = -1"
+[sub_resource type="Resource" id="Resource_fiiwi"]
+script = ExtResource("7_fu2bx")
+ace_id = "DictClear"
+params = {
+"var_name": "homing_targets"
+}
 
-[sub_resource type="Resource" id="Resource_qt6ic"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_dt6ra"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "in_homing_range"
+}
+
+[sub_resource type="Resource" id="Resource_1l0in"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "-1",
+"var_name": "nearest_homing_uid"
+}
+
+[sub_resource type="Resource" id="Resource_oyavq"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "-1.0",
+"var_name": "nearest_homing_dist"
+}
+
+[sub_resource type="Resource" id="Resource_tmtyc"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "-1",
+"var_name": "homing_snapped_uid"
+}
+
+[sub_resource type="Resource" id="Resource_yfv82"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_fiiwi"), SubResource("Resource_dt6ra"), SubResource("Resource_1l0in"), SubResource("Resource_oyavq"), SubResource("Resource_tmtyc")])
+event_uid = "0bb6aa"
+
+[sub_resource type="Resource" id="Resource_fwgu7"]
+script = ExtResource("9_dwkn7")
 function_name = "clear_homing_targets"
 description = "Removes every homing target."
 expose_as_ace = true
 ace_display_name = "Clear Homing Targets"
 ace_category = "Virtual Cursor"
-events = Array[Resource]([SubResource("Resource_mvb2w")])
+events = Array[Resource]([SubResource("Resource_yfv82")])
 
-[sub_resource type="Resource" id="Resource_hff7v"]
-script = ExtResource("2_jstna")
-code = "if target != null:
-	var id := target.get_instance_id()
-	if not solids.has(id):
-		solids.append(id)"
+[sub_resource type="Resource" id="Resource_ocido"]
+script = ExtResource("2_1th2w")
+code = "var id := target.get_instance_id()"
+lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_vr732"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_qbyql"]
+script = ExtResource("3_tmuc2")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "target"
+}
+
+[sub_resource type="Resource" id="Resource_nw7th"]
+script = ExtResource("7_fu2bx")
+ace_id = "ArrayAppend"
+params = {
+"value": "id",
+"var_name": "solids"
+}
+
+[sub_resource type="Resource" id="Resource_4tt70"]
+script = ExtResource("3_tmuc2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "not solids"
+}
+
+[sub_resource type="Resource" id="Resource_w6l22"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_4tt70")])
+actions = Array[Resource]([SubResource("Resource_nw7th")])
+event_uid = "419e88"
+
+[sub_resource type="Resource" id="Resource_056fv"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_qbyql")])
+actions = Array[Resource]([SubResource("Resource_ocido")])
+sub_events = Array[Resource]([SubResource("Resource_w6l22")])
+event_uid = "2eb77c"
+
+[sub_resource type="Resource" id="Resource_gnkq0"]
+script = ExtResource("8_8p8d4")
 id = "target"
 type_name = "Node2D"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_6on3v"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_5tu1j"]
+script = ExtResource("9_dwkn7")
 function_name = "add_solid"
 description = "Registers a node as a tracked solid (for SolidUID reporting)."
 expose_as_ace = true
 ace_display_name = "Add Solid"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_vr732")])
-events = Array[Resource]([SubResource("Resource_hff7v")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_gnkq0")])
+events = Array[Resource]([SubResource("Resource_056fv")])
 
-[sub_resource type="Resource" id="Resource_fxkml"]
-script = ExtResource("2_jstna")
-code = "if target != null:
-	solids.erase(target.get_instance_id())"
+[sub_resource type="Resource" id="Resource_r7vpb"]
+script = ExtResource("7_fu2bx")
+ace_id = "DictDeleteKey"
+params = {
+"key": "target.get_instance_id()",
+"var_name": "solids"
+}
 
-[sub_resource type="Resource" id="Resource_o2hch"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_sidy4"]
+script = ExtResource("3_tmuc2")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "target"
+}
+
+[sub_resource type="Resource" id="Resource_bdhnk"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_sidy4")])
+actions = Array[Resource]([SubResource("Resource_r7vpb")])
+event_uid = "0c2af8"
+
+[sub_resource type="Resource" id="Resource_idu6u"]
+script = ExtResource("8_8p8d4")
 id = "target"
 type_name = "Node2D"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_rbnpe"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_sft7a"]
+script = ExtResource("9_dwkn7")
 function_name = "remove_solid"
 description = "Unregisters a tracked solid."
 expose_as_ace = true
 ace_display_name = "Remove Solid"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_o2hch")])
-events = Array[Resource]([SubResource("Resource_fxkml")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_idu6u")])
+events = Array[Resource]([SubResource("Resource_bdhnk")])
 
-[sub_resource type="Resource" id="Resource_p50mr"]
-script = ExtResource("2_jstna")
-code = "solids.clear()"
+[sub_resource type="Resource" id="Resource_beinm"]
+script = ExtResource("7_fu2bx")
+ace_id = "DictClear"
+params = {
+"var_name": "solids"
+}
 
-[sub_resource type="Resource" id="Resource_0f1i8"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_g7u41"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_beinm")])
+event_uid = "5ce3a1"
+
+[sub_resource type="Resource" id="Resource_o27m3"]
+script = ExtResource("9_dwkn7")
 function_name = "clear_solids"
 description = "Clears the tracked-solids list."
 expose_as_ace = true
 ace_display_name = "Clear Solids"
 ace_category = "Virtual Cursor"
-events = Array[Resource]([SubResource("Resource_p50mr")])
+events = Array[Resource]([SubResource("Resource_g7u41")])
 
-[sub_resource type="Resource" id="Resource_pmp27"]
-script = ExtResource("2_jstna")
-code = "solid_collision = is_enabled"
+[sub_resource type="Resource" id="Resource_n0ta7"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "is_enabled",
+"var_name": "solid_collision"
+}
 
-[sub_resource type="Resource" id="Resource_v1rmu"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_ew8ej"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_n0ta7")])
+event_uid = "2f2ca3"
+
+[sub_resource type="Resource" id="Resource_jeksv"]
+script = ExtResource("8_8p8d4")
 id = "is_enabled"
 type_name = "bool"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_4h7bh"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_jx2k4"]
+script = ExtResource("9_dwkn7")
 function_name = "set_solid_collision"
 description = "Toggles solid push-out via move_and_slide."
 expose_as_ace = true
 ace_display_name = "Set Solid Collision"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_v1rmu")])
-events = Array[Resource]([SubResource("Resource_pmp27")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_jeksv")])
+events = Array[Resource]([SubResource("Resource_ew8ej")])
 
-[sub_resource type="Resource" id="Resource_mxhhe"]
-script = ExtResource("2_jstna")
-code = "allow_sliding = state"
+[sub_resource type="Resource" id="Resource_p8eoa"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "state",
+"var_name": "allow_sliding"
+}
 
-[sub_resource type="Resource" id="Resource_d04q3"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_twdau"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_p8eoa")])
+event_uid = "aac38f"
+
+[sub_resource type="Resource" id="Resource_1xe4h"]
+script = ExtResource("8_8p8d4")
 id = "state"
 type_name = "bool"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_1erpr"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_bw84a"]
+script = ExtResource("9_dwkn7")
 function_name = "set_allow_sliding"
 description = "Slide along solids (true) or hard-stop (false)."
 expose_as_ace = true
 ace_display_name = "Set Allow Sliding"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_d04q3")])
-events = Array[Resource]([SubResource("Resource_mxhhe")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_1xe4h")])
+events = Array[Resource]([SubResource("Resource_twdau")])
 
-[sub_resource type="Resource" id="Resource_bq5c6"]
-script = ExtResource("2_jstna")
-code = "bounce_mode = clampi(mode, 0, 3)"
+[sub_resource type="Resource" id="Resource_j2krw"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "clampi(mode, 0, 3)",
+"var_name": "bounce_mode"
+}
 
-[sub_resource type="Resource" id="Resource_i20kq"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_r6jjh"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_j2krw")])
+event_uid = "42c409"
+
+[sub_resource type="Resource" id="Resource_sksqb"]
+script = ExtResource("8_8p8d4")
 id = "mode"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_wgjhg"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_u61hu"]
+script = ExtResource("9_dwkn7")
 function_name = "set_bounce"
 description = "0 none, 1 solids, 2 constraints, 3 both."
 expose_as_ace = true
 ace_display_name = "Set Bounce"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_i20kq")])
-events = Array[Resource]([SubResource("Resource_bq5c6")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_sksqb")])
+events = Array[Resource]([SubResource("Resource_r6jjh")])
 
-[sub_resource type="Resource" id="Resource_1v70k"]
-script = ExtResource("2_jstna")
-code = "direction_mode = clampi(mode, 0, 3)"
+[sub_resource type="Resource" id="Resource_xdwqr"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "clampi(mode, 0, 3)",
+"var_name": "direction_mode"
+}
 
-[sub_resource type="Resource" id="Resource_2lguv"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_p8fce"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_xdwqr")])
+event_uid = "08fb4d"
+
+[sub_resource type="Resource" id="Resource_g4r4y"]
+script = ExtResource("8_8p8d4")
 id = "mode"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_8o50v"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_fpvry"]
+script = ExtResource("9_dwkn7")
 function_name = "set_direction_mode"
 description = "0 up/down, 1 left/right, 2 four-way, 3 eight-way."
 expose_as_ace = true
 ace_display_name = "Set Direction Mode"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_2lguv")])
-events = Array[Resource]([SubResource("Resource_1v70k")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_g4r4y")])
+events = Array[Resource]([SubResource("Resource_p8fce")])
 
-[sub_resource type="Resource" id="Resource_63oj3"]
-script = ExtResource("2_jstna")
-code = "default_controls = state"
+[sub_resource type="Resource" id="Resource_43gxj"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "state",
+"var_name": "default_controls"
+}
 
-[sub_resource type="Resource" id="Resource_euh3c"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_yvl4r"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_43gxj")])
+event_uid = "79cb12"
+
+[sub_resource type="Resource" id="Resource_805fa"]
+script = ExtResource("8_8p8d4")
 id = "state"
 type_name = "bool"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_2n2m0"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_6h6ie"]
+script = ExtResource("9_dwkn7")
 function_name = "set_default_controls"
 description = "Read ui_left/right/up/down each tick."
 expose_as_ace = true
 ace_display_name = "Set Default Controls"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_euh3c")])
-events = Array[Resource]([SubResource("Resource_63oj3")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_805fa")])
+events = Array[Resource]([SubResource("Resource_yvl4r")])
 
-[sub_resource type="Resource" id="Resource_0aarx"]
-script = ExtResource("2_jstna")
-code = "enabled = is_enabled"
+[sub_resource type="Resource" id="Resource_cjapf"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "is_enabled",
+"var_name": "enabled"
+}
 
-[sub_resource type="Resource" id="Resource_u7jy1"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_ap6io"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_cjapf")])
+event_uid = "24f13c"
+
+[sub_resource type="Resource" id="Resource_rytme"]
+script = ExtResource("8_8p8d4")
 id = "is_enabled"
 type_name = "bool"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_2oxbf"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_thdss"]
+script = ExtResource("9_dwkn7")
 function_name = "set_cursor_enabled"
 description = "Master on/off."
 expose_as_ace = true
 ace_display_name = "Set Enabled"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_u7jy1")])
-events = Array[Resource]([SubResource("Resource_0aarx")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_rytme")])
+events = Array[Resource]([SubResource("Resource_ap6io")])
 
-[sub_resource type="Resource" id="Resource_u11vt"]
-script = ExtResource("2_jstna")
-code = "ignoring_input = state"
+[sub_resource type="Resource" id="Resource_wcw2n"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "state",
+"var_name": "ignoring_input"
+}
 
-[sub_resource type="Resource" id="Resource_gvxr3"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_ffjd1"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_wcw2n")])
+event_uid = "2029ed"
+
+[sub_resource type="Resource" id="Resource_wrb10"]
+script = ExtResource("8_8p8d4")
 id = "state"
 type_name = "bool"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_6yc2x"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_f18io"]
+script = ExtResource("9_dwkn7")
 function_name = "set_ignoring_input"
 description = "Ignore all input while true (movement decays to zero)."
 expose_as_ace = true
 ace_display_name = "Set Ignoring Input"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_gvxr3")])
-events = Array[Resource]([SubResource("Resource_u11vt")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_wrb10")])
+events = Array[Resource]([SubResource("Resource_ffjd1")])
 
-[sub_resource type="Resource" id="Resource_5rsjp"]
-script = ExtResource("2_jstna")
-code = "constrain_to_layout = is_enabled"
+[sub_resource type="Resource" id="Resource_plp0i"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "is_enabled",
+"var_name": "constrain_to_layout"
+}
 
-[sub_resource type="Resource" id="Resource_23uuh"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_n2oxp"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_plp0i")])
+event_uid = "10a4e3"
+
+[sub_resource type="Resource" id="Resource_1xd6l"]
+script = ExtResource("8_8p8d4")
 id = "is_enabled"
 type_name = "bool"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_t7mot"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_1xo36"]
+script = ExtResource("9_dwkn7")
 function_name = "set_constrain_to_layout"
 description = "Clamp the cursor inside the bounds."
 expose_as_ace = true
 ace_display_name = "Set Constrain To Layout"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_23uuh")])
-events = Array[Resource]([SubResource("Resource_5rsjp")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_1xd6l")])
+events = Array[Resource]([SubResource("Resource_n2oxp")])
 
-[sub_resource type="Resource" id="Resource_nyg7v"]
-script = ExtResource("2_jstna")
-code = "if left == 0.0 and top == 0.0 and right == 0.0 and bottom == 0.0:
-	has_constraint_bounds = false
-else:
-	constraint_bounds = Rect2(left, top, right - left, bottom - top)
-	has_constraint_bounds = true"
+[sub_resource type="Resource" id="Resource_kkv8v"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "has_constraint_bounds"
+}
 
-[sub_resource type="Resource" id="Resource_xv5we"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_ty6vx"]
+script = ExtResource("3_tmuc2")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "0.0",
+"var_name": "left"
+}
+
+[sub_resource type="Resource" id="Resource_2hwxm"]
+script = ExtResource("3_tmuc2")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "0.0",
+"var_name": "top"
+}
+
+[sub_resource type="Resource" id="Resource_xrl4g"]
+script = ExtResource("3_tmuc2")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "0.0",
+"var_name": "right"
+}
+
+[sub_resource type="Resource" id="Resource_rhwhi"]
+script = ExtResource("3_tmuc2")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "0.0",
+"var_name": "bottom"
+}
+
+[sub_resource type="Resource" id="Resource_ngh87"]
+script = ExtResource("6_mwbwx")
+conditions = Array[ExtResource("3_tmuc2")]([SubResource("Resource_ty6vx"), SubResource("Resource_2hwxm"), SubResource("Resource_xrl4g"), SubResource("Resource_rhwhi")])
+actions = Array[Resource]([SubResource("Resource_kkv8v")])
+event_uid = "82884e"
+
+[sub_resource type="Resource" id="Resource_h76t1"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "Rect2(left, top, right - left, bottom - top)",
+"var_name": "constraint_bounds"
+}
+
+[sub_resource type="Resource" id="Resource_cxf26"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "has_constraint_bounds"
+}
+
+[sub_resource type="Resource" id="Resource_vibco"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_h76t1"), SubResource("Resource_cxf26")])
+else_mode = 1
+event_uid = "8522e5"
+
+[sub_resource type="Resource" id="Resource_6k6xj"]
+script = ExtResource("8_8p8d4")
 id = "left"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_sfe4q"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_m6bns"]
+script = ExtResource("8_8p8d4")
 id = "top"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_c0geo"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_urxvl"]
+script = ExtResource("8_8p8d4")
 id = "right"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_7bve5"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_tk4jc"]
+script = ExtResource("8_8p8d4")
 id = "bottom"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_odhse"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_dm6vn"]
+script = ExtResource("9_dwkn7")
 function_name = "set_constraint_bounds"
 description = "Sets explicit clamp bounds (all-zero clears them, falling back to the viewport)."
 expose_as_ace = true
 ace_display_name = "Set Constraint Bounds"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_xv5we"), SubResource("Resource_sfe4q"), SubResource("Resource_c0geo"), SubResource("Resource_7bve5")])
-events = Array[Resource]([SubResource("Resource_nyg7v")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_6k6xj"), SubResource("Resource_m6bns"), SubResource("Resource_urxvl"), SubResource("Resource_tk4jc")])
+events = Array[Resource]([SubResource("Resource_ngh87"), SubResource("Resource_vibco")])
 
-[sub_resource type="Resource" id="Resource_8i3tt"]
-script = ExtResource("2_jstna")
-code = "hover_mode = clampi(mode, 0, 1)"
+[sub_resource type="Resource" id="Resource_lmw54"]
+script = ExtResource("7_fu2bx")
+ace_id = "SetVar"
+params = {
+"value": "clampi(mode, 0, 1)",
+"var_name": "hover_mode"
+}
 
-[sub_resource type="Resource" id="Resource_wngax"]
-script = ExtResource("7_mwbwx")
+[sub_resource type="Resource" id="Resource_m4hq2"]
+script = ExtResource("6_mwbwx")
+actions = Array[Resource]([SubResource("Resource_lmw54")])
+event_uid = "6b68a2"
+
+[sub_resource type="Resource" id="Resource_728fv"]
+script = ExtResource("8_8p8d4")
 id = "mode"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_adyjs"]
-script = ExtResource("8_fu2bx")
+[sub_resource type="Resource" id="Resource_g2xuh"]
+script = ExtResource("9_dwkn7")
 function_name = "set_hover_mode"
 description = "0 point (origin inside shape), 1 overlap (shapes overlap)."
 expose_as_ace = true
 ace_display_name = "Set Hover Mode"
 ace_category = "Virtual Cursor"
-params = Array[ExtResource("7_mwbwx")]([SubResource("Resource_wngax")])
-events = Array[Resource]([SubResource("Resource_8i3tt")])
+params = Array[ExtResource("8_8p8d4")]([SubResource("Resource_728fv")])
+events = Array[Resource]([SubResource("Resource_m4hq2")])
 
 [resource]
-script = ExtResource("9_8p8d4")
+script = ExtResource("10_3d4q0")
 host_class = "CharacterBody2D"
 behavior_mode = true
 custom_class_name = "VirtualCursor"
 addon_tags = PackedStringArray()
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_dwkn7"), SubResource("Resource_3d4q0"), SubResource("Resource_rhot5"), SubResource("Resource_44tmr")])
+events = Array[Resource]([SubResource("Resource_rhot5"), SubResource("Resource_jx54r"), SubResource("Resource_44tmr"), SubResource("Resource_oc0dh")])
 variables = {
 "acceleration": {
 "attributes": {
@@ -1341,4 +2013,4 @@ variables = {
 "type": "Array"
 }
 }
-functions = Array[Resource]([SubResource("Resource_20f11"), SubResource("Resource_ho1id"), SubResource("Resource_66wol"), SubResource("Resource_kuuts"), SubResource("Resource_cpnum"), SubResource("Resource_juucx"), SubResource("Resource_js7xq"), SubResource("Resource_055pe"), SubResource("Resource_adk8i"), SubResource("Resource_oc1vl"), SubResource("Resource_tv272"), SubResource("Resource_2vtot"), SubResource("Resource_au54m"), SubResource("Resource_gb0sy"), SubResource("Resource_dxjo4"), SubResource("Resource_nep1k"), SubResource("Resource_ib61g"), SubResource("Resource_qt6ic"), SubResource("Resource_6on3v"), SubResource("Resource_rbnpe"), SubResource("Resource_0f1i8"), SubResource("Resource_4h7bh"), SubResource("Resource_1erpr"), SubResource("Resource_wgjhg"), SubResource("Resource_8o50v"), SubResource("Resource_2n2m0"), SubResource("Resource_2oxbf"), SubResource("Resource_6yc2x"), SubResource("Resource_t7mot"), SubResource("Resource_odhse"), SubResource("Resource_adyjs")])
+functions = Array[Resource]([SubResource("Resource_kofvj"), SubResource("Resource_e0w66"), SubResource("Resource_4tc0m"), SubResource("Resource_c5kvy"), SubResource("Resource_qc17x"), SubResource("Resource_y4i1d"), SubResource("Resource_82utc"), SubResource("Resource_mvb2w"), SubResource("Resource_v1rmu"), SubResource("Resource_2lguv"), SubResource("Resource_23uuh"), SubResource("Resource_sfe4q"), SubResource("Resource_8i3tt"), SubResource("Resource_lgccr"), SubResource("Resource_opmhw"), SubResource("Resource_0lp5i"), SubResource("Resource_gvomc"), SubResource("Resource_fwgu7"), SubResource("Resource_5tu1j"), SubResource("Resource_sft7a"), SubResource("Resource_o27m3"), SubResource("Resource_jx2k4"), SubResource("Resource_bw84a"), SubResource("Resource_u61hu"), SubResource("Resource_fpvry"), SubResource("Resource_6h6ie"), SubResource("Resource_thdss"), SubResource("Resource_f18io"), SubResource("Resource_1xo36"), SubResource("Resource_dm6vn"), SubResource("Resource_g2xuh")])

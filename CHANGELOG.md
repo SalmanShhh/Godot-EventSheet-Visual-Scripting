@@ -108,12 +108,17 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   variable **row** with the annotation kept verbatim (a new `export_hint`), instead of staying a RawCode
   block. So a real tuned script renders as a sheet and round-trips byte-identically; the per-line
   verify-lift gate rejects any annotation it can't reproduce exactly (those stay blocks).
-- **Showcases shed GDScript blocks.** The demo showcases' most visible code cells — HUD/score text
-  (`$Hud.text = "…" % […]`), position clamps, and scene spawns — are now authored as **Set Text
-  (formatted)**, **Set Property**, and **Spawn Scene (Full)** ACE rows instead of RawCode, so they read
-  as events (the compiled GDScript is unchanged). The loop-heavy hit-detection/grid-spawn/oscillation
-  blocks remain code cells for now — tracked as the ongoing behaviour-as-ACEs parity work, which the new
-  math/trig vocabulary unblocks.
+- **Behaviour addons + showcases are code-free by default.** A build-time pass (`lift_function_bodies`)
+  reverse-lifts every behaviour pack's and showcase's function bodies into ACE rows — the *same* lifter
+  that opens a `.gd` as events — keeping the lifted rows only when the sheet still recompiles
+  **byte-identically** (a per-function gate). So algorithmic kernels (spring integrators, sine
+  oscillators, physics ticks, weapon/health logic) now read as **Add/Set Variable**, **Set Property**,
+  and **Call Method** rows instead of GDScript blocks, across all 31 packs — while shipping the **exact
+  same GDScript** (0 generated `.gd` changed; drift=0). Bodies that can't round-trip (inner classes,
+  exotic control flow) keep their RawCode — the honest irreducible limit. The showcases' most visible
+  cells (HUD text, position clamps, spawns) were also hand-authored as **Set Text (formatted)** / **Set
+  Property** / **Spawn Scene (Full)** rows; their remaining loop-heavy event blocks (nested
+  hit-detection with `break`, grid spawn) stay code cells, where they read better than a pile of rows.
 
 ### Editor UX + behaviour icons
 

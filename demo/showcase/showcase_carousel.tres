@@ -233,13 +233,47 @@ actions = Array[Resource]([SubResource("Resource_d20ds")])
 event_uid = "401410"
 
 [sub_resource type="Resource" id="Resource_ak434"]
-script = ExtResource("8_fs8kx")
-code = "var t: Node2D = $Tiles.get_child(index % $Tiles.get_child_count())
-t.get_node(\"SpringBehavior\").add_impulse(\"__scale\", kick)
-t.get_node(\"SpringBehavior\").spring_host_scale(1.0)
-t.get_node(\"TweenBehavior\").tween_rotation(t.rotation_degrees + 90.0, 0.5)"
+script = ExtResource("2_i1ys7")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "t",
+"value": "$Tiles.get_child(index % $Tiles.get_child_count())",
+"var_type": "Node2D"
+}
 
 [sub_resource type="Resource" id="Resource_3iqft"]
+script = ExtResource("2_i1ys7")
+ace_id = "CallMethod"
+params = {
+"args": "\"SpringBehavior\").add_impulse(\"__scale\", kick",
+"method": "get_node",
+"target": "t"
+}
+
+[sub_resource type="Resource" id="Resource_n6nc4"]
+script = ExtResource("2_i1ys7")
+ace_id = "CallMethod"
+params = {
+"args": "\"SpringBehavior\").spring_host_scale(1.0",
+"method": "get_node",
+"target": "t"
+}
+
+[sub_resource type="Resource" id="Resource_62dol"]
+script = ExtResource("2_i1ys7")
+ace_id = "CallMethod"
+params = {
+"args": "\"TweenBehavior\").tween_rotation(t.rotation_degrees + 90.0, 0.5",
+"method": "get_node",
+"target": "t"
+}
+
+[sub_resource type="Resource" id="Resource_8vpcd"]
+script = ExtResource("6_l76gw")
+actions = Array[Resource]([SubResource("Resource_ak434"), SubResource("Resource_3iqft"), SubResource("Resource_n6nc4"), SubResource("Resource_62dol")])
+event_uid = "28d650"
+
+[sub_resource type="Resource" id="Resource_y7wcg"]
 script = ExtResource("9_x7hkf")
 id = "index"
 type = 2
@@ -247,7 +281,7 @@ type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_n6nc4"]
+[sub_resource type="Resource" id="Resource_c4tn4"]
 script = ExtResource("9_x7hkf")
 id = "kick"
 type = 3
@@ -255,11 +289,11 @@ type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_62dol"]
+[sub_resource type="Resource" id="Resource_sufqi"]
 script = ExtResource("10_3vm00")
 function_name = "juice_tile"
-params = Array[ExtResource("9_x7hkf")]([SubResource("Resource_3iqft"), SubResource("Resource_n6nc4")])
-events = Array[Resource]([SubResource("Resource_ak434")])
+params = Array[ExtResource("9_x7hkf")]([SubResource("Resource_y7wcg"), SubResource("Resource_c4tn4")])
+events = Array[Resource]([SubResource("Resource_8vpcd")])
 
 [resource]
 script = ExtResource("11_oan50")
@@ -304,4 +338,4 @@ variables = {
 "type": "bool"
 }
 }
-functions = Array[Resource]([SubResource("Resource_62dol")])
+functions = Array[Resource]([SubResource("Resource_sufqi")])

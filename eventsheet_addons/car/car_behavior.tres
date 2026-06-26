@@ -1,21 +1,22 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_phgd3"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_cb0ow"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_i5pmt"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_ct0p5"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_saqex"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_8vblq"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_bgk0m"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_s1mgl"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_1hj83"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_cb0ow"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_i5pmt"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_ct0p5"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_saqex"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_8vblq"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_bgk0m"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_s1mgl"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_1hj83"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_1707f"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_bb4cx"]
 
-[sub_resource type="Resource" id="Resource_1707f"]
-script = ExtResource("1_phgd3")
+[sub_resource type="Resource" id="Resource_pbr7j"]
+script = ExtResource("1_cb0ow")
 text = "Car behavior (C3 parity): accelerate/brake with up/down, steer with left/right. drift_recover blends sliding back toward the heading (1 = grippy, low = drifty); turn_while_stopped allows steering at rest."
 
-[sub_resource type="Resource" id="Resource_bb4cx"]
-script = ExtResource("2_cb0ow")
+[sub_resource type="Resource" id="Resource_8htxg"]
+script = ExtResource("2_i5pmt")
 code = "## @ace_trigger
 ## @ace_name(\"On Drift Started\")
 ## @ace_category(\"Car\")
@@ -26,8 +27,8 @@ signal drift_started
 ## @ace_category(\"Car\")
 signal drift_recovered"
 
-[sub_resource type="Resource" id="Resource_pbr7j"]
-script = ExtResource("2_cb0ow")
+[sub_resource type="Resource" id="Resource_3ywck"]
+script = ExtResource("2_i5pmt")
 code = "if host == null:
 	return
 var throttle := Input.get_axis(&\"ui_down\", &\"ui_up\")
@@ -52,36 +53,66 @@ elif not drifting and _drifting:
 	drift_recovered.emit()
 host.move_and_slide()"
 
-[sub_resource type="Resource" id="Resource_8htxg"]
-script = ExtResource("6_8vblq")
+[sub_resource type="Resource" id="Resource_66i7s"]
+script = ExtResource("6_bgk0m")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
-actions = Array[Resource]([SubResource("Resource_pbr7j")])
+actions = Array[Resource]([SubResource("Resource_3ywck")])
 event_uid = "c2469a"
 
-[sub_resource type="Resource" id="Resource_3ywck"]
-script = ExtResource("2_cb0ow")
-code = "speed = 0.0
-if host != null:
-	host.velocity = Vector2.ZERO"
+[sub_resource type="Resource" id="Resource_88562"]
+script = ExtResource("7_s1mgl")
+ace_id = "SetVar"
+params = {
+"value": "0.0",
+"var_name": "speed"
+}
 
-[sub_resource type="Resource" id="Resource_66i7s"]
-script = ExtResource("8_s1mgl")
+[sub_resource type="Resource" id="Resource_mjrp5"]
+script = ExtResource("6_bgk0m")
+actions = Array[Resource]([SubResource("Resource_88562")])
+event_uid = "4ca5e1"
+
+[sub_resource type="Resource" id="Resource_63yxm"]
+script = ExtResource("7_s1mgl")
+ace_id = "SetVelocity2D"
+params = {
+"host": "host",
+"vel": "Vector2.ZERO"
+}
+
+[sub_resource type="Resource" id="Resource_mxxnm"]
+script = ExtResource("3_ct0p5")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "host"
+}
+
+[sub_resource type="Resource" id="Resource_t6s8a"]
+script = ExtResource("6_bgk0m")
+conditions = Array[ExtResource("3_ct0p5")]([SubResource("Resource_mxxnm")])
+actions = Array[Resource]([SubResource("Resource_63yxm")])
+event_uid = "8abfbf"
+
+[sub_resource type="Resource" id="Resource_o4167"]
+script = ExtResource("9_1707f")
 function_name = "stop_car"
 description = "Kills all momentum."
 expose_as_ace = true
 ace_display_name = "Stop Car"
 ace_category = "Car"
-events = Array[Resource]([SubResource("Resource_3ywck")])
+events = Array[Resource]([SubResource("Resource_mjrp5"), SubResource("Resource_t6s8a")])
 
 [resource]
-script = ExtResource("9_1hj83")
+script = ExtResource("10_bb4cx")
 host_class = "CharacterBody2D"
 behavior_mode = true
 custom_class_name = "CarBehavior"
 addon_tags = PackedStringArray()
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_1707f"), SubResource("Resource_bb4cx"), SubResource("Resource_8htxg")])
+events = Array[Resource]([SubResource("Resource_pbr7j"), SubResource("Resource_8htxg"), SubResource("Resource_66i7s")])
 variables = {
 "_drifting": {
 "default": false,
@@ -129,4 +160,4 @@ variables = {
 "type": "bool"
 }
 }
-functions = Array[Resource]([SubResource("Resource_66i7s")])
+functions = Array[Resource]([SubResource("Resource_o4167")])

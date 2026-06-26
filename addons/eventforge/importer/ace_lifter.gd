@@ -158,6 +158,62 @@ static func _retry_or_fail(sheet: EventSheetResource, source: String, lift_funct
 		return attempt_lift(sheet, source, false)
 	return false
 
+## Build-time de-coding for behaviour packs: replaces each sheet function's single-RawCode body with
+## lifted ACE rows (the same reverse grammar that opens a .gd as events), kept ONLY when the whole
+## sheet still recompiles BYTE-IDENTICALLY — a PER-FUNCTION gate, so one un-liftable body never reverts
+## the others. Lets pack builders ship code-free without hand-authoring every row; bodies that can't
+## round-trip (inner classes, exotic control flow) keep their RawCode. Idempotent + deterministic, so
+## the regenerated .tres stays byte-stable (drift=0). Returns the number of functions de-coded.
+static func lift_function_bodies(sheet: EventSheetResource) -> int:
+	if sheet == null or sheet.functions.is_empty():
+		return 0
+	var reverse_entries: Array = _build_reverse_entries()
+	var verify_path: String = "user://_eventforge_pack_body_verify.gd"
+	var converted: int = 0
+	for fn_variant: Variant in sheet.functions:
+		var fn: EventFunction = fn_variant as EventFunction
+		if fn == null:
+			continue
+		var body_rows: Array = fn.events if not fn.events.is_empty() else fn.rows
+		if body_rows.size() != 1 or not (body_rows[0] is RawCodeRow):
+			continue  # only the un-converted shape (one verbatim block)
+		var code: String = (body_rows[0] as RawCodeRow).code
+		if code.strip_edges().is_empty():
+			continue
+		var before: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+		# Parse the body as a depth-1 function body (one leading tab per line, plus a dummy header).
+		var lines: PackedStringArray = PackedStringArray(["func _ready() -> void:"])
+		for line: String in code.split("\n"):
+			lines.append("\t" + line)
+		var parsed: Dictionary = _parse_body(lines, 1, 1, "", "", "", "", reverse_entries, true)
+		if not bool(parsed.get("ok", false)) or int(parsed.get("next", 0)) < lines.size():
+			continue
+		var lifted: Array = parsed.get("rows", [])
+		if lifted.is_empty():
+			continue
+		var backup: Array[Resource] = (fn.events if not fn.events.is_empty() else fn.rows).duplicate()
+		var had_events: bool = not fn.events.is_empty()
+		fn.events = _to_resource_array(lifted)
+		fn.rows = []
+		var after: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+		if after == before:
+			converted += 1
+		else:
+			if had_events:
+				fn.events = backup
+				fn.rows = []
+			else:
+				fn.rows = backup
+				fn.events = []
+	return converted
+
+static func _to_resource_array(rows: Array) -> Array[Resource]:
+	var out: Array[Resource] = []
+	for r: Variant in rows:
+		if r is Resource:
+			out.append(r as Resource)
+	return out
+
 ## Classifies a trailing-run row: "func", "annotations" (## @ace block), "blank",
 ## "comments" (top-level # lines), or "other" (breaks the run).
 static func _run_row_kind(code: String, lift_functions: bool) -> String:

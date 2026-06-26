@@ -1,21 +1,22 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_lheeo"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_p4ivb"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_ron22"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_5mxdm"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_x8d86"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_j4ynf"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_whq3n"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_bff3u"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_6c0uw"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_p4ivb"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_ron22"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_5mxdm"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_x8d86"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_j4ynf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_whq3n"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_bff3u"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_6c0uw"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_526kk"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_w5wfh"]
 
-[sub_resource type="Resource" id="Resource_526kk"]
-script = ExtResource("1_lheeo")
+[sub_resource type="Resource" id="Resource_pe8wu"]
+script = ExtResource("1_p4ivb")
 text = "Sine 3D behavior (C3-style): oscillates the host along an axis (x, y, z) or around the Y axis (rotation-y), with the full wave set."
 
-[sub_resource type="Resource" id="Resource_w5wfh"]
-script = ExtResource("2_p4ivb")
+[sub_resource type="Resource" id="Resource_wu8f5"]
+script = ExtResource("2_ron22")
 code = "## @ace_hidden
 func _wave(t: float) -> float:
 	var cycle := fposmod(t, 1.0)
@@ -30,8 +31,8 @@ func _wave(t: float) -> float:
 			return 1.0 if cycle < 0.5 else -1.0
 	return sin(cycle * TAU)"
 
-[sub_resource type="Resource" id="Resource_pe8wu"]
-script = ExtResource("2_p4ivb")
+[sub_resource type="Resource" id="Resource_ol3o0"]
+script = ExtResource("2_ron22")
 code = "if not active or host == null:
 	return
 if not base_captured:
@@ -52,77 +53,110 @@ elif movement == \"z\":
 elif movement == \"rotation-y\":
 	host.rotation.y = base_rot_y + offset * 0.0174533"
 
-[sub_resource type="Resource" id="Resource_wu8f5"]
-script = ExtResource("6_j4ynf")
+[sub_resource type="Resource" id="Resource_i2rxt"]
+script = ExtResource("6_whq3n")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_pe8wu")])
+actions = Array[Resource]([SubResource("Resource_ol3o0")])
 event_uid = "180463"
 
-[sub_resource type="Resource" id="Resource_ol3o0"]
-script = ExtResource("2_p4ivb")
-code = "active = is_active"
+[sub_resource type="Resource" id="Resource_mvta1"]
+script = ExtResource("7_bff3u")
+ace_id = "SetAnimationTreeActive"
+params = {
+"active": "is_active"
+}
 
-[sub_resource type="Resource" id="Resource_i2rxt"]
-script = ExtResource("7_whq3n")
+[sub_resource type="Resource" id="Resource_dwdnu"]
+script = ExtResource("6_whq3n")
+actions = Array[Resource]([SubResource("Resource_mvta1")])
+event_uid = "496977"
+
+[sub_resource type="Resource" id="Resource_ipr4t"]
+script = ExtResource("8_6c0uw")
 id = "is_active"
 type_name = "bool"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_mvta1"]
-script = ExtResource("8_bff3u")
+[sub_resource type="Resource" id="Resource_wk035"]
+script = ExtResource("9_526kk")
 function_name = "set_sine3d_active"
 description = "Pauses or resumes the oscillation."
 expose_as_ace = true
 ace_display_name = "Set Sine 3D Active"
 ace_category = "Sine 3D"
-params = Array[ExtResource("7_whq3n")]([SubResource("Resource_i2rxt")])
-events = Array[Resource]([SubResource("Resource_ol3o0")])
+params = Array[ExtResource("8_6c0uw")]([SubResource("Resource_ipr4t")])
+events = Array[Resource]([SubResource("Resource_dwdnu")])
 
-[sub_resource type="Resource" id="Resource_dwdnu"]
-script = ExtResource("2_p4ivb")
-code = "phase_degrees = degrees"
+[sub_resource type="Resource" id="Resource_5q4sb"]
+script = ExtResource("7_bff3u")
+ace_id = "SetVar"
+params = {
+"value": "degrees",
+"var_name": "phase_degrees"
+}
 
-[sub_resource type="Resource" id="Resource_ipr4t"]
-script = ExtResource("7_whq3n")
+[sub_resource type="Resource" id="Resource_o0enn"]
+script = ExtResource("6_whq3n")
+actions = Array[Resource]([SubResource("Resource_5q4sb")])
+event_uid = "3c7caa"
+
+[sub_resource type="Resource" id="Resource_f2nqp"]
+script = ExtResource("8_6c0uw")
 id = "degrees"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_wk035"]
-script = ExtResource("8_bff3u")
+[sub_resource type="Resource" id="Resource_bxiom"]
+script = ExtResource("9_526kk")
 function_name = "set_sine3d_phase"
 description = "Phase offset in degrees."
 expose_as_ace = true
 ace_display_name = "Set Phase"
 ace_category = "Sine 3D"
-params = Array[ExtResource("7_whq3n")]([SubResource("Resource_ipr4t")])
-events = Array[Resource]([SubResource("Resource_dwdnu")])
+params = Array[ExtResource("8_6c0uw")]([SubResource("Resource_f2nqp")])
+events = Array[Resource]([SubResource("Resource_o0enn")])
 
-[sub_resource type="Resource" id="Resource_5q4sb"]
-script = ExtResource("2_p4ivb")
-code = "time = 0.0
-base_captured = false"
+[sub_resource type="Resource" id="Resource_pyxm3"]
+script = ExtResource("7_bff3u")
+ace_id = "SetVar"
+params = {
+"value": "0.0",
+"var_name": "time"
+}
 
-[sub_resource type="Resource" id="Resource_o0enn"]
-script = ExtResource("8_bff3u")
+[sub_resource type="Resource" id="Resource_6dce3"]
+script = ExtResource("7_bff3u")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "base_captured"
+}
+
+[sub_resource type="Resource" id="Resource_pxnpt"]
+script = ExtResource("6_whq3n")
+actions = Array[Resource]([SubResource("Resource_pyxm3"), SubResource("Resource_6dce3")])
+event_uid = "f1487a"
+
+[sub_resource type="Resource" id="Resource_tweq2"]
+script = ExtResource("9_526kk")
 function_name = "reset_sine3d"
 description = "Restarts the wave from the current state."
 expose_as_ace = true
 ace_display_name = "Reset Sine 3D"
 ace_category = "Sine 3D"
-events = Array[Resource]([SubResource("Resource_5q4sb")])
+events = Array[Resource]([SubResource("Resource_pxnpt")])
 
 [resource]
-script = ExtResource("9_6c0uw")
+script = ExtResource("10_w5wfh")
 host_class = "Node3D"
 behavior_mode = true
 custom_class_name = "Sine3DBehavior"
 addon_tags = PackedStringArray()
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_526kk"), SubResource("Resource_w5wfh"), SubResource("Resource_wu8f5")])
+events = Array[Resource]([SubResource("Resource_pe8wu"), SubResource("Resource_wu8f5"), SubResource("Resource_i2rxt")])
 variables = {
 "active": {
 "default": true,
@@ -187,4 +221,4 @@ variables = {
 "type": "String"
 }
 }
-functions = Array[Resource]([SubResource("Resource_mvta1"), SubResource("Resource_wk035"), SubResource("Resource_o0enn")])
+functions = Array[Resource]([SubResource("Resource_wk035"), SubResource("Resource_bxiom"), SubResource("Resource_tweq2")])

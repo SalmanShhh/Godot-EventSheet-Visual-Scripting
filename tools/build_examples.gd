@@ -85,6 +85,10 @@ func _attach_behavior(parent: Node, node_name: String, path: String, root: Node,
 
 ## Save sheet -> reload (so it has a real path) -> compile to gd -> assert success.
 func _compile(sheet: EventSheetResource, tres_path: String, gd_path: String) -> bool:
+	# Code-free by default: reverse-lift each function's RawCode body into ACE rows where it recompiles
+	# byte-identically (same build-time pass the behaviour packs use). The showcase ships identical
+	# GDScript but reads as events.
+	EventSheetACELifter.lift_function_bodies(sheet)
 	# Deterministic row uids so rebuilding an unchanged showcase is byte-identical (no diff
 	# churn) — same fix the behavior-pack builder uses.
 	PackLib._assign_stable_uids(sheet)

@@ -1,21 +1,22 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_bxshy"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_bvvcx"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_7f2sw"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_aiqtj"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_85j5o"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_b7r38"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_s828s"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_3pjg3"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_07u1j"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_bvvcx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_7f2sw"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_aiqtj"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_85j5o"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_b7r38"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_s828s"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_3pjg3"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_07u1j"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_p2muo"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_u540h"]
 
-[sub_resource type="Resource" id="Resource_p2muo"]
-script = ExtResource("1_bxshy")
+[sub_resource type="Resource" id="Resource_q2el6"]
+script = ExtResource("1_bvvcx")
 text = "Drag & Drop behavior (C3 parity, event-driven): the author feeds the drag point each tick (virtual cursor, gamepad, touch, AI) — never polls Input. Follow-speed lag, direction lock, break-distance auto-drop, snapping/magnetism, auto-measured throw velocity (routed by you in On Dropped). NOTE: overlap snap mode is a v1 radius-distance simplification (true shape-overlap is a follow-up)."
 
-[sub_resource type="Resource" id="Resource_u540h"]
-script = ExtResource("2_bvvcx")
+[sub_resource type="Resource" id="Resource_0clv1"]
+script = ExtResource("2_7f2sw")
 code = "## Per-tick movement lock (8Direction style).
 @export_enum(\"free\", \"up_down\", \"left_right\", \"four_dir\", \"eight_dir\") var directions: int = 0
 var drag_point: Vector2 = Vector2.ZERO
@@ -26,8 +27,8 @@ var override_throw: Vector2 = Vector2.ZERO
 var snap_target: Vector2 = Vector2.ZERO
 var throw_history: PackedVector2Array = PackedVector2Array()"
 
-[sub_resource type="Resource" id="Resource_q2el6"]
-script = ExtResource("2_bvvcx")
+[sub_resource type="Resource" id="Resource_swrhc"]
+script = ExtResource("2_7f2sw")
 code = "## @ace_trigger
 ## @ace_name(\"On Drag Started\")
 ## @ace_category(\"Drag & Drop\")
@@ -236,8 +237,8 @@ func _end_drag(apply_throw: bool, reason: String) -> void:
 	if did_snap:
 		snapped.emit()"
 
-[sub_resource type="Resource" id="Resource_0clv1"]
-script = ExtResource("2_bvvcx")
+[sub_resource type="Resource" id="Resource_gava7"]
+script = ExtResource("2_7f2sw")
 code = "if not enabled or not dragging or host == null:
 	return
 if follow_uid != -1:
@@ -275,434 +276,869 @@ else:
 if break_distance > 0.0 and distance_from_point > break_distance:
 	_end_drag(break_action != 1, \"broke_distance\")"
 
-[sub_resource type="Resource" id="Resource_swrhc"]
-script = ExtResource("6_b7r38")
+[sub_resource type="Resource" id="Resource_l1eqf"]
+script = ExtResource("6_s828s")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_0clv1")])
+actions = Array[Resource]([SubResource("Resource_gava7")])
 event_uid = "6f8938"
 
-[sub_resource type="Resource" id="Resource_gava7"]
-script = ExtResource("2_bvvcx")
-code = "if not enabled or dragging or host == null:
-	return
-drag_point = Vector2(drag_point_x, drag_point_y)
-prev_drag_point = drag_point
-grab_offset = (host.global_position - drag_point) if grab_mode == 0 else Vector2.ZERO
-dragging = true
-follow_uid = -1
-drop_reason = \"manual\"
-has_throw_override = false
-throw_history = PackedVector2Array()
-throw_cursor = 0
-is_snapping_flag = false
-drag_started.emit()"
+[sub_resource type="Resource" id="Resource_inhpq"]
+script = ExtResource("7_3pjg3")
+ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_l1eqf"]
-script = ExtResource("7_s828s")
+[sub_resource type="Resource" id="Resource_1acub"]
+script = ExtResource("3_aiqtj")
+ace_id = "CompareVar"
+params = {
+"op": "enabled",
+"value": "or dragging or host == null",
+"var_name": "not"
+}
+
+[sub_resource type="Resource" id="Resource_ax5ak"]
+script = ExtResource("6_s828s")
+conditions = Array[ExtResource("3_aiqtj")]([SubResource("Resource_1acub")])
+actions = Array[Resource]([SubResource("Resource_inhpq")])
+event_uid = "9c783d"
+
+[sub_resource type="Resource" id="Resource_iy6ox"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "Vector2(drag_point_x, drag_point_y)",
+"var_name": "drag_point"
+}
+
+[sub_resource type="Resource" id="Resource_k1tmn"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "drag_point",
+"var_name": "prev_drag_point"
+}
+
+[sub_resource type="Resource" id="Resource_0nd2e"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "(host.global_position - drag_point) if grab_mode == 0 else Vector2.ZERO",
+"var_name": "grab_offset"
+}
+
+[sub_resource type="Resource" id="Resource_iye3q"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "dragging"
+}
+
+[sub_resource type="Resource" id="Resource_oqj4b"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "-1",
+"var_name": "follow_uid"
+}
+
+[sub_resource type="Resource" id="Resource_tipnb"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "\"manual\"",
+"var_name": "drop_reason"
+}
+
+[sub_resource type="Resource" id="Resource_jsnjb"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "has_throw_override"
+}
+
+[sub_resource type="Resource" id="Resource_weu7q"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "PackedVector2Array()",
+"var_name": "throw_history"
+}
+
+[sub_resource type="Resource" id="Resource_ub0bq"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "0",
+"var_name": "throw_cursor"
+}
+
+[sub_resource type="Resource" id="Resource_rb5tk"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "is_snapping_flag"
+}
+
+[sub_resource type="Resource" id="Resource_fxohw"]
+script = ExtResource("2_7f2sw")
+code = "drag_started.emit()"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_fum8s"]
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_iy6ox"), SubResource("Resource_k1tmn"), SubResource("Resource_0nd2e"), SubResource("Resource_iye3q"), SubResource("Resource_oqj4b"), SubResource("Resource_tipnb"), SubResource("Resource_jsnjb"), SubResource("Resource_weu7q"), SubResource("Resource_ub0bq"), SubResource("Resource_rb5tk"), SubResource("Resource_fxohw")])
+event_uid = "ef75dc"
+
+[sub_resource type="Resource" id="Resource_jlioq"]
+script = ExtResource("8_07u1j")
 id = "drag_point_x"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_inhpq"]
-script = ExtResource("7_s828s")
+[sub_resource type="Resource" id="Resource_xn1ej"]
+script = ExtResource("8_07u1j")
 id = "drag_point_y"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_1acub"]
-script = ExtResource("7_s828s")
+[sub_resource type="Resource" id="Resource_6jbfl"]
+script = ExtResource("8_07u1j")
 id = "grab_mode"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_ax5ak"]
-script = ExtResource("8_3pjg3")
+[sub_resource type="Resource" id="Resource_umgkc"]
+script = ExtResource("9_p2muo")
 function_name = "start_drag"
 description = "Begins a drag at a point. grab_mode 0 = keep offset from the host; 1 = centre on the point."
 expose_as_ace = true
 ace_display_name = "Start Drag"
 ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_l1eqf"), SubResource("Resource_inhpq"), SubResource("Resource_1acub")])
-events = Array[Resource]([SubResource("Resource_gava7")])
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_jlioq"), SubResource("Resource_xn1ej"), SubResource("Resource_6jbfl")])
+events = Array[Resource]([SubResource("Resource_ax5ak"), SubResource("Resource_fum8s")])
 
-[sub_resource type="Resource" id="Resource_iy6ox"]
-script = ExtResource("2_bvvcx")
-code = "if target == null:
-	return
-start_drag(target.global_position.x, target.global_position.y, grab_mode)
-if dragging:
-	follow_uid = target.get_instance_id()"
+[sub_resource type="Resource" id="Resource_226pe"]
+script = ExtResource("7_3pjg3")
+ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_k1tmn"]
-script = ExtResource("7_s828s")
+[sub_resource type="Resource" id="Resource_gl3f5"]
+script = ExtResource("3_aiqtj")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "null",
+"var_name": "target"
+}
+
+[sub_resource type="Resource" id="Resource_yj16o"]
+script = ExtResource("6_s828s")
+conditions = Array[ExtResource("3_aiqtj")]([SubResource("Resource_gl3f5")])
+actions = Array[Resource]([SubResource("Resource_226pe")])
+event_uid = "c85353"
+
+[sub_resource type="Resource" id="Resource_pq3bs"]
+script = ExtResource("7_3pjg3")
+ace_id = "CallFunction"
+params = {
+"args": "target.global_position.x, target.global_position.y, grab_mode",
+"function_name": "start_drag"
+}
+
+[sub_resource type="Resource" id="Resource_nb87h"]
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_pq3bs")])
+event_uid = "f5a4a6"
+
+[sub_resource type="Resource" id="Resource_xabrh"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "target.get_instance_id()",
+"var_name": "follow_uid"
+}
+
+[sub_resource type="Resource" id="Resource_7nps2"]
+script = ExtResource("3_aiqtj")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "dragging"
+}
+
+[sub_resource type="Resource" id="Resource_eqgmy"]
+script = ExtResource("6_s828s")
+conditions = Array[ExtResource("3_aiqtj")]([SubResource("Resource_7nps2")])
+actions = Array[Resource]([SubResource("Resource_xabrh")])
+event_uid = "4ec80e"
+
+[sub_resource type="Resource" id="Resource_qpvwd"]
+script = ExtResource("8_07u1j")
 id = "target"
 type_name = "Node2D"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_0nd2e"]
-script = ExtResource("7_s828s")
+[sub_resource type="Resource" id="Resource_46xu4"]
+script = ExtResource("8_07u1j")
 id = "grab_mode"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_iye3q"]
-script = ExtResource("8_3pjg3")
+[sub_resource type="Resource" id="Resource_j5mn6"]
+script = ExtResource("9_p2muo")
 function_name = "start_drag_at_object"
 description = "Begins a drag that follows the given object each tick."
 expose_as_ace = true
 ace_display_name = "Start Drag At Object"
 ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_k1tmn"), SubResource("Resource_0nd2e")])
-events = Array[Resource]([SubResource("Resource_iy6ox")])
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_qpvwd"), SubResource("Resource_46xu4")])
+events = Array[Resource]([SubResource("Resource_yj16o"), SubResource("Resource_nb87h"), SubResource("Resource_eqgmy")])
 
-[sub_resource type="Resource" id="Resource_oqj4b"]
-script = ExtResource("2_bvvcx")
-code = "if not dragging:
-	return
-drop_reason = \"manual\"
-_end_drag(how == 0, \"manual\")"
+[sub_resource type="Resource" id="Resource_f68j1"]
+script = ExtResource("7_3pjg3")
+ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_tipnb"]
-script = ExtResource("7_s828s")
+[sub_resource type="Resource" id="Resource_qtqm4"]
+script = ExtResource("3_aiqtj")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "not dragging"
+}
+
+[sub_resource type="Resource" id="Resource_kf0gh"]
+script = ExtResource("6_s828s")
+conditions = Array[ExtResource("3_aiqtj")]([SubResource("Resource_qtqm4")])
+actions = Array[Resource]([SubResource("Resource_f68j1")])
+event_uid = "e6e8f7"
+
+[sub_resource type="Resource" id="Resource_5ryq0"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "\"manual\"",
+"var_name": "drop_reason"
+}
+
+[sub_resource type="Resource" id="Resource_3re3j"]
+script = ExtResource("7_3pjg3")
+ace_id = "CallFunction"
+params = {
+"args": "how == 0, \"manual\"",
+"function_name": "_end_drag"
+}
+
+[sub_resource type="Resource" id="Resource_bqa3e"]
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_5ryq0"), SubResource("Resource_3re3j")])
+event_uid = "ac6934"
+
+[sub_resource type="Resource" id="Resource_e13dr"]
+script = ExtResource("8_07u1j")
 id = "how"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_jsnjb"]
-script = ExtResource("8_3pjg3")
+[sub_resource type="Resource" id="Resource_bagmo"]
+script = ExtResource("9_p2muo")
 function_name = "drop_drag"
 description = "Ends the drag. how 0 = apply throw/snap; 1 = cancel silently."
 expose_as_ace = true
 ace_display_name = "Drop"
 ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_tipnb")])
-events = Array[Resource]([SubResource("Resource_oqj4b")])
-
-[sub_resource type="Resource" id="Resource_weu7q"]
-script = ExtResource("2_bvvcx")
-code = "if is_finite(x) and is_finite(y):
-	_sample_throw(Vector2(x, y))
-follow_uid = -1"
-
-[sub_resource type="Resource" id="Resource_ub0bq"]
-script = ExtResource("7_s828s")
-id = "x"
-type_name = "float"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_rb5tk"]
-script = ExtResource("7_s828s")
-id = "y"
-type_name = "float"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_fxohw"]
-script = ExtResource("8_3pjg3")
-function_name = "set_drag_point"
-description = "Updates the drag point (call each tick from your input source)."
-expose_as_ace = true
-ace_display_name = "Set Drag Point"
-ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_ub0bq"), SubResource("Resource_rb5tk")])
-events = Array[Resource]([SubResource("Resource_weu7q")])
-
-[sub_resource type="Resource" id="Resource_fum8s"]
-script = ExtResource("2_bvvcx")
-code = "if target != null:
-	_sample_throw(target.global_position)
-	follow_uid = -1"
-
-[sub_resource type="Resource" id="Resource_jlioq"]
-script = ExtResource("7_s828s")
-id = "target"
-type_name = "Node2D"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_xn1ej"]
-script = ExtResource("8_3pjg3")
-function_name = "set_drag_point_to_object"
-description = "Sets the drag point to an object's current position (one-shot)."
-expose_as_ace = true
-ace_display_name = "Set Drag Point To Object"
-ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_jlioq")])
-events = Array[Resource]([SubResource("Resource_fum8s")])
-
-[sub_resource type="Resource" id="Resource_6jbfl"]
-script = ExtResource("2_bvvcx")
-code = "follow_speed = maxf(0.0, speed)"
-
-[sub_resource type="Resource" id="Resource_umgkc"]
-script = ExtResource("7_s828s")
-id = "speed"
-type_name = "float"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_226pe"]
-script = ExtResource("8_3pjg3")
-function_name = "set_follow_speed"
-description = "Max catch-up speed (px/s); 0 = instant snap each tick."
-expose_as_ace = true
-ace_display_name = "Set Follow Speed"
-ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_umgkc")])
-events = Array[Resource]([SubResource("Resource_6jbfl")])
-
-[sub_resource type="Resource" id="Resource_gl3f5"]
-script = ExtResource("2_bvvcx")
-code = "directions = clampi(dirs, 0, 4)"
-
-[sub_resource type="Resource" id="Resource_yj16o"]
-script = ExtResource("7_s828s")
-id = "dirs"
-type_name = "int"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_pq3bs"]
-script = ExtResource("8_3pjg3")
-function_name = "set_directions"
-description = "Direction lock: 0 free, 1 up/down, 2 left/right, 3 four-dir, 4 eight-dir."
-expose_as_ace = true
-ace_display_name = "Set Directions"
-ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_yj16o")])
-events = Array[Resource]([SubResource("Resource_gl3f5")])
-
-[sub_resource type="Resource" id="Resource_nb87h"]
-script = ExtResource("2_bvvcx")
-code = "break_distance = maxf(0.0, distance)
-break_action = action"
-
-[sub_resource type="Resource" id="Resource_xabrh"]
-script = ExtResource("7_s828s")
-id = "distance"
-type_name = "float"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_7nps2"]
-script = ExtResource("7_s828s")
-id = "action"
-type_name = "int"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_eqgmy"]
-script = ExtResource("8_3pjg3")
-function_name = "set_break_distance"
-description = "Auto-end the drag past this gap; action 0 = drop, 1 = cancel. 0 distance disables."
-expose_as_ace = true
-ace_display_name = "Set Break Distance"
-ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_xabrh"), SubResource("Resource_7nps2")])
-events = Array[Resource]([SubResource("Resource_nb87h")])
-
-[sub_resource type="Resource" id="Resource_qpvwd"]
-script = ExtResource("2_bvvcx")
-code = "override_throw = Vector2(velocity_x, velocity_y)
-has_throw_override = true"
-
-[sub_resource type="Resource" id="Resource_46xu4"]
-script = ExtResource("7_s828s")
-id = "velocity_x"
-type_name = "float"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_j5mn6"]
-script = ExtResource("7_s828s")
-id = "velocity_y"
-type_name = "float"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_f68j1"]
-script = ExtResource("8_3pjg3")
-function_name = "set_throw_velocity"
-description = "Overrides the auto-measured throw velocity for the next drop."
-expose_as_ace = true
-ace_display_name = "Set Throw Velocity"
-ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_46xu4"), SubResource("Resource_j5mn6")])
-events = Array[Resource]([SubResource("Resource_qpvwd")])
-
-[sub_resource type="Resource" id="Resource_qtqm4"]
-script = ExtResource("2_bvvcx")
-code = "enabled = is_enabled
-if not is_enabled and dragging:
-	dragging = false
-	follow_uid = -1
-	has_throw_override = false
-	is_snapping_flag = false
-	throw_history = PackedVector2Array()"
-
-[sub_resource type="Resource" id="Resource_kf0gh"]
-script = ExtResource("7_s828s")
-id = "is_enabled"
-type_name = "bool"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_5ryq0"]
-script = ExtResource("8_3pjg3")
-function_name = "set_dragdrop_enabled"
-description = "Enables/disables; disabling mid-drag cancels silently."
-expose_as_ace = true
-ace_display_name = "Set Enabled"
-ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_kf0gh")])
-events = Array[Resource]([SubResource("Resource_qtqm4")])
-
-[sub_resource type="Resource" id="Resource_3re3j"]
-script = ExtResource("2_bvvcx")
-code = "snap_positions.append(Vector2(x, y))"
-
-[sub_resource type="Resource" id="Resource_bqa3e"]
-script = ExtResource("7_s828s")
-id = "x"
-type_name = "float"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_e13dr"]
-script = ExtResource("7_s828s")
-id = "y"
-type_name = "float"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_bagmo"]
-script = ExtResource("8_3pjg3")
-function_name = "add_snap_position"
-description = "Registers a fixed snap/magnet position."
-expose_as_ace = true
-ace_display_name = "Add Snap Position"
-ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_bqa3e"), SubResource("Resource_e13dr")])
-events = Array[Resource]([SubResource("Resource_3re3j")])
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_e13dr")])
+events = Array[Resource]([SubResource("Resource_kf0gh"), SubResource("Resource_bqa3e")])
 
 [sub_resource type="Resource" id="Resource_75mtb"]
-script = ExtResource("2_bvvcx")
-code = "if target != null:
-	var id := target.get_instance_id()
-	if not snap_uids.has(id):
-		snap_uids.append(id)"
+script = ExtResource("7_3pjg3")
+ace_id = "CallFunction"
+params = {
+"args": "Vector2(x, y)",
+"function_name": "_sample_throw"
+}
 
 [sub_resource type="Resource" id="Resource_h28h0"]
-script = ExtResource("7_s828s")
-id = "target"
-type_name = "Node2D"
-initial_value = null
-initialValue = null
+script = ExtResource("3_aiqtj")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "is_finite(x)"
+}
 
 [sub_resource type="Resource" id="Resource_j5vg4"]
-script = ExtResource("8_3pjg3")
-function_name = "add_snap_object"
-description = "Registers an object whose position is a live snap/magnet target."
-expose_as_ace = true
-ace_display_name = "Add Snap Object"
-ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_h28h0")])
-events = Array[Resource]([SubResource("Resource_75mtb")])
+script = ExtResource("3_aiqtj")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "is_finite(y)"
+}
 
 [sub_resource type="Resource" id="Resource_2gfka"]
-script = ExtResource("2_bvvcx")
-code = "snap_positions.clear()
-snap_uids.clear()
-is_snapping_flag = false"
+script = ExtResource("6_s828s")
+conditions = Array[ExtResource("3_aiqtj")]([SubResource("Resource_h28h0"), SubResource("Resource_j5vg4")])
+actions = Array[Resource]([SubResource("Resource_75mtb")])
+event_uid = "bd4cbf"
 
 [sub_resource type="Resource" id="Resource_u672x"]
-script = ExtResource("8_3pjg3")
-function_name = "clear_snap_targets"
-description = "Removes every snap position and object."
-expose_as_ace = true
-ace_display_name = "Clear Snap Targets"
-ace_category = "Drag & Drop"
-events = Array[Resource]([SubResource("Resource_2gfka")])
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "-1",
+"var_name": "follow_uid"
+}
 
 [sub_resource type="Resource" id="Resource_6ecen"]
-script = ExtResource("2_bvvcx")
-code = "snap_radius = maxf(0.0, radius)"
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_u672x")])
+event_uid = "66b637"
 
 [sub_resource type="Resource" id="Resource_qwbd5"]
-script = ExtResource("7_s828s")
-id = "radius"
+script = ExtResource("8_07u1j")
+id = "x"
 type_name = "float"
 initial_value = null
 initialValue = null
 
 [sub_resource type="Resource" id="Resource_o83y4"]
-script = ExtResource("8_3pjg3")
+script = ExtResource("8_07u1j")
+id = "y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ejh0g"]
+script = ExtResource("9_p2muo")
+function_name = "set_drag_point"
+description = "Updates the drag point (call each tick from your input source)."
+expose_as_ace = true
+ace_display_name = "Set Drag Point"
+ace_category = "Drag & Drop"
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_qwbd5"), SubResource("Resource_o83y4")])
+events = Array[Resource]([SubResource("Resource_2gfka"), SubResource("Resource_6ecen")])
+
+[sub_resource type="Resource" id="Resource_j1ndd"]
+script = ExtResource("7_3pjg3")
+ace_id = "CallFunction"
+params = {
+"args": "target.global_position",
+"function_name": "_sample_throw"
+}
+
+[sub_resource type="Resource" id="Resource_yp0aa"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "-1",
+"var_name": "follow_uid"
+}
+
+[sub_resource type="Resource" id="Resource_mk3co"]
+script = ExtResource("3_aiqtj")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "target"
+}
+
+[sub_resource type="Resource" id="Resource_wclsi"]
+script = ExtResource("6_s828s")
+conditions = Array[ExtResource("3_aiqtj")]([SubResource("Resource_mk3co")])
+actions = Array[Resource]([SubResource("Resource_j1ndd"), SubResource("Resource_yp0aa")])
+event_uid = "c6beca"
+
+[sub_resource type="Resource" id="Resource_hxti3"]
+script = ExtResource("8_07u1j")
+id = "target"
+type_name = "Node2D"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_wkwgt"]
+script = ExtResource("9_p2muo")
+function_name = "set_drag_point_to_object"
+description = "Sets the drag point to an object's current position (one-shot)."
+expose_as_ace = true
+ace_display_name = "Set Drag Point To Object"
+ace_category = "Drag & Drop"
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_hxti3")])
+events = Array[Resource]([SubResource("Resource_wclsi")])
+
+[sub_resource type="Resource" id="Resource_ppgrp"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "maxf(0.0, speed)",
+"var_name": "follow_speed"
+}
+
+[sub_resource type="Resource" id="Resource_pujol"]
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_ppgrp")])
+event_uid = "aaf592"
+
+[sub_resource type="Resource" id="Resource_m8yjl"]
+script = ExtResource("8_07u1j")
+id = "speed"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ymv1l"]
+script = ExtResource("9_p2muo")
+function_name = "set_follow_speed"
+description = "Max catch-up speed (px/s); 0 = instant snap each tick."
+expose_as_ace = true
+ace_display_name = "Set Follow Speed"
+ace_category = "Drag & Drop"
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_m8yjl")])
+events = Array[Resource]([SubResource("Resource_pujol")])
+
+[sub_resource type="Resource" id="Resource_5ekre"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "clampi(dirs, 0, 4)",
+"var_name": "directions"
+}
+
+[sub_resource type="Resource" id="Resource_jyewl"]
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_5ekre")])
+event_uid = "031f6f"
+
+[sub_resource type="Resource" id="Resource_u8faj"]
+script = ExtResource("8_07u1j")
+id = "dirs"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_e1o6l"]
+script = ExtResource("9_p2muo")
+function_name = "set_directions"
+description = "Direction lock: 0 free, 1 up/down, 2 left/right, 3 four-dir, 4 eight-dir."
+expose_as_ace = true
+ace_display_name = "Set Directions"
+ace_category = "Drag & Drop"
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_u8faj")])
+events = Array[Resource]([SubResource("Resource_jyewl")])
+
+[sub_resource type="Resource" id="Resource_g1rn2"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "maxf(0.0, distance)",
+"var_name": "break_distance"
+}
+
+[sub_resource type="Resource" id="Resource_vtwax"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "action",
+"var_name": "break_action"
+}
+
+[sub_resource type="Resource" id="Resource_x8stb"]
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_g1rn2"), SubResource("Resource_vtwax")])
+event_uid = "545cbe"
+
+[sub_resource type="Resource" id="Resource_rv2pn"]
+script = ExtResource("8_07u1j")
+id = "distance"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_0n5ib"]
+script = ExtResource("8_07u1j")
+id = "action"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_rje5a"]
+script = ExtResource("9_p2muo")
+function_name = "set_break_distance"
+description = "Auto-end the drag past this gap; action 0 = drop, 1 = cancel. 0 distance disables."
+expose_as_ace = true
+ace_display_name = "Set Break Distance"
+ace_category = "Drag & Drop"
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_rv2pn"), SubResource("Resource_0n5ib")])
+events = Array[Resource]([SubResource("Resource_x8stb")])
+
+[sub_resource type="Resource" id="Resource_6dqby"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "Vector2(velocity_x, velocity_y)",
+"var_name": "override_throw"
+}
+
+[sub_resource type="Resource" id="Resource_7uomd"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "has_throw_override"
+}
+
+[sub_resource type="Resource" id="Resource_eiwpx"]
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_6dqby"), SubResource("Resource_7uomd")])
+event_uid = "df05ba"
+
+[sub_resource type="Resource" id="Resource_fy3gv"]
+script = ExtResource("8_07u1j")
+id = "velocity_x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_i72yn"]
+script = ExtResource("8_07u1j")
+id = "velocity_y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_j75hl"]
+script = ExtResource("9_p2muo")
+function_name = "set_throw_velocity"
+description = "Overrides the auto-measured throw velocity for the next drop."
+expose_as_ace = true
+ace_display_name = "Set Throw Velocity"
+ace_category = "Drag & Drop"
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_fy3gv"), SubResource("Resource_i72yn")])
+events = Array[Resource]([SubResource("Resource_eiwpx")])
+
+[sub_resource type="Resource" id="Resource_lhdjk"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "is_enabled",
+"var_name": "enabled"
+}
+
+[sub_resource type="Resource" id="Resource_b0pph"]
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_lhdjk")])
+event_uid = "f97c7b"
+
+[sub_resource type="Resource" id="Resource_mkvfj"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "dragging"
+}
+
+[sub_resource type="Resource" id="Resource_14vuo"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "-1",
+"var_name": "follow_uid"
+}
+
+[sub_resource type="Resource" id="Resource_ovfnc"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "has_throw_override"
+}
+
+[sub_resource type="Resource" id="Resource_pk5am"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "is_snapping_flag"
+}
+
+[sub_resource type="Resource" id="Resource_2dpvb"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "PackedVector2Array()",
+"var_name": "throw_history"
+}
+
+[sub_resource type="Resource" id="Resource_e317c"]
+script = ExtResource("3_aiqtj")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "not is_enabled"
+}
+
+[sub_resource type="Resource" id="Resource_n84l4"]
+script = ExtResource("3_aiqtj")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "dragging"
+}
+
+[sub_resource type="Resource" id="Resource_t54cx"]
+script = ExtResource("6_s828s")
+conditions = Array[ExtResource("3_aiqtj")]([SubResource("Resource_e317c"), SubResource("Resource_n84l4")])
+actions = Array[Resource]([SubResource("Resource_mkvfj"), SubResource("Resource_14vuo"), SubResource("Resource_ovfnc"), SubResource("Resource_pk5am"), SubResource("Resource_2dpvb")])
+event_uid = "a743e5"
+
+[sub_resource type="Resource" id="Resource_fwyel"]
+script = ExtResource("8_07u1j")
+id = "is_enabled"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_sffg4"]
+script = ExtResource("9_p2muo")
+function_name = "set_dragdrop_enabled"
+description = "Enables/disables; disabling mid-drag cancels silently."
+expose_as_ace = true
+ace_display_name = "Set Enabled"
+ace_category = "Drag & Drop"
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_fwyel")])
+events = Array[Resource]([SubResource("Resource_b0pph"), SubResource("Resource_t54cx")])
+
+[sub_resource type="Resource" id="Resource_ffxv3"]
+script = ExtResource("7_3pjg3")
+ace_id = "ArrayAppend"
+params = {
+"value": "Vector2(x, y)",
+"var_name": "snap_positions"
+}
+
+[sub_resource type="Resource" id="Resource_hj6cc"]
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_ffxv3")])
+event_uid = "63b848"
+
+[sub_resource type="Resource" id="Resource_3ofma"]
+script = ExtResource("8_07u1j")
+id = "x"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_cuef7"]
+script = ExtResource("8_07u1j")
+id = "y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_4ipw5"]
+script = ExtResource("9_p2muo")
+function_name = "add_snap_position"
+description = "Registers a fixed snap/magnet position."
+expose_as_ace = true
+ace_display_name = "Add Snap Position"
+ace_category = "Drag & Drop"
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_3ofma"), SubResource("Resource_cuef7")])
+events = Array[Resource]([SubResource("Resource_hj6cc")])
+
+[sub_resource type="Resource" id="Resource_rvf07"]
+script = ExtResource("2_7f2sw")
+code = "var id := target.get_instance_id()"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_y7upd"]
+script = ExtResource("3_aiqtj")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "target"
+}
+
+[sub_resource type="Resource" id="Resource_xq5k8"]
+script = ExtResource("7_3pjg3")
+ace_id = "ArrayAppend"
+params = {
+"value": "id",
+"var_name": "snap_uids"
+}
+
+[sub_resource type="Resource" id="Resource_k4wjo"]
+script = ExtResource("3_aiqtj")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "not snap_uids"
+}
+
+[sub_resource type="Resource" id="Resource_d2n7o"]
+script = ExtResource("6_s828s")
+conditions = Array[ExtResource("3_aiqtj")]([SubResource("Resource_k4wjo")])
+actions = Array[Resource]([SubResource("Resource_xq5k8")])
+event_uid = "757a90"
+
+[sub_resource type="Resource" id="Resource_cvrvy"]
+script = ExtResource("6_s828s")
+conditions = Array[ExtResource("3_aiqtj")]([SubResource("Resource_y7upd")])
+actions = Array[Resource]([SubResource("Resource_rvf07")])
+sub_events = Array[Resource]([SubResource("Resource_d2n7o")])
+event_uid = "8ad55b"
+
+[sub_resource type="Resource" id="Resource_kfi8m"]
+script = ExtResource("8_07u1j")
+id = "target"
+type_name = "Node2D"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_upbuy"]
+script = ExtResource("9_p2muo")
+function_name = "add_snap_object"
+description = "Registers an object whose position is a live snap/magnet target."
+expose_as_ace = true
+ace_display_name = "Add Snap Object"
+ace_category = "Drag & Drop"
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_kfi8m")])
+events = Array[Resource]([SubResource("Resource_cvrvy")])
+
+[sub_resource type="Resource" id="Resource_25stf"]
+script = ExtResource("7_3pjg3")
+ace_id = "DictClear"
+params = {
+"var_name": "snap_positions"
+}
+
+[sub_resource type="Resource" id="Resource_xd8ix"]
+script = ExtResource("7_3pjg3")
+ace_id = "DictClear"
+params = {
+"var_name": "snap_uids"
+}
+
+[sub_resource type="Resource" id="Resource_iof7w"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "is_snapping_flag"
+}
+
+[sub_resource type="Resource" id="Resource_1ho6s"]
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_25stf"), SubResource("Resource_xd8ix"), SubResource("Resource_iof7w")])
+event_uid = "1346da"
+
+[sub_resource type="Resource" id="Resource_1d6jx"]
+script = ExtResource("9_p2muo")
+function_name = "clear_snap_targets"
+description = "Removes every snap position and object."
+expose_as_ace = true
+ace_display_name = "Clear Snap Targets"
+ace_category = "Drag & Drop"
+events = Array[Resource]([SubResource("Resource_1ho6s")])
+
+[sub_resource type="Resource" id="Resource_hhbb0"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "maxf(0.0, radius)",
+"var_name": "snap_radius"
+}
+
+[sub_resource type="Resource" id="Resource_q0k25"]
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_hhbb0")])
+event_uid = "c7115e"
+
+[sub_resource type="Resource" id="Resource_ldtm6"]
+script = ExtResource("8_07u1j")
+id = "radius"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_rtgjd"]
+script = ExtResource("9_p2muo")
 function_name = "set_snap_radius"
 description = "Distance within which snapping/magnetism engages."
 expose_as_ace = true
 ace_display_name = "Set Snap Radius"
 ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_qwbd5")])
-events = Array[Resource]([SubResource("Resource_6ecen")])
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_ldtm6")])
+events = Array[Resource]([SubResource("Resource_q0k25")])
 
-[sub_resource type="Resource" id="Resource_ejh0g"]
-script = ExtResource("2_bvvcx")
-code = "snap_mode = clampi(mode, 0, 1)"
+[sub_resource type="Resource" id="Resource_y34mw"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "clampi(mode, 0, 1)",
+"var_name": "snap_mode"
+}
 
-[sub_resource type="Resource" id="Resource_j1ndd"]
-script = ExtResource("7_s828s")
+[sub_resource type="Resource" id="Resource_cc7gc"]
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_y34mw")])
+event_uid = "5bc49c"
+
+[sub_resource type="Resource" id="Resource_6runi"]
+script = ExtResource("8_07u1j")
 id = "mode"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_yp0aa"]
-script = ExtResource("8_3pjg3")
+[sub_resource type="Resource" id="Resource_q6orm"]
+script = ExtResource("9_p2muo")
 function_name = "set_snap_mode"
 description = "0 = host-position proximity; 1 = drag-point overlap (v1 radius approximation)."
 expose_as_ace = true
 ace_display_name = "Set Snap Mode"
 ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_j1ndd")])
-events = Array[Resource]([SubResource("Resource_ejh0g")])
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_6runi")])
+events = Array[Resource]([SubResource("Resource_cc7gc")])
 
-[sub_resource type="Resource" id="Resource_mk3co"]
-script = ExtResource("2_bvvcx")
-code = "magnet_strength = clampf(strength, 0.0, 1.0)"
+[sub_resource type="Resource" id="Resource_470sg"]
+script = ExtResource("7_3pjg3")
+ace_id = "SetVar"
+params = {
+"value": "clampf(strength, 0.0, 1.0)",
+"var_name": "magnet_strength"
+}
 
-[sub_resource type="Resource" id="Resource_wclsi"]
-script = ExtResource("7_s828s")
+[sub_resource type="Resource" id="Resource_4un3o"]
+script = ExtResource("6_s828s")
+actions = Array[Resource]([SubResource("Resource_470sg")])
+event_uid = "0052a4"
+
+[sub_resource type="Resource" id="Resource_tawb6"]
+script = ExtResource("8_07u1j")
 id = "strength"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_hxti3"]
-script = ExtResource("8_3pjg3")
+[sub_resource type="Resource" id="Resource_yp8au"]
+script = ExtResource("9_p2muo")
 function_name = "set_magnet_strength"
 description = "How strongly the drag is pulled toward a nearby snap target (0..1)."
 expose_as_ace = true
 ace_display_name = "Set Magnet Strength"
 ace_category = "Drag & Drop"
-params = Array[ExtResource("7_s828s")]([SubResource("Resource_wclsi")])
-events = Array[Resource]([SubResource("Resource_mk3co")])
+params = Array[ExtResource("8_07u1j")]([SubResource("Resource_tawb6")])
+events = Array[Resource]([SubResource("Resource_4un3o")])
 
 [resource]
-script = ExtResource("9_07u1j")
+script = ExtResource("10_u540h")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "DragDropBehavior"
 addon_tags = PackedStringArray()
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_p2muo"), SubResource("Resource_u540h"), SubResource("Resource_q2el6"), SubResource("Resource_swrhc")])
+events = Array[Resource]([SubResource("Resource_q2el6"), SubResource("Resource_0clv1"), SubResource("Resource_swrhc"), SubResource("Resource_l1eqf")])
 variables = {
 "break_action": {
 "default": 0,
@@ -804,4 +1240,4 @@ variables = {
 "type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_ax5ak"), SubResource("Resource_iye3q"), SubResource("Resource_jsnjb"), SubResource("Resource_fxohw"), SubResource("Resource_xn1ej"), SubResource("Resource_226pe"), SubResource("Resource_pq3bs"), SubResource("Resource_eqgmy"), SubResource("Resource_f68j1"), SubResource("Resource_5ryq0"), SubResource("Resource_bagmo"), SubResource("Resource_j5vg4"), SubResource("Resource_u672x"), SubResource("Resource_o83y4"), SubResource("Resource_yp0aa"), SubResource("Resource_hxti3")])
+functions = Array[Resource]([SubResource("Resource_umgkc"), SubResource("Resource_j5mn6"), SubResource("Resource_bagmo"), SubResource("Resource_ejh0g"), SubResource("Resource_wkwgt"), SubResource("Resource_ymv1l"), SubResource("Resource_e1o6l"), SubResource("Resource_rje5a"), SubResource("Resource_j75hl"), SubResource("Resource_sffg4"), SubResource("Resource_4ipw5"), SubResource("Resource_upbuy"), SubResource("Resource_1d6jx"), SubResource("Resource_rtgjd"), SubResource("Resource_q6orm"), SubResource("Resource_yp8au")])
