@@ -60,6 +60,13 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   also **reverse-lift**, so `health -= 1` in a hand-written `.gd` opens as a *Subtract Variable* row
   instead of a code cell. (For an `is` class check, use *Expression Is True* with `self is Area2D`.)
   Roadmap: `docs/internal/SPEC-near-zero-rawcode-roadmap.md`.
+- **More of an opened `.gd` renders as rows (near-zero-RawCode roadmap, Phase 2).** Inside an
+  already-lifted trigger body, a property assignment `a.b = c` reverse-lifts to a **Set Property** row
+  and a method call `a.b()` to a **Call Method** row — instead of staying an in-flow GDScript cell. A
+  specific ACE always wins (`$Sprite.modulate = …` still lifts to *Set Modulate*, `$Sprite.play(…)` to
+  *Play*); only what no ACE claims falls to the generic catch-alls, admitted at lowest specificity. The
+  byte-identical recompile gates every match, and no functions move, so the GDScript-backed-sheet
+  "events append" contract is untouched.
 
 ### Fixed
 

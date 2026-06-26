@@ -500,11 +500,14 @@ static func _build_reverse_entries() -> Array:
 		var template: String = descriptor.codegen_template.strip_edges()
 		if template.is_empty() or template.contains("{,"):
 			continue  # optional-segment templates are not reversible (v1)
-		if descriptor.category == "Helpers":
-			# Helper ACEs are FORWARD-authoring conveniences whose templates are deliberately
-			# generic ({code}, {target}.{method}({args}), {target}.{property} = {value}). They
-			# match almost anything, so reverse-lifting through them would shadow specific ACEs
-			# and swallow lines that should stay verbatim blocks — keep them out of the index.
+		# Helper ACEs are mostly forward-authoring conveniences with deliberately generic templates
+		# ({code}, math expressions) that would shadow specific ACEs — kept out of the reverse index.
+		# EXCEPT the two statement catch-alls Set Property (`{target}.{property} = {value}`) and Call
+		# Method (`{target}.{method}({args})`): admitted at LOWEST specificity (the literal_len sort at
+		# the bottom puts them after every specific ACE), they reverse-lift an `a.b = c` / `a.b()` that
+		# no specific ACE claims into a ROW instead of an in-flow code cell (Stage B of the
+		# near-zero-RawCode roadmap). The byte-identical recompile still gates every match.
+		if descriptor.category == "Helpers" and not (descriptor.ace_id in ["SetProperty", "CallMethod"]):
 			continue
 		if template in ["break", "continue", "pass"]:
 			# Bare loop-control keywords also appear in generated pick-loop bodies, so
