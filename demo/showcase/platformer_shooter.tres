@@ -113,8 +113,14 @@ actions = Array[Resource]([SubResource("Resource_qvy1r"), SubResource("Resource_
 event_uid = "195a24"
 
 [sub_resource type="Resource" id="Resource_oidi1"]
-script = ExtResource("7_vpfg4")
-code = "$Player.position.x = clampf($Player.position.x, 40.0, 1112.0)"
+script = ExtResource("2_cdguq")
+ace_id = "SetProperty"
+params = {
+"property": "position.x",
+"target": "$Player",
+"value": "clampf($Player.position.x, 40.0, 1112.0)"
+}
+codegen_template = "{target}.{property} = {value}"
 
 [sub_resource type="Resource" id="Resource_qj8t7"]
 script = ExtResource("6_350ct")
@@ -124,12 +130,19 @@ actions = Array[Resource]([SubResource("Resource_oidi1")])
 event_uid = "8fd01a"
 
 [sub_resource type="Resource" id="Resource_1xblb"]
-script = ExtResource("7_vpfg4")
-code = "var __target = load(\"res://demo/showcase/target.tscn\").instantiate()
-__target.position = Vector2(1240.0, randf_range(120.0, 540.0))
-__target.rotation_degrees = 180.0
-add_child(__target)
-__target.add_to_group(\"targets\")"
+script = ExtResource("2_cdguq")
+ace_id = "SpawnSceneFull"
+params = {
+"group": "\"targets\"",
+"path": "\"res://demo/showcase/target.tscn\"",
+"position": "Vector2(1240.0, randf_range(120.0, 540.0))",
+"rotation": "180.0"
+}
+codegen_template = "var __spawn_shot = load({path}).instantiate()
+__spawn_shot.position = {position}
+__spawn_shot.rotation_degrees = {rotation}
+add_child(__spawn_shot)
+if {group} != \"\": __spawn_shot.add_to_group({group})"
 
 [sub_resource type="Resource" id="Resource_24y5q"]
 script = ExtResource("3_sjy6o")
@@ -171,8 +184,14 @@ actions = Array[Resource]([SubResource("Resource_8ka61")])
 event_uid = "ec03f2"
 
 [sub_resource type="Resource" id="Resource_472ww"]
-script = ExtResource("7_vpfg4")
-code = "$Hud.text = \"Score %d    Ammo %d/%d    %s\" % [score, $Player/WeaponKit.current_ammo, $Player/WeaponKit.max_ammo, (\"RELOADING...\" if $Player/WeaponKit.is_reloading() else \"A/D move   Up jump   hold Space fire\")]"
+script = ExtResource("2_cdguq")
+ace_id = "SetTextFormatted"
+params = {
+"args": "score, $Player/WeaponKit.current_ammo, $Player/WeaponKit.max_ammo, (\"RELOADING...\" if $Player/WeaponKit.is_reloading() else \"A/D move   Up jump   hold Space fire\")",
+"target": "$Hud",
+"template": "\"Score %d    Ammo %d/%d    %s\""
+}
+codegen_template = "{target}.text = {template} % [{args}]"
 
 [sub_resource type="Resource" id="Resource_orkm1"]
 script = ExtResource("6_350ct")

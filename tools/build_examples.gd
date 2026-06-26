@@ -295,7 +295,7 @@ func _build_starfall() -> bool:
 	# Place the ship + a clamp helper.
 	var place: EventRow = EventRow.new()
 	place.trigger_provider_id = "Core"; place.trigger_id = "OnReady"
-	place.actions.append(_raw("$Ship.position = Vector2(576, 590)"))
+	place.actions.append(_action("Core", "SetProperty", "{target}.{property} = {value}", {"target": "$Ship", "property": "position", "value": "Vector2(576, 590)"}))
 	sheet.events.append(place)
 
 	# FSM tick (enum + match), restart on ui_accept when GAME_OVER.
@@ -364,7 +364,7 @@ func _build_starfall() -> bool:
 	# HUD (render-only).
 	var hud: EventRow = EventRow.new()
 	hud.trigger_provider_id = "Core"; hud.trigger_id = "OnProcess"
-	hud.actions.append(_raw("$ScoreLabel.text = \"Score %d    Lives %d    %s\" % [score, lives, (\"GAME OVER - press Enter\" if state == State.GAME_OVER else \"PLAYING\")]"))
+	hud.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$ScoreLabel", "template": "\"Score %d    Lives %d    %s\"", "args": "score, lives, (\"GAME OVER - press Enter\" if state == State.GAME_OVER else \"PLAYING\")"}))
 	sheet.events.append(hud)
 
 	if not _compile(sheet, "res://demo/showcase/starfall.tres", "res://demo/showcase/starfall.gd"):
@@ -475,7 +475,7 @@ func _build_quest_fsm() -> bool:
 	# HUD.
 	var hud: EventRow = EventRow.new()
 	hud.trigger_provider_id = "Core"; hud.trigger_id = "OnProcess"
-	hud.actions.append(_raw("$Screen.text = \"QUEST: %s\nitems: %d   log: %d\nt = %d\" % [[\"OFFERED\", \"ACTIVE\", \"COMPLETE\"][quest_state], inventory.size(), quest_log.size(), tick]"))
+	hud.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$Screen", "template": "\"QUEST: %s\nitems: %d   log: %d\nt = %d\"", "args": "[\"OFFERED\", \"ACTIVE\", \"COMPLETE\"][quest_state], inventory.size(), quest_log.size(), tick"}))
 	sheet.events.append(hud)
 
 	if not _compile(sheet, "res://demo/showcase/quest_fsm.tres", "res://demo/showcase/quest_fsm.gd"):
@@ -571,20 +571,14 @@ func _build_platformer_shooter() -> bool:
 	# Keep the player on screen.
 	var clamp_row: EventRow = EventRow.new()
 	clamp_row.trigger_provider_id = "Core"; clamp_row.trigger_id = "OnPhysicsProcess"
-	clamp_row.actions.append(_raw("$Player.position.x = clampf($Player.position.x, 40.0, 1112.0)"))
+	clamp_row.actions.append(_action("Core", "SetProperty", "{target}.{property} = {value}", {"target": "$Player", "property": "position.x", "value": "clampf($Player.position.x, 40.0, 1112.0)"}))
 	sheet.events.append(clamp_row)
 
 	# Spawn a target from the right every 1.5s.
 	var spawn: EventRow = EventRow.new()
 	spawn.trigger_provider_id = "Core"; spawn.trigger_id = "OnPhysicsProcess"
 	spawn.conditions.append(_every("ps_spawn", "1.5"))
-	spawn.actions.append(_raw("\n".join(PackedStringArray([
-		"var __target = load(\"res://demo/showcase/target.tscn\").instantiate()",
-		"__target.position = Vector2(1240.0, randf_range(120.0, 540.0))",
-		"__target.rotation_degrees = 180.0",
-		"add_child(__target)",
-		"__target.add_to_group(\"targets\")"
-	]))))
+	spawn.actions.append(_action("Core", "SpawnSceneFull", "var __spawn_shot = load({path}).instantiate()\n__spawn_shot.position = {position}\n__spawn_shot.rotation_degrees = {rotation}\nadd_child(__spawn_shot)\nif {group} != \"\": __spawn_shot.add_to_group({group})", {"path": "\"res://demo/showcase/target.tscn\"", "position": "Vector2(1240.0, randf_range(120.0, 540.0))", "rotation": "180.0", "group": "\"targets\""}))
 	sheet.events.append(spawn)
 
 	# Hit detection (shots x targets) + off-screen culling.
@@ -607,7 +601,7 @@ func _build_platformer_shooter() -> bool:
 	# HUD (render-only): score + the Weapon Kit's live ammo/reload state.
 	var hud_row: EventRow = EventRow.new()
 	hud_row.trigger_provider_id = "Core"; hud_row.trigger_id = "OnProcess"
-	hud_row.actions.append(_raw("$Hud.text = \"Score %d    Ammo %d/%d    %s\" % [score, $Player/WeaponKit.current_ammo, $Player/WeaponKit.max_ammo, (\"RELOADING...\" if $Player/WeaponKit.is_reloading() else \"A/D move   Up jump   hold Space fire\")]"))
+	hud_row.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$Hud", "template": "\"Score %d    Ammo %d/%d    %s\"", "args": "score, $Player/WeaponKit.current_ammo, $Player/WeaponKit.max_ammo, (\"RELOADING...\" if $Player/WeaponKit.is_reloading() else \"A/D move   Up jump   hold Space fire\")"}))
 	sheet.events.append(hud_row)
 
 	if not _compile(sheet, "res://demo/showcase/platformer_shooter.tres", "res://demo/showcase/platformer_shooter.gd"):
@@ -701,7 +695,7 @@ func _build_swarm() -> bool:
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"; tick.trigger_id = "OnProcess"
 	tick.actions.append(_raw("t += delta"))
-	tick.actions.append(_raw("$Info.text = \"%d sprites   ·   Budgeted For Each: 90/frame   ·   %d FPS\" % [count, Engine.get_frames_per_second()]"))
+	tick.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$Info", "template": "\"%d sprites   ·   Budgeted For Each: 90/frame   ·   %d FPS\"", "args": "count, Engine.get_frames_per_second()"}))
 	sheet.events.append(tick)
 
 	# On Process: a Budgeted For Each over the crowd — wobble the texture offset + sweep the hue.

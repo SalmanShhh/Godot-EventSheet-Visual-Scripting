@@ -25,11 +25,11 @@ func _physics_process(delta: float) -> void:
 	__every_ps_spawn += delta
 	if __every_ps_spawn >= maxf(1.5, 0.001):
 		__every_ps_spawn = fmod(__every_ps_spawn, maxf(1.5, 0.001))
-		var __target = load("res://demo/showcase/target.tscn").instantiate()
-		__target.position = Vector2(1240.0, randf_range(120.0, 540.0))
-		__target.rotation_degrees = 180.0
-		add_child(__target)
-		__target.add_to_group("targets")
+		var __spawn_shot = load("res://demo/showcase/target.tscn").instantiate()
+		__spawn_shot.position = Vector2(1240.0, randf_range(120.0, 540.0))
+		__spawn_shot.rotation_degrees = 180.0
+		add_child(__spawn_shot)
+		if "targets" != "": __spawn_shot.add_to_group("targets")
 	for __shot in get_tree().get_nodes_in_group("shots"):
 		for __target in get_tree().get_nodes_in_group("targets"):
 			if is_instance_valid(__shot) and is_instance_valid(__target) and __shot.global_position.distance_to(__target.global_position) < 42.0:

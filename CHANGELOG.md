@@ -108,6 +108,12 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   variable **row** with the annotation kept verbatim (a new `export_hint`), instead of staying a RawCode
   block. So a real tuned script renders as a sheet and round-trips byte-identically; the per-line
   verify-lift gate rejects any annotation it can't reproduce exactly (those stay blocks).
+- **Showcases shed GDScript blocks.** The demo showcases' most visible code cells — HUD/score text
+  (`$Hud.text = "…" % […]`), position clamps, and scene spawns — are now authored as **Set Text
+  (formatted)**, **Set Property**, and **Spawn Scene (Full)** ACE rows instead of RawCode, so they read
+  as events (the compiled GDScript is unchanged). The loop-heavy hit-detection/grid-spawn/oscillation
+  blocks remain code cells for now — tracked as the ongoing behaviour-as-ACEs parity work, which the new
+  math/trig vocabulary unblocks.
 
 ### Editor UX + behaviour icons
 

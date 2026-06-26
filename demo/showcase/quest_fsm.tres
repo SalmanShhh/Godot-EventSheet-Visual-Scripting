@@ -1,40 +1,39 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_epfi1"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/enum_row.gd" id="2_rc5qo"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="3_gu2ps"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_yepfv"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="5_bfrky"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/match_row.gd" id="6_kpwkv"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="7_smcs3"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="8_ybxxm"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="9_lpwia"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="10_teoow"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="11_ol5sw"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="12_pq7vv"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="13_aayxw"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_akuff"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/enum_row.gd" id="2_epfi1"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="3_rc5qo"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_gu2ps"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="5_yepfv"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/match_row.gd" id="6_bfrky"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="7_kpwkv"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="8_smcs3"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="9_ybxxm"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="10_lpwia"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="11_teoow"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="12_ol5sw"]
 
-[sub_resource type="Resource" id="Resource_rfbge"]
-script = ExtResource("1_epfi1")
+[sub_resource type="Resource" id="Resource_pq7vv"]
+script = ExtResource("1_akuff")
 text = "[b]Quest & Inventory FSM[/b] — a self-driving quest engine (no input): an enum+match state machine walks OFFERED -> ACTIVE -> COMPLETE, a reused grant_item() function fills a Dictionary inventory + Array quest log and emits signals, and signal: triggers spring/tween the icon on every beat. Proves the sheet compiles real software logic — collections, signals, functions, match — not just movement."
 
-[sub_resource type="Resource" id="Resource_gp27s"]
-script = ExtResource("2_rc5qo")
+[sub_resource type="Resource" id="Resource_aayxw"]
+script = ExtResource("2_epfi1")
 enum_name = "QuestState"
 members = PackedStringArray("OFFERED", "ACTIVE", "COMPLETE")
 
-[sub_resource type="Resource" id="Resource_eimtb"]
-script = ExtResource("3_gu2ps")
+[sub_resource type="Resource" id="Resource_rfbge"]
+script = ExtResource("3_rc5qo")
 signal_name = "item_collected"
 params = PackedStringArray("id: String")
 
-[sub_resource type="Resource" id="Resource_jddtr"]
-script = ExtResource("3_gu2ps")
+[sub_resource type="Resource" id="Resource_gp27s"]
+script = ExtResource("3_rc5qo")
 signal_name = "quest_advanced"
 params = PackedStringArray("phase: int")
 
-[sub_resource type="Resource" id="Resource_5v2ga"]
-script = ExtResource("4_yepfv")
+[sub_resource type="Resource" id="Resource_eimtb"]
+script = ExtResource("4_gu2ps")
 name = "inventory"
 type = 27
 type_name = "Dictionary"
@@ -42,8 +41,8 @@ default_value = {}
 exported = true
 options = PackedStringArray()
 
-[sub_resource type="Resource" id="Resource_qfunk"]
-script = ExtResource("4_yepfv")
+[sub_resource type="Resource" id="Resource_jddtr"]
+script = ExtResource("4_gu2ps")
 name = "quest_log"
 type = 28
 type_name = "Array"
@@ -51,8 +50,8 @@ default_value = []
 exported = true
 options = PackedStringArray()
 
-[sub_resource type="Resource" id="Resource_ietul"]
-script = ExtResource("4_yepfv")
+[sub_resource type="Resource" id="Resource_5v2ga"]
+script = ExtResource("4_gu2ps")
 name = "tick"
 type = 2
 type_name = "int"
@@ -60,8 +59,8 @@ default_value = 0
 exported = true
 options = PackedStringArray()
 
-[sub_resource type="Resource" id="Resource_u1m31"]
-script = ExtResource("5_bfrky")
+[sub_resource type="Resource" id="Resource_qfunk"]
+script = ExtResource("5_yepfv")
 ace_id = "AddVar"
 params = {
 "amount": "1",
@@ -69,8 +68,8 @@ params = {
 }
 codegen_template = "{var_name} += {amount}"
 
-[sub_resource type="Resource" id="Resource_1qjyp"]
-script = ExtResource("6_kpwkv")
+[sub_resource type="Resource" id="Resource_ietul"]
+script = ExtResource("6_bfrky")
 match_expression = "quest_state"
 branches_text = "QuestState.OFFERED:
 	quest_state = QuestState.ACTIVE
@@ -83,8 +82,8 @@ QuestState.ACTIVE:
 _:
 	pass"
 
-[sub_resource type="Resource" id="Resource_0i65x"]
-script = ExtResource("7_smcs3")
+[sub_resource type="Resource" id="Resource_u1m31"]
+script = ExtResource("7_kpwkv")
 ace_id = "EveryXSeconds"
 params = {
 "seconds": "1.0"
@@ -94,16 +93,16 @@ member_declaration = "var __every_quest: float = 0.0"
 codegen_prelude = "__every_quest += delta"
 codegen_on_true = "__every_quest = fmod(__every_quest, maxf(1.0, 0.001))"
 
-[sub_resource type="Resource" id="Resource_3ypjf"]
-script = ExtResource("9_lpwia")
+[sub_resource type="Resource" id="Resource_1qjyp"]
+script = ExtResource("9_ybxxm")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-conditions = Array[ExtResource("7_smcs3")]([SubResource("Resource_0i65x")])
-actions = Array[Resource]([SubResource("Resource_u1m31"), SubResource("Resource_1qjyp")])
+conditions = Array[ExtResource("7_kpwkv")]([SubResource("Resource_u1m31")])
+actions = Array[Resource]([SubResource("Resource_qfunk"), SubResource("Resource_ietul")])
 event_uid = "00b366"
 
-[sub_resource type="Resource" id="Resource_0j44r"]
-script = ExtResource("5_bfrky")
+[sub_resource type="Resource" id="Resource_0i65x"]
+script = ExtResource("5_yepfv")
 provider_id = "SpringBehavior"
 ace_id = "method:spring_host_scale"
 params = {
@@ -112,8 +111,8 @@ params = {
 }
 codegen_template = "{on_node}.spring_host_scale({target})"
 
-[sub_resource type="Resource" id="Resource_1w1ep"]
-script = ExtResource("5_bfrky")
+[sub_resource type="Resource" id="Resource_3ypjf"]
+script = ExtResource("5_yepfv")
 provider_id = "SpringBehavior"
 ace_id = "method:add_impulse"
 params = {
@@ -123,16 +122,16 @@ params = {
 }
 codegen_template = "{target}.add_impulse({spring_name}, {amount})"
 
-[sub_resource type="Resource" id="Resource_0f73a"]
-script = ExtResource("9_lpwia")
+[sub_resource type="Resource" id="Resource_0j44r"]
+script = ExtResource("9_ybxxm")
 trigger_provider_id = "Core"
 trigger_id = "signal:item_collected"
 trigger_args = "id: String"
-actions = Array[Resource]([SubResource("Resource_0j44r"), SubResource("Resource_1w1ep")])
+actions = Array[Resource]([SubResource("Resource_0i65x"), SubResource("Resource_3ypjf")])
 event_uid = "b947da"
 
-[sub_resource type="Resource" id="Resource_22qyo"]
-script = ExtResource("5_bfrky")
+[sub_resource type="Resource" id="Resource_1w1ep"]
+script = ExtResource("5_yepfv")
 provider_id = "TweenBehavior"
 ace_id = "method:tween_rotation"
 params = {
@@ -142,8 +141,8 @@ params = {
 }
 codegen_template = "{target}.tween_rotation({degrees}, {duration})"
 
-[sub_resource type="Resource" id="Resource_o1x6f"]
-script = ExtResource("5_bfrky")
+[sub_resource type="Resource" id="Resource_0f73a"]
+script = ExtResource("5_yepfv")
 provider_id = "SpringBehavior"
 ace_id = "method:spring_host_scale"
 params = {
@@ -152,29 +151,35 @@ params = {
 }
 codegen_template = "{on_node}.spring_host_scale({target})"
 
-[sub_resource type="Resource" id="Resource_ay0qf"]
-script = ExtResource("9_lpwia")
+[sub_resource type="Resource" id="Resource_22qyo"]
+script = ExtResource("9_ybxxm")
 trigger_provider_id = "Core"
 trigger_id = "signal:quest_advanced"
 trigger_args = "phase: int"
-actions = Array[Resource]([SubResource("Resource_22qyo"), SubResource("Resource_o1x6f")])
+actions = Array[Resource]([SubResource("Resource_1w1ep"), SubResource("Resource_0f73a")])
 event_uid = "b14d76"
 
-[sub_resource type="Resource" id="Resource_ces6m"]
-script = ExtResource("10_teoow")
-code = "$Screen.text = \"QUEST: %s
+[sub_resource type="Resource" id="Resource_o1x6f"]
+script = ExtResource("5_yepfv")
+ace_id = "SetTextFormatted"
+params = {
+"args": "[\"OFFERED\", \"ACTIVE\", \"COMPLETE\"][quest_state], inventory.size(), quest_log.size(), tick",
+"target": "$Screen",
+"template": "\"QUEST: %s
 items: %d   log: %d
-t = %d\" % [[\"OFFERED\", \"ACTIVE\", \"COMPLETE\"][quest_state], inventory.size(), quest_log.size(), tick]"
+t = %d\""
+}
+codegen_template = "{target}.text = {template} % [{args}]"
 
-[sub_resource type="Resource" id="Resource_v7xv7"]
-script = ExtResource("9_lpwia")
+[sub_resource type="Resource" id="Resource_ay0qf"]
+script = ExtResource("9_ybxxm")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_ces6m")])
+actions = Array[Resource]([SubResource("Resource_o1x6f")])
 event_uid = "24c82a"
 
-[sub_resource type="Resource" id="Resource_jjoap"]
-script = ExtResource("5_bfrky")
+[sub_resource type="Resource" id="Resource_ces6m"]
+script = ExtResource("5_yepfv")
 ace_id = "DictSetKey"
 params = {
 "key": "id",
@@ -183,8 +188,8 @@ params = {
 }
 codegen_template = "{var_name}[{key}] = {value}"
 
-[sub_resource type="Resource" id="Resource_jg684"]
-script = ExtResource("5_bfrky")
+[sub_resource type="Resource" id="Resource_v7xv7"]
+script = ExtResource("5_yepfv")
 ace_id = "ArrayAppend"
 params = {
 "value": "id",
@@ -192,42 +197,42 @@ params = {
 }
 codegen_template = "{var_name}.append({value})"
 
-[sub_resource type="Resource" id="Resource_3iry7"]
-script = ExtResource("5_bfrky")
+[sub_resource type="Resource" id="Resource_jjoap"]
+script = ExtResource("5_yepfv")
 ace_id = "EmitSignal"
 codegen_template = "item_collected.emit(id)"
 
-[sub_resource type="Resource" id="Resource_t8sa1"]
-script = ExtResource("9_lpwia")
-actions = Array[Resource]([SubResource("Resource_jjoap"), SubResource("Resource_jg684"), SubResource("Resource_3iry7")])
+[sub_resource type="Resource" id="Resource_jg684"]
+script = ExtResource("9_ybxxm")
+actions = Array[Resource]([SubResource("Resource_ces6m"), SubResource("Resource_v7xv7"), SubResource("Resource_jjoap")])
 event_uid = "2bec9e"
 
-[sub_resource type="Resource" id="Resource_nxvij"]
-script = ExtResource("11_ol5sw")
+[sub_resource type="Resource" id="Resource_3iry7"]
+script = ExtResource("10_lpwia")
 id = "id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_4t3xl"]
-script = ExtResource("11_ol5sw")
+[sub_resource type="Resource" id="Resource_t8sa1"]
+script = ExtResource("10_lpwia")
 id = "qty"
 type = 2
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_vn3va"]
-script = ExtResource("12_pq7vv")
+[sub_resource type="Resource" id="Resource_nxvij"]
+script = ExtResource("11_teoow")
 function_name = "grant_item"
-params = Array[ExtResource("11_ol5sw")]([SubResource("Resource_nxvij"), SubResource("Resource_4t3xl")])
-events = Array[Resource]([SubResource("Resource_t8sa1")])
+params = Array[ExtResource("10_lpwia")]([SubResource("Resource_3iry7"), SubResource("Resource_t8sa1")])
+events = Array[Resource]([SubResource("Resource_jg684")])
 
 [resource]
-script = ExtResource("13_aayxw")
+script = ExtResource("12_ol5sw")
 host_class = "Node2D"
 custom_class_name = "QuestFsm"
 addon_tags = PackedStringArray()
-events = Array[Resource]([SubResource("Resource_rfbge"), SubResource("Resource_gp27s"), SubResource("Resource_eimtb"), SubResource("Resource_jddtr"), SubResource("Resource_5v2ga"), SubResource("Resource_qfunk"), SubResource("Resource_ietul"), SubResource("Resource_3ypjf"), SubResource("Resource_0f73a"), SubResource("Resource_ay0qf"), SubResource("Resource_v7xv7")])
+events = Array[Resource]([SubResource("Resource_pq7vv"), SubResource("Resource_aayxw"), SubResource("Resource_rfbge"), SubResource("Resource_gp27s"), SubResource("Resource_eimtb"), SubResource("Resource_jddtr"), SubResource("Resource_5v2ga"), SubResource("Resource_1qjyp"), SubResource("Resource_0j44r"), SubResource("Resource_22qyo"), SubResource("Resource_ay0qf")])
 variables = {
 "quest_state": {
 "attributes": {
@@ -238,4 +243,4 @@ variables = {
 "type": "int"
 }
 }
-functions = Array[Resource]([SubResource("Resource_vn3va")])
+functions = Array[Resource]([SubResource("Resource_nxvij")])
