@@ -214,6 +214,174 @@ static func _to_resource_array(rows: Array) -> Array[Resource]:
 			out.append(r as Resource)
 	return out
 
+## Build-time de-coding for EVENT bodies — the sibling of lift_function_bodies, for sheet.events.
+## An event whose body is a single verbatim RawCode block (e.g. a behaviour's OnProcess /
+## OnPhysicsProcess tick) is reverse-lifted into the SAME ordered row list a function body uses, then
+## folded into the event's sub_events (the compiler walks sub_events in order: a condition-less row
+## emits its actions inline, a conditioned row emits if/elif/else). Kept ONLY when the whole sheet
+## still recompiles BYTE-IDENTICALLY — a PER-EVENT gate, so one stubborn body never reverts the rest.
+## This is what turns a behaviour's code cell into the Construct-style if/else/elseif + action rows.
+## Idempotent + deterministic (byte-stable regeneration, drift=0). Returns the number of events lifted.
+static func lift_event_bodies(sheet: EventSheetResource) -> int:
+	if sheet == null or sheet.events.is_empty():
+		return 0
+	var reverse_entries: Array = _build_reverse_entries()
+	var verify_path: String = "user://_eventforge_event_body_verify.gd"
+	var targets: Array[EventRow] = []
+	_collect_single_block_event_rows(sheet.events, targets)
+	var converted: int = 0
+	for row: EventRow in targets:
+		var code: String = (row.actions[0] as RawCodeRow).code
+		if code.strip_edges().is_empty():
+			continue
+		var before: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+		# Parse the body under a throwaway depth-1 header, exactly like the function-body path.
+		var lines: PackedStringArray = PackedStringArray(["func _ready() -> void:"])
+		for line: String in code.split("\n"):
+			lines.append("\t" + line)
+		var parsed: Dictionary = _parse_body(lines, 1, 1, "", "", "", "", reverse_entries, true)
+		if not bool(parsed.get("ok", false)) or int(parsed.get("next", 0)) < lines.size():
+			continue
+		var lifted: Array = parsed.get("rows", [])
+		if lifted.is_empty():
+			continue
+		var backup_actions: Array[Resource] = row.actions.duplicate()
+		var backup_subs: Array[Resource] = row.sub_events.duplicate()
+		row.actions = []
+		row.sub_events = _to_resource_array(lifted)
+		var after: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+		if after == before:
+			converted += 1
+		else:
+			row.actions = backup_actions
+			row.sub_events = backup_subs
+	return converted
+
+## Converts hand-written `## @ace_trigger` (+ @ace_name / @ace_category) `signal X` declaration blocks
+## inside top-level RawCode rows into SignalRow rows, so a behaviour's trigger signals read as
+## keyword-badged Trigger rows (and feed the On Signal / Emit Signal pickers + autocomplete) instead
+## of a code cell. The declarations relocate to the compiler's signal prelude — behaviour-identical,
+## the SAME `## @ace_trigger` annotations, just emitted as rows. At pack-build time the .gd regenerates
+## (byte_gated=false); the importer calls it byte_gated=true so a user's .gd only converts when the
+## recompile stays byte-identical. Returns the number of signals lifted.
+static func lift_signal_declarations(sheet: EventSheetResource, byte_gated: bool = false) -> int:
+	if sheet == null or sheet.events.is_empty():
+		return 0
+	var verify_path: String = "user://_eventforge_signal_verify.gd"
+	var before: String = ""
+	if byte_gated:
+		before = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+	var new_events: Array[Resource] = []
+	var lifted_total: int = 0
+	for item: Variant in sheet.events:
+		if item is RawCodeRow:
+			var split: Dictionary = _split_signal_declarations(item as RawCodeRow)
+			lifted_total += int(split.get("count", 0))
+			for produced: Variant in split.get("rows", []):
+				new_events.append(produced as Resource)
+		else:
+			new_events.append(item as Resource)
+	if lifted_total == 0:
+		return 0
+	var backup: Array[Resource] = sheet.events.duplicate()
+	sheet.events = new_events
+	if byte_gated:
+		var after: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+		if after != before:
+			sheet.events = backup  # reorder/spacing changed — keep the verbatim block (round-trip safe)
+			return 0
+	return lifted_total
+
+## Splits one RawCode block into [SignalRow…, remainder RawCode]: each leading `## @ace_trigger`
+## signal group becomes a trigger SignalRow; everything else stays a single verbatim block (its
+## relative order preserved), so @ace_condition/@ace_expression helper functions are untouched.
+static func _split_signal_declarations(raw: RawCodeRow) -> Dictionary:
+	var src_lines: PackedStringArray = raw.code.split("\n")
+	var signal_rows: Array = []
+	var remainder: PackedStringArray = PackedStringArray()
+	var count: int = 0
+	var i: int = 0
+	while i < src_lines.size():
+		if src_lines[i].strip_edges() == "## @ace_trigger":
+			# Collect the annotation lines, then require a `signal …` line to confirm a signal group.
+			var j: int = i + 1
+			var ace_name: String = ""
+			var ace_category: String = ""
+			while j < src_lines.size() and src_lines[j].strip_edges().begins_with("## @ace_"):
+				var annotation: String = src_lines[j].strip_edges()
+				var name_arg: String = _extract_annotation_arg(annotation, "@ace_name")
+				if not name_arg.is_empty():
+					ace_name = name_arg
+				var category_arg: String = _extract_annotation_arg(annotation, "@ace_category")
+				if not category_arg.is_empty():
+					ace_category = category_arg
+				j += 1
+			if j < src_lines.size() and src_lines[j].strip_edges().begins_with("signal "):
+				var parsed_signal: Dictionary = _parse_signal_line(src_lines[j].strip_edges())
+				var signal_row: SignalRow = SignalRow.new()
+				signal_row.signal_name = str(parsed_signal.get("name", ""))
+				signal_row.params = parsed_signal.get("params", PackedStringArray())
+				signal_row.trigger = true
+				signal_row.ace_name = ace_name
+				signal_row.ace_category = ace_category
+				signal_rows.append(signal_row)
+				count += 1
+				i = j + 1
+				if i < src_lines.size() and src_lines[i].strip_edges().is_empty():
+					i += 1  # consume the blank that separated this signal from the next block
+				continue
+		remainder.append(src_lines[i])
+		i += 1
+	var out: Array = []
+	for produced: Variant in signal_rows:
+		out.append(produced)
+	if not "\n".join(remainder).strip_edges().is_empty():
+		var remainder_row: RawCodeRow = RawCodeRow.new()
+		remainder_row.code = "\n".join(remainder)
+		out.append(remainder_row)
+	return {"rows": out, "count": count}
+
+## Pulls the quoted argument out of an annotation line, e.g. `## @ace_name("On Jumped")` → `On Jumped`.
+## Returns "" when the key is absent or unquoted.
+static func _extract_annotation_arg(line: String, key: String) -> String:
+	var anchor: String = "%s(\"" % key
+	var start: int = line.find(anchor)
+	if start == -1:
+		return ""
+	start += anchor.length()
+	var end: int = line.find("\"", start)
+	if end == -1:
+		return ""
+	return line.substr(start, end - start)
+
+## Parses a `signal name` / `signal name(a, b: int)` declaration into {name, params}.
+static func _parse_signal_line(line: String) -> Dictionary:
+	var rest: String = line.substr("signal ".length()).strip_edges()
+	var params: PackedStringArray = PackedStringArray()
+	var paren: int = rest.find("(")
+	if paren != -1:
+		var name: String = rest.substr(0, paren).strip_edges()
+		var inside: String = rest.substr(paren + 1, rest.rfind(")") - paren - 1)
+		for piece: String in inside.split(","):
+			if not piece.strip_edges().is_empty():
+				params.append(piece.strip_edges())
+		return {"name": name, "params": params}
+	return {"name": rest, "params": params}
+
+## Collects EventRows whose body is exactly one verbatim RawCode block (the un-converted shape:
+## a single RawCodeRow action and no sub-events). Recurses through sub-events and groups so a
+## nested single-block tick lifts too.
+static func _collect_single_block_event_rows(events: Array, into: Array[EventRow]) -> void:
+	for item: Variant in events:
+		if item is EventRow:
+			var row: EventRow = item as EventRow
+			if row.actions.size() == 1 and row.actions[0] is RawCodeRow and row.sub_events.is_empty():
+				into.append(row)
+			else:
+				_collect_single_block_event_rows(row.sub_events, into)
+		elif item is EventGroup:
+			_collect_single_block_event_rows((item as EventGroup).events, into)
+
 ## Classifies a trailing-run row: "func", "annotations" (## @ace block), "blank",
 ## "comments" (top-level # lines), or "other" (breaks the run).
 static func _run_row_kind(code: String, lift_functions: bool) -> String:
@@ -784,7 +952,13 @@ static func _template_to_regex(template: String) -> RegEx:
 			pattern += _escape_regex(template.substr(cursor))
 			break
 		pattern += _escape_regex(template.substr(cursor, open - cursor))
-		pattern += "(?<%s>.+?)" % template.substr(open + 1, close - open - 1)
+		var param_name: String = template.substr(open + 1, close - open - 1)
+		# Call-argument captures may legitimately be empty — a zero-arg call like `landed.emit()`,
+		# `jump()` or `super()` — so `{args}` uses a zero-or-more lazy capture; every other placeholder
+		# (value, expression, target…) still requires at least one char. An empty match can only land
+		# against the literal `()` in the template, so this never over-claims, and it round-trips.
+		var quantifier: String = "*?" if param_name == "args" else "+?"
+		pattern += "(?<%s>.%s)" % [param_name, quantifier]
 		cursor = close + 1
 	pattern += "$"
 	var regex: RegEx = RegEx.new()

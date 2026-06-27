@@ -1,0 +1,149 @@
+# SPEC — Construct-3-parity event sheets (control flow as blocks, signals as first-class)
+
+Status: **APPROVED (2026-06-27) — building.** Decisions: Q1 Structure-always · Q2 Both (packs + importer)
+· Q3 3-way Save/Discard/Cancel on tab-close AND app-quit · Q4 add the visible Functions panel.
+Date: 2026-06-27. Origin: user goal — "the GDScript block in the Platformer behaviour doesn't fit the
+code-free experience… there's no if/else/elseif that I was expecting in a similar fashion to Construct,
+or helper events for rendering Signals… make them render as conditions (if/else/elseif) & Trigger
+(signal) events and for creating functions… feature sets similar to Construct 3 but expanded for Godot
+users — it should be possible to make a whole game using EventSheets."
+
+---
+
+## 1. The problem (what the screenshots show)
+
+The `platformer_movement` behaviour opens like hand-written GDScript, not like a Construct event sheet:
+
+- **One giant code cell.** The `OnPhysicsProcess` event body (gravity, input, wall-slide, jump-buffer,
+  coyote-time) renders as a single verbatim GDScript block — `if/else`, `var … :=`, `host.velocity.x =
+  move_toward(...)`, `landed.emit()` — instead of **if / else / elseif condition rows** with action rows
+  underneath, the way C3 (and the rest of the sheet) reads.
+- **Signals render as code.** `jumped` / `landed` / `double_jumped` / `wall_jumped` appear as raw
+  `## @ace_trigger` + `signal jumped` GDScript blocks, not as **Trigger (signal) rows**. Emitting them
+  (`landed.emit()`) is buried in the code cell, not an **Emit Signal** action row.
+
+The root of both: the build-time de-coding pass only reverse-lifts **function** bodies, never **event**
+bodies or **signal declarations**.
+
+---
+
+## 2. Root causes (verified, path:line)
+
+| # | Symptom | Cause |
+|---|---------|-------|
+| A | `OnPhysicsProcess` body is one code cell | `EventSheetACELifter.lift_function_bodies` (`ace_lifter.gd:167-208`) iterates **only** `sheet.functions`. It never walks `sheet.events`, so an `EventRow` whose single action is a `RawCodeRow` is left untouched. |
+| B | `if host == null:` etc. wouldn't become rows even if walked | The reverse-lift's `_parse_conditions` only matches **specific** condition templates. A bare boolean like `host == null` matches none, so the `if` falls back to the lenient-raw path and the whole block stays code. The catch-all **`Core/ExpressionIsTrue`** condition (`system_aces.gd:65`, template `{expr}`) is **not** wired into the reverse path. |
+| C | Signals are code blocks, not Trigger rows | The platformer pack authors signals as **`RawCodeRow`** `@ace_trigger` blocks. The `SignalRow` resource (`signal_row.gd`, fields `trigger`/`ace_name`/`ace_category`) emits the identical `@ace_trigger` block, but nothing converts the raw blocks to `SignalRow`s — and the importer (`ace_lifter.gd`) has **no** path to lift a `@ace_trigger`+`signal X` declaration back to a `SignalRow`. |
+| D | `landed.emit()` won't become an Emit Signal row | `Core/EmitSignal` exists (`core_aces.gd:81`, template `{signal_name}.emit({args})`), but the reverse-match wants ≥1 char of `{args}`; the platformer's calls have **empty** args (`landed.emit()`), so they never match and stay raw. |
+| E | No behaviour class description | `EventSheetResource` (`event_sheet.gd`) has **no** `class_description` field; the compiler emits no `##` docstring before `class_name` (`sheet_compiler.gd:94-118`); the importer recovers none. Godot's *Create New Node* dialog shows that docstring — we ship nothing there. |
+| F | Closing a tab can silently drop work | `_on_tab_close_pressed(index)` → `_close_tab(index)` directly, **no** dirty check, even though `is_tab_dirty(index)` exists (`event_sheet_dock.gd:301,318`). |
+| — | Function creation | **Already works** — Add ▸ Function… (`event_sheet_dock.gd:600`) opens `function_dialog.gd` (name, return type, params, expose-as-ACE). Gap is only discoverability: there is no always-visible Functions panel. |
+
+---
+
+## 3. Design
+
+### 3.1 De-code event bodies into condition/action rows (causes A + B) — the centerpiece
+
+**Generalize the build-time lift to event bodies.** Add `EventSheetACELifter.lift_event_bodies(sheet)`
+(or fold into `lift_function_bodies`, renamed `lift_bodies`) that, in addition to functions, walks
+`sheet.events` recursively. For every `EventRow` whose `actions` are exactly one `RawCodeRow`:
+
+1. Wrap the body under a throwaway header at the row's depth, run the existing `_parse_body` grammar
+   (it already produces conditioned `EventRow`s with `ElseMode.ELSE`/`ELIF` for `if/elif/else`, PickFilter
+   rows for loops, MatchRows for `match`, and ACE-action rows for statements).
+2. Replace the row's `actions` + `sub_events` with the lifted rows.
+3. **Per-event byte gate:** recompile the whole sheet; keep the lift **only** if the output is byte-identical,
+   else revert *just this event*. (Per-event is more granular than the per-function gate — one stubborn
+   event never reverts the others.)
+
+This reuses the proven, lossless machinery; the shipped `.gd` is unchanged by construction.
+
+**Make control-flow *structure* always survive (cause B).** Wire `Core/ExpressionIsTrue` as the
+**last-resort** condition in `_parse_conditions`: when an `if/elif` condition matches no specific ACE
+template, emit an **Expression Is True** row carrying the raw expression (e.g. `host == null`,
+`_buffer_timer > 0.0 and (on_floor or …)`) instead of bailing the whole block to raw. Result: the
+**if / else / elseif skeleton always renders as rows**; only the irreducible leaf (the raw boolean text,
+or a `return`) shows as a small expression/cell. This is exactly the C3 reading the user expects, and it
+stays byte-identical because Expression Is True re-emits the expression verbatim.
+
+**Honest limit (unchanged philosophy):** a `return`, a `var x := y` inferred-type local, or a deeply
+nested numeric kernel may remain a small raw cell inside its block. "Code-free" means *the structure and
+the common verbs are rows*; we do **not** force-shred every leaf into something less readable. (See the
+standing `behaviour-as-aces-parity` note — readability wins over zero-code purism.)
+
+**Optional reach (decide in Q1):** add **`SetLocalVarInferred`** (`var {name} := {value}`) and admit the
+empty-args `.emit()` so even those leaves become rows — squeezing the platformer closer to fully code-free.
+
+### 3.2 Signals as first-class rows (causes C + D)
+
+1. **Re-author the platformer pack** (and any sibling that hand-writes `@ace_trigger` blocks) to declare
+   signals as **`SignalRow`** rows. Identical `.gd` output (drift = 0), but the `.tres` reads as **Trigger
+   (signal)** rows in the editor.
+2. **Lift `@ace_trigger` signal blocks → `SignalRow`** in the importer, so opening *any* hand-written `.gd`
+   surfaces its annotated signals as Trigger rows (serves "open any .gd as events"). Byte-gated.
+3. **Emit Signal helper, empty-args aware.** Admit `{signal_name}.emit()` (no args) to the EmitSignal
+   reverse-match so `landed.emit()` lifts to an **Emit Signal** action row. Confirm the **Emit Signal**
+   and **Emit Signal On** ACEs are in the picker's Signals category.
+4. **Signal-name autocomplete.** `ace_params_dialog.gd:447-497` already gathers signal names from
+   `SignalRow`s + `signal x` raw lines + `ClassDB`. Confirm it lists the host/behaviour's own signals and
+   that the **On Signal** trigger picker offers them — so authors pick from a list rather than retype.
+
+### 3.3 Behaviour class description (cause E)
+
+- Add `@export var class_description: String` to `EventSheetResource`.
+- Emit it as a `## ` doc comment immediately before `class_name` (only when non-empty + a custom class
+  name exists) — Godot then shows it in *Create New Node* and the script doc.
+- Recover it in the importer (leading `##` block before `class_name`), byte-gated round-trip.
+- Surface a **Description** field in the Sheet Type / identity dialog next to class name + icon + host.
+
+### 3.4 Unsaved-close warning (cause F)
+
+- Before `_close_tab`, if `is_tab_dirty(index)`, show a `ConfirmationDialog` (mirror the existing
+  `_external_reload_dialog` pattern) — **Save / Discard / Cancel**. Save runs the existing save path then
+  closes; Discard closes; Cancel aborts. Apply to the tab ✕.
+- **Scope (decide in Q3):** tab-close only, or also editor close-all / project quit (warn if *any* tab dirty).
+
+### 3.5 Function creation (already shipped; optional polish)
+
+Creation works via Add ▸ Function…. Optional (decide in Q4): an always-visible **Functions panel**
+(beside variables) listing `sheet.functions` with edit/rename/delete + double-click to edit — so functions
+are discoverable, not hidden behind a menu.
+
+---
+
+## 4. The bigger picture — "a whole game in event sheets"
+
+To make Construct-style whole-game authoring real *for Godot*, the structural pieces below already exist
+(triggers, conditions, loops, functions, variables, signals, the {host.} idiom, the reverse-lift). This
+goal closes the **readability** gap (control flow + signals as rows). The remaining parity items — tracked
+here for follow-up, **not** in this goal's scope unless you say so — are: a scene/instance authoring story
+(spawn/pick/per-instance vars across nodes), a families/groups analogue, and a layout/UI event surface.
+The reverse-lift means none of this locks the user in: every sheet is still plain GDScript.
+
+---
+
+## 5. Open Decisions (clarifying questions → asked in chat)
+
+- **Q1 — De-coding aggressiveness.** Structure-always (Expression Is True catch-all so if/else always
+  renders, raw leaves allowed) — recommended — vs. add the extra leaf vocab (`SetLocalVarInferred`,
+  empty-args emit) to push toward fully code-free, vs. conservative (only lift when every leaf maps).
+- **Q2 — Signal lifting scope.** Re-author bundled packs to `SignalRow` only, or also add the general
+  importer `@ace_trigger → SignalRow` lift for any opened `.gd`.
+- **Q3 — Unsaved-close dialog.** 3-way Save/Discard/Cancel; tab-close only or also app-quit/close-all.
+- **Q4 — Functions panel.** Add the always-visible Functions side-panel, or keep Add ▸ Function… as-is.
+
+---
+
+## 6. Verification plan
+
+- New `event_body_lift_test`: a representative event body (if/else + assignments + emit) lifts to
+  condition/action rows and recompiles byte-identically; the irreducible-leaf case stays raw + round-trips.
+- Extend the fidelity ratchet + `pack_rawcode_budget_test` to count the platformer's code cells (ratchet
+  down).
+- `signal_row_lift_test`: `@ace_trigger`+`signal X` → `SignalRow` and back, byte-identical; `landed.emit()`
+  → Emit Signal row.
+- `class_description_roundtrip_test`: field → `##` emission → importer recovery, byte-identical.
+- `unsaved_close_test`: dirty tab close pops the dialog; Discard closes; Cancel aborts; Save saves+closes.
+- Full suite green; `tools/audit_addons.gd` → `audited=31 drifted=0`; regenerate packs + showcases; revert
+  incidental `.tscn`/`project.godot` churn.

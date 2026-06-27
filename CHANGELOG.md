@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### Added — Behaviour bodies read as Construct event sheets (if/else + signals as rows)
+
+The bundled behaviours stopped reading like event sheets exactly where it mattered most: a behaviour's
+`OnProcess`/`OnPhysicsProcess` tick was one big GDScript cell (no if/else/elseif rows), and its trigger
+signals were hand-written `## @ace_trigger` code blocks. Both now de-code automatically at build time
+(`docs/internal/SPEC-construct-parity-eventsheets.md`):
+
+- **Event bodies de-code into if/else/elseif condition rows.** A new `lift_event_bodies` pass reverse-
+  lifts an event's single RawCode body into the same ordered condition/action rows a function body uses
+  (folded into the event's sub-events), kept **only** where the whole sheet still recompiles
+  byte-identically (a per-event gate). The Platformer Movement tick now reads as ~15 if/else rows
+  (gravity → Apply Gravity + Add, wall-slide conditions, Move And Slide…) instead of a code cell; the
+  shipped GDScript is unchanged. Only the irreducible leaves (an early `return`, a `var x :=` inferred
+  local) remain as small cells.
+- **Trigger signals become Trigger rows.** A new `lift_signal_declarations` pass converts
+  `## @ace_trigger … signal X` blocks into `SignalRow` rows (name/category/params recovered), so a
+  behaviour's signals read as keyword-badged Trigger rows and feed the On Signal / Emit Signal pickers.
+  Applied to all 17 bundled packs that declared signals as code.
+- **Zero-arg `signal.emit()` lifts to an Emit Signal row.** The reverse-match now accepts an empty
+  argument list, so `landed.emit()` / `jump()` / `super()` reverse-lift to Emit Signal / Call rows
+  instead of staying code (byte-safe — an empty match can only land on a literal `()`).
+- Covered by `event_body_lift_test` and `signal_row_lift_test`; all 31 packs + showcases regenerate
+  byte-stable (drift = 0).
+
 ### Added — Behaviour-as-ACEs parity (foundation)
 
 Toward authoring whole behaviour packs as event sheets with **no GDScript blocks** — so a behaviour

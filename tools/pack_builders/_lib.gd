@@ -18,6 +18,16 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 	# events — algorithmic kernels (spring/sine/physics) become Set/Add/Set-Property rows, not code
 	# blocks. Bodies that can't round-trip (inner classes, exotic flow) keep their RawCode. Deterministic.
 	EventSheetACELifter.lift_function_bodies(sheet)
+	# Same de-coding for EVENT bodies (a behaviour's OnProcess/OnPhysicsProcess tick): a single
+	# verbatim RawCode block becomes if/else/elseif condition rows + action rows (folded into the
+	# event's sub_events), kept only where the sheet still recompiles byte-identically (per-event
+	# gated). This is what makes a behaviour read like a Construct event sheet, not hand-written code.
+	EventSheetACELifter.lift_event_bodies(sheet)
+	# Trigger signals authored as `## @ace_trigger … signal X` code blocks become SignalRow rows
+	# (keyword-badged Trigger rows that feed the On Signal / Emit Signal pickers). The declarations
+	# relocate to the compiler's signal prelude — behaviour-identical, so the regenerated .gd stays
+	# self-consistent (drift=0); only the cosmetic position of the signal lines changes.
+	EventSheetACELifter.lift_signal_declarations(sheet, false)
 	# Stamp DETERMINISTIC row UIDs before saving. EventRow/EventGroup otherwise mint a random
 	# uid in _init(), so every regeneration churns the .tres of EVERY pack — exploding git
 	# diffs even for packs that did not change. Deriving the uid from the row's structural
