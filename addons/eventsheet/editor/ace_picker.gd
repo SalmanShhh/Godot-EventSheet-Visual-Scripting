@@ -137,8 +137,7 @@ const GROUP_COLOR_NEUTRAL := Color("#9aa1ad")     # neutral muted — other cate
 # picker itself no longer tints rows by type (Create-New-Node style — the per-row icon carries that).
 const ITEM_COLOR_EXPRESSION := Color("#c79bf0") # soft purple
 
-var _window: Window = null
-var _header: Label = null
+var _window: ConfirmationDialog = null
 var _search: LineEdit = null
 var _tree: Tree = null
 var _info_label: RichTextLabel = null
@@ -147,7 +146,6 @@ var _favorites_list: Tree = null
 var _recent_list: Tree = null
 var _favorite_button: Button = null
 var _add_button: Button = null
-var _cancel_button: Button = null
 var _selected_definition: ACEDefinition = null
 var _hint: Label = null
 var _context: Dictionary = {}
@@ -160,28 +158,30 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	load_recents()  # hydrate this project's persisted recents before the ★ Recent pane first draws
 	if _window != null:
 		return
-	_window = Window.new()
+	# A ConfirmationDialog (not a bare Window) so the picker gets the same editor-themed panel,
+	# title bar, and OK/Cancel buttons as every other plugin dialog (function / variable / params).
+	# The built-in OK button is the "Add" button; Cancel is the dialog's own cancel button.
+	_window = ConfirmationDialog.new()
 	_window.title = "Add Action / Condition"
 	_window.visible = false
 	_window.min_size = Vector2i(640, 420)
+	_window.ok_button_text = "Add"
 	_window.close_requested.connect(close)
+	_window.canceled.connect(close)
+	_window.confirmed.connect(_on_add_button_pressed)
 	parent_node.add_child(_window)
+	# The dialog's own OK button drives "Add" — disabled until something is selected.
+	_add_button = _window.get_ok_button()
+	_add_button.disabled = true
 
-	var margin: MarginContainer = MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 10)
-	margin.add_theme_constant_override("margin_right", 10)
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_bottom", 10)
-	_window.add_child(margin)
-
-	var content: VBoxContainer = VBoxContainer.new()
-	content.add_theme_constant_override("separation", 6)
-	margin.add_child(content)
-
-	_header = Label.new()
-	_header.add_theme_font_size_override("font_size", 16)
-	content.add_child(_header)
+	# A sensible default content width; the body height is bounded by the split below so the
+	# dialog opens at a comfortable size and the tree scrolls internally (it does NOT grow to
+	# fit every row — a ConfirmationDialog otherwise hugs its content's full minimum height).
+	var content: VBoxContainer = EventSheetPopupUI.form_box()
+	content.custom_minimum_size = Vector2(700.0, 0.0)
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_window.add_child(EventSheetPopupUI.margined(content))
 
 	# Search row: the field + a ⭐ toggle that pins/unpins the highlighted ACE.
 	var search_row: HBoxContainer = HBoxContainer.new()
@@ -206,17 +206,30 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_favorite_button.pressed.connect(_on_favorite_button_pressed)
 	search_row.add_child(_favorite_button)
 
+	# Single-line (NOT autowrap): the dialog sizes to its content's minimum, and an autowrap
+	# label reports a runaway min height during the initial zero-width pass (it wraps to one
+	# glyph per line), which balloons the whole dialog. The hints are short, fixed strings that
+	# fit the dialog width, so a single line is all they need.
 	_hint = Label.new()
 	_hint.add_theme_color_override("font_color", GROUP_COLOR_NEUTRAL)
-	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	content.add_child(_hint)
 
 	# Body: ⭐ Favorites + ★ Recent panes on the left (Create-Node style), category tree right.
+	# A plain Control holder bounds the dialog height: a Tree reports its FULL content height as
+	# its minimum size, and a ConfirmationDialog grows to fit that — so a populated picker would
+	# open thousands of px tall. A bare Control ignores its children's minimums and reports only
+	# its own, so the split fills it (anchored) and the trees scroll internally at a fixed height.
+	var body_holder: Control = Control.new()
+	body_holder.custom_minimum_size = Vector2(0.0, 340.0)
+	body_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(body_holder)
 	var split: HSplitContainer = HSplitContainer.new()
-	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	split.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	split.split_offset = 200
-	content.add_child(split)
+	body_holder.add_child(split)
 	var side: VBoxContainer = VBoxContainer.new()
 	side.custom_minimum_size = Vector2(180.0, 0.0)
 	side.add_theme_constant_override("separation", 4)
@@ -246,8 +259,11 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_tree.gui_input.connect(_on_tree_gui_input)
 	split.add_child(_tree)
 	# Description panel (Create-Node style): the highlighted ACE's name, type + what it does.
+	# Fixed height + internal scrolling (NOT fit_content): inside a ConfirmationDialog the dialog
+	# hugs its content's minimum size, and a fit_content + autowrap RichTextLabel reports a huge
+	# min height during that pass (it wraps at ~0 width), which would balloon the whole dialog.
 	_info_panel = PanelContainer.new()
-	_info_panel.custom_minimum_size = Vector2(0.0, 64.0)
+	_info_panel.custom_minimum_size = Vector2(0.0, 72.0)
 	content.add_child(_info_panel)
 	var info_margin: MarginContainer = MarginContainer.new()
 	info_margin.add_theme_constant_override("margin_left", 8)
@@ -257,24 +273,12 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_info_panel.add_child(info_margin)
 	_info_label = RichTextLabel.new()
 	_info_label.bbcode_enabled = true
-	_info_label.fit_content = true
-	_info_label.scroll_active = false
+	_info_label.fit_content = false
+	_info_label.scroll_active = true
 	_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info_margin.add_child(_info_label)
-	# Action row: Cancel + Add, alongside the existing double-click / Enter-to-add.
-	var button_row: HBoxContainer = HBoxContainer.new()
-	button_row.alignment = BoxContainer.ALIGNMENT_END
-	button_row.add_theme_constant_override("separation", 6)
-	content.add_child(button_row)
-	_cancel_button = Button.new()
-	_cancel_button.text = "Cancel"
-	_cancel_button.pressed.connect(close)
-	button_row.add_child(_cancel_button)
-	_add_button = Button.new()
-	_add_button.text = "Add"
-	_add_button.disabled = true
-	_add_button.pressed.connect(_on_add_button_pressed)
-	button_row.add_child(_add_button)
+	# Add / Cancel are the dialog's own themed buttons (wired in the window setup above);
+	# double-click and Enter-to-add still work alongside them.
 
 ## Provider returning true when Simple Mode is on (wired by the dock) — gates the denylist below.
 var _simple_mode_provider: Callable = Callable()
@@ -327,7 +331,6 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 		_context[key] = extra_context[key]
 	var title: String = _title_for_mode(mode, signals_only)
 	_window.title = title
-	_header.text = title
 	_search.text = ""
 	_hint.text = _build_hint_text(mode, signals_only)
 	_selected_definition = null

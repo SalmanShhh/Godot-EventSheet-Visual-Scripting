@@ -28,6 +28,10 @@ __pycache__/
 *.uid
 _preview.png
 _preview.png.import
+_picker_preview.png
+_picker_preview.png.import
+# Generated codegen artifact written by the non-headless render harnesses
+event_sheet_generated.gd
 
 # Test Bench scratch artifacts (generated per run)
 .eventsheets_test_bench.*
