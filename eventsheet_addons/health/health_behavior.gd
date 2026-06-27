@@ -70,132 +70,10 @@ class HealthPool:
 	var absorption_rate: float = 1.0
 	var last_absorbed: float = 0.0
 	var priority: float = 0.0
-
-## @ace_condition
-## @ace_name("Is Dead")
-## @ace_category("Health")
-## @ace_codegen_template("$SimpleHealthBehavior.is_dead()")
-func is_dead() -> bool:
-	return is_dead_flag
-
-## @ace_condition
-## @ace_name("Is Invulnerable")
-## @ace_category("Health")
-## @ace_codegen_template("$SimpleHealthBehavior.is_invulnerable()")
-func is_invulnerable() -> bool:
-	return invulnerable
-
-## @ace_condition
-## @ace_name("Has Any Health Pool")
-## @ace_category("Health")
-## @ace_codegen_template("$SimpleHealthBehavior.has_any_health_pool()")
-func has_any_health_pool() -> bool:
-	for pool_name: String in health_pools.keys():
-		if (health_pools[pool_name] as HealthPool).amount > 0.0:
-			return true
-	return false
-
-## @ace_condition
-## @ace_name("Has Health Pool")
-## @ace_category("Health")
-## @ace_codegen_template("$SimpleHealthBehavior.has_health_pool({type})")
-func has_health_pool(type: String) -> bool:
-	return health_pools.has(type) and (health_pools[type] as HealthPool).amount > 0.0
-
-## @ace_condition
-## @ace_name("Health Pool Is Type")
-## @ace_category("Health")
-## @ace_codegen_template("$SimpleHealthBehavior.is_health_pool_type({type})")
-func is_health_pool_type(type: String) -> bool:
-	return last_trigger_pool_type == type
-
-## @ace_expression
-## @ace_name("Current Health")
-## @ace_category("Health")
-func current_health_value() -> float:
-	return current_health
-
-## @ace_expression
-## @ace_name("Max Health")
-## @ace_category("Health")
-func max_health_value() -> float:
-	return max_health
-
-## @ace_expression
-## @ace_name("Health Percent")
-## @ace_category("Health")
-func health_percent() -> float:
-	return (current_health / max_health) * 100.0 if max_health != 0.0 else 0.0
-
-## @ace_expression
-## @ace_name("Health Absorption Rate")
-## @ace_category("Health")
-func health_absorption_rate_value() -> float:
-	return health_absorption_rate
-
-## @ace_expression
-## @ace_name("Last Damage")
-## @ace_category("Health")
-func last_damage_value() -> float:
-	return last_damage
-
-## @ace_expression
-## @ace_name("Last Heal")
-## @ace_category("Health")
-func last_heal_value() -> float:
-	return last_heal
-
-## @ace_expression
-## @ace_name("Health Pool")
-## @ace_category("Health")
-func health_pool_value(type: String) -> float:
-	return (health_pools[type] as HealthPool).amount if health_pools.has(type) else 0.0
-
-## @ace_expression
-## @ace_name("Health Pool Decay Rate")
-## @ace_category("Health")
-func health_pool_decay_rate_value(type: String) -> float:
-	return (health_pools[type] as HealthPool).decay_rate if health_pools.has(type) else 0.0
-
-## @ace_expression
-## @ace_name("Health Pool Absorption Rate")
-## @ace_category("Health")
-func health_pool_absorption_rate_value(type: String) -> float:
-	return (health_pools[type] as HealthPool).absorption_rate if health_pools.has(type) else 1.0
-
-## @ace_expression
-## @ace_name("Health Pool Priority")
-## @ace_category("Health")
-func health_pool_priority_value(type: String) -> float:
-	return (health_pools[type] as HealthPool).priority if health_pools.has(type) else 0.0
-
-## @ace_expression
-## @ace_name("Last Pool Damage Absorbed")
-## @ace_category("Health")
-func last_pool_damage_absorbed_value() -> float:
-	return last_pool_damage_absorbed
-
-## @ace_expression
-## @ace_name("Last Health Pool Type")
-## @ace_category("Health")
-func last_health_pool_type_value() -> String:
-	return last_trigger_pool_type
-
 func _get_pool(type: String) -> HealthPool:
 	if not health_pools.has(type):
 		health_pools[type] = HealthPool.new()
 	return health_pools[type]
-
-func _sorted_pool_keys() -> Array:
-	var keys: Array = health_pools.keys()
-	var indexed: Array = []
-	for i: int in keys.size():
-		indexed.append([keys[i], (health_pools[keys[i]] as HealthPool).priority, i])
-	indexed.sort_custom(func(a, b): return a[1] < b[1] if a[1] != b[1] else a[2] < b[2])
-	var out: Array = []
-	for entry: Array in indexed:
-		out.append(entry[0])
-	return out
 
 func _ready() -> void:
 	current_health = max_health
@@ -444,5 +322,155 @@ func revive(amount: float) -> void:
 	current_health = minf(amount, max_health) if amount > 0.0 else max_health
 	on_revived.emit()
 	on_health_changed.emit()
+
+## @ace_condition
+## @ace_name("Is Dead")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.is_dead()")
+func is_dead() -> bool:
+	return is_dead_flag
+
+## @ace_condition
+## @ace_name("Is Invulnerable")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.is_invulnerable()")
+func is_invulnerable() -> bool:
+	return invulnerable
+
+## @ace_condition
+## @ace_name("Has Any Health Pool")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.has_any_health_pool()")
+func has_any_health_pool() -> bool:
+	for pool_name: String in health_pools.keys():
+		if (health_pools[pool_name] as HealthPool).amount > 0.0:
+			return true
+	return false
+
+## @ace_condition
+## @ace_name("Has Health Pool")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.has_health_pool({type})")
+func has_health_pool(type: String) -> bool:
+	return health_pools.has(type) and (health_pools[type] as HealthPool).amount > 0.0
+
+## @ace_condition
+## @ace_name("Health Pool Is Type")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.is_health_pool_type({type})")
+func is_health_pool_type(type: String) -> bool:
+	return last_trigger_pool_type == type
+
+## @ace_expression
+## @ace_name("Current Health")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.current_health_value()")
+func current_health_value() -> float:
+	return current_health
+
+## @ace_expression
+## @ace_name("Max Health")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.max_health_value()")
+func max_health_value() -> float:
+	return max_health
+
+## @ace_expression
+## @ace_name("Health Percent")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.health_percent()")
+func health_percent() -> float:
+	return (current_health / max_health) * 100.0 if max_health != 0.0 else 0.0
+
+## @ace_expression
+## @ace_name("Health Absorption Rate")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.health_absorption_rate_value()")
+func health_absorption_rate_value() -> float:
+	return health_absorption_rate
+
+## @ace_expression
+## @ace_name("Last Damage")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.last_damage_value()")
+func last_damage_value() -> float:
+	return last_damage
+
+## @ace_expression
+## @ace_name("Last Heal")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.last_heal_value()")
+func last_heal_value() -> float:
+	return last_heal
+
+## @ace_expression
+## @ace_name("Health Pool")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.health_pool_value({type})")
+func health_pool_value(type: String) -> float:
+	return (health_pools[type] as HealthPool).amount if health_pools.has(type) else 0.0
+
+## @ace_expression
+## @ace_name("Health Pool Decay Rate")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.health_pool_decay_rate_value({type})")
+func health_pool_decay_rate_value(type: String) -> float:
+	return (health_pools[type] as HealthPool).decay_rate if health_pools.has(type) else 0.0
+
+## @ace_expression
+## @ace_name("Health Pool Absorption Rate")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.health_pool_absorption_rate_value({type})")
+func health_pool_absorption_rate_value(type: String) -> float:
+	return (health_pools[type] as HealthPool).absorption_rate if health_pools.has(type) else 1.0
+
+## @ace_expression
+## @ace_name("Health Pool Priority")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.health_pool_priority_value({type})")
+func health_pool_priority_value(type: String) -> float:
+	return (health_pools[type] as HealthPool).priority if health_pools.has(type) else 0.0
+
+## @ace_expression
+## @ace_name("Last Pool Damage Absorbed")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.last_pool_damage_absorbed_value()")
+func last_pool_damage_absorbed_value() -> float:
+	return last_pool_damage_absorbed
+
+## @ace_expression
+## @ace_name("Last Health Pool Type")
+## @ace_category("Health")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.last_health_pool_type_value()")
+func last_health_pool_type_value() -> String:
+	return last_trigger_pool_type
+
+func _sorted_pool_keys() -> Array:
+	var keys: Array = health_pools.keys()
+	var indexed: Array = []
+	for i: int in keys.size():
+		indexed.append([keys[i], (health_pools[keys[i]] as HealthPool).priority, i])
+	indexed.sort_custom(func(a, b): return a[1] < b[1] if a[1] != b[1] else a[2] < b[2])
+	var out: Array = []
+	for entry: Array in indexed:
+		out.append(entry[0])
+	return out
 
 # Simple Health behavior (C3 parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. current_health seeds to max_health On Ready.

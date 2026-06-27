@@ -75,50 +75,6 @@ class ColorSpringEntry:
 			active = false
 			return true
 		return false
-
-## @ace_expression
-## @ace_name("Color Value")
-## @ace_category("Spring")
-func color_value(spring_name: String) -> Color:
-	if not color_springs.has(spring_name):
-		return Color.WHITE
-	return (color_springs[spring_name] as ColorSpringEntry).value
-
-## @ace_condition
-## @ace_name("Is Springing")
-## @ace_category("Spring")
-## @ace_codegen_template("$SpringBehavior.is_springing({spring_name})")
-func is_springing(spring_name: String) -> bool:
-	return springs.has(spring_name) and (springs[spring_name] as SpringEntry).active
-
-## @ace_expression
-## @ace_name("Spring Value")
-## @ace_category("Spring")
-func spring_value(spring_name: String) -> float:
-	if not springs.has(spring_name):
-		return 0.0
-	return (springs[spring_name] as SpringEntry).value
-
-## @ace_expression
-## @ace_name("Spring Velocity")
-## @ace_category("Spring")
-func spring_velocity(spring_name: String) -> float:
-	if not springs.has(spring_name):
-		return 0.0
-	return (springs[spring_name] as SpringEntry).velocity
-
-## @ace_expression
-## @ace_name("Spring Progress")
-## @ace_category("Spring")
-func spring_progress(spring_name: String) -> float:
-	if not springs.has(spring_name):
-		return 1.0
-	var entry: SpringEntry = springs[spring_name]
-	var span: float = absf(entry.target - entry.from_value)
-	if span <= 0.0:
-		return 1.0
-	return clampf(1.0 - absf(entry.target - entry.value) / span, 0.0, 1.0)
-
 func _spring_entry(spring_name: String) -> SpringEntry:
 	if not springs.has(spring_name):
 		var entry := SpringEntry.new()
@@ -127,7 +83,6 @@ func _spring_entry(spring_name: String) -> SpringEntry:
 		entry.precision = default_precision
 		springs[spring_name] = entry
 	return springs[spring_name]
-
 func _color_entry(spring_name: String) -> ColorSpringEntry:
 	if not color_springs.has(spring_name):
 		var entry := ColorSpringEntry.new()
@@ -136,16 +91,6 @@ func _color_entry(spring_name: String) -> ColorSpringEntry:
 		entry.precision = default_precision
 		color_springs[spring_name] = entry
 	return color_springs[spring_name]
-
-# Host conveniences: springs with these names write straight onto the parent.
-func _apply_to_host(spring_name: String, value: float) -> void:
-	if host == null:
-		return
-	match spring_name:
-		"__x": host.position.x = value
-		"__y": host.position.y = value
-		"__angle": host.rotation_degrees = value
-		"__scale": host.scale = Vector2(value, value)
 
 func _process(delta: float) -> void:
 	# Each spring integrates itself (framerate-independent); host springs write to the parent.
@@ -366,5 +311,67 @@ func remove_spring(spring_name: String) -> void:
 func reset_springs() -> void:
 	springs.clear()
 	color_springs.clear()
+
+## @ace_expression
+## @ace_name("Color Value")
+## @ace_category("Spring")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SpringBehavior.color_value({spring_name})")
+func color_value(spring_name: String) -> Color:
+	if not color_springs.has(spring_name):
+		return Color.WHITE
+	return (color_springs[spring_name] as ColorSpringEntry).value
+
+## @ace_condition
+## @ace_name("Is Springing")
+## @ace_category("Spring")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SpringBehavior.is_springing({spring_name})")
+func is_springing(spring_name: String) -> bool:
+	return springs.has(spring_name) and (springs[spring_name] as SpringEntry).active
+
+## @ace_expression
+## @ace_name("Spring Value")
+## @ace_category("Spring")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SpringBehavior.spring_value({spring_name})")
+func spring_value(spring_name: String) -> float:
+	if not springs.has(spring_name):
+		return 0.0
+	return (springs[spring_name] as SpringEntry).value
+
+## @ace_expression
+## @ace_name("Spring Velocity")
+## @ace_category("Spring")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SpringBehavior.spring_velocity({spring_name})")
+func spring_velocity(spring_name: String) -> float:
+	if not springs.has(spring_name):
+		return 0.0
+	return (springs[spring_name] as SpringEntry).velocity
+
+## @ace_expression
+## @ace_name("Spring Progress")
+## @ace_category("Spring")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SpringBehavior.spring_progress({spring_name})")
+func spring_progress(spring_name: String) -> float:
+	if not springs.has(spring_name):
+		return 1.0
+	var entry: SpringEntry = springs[spring_name]
+	var span: float = absf(entry.target - entry.from_value)
+	if span <= 0.0:
+		return 1.0
+	return clampf(1.0 - absf(entry.target - entry.value) / span, 0.0, 1.0)
+
+func _apply_to_host(spring_name: String, value: float) -> void:
+	# Host conveniences: springs with these names write straight onto the parent.
+	if host == null:
+		return
+	match spring_name:
+		"__x": host.position.x = value
+		"__y": host.position.y = value
+		"__angle": host.rotation_degrees = value
+		"__scale": host.scale = Vector2(value, value)
 
 # Numeric springing: snappy, physical motion for ANY number. Name a spring, set its target, read its value — or use the host helpers (x/y/angle/scale) for instant juice.

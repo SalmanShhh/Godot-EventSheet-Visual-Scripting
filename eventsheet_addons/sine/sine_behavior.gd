@@ -30,20 +30,6 @@ var time: float = 0.0
 @export_enum("sine", "triangle", "sawtooth", "reverse-sawtooth", "square") var wave: String = "sine"
 var wave_value: float = 0.0
 
-## @ace_hidden
-func _wave(t: float) -> float:
-	var cycle := fposmod(t, 1.0)
-	match wave:
-		"triangle":
-			return 1.0 - 4.0 * absf(cycle - 0.5)
-		"sawtooth":
-			return 2.0 * cycle - 1.0
-		"reverse-sawtooth":
-			return 1.0 - 2.0 * cycle
-		"square":
-			return 1.0 if cycle < 0.5 else -1.0
-	return sin(cycle * TAU)
-
 func _process(delta: float) -> void:
 	if not active or host == null:
 		return
@@ -110,5 +96,19 @@ func set_sine_phase(degrees: float) -> void:
 func reset_sine() -> void:
 	time = 0.0
 	base_captured = false
+
+## @ace_hidden
+func _wave(t: float) -> float:
+	var cycle := fposmod(t, 1.0)
+	match wave:
+		"triangle":
+			return 1.0 - 4.0 * absf(cycle - 0.5)
+		"sawtooth":
+			return 2.0 * cycle - 1.0
+		"reverse-sawtooth":
+			return 1.0 - 2.0 * cycle
+		"square":
+			return 1.0 if cycle < 0.5 else -1.0
+	return sin(cycle * TAU)
 
 # Sine behavior (C3 parity): wave-driven oscillation. movement: horizontal, vertical, forwards-backwards, size, angle, opacity, value-only. wave: sine, triangle, sawtooth, reverse-sawtooth, square. Read the current wave via $SineBehavior.wave_value.

@@ -61,183 +61,10 @@ class AbilityData:
 	var tags: Array = []
 	var expiration: float = 0.0
 	var max_expiration: float = 0.0
-
-## @ace_condition
-## @ace_name("Has Ability")
-## @ace_category("Abilities")
-## @ace_codegen_template("$SimpleAbilitiesBehavior.has_ability({id})")
-func has_ability(id: String) -> bool:
-	return abilities.has(id)
-
-## @ace_condition
-## @ace_name("Is Ability Ready")
-## @ace_category("Abilities")
-## @ace_codegen_template("$SimpleAbilitiesBehavior.is_ready({id})")
-func is_ready(id: String) -> bool:
-	if not abilities.has(id):
-		return false
-	var a: AbilityData = abilities[id]
-	return a.enabled and a.stacks > 0
-
-## @ace_condition
-## @ace_name("Is Ability Active")
-## @ace_category("Abilities")
-## @ace_codegen_template("$SimpleAbilitiesBehavior.is_active({id})")
-func is_active(id: String) -> bool:
-	return abilities.has(id) and (abilities[id] as AbilityData).active
-
-## @ace_condition
-## @ace_name("Is Ability Enabled")
-## @ace_category("Abilities")
-## @ace_codegen_template("$SimpleAbilitiesBehavior.is_enabled({id})")
-func is_enabled(id: String) -> bool:
-	return abilities.has(id) and (abilities[id] as AbilityData).enabled
-
-## @ace_condition
-## @ace_name("Has Stacks Available")
-## @ace_category("Abilities")
-## @ace_codegen_template("$SimpleAbilitiesBehavior.has_stacks({id})")
-func has_stacks(id: String) -> bool:
-	return abilities.has(id) and (abilities[id] as AbilityData).stacks > 0
-
-## @ace_condition
-## @ace_name("Ability Has Tag")
-## @ace_category("Abilities")
-## @ace_codegen_template("$SimpleAbilitiesBehavior.ability_has_tag({id}, {tag})")
-func ability_has_tag(id: String, tag: String) -> bool:
-	return abilities.has(id) and (abilities[id] as AbilityData).tags.has(tag)
-
-## @ace_condition
-## @ace_name("Current Ability Is")
-## @ace_category("Abilities")
-## @ace_codegen_template("$SimpleAbilitiesBehavior.current_ability_is({id})")
-func current_ability_is(id: String) -> bool:
-	return current_ability_id == id
-
-## @ace_expression
-## @ace_name("Current Ability ID")
-## @ace_category("Abilities")
-func current_ability() -> String:
-	return current_ability_id
-
-## @ace_expression
-## @ace_name("Cooldown Remaining")
-## @ace_category("Abilities")
-func get_cooldown_remaining(id: String) -> float:
-	return (abilities[id] as AbilityData).cooldown if abilities.has(id) else 0.0
-
-## @ace_expression
-## @ace_name("Cooldown Progress")
-## @ace_category("Abilities")
-func get_cooldown_progress(id: String) -> float:
-	if not abilities.has(id) or (abilities[id] as AbilityData).max_cooldown <= 0.0:
-		return 0.0
-	return clampf((abilities[id] as AbilityData).cooldown / (abilities[id] as AbilityData).max_cooldown, 0.0, 1.0)
-
-## @ace_expression
-## @ace_name("Stacks")
-## @ace_category("Abilities")
-func get_stacks(id: String) -> int:
-	return (abilities[id] as AbilityData).stacks if abilities.has(id) else 0
-
-## @ace_expression
-## @ace_name("Max Stacks")
-## @ace_category("Abilities")
-func get_max_stacks(id: String) -> int:
-	return (abilities[id] as AbilityData).max_stacks if abilities.has(id) else 0
-
-## @ace_expression
-## @ace_name("Stack Cooldown Remaining")
-## @ace_category("Abilities")
-func get_stack_cooldown_remaining(id: String) -> float:
-	return (abilities[id] as AbilityData).cooldown if abilities.has(id) else 0.0
-
-## @ace_expression
-## @ace_name("Stack Progress")
-## @ace_category("Abilities")
-func get_stack_progress(id: String) -> float:
-	return get_cooldown_progress(id)
-
-## @ace_expression
-## @ace_name("Expiration Time")
-## @ace_category("Abilities")
-func get_expiration_time(id: String) -> float:
-	return (abilities[id] as AbilityData).expiration if abilities.has(id) else 0.0
-
-## @ace_expression
-## @ace_name("Expiration Progress")
-## @ace_category("Abilities")
-func get_expiration_progress(id: String) -> float:
-	if not abilities.has(id) or (abilities[id] as AbilityData).max_expiration <= 0.0:
-		return 0.0
-	return clampf(1.0 - (abilities[id] as AbilityData).expiration / (abilities[id] as AbilityData).max_expiration, 0.0, 1.0)
-
-## @ace_expression
-## @ace_name("Max Expiration Time")
-## @ace_category("Abilities")
-func get_max_expiration_time(id: String) -> float:
-	return (abilities[id] as AbilityData).max_expiration if abilities.has(id) else 0.0
-
-## @ace_expression
-## @ace_name("Ability Count")
-## @ace_category("Abilities")
-func get_ability_count() -> int:
-	return abilities.size()
-
-## @ace_expression
-## @ace_name("List Active Abilities")
-## @ace_category("Abilities")
-func list_active_abilities() -> String:
-	return ",".join(abilities.keys())
-
-## @ace_expression
-## @ace_name("Ready Abilities")
-## @ace_category("Abilities")
-func get_ready_abilities() -> String:
-	var out: PackedStringArray = PackedStringArray()
-	for id: String in abilities.keys():
-		if is_ready(id):
-			out.append(id)
-	return ",".join(out)
-
-## @ace_expression
-## @ace_name("Ability Data")
-## @ace_category("Abilities")
-func get_ability_data(id: String, key: String) -> String:
-	if not abilities.has(id):
-		return ""
-	return str((abilities[id] as AbilityData).data.get(key, ""))
-
-## @ace_expression
-## @ace_name("Count Abilities By Tag")
-## @ace_category("Abilities")
-func count_abilities_by_tag(tag: String) -> int:
-	return _ids_with_tag(tag).size()
-
-## @ace_expression
-## @ace_name("Ability By Tag Index")
-## @ace_category("Abilities")
-func get_ability_by_tag_index(tag: String, index: int) -> String:
-	var ids: Array = _ids_with_tag(tag)
-	return str(ids[index]) if index >= 0 and index < ids.size() else ""
-
-## @ace_expression
-## @ace_name("List Abilities By Tag")
-## @ace_category("Abilities")
-func list_abilities_by_tag(tag: String) -> String:
-	return ",".join(_ids_with_tag(tag))
-
 func _ensure_ability(id: String) -> AbilityData:
 	if not abilities.has(id):
 		abilities[id] = AbilityData.new()
 	return abilities[id] as AbilityData
-
-func _ids_with_tag(tag: String) -> Array:
-	var out: Array = []
-	for id: String in abilities.keys():
-		if (abilities[id] as AbilityData).tags.has(tag):
-			out.append(id)
-	return out
 
 func _process(delta: float) -> void:
 	if abilities.is_empty():
@@ -569,5 +396,218 @@ func reset_cooldown_for_tag(tag: String) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_cooldown_multiplier({multiplier})")
 func set_cooldown_multiplier(multiplier: float) -> void:
 	cooldown_multiplier = maxf(0.0, multiplier)
+
+## @ace_condition
+## @ace_name("Has Ability")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.has_ability({id})")
+func has_ability(id: String) -> bool:
+	return abilities.has(id)
+
+## @ace_condition
+## @ace_name("Is Ability Ready")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.is_ready({id})")
+func is_ready(id: String) -> bool:
+	if not abilities.has(id):
+		return false
+	var a: AbilityData = abilities[id]
+	return a.enabled and a.stacks > 0
+
+## @ace_condition
+## @ace_name("Is Ability Active")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.is_active({id})")
+func is_active(id: String) -> bool:
+	return abilities.has(id) and (abilities[id] as AbilityData).active
+
+## @ace_condition
+## @ace_name("Is Ability Enabled")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.is_enabled({id})")
+func is_enabled(id: String) -> bool:
+	return abilities.has(id) and (abilities[id] as AbilityData).enabled
+
+## @ace_condition
+## @ace_name("Has Stacks Available")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.has_stacks({id})")
+func has_stacks(id: String) -> bool:
+	return abilities.has(id) and (abilities[id] as AbilityData).stacks > 0
+
+## @ace_condition
+## @ace_name("Ability Has Tag")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.ability_has_tag({id}, {tag})")
+func ability_has_tag(id: String, tag: String) -> bool:
+	return abilities.has(id) and (abilities[id] as AbilityData).tags.has(tag)
+
+## @ace_condition
+## @ace_name("Current Ability Is")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.current_ability_is({id})")
+func current_ability_is(id: String) -> bool:
+	return current_ability_id == id
+
+## @ace_expression
+## @ace_name("Current Ability ID")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.current_ability()")
+func current_ability() -> String:
+	return current_ability_id
+
+## @ace_expression
+## @ace_name("Cooldown Remaining")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.get_cooldown_remaining({id})")
+func get_cooldown_remaining(id: String) -> float:
+	return (abilities[id] as AbilityData).cooldown if abilities.has(id) else 0.0
+
+## @ace_expression
+## @ace_name("Cooldown Progress")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.get_cooldown_progress({id})")
+func get_cooldown_progress(id: String) -> float:
+	if not abilities.has(id) or (abilities[id] as AbilityData).max_cooldown <= 0.0:
+		return 0.0
+	return clampf((abilities[id] as AbilityData).cooldown / (abilities[id] as AbilityData).max_cooldown, 0.0, 1.0)
+
+## @ace_expression
+## @ace_name("Stacks")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.get_stacks({id})")
+func get_stacks(id: String) -> int:
+	return (abilities[id] as AbilityData).stacks if abilities.has(id) else 0
+
+## @ace_expression
+## @ace_name("Max Stacks")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.get_max_stacks({id})")
+func get_max_stacks(id: String) -> int:
+	return (abilities[id] as AbilityData).max_stacks if abilities.has(id) else 0
+
+## @ace_expression
+## @ace_name("Stack Cooldown Remaining")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.get_stack_cooldown_remaining({id})")
+func get_stack_cooldown_remaining(id: String) -> float:
+	return (abilities[id] as AbilityData).cooldown if abilities.has(id) else 0.0
+
+## @ace_expression
+## @ace_name("Stack Progress")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.get_stack_progress({id})")
+func get_stack_progress(id: String) -> float:
+	return get_cooldown_progress(id)
+
+## @ace_expression
+## @ace_name("Expiration Time")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.get_expiration_time({id})")
+func get_expiration_time(id: String) -> float:
+	return (abilities[id] as AbilityData).expiration if abilities.has(id) else 0.0
+
+## @ace_expression
+## @ace_name("Expiration Progress")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.get_expiration_progress({id})")
+func get_expiration_progress(id: String) -> float:
+	if not abilities.has(id) or (abilities[id] as AbilityData).max_expiration <= 0.0:
+		return 0.0
+	return clampf(1.0 - (abilities[id] as AbilityData).expiration / (abilities[id] as AbilityData).max_expiration, 0.0, 1.0)
+
+## @ace_expression
+## @ace_name("Max Expiration Time")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.get_max_expiration_time({id})")
+func get_max_expiration_time(id: String) -> float:
+	return (abilities[id] as AbilityData).max_expiration if abilities.has(id) else 0.0
+
+## @ace_expression
+## @ace_name("Ability Count")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.get_ability_count()")
+func get_ability_count() -> int:
+	return abilities.size()
+
+## @ace_expression
+## @ace_name("List Active Abilities")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.list_active_abilities()")
+func list_active_abilities() -> String:
+	return ",".join(abilities.keys())
+
+## @ace_expression
+## @ace_name("Ready Abilities")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.get_ready_abilities()")
+func get_ready_abilities() -> String:
+	var out: PackedStringArray = PackedStringArray()
+	for id: String in abilities.keys():
+		if is_ready(id):
+			out.append(id)
+	return ",".join(out)
+
+## @ace_expression
+## @ace_name("Ability Data")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.get_ability_data({id}, {key})")
+func get_ability_data(id: String, key: String) -> String:
+	if not abilities.has(id):
+		return ""
+	return str((abilities[id] as AbilityData).data.get(key, ""))
+
+## @ace_expression
+## @ace_name("Count Abilities By Tag")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.count_abilities_by_tag({tag})")
+func count_abilities_by_tag(tag: String) -> int:
+	return _ids_with_tag(tag).size()
+
+## @ace_expression
+## @ace_name("Ability By Tag Index")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.get_ability_by_tag_index({tag}, {index})")
+func get_ability_by_tag_index(tag: String, index: int) -> String:
+	var ids: Array = _ids_with_tag(tag)
+	return str(ids[index]) if index >= 0 and index < ids.size() else ""
+
+## @ace_expression
+## @ace_name("List Abilities By Tag")
+## @ace_category("Abilities")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.list_abilities_by_tag({tag})")
+func list_abilities_by_tag(tag: String) -> String:
+	return ",".join(_ids_with_tag(tag))
+
+func _ids_with_tag(tag: String) -> Array:
+	var out: Array = []
+	for id: String in abilities.keys():
+		if (abilities[id] as AbilityData).tags.has(tag):
+			out.append(id)
+	return out
 
 # Simple Abilities (C3 parity + Godot extras): grant abilities by id, cooldowns, stack charges that auto-regen, temporary abilities that auto-expire, per-ability custom data, and tags for bulk operations. Triggers fire for ANY ability; read Current Ability ID (or the Current Ability Is condition) to tell which one fired.

@@ -1,45 +1,23 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_xo0ic"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_e70dw"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_mcfg8"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_wa7cv"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_1idfc"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_8v0r7"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="7_wh4he"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_wa7cv"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_1idfc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_8v0r7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_wh4he"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_s6joc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_eemov"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_w4ol3"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_ttxwp"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_4oylg"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_2ocr3"]
 
-[sub_resource type="Resource" id="Resource_s6joc"]
-script = ExtResource("1_xo0ic")
+[sub_resource type="Resource" id="Resource_m7a1i"]
+script = ExtResource("1_wa7cv")
 text = "Line of Sight 3D behavior (C3 parity): raycast LOS in 3D with range and an optional cone of view (degrees; 360 = all around, measured from the host's -Z forward). Conditions: Has Line Of Sight To, Has LOS Between positions."
 
-[sub_resource type="Resource" id="Resource_eemov"]
-script = ExtResource("2_e70dw")
-code = "## @ace_condition
-## @ace_name(\"Has Line Of Sight To\")
-## @ace_category(\"Line Of Sight 3D\")
-## @ace_codegen_template(\"$LOS3DBehavior.has_los_to({point})\")
-func has_los_to(point: Vector3) -> bool:
-	if host == null or host.global_position.distance_to(point) > sight_range:
-		return false
-	if cone_of_view_degrees < 360.0:
-		var forward := -host.global_transform.basis.z
-		var to_target := point - host.global_position
-		if to_target.length() > 0.0001 and forward.angle_to(to_target) > deg_to_rad(cone_of_view_degrees) * 0.5:
-			return false
-	return has_los_between(host.global_position, point)
-
-## @ace_condition
-## @ace_name(\"Has LOS Between\")
-## @ace_category(\"Line Of Sight 3D\")
-## @ace_codegen_template(\"$LOS3DBehavior.has_los_between({from_point}, {to_point})\")
-func has_los_between(from_point: Vector3, to_point: Vector3) -> bool:
-	if host == null:
-		return false
-	var query := PhysicsRayQueryParameters3D.create(from_point, to_point)
-	query.collision_mask = collision_mask
-	return host.get_world_3d().direct_space_state.intersect_ray(query).is_empty()
-
-## @ace_expression
+[sub_resource type="Resource" id="Resource_tfsxl"]
+script = ExtResource("2_1idfc")
+code = "## @ace_expression
 ## @ace_name(\"Nearest Visible In Group\")
 ## @ace_category(\"Line Of Sight 3D\")
 ## @ace_codegen_template(\"$LOS3DBehavior.nearest_visible_in_group({group})\")
@@ -58,31 +36,211 @@ func nearest_visible_in_group(group: String) -> Node3D:
 			best = candidate
 	return best"
 
-[sub_resource type="Resource" id="Resource_w4ol3"]
-script = ExtResource("2_e70dw")
+[sub_resource type="Resource" id="Resource_8k05e"]
+script = ExtResource("2_1idfc")
 code = "pass"
 lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_ttxwp"]
-script = ExtResource("6_8v0r7")
-actions = Array[Resource]([SubResource("Resource_w4ol3")])
+[sub_resource type="Resource" id="Resource_aao7c"]
+script = ExtResource("6_eemov")
+actions = Array[Resource]([SubResource("Resource_8k05e")])
 event_uid = "9bab3c"
 
-[sub_resource type="Resource" id="Resource_4oylg"]
-script = ExtResource("6_8v0r7")
+[sub_resource type="Resource" id="Resource_7sv57"]
+script = ExtResource("6_eemov")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-sub_events = Array[Resource]([SubResource("Resource_ttxwp")])
+sub_events = Array[Resource]([SubResource("Resource_aao7c")])
 event_uid = "95e878"
 
+[sub_resource type="Resource" id="Resource_dj1qf"]
+script = ExtResource("7_w4ol3")
+ace_id = "ReturnValue"
+params = {
+"value": "false"
+}
+
+[sub_resource type="Resource" id="Resource_l1b8p"]
+script = ExtResource("3_8v0r7")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "null or host.global_position.distance_to(point) > sight_range",
+"var_name": "host"
+}
+
+[sub_resource type="Resource" id="Resource_uaclq"]
+script = ExtResource("6_eemov")
+conditions = Array[ExtResource("3_8v0r7")]([SubResource("Resource_l1b8p")])
+actions = Array[Resource]([SubResource("Resource_dj1qf")])
+event_uid = "0a9c55"
+
+[sub_resource type="Resource" id="Resource_sgswd"]
+script = ExtResource("2_1idfc")
+code = "var forward := -host.global_transform.basis.z
+var to_target := point - host.global_position"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_y43k2"]
+script = ExtResource("3_8v0r7")
+ace_id = "CompareVar"
+params = {
+"op": "<",
+"value": "360.0",
+"var_name": "cone_of_view_degrees"
+}
+
+[sub_resource type="Resource" id="Resource_bkoyl"]
+script = ExtResource("7_w4ol3")
+ace_id = "ReturnValue"
+params = {
+"value": "false"
+}
+
+[sub_resource type="Resource" id="Resource_1af15"]
+script = ExtResource("3_8v0r7")
+ace_id = "CompareVar"
+params = {
+"op": ">",
+"value": "0.0001",
+"var_name": "to_target.length()"
+}
+
+[sub_resource type="Resource" id="Resource_adyy2"]
+script = ExtResource("3_8v0r7")
+ace_id = "CompareVar"
+params = {
+"op": ">",
+"value": "deg_to_rad(cone_of_view_degrees) * 0.5",
+"var_name": "forward.angle_to(to_target)"
+}
+
+[sub_resource type="Resource" id="Resource_u4g21"]
+script = ExtResource("6_eemov")
+conditions = Array[ExtResource("3_8v0r7")]([SubResource("Resource_1af15"), SubResource("Resource_adyy2")])
+actions = Array[Resource]([SubResource("Resource_bkoyl")])
+event_uid = "170602"
+
+[sub_resource type="Resource" id="Resource_3s2ox"]
+script = ExtResource("6_eemov")
+conditions = Array[ExtResource("3_8v0r7")]([SubResource("Resource_y43k2")])
+actions = Array[Resource]([SubResource("Resource_sgswd")])
+sub_events = Array[Resource]([SubResource("Resource_u4g21")])
+event_uid = "9275e9"
+
+[sub_resource type="Resource" id="Resource_3mo3f"]
+script = ExtResource("7_w4ol3")
+ace_id = "ReturnValue"
+params = {
+"value": "has_los_between(host.global_position, point)"
+}
+
+[sub_resource type="Resource" id="Resource_0ytwt"]
+script = ExtResource("6_eemov")
+actions = Array[Resource]([SubResource("Resource_3mo3f")])
+event_uid = "432f56"
+
+[sub_resource type="Resource" id="Resource_jtpi2"]
+script = ExtResource("8_ttxwp")
+id = "point"
+type_name = "Vector3"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_qygxo"]
+script = ExtResource("9_4oylg")
+function_name = "has_los_to"
+expose_as_ace = true
+ace_display_name = "Has Line Of Sight To"
+ace_category = "Line Of Sight 3D"
+params = Array[ExtResource("8_ttxwp")]([SubResource("Resource_jtpi2")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_uaclq"), SubResource("Resource_3s2ox"), SubResource("Resource_0ytwt")])
+
+[sub_resource type="Resource" id="Resource_ok5vj"]
+script = ExtResource("7_w4ol3")
+ace_id = "ReturnValue"
+params = {
+"value": "false"
+}
+
+[sub_resource type="Resource" id="Resource_wvian"]
+script = ExtResource("3_8v0r7")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "null",
+"var_name": "host"
+}
+
+[sub_resource type="Resource" id="Resource_sct76"]
+script = ExtResource("6_eemov")
+conditions = Array[ExtResource("3_8v0r7")]([SubResource("Resource_wvian")])
+actions = Array[Resource]([SubResource("Resource_ok5vj")])
+event_uid = "e6a0f2"
+
+[sub_resource type="Resource" id="Resource_65kjf"]
+script = ExtResource("7_w4ol3")
+ace_id = "CallMethod"
+params = {
+"args": "from_point, to_point",
+"method": "create",
+"target": "var query := PhysicsRayQueryParameters3D"
+}
+
+[sub_resource type="Resource" id="Resource_w57ja"]
+script = ExtResource("7_w4ol3")
+ace_id = "SetProperty"
+params = {
+"property": "collision_mask",
+"target": "query",
+"value": "collision_mask"
+}
+
+[sub_resource type="Resource" id="Resource_hs7i0"]
+script = ExtResource("7_w4ol3")
+ace_id = "ReturnValue"
+params = {
+"value": "host.get_world_3d().direct_space_state.intersect_ray(query).is_empty()"
+}
+
+[sub_resource type="Resource" id="Resource_v5xsw"]
+script = ExtResource("6_eemov")
+actions = Array[Resource]([SubResource("Resource_65kjf"), SubResource("Resource_w57ja"), SubResource("Resource_hs7i0")])
+event_uid = "087266"
+
+[sub_resource type="Resource" id="Resource_hqce2"]
+script = ExtResource("8_ttxwp")
+id = "from_point"
+type_name = "Vector3"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_si1rd"]
+script = ExtResource("8_ttxwp")
+id = "to_point"
+type_name = "Vector3"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_gsw8p"]
+script = ExtResource("9_4oylg")
+function_name = "has_los_between"
+expose_as_ace = true
+ace_display_name = "Has LOS Between"
+ace_category = "Line Of Sight 3D"
+params = Array[ExtResource("8_ttxwp")]([SubResource("Resource_hqce2"), SubResource("Resource_si1rd")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_sct76"), SubResource("Resource_v5xsw")])
+
 [resource]
-script = ExtResource("7_wh4he")
+script = ExtResource("10_2ocr3")
 host_class = "Node3D"
 behavior_mode = true
 custom_class_name = "LOS3DBehavior"
 addon_tags = PackedStringArray()
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_s6joc"), SubResource("Resource_eemov"), SubResource("Resource_4oylg")])
+events = Array[Resource]([SubResource("Resource_m7a1i"), SubResource("Resource_tfsxl"), SubResource("Resource_7sv57")])
 variables = {
 "collision_mask": {
 "default": 1,
@@ -100,3 +258,4 @@ variables = {
 "type": "float"
 }
 }
+functions = Array[Resource]([SubResource("Resource_qygxo"), SubResource("Resource_gsw8p")])

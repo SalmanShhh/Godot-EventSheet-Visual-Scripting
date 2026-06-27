@@ -35,10 +35,6 @@ var to_y: float = 0.0
 func to_grid(pixel: Vector2) -> Vector2i:
 	return Vector2i(roundi(pixel.x / tile_size), roundi(pixel.y / tile_size))
 
-## @ace_hidden
-func from_grid(tile: Vector2i) -> Vector2:
-	return Vector2(tile) * tile_size
-
 func _process(delta: float) -> void:
 	if host == null:
 		return
@@ -92,5 +88,9 @@ func teleport_to_tile(tile_x: float, tile_y: float) -> void:
 	if host != null:
 		host.position = Vector2(tile_x, tile_y) * tile_size
 	moving = false
+
+## @ace_hidden
+func from_grid(tile: Vector2i) -> Vector2:
+	return Vector2(tile) * tile_size
 
 # Tile Movement behavior (C3 parity): grid-locked stepping (arrow keys or Simulate Step); grid-space helpers convert between tiles and pixels. Fires On Step Finished per tile.

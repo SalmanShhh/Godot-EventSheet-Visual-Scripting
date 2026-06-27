@@ -90,132 +90,10 @@ class HealthPool:
 	var absorption_rate: float = 1.0
 	var last_absorbed: float = 0.0
 	var priority: float = 0.0
-
-## @ace_condition
-## @ace_name(\"Is Dead\")
-## @ace_category(\"Health\")
-## @ace_codegen_template(\"$SimpleHealthBehavior.is_dead()\")
-func is_dead() -> bool:
-	return is_dead_flag
-
-## @ace_condition
-## @ace_name(\"Is Invulnerable\")
-## @ace_category(\"Health\")
-## @ace_codegen_template(\"$SimpleHealthBehavior.is_invulnerable()\")
-func is_invulnerable() -> bool:
-	return invulnerable
-
-## @ace_condition
-## @ace_name(\"Has Any Health Pool\")
-## @ace_category(\"Health\")
-## @ace_codegen_template(\"$SimpleHealthBehavior.has_any_health_pool()\")
-func has_any_health_pool() -> bool:
-	for pool_name: String in health_pools.keys():
-		if (health_pools[pool_name] as HealthPool).amount > 0.0:
-			return true
-	return false
-
-## @ace_condition
-## @ace_name(\"Has Health Pool\")
-## @ace_category(\"Health\")
-## @ace_codegen_template(\"$SimpleHealthBehavior.has_health_pool({type})\")
-func has_health_pool(type: String) -> bool:
-	return health_pools.has(type) and (health_pools[type] as HealthPool).amount > 0.0
-
-## @ace_condition
-## @ace_name(\"Health Pool Is Type\")
-## @ace_category(\"Health\")
-## @ace_codegen_template(\"$SimpleHealthBehavior.is_health_pool_type({type})\")
-func is_health_pool_type(type: String) -> bool:
-	return last_trigger_pool_type == type
-
-## @ace_expression
-## @ace_name(\"Current Health\")
-## @ace_category(\"Health\")
-func current_health_value() -> float:
-	return current_health
-
-## @ace_expression
-## @ace_name(\"Max Health\")
-## @ace_category(\"Health\")
-func max_health_value() -> float:
-	return max_health
-
-## @ace_expression
-## @ace_name(\"Health Percent\")
-## @ace_category(\"Health\")
-func health_percent() -> float:
-	return (current_health / max_health) * 100.0 if max_health != 0.0 else 0.0
-
-## @ace_expression
-## @ace_name(\"Health Absorption Rate\")
-## @ace_category(\"Health\")
-func health_absorption_rate_value() -> float:
-	return health_absorption_rate
-
-## @ace_expression
-## @ace_name(\"Last Damage\")
-## @ace_category(\"Health\")
-func last_damage_value() -> float:
-	return last_damage
-
-## @ace_expression
-## @ace_name(\"Last Heal\")
-## @ace_category(\"Health\")
-func last_heal_value() -> float:
-	return last_heal
-
-## @ace_expression
-## @ace_name(\"Health Pool\")
-## @ace_category(\"Health\")
-func health_pool_value(type: String) -> float:
-	return (health_pools[type] as HealthPool).amount if health_pools.has(type) else 0.0
-
-## @ace_expression
-## @ace_name(\"Health Pool Decay Rate\")
-## @ace_category(\"Health\")
-func health_pool_decay_rate_value(type: String) -> float:
-	return (health_pools[type] as HealthPool).decay_rate if health_pools.has(type) else 0.0
-
-## @ace_expression
-## @ace_name(\"Health Pool Absorption Rate\")
-## @ace_category(\"Health\")
-func health_pool_absorption_rate_value(type: String) -> float:
-	return (health_pools[type] as HealthPool).absorption_rate if health_pools.has(type) else 1.0
-
-## @ace_expression
-## @ace_name(\"Health Pool Priority\")
-## @ace_category(\"Health\")
-func health_pool_priority_value(type: String) -> float:
-	return (health_pools[type] as HealthPool).priority if health_pools.has(type) else 0.0
-
-## @ace_expression
-## @ace_name(\"Last Pool Damage Absorbed\")
-## @ace_category(\"Health\")
-func last_pool_damage_absorbed_value() -> float:
-	return last_pool_damage_absorbed
-
-## @ace_expression
-## @ace_name(\"Last Health Pool Type\")
-## @ace_category(\"Health\")
-func last_health_pool_type_value() -> String:
-	return last_trigger_pool_type
-
 func _get_pool(type: String) -> HealthPool:
 	if not health_pools.has(type):
 		health_pools[type] = HealthPool.new()
-	return health_pools[type]
-
-func _sorted_pool_keys() -> Array:
-	var keys: Array = health_pools.keys()
-	var indexed: Array = []
-	for i: int in keys.size():
-		indexed.append([keys[i], (health_pools[keys[i]] as HealthPool).priority, i])
-	indexed.sort_custom(func(a, b): return a[1] < b[1] if a[1] != b[1] else a[2] < b[2])
-	var out: Array = []
-	for entry: Array in indexed:
-		out.append(entry[0])
-	return out"
+	return health_pools[type]"
 
 [sub_resource type="Resource" id="Resource_u0l2y"]
 script = ExtResource("8_qhshe")
@@ -1437,6 +1315,541 @@ ace_category = "Health"
 params = Array[ExtResource("9_o4pmk")]([SubResource("Resource_r4eoy")])
 events = Array[Resource]([SubResource("Resource_j7f6s")])
 
+[sub_resource type="Resource" id="Resource_3qi7l"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "is_dead_flag"
+}
+
+[sub_resource type="Resource" id="Resource_jup4n"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_3qi7l")])
+event_uid = "5a31b8"
+
+[sub_resource type="Resource" id="Resource_b104u"]
+script = ExtResource("10_exeo8")
+function_name = "is_dead"
+expose_as_ace = true
+ace_display_name = "Is Dead"
+ace_category = "Health"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_jup4n")])
+
+[sub_resource type="Resource" id="Resource_71v6j"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "invulnerable"
+}
+
+[sub_resource type="Resource" id="Resource_wniol"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_71v6j")])
+event_uid = "08286c"
+
+[sub_resource type="Resource" id="Resource_7aarb"]
+script = ExtResource("10_exeo8")
+function_name = "is_invulnerable"
+expose_as_ace = true
+ace_display_name = "Is Invulnerable"
+ace_category = "Health"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_wniol")])
+
+[sub_resource type="Resource" id="Resource_i2yax"]
+script = ExtResource("6_kursp")
+iterator_name = "pool_name: String"
+collection_value = "health_pools.keys()"
+
+[sub_resource type="Resource" id="Resource_aqewq"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "true"
+}
+
+[sub_resource type="Resource" id="Resource_5tewa"]
+script = ExtResource("4_5qxg0")
+ace_id = "CompareVar"
+params = {
+"op": "as",
+"value": "HealthPool).amount > 0.0",
+"var_name": "(health_pools[pool_name]"
+}
+
+[sub_resource type="Resource" id="Resource_40avg"]
+script = ExtResource("7_c4a7h")
+conditions = Array[ExtResource("4_5qxg0")]([SubResource("Resource_5tewa")])
+actions = Array[Resource]([SubResource("Resource_aqewq")])
+event_uid = "a835b2"
+
+[sub_resource type="Resource" id="Resource_djoex"]
+script = ExtResource("7_c4a7h")
+sub_events = Array[Resource]([SubResource("Resource_40avg")])
+event_uid = "2aae47"
+pick_filters = Array[ExtResource("6_kursp")]([SubResource("Resource_i2yax")])
+
+[sub_resource type="Resource" id="Resource_x4pmt"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "false"
+}
+
+[sub_resource type="Resource" id="Resource_xrw7o"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_x4pmt")])
+event_uid = "ff3729"
+
+[sub_resource type="Resource" id="Resource_lprar"]
+script = ExtResource("10_exeo8")
+function_name = "has_any_health_pool"
+expose_as_ace = true
+ace_display_name = "Has Any Health Pool"
+ace_category = "Health"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_djoex"), SubResource("Resource_xrw7o")])
+
+[sub_resource type="Resource" id="Resource_neame"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "health_pools.has(type) and (health_pools[type] as HealthPool).amount > 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_te480"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_neame")])
+event_uid = "6a8e31"
+
+[sub_resource type="Resource" id="Resource_fpmo0"]
+script = ExtResource("9_o4pmk")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_0vk6k"]
+script = ExtResource("10_exeo8")
+function_name = "has_health_pool"
+expose_as_ace = true
+ace_display_name = "Has Health Pool"
+ace_category = "Health"
+params = Array[ExtResource("9_o4pmk")]([SubResource("Resource_fpmo0")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_te480")])
+
+[sub_resource type="Resource" id="Resource_vg2jl"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "last_trigger_pool_type == type"
+}
+
+[sub_resource type="Resource" id="Resource_iobit"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_vg2jl")])
+event_uid = "a09a59"
+
+[sub_resource type="Resource" id="Resource_puhet"]
+script = ExtResource("9_o4pmk")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_fo8d6"]
+script = ExtResource("10_exeo8")
+function_name = "is_health_pool_type"
+expose_as_ace = true
+ace_display_name = "Health Pool Is Type"
+ace_category = "Health"
+params = Array[ExtResource("9_o4pmk")]([SubResource("Resource_puhet")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_iobit")])
+
+[sub_resource type="Resource" id="Resource_yfulf"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "current_health"
+}
+
+[sub_resource type="Resource" id="Resource_o1ghj"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_yfulf")])
+event_uid = "a43f27"
+
+[sub_resource type="Resource" id="Resource_2a1j2"]
+script = ExtResource("10_exeo8")
+function_name = "current_health_value"
+expose_as_ace = true
+ace_display_name = "Current Health"
+ace_category = "Health"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_o1ghj")])
+
+[sub_resource type="Resource" id="Resource_tbg0m"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "max_health"
+}
+
+[sub_resource type="Resource" id="Resource_211fx"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_tbg0m")])
+event_uid = "6140d4"
+
+[sub_resource type="Resource" id="Resource_tfby3"]
+script = ExtResource("10_exeo8")
+function_name = "max_health_value"
+expose_as_ace = true
+ace_display_name = "Max Health"
+ace_category = "Health"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_211fx")])
+
+[sub_resource type="Resource" id="Resource_wgtud"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "(current_health / max_health) * 100.0 if max_health != 0.0 else 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_7g17j"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_wgtud")])
+event_uid = "92bccc"
+
+[sub_resource type="Resource" id="Resource_75s8u"]
+script = ExtResource("10_exeo8")
+function_name = "health_percent"
+expose_as_ace = true
+ace_display_name = "Health Percent"
+ace_category = "Health"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_7g17j")])
+
+[sub_resource type="Resource" id="Resource_oy8d1"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "health_absorption_rate"
+}
+
+[sub_resource type="Resource" id="Resource_5bt14"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_oy8d1")])
+event_uid = "f9d686"
+
+[sub_resource type="Resource" id="Resource_f3uxs"]
+script = ExtResource("10_exeo8")
+function_name = "health_absorption_rate_value"
+expose_as_ace = true
+ace_display_name = "Health Absorption Rate"
+ace_category = "Health"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_5bt14")])
+
+[sub_resource type="Resource" id="Resource_5m2ob"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "last_damage"
+}
+
+[sub_resource type="Resource" id="Resource_kdbwe"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_5m2ob")])
+event_uid = "677606"
+
+[sub_resource type="Resource" id="Resource_ikoot"]
+script = ExtResource("10_exeo8")
+function_name = "last_damage_value"
+expose_as_ace = true
+ace_display_name = "Last Damage"
+ace_category = "Health"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_kdbwe")])
+
+[sub_resource type="Resource" id="Resource_jdf2e"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "last_heal"
+}
+
+[sub_resource type="Resource" id="Resource_mu30y"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_jdf2e")])
+event_uid = "d2da01"
+
+[sub_resource type="Resource" id="Resource_0k04p"]
+script = ExtResource("10_exeo8")
+function_name = "last_heal_value"
+expose_as_ace = true
+ace_display_name = "Last Heal"
+ace_category = "Health"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_mu30y")])
+
+[sub_resource type="Resource" id="Resource_57x1m"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "(health_pools[type] as HealthPool).amount if health_pools.has(type) else 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_aynwp"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_57x1m")])
+event_uid = "f7f0f2"
+
+[sub_resource type="Resource" id="Resource_u6v0c"]
+script = ExtResource("9_o4pmk")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_3xnef"]
+script = ExtResource("10_exeo8")
+function_name = "health_pool_value"
+expose_as_ace = true
+ace_display_name = "Health Pool"
+ace_category = "Health"
+params = Array[ExtResource("9_o4pmk")]([SubResource("Resource_u6v0c")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_aynwp")])
+
+[sub_resource type="Resource" id="Resource_3hvds"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "(health_pools[type] as HealthPool).decay_rate if health_pools.has(type) else 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_ni6wk"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_3hvds")])
+event_uid = "85db1e"
+
+[sub_resource type="Resource" id="Resource_by3gs"]
+script = ExtResource("9_o4pmk")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_2x5we"]
+script = ExtResource("10_exeo8")
+function_name = "health_pool_decay_rate_value"
+expose_as_ace = true
+ace_display_name = "Health Pool Decay Rate"
+ace_category = "Health"
+params = Array[ExtResource("9_o4pmk")]([SubResource("Resource_by3gs")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_ni6wk")])
+
+[sub_resource type="Resource" id="Resource_i0xtw"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "(health_pools[type] as HealthPool).absorption_rate if health_pools.has(type) else 1.0"
+}
+
+[sub_resource type="Resource" id="Resource_spj3d"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_i0xtw")])
+event_uid = "91485b"
+
+[sub_resource type="Resource" id="Resource_epes3"]
+script = ExtResource("9_o4pmk")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ms7vk"]
+script = ExtResource("10_exeo8")
+function_name = "health_pool_absorption_rate_value"
+expose_as_ace = true
+ace_display_name = "Health Pool Absorption Rate"
+ace_category = "Health"
+params = Array[ExtResource("9_o4pmk")]([SubResource("Resource_epes3")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_spj3d")])
+
+[sub_resource type="Resource" id="Resource_8hxe7"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "(health_pools[type] as HealthPool).priority if health_pools.has(type) else 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_knv0f"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_8hxe7")])
+event_uid = "a572ef"
+
+[sub_resource type="Resource" id="Resource_5wkux"]
+script = ExtResource("9_o4pmk")
+id = "type"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_bogqe"]
+script = ExtResource("10_exeo8")
+function_name = "health_pool_priority_value"
+expose_as_ace = true
+ace_display_name = "Health Pool Priority"
+ace_category = "Health"
+params = Array[ExtResource("9_o4pmk")]([SubResource("Resource_5wkux")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_knv0f")])
+
+[sub_resource type="Resource" id="Resource_a0kuc"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "last_pool_damage_absorbed"
+}
+
+[sub_resource type="Resource" id="Resource_8lr6c"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_a0kuc")])
+event_uid = "f474d4"
+
+[sub_resource type="Resource" id="Resource_cr3j5"]
+script = ExtResource("10_exeo8")
+function_name = "last_pool_damage_absorbed_value"
+expose_as_ace = true
+ace_display_name = "Last Pool Damage Absorbed"
+ace_category = "Health"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_8lr6c")])
+
+[sub_resource type="Resource" id="Resource_fmafx"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "last_trigger_pool_type"
+}
+
+[sub_resource type="Resource" id="Resource_ty8s3"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_fmafx")])
+event_uid = "eea49c"
+
+[sub_resource type="Resource" id="Resource_55k08"]
+script = ExtResource("10_exeo8")
+function_name = "last_health_pool_type_value"
+expose_as_ace = true
+ace_display_name = "Last Health Pool Type"
+ace_category = "Health"
+return_type = 4
+events = Array[Resource]([SubResource("Resource_ty8s3")])
+
+[sub_resource type="Resource" id="Resource_2d2td"]
+script = ExtResource("8_qhshe")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "keys",
+"value": "health_pools.keys()",
+"var_type": "Array"
+}
+
+[sub_resource type="Resource" id="Resource_275fu"]
+script = ExtResource("8_qhshe")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "indexed",
+"value": "[]",
+"var_type": "Array"
+}
+
+[sub_resource type="Resource" id="Resource_x2g10"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_2d2td"), SubResource("Resource_275fu")])
+event_uid = "2b8d37"
+
+[sub_resource type="Resource" id="Resource_b6yxc"]
+script = ExtResource("8_qhshe")
+ace_id = "ArrayAppend"
+params = {
+"value": "[keys[i], (health_pools[keys[i]] as HealthPool).priority, i]",
+"var_name": "indexed"
+}
+
+[sub_resource type="Resource" id="Resource_hvddf"]
+script = ExtResource("6_kursp")
+iterator_name = "i: int"
+collection_value = "keys.size()"
+
+[sub_resource type="Resource" id="Resource_flou4"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_b6yxc")])
+event_uid = "30c18e"
+pick_filters = Array[ExtResource("6_kursp")]([SubResource("Resource_hvddf")])
+
+[sub_resource type="Resource" id="Resource_8ilwn"]
+script = ExtResource("8_qhshe")
+ace_id = "CallMethod"
+params = {
+"args": "func(a, b): return a[1] < b[1] if a[1] != b[1] else a[2] < b[2]",
+"method": "sort_custom",
+"target": "indexed"
+}
+
+[sub_resource type="Resource" id="Resource_yxtse"]
+script = ExtResource("8_qhshe")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "out",
+"value": "[]",
+"var_type": "Array"
+}
+
+[sub_resource type="Resource" id="Resource_kt5rm"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_8ilwn"), SubResource("Resource_yxtse")])
+event_uid = "7ced8c"
+
+[sub_resource type="Resource" id="Resource_t7js7"]
+script = ExtResource("8_qhshe")
+ace_id = "ArrayAppend"
+params = {
+"value": "entry[0]",
+"var_name": "out"
+}
+
+[sub_resource type="Resource" id="Resource_f0pmm"]
+script = ExtResource("6_kursp")
+iterator_name = "entry: Array"
+collection_value = "indexed"
+
+[sub_resource type="Resource" id="Resource_8p5u0"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_t7js7")])
+event_uid = "15a22a"
+pick_filters = Array[ExtResource("6_kursp")]([SubResource("Resource_f0pmm")])
+
+[sub_resource type="Resource" id="Resource_1yh2l"]
+script = ExtResource("8_qhshe")
+ace_id = "ReturnValue"
+params = {
+"value": "out"
+}
+
+[sub_resource type="Resource" id="Resource_723u7"]
+script = ExtResource("7_c4a7h")
+actions = Array[Resource]([SubResource("Resource_1yh2l")])
+event_uid = "828d86"
+
+[sub_resource type="Resource" id="Resource_cpvxd"]
+script = ExtResource("10_exeo8")
+function_name = "_sorted_pool_keys"
+lifted_unannotated = true
+return_type = 28
+events = Array[Resource]([SubResource("Resource_x2g10"), SubResource("Resource_flou4"), SubResource("Resource_kt5rm"), SubResource("Resource_8p5u0"), SubResource("Resource_723u7")])
+
 [resource]
 script = ExtResource("11_xmwhe")
 host_class = "Node2D"
@@ -1516,4 +1929,4 @@ variables = {
 "type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_wwgye"), SubResource("Resource_tm63j"), SubResource("Resource_syymc"), SubResource("Resource_w28ye"), SubResource("Resource_maxlo"), SubResource("Resource_qdrux"), SubResource("Resource_d03au"), SubResource("Resource_u7lbg"), SubResource("Resource_oi2vd"), SubResource("Resource_gvmvt"), SubResource("Resource_61tst"), SubResource("Resource_ia07h"), SubResource("Resource_b3w2t"), SubResource("Resource_ndsim"), SubResource("Resource_ggxlr"), SubResource("Resource_o1pru")])
+functions = Array[Resource]([SubResource("Resource_wwgye"), SubResource("Resource_tm63j"), SubResource("Resource_syymc"), SubResource("Resource_w28ye"), SubResource("Resource_maxlo"), SubResource("Resource_qdrux"), SubResource("Resource_d03au"), SubResource("Resource_u7lbg"), SubResource("Resource_oi2vd"), SubResource("Resource_gvmvt"), SubResource("Resource_61tst"), SubResource("Resource_ia07h"), SubResource("Resource_b3w2t"), SubResource("Resource_ndsim"), SubResource("Resource_ggxlr"), SubResource("Resource_o1pru"), SubResource("Resource_b104u"), SubResource("Resource_7aarb"), SubResource("Resource_lprar"), SubResource("Resource_0vk6k"), SubResource("Resource_fo8d6"), SubResource("Resource_2a1j2"), SubResource("Resource_tfby3"), SubResource("Resource_75s8u"), SubResource("Resource_f3uxs"), SubResource("Resource_ikoot"), SubResource("Resource_0k04p"), SubResource("Resource_3xnef"), SubResource("Resource_2x5we"), SubResource("Resource_ms7vk"), SubResource("Resource_bogqe"), SubResource("Resource_cr3j5"), SubResource("Resource_55k08"), SubResource("Resource_cpvxd")])

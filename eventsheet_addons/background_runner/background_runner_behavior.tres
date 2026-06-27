@@ -30,27 +30,7 @@ code = "# In-flight tasks as [task_id, call_id]; results keyed by call_id, writt
 var _tasks: Array = []
 var _results: Dictionary = {}
 var _next_id: int = 0
-var _mutex: Mutex = null
-
-## @ace_condition
-## @ace_name(\"Is Running\")
-## @ace_category(\"Background\")
-## @ace_codegen_template(\"$BackgroundRunner.is_running()\")
-func is_running() -> bool:
-	return not _tasks.is_empty()
-
-## @ace_expression
-## @ace_name(\"Tasks Running\")
-## @ace_category(\"Background\")
-func tasks_running() -> int:
-	return _tasks.size()
-
-## Runs the (PURE) work callable off the main thread, then stores its result for the poll to emit.
-func _run_task(work: Callable, call_id: int) -> void:
-	var result: Variant = work.call()
-	_mutex.lock()
-	_results[call_id] = result
-	_mutex.unlock()"
+var _mutex: Mutex = null"
 
 [sub_resource type="Resource" id="Resource_axfwi"]
 script = ExtResource("8_dkcia")
@@ -314,6 +294,110 @@ ace_category = "Background"
 params = Array[ExtResource("9_rwyty")]([SubResource("Resource_72xop"), SubResource("Resource_8qbqi")])
 events = Array[Resource]([SubResource("Resource_clshi")])
 
+[sub_resource type="Resource" id="Resource_loetn"]
+script = ExtResource("8_dkcia")
+ace_id = "ReturnValue"
+params = {
+"value": "not _tasks.is_empty()"
+}
+
+[sub_resource type="Resource" id="Resource_oin2g"]
+script = ExtResource("7_03u21")
+actions = Array[Resource]([SubResource("Resource_loetn")])
+event_uid = "17829d"
+
+[sub_resource type="Resource" id="Resource_u1bgx"]
+script = ExtResource("10_00515")
+function_name = "is_running"
+expose_as_ace = true
+ace_display_name = "Is Running"
+ace_category = "Background"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_oin2g")])
+
+[sub_resource type="Resource" id="Resource_7wt68"]
+script = ExtResource("8_dkcia")
+ace_id = "ReturnValue"
+params = {
+"value": "_tasks.size()"
+}
+
+[sub_resource type="Resource" id="Resource_j16hw"]
+script = ExtResource("7_03u21")
+actions = Array[Resource]([SubResource("Resource_7wt68")])
+event_uid = "8653e5"
+
+[sub_resource type="Resource" id="Resource_pdl43"]
+script = ExtResource("10_00515")
+function_name = "tasks_running"
+expose_as_ace = true
+ace_display_name = "Tasks Running"
+ace_category = "Background"
+return_type = 2
+events = Array[Resource]([SubResource("Resource_j16hw")])
+
+[sub_resource type="Resource" id="Resource_h7gme"]
+script = ExtResource("8_dkcia")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "result",
+"value": "work.call()",
+"var_type": "Variant"
+}
+
+[sub_resource type="Resource" id="Resource_vojsu"]
+script = ExtResource("8_dkcia")
+ace_id = "CallMethod"
+params = {
+"args": "",
+"method": "lock",
+"target": "_mutex"
+}
+
+[sub_resource type="Resource" id="Resource_a3utd"]
+script = ExtResource("8_dkcia")
+ace_id = "DictSetKey"
+params = {
+"key": "call_id",
+"value": "result",
+"var_name": "_results"
+}
+
+[sub_resource type="Resource" id="Resource_pw2aq"]
+script = ExtResource("8_dkcia")
+ace_id = "CallMethod"
+params = {
+"args": "",
+"method": "unlock",
+"target": "_mutex"
+}
+
+[sub_resource type="Resource" id="Resource_btx3e"]
+script = ExtResource("7_03u21")
+actions = Array[Resource]([SubResource("Resource_h7gme"), SubResource("Resource_vojsu"), SubResource("Resource_a3utd"), SubResource("Resource_pw2aq")])
+event_uid = "ea9c38"
+
+[sub_resource type="Resource" id="Resource_g1sd7"]
+script = ExtResource("9_rwyty")
+id = "work"
+type_name = "Callable"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_5ctp5"]
+script = ExtResource("9_rwyty")
+id = "call_id"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_4kk76"]
+script = ExtResource("10_00515")
+function_name = "_run_task"
+lifted_unannotated = true
+params = Array[ExtResource("9_rwyty")]([SubResource("Resource_g1sd7"), SubResource("Resource_5ctp5")])
+events = Array[Resource]([SubResource("Resource_btx3e")])
+
 [resource]
 script = ExtResource("11_x2pyo")
 behavior_mode = true
@@ -321,4 +405,4 @@ custom_class_name = "BackgroundRunner"
 addon_tags = PackedStringArray("performance", "threading")
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
 events = Array[Resource]([SubResource("Resource_7q1e1"), SubResource("Resource_k4g2r"), SubResource("Resource_dx17e"), SubResource("Resource_e0cyr"), SubResource("Resource_bty4x")])
-functions = Array[Resource]([SubResource("Resource_6a3t0"), SubResource("Resource_f1714")])
+functions = Array[Resource]([SubResource("Resource_6a3t0"), SubResource("Resource_f1714"), SubResource("Resource_u1bgx"), SubResource("Resource_pdl43"), SubResource("Resource_4kk76")])

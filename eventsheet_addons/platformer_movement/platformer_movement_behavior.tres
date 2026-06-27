@@ -2,12 +2,12 @@
 
 [ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_7ojdv"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="2_vta8r"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="3_60b5s"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="4_wybey"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="5_852lf"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="6_x0bpu"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="7_4680w"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="8_wlsfs"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_60b5s"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_wybey"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_852lf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_x0bpu"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_4680w"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="8_wlsfs"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="9_b2uae"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="10_3d0wo"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="11_4dex6"]
@@ -49,77 +49,11 @@ ace_name = "On Wall Jumped"
 ace_category = "Platformer"
 
 [sub_resource type="Resource" id="Resource_hob2v"]
-script = ExtResource("3_60b5s")
-code = "## @ace_condition
-## @ace_name(\"Is Moving\")
-## @ace_category(\"Platformer\")
-## @ace_codegen_template(\"$PlatformerMovement.is_moving()\")
-func is_moving() -> bool:
-	return host != null and absf(host.velocity.x) > 1.0
-
-## @ace_condition
-## @ace_name(\"Is Jumping\")
-## @ace_category(\"Platformer\")
-## @ace_codegen_template(\"$PlatformerMovement.is_jumping()\")
-func is_jumping() -> bool:
-	return host != null and not host.is_on_floor() and host.velocity.y < 0.0
-
-## @ace_condition
-## @ace_name(\"Is Falling\")
-## @ace_category(\"Platformer\")
-## @ace_codegen_template(\"$PlatformerMovement.is_falling()\")
-func is_falling() -> bool:
-	return host != null and not host.is_on_floor() and host.velocity.y > 0.0
-
-## @ace_condition
-## @ace_name(\"Is Wall Sliding\")
-## @ace_category(\"Platformer\")
-## @ace_codegen_template(\"$PlatformerMovement.is_wall_sliding()\")
-func is_wall_sliding() -> bool:
-	return _wall_sliding
-
-## @ace_condition
-## @ace_name(\"Can Jump\")
-## @ace_category(\"Platformer\")
-## @ace_codegen_template(\"$PlatformerMovement.can_jump()\")
-func can_jump() -> bool:
-	if host == null:
-		return false
-	return host.is_on_floor() or _coyote_timer > 0.0 or _jumps_left > 0 or (enable_wall_jump and host.is_on_wall())
-
-## @ace_expression
-## @ace_name(\"Jumps Remaining\")
-## @ace_category(\"Platformer\")
-func jumps_remaining() -> int:
-	return _jumps_left
-
-## @ace_expression
-## @ace_name(\"Air Time\")
-## @ace_category(\"Platformer\")
-func air_time() -> float:
-	return _air_time
-
-## @ace_expression
-## @ace_name(\"Facing Direction\")
-## @ace_category(\"Platformer\")
-func facing_direction() -> int:
-	return _facing
-
-# Shared jump kernel: set the rise and spend the coyote window. _jumps_left counts
-# only AIR jumps (it is decremented by the air-jump branch, not here), so falling off
-# a ledge past the coyote window never grants a phantom jump.
-func _perform_jump(velocity_y: float) -> void:
-	if host == null:
-		return
-	host.velocity.y = velocity_y
-	_coyote_timer = 0.0"
-
-[sub_resource type="Resource" id="Resource_6dxvl"]
-script = ExtResource("8_wlsfs")
+script = ExtResource("7_4680w")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_2eah4"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_6dxvl"]
+script = ExtResource("3_60b5s")
 ace_id = "CompareVar"
 params = {
 "op": "==",
@@ -127,19 +61,19 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_lx7gs"]
-script = ExtResource("7_4680w")
-conditions = Array[ExtResource("4_wybey")]([SubResource("Resource_2eah4")])
-actions = Array[Resource]([SubResource("Resource_6dxvl")])
-event_uid = "ef491c"
+[sub_resource type="Resource" id="Resource_2eah4"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_6dxvl")])
+actions = Array[Resource]([SubResource("Resource_hob2v")])
+event_uid = "76a998"
 
-[sub_resource type="Resource" id="Resource_b0w8i"]
-script = ExtResource("3_60b5s")
+[sub_resource type="Resource" id="Resource_lx7gs"]
+script = ExtResource("8_wlsfs")
 code = "var was_on_floor := _was_on_floor"
 lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_u5mnh"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_b0w8i"]
+script = ExtResource("7_4680w")
 ace_id = "CallMethod"
 params = {
 "args": "",
@@ -147,13 +81,13 @@ params = {
 "target": "var on_floor := host"
 }
 
+[sub_resource type="Resource" id="Resource_u5mnh"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_lx7gs"), SubResource("Resource_b0w8i")])
+event_uid = "69226b"
+
 [sub_resource type="Resource" id="Resource_q37kk"]
 script = ExtResource("7_4680w")
-actions = Array[Resource]([SubResource("Resource_b0w8i"), SubResource("Resource_u5mnh")])
-event_uid = "60ce26"
-
-[sub_resource type="Resource" id="Resource_ad340"]
-script = ExtResource("8_wlsfs")
 ace_id = "ApplyGravity"
 params = {
 "delta_t": "delta",
@@ -162,43 +96,43 @@ params = {
 "max_fall": "max_fall_speed"
 }
 
-[sub_resource type="Resource" id="Resource_tref5"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_ad340"]
+script = ExtResource("7_4680w")
 ace_id = "AddVar"
 params = {
 "amount": "delta",
 "var_name": "_air_time"
 }
 
-[sub_resource type="Resource" id="Resource_r3m0n"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_tref5"]
+script = ExtResource("3_60b5s")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "not on_floor"
 }
 
+[sub_resource type="Resource" id="Resource_r3m0n"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_tref5")])
+actions = Array[Resource]([SubResource("Resource_q37kk"), SubResource("Resource_ad340")])
+event_uid = "3500ba"
+
 [sub_resource type="Resource" id="Resource_npt2o"]
 script = ExtResource("7_4680w")
-conditions = Array[ExtResource("4_wybey")]([SubResource("Resource_r3m0n")])
-actions = Array[Resource]([SubResource("Resource_ad340"), SubResource("Resource_tref5")])
-event_uid = "063850"
-
-[sub_resource type="Resource" id="Resource_csrmw"]
-script = ExtResource("8_wlsfs")
 ace_id = "SetVar"
 params = {
 "value": "0.0",
 "var_name": "_air_time"
 }
 
+[sub_resource type="Resource" id="Resource_csrmw"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_npt2o")])
+else_mode = 1
+event_uid = "a0d3b6"
+
 [sub_resource type="Resource" id="Resource_gijsd"]
 script = ExtResource("7_4680w")
-actions = Array[Resource]([SubResource("Resource_csrmw")])
-else_mode = 1
-event_uid = "3b6189"
-
-[sub_resource type="Resource" id="Resource_nloga"]
-script = ExtResource("8_wlsfs")
 ace_id = "CallMethod"
 params = {
 "args": "\"ui_left\", \"ui_right\"",
@@ -206,14 +140,14 @@ params = {
 "target": "var direction := Input"
 }
 
-[sub_resource type="Resource" id="Resource_28gug"]
-script = ExtResource("3_60b5s")
+[sub_resource type="Resource" id="Resource_nloga"]
+script = ExtResource("8_wlsfs")
 code = "var target_speed := direction * move_speed
 var rate := acceleration if not is_zero_approx(direction) else deceleration"
 lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_7nqno"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_28gug"]
+script = ExtResource("7_4680w")
 ace_id = "AccelerateVelocityX"
 params = {
 "delta_t": "delta",
@@ -222,84 +156,84 @@ params = {
 "target_speed": "target_speed"
 }
 
+[sub_resource type="Resource" id="Resource_7nqno"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_gijsd"), SubResource("Resource_nloga"), SubResource("Resource_28gug")])
+event_uid = "991af9"
+
 [sub_resource type="Resource" id="Resource_2v6yt"]
 script = ExtResource("7_4680w")
-actions = Array[Resource]([SubResource("Resource_nloga"), SubResource("Resource_28gug"), SubResource("Resource_7nqno")])
-event_uid = "43d1f9"
-
-[sub_resource type="Resource" id="Resource_w48ba"]
-script = ExtResource("8_wlsfs")
 ace_id = "SetVar"
 params = {
 "value": "1 if direction > 0.0 else -1",
 "var_name": "_facing"
 }
 
-[sub_resource type="Resource" id="Resource_mdw26"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_w48ba"]
+script = ExtResource("3_60b5s")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "not is_zero_approx(direction)"
 }
 
+[sub_resource type="Resource" id="Resource_mdw26"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_w48ba")])
+actions = Array[Resource]([SubResource("Resource_2v6yt")])
+event_uid = "c486cc"
+
 [sub_resource type="Resource" id="Resource_tvaee"]
 script = ExtResource("7_4680w")
-conditions = Array[ExtResource("4_wybey")]([SubResource("Resource_mdw26")])
-actions = Array[Resource]([SubResource("Resource_w48ba")])
-event_uid = "df23f5"
-
-[sub_resource type="Resource" id="Resource_uhf7a"]
-script = ExtResource("8_wlsfs")
 ace_id = "SetVar"
 params = {
 "value": "false",
 "var_name": "_wall_sliding"
 }
 
+[sub_resource type="Resource" id="Resource_uhf7a"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_tvaee")])
+event_uid = "e16788"
+
 [sub_resource type="Resource" id="Resource_swfa5"]
 script = ExtResource("7_4680w")
-actions = Array[Resource]([SubResource("Resource_uhf7a")])
-event_uid = "c5418e"
-
-[sub_resource type="Resource" id="Resource_nh3hj"]
-script = ExtResource("8_wlsfs")
 ace_id = "SetVelocityY"
 params = {
 "host": "host",
 "y": "minf(host.velocity.y, wall_slide_speed)"
 }
 
-[sub_resource type="Resource" id="Resource_8j100"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_nh3hj"]
+script = ExtResource("7_4680w")
 ace_id = "SetVar"
 params = {
 "value": "true",
 "var_name": "_wall_sliding"
 }
 
-[sub_resource type="Resource" id="Resource_0mx7w"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_8j100"]
+script = ExtResource("3_60b5s")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "enable_wall_slide"
 }
 
-[sub_resource type="Resource" id="Resource_xyffg"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_0mx7w"]
+script = ExtResource("3_60b5s")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "not on_floor"
 }
 
-[sub_resource type="Resource" id="Resource_vm1xv"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_xyffg"]
+script = ExtResource("3_60b5s")
 ace_id = "IsOnWall"
 params = {
 "host": "host"
 }
 
-[sub_resource type="Resource" id="Resource_yfs1r"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_vm1xv"]
+script = ExtResource("3_60b5s")
 ace_id = "CompareVar"
 params = {
 "op": ">",
@@ -307,134 +241,134 @@ params = {
 "var_name": "host.velocity.y"
 }
 
-[sub_resource type="Resource" id="Resource_bb7i4"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_yfs1r"]
+script = ExtResource("3_60b5s")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "not is_zero_approx(direction)"
 }
 
+[sub_resource type="Resource" id="Resource_bb7i4"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_8j100"), SubResource("Resource_0mx7w"), SubResource("Resource_xyffg"), SubResource("Resource_vm1xv"), SubResource("Resource_yfs1r")])
+actions = Array[Resource]([SubResource("Resource_swfa5"), SubResource("Resource_nh3hj")])
+event_uid = "354e74"
+
 [sub_resource type="Resource" id="Resource_rjo2n"]
 script = ExtResource("7_4680w")
-conditions = Array[ExtResource("4_wybey")]([SubResource("Resource_0mx7w"), SubResource("Resource_xyffg"), SubResource("Resource_vm1xv"), SubResource("Resource_yfs1r"), SubResource("Resource_bb7i4")])
-actions = Array[Resource]([SubResource("Resource_nh3hj"), SubResource("Resource_8j100")])
-event_uid = "367756"
-
-[sub_resource type="Resource" id="Resource_e6sf3"]
-script = ExtResource("8_wlsfs")
 ace_id = "SetVar"
 params = {
 "value": "coyote_time",
 "var_name": "_coyote_timer"
 }
 
-[sub_resource type="Resource" id="Resource_p4hke"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_e6sf3"]
+script = ExtResource("7_4680w")
 ace_id = "SetVar"
 params = {
 "value": "maxi(max_jumps - 1, 0)",
 "var_name": "_jumps_left"
 }
 
-[sub_resource type="Resource" id="Resource_lqlja"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_p4hke"]
+script = ExtResource("3_60b5s")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "on_floor"
 }
 
+[sub_resource type="Resource" id="Resource_lqlja"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_p4hke")])
+actions = Array[Resource]([SubResource("Resource_rjo2n"), SubResource("Resource_e6sf3")])
+event_uid = "e7af83"
+
 [sub_resource type="Resource" id="Resource_4txl5"]
 script = ExtResource("7_4680w")
-conditions = Array[ExtResource("4_wybey")]([SubResource("Resource_lqlja")])
-actions = Array[Resource]([SubResource("Resource_e6sf3"), SubResource("Resource_p4hke")])
-event_uid = "5a5a21"
-
-[sub_resource type="Resource" id="Resource_2238p"]
-script = ExtResource("8_wlsfs")
 ace_id = "SetVar"
 params = {
 "value": "maxf(_coyote_timer - delta, 0.0)",
 "var_name": "_coyote_timer"
 }
 
+[sub_resource type="Resource" id="Resource_2238p"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_4txl5")])
+else_mode = 1
+event_uid = "f8bdc4"
+
 [sub_resource type="Resource" id="Resource_kd6cs"]
 script = ExtResource("7_4680w")
-actions = Array[Resource]([SubResource("Resource_2238p")])
-else_mode = 1
-event_uid = "b80fd4"
-
-[sub_resource type="Resource" id="Resource_vn7i8"]
-script = ExtResource("8_wlsfs")
 ace_id = "SetVar"
 params = {
 "value": "maxf(_buffer_timer - delta, 0.0)",
 "var_name": "_buffer_timer"
 }
 
+[sub_resource type="Resource" id="Resource_vn7i8"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_kd6cs")])
+event_uid = "b7e09a"
+
 [sub_resource type="Resource" id="Resource_l2sxr"]
 script = ExtResource("7_4680w")
-actions = Array[Resource]([SubResource("Resource_vn7i8")])
-event_uid = "f2a67e"
-
-[sub_resource type="Resource" id="Resource_g62fl"]
-script = ExtResource("8_wlsfs")
 ace_id = "EmitSignal"
 params = {
 "args": "",
 "signal_name": "landed"
 }
 
-[sub_resource type="Resource" id="Resource_iwcnn"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_g62fl"]
+script = ExtResource("3_60b5s")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "on_floor"
 }
 
-[sub_resource type="Resource" id="Resource_vbigd"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_iwcnn"]
+script = ExtResource("3_60b5s")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "not was_on_floor"
 }
 
+[sub_resource type="Resource" id="Resource_vbigd"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_g62fl"), SubResource("Resource_iwcnn")])
+actions = Array[Resource]([SubResource("Resource_l2sxr")])
+event_uid = "37908a"
+
 [sub_resource type="Resource" id="Resource_8707a"]
 script = ExtResource("7_4680w")
-conditions = Array[ExtResource("4_wybey")]([SubResource("Resource_iwcnn"), SubResource("Resource_vbigd")])
-actions = Array[Resource]([SubResource("Resource_g62fl")])
-event_uid = "dfbac8"
-
-[sub_resource type="Resource" id="Resource_87kws"]
-script = ExtResource("8_wlsfs")
 ace_id = "SetVar"
 params = {
 "value": "on_floor",
 "var_name": "_was_on_floor"
 }
 
+[sub_resource type="Resource" id="Resource_87kws"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_8707a")])
+event_uid = "27e0f2"
+
 [sub_resource type="Resource" id="Resource_5kvay"]
 script = ExtResource("7_4680w")
-actions = Array[Resource]([SubResource("Resource_87kws")])
-event_uid = "b161fc"
-
-[sub_resource type="Resource" id="Resource_crq5d"]
-script = ExtResource("8_wlsfs")
 ace_id = "SetVar"
 params = {
 "value": "0.0",
 "var_name": "_buffer_timer"
 }
 
-[sub_resource type="Resource" id="Resource_qlhf6"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_crq5d"]
+script = ExtResource("7_4680w")
 ace_id = "CallFunction"
 params = {
 "args": "",
 "function_name": "jump"
 }
 
-[sub_resource type="Resource" id="Resource_yn6rb"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_qlhf6"]
+script = ExtResource("3_60b5s")
 ace_id = "CompareVar"
 params = {
 "op": ">",
@@ -442,8 +376,8 @@ params = {
 "var_name": "_buffer_timer"
 }
 
-[sub_resource type="Resource" id="Resource_ukyxu"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_yn6rb"]
+script = ExtResource("3_60b5s")
 ace_id = "CompareVar"
 params = {
 "op": "or",
@@ -451,37 +385,37 @@ params = {
 "var_name": "(on_floor"
 }
 
+[sub_resource type="Resource" id="Resource_ukyxu"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_qlhf6"), SubResource("Resource_yn6rb")])
+actions = Array[Resource]([SubResource("Resource_5kvay"), SubResource("Resource_crq5d")])
+event_uid = "3dad6b"
+
 [sub_resource type="Resource" id="Resource_wqdpx"]
 script = ExtResource("7_4680w")
-conditions = Array[ExtResource("4_wybey")]([SubResource("Resource_yn6rb"), SubResource("Resource_ukyxu")])
-actions = Array[Resource]([SubResource("Resource_crq5d"), SubResource("Resource_qlhf6")])
-event_uid = "131313"
-
-[sub_resource type="Resource" id="Resource_yey7g"]
-script = ExtResource("8_wlsfs")
 ace_id = "MoveAndSlide"
 params = {
 "host": "host"
 }
 
+[sub_resource type="Resource" id="Resource_yey7g"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_wqdpx")])
+event_uid = "6e3db4"
+
 [sub_resource type="Resource" id="Resource_04qo1"]
-script = ExtResource("7_4680w")
-actions = Array[Resource]([SubResource("Resource_yey7g")])
-event_uid = "c30476"
+script = ExtResource("6_x0bpu")
+trigger_provider_id = "Core"
+trigger_id = "OnPhysicsProcess"
+sub_events = Array[Resource]([SubResource("Resource_2eah4"), SubResource("Resource_u5mnh"), SubResource("Resource_r3m0n"), SubResource("Resource_csrmw"), SubResource("Resource_7nqno"), SubResource("Resource_mdw26"), SubResource("Resource_uhf7a"), SubResource("Resource_bb7i4"), SubResource("Resource_lqlja"), SubResource("Resource_2238p"), SubResource("Resource_vn7i8"), SubResource("Resource_vbigd"), SubResource("Resource_87kws"), SubResource("Resource_ukyxu"), SubResource("Resource_yey7g")])
+event_uid = "ba549d"
 
 [sub_resource type="Resource" id="Resource_6enfp"]
 script = ExtResource("7_4680w")
-trigger_provider_id = "Core"
-trigger_id = "OnPhysicsProcess"
-sub_events = Array[Resource]([SubResource("Resource_lx7gs"), SubResource("Resource_q37kk"), SubResource("Resource_npt2o"), SubResource("Resource_gijsd"), SubResource("Resource_2v6yt"), SubResource("Resource_tvaee"), SubResource("Resource_swfa5"), SubResource("Resource_rjo2n"), SubResource("Resource_4txl5"), SubResource("Resource_kd6cs"), SubResource("Resource_l2sxr"), SubResource("Resource_8707a"), SubResource("Resource_5kvay"), SubResource("Resource_wqdpx"), SubResource("Resource_04qo1")])
-event_uid = "202de3"
-
-[sub_resource type="Resource" id="Resource_pk8df"]
-script = ExtResource("8_wlsfs")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_yce6d"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_pk8df"]
+script = ExtResource("3_60b5s")
 ace_id = "CompareVar"
 params = {
 "op": "==",
@@ -489,30 +423,30 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_e43jk"]
-script = ExtResource("7_4680w")
-conditions = Array[ExtResource("4_wybey")]([SubResource("Resource_yce6d")])
-actions = Array[Resource]([SubResource("Resource_pk8df")])
+[sub_resource type="Resource" id="Resource_yce6d"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_pk8df")])
+actions = Array[Resource]([SubResource("Resource_6enfp")])
 event_uid = "c18f1c"
 
-[sub_resource type="Resource" id="Resource_oh3wb"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_e43jk"]
+script = ExtResource("7_4680w")
 ace_id = "CallFunction"
 params = {
 "args": "jump_velocity",
 "function_name": "_perform_jump"
 }
 
-[sub_resource type="Resource" id="Resource_xjc1l"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_oh3wb"]
+script = ExtResource("7_4680w")
 ace_id = "EmitSignal"
 params = {
 "args": "",
 "signal_name": "jumped"
 }
 
-[sub_resource type="Resource" id="Resource_qw2ms"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_xjc1l"]
+script = ExtResource("3_60b5s")
 ace_id = "CompareVar"
 params = {
 "op": "or",
@@ -520,99 +454,99 @@ params = {
 "var_name": "host.is_on_floor()"
 }
 
-[sub_resource type="Resource" id="Resource_d1ylx"]
-script = ExtResource("7_4680w")
-conditions = Array[ExtResource("4_wybey")]([SubResource("Resource_qw2ms")])
-actions = Array[Resource]([SubResource("Resource_oh3wb"), SubResource("Resource_xjc1l")])
+[sub_resource type="Resource" id="Resource_qw2ms"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_xjc1l")])
+actions = Array[Resource]([SubResource("Resource_e43jk"), SubResource("Resource_oh3wb")])
 event_uid = "522efd"
 
-[sub_resource type="Resource" id="Resource_iowmd"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_d1ylx"]
+script = ExtResource("7_4680w")
 ace_id = "SetVelocityY"
 params = {
 "host": "host",
 "y": "wall_jump_velocity"
 }
 
-[sub_resource type="Resource" id="Resource_48f5l"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_iowmd"]
+script = ExtResource("7_4680w")
 ace_id = "SetVelocityX"
 params = {
 "host": "host",
 "x": "host.get_wall_normal().x * wall_jump_push"
 }
 
-[sub_resource type="Resource" id="Resource_52hwi"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_48f5l"]
+script = ExtResource("7_4680w")
 ace_id = "SetVar"
 params = {
 "value": "0.0",
 "var_name": "_coyote_timer"
 }
 
-[sub_resource type="Resource" id="Resource_4c6pe"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_52hwi"]
+script = ExtResource("7_4680w")
 ace_id = "SetVar"
 params = {
 "value": "1 if host.get_wall_normal().x > 0.0 else -1",
 "var_name": "_facing"
 }
 
-[sub_resource type="Resource" id="Resource_pce87"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_4c6pe"]
+script = ExtResource("7_4680w")
 ace_id = "EmitSignal"
 params = {
 "args": "",
 "signal_name": "wall_jumped"
 }
 
-[sub_resource type="Resource" id="Resource_023rr"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_pce87"]
+script = ExtResource("3_60b5s")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "enable_wall_jump"
 }
 
-[sub_resource type="Resource" id="Resource_dhfn4"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_023rr"]
+script = ExtResource("3_60b5s")
 ace_id = "IsOnWall"
 params = {
 "host": "host"
 }
 
-[sub_resource type="Resource" id="Resource_qy8gu"]
-script = ExtResource("7_4680w")
-conditions = Array[ExtResource("4_wybey")]([SubResource("Resource_023rr"), SubResource("Resource_dhfn4")])
-actions = Array[Resource]([SubResource("Resource_iowmd"), SubResource("Resource_48f5l"), SubResource("Resource_52hwi"), SubResource("Resource_4c6pe"), SubResource("Resource_pce87")])
+[sub_resource type="Resource" id="Resource_dhfn4"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_pce87"), SubResource("Resource_023rr")])
+actions = Array[Resource]([SubResource("Resource_d1ylx"), SubResource("Resource_iowmd"), SubResource("Resource_48f5l"), SubResource("Resource_52hwi"), SubResource("Resource_4c6pe")])
 else_mode = 1
 event_uid = "e7ed7f"
 
-[sub_resource type="Resource" id="Resource_0tqj5"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_qy8gu"]
+script = ExtResource("7_4680w")
 ace_id = "CallFunction"
 params = {
 "args": "jump_velocity",
 "function_name": "_perform_jump"
 }
 
-[sub_resource type="Resource" id="Resource_6rm6n"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_0tqj5"]
+script = ExtResource("7_4680w")
 ace_id = "SubtractVar"
 params = {
 "amount": "1",
 "var_name": "_jumps_left"
 }
 
-[sub_resource type="Resource" id="Resource_eyljt"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_6rm6n"]
+script = ExtResource("7_4680w")
 ace_id = "EmitSignal"
 params = {
 "args": "",
 "signal_name": "double_jumped"
 }
 
-[sub_resource type="Resource" id="Resource_gfmgq"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_eyljt"]
+script = ExtResource("3_60b5s")
 ace_id = "CompareVar"
 params = {
 "op": ">",
@@ -620,46 +554,46 @@ params = {
 "var_name": "_jumps_left"
 }
 
-[sub_resource type="Resource" id="Resource_ov4cg"]
-script = ExtResource("7_4680w")
-conditions = Array[ExtResource("4_wybey")]([SubResource("Resource_gfmgq")])
-actions = Array[Resource]([SubResource("Resource_0tqj5"), SubResource("Resource_6rm6n"), SubResource("Resource_eyljt")])
+[sub_resource type="Resource" id="Resource_gfmgq"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_eyljt")])
+actions = Array[Resource]([SubResource("Resource_qy8gu"), SubResource("Resource_0tqj5"), SubResource("Resource_6rm6n")])
 else_mode = 1
 event_uid = "8a8fe8"
 
-[sub_resource type="Resource" id="Resource_icfmt"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_ov4cg"]
+script = ExtResource("7_4680w")
 ace_id = "SetVar"
 params = {
 "value": "jump_buffer_time",
 "var_name": "_buffer_timer"
 }
 
-[sub_resource type="Resource" id="Resource_dkq6j"]
-script = ExtResource("7_4680w")
-actions = Array[Resource]([SubResource("Resource_icfmt")])
+[sub_resource type="Resource" id="Resource_icfmt"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_ov4cg")])
 else_mode = 1
 event_uid = "728508"
 
-[sub_resource type="Resource" id="Resource_q5rle"]
+[sub_resource type="Resource" id="Resource_dkq6j"]
 script = ExtResource("10_3d0wo")
 function_name = "jump"
 description = "Jumps: from the floor or within coyote time, off a wall (if enabled), or a mid-air (double) jump if any remain. If none are available right now, the press is buffered."
 expose_as_ace = true
 ace_display_name = "Jump"
 ace_category = "Platformer"
-events = Array[Resource]([SubResource("Resource_e43jk"), SubResource("Resource_d1ylx"), SubResource("Resource_qy8gu"), SubResource("Resource_ov4cg"), SubResource("Resource_dkq6j")])
+events = Array[Resource]([SubResource("Resource_yce6d"), SubResource("Resource_qw2ms"), SubResource("Resource_dhfn4"), SubResource("Resource_gfmgq"), SubResource("Resource_icfmt")])
 
-[sub_resource type="Resource" id="Resource_a4pht"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_q5rle"]
+script = ExtResource("7_4680w")
 ace_id = "MultiplyVar"
 params = {
 "amount": "jump_cut_factor",
 "var_name": "host.velocity.y"
 }
 
-[sub_resource type="Resource" id="Resource_84ofl"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_a4pht"]
+script = ExtResource("3_60b5s")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -667,15 +601,15 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_a7tsh"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_84ofl"]
+script = ExtResource("3_60b5s")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "variable_jump_height"
 }
 
-[sub_resource type="Resource" id="Resource_akbuh"]
-script = ExtResource("4_wybey")
+[sub_resource type="Resource" id="Resource_a7tsh"]
+script = ExtResource("3_60b5s")
 ace_id = "CompareVar"
 params = {
 "op": "<",
@@ -683,72 +617,322 @@ params = {
 "var_name": "host.velocity.y"
 }
 
-[sub_resource type="Resource" id="Resource_gnqs2"]
-script = ExtResource("7_4680w")
-conditions = Array[ExtResource("4_wybey")]([SubResource("Resource_84ofl"), SubResource("Resource_a7tsh"), SubResource("Resource_akbuh")])
-actions = Array[Resource]([SubResource("Resource_a4pht")])
+[sub_resource type="Resource" id="Resource_akbuh"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_a4pht"), SubResource("Resource_84ofl"), SubResource("Resource_a7tsh")])
+actions = Array[Resource]([SubResource("Resource_q5rle")])
 event_uid = "4e05ef"
 
-[sub_resource type="Resource" id="Resource_17lpy"]
+[sub_resource type="Resource" id="Resource_gnqs2"]
 script = ExtResource("10_3d0wo")
 function_name = "jump_released"
 description = "Call when the jump button is released — cuts the rise short for variable jump height (hold = higher)."
 expose_as_ace = true
 ace_display_name = "Jump Released"
 ace_category = "Platformer"
-events = Array[Resource]([SubResource("Resource_gnqs2")])
+events = Array[Resource]([SubResource("Resource_akbuh")])
 
-[sub_resource type="Resource" id="Resource_58tp0"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_17lpy"]
+script = ExtResource("7_4680w")
 ace_id = "SetVar"
 params = {
 "value": "speed",
 "var_name": "move_speed"
 }
 
-[sub_resource type="Resource" id="Resource_vrtww"]
-script = ExtResource("7_4680w")
-actions = Array[Resource]([SubResource("Resource_58tp0")])
+[sub_resource type="Resource" id="Resource_58tp0"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_17lpy")])
 event_uid = "34d480"
 
-[sub_resource type="Resource" id="Resource_kp7la"]
+[sub_resource type="Resource" id="Resource_vrtww"]
 script = ExtResource("9_b2uae")
 id = "speed"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_5o656"]
+[sub_resource type="Resource" id="Resource_kp7la"]
 script = ExtResource("10_3d0wo")
 function_name = "set_move_speed"
 description = "Changes the horizontal move speed."
 expose_as_ace = true
 ace_display_name = "Set Move Speed"
 ace_category = "Platformer"
-params = Array[ExtResource("9_b2uae")]([SubResource("Resource_kp7la")])
-events = Array[Resource]([SubResource("Resource_vrtww")])
+params = Array[ExtResource("9_b2uae")]([SubResource("Resource_vrtww")])
+events = Array[Resource]([SubResource("Resource_58tp0")])
 
-[sub_resource type="Resource" id="Resource_l3yc3"]
-script = ExtResource("8_wlsfs")
+[sub_resource type="Resource" id="Resource_5o656"]
+script = ExtResource("7_4680w")
 ace_id = "SetVar"
 params = {
 "value": "maxi(max_jumps - 1, 0)",
 "var_name": "_jumps_left"
 }
 
-[sub_resource type="Resource" id="Resource_1iqun"]
-script = ExtResource("7_4680w")
-actions = Array[Resource]([SubResource("Resource_l3yc3")])
+[sub_resource type="Resource" id="Resource_l3yc3"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_5o656")])
 event_uid = "a2ebf3"
 
-[sub_resource type="Resource" id="Resource_ga63h"]
+[sub_resource type="Resource" id="Resource_1iqun"]
 script = ExtResource("10_3d0wo")
 function_name = "reset_jumps"
 description = "Refills the air-jump count (e.g. after grabbing a power-up)."
 expose_as_ace = true
 ace_display_name = "Reset Jumps"
 ace_category = "Platformer"
-events = Array[Resource]([SubResource("Resource_1iqun")])
+events = Array[Resource]([SubResource("Resource_l3yc3")])
+
+[sub_resource type="Resource" id="Resource_ga63h"]
+script = ExtResource("7_4680w")
+ace_id = "ReturnValue"
+params = {
+"value": "host != null and absf(host.velocity.x) > 1.0"
+}
+
+[sub_resource type="Resource" id="Resource_15a33"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_ga63h")])
+event_uid = "ef7d0a"
+
+[sub_resource type="Resource" id="Resource_26utn"]
+script = ExtResource("10_3d0wo")
+function_name = "is_moving"
+expose_as_ace = true
+ace_display_name = "Is Moving"
+ace_category = "Platformer"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_15a33")])
+
+[sub_resource type="Resource" id="Resource_j5iqh"]
+script = ExtResource("7_4680w")
+ace_id = "ReturnValue"
+params = {
+"value": "host != null and not host.is_on_floor() and host.velocity.y < 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_bup3u"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_j5iqh")])
+event_uid = "d2c20f"
+
+[sub_resource type="Resource" id="Resource_p7rni"]
+script = ExtResource("10_3d0wo")
+function_name = "is_jumping"
+expose_as_ace = true
+ace_display_name = "Is Jumping"
+ace_category = "Platformer"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_bup3u")])
+
+[sub_resource type="Resource" id="Resource_i8dve"]
+script = ExtResource("7_4680w")
+ace_id = "ReturnValue"
+params = {
+"value": "host != null and not host.is_on_floor() and host.velocity.y > 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_v5hxq"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_i8dve")])
+event_uid = "48bfda"
+
+[sub_resource type="Resource" id="Resource_8n10t"]
+script = ExtResource("10_3d0wo")
+function_name = "is_falling"
+expose_as_ace = true
+ace_display_name = "Is Falling"
+ace_category = "Platformer"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_v5hxq")])
+
+[sub_resource type="Resource" id="Resource_p8op2"]
+script = ExtResource("7_4680w")
+ace_id = "ReturnValue"
+params = {
+"value": "_wall_sliding"
+}
+
+[sub_resource type="Resource" id="Resource_s10ra"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_p8op2")])
+event_uid = "9aeab2"
+
+[sub_resource type="Resource" id="Resource_80v7n"]
+script = ExtResource("10_3d0wo")
+function_name = "is_wall_sliding"
+expose_as_ace = true
+ace_display_name = "Is Wall Sliding"
+ace_category = "Platformer"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_s10ra")])
+
+[sub_resource type="Resource" id="Resource_w3wyo"]
+script = ExtResource("7_4680w")
+ace_id = "ReturnValue"
+params = {
+"value": "false"
+}
+
+[sub_resource type="Resource" id="Resource_chlsv"]
+script = ExtResource("3_60b5s")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "null",
+"var_name": "host"
+}
+
+[sub_resource type="Resource" id="Resource_i6vl0"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_chlsv")])
+actions = Array[Resource]([SubResource("Resource_w3wyo")])
+event_uid = "78776e"
+
+[sub_resource type="Resource" id="Resource_q15iy"]
+script = ExtResource("7_4680w")
+ace_id = "ReturnValue"
+params = {
+"value": "host.is_on_floor() or _coyote_timer > 0.0 or _jumps_left > 0 or (enable_wall_jump and host.is_on_wall())"
+}
+
+[sub_resource type="Resource" id="Resource_1l6c4"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_q15iy")])
+event_uid = "e37bfe"
+
+[sub_resource type="Resource" id="Resource_hfpye"]
+script = ExtResource("10_3d0wo")
+function_name = "can_jump"
+expose_as_ace = true
+ace_display_name = "Can Jump"
+ace_category = "Platformer"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_i6vl0"), SubResource("Resource_1l6c4")])
+
+[sub_resource type="Resource" id="Resource_sbvhw"]
+script = ExtResource("7_4680w")
+ace_id = "ReturnValue"
+params = {
+"value": "_jumps_left"
+}
+
+[sub_resource type="Resource" id="Resource_rgfiw"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_sbvhw")])
+event_uid = "e61c28"
+
+[sub_resource type="Resource" id="Resource_hapts"]
+script = ExtResource("10_3d0wo")
+function_name = "jumps_remaining"
+expose_as_ace = true
+ace_display_name = "Jumps Remaining"
+ace_category = "Platformer"
+return_type = 2
+events = Array[Resource]([SubResource("Resource_rgfiw")])
+
+[sub_resource type="Resource" id="Resource_i6duo"]
+script = ExtResource("7_4680w")
+ace_id = "ReturnValue"
+params = {
+"value": "_air_time"
+}
+
+[sub_resource type="Resource" id="Resource_5wdac"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_i6duo")])
+event_uid = "a30e8d"
+
+[sub_resource type="Resource" id="Resource_btlhw"]
+script = ExtResource("10_3d0wo")
+function_name = "air_time"
+expose_as_ace = true
+ace_display_name = "Air Time"
+ace_category = "Platformer"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_5wdac")])
+
+[sub_resource type="Resource" id="Resource_8s3di"]
+script = ExtResource("7_4680w")
+ace_id = "ReturnValue"
+params = {
+"value": "_facing"
+}
+
+[sub_resource type="Resource" id="Resource_w25d1"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_8s3di")])
+event_uid = "342cf2"
+
+[sub_resource type="Resource" id="Resource_olqn4"]
+script = ExtResource("10_3d0wo")
+function_name = "facing_direction"
+expose_as_ace = true
+ace_display_name = "Facing Direction"
+ace_category = "Platformer"
+return_type = 2
+events = Array[Resource]([SubResource("Resource_w25d1")])
+
+[sub_resource type="Resource" id="Resource_je3lf"]
+script = ExtResource("1_7ojdv")
+text = "Shared jump kernel: set the rise and spend the coyote window. _jumps_left counts
+only AIR jumps (it is decremented by the air-jump branch, not here), so falling off
+a ledge past the coyote window never grants a phantom jump."
+
+[sub_resource type="Resource" id="Resource_t515a"]
+script = ExtResource("7_4680w")
+ace_id = "ReturnEarly"
+
+[sub_resource type="Resource" id="Resource_wscpd"]
+script = ExtResource("3_60b5s")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "null",
+"var_name": "host"
+}
+
+[sub_resource type="Resource" id="Resource_j7x27"]
+script = ExtResource("6_x0bpu")
+conditions = Array[ExtResource("3_60b5s")]([SubResource("Resource_wscpd")])
+actions = Array[Resource]([SubResource("Resource_t515a")])
+event_uid = "407033"
+
+[sub_resource type="Resource" id="Resource_nufct"]
+script = ExtResource("7_4680w")
+ace_id = "SetVelocityY"
+params = {
+"host": "host",
+"y": "velocity_y"
+}
+
+[sub_resource type="Resource" id="Resource_q6ts0"]
+script = ExtResource("7_4680w")
+ace_id = "SetVar"
+params = {
+"value": "0.0",
+"var_name": "_coyote_timer"
+}
+
+[sub_resource type="Resource" id="Resource_ynk3b"]
+script = ExtResource("6_x0bpu")
+actions = Array[Resource]([SubResource("Resource_nufct"), SubResource("Resource_q6ts0")])
+event_uid = "694476"
+
+[sub_resource type="Resource" id="Resource_k4755"]
+script = ExtResource("9_b2uae")
+id = "velocity_y"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_qys7b"]
+script = ExtResource("10_3d0wo")
+function_name = "_perform_jump"
+lifted_unannotated = true
+params = Array[ExtResource("9_b2uae")]([SubResource("Resource_k4755")])
+events = Array[Resource]([SubResource("Resource_je3lf"), SubResource("Resource_j7x27"), SubResource("Resource_ynk3b")])
 
 [resource]
 script = ExtResource("11_4dex6")
@@ -757,7 +941,7 @@ behavior_mode = true
 custom_class_name = "PlatformerMovement"
 addon_tags = PackedStringArray("movement", "platformer")
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_dop18"), SubResource("Resource_ktl15"), SubResource("Resource_f35s6"), SubResource("Resource_7agrn"), SubResource("Resource_0mmu2"), SubResource("Resource_hob2v"), SubResource("Resource_6enfp")])
+events = Array[Resource]([SubResource("Resource_dop18"), SubResource("Resource_ktl15"), SubResource("Resource_f35s6"), SubResource("Resource_7agrn"), SubResource("Resource_0mmu2"), SubResource("Resource_04qo1")])
 variables = {
 "_air_time": {
 "default": 0.0,
@@ -928,4 +1112,4 @@ variables = {
 "type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_q5rle"), SubResource("Resource_17lpy"), SubResource("Resource_5o656"), SubResource("Resource_ga63h")])
+functions = Array[Resource]([SubResource("Resource_dkq6j"), SubResource("Resource_gnqs2"), SubResource("Resource_kp7la"), SubResource("Resource_1iqun"), SubResource("Resource_26utn"), SubResource("Resource_p7rni"), SubResource("Resource_8n10t"), SubResource("Resource_80v7n"), SubResource("Resource_hfpye"), SubResource("Resource_hapts"), SubResource("Resource_btlhw"), SubResource("Resource_olqn4"), SubResource("Resource_qys7b")])

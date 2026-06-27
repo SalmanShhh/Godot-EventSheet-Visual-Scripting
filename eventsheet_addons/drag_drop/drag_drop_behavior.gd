@@ -63,194 +63,6 @@ var override_throw: Vector2 = Vector2.ZERO
 var snap_target: Vector2 = Vector2.ZERO
 var throw_history: PackedVector2Array = PackedVector2Array()
 
-## @ace_condition
-## @ace_name("Is Dragging")
-## @ace_category("Drag & Drop")
-## @ace_codegen_template("$DragDropBehavior.is_dragging()")
-func is_dragging() -> bool:
-	return dragging
-
-## @ace_condition
-## @ace_name("Is Enabled")
-## @ace_category("Drag & Drop")
-## @ace_codegen_template("$DragDropBehavior.is_dragdrop_enabled()")
-func is_dragdrop_enabled() -> bool:
-	return enabled
-
-## @ace_condition
-## @ace_name("Is Snapping")
-## @ace_category("Drag & Drop")
-## @ace_codegen_template("$DragDropBehavior.is_snapping()")
-func is_snapping() -> bool:
-	return is_snapping_flag
-
-## @ace_expression
-## @ace_name("Drag Point X")
-## @ace_category("Drag & Drop")
-func drag_point_x() -> float:
-	return drag_point.x
-
-## @ace_expression
-## @ace_name("Drag Point Y")
-## @ace_category("Drag & Drop")
-func drag_point_y() -> float:
-	return drag_point.y
-
-## @ace_expression
-## @ace_name("Drag Point Object UID")
-## @ace_category("Drag & Drop")
-func drag_point_object_uid() -> int:
-	return follow_uid
-
-## @ace_expression
-## @ace_name("Distance From Point")
-## @ace_category("Drag & Drop")
-func distance_from_point_value() -> float:
-	return distance_from_point
-
-## @ace_expression
-## @ace_name("Throw Velocity X")
-## @ace_category("Drag & Drop")
-func throw_velocity_x() -> float:
-	return throw_vel.x
-
-## @ace_expression
-## @ace_name("Throw Velocity Y")
-## @ace_category("Drag & Drop")
-func throw_velocity_y() -> float:
-	return throw_vel.y
-
-## @ace_expression
-## @ace_name("Throw Speed")
-## @ace_category("Drag & Drop")
-func throw_speed_value() -> float:
-	return throw_speed
-
-## @ace_expression
-## @ace_name("Drop Reason")
-## @ace_category("Drag & Drop")
-func drop_reason_value() -> String:
-	return drop_reason
-
-## @ace_expression
-## @ace_name("Snap Target X")
-## @ace_category("Drag & Drop")
-func snap_target_x() -> float:
-	return snap_target.x
-
-## @ace_expression
-## @ace_name("Snap Target Y")
-## @ace_category("Drag & Drop")
-func snap_target_y() -> float:
-	return snap_target.y
-
-## @ace_expression
-## @ace_name("Snapped Object UID")
-## @ace_category("Drag & Drop")
-func snapped_object_uid() -> int:
-	return snapped_uid
-
-func _constrain_step(step: Vector2) -> Vector2:
-	match directions:
-		1: return Vector2(0.0, step.y)
-		2: return Vector2(step.x, 0.0)
-		3: return Vector2(step.x, 0.0) if absf(step.x) >= absf(step.y) else Vector2(0.0, step.y)
-		4:
-			var ang := snappedf(atan2(step.y, step.x), PI / 4.0)
-			var dir := Vector2(cos(ang), sin(ang))
-			return dir * (step.x * dir.x + step.y * dir.y)
-		_: return step
-
-func _snap_points() -> Array:
-	var pts: Array = snap_positions.duplicate()
-	for id in snap_uids:
-		var n := instance_from_id(id)
-		if is_instance_valid(n) and n != host:
-			pts.append(n.global_position)
-	return pts
-
-func _nearest_snap(ref: Vector2) -> Vector2:
-	var best := ref
-	var best_d := INF
-	for p in _snap_points():
-		var d: float = ref.distance_to(p)
-		if d < best_d:
-			best_d = d
-			best = p
-	return best
-
-## Overlap-mode proximity. With a positive snap_radius we honour it; otherwise (the v1
-## radius approximation of shape-overlap) we derive a sane extent from the host's first
-## CollisionShape2D so overlap snapping actually engages instead of degenerating to a
-## sub-pixel threshold. Falls back to 32px when no shape is present.
-func _overlap_proximity() -> float:
-	if snap_radius > 0.0:
-		return snap_radius
-	var extent := 0.0
-	if host != null:
-		for child in host.get_children():
-			var cs := child as CollisionShape2D
-			if cs != null and cs.shape != null:
-				var r: Rect2 = cs.shape.get_rect()
-				extent = maxf(r.size.x, r.size.y) * 0.5
-				break
-	return extent if extent > 0.0 else 32.0
-
-## Single source of truth for throw samples: push the per-frame drag-point velocity
-## into the 8-slot ring buffer whenever the drag point actually moves while dragging,
-## then advance it. Called from set_drag_point(_to_object) AND the glued-follow path so
-## the final pre-Drop flick (which can land on the same frame as Drop) is captured.
-func _sample_throw(new_point: Vector2) -> void:
-	if not dragging:
-		drag_point = new_point
-		prev_drag_point = new_point
-		return
-	var dt := get_process_delta_time()
-	if dt > 0.0 and new_point != drag_point:
-		var v := (new_point - drag_point) / dt
-		if throw_history.size() < 8:
-			throw_history.append(v)
-		else:
-			throw_history[throw_cursor] = v
-			throw_cursor = (throw_cursor + 1) % 8
-	drag_point = new_point
-	prev_drag_point = new_point
-
-func _end_drag(apply_throw: bool, reason: String) -> void:
-	drop_reason = reason
-	snapped_uid = -1
-	var did_snap := false
-	if apply_throw and is_snapping_flag:
-		host.global_position = snap_target
-		did_snap = true
-		for id in snap_uids:
-			var n := instance_from_id(id)
-			if is_instance_valid(n) and n.global_position.distance_to(snap_target) < 0.01:
-				snapped_uid = id
-				break
-	if apply_throw and not did_snap:
-		if has_throw_override:
-			throw_vel = override_throw
-		else:
-			var sum := Vector2.ZERO
-			for v in throw_history:
-				sum += v
-			throw_vel = sum / throw_history.size() if throw_history.size() > 0 else Vector2.ZERO
-	else:
-		throw_vel = Vector2.ZERO
-	throw_speed = throw_vel.length()
-	dragging = false
-	follow_uid = -1
-	has_throw_override = false
-	is_snapping_flag = false
-	throw_history = PackedVector2Array()
-	if apply_throw:
-		dropped.emit()
-	else:
-		drag_cancelled.emit()
-	if did_snap:
-		snapped.emit()
-
 func _process(delta: float) -> void:
 	if not enabled or not dragging or host == null:
 		return
@@ -468,5 +280,210 @@ func set_snap_mode(mode: int) -> void:
 ## @ace_codegen_template("$DragDropBehavior.set_magnet_strength({strength})")
 func set_magnet_strength(strength: float) -> void:
 	magnet_strength = clampf(strength, 0.0, 1.0)
+
+## @ace_condition
+## @ace_name("Is Dragging")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.is_dragging()")
+func is_dragging() -> bool:
+	return dragging
+
+## @ace_condition
+## @ace_name("Is Enabled")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.is_dragdrop_enabled()")
+func is_dragdrop_enabled() -> bool:
+	return enabled
+
+## @ace_condition
+## @ace_name("Is Snapping")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.is_snapping()")
+func is_snapping() -> bool:
+	return is_snapping_flag
+
+## @ace_expression
+## @ace_name("Drag Point X")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.drag_point_x()")
+func drag_point_x() -> float:
+	return drag_point.x
+
+## @ace_expression
+## @ace_name("Drag Point Y")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.drag_point_y()")
+func drag_point_y() -> float:
+	return drag_point.y
+
+## @ace_expression
+## @ace_name("Drag Point Object UID")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.drag_point_object_uid()")
+func drag_point_object_uid() -> int:
+	return follow_uid
+
+## @ace_expression
+## @ace_name("Distance From Point")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.distance_from_point_value()")
+func distance_from_point_value() -> float:
+	return distance_from_point
+
+## @ace_expression
+## @ace_name("Throw Velocity X")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.throw_velocity_x()")
+func throw_velocity_x() -> float:
+	return throw_vel.x
+
+## @ace_expression
+## @ace_name("Throw Velocity Y")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.throw_velocity_y()")
+func throw_velocity_y() -> float:
+	return throw_vel.y
+
+## @ace_expression
+## @ace_name("Throw Speed")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.throw_speed_value()")
+func throw_speed_value() -> float:
+	return throw_speed
+
+## @ace_expression
+## @ace_name("Drop Reason")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.drop_reason_value()")
+func drop_reason_value() -> String:
+	return drop_reason
+
+## @ace_expression
+## @ace_name("Snap Target X")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.snap_target_x()")
+func snap_target_x() -> float:
+	return snap_target.x
+
+## @ace_expression
+## @ace_name("Snap Target Y")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.snap_target_y()")
+func snap_target_y() -> float:
+	return snap_target.y
+
+## @ace_expression
+## @ace_name("Snapped Object UID")
+## @ace_category("Drag & Drop")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DragDropBehavior.snapped_object_uid()")
+func snapped_object_uid() -> int:
+	return snapped_uid
+
+func _constrain_step(step: Vector2) -> Vector2:
+	match directions:
+		1: return Vector2(0.0, step.y)
+		2: return Vector2(step.x, 0.0)
+		3: return Vector2(step.x, 0.0) if absf(step.x) >= absf(step.y) else Vector2(0.0, step.y)
+		4:
+			var ang := snappedf(atan2(step.y, step.x), PI / 4.0)
+			var dir := Vector2(cos(ang), sin(ang))
+			return dir * (step.x * dir.x + step.y * dir.y)
+		_: return step
+
+func _snap_points() -> Array:
+	var pts: Array = snap_positions.duplicate()
+	for id in snap_uids:
+		var n := instance_from_id(id)
+		if is_instance_valid(n) and n != host:
+			pts.append(n.global_position)
+	return pts
+
+func _nearest_snap(ref: Vector2) -> Vector2:
+	var best := ref
+	var best_d := INF
+	for p in _snap_points():
+		var d: float = ref.distance_to(p)
+		if d < best_d:
+			best_d = d
+			best = p
+	return best
+
+func _overlap_proximity() -> float:
+	if snap_radius > 0.0:
+		return snap_radius
+	var extent := 0.0
+	if host != null:
+		for child in host.get_children():
+			var cs := child as CollisionShape2D
+			if cs != null and cs.shape != null:
+				var r: Rect2 = cs.shape.get_rect()
+				extent = maxf(r.size.x, r.size.y) * 0.5
+				break
+	return extent if extent > 0.0 else 32.0
+
+func _sample_throw(new_point: Vector2) -> void:
+	if not dragging:
+		drag_point = new_point
+		prev_drag_point = new_point
+		return
+	var dt := get_process_delta_time()
+	if dt > 0.0 and new_point != drag_point:
+		var v := (new_point - drag_point) / dt
+		if throw_history.size() < 8:
+			throw_history.append(v)
+		else:
+			throw_history[throw_cursor] = v
+			throw_cursor = (throw_cursor + 1) % 8
+	drag_point = new_point
+	prev_drag_point = new_point
+
+func _end_drag(apply_throw: bool, reason: String) -> void:
+	drop_reason = reason
+	snapped_uid = -1
+	var did_snap := false
+	if apply_throw and is_snapping_flag:
+		host.global_position = snap_target
+		did_snap = true
+		for id in snap_uids:
+			var n := instance_from_id(id)
+			if is_instance_valid(n) and n.global_position.distance_to(snap_target) < 0.01:
+				snapped_uid = id
+				break
+	if apply_throw and not did_snap:
+		if has_throw_override:
+			throw_vel = override_throw
+		else:
+			var sum := Vector2.ZERO
+			for v in throw_history:
+				sum += v
+			throw_vel = sum / throw_history.size() if throw_history.size() > 0 else Vector2.ZERO
+	else:
+		throw_vel = Vector2.ZERO
+	throw_speed = throw_vel.length()
+	dragging = false
+	follow_uid = -1
+	has_throw_override = false
+	is_snapping_flag = false
+	throw_history = PackedVector2Array()
+	if apply_throw:
+		dropped.emit()
+	else:
+		drag_cancelled.emit()
+	if did_snap:
+		snapped.emit()
 
 # Drag & Drop behavior (C3 parity, event-driven): the author feeds the drag point each tick (virtual cursor, gamepad, touch, AI) — never polls Input. Follow-speed lag, direction lock, break-distance auto-drop, snapping/magnetism, auto-measured throw velocity (routed by you in On Dropped). NOTE: overlap snap mode is a v1 radius-distance simplification (true shape-overlap is a follow-up).

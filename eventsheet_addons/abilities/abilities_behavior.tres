@@ -87,183 +87,10 @@ class AbilityData:
 	var tags: Array = []
 	var expiration: float = 0.0
 	var max_expiration: float = 0.0
-
-## @ace_condition
-## @ace_name(\"Has Ability\")
-## @ace_category(\"Abilities\")
-## @ace_codegen_template(\"$SimpleAbilitiesBehavior.has_ability({id})\")
-func has_ability(id: String) -> bool:
-	return abilities.has(id)
-
-## @ace_condition
-## @ace_name(\"Is Ability Ready\")
-## @ace_category(\"Abilities\")
-## @ace_codegen_template(\"$SimpleAbilitiesBehavior.is_ready({id})\")
-func is_ready(id: String) -> bool:
-	if not abilities.has(id):
-		return false
-	var a: AbilityData = abilities[id]
-	return a.enabled and a.stacks > 0
-
-## @ace_condition
-## @ace_name(\"Is Ability Active\")
-## @ace_category(\"Abilities\")
-## @ace_codegen_template(\"$SimpleAbilitiesBehavior.is_active({id})\")
-func is_active(id: String) -> bool:
-	return abilities.has(id) and (abilities[id] as AbilityData).active
-
-## @ace_condition
-## @ace_name(\"Is Ability Enabled\")
-## @ace_category(\"Abilities\")
-## @ace_codegen_template(\"$SimpleAbilitiesBehavior.is_enabled({id})\")
-func is_enabled(id: String) -> bool:
-	return abilities.has(id) and (abilities[id] as AbilityData).enabled
-
-## @ace_condition
-## @ace_name(\"Has Stacks Available\")
-## @ace_category(\"Abilities\")
-## @ace_codegen_template(\"$SimpleAbilitiesBehavior.has_stacks({id})\")
-func has_stacks(id: String) -> bool:
-	return abilities.has(id) and (abilities[id] as AbilityData).stacks > 0
-
-## @ace_condition
-## @ace_name(\"Ability Has Tag\")
-## @ace_category(\"Abilities\")
-## @ace_codegen_template(\"$SimpleAbilitiesBehavior.ability_has_tag({id}, {tag})\")
-func ability_has_tag(id: String, tag: String) -> bool:
-	return abilities.has(id) and (abilities[id] as AbilityData).tags.has(tag)
-
-## @ace_condition
-## @ace_name(\"Current Ability Is\")
-## @ace_category(\"Abilities\")
-## @ace_codegen_template(\"$SimpleAbilitiesBehavior.current_ability_is({id})\")
-func current_ability_is(id: String) -> bool:
-	return current_ability_id == id
-
-## @ace_expression
-## @ace_name(\"Current Ability ID\")
-## @ace_category(\"Abilities\")
-func current_ability() -> String:
-	return current_ability_id
-
-## @ace_expression
-## @ace_name(\"Cooldown Remaining\")
-## @ace_category(\"Abilities\")
-func get_cooldown_remaining(id: String) -> float:
-	return (abilities[id] as AbilityData).cooldown if abilities.has(id) else 0.0
-
-## @ace_expression
-## @ace_name(\"Cooldown Progress\")
-## @ace_category(\"Abilities\")
-func get_cooldown_progress(id: String) -> float:
-	if not abilities.has(id) or (abilities[id] as AbilityData).max_cooldown <= 0.0:
-		return 0.0
-	return clampf((abilities[id] as AbilityData).cooldown / (abilities[id] as AbilityData).max_cooldown, 0.0, 1.0)
-
-## @ace_expression
-## @ace_name(\"Stacks\")
-## @ace_category(\"Abilities\")
-func get_stacks(id: String) -> int:
-	return (abilities[id] as AbilityData).stacks if abilities.has(id) else 0
-
-## @ace_expression
-## @ace_name(\"Max Stacks\")
-## @ace_category(\"Abilities\")
-func get_max_stacks(id: String) -> int:
-	return (abilities[id] as AbilityData).max_stacks if abilities.has(id) else 0
-
-## @ace_expression
-## @ace_name(\"Stack Cooldown Remaining\")
-## @ace_category(\"Abilities\")
-func get_stack_cooldown_remaining(id: String) -> float:
-	return (abilities[id] as AbilityData).cooldown if abilities.has(id) else 0.0
-
-## @ace_expression
-## @ace_name(\"Stack Progress\")
-## @ace_category(\"Abilities\")
-func get_stack_progress(id: String) -> float:
-	return get_cooldown_progress(id)
-
-## @ace_expression
-## @ace_name(\"Expiration Time\")
-## @ace_category(\"Abilities\")
-func get_expiration_time(id: String) -> float:
-	return (abilities[id] as AbilityData).expiration if abilities.has(id) else 0.0
-
-## @ace_expression
-## @ace_name(\"Expiration Progress\")
-## @ace_category(\"Abilities\")
-func get_expiration_progress(id: String) -> float:
-	if not abilities.has(id) or (abilities[id] as AbilityData).max_expiration <= 0.0:
-		return 0.0
-	return clampf(1.0 - (abilities[id] as AbilityData).expiration / (abilities[id] as AbilityData).max_expiration, 0.0, 1.0)
-
-## @ace_expression
-## @ace_name(\"Max Expiration Time\")
-## @ace_category(\"Abilities\")
-func get_max_expiration_time(id: String) -> float:
-	return (abilities[id] as AbilityData).max_expiration if abilities.has(id) else 0.0
-
-## @ace_expression
-## @ace_name(\"Ability Count\")
-## @ace_category(\"Abilities\")
-func get_ability_count() -> int:
-	return abilities.size()
-
-## @ace_expression
-## @ace_name(\"List Active Abilities\")
-## @ace_category(\"Abilities\")
-func list_active_abilities() -> String:
-	return \",\".join(abilities.keys())
-
-## @ace_expression
-## @ace_name(\"Ready Abilities\")
-## @ace_category(\"Abilities\")
-func get_ready_abilities() -> String:
-	var out: PackedStringArray = PackedStringArray()
-	for id: String in abilities.keys():
-		if is_ready(id):
-			out.append(id)
-	return \",\".join(out)
-
-## @ace_expression
-## @ace_name(\"Ability Data\")
-## @ace_category(\"Abilities\")
-func get_ability_data(id: String, key: String) -> String:
-	if not abilities.has(id):
-		return \"\"
-	return str((abilities[id] as AbilityData).data.get(key, \"\"))
-
-## @ace_expression
-## @ace_name(\"Count Abilities By Tag\")
-## @ace_category(\"Abilities\")
-func count_abilities_by_tag(tag: String) -> int:
-	return _ids_with_tag(tag).size()
-
-## @ace_expression
-## @ace_name(\"Ability By Tag Index\")
-## @ace_category(\"Abilities\")
-func get_ability_by_tag_index(tag: String, index: int) -> String:
-	var ids: Array = _ids_with_tag(tag)
-	return str(ids[index]) if index >= 0 and index < ids.size() else \"\"
-
-## @ace_expression
-## @ace_name(\"List Abilities By Tag\")
-## @ace_category(\"Abilities\")
-func list_abilities_by_tag(tag: String) -> String:
-	return \",\".join(_ids_with_tag(tag))
-
 func _ensure_ability(id: String) -> AbilityData:
 	if not abilities.has(id):
 		abilities[id] = AbilityData.new()
-	return abilities[id] as AbilityData
-
-func _ids_with_tag(tag: String) -> Array:
-	var out: Array = []
-	for id: String in abilities.keys():
-		if (abilities[id] as AbilityData).tags.has(tag):
-			out.append(id)
-	return out"
+	return abilities[id] as AbilityData"
 
 [sub_resource type="Resource" id="Resource_bssia"]
 script = ExtResource("8_mng6w")
@@ -2181,6 +2008,892 @@ ace_category = "Abilities"
 params = Array[ExtResource("9_44b4b")]([SubResource("Resource_c8l04")])
 events = Array[Resource]([SubResource("Resource_bnxvf")])
 
+[sub_resource type="Resource" id="Resource_ic8nc"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "abilities.has(id)"
+}
+
+[sub_resource type="Resource" id="Resource_0q314"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_ic8nc")])
+event_uid = "51f1bc"
+
+[sub_resource type="Resource" id="Resource_y8bl0"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_c2sfa"]
+script = ExtResource("10_geuiw")
+function_name = "has_ability"
+expose_as_ace = true
+ace_display_name = "Has Ability"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_y8bl0")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_0q314")])
+
+[sub_resource type="Resource" id="Resource_cuujx"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "false"
+}
+
+[sub_resource type="Resource" id="Resource_1sbwd"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "not abilities"
+}
+
+[sub_resource type="Resource" id="Resource_bv5lr"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_1sbwd")])
+actions = Array[Resource]([SubResource("Resource_cuujx")])
+event_uid = "76e216"
+
+[sub_resource type="Resource" id="Resource_irvxs"]
+script = ExtResource("8_mng6w")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "a",
+"value": "abilities[id]",
+"var_type": "AbilityData"
+}
+
+[sub_resource type="Resource" id="Resource_by1n2"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "a.enabled and a.stacks > 0"
+}
+
+[sub_resource type="Resource" id="Resource_gp4vl"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_irvxs"), SubResource("Resource_by1n2")])
+event_uid = "fd1b98"
+
+[sub_resource type="Resource" id="Resource_mg5ow"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_3qgfl"]
+script = ExtResource("10_geuiw")
+function_name = "is_ready"
+expose_as_ace = true
+ace_display_name = "Is Ability Ready"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_mg5ow")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_bv5lr"), SubResource("Resource_gp4vl")])
+
+[sub_resource type="Resource" id="Resource_hoqqp"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "abilities.has(id) and (abilities[id] as AbilityData).active"
+}
+
+[sub_resource type="Resource" id="Resource_5wwqj"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_hoqqp")])
+event_uid = "ef551b"
+
+[sub_resource type="Resource" id="Resource_yuss8"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_y4yq7"]
+script = ExtResource("10_geuiw")
+function_name = "is_active"
+expose_as_ace = true
+ace_display_name = "Is Ability Active"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_yuss8")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_5wwqj")])
+
+[sub_resource type="Resource" id="Resource_lcdot"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "abilities.has(id) and (abilities[id] as AbilityData).enabled"
+}
+
+[sub_resource type="Resource" id="Resource_7g0ls"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_lcdot")])
+event_uid = "6a9487"
+
+[sub_resource type="Resource" id="Resource_e70i0"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_wiyf8"]
+script = ExtResource("10_geuiw")
+function_name = "is_enabled"
+expose_as_ace = true
+ace_display_name = "Is Ability Enabled"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_e70i0")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_7g0ls")])
+
+[sub_resource type="Resource" id="Resource_8pt8u"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "abilities.has(id) and (abilities[id] as AbilityData).stacks > 0"
+}
+
+[sub_resource type="Resource" id="Resource_nf3uh"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_8pt8u")])
+event_uid = "4dfc6a"
+
+[sub_resource type="Resource" id="Resource_g25wk"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ylko3"]
+script = ExtResource("10_geuiw")
+function_name = "has_stacks"
+expose_as_ace = true
+ace_display_name = "Has Stacks Available"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_g25wk")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_nf3uh")])
+
+[sub_resource type="Resource" id="Resource_x8ibv"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "abilities.has(id) and (abilities[id] as AbilityData).tags.has(tag)"
+}
+
+[sub_resource type="Resource" id="Resource_7i7vl"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_x8ibv")])
+event_uid = "fe7a90"
+
+[sub_resource type="Resource" id="Resource_muwpf"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_22suc"]
+script = ExtResource("9_44b4b")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_bdu4v"]
+script = ExtResource("10_geuiw")
+function_name = "ability_has_tag"
+expose_as_ace = true
+ace_display_name = "Ability Has Tag"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_muwpf"), SubResource("Resource_22suc")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_7i7vl")])
+
+[sub_resource type="Resource" id="Resource_pqwca"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "current_ability_id == id"
+}
+
+[sub_resource type="Resource" id="Resource_3o1ka"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_pqwca")])
+event_uid = "1cbc45"
+
+[sub_resource type="Resource" id="Resource_ipcqj"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_6m1gi"]
+script = ExtResource("10_geuiw")
+function_name = "current_ability_is"
+expose_as_ace = true
+ace_display_name = "Current Ability Is"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_ipcqj")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_3o1ka")])
+
+[sub_resource type="Resource" id="Resource_xo8dn"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "current_ability_id"
+}
+
+[sub_resource type="Resource" id="Resource_uv2b5"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_xo8dn")])
+event_uid = "1c7e22"
+
+[sub_resource type="Resource" id="Resource_edbfh"]
+script = ExtResource("10_geuiw")
+function_name = "current_ability"
+expose_as_ace = true
+ace_display_name = "Current Ability ID"
+ace_category = "Abilities"
+return_type = 4
+events = Array[Resource]([SubResource("Resource_uv2b5")])
+
+[sub_resource type="Resource" id="Resource_mq4uf"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "(abilities[id] as AbilityData).cooldown if abilities.has(id) else 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_p2xip"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_mq4uf")])
+event_uid = "ed6345"
+
+[sub_resource type="Resource" id="Resource_v5bip"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_xo7b4"]
+script = ExtResource("10_geuiw")
+function_name = "get_cooldown_remaining"
+expose_as_ace = true
+ace_display_name = "Cooldown Remaining"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_v5bip")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_p2xip")])
+
+[sub_resource type="Resource" id="Resource_i07kb"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "0.0"
+}
+
+[sub_resource type="Resource" id="Resource_r406e"]
+script = ExtResource("4_2qok2")
+ace_id = "CompareVar"
+params = {
+"op": "abilities.has(id)",
+"value": "or (abilities[id] as AbilityData).max_cooldown <= 0.0",
+"var_name": "not"
+}
+
+[sub_resource type="Resource" id="Resource_f7fis"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_r406e")])
+actions = Array[Resource]([SubResource("Resource_i07kb")])
+event_uid = "ad3c64"
+
+[sub_resource type="Resource" id="Resource_gmrup"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "clampf((abilities[id] as AbilityData).cooldown / (abilities[id] as AbilityData).max_cooldown, 0.0, 1.0)"
+}
+
+[sub_resource type="Resource" id="Resource_cllyu"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_gmrup")])
+event_uid = "7a04dc"
+
+[sub_resource type="Resource" id="Resource_lgcrl"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_mj1gr"]
+script = ExtResource("10_geuiw")
+function_name = "get_cooldown_progress"
+expose_as_ace = true
+ace_display_name = "Cooldown Progress"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_lgcrl")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_f7fis"), SubResource("Resource_cllyu")])
+
+[sub_resource type="Resource" id="Resource_1q6wk"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "(abilities[id] as AbilityData).stacks if abilities.has(id) else 0"
+}
+
+[sub_resource type="Resource" id="Resource_f25md"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_1q6wk")])
+event_uid = "12b177"
+
+[sub_resource type="Resource" id="Resource_yrkkw"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_k2oih"]
+script = ExtResource("10_geuiw")
+function_name = "get_stacks"
+expose_as_ace = true
+ace_display_name = "Stacks"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_yrkkw")])
+return_type = 2
+events = Array[Resource]([SubResource("Resource_f25md")])
+
+[sub_resource type="Resource" id="Resource_4gihp"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "(abilities[id] as AbilityData).max_stacks if abilities.has(id) else 0"
+}
+
+[sub_resource type="Resource" id="Resource_kqie7"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_4gihp")])
+event_uid = "9d4b71"
+
+[sub_resource type="Resource" id="Resource_5wxhg"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_h3omj"]
+script = ExtResource("10_geuiw")
+function_name = "get_max_stacks"
+expose_as_ace = true
+ace_display_name = "Max Stacks"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_5wxhg")])
+return_type = 2
+events = Array[Resource]([SubResource("Resource_kqie7")])
+
+[sub_resource type="Resource" id="Resource_aa8ys"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "(abilities[id] as AbilityData).cooldown if abilities.has(id) else 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_kft1q"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_aa8ys")])
+event_uid = "4a920f"
+
+[sub_resource type="Resource" id="Resource_n61c6"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_783ya"]
+script = ExtResource("10_geuiw")
+function_name = "get_stack_cooldown_remaining"
+expose_as_ace = true
+ace_display_name = "Stack Cooldown Remaining"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_n61c6")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_kft1q")])
+
+[sub_resource type="Resource" id="Resource_elxmv"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "get_cooldown_progress(id)"
+}
+
+[sub_resource type="Resource" id="Resource_d6phf"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_elxmv")])
+event_uid = "bf8588"
+
+[sub_resource type="Resource" id="Resource_ap0ci"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_tvjkj"]
+script = ExtResource("10_geuiw")
+function_name = "get_stack_progress"
+expose_as_ace = true
+ace_display_name = "Stack Progress"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_ap0ci")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_d6phf")])
+
+[sub_resource type="Resource" id="Resource_32kr2"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "(abilities[id] as AbilityData).expiration if abilities.has(id) else 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_2n2yh"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_32kr2")])
+event_uid = "049c5f"
+
+[sub_resource type="Resource" id="Resource_kq6h6"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_74u8p"]
+script = ExtResource("10_geuiw")
+function_name = "get_expiration_time"
+expose_as_ace = true
+ace_display_name = "Expiration Time"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_kq6h6")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_2n2yh")])
+
+[sub_resource type="Resource" id="Resource_eii7o"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "0.0"
+}
+
+[sub_resource type="Resource" id="Resource_ij8u2"]
+script = ExtResource("4_2qok2")
+ace_id = "CompareVar"
+params = {
+"op": "abilities.has(id)",
+"value": "or (abilities[id] as AbilityData).max_expiration <= 0.0",
+"var_name": "not"
+}
+
+[sub_resource type="Resource" id="Resource_w4qrv"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_ij8u2")])
+actions = Array[Resource]([SubResource("Resource_eii7o")])
+event_uid = "b79cfa"
+
+[sub_resource type="Resource" id="Resource_ptwjg"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "clampf(1.0 - (abilities[id] as AbilityData).expiration / (abilities[id] as AbilityData).max_expiration, 0.0, 1.0)"
+}
+
+[sub_resource type="Resource" id="Resource_2uw5j"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_ptwjg")])
+event_uid = "492245"
+
+[sub_resource type="Resource" id="Resource_54ids"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_bw5d0"]
+script = ExtResource("10_geuiw")
+function_name = "get_expiration_progress"
+expose_as_ace = true
+ace_display_name = "Expiration Progress"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_54ids")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_w4qrv"), SubResource("Resource_2uw5j")])
+
+[sub_resource type="Resource" id="Resource_ogtr2"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "(abilities[id] as AbilityData).max_expiration if abilities.has(id) else 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_q2wbi"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_ogtr2")])
+event_uid = "b09ff9"
+
+[sub_resource type="Resource" id="Resource_bl2qp"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_iv66u"]
+script = ExtResource("10_geuiw")
+function_name = "get_max_expiration_time"
+expose_as_ace = true
+ace_display_name = "Max Expiration Time"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_bl2qp")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_q2wbi")])
+
+[sub_resource type="Resource" id="Resource_uqgg6"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "abilities.size()"
+}
+
+[sub_resource type="Resource" id="Resource_tnb6p"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_uqgg6")])
+event_uid = "034780"
+
+[sub_resource type="Resource" id="Resource_xvhyn"]
+script = ExtResource("10_geuiw")
+function_name = "get_ability_count"
+expose_as_ace = true
+ace_display_name = "Ability Count"
+ace_category = "Abilities"
+return_type = 2
+events = Array[Resource]([SubResource("Resource_tnb6p")])
+
+[sub_resource type="Resource" id="Resource_hq8wb"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "\",\".join(abilities.keys())"
+}
+
+[sub_resource type="Resource" id="Resource_btjqg"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_hq8wb")])
+event_uid = "807d4e"
+
+[sub_resource type="Resource" id="Resource_f7bge"]
+script = ExtResource("10_geuiw")
+function_name = "list_active_abilities"
+expose_as_ace = true
+ace_display_name = "List Active Abilities"
+ace_category = "Abilities"
+return_type = 4
+events = Array[Resource]([SubResource("Resource_btjqg")])
+
+[sub_resource type="Resource" id="Resource_kmsyn"]
+script = ExtResource("8_mng6w")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "out",
+"value": "PackedStringArray()",
+"var_type": "PackedStringArray"
+}
+
+[sub_resource type="Resource" id="Resource_h8juw"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_kmsyn")])
+event_uid = "7f82f2"
+
+[sub_resource type="Resource" id="Resource_d37ht"]
+script = ExtResource("6_nccum")
+iterator_name = "id: String"
+collection_value = "abilities.keys()"
+
+[sub_resource type="Resource" id="Resource_2o20m"]
+script = ExtResource("8_mng6w")
+ace_id = "ArrayAppend"
+params = {
+"value": "id",
+"var_name": "out"
+}
+
+[sub_resource type="Resource" id="Resource_ja338"]
+script = ExtResource("4_2qok2")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "is_ready(id)"
+}
+
+[sub_resource type="Resource" id="Resource_kmk0o"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_ja338")])
+actions = Array[Resource]([SubResource("Resource_2o20m")])
+event_uid = "71081e"
+
+[sub_resource type="Resource" id="Resource_16pmi"]
+script = ExtResource("7_ugumu")
+sub_events = Array[Resource]([SubResource("Resource_kmk0o")])
+event_uid = "3391a5"
+pick_filters = Array[ExtResource("6_nccum")]([SubResource("Resource_d37ht")])
+
+[sub_resource type="Resource" id="Resource_vs3j0"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "\",\".join(out)"
+}
+
+[sub_resource type="Resource" id="Resource_jol12"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_vs3j0")])
+event_uid = "eda2d4"
+
+[sub_resource type="Resource" id="Resource_msuu3"]
+script = ExtResource("10_geuiw")
+function_name = "get_ready_abilities"
+expose_as_ace = true
+ace_display_name = "Ready Abilities"
+ace_category = "Abilities"
+return_type = 4
+events = Array[Resource]([SubResource("Resource_h8juw"), SubResource("Resource_16pmi"), SubResource("Resource_jol12")])
+
+[sub_resource type="Resource" id="Resource_fd4ml"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "\"\""
+}
+
+[sub_resource type="Resource" id="Resource_jvhgu"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "not abilities"
+}
+
+[sub_resource type="Resource" id="Resource_ubb25"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_jvhgu")])
+actions = Array[Resource]([SubResource("Resource_fd4ml")])
+event_uid = "40564a"
+
+[sub_resource type="Resource" id="Resource_pugai"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "str((abilities[id] as AbilityData).data.get(key, \"\"))"
+}
+
+[sub_resource type="Resource" id="Resource_3lqpr"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_pugai")])
+event_uid = "41f843"
+
+[sub_resource type="Resource" id="Resource_eovga"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_bl042"]
+script = ExtResource("9_44b4b")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_rekkq"]
+script = ExtResource("10_geuiw")
+function_name = "get_ability_data"
+expose_as_ace = true
+ace_display_name = "Ability Data"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_eovga"), SubResource("Resource_bl042")])
+return_type = 4
+events = Array[Resource]([SubResource("Resource_ubb25"), SubResource("Resource_3lqpr")])
+
+[sub_resource type="Resource" id="Resource_booiy"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "_ids_with_tag(tag).size()"
+}
+
+[sub_resource type="Resource" id="Resource_yuoyc"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_booiy")])
+event_uid = "69d043"
+
+[sub_resource type="Resource" id="Resource_mm5o5"]
+script = ExtResource("9_44b4b")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_b0irm"]
+script = ExtResource("10_geuiw")
+function_name = "count_abilities_by_tag"
+expose_as_ace = true
+ace_display_name = "Count Abilities By Tag"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_mm5o5")])
+return_type = 2
+events = Array[Resource]([SubResource("Resource_yuoyc")])
+
+[sub_resource type="Resource" id="Resource_iqx6t"]
+script = ExtResource("8_mng6w")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "ids",
+"value": "_ids_with_tag(tag)",
+"var_type": "Array"
+}
+
+[sub_resource type="Resource" id="Resource_dwoj4"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "str(ids[index]) if index >= 0 and index < ids.size() else \"\""
+}
+
+[sub_resource type="Resource" id="Resource_ak0by"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_iqx6t"), SubResource("Resource_dwoj4")])
+event_uid = "c58af9"
+
+[sub_resource type="Resource" id="Resource_ci47s"]
+script = ExtResource("9_44b4b")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ear8f"]
+script = ExtResource("9_44b4b")
+id = "index"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_buxkl"]
+script = ExtResource("10_geuiw")
+function_name = "get_ability_by_tag_index"
+expose_as_ace = true
+ace_display_name = "Ability By Tag Index"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_ci47s"), SubResource("Resource_ear8f")])
+return_type = 4
+events = Array[Resource]([SubResource("Resource_ak0by")])
+
+[sub_resource type="Resource" id="Resource_ywyig"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "\",\".join(_ids_with_tag(tag))"
+}
+
+[sub_resource type="Resource" id="Resource_xrhfe"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_ywyig")])
+event_uid = "562c9e"
+
+[sub_resource type="Resource" id="Resource_2h2wk"]
+script = ExtResource("9_44b4b")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_fp3t6"]
+script = ExtResource("10_geuiw")
+function_name = "list_abilities_by_tag"
+expose_as_ace = true
+ace_display_name = "List Abilities By Tag"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_2h2wk")])
+return_type = 4
+events = Array[Resource]([SubResource("Resource_xrhfe")])
+
+[sub_resource type="Resource" id="Resource_g6mfw"]
+script = ExtResource("8_mng6w")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "out",
+"value": "[]",
+"var_type": "Array"
+}
+
+[sub_resource type="Resource" id="Resource_tydn1"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_g6mfw")])
+event_uid = "c83af4"
+
+[sub_resource type="Resource" id="Resource_p2way"]
+script = ExtResource("6_nccum")
+iterator_name = "id: String"
+collection_value = "abilities.keys()"
+
+[sub_resource type="Resource" id="Resource_fpxbg"]
+script = ExtResource("8_mng6w")
+ace_id = "ArrayAppend"
+params = {
+"value": "id",
+"var_name": "out"
+}
+
+[sub_resource type="Resource" id="Resource_icmdf"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "tag",
+"var_name": "(abilities[id] as AbilityData).tags"
+}
+
+[sub_resource type="Resource" id="Resource_5iuss"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_icmdf")])
+actions = Array[Resource]([SubResource("Resource_fpxbg")])
+event_uid = "b43e58"
+
+[sub_resource type="Resource" id="Resource_xkdhs"]
+script = ExtResource("7_ugumu")
+sub_events = Array[Resource]([SubResource("Resource_5iuss")])
+event_uid = "19310b"
+pick_filters = Array[ExtResource("6_nccum")]([SubResource("Resource_p2way")])
+
+[sub_resource type="Resource" id="Resource_r51hu"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnValue"
+params = {
+"value": "out"
+}
+
+[sub_resource type="Resource" id="Resource_fm7n5"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_r51hu")])
+event_uid = "ab76a6"
+
+[sub_resource type="Resource" id="Resource_vtahj"]
+script = ExtResource("9_44b4b")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_d4ald"]
+script = ExtResource("10_geuiw")
+function_name = "_ids_with_tag"
+lifted_unannotated = true
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_vtahj")])
+return_type = 28
+events = Array[Resource]([SubResource("Resource_tydn1"), SubResource("Resource_xkdhs"), SubResource("Resource_fm7n5")])
+
 [resource]
 script = ExtResource("11_n4pln")
 behavior_mode = true
@@ -2213,4 +2926,4 @@ variables = {
 "type": "String"
 }
 }
-functions = Array[Resource]([SubResource("Resource_d1oml"), SubResource("Resource_a5pjh"), SubResource("Resource_ww1lv"), SubResource("Resource_8k8ro"), SubResource("Resource_y7l2t"), SubResource("Resource_12fe2"), SubResource("Resource_l6b4c"), SubResource("Resource_ua0dw"), SubResource("Resource_3tul6"), SubResource("Resource_56px4"), SubResource("Resource_6840f"), SubResource("Resource_ecu0b"), SubResource("Resource_ojtf8"), SubResource("Resource_qqsyy"), SubResource("Resource_e0ywd"), SubResource("Resource_gu1l8"), SubResource("Resource_cuv13"), SubResource("Resource_c41jc"), SubResource("Resource_l727i"), SubResource("Resource_k3scl"), SubResource("Resource_reu5c"), SubResource("Resource_uy4l4"), SubResource("Resource_ahoq1"), SubResource("Resource_ov6if")])
+functions = Array[Resource]([SubResource("Resource_d1oml"), SubResource("Resource_a5pjh"), SubResource("Resource_ww1lv"), SubResource("Resource_8k8ro"), SubResource("Resource_y7l2t"), SubResource("Resource_12fe2"), SubResource("Resource_l6b4c"), SubResource("Resource_ua0dw"), SubResource("Resource_3tul6"), SubResource("Resource_56px4"), SubResource("Resource_6840f"), SubResource("Resource_ecu0b"), SubResource("Resource_ojtf8"), SubResource("Resource_qqsyy"), SubResource("Resource_e0ywd"), SubResource("Resource_gu1l8"), SubResource("Resource_cuv13"), SubResource("Resource_c41jc"), SubResource("Resource_l727i"), SubResource("Resource_k3scl"), SubResource("Resource_reu5c"), SubResource("Resource_uy4l4"), SubResource("Resource_ahoq1"), SubResource("Resource_ov6if"), SubResource("Resource_c2sfa"), SubResource("Resource_3qgfl"), SubResource("Resource_y4yq7"), SubResource("Resource_wiyf8"), SubResource("Resource_ylko3"), SubResource("Resource_bdu4v"), SubResource("Resource_6m1gi"), SubResource("Resource_edbfh"), SubResource("Resource_xo7b4"), SubResource("Resource_mj1gr"), SubResource("Resource_k2oih"), SubResource("Resource_h3omj"), SubResource("Resource_783ya"), SubResource("Resource_tvjkj"), SubResource("Resource_74u8p"), SubResource("Resource_bw5d0"), SubResource("Resource_iv66u"), SubResource("Resource_xvhyn"), SubResource("Resource_f7bge"), SubResource("Resource_msuu3"), SubResource("Resource_rekkq"), SubResource("Resource_b0irm"), SubResource("Resource_buxkl"), SubResource("Resource_fp3t6"), SubResource("Resource_d4ald")])

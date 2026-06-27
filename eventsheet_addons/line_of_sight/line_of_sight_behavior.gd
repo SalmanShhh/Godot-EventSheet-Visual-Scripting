@@ -18,30 +18,6 @@ func _enter_tree() -> void:
 @export var cone_of_view_degrees: float = 360.0
 @export var sight_range: float = 400.0
 
-## @ace_condition
-## @ace_name("Has Line Of Sight To")
-## @ace_category("Line Of Sight")
-## @ace_codegen_template("$LOSBehavior.has_los_to({point})")
-func has_los_to(point: Vector2) -> bool:
-	if host == null or host.global_position.distance_to(point) > sight_range:
-		return false
-	if cone_of_view_degrees < 360.0:
-		var to_target := (point - host.global_position).angle()
-		if absf(angle_difference(host.rotation, to_target)) > deg_to_rad(cone_of_view_degrees) * 0.5:
-			return false
-	return has_los_between(host.global_position, point)
-
-## @ace_condition
-## @ace_name("Has LOS Between")
-## @ace_category("Line Of Sight")
-## @ace_codegen_template("$LOSBehavior.has_los_between({from_point}, {to_point})")
-func has_los_between(from_point: Vector2, to_point: Vector2) -> bool:
-	if host == null:
-		return false
-	var query := PhysicsRayQueryParameters2D.create(from_point, to_point)
-	query.collision_mask = collision_mask
-	return host.get_world_2d().direct_space_state.intersect_ray(query).is_empty()
-
 ## @ace_expression
 ## @ace_name("Nearest Visible In Group")
 ## @ace_category("Line Of Sight")
@@ -63,5 +39,31 @@ func nearest_visible_in_group(group: String) -> Node2D:
 
 func _process(delta: float) -> void:
 	pass
+
+## @ace_condition
+## @ace_name("Has Line Of Sight To")
+## @ace_category("Line Of Sight")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$LOSBehavior.has_los_to({point})")
+func has_los_to(point: Vector2) -> bool:
+	if host == null or host.global_position.distance_to(point) > sight_range:
+		return false
+	if cone_of_view_degrees < 360.0:
+		var to_target := (point - host.global_position).angle()
+		if absf(angle_difference(host.rotation, to_target)) > deg_to_rad(cone_of_view_degrees) * 0.5:
+			return false
+	return has_los_between(host.global_position, point)
+
+## @ace_condition
+## @ace_name("Has LOS Between")
+## @ace_category("Line Of Sight")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$LOSBehavior.has_los_between({from_point}, {to_point})")
+func has_los_between(from_point: Vector2, to_point: Vector2) -> bool:
+	if host == null:
+		return false
+	var query := PhysicsRayQueryParameters2D.create(from_point, to_point)
+	query.collision_mask = collision_mask
+	return host.get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
 # Line of Sight behavior (C3 parity): raycast LOS with range and an optional cone of view (degrees; 360 = all around). Conditions: Has Line Of Sight To, Has LOS Between positions.

@@ -27,20 +27,6 @@ var base_z: float = 0.0
 var time: float = 0.0
 @export_enum("sine", "triangle", "sawtooth", "reverse-sawtooth", "square") var wave: String = "sine"
 
-## @ace_hidden
-func _wave(t: float) -> float:
-	var cycle := fposmod(t, 1.0)
-	match wave:
-		"triangle":
-			return 1.0 - 4.0 * absf(cycle - 0.5)
-		"sawtooth":
-			return 2.0 * cycle - 1.0
-		"reverse-sawtooth":
-			return 1.0 - 2.0 * cycle
-		"square":
-			return 1.0 if cycle < 0.5 else -1.0
-	return sin(cycle * TAU)
-
 func _process(delta: float) -> void:
 	if not active or host == null:
 		return
@@ -89,5 +75,19 @@ func set_sine3d_phase(degrees: float) -> void:
 func reset_sine3d() -> void:
 	time = 0.0
 	base_captured = false
+
+## @ace_hidden
+func _wave(t: float) -> float:
+	var cycle := fposmod(t, 1.0)
+	match wave:
+		"triangle":
+			return 1.0 - 4.0 * absf(cycle - 0.5)
+		"sawtooth":
+			return 2.0 * cycle - 1.0
+		"reverse-sawtooth":
+			return 1.0 - 2.0 * cycle
+		"square":
+			return 1.0 if cycle < 0.5 else -1.0
+	return sin(cycle * TAU)
 
 # Sine 3D behavior (C3-style): oscillates the host along an axis (x, y, z) or around the Y axis (rotation-y), with the full wave set.

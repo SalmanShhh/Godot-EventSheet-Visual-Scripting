@@ -78,7 +78,6 @@ var _slowmo_tween: Tween = null
 var _squash_spring_active: bool = false
 var _squash_value: Vector2 = Vector2.ONE
 var _squash_velocity: Vector2 = Vector2.ZERO
-
 ## The camera these effects drive: an explicit override (Use Camera), else the active Camera2D —
 ## auto-found, so Shake / Zoom just work from anywhere without wiring a path.
 func _camera() -> Camera2D:
@@ -88,62 +87,6 @@ func _camera() -> Camera2D:
 	if vp == null:
 		return null
 	return vp.get_camera_2d()
-
-## Drives an ANCHORED zoom: keeps _zoom_anchor pinned under the same screen point as the zoom
-## interpolates (mouse-wheel-to-cursor feel). Called by Zoom Toward Point's tween each frame.
-func _zoom_anchored_step(f: float) -> void:
-	var cam: Camera2D = _camera()
-	if cam == null:
-		return
-	var z: Vector2 = _zoom_from.lerp(_zoom_to, f)
-	z.x = maxf(z.x, 0.001)
-	z.y = maxf(z.y, 0.001)
-	cam.zoom = z
-	cam.global_position = _zoom_anchor - (_zoom_anchor - _zoom_cam_from) * (_zoom_from / z)
-
-## @ace_condition
-## @ace_name("Is Shaking")
-## @ace_category("Juice")
-func is_shaking() -> bool:
-	return trauma > 0.0
-
-## @ace_expression
-## @ace_name("Trauma")
-## @ace_category("Juice")
-func current_trauma() -> float:
-	return trauma
-
-func _set_time_scale(s: float) -> void:
-	Engine.time_scale = s
-
-## Maps a slowmo easing-curve name (Inspector enum) to a Tween.TransitionType.
-func _slowmo_trans(easing_name: String) -> int:
-	match easing_name:
-		"linear": return Tween.TRANS_LINEAR
-		"quad": return Tween.TRANS_QUAD
-		"cubic": return Tween.TRANS_CUBIC
-		"expo": return Tween.TRANS_EXPO
-		"circ": return Tween.TRANS_CIRC
-		"back": return Tween.TRANS_BACK
-		_: return Tween.TRANS_SINE
-
-## Maps a slowmo easing-direction name (Inspector enum) to a Tween.EaseType.
-func _slowmo_ease(easing_name: String) -> int:
-	match easing_name:
-		"in": return Tween.EASE_IN
-		"in_out": return Tween.EASE_IN_OUT
-		"out_in": return Tween.EASE_OUT_IN
-		_: return Tween.EASE_OUT
-
-## Applies a scale to the host whether it's a Node2D or a Control (centring a Control's pivot so
-## it scales from the middle). Used by Spring Squash's per-frame integrator.
-func _apply_host_scale(s: Vector2) -> void:
-	if host is Node2D:
-		(host as Node2D).scale = s
-	elif host is Control:
-		var c: Control = host as Control
-		c.pivot_offset = c.size / 2.0
-		c.scale = s
 
 func _ready() -> void:
 	tree_exiting.connect(_on_tree_exiting)
@@ -350,5 +293,59 @@ func clear_slowmo() -> void:
 		_slowmo_tween.kill()
 		_slowmo_tween = null
 	Engine.time_scale = 1.0
+
+func _zoom_anchored_step(f: float) -> void:
+	var cam: Camera2D = _camera()
+	if cam == null:
+		return
+	var z: Vector2 = _zoom_from.lerp(_zoom_to, f)
+	z.x = maxf(z.x, 0.001)
+	z.y = maxf(z.y, 0.001)
+	cam.zoom = z
+	cam.global_position = _zoom_anchor - (_zoom_anchor - _zoom_cam_from) * (_zoom_from / z)
+
+## @ace_condition
+## @ace_name("Is Shaking")
+## @ace_category("Juice")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.is_shaking()")
+func is_shaking() -> bool:
+	return trauma > 0.0
+
+## @ace_expression
+## @ace_name("Trauma")
+## @ace_category("Juice")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.current_trauma()")
+func current_trauma() -> float:
+	return trauma
+
+func _set_time_scale(s: float) -> void:
+	Engine.time_scale = s
+
+func _slowmo_trans(easing_name: String) -> int:
+	match easing_name:
+		"linear": return Tween.TRANS_LINEAR
+		"quad": return Tween.TRANS_QUAD
+		"cubic": return Tween.TRANS_CUBIC
+		"expo": return Tween.TRANS_EXPO
+		"circ": return Tween.TRANS_CIRC
+		"back": return Tween.TRANS_BACK
+		_: return Tween.TRANS_SINE
+
+func _slowmo_ease(easing_name: String) -> int:
+	match easing_name:
+		"in": return Tween.EASE_IN
+		"in_out": return Tween.EASE_IN_OUT
+		"out_in": return Tween.EASE_OUT_IN
+		_: return Tween.EASE_OUT
+
+func _apply_host_scale(s: Vector2) -> void:
+	if host is Node2D:
+		(host as Node2D).scale = s
+	elif host is Control:
+		var c: Control = host as Control
+		c.pivot_offset = c.size / 2.0
+		c.scale = s
 
 # Game feel, batteries included: screenshake, smooth zoom, and squash & stretch. The camera is found automatically — attach this anywhere and call Shake / Zoom; Squash & Stretch animates the node it's attached to.

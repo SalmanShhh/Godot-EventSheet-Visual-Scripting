@@ -36,53 +36,6 @@ var autosave_accumulator: float = 0.0
 @export_group("Save System")
 @export_range(0, 9, 1) var slot: int = 0
 
-func _slot_path(target_slot: int = -1) -> String:
-	var chosen: int = slot if target_slot < 0 else target_slot
-	return save_directory.path_join(file_pattern.replace("{slot}", str(chosen)))
-
-# Format-agnostic backends: everything above reads/writes one Dictionary.
-func _read_all() -> Dictionary:
-	var path: String = _slot_path()
-	if format == "json":
-		var file: FileAccess = FileAccess.open_encrypted_with_pass(path, FileAccess.READ, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.READ)
-		if file == null:
-			return {}
-		var parsed: Variant = JSON.parse_string(file.get_as_text())
-		return (parsed as Dictionary).get(section, {}) if parsed is Dictionary else {}
-	var config: ConfigFile = ConfigFile.new()
-	if encryption_key.is_empty():
-		config.load(path)
-	else:
-		config.load_encrypted_pass(path, encryption_key)
-	var data: Dictionary = {}
-	for key: String in config.get_section_keys(section) if config.has_section(section) else PackedStringArray():
-		data[key] = config.get_value(section, key)
-	return data
-
-func _write_all(data: Dictionary) -> bool:
-	var path: String = _slot_path()
-	if format == "json":
-		var file: FileAccess = FileAccess.open_encrypted_with_pass(path, FileAccess.WRITE, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.WRITE)
-		if file == null:
-			return false
-		file.store_string(JSON.stringify({section: data}, "\t"))
-		if file.get_error() != Error.OK:
-			return false
-		file.close()
-		return true
-	else:
-		var config: ConfigFile = ConfigFile.new()
-		for key: Variant in data.keys():
-			config.set_value(section, str(key), data[key])
-		var err: Error
-		if encryption_key.is_empty():
-			err = config.save(path)
-		else:
-			err = config.save_encrypted_pass(path, encryption_key)
-		if err != Error.OK:
-			return false
-		return true
-
 func _process(delta: float) -> void:
 	if autosave_interval <= 0.0:
 		return
@@ -217,5 +170,52 @@ func list_slots() -> Array:
 ## @ace_codegen_template("SaveSystem.slot_modified_time({slot_index})")
 func slot_modified_time(slot_index: int) -> int:
 	return FileAccess.get_modified_time(_slot_path(slot_index)) if FileAccess.file_exists(_slot_path(slot_index)) else 0
+
+func _slot_path(target_slot: int = -1) -> String:
+	var chosen: int = slot if target_slot < 0 else target_slot
+	return save_directory.path_join(file_pattern.replace("{slot}", str(chosen)))
+
+func _read_all() -> Dictionary:
+	# Format-agnostic backends: everything above reads/writes one Dictionary.
+	var path: String = _slot_path()
+	if format == "json":
+		var file: FileAccess = FileAccess.open_encrypted_with_pass(path, FileAccess.READ, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.READ)
+		if file == null:
+			return {}
+		var parsed: Variant = JSON.parse_string(file.get_as_text())
+		return (parsed as Dictionary).get(section, {}) if parsed is Dictionary else {}
+	var config: ConfigFile = ConfigFile.new()
+	if encryption_key.is_empty():
+		config.load(path)
+	else:
+		config.load_encrypted_pass(path, encryption_key)
+	var data: Dictionary = {}
+	for key: String in config.get_section_keys(section) if config.has_section(section) else PackedStringArray():
+		data[key] = config.get_value(section, key)
+	return data
+
+func _write_all(data: Dictionary) -> bool:
+	var path: String = _slot_path()
+	if format == "json":
+		var file: FileAccess = FileAccess.open_encrypted_with_pass(path, FileAccess.WRITE, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.WRITE)
+		if file == null:
+			return false
+		file.store_string(JSON.stringify({section: data}, "\t"))
+		if file.get_error() != Error.OK:
+			return false
+		file.close()
+		return true
+	else:
+		var config: ConfigFile = ConfigFile.new()
+		for key: Variant in data.keys():
+			config.set_value(section, str(key), data[key])
+		var err: Error
+		if encryption_key.is_empty():
+			err = config.save(path)
+		else:
+			err = config.save_encrypted_pass(path, encryption_key)
+		if err != Error.OK:
+			return false
+		return true
 
 # Save System: register as the SaveSystem autoload, then save from any sheet. Strategy (paths/format/encryption) lives in the Inspector; On Before Save / On After Load let every sheet contribute its own state. This pack is an event sheet — extend it by editing it.

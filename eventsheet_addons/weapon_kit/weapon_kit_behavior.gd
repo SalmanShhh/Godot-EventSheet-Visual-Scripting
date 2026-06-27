@@ -55,77 +55,6 @@ var _reloading: bool = false
 ## Spare rounds a reload draws from.
 @export var reserve_ammo: int = 96
 
-## @ace_condition
-## @ace_name("Can Fire")
-## @ace_category("Weapon")
-## @ace_codegen_template("$WeaponKit.can_fire()")
-func can_fire() -> bool:
-	return not _reloading and _cooldown <= 0.0 and current_ammo > 0 and _burst_left <= 0
-
-## @ace_condition
-## @ace_name("Has Ammo")
-## @ace_category("Weapon")
-## @ace_codegen_template("$WeaponKit.has_ammo()")
-func has_ammo() -> bool:
-	return current_ammo > 0
-
-## @ace_condition
-## @ace_name("Is Full")
-## @ace_category("Weapon")
-## @ace_codegen_template("$WeaponKit.is_full()")
-func is_full() -> bool:
-	return current_ammo >= max_ammo
-
-## @ace_condition
-## @ace_name("Is Reloading")
-## @ace_category("Weapon")
-## @ace_codegen_template("$WeaponKit.is_reloading()")
-func is_reloading() -> bool:
-	return _reloading
-
-## @ace_expression
-## @ace_name("Ammo Percent")
-## @ace_category("Weapon")
-func ammo_percent() -> float:
-	return (float(current_ammo) / float(maxi(max_ammo, 1))) * 100.0
-
-## @ace_expression
-## @ace_name("Reload Progress")
-## @ace_category("Weapon")
-func reload_progress() -> float:
-	if not _reloading:
-		return 1.0
-	return clampf(1.0 - _reload_timer / maxf(reload_time, 0.01), 0.0, 1.0)
-
-## @ace_expression
-## @ace_name("Cooldown Progress")
-## @ace_category("Weapon")
-func cooldown_progress() -> float:
-	return clampf(1.0 - _cooldown * maxf(fire_rate, 0.01), 0.0, 1.0)
-
-# One round leaves the barrel: spend ammo, start the cooldown, trigger On Fire, and
-# fall through to empty/auto-reload when the magazine runs dry.
-func _fire_one() -> void:
-	current_ammo -= 1
-	_cooldown = 1.0 / maxf(fire_rate, 0.01)
-	fired.emit()
-	if current_ammo <= 0:
-		_burst_left = 0
-		emptied.emit()
-		if auto_reload:
-			reload()
-
-# Move rounds from the reserve into the magazine (capped by reserve unless infinite).
-func _complete_reload() -> void:
-	var needed: int = max_ammo - current_ammo
-	var taken: int = needed if infinite_reserve else mini(needed, reserve_ammo)
-	current_ammo += taken
-	if not infinite_reserve:
-		reserve_ammo -= taken
-	_reloading = false
-	_reload_timer = 0.0
-	reload_completed.emit()
-
 func _process(delta: float) -> void:
 	_cooldown = maxf(_cooldown - delta, 0.0)
 	if _reloading:
@@ -238,5 +167,86 @@ func set_fire_mode(mode: int) -> void:
 ## @ace_codegen_template("$WeaponKit.set_max_ammo({size})")
 func set_max_ammo(size: int) -> void:
 	max_ammo = maxi(size, 0)
+
+## @ace_condition
+## @ace_name("Can Fire")
+## @ace_category("Weapon")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$WeaponKit.can_fire()")
+func can_fire() -> bool:
+	return not _reloading and _cooldown <= 0.0 and current_ammo > 0 and _burst_left <= 0
+
+## @ace_condition
+## @ace_name("Has Ammo")
+## @ace_category("Weapon")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$WeaponKit.has_ammo()")
+func has_ammo() -> bool:
+	return current_ammo > 0
+
+## @ace_condition
+## @ace_name("Is Full")
+## @ace_category("Weapon")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$WeaponKit.is_full()")
+func is_full() -> bool:
+	return current_ammo >= max_ammo
+
+## @ace_condition
+## @ace_name("Is Reloading")
+## @ace_category("Weapon")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$WeaponKit.is_reloading()")
+func is_reloading() -> bool:
+	return _reloading
+
+## @ace_expression
+## @ace_name("Ammo Percent")
+## @ace_category("Weapon")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$WeaponKit.ammo_percent()")
+func ammo_percent() -> float:
+	return (float(current_ammo) / float(maxi(max_ammo, 1))) * 100.0
+
+## @ace_expression
+## @ace_name("Reload Progress")
+## @ace_category("Weapon")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$WeaponKit.reload_progress()")
+func reload_progress() -> float:
+	if not _reloading:
+		return 1.0
+	return clampf(1.0 - _reload_timer / maxf(reload_time, 0.01), 0.0, 1.0)
+
+## @ace_expression
+## @ace_name("Cooldown Progress")
+## @ace_category("Weapon")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$WeaponKit.cooldown_progress()")
+func cooldown_progress() -> float:
+	return clampf(1.0 - _cooldown * maxf(fire_rate, 0.01), 0.0, 1.0)
+
+func _fire_one() -> void:
+	# One round leaves the barrel: spend ammo, start the cooldown, trigger On Fire, and
+	# fall through to empty/auto-reload when the magazine runs dry.
+	current_ammo -= 1
+	_cooldown = 1.0 / maxf(fire_rate, 0.01)
+	fired.emit()
+	if current_ammo <= 0:
+		_burst_left = 0
+		emptied.emit()
+		if auto_reload:
+			reload()
+
+func _complete_reload() -> void:
+	# Move rounds from the reserve into the magazine (capped by reserve unless infinite).
+	var needed: int = max_ammo - current_ammo
+	var taken: int = needed if infinite_reserve else mini(needed, reserve_ammo)
+	current_ammo += taken
+	if not infinite_reserve:
+		reserve_ammo -= taken
+	_reloading = false
+	_reload_timer = 0.0
+	reload_completed.emit()
 
 # Weapon Kit: ammo + reserve, fire-rate cooldown, single/auto/burst modes, and timed/instant reload. Call Fire (it manages ammo + cooldown and triggers On Fire — you spawn the bullet); call Reload. Read Ammo %, Reload Progress, etc. for HUD.

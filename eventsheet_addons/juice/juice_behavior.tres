@@ -1,55 +1,56 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_mp6i8"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="2_h8e54"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="3_mxhkf"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="4_m121v"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="5_yqweo"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="6_5xkvr"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="7_ixhnj"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="8_04rea"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="9_yc8eo"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="10_ay68o"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="11_yi7a2"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_h8e54"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="2_mxhkf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="3_m121v"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="4_yqweo"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="5_5xkvr"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="6_ixhnj"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="7_04rea"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="8_yc8eo"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="9_ay68o"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="10_yi7a2"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/match_row.gd" id="11_8fvqu"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="12_215nc"]
 
-[sub_resource type="Resource" id="Resource_8fvqu"]
-script = ExtResource("1_mp6i8")
+[sub_resource type="Resource" id="Resource_u2h56"]
+script = ExtResource("1_h8e54")
 text = "Game feel, batteries included: screenshake, smooth zoom, and squash & stretch. The camera is found automatically — attach this anywhere and call Shake / Zoom; Squash & Stretch animates the node it's attached to."
 
-[sub_resource type="Resource" id="Resource_215nc"]
-script = ExtResource("2_h8e54")
+[sub_resource type="Resource" id="Resource_smfhv"]
+script = ExtResource("2_mxhkf")
 signal_name = "shake_stopped"
 params = PackedStringArray()
 trigger = true
 ace_name = "On Shake Stopped"
 ace_category = "Juice"
 
-[sub_resource type="Resource" id="Resource_u2h56"]
-script = ExtResource("2_h8e54")
+[sub_resource type="Resource" id="Resource_pe501"]
+script = ExtResource("2_mxhkf")
 signal_name = "zoom_finished"
 params = PackedStringArray()
 trigger = true
 ace_name = "On Zoom Finished"
 ace_category = "Juice"
 
-[sub_resource type="Resource" id="Resource_smfhv"]
-script = ExtResource("2_h8e54")
+[sub_resource type="Resource" id="Resource_ffaey"]
+script = ExtResource("2_mxhkf")
 signal_name = "squash_finished"
 params = PackedStringArray()
 trigger = true
 ace_name = "On Squash Finished"
 ace_category = "Juice"
 
-[sub_resource type="Resource" id="Resource_pe501"]
-script = ExtResource("2_h8e54")
+[sub_resource type="Resource" id="Resource_dp0f6"]
+script = ExtResource("2_mxhkf")
 signal_name = "slowmo_finished"
 params = PackedStringArray()
 trigger = true
 ace_name = "On Slowmo Finished"
 ace_category = "Juice"
 
-[sub_resource type="Resource" id="Resource_ffaey"]
-script = ExtResource("3_mxhkf")
+[sub_resource type="Resource" id="Resource_timcu"]
+script = ExtResource("3_m121v")
 code = "# --- Designer knobs (tune the FEEL in the Inspector) ---
 ## Peak camera shake offset, in pixels, at full trauma.
 @export var max_offset: Vector2 = Vector2(24, 16)
@@ -96,7 +97,6 @@ var _slowmo_tween: Tween = null
 var _squash_spring_active: bool = false
 var _squash_value: Vector2 = Vector2.ONE
 var _squash_velocity: Vector2 = Vector2.ZERO
-
 ## The camera these effects drive: an explicit override (Use Camera), else the active Camera2D —
 ## auto-found, so Shake / Zoom just work from anywhere without wiring a path.
 func _camera() -> Camera2D:
@@ -105,74 +105,18 @@ func _camera() -> Camera2D:
 	var vp: Viewport = get_viewport()
 	if vp == null:
 		return null
-	return vp.get_camera_2d()
+	return vp.get_camera_2d()"
 
-## Drives an ANCHORED zoom: keeps _zoom_anchor pinned under the same screen point as the zoom
-## interpolates (mouse-wheel-to-cursor feel). Called by Zoom Toward Point's tween each frame.
-func _zoom_anchored_step(f: float) -> void:
-	var cam: Camera2D = _camera()
-	if cam == null:
-		return
-	var z: Vector2 = _zoom_from.lerp(_zoom_to, f)
-	z.x = maxf(z.x, 0.001)
-	z.y = maxf(z.y, 0.001)
-	cam.zoom = z
-	cam.global_position = _zoom_anchor - (_zoom_anchor - _zoom_cam_from) * (_zoom_from / z)
-
-## @ace_condition
-## @ace_name(\"Is Shaking\")
-## @ace_category(\"Juice\")
-func is_shaking() -> bool:
-	return trauma > 0.0
-
-## @ace_expression
-## @ace_name(\"Trauma\")
-## @ace_category(\"Juice\")
-func current_trauma() -> float:
-	return trauma
-
-func _set_time_scale(s: float) -> void:
-	Engine.time_scale = s
-
-## Maps a slowmo easing-curve name (Inspector enum) to a Tween.TransitionType.
-func _slowmo_trans(easing_name: String) -> int:
-	match easing_name:
-		\"linear\": return Tween.TRANS_LINEAR
-		\"quad\": return Tween.TRANS_QUAD
-		\"cubic\": return Tween.TRANS_CUBIC
-		\"expo\": return Tween.TRANS_EXPO
-		\"circ\": return Tween.TRANS_CIRC
-		\"back\": return Tween.TRANS_BACK
-		_: return Tween.TRANS_SINE
-
-## Maps a slowmo easing-direction name (Inspector enum) to a Tween.EaseType.
-func _slowmo_ease(easing_name: String) -> int:
-	match easing_name:
-		\"in\": return Tween.EASE_IN
-		\"in_out\": return Tween.EASE_IN_OUT
-		\"out_in\": return Tween.EASE_OUT_IN
-		_: return Tween.EASE_OUT
-
-## Applies a scale to the host whether it's a Node2D or a Control (centring a Control's pivot so
-## it scales from the middle). Used by Spring Squash's per-frame integrator.
-func _apply_host_scale(s: Vector2) -> void:
-	if host is Node2D:
-		(host as Node2D).scale = s
-	elif host is Control:
-		var c: Control = host as Control
-		c.pivot_offset = c.size / 2.0
-		c.scale = s"
-
-[sub_resource type="Resource" id="Resource_dp0f6"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_c7w01"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "FastNoiseLite.new()",
 "var_name": "_noise"
 }
 
-[sub_resource type="Resource" id="Resource_timcu"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_flw5d"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetProperty"
 params = {
 "property": "noise_type",
@@ -180,8 +124,8 @@ params = {
 "value": "FastNoiseLite.TYPE_SIMPLEX_SMOOTH"
 }
 
-[sub_resource type="Resource" id="Resource_c7w01"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_1d8tj"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetProperty"
 params = {
 "property": "frequency",
@@ -189,8 +133,8 @@ params = {
 "value": "1.0"
 }
 
-[sub_resource type="Resource" id="Resource_flw5d"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_sk1ln"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetProperty"
 params = {
 "property": "seed",
@@ -198,21 +142,21 @@ params = {
 "value": "randi()"
 }
 
-[sub_resource type="Resource" id="Resource_1d8tj"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_dp0f6"), SubResource("Resource_timcu"), SubResource("Resource_c7w01"), SubResource("Resource_flw5d")])
+[sub_resource type="Resource" id="Resource_exiid"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_c7w01"), SubResource("Resource_flw5d"), SubResource("Resource_1d8tj"), SubResource("Resource_sk1ln")])
 event_uid = "423120"
 
-[sub_resource type="Resource" id="Resource_sk1ln"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_7b1it"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "(host as Node2D).scale",
 "var_name": "_base_scale"
 }
 
-[sub_resource type="Resource" id="Resource_exiid"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_y8i3a"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "is",
@@ -220,22 +164,22 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_7b1it"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_exiid")])
-actions = Array[Resource]([SubResource("Resource_sk1ln")])
+[sub_resource type="Resource" id="Resource_mx66i"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_y8i3a")])
+actions = Array[Resource]([SubResource("Resource_7b1it")])
 event_uid = "e7c67b"
 
-[sub_resource type="Resource" id="Resource_y8i3a"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_8i2fn"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "(host as Control).scale",
 "var_name": "_base_scale"
 }
 
-[sub_resource type="Resource" id="Resource_mx66i"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_3cbs0"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "is",
@@ -243,50 +187,50 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_8i2fn"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_mx66i")])
-actions = Array[Resource]([SubResource("Resource_y8i3a")])
+[sub_resource type="Resource" id="Resource_ehwlx"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_3cbs0")])
+actions = Array[Resource]([SubResource("Resource_8i2fn")])
 else_mode = 1
 event_uid = "04d1ee"
 
-[sub_resource type="Resource" id="Resource_3cbs0"]
-script = ExtResource("7_ixhnj")
+[sub_resource type="Resource" id="Resource_cuvq4"]
+script = ExtResource("7_04rea")
 trigger_provider_id = "Core"
 trigger_id = "OnReady"
-sub_events = Array[Resource]([SubResource("Resource_1d8tj"), SubResource("Resource_7b1it"), SubResource("Resource_8i2fn")])
+sub_events = Array[Resource]([SubResource("Resource_exiid"), SubResource("Resource_mx66i"), SubResource("Resource_ehwlx")])
 event_uid = "a4caf5"
 
-[sub_resource type="Resource" id="Resource_ehwlx"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_4hslg"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallFunction"
 params = {
 "args": "",
 "function_name": "clear_slowmo"
 }
 
-[sub_resource type="Resource" id="Resource_cuvq4"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_ehwlx")])
+[sub_resource type="Resource" id="Resource_7xh2n"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_4hslg")])
 event_uid = "ad5907"
 
-[sub_resource type="Resource" id="Resource_4hslg"]
-script = ExtResource("7_ixhnj")
+[sub_resource type="Resource" id="Resource_vutrg"]
+script = ExtResource("7_04rea")
 trigger_provider_id = "Core"
 trigger_id = "OnTreeExiting"
-sub_events = Array[Resource]([SubResource("Resource_cuvq4")])
+sub_events = Array[Resource]([SubResource("Resource_7xh2n")])
 event_uid = "e1c954"
 
-[sub_resource type="Resource" id="Resource_7xh2n"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_7wugj"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "maxf(trauma - shake_decay * delta, 0.0)",
 "var_name": "trauma"
 }
 
-[sub_resource type="Resource" id="Resource_vutrg"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_ewr3c"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "cam",
@@ -294,8 +238,8 @@ params = {
 "var_type": "Camera2D"
 }
 
-[sub_resource type="Resource" id="Resource_7wugj"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_eriro"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": ">",
@@ -303,8 +247,8 @@ params = {
 "var_name": "trauma"
 }
 
-[sub_resource type="Resource" id="Resource_ewr3c"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_eu7pb"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -312,58 +256,58 @@ params = {
 "var_name": "cam"
 }
 
-[sub_resource type="Resource" id="Resource_eriro"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_lurb6"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "true",
 "var_name": "_shaking"
 }
 
-[sub_resource type="Resource" id="Resource_eu7pb"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_0lco1"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "cam.offset",
 "var_name": "_base_offset"
 }
 
-[sub_resource type="Resource" id="Resource_lurb6"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_ofju1"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "cam.rotation",
 "var_name": "_base_rotation"
 }
 
-[sub_resource type="Resource" id="Resource_0lco1"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_q568v"]
+script = ExtResource("4_yqweo")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "not _shaking"
 }
 
-[sub_resource type="Resource" id="Resource_ofju1"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_0lco1")])
-actions = Array[Resource]([SubResource("Resource_eriro"), SubResource("Resource_eu7pb"), SubResource("Resource_lurb6")])
+[sub_resource type="Resource" id="Resource_6f2ks"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_q568v")])
+actions = Array[Resource]([SubResource("Resource_lurb6"), SubResource("Resource_0lco1"), SubResource("Resource_ofju1")])
 event_uid = "e58496"
 
-[sub_resource type="Resource" id="Resource_q568v"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_50sw7"]
+script = ExtResource("8_yc8eo")
 ace_id = "AddVar"
 params = {
 "amount": "delta",
 "var_name": "shake_time"
 }
 
-[sub_resource type="Resource" id="Resource_6f2ks"]
-script = ExtResource("3_mxhkf")
+[sub_resource type="Resource" id="Resource_inir4"]
+script = ExtResource("3_m121v")
 code = "# Square the trauma so the shake ramps in perceptually (Squirrel Eiserloh's model)."
 lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_50sw7"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_sh2r7"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "amount",
@@ -371,8 +315,8 @@ params = {
 "var_type": "float"
 }
 
-[sub_resource type="Resource" id="Resource_inir4"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_17o54"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "t",
@@ -380,16 +324,16 @@ params = {
 "var_type": "float"
 }
 
-[sub_resource type="Resource" id="Resource_sh2r7"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_87bbh"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetCameraOffset"
 params = {
 "offset": "_base_offset + Vector2(max_offset.x * amount * _noise.get_noise_2d(t, 0.0), max_offset.y * amount * _noise.get_noise_2d(0.0, t))",
 "target": "cam"
 }
 
-[sub_resource type="Resource" id="Resource_17o54"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_tkhpc"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetProperty"
 params = {
 "property": "rotation",
@@ -397,8 +341,8 @@ params = {
 "value": "_base_rotation + deg_to_rad(max_roll_degrees) * amount * _noise.get_noise_2d(t, t)"
 }
 
-[sub_resource type="Resource" id="Resource_87bbh"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_8mvxw"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": ">",
@@ -406,27 +350,27 @@ params = {
 "var_name": "trauma"
 }
 
-[sub_resource type="Resource" id="Resource_tkhpc"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_87bbh")])
-actions = Array[Resource]([SubResource("Resource_q568v"), SubResource("Resource_6f2ks"), SubResource("Resource_50sw7"), SubResource("Resource_inir4"), SubResource("Resource_sh2r7"), SubResource("Resource_17o54")])
+[sub_resource type="Resource" id="Resource_clrk7"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_8mvxw")])
+actions = Array[Resource]([SubResource("Resource_50sw7"), SubResource("Resource_inir4"), SubResource("Resource_sh2r7"), SubResource("Resource_17o54"), SubResource("Resource_87bbh"), SubResource("Resource_tkhpc")])
 event_uid = "955770"
 
-[sub_resource type="Resource" id="Resource_8mvxw"]
-script = ExtResource("3_mxhkf")
+[sub_resource type="Resource" id="Resource_8xpvh"]
+script = ExtResource("3_m121v")
 code = "# Settled this frame: restore the camera's resting offset/roll."
 lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_clrk7"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_w2pm0"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetCameraOffset"
 params = {
 "offset": "_base_offset",
 "target": "cam"
 }
 
-[sub_resource type="Resource" id="Resource_8xpvh"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_apwgh"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetProperty"
 params = {
 "property": "rotation",
@@ -434,36 +378,36 @@ params = {
 "value": "_base_rotation"
 }
 
-[sub_resource type="Resource" id="Resource_w2pm0"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_8mvxw"), SubResource("Resource_clrk7"), SubResource("Resource_8xpvh")])
+[sub_resource type="Resource" id="Resource_woj84"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_8xpvh"), SubResource("Resource_w2pm0"), SubResource("Resource_apwgh")])
 else_mode = 1
 event_uid = "6f64fb"
 
-[sub_resource type="Resource" id="Resource_apwgh"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_ewr3c")])
-sub_events = Array[Resource]([SubResource("Resource_ofju1"), SubResource("Resource_tkhpc"), SubResource("Resource_w2pm0")])
+[sub_resource type="Resource" id="Resource_hrnu1"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_eu7pb")])
+sub_events = Array[Resource]([SubResource("Resource_6f2ks"), SubResource("Resource_clrk7"), SubResource("Resource_woj84")])
 event_uid = "1f0595"
 
-[sub_resource type="Resource" id="Resource_woj84"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_j6v81"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "false",
 "var_name": "_shaking"
 }
 
-[sub_resource type="Resource" id="Resource_hrnu1"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_f1cpr"]
+script = ExtResource("8_yc8eo")
 ace_id = "EmitSignal"
 params = {
 "args": "",
 "signal_name": "shake_stopped"
 }
 
-[sub_resource type="Resource" id="Resource_j6v81"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_u0bn4"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "<=",
@@ -471,104 +415,104 @@ params = {
 "var_name": "trauma"
 }
 
-[sub_resource type="Resource" id="Resource_f1cpr"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_th4ha"]
+script = ExtResource("4_yqweo")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "_shaking"
 }
 
-[sub_resource type="Resource" id="Resource_u0bn4"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_j6v81"), SubResource("Resource_f1cpr")])
-actions = Array[Resource]([SubResource("Resource_woj84"), SubResource("Resource_hrnu1")])
+[sub_resource type="Resource" id="Resource_lwvey"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_u0bn4"), SubResource("Resource_th4ha")])
+actions = Array[Resource]([SubResource("Resource_j6v81"), SubResource("Resource_f1cpr")])
 event_uid = "a3ec66"
 
-[sub_resource type="Resource" id="Resource_th4ha"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_7wugj")])
-actions = Array[Resource]([SubResource("Resource_7xh2n"), SubResource("Resource_vutrg")])
-sub_events = Array[Resource]([SubResource("Resource_apwgh"), SubResource("Resource_u0bn4")])
+[sub_resource type="Resource" id="Resource_p4lf5"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_eriro")])
+actions = Array[Resource]([SubResource("Resource_7wugj"), SubResource("Resource_ewr3c")])
+sub_events = Array[Resource]([SubResource("Resource_hrnu1"), SubResource("Resource_lwvey")])
 event_uid = "21cd3b"
 
-[sub_resource type="Resource" id="Resource_lwvey"]
-script = ExtResource("3_mxhkf")
+[sub_resource type="Resource" id="Resource_auqic"]
+script = ExtResource("3_m121v")
 code = "# Spring the scale back to rest (semi-implicit, framerate-independent — same model as the Spring pack)."
 lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_p4lf5"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_excm4"]
+script = ExtResource("8_yc8eo")
 ace_id = "AddVar"
 params = {
 "amount": "(_base_scale - _squash_value) * squash_stiffness * delta",
 "var_name": "_squash_velocity"
 }
 
-[sub_resource type="Resource" id="Resource_auqic"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_vmstg"]
+script = ExtResource("8_yc8eo")
 ace_id = "MultiplyVar"
 params = {
 "amount": "pow(1.0 - squash_damping, delta)",
 "var_name": "_squash_velocity"
 }
 
-[sub_resource type="Resource" id="Resource_excm4"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_7re2o"]
+script = ExtResource("8_yc8eo")
 ace_id = "AddVar"
 params = {
 "amount": "_squash_velocity * delta",
 "var_name": "_squash_value"
 }
 
-[sub_resource type="Resource" id="Resource_vmstg"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_28ufx"]
+script = ExtResource("4_yqweo")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "_squash_spring_active"
 }
 
-[sub_resource type="Resource" id="Resource_7re2o"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_nd8vq"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "_base_scale",
 "var_name": "_squash_value"
 }
 
-[sub_resource type="Resource" id="Resource_28ufx"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_23ged"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "Vector2.ZERO",
 "var_name": "_squash_velocity"
 }
 
-[sub_resource type="Resource" id="Resource_nd8vq"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_cc57q"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "false",
 "var_name": "_squash_spring_active"
 }
 
-[sub_resource type="Resource" id="Resource_23ged"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_5vder"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallFunction"
 params = {
 "args": "_base_scale",
 "function_name": "_apply_host_scale"
 }
 
-[sub_resource type="Resource" id="Resource_cc57q"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_k27tb"]
+script = ExtResource("8_yc8eo")
 ace_id = "EmitSignal"
 params = {
 "args": "",
 "signal_name": "squash_finished"
 }
 
-[sub_resource type="Resource" id="Resource_5vder"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_d86c0"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "-",
@@ -576,8 +520,8 @@ params = {
 "var_name": "(_base_scale"
 }
 
-[sub_resource type="Resource" id="Resource_k27tb"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_ofisl"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "<",
@@ -585,89 +529,89 @@ params = {
 "var_name": "_squash_velocity.length()"
 }
 
-[sub_resource type="Resource" id="Resource_d86c0"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_5vder"), SubResource("Resource_k27tb")])
-actions = Array[Resource]([SubResource("Resource_7re2o"), SubResource("Resource_28ufx"), SubResource("Resource_nd8vq"), SubResource("Resource_23ged"), SubResource("Resource_cc57q")])
+[sub_resource type="Resource" id="Resource_uet3t"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_d86c0"), SubResource("Resource_ofisl")])
+actions = Array[Resource]([SubResource("Resource_nd8vq"), SubResource("Resource_23ged"), SubResource("Resource_cc57q"), SubResource("Resource_5vder"), SubResource("Resource_k27tb")])
 event_uid = "b458d6"
 
-[sub_resource type="Resource" id="Resource_ofisl"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_hg3oy"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallFunction"
 params = {
 "args": "_squash_value",
 "function_name": "_apply_host_scale"
 }
 
-[sub_resource type="Resource" id="Resource_uet3t"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_ofisl")])
+[sub_resource type="Resource" id="Resource_46hej"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_hg3oy")])
 else_mode = 1
 event_uid = "1c9d62"
 
-[sub_resource type="Resource" id="Resource_hg3oy"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_vmstg")])
-actions = Array[Resource]([SubResource("Resource_lwvey"), SubResource("Resource_p4lf5"), SubResource("Resource_auqic"), SubResource("Resource_excm4")])
-sub_events = Array[Resource]([SubResource("Resource_d86c0"), SubResource("Resource_uet3t")])
+[sub_resource type="Resource" id="Resource_qadsb"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_28ufx")])
+actions = Array[Resource]([SubResource("Resource_auqic"), SubResource("Resource_excm4"), SubResource("Resource_vmstg"), SubResource("Resource_7re2o")])
+sub_events = Array[Resource]([SubResource("Resource_uet3t"), SubResource("Resource_46hej")])
 event_uid = "2e7f9e"
 
-[sub_resource type="Resource" id="Resource_46hej"]
-script = ExtResource("7_ixhnj")
+[sub_resource type="Resource" id="Resource_nomh8"]
+script = ExtResource("7_04rea")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-sub_events = Array[Resource]([SubResource("Resource_th4ha"), SubResource("Resource_hg3oy")])
+sub_events = Array[Resource]([SubResource("Resource_p4lf5"), SubResource("Resource_qadsb")])
 event_uid = "d5bf89"
 
-[sub_resource type="Resource" id="Resource_qadsb"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_s66kd"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "clampf(trauma + strength, 0.0, 1.0)",
 "var_name": "trauma"
 }
 
-[sub_resource type="Resource" id="Resource_nomh8"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_qadsb")])
+[sub_resource type="Resource" id="Resource_2tel6"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_s66kd")])
 event_uid = "f4e38d"
 
-[sub_resource type="Resource" id="Resource_s66kd"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_ggkvp"]
+script = ExtResource("9_ay68o")
 id = "strength"
 type_name = "float"
 default_value = "0.4"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_2tel6"]
-script = ExtResource("10_ay68o")
+[sub_resource type="Resource" id="Resource_naup3"]
+script = ExtResource("10_yi7a2")
 function_name = "shake"
 description = "Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically — fire it on every hit."
 expose_as_ace = true
 ace_display_name = "Shake"
 ace_category = "Juice"
-params = Array[ExtResource("9_yc8eo")]([SubResource("Resource_s66kd")])
-events = Array[Resource]([SubResource("Resource_nomh8")])
+params = Array[ExtResource("9_ay68o")]([SubResource("Resource_ggkvp")])
+events = Array[Resource]([SubResource("Resource_2tel6")])
 
-[sub_resource type="Resource" id="Resource_ggkvp"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_dgkks"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "0.0",
 "var_name": "trauma"
 }
 
-[sub_resource type="Resource" id="Resource_naup3"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_gwqlt"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "0.0",
 "var_name": "shake_time"
 }
 
-[sub_resource type="Resource" id="Resource_dgkks"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_v228n"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "cam",
@@ -675,21 +619,21 @@ params = {
 "var_type": "Camera2D"
 }
 
-[sub_resource type="Resource" id="Resource_gwqlt"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_ggkvp"), SubResource("Resource_naup3"), SubResource("Resource_dgkks")])
+[sub_resource type="Resource" id="Resource_i3aeb"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_dgkks"), SubResource("Resource_gwqlt"), SubResource("Resource_v228n")])
 event_uid = "0290e4"
 
-[sub_resource type="Resource" id="Resource_v228n"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_henei"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetCameraOffset"
 params = {
 "offset": "_base_offset",
 "target": "cam"
 }
 
-[sub_resource type="Resource" id="Resource_i3aeb"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_ddoon"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetProperty"
 params = {
 "property": "rotation",
@@ -697,8 +641,8 @@ params = {
 "value": "_base_rotation"
 }
 
-[sub_resource type="Resource" id="Resource_henei"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_otqox"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -706,73 +650,73 @@ params = {
 "var_name": "cam"
 }
 
-[sub_resource type="Resource" id="Resource_ddoon"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_y7rhm"]
+script = ExtResource("4_yqweo")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "_shaking"
 }
 
-[sub_resource type="Resource" id="Resource_otqox"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_henei"), SubResource("Resource_ddoon")])
-actions = Array[Resource]([SubResource("Resource_v228n"), SubResource("Resource_i3aeb")])
+[sub_resource type="Resource" id="Resource_w6240"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_otqox"), SubResource("Resource_y7rhm")])
+actions = Array[Resource]([SubResource("Resource_henei"), SubResource("Resource_ddoon")])
 event_uid = "a43dbf"
 
-[sub_resource type="Resource" id="Resource_y7rhm"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_tiigf"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "false",
 "var_name": "_shaking"
 }
 
-[sub_resource type="Resource" id="Resource_w6240"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_y7rhm")])
+[sub_resource type="Resource" id="Resource_sjtqk"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_tiigf")])
 event_uid = "db2ca3"
 
-[sub_resource type="Resource" id="Resource_tiigf"]
-script = ExtResource("10_ay68o")
+[sub_resource type="Resource" id="Resource_xfvjl"]
+script = ExtResource("10_yi7a2")
 function_name = "stop_shake"
 description = "Cancels any shake and restores the camera to rest immediately."
 expose_as_ace = true
 ace_display_name = "Stop Shake"
 ace_category = "Juice"
-events = Array[Resource]([SubResource("Resource_gwqlt"), SubResource("Resource_otqox"), SubResource("Resource_w6240")])
+events = Array[Resource]([SubResource("Resource_i3aeb"), SubResource("Resource_w6240"), SubResource("Resource_sjtqk")])
 
-[sub_resource type="Resource" id="Resource_sjtqk"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_i5t78"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "get_node_or_null(camera_path) as Camera2D",
 "var_name": "_camera_override"
 }
 
-[sub_resource type="Resource" id="Resource_xfvjl"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_sjtqk")])
+[sub_resource type="Resource" id="Resource_2y5kx"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_i5t78")])
 event_uid = "c9eaaf"
 
-[sub_resource type="Resource" id="Resource_i5t78"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_q3jnw"]
+script = ExtResource("9_ay68o")
 id = "camera_path"
 type_name = "NodePath"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_2y5kx"]
-script = ExtResource("10_ay68o")
+[sub_resource type="Resource" id="Resource_8s5en"]
+script = ExtResource("10_yi7a2")
 function_name = "use_camera"
 description = "Pin the effects to a specific Camera2D (by path). Leave it unused to auto-target whichever camera is active."
 expose_as_ace = true
 ace_display_name = "Use Camera"
 ace_category = "Juice"
-params = Array[ExtResource("9_yc8eo")]([SubResource("Resource_i5t78")])
-events = Array[Resource]([SubResource("Resource_xfvjl")])
+params = Array[ExtResource("9_ay68o")]([SubResource("Resource_q3jnw")])
+events = Array[Resource]([SubResource("Resource_2y5kx")])
 
-[sub_resource type="Resource" id="Resource_q3jnw"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_8ge11"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "cam",
@@ -780,17 +724,17 @@ params = {
 "var_type": "Camera2D"
 }
 
-[sub_resource type="Resource" id="Resource_8s5en"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_q3jnw")])
+[sub_resource type="Resource" id="Resource_l1mgr"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_8ge11")])
 event_uid = "df63c3"
 
-[sub_resource type="Resource" id="Resource_8ge11"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_ueage"]
+script = ExtResource("8_yc8eo")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_l1mgr"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_bn1qw"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "==",
@@ -798,14 +742,14 @@ params = {
 "var_name": "cam"
 }
 
-[sub_resource type="Resource" id="Resource_ueage"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_l1mgr")])
-actions = Array[Resource]([SubResource("Resource_8ge11")])
+[sub_resource type="Resource" id="Resource_gdcvo"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_bn1qw")])
+actions = Array[Resource]([SubResource("Resource_ueage")])
 event_uid = "58eb6f"
 
-[sub_resource type="Resource" id="Resource_bn1qw"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_7gm8s"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "target_zoom",
@@ -813,16 +757,16 @@ params = {
 "var_type": "Vector2"
 }
 
-[sub_resource type="Resource" id="Resource_gdcvo"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_pnn3l"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "Vector2(clampf(target_zoom.x, min_zoom, max_zoom), clampf(target_zoom.y, min_zoom, max_zoom))",
 "var_name": "target_zoom"
 }
 
-[sub_resource type="Resource" id="Resource_7gm8s"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_g8umx"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "tw",
@@ -830,8 +774,8 @@ params = {
 "var_type": "Tween"
 }
 
-[sub_resource type="Resource" id="Resource_pnn3l"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_y3bpv"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallMethod"
 params = {
 "args": "cam, \"zoom\", target_zoom, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT",
@@ -839,47 +783,47 @@ params = {
 "target": "tw"
 }
 
-[sub_resource type="Resource" id="Resource_g8umx"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_0l3yc"]
+script = ExtResource("8_yc8eo")
 ace_id = "EmitSignal"
 params = {
 "args": ")",
 "signal_name": "tw.finished.connect(func() -> void: zoom_finished"
 }
 
-[sub_resource type="Resource" id="Resource_y3bpv"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_bn1qw"), SubResource("Resource_gdcvo"), SubResource("Resource_7gm8s"), SubResource("Resource_pnn3l"), SubResource("Resource_g8umx")])
+[sub_resource type="Resource" id="Resource_un7g1"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_7gm8s"), SubResource("Resource_pnn3l"), SubResource("Resource_g8umx"), SubResource("Resource_y3bpv"), SubResource("Resource_0l3yc")])
 event_uid = "454686"
 
-[sub_resource type="Resource" id="Resource_0l3yc"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_461w0"]
+script = ExtResource("9_ay68o")
 id = "percent"
 type_name = "float"
 default_value = "150"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_un7g1"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_treek"]
+script = ExtResource("9_ay68o")
 id = "duration"
 type_name = "float"
 default_value = "0.4"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_461w0"]
-script = ExtResource("10_ay68o")
+[sub_resource type="Resource" id="Resource_gb47t"]
+script = ExtResource("10_yi7a2")
 function_name = "zoom_by_percent"
 description = "Smoothly zooms the camera (100 = no change, 150 = zoom in 1.5x, 50 = zoom out). Clamped to the min/max zoom knobs."
 expose_as_ace = true
 ace_display_name = "Zoom By Percent"
 ace_category = "Juice"
-params = Array[ExtResource("9_yc8eo")]([SubResource("Resource_0l3yc"), SubResource("Resource_un7g1")])
-events = Array[Resource]([SubResource("Resource_8s5en"), SubResource("Resource_ueage"), SubResource("Resource_y3bpv")])
+params = Array[ExtResource("9_ay68o")]([SubResource("Resource_461w0"), SubResource("Resource_treek")])
+events = Array[Resource]([SubResource("Resource_l1mgr"), SubResource("Resource_gdcvo"), SubResource("Resource_un7g1")])
 
-[sub_resource type="Resource" id="Resource_treek"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_cgpmo"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "cam",
@@ -887,17 +831,17 @@ params = {
 "var_type": "Camera2D"
 }
 
-[sub_resource type="Resource" id="Resource_gb47t"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_treek")])
+[sub_resource type="Resource" id="Resource_gftge"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_cgpmo")])
 event_uid = "ff3590"
 
-[sub_resource type="Resource" id="Resource_cgpmo"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_b1xqy"]
+script = ExtResource("8_yc8eo")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_gftge"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_5perj"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "==",
@@ -905,14 +849,14 @@ params = {
 "var_name": "cam"
 }
 
-[sub_resource type="Resource" id="Resource_b1xqy"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_gftge")])
-actions = Array[Resource]([SubResource("Resource_cgpmo")])
+[sub_resource type="Resource" id="Resource_iliu7"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_5perj")])
+actions = Array[Resource]([SubResource("Resource_b1xqy")])
 event_uid = "02d27c"
 
-[sub_resource type="Resource" id="Resource_5perj"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_qdnwj"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "target_zoom",
@@ -920,16 +864,16 @@ params = {
 "var_type": "Vector2"
 }
 
-[sub_resource type="Resource" id="Resource_iliu7"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_psfh7"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "Vector2(clampf(target_zoom.x, min_zoom, max_zoom), clampf(target_zoom.y, min_zoom, max_zoom))",
 "var_name": "target_zoom"
 }
 
-[sub_resource type="Resource" id="Resource_qdnwj"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_kw47e"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "seconds",
@@ -937,8 +881,8 @@ params = {
 "var_type": "float"
 }
 
-[sub_resource type="Resource" id="Resource_psfh7"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_0jwuk"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "tw",
@@ -946,8 +890,8 @@ params = {
 "var_type": "Tween"
 }
 
-[sub_resource type="Resource" id="Resource_kw47e"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_808xl"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallMethod"
 params = {
 "args": "cam, \"zoom\", target_zoom, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT",
@@ -955,8 +899,8 @@ params = {
 "target": "tw"
 }
 
-[sub_resource type="Resource" id="Resource_0jwuk"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_a6ybo"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallMethod"
 params = {
 "args": "cam, \"global_position\", world_position, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT",
@@ -964,54 +908,54 @@ params = {
 "target": "tw"
 }
 
-[sub_resource type="Resource" id="Resource_808xl"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_mm2ve"]
+script = ExtResource("8_yc8eo")
 ace_id = "EmitSignal"
 params = {
 "args": ")",
 "signal_name": "tw.finished.connect(func() -> void: zoom_finished"
 }
 
-[sub_resource type="Resource" id="Resource_a6ybo"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_5perj"), SubResource("Resource_iliu7"), SubResource("Resource_qdnwj"), SubResource("Resource_psfh7"), SubResource("Resource_kw47e"), SubResource("Resource_0jwuk"), SubResource("Resource_808xl")])
+[sub_resource type="Resource" id="Resource_m46xn"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_qdnwj"), SubResource("Resource_psfh7"), SubResource("Resource_kw47e"), SubResource("Resource_0jwuk"), SubResource("Resource_808xl"), SubResource("Resource_a6ybo"), SubResource("Resource_mm2ve")])
 event_uid = "0faad6"
 
-[sub_resource type="Resource" id="Resource_mm2ve"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_w21yq"]
+script = ExtResource("9_ay68o")
 id = "world_position"
 type_name = "Vector2"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_m46xn"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_6x3qj"]
+script = ExtResource("9_ay68o")
 id = "percent"
 type_name = "float"
 default_value = "150"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_w21yq"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_8nsos"]
+script = ExtResource("9_ay68o")
 id = "duration"
 type_name = "float"
 default_value = "0.4"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_6x3qj"]
-script = ExtResource("10_ay68o")
+[sub_resource type="Resource" id="Resource_1bxvv"]
+script = ExtResource("10_yi7a2")
 function_name = "zoom_to_position"
 description = "Zooms in while gliding the camera so a world position becomes the screen CENTRE — frame a spot in one action."
 expose_as_ace = true
 ace_display_name = "Zoom To Position"
 ace_category = "Juice"
-params = Array[ExtResource("9_yc8eo")]([SubResource("Resource_mm2ve"), SubResource("Resource_m46xn"), SubResource("Resource_w21yq")])
-events = Array[Resource]([SubResource("Resource_gb47t"), SubResource("Resource_b1xqy"), SubResource("Resource_a6ybo")])
+params = Array[ExtResource("9_ay68o")]([SubResource("Resource_w21yq"), SubResource("Resource_6x3qj"), SubResource("Resource_8nsos")])
+events = Array[Resource]([SubResource("Resource_gftge"), SubResource("Resource_iliu7"), SubResource("Resource_m46xn")])
 
-[sub_resource type="Resource" id="Resource_8nsos"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_0frtw"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "cam",
@@ -1019,17 +963,17 @@ params = {
 "var_type": "Camera2D"
 }
 
-[sub_resource type="Resource" id="Resource_1bxvv"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_8nsos")])
+[sub_resource type="Resource" id="Resource_jxmgn"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_0frtw")])
 event_uid = "8e0df5"
 
-[sub_resource type="Resource" id="Resource_0frtw"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_4ehcd"]
+script = ExtResource("8_yc8eo")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_jxmgn"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_j8yiu"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "==",
@@ -1037,30 +981,30 @@ params = {
 "var_name": "cam"
 }
 
-[sub_resource type="Resource" id="Resource_4ehcd"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_jxmgn")])
-actions = Array[Resource]([SubResource("Resource_0frtw")])
+[sub_resource type="Resource" id="Resource_w5hnr"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_j8yiu")])
+actions = Array[Resource]([SubResource("Resource_4ehcd")])
 event_uid = "9a9367"
 
-[sub_resource type="Resource" id="Resource_j8yiu"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_olmq7"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "cam.global_position",
 "var_name": "_zoom_cam_from"
 }
 
-[sub_resource type="Resource" id="Resource_w5hnr"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_e82ao"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "cam.zoom",
 "var_name": "_zoom_from"
 }
 
-[sub_resource type="Resource" id="Resource_olmq7"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_spx1h"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "target_zoom",
@@ -1068,24 +1012,24 @@ params = {
 "var_type": "Vector2"
 }
 
-[sub_resource type="Resource" id="Resource_e82ao"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_dmfgk"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "Vector2(clampf(target_zoom.x, min_zoom, max_zoom), clampf(target_zoom.y, min_zoom, max_zoom))",
 "var_name": "_zoom_to"
 }
 
-[sub_resource type="Resource" id="Resource_spx1h"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_lo7vw"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "world_position",
 "var_name": "_zoom_anchor"
 }
 
-[sub_resource type="Resource" id="Resource_dmfgk"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_42qtt"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "tw",
@@ -1093,8 +1037,8 @@ params = {
 "var_type": "Tween"
 }
 
-[sub_resource type="Resource" id="Resource_lo7vw"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_8ot6t"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallMethod"
 params = {
 "args": "_zoom_anchored_step, 0.0, 1.0, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT",
@@ -1102,58 +1046,58 @@ params = {
 "target": "tw"
 }
 
-[sub_resource type="Resource" id="Resource_42qtt"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_tr5qn"]
+script = ExtResource("8_yc8eo")
 ace_id = "EmitSignal"
 params = {
 "args": ")",
 "signal_name": "tw.finished.connect(func() -> void: zoom_finished"
 }
 
-[sub_resource type="Resource" id="Resource_8ot6t"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_j8yiu"), SubResource("Resource_w5hnr"), SubResource("Resource_olmq7"), SubResource("Resource_e82ao"), SubResource("Resource_spx1h"), SubResource("Resource_dmfgk"), SubResource("Resource_lo7vw"), SubResource("Resource_42qtt")])
+[sub_resource type="Resource" id="Resource_i8yii"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_olmq7"), SubResource("Resource_e82ao"), SubResource("Resource_spx1h"), SubResource("Resource_dmfgk"), SubResource("Resource_lo7vw"), SubResource("Resource_42qtt"), SubResource("Resource_8ot6t"), SubResource("Resource_tr5qn")])
 event_uid = "1fae86"
 
-[sub_resource type="Resource" id="Resource_tr5qn"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_safbn"]
+script = ExtResource("9_ay68o")
 id = "world_position"
 type_name = "Vector2"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_i8yii"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_so1wt"]
+script = ExtResource("9_ay68o")
 id = "percent"
 type_name = "float"
 default_value = "150"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_safbn"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_7e4oo"]
+script = ExtResource("9_ay68o")
 id = "duration"
 type_name = "float"
 default_value = "0.4"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_so1wt"]
-script = ExtResource("10_ay68o")
+[sub_resource type="Resource" id="Resource_t1oqh"]
+script = ExtResource("10_yi7a2")
 function_name = "zoom_toward_point"
 description = "Zooms while keeping a world position pinned under the same screen spot (mouse-wheel-to-cursor style) — great for strategy/map zoom."
 expose_as_ace = true
 ace_display_name = "Zoom Toward Point"
 ace_category = "Juice"
-params = Array[ExtResource("9_yc8eo")]([SubResource("Resource_tr5qn"), SubResource("Resource_i8yii"), SubResource("Resource_safbn")])
-events = Array[Resource]([SubResource("Resource_1bxvv"), SubResource("Resource_4ehcd"), SubResource("Resource_8ot6t")])
+params = Array[ExtResource("9_ay68o")]([SubResource("Resource_safbn"), SubResource("Resource_so1wt"), SubResource("Resource_7e4oo")])
+events = Array[Resource]([SubResource("Resource_jxmgn"), SubResource("Resource_w5hnr"), SubResource("Resource_i8yii")])
 
-[sub_resource type="Resource" id="Resource_7e4oo"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_xjk2q"]
+script = ExtResource("8_yc8eo")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_t1oqh"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_2bqny"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "==",
@@ -1161,14 +1105,14 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_xjk2q"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_t1oqh")])
-actions = Array[Resource]([SubResource("Resource_7e4oo")])
+[sub_resource type="Resource" id="Resource_1w55f"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_2bqny")])
+actions = Array[Resource]([SubResource("Resource_xjk2q")])
 event_uid = "a69a4e"
 
-[sub_resource type="Resource" id="Resource_2bqny"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_w4qxg"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "s",
@@ -1176,8 +1120,8 @@ params = {
 "var_type": "float"
 }
 
-[sub_resource type="Resource" id="Resource_1w55f"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_6fq30"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "stretched",
@@ -1185,21 +1129,21 @@ params = {
 "var_type": "Vector2"
 }
 
-[sub_resource type="Resource" id="Resource_w4qxg"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_2bqny"), SubResource("Resource_1w55f")])
+[sub_resource type="Resource" id="Resource_10qsn"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_w4qxg"), SubResource("Resource_6fq30")])
 event_uid = "c55d42"
 
-[sub_resource type="Resource" id="Resource_6fq30"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_4p0ac"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetScale3D"
 params = {
 "scale": "stretched",
 "target": "(host as Node2D)"
 }
 
-[sub_resource type="Resource" id="Resource_10qsn"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_iahju"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "is",
@@ -1207,14 +1151,14 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_4p0ac"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_10qsn")])
-actions = Array[Resource]([SubResource("Resource_6fq30")])
+[sub_resource type="Resource" id="Resource_n0vm7"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_iahju")])
+actions = Array[Resource]([SubResource("Resource_4p0ac")])
 event_uid = "349f13"
 
-[sub_resource type="Resource" id="Resource_iahju"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_reuwi"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "c",
@@ -1222,13 +1166,13 @@ params = {
 "var_type": "Control"
 }
 
-[sub_resource type="Resource" id="Resource_n0vm7"]
-script = ExtResource("3_mxhkf")
+[sub_resource type="Resource" id="Resource_on5xl"]
+script = ExtResource("3_m121v")
 code = "# Control scales from its top-left by default; centre the pivot so the pop reads right."
 lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_reuwi"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_hlg1b"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetProperty"
 params = {
 "property": "pivot_offset",
@@ -1236,16 +1180,16 @@ params = {
 "value": "c.size / 2.0"
 }
 
-[sub_resource type="Resource" id="Resource_on5xl"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_fbu6h"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetScale3D"
 params = {
 "scale": "stretched",
 "target": "c"
 }
 
-[sub_resource type="Resource" id="Resource_hlg1b"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_kdjca"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "is",
@@ -1253,25 +1197,25 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_fbu6h"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_hlg1b")])
-actions = Array[Resource]([SubResource("Resource_iahju"), SubResource("Resource_n0vm7"), SubResource("Resource_reuwi"), SubResource("Resource_on5xl")])
+[sub_resource type="Resource" id="Resource_xnh0p"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_kdjca")])
+actions = Array[Resource]([SubResource("Resource_reuwi"), SubResource("Resource_on5xl"), SubResource("Resource_hlg1b"), SubResource("Resource_fbu6h")])
 else_mode = 1
 event_uid = "ab4cd9"
 
-[sub_resource type="Resource" id="Resource_kdjca"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_ybtbr"]
+script = ExtResource("8_yc8eo")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_xnh0p"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_kdjca")])
+[sub_resource type="Resource" id="Resource_wvq2l"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_ybtbr")])
 else_mode = 1
 event_uid = "f392d7"
 
-[sub_resource type="Resource" id="Resource_ybtbr"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_aqiou"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "tw",
@@ -1279,8 +1223,8 @@ params = {
 "var_type": "Tween"
 }
 
-[sub_resource type="Resource" id="Resource_wvq2l"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_svlpb"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallMethod"
 params = {
 "args": "host, \"scale\", _base_scale, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT",
@@ -1288,51 +1232,51 @@ params = {
 "target": "tw"
 }
 
-[sub_resource type="Resource" id="Resource_aqiou"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_gkrtm"]
+script = ExtResource("8_yc8eo")
 ace_id = "EmitSignal"
 params = {
 "args": ")",
 "signal_name": "tw.finished.connect(func() -> void: squash_finished"
 }
 
-[sub_resource type="Resource" id="Resource_svlpb"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_ybtbr"), SubResource("Resource_wvq2l"), SubResource("Resource_aqiou")])
+[sub_resource type="Resource" id="Resource_ux1d5"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_aqiou"), SubResource("Resource_svlpb"), SubResource("Resource_gkrtm")])
 event_uid = "971cc3"
 
-[sub_resource type="Resource" id="Resource_gkrtm"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_wlbd3"]
+script = ExtResource("9_ay68o")
 id = "stretch"
 type_name = "float"
 default_value = "0.3"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_ux1d5"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_gh2gg"]
+script = ExtResource("9_ay68o")
 id = "duration"
 type_name = "float"
 default_value = "0.4"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_wlbd3"]
-script = ExtResource("10_ay68o")
+[sub_resource type="Resource" id="Resource_s58y8"]
+script = ExtResource("10_yi7a2")
 function_name = "squash_and_stretch"
 description = "Pops the host (Node2D or Control) with a volume-preserving stretch that springs back elastically. Positive = stretch tall (a jump), negative = squash wide (a landing)."
 expose_as_ace = true
 ace_display_name = "Squash & Stretch"
 ace_category = "Juice"
-params = Array[ExtResource("9_yc8eo")]([SubResource("Resource_gkrtm"), SubResource("Resource_ux1d5")])
-events = Array[Resource]([SubResource("Resource_xjk2q"), SubResource("Resource_w4qxg"), SubResource("Resource_4p0ac"), SubResource("Resource_fbu6h"), SubResource("Resource_xnh0p"), SubResource("Resource_svlpb")])
+params = Array[ExtResource("9_ay68o")]([SubResource("Resource_wlbd3"), SubResource("Resource_gh2gg")])
+events = Array[Resource]([SubResource("Resource_1w55f"), SubResource("Resource_10qsn"), SubResource("Resource_n0vm7"), SubResource("Resource_xnh0p"), SubResource("Resource_wvq2l"), SubResource("Resource_ux1d5")])
 
-[sub_resource type="Resource" id="Resource_gh2gg"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_r1a2v"]
+script = ExtResource("8_yc8eo")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_s58y8"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_76mug"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "==",
@@ -1340,14 +1284,14 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_r1a2v"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_s58y8")])
-actions = Array[Resource]([SubResource("Resource_gh2gg")])
+[sub_resource type="Resource" id="Resource_uefo7"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_76mug")])
+actions = Array[Resource]([SubResource("Resource_r1a2v")])
 event_uid = "f6cc00"
 
-[sub_resource type="Resource" id="Resource_76mug"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_yf70i"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "s",
@@ -1355,63 +1299,63 @@ params = {
 "var_type": "float"
 }
 
-[sub_resource type="Resource" id="Resource_uefo7"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_gpbqh"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "Vector2(_base_scale.x / (1.0 + s), _base_scale.y * (1.0 + s))",
 "var_name": "_squash_value"
 }
 
-[sub_resource type="Resource" id="Resource_yf70i"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_j2lf0"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "Vector2.ZERO",
 "var_name": "_squash_velocity"
 }
 
-[sub_resource type="Resource" id="Resource_gpbqh"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_1tjr0"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "true",
 "var_name": "_squash_spring_active"
 }
 
-[sub_resource type="Resource" id="Resource_j2lf0"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_wrn7a"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallFunction"
 params = {
 "args": "_squash_value",
 "function_name": "_apply_host_scale"
 }
 
-[sub_resource type="Resource" id="Resource_1tjr0"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_76mug"), SubResource("Resource_uefo7"), SubResource("Resource_yf70i"), SubResource("Resource_gpbqh"), SubResource("Resource_j2lf0")])
+[sub_resource type="Resource" id="Resource_b7k57"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_yf70i"), SubResource("Resource_gpbqh"), SubResource("Resource_j2lf0"), SubResource("Resource_1tjr0"), SubResource("Resource_wrn7a")])
 event_uid = "a38e76"
 
-[sub_resource type="Resource" id="Resource_wrn7a"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_qsr3d"]
+script = ExtResource("9_ay68o")
 id = "stretch"
 type_name = "float"
 default_value = "0.3"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_b7k57"]
-script = ExtResource("10_ay68o")
+[sub_resource type="Resource" id="Resource_2bftd"]
+script = ExtResource("10_yi7a2")
 function_name = "spring_squash"
 description = "Pops the host (Node2D or Control) with a volume-preserving stretch that springs back via a real spring (the stiffness/damping knobs) — bouncier + more organic than the tween Squash & Stretch. Positive = stretch tall (a jump), negative = squash wide (a landing)."
 expose_as_ace = true
 ace_display_name = "Spring Squash"
 ace_category = "Juice"
-params = Array[ExtResource("9_yc8eo")]([SubResource("Resource_wrn7a")])
-events = Array[Resource]([SubResource("Resource_r1a2v"), SubResource("Resource_1tjr0")])
+params = Array[ExtResource("9_ay68o")]([SubResource("Resource_qsr3d")])
+events = Array[Resource]([SubResource("Resource_uefo7"), SubResource("Resource_b7k57")])
 
-[sub_resource type="Resource" id="Resource_qsr3d"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_p1ouu"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallMethod"
 params = {
 "args": "",
@@ -1419,8 +1363,8 @@ params = {
 "target": "_slowmo_tween"
 }
 
-[sub_resource type="Resource" id="Resource_2bftd"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_otav7"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -1428,14 +1372,14 @@ params = {
 "var_name": "_slowmo_tween"
 }
 
-[sub_resource type="Resource" id="Resource_p1ouu"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_2bftd")])
-actions = Array[Resource]([SubResource("Resource_qsr3d")])
+[sub_resource type="Resource" id="Resource_ybuv4"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_otav7")])
+actions = Array[Resource]([SubResource("Resource_p1ouu")])
 event_uid = "96312a"
 
-[sub_resource type="Resource" id="Resource_otav7"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_8iis0"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "ts",
@@ -1443,8 +1387,8 @@ params = {
 "var_type": "float"
 }
 
-[sub_resource type="Resource" id="Resource_ybuv4"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_d5tyq"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "tw",
@@ -1452,8 +1396,8 @@ params = {
 "var_type": "Tween"
 }
 
-[sub_resource type="Resource" id="Resource_8iis0"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_mp4q5"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallMethod"
 params = {
 "args": "duration_clock == \"realtime\"",
@@ -1461,8 +1405,8 @@ params = {
 "target": "tw"
 }
 
-[sub_resource type="Resource" id="Resource_d5tyq"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_m7db2"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallMethod"
 params = {
 "args": "_set_time_scale, Engine.time_scale, ts, maxf(slowmo_fade_in_secs, 0.0001)).set_trans(_slowmo_trans(slowmo_fade_in_trans)).set_ease(_slowmo_ease(slowmo_fade_in_ease)",
@@ -1470,8 +1414,8 @@ params = {
 "target": "tw"
 }
 
-[sub_resource type="Resource" id="Resource_mp4q5"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_xqiow"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallMethod"
 params = {
 "args": "maxf(hold_duration, 0.0)",
@@ -1479,8 +1423,8 @@ params = {
 "target": "tw"
 }
 
-[sub_resource type="Resource" id="Resource_m7db2"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_knp87"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallMethod"
 params = {
 "args": "_set_time_scale, ts, 1.0, maxf(slowmo_fade_out_secs, 0.0001)).set_trans(_slowmo_trans(slowmo_fade_out_trans)).set_ease(_slowmo_ease(slowmo_fade_out_ease)",
@@ -1488,63 +1432,63 @@ params = {
 "target": "tw"
 }
 
-[sub_resource type="Resource" id="Resource_xqiow"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_hpaid"]
+script = ExtResource("8_yc8eo")
 ace_id = "EmitSignal"
 params = {
 "args": ")",
 "signal_name": "tw.finished.connect(func() -> void: slowmo_finished"
 }
 
-[sub_resource type="Resource" id="Resource_knp87"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_gn23s"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "tw",
 "var_name": "_slowmo_tween"
 }
 
-[sub_resource type="Resource" id="Resource_hpaid"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_otav7"), SubResource("Resource_ybuv4"), SubResource("Resource_8iis0"), SubResource("Resource_d5tyq"), SubResource("Resource_mp4q5"), SubResource("Resource_m7db2"), SubResource("Resource_xqiow"), SubResource("Resource_knp87")])
+[sub_resource type="Resource" id="Resource_vqqgj"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_8iis0"), SubResource("Resource_d5tyq"), SubResource("Resource_mp4q5"), SubResource("Resource_m7db2"), SubResource("Resource_xqiow"), SubResource("Resource_knp87"), SubResource("Resource_hpaid"), SubResource("Resource_gn23s")])
 event_uid = "b94310"
 
-[sub_resource type="Resource" id="Resource_gn23s"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_eo1cv"]
+script = ExtResource("9_ay68o")
 id = "target_scale"
 type_name = "float"
 default_value = "0.15"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_vqqgj"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_qg6ok"]
+script = ExtResource("9_ay68o")
 id = "hold_duration"
 type_name = "float"
 default_value = "0.25"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_eo1cv"]
-script = ExtResource("9_yc8eo")
+[sub_resource type="Resource" id="Resource_a2un2"]
+script = ExtResource("9_ay68o")
 id = "duration_clock"
 default_value = "realtime"
 initial_value = null
 initialValue = null
 options = Array[String](["realtime", "gametime"])
 
-[sub_resource type="Resource" id="Resource_qg6ok"]
-script = ExtResource("10_ay68o")
+[sub_resource type="Resource" id="Resource_6op6b"]
+script = ExtResource("10_yi7a2")
 function_name = "slowmo"
 description = "Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished."
 expose_as_ace = true
 ace_display_name = "Slowmo"
 ace_category = "Juice"
-params = Array[ExtResource("9_yc8eo")]([SubResource("Resource_gn23s"), SubResource("Resource_vqqgj"), SubResource("Resource_eo1cv")])
-events = Array[Resource]([SubResource("Resource_p1ouu"), SubResource("Resource_hpaid")])
+params = Array[ExtResource("9_ay68o")]([SubResource("Resource_eo1cv"), SubResource("Resource_qg6ok"), SubResource("Resource_a2un2")])
+events = Array[Resource]([SubResource("Resource_ybuv4"), SubResource("Resource_vqqgj")])
 
-[sub_resource type="Resource" id="Resource_a2un2"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_tfmpo"]
+script = ExtResource("8_yc8eo")
 ace_id = "CallMethod"
 params = {
 "args": "",
@@ -1552,16 +1496,16 @@ params = {
 "target": "_slowmo_tween"
 }
 
-[sub_resource type="Resource" id="Resource_6op6b"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_b5o6n"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetVar"
 params = {
 "value": "null",
 "var_name": "_slowmo_tween"
 }
 
-[sub_resource type="Resource" id="Resource_tfmpo"]
-script = ExtResource("4_m121v")
+[sub_resource type="Resource" id="Resource_yy204"]
+script = ExtResource("4_yqweo")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -1569,39 +1513,339 @@ params = {
 "var_name": "_slowmo_tween"
 }
 
-[sub_resource type="Resource" id="Resource_b5o6n"]
-script = ExtResource("7_ixhnj")
-conditions = Array[ExtResource("4_m121v")]([SubResource("Resource_tfmpo")])
-actions = Array[Resource]([SubResource("Resource_a2un2"), SubResource("Resource_6op6b")])
+[sub_resource type="Resource" id="Resource_sovh4"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_yy204")])
+actions = Array[Resource]([SubResource("Resource_tfmpo"), SubResource("Resource_b5o6n")])
 event_uid = "fa744e"
 
-[sub_resource type="Resource" id="Resource_yy204"]
-script = ExtResource("8_04rea")
+[sub_resource type="Resource" id="Resource_4wy0l"]
+script = ExtResource("8_yc8eo")
 ace_id = "SetTimeScale"
 params = {
 "scale": "1.0"
 }
 
-[sub_resource type="Resource" id="Resource_sovh4"]
-script = ExtResource("7_ixhnj")
-actions = Array[Resource]([SubResource("Resource_yy204")])
+[sub_resource type="Resource" id="Resource_28q0w"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_4wy0l")])
 event_uid = "dd15e0"
 
-[sub_resource type="Resource" id="Resource_4wy0l"]
-script = ExtResource("10_ay68o")
+[sub_resource type="Resource" id="Resource_cn1ee"]
+script = ExtResource("10_yi7a2")
 function_name = "clear_slowmo"
 description = "Cancels any slowmo and snaps Engine.time_scale back to 1.0 immediately (call on scene exit if a slowmo might still be running)."
 expose_as_ace = true
 ace_display_name = "Clear Slowmo"
 ace_category = "Juice"
-events = Array[Resource]([SubResource("Resource_b5o6n"), SubResource("Resource_sovh4")])
+events = Array[Resource]([SubResource("Resource_sovh4"), SubResource("Resource_28q0w")])
+
+[sub_resource type="Resource" id="Resource_l3i3u"]
+script = ExtResource("8_yc8eo")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "cam",
+"value": "_camera()",
+"var_type": "Camera2D"
+}
+
+[sub_resource type="Resource" id="Resource_e18yo"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_l3i3u")])
+event_uid = "720ab7"
+
+[sub_resource type="Resource" id="Resource_vdc35"]
+script = ExtResource("8_yc8eo")
+ace_id = "ReturnEarly"
+
+[sub_resource type="Resource" id="Resource_pfwvw"]
+script = ExtResource("4_yqweo")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "null",
+"var_name": "cam"
+}
+
+[sub_resource type="Resource" id="Resource_85fm8"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_pfwvw")])
+actions = Array[Resource]([SubResource("Resource_vdc35")])
+event_uid = "abfb7c"
+
+[sub_resource type="Resource" id="Resource_0cy1g"]
+script = ExtResource("8_yc8eo")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "z",
+"value": "_zoom_from.lerp(_zoom_to, f)",
+"var_type": "Vector2"
+}
+
+[sub_resource type="Resource" id="Resource_u6n8k"]
+script = ExtResource("8_yc8eo")
+ace_id = "SetProperty"
+params = {
+"property": "x",
+"target": "z",
+"value": "maxf(z.x, 0.001)"
+}
+
+[sub_resource type="Resource" id="Resource_fojua"]
+script = ExtResource("8_yc8eo")
+ace_id = "SetProperty"
+params = {
+"property": "y",
+"target": "z",
+"value": "maxf(z.y, 0.001)"
+}
+
+[sub_resource type="Resource" id="Resource_q4nhm"]
+script = ExtResource("8_yc8eo")
+ace_id = "SetCameraZoom"
+params = {
+"target": "cam",
+"zoom": "z"
+}
+
+[sub_resource type="Resource" id="Resource_mfief"]
+script = ExtResource("8_yc8eo")
+ace_id = "SetProperty"
+params = {
+"property": "global_position",
+"target": "cam",
+"value": "_zoom_anchor - (_zoom_anchor - _zoom_cam_from) * (_zoom_from / z)"
+}
+
+[sub_resource type="Resource" id="Resource_xo4v6"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_0cy1g"), SubResource("Resource_u6n8k"), SubResource("Resource_fojua"), SubResource("Resource_q4nhm"), SubResource("Resource_mfief")])
+event_uid = "80b8ff"
+
+[sub_resource type="Resource" id="Resource_iuo5b"]
+script = ExtResource("9_ay68o")
+id = "f"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_juuwx"]
+script = ExtResource("10_yi7a2")
+function_name = "_zoom_anchored_step"
+lifted_unannotated = true
+params = Array[ExtResource("9_ay68o")]([SubResource("Resource_iuo5b")])
+events = Array[Resource]([SubResource("Resource_e18yo"), SubResource("Resource_85fm8"), SubResource("Resource_xo4v6")])
+
+[sub_resource type="Resource" id="Resource_3xjcj"]
+script = ExtResource("8_yc8eo")
+ace_id = "ReturnValue"
+params = {
+"value": "trauma > 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_4rbr5"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_3xjcj")])
+event_uid = "84ff26"
+
+[sub_resource type="Resource" id="Resource_8cxfn"]
+script = ExtResource("10_yi7a2")
+function_name = "is_shaking"
+expose_as_ace = true
+ace_display_name = "Is Shaking"
+ace_category = "Juice"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_4rbr5")])
+
+[sub_resource type="Resource" id="Resource_hxib4"]
+script = ExtResource("8_yc8eo")
+ace_id = "ReturnValue"
+params = {
+"value": "trauma"
+}
+
+[sub_resource type="Resource" id="Resource_yd51f"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_hxib4")])
+event_uid = "3f583e"
+
+[sub_resource type="Resource" id="Resource_pj0o2"]
+script = ExtResource("10_yi7a2")
+function_name = "current_trauma"
+expose_as_ace = true
+ace_display_name = "Trauma"
+ace_category = "Juice"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_yd51f")])
+
+[sub_resource type="Resource" id="Resource_fiaek"]
+script = ExtResource("8_yc8eo")
+ace_id = "SetTimeScale"
+params = {
+"scale": "s"
+}
+
+[sub_resource type="Resource" id="Resource_0gsvy"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_fiaek")])
+event_uid = "b7ff1d"
+
+[sub_resource type="Resource" id="Resource_x2psr"]
+script = ExtResource("9_ay68o")
+id = "s"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_bmsfr"]
+script = ExtResource("10_yi7a2")
+function_name = "_set_time_scale"
+lifted_unannotated = true
+params = Array[ExtResource("9_ay68o")]([SubResource("Resource_x2psr")])
+events = Array[Resource]([SubResource("Resource_0gsvy")])
+
+[sub_resource type="Resource" id="Resource_t5snx"]
+script = ExtResource("11_8fvqu")
+match_expression = "easing_name"
+branches_text = "\"linear\": return Tween.TRANS_LINEAR
+\"quad\": return Tween.TRANS_QUAD
+\"cubic\": return Tween.TRANS_CUBIC
+\"expo\": return Tween.TRANS_EXPO
+\"circ\": return Tween.TRANS_CIRC
+\"back\": return Tween.TRANS_BACK
+_: return Tween.TRANS_SINE"
+
+[sub_resource type="Resource" id="Resource_8hd62"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_t5snx")])
+event_uid = "b2a5c1"
+
+[sub_resource type="Resource" id="Resource_f8va3"]
+script = ExtResource("9_ay68o")
+id = "easing_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_026lr"]
+script = ExtResource("10_yi7a2")
+function_name = "_slowmo_trans"
+lifted_unannotated = true
+params = Array[ExtResource("9_ay68o")]([SubResource("Resource_f8va3")])
+return_type = 2
+events = Array[Resource]([SubResource("Resource_8hd62")])
+
+[sub_resource type="Resource" id="Resource_t7mc7"]
+script = ExtResource("11_8fvqu")
+match_expression = "easing_name"
+branches_text = "\"in\": return Tween.EASE_IN
+\"in_out\": return Tween.EASE_IN_OUT
+\"out_in\": return Tween.EASE_OUT_IN
+_: return Tween.EASE_OUT"
+
+[sub_resource type="Resource" id="Resource_k3k0j"]
+script = ExtResource("7_04rea")
+actions = Array[Resource]([SubResource("Resource_t7mc7")])
+event_uid = "a94c24"
+
+[sub_resource type="Resource" id="Resource_6q31o"]
+script = ExtResource("9_ay68o")
+id = "easing_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_gxhch"]
+script = ExtResource("10_yi7a2")
+function_name = "_slowmo_ease"
+lifted_unannotated = true
+params = Array[ExtResource("9_ay68o")]([SubResource("Resource_6q31o")])
+return_type = 2
+events = Array[Resource]([SubResource("Resource_k3k0j")])
+
+[sub_resource type="Resource" id="Resource_h70pw"]
+script = ExtResource("8_yc8eo")
+ace_id = "SetScale3D"
+params = {
+"scale": "s",
+"target": "(host as Node2D)"
+}
+
+[sub_resource type="Resource" id="Resource_oew8q"]
+script = ExtResource("4_yqweo")
+ace_id = "CompareVar"
+params = {
+"op": "is",
+"value": "Node2D",
+"var_name": "host"
+}
+
+[sub_resource type="Resource" id="Resource_ipy50"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_oew8q")])
+actions = Array[Resource]([SubResource("Resource_h70pw")])
+event_uid = "0bfea7"
+
+[sub_resource type="Resource" id="Resource_240xu"]
+script = ExtResource("8_yc8eo")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "c",
+"value": "host as Control",
+"var_type": "Control"
+}
+
+[sub_resource type="Resource" id="Resource_q5ikm"]
+script = ExtResource("8_yc8eo")
+ace_id = "SetProperty"
+params = {
+"property": "pivot_offset",
+"target": "c",
+"value": "c.size / 2.0"
+}
+
+[sub_resource type="Resource" id="Resource_228un"]
+script = ExtResource("8_yc8eo")
+ace_id = "SetScale3D"
+params = {
+"scale": "s",
+"target": "c"
+}
+
+[sub_resource type="Resource" id="Resource_b8w8m"]
+script = ExtResource("4_yqweo")
+ace_id = "CompareVar"
+params = {
+"op": "is",
+"value": "Control",
+"var_name": "host"
+}
+
+[sub_resource type="Resource" id="Resource_xnyux"]
+script = ExtResource("7_04rea")
+conditions = Array[ExtResource("4_yqweo")]([SubResource("Resource_b8w8m")])
+actions = Array[Resource]([SubResource("Resource_240xu"), SubResource("Resource_q5ikm"), SubResource("Resource_228un")])
+else_mode = 1
+event_uid = "7a911c"
+
+[sub_resource type="Resource" id="Resource_b2ypg"]
+script = ExtResource("9_ay68o")
+id = "s"
+type_name = "Vector2"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_3u2hx"]
+script = ExtResource("10_yi7a2")
+function_name = "_apply_host_scale"
+lifted_unannotated = true
+params = Array[ExtResource("9_ay68o")]([SubResource("Resource_b2ypg")])
+events = Array[Resource]([SubResource("Resource_ipy50"), SubResource("Resource_xnyux")])
 
 [resource]
-script = ExtResource("11_yi7a2")
+script = ExtResource("12_215nc")
 host_class = "CanvasItem"
 behavior_mode = true
 custom_class_name = "JuiceBehavior"
 addon_tags = PackedStringArray("camera", "juice")
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_8fvqu"), SubResource("Resource_215nc"), SubResource("Resource_u2h56"), SubResource("Resource_smfhv"), SubResource("Resource_pe501"), SubResource("Resource_ffaey"), SubResource("Resource_3cbs0"), SubResource("Resource_4hslg"), SubResource("Resource_46hej")])
-functions = Array[Resource]([SubResource("Resource_2tel6"), SubResource("Resource_tiigf"), SubResource("Resource_2y5kx"), SubResource("Resource_461w0"), SubResource("Resource_6x3qj"), SubResource("Resource_so1wt"), SubResource("Resource_wlbd3"), SubResource("Resource_b7k57"), SubResource("Resource_qg6ok"), SubResource("Resource_4wy0l")])
+events = Array[Resource]([SubResource("Resource_u2h56"), SubResource("Resource_smfhv"), SubResource("Resource_pe501"), SubResource("Resource_ffaey"), SubResource("Resource_dp0f6"), SubResource("Resource_timcu"), SubResource("Resource_cuvq4"), SubResource("Resource_vutrg"), SubResource("Resource_nomh8")])
+functions = Array[Resource]([SubResource("Resource_naup3"), SubResource("Resource_xfvjl"), SubResource("Resource_8s5en"), SubResource("Resource_gb47t"), SubResource("Resource_1bxvv"), SubResource("Resource_t1oqh"), SubResource("Resource_s58y8"), SubResource("Resource_2bftd"), SubResource("Resource_6op6b"), SubResource("Resource_cn1ee"), SubResource("Resource_juuwx"), SubResource("Resource_8cxfn"), SubResource("Resource_pj0o2"), SubResource("Resource_bmsfr"), SubResource("Resource_026lr"), SubResource("Resource_gxhch"), SubResource("Resource_3u2hx")])

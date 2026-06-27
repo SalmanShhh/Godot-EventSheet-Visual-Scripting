@@ -28,11 +28,7 @@ ace_category = "Tile Movement"
 script = ExtResource("3_gml7f")
 code = "## @ace_hidden
 func to_grid(pixel: Vector2) -> Vector2i:
-	return Vector2i(roundi(pixel.x / tile_size), roundi(pixel.y / tile_size))
-
-## @ace_hidden
-func from_grid(tile: Vector2i) -> Vector2:
-	return Vector2(tile) * tile_size"
+	return Vector2i(roundi(pixel.x / tile_size), roundi(pixel.y / tile_size))"
 
 [sub_resource type="Resource" id="Resource_bxm2s"]
 script = ExtResource("3_gml7f")
@@ -241,6 +237,32 @@ ace_category = "Tile Movement"
 params = Array[ExtResource("9_gl44j")]([SubResource("Resource_216b8"), SubResource("Resource_oaokd")])
 events = Array[Resource]([SubResource("Resource_f5jcc"), SubResource("Resource_6xokh")])
 
+[sub_resource type="Resource" id="Resource_h6osu"]
+script = ExtResource("8_0b1ao")
+ace_id = "ReturnValue"
+params = {
+"value": "Vector2(tile) * tile_size"
+}
+
+[sub_resource type="Resource" id="Resource_c8wk0"]
+script = ExtResource("7_63fav")
+actions = Array[Resource]([SubResource("Resource_h6osu")])
+event_uid = "f6bd64"
+
+[sub_resource type="Resource" id="Resource_njgew"]
+script = ExtResource("9_gl44j")
+id = "tile"
+type_name = "Vector2i"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_imd4l"]
+script = ExtResource("10_s6njm")
+function_name = "from_grid"
+params = Array[ExtResource("9_gl44j")]([SubResource("Resource_njgew")])
+return_type = 5
+events = Array[Resource]([SubResource("Resource_c8wk0")])
+
 [resource]
 script = ExtResource("11_svak1")
 host_class = "Node2D"
@@ -306,4 +328,4 @@ variables = {
 "type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_kqe0l"), SubResource("Resource_sfj6g")])
+functions = Array[Resource]([SubResource("Resource_kqe0l"), SubResource("Resource_sfj6g"), SubResource("Resource_imd4l")])

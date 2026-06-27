@@ -97,192 +97,10 @@ ace_category = "Virtual Cursor"
 
 [sub_resource type="Resource" id="Resource_18c8k"]
 script = ExtResource("2_tmuc2")
-code = "## @ace_condition
-## @ace_name(\"Is Interact Held\")
-## @ace_category(\"Virtual Cursor\")
-## @ace_codegen_template(\"$VirtualCursor.is_interact_held({id})\")
-func is_interact_held(id: String) -> bool:
-	if id == \"\":
-		for key in interact_states:
-			if bool(interact_states[key]):
-				return true
-		return false
-	return bool(interact_states.get(id, false))
-
-## @ace_condition
-## @ace_name(\"Is Moving\")
-## @ace_category(\"Virtual Cursor\")
-## @ace_codegen_template(\"$VirtualCursor.is_moving()\")
-func is_moving() -> bool:
-	return report_vel.length() > 0.0
-
-## @ace_condition
-## @ace_name(\"Is In Homing Range\")
-## @ace_category(\"Virtual Cursor\")
-## @ace_codegen_template(\"$VirtualCursor.is_in_homing_range()\")
-func is_in_homing_range() -> bool:
-	return in_homing_range
-
-## @ace_condition
-## @ace_name(\"Is Blocked\")
-## @ace_category(\"Virtual Cursor\")
-## @ace_codegen_template(\"$VirtualCursor.is_blocked()\")
-func is_blocked() -> bool:
-	return blocked_this_tick
-
-## @ace_condition
-## @ace_name(\"Is Enabled\")
-## @ace_category(\"Virtual Cursor\")
-## @ace_codegen_template(\"$VirtualCursor.is_cursor_enabled()\")
-func is_cursor_enabled() -> bool:
-	return enabled
-
-## @ace_condition
-## @ace_name(\"Is Ignoring Input\")
-## @ace_category(\"Virtual Cursor\")
-## @ace_codegen_template(\"$VirtualCursor.is_ignoring_input()\")
-func is_ignoring_input() -> bool:
-	return ignoring_input
-
-## @ace_condition
-## @ace_name(\"Is Hovering\")
-## @ace_category(\"Virtual Cursor\")
-## @ace_codegen_template(\"$VirtualCursor.is_hovering({target})\")
-func is_hovering(target: Node2D) -> bool:
-	hovered_uid = -1
-	if host == null or target == null or target == host or not target.visible:
-		return false
-	var hit := false
-	if hover_mode == 0:
-		var shape := target.get_node_or_null(\"CollisionShape2D\") as CollisionShape2D
-		if shape != null and shape.shape != null:
-			hit = shape.shape.collide(shape.global_transform, _point_shape(), Transform2D(0.0, host.global_position))
-		elif target.has_method(\"get_global_rect\"):
-			hit = target.call(\"get_global_rect\").has_point(host.global_position)
-		else:
-			# Robust fallback for plain Sprite2D/CanvasItem (no CollisionShape2D, no
-			# get_global_rect): derive a world rect from get_rect(), else distance check.
-			var info := _target_world_rect(target)
-			if bool(info[\"has_area\"]):
-				hit = (info[\"rect\"] as Rect2).has_point(host.global_position)
-			else:
-				hit = host.global_position.distance_to(target.global_position) <= _target_extent(target)
-	else:
-		var host_node: Node = host
-		if host_node is Area2D:
-			var area := host_node as Area2D
-			hit = area.get_overlapping_bodies().has(target) or area.get_overlapping_areas().has(target)
-		else:
-			# CharacterBody2D host never overlaps as an Area2D — gate on the target's
-			# derived extent instead of a fixed 32px so size is respected.
-			hit = host.global_position.distance_to(target.global_position) <= _target_extent(target)
-	if hit:
-		hovered_uid = target.get_instance_id()
-	return hit
-
-## @ace_expression
-## @ace_name(\"Cursor X\")
-## @ace_category(\"Virtual Cursor\")
-func cursor_x() -> float:
-	return host.global_position.x if host != null else 0.0
-
-## @ace_expression
-## @ace_name(\"Cursor Y\")
-## @ace_category(\"Virtual Cursor\")
-func cursor_y() -> float:
-	return host.global_position.y if host != null else 0.0
-
-## @ace_expression
-## @ace_name(\"Speed\")
-## @ace_category(\"Virtual Cursor\")
-func speed() -> float:
-	return report_vel.length()
-
-## @ace_expression
-## @ace_name(\"Velocity X\")
-## @ace_category(\"Virtual Cursor\")
-func velocity_x() -> float:
-	return report_vel.x
-
-## @ace_expression
-## @ace_name(\"Velocity Y\")
-## @ace_category(\"Virtual Cursor\")
-func velocity_y() -> float:
-	return report_vel.y
-
-## @ace_expression
-## @ace_name(\"Moving Angle\")
-## @ace_category(\"Virtual Cursor\")
-func moving_angle() -> float:
-	return fposmod(rad_to_deg(report_vel.angle()), 360.0)
-
-## @ace_expression
-## @ace_name(\"Axis X\")
-## @ace_category(\"Virtual Cursor\")
-func axis_x() -> float:
-	return axis.x
-
-## @ace_expression
-## @ace_name(\"Axis Y\")
-## @ace_category(\"Virtual Cursor\")
-func axis_y() -> float:
-	return axis.y
-
-## @ace_expression
-## @ace_name(\"Max Speed\")
-## @ace_category(\"Virtual Cursor\")
-func max_speed_value() -> float:
-	return max_speed
-
-## @ace_expression
-## @ace_name(\"Hovered UID\")
-## @ace_category(\"Virtual Cursor\")
-func hovered_uid_value() -> int:
-	return hovered_uid
-
-## @ace_expression
-## @ace_name(\"Homing Target UID\")
-## @ace_category(\"Virtual Cursor\")
-func homing_target_uid_value() -> int:
-	return nearest_homing_uid
-
-## @ace_expression
-## @ace_name(\"Homing Target Dist\")
-## @ace_category(\"Virtual Cursor\")
-func homing_target_dist_value() -> float:
-	return nearest_homing_dist
-
-## @ace_expression
-## @ace_name(\"Count Homing Targets\")
-## @ace_category(\"Virtual Cursor\")
-func count_homing_targets() -> int:
-	return homing_targets.size()
-
-## @ace_expression
-## @ace_name(\"Bounce Mode\")
-## @ace_category(\"Virtual Cursor\")
-func bounce_mode_token() -> String:
-	return [\"none\", \"solids\", \"constraints\", \"both\"][bounce_mode]
-
-func _point_shape() -> Shape2D:
+code = "func _point_shape() -> Shape2D:
 	var s := CircleShape2D.new()
 	s.radius = 0.5
 	return s
-
-## Best-effort world-space AABB for a target that has no usable CollisionShape2D.
-## Sprite2D/CanvasItem expose a LOCAL get_rect(); we transform its centre + half-size
-## through global_transform so hover works on plain sprites. Returns has_area=false when
-## nothing usable is found (caller then falls back to a distance/extent check).
-func _target_world_rect(target: Node2D) -> Dictionary:
-	var shape := target.get_node_or_null(\"CollisionShape2D\") as CollisionShape2D
-	if shape != null and shape.shape != null:
-		var lr: Rect2 = shape.shape.get_rect()
-		return {\"has_area\": true, \"rect\": _xform_rect(shape.global_transform, lr)}
-	if target.has_method(\"get_rect\"):
-		var r: Rect2 = target.call(\"get_rect\")
-		return {\"has_area\": true, \"rect\": _xform_rect(target.global_transform, r)}
-	return {\"has_area\": false, \"rect\": Rect2()}
-
 ## Transform a local-space Rect2 into a world-space AABB by mapping its four corners.
 func _xform_rect(xform: Transform2D, r: Rect2) -> Rect2:
 	var p0 := xform * r.position
@@ -291,19 +109,6 @@ func _xform_rect(xform: Transform2D, r: Rect2) -> Rect2:
 	out = out.expand(xform * Vector2(r.position.x, r.position.y + r.size.y))
 	out = out.expand(xform * (r.position + r.size))
 	return out
-
-## A representative world-space proximity radius for a target: half the larger side of
-## its derived world rect, else 32px. Used by overlap-mode hover so the gate tracks the
-## actual target size instead of a fixed constant.
-func _target_extent(target: Node2D) -> float:
-	var info := _target_world_rect(target)
-	if bool(info[\"has_area\"]):
-		var r: Rect2 = info[\"rect\"]
-		var e := maxf(r.size.x, r.size.y) * 0.5
-		if e > 0.0:
-			return e
-	return 32.0
-
 func _resolve_bounds() -> Rect2:
 	if has_constraint_bounds:
 		return constraint_bounds
@@ -2695,6 +2500,926 @@ ace_category = "Virtual Cursor"
 params = Array[ExtResource("9_3d4q0")]([SubResource("Resource_hvprm")])
 events = Array[Resource]([SubResource("Resource_evruj")])
 
+[sub_resource type="Resource" id="Resource_62son"]
+script = ExtResource("2_tmuc2")
+code = "if id == \"\":
+	for key in interact_states:
+		if bool(interact_states[key]):
+			return true
+	return false"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_sqy5h"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "bool(interact_states.get(id, false))"
+}
+
+[sub_resource type="Resource" id="Resource_lalso"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_62son"), SubResource("Resource_sqy5h")])
+event_uid = "a5363f"
+
+[sub_resource type="Resource" id="Resource_hjqdn"]
+script = ExtResource("9_3d4q0")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_4a1ea"]
+script = ExtResource("10_rhot5")
+function_name = "is_interact_held"
+expose_as_ace = true
+ace_display_name = "Is Interact Held"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("9_3d4q0")]([SubResource("Resource_hjqdn")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_lalso")])
+
+[sub_resource type="Resource" id="Resource_7wgtd"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "report_vel.length() > 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_7ppos"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_7wgtd")])
+event_uid = "a56d2f"
+
+[sub_resource type="Resource" id="Resource_mrpe7"]
+script = ExtResource("10_rhot5")
+function_name = "is_moving"
+expose_as_ace = true
+ace_display_name = "Is Moving"
+ace_category = "Virtual Cursor"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_7ppos")])
+
+[sub_resource type="Resource" id="Resource_my2fk"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "in_homing_range"
+}
+
+[sub_resource type="Resource" id="Resource_nyoem"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_my2fk")])
+event_uid = "a3bacf"
+
+[sub_resource type="Resource" id="Resource_qi2kr"]
+script = ExtResource("10_rhot5")
+function_name = "is_in_homing_range"
+expose_as_ace = true
+ace_display_name = "Is In Homing Range"
+ace_category = "Virtual Cursor"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_nyoem")])
+
+[sub_resource type="Resource" id="Resource_cjjep"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "blocked_this_tick"
+}
+
+[sub_resource type="Resource" id="Resource_p7d0n"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_cjjep")])
+event_uid = "74052c"
+
+[sub_resource type="Resource" id="Resource_7x80w"]
+script = ExtResource("10_rhot5")
+function_name = "is_blocked"
+expose_as_ace = true
+ace_display_name = "Is Blocked"
+ace_category = "Virtual Cursor"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_p7d0n")])
+
+[sub_resource type="Resource" id="Resource_vs01j"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "enabled"
+}
+
+[sub_resource type="Resource" id="Resource_hladm"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_vs01j")])
+event_uid = "4cb9f8"
+
+[sub_resource type="Resource" id="Resource_uxdhk"]
+script = ExtResource("10_rhot5")
+function_name = "is_cursor_enabled"
+expose_as_ace = true
+ace_display_name = "Is Enabled"
+ace_category = "Virtual Cursor"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_hladm")])
+
+[sub_resource type="Resource" id="Resource_e4rvh"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "ignoring_input"
+}
+
+[sub_resource type="Resource" id="Resource_6afu1"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_e4rvh")])
+event_uid = "90f821"
+
+[sub_resource type="Resource" id="Resource_3n4ol"]
+script = ExtResource("10_rhot5")
+function_name = "is_ignoring_input"
+expose_as_ace = true
+ace_display_name = "Is Ignoring Input"
+ace_category = "Virtual Cursor"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_6afu1")])
+
+[sub_resource type="Resource" id="Resource_kp7di"]
+script = ExtResource("8_dwkn7")
+ace_id = "SetVar"
+params = {
+"value": "-1",
+"var_name": "hovered_uid"
+}
+
+[sub_resource type="Resource" id="Resource_ub5cr"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_kp7di")])
+event_uid = "27ac1a"
+
+[sub_resource type="Resource" id="Resource_nyfmp"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "false"
+}
+
+[sub_resource type="Resource" id="Resource_p8gy4"]
+script = ExtResource("4_v4dpl")
+ace_id = "IsVisible"
+params = {
+"target": "host == null or target == null or target == host or not target"
+}
+
+[sub_resource type="Resource" id="Resource_uwx5m"]
+script = ExtResource("7_8p8d4")
+conditions = Array[ExtResource("4_v4dpl")]([SubResource("Resource_p8gy4")])
+actions = Array[Resource]([SubResource("Resource_nyfmp")])
+event_uid = "0838f7"
+
+[sub_resource type="Resource" id="Resource_1wt32"]
+script = ExtResource("2_tmuc2")
+code = "var hit := false"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_a76fb"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_1wt32")])
+event_uid = "11286f"
+
+[sub_resource type="Resource" id="Resource_3bkjx"]
+script = ExtResource("2_tmuc2")
+code = "var shape := target.get_node_or_null(\"CollisionShape2D\") as CollisionShape2D"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_o5jnb"]
+script = ExtResource("4_v4dpl")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "0",
+"var_name": "hover_mode"
+}
+
+[sub_resource type="Resource" id="Resource_vd186"]
+script = ExtResource("8_dwkn7")
+ace_id = "SetVar"
+params = {
+"value": "shape.shape.collide(shape.global_transform, _point_shape(), Transform2D(0.0, host.global_position))",
+"var_name": "hit"
+}
+
+[sub_resource type="Resource" id="Resource_8ih4f"]
+script = ExtResource("4_v4dpl")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "shape"
+}
+
+[sub_resource type="Resource" id="Resource_areyi"]
+script = ExtResource("4_v4dpl")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "shape.shape"
+}
+
+[sub_resource type="Resource" id="Resource_d5cbg"]
+script = ExtResource("7_8p8d4")
+conditions = Array[ExtResource("4_v4dpl")]([SubResource("Resource_8ih4f"), SubResource("Resource_areyi")])
+actions = Array[Resource]([SubResource("Resource_vd186")])
+event_uid = "a3a654"
+
+[sub_resource type="Resource" id="Resource_op78r"]
+script = ExtResource("8_dwkn7")
+ace_id = "SetVar"
+params = {
+"value": "target.call(\"get_global_rect\").has_point(host.global_position)",
+"var_name": "hit"
+}
+
+[sub_resource type="Resource" id="Resource_0m2a1"]
+script = ExtResource("4_v4dpl")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "target.has_method(\"get_global_rect\")"
+}
+
+[sub_resource type="Resource" id="Resource_yp4an"]
+script = ExtResource("7_8p8d4")
+conditions = Array[ExtResource("4_v4dpl")]([SubResource("Resource_0m2a1")])
+actions = Array[Resource]([SubResource("Resource_op78r")])
+else_mode = 1
+event_uid = "8c2b17"
+
+[sub_resource type="Resource" id="Resource_hb7l1"]
+script = ExtResource("2_tmuc2")
+code = "# Robust fallback for plain Sprite2D/CanvasItem (no CollisionShape2D, no
+# get_global_rect): derive a world rect from get_rect(), else distance check."
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_4mwap"]
+script = ExtResource("8_dwkn7")
+ace_id = "CallFunction"
+params = {
+"args": "target",
+"function_name": "var info := _target_world_rect"
+}
+
+[sub_resource type="Resource" id="Resource_5gvly"]
+script = ExtResource("8_dwkn7")
+ace_id = "SetVar"
+params = {
+"value": "(info[\"rect\"] as Rect2).has_point(host.global_position)",
+"var_name": "hit"
+}
+
+[sub_resource type="Resource" id="Resource_47wdq"]
+script = ExtResource("4_v4dpl")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "bool(info[\"has_area\"])"
+}
+
+[sub_resource type="Resource" id="Resource_qfobl"]
+script = ExtResource("7_8p8d4")
+conditions = Array[ExtResource("4_v4dpl")]([SubResource("Resource_47wdq")])
+actions = Array[Resource]([SubResource("Resource_5gvly")])
+event_uid = "c03370"
+
+[sub_resource type="Resource" id="Resource_fsy8q"]
+script = ExtResource("8_dwkn7")
+ace_id = "SetVar"
+params = {
+"value": "host.global_position.distance_to(target.global_position) <= _target_extent(target)",
+"var_name": "hit"
+}
+
+[sub_resource type="Resource" id="Resource_f34t7"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_fsy8q")])
+else_mode = 1
+event_uid = "19cb3a"
+
+[sub_resource type="Resource" id="Resource_5c6ry"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_hb7l1"), SubResource("Resource_4mwap")])
+sub_events = Array[Resource]([SubResource("Resource_qfobl"), SubResource("Resource_f34t7")])
+else_mode = 1
+event_uid = "e58e25"
+
+[sub_resource type="Resource" id="Resource_38j1b"]
+script = ExtResource("7_8p8d4")
+conditions = Array[ExtResource("4_v4dpl")]([SubResource("Resource_o5jnb")])
+actions = Array[Resource]([SubResource("Resource_3bkjx")])
+sub_events = Array[Resource]([SubResource("Resource_d5cbg"), SubResource("Resource_yp4an"), SubResource("Resource_5c6ry")])
+event_uid = "9d672f"
+
+[sub_resource type="Resource" id="Resource_vd2xc"]
+script = ExtResource("8_dwkn7")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "host_node",
+"value": "host",
+"var_type": "Node"
+}
+
+[sub_resource type="Resource" id="Resource_2tn3g"]
+script = ExtResource("2_tmuc2")
+code = "var area := host_node as Area2D"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_as56l"]
+script = ExtResource("8_dwkn7")
+ace_id = "SetVar"
+params = {
+"value": "area.get_overlapping_bodies().has(target) or area.get_overlapping_areas().has(target)",
+"var_name": "hit"
+}
+
+[sub_resource type="Resource" id="Resource_lo1dq"]
+script = ExtResource("4_v4dpl")
+ace_id = "CompareVar"
+params = {
+"op": "is",
+"value": "Area2D",
+"var_name": "host_node"
+}
+
+[sub_resource type="Resource" id="Resource_y687i"]
+script = ExtResource("7_8p8d4")
+conditions = Array[ExtResource("4_v4dpl")]([SubResource("Resource_lo1dq")])
+actions = Array[Resource]([SubResource("Resource_2tn3g"), SubResource("Resource_as56l")])
+event_uid = "041b8f"
+
+[sub_resource type="Resource" id="Resource_e1tob"]
+script = ExtResource("2_tmuc2")
+code = "# CharacterBody2D host never overlaps as an Area2D — gate on the target's
+# derived extent instead of a fixed 32px so size is respected."
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_vtukt"]
+script = ExtResource("8_dwkn7")
+ace_id = "SetVar"
+params = {
+"value": "host.global_position.distance_to(target.global_position) <= _target_extent(target)",
+"var_name": "hit"
+}
+
+[sub_resource type="Resource" id="Resource_j32r6"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_e1tob"), SubResource("Resource_vtukt")])
+else_mode = 1
+event_uid = "b4f161"
+
+[sub_resource type="Resource" id="Resource_f53gi"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_vd2xc")])
+sub_events = Array[Resource]([SubResource("Resource_y687i"), SubResource("Resource_j32r6")])
+else_mode = 1
+event_uid = "3069ca"
+
+[sub_resource type="Resource" id="Resource_lhv2r"]
+script = ExtResource("8_dwkn7")
+ace_id = "SetVar"
+params = {
+"value": "target.get_instance_id()",
+"var_name": "hovered_uid"
+}
+
+[sub_resource type="Resource" id="Resource_hlqvd"]
+script = ExtResource("4_v4dpl")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "hit"
+}
+
+[sub_resource type="Resource" id="Resource_ausf0"]
+script = ExtResource("7_8p8d4")
+conditions = Array[ExtResource("4_v4dpl")]([SubResource("Resource_hlqvd")])
+actions = Array[Resource]([SubResource("Resource_lhv2r")])
+event_uid = "2cb438"
+
+[sub_resource type="Resource" id="Resource_tcpiy"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "hit"
+}
+
+[sub_resource type="Resource" id="Resource_pk6ny"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_tcpiy")])
+event_uid = "5d472a"
+
+[sub_resource type="Resource" id="Resource_ml4hc"]
+script = ExtResource("9_3d4q0")
+id = "target"
+type_name = "Node2D"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_rh4uy"]
+script = ExtResource("10_rhot5")
+function_name = "is_hovering"
+expose_as_ace = true
+ace_display_name = "Is Hovering"
+ace_category = "Virtual Cursor"
+params = Array[ExtResource("9_3d4q0")]([SubResource("Resource_ml4hc")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_ub5cr"), SubResource("Resource_uwx5m"), SubResource("Resource_a76fb"), SubResource("Resource_38j1b"), SubResource("Resource_f53gi"), SubResource("Resource_ausf0"), SubResource("Resource_pk6ny")])
+
+[sub_resource type="Resource" id="Resource_q2tkt"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "host.global_position.x if host != null else 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_ccvj7"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_q2tkt")])
+event_uid = "403e7b"
+
+[sub_resource type="Resource" id="Resource_2j102"]
+script = ExtResource("10_rhot5")
+function_name = "cursor_x"
+expose_as_ace = true
+ace_display_name = "Cursor X"
+ace_category = "Virtual Cursor"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_ccvj7")])
+
+[sub_resource type="Resource" id="Resource_evds2"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "host.global_position.y if host != null else 0.0"
+}
+
+[sub_resource type="Resource" id="Resource_epa2e"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_evds2")])
+event_uid = "b3423e"
+
+[sub_resource type="Resource" id="Resource_qkre0"]
+script = ExtResource("10_rhot5")
+function_name = "cursor_y"
+expose_as_ace = true
+ace_display_name = "Cursor Y"
+ace_category = "Virtual Cursor"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_epa2e")])
+
+[sub_resource type="Resource" id="Resource_owsrb"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "report_vel.length()"
+}
+
+[sub_resource type="Resource" id="Resource_nx7gx"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_owsrb")])
+event_uid = "24b21b"
+
+[sub_resource type="Resource" id="Resource_f0gmi"]
+script = ExtResource("10_rhot5")
+function_name = "speed"
+expose_as_ace = true
+ace_display_name = "Speed"
+ace_category = "Virtual Cursor"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_nx7gx")])
+
+[sub_resource type="Resource" id="Resource_xdm4a"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "report_vel.x"
+}
+
+[sub_resource type="Resource" id="Resource_cbfs7"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_xdm4a")])
+event_uid = "b7082d"
+
+[sub_resource type="Resource" id="Resource_xhlbq"]
+script = ExtResource("10_rhot5")
+function_name = "velocity_x"
+expose_as_ace = true
+ace_display_name = "Velocity X"
+ace_category = "Virtual Cursor"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_cbfs7")])
+
+[sub_resource type="Resource" id="Resource_jubl2"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "report_vel.y"
+}
+
+[sub_resource type="Resource" id="Resource_o3yqd"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_jubl2")])
+event_uid = "060d9d"
+
+[sub_resource type="Resource" id="Resource_e1nnp"]
+script = ExtResource("10_rhot5")
+function_name = "velocity_y"
+expose_as_ace = true
+ace_display_name = "Velocity Y"
+ace_category = "Virtual Cursor"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_o3yqd")])
+
+[sub_resource type="Resource" id="Resource_bp0fg"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "fposmod(rad_to_deg(report_vel.angle()), 360.0)"
+}
+
+[sub_resource type="Resource" id="Resource_xbjp1"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_bp0fg")])
+event_uid = "294a5a"
+
+[sub_resource type="Resource" id="Resource_2jmep"]
+script = ExtResource("10_rhot5")
+function_name = "moving_angle"
+expose_as_ace = true
+ace_display_name = "Moving Angle"
+ace_category = "Virtual Cursor"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_xbjp1")])
+
+[sub_resource type="Resource" id="Resource_m1w0u"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "axis.x"
+}
+
+[sub_resource type="Resource" id="Resource_dkci2"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_m1w0u")])
+event_uid = "54c337"
+
+[sub_resource type="Resource" id="Resource_wyb3l"]
+script = ExtResource("10_rhot5")
+function_name = "axis_x"
+expose_as_ace = true
+ace_display_name = "Axis X"
+ace_category = "Virtual Cursor"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_dkci2")])
+
+[sub_resource type="Resource" id="Resource_216j5"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "axis.y"
+}
+
+[sub_resource type="Resource" id="Resource_lqsn3"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_216j5")])
+event_uid = "3590ad"
+
+[sub_resource type="Resource" id="Resource_agb6l"]
+script = ExtResource("10_rhot5")
+function_name = "axis_y"
+expose_as_ace = true
+ace_display_name = "Axis Y"
+ace_category = "Virtual Cursor"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_lqsn3")])
+
+[sub_resource type="Resource" id="Resource_qogns"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "max_speed"
+}
+
+[sub_resource type="Resource" id="Resource_eiddt"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_qogns")])
+event_uid = "d129f8"
+
+[sub_resource type="Resource" id="Resource_sw5bk"]
+script = ExtResource("10_rhot5")
+function_name = "max_speed_value"
+expose_as_ace = true
+ace_display_name = "Max Speed"
+ace_category = "Virtual Cursor"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_eiddt")])
+
+[sub_resource type="Resource" id="Resource_jpvg7"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "hovered_uid"
+}
+
+[sub_resource type="Resource" id="Resource_akdgs"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_jpvg7")])
+event_uid = "96caa1"
+
+[sub_resource type="Resource" id="Resource_ttj3k"]
+script = ExtResource("10_rhot5")
+function_name = "hovered_uid_value"
+expose_as_ace = true
+ace_display_name = "Hovered UID"
+ace_category = "Virtual Cursor"
+return_type = 2
+events = Array[Resource]([SubResource("Resource_akdgs")])
+
+[sub_resource type="Resource" id="Resource_7otq5"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "nearest_homing_uid"
+}
+
+[sub_resource type="Resource" id="Resource_xku4p"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_7otq5")])
+event_uid = "deb6f5"
+
+[sub_resource type="Resource" id="Resource_08e86"]
+script = ExtResource("10_rhot5")
+function_name = "homing_target_uid_value"
+expose_as_ace = true
+ace_display_name = "Homing Target UID"
+ace_category = "Virtual Cursor"
+return_type = 2
+events = Array[Resource]([SubResource("Resource_xku4p")])
+
+[sub_resource type="Resource" id="Resource_6a70d"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "nearest_homing_dist"
+}
+
+[sub_resource type="Resource" id="Resource_2opng"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_6a70d")])
+event_uid = "768c6e"
+
+[sub_resource type="Resource" id="Resource_xvhie"]
+script = ExtResource("10_rhot5")
+function_name = "homing_target_dist_value"
+expose_as_ace = true
+ace_display_name = "Homing Target Dist"
+ace_category = "Virtual Cursor"
+return_type = 3
+events = Array[Resource]([SubResource("Resource_2opng")])
+
+[sub_resource type="Resource" id="Resource_487sq"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "homing_targets.size()"
+}
+
+[sub_resource type="Resource" id="Resource_ih7ga"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_487sq")])
+event_uid = "f19ad4"
+
+[sub_resource type="Resource" id="Resource_x46rc"]
+script = ExtResource("10_rhot5")
+function_name = "count_homing_targets"
+expose_as_ace = true
+ace_display_name = "Count Homing Targets"
+ace_category = "Virtual Cursor"
+return_type = 2
+events = Array[Resource]([SubResource("Resource_ih7ga")])
+
+[sub_resource type="Resource" id="Resource_0ql1f"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "[\"none\", \"solids\", \"constraints\", \"both\"][bounce_mode]"
+}
+
+[sub_resource type="Resource" id="Resource_645sc"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_0ql1f")])
+event_uid = "356db8"
+
+[sub_resource type="Resource" id="Resource_t4ay1"]
+script = ExtResource("10_rhot5")
+function_name = "bounce_mode_token"
+expose_as_ace = true
+ace_display_name = "Bounce Mode"
+ace_category = "Virtual Cursor"
+return_type = 4
+events = Array[Resource]([SubResource("Resource_645sc")])
+
+[sub_resource type="Resource" id="Resource_uh7c1"]
+script = ExtResource("2_tmuc2")
+code = "var shape := target.get_node_or_null(\"CollisionShape2D\") as CollisionShape2D"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_50g8y"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_uh7c1")])
+event_uid = "5bf239"
+
+[sub_resource type="Resource" id="Resource_6kaur"]
+script = ExtResource("8_dwkn7")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "lr",
+"value": "shape.shape.get_rect()",
+"var_type": "Rect2"
+}
+
+[sub_resource type="Resource" id="Resource_lyrkn"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "{\"has_area\": true, \"rect\": _xform_rect(shape.global_transform, lr)}"
+}
+
+[sub_resource type="Resource" id="Resource_djyiq"]
+script = ExtResource("4_v4dpl")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "shape"
+}
+
+[sub_resource type="Resource" id="Resource_srern"]
+script = ExtResource("4_v4dpl")
+ace_id = "CompareVar"
+params = {
+"op": "!=",
+"value": "null",
+"var_name": "shape.shape"
+}
+
+[sub_resource type="Resource" id="Resource_0n4cf"]
+script = ExtResource("7_8p8d4")
+conditions = Array[ExtResource("4_v4dpl")]([SubResource("Resource_djyiq"), SubResource("Resource_srern")])
+actions = Array[Resource]([SubResource("Resource_6kaur"), SubResource("Resource_lyrkn")])
+event_uid = "e73a1a"
+
+[sub_resource type="Resource" id="Resource_mqce1"]
+script = ExtResource("8_dwkn7")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "r",
+"value": "target.call(\"get_rect\")",
+"var_type": "Rect2"
+}
+
+[sub_resource type="Resource" id="Resource_idfwj"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "{\"has_area\": true, \"rect\": _xform_rect(target.global_transform, r)}"
+}
+
+[sub_resource type="Resource" id="Resource_v6yxw"]
+script = ExtResource("4_v4dpl")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "target.has_method(\"get_rect\")"
+}
+
+[sub_resource type="Resource" id="Resource_t1w35"]
+script = ExtResource("7_8p8d4")
+conditions = Array[ExtResource("4_v4dpl")]([SubResource("Resource_v6yxw")])
+actions = Array[Resource]([SubResource("Resource_mqce1"), SubResource("Resource_idfwj")])
+event_uid = "4f93cd"
+
+[sub_resource type="Resource" id="Resource_ibx2h"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "{\"has_area\": false, \"rect\": Rect2()}"
+}
+
+[sub_resource type="Resource" id="Resource_0tem0"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_ibx2h")])
+event_uid = "2de155"
+
+[sub_resource type="Resource" id="Resource_e5ou1"]
+script = ExtResource("9_3d4q0")
+id = "target"
+type_name = "Node2D"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_h3v35"]
+script = ExtResource("10_rhot5")
+function_name = "_target_world_rect"
+lifted_unannotated = true
+params = Array[ExtResource("9_3d4q0")]([SubResource("Resource_e5ou1")])
+return_type = 27
+events = Array[Resource]([SubResource("Resource_50g8y"), SubResource("Resource_0n4cf"), SubResource("Resource_t1w35"), SubResource("Resource_0tem0")])
+
+[sub_resource type="Resource" id="Resource_hwcq4"]
+script = ExtResource("8_dwkn7")
+ace_id = "CallFunction"
+params = {
+"args": "target",
+"function_name": "var info := _target_world_rect"
+}
+
+[sub_resource type="Resource" id="Resource_om77h"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_hwcq4")])
+event_uid = "51e40f"
+
+[sub_resource type="Resource" id="Resource_vfjxm"]
+script = ExtResource("8_dwkn7")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "r",
+"value": "info[\"rect\"]",
+"var_type": "Rect2"
+}
+
+[sub_resource type="Resource" id="Resource_uul86"]
+script = ExtResource("2_tmuc2")
+code = "var e := maxf(r.size.x, r.size.y) * 0.5"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_w3ayu"]
+script = ExtResource("4_v4dpl")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "bool(info[\"has_area\"])"
+}
+
+[sub_resource type="Resource" id="Resource_nfljd"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "e"
+}
+
+[sub_resource type="Resource" id="Resource_rebjk"]
+script = ExtResource("4_v4dpl")
+ace_id = "CompareVar"
+params = {
+"op": ">",
+"value": "0.0",
+"var_name": "e"
+}
+
+[sub_resource type="Resource" id="Resource_v01mr"]
+script = ExtResource("7_8p8d4")
+conditions = Array[ExtResource("4_v4dpl")]([SubResource("Resource_rebjk")])
+actions = Array[Resource]([SubResource("Resource_nfljd")])
+event_uid = "d180f4"
+
+[sub_resource type="Resource" id="Resource_yseaf"]
+script = ExtResource("7_8p8d4")
+conditions = Array[ExtResource("4_v4dpl")]([SubResource("Resource_w3ayu")])
+actions = Array[Resource]([SubResource("Resource_vfjxm"), SubResource("Resource_uul86")])
+sub_events = Array[Resource]([SubResource("Resource_v01mr")])
+event_uid = "c68150"
+
+[sub_resource type="Resource" id="Resource_xpvuy"]
+script = ExtResource("8_dwkn7")
+ace_id = "ReturnValue"
+params = {
+"value": "32.0"
+}
+
+[sub_resource type="Resource" id="Resource_3501p"]
+script = ExtResource("7_8p8d4")
+actions = Array[Resource]([SubResource("Resource_xpvuy")])
+event_uid = "363a4f"
+
+[sub_resource type="Resource" id="Resource_1vl86"]
+script = ExtResource("9_3d4q0")
+id = "target"
+type_name = "Node2D"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_1fw2g"]
+script = ExtResource("10_rhot5")
+function_name = "_target_extent"
+lifted_unannotated = true
+params = Array[ExtResource("9_3d4q0")]([SubResource("Resource_1vl86")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_om77h"), SubResource("Resource_yseaf"), SubResource("Resource_3501p")])
+
 [resource]
 script = ExtResource("11_jx54r")
 host_class = "CharacterBody2D"
@@ -2876,4 +3601,4 @@ variables = {
 "type": "Array"
 }
 }
-functions = Array[Resource]([SubResource("Resource_1xe4h"), SubResource("Resource_xdwqr"), SubResource("Resource_rytme"), SubResource("Resource_wrb10"), SubResource("Resource_1xd6l"), SubResource("Resource_2hwxm"), SubResource("Resource_vibco"), SubResource("Resource_o1qd8"), SubResource("Resource_hoxm6"), SubResource("Resource_6qkxe"), SubResource("Resource_vfprl"), SubResource("Resource_vjsgv"), SubResource("Resource_6as8w"), SubResource("Resource_bmxta"), SubResource("Resource_fiao6"), SubResource("Resource_u2wx7"), SubResource("Resource_m2t0o"), SubResource("Resource_javql"), SubResource("Resource_m36h8"), SubResource("Resource_xxvks"), SubResource("Resource_nydcg"), SubResource("Resource_f8ixl"), SubResource("Resource_mk3cl"), SubResource("Resource_1cgoa"), SubResource("Resource_71lgk"), SubResource("Resource_fc633"), SubResource("Resource_fiwvc"), SubResource("Resource_v5mtc"), SubResource("Resource_oe1bi"), SubResource("Resource_o6ht6"), SubResource("Resource_s4077")])
+functions = Array[Resource]([SubResource("Resource_1xe4h"), SubResource("Resource_xdwqr"), SubResource("Resource_rytme"), SubResource("Resource_wrb10"), SubResource("Resource_1xd6l"), SubResource("Resource_2hwxm"), SubResource("Resource_vibco"), SubResource("Resource_o1qd8"), SubResource("Resource_hoxm6"), SubResource("Resource_6qkxe"), SubResource("Resource_vfprl"), SubResource("Resource_vjsgv"), SubResource("Resource_6as8w"), SubResource("Resource_bmxta"), SubResource("Resource_fiao6"), SubResource("Resource_u2wx7"), SubResource("Resource_m2t0o"), SubResource("Resource_javql"), SubResource("Resource_m36h8"), SubResource("Resource_xxvks"), SubResource("Resource_nydcg"), SubResource("Resource_f8ixl"), SubResource("Resource_mk3cl"), SubResource("Resource_1cgoa"), SubResource("Resource_71lgk"), SubResource("Resource_fc633"), SubResource("Resource_fiwvc"), SubResource("Resource_v5mtc"), SubResource("Resource_oe1bi"), SubResource("Resource_o6ht6"), SubResource("Resource_s4077"), SubResource("Resource_4a1ea"), SubResource("Resource_mrpe7"), SubResource("Resource_qi2kr"), SubResource("Resource_7x80w"), SubResource("Resource_uxdhk"), SubResource("Resource_3n4ol"), SubResource("Resource_rh4uy"), SubResource("Resource_2j102"), SubResource("Resource_qkre0"), SubResource("Resource_f0gmi"), SubResource("Resource_xhlbq"), SubResource("Resource_e1nnp"), SubResource("Resource_2jmep"), SubResource("Resource_wyb3l"), SubResource("Resource_agb6l"), SubResource("Resource_sw5bk"), SubResource("Resource_ttj3k"), SubResource("Resource_08e86"), SubResource("Resource_xvhie"), SubResource("Resource_x46rc"), SubResource("Resource_t4ay1"), SubResource("Resource_h3v35"), SubResource("Resource_1fw2g")])

@@ -38,38 +38,6 @@ var primitives: Dictionary = {}
 @export var root_task: String = ""
 var world_state: Dictionary = {}
 
-## @ace_condition
-## @ace_name("Has Plan")
-## @ace_category("HTN")
-## @ace_codegen_template("$HTNAgent.has_plan()")
-func has_plan() -> bool:
-	return plan_index < plan.size()
-
-## @ace_condition
-## @ace_name("Current Task Is")
-## @ace_category("HTN")
-## @ace_codegen_template("$HTNAgent.current_task_is({task_name})")
-func current_task_is(task_name: String) -> bool:
-	return current_task() == task_name
-
-## @ace_expression
-## @ace_name("Current Task")
-## @ace_category("HTN")
-func current_task() -> String:
-	return str(plan[plan_index]) if plan_index < plan.size() else ""
-
-## @ace_expression
-## @ace_name("Plan Length")
-## @ace_category("HTN")
-func plan_length() -> int:
-	return plan.size()
-
-## @ace_expression
-## @ace_name("World Value")
-## @ace_category("HTN")
-func world_value(key: String) -> Variant:
-	return world_state.get(key, 0)
-
 ## An HTN method — a way to accomplish a compound task, with preconditions + an ordered subtask list.
 class HTNMethod:
 	var id: String = ""
@@ -82,67 +50,12 @@ class HTNCondition:
 	var key: String = ""
 	var op: String = "=="
 	var value: Variant = null
-
 # ── Planner internals ──
 func _find_method(task_name: String, method_id: String) -> HTNMethod:
 	for method: HTNMethod in compounds.get(task_name, []):
 		if method.id == method_id:
 			return method
 	return null
-
-func _to_number(value: Variant) -> float:
-	if value is float or value is int:
-		return float(value)
-	return str(value).to_float()
-
-func _loose_equal(a: Variant, b: Variant) -> bool:
-	if (a is float or a is int) and (b is float or b is int):
-		return is_equal_approx(float(a), float(b))
-	return str(a) == str(b)
-
-func _compare_values(a: Variant, op: String, b: Variant) -> bool:
-	if op == "==": return _loose_equal(a, b)
-	if op == "!=": return not _loose_equal(a, b)
-	if op == "<": return _to_number(a) < _to_number(b)
-	if op == "<=": return _to_number(a) <= _to_number(b)
-	if op == ">": return _to_number(a) > _to_number(b)
-	if op == ">=": return _to_number(a) >= _to_number(b)
-	return false
-
-func _conditions_hold(conditions: Array) -> bool:
-	for condition: HTNCondition in conditions:
-		var actual: Variant = world_state.get(condition.key, null)
-		if not _compare_values(actual, condition.op, condition.value):
-			return false
-	return true
-
-# Decompose a task into an ordered list of primitive task names. At each compound the
-# applicable methods (preconditions satisfied) are tried in descending utility order,
-# backtracking to the next method when a subtask cannot be decomposed.
-func _decompose(task_name: String, depth: int) -> Array:
-	if depth > 64:
-		return []
-	if primitives.has(task_name):
-		return [task_name]
-	if not compounds.has(task_name):
-		return []
-	var applicable: Array = []
-	for method: HTNMethod in compounds[task_name]:
-		if _conditions_hold(method.conditions):
-			applicable.append(method)
-	applicable.sort_custom(func(a: HTNMethod, b: HTNMethod) -> bool: return a.utility > b.utility)
-	for method: HTNMethod in applicable:
-		var result: Array = []
-		var ok: bool = true
-		for subtask: String in method.subtasks:
-			var sub: Array = _decompose(subtask, depth + 1)
-			if sub.is_empty():
-				ok = false
-				break
-			result.append_array(sub)
-		if ok:
-			return result
-	return []
 
 ## @ace_action
 ## @ace_name("Set World State")
@@ -300,5 +213,99 @@ func mark_failed() -> void:
 func invalidate_plan() -> void:
 	plan = []
 	plan_index = 0
+
+## @ace_condition
+## @ace_name("Has Plan")
+## @ace_category("HTN")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$HTNAgent.has_plan()")
+func has_plan() -> bool:
+	return plan_index < plan.size()
+
+## @ace_condition
+## @ace_name("Current Task Is")
+## @ace_category("HTN")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$HTNAgent.current_task_is({task_name})")
+func current_task_is(task_name: String) -> bool:
+	return current_task() == task_name
+
+## @ace_expression
+## @ace_name("Current Task")
+## @ace_category("HTN")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$HTNAgent.current_task()")
+func current_task() -> String:
+	return str(plan[plan_index]) if plan_index < plan.size() else ""
+
+## @ace_expression
+## @ace_name("Plan Length")
+## @ace_category("HTN")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$HTNAgent.plan_length()")
+func plan_length() -> int:
+	return plan.size()
+
+## @ace_expression
+## @ace_name("World Value")
+## @ace_category("HTN")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$HTNAgent.world_value({key})")
+func world_value(key: String) -> Variant:
+	return world_state.get(key, 0)
+
+func _to_number(value) -> float:
+	if value is float or value is int:
+		return float(value)
+	return str(value).to_float()
+
+func _loose_equal(a, b) -> bool:
+	if (a is float or a is int) and (b is float or b is int):
+		return is_equal_approx(float(a), float(b))
+	return str(a) == str(b)
+
+func _compare_values(a, op: String, b) -> bool:
+	if op == "==": return _loose_equal(a, b)
+	if op == "!=": return not _loose_equal(a, b)
+	if op == "<": return _to_number(a) < _to_number(b)
+	if op == "<=": return _to_number(a) <= _to_number(b)
+	if op == ">": return _to_number(a) > _to_number(b)
+	if op == ">=": return _to_number(a) >= _to_number(b)
+	return false
+
+func _conditions_hold(conditions: Array) -> bool:
+	for condition: HTNCondition in conditions:
+		var actual: Variant = world_state.get(condition.key, null)
+		if not _compare_values(actual, condition.op, condition.value):
+			return false
+	return true
+
+func _decompose(task_name: String, depth: int) -> Array:
+	# Decompose a task into an ordered list of primitive task names. At each compound the
+	# applicable methods (preconditions satisfied) are tried in descending utility order,
+	# backtracking to the next method when a subtask cannot be decomposed.
+	if depth > 64:
+		return []
+	if primitives.has(task_name):
+		return [task_name]
+	if not compounds.has(task_name):
+		return []
+	var applicable: Array = []
+	for method: HTNMethod in compounds[task_name]:
+		if _conditions_hold(method.conditions):
+			applicable.append(method)
+	applicable.sort_custom(func(a: HTNMethod, b: HTNMethod) -> bool: return a.utility > b.utility)
+	for method: HTNMethod in applicable:
+		var result: Array = []
+		var ok: bool = true
+		for subtask: String in method.subtasks:
+			var sub: Array = _decompose(subtask, depth + 1)
+			if sub.is_empty():
+				ok = false
+				break
+			result.append_array(sub)
+		if ok:
+			return result
+	return []
 
 # Utility-driven HTN planner. In On Ready build a task network (Add Primitive / Add Compound / Add Method / Add Method Condition / Add Method Subtask) and set the Root Task. Feed facts with Set World State, call Request Plan, run the Current Task in your sheet, and call Mark Complete / Mark Failed. Highest-utility applicable method wins at each compound (with backtracking). Triggers: On Task Started, On Plan Complete, On Plan Failed.

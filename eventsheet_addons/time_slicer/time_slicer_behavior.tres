@@ -2,12 +2,12 @@
 
 [ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_ecg1s"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="2_xkkd0"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="3_q274n"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="4_pap2t"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="5_mnr22"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="6_pc2pk"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="7_uikdf"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="8_geigq"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_q274n"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_pap2t"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_mnr22"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_pc2pk"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_uikdf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="8_geigq"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="9_13vlq"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="10_w6hqk"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="11_tbyw6"]
@@ -33,50 +33,29 @@ ace_name = "On Drained"
 ace_category = "Time Slicer"
 
 [sub_resource type="Resource" id="Resource_84hue"]
-script = ExtResource("3_q274n")
-code = "## @ace_condition
-## @ace_name(\"Is Busy\")
-## @ace_category(\"Time Slicer\")
-## @ace_codegen_template(\"$TimeSlicerBehavior.is_busy()\")
-func is_busy() -> bool:
-	return not _queue.is_empty()
-
-## @ace_expression
-## @ace_name(\"Items Remaining\")
-## @ace_category(\"Time Slicer\")
-func items_remaining() -> int:
-	return _queue.size()
-
-## @ace_expression
-## @ace_name(\"Last Frame Item Count\")
-## @ace_category(\"Time Slicer\")
-func last_frame_item_count() -> int:
-	return _last_count"
-
-[sub_resource type="Resource" id="Resource_sjsb6"]
-script = ExtResource("8_geigq")
+script = ExtResource("7_uikdf")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_vijfo"]
-script = ExtResource("4_pap2t")
+[sub_resource type="Resource" id="Resource_sjsb6"]
+script = ExtResource("3_q274n")
 ace_id = "DictIsEmpty"
 params = {
 "var_name": "_paused or _queue"
 }
 
-[sub_resource type="Resource" id="Resource_ybc4u"]
-script = ExtResource("7_uikdf")
-conditions = Array[ExtResource("4_pap2t")]([SubResource("Resource_vijfo")])
-actions = Array[Resource]([SubResource("Resource_sjsb6")])
-event_uid = "59ba32"
+[sub_resource type="Resource" id="Resource_vijfo"]
+script = ExtResource("6_pc2pk")
+conditions = Array[ExtResource("3_q274n")]([SubResource("Resource_sjsb6")])
+actions = Array[Resource]([SubResource("Resource_84hue")])
+event_uid = "bf2215"
 
-[sub_resource type="Resource" id="Resource_r45xq"]
-script = ExtResource("3_q274n")
+[sub_resource type="Resource" id="Resource_ybc4u"]
+script = ExtResource("8_geigq")
 code = "# Wall-clock ms fence — the one budget primitive shared across the frame-spreading tools."
 lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_q4syt"]
-script = ExtResource("8_geigq")
+[sub_resource type="Resource" id="Resource_r45xq"]
+script = ExtResource("7_uikdf")
 ace_id = "CallMethod"
 params = {
 "args": ") + int(frame_budget_ms * 1000.0",
@@ -84,45 +63,45 @@ params = {
 "target": "var __budget_end := Time"
 }
 
-[sub_resource type="Resource" id="Resource_e53cp"]
-script = ExtResource("3_q274n")
+[sub_resource type="Resource" id="Resource_q4syt"]
+script = ExtResource("8_geigq")
 code = "var __n := 0"
 lift_note = "no matching ACE template"
 
+[sub_resource type="Resource" id="Resource_e53cp"]
+script = ExtResource("6_pc2pk")
+actions = Array[Resource]([SubResource("Resource_ybc4u"), SubResource("Resource_r45xq"), SubResource("Resource_q4syt")])
+event_uid = "b6713b"
+
 [sub_resource type="Resource" id="Resource_y4urs"]
 script = ExtResource("7_uikdf")
-actions = Array[Resource]([SubResource("Resource_r45xq"), SubResource("Resource_q4syt"), SubResource("Resource_e53cp")])
-event_uid = "34676a"
-
-[sub_resource type="Resource" id="Resource_y6j20"]
-script = ExtResource("8_geigq")
 ace_id = "EmitSignal"
 params = {
 "args": "_queue.pop_front()",
 "signal_name": "process_item"
 }
 
-[sub_resource type="Resource" id="Resource_0hl0x"]
-script = ExtResource("8_geigq")
+[sub_resource type="Resource" id="Resource_y6j20"]
+script = ExtResource("7_uikdf")
 ace_id = "AddVar"
 params = {
 "amount": "1",
 "var_name": "__n"
 }
 
-[sub_resource type="Resource" id="Resource_rryhb"]
-script = ExtResource("6_pc2pk")
+[sub_resource type="Resource" id="Resource_0hl0x"]
+script = ExtResource("5_mnr22")
 iterator_name = ""
 collection_kind = 8
 collection_value = "not _queue.is_empty()"
 
-[sub_resource type="Resource" id="Resource_3o7pn"]
-script = ExtResource("3_q274n")
+[sub_resource type="Resource" id="Resource_rryhb"]
+script = ExtResource("8_geigq")
 code = "break"
 lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_fs2wn"]
-script = ExtResource("4_pap2t")
+[sub_resource type="Resource" id="Resource_3o7pn"]
+script = ExtResource("3_q274n")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -130,8 +109,8 @@ params = {
 "var_name": "mode"
 }
 
-[sub_resource type="Resource" id="Resource_d8iwo"]
-script = ExtResource("4_pap2t")
+[sub_resource type="Resource" id="Resource_fs2wn"]
+script = ExtResource("3_q274n")
 ace_id = "CompareVar"
 params = {
 "op": ">=",
@@ -139,19 +118,19 @@ params = {
 "var_name": "Time.get_ticks_usec()"
 }
 
-[sub_resource type="Resource" id="Resource_o6gml"]
-script = ExtResource("7_uikdf")
-conditions = Array[ExtResource("4_pap2t")]([SubResource("Resource_fs2wn"), SubResource("Resource_d8iwo")])
-actions = Array[Resource]([SubResource("Resource_3o7pn")])
-event_uid = "ca328f"
+[sub_resource type="Resource" id="Resource_d8iwo"]
+script = ExtResource("6_pc2pk")
+conditions = Array[ExtResource("3_q274n")]([SubResource("Resource_3o7pn"), SubResource("Resource_fs2wn")])
+actions = Array[Resource]([SubResource("Resource_rryhb")])
+event_uid = "058641"
 
-[sub_resource type="Resource" id="Resource_g6f41"]
-script = ExtResource("3_q274n")
+[sub_resource type="Resource" id="Resource_o6gml"]
+script = ExtResource("8_geigq")
 code = "break"
 lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_ngf8b"]
-script = ExtResource("4_pap2t")
+[sub_resource type="Resource" id="Resource_g6f41"]
+script = ExtResource("3_q274n")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -159,8 +138,8 @@ params = {
 "var_name": "mode"
 }
 
-[sub_resource type="Resource" id="Resource_dr8tj"]
-script = ExtResource("4_pap2t")
+[sub_resource type="Resource" id="Resource_ngf8b"]
+script = ExtResource("3_q274n")
 ace_id = "CompareVar"
 params = {
 "op": ">=",
@@ -168,243 +147,306 @@ params = {
 "var_name": "__n"
 }
 
+[sub_resource type="Resource" id="Resource_dr8tj"]
+script = ExtResource("6_pc2pk")
+conditions = Array[ExtResource("3_q274n")]([SubResource("Resource_g6f41"), SubResource("Resource_ngf8b")])
+actions = Array[Resource]([SubResource("Resource_o6gml")])
+event_uid = "db6aac"
+
 [sub_resource type="Resource" id="Resource_j0qlf"]
-script = ExtResource("7_uikdf")
-conditions = Array[ExtResource("4_pap2t")]([SubResource("Resource_ngf8b"), SubResource("Resource_dr8tj")])
-actions = Array[Resource]([SubResource("Resource_g6f41")])
-event_uid = "da4966"
+script = ExtResource("6_pc2pk")
+actions = Array[Resource]([SubResource("Resource_y4urs"), SubResource("Resource_y6j20")])
+sub_events = Array[Resource]([SubResource("Resource_d8iwo"), SubResource("Resource_dr8tj")])
+event_uid = "1ac3d5"
+pick_filters = Array[ExtResource("5_mnr22")]([SubResource("Resource_0hl0x")])
 
 [sub_resource type="Resource" id="Resource_pyqta"]
 script = ExtResource("7_uikdf")
-actions = Array[Resource]([SubResource("Resource_y6j20"), SubResource("Resource_0hl0x")])
-sub_events = Array[Resource]([SubResource("Resource_o6gml"), SubResource("Resource_j0qlf")])
-event_uid = "0275ad"
-pick_filters = Array[ExtResource("6_pc2pk")]([SubResource("Resource_rryhb")])
-
-[sub_resource type="Resource" id="Resource_1kmie"]
-script = ExtResource("8_geigq")
 ace_id = "SetVar"
 params = {
 "value": "__n",
 "var_name": "_last_count"
 }
 
+[sub_resource type="Resource" id="Resource_1kmie"]
+script = ExtResource("6_pc2pk")
+actions = Array[Resource]([SubResource("Resource_pyqta")])
+event_uid = "576ad2"
+
 [sub_resource type="Resource" id="Resource_xj3fc"]
 script = ExtResource("7_uikdf")
-actions = Array[Resource]([SubResource("Resource_1kmie")])
-event_uid = "2b5a92"
-
-[sub_resource type="Resource" id="Resource_6kqht"]
-script = ExtResource("8_geigq")
 ace_id = "EmitSignal"
 params = {
 "args": "",
 "signal_name": "drained"
 }
 
-[sub_resource type="Resource" id="Resource_hg0dh"]
-script = ExtResource("4_pap2t")
+[sub_resource type="Resource" id="Resource_6kqht"]
+script = ExtResource("3_q274n")
 ace_id = "DictIsEmpty"
 params = {
 "var_name": "_queue"
 }
 
+[sub_resource type="Resource" id="Resource_hg0dh"]
+script = ExtResource("6_pc2pk")
+conditions = Array[ExtResource("3_q274n")]([SubResource("Resource_6kqht")])
+actions = Array[Resource]([SubResource("Resource_xj3fc")])
+event_uid = "b57287"
+
 [sub_resource type="Resource" id="Resource_ic3dq"]
-script = ExtResource("7_uikdf")
-conditions = Array[ExtResource("4_pap2t")]([SubResource("Resource_hg0dh")])
-actions = Array[Resource]([SubResource("Resource_6kqht")])
-event_uid = "c67af7"
+script = ExtResource("6_pc2pk")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+sub_events = Array[Resource]([SubResource("Resource_vijfo"), SubResource("Resource_e53cp"), SubResource("Resource_j0qlf"), SubResource("Resource_1kmie"), SubResource("Resource_hg0dh")])
+event_uid = "4c0bd5"
 
 [sub_resource type="Resource" id="Resource_wtx5o"]
 script = ExtResource("7_uikdf")
-trigger_provider_id = "Core"
-trigger_id = "OnProcess"
-sub_events = Array[Resource]([SubResource("Resource_ybc4u"), SubResource("Resource_y4urs"), SubResource("Resource_pyqta"), SubResource("Resource_xj3fc"), SubResource("Resource_ic3dq")])
-event_uid = "48a58e"
-
-[sub_resource type="Resource" id="Resource_g7tla"]
-script = ExtResource("8_geigq")
 ace_id = "ArrayAppend"
 params = {
 "value": "item",
 "var_name": "_queue"
 }
 
-[sub_resource type="Resource" id="Resource_v25g0"]
-script = ExtResource("7_uikdf")
-actions = Array[Resource]([SubResource("Resource_g7tla")])
+[sub_resource type="Resource" id="Resource_g7tla"]
+script = ExtResource("6_pc2pk")
+actions = Array[Resource]([SubResource("Resource_wtx5o")])
 event_uid = "cfc517"
 
-[sub_resource type="Resource" id="Resource_4elpe"]
+[sub_resource type="Resource" id="Resource_v25g0"]
 script = ExtResource("9_13vlq")
 id = "item"
 type_name = "Variant"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_4qnvn"]
+[sub_resource type="Resource" id="Resource_4elpe"]
 script = ExtResource("10_w6hqk")
 function_name = "enqueue_item"
 description = "Adds one item to the work queue (processed later within the per-frame budget)."
 expose_as_ace = true
 ace_display_name = "Enqueue Item"
 ace_category = "Time Slicer"
-params = Array[ExtResource("9_13vlq")]([SubResource("Resource_4elpe")])
-events = Array[Resource]([SubResource("Resource_v25g0")])
+params = Array[ExtResource("9_13vlq")]([SubResource("Resource_v25g0")])
+events = Array[Resource]([SubResource("Resource_g7tla")])
 
-[sub_resource type="Resource" id="Resource_dqobt"]
-script = ExtResource("8_geigq")
+[sub_resource type="Resource" id="Resource_4qnvn"]
+script = ExtResource("7_uikdf")
 ace_id = "ArrayAppendArray"
 params = {
 "other": "items",
 "var_name": "_queue"
 }
 
-[sub_resource type="Resource" id="Resource_6ox73"]
-script = ExtResource("7_uikdf")
-actions = Array[Resource]([SubResource("Resource_dqobt")])
+[sub_resource type="Resource" id="Resource_dqobt"]
+script = ExtResource("6_pc2pk")
+actions = Array[Resource]([SubResource("Resource_4qnvn")])
 event_uid = "0b20db"
 
-[sub_resource type="Resource" id="Resource_amysj"]
+[sub_resource type="Resource" id="Resource_6ox73"]
 script = ExtResource("9_13vlq")
 id = "items"
 type_name = "Array"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_n6hjm"]
+[sub_resource type="Resource" id="Resource_amysj"]
 script = ExtResource("10_w6hqk")
 function_name = "enqueue_items"
 description = "Adds every element of an array to the work queue."
 expose_as_ace = true
 ace_display_name = "Enqueue Items"
 ace_category = "Time Slicer"
-params = Array[ExtResource("9_13vlq")]([SubResource("Resource_amysj")])
-events = Array[Resource]([SubResource("Resource_6ox73")])
+params = Array[ExtResource("9_13vlq")]([SubResource("Resource_6ox73")])
+events = Array[Resource]([SubResource("Resource_dqobt")])
 
-[sub_resource type="Resource" id="Resource_lsv7s"]
-script = ExtResource("8_geigq")
+[sub_resource type="Resource" id="Resource_n6hjm"]
+script = ExtResource("7_uikdf")
 ace_id = "ArrayAppendArray"
 params = {
 "other": "get_tree().get_nodes_in_group(group)",
 "var_name": "_queue"
 }
 
-[sub_resource type="Resource" id="Resource_sqsvd"]
-script = ExtResource("7_uikdf")
-actions = Array[Resource]([SubResource("Resource_lsv7s")])
+[sub_resource type="Resource" id="Resource_lsv7s"]
+script = ExtResource("6_pc2pk")
+actions = Array[Resource]([SubResource("Resource_n6hjm")])
 event_uid = "ac650d"
 
-[sub_resource type="Resource" id="Resource_banw8"]
+[sub_resource type="Resource" id="Resource_sqsvd"]
 script = ExtResource("9_13vlq")
 id = "group"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_tp6yj"]
+[sub_resource type="Resource" id="Resource_banw8"]
 script = ExtResource("10_w6hqk")
 function_name = "enqueue_group"
 description = "Adds every node in a group to the work queue (e.g. process all enemies, spread over frames)."
 expose_as_ace = true
 ace_display_name = "Enqueue Group"
 ace_category = "Time Slicer"
-params = Array[ExtResource("9_13vlq")]([SubResource("Resource_banw8")])
-events = Array[Resource]([SubResource("Resource_sqsvd")])
+params = Array[ExtResource("9_13vlq")]([SubResource("Resource_sqsvd")])
+events = Array[Resource]([SubResource("Resource_lsv7s")])
 
-[sub_resource type="Resource" id="Resource_n0cux"]
-script = ExtResource("8_geigq")
+[sub_resource type="Resource" id="Resource_tp6yj"]
+script = ExtResource("7_uikdf")
 ace_id = "DictClear"
 params = {
 "var_name": "_queue"
 }
 
-[sub_resource type="Resource" id="Resource_nb3ee"]
-script = ExtResource("7_uikdf")
-actions = Array[Resource]([SubResource("Resource_n0cux")])
+[sub_resource type="Resource" id="Resource_n0cux"]
+script = ExtResource("6_pc2pk")
+actions = Array[Resource]([SubResource("Resource_tp6yj")])
 event_uid = "38c316"
 
-[sub_resource type="Resource" id="Resource_ulhfs"]
+[sub_resource type="Resource" id="Resource_nb3ee"]
 script = ExtResource("10_w6hqk")
 function_name = "clear_queue"
 description = "Drops all pending items without processing them."
 expose_as_ace = true
 ace_display_name = "Clear Queue"
 ace_category = "Time Slicer"
-events = Array[Resource]([SubResource("Resource_nb3ee")])
+events = Array[Resource]([SubResource("Resource_n0cux")])
 
-[sub_resource type="Resource" id="Resource_megqk"]
-script = ExtResource("8_geigq")
+[sub_resource type="Resource" id="Resource_ulhfs"]
+script = ExtResource("7_uikdf")
 ace_id = "SetVar"
 params = {
 "value": "maxf(0.0, ms)",
 "var_name": "frame_budget_ms"
 }
 
-[sub_resource type="Resource" id="Resource_llh1h"]
-script = ExtResource("7_uikdf")
-actions = Array[Resource]([SubResource("Resource_megqk")])
+[sub_resource type="Resource" id="Resource_megqk"]
+script = ExtResource("6_pc2pk")
+actions = Array[Resource]([SubResource("Resource_ulhfs")])
 event_uid = "aa2965"
 
-[sub_resource type="Resource" id="Resource_c0ybl"]
+[sub_resource type="Resource" id="Resource_llh1h"]
 script = ExtResource("9_13vlq")
 id = "ms"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_urt2v"]
+[sub_resource type="Resource" id="Resource_c0ybl"]
 script = ExtResource("10_w6hqk")
 function_name = "set_frame_budget"
 description = "Sets the per-frame millisecond budget at runtime (dial it down during heavy scenes)."
 expose_as_ace = true
 ace_display_name = "Set Frame Budget"
 ace_category = "Time Slicer"
-params = Array[ExtResource("9_13vlq")]([SubResource("Resource_c0ybl")])
-events = Array[Resource]([SubResource("Resource_llh1h")])
+params = Array[ExtResource("9_13vlq")]([SubResource("Resource_llh1h")])
+events = Array[Resource]([SubResource("Resource_megqk")])
 
-[sub_resource type="Resource" id="Resource_kh34h"]
-script = ExtResource("8_geigq")
+[sub_resource type="Resource" id="Resource_urt2v"]
+script = ExtResource("7_uikdf")
 ace_id = "SetVar"
 params = {
 "value": "true",
 "var_name": "_paused"
 }
 
-[sub_resource type="Resource" id="Resource_mdaen"]
-script = ExtResource("7_uikdf")
-actions = Array[Resource]([SubResource("Resource_kh34h")])
+[sub_resource type="Resource" id="Resource_kh34h"]
+script = ExtResource("6_pc2pk")
+actions = Array[Resource]([SubResource("Resource_urt2v")])
 event_uid = "f2dae4"
 
-[sub_resource type="Resource" id="Resource_fduhb"]
+[sub_resource type="Resource" id="Resource_mdaen"]
 script = ExtResource("10_w6hqk")
 function_name = "pause_slicer"
 description = "Stops draining (items stay queued)."
 expose_as_ace = true
 ace_display_name = "Pause"
 ace_category = "Time Slicer"
-events = Array[Resource]([SubResource("Resource_mdaen")])
+events = Array[Resource]([SubResource("Resource_kh34h")])
 
-[sub_resource type="Resource" id="Resource_i3b6p"]
-script = ExtResource("8_geigq")
+[sub_resource type="Resource" id="Resource_fduhb"]
+script = ExtResource("7_uikdf")
 ace_id = "SetVar"
 params = {
 "value": "false",
 "var_name": "_paused"
 }
 
-[sub_resource type="Resource" id="Resource_mjvge"]
-script = ExtResource("7_uikdf")
-actions = Array[Resource]([SubResource("Resource_i3b6p")])
+[sub_resource type="Resource" id="Resource_i3b6p"]
+script = ExtResource("6_pc2pk")
+actions = Array[Resource]([SubResource("Resource_fduhb")])
 event_uid = "ca099c"
 
-[sub_resource type="Resource" id="Resource_x638o"]
+[sub_resource type="Resource" id="Resource_mjvge"]
 script = ExtResource("10_w6hqk")
 function_name = "resume_slicer"
 description = "Resumes draining the queue."
 expose_as_ace = true
 ace_display_name = "Resume"
 ace_category = "Time Slicer"
-events = Array[Resource]([SubResource("Resource_mjvge")])
+events = Array[Resource]([SubResource("Resource_i3b6p")])
+
+[sub_resource type="Resource" id="Resource_x638o"]
+script = ExtResource("7_uikdf")
+ace_id = "ReturnValue"
+params = {
+"value": "not _queue.is_empty()"
+}
+
+[sub_resource type="Resource" id="Resource_ah44s"]
+script = ExtResource("6_pc2pk")
+actions = Array[Resource]([SubResource("Resource_x638o")])
+event_uid = "5e5cb7"
+
+[sub_resource type="Resource" id="Resource_rsmjx"]
+script = ExtResource("10_w6hqk")
+function_name = "is_busy"
+expose_as_ace = true
+ace_display_name = "Is Busy"
+ace_category = "Time Slicer"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_ah44s")])
+
+[sub_resource type="Resource" id="Resource_mvmon"]
+script = ExtResource("7_uikdf")
+ace_id = "ReturnValue"
+params = {
+"value": "_queue.size()"
+}
+
+[sub_resource type="Resource" id="Resource_7dgx1"]
+script = ExtResource("6_pc2pk")
+actions = Array[Resource]([SubResource("Resource_mvmon")])
+event_uid = "b30134"
+
+[sub_resource type="Resource" id="Resource_fhvu5"]
+script = ExtResource("10_w6hqk")
+function_name = "items_remaining"
+expose_as_ace = true
+ace_display_name = "Items Remaining"
+ace_category = "Time Slicer"
+return_type = 2
+events = Array[Resource]([SubResource("Resource_7dgx1")])
+
+[sub_resource type="Resource" id="Resource_i6hsd"]
+script = ExtResource("7_uikdf")
+ace_id = "ReturnValue"
+params = {
+"value": "_last_count"
+}
+
+[sub_resource type="Resource" id="Resource_1d5st"]
+script = ExtResource("6_pc2pk")
+actions = Array[Resource]([SubResource("Resource_i6hsd")])
+event_uid = "032133"
+
+[sub_resource type="Resource" id="Resource_jxisj"]
+script = ExtResource("10_w6hqk")
+function_name = "last_frame_item_count"
+expose_as_ace = true
+ace_display_name = "Last Frame Item Count"
+ace_category = "Time Slicer"
+return_type = 2
+events = Array[Resource]([SubResource("Resource_1d5st")])
 
 [resource]
 script = ExtResource("11_tbyw6")
@@ -412,7 +454,7 @@ behavior_mode = true
 custom_class_name = "TimeSlicerBehavior"
 addon_tags = PackedStringArray("performance", "scheduling")
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_0pebw"), SubResource("Resource_ht2af"), SubResource("Resource_1jdua"), SubResource("Resource_84hue"), SubResource("Resource_wtx5o")])
+events = Array[Resource]([SubResource("Resource_0pebw"), SubResource("Resource_ht2af"), SubResource("Resource_1jdua"), SubResource("Resource_ic3dq")])
 variables = {
 "_last_count": {
 "default": 0,
@@ -457,4 +499,4 @@ variables = {
 "type": "String"
 }
 }
-functions = Array[Resource]([SubResource("Resource_4qnvn"), SubResource("Resource_n6hjm"), SubResource("Resource_tp6yj"), SubResource("Resource_ulhfs"), SubResource("Resource_urt2v"), SubResource("Resource_fduhb"), SubResource("Resource_x638o")])
+functions = Array[Resource]([SubResource("Resource_4elpe"), SubResource("Resource_amysj"), SubResource("Resource_banw8"), SubResource("Resource_nb3ee"), SubResource("Resource_c0ybl"), SubResource("Resource_mdaen"), SubResource("Resource_mjvge"), SubResource("Resource_rsmjx"), SubResource("Resource_fhvu5"), SubResource("Resource_jxisj")])

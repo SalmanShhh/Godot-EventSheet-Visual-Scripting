@@ -98,192 +98,10 @@ var simulated_axis: Vector2 = Vector2.ZERO
 var mouse_target: Vector2 = Vector2.ZERO
 var constraint_bounds: Rect2 = Rect2()
 
-## @ace_condition
-## @ace_name("Is Interact Held")
-## @ace_category("Virtual Cursor")
-## @ace_codegen_template("$VirtualCursor.is_interact_held({id})")
-func is_interact_held(id: String) -> bool:
-	if id == "":
-		for key in interact_states:
-			if bool(interact_states[key]):
-				return true
-		return false
-	return bool(interact_states.get(id, false))
-
-## @ace_condition
-## @ace_name("Is Moving")
-## @ace_category("Virtual Cursor")
-## @ace_codegen_template("$VirtualCursor.is_moving()")
-func is_moving() -> bool:
-	return report_vel.length() > 0.0
-
-## @ace_condition
-## @ace_name("Is In Homing Range")
-## @ace_category("Virtual Cursor")
-## @ace_codegen_template("$VirtualCursor.is_in_homing_range()")
-func is_in_homing_range() -> bool:
-	return in_homing_range
-
-## @ace_condition
-## @ace_name("Is Blocked")
-## @ace_category("Virtual Cursor")
-## @ace_codegen_template("$VirtualCursor.is_blocked()")
-func is_blocked() -> bool:
-	return blocked_this_tick
-
-## @ace_condition
-## @ace_name("Is Enabled")
-## @ace_category("Virtual Cursor")
-## @ace_codegen_template("$VirtualCursor.is_cursor_enabled()")
-func is_cursor_enabled() -> bool:
-	return enabled
-
-## @ace_condition
-## @ace_name("Is Ignoring Input")
-## @ace_category("Virtual Cursor")
-## @ace_codegen_template("$VirtualCursor.is_ignoring_input()")
-func is_ignoring_input() -> bool:
-	return ignoring_input
-
-## @ace_condition
-## @ace_name("Is Hovering")
-## @ace_category("Virtual Cursor")
-## @ace_codegen_template("$VirtualCursor.is_hovering({target})")
-func is_hovering(target: Node2D) -> bool:
-	hovered_uid = -1
-	if host == null or target == null or target == host or not target.visible:
-		return false
-	var hit := false
-	if hover_mode == 0:
-		var shape := target.get_node_or_null("CollisionShape2D") as CollisionShape2D
-		if shape != null and shape.shape != null:
-			hit = shape.shape.collide(shape.global_transform, _point_shape(), Transform2D(0.0, host.global_position))
-		elif target.has_method("get_global_rect"):
-			hit = target.call("get_global_rect").has_point(host.global_position)
-		else:
-			# Robust fallback for plain Sprite2D/CanvasItem (no CollisionShape2D, no
-			# get_global_rect): derive a world rect from get_rect(), else distance check.
-			var info := _target_world_rect(target)
-			if bool(info["has_area"]):
-				hit = (info["rect"] as Rect2).has_point(host.global_position)
-			else:
-				hit = host.global_position.distance_to(target.global_position) <= _target_extent(target)
-	else:
-		var host_node: Node = host
-		if host_node is Area2D:
-			var area := host_node as Area2D
-			hit = area.get_overlapping_bodies().has(target) or area.get_overlapping_areas().has(target)
-		else:
-			# CharacterBody2D host never overlaps as an Area2D — gate on the target's
-			# derived extent instead of a fixed 32px so size is respected.
-			hit = host.global_position.distance_to(target.global_position) <= _target_extent(target)
-	if hit:
-		hovered_uid = target.get_instance_id()
-	return hit
-
-## @ace_expression
-## @ace_name("Cursor X")
-## @ace_category("Virtual Cursor")
-func cursor_x() -> float:
-	return host.global_position.x if host != null else 0.0
-
-## @ace_expression
-## @ace_name("Cursor Y")
-## @ace_category("Virtual Cursor")
-func cursor_y() -> float:
-	return host.global_position.y if host != null else 0.0
-
-## @ace_expression
-## @ace_name("Speed")
-## @ace_category("Virtual Cursor")
-func speed() -> float:
-	return report_vel.length()
-
-## @ace_expression
-## @ace_name("Velocity X")
-## @ace_category("Virtual Cursor")
-func velocity_x() -> float:
-	return report_vel.x
-
-## @ace_expression
-## @ace_name("Velocity Y")
-## @ace_category("Virtual Cursor")
-func velocity_y() -> float:
-	return report_vel.y
-
-## @ace_expression
-## @ace_name("Moving Angle")
-## @ace_category("Virtual Cursor")
-func moving_angle() -> float:
-	return fposmod(rad_to_deg(report_vel.angle()), 360.0)
-
-## @ace_expression
-## @ace_name("Axis X")
-## @ace_category("Virtual Cursor")
-func axis_x() -> float:
-	return axis.x
-
-## @ace_expression
-## @ace_name("Axis Y")
-## @ace_category("Virtual Cursor")
-func axis_y() -> float:
-	return axis.y
-
-## @ace_expression
-## @ace_name("Max Speed")
-## @ace_category("Virtual Cursor")
-func max_speed_value() -> float:
-	return max_speed
-
-## @ace_expression
-## @ace_name("Hovered UID")
-## @ace_category("Virtual Cursor")
-func hovered_uid_value() -> int:
-	return hovered_uid
-
-## @ace_expression
-## @ace_name("Homing Target UID")
-## @ace_category("Virtual Cursor")
-func homing_target_uid_value() -> int:
-	return nearest_homing_uid
-
-## @ace_expression
-## @ace_name("Homing Target Dist")
-## @ace_category("Virtual Cursor")
-func homing_target_dist_value() -> float:
-	return nearest_homing_dist
-
-## @ace_expression
-## @ace_name("Count Homing Targets")
-## @ace_category("Virtual Cursor")
-func count_homing_targets() -> int:
-	return homing_targets.size()
-
-## @ace_expression
-## @ace_name("Bounce Mode")
-## @ace_category("Virtual Cursor")
-func bounce_mode_token() -> String:
-	return ["none", "solids", "constraints", "both"][bounce_mode]
-
 func _point_shape() -> Shape2D:
 	var s := CircleShape2D.new()
 	s.radius = 0.5
 	return s
-
-## Best-effort world-space AABB for a target that has no usable CollisionShape2D.
-## Sprite2D/CanvasItem expose a LOCAL get_rect(); we transform its centre + half-size
-## through global_transform so hover works on plain sprites. Returns has_area=false when
-## nothing usable is found (caller then falls back to a distance/extent check).
-func _target_world_rect(target: Node2D) -> Dictionary:
-	var shape := target.get_node_or_null("CollisionShape2D") as CollisionShape2D
-	if shape != null and shape.shape != null:
-		var lr: Rect2 = shape.shape.get_rect()
-		return {"has_area": true, "rect": _xform_rect(shape.global_transform, lr)}
-	if target.has_method("get_rect"):
-		var r: Rect2 = target.call("get_rect")
-		return {"has_area": true, "rect": _xform_rect(target.global_transform, r)}
-	return {"has_area": false, "rect": Rect2()}
-
 ## Transform a local-space Rect2 into a world-space AABB by mapping its four corners.
 func _xform_rect(xform: Transform2D, r: Rect2) -> Rect2:
 	var p0 := xform * r.position
@@ -292,19 +110,6 @@ func _xform_rect(xform: Transform2D, r: Rect2) -> Rect2:
 	out = out.expand(xform * Vector2(r.position.x, r.position.y + r.size.y))
 	out = out.expand(xform * (r.position + r.size))
 	return out
-
-## A representative world-space proximity radius for a target: half the larger side of
-## its derived world rect, else 32px. Used by overlap-mode hover so the gate tracks the
-## actual target size instead of a fixed constant.
-func _target_extent(target: Node2D) -> float:
-	var info := _target_world_rect(target)
-	if bool(info["has_area"]):
-		var r: Rect2 = info["rect"]
-		var e := maxf(r.size.x, r.size.y) * 0.5
-		if e > 0.0:
-			return e
-	return 32.0
-
 func _resolve_bounds() -> Rect2:
 	if has_constraint_bounds:
 		return constraint_bounds
@@ -769,5 +574,226 @@ func set_constraint_bounds(left: float, top: float, right: float, bottom: float)
 ## @ace_codegen_template("$VirtualCursor.set_hover_mode({mode})")
 func set_hover_mode(mode: int) -> void:
 	hover_mode = clampi(mode, 0, 1)
+
+## @ace_condition
+## @ace_name("Is Interact Held")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.is_interact_held({id})")
+func is_interact_held(id: String) -> bool:
+	if id == "":
+		for key in interact_states:
+			if bool(interact_states[key]):
+				return true
+		return false
+	return bool(interact_states.get(id, false))
+
+## @ace_condition
+## @ace_name("Is Moving")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.is_moving()")
+func is_moving() -> bool:
+	return report_vel.length() > 0.0
+
+## @ace_condition
+## @ace_name("Is In Homing Range")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.is_in_homing_range()")
+func is_in_homing_range() -> bool:
+	return in_homing_range
+
+## @ace_condition
+## @ace_name("Is Blocked")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.is_blocked()")
+func is_blocked() -> bool:
+	return blocked_this_tick
+
+## @ace_condition
+## @ace_name("Is Enabled")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.is_cursor_enabled()")
+func is_cursor_enabled() -> bool:
+	return enabled
+
+## @ace_condition
+## @ace_name("Is Ignoring Input")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.is_ignoring_input()")
+func is_ignoring_input() -> bool:
+	return ignoring_input
+
+## @ace_condition
+## @ace_name("Is Hovering")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.is_hovering({target})")
+func is_hovering(target: Node2D) -> bool:
+	hovered_uid = -1
+	if host == null or target == null or target == host or not target.visible:
+		return false
+	var hit := false
+	if hover_mode == 0:
+		var shape := target.get_node_or_null("CollisionShape2D") as CollisionShape2D
+		if shape != null and shape.shape != null:
+			hit = shape.shape.collide(shape.global_transform, _point_shape(), Transform2D(0.0, host.global_position))
+		elif target.has_method("get_global_rect"):
+			hit = target.call("get_global_rect").has_point(host.global_position)
+		else:
+			# Robust fallback for plain Sprite2D/CanvasItem (no CollisionShape2D, no
+			# get_global_rect): derive a world rect from get_rect(), else distance check.
+			var info := _target_world_rect(target)
+			if bool(info["has_area"]):
+				hit = (info["rect"] as Rect2).has_point(host.global_position)
+			else:
+				hit = host.global_position.distance_to(target.global_position) <= _target_extent(target)
+	else:
+		var host_node: Node = host
+		if host_node is Area2D:
+			var area := host_node as Area2D
+			hit = area.get_overlapping_bodies().has(target) or area.get_overlapping_areas().has(target)
+		else:
+			# CharacterBody2D host never overlaps as an Area2D — gate on the target's
+			# derived extent instead of a fixed 32px so size is respected.
+			hit = host.global_position.distance_to(target.global_position) <= _target_extent(target)
+	if hit:
+		hovered_uid = target.get_instance_id()
+	return hit
+
+## @ace_expression
+## @ace_name("Cursor X")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.cursor_x()")
+func cursor_x() -> float:
+	return host.global_position.x if host != null else 0.0
+
+## @ace_expression
+## @ace_name("Cursor Y")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.cursor_y()")
+func cursor_y() -> float:
+	return host.global_position.y if host != null else 0.0
+
+## @ace_expression
+## @ace_name("Speed")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.speed()")
+func speed() -> float:
+	return report_vel.length()
+
+## @ace_expression
+## @ace_name("Velocity X")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.velocity_x()")
+func velocity_x() -> float:
+	return report_vel.x
+
+## @ace_expression
+## @ace_name("Velocity Y")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.velocity_y()")
+func velocity_y() -> float:
+	return report_vel.y
+
+## @ace_expression
+## @ace_name("Moving Angle")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.moving_angle()")
+func moving_angle() -> float:
+	return fposmod(rad_to_deg(report_vel.angle()), 360.0)
+
+## @ace_expression
+## @ace_name("Axis X")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.axis_x()")
+func axis_x() -> float:
+	return axis.x
+
+## @ace_expression
+## @ace_name("Axis Y")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.axis_y()")
+func axis_y() -> float:
+	return axis.y
+
+## @ace_expression
+## @ace_name("Max Speed")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.max_speed_value()")
+func max_speed_value() -> float:
+	return max_speed
+
+## @ace_expression
+## @ace_name("Hovered UID")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.hovered_uid_value()")
+func hovered_uid_value() -> int:
+	return hovered_uid
+
+## @ace_expression
+## @ace_name("Homing Target UID")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.homing_target_uid_value()")
+func homing_target_uid_value() -> int:
+	return nearest_homing_uid
+
+## @ace_expression
+## @ace_name("Homing Target Dist")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.homing_target_dist_value()")
+func homing_target_dist_value() -> float:
+	return nearest_homing_dist
+
+## @ace_expression
+## @ace_name("Count Homing Targets")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.count_homing_targets()")
+func count_homing_targets() -> int:
+	return homing_targets.size()
+
+## @ace_expression
+## @ace_name("Bounce Mode")
+## @ace_category("Virtual Cursor")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$VirtualCursor.bounce_mode_token()")
+func bounce_mode_token() -> String:
+	return ["none", "solids", "constraints", "both"][bounce_mode]
+
+func _target_world_rect(target: Node2D) -> Dictionary:
+	var shape := target.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if shape != null and shape.shape != null:
+		var lr: Rect2 = shape.shape.get_rect()
+		return {"has_area": true, "rect": _xform_rect(shape.global_transform, lr)}
+	if target.has_method("get_rect"):
+		var r: Rect2 = target.call("get_rect")
+		return {"has_area": true, "rect": _xform_rect(target.global_transform, r)}
+	return {"has_area": false, "rect": Rect2()}
+
+func _target_extent(target: Node2D) -> float:
+	var info := _target_world_rect(target)
+	if bool(info["has_area"]):
+		var r: Rect2 = info["rect"]
+		var e := maxf(r.size.x, r.size.y) * 0.5
+		if e > 0.0:
+			return e
+	return 32.0
 
 # Virtual Cursor behavior (C3 parity): input-agnostic controllable cursor on a CharacterBody2D — event-driven/axis/mouse-follow movement with accel/decel and direction modes, homing magnet, solid push-out via move_and_slide with sliding, lossless bounce, layout/viewport constraints, hover detection, and named interact buttons. Drives the Drag N Drop pack.

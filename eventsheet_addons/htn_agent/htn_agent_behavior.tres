@@ -42,39 +42,7 @@ ace_category = "HTN"
 
 [sub_resource type="Resource" id="Resource_qgett"]
 script = ExtResource("3_2sslc")
-code = "## @ace_condition
-## @ace_name(\"Has Plan\")
-## @ace_category(\"HTN\")
-## @ace_codegen_template(\"$HTNAgent.has_plan()\")
-func has_plan() -> bool:
-	return plan_index < plan.size()
-
-## @ace_condition
-## @ace_name(\"Current Task Is\")
-## @ace_category(\"HTN\")
-## @ace_codegen_template(\"$HTNAgent.current_task_is({task_name})\")
-func current_task_is(task_name: String) -> bool:
-	return current_task() == task_name
-
-## @ace_expression
-## @ace_name(\"Current Task\")
-## @ace_category(\"HTN\")
-func current_task() -> String:
-	return str(plan[plan_index]) if plan_index < plan.size() else \"\"
-
-## @ace_expression
-## @ace_name(\"Plan Length\")
-## @ace_category(\"HTN\")
-func plan_length() -> int:
-	return plan.size()
-
-## @ace_expression
-## @ace_name(\"World Value\")
-## @ace_category(\"HTN\")
-func world_value(key: String) -> Variant:
-	return world_state.get(key, 0)
-
-## An HTN method — a way to accomplish a compound task, with preconditions + an ordered subtask list.
+code = "## An HTN method — a way to accomplish a compound task, with preconditions + an ordered subtask list.
 class HTNMethod:
 	var id: String = \"\"
 	var utility: float = 0.0
@@ -86,67 +54,12 @@ class HTNCondition:
 	var key: String = \"\"
 	var op: String = \"==\"
 	var value: Variant = null
-
 # ── Planner internals ──
 func _find_method(task_name: String, method_id: String) -> HTNMethod:
 	for method: HTNMethod in compounds.get(task_name, []):
 		if method.id == method_id:
 			return method
-	return null
-
-func _to_number(value: Variant) -> float:
-	if value is float or value is int:
-		return float(value)
-	return str(value).to_float()
-
-func _loose_equal(a: Variant, b: Variant) -> bool:
-	if (a is float or a is int) and (b is float or b is int):
-		return is_equal_approx(float(a), float(b))
-	return str(a) == str(b)
-
-func _compare_values(a: Variant, op: String, b: Variant) -> bool:
-	if op == \"==\": return _loose_equal(a, b)
-	if op == \"!=\": return not _loose_equal(a, b)
-	if op == \"<\": return _to_number(a) < _to_number(b)
-	if op == \"<=\": return _to_number(a) <= _to_number(b)
-	if op == \">\": return _to_number(a) > _to_number(b)
-	if op == \">=\": return _to_number(a) >= _to_number(b)
-	return false
-
-func _conditions_hold(conditions: Array) -> bool:
-	for condition: HTNCondition in conditions:
-		var actual: Variant = world_state.get(condition.key, null)
-		if not _compare_values(actual, condition.op, condition.value):
-			return false
-	return true
-
-# Decompose a task into an ordered list of primitive task names. At each compound the
-# applicable methods (preconditions satisfied) are tried in descending utility order,
-# backtracking to the next method when a subtask cannot be decomposed.
-func _decompose(task_name: String, depth: int) -> Array:
-	if depth > 64:
-		return []
-	if primitives.has(task_name):
-		return [task_name]
-	if not compounds.has(task_name):
-		return []
-	var applicable: Array = []
-	for method: HTNMethod in compounds[task_name]:
-		if _conditions_hold(method.conditions):
-			applicable.append(method)
-	applicable.sort_custom(func(a: HTNMethod, b: HTNMethod) -> bool: return a.utility > b.utility)
-	for method: HTNMethod in applicable:
-		var result: Array = []
-		var ok: bool = true
-		for subtask: String in method.subtasks:
-			var sub: Array = _decompose(subtask, depth + 1)
-			if sub.is_empty():
-				ok = false
-				break
-			result.append_array(sub)
-		if ok:
-			return result
-	return []"
+	return null"
 
 [sub_resource type="Resource" id="Resource_jqvex"]
 script = ExtResource("4_s4esc")
@@ -936,6 +849,649 @@ ace_display_name = "Invalidate Plan"
 ace_category = "HTN"
 events = Array[Resource]([SubResource("Resource_5tape")])
 
+[sub_resource type="Resource" id="Resource_0hdo5"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "plan_index < plan.size()"
+}
+
+[sub_resource type="Resource" id="Resource_ohyp8"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_0hdo5")])
+event_uid = "f937ec"
+
+[sub_resource type="Resource" id="Resource_f3g3q"]
+script = ExtResource("10_ixx0h")
+function_name = "has_plan"
+expose_as_ace = true
+ace_display_name = "Has Plan"
+ace_category = "HTN"
+return_type = 1
+events = Array[Resource]([SubResource("Resource_ohyp8")])
+
+[sub_resource type="Resource" id="Resource_jekp3"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "current_task() == task_name"
+}
+
+[sub_resource type="Resource" id="Resource_h5v8f"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_jekp3")])
+event_uid = "1c4741"
+
+[sub_resource type="Resource" id="Resource_kvned"]
+script = ExtResource("9_j4fh5")
+id = "task_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_md1oe"]
+script = ExtResource("10_ixx0h")
+function_name = "current_task_is"
+expose_as_ace = true
+ace_display_name = "Current Task Is"
+ace_category = "HTN"
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_kvned")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_h5v8f")])
+
+[sub_resource type="Resource" id="Resource_2mdqn"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "str(plan[plan_index]) if plan_index < plan.size() else \"\""
+}
+
+[sub_resource type="Resource" id="Resource_quo81"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_2mdqn")])
+event_uid = "a14373"
+
+[sub_resource type="Resource" id="Resource_tmwsi"]
+script = ExtResource("10_ixx0h")
+function_name = "current_task"
+expose_as_ace = true
+ace_display_name = "Current Task"
+ace_category = "HTN"
+return_type = 4
+events = Array[Resource]([SubResource("Resource_quo81")])
+
+[sub_resource type="Resource" id="Resource_2l2ms"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "plan.size()"
+}
+
+[sub_resource type="Resource" id="Resource_g8hul"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_2l2ms")])
+event_uid = "618cf3"
+
+[sub_resource type="Resource" id="Resource_4lwk0"]
+script = ExtResource("10_ixx0h")
+function_name = "plan_length"
+expose_as_ace = true
+ace_display_name = "Plan Length"
+ace_category = "HTN"
+return_type = 2
+events = Array[Resource]([SubResource("Resource_g8hul")])
+
+[sub_resource type="Resource" id="Resource_a0ifg"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "world_state.get(key, 0)"
+}
+
+[sub_resource type="Resource" id="Resource_8jopo"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_a0ifg")])
+event_uid = "a7cc87"
+
+[sub_resource type="Resource" id="Resource_nqbys"]
+script = ExtResource("9_j4fh5")
+id = "key"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_gsfbc"]
+script = ExtResource("10_ixx0h")
+function_name = "world_value"
+expose_as_ace = true
+ace_display_name = "World Value"
+ace_category = "HTN"
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_nqbys")])
+return_type = 39
+events = Array[Resource]([SubResource("Resource_8jopo")])
+
+[sub_resource type="Resource" id="Resource_vqnxy"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "float(value)"
+}
+
+[sub_resource type="Resource" id="Resource_fdmic"]
+script = ExtResource("5_1iywo")
+ace_id = "CompareVar"
+params = {
+"op": "is",
+"value": "float or value is int",
+"var_name": "value"
+}
+
+[sub_resource type="Resource" id="Resource_540im"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_fdmic")])
+actions = Array[Resource]([SubResource("Resource_vqnxy")])
+event_uid = "60858e"
+
+[sub_resource type="Resource" id="Resource_52dvk"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "str(value).to_float()"
+}
+
+[sub_resource type="Resource" id="Resource_rkl8y"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_52dvk")])
+event_uid = "ceea66"
+
+[sub_resource type="Resource" id="Resource_02uah"]
+script = ExtResource("9_j4fh5")
+id = "value"
+type_name = "Variant"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_fmsct"]
+script = ExtResource("10_ixx0h")
+function_name = "_to_number"
+lifted_unannotated = true
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_02uah")])
+return_type = 3
+events = Array[Resource]([SubResource("Resource_540im"), SubResource("Resource_rkl8y")])
+
+[sub_resource type="Resource" id="Resource_dah0f"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "is_equal_approx(float(a), float(b))"
+}
+
+[sub_resource type="Resource" id="Resource_pq716"]
+script = ExtResource("5_1iywo")
+ace_id = "CompareVar"
+params = {
+"op": "is",
+"value": "float or a is int)",
+"var_name": "(a"
+}
+
+[sub_resource type="Resource" id="Resource_6e77e"]
+script = ExtResource("5_1iywo")
+ace_id = "CompareVar"
+params = {
+"op": "is",
+"value": "float or b is int)",
+"var_name": "(b"
+}
+
+[sub_resource type="Resource" id="Resource_iun2u"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_pq716"), SubResource("Resource_6e77e")])
+actions = Array[Resource]([SubResource("Resource_dah0f")])
+event_uid = "aa7aa9"
+
+[sub_resource type="Resource" id="Resource_wy5xl"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "str(a) == str(b)"
+}
+
+[sub_resource type="Resource" id="Resource_u8ps1"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_wy5xl")])
+event_uid = "6b93bd"
+
+[sub_resource type="Resource" id="Resource_0p5ix"]
+script = ExtResource("9_j4fh5")
+id = "a"
+type_name = "Variant"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_cwuni"]
+script = ExtResource("9_j4fh5")
+id = "b"
+type_name = "Variant"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_fa85m"]
+script = ExtResource("10_ixx0h")
+function_name = "_loose_equal"
+lifted_unannotated = true
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_0p5ix"), SubResource("Resource_cwuni")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_iun2u"), SubResource("Resource_u8ps1")])
+
+[sub_resource type="Resource" id="Resource_w1nwh"]
+script = ExtResource("4_s4esc")
+ace_id = "CallFunction"
+params = {
+"args": "a, b",
+"function_name": "if op == \"==\": return _loose_equal"
+}
+
+[sub_resource type="Resource" id="Resource_c2qch"]
+script = ExtResource("4_s4esc")
+ace_id = "CallFunction"
+params = {
+"args": "a, b",
+"function_name": "if op == \"!=\": return not _loose_equal"
+}
+
+[sub_resource type="Resource" id="Resource_7f30c"]
+script = ExtResource("4_s4esc")
+ace_id = "CallFunction"
+params = {
+"args": "a) < _to_number(b",
+"function_name": "if op == \"<\": return _to_number"
+}
+
+[sub_resource type="Resource" id="Resource_5c7fn"]
+script = ExtResource("4_s4esc")
+ace_id = "CallFunction"
+params = {
+"args": "a) <= _to_number(b",
+"function_name": "if op == \"<=\": return _to_number"
+}
+
+[sub_resource type="Resource" id="Resource_0lcr0"]
+script = ExtResource("4_s4esc")
+ace_id = "CallFunction"
+params = {
+"args": "a) > _to_number(b",
+"function_name": "if op == \">\": return _to_number"
+}
+
+[sub_resource type="Resource" id="Resource_eawbd"]
+script = ExtResource("4_s4esc")
+ace_id = "CallFunction"
+params = {
+"args": "a) >= _to_number(b",
+"function_name": "if op == \">=\": return _to_number"
+}
+
+[sub_resource type="Resource" id="Resource_xg5pr"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "false"
+}
+
+[sub_resource type="Resource" id="Resource_u5ss3"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_w1nwh"), SubResource("Resource_c2qch"), SubResource("Resource_7f30c"), SubResource("Resource_5c7fn"), SubResource("Resource_0lcr0"), SubResource("Resource_eawbd"), SubResource("Resource_xg5pr")])
+event_uid = "12739a"
+
+[sub_resource type="Resource" id="Resource_3f3tr"]
+script = ExtResource("9_j4fh5")
+id = "a"
+type_name = "Variant"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ws0ud"]
+script = ExtResource("9_j4fh5")
+id = "op"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_yqck1"]
+script = ExtResource("9_j4fh5")
+id = "b"
+type_name = "Variant"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_h6hyo"]
+script = ExtResource("10_ixx0h")
+function_name = "_compare_values"
+lifted_unannotated = true
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_3f3tr"), SubResource("Resource_ws0ud"), SubResource("Resource_yqck1")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_u5ss3")])
+
+[sub_resource type="Resource" id="Resource_0yyad"]
+script = ExtResource("4_s4esc")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "actual",
+"value": "world_state.get(condition.key, null)",
+"var_type": "Variant"
+}
+
+[sub_resource type="Resource" id="Resource_dkymt"]
+script = ExtResource("7_4rc60")
+iterator_name = "condition: HTNCondition"
+collection_value = "conditions"
+
+[sub_resource type="Resource" id="Resource_t1mt4"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "false"
+}
+
+[sub_resource type="Resource" id="Resource_nsuug"]
+script = ExtResource("5_1iywo")
+ace_id = "CompareVar"
+params = {
+"op": "_compare_values(actual,",
+"value": "condition.op, condition.value)",
+"var_name": "not"
+}
+
+[sub_resource type="Resource" id="Resource_qrhqj"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_nsuug")])
+actions = Array[Resource]([SubResource("Resource_t1mt4")])
+event_uid = "4761f4"
+
+[sub_resource type="Resource" id="Resource_4uxut"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_0yyad")])
+sub_events = Array[Resource]([SubResource("Resource_qrhqj")])
+event_uid = "71d297"
+pick_filters = Array[ExtResource("7_4rc60")]([SubResource("Resource_dkymt")])
+
+[sub_resource type="Resource" id="Resource_8gf25"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "true"
+}
+
+[sub_resource type="Resource" id="Resource_y20q5"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_8gf25")])
+event_uid = "0e7ab2"
+
+[sub_resource type="Resource" id="Resource_esu2d"]
+script = ExtResource("9_j4fh5")
+id = "conditions"
+type_name = "Array"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_6xtru"]
+script = ExtResource("10_ixx0h")
+function_name = "_conditions_hold"
+lifted_unannotated = true
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_esu2d")])
+return_type = 1
+events = Array[Resource]([SubResource("Resource_4uxut"), SubResource("Resource_y20q5")])
+
+[sub_resource type="Resource" id="Resource_hsoxq"]
+script = ExtResource("1_loqp0")
+text = "Decompose a task into an ordered list of primitive task names. At each compound the
+applicable methods (preconditions satisfied) are tried in descending utility order,
+backtracking to the next method when a subtask cannot be decomposed."
+
+[sub_resource type="Resource" id="Resource_sph4h"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "[]"
+}
+
+[sub_resource type="Resource" id="Resource_j106t"]
+script = ExtResource("5_1iywo")
+ace_id = "CompareVar"
+params = {
+"op": ">",
+"value": "64",
+"var_name": "depth"
+}
+
+[sub_resource type="Resource" id="Resource_rt43j"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_j106t")])
+actions = Array[Resource]([SubResource("Resource_sph4h")])
+event_uid = "0a9f9b"
+
+[sub_resource type="Resource" id="Resource_x11ep"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "[task_name]"
+}
+
+[sub_resource type="Resource" id="Resource_12the"]
+script = ExtResource("5_1iywo")
+ace_id = "DictHasKey"
+params = {
+"key": "task_name",
+"var_name": "primitives"
+}
+
+[sub_resource type="Resource" id="Resource_8obsn"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_12the")])
+actions = Array[Resource]([SubResource("Resource_x11ep")])
+event_uid = "b4ca34"
+
+[sub_resource type="Resource" id="Resource_kfldf"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "[]"
+}
+
+[sub_resource type="Resource" id="Resource_ld2gi"]
+script = ExtResource("5_1iywo")
+ace_id = "DictHasKey"
+params = {
+"key": "task_name",
+"var_name": "not compounds"
+}
+
+[sub_resource type="Resource" id="Resource_okhq0"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_ld2gi")])
+actions = Array[Resource]([SubResource("Resource_kfldf")])
+event_uid = "5396ce"
+
+[sub_resource type="Resource" id="Resource_2au8u"]
+script = ExtResource("4_s4esc")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "applicable",
+"value": "[]",
+"var_type": "Array"
+}
+
+[sub_resource type="Resource" id="Resource_r7xyu"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_2au8u")])
+event_uid = "39f278"
+
+[sub_resource type="Resource" id="Resource_ispe5"]
+script = ExtResource("7_4rc60")
+iterator_name = "method: HTNMethod"
+collection_value = "compounds[task_name]"
+
+[sub_resource type="Resource" id="Resource_tvsll"]
+script = ExtResource("4_s4esc")
+ace_id = "ArrayAppend"
+params = {
+"value": "method",
+"var_name": "applicable"
+}
+
+[sub_resource type="Resource" id="Resource_3iqed"]
+script = ExtResource("5_1iywo")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "_conditions_hold(method.conditions)"
+}
+
+[sub_resource type="Resource" id="Resource_vnko2"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_3iqed")])
+actions = Array[Resource]([SubResource("Resource_tvsll")])
+event_uid = "f2af43"
+
+[sub_resource type="Resource" id="Resource_y07mh"]
+script = ExtResource("8_obmvm")
+sub_events = Array[Resource]([SubResource("Resource_vnko2")])
+event_uid = "171418"
+pick_filters = Array[ExtResource("7_4rc60")]([SubResource("Resource_ispe5")])
+
+[sub_resource type="Resource" id="Resource_8jv6i"]
+script = ExtResource("4_s4esc")
+ace_id = "CallMethod"
+params = {
+"args": "func(a: HTNMethod, b: HTNMethod) -> bool: return a.utility > b.utility",
+"method": "sort_custom",
+"target": "applicable"
+}
+
+[sub_resource type="Resource" id="Resource_sk6h2"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_8jv6i")])
+event_uid = "3f7f83"
+
+[sub_resource type="Resource" id="Resource_msjnm"]
+script = ExtResource("4_s4esc")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "result",
+"value": "[]",
+"var_type": "Array"
+}
+
+[sub_resource type="Resource" id="Resource_dlto5"]
+script = ExtResource("4_s4esc")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "ok",
+"value": "true",
+"var_type": "bool"
+}
+
+[sub_resource type="Resource" id="Resource_o46gy"]
+script = ExtResource("3_2sslc")
+code = "for subtask: String in method.subtasks:"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_mq7i6"]
+script = ExtResource("4_s4esc")
+ace_id = "SetVar"
+params = {
+"value": "_decompose(subtask, depth + 1)",
+"var_name": "	var sub: Array"
+}
+
+[sub_resource type="Resource" id="Resource_kr6rd"]
+script = ExtResource("3_2sslc")
+code = "	if sub.is_empty():"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_dhjlm"]
+script = ExtResource("4_s4esc")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "		ok"
+}
+
+[sub_resource type="Resource" id="Resource_oqakn"]
+script = ExtResource("3_2sslc")
+code = "		break"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_noxdl"]
+script = ExtResource("4_s4esc")
+ace_id = "ArrayAppendArray"
+params = {
+"other": "sub",
+"var_name": "	result"
+}
+
+[sub_resource type="Resource" id="Resource_1cl6w"]
+script = ExtResource("7_4rc60")
+iterator_name = "method: HTNMethod"
+collection_value = "applicable"
+
+[sub_resource type="Resource" id="Resource_5afj1"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "result"
+}
+
+[sub_resource type="Resource" id="Resource_kspua"]
+script = ExtResource("5_1iywo")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "ok"
+}
+
+[sub_resource type="Resource" id="Resource_hon5d"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_kspua")])
+actions = Array[Resource]([SubResource("Resource_5afj1")])
+event_uid = "08b5d2"
+
+[sub_resource type="Resource" id="Resource_mu8qk"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_msjnm"), SubResource("Resource_dlto5"), SubResource("Resource_o46gy"), SubResource("Resource_mq7i6"), SubResource("Resource_kr6rd"), SubResource("Resource_dhjlm"), SubResource("Resource_oqakn"), SubResource("Resource_noxdl")])
+sub_events = Array[Resource]([SubResource("Resource_hon5d")])
+event_uid = "954dc5"
+pick_filters = Array[ExtResource("7_4rc60")]([SubResource("Resource_1cl6w")])
+
+[sub_resource type="Resource" id="Resource_7ylvu"]
+script = ExtResource("4_s4esc")
+ace_id = "ReturnValue"
+params = {
+"value": "[]"
+}
+
+[sub_resource type="Resource" id="Resource_bxvqs"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_7ylvu")])
+event_uid = "273a9d"
+
+[sub_resource type="Resource" id="Resource_yrm64"]
+script = ExtResource("9_j4fh5")
+id = "task_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_6oejc"]
+script = ExtResource("9_j4fh5")
+id = "depth"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_l4beq"]
+script = ExtResource("10_ixx0h")
+function_name = "_decompose"
+lifted_unannotated = true
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_yrm64"), SubResource("Resource_6oejc")])
+return_type = 28
+events = Array[Resource]([SubResource("Resource_hsoxq"), SubResource("Resource_rt43j"), SubResource("Resource_8obsn"), SubResource("Resource_okhq0"), SubResource("Resource_r7xyu"), SubResource("Resource_y07mh"), SubResource("Resource_sk6h2"), SubResource("Resource_mu8qk"), SubResource("Resource_bxvqs")])
+
 [resource]
 script = ExtResource("11_6kwa2")
 host_class = "Node2D"
@@ -987,4 +1543,4 @@ variables = {
 "type": "Dictionary"
 }
 }
-functions = Array[Resource]([SubResource("Resource_gi242"), SubResource("Resource_po5ib"), SubResource("Resource_6e2s1"), SubResource("Resource_gnq4j"), SubResource("Resource_ffnch"), SubResource("Resource_owpvs"), SubResource("Resource_65hp7"), SubResource("Resource_e2g3u"), SubResource("Resource_mth7m"), SubResource("Resource_d6cyj"), SubResource("Resource_mmrdq"), SubResource("Resource_wyj8y"), SubResource("Resource_d4eax")])
+functions = Array[Resource]([SubResource("Resource_gi242"), SubResource("Resource_po5ib"), SubResource("Resource_6e2s1"), SubResource("Resource_gnq4j"), SubResource("Resource_ffnch"), SubResource("Resource_owpvs"), SubResource("Resource_65hp7"), SubResource("Resource_e2g3u"), SubResource("Resource_mth7m"), SubResource("Resource_d6cyj"), SubResource("Resource_mmrdq"), SubResource("Resource_wyj8y"), SubResource("Resource_d4eax"), SubResource("Resource_f3g3q"), SubResource("Resource_md1oe"), SubResource("Resource_tmwsi"), SubResource("Resource_4lwk0"), SubResource("Resource_gsfbc"), SubResource("Resource_fmsct"), SubResource("Resource_fa85m"), SubResource("Resource_h6hyo"), SubResource("Resource_6xtru"), SubResource("Resource_l4beq")])

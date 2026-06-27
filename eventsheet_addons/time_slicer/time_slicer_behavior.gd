@@ -33,25 +33,6 @@ var _queue: Array = []
 @export var max_items_per_frame: int = 64
 @export_enum("both", "ms", "count") var mode: String = "both"
 
-## @ace_condition
-## @ace_name("Is Busy")
-## @ace_category("Time Slicer")
-## @ace_codegen_template("$TimeSlicerBehavior.is_busy()")
-func is_busy() -> bool:
-	return not _queue.is_empty()
-
-## @ace_expression
-## @ace_name("Items Remaining")
-## @ace_category("Time Slicer")
-func items_remaining() -> int:
-	return _queue.size()
-
-## @ace_expression
-## @ace_name("Last Frame Item Count")
-## @ace_category("Time Slicer")
-func last_frame_item_count() -> int:
-	return _last_count
-
 func _process(delta: float) -> void:
 	if _paused or _queue.is_empty():
 		return
@@ -131,5 +112,29 @@ func pause_slicer() -> void:
 ## @ace_codegen_template("$TimeSlicerBehavior.resume_slicer()")
 func resume_slicer() -> void:
 	_paused = false
+
+## @ace_condition
+## @ace_name("Is Busy")
+## @ace_category("Time Slicer")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$TimeSlicerBehavior.is_busy()")
+func is_busy() -> bool:
+	return not _queue.is_empty()
+
+## @ace_expression
+## @ace_name("Items Remaining")
+## @ace_category("Time Slicer")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$TimeSlicerBehavior.items_remaining()")
+func items_remaining() -> int:
+	return _queue.size()
+
+## @ace_expression
+## @ace_name("Last Frame Item Count")
+## @ace_category("Time Slicer")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$TimeSlicerBehavior.last_frame_item_count()")
+func last_frame_item_count() -> int:
+	return _last_count
 
 # Time Slicer: a managed work queue that drains within a per-frame ms / count budget. Enqueue items, react to On Process Item(item) — heavy work self-spreads across frames with no loop, no await, no hitch.

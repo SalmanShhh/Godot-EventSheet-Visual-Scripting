@@ -26,26 +26,6 @@ var _results: Dictionary = {}
 var _next_id: int = 0
 var _mutex: Mutex = null
 
-## @ace_condition
-## @ace_name("Is Running")
-## @ace_category("Background")
-## @ace_codegen_template("$BackgroundRunner.is_running()")
-func is_running() -> bool:
-	return not _tasks.is_empty()
-
-## @ace_expression
-## @ace_name("Tasks Running")
-## @ace_category("Background")
-func tasks_running() -> int:
-	return _tasks.size()
-
-## Runs the (PURE) work callable off the main thread, then stores its result for the poll to emit.
-func _run_task(work: Callable, call_id: int) -> void:
-	var result: Variant = work.call()
-	_mutex.lock()
-	_results[call_id] = result
-	_mutex.unlock()
-
 func _ready() -> void:
 	_mutex = Mutex.new()
 
@@ -86,5 +66,27 @@ func run_in_background(work: Callable) -> void:
 func run_batch_in_background(items: Array, work: Callable) -> void:
 	for __item: Variant in items:
 		run_in_background(work.bind(__item))
+
+## @ace_condition
+## @ace_name("Is Running")
+## @ace_category("Background")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$BackgroundRunner.is_running()")
+func is_running() -> bool:
+	return not _tasks.is_empty()
+
+## @ace_expression
+## @ace_name("Tasks Running")
+## @ace_category("Background")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$BackgroundRunner.tasks_running()")
+func tasks_running() -> int:
+	return _tasks.size()
+
+func _run_task(work: Callable, call_id: int) -> void:
+	var result: Variant = work.call()
+	_mutex.lock()
+	_results[call_id] = result
+	_mutex.unlock()
 
 # Run In Background: hands a PURE function (no scene-tree access!) to a worker thread; On Done(result) fires on the main thread when it finishes. For heavy compute that would hitch even when spread across frames.

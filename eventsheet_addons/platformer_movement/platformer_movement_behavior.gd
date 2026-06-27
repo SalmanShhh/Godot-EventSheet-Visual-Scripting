@@ -72,70 +72,6 @@ var _was_on_floor: bool = false
 ## Max fall speed while wall sliding (px/s).
 @export var wall_slide_speed: float = 80.0
 
-## @ace_condition
-## @ace_name("Is Moving")
-## @ace_category("Platformer")
-## @ace_codegen_template("$PlatformerMovement.is_moving()")
-func is_moving() -> bool:
-	return host != null and absf(host.velocity.x) > 1.0
-
-## @ace_condition
-## @ace_name("Is Jumping")
-## @ace_category("Platformer")
-## @ace_codegen_template("$PlatformerMovement.is_jumping()")
-func is_jumping() -> bool:
-	return host != null and not host.is_on_floor() and host.velocity.y < 0.0
-
-## @ace_condition
-## @ace_name("Is Falling")
-## @ace_category("Platformer")
-## @ace_codegen_template("$PlatformerMovement.is_falling()")
-func is_falling() -> bool:
-	return host != null and not host.is_on_floor() and host.velocity.y > 0.0
-
-## @ace_condition
-## @ace_name("Is Wall Sliding")
-## @ace_category("Platformer")
-## @ace_codegen_template("$PlatformerMovement.is_wall_sliding()")
-func is_wall_sliding() -> bool:
-	return _wall_sliding
-
-## @ace_condition
-## @ace_name("Can Jump")
-## @ace_category("Platformer")
-## @ace_codegen_template("$PlatformerMovement.can_jump()")
-func can_jump() -> bool:
-	if host == null:
-		return false
-	return host.is_on_floor() or _coyote_timer > 0.0 or _jumps_left > 0 or (enable_wall_jump and host.is_on_wall())
-
-## @ace_expression
-## @ace_name("Jumps Remaining")
-## @ace_category("Platformer")
-func jumps_remaining() -> int:
-	return _jumps_left
-
-## @ace_expression
-## @ace_name("Air Time")
-## @ace_category("Platformer")
-func air_time() -> float:
-	return _air_time
-
-## @ace_expression
-## @ace_name("Facing Direction")
-## @ace_category("Platformer")
-func facing_direction() -> int:
-	return _facing
-
-# Shared jump kernel: set the rise and spend the coyote window. _jumps_left counts
-# only AIR jumps (it is decremented by the air-jump branch, not here), so falling off
-# a ledge past the coyote window never grants a phantom jump.
-func _perform_jump(velocity_y: float) -> void:
-	if host == null:
-		return
-	host.velocity.y = velocity_y
-	_coyote_timer = 0.0
-
 func _physics_process(delta: float) -> void:
 	if host == null:
 		return
@@ -222,5 +158,80 @@ func set_move_speed(speed: float) -> void:
 ## @ace_codegen_template("$PlatformerMovement.reset_jumps()")
 func reset_jumps() -> void:
 	_jumps_left = maxi(max_jumps - 1, 0)
+
+## @ace_condition
+## @ace_name("Is Moving")
+## @ace_category("Platformer")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerMovement.is_moving()")
+func is_moving() -> bool:
+	return host != null and absf(host.velocity.x) > 1.0
+
+## @ace_condition
+## @ace_name("Is Jumping")
+## @ace_category("Platformer")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerMovement.is_jumping()")
+func is_jumping() -> bool:
+	return host != null and not host.is_on_floor() and host.velocity.y < 0.0
+
+## @ace_condition
+## @ace_name("Is Falling")
+## @ace_category("Platformer")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerMovement.is_falling()")
+func is_falling() -> bool:
+	return host != null and not host.is_on_floor() and host.velocity.y > 0.0
+
+## @ace_condition
+## @ace_name("Is Wall Sliding")
+## @ace_category("Platformer")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerMovement.is_wall_sliding()")
+func is_wall_sliding() -> bool:
+	return _wall_sliding
+
+## @ace_condition
+## @ace_name("Can Jump")
+## @ace_category("Platformer")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerMovement.can_jump()")
+func can_jump() -> bool:
+	if host == null:
+		return false
+	return host.is_on_floor() or _coyote_timer > 0.0 or _jumps_left > 0 or (enable_wall_jump and host.is_on_wall())
+
+## @ace_expression
+## @ace_name("Jumps Remaining")
+## @ace_category("Platformer")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerMovement.jumps_remaining()")
+func jumps_remaining() -> int:
+	return _jumps_left
+
+## @ace_expression
+## @ace_name("Air Time")
+## @ace_category("Platformer")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerMovement.air_time()")
+func air_time() -> float:
+	return _air_time
+
+## @ace_expression
+## @ace_name("Facing Direction")
+## @ace_category("Platformer")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerMovement.facing_direction()")
+func facing_direction() -> int:
+	return _facing
+
+func _perform_jump(velocity_y: float) -> void:
+	# Shared jump kernel: set the rise and spend the coyote window. _jumps_left counts
+	# only AIR jumps (it is decremented by the air-jump branch, not here), so falling off
+	# a ledge past the coyote window never grants a phantom jump.
+	if host == null:
+		return
+	host.velocity.y = velocity_y
+	_coyote_timer = 0.0
 
 # Platformer movement: attach under a CharacterBody2D. Run with ui_left/ui_right, call Jump (with coyote time + buffering), and turn on wall slide / wall jump / double jump in the Inspector. Call Jump Released when the player lets go of the jump button for variable jump height.

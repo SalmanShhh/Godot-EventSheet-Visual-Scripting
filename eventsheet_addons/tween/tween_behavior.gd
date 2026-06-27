@@ -25,44 +25,7 @@ signal tween_finished
 @export_enum("in", "out", "in_out", "out_in") var easing: String = "out"
 @export_enum("linear", "sine", "quad", "cubic", "quart", "quint", "expo", "circ", "elastic", "back", "bounce", "spring") var transition: String = "sine"
 
-## @ace_condition
-## @ace_name("Is Tweening")
-## @ace_category("Tween")
-## @ace_codegen_template("$TweenBehavior.is_tweening()")
-func is_tweening() -> bool:
-	return _active_tween != null and _active_tween.is_running()
-
 var _active_tween: Tween = null
-
-func _trans_id() -> int:
-	match transition:
-		"linear": return Tween.TRANS_LINEAR
-		"quad": return Tween.TRANS_QUAD
-		"cubic": return Tween.TRANS_CUBIC
-		"quart": return Tween.TRANS_QUART
-		"quint": return Tween.TRANS_QUINT
-		"expo": return Tween.TRANS_EXPO
-		"circ": return Tween.TRANS_CIRC
-		"elastic": return Tween.TRANS_ELASTIC
-		"back": return Tween.TRANS_BACK
-		"bounce": return Tween.TRANS_BOUNCE
-		"spring": return Tween.TRANS_SPRING
-	return Tween.TRANS_SINE
-
-func _ease_id() -> int:
-	match easing:
-		"in": return Tween.EASE_IN
-		"in_out": return Tween.EASE_IN_OUT
-		"out_in": return Tween.EASE_OUT_IN
-	return Tween.EASE_OUT
-
-func _start_tween(property_path: String, final_value: Variant, duration: float) -> void:
-	if host == null:
-		return
-	var seconds: float = duration if duration > 0.0 else default_duration
-	_active_tween = host.create_tween()
-	_active_tween.tween_property(host, NodePath(property_path), final_value, seconds).set_trans(_trans_id()).set_ease(_ease_id())
-	_active_tween.finished.connect(func() -> void: tween_finished.emit())
 
 ## @ace_action
 ## @ace_name("Tween Property")
@@ -119,5 +82,43 @@ func stop_tweens() -> void:
 	if _active_tween != null:
 		_active_tween.kill()
 		_active_tween = null
+
+## @ace_condition
+## @ace_name("Is Tweening")
+## @ace_category("Tween")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$TweenBehavior.is_tweening()")
+func is_tweening() -> bool:
+	return _active_tween != null and _active_tween.is_running()
+
+func _trans_id() -> int:
+	match transition:
+		"linear": return Tween.TRANS_LINEAR
+		"quad": return Tween.TRANS_QUAD
+		"cubic": return Tween.TRANS_CUBIC
+		"quart": return Tween.TRANS_QUART
+		"quint": return Tween.TRANS_QUINT
+		"expo": return Tween.TRANS_EXPO
+		"circ": return Tween.TRANS_CIRC
+		"elastic": return Tween.TRANS_ELASTIC
+		"back": return Tween.TRANS_BACK
+		"bounce": return Tween.TRANS_BOUNCE
+		"spring": return Tween.TRANS_SPRING
+	return Tween.TRANS_SINE
+
+func _ease_id() -> int:
+	match easing:
+		"in": return Tween.EASE_IN
+		"in_out": return Tween.EASE_IN_OUT
+		"out_in": return Tween.EASE_OUT_IN
+	return Tween.EASE_OUT
+
+func _start_tween(property_path: String, final_value, duration: float) -> void:
+	if host == null:
+		return
+	var seconds: float = duration if duration > 0.0 else default_duration
+	_active_tween = host.create_tween()
+	_active_tween.tween_property(host, NodePath(property_path), final_value, seconds).set_trans(_trans_id()).set_ease(_ease_id())
+	_active_tween.finished.connect(func() -> void: tween_finished.emit())
 
 # Tweens, the behavior way: pick transition + easing in the Inspector, then call one action — Tween Position / Scale / Rotation / Alpha / any property.
