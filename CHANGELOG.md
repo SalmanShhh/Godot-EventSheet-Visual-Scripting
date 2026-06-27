@@ -26,6 +26,19 @@ signals were hand-written `## @ace_trigger` code blocks. Both now de-code automa
 - Covered by `event_body_lift_test` and `signal_row_lift_test`; all 31 packs + showcases regenerate
   byte-stable (drift = 0).
 
+### Added — Behaviour class descriptions
+
+- A sheet now has a **Description** (`class_description`), set in the **Sheet Type…** dialog. It
+  compiles to a `##` documentation comment right after `extends` — Godot's class-doc position — so a
+  behaviour/custom node shows its blurb in the *Create Node* dialog and the script docs. The importer
+  recovers it, so it round-trips byte-identically (`class_description_roundtrip_test`).
+
+### Added — Unsaved-close guard
+
+- Closing a sheet tab with unsaved changes now asks **Save / Discard / Cancel** instead of silently
+  dropping work. Save writes the tab and closes only if the save succeeds; a clean tab still closes
+  instantly. `has_unsaved_tabs()` exposes the dirty state for editor-level prompts (`unsaved_close_test`).
+
 ### Added — Behaviour-as-ACEs parity (foundation)
 
 Toward authoring whole behaviour packs as event sheets with **no GDScript blocks** — so a behaviour

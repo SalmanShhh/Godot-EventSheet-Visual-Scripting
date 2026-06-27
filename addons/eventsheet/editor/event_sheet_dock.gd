@@ -299,8 +299,65 @@ func _on_tab_selected(index: int) -> void:
         _activate_tab(index)
 
 func _on_tab_close_pressed(index: int) -> void:
-    if not _suppress_tab_signal:
+    if _suppress_tab_signal:
+        return
+    # Guard against losing work: a dirty tab asks Save / Discard / Cancel before it closes.
+    if is_tab_dirty(index):
+        _pending_close_index = index
+        _ensure_unsaved_close_dialog()
+        var tab: Dictionary = _open_tabs[index]
+        var tab_title: String = _format_sheet_title(tab.get("sheet"), str(tab.get("path", "")))
+        _unsaved_close_dialog.dialog_text = "\"%s\" has unsaved changes.\n\nSave before closing?" % tab_title
+        _unsaved_close_dialog.popup_centered(Vector2i(440, 150))
+        return
+    _close_tab(index)
+
+## 3-way "you have unsaved changes" guard for closing a dirty tab (Save / Discard / Cancel).
+var _unsaved_close_dialog: ConfirmationDialog = null
+var _pending_close_index: int = -1
+
+func _ensure_unsaved_close_dialog() -> void:
+    if _unsaved_close_dialog != null:
+        return
+    _unsaved_close_dialog = ConfirmationDialog.new()
+    _unsaved_close_dialog.title = "Unsaved Changes"
+    _unsaved_close_dialog.ok_button_text = "Discard"
+    _unsaved_close_dialog.cancel_button_text = "Cancel"
+    # A third action button so Save-and-close is one step; Cancel (the default) just aborts.
+    _unsaved_close_dialog.add_button("Save", false, "save")
+    _unsaved_close_dialog.confirmed.connect(_on_unsaved_close_discard)
+    _unsaved_close_dialog.custom_action.connect(_on_unsaved_close_action)
+    add_child(_unsaved_close_dialog)
+
+## Discard (the OK button): close the tab, losing its unsaved edits.
+func _on_unsaved_close_discard() -> void:
+    var index: int = _pending_close_index
+    _pending_close_index = -1
+    if index >= 0:
         _close_tab(index)
+
+## Save (the custom button): activate the target tab, save it, and close only if the save succeeded
+## (a failed compile leaves the tab open with its error in the status bar, so nothing is lost).
+func _on_unsaved_close_action(action: StringName) -> void:
+    if action != &"save":
+        return
+    _unsaved_close_dialog.hide()
+    var index: int = _pending_close_index
+    _pending_close_index = -1
+    if index < 0 or index >= _open_tabs.size():
+        return
+    if index != _active_tab_index:
+        _activate_tab(index)
+    _on_save_requested()
+    if not _dirty:
+        _close_tab(index)
+
+## Whether any open tab has unsaved changes (for an editor-level "discard all?" prompt).
+func has_unsaved_tabs() -> bool:
+    for tab: Dictionary in _open_tabs:
+        if bool(tab.get("dirty", false)):
+            return true
+    return false
 
 ## Number of open sheet tabs.
 func get_open_tab_count() -> int:
@@ -5402,6 +5459,7 @@ var _sheet_type_dialog: ConfirmationDialog = null
 var _sheet_type_option: OptionButton = null
 var _sheet_type_name_edit: LineEdit = null
 var _sheet_type_icon_edit: LineEdit = null
+var _sheet_type_description_edit: TextEdit = null
 var _sheet_type_host_edit: LineEdit = null
 var _sheet_type_tool_check: CheckBox = null
 var _sheet_type_tags_edit: LineEdit = null
@@ -5424,6 +5482,7 @@ func _open_sheet_type_dialog() -> void:
         _sheet_type_option.select(0)
     _sheet_type_name_edit.text = _current_sheet.custom_class_name
     _sheet_type_icon_edit.text = _current_sheet.custom_class_icon
+    _sheet_type_description_edit.text = _current_sheet.class_description
     _sheet_type_host_edit.text = _current_sheet.host_class
     _sheet_type_tool_check.button_pressed = _current_sheet.tool_mode
     _sheet_type_tags_edit.text = ", ".join(_current_sheet.addon_tags)
@@ -5449,6 +5508,7 @@ func _ensure_sheet_type_dialog() -> void:
     form.add_child(_sheet_type_option)
     _sheet_type_name_edit = _add_sheet_type_field(form, "Class name", "PatrolBehavior")
     _sheet_type_icon_edit = _add_sheet_type_field(form, "Icon (res://…)", "res://icons/patrol.svg")
+    _sheet_type_description_edit = _add_sheet_type_multiline_field(form, "Description", "What this behaviour/node does — shown in Godot's Create Node dialog.")
     _sheet_type_host_edit = _add_sheet_type_field(form, "Host / base class", "CharacterBody2D")
     _sheet_type_tool_check = CheckBox.new()
     _sheet_type_tool_check.text = "@tool — runs inside the editor (EXPERIMENTAL, editor-version-coupled)"
@@ -5475,6 +5535,24 @@ func _add_sheet_type_field(form: VBoxContainer, label_text: String, placeholder:
     var edit: LineEdit = LineEdit.new()
     edit.placeholder_text = placeholder
     edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    row.add_child(edit)
+    form.add_child(row)
+    return edit
+
+## Like _add_sheet_type_field, but a small multi-line TextEdit — used for the class description,
+## which compiles to a `##` doc comment (Godot's Create Node tooltip supports multiple lines).
+func _add_sheet_type_multiline_field(form: VBoxContainer, label_text: String, placeholder: String) -> TextEdit:
+    var row: HBoxContainer = HBoxContainer.new()
+    var label: Label = Label.new()
+    label.text = label_text
+    label.custom_minimum_size = Vector2(130.0, 0.0)
+    label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+    row.add_child(label)
+    var edit: TextEdit = TextEdit.new()
+    edit.placeholder_text = placeholder
+    edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    edit.custom_minimum_size = Vector2(0.0, 54.0)
+    edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
     row.add_child(edit)
     form.add_child(row)
     return edit
@@ -5537,16 +5615,20 @@ func _on_sheet_type_confirmed() -> void:
         VariableDialog.parse_options(_sheet_type_includes_edit.text),
         VariableDialog.parse_options(_sheet_type_uses_edit.text),
         VariableDialog.parse_options(_sheet_type_requires_edit.text),
-        _sheet_type_autoload_edit.text
+        _sheet_type_autoload_edit.text,
+        _sheet_type_description_edit.text
     )
 
 ## Applies the chosen sheet type (0 = plain, 1 = custom node, 2 = behavior) undoably and
 ## refreshes every identity surface (banner, tab badge, header, lint context).
-func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray(), include_paths: PackedStringArray = PackedStringArray(), uses_classes: PackedStringArray = PackedStringArray(), requires_classes: PackedStringArray = PackedStringArray(), autoload_name_text: String = "") -> void:
+func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray(), include_paths: PackedStringArray = PackedStringArray(), uses_classes: PackedStringArray = PackedStringArray(), requires_classes: PackedStringArray = PackedStringArray(), autoload_name_text: String = "", class_description_text: String = "") -> void:
     if _current_sheet == null:
         return
     var changed: bool = _perform_undoable_sheet_edit("Set Sheet Type", func() -> bool:
         _current_sheet.behavior_mode = type_index == 2
+        # The class description rides with the named-type identity (cleared for a plain sheet,
+        # which has no class_name to attach a doc to).
+        _current_sheet.class_description = class_description_text.strip_edges() if type_index != 0 else ""
         # Autoload (Singleton) sheets: extends Node, addressed project-wide by name.
         _current_sheet.autoload_mode = type_index == 4
         _current_sheet.autoload_name = autoload_name_text.strip_edges() if type_index == 4 else ""
