@@ -109,7 +109,9 @@ func _build_sheet() -> EventSheetResource:
 	sheet.events.append(empty_condition_event)
 
 	var comment: CommentRow = CommentRow.new()
-	comment.text = "Player gameplay rules"
+	# A long, single-line comment exercises word-wrapping: it should flow onto several lines
+	# and grow the row vertically instead of clipping off the right edge.
+	comment.text = "Player gameplay rules: attach this sheet under a CharacterBody2D, run movement every physics tick, and keep the comment readable by wrapping it across as many lines as it needs instead of clipping off the right edge of the sheet."
 	sheet.events.append(comment)
 
 	var tree_var: LocalVariable = LocalVariable.new()

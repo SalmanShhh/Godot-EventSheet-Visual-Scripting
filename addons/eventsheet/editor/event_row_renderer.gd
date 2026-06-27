@@ -123,6 +123,34 @@ func _draw_text(
     control.draw_string(font, baseline * zoom, text, HORIZONTAL_ALIGNMENT_LEFT, physical_width, physical_size, color)
     control.draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
 
+## Word-wrapped multi-line text (comments). `baseline` is the baseline of the FIRST line;
+## subsequent lines flow downward at the font's line height. The wrap width / break flags
+## match the viewport's wrapped_line_count(), so what is drawn fills exactly the height the
+## row reserved. Zoom is handled like _draw_text: at zoom != 1 we paint at the physical size
+## (scaling width too) so wrap points stay identical and glyphs stay crisp.
+const COMMENT_BREAK_FLAGS := TextServer.BREAK_WORD_BOUND | TextServer.BREAK_GRAPHEME_BOUND
+
+func _draw_multiline_text(
+    control: Control,
+    baseline: Vector2,
+    text: String,
+    max_width: float,
+    font: Font,
+    font_size: int,
+    color: Color
+) -> void:
+    if text.is_empty():
+        return
+    var zoom: float = control.get_zoom_factor() if control.has_method("get_zoom_factor") else 1.0
+    if is_equal_approx(zoom, 1.0):
+        control.draw_multiline_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size, -1, color, COMMENT_BREAK_FLAGS)
+        return
+    var physical_size: int = maxi(int(round(font_size * zoom)), 6)
+    var physical_width: float = max_width * zoom if max_width > 0.0 else max_width
+    control.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+    control.draw_multiline_string(font, baseline * zoom, text, HORIZONTAL_ALIGNMENT_LEFT, physical_width, physical_size, -1, color, COMMENT_BREAK_FLAGS)
+    control.draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
+
 func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
     var row_rect: Rect2 = layout.get("row_rect", Rect2())
     var gutter_rect: Rect2 = layout.get("gutter_rect", Rect2())
@@ -494,6 +522,13 @@ func _draw_spans(
                 if bool(segment.get("bold", false)):
                     _draw_text(control, Vector2(segment_x + 0.7, baseline_y), segment_text, remaining, font, draw_font_size, segment_color)
                 segment_x += font.get_string_size(segment_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+        elif bool(metadata.get("comment_wrap", false)) and span_index != editing_span_index:
+            # Wrapped comment: draw from the top of the (multi-line-tall) cell so the whole
+            # note reads vertically. baseline_y centers on the WHOLE rect, so recompute a
+            # first-line baseline using the single-line height the layout reserved.
+            var comment_line_h: float = float(metadata.get("comment_line_height", draw_font_size + 6))
+            var comment_baseline_y: float = span.rect.position.y + (comment_line_h * ROW_VERTICAL_CENTER_RATIO) + (draw_font_size * FONT_BASELINE_OFFSET_RATIO)
+            _draw_multiline_text(control, Vector2(text_x, comment_baseline_y), draw_text, text_width, font, draw_font_size, color)
         elif value_ranges.is_empty():
             _draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, font, draw_font_size, color)
         else:

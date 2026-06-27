@@ -103,6 +103,11 @@ const MIN_BOX_SELECT_DISTANCE := 1.0
 const MIN_BOX_SELECT_DISTANCE_SQ := MIN_BOX_SELECT_DISTANCE * MIN_BOX_SELECT_DISTANCE
 const COMMENT_DEFAULT_LINE_INDEX := 1
 const MIN_SPAN_WIDTH := 10.0
+## Comment text wraps to the row width and the row grows vertically so the whole note is
+## readable (no more single-line clipping off the right edge). This is the narrowest the
+## wrap column is ever allowed to get, so a very deep indent / narrow panel still wraps
+## sanely instead of collapsing to one glyph per line.
+const MIN_COMMENT_WRAP_WIDTH := 80.0
 ## Sheets with at most this many rows build all event spans up front (matching the
 ## original non-virtualized behavior exactly). Larger sheets keep spans lazy — built
 ## on demand during layout/hit/selection — so they load fast regardless of size.
@@ -119,6 +124,9 @@ var _editor_style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 var _root_rows: Array[EventRowData] = []
 var _flat_rows: Array[Dictionary] = []
 var _row_metrics: Array[Dictionary] = []
+## Logical canvas width the row metrics were last computed at. Comment rows wrap to this
+## width, so when it changes on resize the metrics must be rebuilt (heights change).
+var _metrics_canvas_width: float = -1.0
 var _selected_row_index: int = -1
 var _selected_span_index: int = -1
 var _selected_row_uids: Dictionary = {}
@@ -780,6 +788,12 @@ func ensure_selection_visible() -> void:
 
 func _notification(what: int) -> void:
     if what == NOTIFICATION_RESIZED:
+        # Comments wrap to the canvas width, so a real width change means their heights (and
+        # therefore the row layout) must be recomputed. Guard on the LOGICAL width so the
+        # height-driven size changes _update_canvas_min_size() makes don't loop back in.
+        if not _row_metrics.is_empty() and absf(_get_logical_canvas_width() - _metrics_canvas_width) > 0.5:
+            _rebuild_row_metrics()
+            _layout_cache.clear()
         _update_canvas_min_size()
         queue_redraw()
 
@@ -2560,6 +2574,21 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         if comment_badge_column > 0.0:
             non_event_origin_x += comment_badge_column + EventSheetPalette.SPAN_GAP
     var non_event_line_x: Dictionary = {}
+    # Comment wrapping: each logical line wraps to the row width, so a span can be several
+    # visual lines tall. Precompute, per span, the visual-line offset it starts at and how
+    # many visual lines it spans, so spans stack without overlapping (height matches the
+    # reserved row height from _measure_comment_height).
+    var is_comment_row: bool = row_data.row_type == EventRowData.RowType.COMMENT
+    var comment_wrap_width: float = _comment_wrap_width(row_data.indent, width) if is_comment_row else 0.0
+    var comment_line_tops: Array[int] = []
+    var comment_line_counts: Array[int] = []
+    if is_comment_row:
+        var visual_top: int = 0
+        for comment_span: SemanticSpan in row_data.spans:
+            var span_lines: int = _comment_span_line_count(comment_span, comment_wrap_width, font, font_size)
+            comment_line_tops.append(visual_top)
+            comment_line_counts.append(span_lines)
+            visual_top += span_lines
     for span_index in range(row_data.spans.size()):
         var span: SemanticSpan = row_data.spans[span_index]
         if span == null:
@@ -2575,6 +2604,10 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             var flow_line: int = int(metadata.get("line_index", 0))
             span_y = row_top + float(flow_line) * line_height + 3.0
             span_x = float(non_event_line_x.get(flow_line, non_event_origin_x))
+            # Comment spans stack by accumulated WRAPPED height, not raw line index, so a
+            # multi-line wrapped span pushes the next one down past its full height.
+            if is_comment_row and span_index < comment_line_tops.size():
+                span_y = row_top + float(comment_line_tops[span_index]) * line_height + 3.0
         elif span_lane == "action":
             var action_line_index: int = int(metadata.get("line_index", 0))
             span_y = row_top + float(action_line_index) * line_height + 3.0
@@ -2637,6 +2670,14 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
         # plain text keep the original vertical inset.
         if bool(metadata.get("chip", false)):
             span.rect = Rect2(span_x, span_y - 2.5, span_width + 2.0, line_height - 1.0)
+        elif is_comment_row and span_index < comment_line_counts.size():
+            # A wrapped comment span is as tall as its visual-line count; flag it so the
+            # renderer draws it with word-wrapping instead of a single clipped line.
+            var comment_height: float = float(comment_line_counts[span_index]) * line_height - 6.0
+            span.rect = Rect2(span_x, span_y, span_width + 2.0, comment_height)
+            if (metadata.get("bbcode_segments", []) as Array).is_empty():
+                metadata["comment_wrap"] = true
+                metadata["comment_line_height"] = line_height
         else:
             span.rect = Rect2(span_x, span_y, span_width + 2.0, line_height - 6.0)
         # Store absolute X for the next span start on this line.
@@ -3307,6 +3348,7 @@ func _validate_ace_drag_target(row_data: EventRowData, lane: String) -> Dictiona
     return {"valid": true}
 
 func _rebuild_row_metrics() -> void:
+    _metrics_canvas_width = _get_logical_canvas_width()
     _row_metrics.clear()
     var top: float = 0.0
     var previous_indent: int = -1
@@ -3330,6 +3372,9 @@ func _rebuild_row_metrics() -> void:
 func _resolve_row_height(row_data: EventRowData) -> float:
     if row_data == null:
         return float(ROW_HEIGHT)
+    if row_data.row_type == EventRowData.RowType.COMMENT:
+        # Comments wrap to the row width; the row is as tall as the wrapped text needs.
+        return _measure_comment_height(row_data)
     if row_data.row_type != EventRowData.RowType.EVENT:
         # Multi-line non-event rows (GDScript blocks) expand by their precomputed line count.
         if row_data.line_count > 1:
@@ -3347,6 +3392,66 @@ func _resolve_row_height(row_data: EventRowData) -> float:
         var metadata: Dictionary = span.metadata as Dictionary
         max_line_index = maxi(max_line_index, int(metadata.get("line_index", 0)))
     return float((max_line_index + 1) * line_height)
+
+## Total height of a comment row once each of its logical lines is wrapped to the row width.
+## Mirrors the per-span wrapping done in the layout pass, so the reserved height always
+## matches what is actually drawn (otherwise wrapped text would overlap the next row).
+func _measure_comment_height(row_data: EventRowData) -> float:
+    var line_height: float = _get_event_line_height(_get_font_size())
+    if row_data.spans.is_empty():
+        return float(maxi(row_data.line_count, 1)) * line_height
+    var wrap_width: float = _comment_wrap_width(row_data.indent, _get_logical_canvas_width())
+    var font: Font = _get_font()
+    var font_size: int = _get_font_size()
+    var total_lines: int = 0
+    for span in row_data.spans:
+        total_lines += _comment_span_line_count(span, wrap_width, font, font_size)
+    return float(maxi(total_lines, 1)) * line_height
+
+## Where comment text begins on the row (logical/unzoomed px). Kept in sync with the comment
+## branch of the layout pass so wrapping width, hit-testing, and drawing all agree.
+func _comment_text_origin_x(indent: int) -> float:
+    var origin_x: float = (
+        EventSheetPalette.ROW_HORIZONTAL_PADDING
+        + EventSheetPalette.GUTTER_WIDTH
+        + float(indent * INDENT_WIDTH)
+        + 18.0
+    )
+    var badge_column: float = max(float(_get_event_style().condition_badge_column_width), 0.0)
+    if badge_column > 0.0:
+        origin_x += badge_column + EventSheetPalette.SPAN_GAP
+    return origin_x
+
+## The pixel width comment text wraps inside: from the comment text origin to the row's right
+## padding (the same right limit the layout clamps spans to). Floored at MIN_COMMENT_WRAP_WIDTH.
+func _comment_wrap_width(indent: int, width: float) -> float:
+    var right_limit: float = width - EventSheetPalette.ROW_HORIZONTAL_PADDING
+    return max(right_limit - _comment_text_origin_x(indent) - 2.0, MIN_COMMENT_WRAP_WIDTH)
+
+## How many visual lines one comment span occupies after wrapping. BBCode-styled lines are
+## drawn as a single styled run (segment wrapping is not supported), so they stay one line.
+func _comment_span_line_count(span: SemanticSpan, wrap_width: float, font: Font, font_size: int) -> int:
+    if span == null:
+        return 1
+    var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+    if not (metadata.get("bbcode_segments", []) as Array).is_empty():
+        return 1
+    return wrapped_line_count(span.text, wrap_width, font, font_size)
+
+## Word-wrapped visual line count for `text` inside `wrap_width` (logical px). Uses the same
+## TextServer word/grapheme breaking the renderer draws with, so measurement and drawing stay
+## in lock-step. Pure + static so it is unit-testable without a live viewport. >= 1 always.
+static func wrapped_line_count(text: String, wrap_width: float, font: Font, font_size: int) -> int:
+    if font == null or text.strip_edges().is_empty() or wrap_width <= 1.0:
+        return 1
+    var single_line: float = font.get_height(font_size)
+    if single_line <= 0.0:
+        return 1
+    var wrapped_height: float = font.get_multiline_string_size(
+        text, HORIZONTAL_ALIGNMENT_LEFT, wrap_width, font_size, -1,
+        TextServer.BREAK_WORD_BOUND | TextServer.BREAK_GRAPHEME_BOUND
+    ).y
+    return maxi(1, int(round(wrapped_height / single_line)))
 
 func _get_row_top(index: int) -> float:
     if index < 0 or index >= _row_metrics.size():
