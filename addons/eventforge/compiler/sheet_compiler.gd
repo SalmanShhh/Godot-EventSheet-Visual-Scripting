@@ -1300,10 +1300,14 @@ static func _emit_function_params(event_function: EventFunction) -> String:
 			if param_id.is_empty():
 				continue
 			var type_name: String = param.type_name
-			if type_name.is_empty() or type_name == "Variant":
-				parts.append(param_id)
-			else:
-				parts.append("%s: %s" % [param_id, type_name])
+			var rendered: String = param_id if (type_name.is_empty() or type_name == "Variant") else "%s: %s" % [param_id, type_name]
+			# Optional GDScript default argument (`amount: int = 5`) — a dedicated field, NOT the picker
+			# pre-fill default_value. GDScript requires defaulted params to be trailing; the function
+			# dialog enforces that on author.
+			var default_text: String = param.gdscript_default.strip_edges()
+			if not default_text.is_empty():
+				rendered += " = %s" % default_text
+			parts.append(rendered)
 	else:
 		for param_name: Variant in event_function.parameters:
 			var clean_name: String = str(param_name).strip_edges()

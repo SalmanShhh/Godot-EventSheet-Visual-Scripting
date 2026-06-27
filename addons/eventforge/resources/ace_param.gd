@@ -24,6 +24,11 @@ class_name ACEParam
 ## Human-readable GDScript type name. Drives the UI control choice.
 @export var type_name: String = "String"
 @export var default_value: Variant = ""
+## For SHEET-FUNCTION parameters only: an optional GDScript default argument, emitted into the
+## function signature as `name: type = <this>` (so the parameter is optional). Distinct from
+## default_value (a picker pre-fill); empty = a required parameter. GDScript requires defaulted
+## parameters to be trailing — the function dialog enforces that.
+@export var gdscript_default: String = ""
 @export var initial_value: Variant = null
 @export var initialValue: Variant = null # Construct-style alias.
 @export var options: Array[String] = []

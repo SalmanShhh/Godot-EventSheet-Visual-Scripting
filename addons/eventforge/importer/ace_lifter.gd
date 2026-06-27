@@ -567,12 +567,18 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	event_function.return_type = return_types[return_name]
 	for argument: String in header_match.get_string(2).split(", ", false):
 		var param: ACEParam = ACEParam.new()
-		var colon: int = argument.find(": ")
+		var argument_text: String = argument
+		# Split off a default value (`amount: int = 5`) first, so it never leaks into the type name.
+		var equals: int = argument_text.find(" = ")
+		if equals >= 0:
+			param.gdscript_default = argument_text.substr(equals + 3).strip_edges()
+			argument_text = argument_text.substr(0, equals)
+		var colon: int = argument_text.find(": ")
 		if colon >= 0:
-			param.id = argument.substr(0, colon)
-			param.type_name = argument.substr(colon + 2)
+			param.id = argument_text.substr(0, colon)
+			param.type_name = argument_text.substr(colon + 2)
 		else:
-			param.id = argument
+			param.id = argument_text
 		event_function.params.append(param)
 	event_function.expose_as_ace = bool(annotations.get("expose", false))
 	event_function.ace_display_name = str(annotations.get("name", ""))

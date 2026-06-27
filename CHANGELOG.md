@@ -52,6 +52,19 @@ signals were hand-written `## @ace_trigger` code blocks. Both now de-code automa
   generated GDScript: each shows its signature and an ✦ when it's exposed as an ACE. **＋** opens the
   Add Function dialog; right-clicking a function deletes it (undoable). Covered by `functions_panel_test`.
 
+### Added — Construct-style function dialog
+
+- The **New Sheet Function** dialog is rebuilt to match Construct 3:
+  - **Usable as** picks Action / Condition / Expression in one control — the easy get/set toggle. An
+    Expression is a getter that returns a typed value, a Condition is a yes/no test (bool), an Action
+    is a void doer (a setter); it sets the return type for you.
+  - **Parameters** are full C3 rows: name · type · **default value** · **description**. Defaults emit
+    as optional GDScript args (`amount: int = 5`) via a dedicated `ACEParam.gdscript_default` (kept
+    separate from the picker pre-fill, and validated trailing so the function always parses).
+  - **Run only when** adds guard conditions — GDScript boolean expressions that wrap the function body
+    in an `if` (e.g. *only run when a node setting is enabled*), authored as Expression Is True rows.
+  - Covered by `function_dialog_test`; param defaults round-trip through the importer.
+
 ### Added — Behaviour-as-ACEs parity (foundation)
 
 Toward authoring whole behaviour packs as event sheets with **no GDScript blocks** — so a behaviour

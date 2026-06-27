@@ -6537,14 +6537,30 @@ func _apply_function_data(data: Dictionary) -> void:
         var event_function: EventFunction = EventFunction.new()
         event_function.function_name = str(data.get("name"))
         event_function.return_type = int(data.get("return_type", TYPE_NIL))
+        event_function.description = str(data.get("description", ""))
         for param_entry: Dictionary in (data.get("params", []) as Array):
             var param: ACEParam = ACEParam.new()
             param.id = str(param_entry.get("id"))
             param.type_name = str(param_entry.get("type_name", "Variant"))
+            param.gdscript_default = str(param_entry.get("default", ""))
+            param.description = str(param_entry.get("description", ""))
             event_function.params.append(param)
         event_function.expose_as_ace = bool(data.get("expose", false))
         event_function.ace_display_name = str(data.get("ace_display_name", ""))
         event_function.ace_category = str(data.get("ace_category", ""))
+        # "Run only when" guards: the body runs inside an `if <guards>:` — a Construct-style
+        # function gate (e.g. only act when a node setting is enabled). Each expression becomes an
+        # Expression Is True condition on a wrapper row the body actions are authored under.
+        var guards: PackedStringArray = PackedStringArray(data.get("guards", PackedStringArray()))
+        if not guards.is_empty():
+            var guard_row: EventRow = EventRow.new()
+            for guard_expression: String in guards:
+                var condition: ACECondition = ACECondition.new()
+                condition.provider_id = "Core"
+                condition.ace_id = "ExpressionIsTrue"
+                condition.params = {"expr": guard_expression}
+                guard_row.conditions.append(condition)
+            event_function.events.append(guard_row)
         _current_sheet.functions.append(event_function)
         return true)
     if changed:
