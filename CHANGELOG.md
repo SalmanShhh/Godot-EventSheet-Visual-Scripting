@@ -147,6 +147,11 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
 - **Selecting an event block by clicking outside the condition cell** is pinned: a click in a block's
   empty lane or the left gutter resolves to a whole-row selection (so the block selects, and Delete acts
   on it rather than falling through to the scene tree).
+- **The welcome demo sheet now matches its Generated GDScript.** Its events used the bundled demo
+  actor's reflected ACEs (which the compiler's registry doesn't carry) and set `.trigger` instead of
+  `trigger_id`, so they silently produced no code — the preview showed only the variables + a comment
+  while the viewport showed events. Rebuilt from Core ACEs with real triggers; the panel now compiles
+  to a `_process` function that matches the rows (`event_sheet_editor_test` asserts the match).
 
 - **Pressing Delete in the event sheet no longer deletes a node from the open scene.** The dock
   handled Delete only in `_unhandled_key_input`, which runs *after* the editor's Scene-tree dock's

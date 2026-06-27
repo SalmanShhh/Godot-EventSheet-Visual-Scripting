@@ -8415,46 +8415,23 @@ func _build_demo_sheet() -> EventSheetResource:
     intro_comment.text = "Drag a node into the viewport to preview the actions and conditions it offers."
     sheet.events.append(intro_comment)
 
-    var encounter_group := EventGroup.new()
-    encounter_group.name = _get_demo_provider_id()
-    encounter_group.group_name = encounter_group.name
-
-    var overlap_event := EventRow.new()
-    overlap_event.event_uid = "demo_overlap"
-    overlap_event.trigger = _make_condition(_get_demo_provider_id(), "signal:died", {})
-    overlap_event.conditions = [_make_condition(_get_demo_provider_id(), "method:is_dead", {})]
-    overlap_event.actions = [
-        _make_action(_get_demo_provider_id(), "set:health", {"value": "100"}),
-        _make_action(_get_demo_provider_id(), "method:heal", {"amount": "25"})
-    ]
-    overlap_event.comment = "Auto-generated gameplay vocabulary"
-
-    var child_event := EventRow.new()
-    child_event.event_uid = "demo_attack"
-    child_event.conditions = [_make_condition("Core", "Always", {})]
-    child_event.actions = [_make_action(_get_demo_provider_id(), "method:take_damage", {"amount": "10"})]
-    overlap_event.sub_events.append(child_event)
-
-    encounter_group.events.append(overlap_event)
-    sheet.events.append(encounter_group)
-
-    var movement_event := EventRow.new()
-    movement_event.event_uid = "demo_movement"
-    movement_event.trigger = _make_condition("Core", "OnProcess", {})
-    movement_event.actions = [
-        _make_action(_get_demo_provider_id(), "add:health", {"amount": "5"}),
-        _make_action(_get_demo_provider_id(), "method:jump", {})
-    ]
-    sheet.events.append(movement_event)
+    # A tiny, fully code-free example that ALWAYS compiles, so the Generated GDScript panel matches
+    # exactly what you see. Built from Core ACEs with BAKED templates (the reflected demo-actor
+    # provider isn't in the compiler's registry, so its rows used to silently produce no code — the
+    # preview then disagreed with the sheet). The drag-a-node-to-preview flow still showcases AutoACE.
+    var tick := EventRow.new()
+    tick.event_uid = "demo_tick"
+    tick.trigger_provider_id = "Core"
+    tick.trigger_id = "OnProcess"
+    var score_up := _make_action("Core", "AddVar", {"var_name": "score", "amount": "1"})
+    score_up.codegen_template = "{var_name} += {amount}"
+    var health_down := _make_action("Core", "SubtractVar", {"var_name": "health", "amount": "1"})
+    health_down.codegen_template = "{var_name} -= {amount}"
+    tick.actions = [score_up, health_down]
+    tick.comment = "Auto-generated example — every row is an event, no GDScript"
+    sheet.events.append(tick)
 
     return sheet
-
-func _make_condition(provider_id: String, ace_id: String, params: Dictionary) -> ACECondition:
-    var condition := ACECondition.new()
-    condition.provider_id = provider_id
-    condition.ace_id = ace_id
-    condition.params = params.duplicate(true)
-    return condition
 
 func _make_action(provider_id: String, ace_id: String, params: Dictionary) -> ACEAction:
     var action := ACEAction.new()
@@ -8462,17 +8439,6 @@ func _make_action(provider_id: String, ace_id: String, params: Dictionary) -> AC
     action.ace_id = ace_id
     action.params = params.duplicate(true)
     return action
-
-func _get_demo_provider_id() -> String:
-    # The built-in demo sheet pairs with the bundled demo gameplay actor. Resolve it BY
-    # NAME: "first reflected provider" broke once addons became additive (order varies),
-    # and the registry may not be refreshed yet when the demo builds — the literal
-    # fallback is the actor's class_name, which is what reflection registers it under.
-    if _ace_registry != null:
-        for provider_id: String in _ace_registry.get_reflected_provider_ids():
-            if provider_id.contains("DemoGameplayActor"):
-                return provider_id
-    return "EventSheetDemoGameplayActor"
 
 func _release_ace_sources() -> void:
     for source_object in _ace_sources:
