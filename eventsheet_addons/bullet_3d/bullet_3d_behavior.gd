@@ -63,4 +63,4 @@ func set_bullet3d_speed(value: float) -> void:
 	vel_z = direction.z * value
 	launched = true
 
-# Bullet 3D behavior (C3-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled.
+# Bullet 3D behavior (event-sheet-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled.

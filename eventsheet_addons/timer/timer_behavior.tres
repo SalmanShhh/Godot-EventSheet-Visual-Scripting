@@ -13,7 +13,7 @@
 
 [sub_resource type="Resource" id="Resource_xncmq"]
 script = ExtResource("1_508eb")
-text = "Timer behavior (C3-style): Start Timer / Stop Timer from any sheet; the On Timer trigger fires when it elapses (repeats when 'repeating')."
+text = "Timer behavior (event-sheet-style): Start Timer / Stop Timer from any sheet; the On Timer trigger fires when it elapses (repeats when 'repeating')."
 
 [sub_resource type="Resource" id="Resource_pt8bp"]
 script = ExtResource("2_766qb")

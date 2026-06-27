@@ -65,7 +65,7 @@ func _process(delta: float) -> void:
 ## @ace_action
 ## @ace_name("Simulate Step")
 ## @ace_category("Tile Movement")
-## @ace_description("Steps one tile in a direction: left, right, up or down (C3 simulate control).")
+## @ace_description("Steps one tile in a direction: left, right, up or down (simulate control).")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TileMovementBehavior.simulate_step({direction})")
 func simulate_step(direction: String) -> void:
@@ -93,4 +93,4 @@ func teleport_to_tile(tile_x: float, tile_y: float) -> void:
 func from_grid(tile: Vector2i) -> Vector2:
 	return Vector2(tile) * tile_size
 
-# Tile Movement behavior (C3 parity): grid-locked stepping (arrow keys or Simulate Step); grid-space helpers convert between tiles and pixels. Fires On Step Finished per tile.
+# Tile Movement behavior (event-sheet parity): grid-locked stepping (arrow keys or Simulate Step); grid-space helpers convert between tiles and pixels. Fires On Step Finished per tile.

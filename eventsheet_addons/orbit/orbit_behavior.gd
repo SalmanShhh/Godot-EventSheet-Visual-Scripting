@@ -72,4 +72,4 @@ func set_orbit_radii(primary: float, secondary: float) -> void:
 	primary_radius = primary
 	secondary_radius = secondary
 
-# Orbit behavior (C3 parity): circles or ellipses around a point. secondary_radius 0 = circle; offset_angle tilts the ellipse; match_rotation faces the travel direction.
+# Orbit behavior (event-sheet parity): circles or ellipses around a point. secondary_radius 0 = circle; offset_angle tilts the ellipse; match_rotation faces the travel direction.

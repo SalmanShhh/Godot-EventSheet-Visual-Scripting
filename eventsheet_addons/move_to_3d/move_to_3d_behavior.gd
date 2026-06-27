@@ -64,4 +64,4 @@ func stop_moving_3d() -> void:
 	moving = false
 	waypoints = []
 
-# Move To 3D behavior (C3-style): glides through a queue of Vector3 waypoints and fires On Arrived at the final stop.
+# Move To 3D behavior (event-sheet-style): glides through a queue of Vector3 waypoints and fires On Arrived at the final stop.

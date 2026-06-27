@@ -66,4 +66,4 @@ func has_los_between(from_point: Vector2, to_point: Vector2) -> bool:
 	query.collision_mask = collision_mask
 	return host.get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
-# Line of Sight behavior (C3 parity): raycast LOS with range and an optional cone of view (degrees; 360 = all around). Conditions: Has Line Of Sight To, Has LOS Between positions.
+# Line of Sight behavior (event-sheet parity): raycast LOS with range and an optional cone of view (degrees; 360 = all around). Conditions: Has Line Of Sight To, Has LOS Between positions.

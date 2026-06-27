@@ -90,4 +90,4 @@ func _wave(t: float) -> float:
 			return 1.0 if cycle < 0.5 else -1.0
 	return sin(cycle * TAU)
 
-# Sine 3D behavior (C3-style): oscillates the host along an axis (x, y, z) or around the Y axis (rotation-y), with the full wave set.
+# Sine 3D behavior (event-sheet-style): oscillates the host along an axis (x, y, z) or around the Y axis (rotation-y), with the full wave set.

@@ -13,7 +13,7 @@
 
 [sub_resource type="Resource" id="Resource_m7a1i"]
 script = ExtResource("1_wa7cv")
-text = "Line of Sight 3D behavior (C3 parity): raycast LOS in 3D with range and an optional cone of view (degrees; 360 = all around, measured from the host's -Z forward). Conditions: Has Line Of Sight To, Has LOS Between positions."
+text = "Line of Sight 3D behavior (event-sheet parity): raycast LOS in 3D with range and an optional cone of view (degrees; 360 = all around, measured from the host's -Z forward). Conditions: Has Line Of Sight To, Has LOS Between positions."
 
 [sub_resource type="Resource" id="Resource_tfsxl"]
 script = ExtResource("2_1idfc")

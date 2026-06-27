@@ -14,7 +14,7 @@
 
 [sub_resource type="Resource" id="Resource_3ywck"]
 script = ExtResource("1_i5pmt")
-text = "Car behavior (C3 parity): accelerate/brake with up/down, steer with left/right. drift_recover blends sliding back toward the heading (1 = grippy, low = drifty); turn_while_stopped allows steering at rest."
+text = "Car behavior (event-sheet parity): accelerate/brake with up/down, steer with left/right. drift_recover blends sliding back toward the heading (1 = grippy, low = drifty); turn_while_stopped allows steering at rest."
 
 [sub_resource type="Resource" id="Resource_66i7s"]
 script = ExtResource("2_ct0p5")

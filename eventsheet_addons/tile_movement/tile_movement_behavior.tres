@@ -14,7 +14,7 @@
 
 [sub_resource type="Resource" id="Resource_6dtgv"]
 script = ExtResource("1_tqv7t")
-text = "Tile Movement behavior (C3 parity): grid-locked stepping (arrow keys or Simulate Step); grid-space helpers convert between tiles and pixels. Fires On Step Finished per tile."
+text = "Tile Movement behavior (event-sheet parity): grid-locked stepping (arrow keys or Simulate Step); grid-space helpers convert between tiles and pixels. Fires On Step Finished per tile."
 
 [sub_resource type="Resource" id="Resource_joxbd"]
 script = ExtResource("2_m4uii")
@@ -170,7 +170,7 @@ options = Array[String](["left", "right", "up", "down"])
 [sub_resource type="Resource" id="Resource_kqe0l"]
 script = ExtResource("10_s6njm")
 function_name = "simulate_step"
-description = "Steps one tile in a direction: left, right, up or down (C3 simulate control)."
+description = "Steps one tile in a direction: left, right, up or down (simulate control)."
 expose_as_ace = true
 ace_display_name = "Simulate Step"
 ace_category = "Tile Movement"

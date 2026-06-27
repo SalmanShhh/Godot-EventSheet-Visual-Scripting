@@ -50,7 +50,7 @@ func move_to_position(x: float, y: float) -> void:
 ## @ace_action
 ## @ace_name("Add Waypoint")
 ## @ace_category("Move To")
-## @ace_description("Appends a stop to the queue (C3 waypoints).")
+## @ace_description("Appends a stop to the queue (waypoints).")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$MoveToBehavior.add_waypoint({x}, {y})")
 func add_waypoint(x: float, y: float) -> void:
@@ -67,4 +67,4 @@ func stop_moving() -> void:
 	moving = false
 	waypoints = []
 
-# Move To behavior (C3 parity): glides through a waypoint queue (Move To Position replaces it, Add Waypoint appends) and fires On Arrived at the final stop. rotate_toward_motion faces the travel direction.
+# Move To behavior (event-sheet parity): glides through a waypoint queue (Move To Position replaces it, Add Waypoint appends) and fires On Arrived at the final stop. rotate_toward_motion faces the travel direction.

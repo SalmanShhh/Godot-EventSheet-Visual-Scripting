@@ -76,4 +76,4 @@ func set_angle_of_motion(degrees: float) -> void:
 func set_bullet_enabled(is_enabled: bool) -> void:
 	enabled_movement = is_enabled
 
-# Bullet behavior (C3 parity): angle-of-motion movement with acceleration and gravity; tracks distance travelled (read $BulletBehavior.distance_travelled).
+# Bullet behavior (event-sheet parity): angle-of-motion movement with acceleration and gravity; tracks distance travelled (read $BulletBehavior.distance_travelled).

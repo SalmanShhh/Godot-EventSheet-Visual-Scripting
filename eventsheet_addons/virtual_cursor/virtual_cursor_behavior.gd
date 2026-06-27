@@ -796,4 +796,4 @@ func _target_extent(target: Node2D) -> float:
 			return e
 	return 32.0
 
-# Virtual Cursor behavior (C3 parity): input-agnostic controllable cursor on a CharacterBody2D — event-driven/axis/mouse-follow movement with accel/decel and direction modes, homing magnet, solid push-out via move_and_slide with sliding, lossless bounce, layout/viewport constraints, hover detection, and named interact buttons. Drives the Drag N Drop pack.
+# Virtual Cursor behavior (event-sheet parity): input-agnostic controllable cursor on a CharacterBody2D — event-driven/axis/mouse-follow movement with accel/decel and direction modes, homing magnet, solid push-out via move_and_slide with sliding, lossless bounce, layout/viewport constraints, hover detection, and named interact buttons. Drives the Drag N Drop pack.

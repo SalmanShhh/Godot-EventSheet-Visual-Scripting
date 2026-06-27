@@ -14,7 +14,7 @@
 
 [sub_resource type="Resource" id="Resource_1wlap"]
 script = ExtResource("1_6dloj")
-text = "Sine behavior (C3 parity): wave-driven oscillation. movement: horizontal, vertical, forwards-backwards, size, angle, opacity, value-only. wave: sine, triangle, sawtooth, reverse-sawtooth, square. Read the current wave via $SineBehavior.wave_value."
+text = "Sine behavior (event-sheet parity): wave-driven oscillation. movement: horizontal, vertical, forwards-backwards, size, angle, opacity, value-only. wave: sine, triangle, sawtooth, reverse-sawtooth, square. Read the current wave via $SineBehavior.wave_value."
 
 [sub_resource type="Resource" id="Resource_2rghd"]
 script = ExtResource("6_wp66b")
@@ -353,7 +353,7 @@ event_uid = "8b3534"
 [sub_resource type="Resource" id="Resource_oul26"]
 script = ExtResource("9_4g6ho")
 function_name = "update_initial_state"
-description = "Re-captures the host's current position/scale/angle/opacity as the wave's base (C3 updateInitialState)."
+description = "Re-captures the host's current position/scale/angle/opacity as the wave's base (updateInitialState)."
 expose_as_ace = true
 ace_display_name = "Update Initial State"
 ace_category = "Sine"

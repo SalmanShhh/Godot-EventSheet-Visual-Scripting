@@ -69,4 +69,4 @@ func stop_car() -> void:
 	if host != null:
 		host.velocity = Vector2.ZERO
 
-# Car behavior (C3 parity): accelerate/brake with up/down, steer with left/right. drift_recover blends sliding back toward the heading (1 = grippy, low = drifty); turn_while_stopped allows steering at rest.
+# Car behavior (event-sheet parity): accelerate/brake with up/down, steer with left/right. drift_recover blends sliding back toward the heading (1 = grippy, low = drifty); turn_while_stopped allows steering at rest.

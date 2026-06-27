@@ -13,7 +13,7 @@
 
 [sub_resource type="Resource" id="Resource_f2y24"]
 script = ExtResource("1_q7uqc")
-text = "Move To behavior (C3 parity): glides through a waypoint queue (Move To Position replaces it, Add Waypoint appends) and fires On Arrived at the final stop. rotate_toward_motion faces the travel direction."
+text = "Move To behavior (event-sheet parity): glides through a waypoint queue (Move To Position replaces it, Add Waypoint appends) and fires On Arrived at the final stop. rotate_toward_motion faces the travel direction."
 
 [sub_resource type="Resource" id="Resource_2d2na"]
 script = ExtResource("2_c4ll7")
@@ -238,7 +238,7 @@ initialValue = null
 [sub_resource type="Resource" id="Resource_aoe7j"]
 script = ExtResource("9_1q018")
 function_name = "add_waypoint"
-description = "Appends a stop to the queue (C3 waypoints)."
+description = "Appends a stop to the queue (waypoints)."
 expose_as_ace = true
 ace_display_name = "Add Waypoint"
 ace_category = "Move To"

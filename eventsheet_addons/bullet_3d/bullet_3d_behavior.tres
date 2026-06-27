@@ -13,7 +13,7 @@
 
 [sub_resource type="Resource" id="Resource_wrg6a"]
 script = ExtResource("1_25dsr")
-text = "Bullet 3D behavior (C3-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled."
+text = "Bullet 3D behavior (event-sheet-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled."
 
 [sub_resource type="Resource" id="Resource_5m1b1"]
 script = ExtResource("6_l86d7")

@@ -64,7 +64,7 @@ func set_sine_active(is_active: bool) -> void:
 ## @ace_action
 ## @ace_name("Update Initial State")
 ## @ace_category("Sine")
-## @ace_description("Re-captures the host's current position/scale/angle/opacity as the wave's base (C3 updateInitialState).")
+## @ace_description("Re-captures the host's current position/scale/angle/opacity as the wave's base (updateInitialState).")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SineBehavior.update_initial_state()")
 func update_initial_state() -> void:
@@ -111,4 +111,4 @@ func _wave(t: float) -> float:
 			return 1.0 if cycle < 0.5 else -1.0
 	return sin(cycle * TAU)
 
-# Sine behavior (C3 parity): wave-driven oscillation. movement: horizontal, vertical, forwards-backwards, size, angle, opacity, value-only. wave: sine, triangle, sawtooth, reverse-sawtooth, square. Read the current wave via $SineBehavior.wave_value.
+# Sine behavior (event-sheet parity): wave-driven oscillation. movement: horizontal, vertical, forwards-backwards, size, angle, opacity, value-only. wave: sine, triangle, sawtooth, reverse-sawtooth, square. Read the current wave via $SineBehavior.wave_value.

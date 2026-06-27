@@ -486,4 +486,4 @@ func _end_drag(apply_throw: bool, reason: String) -> void:
 	if did_snap:
 		snapped.emit()
 
-# Drag & Drop behavior (C3 parity, event-driven): the author feeds the drag point each tick (virtual cursor, gamepad, touch, AI) — never polls Input. Follow-speed lag, direction lock, break-distance auto-drop, snapping/magnetism, auto-measured throw velocity (routed by you in On Dropped). NOTE: overlap snap mode is a v1 radius-distance simplification (true shape-overlap is a follow-up).
+# Drag & Drop behavior (event-sheet parity, event-driven): the author feeds the drag point each tick (virtual cursor, gamepad, touch, AI) — never polls Input. Follow-speed lag, direction lock, break-distance auto-drop, snapping/magnetism, auto-measured throw velocity (routed by you in On Dropped). NOTE: overlap snap mode is a v1 radius-distance simplification (true shape-overlap is a follow-up).

@@ -12,7 +12,7 @@
 
 [sub_resource type="Resource" id="Resource_i0mc6"]
 script = ExtResource("1_3bqpc")
-text = "Orbit 3D behavior (C3-style): circles the host around its starting point in the XZ plane (Y stays)."
+text = "Orbit 3D behavior (event-sheet-style): circles the host around its starting point in the XZ plane (Y stays)."
 
 [sub_resource type="Resource" id="Resource_51g62"]
 script = ExtResource("6_6xk7j")

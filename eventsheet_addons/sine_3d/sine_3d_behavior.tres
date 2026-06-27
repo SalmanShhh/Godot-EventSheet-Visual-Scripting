@@ -14,7 +14,7 @@
 
 [sub_resource type="Resource" id="Resource_ol3o0"]
 script = ExtResource("1_ron22")
-text = "Sine 3D behavior (C3-style): oscillates the host along an axis (x, y, z) or around the Y axis (rotation-y), with the full wave set."
+text = "Sine 3D behavior (event-sheet-style): oscillates the host along an axis (x, y, z) or around the Y axis (rotation-y), with the full wave set."
 
 [sub_resource type="Resource" id="Resource_i2rxt"]
 script = ExtResource("6_bff3u")

@@ -13,7 +13,7 @@
 
 [sub_resource type="Resource" id="Resource_bt8yp"]
 script = ExtResource("1_rf12q")
-text = "Move To 3D behavior (C3-style): glides through a queue of Vector3 waypoints and fires On Arrived at the final stop."
+text = "Move To 3D behavior (event-sheet-style): glides through a queue of Vector3 waypoints and fires On Arrived at the final stop."
 
 [sub_resource type="Resource" id="Resource_6db6m"]
 script = ExtResource("2_a81oj")

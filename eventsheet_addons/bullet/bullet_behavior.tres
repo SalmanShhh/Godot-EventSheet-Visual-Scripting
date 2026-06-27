@@ -13,7 +13,7 @@
 
 [sub_resource type="Resource" id="Resource_2c7to"]
 script = ExtResource("1_urm38")
-text = "Bullet behavior (C3 parity): angle-of-motion movement with acceleration and gravity; tracks distance travelled (read $BulletBehavior.distance_travelled)."
+text = "Bullet behavior (event-sheet parity): angle-of-motion movement with acceleration and gravity; tracks distance travelled (read $BulletBehavior.distance_travelled)."
 
 [sub_resource type="Resource" id="Resource_bw4ti"]
 script = ExtResource("6_h0i2u")

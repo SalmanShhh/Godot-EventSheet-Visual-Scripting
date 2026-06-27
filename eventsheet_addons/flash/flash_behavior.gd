@@ -58,4 +58,4 @@ func stop_flash() -> void:
 	if is_instance_valid(host):
 		host.visible = true
 
-# Flash behavior (C3-style): blinks the host's visibility for a duration, then restores it and fires On Flash Finished.
+# Flash behavior (event-sheet-style): blinks the host's visibility for a duration, then restores it and fires On Flash Finished.

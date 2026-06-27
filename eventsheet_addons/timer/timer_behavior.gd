@@ -54,4 +54,4 @@ func start_timer(seconds: float) -> void:
 func stop_timer() -> void:
 	running = false
 
-# Timer behavior (C3-style): Start Timer / Stop Timer from any sheet; the On Timer trigger fires when it elapses (repeats when 'repeating').
+# Timer behavior (event-sheet-style): Start Timer / Stop Timer from any sheet; the On Timer trigger fires when it elapses (repeats when 'repeating').

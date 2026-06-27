@@ -14,7 +14,7 @@
 
 [sub_resource type="Resource" id="Resource_44tmr"]
 script = ExtResource("1_1th2w")
-text = "Virtual Cursor behavior (C3 parity): input-agnostic controllable cursor on a CharacterBody2D — event-driven/axis/mouse-follow movement with accel/decel and direction modes, homing magnet, solid push-out via move_and_slide with sliding, lossless bounce, layout/viewport constraints, hover detection, and named interact buttons. Drives the Drag N Drop pack."
+text = "Virtual Cursor behavior (event-sheet parity): input-agnostic controllable cursor on a CharacterBody2D — event-driven/axis/mouse-follow movement with accel/decel and direction modes, homing magnet, solid push-out via move_and_slide with sliding, lossless bounce, layout/viewport constraints, hover detection, and named interact buttons. Drives the Drag N Drop pack."
 
 [sub_resource type="Resource" id="Resource_iq5m5"]
 script = ExtResource("2_tmuc2")

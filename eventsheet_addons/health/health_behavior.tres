@@ -14,7 +14,7 @@
 
 [sub_resource type="Resource" id="Resource_viqvc"]
 script = ExtResource("1_6c2vf")
-text = "Simple Health behavior (C3 parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. current_health seeds to max_health On Ready."
+text = "Simple Health behavior (event-sheet parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. current_health seeds to max_health On Ready."
 
 [sub_resource type="Resource" id="Resource_oglca"]
 script = ExtResource("2_soq11")

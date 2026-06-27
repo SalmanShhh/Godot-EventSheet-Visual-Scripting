@@ -45,4 +45,4 @@ func set_orbit3d_center(x: float, y: float, z: float) -> void:
 	center_z = z
 	center_captured = true
 
-# Orbit 3D behavior (C3-style): circles the host around its starting point in the XZ plane (Y stays).
+# Orbit 3D behavior (event-sheet-style): circles the host around its starting point in the XZ plane (Y stays).

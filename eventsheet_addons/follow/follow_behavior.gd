@@ -76,4 +76,4 @@ func start_following(path: String) -> void:
 func stop_following() -> void:
 	following = false
 
-# Follow behavior (C3 parity): trails another node. mode smooth = lerp chase; mode delayed = replay the target's position history after a delay (C3's Follow).
+# Follow behavior (event-sheet parity): trails another node. mode smooth = lerp chase; mode delayed = replay the target's position history after a delay (the Follow behavior).

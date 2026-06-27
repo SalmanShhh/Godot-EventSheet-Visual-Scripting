@@ -13,7 +13,7 @@
 
 [sub_resource type="Resource" id="Resource_y7j0k"]
 script = ExtResource("1_1yoqm")
-text = "Flash behavior (C3-style): blinks the host's visibility for a duration, then restores it and fires On Flash Finished."
+text = "Flash behavior (event-sheet-style): blinks the host's visibility for a duration, then restores it and fires On Flash Finished."
 
 [sub_resource type="Resource" id="Resource_dftwn"]
 script = ExtResource("2_5x47p")

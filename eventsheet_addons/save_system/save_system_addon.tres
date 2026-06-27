@@ -614,7 +614,8 @@ event_uid = "301b21"
 [sub_resource type="Resource" id="Resource_rv7no"]
 script = ExtResource("8_n23dw")
 id = "target_slot"
-type_name = "int = -1"
+type_name = "int"
+gdscript_default = "-1"
 initial_value = null
 initialValue = null
 
