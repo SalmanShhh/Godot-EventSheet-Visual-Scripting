@@ -553,6 +553,11 @@ func _build_provider_dialog() -> void:
     remove_button.text = "Remove Selected"
     remove_button.pressed.connect(_on_provider_remove_pressed)
     buttons.add_child(remove_button)
+    var open_in_godot_button: Button = Button.new()
+    open_in_godot_button.text = "Open in Godot"
+    open_in_godot_button.tooltip_text = "Open the selected provider script in Godot's script editor."
+    open_in_godot_button.pressed.connect(_on_provider_open_in_godot_pressed)
+    buttons.add_child(open_in_godot_button)
 
     _provider_file_dialog = FileDialog.new()
     _provider_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
@@ -949,7 +954,8 @@ func _notification(what: int) -> void:
         _release_ace_sources()
     elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
         # GDScript-backed sheets: refocusing the editor is the moment external edits (the
-        # script editor, another tool, git) usually land — offer to reload from disk.
+        # script editor, another tool, git) usually land — offer to reload from disk. This is also
+        # what carries "Open in Godot" edits back into a backed sheet (the .gd changed on disk).
         _prompt_external_reload_if_changed()
     elif what == NOTIFICATION_THEME_CHANGED and is_inside_tree():
         # The user switched their editor theme — re-derive the "Match Editor" default
@@ -1343,6 +1349,19 @@ func _load_sheet_from_path(path: String) -> void:
         return
     _set_status("Open failed: %s is not an EventSheetResource." % resolved_path.get_file(), true)
 
+## Compiles a GDScript-backed sheet to its .gd source. Returns whether the compile succeeded (and
+## sets a failure status when it does not). Shared by Save and "Open in Godot" so the latter can
+## refuse to open a stale source when the sheet doesn't currently compile.
+func _save_backed_sheet() -> bool:
+    var compile_result: Dictionary = SheetCompiler.compile(_current_sheet, _current_sheet.external_source_path)
+    if not bool(compile_result.get("success", false)):
+        _set_status("Save failed: %s" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
+        return false
+    _dirty = false
+    _external_mtime = FileAccess.get_modified_time(_current_sheet.external_source_path)
+    _refresh_title_strip()
+    return true
+
 func _on_save_requested() -> void:
     if _current_sheet == null:
         _set_status("Nothing to save.", true)
@@ -1356,14 +1375,8 @@ func _on_save_requested() -> void:
     # GDScript-backed sheets save by compiling back to their .gd source (order-preserving;
     # an untouched sheet reproduces the file byte-identically).
     if not _current_sheet.external_source_path.is_empty():
-        var compile_result: Dictionary = SheetCompiler.compile(_current_sheet, _current_sheet.external_source_path)
-        if bool(compile_result.get("success", false)):
-            _dirty = false
-            _external_mtime = FileAccess.get_modified_time(_current_sheet.external_source_path)
-            _refresh_title_strip()
+        if _save_backed_sheet():
             _set_status("Saved GDScript: %s" % _current_sheet.external_source_path.get_file())
-        else:
-            _set_status("Save failed: %s" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
         return
     if _current_sheet_path.is_empty() and _current_sheet.resource_path.is_empty():
         _on_save_as_requested()
@@ -3070,6 +3083,11 @@ var _raw_code_in_flow: bool = false
 var _raw_code_hint: Label = null
 var _raw_code_lint_label: Label = null
 
+# ── "Open in Godot" ──────────────────────────────────────────────────────────
+# Hands GDScript to Godot's own script editor — always a REAL file: a custom-ACE provider script, or
+# a code-backed sheet's .gd source (which the block/generated actions compile to and then open).
+# Sheets with no .gd source (.tres) have nothing to open, so those actions nudge the user to Save As.
+
 # ── GDScript provenance panel ────────────────────────────────────────────────
 # Read-only side panel showing the generated GDScript; selecting a sheet row highlights the
 # exact lines it compiles to (sheet → code provenance, via the compiler's source_map).
@@ -3141,6 +3159,11 @@ func _ensure_code_panel() -> void:
     title.text = "Generated GDScript"
     title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     header.add_child(title)
+    var open_in_godot_button: Button = Button.new()
+    open_in_godot_button.text = "Open in Godot"
+    open_in_godot_button.tooltip_text = "Open the .gd source in Godot's own script editor (code-backed sheets). For a .tres sheet, Save As… a .gd first."
+    open_in_godot_button.pressed.connect(_open_generated_in_godot)
+    header.add_child(open_in_godot_button)
     var copy_button: Button = Button.new()
     copy_button.text = "Copy"
     copy_button.tooltip_text = "Copy the generated script to the clipboard"
@@ -3397,6 +3420,13 @@ func _ensure_raw_code_dialog() -> void:
     layout_box.add_child(_raw_code_lint_label)
     _raw_code_dialog.add_child(EventSheetPopupUI.margined(layout_box))
     _raw_code_dialog.confirmed.connect(_on_raw_code_dialog_confirmed)
+    # "Open in Godot" hands the block off to Godot's own script editor (more room, full tooling); the
+    # in-popup editor stays for quick inline edits. custom_action fires for non-OK/Cancel buttons.
+    var open_in_godot: Button = _raw_code_dialog.add_button("Open in Godot", false, "open_in_godot")
+    open_in_godot.tooltip_text = "Edit this block in Godot's script editor — your changes return when you come back to the sheet."
+    _raw_code_dialog.custom_action.connect(func(action: StringName) -> void:
+        if String(action) == "open_in_godot":
+            _open_raw_code_block_in_godot())
     add_child(_raw_code_dialog)
 
 ## Compile-checks the dialog's code against the sheet context (host class + sheet symbols).
@@ -6480,17 +6510,81 @@ func _on_preview_edit_requested() -> void:
 func _on_preview_open_in_script_editor() -> void:
     if _current_sheet == null or _current_sheet.external_source_path.is_empty():
         return
-    if not Engine.has_singleton("EditorInterface"):
-        _set_status("Open in Script Editor is only available inside the Godot editor.", true)
-        return
+    _open_gdscript_path_in_godot(_current_sheet.external_source_path)
+
+## Hands a Script resource to Godot's own script editor — the shared glue behind every "Open in
+## Godot" action. Guarded: a no-op (with a status note) outside the editor or when edit_script is
+## unavailable, so headless/runtime callers degrade gracefully. Returns whether it opened.
+func _edit_script_in_godot(script: Script, line: int = -1) -> bool:
+    if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+        _set_status("Open in Godot is only available inside the Godot editor.", true)
+        return false
     var editor_interface: Object = Engine.get_singleton("EditorInterface")
-    var script: Resource = load(_current_sheet.external_source_path)
-    if script is Script and editor_interface.has_method("edit_script"):
-        editor_interface.call("edit_script", script)
-        if editor_interface.has_method("set_main_screen_editor"):
-            editor_interface.call("set_main_screen_editor", "Script")
-    else:
-        _set_status("Could not open %s in the script editor." % _current_sheet.external_source_path.get_file(), true)
+    if script == null or not editor_interface.has_method("edit_script"):
+        _set_status("Could not open the script in Godot's editor.", true)
+        return false
+    editor_interface.call("edit_script", script, line)
+    if editor_interface.has_method("set_main_screen_editor"):
+        editor_interface.call("set_main_screen_editor", "Script")
+    return true
+
+## Opens an existing res:// .gd in Godot's script editor (provider scripts, a backed sheet's source).
+func _open_gdscript_path_in_godot(path: String, line: int = -1) -> bool:
+    if path.is_empty() or not FileAccess.file_exists(path):
+        _set_status("Script not found: %s" % path, true)
+        return false
+    var script: Resource = load(path)
+    if not (script is Script):
+        _set_status("%s could not be opened as a GDScript." % path.get_file(), true)
+        return false
+    return _edit_script_in_godot(script as Script, line)
+
+## "Open in Godot" for the GDScript block in the popup. A block in a code-backed (.gd) sheet IS part
+## of a real file: apply the popup text, compile the sheet back to its .gd, and open that source —
+## further edits in Godot reload into the sheet on focus (the existing backed-sheet reload). If the
+## sheet doesn't compile, the popup stays open and nothing opens (no stale source / lost edit). A
+## block in a .tres sheet has no file behind it; point the user at Save As… → .gd.
+func _open_raw_code_block_in_godot() -> void:
+    if _raw_code_target == null or _raw_code_edit == null or _current_sheet == null:
+        return
+    if _current_sheet.external_source_path.is_empty():
+        _set_status("Open in Godot edits the sheet's .gd source — Save As… this sheet as a .gd first to edit its code in Godot.", true)
+        return
+    var target: RawCodeRow = _raw_code_target
+    var code: String = _raw_code_edit.text
+    var source_path: String = _current_sheet.external_source_path
+    _perform_undoable_sheet_edit("Edit GDScript Block", func() -> bool:
+        if target.code == code:
+            return false
+        target.code = code
+        return true)
+    # Refuse to open a stale source: if the sheet doesn't compile, _save_backed_sheet() left a
+    # "Save failed: …" status and the .gd on disk is unchanged. Keep the popup open to fix it.
+    if not _save_backed_sheet():
+        return
+    _raw_code_dialog.hide()
+    if _open_gdscript_path_in_godot(source_path):
+        _set_status("Saved and opened %s in Godot — the sheet reloads your edits when you come back." % source_path.get_file())
+
+## "Open in Godot" for the generated GDScript. A code-backed sheet's source IS its generated output —
+## open the real .gd. A non-backed (.tres) sheet has no source file (and the generated text often
+## declares a class_name, which can't safely be written to a throwaway), so point the user at Save
+## As… → .gd; the in-dock panel + Copy stay available for read-only viewing.
+func _open_generated_in_godot() -> void:
+    if _current_sheet == null or _current_sheet.external_source_path.is_empty():
+        _set_status("Open in Godot opens the .gd source — Save As… this sheet as a .gd to open its generated code in Godot (or use Copy).", true)
+        return
+    _open_gdscript_path_in_godot(_current_sheet.external_source_path)
+
+## "Open in Godot" for the selected custom-ACE provider script (a real res:// .gd).
+func _on_provider_open_in_godot_pressed() -> void:
+    if _provider_list == null:
+        return
+    var selected: PackedInt32Array = _provider_list.get_selected_items()
+    if selected.is_empty():
+        _set_status("Select a provider script first, then Open in Godot.", true)
+        return
+    _open_gdscript_path_in_godot(_provider_list.get_item_text(selected[0]))
 
 func _open_lift_report() -> void:
     var report: Array[Dictionary] = EventSheetLiftReport.for_sheet(_current_sheet)
