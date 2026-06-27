@@ -94,6 +94,8 @@ func _compile(sheet: EventSheetResource, tres_path: String, gd_path: String) -> 
 	EventSheetACELifter.lift_event_bodies(sheet)
 	# @ace_trigger signal blocks -> SignalRow trigger rows (relocated to the signal prelude).
 	EventSheetACELifter.lift_signal_declarations(sheet, false)
+	# Class-level helper `func` blocks -> EventFunction rows (exposed ones publish as ACEs).
+	EventSheetACELifter.lift_function_declarations(sheet, false)
 	# Deterministic row uids so rebuilding an unchanged showcase is byte-identical (no diff
 	# churn) — same fix the behavior-pack builder uses.
 	PackLib._assign_stable_uids(sheet)

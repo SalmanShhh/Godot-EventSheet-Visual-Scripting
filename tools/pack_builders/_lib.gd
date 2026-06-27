@@ -28,6 +28,12 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 	# relocate to the compiler's signal prelude — behaviour-identical, so the regenerated .gd stays
 	# self-consistent (drift=0); only the cosmetic position of the signal lines changes.
 	EventSheetACELifter.lift_signal_declarations(sheet, false)
+	# Helper functions authored as a class-level code block (`## @ace_condition … func is_moving()`,
+	# private `func _perform_jump()`) become EventFunction rows — exposed ones publish as ACEs, private
+	# ones stay un-exposed. Exposed functions gain the sheet's `@ace_icon` (the published condition/
+	# expression shows the behaviour icon in the picker), a deliberate cosmetic change to the generated
+	# .gd; drift stays 0 because the .tres and .gd regenerate together.
+	EventSheetACELifter.lift_function_declarations(sheet, false)
 	# Stamp DETERMINISTIC row UIDs before saving. EventRow/EventGroup otherwise mint a random
 	# uid in _init(), so every regeneration churns the .tres of EVERY pack — exploding git
 	# diffs even for packs that did not change. Deriving the uid from the row's structural

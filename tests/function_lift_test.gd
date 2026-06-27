@@ -86,13 +86,19 @@ static func run() -> bool:
 	for row in pack.events:
 		if row is RawCodeRow and (row as RawCodeRow).code.begins_with("func "):
 			pack_function_blocks.append((row as RawCodeRow).code.split("\n")[0])
-	# The enriched platformer uses the annotated-vocabulary pattern (conditions/expressions/
-	# helpers as @ace_* method blocks, like the spring pack), so external import keeps every
-	# method as its own provenance-preserving block row rather than lifting EventFunctions.
-	# What matters: the exposed ACE methods survive AND the whole file round-trips byte-exact.
-	all_passed = _check("behavior pack keeps its exposed ACE methods (as blocks)",
-		pack_function_blocks.has("func jump() -> void:")
-		and pack_function_blocks.has("func set_move_speed(speed: float) -> void:"), true) and all_passed
+	# The enriched platformer authors its conditions/expressions/helpers as @ace_* method blocks; the
+	# build-time function-lift turns them into EventFunction rows (exposed functions gain the sheet's
+	# @ace_icon, so external import round-trips byte-exact), so they recover as exposed sheet functions
+	# (jump, Is Moving, Can Jump…) and the private _perform_jump as an un-exposed one — not code blocks.
+	var pack_function_names: Array[String] = []
+	for pack_fn in pack.functions:
+		if pack_fn is EventFunction:
+			pack_function_names.append((pack_fn as EventFunction).function_name)
+	all_passed = _check("behavior pack lifts its exposed ACE methods to EventFunctions",
+		pack_function_names.has("jump") and pack_function_names.has("set_move_speed")
+		and pack_function_names.has("is_moving") and pack_function_names.has("can_jump"), true) and all_passed
+	all_passed = _check("the private helper lifts as an un-exposed function",
+		pack_function_names.has("_perform_jump"), true) and all_passed
 	# _enter_tree is the behavior host-binding scaffold — external emission keeps the prelude
 	# verbatim (it never synthesizes the host block), so it must stay a block.
 	all_passed = _check("the host-binding scaffold stays a block",

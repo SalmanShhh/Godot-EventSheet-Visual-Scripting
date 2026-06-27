@@ -23,8 +23,15 @@ signals were hand-written `## @ace_trigger` code blocks. Both now de-code automa
 - **Zero-arg `signal.emit()` lifts to an Emit Signal row.** The reverse-match now accepts an empty
   argument list, so `landed.emit()` / `jump()` / `super()` reverse-lift to Emit Signal / Call rows
   instead of staying code (byte-safe — an empty match can only land on a literal `()`).
-- Covered by `event_body_lift_test` and `signal_row_lift_test`; all 31 packs + showcases regenerate
-  byte-stable (drift = 0).
+- **Helper functions become Function rows.** A behaviour's class-level `func` block — exposed
+  `@ace_condition`/`@ace_expression` methods (Is Moving, Can Jump…) *and* private helpers — lifts into
+  `EventFunction` rows (`lift_function_declarations`). The Platformer Movement pack is now **fully
+  code-free**: signals + one if/else event + 13 Function rows, no RawCode. Exposed functions gain the
+  sheet's `@ace_icon` (their picker entries show the behaviour icon); `return <expr>` bodies de-code
+  via the **Return Value** ACE; a private helper's leading comment relocates into its body so nothing
+  is lost. Opening the regenerated `.gd` recovers all of it byte-identically.
+- Covered by `event_body_lift_test`, `signal_row_lift_test`, `function_declaration_lift_test`; all 31
+  packs + showcases regenerate byte-stable (drift = 0).
 
 ### Added — Behaviour class descriptions
 

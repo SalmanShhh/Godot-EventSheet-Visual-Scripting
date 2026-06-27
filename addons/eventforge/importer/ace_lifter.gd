@@ -368,6 +368,105 @@ static func _parse_signal_line(line: String) -> Dictionary:
 		return {"name": name, "params": params}
 	return {"name": rest, "params": params}
 
+## Converts hand-written `func` declarations inside top-level RawCode rows into EventFunction rows,
+## reusing the importer's _lift_sheet_function (so a `## @ace_*` block exposes the function as an
+## ACE, and a plain helper becomes an un-exposed function). This is what makes a behaviour's helper
+## functions (Is Moving, Can Jump, _perform_jump…) read as Function rows instead of one code block.
+## At pack-build time the .gd regenerates (byte_gated=false) — exposed functions gain the sheet's
+## `@ace_icon`; the importer calls it byte_gated=true. Returns the number of functions lifted.
+static func lift_function_declarations(sheet: EventSheetResource, byte_gated: bool = false) -> int:
+	if sheet == null or sheet.events.is_empty():
+		return 0
+	var verify_path: String = "user://_eventforge_function_verify.gd"
+	var before: String = ""
+	if byte_gated:
+		before = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+	var new_events: Array[Resource] = []
+	var harvested: Array = []
+	for item: Variant in sheet.events:
+		if item is RawCodeRow:
+			var split: Dictionary = _split_function_declarations(item as RawCodeRow)
+			for produced: Variant in split.get("functions", []):
+				harvested.append(produced)
+			var remainder: Variant = split.get("remainder")
+			if remainder != null:
+				new_events.append(remainder as Resource)
+		else:
+			new_events.append(item as Resource)
+	if harvested.is_empty():
+		return 0
+	var backup_events: Array[Resource] = sheet.events.duplicate()
+	var backup_functions: Array[Resource] = sheet.functions.duplicate()
+	sheet.events = new_events
+	for produced: Variant in harvested:
+		sheet.functions.append(produced as Resource)
+	if byte_gated:
+		var after: String = str(SheetCompiler.compile(sheet, verify_path).get("output", ""))
+		if after != before:
+			sheet.events = backup_events
+			sheet.functions = backup_functions
+			return 0
+	return harvested.size()
+
+## Splits one RawCode block into [EventFunction…, remainder RawCode]: each `func …:` block (with its
+## preceding `## @ace_*` annotations) becomes an EventFunction; a plain `#` comment above an
+## un-annotated function relocates into the function body so nothing is lost. Lines that aren't part
+## of a liftable function stay in the verbatim remainder.
+static func _split_function_declarations(raw: RawCodeRow) -> Dictionary:
+	var src: PackedStringArray = raw.code.split("\n")
+	var remainder: PackedStringArray = PackedStringArray()
+	var functions: Array = []
+	var i: int = 0
+	while i < src.size():
+		var line: String = src[i]
+		if line.begins_with("func ") and line.strip_edges().ends_with(":"):
+			var function_lines: PackedStringArray = PackedStringArray([line])
+			var k: int = i + 1
+			while k < src.size() and (src[k].strip_edges().is_empty() or src[k].begins_with("\t") or src[k].begins_with(" ")):
+				function_lines.append(src[k])
+				k += 1
+			while function_lines.size() > 1 and function_lines[function_lines.size() - 1].strip_edges().is_empty():
+				function_lines.remove_at(function_lines.size() - 1)
+			# Pull the contiguous comment/annotation block that precedes the function off the remainder.
+			var lead: PackedStringArray = PackedStringArray()
+			while remainder.size() > 0 and remainder[remainder.size() - 1].strip_edges().begins_with("#"):
+				lead.insert(0, remainder[remainder.size() - 1])
+				remainder.remove_at(remainder.size() - 1)
+			while remainder.size() > 0 and remainder[remainder.size() - 1].strip_edges().is_empty():
+				remainder.remove_at(remainder.size() - 1)
+			var ace_block: PackedStringArray = PackedStringArray()
+			var plain_comments: PackedStringArray = PackedStringArray()
+			for lead_line: String in lead:
+				if lead_line.strip_edges().begins_with("##"):
+					ace_block.append(lead_line)
+				else:
+					plain_comments.append(lead_line.strip_edges().trim_prefix("#").strip_edges())
+			var annotations: Dictionary = _parse_annotations("\n".join(ace_block)) if not ace_block.is_empty() else {}
+			var lift: Dictionary = _lift_sheet_function(function_lines, annotations)
+			if bool(lift.get("ok", false)):
+				var event_function: EventFunction = lift.get("function") as EventFunction
+				if not plain_comments.is_empty():
+					var comment_row: CommentRow = CommentRow.new()
+					comment_row.text = "\n".join(plain_comments)
+					event_function.events.insert(0, comment_row)
+				functions.append(event_function)
+				i = k
+				continue
+			for lead_line: String in lead:
+				remainder.append(lead_line)
+			for function_line: String in function_lines:
+				remainder.append(function_line)
+			i = k
+			continue
+		remainder.append(line)
+		i += 1
+	var out: Dictionary = {"functions": functions, "remainder": null}
+	if not "\n".join(remainder).strip_edges().is_empty():
+		var remainder_row: RawCodeRow = RawCodeRow.new()
+		remainder_row.code = "\n".join(remainder)
+		out["remainder"] = remainder_row
+	return out
+
 ## Collects EventRows whose body is exactly one verbatim RawCode block (the un-converted shape:
 ## a single RawCodeRow action and no sub-events). Recurses through sub-events and groups so a
 ## nested single-block tick lifts too.
