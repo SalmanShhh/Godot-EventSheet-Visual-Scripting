@@ -46,6 +46,10 @@ class_name EventSheetResource
 ## Optional icon for the custom node type (emitted as `@icon("path")`; shown in the Create
 ## Node dialog and scene tree). 16×16 SVG recommended, like engine icons.
 @export_file("*.svg", "*.png") var custom_class_icon: String = ""
+## Optional behaviour/class description. Emitted as a `##` documentation comment right after the
+## `extends` line, so Godot shows it for the custom node type (Create Node dialog tooltip + the
+## script doc). Multi-line is supported; round-trips through the importer. Plain prose, no @tags.
+@export_multiline var class_description: String = ""
 @export var events: Array[Resource] = []
 @export var variables: Dictionary = {}
 ## Compile-time includes (C3-style): paths to other event sheets (res://….tres) whose

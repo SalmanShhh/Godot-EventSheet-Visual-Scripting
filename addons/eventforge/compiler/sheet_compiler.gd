@@ -116,6 +116,11 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		lines.append("extends Node")
 	else:
 		lines.append("extends %s" % sheet.host_class)
+	# Class description: a `##` doc comment immediately after `extends` (Godot's class-doc position),
+	# so a behaviour/custom node shows its blurb in the Create Node dialog. The importer recovers the
+	# `##` block right after `extends`, so it round-trips byte-identically.
+	for description_line: String in _class_description_lines(sheet):
+		lines.append(description_line)
 
 	var source_map: Array = result["source_map"]
 	if sheet.behavior_mode:
@@ -1411,6 +1416,16 @@ static func _emit_enum_line(enum_row: EnumRow) -> String:
 
 ## Canonical single-line signal emission ("" when unnamed/disabled). The importer's
 ## verify-lift depends on this exact form.
+## Class description as `## …` doc lines (one per source line; a blank line emits a bare `##`),
+## or empty when unset. Recovered by the importer right after `extends`, so it round-trips.
+static func _class_description_lines(sheet: EventSheetResource) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	if sheet == null or sheet.class_description.strip_edges().is_empty():
+		return out
+	for line: String in sheet.class_description.split("\n"):
+		out.append("##" if line.is_empty() else "## %s" % line)
+	return out
+
 static func _emit_signal_line(signal_row: SignalRow) -> String:
 	if signal_row == null or not signal_row.enabled or signal_row.signal_name.strip_edges().is_empty():
 		return ""

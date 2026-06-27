@@ -103,6 +103,24 @@ func import_external_source(source: String) -> EventSheetResource:
 		var icon_match: RegExMatch = icon_regex.search(source)
 		if icon_match != null:
 			sheet.custom_class_icon = icon_match.get_string(1)
+	# Recover the class description: the `##` doc block immediately after `extends` (no blank
+	# between). The host-member doc and signal annotations are separated from `extends` by a blank
+	# line, so they never match. Metadata only in external mode (the lines stay verbatim).
+	var description_regex: RegEx = RegEx.new()
+	if description_regex.compile("(?m)^extends .+\\n((?:##.*\\n)+)") == OK:
+		var description_match: RegExMatch = description_regex.search(source)
+		if description_match != null:
+			var doc_lines: PackedStringArray = PackedStringArray()
+			for doc_line: String in description_match.get_string(1).split("\n"):
+				if doc_line == "##":
+					doc_lines.append("")
+				elif doc_line.begins_with("## "):
+					doc_lines.append(doc_line.substr(3))
+				elif doc_line.begins_with("##"):
+					doc_lines.append(doc_line.substr(2))
+			while not doc_lines.is_empty() and doc_lines[doc_lines.size() - 1].is_empty():
+				doc_lines.remove_at(doc_lines.size() - 1)
+			sheet.class_description = "\n".join(doc_lines)
 	var host_regex: RegEx = RegEx.new()
 	if source.contains("\nextends Node\n") and host_regex.compile("(?m)^var host: ([A-Za-z_][A-Za-z0-9_]*) = null$") == OK:
 		var host_match: RegExMatch = host_regex.search(source)
