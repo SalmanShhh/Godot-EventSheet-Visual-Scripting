@@ -30,6 +30,8 @@ _preview.png
 _preview.png.import
 _picker_preview.png
 _picker_preview.png.import
+_code_dialog_preview.png
+_code_dialog_preview.png.import
 # Generated codegen artifact written by the non-headless render harnesses
 event_sheet_generated.gd
 

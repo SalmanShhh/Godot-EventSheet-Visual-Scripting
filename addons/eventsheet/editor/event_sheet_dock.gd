@@ -3365,10 +3365,19 @@ func _ensure_raw_code_dialog() -> void:
         return
     _raw_code_dialog = ConfirmationDialog.new()
     _raw_code_dialog.title = "Edit GDScript Block"
-    var layout_box: VBoxContainer = VBoxContainer.new()
-    layout_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    # Standard popup margins, consistent with the other plugin dialogs.
+    var layout_box: VBoxContainer = EventSheetPopupUI.form_box()
+    layout_box.custom_minimum_size = Vector2(640.0, 0.0)
+    layout_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    layout_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    # The hint + lint labels are autowrap but WIDTH-BOUNDED (custom_minimum_size.x): a
+    # ConfirmationDialog sizes to its content's minimum, and an UNBOUNDED autowrap label reports a
+    # runaway min height during the initial zero-width pass (it wraps to one glyph per line), which
+    # ballooned this popup to thousands of px tall on launch. Bounding the width makes the min-size
+    # pass wrap at a sane width while still letting long lint errors wrap at runtime.
     _raw_code_hint = Label.new()
     _raw_code_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _raw_code_hint.custom_minimum_size = Vector2(620.0, 0.0)
     layout_box.add_child(_raw_code_hint)
     _raw_code_edit = CodeEdit.new()
     _raw_code_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -3384,8 +3393,9 @@ func _ensure_raw_code_dialog() -> void:
     layout_box.add_child(_raw_code_edit)
     _raw_code_lint_label = Label.new()
     _raw_code_lint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _raw_code_lint_label.custom_minimum_size = Vector2(620.0, 0.0)
     layout_box.add_child(_raw_code_lint_label)
-    _raw_code_dialog.add_child(layout_box)
+    _raw_code_dialog.add_child(EventSheetPopupUI.margined(layout_box))
     _raw_code_dialog.confirmed.connect(_on_raw_code_dialog_confirmed)
     add_child(_raw_code_dialog)
 
@@ -4692,6 +4702,8 @@ func _open_shortcuts_help() -> void:
         var intro: Label = Label.new()
         intro.text = "Click a shortcut, then press the new key combination (Esc cancels). Custom keys are saved per-user, not in the project."
         intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        # Width-bound so the autowrap label can't report a runaway min height and balloon the dialog.
+        intro.custom_minimum_size = Vector2(500.0, 0.0)
         outer.add_child(intro)
         var scroll: ScrollContainer = ScrollContainer.new()
         scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -5428,6 +5440,8 @@ func _ensure_with_node_dialog() -> void:
     var hint: Label = Label.new()
     hint.text = "Actions in this event act on this node instead of the host.\nUse $Enemy, get_node(\"UI/Score\"), or a variable. Leave blank to act on this node."
     hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    # Width-bound so the autowrap label can't report a runaway min height and balloon the dialog.
+    hint.custom_minimum_size = Vector2(420.0, 0.0)
     form.add_child(hint)
     _with_node_target_edit = LineEdit.new()
     _with_node_target_edit.placeholder_text = "$Enemy"
@@ -5607,6 +5621,8 @@ func _ensure_sheet_type_dialog() -> void:
     var hint: Label = Label.new()
     hint.text = "Custom nodes appear in Godot's Create Node dialog with their icon.\nBehaviors attach as child nodes and act on their parent via the typed `host` accessor."
     hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    # Width-bound so the autowrap label can't report a runaway min height and balloon the dialog.
+    hint.custom_minimum_size = Vector2(420.0, 0.0)
     form.add_child(hint)
     _sheet_type_dialog.add_child(form)
     _sheet_type_dialog.confirmed.connect(_on_sheet_type_confirmed)
@@ -6605,6 +6621,10 @@ func _build_welcome_window() -> void:
     box.add_theme_constant_override("separation", 10)
     var blurb: Label = Label.new()
     blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    # Width-bound the autowrap label itself: the parent box's custom_minimum_size.x does NOT bound a
+    # child's min-height pass, so without this the label wraps to one glyph per line at width 0 and
+    # balloons this AcceptDialog (it sizes to content min) to thousands of px tall on first launch.
+    blurb.custom_minimum_size = Vector2(440.0, 0.0)
     blurb.text = "Event sheets that compile to plain GDScript — zero runtime, performance parity, and every sheet shows you its honest generated code."
     box.add_child(blurb)
     var showcase_button: Button = Button.new()
@@ -6631,6 +6651,7 @@ func _build_welcome_window() -> void:
     var docs_label: Label = Label.new()
     docs_label.text = "Coming from another event-sheet tool? The migration guide in docs/ maps the vocabulary.\nReopen this window any time: Tools → Welcome…"
     docs_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    docs_label.custom_minimum_size = Vector2(440.0, 0.0)  # width-bound (see blurb above) so it can't balloon the dialog
     docs_label.add_theme_font_size_override("font_size", 11)
     box.add_child(docs_label)
     margin.add_child(box)
@@ -7980,6 +8001,9 @@ func _prompt_convert_global_variable_to_local(entry: Dictionary) -> void:
     var summary: Label = Label.new()
     summary.text = "Select the target event for local variable %s." % str(entry.get("name", ""))
     summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    # Width-bound the label itself — the parent VBox's custom_minimum_size.x does not bound the
+    # child's min-height pass, so an unbounded autowrap label would balloon this dialog on launch.
+    summary.custom_minimum_size = Vector2(400.0, 0.0)
     content.add_child(summary)
     var picker: OptionButton = OptionButton.new()
     picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL

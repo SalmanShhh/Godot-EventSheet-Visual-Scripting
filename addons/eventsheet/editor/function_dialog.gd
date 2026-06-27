@@ -137,6 +137,9 @@ func init_dialog(parent_node: Node) -> void:
 
 	_problem_label = Label.new()
 	_problem_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# Width-bound so the autowrap label can't report a runaway min height and balloon the dialog
+	# when it becomes visible on a validation error (the form is 520 wide).
+	_problem_label.custom_minimum_size = Vector2(500.0, 0.0)
 	_problem_label.visible = false
 	_problem_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
 	form.add_child(_problem_label)
