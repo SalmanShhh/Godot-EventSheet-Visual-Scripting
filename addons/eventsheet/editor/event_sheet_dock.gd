@@ -91,7 +91,7 @@ var _preview_title: Label = null
 var _preview_list: ItemList = null
 var _global_var_list: ItemList = null
 var _local_var_list: ItemList = null
-## Functions overview (Construct-style): every sheet function at a glance, atop the GDScript panel.
+## Functions overview (event-sheet-style): every sheet function at a glance, atop the GDScript panel.
 var _functions_list: ItemList = null
 var _functions_menu: PopupMenu = null
 
@@ -290,7 +290,7 @@ func _update_active_tab_title() -> void:
 
 func _format_tab_title(sheet: EventSheetResource, path: String, dirty: bool) -> String:
     var title: String = _format_sheet_title(sheet, path)
-    # Sheet-type badges: ⚙ behavior, ◆ custom node (C3 users expect typed tabs).
+    # Sheet-type badges: ⚙ behavior, ◆ custom node (event-sheet users expect typed tabs).
     if sheet != null and sheet.behavior_mode:
         title = "⚙ " + title
     elif sheet != null and not sheet.custom_class_name.strip_edges().is_empty():
@@ -598,7 +598,7 @@ func _build_ui() -> void:
     add_child(root)
 
     # Toolbar redesign: grouped by purpose (Sheet / Add / Edit / View / Tools menus)
-    # with only the high-frequency C3 reflexes as one-click buttons — and it FLOWS to
+    # with only the high-frequency reflexes as one-click buttons — and it FLOWS to
     # a second row instead of clipping when the panel is narrow (the old single HBox
     # of ~28 controls overflowed past the panel edge).
     _toolbar = HFlowContainer.new()
@@ -644,7 +644,7 @@ func _build_ui() -> void:
     _add_toolbar_button("Save", _on_save_requested, "Save the sheet — compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
     _add_toolbar_button("Run Scene", _run_from_sheet, "Save, then play the scene that uses this sheet's script.", "Play")
     _add_toolbar_separator()
-    # The C3 reflexes stay one click (E / C / A on the keyboard).
+    # The core reflexes stay one click (E / C / A on the keyboard).
     _add_toolbar_button("Add Event", _on_add_event_requested, "Add an event (E).", "Add")
     _add_toolbar_button("Add Condition", _on_add_condition_requested, "Add a condition to the selected event (C).", "MemberConstant")
     _add_toolbar_button("Add Action", _on_add_action_requested, "Add an action to the selected event (A).", "MemberMethod")
@@ -809,7 +809,7 @@ func _build_ui() -> void:
     _populate_theme_picker()
     _quick_add_edit = LineEdit.new()
     _quick_add_edit.placeholder_text = "Quick add…  (e.g. every tick, heal 5)"
-    _quick_add_edit.tooltip_text = "C3-style quick add: type an event/condition/action (C3 phrasing works) plus optional parameter values, press Enter."
+    _quick_add_edit.tooltip_text = "Event-sheet-style quick add: type an event/condition/action (event-sheet phrasing works) plus optional parameter values, press Enter."
     _quick_add_edit.custom_minimum_size = Vector2(190.0, 0.0)
     _quick_add_edit.text_submitted.connect(func(text: String) -> void:
         if _quick_add(text):
@@ -1143,7 +1143,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
     var shift: bool = key_event.shift_pressed
     # Rebindable shortcuts (EventSheetShortcuts — edit via Tools ▸ Keyboard Shortcuts, saved per-user):
     # exact modifier matching, so a chord never shadows its plain form. Entries:
-    # [action, suppressed-while-typing, handler]. C3 reflexes by default: E event,
+    # [action, suppressed-while-typing, handler]. Core reflexes by default: E event,
     # C condition, A action, Q comment, G group, X toggle.
     for entry: Array in [
         ["add_condition_chord", true, _on_add_condition_requested],
@@ -2207,7 +2207,7 @@ func _assign_fresh_event_uids(row: EventRow) -> void:
     row.event_uid = EventRow._generate_short_uid()
     # Stateful conditions (Every X Seconds…): the COPY must own its own accumulator —
     # re-bake the member uid across all four baked fields, or both timers silently
-    # share one member (C3 copies are independent timers).
+    # share one member (copies are independent timers).
     for condition: Variant in row.conditions:
         if condition is ACECondition and not (condition as ACECondition).member_declaration.is_empty():
             var stateful: ACECondition = condition as ACECondition
@@ -2404,7 +2404,7 @@ func _on_add_local_variable_requested() -> void:
         context["selected_resource"] = target_event
     _variable_dlg.open_for_edit("local", context, "", "int", "", false, "Create Variable")
 
-## Appends an in-flow GDScript block to the right-clicked event's actions (C3-style inline
+## Appends an in-flow GDScript block to the right-clicked event's actions (event-sheet-style inline
 ## scripting: statements emitted inside the event body).
 func _add_gdscript_action_to_context_row() -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
@@ -2463,7 +2463,7 @@ func _on_ace_params_back_requested(definition: ACEDefinition, context: Dictionar
     var signals_only: bool = bool(context.get("signals_only", false))
     var selected_resource: Resource = context.get("selected_resource", null)
     # Preselect the ACE you were editing so Back lands on it in the picker (swap it, or re-pick the
-    # same one to tweak params) — matching C3's edit-and-swap.
+    # same one to tweak params) — matching the edit-and-swap.
     if definition != null:
         context["preselect_ace_id"] = definition.id
     _ace_picker.open(mode, signals_only, selected_resource, context)
@@ -3111,7 +3111,7 @@ func _ensure_code_panel() -> void:
     _side_panel.custom_minimum_size = Vector2(360.0, 0.0)
     _side_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _side_panel.visible = false
-    # Functions overview (Construct's function list): every sheet function at a glance, so they're
+    # Functions overview (the function list): every sheet function at a glance, so they're
     # discoverable without scrolling the rows. ＋ opens the function dialog; right-click deletes.
     var functions_header: HBoxContainer = HBoxContainer.new()
     var functions_title: Label = Label.new()
@@ -3605,7 +3605,7 @@ func _on_enum_dialog_confirmed() -> void:
 
 ## Whole-word renames a variable across everything that embeds GDScript text — ACE params,
 ## GDScript blocks (class-level, in-flow, function bodies), and pick-filter expressions —
-## so a rename never silently breaks compiled code (C3-style refactor safety).
+## so a rename never silently breaks compiled code (event-sheet-style refactor safety).
 ## Returns the number of replacements. Call inside the same undoable edit as the rename.
 func _rename_variable_references(old_name: String, new_name: String) -> int:
     if old_name.is_empty() or old_name == new_name or _current_sheet == null:
@@ -4199,7 +4199,7 @@ func _sync_split_sheet() -> void:
     if _detached_viewport != null:
         _detached_viewport.set_sheet(_current_sheet)
 
-# ── Export as Addon Pack (C3 coverage Phase C) ─# ── Export as Addon Pack (C3 coverage Phase C) ────────────────────────────────────────
+# ── Export as Addon Pack (coverage Phase C) ─# ── Export as Addon Pack (coverage Phase C) ────────────────────────────────────────
 
 ## One-click addon publishing: writes the current behavior sheet (+ compiled script) into
 ## eventsheet_addons/<class_snake>/ where the zero-config scanner publishes its ACEs
@@ -4306,7 +4306,7 @@ func _toggle_event_trace() -> void:
                 pane.set_fired_events(PackedStringArray())
         _set_status("Event Trace OFF (recompile to remove the instrumentation).")
 
-# ── Single-param inline editing (C3's fastest gesture) ───────────────────────────────
+# ── Single-param inline editing (the fastest gesture) ───────────────────────────────
 var _param_edit_popup: PopupPanel = null
 var _param_edit_field: LineEdit = null
 var _param_edit_target: Resource = null
@@ -4512,7 +4512,7 @@ func _toggle_group_runtime() -> void:
         _refresh_after_edit()
         _mark_dirty("Group \"%s\" is %s — Set Group Active targets \"%s\"." % [group.group_name, "runtime-toggleable" if group.runtime_toggleable else "compile-time only again", group.group_name.to_snake_case()])
 
-## C3-style group colors: tint the selected group's accent/background (clear = theme).
+## Event-sheet-style group colors: tint the selected group's accent/background (clear = theme).
 func _open_group_color_picker() -> void:
     var target: Resource = _context_row.source_resource if _context_row != null else null
     if not (target is EventGroup):
@@ -5029,11 +5029,11 @@ func _apply_editor_native_defaults(apply_zoom: bool = true) -> void:
         if editor_scale > 1.01:
             _viewport.set_zoom_factor(editor_scale)
 
-# ── Quick-add bar (C3 "type to insert") ──────────────────────────────────────
+# ── Quick-add bar ("type to insert") ──────────────────────────────────────
 var _quick_add_edit: LineEdit = null
 
 ## Best ACE for a quick-add query. Leading words match a definition (display name / id,
-## with the picker's C3 synonym phrasing honored); trailing words fill its parameters
+## with the picker's synonym phrasing honored); trailing words fill its parameters
 ## positionally as raw values. Returns {definition, params} or {}.
 func _quick_match(query: String) -> Dictionary:
     var text: String = query.strip_edges().to_lower()
@@ -5099,7 +5099,7 @@ func _quick_add(query: String) -> bool:
     _apply_ace_definition(definition, matched.get("params", {}), context)
     return true
 
-# ── Pick-filter dialog (C3 "for each" picking) ───────────────────────────────
+# ── Pick-filter dialog ("for each" picking) ───────────────────────────────
 var _pick_dialog: ConfirmationDialog = null
 var _pick_iterator_edit: LineEdit = null
 var _pick_kind_option: OptionButton = null
@@ -5164,7 +5164,7 @@ func _ensure_pick_dialog() -> void:
     _pick_desc_check.text = "Descending (highest first)"
     form.add_child(_pick_desc_check)
     var preset_label: Label = Label.new()
-    preset_label.text = "C3 presets (loops & picking)"
+    preset_label.text = "Presets (loops & picking)"
     preset_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     preset_label.custom_minimum_size = Vector2(380.0, 0.0)
     form.add_child(preset_label)
@@ -5216,7 +5216,7 @@ func _pick_option_to_kind(option: int) -> int:
         _:
             return PickFilter.CollectionKind.EXPRESSION
 
-## C3 presets: each fills the pick-filter fields with the matching loop/picking shape
+## Presets: each fills the pick-filter fields with the matching loop/picking shape
 ## (everything still compiles to plain for/while loops — see _emit_pick_filters).
 func _apply_pick_preset(index: int) -> void:
     match index:
@@ -5489,7 +5489,7 @@ func _locate_owning_event(rows: Array, target: Resource) -> EventRow:
                 return found
     return null
 
-## Comment row → action-cell comment of the nearest EventRow ABOVE it (C3's "comment in
+## Comment row → action-cell comment of the nearest EventRow ABOVE it (the "comment in
 ## the actions"). The reverse of _detach_comment_to_row.
 func _attach_comment_to_event_above(comment_row: CommentRow) -> void:
     if _current_sheet == null or comment_row == null:
@@ -5539,7 +5539,7 @@ func _detach_comment_to_row(comment_row: CommentRow) -> void:
         _mark_dirty("Comment detached to its own row.")
 
 # ── Sheet Type dialog (Event Sheet / Custom Node / Behavior) ────────────────
-# Discoverable alternative to the Inspector fields: matches C3's "Add behavior" mental
+# Discoverable alternative to the Inspector fields: matches the "Add behavior" mental
 # model while writing the same sheet properties Godot users see in the Inspector.
 var _sheet_type_dialog: ConfirmationDialog = null
 var _sheet_type_option: OptionButton = null
@@ -6236,7 +6236,7 @@ func _confirm_rename() -> void:
         _rename_window.hide()
 
 ## The create-variable quick-fix behind the params dialog's "+ var" button: declares
-## the identifier as a float (the C3 "number" default — retype via Edit Variable) so
+## the identifier as a float (the "number" default — retype via Edit Variable) so
 ## the expression lints clean without leaving the dialog.
 func _create_variable_quickfix(variable_name: String) -> bool:
     if _current_sheet == null or not variable_name.is_valid_identifier() or _current_sheet.variables.has(variable_name):
@@ -6348,7 +6348,7 @@ func _refresh_clone_uids(resource: Resource) -> void:
             if child is Resource:
                 _refresh_clone_uids(child as Resource)
 
-# ── Asset drops with intent (the C3 drag-into-layout reflex, grafted onto events):
+# ── Asset drops with intent (the drag-into-layout reflex, grafted onto events):
 # a scene dropped on an event row spawns, a sound plays — pre-filled, undoable. ───────
 
 func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -> void:
@@ -6548,7 +6548,7 @@ func _apply_function_data(data: Dictionary) -> void:
         event_function.expose_as_ace = bool(data.get("expose", false))
         event_function.ace_display_name = str(data.get("ace_display_name", ""))
         event_function.ace_category = str(data.get("ace_category", ""))
-        # "Run only when" guards: the body runs inside an `if <guards>:` — a Construct-style
+        # "Run only when" guards: the body runs inside an `if <guards>:` — an event-sheet-style
         # function gate (e.g. only act when a node setting is enabled). Each expression becomes an
         # Expression Is True condition on a wrapper row the body actions are authored under.
         var guards: PackedStringArray = PackedStringArray(data.get("guards", PackedStringArray()))
@@ -6629,7 +6629,7 @@ func _build_welcome_window() -> void:
     box.add_child(native_check)
     _welcome_window.set_meta("native_check", native_check)
     var docs_label: Label = Label.new()
-    docs_label.text = "Coming from Construct? docs/C3-MIGRATION-GUIDE.md maps the vocabulary.\nReopen this window any time: Tools → Welcome…"
+    docs_label.text = "Coming from another event-sheet tool? The migration guide in docs/ maps the vocabulary.\nReopen this window any time: Tools → Welcome…"
     docs_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     docs_label.add_theme_font_size_override("font_size", 11)
     box.add_child(docs_label)
@@ -6904,12 +6904,12 @@ func _context_ace_resource(lane: String) -> Resource:
         return event_row.conditions[ace_index] if ace_index >= 0 and ace_index < event_row.conditions.size() else null
     return event_row.actions[ace_index] if ace_index >= 0 and ace_index < event_row.actions.size() else null
 
-# ── Per-ACE comments (C3 condition/action notes) ──────────────────────────────────────
+# ── Per-ACE comments (condition/action notes) ──────────────────────────────────────
 var _ace_comment_dialog: ConfirmationDialog = null
 var _ace_comment_edit: LineEdit = null
 var _ace_comment_target: Resource = null
 
-## C3-style per-condition/action note: shown dimmed after the ACE text in the sheet.
+## Event-sheet-style per-condition/action note: shown dimmed after the ACE text in the sheet.
 func _open_ace_comment_dialog(target: Resource) -> void:
     if target == null:
         _set_status("Right-click a condition or action to comment it.", true)
@@ -6940,7 +6940,7 @@ func _on_ace_comment_confirmed() -> void:
         _refresh_after_edit()
         _mark_dirty("ACE comment saved.")
 
-# ── Starter templates (C3 "new from template") ─────────────────────────────────────────
+# ── Starter templates ("new from template") ─────────────────────────────────────────
 var _template_menu: PopupMenu = null
 
 func _open_template_menu() -> void:
@@ -6984,7 +6984,7 @@ static func _build_behavior_component_starter() -> EventSheetResource:
     sheet.custom_class_name = "PickupBehavior"
     sheet.variables = {"value": {"type": "int", "default": 1, "exported": true}}
     var about: CommentRow = CommentRow.new()
-    about.text = "[b]Behavior Component[/b] — Godot's answer to a Construct behavior. Instead of one big sheet on the root, this is a small reusable piece you ATTACH as a child of the node it controls (here, an Area2D pickup); it compiles to a Node, and [code]host[/code] is the node it is attached to.\nIt REACTS to a signal (the host's body_entered) instead of checking every frame, and EMITS its own (On Collected) so other sheets stay decoupled. [code]value[/code] is a designer knob in the Inspector."
+    about.text = "[b]Behavior Component[/b] — Godot's answer to a node-attached behavior. Instead of one big sheet on the root, this is a small reusable piece you ATTACH as a child of the node it controls (here, an Area2D pickup); it compiles to a Node, and [code]host[/code] is the node it is attached to.\nIt REACTS to a signal (the host's body_entered) instead of checking every frame, and EMITS its own (On Collected) so other sheets stay decoupled. [code]value[/code] is a designer knob in the Inspector."
     sheet.events.append(about)
     var declared_signal: RawCodeRow = RawCodeRow.new()
     declared_signal.code = "## @ace_trigger\n## @ace_name(\"On Collected\")\n## @ace_category(\"Pickup\")\nsignal collected(by: Node, amount: int)"
@@ -7692,7 +7692,7 @@ func _on_variable_dialog_confirmed(
     combo_options: PackedStringArray = PackedStringArray(),
     attributes: Dictionary = {}
 ) -> void:
-    # Guardrail (C3-style): auto-correct what's fixable, block what isn't — BEFORE commit.
+    # Guardrail (event-sheet-style): auto-correct what's fixable, block what isn't — BEFORE commit.
     var sanitized_name: String = EventSheetIdentifierRules.sanitize(var_name)
     if sanitized_name.is_empty() or not EventSheetIdentifierRules.is_valid(sanitized_name):
         _set_status("\"%s\" can't be a variable name (letters/digits/underscores, not a GDScript keyword)." % var_name, true)

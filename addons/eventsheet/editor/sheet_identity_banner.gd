@@ -3,7 +3,7 @@
 #   ⚙ PatrolBehavior — Behavior · acts on host: CharacterBody2D
 #   ◆ PatrollingGuard — Custom Node · extends CharacterBody2D
 # Hidden for plain event sheets. Dual-audience cue (Godot: "custom node with an icon";
-# C3: "behavior attached to an object"); clicking it opens the Sheet Type dialog.
+# event sheets: "behavior attached to an object"); clicking it opens the Sheet Type dialog.
 @tool
 class_name SheetIdentityBanner
 extends Control

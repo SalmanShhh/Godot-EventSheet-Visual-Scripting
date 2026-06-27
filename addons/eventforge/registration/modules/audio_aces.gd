@@ -1,15 +1,15 @@
-# EventForge module — Audio (the C3 Audio addon, the Godot way).
+# EventForge module — Audio (the Audio vocabulary, the Godot way).
 #
-# C3's Audio is a global, tag-based mixer. Godot's idiom is nodes + buses, so the
+# A global, tag-based mixer is one approach; Godot's idiom is nodes + buses, so the
 # vocabulary splits in three, all compiling to plain GDScript (parity contract):
 #   1. FIRE-AND-FORGET one-shots ("Play sound"): a throwaway AudioStreamPlayer(2D) that
-#      frees itself on finish — C3's most common Play call, zero bookkeeping, zero
+#      frees itself on finish — the most common Play call, zero bookkeeping, zero
 #      plugin runtime (the multi-line/{uid} template machinery bakes a private local).
 #   2. PLAYER-SCOPED ACEs (node_type AudioStreamPlayer): attach a sheet/behavior to a
 #      player node for music & controlled playback — play/stop/seek/volume/pitch,
-#      C3's "by tag" control mapped to "by node", the Godot-contextual answer.
-#   3. BUS ACEs (Godot extra, no C3 equivalent): master/SFX/Music volume + mute — what
-#      C3 users build tag-groups for, native here.
+#      "by tag" control mapped to "by node", the Godot-contextual answer.
+#   3. BUS ACEs (Godot extra): master/SFX/Music volume + mute — what
+#      tag-groups stand in for elsewhere, native here.
 #
 # Sound params use hint "audio_path": the params dialog shows a ▶ preview button so you
 # can hear the file before applying (see ACEParamsDialog._create_audio_path_field).
@@ -22,7 +22,7 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	# 1 — Fire-and-forget one-shots (C3 "Play").
+	# 1 — Fire-and-forget one-shots ("Play").
 	descriptors.append(F.make_descriptor("Core", "PlaySound", "Play Sound", ACEDescriptor.ACEType.ACTION,
 		"var __sfx_{uid} = AudioStreamPlayer.new()\n__sfx_{uid}.stream = load({path})\nif __sfx_{uid}.stream == null:\n\t__sfx_{uid}.queue_free()\nelse:\n\t__sfx_{uid}.bus = {bus}\n\t__sfx_{uid}.volume_db = {volume_db}\n\tadd_child(__sfx_{uid})\n\t__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n\t__sfx_{uid}.play()",
 		"", [
@@ -60,7 +60,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "AudioGetPosition", "Playback Position", ACEDescriptor.ACEType.EXPRESSION,
 		"get_playback_position()", "", [], "Audio", "playback position", "AudioStreamPlayer"))
 
-	# 3 — Bus control (Godot extras; C3 users fake these with tag groups).
+	# 3 — Bus control (Godot extras; event-sheet users fake these with tag groups).
 	var bus_param: ACEParam = F.make_param("bus", "String", "\"Master\"", "Bus", "Audio bus name.", "expression")
 	descriptors.append(F.make_descriptor("Core", "SetBusVolume", "Set Bus Volume", ACEDescriptor.ACEType.ACTION,
 		"AudioServer.set_bus_volume_db(AudioServer.get_bus_index({bus}), {db})", "", [

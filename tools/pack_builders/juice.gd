@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Game-feel in one behavior: trauma-based SCREENSHAKE (the idea behind the C3 scroll behavior's
+## Game-feel in one behavior: trauma-based SCREENSHAKE (the idea behind the scroll behavior's
 ## shake, but additive on the camera's offset/rotation so it composes with Godot's camera follow
 ## instead of fighting it), smooth ZOOM (by percent, focus-onto-a-point, or anchored mouse-wheel
 ## style), and volume-preserving SQUASH & STRETCH on the host — which can be a Node2D (sprites) OR a

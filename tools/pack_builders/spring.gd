@@ -3,10 +3,10 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Numeric springing (cleaned-up port of the author's C3 simple_spring addon): NAMED
+## Numeric springing (cleaned-up port of the author's simple_spring addon): NAMED
 ## springs (value/target/velocity each) driven by stiffness + damping + precision, with
 ## impulses, reached-triggers and host-transform conveniences. Mesh deformation from the
-## C3 original is an honest skip (that's shader/skeleton territory in Godot). Exported
+## original is an honest skip (that's shader/skeleton territory in Godot). Exported
 ## properties showcase Inspector attributes (ranges + tooltips) in a shipped pack.
 ## Backed by typed inner classes (SpringEntry / ColorSpringEntry) so the hot integrator
 ## reads typed fields instead of float()-casting an untyped Dictionary every spring, every frame.

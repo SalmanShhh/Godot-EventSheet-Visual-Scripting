@@ -13,7 +13,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# ── Collections (rich variables): curated Dictionary / Array / JSON vocabulary ──
-	# C3 ships these as capability addons; here every op is a direct GDScript one-liner
+	# Event sheets ship these as capability addons; here every op is a direct GDScript one-liner
 	# (parity-safe) and the templates double as GDScript teachers. The long tail stays
 	# one fx away. Variable params use "variable_reference:<Type>" so dropdowns offer
 	# only matching (or Variant/untyped) variables.
@@ -44,7 +44,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "ArrayPickRandom", "Pick Random", ACEDescriptor.ACEType.EXPRESSION, "{var_name}.pick_random()", "", [F.make_param("var_name", "String", "list", "Array", "Array variable.", "variable_reference:Array")], "Variables: Array", "random of {var_name}"))
 	# JSON moved to its own module (json_aces.gd / EventForgeJsonACEs) so it is its own thing.
 
-	# Time (C3 System: Wait — handlers are implicit coroutines, await is safe anywhere)
+	# Time (System: Wait — handlers are implicit coroutines, await is safe anywhere)
 	descriptors.append(F.make_descriptor("Core", "Wait", "Wait", ACEDescriptor.ACEType.ACTION, "await get_tree().create_timer({seconds}).timeout", "", [F.make_param("seconds", "String", "1.0", "Seconds", "How long to wait before the next action runs.", "expression")], "Time", "Wait {seconds} s"))
 	descriptors.append(F.make_descriptor("Core", "AwaitSignal", "Wait For Signal", ACEDescriptor.ACEType.ACTION, "await {signal_expression}", "", [F.make_param("signal_expression", "String", "get_tree().process_frame", "Signal", "Signal to wait for (e.g. $Timer.timeout).", "expression")], "Time", "Wait for {signal_expression}"))
 	# Frame budgeting (ADVANCED — frame-spreading Solution 3, see docs/PERFORMANCE.md): hand-roll loop
@@ -61,13 +61,13 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# The consuming ACTION for the axis above: read input into a typed float local in one row, so
 	# "read input, then move" is two ACE rows instead of a RawCode block (closes the input gap).
 	descriptors.append(F.make_descriptor("Core", "SetLocalFromAxis", "Read Input Axis Into", ACEDescriptor.ACEType.ACTION, "var {name}: float = Input.get_axis(&{negative}, &{positive})", "", [F.make_param("name", "String", "direction", "Name", "Local variable name (scoped to this event body)."), F.make_param("negative", "String", "\"ui_left\"", "Negative", "Action for the negative direction.", "", F.input_action_options()), F.make_param("positive", "String", "\"ui_right\"", "Positive", "Action for the positive direction.", "", F.input_action_options())], "Input", "read axis {negative}/{positive} into {name}"))
-	# ── Native-node providers (C3 coverage Lane 1: wrap NATIVE Godot features; the
-	# engine maintains the implementation, we only maintain vocabulary). C3 names are
-	# the display names; see docs/C3-MIGRATION-GUIDE.md for the lane mapping.
-	# Tween (C3 Tween behavior -> Godot's built-in create_tween)
+	# ── Native-node providers (coverage Lane 1: wrap NATIVE Godot features; the
+	# engine maintains the implementation, we only maintain vocabulary). The familiar
+	# names are the display names; see the migration guide for the lane mapping.
+	# Tween (Tween behavior -> Godot's built-in create_tween)
 	descriptors.append(F.make_descriptor("Core", "TweenProperty", "Tween Property", ACEDescriptor.ACEType.ACTION, "create_tween().tween_property({target}, {property}, {value}, {duration}).set_trans({transition}).set_ease({ease})", "", [F.make_param("target", "String", "self", "Target", "Node whose property tweens.", "expression"), F.make_param("property", "String", "\"position\"", "Property", "Property path to animate."), F.make_param("value", "String", "Vector2(100, 0)", "To", "Final value expression.", "expression"), F.make_param("duration", "String", "0.5", "Duration", "Seconds.", "expression"), F.make_param("transition", "String", "Tween.TRANS_SINE", "Transition", "Curve shape.", "", ["Tween.TRANS_LINEAR", "Tween.TRANS_SINE", "Tween.TRANS_QUAD", "Tween.TRANS_CUBIC", "Tween.TRANS_QUART", "Tween.TRANS_ELASTIC", "Tween.TRANS_BACK", "Tween.TRANS_BOUNCE", "Tween.TRANS_EXPO", "Tween.TRANS_CIRC"]), F.make_param("ease", "String", "Tween.EASE_IN_OUT", "Ease", "In / out / in-out.", "", ["Tween.EASE_IN", "Tween.EASE_OUT", "Tween.EASE_IN_OUT"])], "Tween", "Tween {property} to {value} over {duration}s"))
 	descriptors.append(F.make_descriptor("Core", "TweenCallback", "Tween Callback", ACEDescriptor.ACEType.ACTION, "create_tween().tween_callback({callable}).set_delay({delay})", "", [F.make_param("callable", "String", "queue_free", "Callable", "Method/Callable to invoke after the delay (e.g. a node method or a lambda).", "expression"), F.make_param("delay", "String", "1.0", "Delay", "Seconds before the call fires.", "expression")], "Tween", "Call {callable} after {delay}s"))
-	# Scene flow (C3 System: layouts -> Godot scenes)
+	# Scene flow (System: layouts -> Godot scenes)
 	descriptors.append(F.make_descriptor("Core", "ChangeScene", "Go To Scene", ACEDescriptor.ACEType.ACTION, "get_tree().change_scene_to_file({path})", "", [F.make_param("path", "String", "\"res://main.tscn\"", "Scene", "Scene file to switch to.", "expression")], "Scene", "Go to scene {path}"))
 	descriptors.append(F.make_descriptor("Core", "ReloadScene", "Restart Scene", ACEDescriptor.ACEType.ACTION, "get_tree().reload_current_scene()", "", [], "Scene", "Restart the current scene"))
 	descriptors.append(F.make_descriptor("Core", "QuitGame", "Quit Game", ACEDescriptor.ACEType.ACTION, "get_tree().quit()", "", [], "Scene", "Quit the game"))
@@ -80,7 +80,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "SetVolumeDb", "Set Volume (dB)", ACEDescriptor.ACEType.ACTION, "volume_db = {db}", "", [F.make_param("db", "String", "0.0", "Decibels", "0 = full volume, -80 = silent.", "expression")], "General Actions", "Set volume to {db} dB", "AudioStreamPlayer"))
 	descriptors.append(F.make_descriptor("Core", "IsAudioPlaying", "Is Playing", ACEDescriptor.ACEType.CONDITION, "playing", "", [], "General Conditions", "Sound is playing", "AudioStreamPlayer"))
 	descriptors.append(F.make_descriptor("Core", "GetPlaybackPosition", "Playback Position", ACEDescriptor.ACEType.EXPRESSION, "get_playback_position()", "", [], "General Expressions", "playback position", "AudioStreamPlayer"))
-	# AnimatedSprite2D (C3 Sprite animations)
+	# AnimatedSprite2D (Sprite animations)
 	descriptors.append(F.make_descriptor("Core", "PlaySpriteAnimation", "Play Sprite Animation", ACEDescriptor.ACEType.ACTION, "play(&{anim})", "", [F.make_param("anim", "String", "\"default\"", "Animation", "Animation name.")], "General Actions", "Play animation {anim}", "AnimatedSprite2D"))
 	descriptors.append(F.make_descriptor("Core", "StopSpriteAnimation", "Stop Sprite Animation", ACEDescriptor.ACEType.ACTION, "stop()", "", [], "General Actions", "Stop animation", "AnimatedSprite2D"))
 	descriptors.append(F.make_descriptor("Core", "SetSpriteFrame", "Set Frame", ACEDescriptor.ACEType.ACTION, "frame = {frame}", "", [F.make_param("frame", "String", "0", "Frame", "Frame index.", "expression")], "General Actions", "Set frame to {frame}", "AnimatedSprite2D"))
@@ -92,11 +92,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "SetCameraZoom", "Set Camera Zoom", ACEDescriptor.ACEType.ACTION, "zoom = {zoom}", "", [F.make_param("zoom", "String", "Vector2(1, 1)", "Zoom", "Zoom factor.", "expression")], "General Actions", "Set zoom to {zoom}", "Camera2D"))
 	descriptors.append(F.make_descriptor("Core", "SetCameraOffset", "Set Camera Offset", ACEDescriptor.ACEType.ACTION, "offset = {offset}", "", [F.make_param("offset", "String", "Vector2(0, 0)", "Offset", "Offset from the followed position.", "expression")], "General Actions", "Set offset to {offset}", "Camera2D"))
 	descriptors.append(F.make_descriptor("Core", "SetCameraLimits", "Set Camera Limits", ACEDescriptor.ACEType.ACTION, "limit_left = {left}\nlimit_top = {top}\nlimit_right = {right}\nlimit_bottom = {bottom}", "", [F.make_param("left", "String", "0", "Left", "Left bound (px).", "expression"), F.make_param("top", "String", "0", "Top", "Top bound (px).", "expression"), F.make_param("right", "String", "1920", "Right", "Right bound (px).", "expression"), F.make_param("bottom", "String", "1080", "Bottom", "Bottom bound (px).", "expression")], "General Actions", "Set camera limits", "Camera2D"))
-	# Label / text (C3 Text object)
+	# Label / text (Text object)
 	descriptors.append(F.make_descriptor("Core", "SetLabelText", "Set Text", ACEDescriptor.ACEType.ACTION, "text = str({value})", "", [F.make_param("value", "String", "\"Hello\"", "Text", "Value to display (str()-converted).", "expression")], "General Actions", "Set text to {value}", "Label"))
 	descriptors.append(F.make_descriptor("Core", "AppendLabelText", "Append Text", ACEDescriptor.ACEType.ACTION, "text += str({value})", "", [F.make_param("value", "String", "\"!\"", "Text", "Value to append.", "expression")], "General Actions", "Append {value}", "Label"))
 	descriptors.append(F.make_descriptor("Core", "GetLabelText", "Get Text", ACEDescriptor.ACEType.EXPRESSION, "text", "", [], "General Expressions", "text", "Label"))
-	# NavigationAgent2D (C3 Pathfinding behavior)
+	# NavigationAgent2D (Pathfinding behavior)
 	descriptors.append(F.make_descriptor("Core", "SetNavTarget", "Find Path To", ACEDescriptor.ACEType.ACTION, "target_position = {position}", "", [F.make_param("position", "String", "Vector2(0, 0)", "Target", "World position to path toward.", "expression")], "General Actions", "Find path to {position}", "NavigationAgent2D"))
 	descriptors.append(F.make_descriptor("Core", "IsNavFinished", "Has Arrived", ACEDescriptor.ACEType.CONDITION, "is_navigation_finished()", "", [], "General Conditions", "Arrived at destination", "NavigationAgent2D"))
 	descriptors.append(F.make_descriptor("Core", "GetNextPathPosition", "Next Path Position", ACEDescriptor.ACEType.EXPRESSION, "get_next_path_position()", "", [], "General Expressions", "next path position", "NavigationAgent2D"))
@@ -107,7 +107,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "SetModulate", "Set Color Tint", ACEDescriptor.ACEType.ACTION, "modulate = {color}", "", [F.make_param("color", "String", "Color(1, 1, 1, 1)", "Color", "Tint (RGBA).", "color")], "General Actions", "Set tint to {color}", "CanvasItem"))
 	descriptors.append(F.make_descriptor("Core", "SetSelfModulate", "Set Self Tint", ACEDescriptor.ACEType.ACTION, "self_modulate = {color}", "", [F.make_param("color", "String", "Color(1, 1, 1, 1)", "Color", "Tint for this node only (not children).", "color")], "General Actions", "Set self tint to {color}", "CanvasItem"))
 	descriptors.append(F.make_descriptor("Core", "IsVisible", "Is Visible", ACEDescriptor.ACEType.CONDITION, "visible", "", [], "General Conditions", "Is visible", "CanvasItem"))
-	# Math & random (C3 System expressions: random, choose, clamp, lerp, distance, angle)
+	# Math & random (System expressions: random, choose, clamp, lerp, distance, angle)
 	descriptors.append(F.make_descriptor("Core", "RandomRange", "Random", ACEDescriptor.ACEType.EXPRESSION, "randf_range({from}, {to})", "", [F.make_param("from", "String", "0.0", "From", "Lower bound.", "expression"), F.make_param("to", "String", "1.0", "To", "Upper bound.", "expression")], "Math & Random", "random({from}, {to})"))
 	descriptors.append(F.make_descriptor("Core", "RandomInt", "Random Integer", ACEDescriptor.ACEType.EXPRESSION, "randi_range({from}, {to})", "", [F.make_param("from", "String", "0", "From", "Lower bound (inclusive).", "expression"), F.make_param("to", "String", "9", "To", "Upper bound (inclusive).", "expression")], "Math & Random", "random int({from}, {to})"))
 	descriptors.append(F.make_descriptor("Core", "Choose", "Choose", ACEDescriptor.ACEType.EXPRESSION, "[{values}].pick_random()", "", [F.make_param("values", "String", "1, 2, 3", "Values", "Comma-separated values to pick from.", "expression")], "Math & Random", "choose({values})"))
@@ -196,7 +196,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "StringPadZeros", "Pad Number", ACEDescriptor.ACEType.EXPRESSION, "str({number}).pad_zeros({digits})", "", [F.make_param("number", "String", "0", "Number", "Number to pad.", "expression"), F.make_param("digits", "String", "2", "Digits", "Minimum digit count.", "expression")], "Variables: String", "pad {number} to {digits} digits"))
 	descriptors.append(F.make_descriptor("Core", "StringRepeat", "Repeat Text", ACEDescriptor.ACEType.EXPRESSION, "{text}.repeat({count})", "", [F.make_param("text", "String", "\"#\"", "Text", "Text to repeat.", "expression"), F.make_param("count", "String", "3", "Count", "Number of repetitions.", "expression")], "Variables: String", "{text} x {count}"))
 
-	# ── AnimationTree (C3-style state machines / blends) ──
+	# ── AnimationTree (event-sheet-style state machines / blends) ──
 	descriptors.append(F.make_descriptor("Core", "SetAnimationTreeActive", "Set AnimationTree Active", ACEDescriptor.ACEType.ACTION, "active = {active}", "", [F.make_param("active", "String", "true", "Active", "Enable the animation tree.", "", ["true", "false"])], "Animation", "Set tree active {active}", "AnimationTree"))
 	descriptors.append(F.make_descriptor("Core", "TravelToState", "Travel To State", ACEDescriptor.ACEType.ACTION, "get(\"parameters/playback\").travel({state})", "", [F.make_param("state", "String", "\"idle\"", "State", "State-machine node to travel to.")], "Animation", "Travel to state {state}", "AnimationTree"))
 	descriptors.append(F.make_descriptor("Core", "SetTreeParam", "Set Tree Parameter", ACEDescriptor.ACEType.ACTION, "set({path}, {value})", "", [F.make_param("path", "String", "\"parameters/TimeScale/scale\"", "Param Path", "AnimationTree parameter path (blend amount / condition / timescale)."), F.make_param("value", "String", "1.0", "Value", "Value (number / Vector2 / bool).", "expression")], "Animation", "Set {path} to {value}", "AnimationTree"))

@@ -32,7 +32,7 @@ extends Resource
 @export var column_header_background_color: Color = Color("#22242b")
 @export var column_header_conditions_color: Color = Color("#8fb0e0")
 @export var column_header_actions_color: Color = Color("#6fd0bf")
-## C3-style red ✗ shown on inverted (negated) conditions (Construct's --invert-icon-color).
+## Red ✗ shown on inverted (negated) conditions (the --invert-icon-color).
 @export var invert_marker_color: Color = Color("#FF0000")
 ## Object/origin label drawn before each condition/action ("System", node class).
 @export var object_label_color: Color = EventSheetPalette.COLOR_OBJECT
@@ -40,6 +40,6 @@ extends Resource
 @export var value_highlight_color: Color = EventSheetPalette.COLOR_VALUE
 ## Hover tint for an individual condition/action cell.
 @export var cell_hover_color: Color = Color(1.0, 1.0, 1.0, 0.14)
-## Accent for behavior sheets (identity banner / tab badge) — soft purple, the C3-style
+## Accent for behavior sheets (identity banner / tab badge) — soft purple, the event-sheet-style
 ## "this is a behavior" color language.
 @export var behavior_accent_color: Color = Color("#8a7bd8")

@@ -1,7 +1,7 @@
 # EventForge — GDScript pairing batch
 #
-# Guards the C3→GDScript bridge features: inline GDScript blocks (render multi-line, compile
-# verbatim at class level), codegen tooltip previews, the C3 picker search synonyms, and the
+# Guards the event-sheet→GDScript bridge features: inline GDScript blocks (render multi-line, compile
+# verbatim at class level), codegen tooltip previews, the picker search synonyms, and the
 # new semantic theme tokens.
 @tool
 extends RefCounted
@@ -79,7 +79,7 @@ static func run() -> bool:
 	all_passed = _check("Core/Always previews its codegen ('true')", preview, "true") and all_passed
 	viewport.free()
 
-	# Picker synonyms: C3 phrases map to Godot search terms.
+	# Picker synonyms: event-sheet phrases map to Godot search terms.
 	all_passed = _check("'on start of layout' maps to ready",
 		ACEPickerDialog._c3_synonym_queries("on start of layout").has("ready"), true) and all_passed
 	all_passed = _check("'spawn' maps to instantiate",
@@ -87,9 +87,9 @@ static func run() -> bool:
 	all_passed = _check("short queries are not synonym-expanded",
 		ACEPickerDialog._c3_synonym_queries("on").is_empty(), true) and all_passed
 
-	# New semantic theme tokens exist with C3-faithful defaults.
+	# New semantic theme tokens exist with event-sheet-faithful defaults.
 	var style: EventSheetEventStyle = EventSheetEventStyle.new()
-	all_passed = _check("invert marker token defaults to C3 red", style.invert_marker_color, Color("#FF0000")) and all_passed
+	all_passed = _check("invert marker token defaults to red", style.invert_marker_color, Color("#FF0000")) and all_passed
 	all_passed = _check("object label token exists", style.object_label_color, EventSheetPalette.COLOR_OBJECT) and all_passed
 	all_passed = _check("value highlight token exists", style.value_highlight_color, EventSheetPalette.COLOR_VALUE) and all_passed
 

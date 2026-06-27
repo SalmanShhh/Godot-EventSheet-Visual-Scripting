@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Orbit behavior (C3 parity)
+## Orbit behavior (event-sheet parity)
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -22,7 +22,7 @@ static func build() -> bool:
 		"center_captured": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Orbit behavior (C3 parity): circles or ellipses around a point. secondary_radius 0 = circle; offset_angle tilts the ellipse; match_rotation faces the travel direction."
+	about.text = "Orbit behavior (event-sheet parity): circles or ellipses around a point. secondary_radius 0 = circle; offset_angle tilts the ellipse; match_rotation faces the travel direction."
 	sheet.events.append(about)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"

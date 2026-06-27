@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Sine 3D behavior (C3-style)
+## Sine 3D behavior (event-sheet-style)
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -24,7 +24,7 @@ static func build() -> bool:
 		"base_captured": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Sine 3D behavior (C3-style): oscillates the host along an axis (x, y, z) or around the Y axis (rotation-y), with the full wave set."
+	about.text = "Sine 3D behavior (event-sheet-style): oscillates the host along an axis (x, y, z) or around the Y axis (rotation-y), with the full wave set."
 	sheet.events.append(about)
 	var extra_block_0: RawCodeRow = RawCodeRow.new()
 	extra_block_0.code = "\n".join(PackedStringArray([

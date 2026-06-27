@@ -2,7 +2,7 @@
 #
 # Covers two slices added together:
 #  (1) The `## @ace_param_autocomplete(...)` annotation → an EDITABLE suggest combo
-#      (Construct-style: type any value, or filter/pick from suggestions). The value
+#      (event-sheet-style: type any value, or filter/pick from suggestions). The value
 #      flows analyzer → generator → adapter → ACEParam, and the params dialog renders a
 #      LineEdit (the value field) + a filtered suggestion popup.
 #  (2) The new Array / Dictionary / Vector / String Helper ACEs register with the exact

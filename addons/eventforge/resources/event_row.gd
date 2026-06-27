@@ -46,7 +46,7 @@ static var _uid_counter: int = 0
 @export var event_uid: String = ""
 @export var local_variables: Array[LocalVariable] = []
 @export var pick_filters: Array[PickFilter] = []
-## "With node X:" scope (Construct-style pick-once). When non-empty, this row's actions — and those of
+## "With node X:" scope (event-sheet-style pick-once). When non-empty, this row's actions — and those of
 ## its descendant sub-events — that leave their "On node" target blank/self act on this node instead of
 ## the host (the target is inlined per action: $Enemy.play()). Empty = a normal host-scoped row.
 @export var with_node_target: String = ""

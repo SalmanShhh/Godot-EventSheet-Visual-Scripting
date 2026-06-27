@@ -2,7 +2,7 @@
 # Owns the picker window, search field, grouped/filtered tree, and mode-aware filtering.
 # Use open() to show it and connect to ace_selected to receive the chosen ACEDefinition.
 #
-# Construct 3-style presentation:
+# Event-sheet-style presentation:
 #  - Entries are grouped by Godot node type (ACEDefinition.metadata.node_type) when set,
 #    otherwise by category. Node-type sections are colour-coded amber; Run Context /
 #    Triggers teal-green; Variables muted blue; Custom ACEs purple; others neutral.
@@ -19,7 +19,7 @@ extends RefCounted
 ## context is the same dictionary passed to open().
 signal ace_selected(definition: ACEDefinition, context: Dictionary)
 
-## Recents (C3 surfaces familiar ACEs first): last-used ACE ids, newest first. Persisted PER-USER and
+## Recents (familiar ACEs surface first): last-used ACE ids, newest first. Persisted PER-USER and
 ## PER-PROJECT in a user:// file — NOT project.godot: recents change on every ACE use and would churn
 ## the version-controlled file constantly (Favorites live in ProjectSettings because they change rarely).
 static var _recent_ace_ids: PackedStringArray = PackedStringArray()
@@ -62,7 +62,7 @@ static func toggle_favorite(provider_id: String, ace_id: String) -> bool:
 	return existing < 0
 
 ## True when `query`'s characters appear in order inside `text` (case/space-insensitive)
-## — the power user's "stt" reflex from C3/GDevelop pickers.
+## — the power user's "stt" reflex from event-sheet/GDevelop pickers.
 static func fuzzy_match(query: String, text: String) -> bool:
 	var needle: String = query.to_lower().replace(" ", "")
 	var haystack: String = text.to_lower().replace(" ", "")
@@ -389,9 +389,9 @@ func _build_hint_text(mode: String, signals_only: bool) -> String:
 		_:
 			return "Select a condition, action, or trigger to create a new event."
 
-## Construct 3 phrase → Godot search-term bridge, so C3 users typing their old vocabulary
+## Event-sheet phrase → Godot search-term bridge, so event-sheet users typing their old vocabulary
 ## still find the right ACE (e.g. "on start of layout" finds _ready-based triggers).
-const C3_SEARCH_SYNONYMS := {
+const SEARCH_SYNONYMS := {
 	"on start of layout": "ready",
 	"start of layout": "ready",
 	"every tick": "process",
@@ -445,9 +445,9 @@ static func _c3_synonym_queries(query: String) -> Array[String]:
 	var extra: Array[String] = []
 	if lowered.length() < 4:
 		return extra
-	for phrase: String in C3_SEARCH_SYNONYMS:
+	for phrase: String in SEARCH_SYNONYMS:
 		if lowered.contains(phrase) or phrase.contains(lowered):
-			var mapped: String = str(C3_SEARCH_SYNONYMS[phrase])
+			var mapped: String = str(SEARCH_SYNONYMS[phrase])
 			if not extra.has(mapped):
 				extra.append(mapped)
 	return extra
@@ -474,7 +474,7 @@ func _refresh_tree() -> void:
 	# in-tree groups — so they stay visible while you browse categories, Create-Node style.
 
 	var definitions: Array[ACEDefinition] = _registry.search(query)
-	# Construct 3 vocabulary bridge: familiar C3 phrases also find their Godot equivalents.
+	# Event-sheet vocabulary bridge: familiar event-sheet phrases also find their Godot equivalents.
 	for synonym_query: String in _c3_synonym_queries(query):
 		for extra_definition: ACEDefinition in _registry.search(synonym_query):
 			if not definitions.has(extra_definition):
@@ -504,7 +504,7 @@ func _refresh_tree() -> void:
 			if twin_def != null and not definitions.has(twin_def) and not reactive_twins.has(twin_def):
 				reactive_twins.append(twin_def)
 		definitions.append_array(reactive_twins)
-	# Featured ACEs (the everyday verbs) float to the top of their group + render bold below — C3 "highlight".
+	# Featured ACEs (the everyday verbs) float to the top of their group + render bold below — the "highlight".
 	if not definitions.is_empty():
 		var __featured: Array[ACEDefinition] = []
 		var __rest: Array[ACEDefinition] = []
@@ -536,7 +536,7 @@ func _refresh_tree() -> void:
 				item.set_custom_font(0, __bold)
 
 	# No-match guidance: a blank tree leaves a newcomer stuck wondering if the picker is broken.
-	# Nudge the C3 vocabulary bridge (plain phrases find Godot equivalents) instead of silence.
+	# Nudge the vocabulary bridge (plain phrases find Godot equivalents) instead of silence.
 	if filtering and root.get_child_count() == 0:
 		var empty_item: TreeItem = _tree.create_item(root)
 		empty_item.set_text(0, "No matches for \"%s\" — try a plainer word like \"move\", \"spawn\", or \"hide\"." % query)
@@ -546,7 +546,7 @@ func _refresh_tree() -> void:
 func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> TreeItem:
 	var group_item: TreeItem = _tree.create_item(root)
 	group_item.set_text(0, group_key)
-	# Node-type sections show the class's editor icon (C3 users expect the object's icon
+	# Node-type sections show the class's editor icon (event-sheet users expect the object's icon
 	# next to its name everywhere).
 	if is_node_type:
 		var class_icon: Texture2D = editor_icon(group_key)
@@ -603,7 +603,7 @@ static func split_subcategory(group_key: String) -> PackedStringArray:
 		return PackedStringArray()
 	return PackedStringArray([parent_name, child_name])
 
-## Resolves an ACE's icon, in C3-familiarity order: an explicit `res://` texture from the
+## Resolves an ACE's icon, in event-sheet-familiarity order: an explicit `res://` texture from the
 ## addon's @ace_icon annotation → the node type's editor class icon → a member-kind editor
 ## icon (signal/method/property). Returns null headless / when nothing matches, which keeps
 ## the previous text-only look. Static + shared so row rendering can reuse it later.
@@ -685,7 +685,7 @@ func _muted_header_color() -> Color:
 				return theme.get_color("font_disabled_color", "Editor")
 	return GROUP_COLOR_NEUTRAL
 
-## The everyday "featured" verbs (C3-style highlight): rendered bold and floated to the top of their
+## The everyday "featured" verbs (event-sheet-style highlight): rendered bold and floated to the top of their
 ## group so the common picks stand out. Curated default; keys are "provider_id/ace_id".
 const FEATURED := {
 	"Core/OnReady": true, "Core/OnProcess": true, "Core/OnPhysicsProcess": true,
@@ -733,7 +733,7 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 		_:
 			return definition.ace_type in [ACEDefinition.ACEType.TRIGGER, ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.ACTION]
 
-## C3-style bottom info pane: selecting an entry shows its description AND the exact
+## Event-sheet-style bottom info pane: selecting an entry shows its description AND the exact
 ## GDScript it will generate — the picker doubles as a teaching surface.
 func _on_item_selected_for_info() -> void:
 	var selected: TreeItem = _tree.get_selected()

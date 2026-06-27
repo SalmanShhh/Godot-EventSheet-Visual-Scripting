@@ -1,4 +1,4 @@
-# EventForge — the Functions overview panel (Construct's function list). Every sheet function shows
+# EventForge — the Functions overview panel (the function list). Every sheet function shows
 # at a glance with its signature (and an ✦ when exposed as an ACE); right-click deletes one.
 @tool
 extends RefCounted

@@ -4,7 +4,7 @@ extends Control
 
 @export_group("Designer Guide")
 @export_multiline var designer_usage_hint: String = "This scene previews the full EventSheet block shell. Edit the ColorRect/Label preview nodes for quick visual feedback, then tune the exported token fields below to control sheet background, group/comment chrome, and interaction colors."
-@export_multiline var preview_role_hint: String = "PreviewRow/PreviewRowAlt = event block backgrounds. PreviewConditionLane = left condition lane. PreviewLaneDivider = badge/action split. PreviewActionLane = right action lane. Trigger preview nodes show the badge column treatment used by Construct-style stacked conditions."
+@export_multiline var preview_role_hint: String = "PreviewRow/PreviewRowAlt = event block backgrounds. PreviewConditionLane = left condition lane. PreviewLaneDivider = badge/action split. PreviewActionLane = right action lane. Trigger preview nodes show the badge column treatment used by event-sheet-style stacked conditions."
 
 @export_group("Layout Tokens")
 @export_range(0.20, 0.80, 0.01) var condition_lane_ratio: float = EventSheetPalette.CONDITION_LANE_RATIO

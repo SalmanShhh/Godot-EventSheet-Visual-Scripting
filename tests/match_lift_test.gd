@@ -1,4 +1,4 @@
-# EventForge — Phase 3 (Stage C): control-flow reverse-lift (match / Construct's "switch").
+# EventForge — Phase 3 (Stage C): control-flow reverse-lift (match / the "switch").
 # A `match EXPR:` inside a lifted trigger body reverse-lifts to a MatchRow action — subject plus
 # verbatim branch text — instead of an in-flow GDScript cell. The branch lines are kept verbatim
 # (patterns + bodies are not parsed as ACEs); the byte-identical recompile gates the reconstruction.

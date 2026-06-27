@@ -471,7 +471,7 @@ func _on_confirmed() -> void:
 			_dialog.call_deferred("popup_centered", Vector2i(460, 260))
 		return
 	var type_name: String = _type_option.get_item_text(_type_option.selected)
-	# Guardrail (C3-style): an invalid collection literal never commits — the dialog
+	# Guardrail (event-sheet-style): an invalid collection literal never commits — the dialog
 	# reopens with the text intact so the user fixes or cancels deliberately.
 	var verdict: Dictionary = validate_default(type_name, _default_edit.text)
 	if not bool(verdict.get("ok", true)):
@@ -482,7 +482,7 @@ func _on_confirmed() -> void:
 			_dialog.call_deferred("popup_centered", Vector2i(440, 240))
 		return
 	var default_value: Variant = _parse_default(type_name, _default_edit.text)
-	# Combo guardrail (C3): a String with options must default to one of them.
+	# Combo guardrail (event sheet): a String with options must default to one of them.
 	var combo_options: PackedStringArray = parse_options(_options_edit.text if _options_edit != null else "")
 	if type_name == "String" and not combo_options.is_empty():
 		if str(default_value).strip_edges().is_empty():

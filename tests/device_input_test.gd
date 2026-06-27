@@ -1,4 +1,4 @@
-# Godot EventSheets — Device input vocabulary (C3 Keyboard/Mouse/Gamepad/Touch) +
+# Godot EventSheets — Device input vocabulary (Keyboard/Mouse/Gamepad/Touch) +
 # the press-a-key capture workflow + dialog-width hygiene.
 @tool
 extends RefCounted
@@ -69,7 +69,7 @@ static func run() -> bool:
 		vd._default_help.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and vd._const_help.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART, true) and all_passed
 	host.free()
 
-	# scene_path + animation_reference hints (the last two C3 param-type gaps).
+	# scene_path + animation_reference hints (the last two param-type gaps).
 	var hint_dialog: ACEParamsDialog = ACEParamsDialog.new()
 	var scene_field: Control = hint_dialog._create_scene_path_field("path", "\"res://x.tscn\"")
 	var scene_edit: LineEdit = null

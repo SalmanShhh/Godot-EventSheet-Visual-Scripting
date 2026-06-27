@@ -3,9 +3,9 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Move To behavior (C3 parity), authored entirely as ACE rows (ZERO RawCode): glides through a
+## Move To behavior (event-sheet parity), authored entirely as ACE rows (ZERO RawCode): glides through a
 ## waypoint queue and fires On Arrived at the final stop. The per-step position math
-## (move_toward / angle / distance_to) lives in ACE expression params — the C3 model — so there is
+## (move_toward / angle / distance_to) lives in ACE expression params — the visual event-sheet model — so there is
 ## no GDScript block. See docs/internal/SPEC-behaviour-as-aces-parity.md.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -19,7 +19,7 @@ static func build() -> bool:
 		"moving": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Move To behavior (C3 parity): glides through a waypoint queue (Move To Position replaces it, Add Waypoint appends) and fires On Arrived at the final stop. rotate_toward_motion faces the travel direction."
+	about.text = "Move To behavior (event-sheet parity): glides through a waypoint queue (Move To Position replaces it, Add Waypoint appends) and fires On Arrived at the final stop. rotate_toward_motion faces the travel direction."
 	sheet.events.append(about)
 
 	var arrived_signal: SignalRow = SignalRow.new()
@@ -65,8 +65,8 @@ static func build() -> bool:
 	move_to_position.events.append(move_to_position_body)
 	sheet.functions.append(move_to_position)
 
-	# Add Waypoint(x, y): append a stop to the queue (C3 waypoints).
-	var add_waypoint: EventFunction = _exposed("add_waypoint", "Add Waypoint", "Appends a stop to the queue (C3 waypoints).", [["x", "float"], ["y", "float"]])
+	# Add Waypoint(x, y): append a stop to the queue (waypoints).
+	var add_waypoint: EventFunction = _exposed("add_waypoint", "Add Waypoint", "Appends a stop to the queue (waypoints).", [["x", "float"], ["y", "float"]])
 	var add_waypoint_body: EventRow = EventRow.new()
 	add_waypoint_body.actions.append(_action("CallMethod", {"target": "waypoints", "method": "append", "args": "Vector2(x, y)"}))
 	add_waypoint_body.actions.append(_action("SetVar", {"var_name": "moving", "value": "true"}))

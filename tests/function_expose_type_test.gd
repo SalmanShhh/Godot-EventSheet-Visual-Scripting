@@ -1,4 +1,4 @@
-# EventForge — three-way function expose (C3-parity function system, spec §1).
+# EventForge — three-way function expose (event-sheet-parity function system, spec §1).
 #
 # When a sheet function is exposed as an ACE, the directive follows its RETURN TYPE: a void function
 # publishes as an action, a bool function as a condition, any other value as an expression. (One

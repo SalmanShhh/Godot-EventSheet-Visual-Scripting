@@ -1,6 +1,6 @@
 # Pack builder — htn_agent (one pack per file; run via tools/build_sample_behaviors.gd).
 #
-# Utility-driven Hierarchical Task Network agent — a Godot-native port of the author's C3
+# Utility-driven Hierarchical Task Network agent — a Godot-native port of the author's
 # DHTN addons (manager plugin + agent behavior), collapsed into ONE per-object behavior (the
 # natural fit for event-sheet behaviors). It owns a world-state blackboard and a task network
 # of primitive tasks + compound tasks whose methods carry preconditions, an ordered subtask
@@ -10,7 +10,7 @@
 # Failed; On Task Started / On Plan Complete / On Plan Failed drive the sheet.
 #
 # Faithful-but-focused: squad coordination, slot reservation and decaying alert stimuli from
-# the C3 manager are an honest scope cut. The reusable core — world state + utility HTN
+# the original manager are an honest scope cut. The reusable core — world state + utility HTN
 # decomposition + plan execution — is what makes this useful to every kind of game.
 @tool
 

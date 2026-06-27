@@ -220,7 +220,7 @@ static func _to_resource_array(rows: Array) -> Array[Resource]:
 ## folded into the event's sub_events (the compiler walks sub_events in order: a condition-less row
 ## emits its actions inline, a conditioned row emits if/elif/else). Kept ONLY when the whole sheet
 ## still recompiles BYTE-IDENTICALLY — a PER-EVENT gate, so one stubborn body never reverts the rest.
-## This is what turns a behaviour's code cell into the Construct-style if/else/elseif + action rows.
+## This is what turns a behaviour's code cell into the event-sheet-style if/else/elseif + action rows.
 ## Idempotent + deterministic (byte-stable regeneration, drift=0). Returns the number of events lifted.
 static func lift_event_bodies(sheet: EventSheetResource) -> int:
 	if sheet == null or sheet.events.is_empty():
@@ -735,7 +735,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			index = int(inner.get("next"))
 			chain_open = true
 			continue
-		# Loops (Construct "For Each" / repeat / while): `for X in EXPR:` or `while EXPR:` at this
+		# Loops ('For Each' / repeat / while): `for X in EXPR:` or `while EXPR:` at this
 		# depth opens a pick-filter row whose body parses one level deeper — exactly the if/elif/else
 		# grammar above, but the wrapper is a PickFilter, not conditions. _adopt_block_body folds the
 		# body (leading statements → actions, nested blocks → sub_events); a statement AFTER a nested
@@ -765,7 +765,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			index = int(loop_inner.get("next"))
 			chain_open = false  # a loop never opens an if/elif/else chain
 			continue
-		# Match (Construct "switch"): `match EXPR:` at this depth plus its arm lines (one level deeper)
+		# Match ("switch"): `match EXPR:` at this depth plus its arm lines (one level deeper)
 		# become a MatchRow ACTION — subject + verbatim branch text, exactly as the emitter re-prefixes
 		# body_indent+tab onto each line. A blank inside the arms (the lifter's hand-written-code signal)
 		# ends collection, so the whole function safely stays blocks; byte-verify gates the rebuild.

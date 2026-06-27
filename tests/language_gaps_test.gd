@@ -1,4 +1,4 @@
-# Godot EventSheets — Language gaps closed (C3 Loops + Pick Instances + returns + more)
+# Godot EventSheets — Language gaps closed (Loops + Pick Instances + returns + more)
 # Ordered picking (pick nearest/highest), Repeat/While loop kinds, function return types
 # (+ Return actions), group-local variables, and real breakpoints (gated emission).
 @tool
@@ -139,7 +139,7 @@ static func run() -> bool:
 	all_passed = _check("debug compiles emit breakpoint first",
 		on_output.contains("\tbreakpoint") and on_output.find("breakpoint") < on_output.find("queue_free()"), true) and all_passed
 
-	# C3 preset wiring: presets fill the dialog into the right kinds.
+	# Preset wiring: presets fill the dialog into the right kinds.
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(EventSheetResource.new())
 	editor.set_undo_redo_manager(NoopUndoManager.new())
@@ -155,7 +155,7 @@ static func run() -> bool:
 		editor._pick_collection_edit.text.contains(".pick_random()"), true) and all_passed
 	editor.free()
 
-	# Runtime-toggleable groups (C3 Set Group Active, opt-in).
+	# Runtime-toggleable groups (Set Group Active, opt-in).
 	var rt_sheet: EventSheetResource = EventSheetResource.new()
 	var rt_group: EventGroup = EventGroup.new()
 	rt_group.group_name = "Combat"

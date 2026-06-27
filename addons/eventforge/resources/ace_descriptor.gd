@@ -16,22 +16,22 @@ enum ACEType {
 @export var ace_id: String = ""
 @export var display_name: String = ""
 @export var list_name: String = ""
-@export var listName: String = "" # Construct-style alias.
+@export var listName: String = "" # event-sheet-style alias.
 @export var description: String = ""
 @export_multiline var display_text: String = ""
-@export_multiline var displayText: String = "" # Construct-style alias.
+@export_multiline var displayText: String = "" # event-sheet-style alias.
 @export var category: String = ""
 ## Godot class/namespace this ACE belongs to (e.g. "CharacterBody2D", "Area2D", "Node").
 ## When set, the ACE picker groups the entry under this node type instead of its category.
 @export var node_type: String = ""
-## Stateful conditions (C3 "Every X seconds"/latches): a class member the compiler
+## Stateful conditions ("Every X seconds"/latches): a class member the compiler
 ## declares per applied instance ({uid} is baked fresh at apply), plus lines emitted
 ## before the if (prelude) and just inside it (on_true). Params substitute like the
 ## main template.
 var member_template: String = ""
 var codegen_prelude: String = ""
 var codegen_on_true: String = ""
-@export var nodeType: String = "" # Construct-style alias for node_type.
+@export var nodeType: String = "" # event-sheet-style alias for node_type.
 @export var params: Array[ACEParam] = []
 @export var signal_name: String = ""
 @export var return_type: int = TYPE_NIL

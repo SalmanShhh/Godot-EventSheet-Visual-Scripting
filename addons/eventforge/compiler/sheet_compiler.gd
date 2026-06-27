@@ -2,7 +2,7 @@
 # Compiles EventSheetResource assets into deterministic GDScript output.
 #
 # THE PIPELINE (main path, in emission order — each phase is a "## …" section below):
-#   1. includes merge (C3-style; policy-gated — see _merge_includes/_addon_policy)
+#   1. includes merge (event-sheet-style; policy-gated — see _merge_includes/_addon_policy)
 #   2. header comments, @tool, @ace_tags, @icon, class_name, extends
 #   3. behavior host accessor (behavior_mode)
 #   4. enums → signals → variables (with Inspector attributes) → tree variables
@@ -77,7 +77,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 	_throttle_process_emitted = false
 	_runtime_group_guards = {}
 	_runtime_group_members = []
-	# C3-style includes: merge included sheets' rows/variables/functions (compile-time
+	# Event-sheet-style includes: merge included sheets' rows/variables/functions (compile-time
 	# only; the root sheet wins collisions, cycles are skipped with warnings).
 	var all_events: Array = sheet.events.duplicate()
 	var all_functions: Array = sheet.functions.duplicate()
@@ -108,7 +108,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			lines.append("@icon(\"%s\")" % sheet.custom_class_icon)
 		lines.append("class_name %s" % sheet.custom_class_name.strip_edges())
 	# Behavior sheets compile to attachable Node components that act on their PARENT (the
-	# host) — Godot's component idiom standing in for Construct 3 behaviors. host_class is
+	# host) — Godot's component idiom standing in for node-attached behaviors. host_class is
 	# the declared required host type, not the script's base.
 	if sheet.behavior_mode:
 		# Node-scoped ACEs ({host.} templates) target the parent host, not the behavior Node.
@@ -205,7 +205,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			lines.append(declaration)
 			source_map.append({"uid": str((tree_entry as LocalVariable).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "variable"})
 
-	# C3 group-local variables: class members under a per-group header comment.
+	# Group-local variables: class members under a per-group header comment.
 	var group_local_sets: Array = []
 	_collect_group_locals(all_events, group_local_sets)
 	for group_set: Dictionary in group_local_sets:
@@ -337,7 +337,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 			continue
 		if row is EventGroup:
 			# Groups are organizational: their events compile inline (the helper flattens,
-			# honoring C3 semantics — a DISABLED group drops all of its children).
+			# honoring event-sheet semantics — a DISABLED group drops all of its children).
 			top_level_events.append(row)
 			continue
 		if row is EnumRow or row is SignalRow:
@@ -669,7 +669,7 @@ static func _merge_includes(sheet: EventSheetResource, all_events: Array, all_fu
 		_merge_includes(included, all_events, all_functions, merged_variables, visited, warnings, errors, depth + 1)
 
 ## Flattens trigger-bearing rows for emission: EventRows kept, ENABLED groups recursed
-## (a disabled group drops all of its children — C3 group-disable semantics), and group
+## (a disabled group drops all of its children — group-disable semantics), and group
 ## comments collected as deferred comment lines.
 static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "") -> void:
 	for row: Variant in rows:
@@ -681,7 +681,7 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 			var group: EventGroup = row as EventGroup
 			if group.enabled:
 				# Runtime-toggleable groups guard their events (nested groups inherit the
-				# INNERMOST toggleable guard — toggling the inner group wins, C3-style).
+				# INNERMOST toggleable guard — toggling the inner group wins, event-sheet-style).
 				var child_guard: String = runtime_guard
 				if group.runtime_toggleable:
 					var guard_token: String = group.group_name.to_snake_case() if not group.group_name.is_empty() else "group"
@@ -832,7 +832,7 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 ## Emits the condition/action body for a list of event rows, appending to lines.
 ## Shared by trigger handlers, sheet functions, and (recursively) sub-events.
 ##
-## Semantics, mirroring Construct 3:
+## Semantics, mirroring the visual event-sheet model:
 ## - Each event's conditions emit one `if` at `depth`; its actions and sub-events nest one
 ##   level deeper. Sub-events therefore run only when the parent's conditions held.
 ## - An ELSE/ELIF sibling chains onto the previous sibling's `if` (`else:` / `elif c:`).
@@ -969,7 +969,7 @@ static func _emit_event_body(
 		if emitted_block:
 			for on_true_line: String in stateful_on_true:
 				lines.append("\t".repeat(body_depth) + on_true_line)
-		# Pick filters (C3 "for each" picking, the Godot way): each enabled filter wraps the
+		# Pick filters ('for each' picking, the Godot way): each enabled filter wraps the
 		# event's body in a direct `for` loop — group members, children, or any GDScript
 		# iterable — with an optional predicate and first-N cap. Conditions gate the whole
 		# loop; multiple filters nest in order. Plain loops keep the parity contract.
@@ -1007,7 +1007,7 @@ static func _emit_event_body(
 					lines.append(body_indent + emitted_line)
 				had_body = true
 			elif action_item is RawCodeRow:
-				# In-flow GDScript block (C3 inline scripting): emitted verbatim inside the
+				# In-flow GDScript block (inline scripting): emitted verbatim inside the
 				# event body at the body indent (inner indentation preserved beneath it).
 				var inline_raw: RawCodeRow = action_item as RawCodeRow
 				if not inline_raw.enabled or inline_raw.code.strip_edges().is_empty():
@@ -1018,7 +1018,7 @@ static func _emit_event_body(
 				had_body = true
 				source_map.append({"uid": str(inline_raw.get_instance_id()), "start": inline_start, "end": lines.size(), "kind": "raw"})
 			elif action_item is MatchRow:
-				# A GDScript `match` as a structured action row (C3's switch): subject +
+				# A GDScript `match` as a structured action row (the switch idiom): subject +
 				# verbatim branch lines, one level deeper.
 				var match_row: MatchRow = action_item as MatchRow
 				if not match_row.enabled or match_row.match_expression.strip_edges().is_empty():
@@ -1121,7 +1121,7 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 				# While loops reuse the picking pipeline (predicate/first-N still apply).
 				lines.append("%swhile %s:" % [indent, collection])
 			else:
-				# Ordered picking (C3 pick nearest/furthest): sort a copy by the order
+				# Ordered picking (pick nearest/furthest): sort a copy by the order
 				# expression (written in terms of the iterator) before looping.
 				if not pick.order_by_expression.strip_edges().is_empty():
 					var sorted_name: String = "__pick_sorted_%d" % loop_index
@@ -1573,7 +1573,7 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# verbatim (not a quoted literal) so `$Sprite2D` / `get_node(...)` stay code, not strings.
 	if local_var.onready:
 		return "@onready var %s: %s = %s" % [local_var.name, local_var.type_name, str(local_var.default_value)]
-	# Combo (C3): exported String with options -> @export_enum dropdown in the Inspector.
+	# Combo: exported String with options -> @export_enum dropdown in the Inspector.
 	if local_var.exported and local_var.type_name == "String" and not local_var.options.is_empty():
 		return "%s var %s: String = %s" % [_export_enum_prefix(local_var.options), local_var.name, _to_code_literal(local_var.default_value)]
 	# Hinted export (@export_range / @export_file / @export_flags / …): the annotation is kept verbatim.

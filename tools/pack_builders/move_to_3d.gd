@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Move To 3D behavior (C3-style)
+## Move To 3D behavior (event-sheet-style)
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -15,7 +15,7 @@ static func build() -> bool:
 		"moving": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Move To 3D behavior (C3-style): glides through a queue of Vector3 waypoints and fires On Arrived at the final stop."
+	about.text = "Move To 3D behavior (event-sheet-style): glides through a queue of Vector3 waypoints and fires On Arrived at the final stop."
 	sheet.events.append(about)
 	var signal_block: RawCodeRow = RawCodeRow.new()
 	signal_block.code = "\n".join(PackedStringArray([

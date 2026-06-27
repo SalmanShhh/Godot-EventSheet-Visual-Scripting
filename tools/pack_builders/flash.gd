@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## C3 "Flash" behavior: toggles host visibility at an interval for a duration.
+## "Flash" behavior: toggles host visibility at an interval for a duration.
 ##
 ## Authored entirely as ACE rows — ZERO RawCode — the first bundled pack to prove the
 ## behaviour-as-ACEs path end to end (docs/internal/SPEC-behaviour-as-aces-parity.md). The signal is a
@@ -22,7 +22,7 @@ static func build() -> bool:
 		"flashing": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Flash behavior (C3-style): blinks the host's visibility for a duration, then restores it and fires On Flash Finished."
+	about.text = "Flash behavior (event-sheet-style): blinks the host's visibility for a duration, then restores it and fires On Flash Finished."
 	sheet.events.append(about)
 
 	# Trigger signal as a ROW (replaces the hand-written @ace_trigger GDScript block).

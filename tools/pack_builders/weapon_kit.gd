@@ -1,6 +1,6 @@
 # Pack builder — weapon_kit (one pack per file; run via tools/build_sample_behaviors.gd).
 #
-# Shooter state machine ported from the author's C3 "WeaponKit" addon: ammo + reserve
+# Shooter state machine ported from the author's "WeaponKit" addon: ammo + reserve
 # pools, fire-rate cooldown, single/auto/burst fire modes, and timed/instant reload with
 # auto-reload. It owns NO projectile — Fire just manages ammo/cooldown and emits On Fire,
 # so the sheet spawns the bullet/hitscan however it likes (parity-safe, engine-agnostic).

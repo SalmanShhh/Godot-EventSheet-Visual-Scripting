@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Bullet 3D behavior (C3-style)
+## Bullet 3D behavior (event-sheet-style)
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -19,7 +19,7 @@ static func build() -> bool:
 		"launched": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Bullet 3D behavior (C3-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled."
+	about.text = "Bullet 3D behavior (event-sheet-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled."
 	sheet.events.append(about)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"

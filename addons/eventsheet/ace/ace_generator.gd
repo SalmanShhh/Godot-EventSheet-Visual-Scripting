@@ -94,7 +94,7 @@ static func _apply_template_overrides(definition: ACEDefinition, overrides: Dict
 ## not only a direct child literally named WeaponKit), turn that leading "$<Node>." into a
 ## configurable {target} param defaulting to the authored path. The default substitutes back to the
 ## identical string, so existing sheets are byte-for-byte unchanged (drift stays 0); the user retargets
-## via $-autocomplete. This is Construct's "the ACE acts on the object instance you picked" model,
+## via $-autocomplete. This is the "the ACE acts on the object instance you picked" model,
 ## expressed as a Godot node path. Only a bare $Identifier prefix is parameterized — $"Quoted",
 ## %Unique, and multi-segment $A/B paths are already explicit and stay verbatim.
 static func _parameterize_node_target(definition: ACEDefinition) -> void:

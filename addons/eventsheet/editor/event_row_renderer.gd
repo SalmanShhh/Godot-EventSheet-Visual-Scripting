@@ -16,7 +16,7 @@ const COLOR_TRIGGER = EventSheetPalette.COLOR_TRIGGER
 const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
 const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
-# Object icon drawn before the object label in ACE cells (C3 grammar). The advance must
+# Object icon drawn before the object label in ACE cells (event-sheet grammar). The advance must
 # stay in sync with _measure_span_width in the viewport or hit-testing drifts.
 const OBJECT_ICON_SIZE := 14.0
 const OBJECT_ICON_ADVANCE := 18.0
@@ -44,8 +44,8 @@ const SPAN_SELECT_OUTLINE_ALPHA := 0.95
 const SPAN_HOVER_OUTLINE_LIGHTEN := 0.28
 const SPAN_HOVER_OUTLINE_ALPHA := 0.82
 
-## C3-style insert marker: arrowheads at both ends of a thin drop line so the insert point
-## reads instantly (mirrors Construct 3's tree-insert-mark).
+## Event-sheet-style insert marker: arrowheads at both ends of a thin drop line so the insert point
+## reads instantly (mirrors the tree-insert-mark).
 func _draw_insert_marker_arrows(control: Control, line_rect: Rect2, color: Color) -> void:
     var mid_y: float = line_rect.get_center().y
     var arrow: float = 5.0
@@ -60,7 +60,7 @@ func _draw_insert_marker_arrows(control: Control, line_rect: Rect2, color: Color
         Vector2(line_rect.end.x, mid_y + arrow)
     ]), color)
 
-## Draws ACE text with its parameter values highlighted (C3-style): plain segments use the
+## Draws ACE text with its parameter values highlighted (event-sheet-style): plain segments use the
 ## base colour, value segments (numbers / quoted strings / booleans, precomputed at span
 ## build) use the value colour. Segments advance by measured logical width and stop at the
 ## clip width.
@@ -172,7 +172,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
             group_tint = (row_data.source_resource as EventGroup).custom_color
         _draw_group_row_chrome(control, row_rect, fold_rect, alternating, event_style, group_tint)
     elif row_data.row_type == EventRowData.RowType.COMMENT and event_style != null:
-        # Per-comment colors (C3 parity): the row's custom tint wins over the theme token.
+        # Per-comment colors (event-sheet parity): the row's custom tint wins over the theme token.
         var comment_bg: Color = row_data.custom_color if row_data.custom_color.a > 0.01 else event_style.comment_row_background_color
         control.draw_rect(row_rect, comment_bg, true)
     elif row_data.row_type == EventRowData.RowType.EVENT and event_style != null:
@@ -325,7 +325,7 @@ func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2,
     if event_style != null:
         bg = event_style.group_background_alt_color if alternating else event_style.group_background_color
     var accent: Color = event_style.group_accent_color if event_style != null else EventSheetPalette.COLOR_GROUP_ACCENT
-    # Per-group color tag wins over the theme (C3 parity, mirrors per-comment colors).
+    # Per-group color tag wins over the theme (event-sheet parity, mirrors per-comment colors).
     if group_tint.a > 0.0:
         accent = group_tint
         bg = bg.lerp(Color(group_tint.r, group_tint.g, group_tint.b, bg.a), 0.22)
@@ -455,7 +455,7 @@ func _draw_spans(
         var text_x: float = span.rect.position.x + text_padding
         var right_padding: float = text_padding if bool(metadata.get("chip", false)) else 2.0
         var text_width: float = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
-        # Construct 3-style object icon + label drawn before the ACE text
+        # Event-sheet-style object icon + label drawn before the ACE text
         # (e.g. "[icon] System  Is on floor").
         var object_icon: Variant = metadata.get("object_icon")
         if object_icon is Texture2D:
@@ -467,7 +467,7 @@ func _draw_spans(
         if not object_label.is_empty():
             var object_color: Color = event_style.object_label_color if event_style != null else COLOR_OBJECT
             # "System" is the catch-all object for engine/Core ACEs, so it repeats on nearly
-            # every row. Keep it (C3 always shows the object) but dim it so the eye reads the
+            # every row. Keep it (the object is always shown) but dim it so the eye reads the
             # actual condition/action, not a column of identical "System" labels.
             if object_label == "System":
                 object_color.a *= 0.5
@@ -499,7 +499,7 @@ func _draw_spans(
         else:
             var value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
             _draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, value_color)
-        # Color params get a small swatch right after the text (C3-style color preview).
+        # Color params get a small swatch right after the text (event-sheet-style color preview).
         var swatch: Variant = metadata.get("swatch_color")
         if swatch is Color:
             var swatch_advance: float = minf(font.get_string_size(draw_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x, text_width)
@@ -531,7 +531,7 @@ func _draw_spans(
             )
 
 func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary) -> void:
-    # Flat C3/GDevelop-style cell: a subtle rectangular fill, no border or rounded corners.
+    # Flat event-sheet/GDevelop-style cell: a subtle rectangular fill, no border or rounded corners.
     var bg: Color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.035))
     control.draw_rect(span.rect, bg, true)
 
@@ -590,7 +590,7 @@ func _draw_chip_selected_span(
     selection_fill: Color,
     multi_select: bool
 ) -> void:
-    # Flat selected cell: a stronger accent-tinted fill plus a left accent bar (C3 cue).
+    # Flat selected cell: a stronger accent-tinted fill plus a left accent bar (event-sheet cue).
     var accent: Color = metadata.get("text_color", TEXT_PRIMARY)
     var fill: Color = Color(accent.r, accent.g, accent.b, 0.16 if multi_select else 0.22)
     control.draw_rect(span.rect, fill, true)

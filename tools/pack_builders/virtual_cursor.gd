@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Virtual Cursor behavior (C3 parity — ported from the virtual_cursor C3 addon).
+## Virtual Cursor behavior (event-sheet parity — ported from the virtual_cursor addon).
 ## Input-agnostic controllable cursor on a CharacterBody2D; drives the Drag N Drop pack.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -47,7 +47,7 @@ static func build() -> bool:
 		"edge_hit_prev": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Virtual Cursor behavior (C3 parity): input-agnostic controllable cursor on a CharacterBody2D — event-driven/axis/mouse-follow movement with accel/decel and direction modes, homing magnet, solid push-out via move_and_slide with sliding, lossless bounce, layout/viewport constraints, hover detection, and named interact buttons. Drives the Drag N Drop pack."
+	about.text = "Virtual Cursor behavior (event-sheet parity): input-agnostic controllable cursor on a CharacterBody2D — event-driven/axis/mouse-follow movement with accel/decel and direction modes, homing magnet, solid push-out via move_and_slide with sliding, lossless bounce, layout/viewport constraints, hover detection, and named interact buttons. Drives the Drag N Drop pack."
 	sheet.events.append(about)
 
 	# Exported int enums + Vector2 / Rect2 runtime state — declared verbatim at class level.
@@ -327,7 +327,7 @@ static func build() -> bool:
 	]))
 	sheet.events.append(block)
 
-	# Physics-tick integrator (5-stage order matching C3).
+	# Physics-tick integrator (5-stage order).
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnPhysicsProcess"

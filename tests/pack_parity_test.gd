@@ -1,5 +1,5 @@
-# Godot EventSheets — C3 capability parity for the behavior packs
-# The packs match their C3 counterparts' surfaces: Sine waves/movements, Orbit ellipses,
+# Godot EventSheets — capability parity for the behavior packs
+# The packs match their event-sheet counterparts' surfaces: Sine waves/movements, Orbit ellipses,
 # Bullet distance, Move To waypoint queues, Follow delayed mode, Drag axes, Car drift,
 # Tile Movement simulate/grid helpers, LOS cone + between-positions. Functional checks
 # run on real instantiated behaviors (no host needed for the pure parts).
@@ -12,7 +12,7 @@ static func run() -> bool:
 
 	# Sine: wave shapes are real functions; movement/wave are Inspector combos.
 	var sine_source: String = FileAccess.get_file_as_string("res://eventsheet_addons/sine/sine_behavior.gd")
-	all_passed = _check("sine movement is a combo of the C3 set",
+	all_passed = _check("sine movement is a combo of the standard movement set",
 		sine_source.contains("@export_enum(\"horizontal\", \"vertical\", \"forwards-backwards\", \"size\", \"angle\", \"opacity\", \"value-only\") var movement"), true) and all_passed
 	all_passed = _check("sine wave types are a combo",
 		sine_source.contains("@export_enum(\"sine\", \"triangle\", \"sawtooth\", \"reverse-sawtooth\", \"square\") var wave"), true) and all_passed

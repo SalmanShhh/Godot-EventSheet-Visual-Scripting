@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Advanced Random addon: a faithful port of Construct 3's Advanced Random PLUGIN — a single
+## Advanced Random addon: a faithful port of the Advanced Random PLUGIN — a single
 ## GLOBAL utility, so it ships as an AUTOLOAD (one shared seed = reproducible runs). Wraps
 ## Godot's own RandomNumberGenerator (seeded distributions: uniform / range / dice / normal)
 ## and FastNoiseLite (Perlin/Simplex/value noise with fractal octaves), plus permutation

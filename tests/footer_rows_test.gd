@@ -1,9 +1,9 @@
-# EventForge — C3-style footer "Add event…" rows + red ✗ negation marker
+# EventForge — event-sheet-style footer "Add event…" rows + red ✗ negation marker
 #
 # The sheet ends with an "Add event…" footer and every group keeps one as its last child
 # (one level deeper). Footers are inert affordances: no source resource, never box-selected,
 # clicking emits add_event_requested with the owner; the dock appends the new event into the
-# owner. Also guards the C3 red ✗ (no-circle) inverted-condition marker.
+# owner. Also guards the red ✗ (no-circle) inverted-condition marker.
 @tool
 extends RefCounted
 class_name FooterRowsTest
@@ -86,7 +86,7 @@ static func run() -> bool:
 		if span != null and span.text == "✕" and span.metadata is Dictionary:
 			marker_meta = span.metadata
 	all_passed = _check("negated condition shows the ✕ marker", not marker_meta.is_empty(), true) and all_passed
-	all_passed = _check("✕ marker is C3 red", marker_meta.get("badge_fg", Color.BLACK), Color("#FF0000")) and all_passed
+	all_passed = _check("✕ marker is red", marker_meta.get("badge_fg", Color.BLACK), Color("#FF0000")) and all_passed
 	all_passed = _check("✕ marker has no circle behind it", (marker_meta.get("badge_bg", Color.WHITE) as Color).a, 0.0) and all_passed
 	viewport.free()
 

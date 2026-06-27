@@ -1,7 +1,7 @@
 # Godot EventSheets — Reactivity nudge (poll -> signal-twin map).
 #
 # The picker shows "Reactive alternative: On Timeout" on a polling condition that has a clean signal
-# twin, steering a Construct-3 user from "check every frame" toward Godot's "react to a signal". This
+# twin, steering an event-sheet user from "check every frame" toward Godot's "react to a signal". This
 # guards the curated ACEDescriptor.REACTS_TO map: every mapped polling condition really exists and IS a
 # condition, every reactive trigger really exists and IS a trigger with the named display (so a rename
 # can't silently rot the nudge), and the deliberate omissions (is_on_floor, input-action polls — no

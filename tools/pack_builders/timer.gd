@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## C3 "Timer" behavior: attach under any node; Start/Stop ACEs; "On Timer" trigger.
+## "Timer" behavior: attach under any node; Start/Stop ACEs; "On Timer" trigger.
 ## Authored entirely as ACE rows (ZERO RawCode) — see docs/internal/SPEC-behaviour-as-aces-parity.md.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -17,7 +17,7 @@ static func build() -> bool:
 		"running": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Timer behavior (C3-style): Start Timer / Stop Timer from any sheet; the On Timer trigger fires when it elapses (repeats when 'repeating')."
+	about.text = "Timer behavior (event-sheet-style): Start Timer / Stop Timer from any sheet; the On Timer trigger fires when it elapses (repeats when 'repeating')."
 	sheet.events.append(about)
 
 	var finished_signal: SignalRow = SignalRow.new()

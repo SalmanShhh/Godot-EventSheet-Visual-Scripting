@@ -2,7 +2,7 @@
 #
 # Godot's nodes emit tree_entered / tree_exiting / tree_exited / renamed / child_entered_tree — so
 # "when this OTHER node enters/leaves the scene" is a SIGNAL to react to, not a per-frame IsInsideTree
-# check inside On Process (the Construct poll-every-tick habit). Verifies the five triggers register,
+# check inside On Process (the poll-every-tick habit). Verifies the five triggers register,
 # compile to a _ready signal connection on the source node with a named handler, carry their args, and
 # round-trip back to the named trigger byte-identically.
 @tool

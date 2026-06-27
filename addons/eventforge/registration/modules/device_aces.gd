@@ -1,4 +1,4 @@
-# EventForge module — Device input (C3 Keyboard/Mouse/Gamepad/Touch)
+# EventForge module — Device input (Keyboard/Mouse/Gamepad/Touch)
 #
 # Polling + event-scoped conditions; key params use the press-a-key capture hint.
 # Module contract: see ace_factory.gd — ace_ids/templates are API (compatibility
@@ -12,7 +12,7 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	# ── Device input (C3 Keyboard/Mouse/Gamepad/Touch, Godot-style). Key params use
+	# ── Device input (Keyboard/Mouse/Gamepad/Touch, Godot-style). Key params use
 	# the press-a-key capture workflow (hint key_capture). Event-scoped conditions are
 	# for On Input events, where `event` exists.
 	descriptors.append(F.make_descriptor("Core", "KeyIsDown", "Key Is Down", ACEDescriptor.ACEType.CONDITION, "Input.is_physical_key_pressed({key})", "", [F.make_param("key", "String", "KEY_SPACE", "Key", "Press a key to capture it.", "key_capture")], "Keyboard", "Key {key} is down"))

@@ -4,7 +4,7 @@
 # code: which functions lifted into events, and why each remaining block stayed
 # verbatim — with the closest ACE named, so the boundary teaches instead of
 # confusing. Computed post-hoc from the imported sheet (the lifter needs no
-# changes to be explainable). For C3 users learning Godot, every unlifted block
+# changes to be explainable). For event-sheet users learning Godot, every unlifted block
 # is a lesson; for Godot devs it's trust through transparency.
 @tool
 extends RefCounted

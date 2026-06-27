@@ -242,7 +242,7 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 		return _create_color_field(key, default_value)
 	if hint == EXPRESSION_HINT:
 		return _create_expression_field(key, default_value)
-	# Editable autocomplete combo (Construct-style): type any value, or filter/pick from
+	# Editable autocomplete combo (event-sheet-style): type any value, or filter/pick from
 	# the behavior-declared suggestions. Takes priority over a fixed dropdown.
 	if autocomplete is Array and not autocomplete.is_empty():
 		return _create_autocomplete_field(key, autocomplete, default_value)
@@ -290,7 +290,7 @@ func _create_options_field(key: String, options: Array, default_value: Variant) 
 	_fields[key] = dropdown
 	return dropdown
 
-## Editable autocomplete combo (Construct-style "Combo" with free text): a LineEdit the
+## Editable autocomplete combo (event-sheet-style "Combo" with free text): a LineEdit the
 ## user types into, plus a ▾ button whose popup lists the behavior-declared suggestions
 ## filtered by what's already typed. Picking inserts a suggestion verbatim; typing any
 ## other value is still allowed. The LineEdit IS the value-bearing field (read like text).
@@ -439,7 +439,7 @@ func _variable_matches_type(variable_name: String, required: String) -> bool:
 		return true
 	return type_name.begins_with(required)
 
-## C3-style object-signal picker: a dropdown of the host class's signals plus signals
+## Event-sheet-style object-signal picker: a dropdown of the host class's signals plus signals
 ## declared in the sheet's GDScript blocks (raw names — OnSignal connects them directly).
 ## The current value is always offered (custom names persist).
 ## quoted=true stores values as "name" string literals (Emit Signal's template wraps
@@ -497,7 +497,7 @@ func _signal_options() -> Array[String]:
 	return names
 
 ## Sheet-enum-driven dropdown (hint "enum:State"): options are the enum's members as
-## State.MEMBER values — the C3 Combo backed by a real enum.
+## State.MEMBER values — the Combo backed by a real enum.
 func _create_enum_reference_field(key: String, default_value: Variant, enum_name: String) -> Control:
 	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
 	var member_options: Array = []
@@ -665,7 +665,7 @@ func _drop_on_line_edit(_position: Vector2, data: Variant, edit: LineEdit) -> vo
 static func format_quoted_literal(value: String) -> String:
 	return "\"%s\"" % value
 
-## Animation params (C3's animation picker): a dropdown of every animation on every
+## Animation params (the animation picker): a dropdown of every animation on every
 ## AnimationPlayer in the edited scene, plus a free-text fallback for names that only
 ## exist at runtime. Selections insert quoted.
 var animation_scene_root_override: Node = null  # tests inject a tree here
@@ -718,7 +718,7 @@ static func animation_options_from(root: Node) -> PackedStringArray:
 	names.sort()
 	return names
 
-## C3's press-a-key workflow: a button that captures the next key press (storing the
+## The press-a-key workflow: a button that captures the next key press (storing the
 ## KEY_* constant), plus a fallback dropdown for keys that can't be detected.
 func _create_key_capture_field(key: String, default_value: Variant) -> Control:
 	var container: HBoxContainer = HBoxContainer.new()
@@ -774,7 +774,7 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	edit.scroll_fit_content_height = true
 	edit.gutters_draw_line_numbers = false
 	edit.code_completion_enabled = true
-	# Expressions are plain GDScript — say so explicitly so C3 users learn there is no
+	# Expressions are plain GDScript — say so explicitly so event-sheet users learn there is no
 	# separate expression language to memorize.
 	edit.placeholder_text = "GDScript expression (e.g. health + 10)"
 	edit.tooltip_text = "Plain GDScript — anything valid in an expression works here. Ctrl+Space completes sheet variables/functions and host members."
@@ -1124,8 +1124,8 @@ static func node_references_in_expression(expression: String) -> PackedStringArr
 		references.append(hit.get_string(1))
 	return references
 
-## Unique-name references (Godot 4's `%Name` — the stable, refactor-proof way to reach a node, like a
-## Construct object name): bare `%Name` and `%"Quoted Name"`. A `%` that sits INSIDE a string literal is
+## Unique-name references (Godot 4's `%Name` — the stable, refactor-proof way to reach a node, like an
+## event-sheet object name): bare `%Name` and `%"Quoted Name"`. A `%` that sits INSIDE a string literal is
 ## a printf-style format specifier (`"%d"`, `"%.2f"`) and is NOT a node reference, so it is skipped.
 static func unique_names_in_expression(expression: String) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
@@ -1574,7 +1574,7 @@ func _lint_context_healthy() -> bool:
 func _on_confirmed() -> void:
 	if _definition == null or _apply_blocked:
 		return
-	# Guardrail (C3-style): block the commit while any expression doesn't compile.
+	# Guardrail (event-sheet-style): block the commit while any expression doesn't compile.
 	var invalid_field: Control = _first_invalid_expression() if _lint_context_healthy() else null
 	if invalid_field != null:
 		if _hint != null:

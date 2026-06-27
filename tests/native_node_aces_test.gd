@@ -1,7 +1,7 @@
-# Godot EventSheets — Native-node ACE providers (C3 coverage Lane 1)
+# Godot EventSheets — Native-node ACE providers (event-sheet coverage Lane 1)
 # Tween/Scene/Audio/AnimatedSprite/Camera/Label/Navigation/CanvasItem/Math vocabulary
 # wrapping NATIVE Godot features (the engine maintains the implementation, we maintain
-# vocabulary — the compatibility covenant's lane 1). C3 names + search synonyms.
+# vocabulary — the compatibility covenant's lane 1). Event-sheet names + search synonyms.
 @tool
 extends RefCounted
 class_name NativeNodeAcesTest
@@ -35,7 +35,7 @@ static func run() -> bool:
 	# Native idioms: every template is a direct engine call (lane 1 = wrap, never clone).
 	all_passed = _check("tween wraps create_tween",
 		str(by_id["TweenProperty"].codegen_template).begins_with("create_tween().tween_property("), true) and all_passed
-	all_passed = _check("choose is C3's choose() over pick_random",
+	all_passed = _check("choose is choose() over pick_random",
 		str(by_id["Choose"].codegen_template), "[{values}].pick_random()") and all_passed
 	all_passed = _check("sprite play uses the StringName idiom",
 		str(by_id["PlaySpriteAnimation"].codegen_template).contains("play(&{anim})"), true) and all_passed
@@ -74,7 +74,7 @@ static func run() -> bool:
 	generated.source_code = output
 	all_passed = _check("native-node output parses", generated.reload(true) == OK, true) and all_passed
 
-	# C3 search synonyms reach the new vocabulary.
+	# Event-sheet search synonyms reach the new vocabulary.
 	var layout_queries: Array = ACEPickerDialog._c3_synonym_queries("go to layout")
 	all_passed = _check("'go to layout' maps to scene", layout_queries.has("scene"), true) and all_passed
 	var choose_queries: Array = ACEPickerDialog._c3_synonym_queries("choose")

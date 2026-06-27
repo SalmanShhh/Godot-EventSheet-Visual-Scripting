@@ -3,10 +3,10 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Simple Abilities behavior (ported + expanded from the Simple Abilities C3 addon for Godot).
+## Simple Abilities behavior (ported + expanded from the Simple Abilities addon for Godot).
 ## A per-instance ability manager: grant/remove abilities by string id, cooldowns, stack charges
 ## with auto-regen, temporary (auto-expiring) abilities, custom data, and tags for bulk ops.
-## Godot-suited additions over the C3 original: a CurrentAbilityID expression (the C3 _currentAbilityID
+## Godot-suited additions over the original: a CurrentAbilityID expression (the original _currentAbilityID
 ## had no reader), an exported global cooldown_multiplier (built-in cooldown reduction), a
 ## "Current Ability Is" condition (per-id trigger filtering), and a Ready Abilities list.
 static func build() -> bool:
@@ -20,7 +20,7 @@ static func build() -> bool:
 		"current_ability_id": {"type": "String", "default": "", "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Simple Abilities (C3 parity + Godot extras): grant abilities by id, cooldowns, stack charges that auto-regen, temporary abilities that auto-expire, per-ability custom data, and tags for bulk operations. Triggers fire for ANY ability; read Current Ability ID (or the Current Ability Is condition) to tell which one fired."
+	about.text = "Simple Abilities (event-sheet parity + Godot extras): grant abilities by id, cooldowns, stack charges that auto-regen, temporary abilities that auto-expire, per-ability custom data, and tags for bulk operations. Triggers fire for ANY ability; read Current Ability ID (or the Current Ability Is condition) to tell which one fired."
 	sheet.events.append(about)
 
 	# Triggers (signals), conditions + expressions, and private helpers — as ## @ace_*-annotated

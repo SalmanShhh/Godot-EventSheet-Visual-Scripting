@@ -89,7 +89,7 @@ static func run() -> bool:
 	all_passed = _check("column header gains the host context",
 		editor.get_viewport_control().get_host_context_label(), " — host: CharacterBody2D") and all_passed
 
-	# Sheet Type dialog application path (the discoverable C3-style control).
+	# Sheet Type dialog application path (the discoverable event-sheet-style control).
 	var plain_sheet: EventSheetResource = EventSheetResource.new()
 	var second_editor: EventSheetEditor = EventSheetEditor.new()
 	second_editor.setup(plain_sheet)

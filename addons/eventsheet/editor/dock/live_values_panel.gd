@@ -216,7 +216,7 @@ static func evaluate_watch(expression: String, values: Dictionary) -> Dictionary
         return {"ok": false, "error": expr.get_error_text()}
     return {"ok": true, "value": result}
 
-## Tree edit -> typed value -> running game (debug session). C3's editable debugger.
+## Tree edit -> typed value -> running game (debug session). The event-sheet editable debugger.
 func _on_live_value_edited() -> void:
     var edited: TreeItem = tree.get_edited()
     if edited == null:

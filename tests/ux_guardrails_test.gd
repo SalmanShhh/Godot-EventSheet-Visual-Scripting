@@ -1,4 +1,4 @@
-# Godot EventSheets — C3-familiarity batch: group descriptions, slow double-click editing,
+# Godot EventSheets — event-sheet-familiarity batch: group descriptions, slow double-click editing,
 # variable-rename refactoring, and commit-time guardrails (auto-fix or block bad input).
 @tool
 extends RefCounted
@@ -116,7 +116,7 @@ static func run() -> bool:
 	# This assert exposed that GROUP EVENTS never compiled at all — locked in now.
 	all_passed = _check("group events compile inline", rename_output.contains("func _ready()"), true) and all_passed
 	group.enabled = false
-	all_passed = _check("disabled groups drop their children (C3 semantics)",
+	all_passed = _check("disabled groups drop their children (event-sheet semantics)",
 		str(SheetCompiler.compile(sheet, "user://eventsheets_rename_off.gd").get("output", "")).contains("setup("), false) and all_passed
 	group.enabled = true
 

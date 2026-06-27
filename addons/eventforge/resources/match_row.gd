@@ -1,5 +1,5 @@
 # Godot EventSheets — MatchRow resource
-# A GDScript `match` statement as an action-lane row (C3's switch): an fx-validated
+# A GDScript `match` statement as an action-lane row (the event-sheet switch): an fx-validated
 # subject expression plus branch text (patterns + bodies, exactly GDScript match-body
 # syntax — enum members complete in patterns). Compiles in-flow inside the event body;
 # the dialog lint-gates the whole construct before commit.

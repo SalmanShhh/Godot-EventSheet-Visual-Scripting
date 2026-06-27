@@ -1,4 +1,4 @@
-# EventForge — GDScript inside the event flow (C3 inline scripting)
+# EventForge — GDScript inside the event flow (event-sheet inline scripting)
 #
 # In-flow GDScript blocks live in an event's actions: they render line-by-line in the
 # action lane, compile indented into the trigger body, double-click opens the code dialog,

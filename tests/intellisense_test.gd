@@ -1,6 +1,6 @@
 # Godot EventSheets — Intellisense upgrades
 # Dot-context completion (host./typed-variable./$Behavior. → that type's members),
-# signature hints for the innermost call, and the C3-style quick-add bar (synonym matcher
+# signature hints for the innermost call, and the event-sheet-style quick-add bar (synonym matcher
 # + positional params + apply).
 @tool
 extends RefCounted
@@ -71,7 +71,7 @@ static func run() -> bool:
 	editor.setup(target_sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	var tick_match: Dictionary = editor._quick_match("every tick")
-	all_passed = _check("C3 phrasing matches the trigger",
+	all_passed = _check("event-sheet phrasing matches the trigger",
 		not tick_match.is_empty() and (tick_match.get("definition") as ACEDefinition).id == "OnProcess", true) and all_passed
 	var heal_match: Dictionary = editor._quick_match("heal 7")
 	all_passed = _check("trailing words fill params positionally",

@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Simple Health behavior (C3 parity — ported from the Simple Health C3 addon).
+## Simple Health behavior (event-sheet parity — ported from the Simple Health addon).
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -23,7 +23,7 @@ static func build() -> bool:
 		"last_pool_damage_absorbed": {"type": "float", "default": 0.0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Simple Health behavior (C3 parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. current_health seeds to max_health On Ready."
+	about.text = "Simple Health behavior (event-sheet parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. current_health seeds to max_health On Ready."
 	sheet.events.append(about)
 
 	# Triggers (signals) + conditions + expressions + non-exposed helpers, all as

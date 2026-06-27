@@ -3,7 +3,7 @@
 # THE MODULE CONTRACT (see modules/): each vocabulary lives in its own file exposing
 # `static func get_descriptors() -> Array[ACEDescriptor]`, built through this factory.
 # EventForgeBuiltinACEs concatenates the modules. Why this shape:
-#   - each C3-equivalent "addon" (Audio, Keyboard, …) is one readable, documented file;
+#   - each "addon" (Audio, Keyboard, …) is one readable, documented file;
 #   - a module can ship standalone (copy the file + factory into another project) or be
 #     curated into packs without dragging the whole builtin list along;
 #   - the compatibility covenant stays easy to audit: ace_ids and templates are grep-able

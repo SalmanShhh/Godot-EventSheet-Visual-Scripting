@@ -103,7 +103,7 @@ static func run() -> bool:
 	all_passed = _check("Is In State is typed as a condition",
 		is_in_state != null and is_in_state.ace_type == ACEDefinition.ACEType.CONDITION, true) and all_passed
 	# Abilities pack: an action, a trigger, a condition (with its template), and the
-	# CurrentAbilityID expression (the Godot-suited reader the C3 original lacked).
+	# CurrentAbilityID expression (the Godot-suited reader the event-sheet original lacked).
 	var ab_activate: ACEDefinition = editor._ace_registry.find_definition("SimpleAbilitiesBehavior", "method:activate_ability")
 	var ab_on_activated: ACEDefinition = editor._ace_registry.find_definition("SimpleAbilitiesBehavior", "signal:on_ability_activated")
 	var ab_is_ready: ACEDefinition = editor._ace_registry.find_definition("SimpleAbilitiesBehavior", "method:is_ready")

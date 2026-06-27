@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Follow behavior (C3 parity)
+## Follow behavior (event-sheet parity)
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -21,7 +21,7 @@ static func build() -> bool:
 		"_reached": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Follow behavior (C3 parity): trails another node. mode smooth = lerp chase; mode delayed = replay the target's position history after a delay (C3's Follow)."
+	about.text = "Follow behavior (event-sheet parity): trails another node. mode smooth = lerp chase; mode delayed = replay the target's position history after a delay (the Follow behavior)."
 	sheet.events.append(about)
 	var signal_block: RawCodeRow = RawCodeRow.new()
 	signal_block.code = "\n".join(PackedStringArray([

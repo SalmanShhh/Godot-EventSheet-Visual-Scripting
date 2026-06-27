@@ -1,4 +1,4 @@
-# Godot EventSheets — C3 System coverage: time/engine, display, text, comparisons
+# Godot EventSheets — event-sheet System coverage: time/engine, display, text, comparisons
 @tool
 extends RefCounted
 class_name SystemAcesTest

@@ -570,7 +570,7 @@ func _build_platformer_shooter() -> bool:
 	# Fire (hold Space): FULLY CODE-FREE — conditions on the left (the input + the Weapon Kit's own
 	# Can Fire gate, targeting the behavior at $Player/WeaponKit), actions on the right (the pack's
 	# Fire, then Spawn Scene (Full) aimed by the Platformer pack's facing_direction). This is the row
-	# the node-targetable pack ACEs unlocked — no raw GDScript, the same legibility as Construct.
+	# the node-targetable pack ACEs unlocked — no raw GDScript, the same legibility as event sheets.
 	var fire: EventRow = EventRow.new()
 	fire.trigger_provider_id = "Core"; fire.trigger_id = "OnPhysicsProcess"
 	fire.conditions.append(_condition("Core", "IsActionPressed", "Input.is_action_pressed(&{action})", {"action": "\"ui_accept\""}))

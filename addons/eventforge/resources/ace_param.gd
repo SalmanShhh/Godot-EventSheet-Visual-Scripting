@@ -19,7 +19,7 @@ class_name ACEParam
 @export var name: String = "" # Backwards-compatible alias for early Phase 1 code.
 @export var display_name: String = ""
 @export var description: String = ""
-@export var desc: String = "" # Construct-style alias.
+@export var desc: String = "" # event-sheet-style alias.
 @export var type: int = TYPE_STRING
 ## Human-readable GDScript type name. Drives the UI control choice.
 @export var type_name: String = "String"
@@ -30,9 +30,9 @@ class_name ACEParam
 ## parameters to be trailing — the function dialog enforces that.
 @export var gdscript_default: String = ""
 @export var initial_value: Variant = null
-@export var initialValue: Variant = null # Construct-style alias.
+@export var initialValue: Variant = null # event-sheet-style alias.
 @export var options: Array[String] = []
-## Suggestions for an EDITABLE autocomplete combo (Construct-style): unlike `options`
+## Suggestions for an EDITABLE autocomplete combo (event-sheet-style): unlike `options`
 ## (a fixed dropdown), the user may type any value AND pick/filter from these. A behavior
 ## opts in per-param via `## @ace_param_autocomplete(param "a", "b", …)`; empty = plain field.
 @export var autocomplete: Array[String] = []

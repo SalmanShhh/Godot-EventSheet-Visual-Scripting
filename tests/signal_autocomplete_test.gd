@@ -1,4 +1,4 @@
-# Godot EventSheets — Signal autocomplete (C3 object-signal parity)
+# Godot EventSheets — Signal autocomplete (object-signal parity)
 # Signals join member completion (host members, typed variables, $GlobalClass — incl.
 # script-declared signals), and signal params get a picker: host-class signals + signals
 # declared in the sheet's GDScript blocks, offered as a dropdown instead of typed text.

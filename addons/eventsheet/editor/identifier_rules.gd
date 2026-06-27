@@ -1,5 +1,5 @@
 # Godot EventSheets — identifier guardrails
-# C3-style "you can't enter broken stuff": names that reach GDScript (variables, enums)
+# Event-sheet-style "you can't enter broken stuff": names that reach GDScript (variables, enums)
 # are auto-corrected where possible (spaces/invalid chars → underscores, digit-led names
 # prefixed) and BLOCKED with a clear message where not (keywords, empty results). Shared
 # by the variable and enum dialogs so every commit point behaves the same.

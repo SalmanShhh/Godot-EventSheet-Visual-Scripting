@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Tile Movement behavior (C3 parity)
+## Tile Movement behavior (event-sheet parity)
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -23,7 +23,7 @@ static func build() -> bool:
 		"pending_y": {"type": "float", "default": 0.0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Tile Movement behavior (C3 parity): grid-locked stepping (arrow keys or Simulate Step); grid-space helpers convert between tiles and pixels. Fires On Step Finished per tile."
+	about.text = "Tile Movement behavior (event-sheet parity): grid-locked stepping (arrow keys or Simulate Step); grid-space helpers convert between tiles and pixels. Fires On Step Finished per tile."
 	sheet.events.append(about)
 	var signal_block: RawCodeRow = RawCodeRow.new()
 	signal_block.code = "\n".join(PackedStringArray([
@@ -83,7 +83,7 @@ static func build() -> bool:
 	simulate_step_fn.expose_as_ace = true
 	simulate_step_fn.ace_display_name = "Simulate Step"
 	simulate_step_fn.ace_category = "Tile Movement"
-	simulate_step_fn.description = "Steps one tile in a direction: left, right, up or down (C3 simulate control)."
+	simulate_step_fn.description = "Steps one tile in a direction: left, right, up or down (simulate control)."
 	var simulate_step_fn_direction: ACEParam = ACEParam.new()
 	simulate_step_fn_direction.id = "direction"
 	simulate_step_fn_direction.type_name = "String"

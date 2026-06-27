@@ -2,8 +2,8 @@
 #
 # Sub-events compile nested inside their parent's conditions; ELSE/ELIF siblings chain onto
 # the previous if; comments compile to # lines; flow-dropped variables become locals; a
-# block whose body emits nothing gets `pass` (always-valid GDScript). Mirrors Construct 3
-# event-flow semantics — see _emit_event_body's doc comment for the full rules.
+# block whose body emits nothing gets `pass` (always-valid GDScript). Mirrors the visual
+# event-sheet event-flow semantics — see _emit_event_body's doc comment for the full rules.
 @tool
 extends RefCounted
 class_name SubeventCompileTest

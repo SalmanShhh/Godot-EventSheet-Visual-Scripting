@@ -1,6 +1,6 @@
 # EventForge — ACE picker presentation logic
 #
-# Verifies the C3-style grouping/colour/mode logic of ACEPickerDialog without opening the
+# Verifies the event-sheet-style grouping/colour/mode logic of ACEPickerDialog without opening the
 # popup window (which needs a display server). Exercises the pure helpers directly.
 @tool
 extends RefCounted
@@ -36,7 +36,7 @@ static func run() -> bool:
 	all_passed = _check("category header muted: custom", picker._group_color_for("Custom ACEs", false), muted) and all_passed
 	all_passed = _check("category header muted: other", picker._group_color_for("General Conditions", false), muted) and all_passed
 
-	# Featured verbs (C3-style highlight) are recognized for bolding + floating to the top of their group.
+	# Featured verbs (event-sheet-style highlight) are recognized for bolding + floating to the top of their group.
 	var feat_def: ACEDefinition = ACEDefinition.new()
 	feat_def.provider_id = "Core"; feat_def.id = "SetVar"
 	all_passed = _check("featured: Core/SetVar is featured", picker._is_featured(feat_def), true) and all_passed
@@ -110,7 +110,7 @@ static func run() -> bool:
 	ProjectSettings.set_setting("eventsheets/picker/favorites", null)
 
 	# De-jargoned hints: the user-facing picker hint must not surface the insider acronym "ACE"
-	# (Construct 3 / GDevelop never show it — newcomers read "condition / action / trigger").
+	# (event sheets / GDevelop never show it — newcomers read "condition / action / trigger").
 	for hint_mode: String in ["new_condition_event", "append_condition", "append_action", "replace_trigger", "other"]:
 		all_passed = _check("picker hint for %s drops the ACE jargon" % hint_mode,
 			picker._build_hint_text(hint_mode, false).contains("ACE"), false) and all_passed

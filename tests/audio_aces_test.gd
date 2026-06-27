@@ -1,4 +1,4 @@
-# Godot EventSheets — Audio module (C3 Audio addon, the Godot way) + the module
+# Godot EventSheets — Audio module (event-sheet Audio addon, the Godot way) + the module
 # contract (factory-built vocabularies concatenated into the builtin registry).
 @tool
 extends RefCounted

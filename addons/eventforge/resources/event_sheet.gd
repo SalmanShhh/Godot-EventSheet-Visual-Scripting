@@ -9,7 +9,7 @@ class_name EventSheetResource
 
 @export var host_class: String = "Node"
 @export var host_node_path: NodePath = NodePath(".")
-## Behavior sheets compile to attachable Node component scripts (Construct 3 behaviors,
+## Behavior sheets compile to attachable Node component scripts (node-attached behaviors,
 ## Godot-style): the script extends Node, acts on its PARENT via the generated `host`
 ## accessor, and host_class becomes the declared/required host type (typed accessor +
 ## attach-time warning + lint/completion context).
@@ -40,7 +40,7 @@ class_name EventSheetResource
 ## custom node type that appears in Godot's Create Node dialog, exactly like a hand-written
 ## GDScript class. Must be unique across the project (Godot enforces this).
 @export var custom_class_name: String = ""
-## Addon tags (C3-style: organize/filter your addon library): emitted as a class-level
+## Addon tags (event-sheet-style: organize/filter your addon library): emitted as a class-level
 ## `@ace_tags(...)` annotation, searchable in the picker and over MCP.
 @export var addon_tags: PackedStringArray = PackedStringArray()
 ## Optional icon for the custom node type (emitted as `@icon("path")`; shown in the Create
@@ -52,7 +52,7 @@ class_name EventSheetResource
 @export_multiline var class_description: String = ""
 @export var events: Array[Resource] = []
 @export var variables: Dictionary = {}
-## Compile-time includes (C3-style): paths to other event sheets (res://….tres) whose
+## Compile-time includes (event-sheet-style): paths to other event sheets (res://….tres) whose
 ## variables, class-level blocks, events, and functions merge into this sheet's generated
 ## script. The root sheet wins name collisions (warnings emitted); cycles are detected and
 ## skipped. Edited via the Inspector; ignored for GDScript-backed sheets.

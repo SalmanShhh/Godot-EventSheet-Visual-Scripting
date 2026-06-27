@@ -201,7 +201,7 @@ static func run() -> bool:
         true
     ) and all_passed
     all_passed = _check(
-        "add action affordance sits on its own line below the actions (C3-style)",
+        "add action affordance sits on its own line below the actions (event-sheet-style)",
         add_action_span_index >= 0
             and action_span_index >= 0
             and event_row_data.spans[add_action_span_index].rect.position.y > event_row_data.spans[action_span_index].rect.position.y,

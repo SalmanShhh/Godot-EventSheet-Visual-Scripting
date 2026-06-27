@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Line of Sight 3D behavior (C3 parity, Node3D host)
+## Line of Sight 3D behavior (event-sheet parity, Node3D host)
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -15,7 +15,7 @@ static func build() -> bool:
 		"collision_mask": {"type": "int", "default": 1, "exported": true}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Line of Sight 3D behavior (C3 parity): raycast LOS in 3D with range and an optional cone of view (degrees; 360 = all around, measured from the host's -Z forward). Conditions: Has Line Of Sight To, Has LOS Between positions."
+	about.text = "Line of Sight 3D behavior (event-sheet parity): raycast LOS in 3D with range and an optional cone of view (degrees; 360 = all around, measured from the host's -Z forward). Conditions: Has Line Of Sight To, Has LOS Between positions."
 	sheet.events.append(about)
 	var extra_block_0: RawCodeRow = RawCodeRow.new()
 	extra_block_0.code = "\n".join(PackedStringArray([

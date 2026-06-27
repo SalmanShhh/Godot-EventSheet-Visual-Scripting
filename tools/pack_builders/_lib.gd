@@ -21,7 +21,7 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 	# Same de-coding for EVENT bodies (a behaviour's OnProcess/OnPhysicsProcess tick): a single
 	# verbatim RawCode block becomes if/else/elseif condition rows + action rows (folded into the
 	# event's sub_events), kept only where the sheet still recompiles byte-identically (per-event
-	# gated). This is what makes a behaviour read like a Construct event sheet, not hand-written code.
+	# gated). This is what makes a behaviour read like an event sheet, not hand-written code.
 	EventSheetACELifter.lift_event_bodies(sheet)
 	# Trigger signals authored as `## @ace_trigger … signal X` code blocks become SignalRow rows
 	# (keyword-badged Trigger rows that feed the On Signal / Emit Signal pickers). The declarations

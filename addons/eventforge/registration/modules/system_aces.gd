@@ -1,4 +1,4 @@
-# EventForge module — System (C3 System parity)
+# EventForge module — System (event-sheet System parity)
 #
 # Time/engine, display, text expressions, comparisons, shader/date/platform info,
 # stateful Every X Seconds and the multi-line Spawn Scene At.
@@ -13,7 +13,7 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	# ── C3 System coverage: time/engine, display, text expressions, comparisons ──
+	# ── Event-sheet System coverage: time/engine, display, text expressions, comparisons ──
 	descriptors.append(F.make_descriptor("Core", "SetTimeScale", "Set Time Scale", ACEDescriptor.ACEType.ACTION, "Engine.time_scale = {scale}", "", [F.make_param("scale", "String", "1.0", "Scale", "1 = normal, 0.5 = slow motion, 0 = paused physics/process.", "expression")], "Time", "Set time scale to {scale}"))
 	descriptors.append(F.make_descriptor("Core", "GetTimeScale", "Time Scale", ACEDescriptor.ACEType.EXPRESSION, "Engine.time_scale", "", [], "Time", "time scale"))
 	descriptors.append(F.make_descriptor("Core", "GetGameTime", "Game Time", ACEDescriptor.ACEType.EXPRESSION, "(Time.get_ticks_msec() / 1000.0)", "", [], "Time", "game time (seconds)"))
@@ -23,7 +23,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "SetWindowSize", "Set Window Size", ACEDescriptor.ACEType.ACTION, "DisplayServer.window_set_size({size})", "", [F.make_param("size", "String", "Vector2i(1280, 720)", "Size", "Window size in pixels.", "expression")], "Display", "Set window size to {size}"))
 	descriptors.append(F.make_descriptor("Core", "GetWindowWidth", "Window Width", ACEDescriptor.ACEType.EXPRESSION, "DisplayServer.window_get_size().x", "", [], "Display", "window width"))
 	descriptors.append(F.make_descriptor("Core", "GetWindowHeight", "Window Height", ACEDescriptor.ACEType.EXPRESSION, "DisplayServer.window_get_size().y", "", [], "Display", "window height"))
-	# Text (C3 System string expressions -> direct String methods)
+	# Text (event-sheet System string expressions -> direct String methods)
 	descriptors.append(F.make_descriptor("Core", "TextTokenAt", "Token At", ACEDescriptor.ACEType.EXPRESSION, "{text}.get_slice({separator}, {index})", "", [F.make_param("text", "String", "text", "Text", "Source string.", "expression"), F.make_param("separator", "String", "\",\"", "Separator", "Token separator.", "expression"), F.make_param("index", "String", "0", "Index", "Token index.", "expression")], "Text", "tokenat({text}, {index})"))
 	descriptors.append(F.make_descriptor("Core", "TextTokenCount", "Token Count", ACEDescriptor.ACEType.EXPRESSION, "{text}.get_slice_count({separator})", "", [F.make_param("text", "String", "text", "Text", "Source string.", "expression"), F.make_param("separator", "String", "\",\"", "Separator", "Token separator.", "expression")], "Text", "tokencount({text})"))
 	descriptors.append(F.make_descriptor("Core", "TextFind", "Find In Text", ACEDescriptor.ACEType.EXPRESSION, "{text}.find({needle})", "", [F.make_param("text", "String", "text", "Text", "Source string.", "expression"), F.make_param("needle", "String", "\"a\"", "Find", "Substring to find (-1 when missing).", "expression")], "Text", "find({needle})"))
@@ -37,13 +37,13 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "TextTrim", "Trim", ACEDescriptor.ACEType.EXPRESSION, "{text}.strip_edges()", "", [F.make_param("text", "String", "text", "Text", "Source string.", "expression")], "Text", "trim({text})"))
 	descriptors.append(F.make_descriptor("Core", "TextZeroPad", "Zero Pad", ACEDescriptor.ACEType.EXPRESSION, "(\"%0*d\" % [{digits}, {value}])", "", [F.make_param("digits", "String", "3", "Digits", "Total width.", "expression"), F.make_param("value", "String", "7", "Value", "Integer to pad.", "expression")], "Text", "zeropad({value}, {digits})"))
 
-	# Shader params (C3 effects -> Godot materials), date & time, platform info
+	# Shader params (event-sheet effects -> Godot materials), date & time, platform info
 	descriptors.append(F.make_descriptor("Core", "SetShaderParameter", "Set Shader Parameter", ACEDescriptor.ACEType.ACTION, "material.set_shader_parameter(&{param}, {value})", "", [F.make_param("param", "String", "\"strength\"", "Parameter", "Shader uniform name."), F.make_param("value", "String", "1.0", "Value", "Value expression.", "expression")], "General Actions", "Set shader {param} to {value}", "CanvasItem"))
 	descriptors.append(F.make_descriptor("Core", "GetDatetimeString", "Date & Time Text", ACEDescriptor.ACEType.EXPRESSION, "Time.get_datetime_string_from_system()", "", [], "Time", "datetime string"))
 	descriptors.append(F.make_descriptor("Core", "GetUnixTime", "Unix Time", ACEDescriptor.ACEType.EXPRESSION, "Time.get_unix_time_from_system()", "", [], "Time", "unix time"))
 	descriptors.append(F.make_descriptor("Core", "GetOSName", "OS Name", ACEDescriptor.ACEType.EXPRESSION, "OS.get_name()", "", [], "Platform", "os name"))
 	descriptors.append(F.make_descriptor("Core", "HasOSFeature", "Platform Has Feature", ACEDescriptor.ACEType.CONDITION, "OS.has_feature({feature})", "", [F.make_param("feature", "String", "\"mobile\"", "Feature", "Feature tag to test.", "", ["\"mobile\"", "\"pc\"", "\"web\"", "\"android\"", "\"ios\"", "\"editor\"", "\"debug\"", "\"release\""])], "Platform", "platform has {feature}"))
-	# Stateful conditions (C3's Every X seconds): each applied instance owns a member;
+	# Stateful conditions (the Every X seconds pattern): each applied instance owns a member;
 	# the prelude accumulates frame time (get_process_delta_time, defined on any Node) before the
 	# if, on_true rebases inside it. Compiles under any trigger; best used under a per-frame one.
 	var every_seconds: ACEDescriptor = F.make_descriptor("Core", "EveryXSeconds", "Every X Seconds", ACEDescriptor.ACEType.CONDITION, "__every_{uid} >= maxf({seconds}, 0.001)", "", [F.make_param("seconds", "String", "1.0", "Seconds", "Interval between runs (needs a per-frame trigger).", "expression")], "Time", "Every {seconds} seconds")
@@ -55,7 +55,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "SpawnSceneAt", "Spawn Scene At", ACEDescriptor.ACEType.ACTION, "var __spawn_{uid} = load({path}).instantiate()\n__spawn_{uid}.position = {position}\nadd_child(__spawn_{uid})", "", [F.make_param("path", "String", "\"res://enemy.tscn\"", "Scene", "Scene file to instance.", "scene_path"), F.make_param("position", "String", "Vector2(0, 0)", "Position", "Spawn position.", "expression")], "Scene", "Spawn {path} at {position}"))
 	# Spawn + position + rotation + an optional group tag in one row (replaces a raw load/instantiate block).
 	descriptors.append(F.make_descriptor("Core", "SpawnSceneFull", "Spawn Scene (Full)", ACEDescriptor.ACEType.ACTION, "var __spawn_{uid} = load({path}).instantiate()\n__spawn_{uid}.position = {position}\n__spawn_{uid}.rotation_degrees = {rotation}\nadd_child(__spawn_{uid})\nif {group} != \"\": __spawn_{uid}.add_to_group({group})", "", [F.make_param("path", "String", "\"res://enemy.tscn\"", "Scene", "Scene file to instance.", "scene_path"), F.make_param("position", "String", "Vector2(0, 0)", "Position", "Spawn position.", "expression"), F.make_param("rotation", "String", "0.0", "Rotation", "Rotation in degrees.", "expression"), F.make_param("group", "String", "\"\"", "Group", "Optional group to add the spawned node to (blank = none).", "expression")], "Scene", "Spawn {path} (rot {rotation}, group {group})"))
-	# Generic comparisons (C3 System: compare two values / is between values)
+	# Generic comparisons (event-sheet System: compare two values / is between values)
 	descriptors.append(F.make_descriptor("Core", "CompareValues", "Compare Values", ACEDescriptor.ACEType.CONDITION, "{a} {op} {b}", "", [F.make_param("a", "String", "0", "First", "Left value.", "expression"), F.make_param("op", "String", "==", "Operator", "Comparison.", "", F.COMPARISON_OPERATORS), F.make_param("b", "String", "0", "Second", "Right value.", "expression")], "General Conditions", "{a} {op} {b}"))
 	descriptors.append(F.make_descriptor("Core", "IsBetween", "Is Between Values", ACEDescriptor.ACEType.CONDITION, "({min} <= {value} and {value} <= {max})", "", [F.make_param("value", "String", "0", "Value", "Value to test.", "expression"), F.make_param("min", "String", "0", "Min", "Lower bound (inclusive).", "expression"), F.make_param("max", "String", "10", "Max", "Upper bound (inclusive).", "expression")], "General Conditions", "{value} is between {min} and {max}"))
 	# Generic boolean escape hatch (the code-free fallback): use any GDScript that returns a bool as a
@@ -64,7 +64,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# get right; it inverts to `not (...)` for free. Prefer a named pack condition where one exists.
 	descriptors.append(F.make_descriptor("Core", "ExpressionIsTrue", "Expression Is True", ACEDescriptor.ACEType.CONDITION, "{expr}", "", [F.make_param("expr", "String", "true", "Expression", "Any GDScript boolean expression, e.g. $Player/WeaponKit.can_fire() or health > 0.", "expression")], "General Conditions", "{expr}"))
 
-	# Runtime group toggling (C3 Set Group Active): targets the opt-in "runtime
+	# Runtime group toggling (event-sheet Set Group Active): targets the opt-in "runtime
 	# toggleable" flag members. The group param is the snake-cased group name.
 	descriptors.append(F.make_descriptor("Core", "SetGroupActive", "Set Group Active", ACEDescriptor.ACEType.ACTION, "set(\"__group_\" + {group} + \"_active\", {active})", "", [F.make_param("group", "String", "\"combat\"", "Group", "Snake-cased group name (runtime-toggleable groups only).", "expression"), F.make_param("active", "String", "true", "Active", "true / false.", "", ["true", "false"])], "General Actions", "Set group {group} active: {active}"))
 	descriptors.append(F.make_descriptor("Core", "IsGroupActive", "Is Group Active", ACEDescriptor.ACEType.CONDITION, "bool(get(\"__group_\" + {group} + \"_active\"))", "", [F.make_param("group", "String", "\"combat\"", "Group", "Snake-cased group name.", "expression")], "General Conditions", "group {group} is active"))

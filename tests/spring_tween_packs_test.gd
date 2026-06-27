@@ -1,4 +1,4 @@
-# Godot EventSheets — Spring + Tween behavior packs (the C3 simple_spring port, cleaned,
+# Godot EventSheets — Spring + Tween behavior packs (the simple_spring port, cleaned,
 # and Godot Tweens as a behavior). The spring assert SIMULATES: a stepped spring must
 # converge on its target and fire On Spring Reached.
 @tool

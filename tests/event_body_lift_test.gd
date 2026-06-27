@@ -1,7 +1,7 @@
 # EventForge — build-time de-coding of EVENT bodies (the sibling of the function-body lift).
 # A behaviour's OnProcess/OnPhysicsProcess tick authored as one verbatim RawCode block is reverse-
 # lifted into if/else/elseif CONDITION rows + action rows, folded into the event's sub_events (the
-# ordered list the compiler walks). This is what makes a behaviour read like a Construct event sheet.
+# ordered list the compiler walks). This is what makes a behaviour read like an event sheet.
 # The per-event byte-identical gate guarantees the shipped GDScript never changes.
 @tool
 extends RefCounted

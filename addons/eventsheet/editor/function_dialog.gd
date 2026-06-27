@@ -1,10 +1,10 @@
-# Godot EventSheets — sheet-function dialog (Construct-3 style)
+# Godot EventSheets — sheet-function dialog (event-sheet style)
 #
-# Authors an EventFunction from a popup, the way Construct's "Add function" dialog does:
+# Authors an EventFunction from a popup, the way an "Add function" dialog does:
 #  • "Usable as" picks Action / Condition / Expression in one control (an Expression is a getter
 #    that returns a typed value; a Condition is a bool test; an Action is a void doer / setter) and
 #    sets the return type for you — the easy get/set toggle.
-#  • Parameters are full C3 rows: name · type · default value · description.
+#  • Parameters are full event-sheet rows: name · type · default value · description.
 #  • "Run only when" adds guard conditions (GDScript boolean expressions) that wrap the function
 #    body in an `if`, so the body only runs when they hold (e.g. a node setting is enabled).
 #  • Expose-as-ACE publishes it into other sheets' pickers.
@@ -81,7 +81,7 @@ func init_dialog(parent_node: Node) -> void:
 	_value_type_row = EventSheetPopupUI.form_row("Value type", _value_type_option)
 	form.add_child(_value_type_row)
 
-	# Parameters — C3-style rows: name · type · default · description.
+	# Parameters — event-sheet-style rows: name · type · default · description.
 	var params_row: HBoxContainer = HBoxContainer.new()
 	var params_label: Label = Label.new()
 	params_label.text = "Parameters"

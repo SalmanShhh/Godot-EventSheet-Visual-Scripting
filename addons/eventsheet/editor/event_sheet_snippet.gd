@@ -1,4 +1,4 @@
-# EventSheet — Shareable snippet serialization (C3-style)
+# EventSheet — Shareable snippet serialization (event-sheet-style)
 # Serializes sheet rows to a portable, versioned TEXT form for the system clipboard, so
 # events paste across projects, editor instances, and forum/Discord posts. Pure data via
 # Godot's var_to_str (no JSON, no script paths, no UIDs): provider ids, params, baked

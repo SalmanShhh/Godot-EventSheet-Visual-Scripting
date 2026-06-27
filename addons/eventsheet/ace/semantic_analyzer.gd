@@ -146,7 +146,7 @@ func _build_overrides(directives: Array[String], exported: bool = false) -> Dict
             overrides["codegen_template"] = _extract_annotation_value(directive)
         elif directive.begins_with("@ace_param_options"):
             # `@ace_param_options(movement horizontal, vertical, angle)` -> the param
-            # renders as a dropdown (C3's Combo) in the params dialog.
+            # renders as a dropdown (a Combo) in the params dialog.
             var options_value: String = _extract_annotation_value(directive)
             var options_split: PackedStringArray = options_value.split(" ", false, 1)
             if options_split.size() == 2:
@@ -159,7 +159,7 @@ func _build_overrides(directives: Array[String], exported: bool = false) -> Dict
                 overrides["param_options"] = param_options
         elif directive.begins_with("@ace_param_autocomplete"):
             # `@ace_param_autocomplete(anim "idle", "run", "jump")` -> the param renders as
-            # an EDITABLE suggest combo (C3 autocomplete): the user may type any value AND
+            # an EDITABLE suggest combo (autocomplete): the user may type any value AND
             # filter/pick from these. Toggled purely by the behavior's own code (present =
             # on). Values are inserted verbatim, so quote string suggestions in the source.
             # Extract the parens content RAW (unlike _extract_annotation_value, which would

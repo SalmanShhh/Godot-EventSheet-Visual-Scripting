@@ -3,7 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Orbit 3D behavior (C3-style)
+## Orbit 3D behavior (event-sheet-style)
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -19,7 +19,7 @@ static func build() -> bool:
 		"center_captured": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Orbit 3D behavior (C3-style): circles the host around its starting point in the XZ plane (Y stays)."
+	about.text = "Orbit 3D behavior (event-sheet-style): circles the host around its starting point in the XZ plane (Y stays)."
 	sheet.events.append(about)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"

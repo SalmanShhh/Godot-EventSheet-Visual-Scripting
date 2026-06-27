@@ -1,9 +1,9 @@
 # Pack builder — platformer (one pack per file; run via tools/build_sample_behaviors.gd).
 #
 # Rich kinematic platformer for a CharacterBody2D, porting the feel features from the
-# author's C3 "Physics Platformer" addon — coyote time, jump buffering, variable jump
+# author's "Physics Platformer" addon — coyote time, jump buffering, variable jump
 # height, multi-jump, wall slide + wall jump, acceleration/deceleration and terminal
-# velocity — implemented kinematically (cleaner + more predictable than C3's physics
+# velocity — implemented kinematically (cleaner + more predictable than physics
 # integration). The original jump()/set_move_speed()/On Jumped ACEs keep their ids
 # (compatibility covenant); everything else is additive.
 @tool

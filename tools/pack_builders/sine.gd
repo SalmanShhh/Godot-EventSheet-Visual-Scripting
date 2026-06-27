@@ -4,7 +4,7 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 ## Saves the editable sheet (.tres) and the compiled addon script (.gd) side by side.
-## Sine behavior (C3 parity)
+## Sine behavior (event-sheet parity)
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -28,7 +28,7 @@ static func build() -> bool:
 		"base_captured": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Sine behavior (C3 parity): wave-driven oscillation. movement: horizontal, vertical, forwards-backwards, size, angle, opacity, value-only. wave: sine, triangle, sawtooth, reverse-sawtooth, square. Read the current wave via $SineBehavior.wave_value."
+	about.text = "Sine behavior (event-sheet parity): wave-driven oscillation. movement: horizontal, vertical, forwards-backwards, size, angle, opacity, value-only. wave: sine, triangle, sawtooth, reverse-sawtooth, square. Read the current wave via $SineBehavior.wave_value."
 	sheet.events.append(about)
 	var extra_block_0: RawCodeRow = RawCodeRow.new()
 	extra_block_0.code = "\n".join(PackedStringArray([
@@ -98,7 +98,7 @@ static func build() -> bool:
 	update_initial_state_fn.expose_as_ace = true
 	update_initial_state_fn.ace_display_name = "Update Initial State"
 	update_initial_state_fn.ace_category = "Sine"
-	update_initial_state_fn.description = "Re-captures the host's current position/scale/angle/opacity as the wave's base (C3 updateInitialState)."
+	update_initial_state_fn.description = "Re-captures the host's current position/scale/angle/opacity as the wave's base (updateInitialState)."
 	var update_initial_state_fn_body: RawCodeRow = RawCodeRow.new()
 	update_initial_state_fn_body.code = "\n".join(PackedStringArray([
 		"if host == null:",

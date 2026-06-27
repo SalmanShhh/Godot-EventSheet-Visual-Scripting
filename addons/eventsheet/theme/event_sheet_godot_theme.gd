@@ -42,7 +42,7 @@ static func apply(
 	event_style.row_background_color = dark_1
 	event_style.row_background_alt_color = dark_1.lerp(base, 0.35)
 	event_style.row_border_color = dark_2.lerp(Color.BLACK, 0.2)
-	# Subtle neutral lane tints (C3 keeps the condition side slightly lighter).
+	# Subtle neutral lane tints (the condition side is kept slightly lighter).
 	event_style.condition_lane_color = Color(1.0, 1.0, 1.0, 0.025)
 	event_style.action_lane_color = Color(1.0, 1.0, 1.0, 0.008)
 	event_style.lane_divider_color = dark_2.lerp(Color.BLACK, 0.25)

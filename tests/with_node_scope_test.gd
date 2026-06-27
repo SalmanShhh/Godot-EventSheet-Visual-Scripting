@@ -1,4 +1,4 @@
-# Godot EventSheets — "With node X:" scope block (Construct-style pick-once).
+# Godot EventSheets — "With node X:" scope block (event-sheet-style pick-once).
 #
 # A row with a with_node_target scopes its actions — and its descendant sub-events' actions — to that
 # node: any action that leaves its "On node" target on the host (blank, or the "self" of the group/meta

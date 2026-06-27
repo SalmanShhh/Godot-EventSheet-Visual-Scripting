@@ -10,7 +10,7 @@ signal asset_dropped(target_event: Resource, asset_paths: PackedStringArray)
 signal ace_picker_requested(row_data: EventRowData, lane: String)
 signal span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String)
 signal ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary)
-## C3's fastest gesture: double-click a highlighted VALUE inside an ACE to edit just
+## The fastest gesture: double-click a highlighted VALUE inside an ACE to edit just
 ## that parameter (no full dialog). Emitted with the resolved ACE + param id.
 signal param_value_edit_requested(ace: Resource, param_id: String, current_text: String)
 signal ace_drop_requested(
@@ -169,11 +169,11 @@ var _zoom_factor: float = 1.0
 var _layout_style_signature: String = ""
 var _dragging_lane_divider: bool = false
 const LANE_DIVIDER_GRAB_TOLERANCE := 5.0
-## C3-style trailing "Add event…" footer rows (sheet-end and per-group). On by default;
+## Event-sheet-style trailing "Add event…" footer rows (sheet-end and per-group). On by default;
 ## settable so headless tests can assert raw row counts/indices without the affordance
 ## shifting them, and so the dock can offer a "hide add-event rows" declutter option.
 var show_add_event_footers: bool = true
-## C3-style drag ghost: a faint label of the dragged content following the cursor.
+## Event-sheet-style drag ghost: a faint label of the dragged content following the cursor.
 var _drag_ghost_label: String = ""
 var _drag_pointer_position: Vector2 = Vector2.ZERO
 ## Vertical gap inserted before an event/group that starts a new sibling block (indent <=
@@ -820,7 +820,7 @@ func _draw() -> void:
     _draw_box_selection_overlay()
     _draw_drag_ghost(font, font_size)
 
-## C3-style drag ghost: a faint (~0.66 opacity) label of the dragged content following the
+## Event-sheet-style drag ghost: a faint (~0.66 opacity) label of the dragged content following the
 ## cursor while an ACE/row drag has an active target (i.e. after actual mouse motion).
 func _draw_drag_ghost(font: Font, font_size: int) -> void:
     if _drag_ghost_label.is_empty():
@@ -1499,7 +1499,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
         var row_data: EventRowData = _build_row_from_resource(entry, 0)
         if row_data != null:
             root_rows.append(row_data)
-    # C3-style trailing "Add event…" footer at the end of the sheet.
+    # Event-sheet-style trailing "Add event…" footer at the end of the sheet.
     if show_add_event_footers:
         root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
     return root_rows
@@ -1686,7 +1686,7 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
     return row_data
 
 ## A GDScript block row: verbatim code shown line-by-line, edited via the dock's code dialog
-## (double-click), compiled at class level. The C3-style "inline code" escape hatch.
+## (double-click), compiled at class level. The event-sheet-style "inline code" escape hatch.
 func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
     var row_data := EventRowData.new()
     row_data.indent = indent
@@ -1763,7 +1763,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
             }
         )
     ]
-    # C3-style group description: a muted second line on the header, inline-editable.
+    # Event-sheet-style group description: a muted second line on the header, inline-editable.
     if not group.description.strip_edges().is_empty():
         row_data.line_count = 2
         row_data.spans.append(
@@ -1782,7 +1782,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
         var child_row: EventRowData = _build_row_from_resource(child, indent + 1)
         if child_row != null:
             row_data.children.append(child_row)
-    # C3-style per-group footer: always the group's last child, one level deeper.
+    # Event-sheet-style per-group footer: always the group's last child, one level deeper.
     if show_add_event_footers:
         row_data.children.append(
             _build_add_event_footer_row(group, indent + 1, "+ Add event to '%s'…" % _group_name(group))
@@ -2142,7 +2142,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
             )
         )
         condition_line_index += 1
-    # Pick filters render as "For each …" lines below the conditions (C3's picking rows);
+    # Pick filters render as "For each …" lines below the conditions (the picking rows);
     # double-click opens the pick-filter dialog.
     for pick_index in range(event_row.pick_filters.size()):
         var pick: PickFilter = event_row.pick_filters[pick_index] as PickFilter
@@ -2202,7 +2202,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                 )
                 action_line_index += 1
             elif action_resource is MatchRow:
-                # match statement (C3's switch): header + branch lines as action cells
+                # match statement (the switch): header + branch lines as action cells
                 # sharing one ace_index; double-click opens the match dialog.
                 var match_resource: MatchRow = action_resource as MatchRow
                 var match_lines: PackedStringArray = PackedStringArray(["match %s:" % match_resource.match_expression])
@@ -2255,7 +2255,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
                     )
                     action_line_index += 1
             elif action_resource is CommentRow:
-                # Action-cell comment (C3 parity: comments can live inside an event's
+                # Action-cell comment (event-sheet parity: comments can live inside an event's
                 # action flow; convertible back to a standalone comment row). One
                 # comment-styled cell per text line, sharing the ace_index.
                 var action_comment: CommentRow = action_resource as CommentRow
@@ -2304,7 +2304,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
             )
         )
         add_action_line_index = comment_line_index + 1
-    # C3-style faint "Add action" affordance on its own line below the actions.
+    # Event-sheet-style faint "Add action" affordance on its own line below the actions.
     var add_action_color: Color = action_style_meta.get("text_color", EventSheetPalette.COLOR_ACTION)
     add_action_color.a *= 0.55
     spans.append(
@@ -2405,7 +2405,7 @@ func _append_condition_prefix_spans(
         negated_meta["condition_index"] = condition_index
         negated_meta["line_index"] = line_index
         negated_meta["badge_style"] = "negated"
-        # C3-style inverted-condition marker: a bare red ✗ (C3's --invert-icon-color),
+        # Event-sheet-style inverted-condition marker: a bare red ✗ (the --invert-icon-color),
         # no circle behind it. Themable via EventSheetEventStyle.invert_marker_color.
         negated_meta["badge_bg"] = Color(0.0, 0.0, 0.0, 0.0)
         negated_meta["badge_fg"] = _get_event_style().invert_marker_color
@@ -2632,7 +2632,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
             # -2.0 accounts for the +2.0 the rect adds below, so non-event spans (comments,
             # variables, blocks) never bleed past the row's right padding.
             span_width = max(min(span_width, row_right_limit - span_x - 2.0), 1.0)
-        # C3-style contiguous cells: chip cells (conditions/actions/comments) fill their full
+        # Event-sheet-style contiguous cells: chip cells (conditions/actions/comments) fill their full
         # line minus a 1px hairline, so stacked cells read as one solid block. Badges and
         # plain text keep the original vertical inset.
         if bool(metadata.get("chip", false)):
@@ -3558,7 +3558,7 @@ func _group_name(group: EventGroup) -> String:
         return group.group_name
     return "Group"
 
-## Construct 3-style object label shown before each condition/action (e.g. "System",
+## Event-sheet-style object label shown before each condition/action (e.g. "System",
 ## "Sprite", "CharacterBody2D"). Core ACEs read as "System"; node-typed ACEs use the class.
 func _object_label_for(provider_id: String, ace_id: String) -> String:
     var definition: ACEDefinition = _find_definition(provider_id, ace_id)
@@ -3665,7 +3665,7 @@ func _get_scope_badge_colors(scope_label: String) -> Dictionary:
 static var _value_regex: RegEx = null
 
 ## Ranges ([start, length]) of parameter-like values (numbers, quoted strings, booleans)
-## inside ACE display text, so the renderer can highlight them C3-style.
+## inside ACE display text, so the renderer can highlight them event-sheet-style.
 static func _value_ranges_for(text: String) -> Array:
     if _value_regex == null:
         _value_regex = RegEx.new()
@@ -3753,7 +3753,7 @@ func _find_definition(provider_id: String, ace_id: String) -> ACEDefinition:
 # (registry lookup + editor-theme/texture fetch) must not run per rebuild per span.
 var _ace_icon_cache: Dictionary = {}
 
-## Icon shown before an ACE's object label in row cells (C3 shows the object's icon next
+## Icon shown before an ACE's object label in row cells (event sheets show the object's icon next
 ## to its name everywhere). Resolution order matches the picker; Core/System falls back to
 ## the editor's Tools glyph. Null (headless / nothing matches) keeps the text-only look.
 func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
