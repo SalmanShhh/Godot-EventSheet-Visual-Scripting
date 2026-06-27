@@ -1,88 +1,307 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_cb0ow"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_i5pmt"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_ct0p5"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_saqex"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_8vblq"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_bgk0m"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_s1mgl"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_1hj83"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_1707f"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_bb4cx"]
-
-[sub_resource type="Resource" id="Resource_pbr7j"]
-script = ExtResource("1_cb0ow")
-text = "Car behavior (C3 parity): accelerate/brake with up/down, steer with left/right. drift_recover blends sliding back toward the heading (1 = grippy, low = drifty); turn_while_stopped allows steering at rest."
-
-[sub_resource type="Resource" id="Resource_8htxg"]
-script = ExtResource("2_i5pmt")
-code = "## @ace_trigger
-## @ace_name(\"On Drift Started\")
-## @ace_category(\"Car\")
-signal drift_started
-
-## @ace_trigger
-## @ace_name(\"On Drift Recovered\")
-## @ace_category(\"Car\")
-signal drift_recovered"
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_i5pmt"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="2_ct0p5"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_saqex"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_8vblq"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_bgk0m"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_s1mgl"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_1hj83"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="8_1707f"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="9_bb4cx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="10_pbr7j"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="11_8htxg"]
 
 [sub_resource type="Resource" id="Resource_3ywck"]
-script = ExtResource("2_i5pmt")
-code = "if host == null:
-	return
-var throttle := Input.get_axis(&\"ui_down\", &\"ui_up\")
-if throttle > 0.0:
-	speed = minf(speed + acceleration * delta, max_speed)
-elif throttle < 0.0:
-	speed = maxf(speed - acceleration * delta, -max_speed * 0.5)
-else:
-	speed = move_toward(speed, 0.0, deceleration * delta)
-var steer := Input.get_axis(&\"ui_left\", &\"ui_right\")
-var steer_scale := 1.0 if (turn_while_stopped and absf(speed) < 1.0) else clampf(absf(speed) / max_speed, 0.0, 1.0) * signf(speed)
-host.rotation += deg_to_rad(steer_degrees) * steer * delta * steer_scale
-var heading := Vector2.from_angle(host.rotation) * speed
-host.velocity = host.velocity.lerp(heading, clampf(drift_recover, 0.01, 1.0))
-# Drift = the velocity has slid away from the heading; edge-triggered so each slide fires once.
-var drifting := absf(speed) > 20.0 and host.velocity.length() > 20.0 and absf(host.velocity.angle_to(heading)) > deg_to_rad(drift_angle_threshold)
-if drifting and not _drifting:
-	_drifting = true
-	drift_started.emit()
-elif not drifting and _drifting:
-	_drifting = false
-	drift_recovered.emit()
-host.move_and_slide()"
+script = ExtResource("1_i5pmt")
+text = "Car behavior (C3 parity): accelerate/brake with up/down, steer with left/right. drift_recover blends sliding back toward the heading (1 = grippy, low = drifty); turn_while_stopped allows steering at rest."
 
 [sub_resource type="Resource" id="Resource_66i7s"]
-script = ExtResource("6_bgk0m")
-trigger_provider_id = "Core"
-trigger_id = "OnPhysicsProcess"
-actions = Array[Resource]([SubResource("Resource_3ywck")])
-event_uid = "c2469a"
+script = ExtResource("2_ct0p5")
+signal_name = "drift_started"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Drift Started"
+ace_category = "Car"
 
 [sub_resource type="Resource" id="Resource_88562"]
-script = ExtResource("7_s1mgl")
+script = ExtResource("2_ct0p5")
+signal_name = "drift_recovered"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Drift Recovered"
+ace_category = "Car"
+
+[sub_resource type="Resource" id="Resource_mjrp5"]
+script = ExtResource("7_1hj83")
+ace_id = "ReturnEarly"
+
+[sub_resource type="Resource" id="Resource_63yxm"]
+script = ExtResource("3_saqex")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "null",
+"var_name": "host"
+}
+
+[sub_resource type="Resource" id="Resource_mxxnm"]
+script = ExtResource("6_s1mgl")
+conditions = Array[ExtResource("3_saqex")]([SubResource("Resource_63yxm")])
+actions = Array[Resource]([SubResource("Resource_mjrp5")])
+event_uid = "91210d"
+
+[sub_resource type="Resource" id="Resource_t6s8a"]
+script = ExtResource("7_1hj83")
+ace_id = "CallMethod"
+params = {
+"args": "&\"ui_down\", &\"ui_up\"",
+"method": "get_axis",
+"target": "var throttle := Input"
+}
+
+[sub_resource type="Resource" id="Resource_o4167"]
+script = ExtResource("6_s1mgl")
+actions = Array[Resource]([SubResource("Resource_t6s8a")])
+event_uid = "88900f"
+
+[sub_resource type="Resource" id="Resource_xr31o"]
+script = ExtResource("7_1hj83")
+ace_id = "SetVar"
+params = {
+"value": "minf(speed + acceleration * delta, max_speed)",
+"var_name": "speed"
+}
+
+[sub_resource type="Resource" id="Resource_hdh56"]
+script = ExtResource("3_saqex")
+ace_id = "CompareVar"
+params = {
+"op": ">",
+"value": "0.0",
+"var_name": "throttle"
+}
+
+[sub_resource type="Resource" id="Resource_c7kmx"]
+script = ExtResource("6_s1mgl")
+conditions = Array[ExtResource("3_saqex")]([SubResource("Resource_hdh56")])
+actions = Array[Resource]([SubResource("Resource_xr31o")])
+event_uid = "53545b"
+
+[sub_resource type="Resource" id="Resource_aaxbo"]
+script = ExtResource("7_1hj83")
+ace_id = "SetVar"
+params = {
+"value": "maxf(speed - acceleration * delta, -max_speed * 0.5)",
+"var_name": "speed"
+}
+
+[sub_resource type="Resource" id="Resource_n4keq"]
+script = ExtResource("3_saqex")
+ace_id = "CompareVar"
+params = {
+"op": "<",
+"value": "0.0",
+"var_name": "throttle"
+}
+
+[sub_resource type="Resource" id="Resource_c5x6x"]
+script = ExtResource("6_s1mgl")
+conditions = Array[ExtResource("3_saqex")]([SubResource("Resource_n4keq")])
+actions = Array[Resource]([SubResource("Resource_aaxbo")])
+else_mode = 1
+event_uid = "a38431"
+
+[sub_resource type="Resource" id="Resource_77va4"]
+script = ExtResource("7_1hj83")
+ace_id = "SetVar"
+params = {
+"value": "move_toward(speed, 0.0, deceleration * delta)",
+"var_name": "speed"
+}
+
+[sub_resource type="Resource" id="Resource_23h8r"]
+script = ExtResource("6_s1mgl")
+actions = Array[Resource]([SubResource("Resource_77va4")])
+else_mode = 1
+event_uid = "16a1d1"
+
+[sub_resource type="Resource" id="Resource_4tjbu"]
+script = ExtResource("7_1hj83")
+ace_id = "CallMethod"
+params = {
+"args": "&\"ui_left\", &\"ui_right\"",
+"method": "get_axis",
+"target": "var steer := Input"
+}
+
+[sub_resource type="Resource" id="Resource_g1bl3"]
+script = ExtResource("7_1hj83")
+ace_id = "CallMethod"
+params = {
+"args": "turn_while_stopped and absf(speed) < 1.0) else clampf(absf(speed) / max_speed, 0.0, 1.0) * signf(speed",
+"method": "0 if ",
+"target": "var steer_scale := 1"
+}
+
+[sub_resource type="Resource" id="Resource_ax4nf"]
+script = ExtResource("7_1hj83")
+ace_id = "AddVar"
+params = {
+"amount": "deg_to_rad(steer_degrees) * steer * delta * steer_scale",
+"var_name": "host.rotation"
+}
+
+[sub_resource type="Resource" id="Resource_18r3t"]
+script = ExtResource("8_1707f")
+code = "var heading := Vector2.from_angle(host.rotation) * speed"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_3d6nx"]
+script = ExtResource("7_1hj83")
+ace_id = "SetVelocity2D"
+params = {
+"host": "host",
+"vel": "host.velocity.lerp(heading, clampf(drift_recover, 0.01, 1.0))"
+}
+
+[sub_resource type="Resource" id="Resource_3m4t5"]
+script = ExtResource("7_1hj83")
+ace_id = "SetVar"
+params = {
+"value": "the velocity has slid away from the heading; edge-triggered so each slide fires once.",
+"var_name": "# Drift"
+}
+
+[sub_resource type="Resource" id="Resource_cxe0w"]
+script = ExtResource("7_1hj83")
+ace_id = "CallMethod"
+params = {
+"args": ") > 20.0 and absf(host.velocity.angle_to(heading)) > deg_to_rad(drift_angle_threshold",
+"method": "0 and host.velocity.length",
+"target": "var drifting := absf(speed) > 20"
+}
+
+[sub_resource type="Resource" id="Resource_lv2a5"]
+script = ExtResource("6_s1mgl")
+actions = Array[Resource]([SubResource("Resource_4tjbu"), SubResource("Resource_g1bl3"), SubResource("Resource_ax4nf"), SubResource("Resource_18r3t"), SubResource("Resource_3d6nx"), SubResource("Resource_3m4t5"), SubResource("Resource_cxe0w")])
+event_uid = "aaed0b"
+
+[sub_resource type="Resource" id="Resource_c87vi"]
+script = ExtResource("7_1hj83")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "_drifting"
+}
+
+[sub_resource type="Resource" id="Resource_ikbe0"]
+script = ExtResource("7_1hj83")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "drift_started"
+}
+
+[sub_resource type="Resource" id="Resource_kb8th"]
+script = ExtResource("3_saqex")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "drifting"
+}
+
+[sub_resource type="Resource" id="Resource_tjiud"]
+script = ExtResource("3_saqex")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "not _drifting"
+}
+
+[sub_resource type="Resource" id="Resource_sheln"]
+script = ExtResource("6_s1mgl")
+conditions = Array[ExtResource("3_saqex")]([SubResource("Resource_kb8th"), SubResource("Resource_tjiud")])
+actions = Array[Resource]([SubResource("Resource_c87vi"), SubResource("Resource_ikbe0")])
+event_uid = "a21854"
+
+[sub_resource type="Resource" id="Resource_y4uck"]
+script = ExtResource("7_1hj83")
+ace_id = "SetVar"
+params = {
+"value": "false",
+"var_name": "_drifting"
+}
+
+[sub_resource type="Resource" id="Resource_71b78"]
+script = ExtResource("7_1hj83")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "drift_recovered"
+}
+
+[sub_resource type="Resource" id="Resource_2hpbj"]
+script = ExtResource("3_saqex")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "not drifting"
+}
+
+[sub_resource type="Resource" id="Resource_hfurm"]
+script = ExtResource("3_saqex")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "_drifting"
+}
+
+[sub_resource type="Resource" id="Resource_g8k1n"]
+script = ExtResource("6_s1mgl")
+conditions = Array[ExtResource("3_saqex")]([SubResource("Resource_2hpbj"), SubResource("Resource_hfurm")])
+actions = Array[Resource]([SubResource("Resource_y4uck"), SubResource("Resource_71b78")])
+else_mode = 1
+event_uid = "b216f7"
+
+[sub_resource type="Resource" id="Resource_iscky"]
+script = ExtResource("7_1hj83")
+ace_id = "MoveAndSlide"
+params = {
+"host": "host"
+}
+
+[sub_resource type="Resource" id="Resource_bw10q"]
+script = ExtResource("6_s1mgl")
+actions = Array[Resource]([SubResource("Resource_iscky")])
+event_uid = "20f6a0"
+
+[sub_resource type="Resource" id="Resource_6osp1"]
+script = ExtResource("6_s1mgl")
+trigger_provider_id = "Core"
+trigger_id = "OnPhysicsProcess"
+sub_events = Array[Resource]([SubResource("Resource_mxxnm"), SubResource("Resource_o4167"), SubResource("Resource_c7kmx"), SubResource("Resource_c5x6x"), SubResource("Resource_23h8r"), SubResource("Resource_lv2a5"), SubResource("Resource_sheln"), SubResource("Resource_g8k1n"), SubResource("Resource_bw10q")])
+event_uid = "3dc8de"
+
+[sub_resource type="Resource" id="Resource_3cifv"]
+script = ExtResource("7_1hj83")
 ace_id = "SetVar"
 params = {
 "value": "0.0",
 "var_name": "speed"
 }
 
-[sub_resource type="Resource" id="Resource_mjrp5"]
-script = ExtResource("6_bgk0m")
-actions = Array[Resource]([SubResource("Resource_88562")])
+[sub_resource type="Resource" id="Resource_dt7ss"]
+script = ExtResource("6_s1mgl")
+actions = Array[Resource]([SubResource("Resource_3cifv")])
 event_uid = "4ca5e1"
 
-[sub_resource type="Resource" id="Resource_63yxm"]
-script = ExtResource("7_s1mgl")
+[sub_resource type="Resource" id="Resource_ov883"]
+script = ExtResource("7_1hj83")
 ace_id = "SetVelocity2D"
 params = {
 "host": "host",
 "vel": "Vector2.ZERO"
 }
 
-[sub_resource type="Resource" id="Resource_mxxnm"]
-script = ExtResource("3_ct0p5")
+[sub_resource type="Resource" id="Resource_5n1gs"]
+script = ExtResource("3_saqex")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -90,29 +309,29 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_t6s8a"]
-script = ExtResource("6_bgk0m")
-conditions = Array[ExtResource("3_ct0p5")]([SubResource("Resource_mxxnm")])
-actions = Array[Resource]([SubResource("Resource_63yxm")])
+[sub_resource type="Resource" id="Resource_ead31"]
+script = ExtResource("6_s1mgl")
+conditions = Array[ExtResource("3_saqex")]([SubResource("Resource_5n1gs")])
+actions = Array[Resource]([SubResource("Resource_ov883")])
 event_uid = "8abfbf"
 
-[sub_resource type="Resource" id="Resource_o4167"]
-script = ExtResource("9_1707f")
+[sub_resource type="Resource" id="Resource_de6mh"]
+script = ExtResource("10_pbr7j")
 function_name = "stop_car"
 description = "Kills all momentum."
 expose_as_ace = true
 ace_display_name = "Stop Car"
 ace_category = "Car"
-events = Array[Resource]([SubResource("Resource_mjrp5"), SubResource("Resource_t6s8a")])
+events = Array[Resource]([SubResource("Resource_dt7ss"), SubResource("Resource_ead31")])
 
 [resource]
-script = ExtResource("10_bb4cx")
+script = ExtResource("11_8htxg")
 host_class = "CharacterBody2D"
 behavior_mode = true
 custom_class_name = "CarBehavior"
 addon_tags = PackedStringArray()
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_pbr7j"), SubResource("Resource_8htxg"), SubResource("Resource_66i7s")])
+events = Array[Resource]([SubResource("Resource_3ywck"), SubResource("Resource_66i7s"), SubResource("Resource_88562"), SubResource("Resource_6osp1")])
 variables = {
 "_drifting": {
 "default": false,
@@ -160,4 +379,4 @@ variables = {
 "type": "bool"
 }
 }
-functions = Array[Resource]([SubResource("Resource_o4167")])
+functions = Array[Resource]([SubResource("Resource_de6mh")])

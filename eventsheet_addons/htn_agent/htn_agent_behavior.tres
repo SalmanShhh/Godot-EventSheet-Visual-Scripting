@@ -1,38 +1,48 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_q5b8g"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_loqp0"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="3_s8dy0"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="4_2sslc"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="5_s4esc"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="6_1iywo"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="7_8gaed"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_4rc60"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_obmvm"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_j4fh5"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_loqp0"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="2_s8dy0"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="3_2sslc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="4_s4esc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="5_1iywo"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="6_8gaed"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="7_4rc60"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="8_obmvm"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="9_j4fh5"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="10_ixx0h"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="11_6kwa2"]
 
-[sub_resource type="Resource" id="Resource_ixx0h"]
-script = ExtResource("1_q5b8g")
+[sub_resource type="Resource" id="Resource_6drcv"]
+script = ExtResource("1_loqp0")
 text = "Utility-driven HTN planner. In On Ready build a task network (Add Primitive / Add Compound / Add Method / Add Method Condition / Add Method Subtask) and set the Root Task. Feed facts with Set World State, call Request Plan, run the Current Task in your sheet, and call Mark Complete / Mark Failed. Highest-utility applicable method wins at each compound (with backtracking). Triggers: On Task Started, On Plan Complete, On Plan Failed."
 
-[sub_resource type="Resource" id="Resource_6kwa2"]
-script = ExtResource("2_loqp0")
-code = "## @ace_trigger
-## @ace_name(\"On Task Started\")
-## @ace_category(\"HTN\")
-signal task_started(task_name: String)
+[sub_resource type="Resource" id="Resource_n0rjc"]
+script = ExtResource("2_s8dy0")
+signal_name = "task_started"
+params = PackedStringArray("task_name: String")
+trigger = true
+ace_name = "On Task Started"
+ace_category = "HTN"
 
-## @ace_trigger
-## @ace_name(\"On Plan Complete\")
-## @ace_category(\"HTN\")
-signal plan_complete
+[sub_resource type="Resource" id="Resource_ei1jl"]
+script = ExtResource("2_s8dy0")
+signal_name = "plan_complete"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Plan Complete"
+ace_category = "HTN"
 
-## @ace_trigger
-## @ace_name(\"On Plan Failed\")
-## @ace_category(\"HTN\")
-signal plan_failed
+[sub_resource type="Resource" id="Resource_870ed"]
+script = ExtResource("2_s8dy0")
+signal_name = "plan_failed"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Plan Failed"
+ace_category = "HTN"
 
-## @ace_condition
+[sub_resource type="Resource" id="Resource_qgett"]
+script = ExtResource("3_2sslc")
+code = "## @ace_condition
 ## @ace_name(\"Has Plan\")
 ## @ace_category(\"HTN\")
 ## @ace_codegen_template(\"$HTNAgent.has_plan()\")
@@ -138,8 +148,8 @@ func _decompose(task_name: String, depth: int) -> Array:
 			return result
 	return []"
 
-[sub_resource type="Resource" id="Resource_6drcv"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_jqvex"]
+script = ExtResource("4_s4esc")
 ace_id = "DictSetKey"
 params = {
 "key": "key",
@@ -147,65 +157,65 @@ params = {
 "var_name": "world_state"
 }
 
-[sub_resource type="Resource" id="Resource_n0rjc"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_6drcv")])
+[sub_resource type="Resource" id="Resource_dvrh6"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_jqvex")])
 event_uid = "03ab21"
 
-[sub_resource type="Resource" id="Resource_ei1jl"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_t0ymc"]
+script = ExtResource("9_j4fh5")
 id = "key"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_870ed"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_v0l1y"]
+script = ExtResource("9_j4fh5")
 id = "value"
 type_name = "Variant"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_qgett"]
-script = ExtResource("9_obmvm")
+[sub_resource type="Resource" id="Resource_gi242"]
+script = ExtResource("10_ixx0h")
 function_name = "set_world_state"
 description = "Writes a fact the planner reads in method preconditions."
 expose_as_ace = true
 ace_display_name = "Set World State"
 ace_category = "HTN"
-params = Array[ExtResource("8_4rc60")]([SubResource("Resource_ei1jl"), SubResource("Resource_870ed")])
-events = Array[Resource]([SubResource("Resource_n0rjc")])
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_t0ymc"), SubResource("Resource_v0l1y")])
+events = Array[Resource]([SubResource("Resource_dvrh6")])
 
-[sub_resource type="Resource" id="Resource_jqvex"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_qts4m"]
+script = ExtResource("4_s4esc")
 ace_id = "DictDeleteKey"
 params = {
 "key": "key",
 "var_name": "world_state"
 }
 
-[sub_resource type="Resource" id="Resource_dvrh6"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_jqvex")])
+[sub_resource type="Resource" id="Resource_1fu5h"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_qts4m")])
 event_uid = "bbe463"
 
-[sub_resource type="Resource" id="Resource_t0ymc"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_jrpre"]
+script = ExtResource("9_j4fh5")
 id = "key"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_v0l1y"]
-script = ExtResource("9_obmvm")
+[sub_resource type="Resource" id="Resource_po5ib"]
+script = ExtResource("10_ixx0h")
 function_name = "clear_world_state"
 description = "Removes a world-state key."
 expose_as_ace = true
 ace_display_name = "Clear World State"
 ace_category = "HTN"
-params = Array[ExtResource("8_4rc60")]([SubResource("Resource_t0ymc")])
-events = Array[Resource]([SubResource("Resource_dvrh6")])
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_jrpre")])
+events = Array[Resource]([SubResource("Resource_1fu5h")])
 
-[sub_resource type="Resource" id="Resource_gi242"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_s2r8e"]
+script = ExtResource("4_s4esc")
 ace_id = "DictSetKey"
 params = {
 "key": "task_name",
@@ -213,68 +223,29 @@ params = {
 "var_name": "primitives"
 }
 
-[sub_resource type="Resource" id="Resource_qts4m"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_gi242")])
+[sub_resource type="Resource" id="Resource_e3edj"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_s2r8e")])
 event_uid = "7d7124"
 
-[sub_resource type="Resource" id="Resource_1fu5h"]
-script = ExtResource("8_4rc60")
-id = "task_name"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_jrpre"]
-script = ExtResource("9_obmvm")
-function_name = "add_primitive"
-description = "Registers a leaf task your sheet executes directly."
-expose_as_ace = true
-ace_display_name = "Add Primitive Task"
-ace_category = "HTN"
-params = Array[ExtResource("8_4rc60")]([SubResource("Resource_1fu5h")])
-events = Array[Resource]([SubResource("Resource_qts4m")])
-
-[sub_resource type="Resource" id="Resource_po5ib"]
-script = ExtResource("3_s8dy0")
-ace_id = "DictSetKey"
-params = {
-"key": "task_name",
-"value": "[]",
-"var_name": "compounds"
-}
-
-[sub_resource type="Resource" id="Resource_s2r8e"]
-script = ExtResource("4_2sslc")
-ace_id = "DictHasKey"
-params = {
-"key": "task_name",
-"var_name": "not compounds"
-}
-
-[sub_resource type="Resource" id="Resource_e3edj"]
-script = ExtResource("7_8gaed")
-conditions = Array[ExtResource("4_2sslc")]([SubResource("Resource_s2r8e")])
-actions = Array[Resource]([SubResource("Resource_po5ib")])
-event_uid = "09f09a"
-
 [sub_resource type="Resource" id="Resource_e648a"]
-script = ExtResource("8_4rc60")
+script = ExtResource("9_j4fh5")
 id = "task_name"
 initial_value = null
 initialValue = null
 
 [sub_resource type="Resource" id="Resource_6e2s1"]
-script = ExtResource("9_obmvm")
-function_name = "add_compound"
-description = "Registers a task that decomposes via methods."
+script = ExtResource("10_ixx0h")
+function_name = "add_primitive"
+description = "Registers a leaf task your sheet executes directly."
 expose_as_ace = true
-ace_display_name = "Add Compound Task"
+ace_display_name = "Add Primitive Task"
 ace_category = "HTN"
-params = Array[ExtResource("8_4rc60")]([SubResource("Resource_e648a")])
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_e648a")])
 events = Array[Resource]([SubResource("Resource_e3edj")])
 
 [sub_resource type="Resource" id="Resource_ye0qa"]
-script = ExtResource("3_s8dy0")
+script = ExtResource("4_s4esc")
 ace_id = "DictSetKey"
 params = {
 "key": "task_name",
@@ -283,7 +254,7 @@ params = {
 }
 
 [sub_resource type="Resource" id="Resource_vtrvb"]
-script = ExtResource("4_2sslc")
+script = ExtResource("5_1iywo")
 ace_id = "DictHasKey"
 params = {
 "key": "task_name",
@@ -291,13 +262,52 @@ params = {
 }
 
 [sub_resource type="Resource" id="Resource_s6kpb"]
-script = ExtResource("7_8gaed")
-conditions = Array[ExtResource("4_2sslc")]([SubResource("Resource_vtrvb")])
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_vtrvb")])
 actions = Array[Resource]([SubResource("Resource_ye0qa")])
-event_uid = "f2785e"
+event_uid = "09f09a"
 
 [sub_resource type="Resource" id="Resource_3vsqo"]
-script = ExtResource("3_s8dy0")
+script = ExtResource("9_j4fh5")
+id = "task_name"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_gnq4j"]
+script = ExtResource("10_ixx0h")
+function_name = "add_compound"
+description = "Registers a task that decomposes via methods."
+expose_as_ace = true
+ace_display_name = "Add Compound Task"
+ace_category = "HTN"
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_3vsqo")])
+events = Array[Resource]([SubResource("Resource_s6kpb")])
+
+[sub_resource type="Resource" id="Resource_1wylv"]
+script = ExtResource("4_s4esc")
+ace_id = "DictSetKey"
+params = {
+"key": "task_name",
+"value": "[]",
+"var_name": "compounds"
+}
+
+[sub_resource type="Resource" id="Resource_hdh3k"]
+script = ExtResource("5_1iywo")
+ace_id = "DictHasKey"
+params = {
+"key": "task_name",
+"var_name": "not compounds"
+}
+
+[sub_resource type="Resource" id="Resource_as1ka"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_hdh3k")])
+actions = Array[Resource]([SubResource("Resource_1wylv")])
+event_uid = "f2785e"
+
+[sub_resource type="Resource" id="Resource_13wyb"]
+script = ExtResource("4_s4esc")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "method",
@@ -305,13 +315,13 @@ params = {
 "var_type": "HTNMethod"
 }
 
-[sub_resource type="Resource" id="Resource_gnq4j"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_3vsqo")])
+[sub_resource type="Resource" id="Resource_vdsu5"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_13wyb")])
 event_uid = "909ea2"
 
-[sub_resource type="Resource" id="Resource_1wylv"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_ux87y"]
+script = ExtResource("4_s4esc")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "m",
@@ -319,8 +329,8 @@ params = {
 "var_type": "HTNMethod"
 }
 
-[sub_resource type="Resource" id="Resource_hdh3k"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_5kdvo"]
+script = ExtResource("4_s4esc")
 ace_id = "SetProperty"
 params = {
 "property": "id",
@@ -328,8 +338,8 @@ params = {
 "value": "method_id"
 }
 
-[sub_resource type="Resource" id="Resource_as1ka"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_617yk"]
+script = ExtResource("4_s4esc")
 ace_id = "SetProperty"
 params = {
 "property": "utility",
@@ -337,16 +347,16 @@ params = {
 "value": "utility"
 }
 
-[sub_resource type="Resource" id="Resource_13wyb"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_s8cxo"]
+script = ExtResource("4_s4esc")
 ace_id = "ArrayAppend"
 params = {
 "value": "m",
 "var_name": "compounds[task_name]"
 }
 
-[sub_resource type="Resource" id="Resource_vdsu5"]
-script = ExtResource("4_2sslc")
+[sub_resource type="Resource" id="Resource_6rxx7"]
+script = ExtResource("5_1iywo")
 ace_id = "CompareVar"
 params = {
 "op": "==",
@@ -354,14 +364,14 @@ params = {
 "var_name": "method"
 }
 
-[sub_resource type="Resource" id="Resource_ux87y"]
-script = ExtResource("7_8gaed")
-conditions = Array[ExtResource("4_2sslc")]([SubResource("Resource_vdsu5")])
-actions = Array[Resource]([SubResource("Resource_1wylv"), SubResource("Resource_hdh3k"), SubResource("Resource_as1ka"), SubResource("Resource_13wyb")])
+[sub_resource type="Resource" id="Resource_5ieev"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_6rxx7")])
+actions = Array[Resource]([SubResource("Resource_ux87y"), SubResource("Resource_5kdvo"), SubResource("Resource_617yk"), SubResource("Resource_s8cxo")])
 event_uid = "b932cd"
 
-[sub_resource type="Resource" id="Resource_5kdvo"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_n4cpw"]
+script = ExtResource("4_s4esc")
 ace_id = "SetProperty"
 params = {
 "property": "utility",
@@ -369,43 +379,43 @@ params = {
 "value": "utility"
 }
 
-[sub_resource type="Resource" id="Resource_617yk"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_5kdvo")])
+[sub_resource type="Resource" id="Resource_6ircx"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_n4cpw")])
 else_mode = 1
 event_uid = "877385"
 
-[sub_resource type="Resource" id="Resource_s8cxo"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_ao1gu"]
+script = ExtResource("9_j4fh5")
 id = "task_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_6rxx7"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_ahdd3"]
+script = ExtResource("9_j4fh5")
 id = "method_id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_5ieev"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_ib6a0"]
+script = ExtResource("9_j4fh5")
 id = "utility"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_n4cpw"]
-script = ExtResource("9_obmvm")
+[sub_resource type="Resource" id="Resource_ffnch"]
+script = ExtResource("10_ixx0h")
 function_name = "add_method"
 description = "Adds (or re-scores) a way to accomplish a compound task; highest utility wins."
 expose_as_ace = true
 ace_display_name = "Add Method"
 ace_category = "HTN"
-params = Array[ExtResource("8_4rc60")]([SubResource("Resource_s8cxo"), SubResource("Resource_6rxx7"), SubResource("Resource_5ieev")])
-events = Array[Resource]([SubResource("Resource_s6kpb"), SubResource("Resource_gnq4j"), SubResource("Resource_ux87y"), SubResource("Resource_617yk")])
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_ao1gu"), SubResource("Resource_ahdd3"), SubResource("Resource_ib6a0")])
+events = Array[Resource]([SubResource("Resource_as1ka"), SubResource("Resource_vdsu5"), SubResource("Resource_5ieev"), SubResource("Resource_6ircx")])
 
-[sub_resource type="Resource" id="Resource_6ircx"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_3vclr"]
+script = ExtResource("4_s4esc")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "method",
@@ -413,13 +423,13 @@ params = {
 "var_type": "HTNMethod"
 }
 
-[sub_resource type="Resource" id="Resource_ao1gu"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_6ircx")])
+[sub_resource type="Resource" id="Resource_x3g01"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_3vclr")])
 event_uid = "11a579"
 
-[sub_resource type="Resource" id="Resource_ahdd3"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_76pe8"]
+script = ExtResource("4_s4esc")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "c",
@@ -427,8 +437,8 @@ params = {
 "var_type": "HTNCondition"
 }
 
-[sub_resource type="Resource" id="Resource_ib6a0"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_1e8dk"]
+script = ExtResource("4_s4esc")
 ace_id = "SetProperty"
 params = {
 "property": "key",
@@ -436,8 +446,8 @@ params = {
 "value": "key"
 }
 
-[sub_resource type="Resource" id="Resource_ffnch"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_7jewn"]
+script = ExtResource("4_s4esc")
 ace_id = "SetProperty"
 params = {
 "property": "op",
@@ -445,24 +455,24 @@ params = {
 "value": "op"
 }
 
-[sub_resource type="Resource" id="Resource_3vclr"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_2lybf"]
+script = ExtResource("4_s4esc")
 ace_id = "SetRangeValue"
 params = {
 "target": "c",
 "value": "value"
 }
 
-[sub_resource type="Resource" id="Resource_x3g01"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_j3ryd"]
+script = ExtResource("4_s4esc")
 ace_id = "ArrayAppend"
 params = {
 "value": "c",
 "var_name": "method.conditions"
 }
 
-[sub_resource type="Resource" id="Resource_76pe8"]
-script = ExtResource("4_2sslc")
+[sub_resource type="Resource" id="Resource_q1rhp"]
+script = ExtResource("5_1iywo")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -470,55 +480,55 @@ params = {
 "var_name": "method"
 }
 
-[sub_resource type="Resource" id="Resource_1e8dk"]
-script = ExtResource("7_8gaed")
-conditions = Array[ExtResource("4_2sslc")]([SubResource("Resource_76pe8")])
-actions = Array[Resource]([SubResource("Resource_ahdd3"), SubResource("Resource_ib6a0"), SubResource("Resource_ffnch"), SubResource("Resource_3vclr"), SubResource("Resource_x3g01")])
+[sub_resource type="Resource" id="Resource_052gu"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_q1rhp")])
+actions = Array[Resource]([SubResource("Resource_76pe8"), SubResource("Resource_1e8dk"), SubResource("Resource_7jewn"), SubResource("Resource_2lybf"), SubResource("Resource_j3ryd")])
 event_uid = "9a4135"
 
-[sub_resource type="Resource" id="Resource_7jewn"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_oaqq6"]
+script = ExtResource("9_j4fh5")
 id = "task_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_2lybf"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_20ef2"]
+script = ExtResource("9_j4fh5")
 id = "method_id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_j3ryd"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_v2nkc"]
+script = ExtResource("9_j4fh5")
 id = "key"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_q1rhp"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_oto3s"]
+script = ExtResource("9_j4fh5")
 id = "op"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_052gu"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_g5oed"]
+script = ExtResource("9_j4fh5")
 id = "value"
 type_name = "Variant"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_oaqq6"]
-script = ExtResource("9_obmvm")
+[sub_resource type="Resource" id="Resource_owpvs"]
+script = ExtResource("10_ixx0h")
 function_name = "add_method_condition"
 description = "A precondition (world-state key, operator, value) the method needs to be chosen."
 expose_as_ace = true
 ace_display_name = "Add Method Condition"
 ace_category = "HTN"
-params = Array[ExtResource("8_4rc60")]([SubResource("Resource_7jewn"), SubResource("Resource_2lybf"), SubResource("Resource_j3ryd"), SubResource("Resource_q1rhp"), SubResource("Resource_052gu")])
-events = Array[Resource]([SubResource("Resource_ao1gu"), SubResource("Resource_1e8dk")])
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_oaqq6"), SubResource("Resource_20ef2"), SubResource("Resource_v2nkc"), SubResource("Resource_oto3s"), SubResource("Resource_g5oed")])
+events = Array[Resource]([SubResource("Resource_x3g01"), SubResource("Resource_052gu")])
 
-[sub_resource type="Resource" id="Resource_20ef2"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_5m2sh"]
+script = ExtResource("4_s4esc")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "method",
@@ -526,21 +536,21 @@ params = {
 "var_type": "HTNMethod"
 }
 
-[sub_resource type="Resource" id="Resource_v2nkc"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_20ef2")])
+[sub_resource type="Resource" id="Resource_p0ic0"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_5m2sh")])
 event_uid = "36dfbc"
 
-[sub_resource type="Resource" id="Resource_oto3s"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_qcosf"]
+script = ExtResource("4_s4esc")
 ace_id = "ArrayAppend"
 params = {
 "value": "subtask",
 "var_name": "method.subtasks"
 }
 
-[sub_resource type="Resource" id="Resource_g5oed"]
-script = ExtResource("4_2sslc")
+[sub_resource type="Resource" id="Resource_dejmt"]
+script = ExtResource("5_1iywo")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -548,42 +558,42 @@ params = {
 "var_name": "method"
 }
 
-[sub_resource type="Resource" id="Resource_owpvs"]
-script = ExtResource("7_8gaed")
-conditions = Array[ExtResource("4_2sslc")]([SubResource("Resource_g5oed")])
-actions = Array[Resource]([SubResource("Resource_oto3s")])
+[sub_resource type="Resource" id="Resource_pk5wy"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_dejmt")])
+actions = Array[Resource]([SubResource("Resource_qcosf")])
 event_uid = "3e2e18"
 
-[sub_resource type="Resource" id="Resource_5m2sh"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_rlcw7"]
+script = ExtResource("9_j4fh5")
 id = "task_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_p0ic0"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_3f5qp"]
+script = ExtResource("9_j4fh5")
 id = "method_id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_qcosf"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_4tgt6"]
+script = ExtResource("9_j4fh5")
 id = "subtask"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_dejmt"]
-script = ExtResource("9_obmvm")
+[sub_resource type="Resource" id="Resource_65hp7"]
+script = ExtResource("10_ixx0h")
 function_name = "add_method_subtask"
 description = "Appends a subtask (primitive or compound) to a method, in order."
 expose_as_ace = true
 ace_display_name = "Add Method Subtask"
 ace_category = "HTN"
-params = Array[ExtResource("8_4rc60")]([SubResource("Resource_5m2sh"), SubResource("Resource_p0ic0"), SubResource("Resource_qcosf")])
-events = Array[Resource]([SubResource("Resource_v2nkc"), SubResource("Resource_owpvs")])
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_rlcw7"), SubResource("Resource_3f5qp"), SubResource("Resource_4tgt6")])
+events = Array[Resource]([SubResource("Resource_p0ic0"), SubResource("Resource_pk5wy")])
 
-[sub_resource type="Resource" id="Resource_pk5wy"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_0w4vr"]
+script = ExtResource("4_s4esc")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "method",
@@ -591,13 +601,13 @@ params = {
 "var_type": "HTNMethod"
 }
 
-[sub_resource type="Resource" id="Resource_rlcw7"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_pk5wy")])
+[sub_resource type="Resource" id="Resource_1fxmt"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_0w4vr")])
 event_uid = "6b93e7"
 
-[sub_resource type="Resource" id="Resource_3f5qp"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_rtra1"]
+script = ExtResource("4_s4esc")
 ace_id = "SetProperty"
 params = {
 "property": "utility",
@@ -605,8 +615,8 @@ params = {
 "value": "utility"
 }
 
-[sub_resource type="Resource" id="Resource_4tgt6"]
-script = ExtResource("4_2sslc")
+[sub_resource type="Resource" id="Resource_esbkd"]
+script = ExtResource("5_1iywo")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -614,137 +624,140 @@ params = {
 "var_name": "method"
 }
 
-[sub_resource type="Resource" id="Resource_65hp7"]
-script = ExtResource("7_8gaed")
-conditions = Array[ExtResource("4_2sslc")]([SubResource("Resource_4tgt6")])
-actions = Array[Resource]([SubResource("Resource_3f5qp")])
+[sub_resource type="Resource" id="Resource_g7yu1"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_esbkd")])
+actions = Array[Resource]([SubResource("Resource_rtra1")])
 event_uid = "ecb5f1"
 
-[sub_resource type="Resource" id="Resource_0w4vr"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_hglu5"]
+script = ExtResource("9_j4fh5")
 id = "task_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_1fxmt"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_ytm24"]
+script = ExtResource("9_j4fh5")
 id = "method_id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_rtra1"]
-script = ExtResource("8_4rc60")
+[sub_resource type="Resource" id="Resource_tuf01"]
+script = ExtResource("9_j4fh5")
 id = "utility"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_esbkd"]
-script = ExtResource("9_obmvm")
+[sub_resource type="Resource" id="Resource_e2g3u"]
+script = ExtResource("10_ixx0h")
 function_name = "set_method_utility"
 description = "Updates a method's utility at runtime (utility-driven re-prioritising)."
 expose_as_ace = true
 ace_display_name = "Set Method Utility"
 ace_category = "HTN"
-params = Array[ExtResource("8_4rc60")]([SubResource("Resource_0w4vr"), SubResource("Resource_1fxmt"), SubResource("Resource_rtra1")])
-events = Array[Resource]([SubResource("Resource_rlcw7"), SubResource("Resource_65hp7")])
+params = Array[ExtResource("9_j4fh5")]([SubResource("Resource_hglu5"), SubResource("Resource_ytm24"), SubResource("Resource_tuf01")])
+events = Array[Resource]([SubResource("Resource_1fxmt"), SubResource("Resource_g7yu1")])
 
-[sub_resource type="Resource" id="Resource_g7yu1"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_wagsb"]
+script = ExtResource("4_s4esc")
 ace_id = "DictClear"
 params = {
 "var_name": "primitives"
 }
 
-[sub_resource type="Resource" id="Resource_hglu5"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_bn0oc"]
+script = ExtResource("4_s4esc")
 ace_id = "DictClear"
 params = {
 "var_name": "compounds"
 }
 
-[sub_resource type="Resource" id="Resource_ytm24"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_g7yu1"), SubResource("Resource_hglu5")])
+[sub_resource type="Resource" id="Resource_iyvub"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_wagsb"), SubResource("Resource_bn0oc")])
 event_uid = "06b699"
 
-[sub_resource type="Resource" id="Resource_tuf01"]
-script = ExtResource("9_obmvm")
+[sub_resource type="Resource" id="Resource_mth7m"]
+script = ExtResource("10_ixx0h")
 function_name = "clear_network"
 description = "Wipes all tasks/methods (keeps world state)."
 expose_as_ace = true
 ace_display_name = "Clear Task Network"
 ace_category = "HTN"
-events = Array[Resource]([SubResource("Resource_ytm24")])
+events = Array[Resource]([SubResource("Resource_iyvub")])
 
-[sub_resource type="Resource" id="Resource_e2g3u"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_6gy0g"]
+script = ExtResource("4_s4esc")
 ace_id = "SetVar"
 params = {
 "value": "_decompose(root_task, 0)",
 "var_name": "plan"
 }
 
-[sub_resource type="Resource" id="Resource_wagsb"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_c78ag"]
+script = ExtResource("4_s4esc")
 ace_id = "SetVar"
 params = {
 "value": "0",
 "var_name": "plan_index"
 }
 
-[sub_resource type="Resource" id="Resource_bn0oc"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_e2g3u"), SubResource("Resource_wagsb")])
+[sub_resource type="Resource" id="Resource_v53rq"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_6gy0g"), SubResource("Resource_c78ag")])
 event_uid = "5e6588"
 
-[sub_resource type="Resource" id="Resource_iyvub"]
-script = ExtResource("2_loqp0")
-code = "plan_failed.emit()"
-lift_note = "no matching ACE template"
+[sub_resource type="Resource" id="Resource_frfws"]
+script = ExtResource("4_s4esc")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "plan_failed"
+}
 
-[sub_resource type="Resource" id="Resource_mth7m"]
-script = ExtResource("4_2sslc")
+[sub_resource type="Resource" id="Resource_a2r8l"]
+script = ExtResource("5_1iywo")
 ace_id = "DictIsEmpty"
 params = {
 "var_name": "plan"
 }
 
-[sub_resource type="Resource" id="Resource_6gy0g"]
-script = ExtResource("7_8gaed")
-conditions = Array[ExtResource("4_2sslc")]([SubResource("Resource_mth7m")])
-actions = Array[Resource]([SubResource("Resource_iyvub")])
+[sub_resource type="Resource" id="Resource_bj6pq"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_a2r8l")])
+actions = Array[Resource]([SubResource("Resource_frfws")])
 event_uid = "bb4c89"
 
-[sub_resource type="Resource" id="Resource_c78ag"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_01j6t"]
+script = ExtResource("4_s4esc")
 ace_id = "EmitSignal"
 params = {
 "args": "str(plan[0])",
 "signal_name": "task_started"
 }
 
-[sub_resource type="Resource" id="Resource_v53rq"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_c78ag")])
+[sub_resource type="Resource" id="Resource_5dqce"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_01j6t")])
 else_mode = 1
 event_uid = "ce6b81"
 
-[sub_resource type="Resource" id="Resource_frfws"]
-script = ExtResource("9_obmvm")
+[sub_resource type="Resource" id="Resource_d6cyj"]
+script = ExtResource("10_ixx0h")
 function_name = "request_plan"
 description = "Decomposes the root task into a plan and starts the first task."
 expose_as_ace = true
 ace_display_name = "Request Plan"
 ace_category = "HTN"
-events = Array[Resource]([SubResource("Resource_bn0oc"), SubResource("Resource_6gy0g"), SubResource("Resource_v53rq")])
+events = Array[Resource]([SubResource("Resource_v53rq"), SubResource("Resource_bj6pq"), SubResource("Resource_5dqce")])
 
-[sub_resource type="Resource" id="Resource_a2r8l"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_xa1fd"]
+script = ExtResource("4_s4esc")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_bj6pq"]
-script = ExtResource("4_2sslc")
+[sub_resource type="Resource" id="Resource_tk1ng"]
+script = ExtResource("5_1iywo")
 ace_id = "CompareVar"
 params = {
 "op": ">=",
@@ -752,48 +765,51 @@ params = {
 "var_name": "plan_index"
 }
 
-[sub_resource type="Resource" id="Resource_01j6t"]
-script = ExtResource("7_8gaed")
-conditions = Array[ExtResource("4_2sslc")]([SubResource("Resource_bj6pq")])
-actions = Array[Resource]([SubResource("Resource_a2r8l")])
+[sub_resource type="Resource" id="Resource_j4g00"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_tk1ng")])
+actions = Array[Resource]([SubResource("Resource_xa1fd")])
 event_uid = "691de8"
 
-[sub_resource type="Resource" id="Resource_5dqce"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_tfl7h"]
+script = ExtResource("4_s4esc")
 ace_id = "AddVar"
 params = {
 "amount": "1",
 "var_name": "plan_index"
 }
 
-[sub_resource type="Resource" id="Resource_d6cyj"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_5dqce")])
+[sub_resource type="Resource" id="Resource_t1ftr"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_tfl7h")])
 event_uid = "359725"
 
-[sub_resource type="Resource" id="Resource_xa1fd"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_3pqt2"]
+script = ExtResource("4_s4esc")
 ace_id = "SetVar"
 params = {
 "value": "[]",
 "var_name": "plan"
 }
 
-[sub_resource type="Resource" id="Resource_tk1ng"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_derld"]
+script = ExtResource("4_s4esc")
 ace_id = "SetVar"
 params = {
 "value": "0",
 "var_name": "plan_index"
 }
 
-[sub_resource type="Resource" id="Resource_j4g00"]
-script = ExtResource("2_loqp0")
-code = "plan_complete.emit()"
-lift_note = "no matching ACE template"
+[sub_resource type="Resource" id="Resource_7l38a"]
+script = ExtResource("4_s4esc")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "plan_complete"
+}
 
-[sub_resource type="Resource" id="Resource_tfl7h"]
-script = ExtResource("4_2sslc")
+[sub_resource type="Resource" id="Resource_rq17g"]
+script = ExtResource("5_1iywo")
 ace_id = "CompareVar"
 params = {
 "op": ">=",
@@ -801,91 +817,58 @@ params = {
 "var_name": "plan_index"
 }
 
-[sub_resource type="Resource" id="Resource_t1ftr"]
-script = ExtResource("7_8gaed")
-conditions = Array[ExtResource("4_2sslc")]([SubResource("Resource_tfl7h")])
-actions = Array[Resource]([SubResource("Resource_xa1fd"), SubResource("Resource_tk1ng"), SubResource("Resource_j4g00")])
+[sub_resource type="Resource" id="Resource_31mt3"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_rq17g")])
+actions = Array[Resource]([SubResource("Resource_3pqt2"), SubResource("Resource_derld"), SubResource("Resource_7l38a")])
 event_uid = "877728"
 
-[sub_resource type="Resource" id="Resource_3pqt2"]
-script = ExtResource("3_s8dy0")
+[sub_resource type="Resource" id="Resource_0lipg"]
+script = ExtResource("4_s4esc")
 ace_id = "EmitSignal"
 params = {
 "args": "str(plan[plan_index])",
 "signal_name": "task_started"
 }
 
-[sub_resource type="Resource" id="Resource_derld"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_3pqt2")])
+[sub_resource type="Resource" id="Resource_vuw3c"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_0lipg")])
 else_mode = 1
 event_uid = "f11141"
 
-[sub_resource type="Resource" id="Resource_7l38a"]
-script = ExtResource("9_obmvm")
+[sub_resource type="Resource" id="Resource_mmrdq"]
+script = ExtResource("10_ixx0h")
 function_name = "mark_complete"
 description = "Advances to the next task, or fires On Plan Complete at the end."
 expose_as_ace = true
 ace_display_name = "Mark Task Complete"
 ace_category = "HTN"
-events = Array[Resource]([SubResource("Resource_01j6t"), SubResource("Resource_d6cyj"), SubResource("Resource_t1ftr"), SubResource("Resource_derld")])
+events = Array[Resource]([SubResource("Resource_j4g00"), SubResource("Resource_t1ftr"), SubResource("Resource_31mt3"), SubResource("Resource_vuw3c")])
 
-[sub_resource type="Resource" id="Resource_rq17g"]
-script = ExtResource("2_loqp0")
-code = "request_plan()"
-lift_note = "no matching ACE template"
+[sub_resource type="Resource" id="Resource_b1x1m"]
+script = ExtResource("4_s4esc")
+ace_id = "CallFunction"
+params = {
+"args": "",
+"function_name": "request_plan"
+}
 
-[sub_resource type="Resource" id="Resource_31mt3"]
-script = ExtResource("4_2sslc")
+[sub_resource type="Resource" id="Resource_1n7pu"]
+script = ExtResource("5_1iywo")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "auto_replan_on_fail"
 }
 
-[sub_resource type="Resource" id="Resource_0lipg"]
-script = ExtResource("7_8gaed")
-conditions = Array[ExtResource("4_2sslc")]([SubResource("Resource_31mt3")])
-actions = Array[Resource]([SubResource("Resource_rq17g")])
+[sub_resource type="Resource" id="Resource_ob457"]
+script = ExtResource("8_obmvm")
+conditions = Array[ExtResource("5_1iywo")]([SubResource("Resource_1n7pu")])
+actions = Array[Resource]([SubResource("Resource_b1x1m")])
 event_uid = "04e2c8"
 
-[sub_resource type="Resource" id="Resource_vuw3c"]
-script = ExtResource("3_s8dy0")
-ace_id = "SetVar"
-params = {
-"value": "[]",
-"var_name": "plan"
-}
-
-[sub_resource type="Resource" id="Resource_mmrdq"]
-script = ExtResource("3_s8dy0")
-ace_id = "SetVar"
-params = {
-"value": "0",
-"var_name": "plan_index"
-}
-
-[sub_resource type="Resource" id="Resource_b1x1m"]
-script = ExtResource("2_loqp0")
-code = "plan_failed.emit()"
-lift_note = "no matching ACE template"
-
-[sub_resource type="Resource" id="Resource_1n7pu"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_vuw3c"), SubResource("Resource_mmrdq"), SubResource("Resource_b1x1m")])
-else_mode = 1
-event_uid = "13dfbe"
-
-[sub_resource type="Resource" id="Resource_ob457"]
-script = ExtResource("9_obmvm")
-function_name = "mark_failed"
-description = "Re-plans from the root (or fires On Plan Failed if auto-replan is off)."
-expose_as_ace = true
-ace_display_name = "Mark Task Failed"
-ace_category = "HTN"
-events = Array[Resource]([SubResource("Resource_0lipg"), SubResource("Resource_1n7pu")])
-
 [sub_resource type="Resource" id="Resource_g6vd2"]
-script = ExtResource("3_s8dy0")
+script = ExtResource("4_s4esc")
 ace_id = "SetVar"
 params = {
 "value": "[]",
@@ -893,7 +876,7 @@ params = {
 }
 
 [sub_resource type="Resource" id="Resource_rvwjd"]
-script = ExtResource("3_s8dy0")
+script = ExtResource("4_s4esc")
 ace_id = "SetVar"
 params = {
 "value": "0",
@@ -901,27 +884,66 @@ params = {
 }
 
 [sub_resource type="Resource" id="Resource_cyhrj"]
-script = ExtResource("7_8gaed")
-actions = Array[Resource]([SubResource("Resource_g6vd2"), SubResource("Resource_rvwjd")])
-event_uid = "910ac5"
+script = ExtResource("4_s4esc")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "plan_failed"
+}
 
 [sub_resource type="Resource" id="Resource_q40uu"]
-script = ExtResource("9_obmvm")
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_g6vd2"), SubResource("Resource_rvwjd"), SubResource("Resource_cyhrj")])
+else_mode = 1
+event_uid = "13dfbe"
+
+[sub_resource type="Resource" id="Resource_wyj8y"]
+script = ExtResource("10_ixx0h")
+function_name = "mark_failed"
+description = "Re-plans from the root (or fires On Plan Failed if auto-replan is off)."
+expose_as_ace = true
+ace_display_name = "Mark Task Failed"
+ace_category = "HTN"
+events = Array[Resource]([SubResource("Resource_ob457"), SubResource("Resource_q40uu")])
+
+[sub_resource type="Resource" id="Resource_w4v2h"]
+script = ExtResource("4_s4esc")
+ace_id = "SetVar"
+params = {
+"value": "[]",
+"var_name": "plan"
+}
+
+[sub_resource type="Resource" id="Resource_biw7p"]
+script = ExtResource("4_s4esc")
+ace_id = "SetVar"
+params = {
+"value": "0",
+"var_name": "plan_index"
+}
+
+[sub_resource type="Resource" id="Resource_5tape"]
+script = ExtResource("8_obmvm")
+actions = Array[Resource]([SubResource("Resource_w4v2h"), SubResource("Resource_biw7p")])
+event_uid = "910ac5"
+
+[sub_resource type="Resource" id="Resource_d4eax"]
+script = ExtResource("10_ixx0h")
 function_name = "invalidate_plan"
 description = "Drops the current plan so the next Request Plan rebuilds it."
 expose_as_ace = true
 ace_display_name = "Invalidate Plan"
 ace_category = "HTN"
-events = Array[Resource]([SubResource("Resource_cyhrj")])
+events = Array[Resource]([SubResource("Resource_5tape")])
 
 [resource]
-script = ExtResource("10_j4fh5")
+script = ExtResource("11_6kwa2")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "HTNAgent"
 addon_tags = PackedStringArray("ai", "planning")
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_ixx0h"), SubResource("Resource_6kwa2")])
+events = Array[Resource]([SubResource("Resource_6drcv"), SubResource("Resource_n0rjc"), SubResource("Resource_ei1jl"), SubResource("Resource_870ed"), SubResource("Resource_qgett")])
 variables = {
 "auto_replan_on_fail": {
 "attributes": {
@@ -965,4 +987,4 @@ variables = {
 "type": "Dictionary"
 }
 }
-functions = Array[Resource]([SubResource("Resource_qgett"), SubResource("Resource_v0l1y"), SubResource("Resource_jrpre"), SubResource("Resource_6e2s1"), SubResource("Resource_n4cpw"), SubResource("Resource_oaqq6"), SubResource("Resource_dejmt"), SubResource("Resource_esbkd"), SubResource("Resource_tuf01"), SubResource("Resource_frfws"), SubResource("Resource_7l38a"), SubResource("Resource_ob457"), SubResource("Resource_q40uu")])
+functions = Array[Resource]([SubResource("Resource_gi242"), SubResource("Resource_po5ib"), SubResource("Resource_6e2s1"), SubResource("Resource_gnq4j"), SubResource("Resource_ffnch"), SubResource("Resource_owpvs"), SubResource("Resource_65hp7"), SubResource("Resource_e2g3u"), SubResource("Resource_mth7m"), SubResource("Resource_d6cyj"), SubResource("Resource_mmrdq"), SubResource("Resource_wyj8y"), SubResource("Resource_d4eax")])

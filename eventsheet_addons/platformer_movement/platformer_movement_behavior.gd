@@ -15,6 +15,23 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("PlatformerMovement behavior requires a CharacterBody2D parent.")
 
+## @ace_trigger
+## @ace_name("On Jumped")
+## @ace_category("Platformer")
+signal jumped
+## @ace_trigger
+## @ace_name("On Landed")
+## @ace_category("Platformer")
+signal landed
+## @ace_trigger
+## @ace_name("On Double Jumped")
+## @ace_category("Platformer")
+signal double_jumped
+## @ace_trigger
+## @ace_name("On Wall Jumped")
+## @ace_category("Platformer")
+signal wall_jumped
+
 var _air_time: float = 0.0
 var _buffer_timer: float = 0.0
 var _coyote_timer: float = 0.0
@@ -54,26 +71,6 @@ var _was_on_floor: bool = false
 @export var wall_jump_velocity: float = -380.0
 ## Max fall speed while wall sliding (px/s).
 @export var wall_slide_speed: float = 80.0
-
-## @ace_trigger
-## @ace_name("On Jumped")
-## @ace_category("Platformer")
-signal jumped
-
-## @ace_trigger
-## @ace_name("On Landed")
-## @ace_category("Platformer")
-signal landed
-
-## @ace_trigger
-## @ace_name("On Double Jumped")
-## @ace_category("Platformer")
-signal double_jumped
-
-## @ace_trigger
-## @ace_name("On Wall Jumped")
-## @ace_category("Platformer")
-signal wall_jumped
 
 ## @ace_condition
 ## @ace_name("Is Moving")

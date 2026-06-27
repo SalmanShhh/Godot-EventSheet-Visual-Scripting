@@ -15,15 +15,15 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("TweenBehavior behavior requires a Node2D parent.")
 
-## Seconds used when a tween call passes 0.
-@export_range(0.01, 10, 0.01) var default_duration: float = 0.3
-@export_enum("in", "out", "in_out", "out_in") var easing: String = "out"
-@export_enum("linear", "sine", "quad", "cubic", "quart", "quint", "expo", "circ", "elastic", "back", "bounce", "spring") var transition: String = "sine"
-
 ## @ace_trigger
 ## @ace_name("On Tween Finished")
 ## @ace_category("Tween")
 signal tween_finished
+
+## Seconds used when a tween call passes 0.
+@export_range(0.01, 10, 0.01) var default_duration: float = 0.3
+@export_enum("in", "out", "in_out", "out_in") var easing: String = "out"
+@export_enum("linear", "sine", "quad", "cubic", "quart", "quint", "expo", "circ", "elastic", "back", "bounce", "spring") var transition: String = "sine"
 
 ## @ace_condition
 ## @ace_name("Is Tweening")

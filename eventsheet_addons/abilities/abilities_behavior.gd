@@ -14,6 +14,35 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("SimpleAbilitiesBehavior behavior requires a Node parent.")
 
+## @ace_trigger
+## @ace_name("On Ability Activated")
+## @ace_category("Abilities")
+signal on_ability_activated
+## @ace_trigger
+## @ace_name("On Ability Ready")
+## @ace_category("Abilities")
+signal on_ability_ready
+## @ace_trigger
+## @ace_name("On Ability Created")
+## @ace_category("Abilities")
+signal on_ability_created
+## @ace_trigger
+## @ace_name("On Ability Removed")
+## @ace_category("Abilities")
+signal on_ability_removed
+## @ace_trigger
+## @ace_name("On Stack Consumed")
+## @ace_category("Abilities")
+signal on_stack_consumed
+## @ace_trigger
+## @ace_name("On Stack Gained")
+## @ace_category("Abilities")
+signal on_stack_gained
+## @ace_trigger
+## @ace_name("On Max Stacks Reached")
+## @ace_category("Abilities")
+signal on_max_stacks_reached
+
 var abilities: Dictionary = {}
 ## Global multiplier applied to every Set Cooldown (0.8 = 20% cooldown reduction).
 @export_range(0, 10, 0.05) var cooldown_multiplier: float = 1.0
@@ -32,41 +61,6 @@ class AbilityData:
 	var tags: Array = []
 	var expiration: float = 0.0
 	var max_expiration: float = 0.0
-
-## @ace_trigger
-## @ace_name("On Ability Activated")
-## @ace_category("Abilities")
-signal on_ability_activated
-
-## @ace_trigger
-## @ace_name("On Ability Ready")
-## @ace_category("Abilities")
-signal on_ability_ready
-
-## @ace_trigger
-## @ace_name("On Ability Created")
-## @ace_category("Abilities")
-signal on_ability_created
-
-## @ace_trigger
-## @ace_name("On Ability Removed")
-## @ace_category("Abilities")
-signal on_ability_removed
-
-## @ace_trigger
-## @ace_name("On Stack Consumed")
-## @ace_category("Abilities")
-signal on_stack_consumed
-
-## @ace_trigger
-## @ace_name("On Stack Gained")
-## @ace_category("Abilities")
-signal on_stack_gained
-
-## @ace_trigger
-## @ace_name("On Max Stacks Reached")
-## @ace_category("Abilities")
-signal on_max_stacks_reached
 
 ## @ace_condition
 ## @ace_name("Has Ability")

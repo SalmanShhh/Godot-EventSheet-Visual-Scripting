@@ -1,43 +1,56 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_q5lps"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_204sl"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_lrrm4"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_73t63"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_turmm"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_gljvp"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_l8tj8"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_m4533"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_bhjv5"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_61vf4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_204sl"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="2_lrrm4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="3_73t63"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="4_turmm"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="5_gljvp"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="6_l8tj8"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="7_m4533"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="8_bhjv5"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="9_61vf4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="10_cwid0"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="11_itgvj"]
 
-[sub_resource type="Resource" id="Resource_cwid0"]
-script = ExtResource("1_q5lps")
+[sub_resource type="Resource" id="Resource_jx5ja"]
+script = ExtResource("1_204sl")
 text = "Weapon Kit: ammo + reserve, fire-rate cooldown, single/auto/burst modes, and timed/instant reload. Call Fire (it manages ammo + cooldown and triggers On Fire — you spawn the bullet); call Reload. Read Ammo %, Reload Progress, etc. for HUD."
 
-[sub_resource type="Resource" id="Resource_itgvj"]
-script = ExtResource("2_204sl")
-code = "## @ace_trigger
-## @ace_name(\"On Fire\")
-## @ace_category(\"Weapon\")
-signal fired
+[sub_resource type="Resource" id="Resource_rwa0o"]
+script = ExtResource("2_lrrm4")
+signal_name = "fired"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Fire"
+ace_category = "Weapon"
 
-## @ace_trigger
-## @ace_name(\"On Empty\")
-## @ace_category(\"Weapon\")
-signal emptied
+[sub_resource type="Resource" id="Resource_bc3rm"]
+script = ExtResource("2_lrrm4")
+signal_name = "emptied"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Empty"
+ace_category = "Weapon"
 
-## @ace_trigger
-## @ace_name(\"On Reload Started\")
-## @ace_category(\"Weapon\")
-signal reload_started
+[sub_resource type="Resource" id="Resource_tnug7"]
+script = ExtResource("2_lrrm4")
+signal_name = "reload_started"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Reload Started"
+ace_category = "Weapon"
 
-## @ace_trigger
-## @ace_name(\"On Reload Complete\")
-## @ace_category(\"Weapon\")
-signal reload_completed
+[sub_resource type="Resource" id="Resource_rkgk7"]
+script = ExtResource("2_lrrm4")
+signal_name = "reload_completed"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Reload Complete"
+ace_category = "Weapon"
 
-## @ace_condition
+[sub_resource type="Resource" id="Resource_40oqk"]
+script = ExtResource("3_73t63")
+code = "## @ace_condition
 ## @ace_name(\"Can Fire\")
 ## @ace_category(\"Weapon\")
 ## @ace_codegen_template(\"$WeaponKit.can_fire()\")
@@ -108,33 +121,147 @@ func _complete_reload() -> void:
 	_reload_timer = 0.0
 	reload_completed.emit()"
 
-[sub_resource type="Resource" id="Resource_jx5ja"]
-script = ExtResource("2_204sl")
-code = "_cooldown = maxf(_cooldown - delta, 0.0)
-if _reloading:
-	_reload_timer = maxf(_reload_timer - delta, 0.0)
-	if _reload_timer <= 0.0:
-		_complete_reload()
-elif _burst_left > 0 and _cooldown <= 0.0:
-	if current_ammo > 0:
-		_burst_left -= 1
-		_fire_one()
-	else:
-		_burst_left = 0"
+[sub_resource type="Resource" id="Resource_qxhv0"]
+script = ExtResource("8_bhjv5")
+ace_id = "SetVar"
+params = {
+"value": "maxf(_cooldown - delta, 0.0)",
+"var_name": "_cooldown"
+}
 
-[sub_resource type="Resource" id="Resource_rwa0o"]
-script = ExtResource("6_gljvp")
+[sub_resource type="Resource" id="Resource_juwkg"]
+script = ExtResource("7_m4533")
+actions = Array[Resource]([SubResource("Resource_qxhv0")])
+event_uid = "6eed21"
+
+[sub_resource type="Resource" id="Resource_w3r36"]
+script = ExtResource("8_bhjv5")
+ace_id = "SetVar"
+params = {
+"value": "maxf(_reload_timer - delta, 0.0)",
+"var_name": "_reload_timer"
+}
+
+[sub_resource type="Resource" id="Resource_255iv"]
+script = ExtResource("4_turmm")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "_reloading"
+}
+
+[sub_resource type="Resource" id="Resource_pqx3t"]
+script = ExtResource("8_bhjv5")
+ace_id = "CallFunction"
+params = {
+"args": "",
+"function_name": "_complete_reload"
+}
+
+[sub_resource type="Resource" id="Resource_hnxl2"]
+script = ExtResource("4_turmm")
+ace_id = "CompareVar"
+params = {
+"op": "<=",
+"value": "0.0",
+"var_name": "_reload_timer"
+}
+
+[sub_resource type="Resource" id="Resource_ebvhh"]
+script = ExtResource("7_m4533")
+conditions = Array[ExtResource("4_turmm")]([SubResource("Resource_hnxl2")])
+actions = Array[Resource]([SubResource("Resource_pqx3t")])
+event_uid = "6e39f7"
+
+[sub_resource type="Resource" id="Resource_4makl"]
+script = ExtResource("7_m4533")
+conditions = Array[ExtResource("4_turmm")]([SubResource("Resource_255iv")])
+actions = Array[Resource]([SubResource("Resource_w3r36")])
+sub_events = Array[Resource]([SubResource("Resource_ebvhh")])
+event_uid = "a053f2"
+
+[sub_resource type="Resource" id="Resource_rbsjj"]
+script = ExtResource("4_turmm")
+ace_id = "CompareVar"
+params = {
+"op": ">",
+"value": "0",
+"var_name": "_burst_left"
+}
+
+[sub_resource type="Resource" id="Resource_6hdaa"]
+script = ExtResource("4_turmm")
+ace_id = "CompareVar"
+params = {
+"op": "<=",
+"value": "0.0",
+"var_name": "_cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_ntqov"]
+script = ExtResource("8_bhjv5")
+ace_id = "SubtractVar"
+params = {
+"amount": "1",
+"var_name": "_burst_left"
+}
+
+[sub_resource type="Resource" id="Resource_gyquj"]
+script = ExtResource("8_bhjv5")
+ace_id = "CallFunction"
+params = {
+"args": "",
+"function_name": "_fire_one"
+}
+
+[sub_resource type="Resource" id="Resource_p56ui"]
+script = ExtResource("4_turmm")
+ace_id = "CompareVar"
+params = {
+"op": ">",
+"value": "0",
+"var_name": "current_ammo"
+}
+
+[sub_resource type="Resource" id="Resource_hm5ns"]
+script = ExtResource("7_m4533")
+conditions = Array[ExtResource("4_turmm")]([SubResource("Resource_p56ui")])
+actions = Array[Resource]([SubResource("Resource_ntqov"), SubResource("Resource_gyquj")])
+event_uid = "4d78d1"
+
+[sub_resource type="Resource" id="Resource_hg5vn"]
+script = ExtResource("8_bhjv5")
+ace_id = "SetVar"
+params = {
+"value": "0",
+"var_name": "_burst_left"
+}
+
+[sub_resource type="Resource" id="Resource_wedpr"]
+script = ExtResource("7_m4533")
+actions = Array[Resource]([SubResource("Resource_hg5vn")])
+else_mode = 1
+event_uid = "3701f3"
+
+[sub_resource type="Resource" id="Resource_uvlb7"]
+script = ExtResource("7_m4533")
+conditions = Array[ExtResource("4_turmm")]([SubResource("Resource_rbsjj"), SubResource("Resource_6hdaa")])
+sub_events = Array[Resource]([SubResource("Resource_hm5ns"), SubResource("Resource_wedpr")])
+else_mode = 1
+event_uid = "0c592b"
+
+[sub_resource type="Resource" id="Resource_3rbjk"]
+script = ExtResource("7_m4533")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_jx5ja")])
-event_uid = "bbcb95"
+sub_events = Array[Resource]([SubResource("Resource_juwkg"), SubResource("Resource_4makl"), SubResource("Resource_uvlb7")])
+event_uid = "99b1d5"
 
-[sub_resource type="Resource" id="Resource_bc3rm"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_k7nht"]
+script = ExtResource("8_bhjv5")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_tnug7"]
-script = ExtResource("3_lrrm4")
+[sub_resource type="Resource" id="Resource_olsp2"]
+script = ExtResource("4_turmm")
 ace_id = "CompareVar"
 params = {
 "op": "or",
@@ -142,44 +269,66 @@ params = {
 "var_name": "_reloading"
 }
 
-[sub_resource type="Resource" id="Resource_rkgk7"]
-script = ExtResource("6_gljvp")
-conditions = Array[ExtResource("3_lrrm4")]([SubResource("Resource_tnug7")])
-actions = Array[Resource]([SubResource("Resource_bc3rm")])
+[sub_resource type="Resource" id="Resource_spqyj"]
+script = ExtResource("7_m4533")
+conditions = Array[ExtResource("4_turmm")]([SubResource("Resource_olsp2")])
+actions = Array[Resource]([SubResource("Resource_k7nht")])
 event_uid = "3e39af"
 
-[sub_resource type="Resource" id="Resource_40oqk"]
-script = ExtResource("2_204sl")
-code = "if current_ammo <= 0:
-	emptied.emit()
-	if auto_reload:
-		reload()
-	return"
+[sub_resource type="Resource" id="Resource_vs3yn"]
+script = ExtResource("3_73t63")
+code = "if current_ammo <= 0:"
 lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_qxhv0"]
-script = ExtResource("6_gljvp")
-actions = Array[Resource]([SubResource("Resource_40oqk")])
+[sub_resource type="Resource" id="Resource_jfkrj"]
+script = ExtResource("8_bhjv5")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "	emptied"
+}
+
+[sub_resource type="Resource" id="Resource_2i7uw"]
+script = ExtResource("3_73t63")
+code = "	if auto_reload:"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_motkf"]
+script = ExtResource("8_bhjv5")
+ace_id = "CallFunction"
+params = {
+"args": "",
+"function_name": "		reload"
+}
+
+[sub_resource type="Resource" id="Resource_ykk0v"]
+script = ExtResource("3_73t63")
+code = "	return"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_bw1nn"]
+script = ExtResource("7_m4533")
+actions = Array[Resource]([SubResource("Resource_vs3yn"), SubResource("Resource_jfkrj"), SubResource("Resource_2i7uw"), SubResource("Resource_motkf"), SubResource("Resource_ykk0v")])
 event_uid = "8729d3"
 
-[sub_resource type="Resource" id="Resource_juwkg"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_ipbwb"]
+script = ExtResource("8_bhjv5")
 ace_id = "SetVar"
 params = {
 "value": "maxi(burst_count, 1)",
 "var_name": "_burst_left"
 }
 
-[sub_resource type="Resource" id="Resource_w3r36"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_3dskw"]
+script = ExtResource("8_bhjv5")
 ace_id = "SubtractVar"
 params = {
 "amount": "1",
 "var_name": "_burst_left"
 }
 
-[sub_resource type="Resource" id="Resource_255iv"]
-script = ExtResource("3_lrrm4")
+[sub_resource type="Resource" id="Resource_xdb1w"]
+script = ExtResource("4_turmm")
 ace_id = "CompareVar"
 params = {
 "op": "==",
@@ -187,37 +336,40 @@ params = {
 "var_name": "fire_mode"
 }
 
-[sub_resource type="Resource" id="Resource_pqx3t"]
-script = ExtResource("6_gljvp")
-conditions = Array[ExtResource("3_lrrm4")]([SubResource("Resource_255iv")])
-actions = Array[Resource]([SubResource("Resource_juwkg"), SubResource("Resource_w3r36")])
+[sub_resource type="Resource" id="Resource_1sr40"]
+script = ExtResource("7_m4533")
+conditions = Array[ExtResource("4_turmm")]([SubResource("Resource_xdb1w")])
+actions = Array[Resource]([SubResource("Resource_ipbwb"), SubResource("Resource_3dskw")])
 event_uid = "a15bc0"
 
-[sub_resource type="Resource" id="Resource_hnxl2"]
-script = ExtResource("2_204sl")
-code = "_fire_one()"
-lift_note = "no matching ACE template"
+[sub_resource type="Resource" id="Resource_f1bpx"]
+script = ExtResource("8_bhjv5")
+ace_id = "CallFunction"
+params = {
+"args": "",
+"function_name": "_fire_one"
+}
 
-[sub_resource type="Resource" id="Resource_ebvhh"]
-script = ExtResource("6_gljvp")
-actions = Array[Resource]([SubResource("Resource_hnxl2")])
+[sub_resource type="Resource" id="Resource_k2epp"]
+script = ExtResource("7_m4533")
+actions = Array[Resource]([SubResource("Resource_f1bpx")])
 event_uid = "432334"
 
-[sub_resource type="Resource" id="Resource_4makl"]
-script = ExtResource("9_bhjv5")
+[sub_resource type="Resource" id="Resource_2h8nk"]
+script = ExtResource("10_cwid0")
 function_name = "fire"
 description = "Fires if ready (not reloading, off cooldown, has ammo). In burst mode it kicks off a burst; if the magazine is empty it triggers On Empty (and auto-reloads when enabled)."
 expose_as_ace = true
 ace_display_name = "Fire"
 ace_category = "Weapon"
-events = Array[Resource]([SubResource("Resource_rkgk7"), SubResource("Resource_qxhv0"), SubResource("Resource_pqx3t"), SubResource("Resource_ebvhh")])
+events = Array[Resource]([SubResource("Resource_spqyj"), SubResource("Resource_bw1nn"), SubResource("Resource_1sr40"), SubResource("Resource_k2epp")])
 
-[sub_resource type="Resource" id="Resource_rbsjj"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_wig7o"]
+script = ExtResource("8_bhjv5")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_6hdaa"]
-script = ExtResource("3_lrrm4")
+[sub_resource type="Resource" id="Resource_tw67m"]
+script = ExtResource("4_turmm")
 ace_id = "CompareVar"
 params = {
 "op": "or",
@@ -225,25 +377,25 @@ params = {
 "var_name": "_reloading"
 }
 
-[sub_resource type="Resource" id="Resource_ntqov"]
-script = ExtResource("6_gljvp")
-conditions = Array[ExtResource("3_lrrm4")]([SubResource("Resource_6hdaa")])
-actions = Array[Resource]([SubResource("Resource_rbsjj")])
+[sub_resource type="Resource" id="Resource_km5mq"]
+script = ExtResource("7_m4533")
+conditions = Array[ExtResource("4_turmm")]([SubResource("Resource_tw67m")])
+actions = Array[Resource]([SubResource("Resource_wig7o")])
 event_uid = "ec4db9"
 
-[sub_resource type="Resource" id="Resource_gyquj"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_4v027"]
+script = ExtResource("8_bhjv5")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_p56ui"]
-script = ExtResource("3_lrrm4")
+[sub_resource type="Resource" id="Resource_bcpe2"]
+script = ExtResource("4_turmm")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "not infinite_reserve"
 }
 
-[sub_resource type="Resource" id="Resource_hm5ns"]
-script = ExtResource("3_lrrm4")
+[sub_resource type="Resource" id="Resource_pse6b"]
+script = ExtResource("4_turmm")
 ace_id = "CompareVar"
 params = {
 "op": "<=",
@@ -251,270 +403,276 @@ params = {
 "var_name": "reserve_ammo"
 }
 
-[sub_resource type="Resource" id="Resource_hg5vn"]
-script = ExtResource("6_gljvp")
-conditions = Array[ExtResource("3_lrrm4")]([SubResource("Resource_p56ui"), SubResource("Resource_hm5ns")])
-actions = Array[Resource]([SubResource("Resource_gyquj")])
+[sub_resource type="Resource" id="Resource_uihlq"]
+script = ExtResource("7_m4533")
+conditions = Array[ExtResource("4_turmm")]([SubResource("Resource_bcpe2"), SubResource("Resource_pse6b")])
+actions = Array[Resource]([SubResource("Resource_4v027")])
 event_uid = "6afde2"
 
-[sub_resource type="Resource" id="Resource_wedpr"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_hnqio"]
+script = ExtResource("8_bhjv5")
 ace_id = "SetVar"
 params = {
 "value": "true",
 "var_name": "_reloading"
 }
 
-[sub_resource type="Resource" id="Resource_uvlb7"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_rb5sd"]
+script = ExtResource("8_bhjv5")
 ace_id = "SetVar"
 params = {
 "value": "reload_time",
 "var_name": "_reload_timer"
 }
 
-[sub_resource type="Resource" id="Resource_3rbjk"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_7sfog"]
+script = ExtResource("8_bhjv5")
 ace_id = "SetVar"
 params = {
 "value": "0",
 "var_name": "_burst_left"
 }
 
-[sub_resource type="Resource" id="Resource_k7nht"]
-script = ExtResource("2_204sl")
-code = "reload_started.emit()"
-lift_note = "no matching ACE template"
+[sub_resource type="Resource" id="Resource_416k1"]
+script = ExtResource("8_bhjv5")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "reload_started"
+}
 
-[sub_resource type="Resource" id="Resource_olsp2"]
-script = ExtResource("6_gljvp")
-actions = Array[Resource]([SubResource("Resource_wedpr"), SubResource("Resource_uvlb7"), SubResource("Resource_3rbjk"), SubResource("Resource_k7nht")])
+[sub_resource type="Resource" id="Resource_u0y68"]
+script = ExtResource("7_m4533")
+actions = Array[Resource]([SubResource("Resource_hnqio"), SubResource("Resource_rb5sd"), SubResource("Resource_7sfog"), SubResource("Resource_416k1")])
 event_uid = "fa0c78"
 
-[sub_resource type="Resource" id="Resource_spqyj"]
-script = ExtResource("9_bhjv5")
+[sub_resource type="Resource" id="Resource_26ocw"]
+script = ExtResource("10_cwid0")
 function_name = "reload"
 description = "Starts a timed reload (if not full and reserve has rounds)."
 expose_as_ace = true
 ace_display_name = "Reload"
 ace_category = "Weapon"
-events = Array[Resource]([SubResource("Resource_ntqov"), SubResource("Resource_hg5vn"), SubResource("Resource_olsp2")])
+events = Array[Resource]([SubResource("Resource_km5mq"), SubResource("Resource_uihlq"), SubResource("Resource_u0y68")])
 
-[sub_resource type="Resource" id="Resource_vs3yn"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_gqbd5"]
+script = ExtResource("8_bhjv5")
 ace_id = "SetVar"
 params = {
 "value": "false",
 "var_name": "_reloading"
 }
 
-[sub_resource type="Resource" id="Resource_jfkrj"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_00f2g"]
+script = ExtResource("8_bhjv5")
 ace_id = "SetVar"
 params = {
 "value": "0.0",
 "var_name": "_reload_timer"
 }
 
-[sub_resource type="Resource" id="Resource_2i7uw"]
-script = ExtResource("6_gljvp")
-actions = Array[Resource]([SubResource("Resource_vs3yn"), SubResource("Resource_jfkrj")])
+[sub_resource type="Resource" id="Resource_m2728"]
+script = ExtResource("7_m4533")
+actions = Array[Resource]([SubResource("Resource_gqbd5"), SubResource("Resource_00f2g")])
 event_uid = "8b9c1b"
 
-[sub_resource type="Resource" id="Resource_motkf"]
-script = ExtResource("9_bhjv5")
+[sub_resource type="Resource" id="Resource_xy7nj"]
+script = ExtResource("10_cwid0")
 function_name = "cancel_reload"
 description = "Aborts an in-progress reload (no ammo gained)."
 expose_as_ace = true
 ace_display_name = "Cancel Reload"
 ace_category = "Weapon"
-events = Array[Resource]([SubResource("Resource_2i7uw")])
+events = Array[Resource]([SubResource("Resource_m2728")])
 
-[sub_resource type="Resource" id="Resource_ykk0v"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_0f2yx"]
+script = ExtResource("8_bhjv5")
 ace_id = "SetVar"
 params = {
 "value": "false",
 "var_name": "_reloading"
 }
 
-[sub_resource type="Resource" id="Resource_bw1nn"]
-script = ExtResource("2_204sl")
-code = "_complete_reload()"
-lift_note = "no matching ACE template"
+[sub_resource type="Resource" id="Resource_adlts"]
+script = ExtResource("8_bhjv5")
+ace_id = "CallFunction"
+params = {
+"args": "",
+"function_name": "_complete_reload"
+}
 
-[sub_resource type="Resource" id="Resource_ipbwb"]
-script = ExtResource("6_gljvp")
-actions = Array[Resource]([SubResource("Resource_ykk0v"), SubResource("Resource_bw1nn")])
+[sub_resource type="Resource" id="Resource_8quq6"]
+script = ExtResource("7_m4533")
+actions = Array[Resource]([SubResource("Resource_0f2yx"), SubResource("Resource_adlts")])
 event_uid = "a0bdc0"
 
-[sub_resource type="Resource" id="Resource_3dskw"]
-script = ExtResource("9_bhjv5")
+[sub_resource type="Resource" id="Resource_uvk44"]
+script = ExtResource("10_cwid0")
 function_name = "instant_reload"
 description = "Refills the magazine immediately (no reload time)."
 expose_as_ace = true
 ace_display_name = "Instant Reload"
 ace_category = "Weapon"
-events = Array[Resource]([SubResource("Resource_ipbwb")])
+events = Array[Resource]([SubResource("Resource_8quq6")])
 
-[sub_resource type="Resource" id="Resource_xdb1w"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_hatyb"]
+script = ExtResource("8_bhjv5")
 ace_id = "SetVar"
 params = {
 "value": "mini(current_ammo + amount, max_ammo)",
 "var_name": "current_ammo"
 }
 
-[sub_resource type="Resource" id="Resource_1sr40"]
-script = ExtResource("6_gljvp")
-actions = Array[Resource]([SubResource("Resource_xdb1w")])
+[sub_resource type="Resource" id="Resource_1yehn"]
+script = ExtResource("7_m4533")
+actions = Array[Resource]([SubResource("Resource_hatyb")])
 event_uid = "72c234"
 
-[sub_resource type="Resource" id="Resource_f1bpx"]
-script = ExtResource("8_m4533")
+[sub_resource type="Resource" id="Resource_wylot"]
+script = ExtResource("9_61vf4")
 id = "amount"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_k2epp"]
-script = ExtResource("9_bhjv5")
+[sub_resource type="Resource" id="Resource_i852u"]
+script = ExtResource("10_cwid0")
 function_name = "add_ammo"
 description = "Adds rounds straight to the magazine (capped at the magazine size)."
 expose_as_ace = true
 ace_display_name = "Add Ammo"
 ace_category = "Weapon"
-params = Array[ExtResource("8_m4533")]([SubResource("Resource_f1bpx")])
-events = Array[Resource]([SubResource("Resource_1sr40")])
+params = Array[ExtResource("9_61vf4")]([SubResource("Resource_wylot")])
+events = Array[Resource]([SubResource("Resource_1yehn")])
 
-[sub_resource type="Resource" id="Resource_2h8nk"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_0vn0w"]
+script = ExtResource("8_bhjv5")
 ace_id = "AddVar"
 params = {
 "amount": "amount",
 "var_name": "reserve_ammo"
 }
 
-[sub_resource type="Resource" id="Resource_wig7o"]
-script = ExtResource("6_gljvp")
-actions = Array[Resource]([SubResource("Resource_2h8nk")])
+[sub_resource type="Resource" id="Resource_biopi"]
+script = ExtResource("7_m4533")
+actions = Array[Resource]([SubResource("Resource_0vn0w")])
 event_uid = "6e4ff1"
 
-[sub_resource type="Resource" id="Resource_tw67m"]
-script = ExtResource("8_m4533")
+[sub_resource type="Resource" id="Resource_axcco"]
+script = ExtResource("9_61vf4")
 id = "amount"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_km5mq"]
-script = ExtResource("9_bhjv5")
+[sub_resource type="Resource" id="Resource_upv75"]
+script = ExtResource("10_cwid0")
 function_name = "add_reserve"
 description = "Adds spare rounds to the reserve pool (e.g. an ammo pickup)."
 expose_as_ace = true
 ace_display_name = "Add Reserve Ammo"
 ace_category = "Weapon"
-params = Array[ExtResource("8_m4533")]([SubResource("Resource_tw67m")])
-events = Array[Resource]([SubResource("Resource_wig7o")])
+params = Array[ExtResource("9_61vf4")]([SubResource("Resource_axcco")])
+events = Array[Resource]([SubResource("Resource_biopi")])
 
-[sub_resource type="Resource" id="Resource_4v027"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_15ont"]
+script = ExtResource("8_bhjv5")
 ace_id = "SetVar"
 params = {
 "value": "rate",
 "var_name": "fire_rate"
 }
 
-[sub_resource type="Resource" id="Resource_bcpe2"]
-script = ExtResource("6_gljvp")
-actions = Array[Resource]([SubResource("Resource_4v027")])
+[sub_resource type="Resource" id="Resource_bxja2"]
+script = ExtResource("7_m4533")
+actions = Array[Resource]([SubResource("Resource_15ont")])
 event_uid = "056675"
 
-[sub_resource type="Resource" id="Resource_pse6b"]
-script = ExtResource("8_m4533")
+[sub_resource type="Resource" id="Resource_jrn6h"]
+script = ExtResource("9_61vf4")
 id = "rate"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_uihlq"]
-script = ExtResource("9_bhjv5")
+[sub_resource type="Resource" id="Resource_nrbp0"]
+script = ExtResource("10_cwid0")
 function_name = "set_fire_rate"
 description = "Changes the shots-per-second."
 expose_as_ace = true
 ace_display_name = "Set Fire Rate"
 ace_category = "Weapon"
-params = Array[ExtResource("8_m4533")]([SubResource("Resource_pse6b")])
-events = Array[Resource]([SubResource("Resource_bcpe2")])
+params = Array[ExtResource("9_61vf4")]([SubResource("Resource_jrn6h")])
+events = Array[Resource]([SubResource("Resource_bxja2")])
 
-[sub_resource type="Resource" id="Resource_hnqio"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_kps7h"]
+script = ExtResource("8_bhjv5")
 ace_id = "SetVar"
 params = {
 "value": "mode",
 "var_name": "fire_mode"
 }
 
-[sub_resource type="Resource" id="Resource_rb5sd"]
-script = ExtResource("6_gljvp")
-actions = Array[Resource]([SubResource("Resource_hnqio")])
+[sub_resource type="Resource" id="Resource_osqwn"]
+script = ExtResource("7_m4533")
+actions = Array[Resource]([SubResource("Resource_kps7h")])
 event_uid = "0ed13a"
 
-[sub_resource type="Resource" id="Resource_7sfog"]
-script = ExtResource("8_m4533")
+[sub_resource type="Resource" id="Resource_3p06i"]
+script = ExtResource("9_61vf4")
 id = "mode"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_416k1"]
-script = ExtResource("9_bhjv5")
+[sub_resource type="Resource" id="Resource_ljos4"]
+script = ExtResource("10_cwid0")
 function_name = "set_fire_mode"
 description = "0 = single, 1 = auto, 2 = burst."
 expose_as_ace = true
 ace_display_name = "Set Fire Mode"
 ace_category = "Weapon"
-params = Array[ExtResource("8_m4533")]([SubResource("Resource_7sfog")])
-events = Array[Resource]([SubResource("Resource_rb5sd")])
+params = Array[ExtResource("9_61vf4")]([SubResource("Resource_3p06i")])
+events = Array[Resource]([SubResource("Resource_osqwn")])
 
-[sub_resource type="Resource" id="Resource_u0y68"]
-script = ExtResource("7_l8tj8")
+[sub_resource type="Resource" id="Resource_1tcu8"]
+script = ExtResource("8_bhjv5")
 ace_id = "SetVar"
 params = {
 "value": "maxi(size, 0)",
 "var_name": "max_ammo"
 }
 
-[sub_resource type="Resource" id="Resource_26ocw"]
-script = ExtResource("6_gljvp")
-actions = Array[Resource]([SubResource("Resource_u0y68")])
+[sub_resource type="Resource" id="Resource_h6qwn"]
+script = ExtResource("7_m4533")
+actions = Array[Resource]([SubResource("Resource_1tcu8")])
 event_uid = "f02060"
 
-[sub_resource type="Resource" id="Resource_gqbd5"]
-script = ExtResource("8_m4533")
+[sub_resource type="Resource" id="Resource_ima3u"]
+script = ExtResource("9_61vf4")
 id = "size"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_00f2g"]
-script = ExtResource("9_bhjv5")
+[sub_resource type="Resource" id="Resource_lwcty"]
+script = ExtResource("10_cwid0")
 function_name = "set_max_ammo"
 description = "Changes the magazine size."
 expose_as_ace = true
 ace_display_name = "Set Magazine Size"
 ace_category = "Weapon"
-params = Array[ExtResource("8_m4533")]([SubResource("Resource_gqbd5")])
-events = Array[Resource]([SubResource("Resource_26ocw")])
+params = Array[ExtResource("9_61vf4")]([SubResource("Resource_ima3u")])
+events = Array[Resource]([SubResource("Resource_h6qwn")])
 
 [resource]
-script = ExtResource("10_61vf4")
+script = ExtResource("11_itgvj")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "WeaponKit"
 addon_tags = PackedStringArray("combat", "shooter")
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_cwid0"), SubResource("Resource_itgvj"), SubResource("Resource_rwa0o")])
+events = Array[Resource]([SubResource("Resource_jx5ja"), SubResource("Resource_rwa0o"), SubResource("Resource_bc3rm"), SubResource("Resource_tnug7"), SubResource("Resource_rkgk7"), SubResource("Resource_40oqk"), SubResource("Resource_3rbjk")])
 variables = {
 "_burst_left": {
 "default": 0,
@@ -609,4 +767,4 @@ variables = {
 "type": "int"
 }
 }
-functions = Array[Resource]([SubResource("Resource_4makl"), SubResource("Resource_spqyj"), SubResource("Resource_motkf"), SubResource("Resource_3dskw"), SubResource("Resource_k2epp"), SubResource("Resource_km5mq"), SubResource("Resource_uihlq"), SubResource("Resource_416k1"), SubResource("Resource_00f2g")])
+functions = Array[Resource]([SubResource("Resource_2h8nk"), SubResource("Resource_26ocw"), SubResource("Resource_xy7nj"), SubResource("Resource_uvk44"), SubResource("Resource_i852u"), SubResource("Resource_upv75"), SubResource("Resource_nrbp0"), SubResource("Resource_ljos4"), SubResource("Resource_lwcty")])

@@ -14,6 +14,39 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("VirtualCursor behavior requires a CharacterBody2D parent.")
 
+## @ace_trigger
+## @ace_name("On Interact Pressed")
+## @ace_category("Virtual Cursor")
+signal interact_pressed(id: String)
+## @ace_trigger
+## @ace_name("On Interact Released")
+## @ace_category("Virtual Cursor")
+signal interact_released(id: String)
+## @ace_trigger
+## @ace_name("On Layout Edge Hit")
+## @ace_category("Virtual Cursor")
+signal layout_edge_hit
+## @ace_trigger
+## @ace_name("On Homing Target Entered")
+## @ace_category("Virtual Cursor")
+signal homing_target_entered
+## @ace_trigger
+## @ace_name("On Homing Target Exited")
+## @ace_category("Virtual Cursor")
+signal homing_target_exited
+## @ace_trigger
+## @ace_name("On Homing Snapped")
+## @ace_category("Virtual Cursor")
+signal homing_snapped
+## @ace_trigger
+## @ace_name("On Solid Hit")
+## @ace_category("Virtual Cursor")
+signal solid_hit
+## @ace_trigger
+## @ace_name("On Bounce")
+## @ace_category("Virtual Cursor")
+signal bounce_triggered
+
 ## Speed-up rate while axis held (px/s^2).
 @export var acceleration: float = 1800.0
 ## Slide along solids instead of hard-stop.
@@ -64,46 +97,6 @@ var axis: Vector2 = Vector2.ZERO
 var simulated_axis: Vector2 = Vector2.ZERO
 var mouse_target: Vector2 = Vector2.ZERO
 var constraint_bounds: Rect2 = Rect2()
-
-## @ace_trigger
-## @ace_name("On Interact Pressed")
-## @ace_category("Virtual Cursor")
-signal interact_pressed(id: String)
-
-## @ace_trigger
-## @ace_name("On Interact Released")
-## @ace_category("Virtual Cursor")
-signal interact_released(id: String)
-
-## @ace_trigger
-## @ace_name("On Layout Edge Hit")
-## @ace_category("Virtual Cursor")
-signal layout_edge_hit
-
-## @ace_trigger
-## @ace_name("On Homing Target Entered")
-## @ace_category("Virtual Cursor")
-signal homing_target_entered
-
-## @ace_trigger
-## @ace_name("On Homing Target Exited")
-## @ace_category("Virtual Cursor")
-signal homing_target_exited
-
-## @ace_trigger
-## @ace_name("On Homing Snapped")
-## @ace_category("Virtual Cursor")
-signal homing_snapped
-
-## @ace_trigger
-## @ace_name("On Solid Hit")
-## @ace_category("Virtual Cursor")
-signal solid_hit
-
-## @ace_trigger
-## @ace_name("On Bounce")
-## @ace_category("Virtual Cursor")
-signal bounce_triggered
 
 ## @ace_condition
 ## @ace_name("Is Interact Held")

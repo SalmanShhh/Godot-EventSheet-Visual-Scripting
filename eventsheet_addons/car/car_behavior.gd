@@ -14,6 +14,15 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("CarBehavior behavior requires a CharacterBody2D parent.")
 
+## @ace_trigger
+## @ace_name("On Drift Started")
+## @ace_category("Car")
+signal drift_started
+## @ace_trigger
+## @ace_name("On Drift Recovered")
+## @ace_category("Car")
+signal drift_recovered
+
 var _drifting: bool = false
 @export var acceleration: float = 300.0
 @export var deceleration: float = 400.0
@@ -23,16 +32,6 @@ var _drifting: bool = false
 var speed: float = 0.0
 @export var steer_degrees: float = 180.0
 @export var turn_while_stopped: bool = false
-
-## @ace_trigger
-## @ace_name("On Drift Started")
-## @ace_category("Car")
-signal drift_started
-
-## @ace_trigger
-## @ace_name("On Drift Recovered")
-## @ace_category("Car")
-signal drift_recovered
 
 func _physics_process(delta: float) -> void:
 	if host == null:

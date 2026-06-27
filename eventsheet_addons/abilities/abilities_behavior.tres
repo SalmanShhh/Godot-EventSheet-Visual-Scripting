@@ -1,22 +1,79 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_vnapg"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_hl760"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_erm4e"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_uv7j2"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_2qok2"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_mdlaa"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_nccum"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_ugumu"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_mng6w"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_44b4b"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_hl760"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="2_erm4e"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="3_uv7j2"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="4_2qok2"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="5_mdlaa"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="6_nccum"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="7_ugumu"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="8_mng6w"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="9_44b4b"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="10_geuiw"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="11_n4pln"]
 
-[sub_resource type="Resource" id="Resource_geuiw"]
-script = ExtResource("1_vnapg")
+[sub_resource type="Resource" id="Resource_0c4bb"]
+script = ExtResource("1_hl760")
 text = "Simple Abilities (C3 parity + Godot extras): grant abilities by id, cooldowns, stack charges that auto-regen, temporary abilities that auto-expire, per-ability custom data, and tags for bulk operations. Triggers fire for ANY ability; read Current Ability ID (or the Current Ability Is condition) to tell which one fired."
 
-[sub_resource type="Resource" id="Resource_n4pln"]
-script = ExtResource("2_hl760")
+[sub_resource type="Resource" id="Resource_uco02"]
+script = ExtResource("2_erm4e")
+signal_name = "on_ability_activated"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Ability Activated"
+ace_category = "Abilities"
+
+[sub_resource type="Resource" id="Resource_gf5l5"]
+script = ExtResource("2_erm4e")
+signal_name = "on_ability_ready"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Ability Ready"
+ace_category = "Abilities"
+
+[sub_resource type="Resource" id="Resource_l20oa"]
+script = ExtResource("2_erm4e")
+signal_name = "on_ability_created"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Ability Created"
+ace_category = "Abilities"
+
+[sub_resource type="Resource" id="Resource_wph4b"]
+script = ExtResource("2_erm4e")
+signal_name = "on_ability_removed"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Ability Removed"
+ace_category = "Abilities"
+
+[sub_resource type="Resource" id="Resource_f7itn"]
+script = ExtResource("2_erm4e")
+signal_name = "on_stack_consumed"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Stack Consumed"
+ace_category = "Abilities"
+
+[sub_resource type="Resource" id="Resource_3m6jb"]
+script = ExtResource("2_erm4e")
+signal_name = "on_stack_gained"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Stack Gained"
+ace_category = "Abilities"
+
+[sub_resource type="Resource" id="Resource_0qtj0"]
+script = ExtResource("2_erm4e")
+signal_name = "on_max_stacks_reached"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Max Stacks Reached"
+ace_category = "Abilities"
+
+[sub_resource type="Resource" id="Resource_ou4if"]
+script = ExtResource("3_uv7j2")
 code = "## One ability's runtime state — typed so the cooldown / stack / expiration hot paths read
 ## fields directly instead of float()/int()/bool()-casting an untyped Dictionary every frame.
 class AbilityData:
@@ -30,41 +87,6 @@ class AbilityData:
 	var tags: Array = []
 	var expiration: float = 0.0
 	var max_expiration: float = 0.0
-
-## @ace_trigger
-## @ace_name(\"On Ability Activated\")
-## @ace_category(\"Abilities\")
-signal on_ability_activated
-
-## @ace_trigger
-## @ace_name(\"On Ability Ready\")
-## @ace_category(\"Abilities\")
-signal on_ability_ready
-
-## @ace_trigger
-## @ace_name(\"On Ability Created\")
-## @ace_category(\"Abilities\")
-signal on_ability_created
-
-## @ace_trigger
-## @ace_name(\"On Ability Removed\")
-## @ace_category(\"Abilities\")
-signal on_ability_removed
-
-## @ace_trigger
-## @ace_name(\"On Stack Consumed\")
-## @ace_category(\"Abilities\")
-signal on_stack_consumed
-
-## @ace_trigger
-## @ace_name(\"On Stack Gained\")
-## @ace_category(\"Abilities\")
-signal on_stack_gained
-
-## @ace_trigger
-## @ace_name(\"On Max Stacks Reached\")
-## @ace_category(\"Abilities\")
-signal on_max_stacks_reached
 
 ## @ace_condition
 ## @ace_name(\"Has Ability\")
@@ -243,102 +265,298 @@ func _ids_with_tag(tag: String) -> Array:
 			out.append(id)
 	return out"
 
-[sub_resource type="Resource" id="Resource_0c4bb"]
-script = ExtResource("2_hl760")
-code = "if abilities.is_empty():
-	return
-var expired: Array = []
-for id: String in abilities.keys():
-	var a: AbilityData = abilities[id]
-	if a.cooldown > 0.0:
-		a.cooldown = maxf(0.0, a.cooldown - delta)
-		if a.cooldown <= 0.0:
-			if a.stacks < a.max_stacks:
-				a.stacks = a.stacks + 1
-				current_ability_id = id
-				on_stack_gained.emit()
-				if a.stacks < a.max_stacks and a.max_cooldown > 0.0:
-					a.cooldown = a.max_cooldown
-			current_ability_id = id
-			on_ability_ready.emit()
-	if a.max_expiration > 0.0:
-		a.expiration = maxf(0.0, a.expiration - delta)
-		if a.expiration <= 0.0:
-			expired.append(id)
-for id: String in expired:
-	abilities.erase(id)
-	current_ability_id = id
-	on_ability_removed.emit()"
-
-[sub_resource type="Resource" id="Resource_uco02"]
-script = ExtResource("6_mdlaa")
-trigger_provider_id = "Core"
-trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_0c4bb")])
-event_uid = "916728"
-
-[sub_resource type="Resource" id="Resource_gf5l5"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_bssia"]
+script = ExtResource("8_mng6w")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_l20oa"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
+[sub_resource type="Resource" id="Resource_kbvg2"]
+script = ExtResource("4_2qok2")
+ace_id = "DictIsEmpty"
+params = {
+"var_name": "abilities"
+}
+
+[sub_resource type="Resource" id="Resource_ngics"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_kbvg2")])
+actions = Array[Resource]([SubResource("Resource_bssia")])
+event_uid = "d7f9c2"
+
+[sub_resource type="Resource" id="Resource_hm77x"]
+script = ExtResource("8_mng6w")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "expired",
+"value": "[]",
+"var_type": "Array"
+}
+
+[sub_resource type="Resource" id="Resource_fuji0"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_hm77x")])
+event_uid = "115d5e"
+
+[sub_resource type="Resource" id="Resource_u3ear"]
+script = ExtResource("8_mng6w")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "a",
+"value": "abilities[id]",
+"var_type": "AbilityData"
+}
+
+[sub_resource type="Resource" id="Resource_xnhgr"]
+script = ExtResource("6_nccum")
+iterator_name = "id: String"
+collection_value = "abilities.keys()"
+
+[sub_resource type="Resource" id="Resource_ymee4"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "cooldown",
+"target": "a",
+"value": "maxf(0.0, a.cooldown - delta)"
+}
+
+[sub_resource type="Resource" id="Resource_y8jyx"]
+script = ExtResource("3_uv7j2")
+code = "if a.cooldown <= 0.0:
+	if a.stacks < a.max_stacks:"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_mu2vr"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "stacks",
+"target": "		a",
+"value": "a.stacks + 1"
+}
+
+[sub_resource type="Resource" id="Resource_no1nt"]
+script = ExtResource("8_mng6w")
+ace_id = "SetVar"
+params = {
+"value": "id",
+"var_name": "		current_ability_id"
+}
+
+[sub_resource type="Resource" id="Resource_bv8ro"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "		on_stack_gained"
+}
+
+[sub_resource type="Resource" id="Resource_j4w1m"]
+script = ExtResource("3_uv7j2")
+code = "		if a.stacks < a.max_stacks and a.max_cooldown > 0.0:"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_tphqt"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "cooldown",
+"target": "			a",
+"value": "a.max_cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_cpskq"]
+script = ExtResource("8_mng6w")
+ace_id = "SetVar"
+params = {
+"value": "id",
+"var_name": "	current_ability_id"
+}
+
+[sub_resource type="Resource" id="Resource_mnshf"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "	on_ability_ready"
+}
+
+[sub_resource type="Resource" id="Resource_58jbp"]
+script = ExtResource("4_2qok2")
+ace_id = "CompareVar"
+params = {
+"op": ">",
+"value": "0.0",
+"var_name": "a.cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_60i8h"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_58jbp")])
+actions = Array[Resource]([SubResource("Resource_ymee4"), SubResource("Resource_y8jyx"), SubResource("Resource_mu2vr"), SubResource("Resource_no1nt"), SubResource("Resource_bv8ro"), SubResource("Resource_j4w1m"), SubResource("Resource_tphqt"), SubResource("Resource_cpskq"), SubResource("Resource_mnshf")])
+event_uid = "198585"
+
+[sub_resource type="Resource" id="Resource_ujlqa"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "expiration",
+"target": "a",
+"value": "maxf(0.0, a.expiration - delta)"
+}
+
+[sub_resource type="Resource" id="Resource_6vjts"]
+script = ExtResource("4_2qok2")
+ace_id = "CompareVar"
+params = {
+"op": ">",
+"value": "0.0",
+"var_name": "a.max_expiration"
+}
+
+[sub_resource type="Resource" id="Resource_q1w0d"]
+script = ExtResource("8_mng6w")
+ace_id = "ArrayAppend"
+params = {
+"value": "id",
+"var_name": "expired"
+}
+
+[sub_resource type="Resource" id="Resource_8s5ka"]
+script = ExtResource("4_2qok2")
+ace_id = "CompareVar"
+params = {
+"op": "<=",
+"value": "0.0",
+"var_name": "a.expiration"
+}
+
+[sub_resource type="Resource" id="Resource_kxri8"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_8s5ka")])
+actions = Array[Resource]([SubResource("Resource_q1w0d")])
+event_uid = "9e8d41"
+
+[sub_resource type="Resource" id="Resource_4jhhf"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_6vjts")])
+actions = Array[Resource]([SubResource("Resource_ujlqa")])
+sub_events = Array[Resource]([SubResource("Resource_kxri8")])
+event_uid = "d443d6"
+
+[sub_resource type="Resource" id="Resource_wgamr"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_u3ear")])
+sub_events = Array[Resource]([SubResource("Resource_60i8h"), SubResource("Resource_4jhhf")])
+event_uid = "b6ba7f"
+pick_filters = Array[ExtResource("6_nccum")]([SubResource("Resource_xnhgr")])
+
+[sub_resource type="Resource" id="Resource_f1334"]
+script = ExtResource("8_mng6w")
+ace_id = "DictDeleteKey"
 params = {
 "key": "id",
 "var_name": "abilities"
 }
 
-[sub_resource type="Resource" id="Resource_wph4b"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_l20oa")])
-actions = Array[Resource]([SubResource("Resource_gf5l5")])
-event_uid = "70f457"
-
-[sub_resource type="Resource" id="Resource_f7itn"]
-script = ExtResource("7_nccum")
-ace_id = "CallFunction"
-params = {
-"args": "id",
-"function_name": "_ensure_ability"
-}
-
-[sub_resource type="Resource" id="Resource_3m6jb"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_m2s0k"]
+script = ExtResource("8_mng6w")
 ace_id = "SetVar"
 params = {
 "value": "id",
 "var_name": "current_ability_id"
 }
 
-[sub_resource type="Resource" id="Resource_0qtj0"]
-script = ExtResource("2_hl760")
-code = "on_ability_created.emit()"
-lift_note = "no matching ACE template"
+[sub_resource type="Resource" id="Resource_uyi55"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "on_ability_removed"
+}
 
-[sub_resource type="Resource" id="Resource_ou4if"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_f7itn"), SubResource("Resource_3m6jb"), SubResource("Resource_0qtj0")])
+[sub_resource type="Resource" id="Resource_lgign"]
+script = ExtResource("6_nccum")
+iterator_name = "id: String"
+collection_value = "expired"
+
+[sub_resource type="Resource" id="Resource_xyl57"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_f1334"), SubResource("Resource_m2s0k"), SubResource("Resource_uyi55")])
+event_uid = "e5dd85"
+pick_filters = Array[ExtResource("6_nccum")]([SubResource("Resource_lgign")])
+
+[sub_resource type="Resource" id="Resource_aimsg"]
+script = ExtResource("7_ugumu")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+sub_events = Array[Resource]([SubResource("Resource_ngics"), SubResource("Resource_fuji0"), SubResource("Resource_wgamr"), SubResource("Resource_xyl57")])
+event_uid = "312c88"
+
+[sub_resource type="Resource" id="Resource_4sqo8"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnEarly"
+
+[sub_resource type="Resource" id="Resource_0gvy4"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "abilities"
+}
+
+[sub_resource type="Resource" id="Resource_gs0cq"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_0gvy4")])
+actions = Array[Resource]([SubResource("Resource_4sqo8")])
+event_uid = "70f457"
+
+[sub_resource type="Resource" id="Resource_p5h1q"]
+script = ExtResource("8_mng6w")
+ace_id = "CallFunction"
+params = {
+"args": "id",
+"function_name": "_ensure_ability"
+}
+
+[sub_resource type="Resource" id="Resource_awnw3"]
+script = ExtResource("8_mng6w")
+ace_id = "SetVar"
+params = {
+"value": "id",
+"var_name": "current_ability_id"
+}
+
+[sub_resource type="Resource" id="Resource_i58ax"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "on_ability_created"
+}
+
+[sub_resource type="Resource" id="Resource_tdiol"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_p5h1q"), SubResource("Resource_awnw3"), SubResource("Resource_i58ax")])
 event_uid = "4b43bd"
 
-[sub_resource type="Resource" id="Resource_bssia"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_ryapg"]
+script = ExtResource("9_44b4b")
 id = "id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_kbvg2"]
-script = ExtResource("9_mng6w")
+[sub_resource type="Resource" id="Resource_d1oml"]
+script = ExtResource("10_geuiw")
 function_name = "create_ability"
 description = "Grants an empty ability (no cooldown, 1 stack, enabled). Fires On Ability Created if new."
 expose_as_ace = true
 ace_display_name = "Create Ability"
 ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_bssia")])
-events = Array[Resource]([SubResource("Resource_wph4b"), SubResource("Resource_ou4if")])
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_ryapg")])
+events = Array[Resource]([SubResource("Resource_gs0cq"), SubResource("Resource_tdiol")])
 
-[sub_resource type="Resource" id="Resource_ngics"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_kj7wo"]
+script = ExtResource("8_mng6w")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "is_new",
@@ -346,8 +564,8 @@ params = {
 "var_type": "bool"
 }
 
-[sub_resource type="Resource" id="Resource_hm77x"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_03mxf"]
+script = ExtResource("8_mng6w")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "a",
@@ -355,8 +573,8 @@ params = {
 "var_type": "AbilityData"
 }
 
-[sub_resource type="Resource" id="Resource_fuji0"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_vm1ej"]
+script = ExtResource("8_mng6w")
 ace_id = "SetProperty"
 params = {
 "property": "max_cooldown",
@@ -364,8 +582,8 @@ params = {
 "value": "maxf(0.0, seconds)"
 }
 
-[sub_resource type="Resource" id="Resource_u3ear"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_now3l"]
+script = ExtResource("8_mng6w")
 ace_id = "SetProperty"
 params = {
 "property": "cooldown",
@@ -373,69 +591,72 @@ params = {
 "value": "0.0 if reset_instantly else maxf(0.0, seconds)"
 }
 
-[sub_resource type="Resource" id="Resource_xnhgr"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_ngics"), SubResource("Resource_hm77x"), SubResource("Resource_fuji0"), SubResource("Resource_u3ear")])
+[sub_resource type="Resource" id="Resource_o8r4g"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_kj7wo"), SubResource("Resource_03mxf"), SubResource("Resource_vm1ej"), SubResource("Resource_now3l")])
 event_uid = "d81320"
 
-[sub_resource type="Resource" id="Resource_ymee4"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_asuwn"]
+script = ExtResource("8_mng6w")
 ace_id = "SetVar"
 params = {
 "value": "id",
 "var_name": "current_ability_id"
 }
 
-[sub_resource type="Resource" id="Resource_y8jyx"]
-script = ExtResource("2_hl760")
-code = "on_ability_created.emit()"
-lift_note = "no matching ACE template"
+[sub_resource type="Resource" id="Resource_nb4wx"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "on_ability_created"
+}
 
-[sub_resource type="Resource" id="Resource_mu2vr"]
-script = ExtResource("3_erm4e")
+[sub_resource type="Resource" id="Resource_nmg4c"]
+script = ExtResource("4_2qok2")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "is_new"
 }
 
-[sub_resource type="Resource" id="Resource_no1nt"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_mu2vr")])
-actions = Array[Resource]([SubResource("Resource_ymee4"), SubResource("Resource_y8jyx")])
+[sub_resource type="Resource" id="Resource_lccvh"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_nmg4c")])
+actions = Array[Resource]([SubResource("Resource_asuwn"), SubResource("Resource_nb4wx")])
 event_uid = "21041b"
 
-[sub_resource type="Resource" id="Resource_bv8ro"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_1h8k4"]
+script = ExtResource("9_44b4b")
 id = "id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_j4w1m"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_ab5qp"]
+script = ExtResource("9_44b4b")
 id = "seconds"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_tphqt"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_qas7i"]
+script = ExtResource("9_44b4b")
 id = "reset_instantly"
 type_name = "bool"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_cpskq"]
-script = ExtResource("9_mng6w")
+[sub_resource type="Resource" id="Resource_a5pjh"]
+script = ExtResource("10_geuiw")
 function_name = "create_ability_with_cooldown"
 description = "Grants an ability and sets its cooldown. reset_instantly=true starts it ready."
 expose_as_ace = true
 ace_display_name = "Create Ability With Cooldown"
 ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_bv8ro"), SubResource("Resource_j4w1m"), SubResource("Resource_tphqt")])
-events = Array[Resource]([SubResource("Resource_xnhgr"), SubResource("Resource_no1nt")])
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_1h8k4"), SubResource("Resource_ab5qp"), SubResource("Resource_qas7i")])
+events = Array[Resource]([SubResource("Resource_o8r4g"), SubResource("Resource_lccvh")])
 
-[sub_resource type="Resource" id="Resource_mnshf"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_1fh0h"]
+script = ExtResource("8_mng6w")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "is_new",
@@ -443,8 +664,8 @@ params = {
 "var_type": "bool"
 }
 
-[sub_resource type="Resource" id="Resource_58jbp"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_q7swk"]
+script = ExtResource("8_mng6w")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "a",
@@ -452,8 +673,8 @@ params = {
 "var_type": "AbilityData"
 }
 
-[sub_resource type="Resource" id="Resource_60i8h"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_gyoir"]
+script = ExtResource("8_mng6w")
 ace_id = "SetProperty"
 params = {
 "property": "max_cooldown",
@@ -461,8 +682,8 @@ params = {
 "value": "maxf(0.0, seconds)"
 }
 
-[sub_resource type="Resource" id="Resource_ujlqa"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_duwhk"]
+script = ExtResource("8_mng6w")
 ace_id = "SetProperty"
 params = {
 "property": "max_stacks",
@@ -470,8 +691,8 @@ params = {
 "value": "maxi(1, max_stacks)"
 }
 
-[sub_resource type="Resource" id="Resource_6vjts"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_3kc4v"]
+script = ExtResource("8_mng6w")
 ace_id = "SetProperty"
 params = {
 "property": "stacks",
@@ -479,8 +700,8 @@ params = {
 "value": "a.max_stacks if reset_instantly else 0"
 }
 
-[sub_resource type="Resource" id="Resource_q1w0d"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_ll60d"]
+script = ExtResource("8_mng6w")
 ace_id = "SetProperty"
 params = {
 "property": "cooldown",
@@ -488,76 +709,79 @@ params = {
 "value": "0.0 if reset_instantly else maxf(0.0, seconds)"
 }
 
-[sub_resource type="Resource" id="Resource_8s5ka"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_mnshf"), SubResource("Resource_58jbp"), SubResource("Resource_60i8h"), SubResource("Resource_ujlqa"), SubResource("Resource_6vjts"), SubResource("Resource_q1w0d")])
+[sub_resource type="Resource" id="Resource_rn4g5"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_1fh0h"), SubResource("Resource_q7swk"), SubResource("Resource_gyoir"), SubResource("Resource_duwhk"), SubResource("Resource_3kc4v"), SubResource("Resource_ll60d")])
 event_uid = "3f03e4"
 
-[sub_resource type="Resource" id="Resource_kxri8"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_4wj6s"]
+script = ExtResource("8_mng6w")
 ace_id = "SetVar"
 params = {
 "value": "id",
 "var_name": "current_ability_id"
 }
 
-[sub_resource type="Resource" id="Resource_4jhhf"]
-script = ExtResource("2_hl760")
-code = "on_ability_created.emit()"
-lift_note = "no matching ACE template"
+[sub_resource type="Resource" id="Resource_ityyj"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "on_ability_created"
+}
 
-[sub_resource type="Resource" id="Resource_wgamr"]
-script = ExtResource("3_erm4e")
+[sub_resource type="Resource" id="Resource_gbkuu"]
+script = ExtResource("4_2qok2")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "is_new"
 }
 
-[sub_resource type="Resource" id="Resource_f1334"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_wgamr")])
-actions = Array[Resource]([SubResource("Resource_kxri8"), SubResource("Resource_4jhhf")])
+[sub_resource type="Resource" id="Resource_tqqew"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_gbkuu")])
+actions = Array[Resource]([SubResource("Resource_4wj6s"), SubResource("Resource_ityyj")])
 event_uid = "85d8fe"
 
-[sub_resource type="Resource" id="Resource_m2s0k"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_alk3k"]
+script = ExtResource("9_44b4b")
 id = "id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_uyi55"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_5vrpg"]
+script = ExtResource("9_44b4b")
 id = "seconds"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_lgign"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_l4gpe"]
+script = ExtResource("9_44b4b")
 id = "max_stacks"
 type_name = "int"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_xyl57"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_wqvko"]
+script = ExtResource("9_44b4b")
 id = "reset_instantly"
 type_name = "bool"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_aimsg"]
-script = ExtResource("9_mng6w")
+[sub_resource type="Resource" id="Resource_ww1lv"]
+script = ExtResource("10_geuiw")
 function_name = "create_ability_with_stacks"
 description = "Grants a charge-based ability; each stack regenerates over `seconds`. reset_instantly=true starts full."
 expose_as_ace = true
 ace_display_name = "Create Ability With Cooldown And Stacks"
 ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_m2s0k"), SubResource("Resource_uyi55"), SubResource("Resource_lgign"), SubResource("Resource_xyl57")])
-events = Array[Resource]([SubResource("Resource_8s5ka"), SubResource("Resource_f1334")])
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_alk3k"), SubResource("Resource_5vrpg"), SubResource("Resource_l4gpe"), SubResource("Resource_wqvko")])
+events = Array[Resource]([SubResource("Resource_rn4g5"), SubResource("Resource_tqqew")])
 
-[sub_resource type="Resource" id="Resource_4sqo8"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_kk4gx"]
+script = ExtResource("8_mng6w")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "is_new",
@@ -565,8 +789,8 @@ params = {
 "var_type": "bool"
 }
 
-[sub_resource type="Resource" id="Resource_0gvy4"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_cr3j0"]
+script = ExtResource("8_mng6w")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "a",
@@ -574,8 +798,8 @@ params = {
 "var_type": "AbilityData"
 }
 
-[sub_resource type="Resource" id="Resource_gs0cq"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_7dbhs"]
+script = ExtResource("8_mng6w")
 ace_id = "SetProperty"
 params = {
 "property": "max_expiration",
@@ -583,8 +807,8 @@ params = {
 "value": "maxf(0.0, seconds)"
 }
 
-[sub_resource type="Resource" id="Resource_p5h1q"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_4cisc"]
+script = ExtResource("8_mng6w")
 ace_id = "SetProperty"
 params = {
 "property": "expiration",
@@ -592,80 +816,83 @@ params = {
 "value": "maxf(0.0, seconds)"
 }
 
-[sub_resource type="Resource" id="Resource_awnw3"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_4sqo8"), SubResource("Resource_0gvy4"), SubResource("Resource_gs0cq"), SubResource("Resource_p5h1q")])
+[sub_resource type="Resource" id="Resource_pipgo"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_kk4gx"), SubResource("Resource_cr3j0"), SubResource("Resource_7dbhs"), SubResource("Resource_4cisc")])
 event_uid = "a35509"
 
-[sub_resource type="Resource" id="Resource_i58ax"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_eo5hw"]
+script = ExtResource("8_mng6w")
 ace_id = "SetVar"
 params = {
 "value": "id",
 "var_name": "current_ability_id"
 }
 
-[sub_resource type="Resource" id="Resource_tdiol"]
-script = ExtResource("2_hl760")
-code = "on_ability_created.emit()"
-lift_note = "no matching ACE template"
+[sub_resource type="Resource" id="Resource_0bg57"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "on_ability_created"
+}
 
-[sub_resource type="Resource" id="Resource_ryapg"]
-script = ExtResource("3_erm4e")
+[sub_resource type="Resource" id="Resource_3ta1j"]
+script = ExtResource("4_2qok2")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "is_new"
 }
 
-[sub_resource type="Resource" id="Resource_d1oml"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_ryapg")])
-actions = Array[Resource]([SubResource("Resource_i58ax"), SubResource("Resource_tdiol")])
+[sub_resource type="Resource" id="Resource_g43vd"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_3ta1j")])
+actions = Array[Resource]([SubResource("Resource_eo5hw"), SubResource("Resource_0bg57")])
 event_uid = "7943aa"
 
-[sub_resource type="Resource" id="Resource_kj7wo"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_pkjvh"]
+script = ExtResource("9_44b4b")
 id = "id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_03mxf"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_rks7t"]
+script = ExtResource("9_44b4b")
 id = "seconds"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_vm1ej"]
-script = ExtResource("9_mng6w")
+[sub_resource type="Resource" id="Resource_8k8ro"]
+script = ExtResource("10_geuiw")
 function_name = "create_temporary_ability"
 description = "Grants an ability that auto-removes after `seconds`. Calling again refreshes the timer."
 expose_as_ace = true
 ace_display_name = "Create Temporary Ability"
 ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_kj7wo"), SubResource("Resource_03mxf")])
-events = Array[Resource]([SubResource("Resource_awnw3"), SubResource("Resource_d1oml")])
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_pkjvh"), SubResource("Resource_rks7t")])
+events = Array[Resource]([SubResource("Resource_pipgo"), SubResource("Resource_g43vd")])
 
-[sub_resource type="Resource" id="Resource_now3l"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_4frc3"]
+script = ExtResource("8_mng6w")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_o8r4g"]
-script = ExtResource("3_erm4e")
+[sub_resource type="Resource" id="Resource_tqppg"]
+script = ExtResource("4_2qok2")
 ace_id = "DictHasKey"
 params = {
 "key": "id",
 "var_name": "not abilities"
 }
 
-[sub_resource type="Resource" id="Resource_asuwn"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_o8r4g")])
-actions = Array[Resource]([SubResource("Resource_now3l")])
+[sub_resource type="Resource" id="Resource_oay8p"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_tqppg")])
+actions = Array[Resource]([SubResource("Resource_4frc3")])
 event_uid = "f1d7f3"
 
-[sub_resource type="Resource" id="Resource_nb4wx"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_1dhr1"]
+script = ExtResource("8_mng6w")
 ace_id = "SetProperty"
 params = {
 "property": "max_expiration",
@@ -673,8 +900,8 @@ params = {
 "value": "maxf(0.0, seconds)"
 }
 
-[sub_resource type="Resource" id="Resource_nmg4c"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_d73ix"]
+script = ExtResource("8_mng6w")
 ace_id = "SetProperty"
 params = {
 "property": "expiration",
@@ -682,299 +909,40 @@ params = {
 "value": "maxf(0.0, seconds)"
 }
 
-[sub_resource type="Resource" id="Resource_lccvh"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_nb4wx"), SubResource("Resource_nmg4c")])
+[sub_resource type="Resource" id="Resource_oe7nt"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_1dhr1"), SubResource("Resource_d73ix")])
 event_uid = "ef4da6"
 
-[sub_resource type="Resource" id="Resource_1h8k4"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_jvk4p"]
+script = ExtResource("9_44b4b")
 id = "id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_ab5qp"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_sfu7a"]
+script = ExtResource("9_44b4b")
 id = "seconds"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_qas7i"]
-script = ExtResource("9_mng6w")
+[sub_resource type="Resource" id="Resource_y7l2t"]
+script = ExtResource("10_geuiw")
 function_name = "remove_ability_after"
 description = "Schedules removal of an existing ability after `seconds`."
 expose_as_ace = true
 ace_display_name = "Remove Ability After Duration"
 ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_1h8k4"), SubResource("Resource_ab5qp")])
-events = Array[Resource]([SubResource("Resource_asuwn"), SubResource("Resource_lccvh")])
-
-[sub_resource type="Resource" id="Resource_a5pjh"]
-script = ExtResource("7_nccum")
-ace_id = "ReturnEarly"
-
-[sub_resource type="Resource" id="Resource_1fh0h"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
-params = {
-"key": "id",
-"var_name": "not abilities"
-}
-
-[sub_resource type="Resource" id="Resource_q7swk"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_1fh0h")])
-actions = Array[Resource]([SubResource("Resource_a5pjh")])
-event_uid = "f7e038"
-
-[sub_resource type="Resource" id="Resource_gyoir"]
-script = ExtResource("7_nccum")
-ace_id = "DictDeleteKey"
-params = {
-"key": "id",
-"var_name": "abilities"
-}
-
-[sub_resource type="Resource" id="Resource_duwhk"]
-script = ExtResource("7_nccum")
-ace_id = "SetVar"
-params = {
-"value": "id",
-"var_name": "current_ability_id"
-}
-
-[sub_resource type="Resource" id="Resource_3kc4v"]
-script = ExtResource("2_hl760")
-code = "on_ability_removed.emit()"
-lift_note = "no matching ACE template"
-
-[sub_resource type="Resource" id="Resource_ll60d"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_gyoir"), SubResource("Resource_duwhk"), SubResource("Resource_3kc4v")])
-event_uid = "55cae0"
-
-[sub_resource type="Resource" id="Resource_rn4g5"]
-script = ExtResource("8_ugumu")
-id = "id"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_4wj6s"]
-script = ExtResource("9_mng6w")
-function_name = "remove_ability"
-description = "Deletes an ability and all its data. Fires On Ability Removed."
-expose_as_ace = true
-ace_display_name = "Remove Ability"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_rn4g5")])
-events = Array[Resource]([SubResource("Resource_q7swk"), SubResource("Resource_ll60d")])
-
-[sub_resource type="Resource" id="Resource_ityyj"]
-script = ExtResource("7_nccum")
-ace_id = "SetVar"
-params = {
-"value": "id",
-"var_name": "current_ability_id"
-}
-
-[sub_resource type="Resource" id="Resource_gbkuu"]
-script = ExtResource("2_hl760")
-code = "on_ability_removed.emit()"
-lift_note = "no matching ACE template"
-
-[sub_resource type="Resource" id="Resource_tqqew"]
-script = ExtResource("5_2qok2")
-iterator_name = "id: String"
-collection_value = "abilities.keys()"
-
-[sub_resource type="Resource" id="Resource_alk3k"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_ityyj"), SubResource("Resource_gbkuu")])
-event_uid = "3637e7"
-pick_filters = Array[ExtResource("5_2qok2")]([SubResource("Resource_tqqew")])
-
-[sub_resource type="Resource" id="Resource_5vrpg"]
-script = ExtResource("7_nccum")
-ace_id = "DictClear"
-params = {
-"var_name": "abilities"
-}
-
-[sub_resource type="Resource" id="Resource_l4gpe"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_5vrpg")])
-event_uid = "d7017b"
-
-[sub_resource type="Resource" id="Resource_wqvko"]
-script = ExtResource("9_mng6w")
-function_name = "clear_all_abilities"
-description = "Removes every ability. Fires On Ability Removed for each."
-expose_as_ace = true
-ace_display_name = "Clear All Abilities"
-ace_category = "Abilities"
-events = Array[Resource]([SubResource("Resource_alk3k"), SubResource("Resource_l4gpe")])
-
-[sub_resource type="Resource" id="Resource_ww1lv"]
-script = ExtResource("7_nccum")
-ace_id = "ReturnEarly"
-
-[sub_resource type="Resource" id="Resource_kk4gx"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
-params = {
-"key": "id",
-"var_name": "not abilities"
-}
-
-[sub_resource type="Resource" id="Resource_cr3j0"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_kk4gx")])
-actions = Array[Resource]([SubResource("Resource_ww1lv")])
-event_uid = "cafc1c"
-
-[sub_resource type="Resource" id="Resource_7dbhs"]
-script = ExtResource("7_nccum")
-ace_id = "SetLocalVarTyped"
-params = {
-"name": "a",
-"value": "abilities[id]",
-"var_type": "AbilityData"
-}
-
-[sub_resource type="Resource" id="Resource_4cisc"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_7dbhs")])
-event_uid = "7d0d77"
-
-[sub_resource type="Resource" id="Resource_pipgo"]
-script = ExtResource("7_nccum")
-ace_id = "ReturnEarly"
-
-[sub_resource type="Resource" id="Resource_eo5hw"]
-script = ExtResource("3_erm4e")
-ace_id = "CompareVar"
-params = {
-"op": "a.enabled",
-"value": "or a.stacks <= 0",
-"var_name": "not"
-}
-
-[sub_resource type="Resource" id="Resource_0bg57"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_eo5hw")])
-actions = Array[Resource]([SubResource("Resource_pipgo")])
-event_uid = "d3f86b"
-
-[sub_resource type="Resource" id="Resource_3ta1j"]
-script = ExtResource("7_nccum")
-ace_id = "SetProperty"
-params = {
-"property": "stacks",
-"target": "a",
-"value": "a.stacks - 1"
-}
-
-[sub_resource type="Resource" id="Resource_g43vd"]
-script = ExtResource("7_nccum")
-ace_id = "SetVar"
-params = {
-"value": "id",
-"var_name": "current_ability_id"
-}
-
-[sub_resource type="Resource" id="Resource_pkjvh"]
-script = ExtResource("2_hl760")
-code = "on_stack_consumed.emit()"
-lift_note = "no matching ACE template"
-
-[sub_resource type="Resource" id="Resource_rks7t"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_3ta1j"), SubResource("Resource_g43vd"), SubResource("Resource_pkjvh")])
-event_uid = "f9d230"
-
-[sub_resource type="Resource" id="Resource_8k8ro"]
-script = ExtResource("7_nccum")
-ace_id = "SetProperty"
-params = {
-"property": "cooldown",
-"target": "a",
-"value": "a.max_cooldown"
-}
-
-[sub_resource type="Resource" id="Resource_4frc3"]
-script = ExtResource("3_erm4e")
-ace_id = "CompareVar"
-params = {
-"op": "<",
-"value": "a.max_stacks",
-"var_name": "a.stacks"
-}
-
-[sub_resource type="Resource" id="Resource_tqppg"]
-script = ExtResource("3_erm4e")
-ace_id = "CompareVar"
-params = {
-"op": "<=",
-"value": "0.0",
-"var_name": "a.cooldown"
-}
-
-[sub_resource type="Resource" id="Resource_oay8p"]
-script = ExtResource("3_erm4e")
-ace_id = "CompareVar"
-params = {
-"op": ">",
-"value": "0.0",
-"var_name": "a.max_cooldown"
-}
-
-[sub_resource type="Resource" id="Resource_1dhr1"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_4frc3"), SubResource("Resource_tqppg"), SubResource("Resource_oay8p")])
-actions = Array[Resource]([SubResource("Resource_8k8ro")])
-event_uid = "990e67"
-
-[sub_resource type="Resource" id="Resource_d73ix"]
-script = ExtResource("7_nccum")
-ace_id = "SetVar"
-params = {
-"value": "id",
-"var_name": "current_ability_id"
-}
-
-[sub_resource type="Resource" id="Resource_oe7nt"]
-script = ExtResource("2_hl760")
-code = "on_ability_activated.emit()"
-lift_note = "no matching ACE template"
-
-[sub_resource type="Resource" id="Resource_jvk4p"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_d73ix"), SubResource("Resource_oe7nt")])
-event_uid = "e959cf"
-
-[sub_resource type="Resource" id="Resource_sfu7a"]
-script = ExtResource("8_ugumu")
-id = "id"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_y7l2t"]
-script = ExtResource("9_mng6w")
-function_name = "activate_ability"
-description = "Activates an ability if it is ready: consumes a stack, starts regen, fires On Ability Activated."
-expose_as_ace = true
-ace_display_name = "Activate Ability"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_sfu7a")])
-events = Array[Resource]([SubResource("Resource_cr3j0"), SubResource("Resource_4cisc"), SubResource("Resource_0bg57"), SubResource("Resource_rks7t"), SubResource("Resource_1dhr1"), SubResource("Resource_jvk4p")])
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_jvk4p"), SubResource("Resource_sfu7a")])
+events = Array[Resource]([SubResource("Resource_oay8p"), SubResource("Resource_oe7nt")])
 
 [sub_resource type="Resource" id="Resource_3l1qb"]
-script = ExtResource("7_nccum")
+script = ExtResource("8_mng6w")
 ace_id = "ReturnEarly"
 
 [sub_resource type="Resource" id="Resource_0motv"]
-script = ExtResource("3_erm4e")
+script = ExtResource("4_2qok2")
 ace_id = "DictHasKey"
 params = {
 "key": "id",
@@ -982,415 +950,157 @@ params = {
 }
 
 [sub_resource type="Resource" id="Resource_8w112"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_0motv")])
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_0motv")])
 actions = Array[Resource]([SubResource("Resource_3l1qb")])
-event_uid = "92e968"
+event_uid = "f7e038"
 
 [sub_resource type="Resource" id="Resource_8asb4"]
-script = ExtResource("7_nccum")
-ace_id = "SetLocalVarTyped"
-params = {
-"name": "cd",
-"value": "maxf(0.0, seconds * cooldown_multiplier)",
-"var_type": "float"
-}
-
-[sub_resource type="Resource" id="Resource_hyroe"]
-script = ExtResource("7_nccum")
-ace_id = "SetProperty"
-params = {
-"property": "cooldown",
-"target": "(abilities[id] as AbilityData)",
-"value": "cd"
-}
-
-[sub_resource type="Resource" id="Resource_avuja"]
-script = ExtResource("7_nccum")
-ace_id = "SetProperty"
-params = {
-"property": "max_cooldown",
-"target": "(abilities[id] as AbilityData)",
-"value": "cd"
-}
-
-[sub_resource type="Resource" id="Resource_y7sty"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_8asb4"), SubResource("Resource_hyroe"), SubResource("Resource_avuja")])
-event_uid = "375eec"
-
-[sub_resource type="Resource" id="Resource_x3jla"]
-script = ExtResource("8_ugumu")
-id = "id"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_12fe2"]
-script = ExtResource("8_ugumu")
-id = "seconds"
-type_name = "float"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_owu57"]
-script = ExtResource("9_mng6w")
-function_name = "set_cooldown"
-description = "Puts an ability on cooldown (scaled by the global cooldown multiplier)."
-expose_as_ace = true
-ace_display_name = "Set Ability Cooldown"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_x3jla"), SubResource("Resource_12fe2")])
-events = Array[Resource]([SubResource("Resource_8w112"), SubResource("Resource_y7sty")])
-
-[sub_resource type="Resource" id="Resource_eg4fd"]
-script = ExtResource("7_nccum")
-ace_id = "SetProperty"
-params = {
-"property": "cooldown",
-"target": "(abilities[id] as AbilityData)",
-"value": "0.0"
-}
-
-[sub_resource type="Resource" id="Resource_6j3lp"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
+script = ExtResource("8_mng6w")
+ace_id = "DictDeleteKey"
 params = {
 "key": "id",
 "var_name": "abilities"
 }
 
-[sub_resource type="Resource" id="Resource_cmxwx"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_6j3lp")])
-actions = Array[Resource]([SubResource("Resource_eg4fd")])
-event_uid = "0e47ee"
+[sub_resource type="Resource" id="Resource_hyroe"]
+script = ExtResource("8_mng6w")
+ace_id = "SetVar"
+params = {
+"value": "id",
+"var_name": "current_ability_id"
+}
 
-[sub_resource type="Resource" id="Resource_ap5as"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_avuja"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "on_ability_removed"
+}
+
+[sub_resource type="Resource" id="Resource_y7sty"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_8asb4"), SubResource("Resource_hyroe"), SubResource("Resource_avuja")])
+event_uid = "55cae0"
+
+[sub_resource type="Resource" id="Resource_x3jla"]
+script = ExtResource("9_44b4b")
 id = "id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_7t8t8"]
-script = ExtResource("9_mng6w")
-function_name = "reset_cooldown"
-description = "Sets an ability's cooldown to 0 (instantly ready)."
+[sub_resource type="Resource" id="Resource_12fe2"]
+script = ExtResource("10_geuiw")
+function_name = "remove_ability"
+description = "Deletes an ability and all its data. Fires On Ability Removed."
 expose_as_ace = true
-ace_display_name = "Reset Cooldown"
+ace_display_name = "Remove Ability"
 ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_ap5as")])
-events = Array[Resource]([SubResource("Resource_cmxwx")])
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_x3jla")])
+events = Array[Resource]([SubResource("Resource_8w112"), SubResource("Resource_y7sty")])
+
+[sub_resource type="Resource" id="Resource_owu57"]
+script = ExtResource("8_mng6w")
+ace_id = "SetVar"
+params = {
+"value": "id",
+"var_name": "current_ability_id"
+}
+
+[sub_resource type="Resource" id="Resource_eg4fd"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "on_ability_removed"
+}
+
+[sub_resource type="Resource" id="Resource_6j3lp"]
+script = ExtResource("6_nccum")
+iterator_name = "id: String"
+collection_value = "abilities.keys()"
+
+[sub_resource type="Resource" id="Resource_cmxwx"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_owu57"), SubResource("Resource_eg4fd")])
+event_uid = "3637e7"
+pick_filters = Array[ExtResource("6_nccum")]([SubResource("Resource_6j3lp")])
+
+[sub_resource type="Resource" id="Resource_ap5as"]
+script = ExtResource("8_mng6w")
+ace_id = "DictClear"
+params = {
+"var_name": "abilities"
+}
+
+[sub_resource type="Resource" id="Resource_7t8t8"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_ap5as")])
+event_uid = "d7017b"
 
 [sub_resource type="Resource" id="Resource_l6b4c"]
-script = ExtResource("7_nccum")
-ace_id = "ReturnEarly"
+script = ExtResource("10_geuiw")
+function_name = "clear_all_abilities"
+description = "Removes every ability. Fires On Ability Removed for each."
+expose_as_ace = true
+ace_display_name = "Clear All Abilities"
+ace_category = "Abilities"
+events = Array[Resource]([SubResource("Resource_cmxwx"), SubResource("Resource_7t8t8")])
 
 [sub_resource type="Resource" id="Resource_jmndk"]
-script = ExtResource("3_erm4e")
+script = ExtResource("8_mng6w")
+ace_id = "ReturnEarly"
+
+[sub_resource type="Resource" id="Resource_yg1ck"]
+script = ExtResource("4_2qok2")
 ace_id = "DictHasKey"
 params = {
 "key": "id",
 "var_name": "not abilities"
 }
 
-[sub_resource type="Resource" id="Resource_yg1ck"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_jmndk")])
-actions = Array[Resource]([SubResource("Resource_l6b4c")])
-event_uid = "3e0eaf"
-
 [sub_resource type="Resource" id="Resource_v06uu"]
-script = ExtResource("7_nccum")
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_yg1ck")])
+actions = Array[Resource]([SubResource("Resource_jmndk")])
+event_uid = "cafc1c"
+
+[sub_resource type="Resource" id="Resource_om4gr"]
+script = ExtResource("8_mng6w")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "a",
 "value": "abilities[id]",
 "var_type": "AbilityData"
-}
-
-[sub_resource type="Resource" id="Resource_om4gr"]
-script = ExtResource("7_nccum")
-ace_id = "SetProperty"
-params = {
-"property": "max_stacks",
-"target": "a",
-"value": "maxi(1, max_stacks)"
 }
 
 [sub_resource type="Resource" id="Resource_glsh8"]
-script = ExtResource("7_nccum")
-ace_id = "SetProperty"
-params = {
-"property": "stacks",
-"target": "a",
-"value": "mini(a.stacks, a.max_stacks)"
-}
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_om4gr")])
+event_uid = "7d0d77"
 
 [sub_resource type="Resource" id="Resource_eiyxr"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_v06uu"), SubResource("Resource_om4gr"), SubResource("Resource_glsh8")])
-event_uid = "156348"
+script = ExtResource("8_mng6w")
+ace_id = "ReturnEarly"
 
 [sub_resource type="Resource" id="Resource_5dp4o"]
-script = ExtResource("8_ugumu")
-id = "id"
-initial_value = null
-initialValue = null
+script = ExtResource("4_2qok2")
+ace_id = "CompareVar"
+params = {
+"op": "a.enabled",
+"value": "or a.stacks <= 0",
+"var_name": "not"
+}
 
 [sub_resource type="Resource" id="Resource_eej7e"]
-script = ExtResource("8_ugumu")
-id = "max_stacks"
-type_name = "int"
-initial_value = null
-initialValue = null
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_5dp4o")])
+actions = Array[Resource]([SubResource("Resource_eiyxr")])
+event_uid = "d3f86b"
 
 [sub_resource type="Resource" id="Resource_byivf"]
-script = ExtResource("9_mng6w")
-function_name = "set_max_stacks"
-description = "Changes max charges (current stacks clamp down)."
-expose_as_ace = true
-ace_display_name = "Set Max Stacks"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_5dp4o"), SubResource("Resource_eej7e")])
-events = Array[Resource]([SubResource("Resource_yg1ck"), SubResource("Resource_eiyxr")])
-
-[sub_resource type="Resource" id="Resource_p4u64"]
-script = ExtResource("7_nccum")
-ace_id = "ReturnEarly"
-
-[sub_resource type="Resource" id="Resource_yfylf"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
-params = {
-"key": "id",
-"var_name": "not abilities"
-}
-
-[sub_resource type="Resource" id="Resource_c2qme"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_yfylf")])
-actions = Array[Resource]([SubResource("Resource_p4u64")])
-event_uid = "edd1d9"
-
-[sub_resource type="Resource" id="Resource_h4vue"]
-script = ExtResource("7_nccum")
-ace_id = "SetProperty"
-params = {
-"property": "stacks",
-"target": "(abilities[id] as AbilityData)",
-"value": "clampi(stacks, 0, (abilities[id] as AbilityData).max_stacks)"
-}
-
-[sub_resource type="Resource" id="Resource_g5t4q"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_h4vue")])
-event_uid = "807487"
-
-[sub_resource type="Resource" id="Resource_d7hpy"]
-script = ExtResource("8_ugumu")
-id = "id"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_710be"]
-script = ExtResource("8_ugumu")
-id = "stacks"
-type_name = "int"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_df7ei"]
-script = ExtResource("9_mng6w")
-function_name = "set_stacks"
-description = "Sets current charges (clamped 0..max)."
-expose_as_ace = true
-ace_display_name = "Set Stacks"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_d7hpy"), SubResource("Resource_710be")])
-events = Array[Resource]([SubResource("Resource_c2qme"), SubResource("Resource_g5t4q")])
-
-[sub_resource type="Resource" id="Resource_ufvtj"]
-script = ExtResource("7_nccum")
-ace_id = "ReturnEarly"
-
-[sub_resource type="Resource" id="Resource_5yhda"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
-params = {
-"key": "id",
-"var_name": "not abilities"
-}
-
-[sub_resource type="Resource" id="Resource_g7www"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_5yhda")])
-actions = Array[Resource]([SubResource("Resource_ufvtj")])
-event_uid = "c254ee"
-
-[sub_resource type="Resource" id="Resource_wxem7"]
-script = ExtResource("7_nccum")
-ace_id = "SetLocalVarTyped"
-params = {
-"name": "a",
-"value": "abilities[id]",
-"var_type": "AbilityData"
-}
-
-[sub_resource type="Resource" id="Resource_ua0dw"]
-script = ExtResource("7_nccum")
-ace_id = "SetLocalVarTyped"
-params = {
-"name": "before",
-"value": "a.stacks",
-"var_type": "int"
-}
-
-[sub_resource type="Resource" id="Resource_mx82n"]
-script = ExtResource("7_nccum")
-ace_id = "SetProperty"
-params = {
-"property": "stacks",
-"target": "a",
-"value": "mini(a.max_stacks, before + count)"
-}
-
-[sub_resource type="Resource" id="Resource_s0isi"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_wxem7"), SubResource("Resource_ua0dw"), SubResource("Resource_mx82n")])
-event_uid = "90a1eb"
-
-[sub_resource type="Resource" id="Resource_jiwg1"]
-script = ExtResource("7_nccum")
-ace_id = "SetVar"
-params = {
-"value": "id",
-"var_name": "current_ability_id"
-}
-
-[sub_resource type="Resource" id="Resource_gh1cj"]
-script = ExtResource("2_hl760")
-code = "on_stack_gained.emit()"
-lift_note = "no matching ACE template"
-
-[sub_resource type="Resource" id="Resource_muaha"]
-script = ExtResource("3_erm4e")
-ace_id = "CompareVar"
-params = {
-"op": ">",
-"value": "before",
-"var_name": "a.stacks"
-}
-
-[sub_resource type="Resource" id="Resource_kbe3t"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_muaha")])
-actions = Array[Resource]([SubResource("Resource_jiwg1"), SubResource("Resource_gh1cj")])
-event_uid = "42be5e"
-
-[sub_resource type="Resource" id="Resource_tju6k"]
-script = ExtResource("7_nccum")
-ace_id = "SetVar"
-params = {
-"value": "id",
-"var_name": "current_ability_id"
-}
-
-[sub_resource type="Resource" id="Resource_lj8dr"]
-script = ExtResource("2_hl760")
-code = "on_max_stacks_reached.emit()"
-lift_note = "no matching ACE template"
-
-[sub_resource type="Resource" id="Resource_8q3qx"]
-script = ExtResource("3_erm4e")
-ace_id = "CompareVar"
-params = {
-"op": "+",
-"value": "count > a.max_stacks",
-"var_name": "before"
-}
-
-[sub_resource type="Resource" id="Resource_3tul6"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_8q3qx")])
-actions = Array[Resource]([SubResource("Resource_tju6k"), SubResource("Resource_lj8dr")])
-event_uid = "53cd31"
-
-[sub_resource type="Resource" id="Resource_5xexk"]
-script = ExtResource("8_ugumu")
-id = "id"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_1vahs"]
-script = ExtResource("8_ugumu")
-id = "count"
-type_name = "int"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_3354t"]
-script = ExtResource("9_mng6w")
-function_name = "add_stacks"
-description = "Adds charges up to max. Fires On Stack Gained, and On Max Stacks Reached if it would overflow."
-expose_as_ace = true
-ace_display_name = "Add Stacks"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_5xexk"), SubResource("Resource_1vahs")])
-events = Array[Resource]([SubResource("Resource_g7www"), SubResource("Resource_s0isi"), SubResource("Resource_kbe3t"), SubResource("Resource_3tul6")])
-
-[sub_resource type="Resource" id="Resource_jxddp"]
-script = ExtResource("7_nccum")
-ace_id = "ReturnEarly"
-
-[sub_resource type="Resource" id="Resource_56px4"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
-params = {
-"key": "id",
-"var_name": "not abilities"
-}
-
-[sub_resource type="Resource" id="Resource_we3cn"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_56px4")])
-actions = Array[Resource]([SubResource("Resource_jxddp")])
-event_uid = "479a31"
-
-[sub_resource type="Resource" id="Resource_jwah3"]
-script = ExtResource("7_nccum")
-ace_id = "SetLocalVarTyped"
-params = {
-"name": "a",
-"value": "abilities[id]",
-"var_type": "AbilityData"
-}
-
-[sub_resource type="Resource" id="Resource_h77uv"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_jwah3")])
-event_uid = "a69c1e"
-
-[sub_resource type="Resource" id="Resource_buvie"]
-script = ExtResource("7_nccum")
-ace_id = "ReturnEarly"
-
-[sub_resource type="Resource" id="Resource_03175"]
-script = ExtResource("3_erm4e")
-ace_id = "CompareVar"
-params = {
-"op": "<=",
-"value": "0",
-"var_name": "a.stacks"
-}
-
-[sub_resource type="Resource" id="Resource_k7ull"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_03175")])
-actions = Array[Resource]([SubResource("Resource_buvie")])
-event_uid = "8968e1"
-
-[sub_resource type="Resource" id="Resource_pxmtr"]
-script = ExtResource("7_nccum")
+script = ExtResource("8_mng6w")
 ace_id = "SetProperty"
 params = {
 "property": "stacks",
@@ -1398,26 +1108,29 @@ params = {
 "value": "a.stacks - 1"
 }
 
-[sub_resource type="Resource" id="Resource_dxdox"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_p4u64"]
+script = ExtResource("8_mng6w")
 ace_id = "SetVar"
 params = {
 "value": "id",
 "var_name": "current_ability_id"
 }
 
-[sub_resource type="Resource" id="Resource_2a2e2"]
-script = ExtResource("2_hl760")
-code = "on_stack_consumed.emit()"
-lift_note = "no matching ACE template"
+[sub_resource type="Resource" id="Resource_yfylf"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "on_stack_consumed"
+}
 
-[sub_resource type="Resource" id="Resource_6840f"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_pxmtr"), SubResource("Resource_dxdox"), SubResource("Resource_2a2e2")])
-event_uid = "ab32ae"
+[sub_resource type="Resource" id="Resource_c2qme"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_byivf"), SubResource("Resource_p4u64"), SubResource("Resource_yfylf")])
+event_uid = "f9d230"
 
-[sub_resource type="Resource" id="Resource_7v1nd"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_h4vue"]
+script = ExtResource("8_mng6w")
 ace_id = "SetProperty"
 params = {
 "property": "cooldown",
@@ -1425,8 +1138,8 @@ params = {
 "value": "a.max_cooldown"
 }
 
-[sub_resource type="Resource" id="Resource_ybemg"]
-script = ExtResource("3_erm4e")
+[sub_resource type="Resource" id="Resource_g5t4q"]
+script = ExtResource("4_2qok2")
 ace_id = "CompareVar"
 params = {
 "op": "<",
@@ -1434,8 +1147,8 @@ params = {
 "var_name": "a.stacks"
 }
 
-[sub_resource type="Resource" id="Resource_4a1nt"]
-script = ExtResource("3_erm4e")
+[sub_resource type="Resource" id="Resource_d7hpy"]
+script = ExtResource("4_2qok2")
 ace_id = "CompareVar"
 params = {
 "op": "<=",
@@ -1443,8 +1156,8 @@ params = {
 "var_name": "a.cooldown"
 }
 
-[sub_resource type="Resource" id="Resource_pa6jl"]
-script = ExtResource("3_erm4e")
+[sub_resource type="Resource" id="Resource_710be"]
+script = ExtResource("4_2qok2")
 ace_id = "CompareVar"
 params = {
 "op": ">",
@@ -1452,420 +1165,124 @@ params = {
 "var_name": "a.max_cooldown"
 }
 
-[sub_resource type="Resource" id="Resource_e47k1"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_ybemg"), SubResource("Resource_4a1nt"), SubResource("Resource_pa6jl")])
-actions = Array[Resource]([SubResource("Resource_7v1nd")])
-event_uid = "99b3bd"
+[sub_resource type="Resource" id="Resource_df7ei"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_g5t4q"), SubResource("Resource_d7hpy"), SubResource("Resource_710be")])
+actions = Array[Resource]([SubResource("Resource_h4vue")])
+event_uid = "990e67"
 
-[sub_resource type="Resource" id="Resource_i62va"]
-script = ExtResource("8_ugumu")
-id = "id"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_h8ksd"]
-script = ExtResource("9_mng6w")
-function_name = "consume_stack"
-description = "Removes one charge without activating; starts regen if needed."
-expose_as_ace = true
-ace_display_name = "Consume Ability Stack"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_i62va")])
-events = Array[Resource]([SubResource("Resource_we3cn"), SubResource("Resource_h77uv"), SubResource("Resource_k7ull"), SubResource("Resource_6840f"), SubResource("Resource_e47k1")])
-
-[sub_resource type="Resource" id="Resource_ecu0b"]
-script = ExtResource("7_nccum")
-ace_id = "SetProperty"
-params = {
-"property": "enabled",
-"target": "(abilities[id] as AbilityData)",
-"value": "enabled"
-}
-
-[sub_resource type="Resource" id="Resource_hsh7w"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
-params = {
-"key": "id",
-"var_name": "abilities"
-}
-
-[sub_resource type="Resource" id="Resource_o6qsj"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_hsh7w")])
-actions = Array[Resource]([SubResource("Resource_ecu0b")])
-event_uid = "0b47f9"
-
-[sub_resource type="Resource" id="Resource_icx1g"]
-script = ExtResource("8_ugumu")
-id = "id"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_smhnb"]
-script = ExtResource("8_ugumu")
-id = "enabled"
-type_name = "bool"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_ionoo"]
-script = ExtResource("9_mng6w")
-function_name = "set_enabled"
-description = "Enables or disables activation."
-expose_as_ace = true
-ace_display_name = "Set Ability Enabled"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_icx1g"), SubResource("Resource_smhnb")])
-events = Array[Resource]([SubResource("Resource_o6qsj")])
-
-[sub_resource type="Resource" id="Resource_mxk6w"]
-script = ExtResource("7_nccum")
-ace_id = "SetAnimationTreeActive"
-params = {
-"active": "active",
-"target": "(abilities[id] as AbilityData)"
-}
-
-[sub_resource type="Resource" id="Resource_jnfil"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
-params = {
-"key": "id",
-"var_name": "abilities"
-}
-
-[sub_resource type="Resource" id="Resource_wpdbl"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_jnfil")])
-actions = Array[Resource]([SubResource("Resource_mxk6w")])
-event_uid = "a848e7"
-
-[sub_resource type="Resource" id="Resource_kyql8"]
-script = ExtResource("8_ugumu")
-id = "id"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_rlun0"]
-script = ExtResource("8_ugumu")
-id = "active"
-type_name = "bool"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_pmkrg"]
-script = ExtResource("9_mng6w")
-function_name = "set_active"
-description = "Sets the active flag (for channeled / toggle abilities)."
-expose_as_ace = true
-ace_display_name = "Set Ability Active"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_kyql8"), SubResource("Resource_rlun0")])
-events = Array[Resource]([SubResource("Resource_wpdbl")])
-
-[sub_resource type="Resource" id="Resource_yq8s8"]
-script = ExtResource("7_nccum")
-ace_id = "DictSetKey"
-params = {
-"key": "id] as AbilityData).data[key",
-"value": "str(value)",
-"var_name": "(abilities"
-}
-
-[sub_resource type="Resource" id="Resource_h512k"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
-params = {
-"key": "id",
-"var_name": "abilities"
-}
-
-[sub_resource type="Resource" id="Resource_5xeft"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_h512k")])
-actions = Array[Resource]([SubResource("Resource_yq8s8")])
-event_uid = "a4d9eb"
-
-[sub_resource type="Resource" id="Resource_m302u"]
-script = ExtResource("8_ugumu")
-id = "id"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_f4lbk"]
-script = ExtResource("8_ugumu")
-id = "key"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_rk4sd"]
-script = ExtResource("8_ugumu")
-id = "value"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_ojtf8"]
-script = ExtResource("9_mng6w")
-function_name = "set_ability_data"
-description = "Stores a custom key/value (string) on an ability."
-expose_as_ace = true
-ace_display_name = "Set Ability Data"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_m302u"), SubResource("Resource_f4lbk"), SubResource("Resource_rk4sd")])
-events = Array[Resource]([SubResource("Resource_5xeft")])
-
-[sub_resource type="Resource" id="Resource_o17h2"]
-script = ExtResource("7_nccum")
-ace_id = "ReturnEarly"
-
-[sub_resource type="Resource" id="Resource_kpvqm"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
-params = {
-"key": "id",
-"var_name": "not abilities"
-}
-
-[sub_resource type="Resource" id="Resource_lderx"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_kpvqm")])
-actions = Array[Resource]([SubResource("Resource_o17h2")])
-event_uid = "05e676"
-
-[sub_resource type="Resource" id="Resource_6vjpm"]
-script = ExtResource("7_nccum")
-ace_id = "SetLocalVarTyped"
-params = {
-"name": "tags",
-"value": "(abilities[id] as AbilityData).tags",
-"var_type": "Array"
-}
-
-[sub_resource type="Resource" id="Resource_ano4x"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_6vjpm")])
-event_uid = "2aa712"
-
-[sub_resource type="Resource" id="Resource_0cxcs"]
-script = ExtResource("7_nccum")
-ace_id = "ArrayAppend"
-params = {
-"value": "tag",
-"var_name": "tags"
-}
-
-[sub_resource type="Resource" id="Resource_a8kiv"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
-params = {
-"key": "tag",
-"var_name": "not tags"
-}
-
-[sub_resource type="Resource" id="Resource_ihksp"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_a8kiv")])
-actions = Array[Resource]([SubResource("Resource_0cxcs")])
-event_uid = "ef9893"
-
-[sub_resource type="Resource" id="Resource_e4imh"]
-script = ExtResource("8_ugumu")
-id = "id"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_l6p14"]
-script = ExtResource("8_ugumu")
-id = "tag"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_4gp8l"]
-script = ExtResource("9_mng6w")
-function_name = "add_tag"
-description = "Tags an ability (safe if it already has the tag)."
-expose_as_ace = true
-ace_display_name = "Add Tag"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_e4imh"), SubResource("Resource_l6p14")])
-events = Array[Resource]([SubResource("Resource_lderx"), SubResource("Resource_ano4x"), SubResource("Resource_ihksp")])
-
-[sub_resource type="Resource" id="Resource_u5ddj"]
-script = ExtResource("7_nccum")
-ace_id = "DictDeleteKey"
-params = {
-"key": "tag",
-"var_name": "(abilities[id] as AbilityData).tags"
-}
-
-[sub_resource type="Resource" id="Resource_vflu7"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
-params = {
-"key": "id",
-"var_name": "abilities"
-}
-
-[sub_resource type="Resource" id="Resource_wxuf5"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_vflu7")])
-actions = Array[Resource]([SubResource("Resource_u5ddj")])
-event_uid = "16214a"
-
-[sub_resource type="Resource" id="Resource_4rw8r"]
-script = ExtResource("8_ugumu")
-id = "id"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_u8qsn"]
-script = ExtResource("8_ugumu")
-id = "tag"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_vbffg"]
-script = ExtResource("9_mng6w")
-function_name = "remove_tag"
-description = "Removes a tag from an ability."
-expose_as_ace = true
-ace_display_name = "Remove Tag"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_4rw8r"), SubResource("Resource_u8qsn")])
-events = Array[Resource]([SubResource("Resource_wxuf5")])
-
-[sub_resource type="Resource" id="Resource_qbwnc"]
-script = ExtResource("7_nccum")
-ace_id = "DictClear"
-params = {
-"var_name": "(abilities[id] as AbilityData).tags"
-}
-
-[sub_resource type="Resource" id="Resource_qqsyy"]
-script = ExtResource("3_erm4e")
-ace_id = "DictHasKey"
-params = {
-"key": "id",
-"var_name": "abilities"
-}
-
-[sub_resource type="Resource" id="Resource_vsouv"]
-script = ExtResource("6_mdlaa")
-conditions = Array[ExtResource("3_erm4e")]([SubResource("Resource_qqsyy")])
-actions = Array[Resource]([SubResource("Resource_qbwnc")])
-event_uid = "7268f5"
-
-[sub_resource type="Resource" id="Resource_03gjx"]
-script = ExtResource("8_ugumu")
-id = "id"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_fysg8"]
-script = ExtResource("9_mng6w")
-function_name = "clear_tags"
-description = "Removes every tag from an ability."
-expose_as_ace = true
-ace_display_name = "Clear All Tags"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_03gjx")])
-events = Array[Resource]([SubResource("Resource_vsouv")])
-
-[sub_resource type="Resource" id="Resource_cewxk"]
-script = ExtResource("7_nccum")
-ace_id = "SetProperty"
-params = {
-"property": "enabled",
-"target": "(abilities[id] as AbilityData)",
-"value": "enabled"
-}
-
-[sub_resource type="Resource" id="Resource_cfls6"]
-script = ExtResource("5_2qok2")
-iterator_name = "id: String"
-collection_value = "_ids_with_tag(tag)"
-
-[sub_resource type="Resource" id="Resource_e0ywd"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_cewxk")])
-event_uid = "6ee3c0"
-pick_filters = Array[ExtResource("5_2qok2")]([SubResource("Resource_cfls6")])
-
-[sub_resource type="Resource" id="Resource_gkwtd"]
-script = ExtResource("8_ugumu")
-id = "tag"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_3ijfs"]
-script = ExtResource("8_ugumu")
-id = "enabled"
-type_name = "bool"
-initial_value = null
-initialValue = null
-
-[sub_resource type="Resource" id="Resource_eibem"]
-script = ExtResource("9_mng6w")
-function_name = "set_tag_enabled"
-description = "Enables/disables every ability carrying a tag."
-expose_as_ace = true
-ace_display_name = "Set Abilities With Tag Enabled"
-ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_gkwtd"), SubResource("Resource_3ijfs")])
-events = Array[Resource]([SubResource("Resource_e0ywd")])
-
-[sub_resource type="Resource" id="Resource_rxvq4"]
-script = ExtResource("7_nccum")
-ace_id = "DictDeleteKey"
-params = {
-"key": "id",
-"var_name": "abilities"
-}
-
-[sub_resource type="Resource" id="Resource_kdact"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_ufvtj"]
+script = ExtResource("8_mng6w")
 ace_id = "SetVar"
 params = {
 "value": "id",
 "var_name": "current_ability_id"
 }
 
-[sub_resource type="Resource" id="Resource_gu1l8"]
-script = ExtResource("2_hl760")
-code = "on_ability_removed.emit()"
-lift_note = "no matching ACE template"
+[sub_resource type="Resource" id="Resource_5yhda"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "on_ability_activated"
+}
 
-[sub_resource type="Resource" id="Resource_s8pu3"]
-script = ExtResource("5_2qok2")
-iterator_name = "id: String"
-collection_value = "_ids_with_tag(tag)"
+[sub_resource type="Resource" id="Resource_g7www"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_ufvtj"), SubResource("Resource_5yhda")])
+event_uid = "e959cf"
 
-[sub_resource type="Resource" id="Resource_kedjv"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_rxvq4"), SubResource("Resource_kdact"), SubResource("Resource_gu1l8")])
-event_uid = "707976"
-pick_filters = Array[ExtResource("5_2qok2")]([SubResource("Resource_s8pu3")])
-
-[sub_resource type="Resource" id="Resource_rkk4d"]
-script = ExtResource("8_ugumu")
-id = "tag"
+[sub_resource type="Resource" id="Resource_wxem7"]
+script = ExtResource("9_44b4b")
+id = "id"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_k0cp8"]
-script = ExtResource("9_mng6w")
-function_name = "remove_abilities_with_tag"
-description = "Deletes every ability with a tag. Fires On Ability Removed for each."
+[sub_resource type="Resource" id="Resource_ua0dw"]
+script = ExtResource("10_geuiw")
+function_name = "activate_ability"
+description = "Activates an ability if it is ready: consumes a stack, starts regen, fires On Ability Activated."
 expose_as_ace = true
-ace_display_name = "Remove All Abilities With Tag"
+ace_display_name = "Activate Ability"
 ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_rkk4d")])
-events = Array[Resource]([SubResource("Resource_kedjv")])
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_wxem7")])
+events = Array[Resource]([SubResource("Resource_v06uu"), SubResource("Resource_glsh8"), SubResource("Resource_eej7e"), SubResource("Resource_c2qme"), SubResource("Resource_df7ei"), SubResource("Resource_g7www")])
 
-[sub_resource type="Resource" id="Resource_7hoxo"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_mx82n"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnEarly"
+
+[sub_resource type="Resource" id="Resource_s0isi"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "not abilities"
+}
+
+[sub_resource type="Resource" id="Resource_jiwg1"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_s0isi")])
+actions = Array[Resource]([SubResource("Resource_mx82n")])
+event_uid = "92e968"
+
+[sub_resource type="Resource" id="Resource_gh1cj"]
+script = ExtResource("8_mng6w")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "cd",
+"value": "maxf(0.0, seconds * cooldown_multiplier)",
+"var_type": "float"
+}
+
+[sub_resource type="Resource" id="Resource_muaha"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "cooldown",
+"target": "(abilities[id] as AbilityData)",
+"value": "cd"
+}
+
+[sub_resource type="Resource" id="Resource_kbe3t"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "max_cooldown",
+"target": "(abilities[id] as AbilityData)",
+"value": "cd"
+}
+
+[sub_resource type="Resource" id="Resource_tju6k"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_gh1cj"), SubResource("Resource_muaha"), SubResource("Resource_kbe3t")])
+event_uid = "375eec"
+
+[sub_resource type="Resource" id="Resource_lj8dr"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_8q3qx"]
+script = ExtResource("9_44b4b")
+id = "seconds"
+type_name = "float"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_3tul6"]
+script = ExtResource("10_geuiw")
+function_name = "set_cooldown"
+description = "Puts an ability on cooldown (scaled by the global cooldown multiplier)."
+expose_as_ace = true
+ace_display_name = "Set Ability Cooldown"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_lj8dr"), SubResource("Resource_8q3qx")])
+events = Array[Resource]([SubResource("Resource_jiwg1"), SubResource("Resource_tju6k")])
+
+[sub_resource type="Resource" id="Resource_5xexk"]
+script = ExtResource("8_mng6w")
 ace_id = "SetProperty"
 params = {
 "property": "cooldown",
@@ -1873,70 +1290,904 @@ params = {
 "value": "0.0"
 }
 
+[sub_resource type="Resource" id="Resource_1vahs"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "abilities"
+}
+
+[sub_resource type="Resource" id="Resource_3354t"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_1vahs")])
+actions = Array[Resource]([SubResource("Resource_5xexk")])
+event_uid = "0e47ee"
+
+[sub_resource type="Resource" id="Resource_jxddp"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_56px4"]
+script = ExtResource("10_geuiw")
+function_name = "reset_cooldown"
+description = "Sets an ability's cooldown to 0 (instantly ready)."
+expose_as_ace = true
+ace_display_name = "Reset Cooldown"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_jxddp")])
+events = Array[Resource]([SubResource("Resource_3354t")])
+
+[sub_resource type="Resource" id="Resource_we3cn"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnEarly"
+
+[sub_resource type="Resource" id="Resource_jwah3"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "not abilities"
+}
+
+[sub_resource type="Resource" id="Resource_h77uv"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_jwah3")])
+actions = Array[Resource]([SubResource("Resource_we3cn")])
+event_uid = "3e0eaf"
+
+[sub_resource type="Resource" id="Resource_buvie"]
+script = ExtResource("8_mng6w")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "a",
+"value": "abilities[id]",
+"var_type": "AbilityData"
+}
+
+[sub_resource type="Resource" id="Resource_03175"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "max_stacks",
+"target": "a",
+"value": "maxi(1, max_stacks)"
+}
+
+[sub_resource type="Resource" id="Resource_k7ull"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "stacks",
+"target": "a",
+"value": "mini(a.stacks, a.max_stacks)"
+}
+
+[sub_resource type="Resource" id="Resource_pxmtr"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_buvie"), SubResource("Resource_03175"), SubResource("Resource_k7ull")])
+event_uid = "156348"
+
+[sub_resource type="Resource" id="Resource_dxdox"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_2a2e2"]
+script = ExtResource("9_44b4b")
+id = "max_stacks"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_6840f"]
+script = ExtResource("10_geuiw")
+function_name = "set_max_stacks"
+description = "Changes max charges (current stacks clamp down)."
+expose_as_ace = true
+ace_display_name = "Set Max Stacks"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_dxdox"), SubResource("Resource_2a2e2")])
+events = Array[Resource]([SubResource("Resource_h77uv"), SubResource("Resource_pxmtr")])
+
+[sub_resource type="Resource" id="Resource_7v1nd"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnEarly"
+
+[sub_resource type="Resource" id="Resource_ybemg"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "not abilities"
+}
+
+[sub_resource type="Resource" id="Resource_4a1nt"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_ybemg")])
+actions = Array[Resource]([SubResource("Resource_7v1nd")])
+event_uid = "edd1d9"
+
+[sub_resource type="Resource" id="Resource_pa6jl"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "stacks",
+"target": "(abilities[id] as AbilityData)",
+"value": "clampi(stacks, 0, (abilities[id] as AbilityData).max_stacks)"
+}
+
+[sub_resource type="Resource" id="Resource_e47k1"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_pa6jl")])
+event_uid = "807487"
+
+[sub_resource type="Resource" id="Resource_i62va"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_h8ksd"]
+script = ExtResource("9_44b4b")
+id = "stacks"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ecu0b"]
+script = ExtResource("10_geuiw")
+function_name = "set_stacks"
+description = "Sets current charges (clamped 0..max)."
+expose_as_ace = true
+ace_display_name = "Set Stacks"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_i62va"), SubResource("Resource_h8ksd")])
+events = Array[Resource]([SubResource("Resource_4a1nt"), SubResource("Resource_e47k1")])
+
+[sub_resource type="Resource" id="Resource_hsh7w"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnEarly"
+
+[sub_resource type="Resource" id="Resource_o6qsj"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "not abilities"
+}
+
+[sub_resource type="Resource" id="Resource_icx1g"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_o6qsj")])
+actions = Array[Resource]([SubResource("Resource_hsh7w")])
+event_uid = "c254ee"
+
+[sub_resource type="Resource" id="Resource_smhnb"]
+script = ExtResource("8_mng6w")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "a",
+"value": "abilities[id]",
+"var_type": "AbilityData"
+}
+
+[sub_resource type="Resource" id="Resource_ionoo"]
+script = ExtResource("8_mng6w")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "before",
+"value": "a.stacks",
+"var_type": "int"
+}
+
+[sub_resource type="Resource" id="Resource_mxk6w"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "stacks",
+"target": "a",
+"value": "mini(a.max_stacks, before + count)"
+}
+
+[sub_resource type="Resource" id="Resource_jnfil"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_smhnb"), SubResource("Resource_ionoo"), SubResource("Resource_mxk6w")])
+event_uid = "90a1eb"
+
+[sub_resource type="Resource" id="Resource_wpdbl"]
+script = ExtResource("8_mng6w")
+ace_id = "SetVar"
+params = {
+"value": "id",
+"var_name": "current_ability_id"
+}
+
+[sub_resource type="Resource" id="Resource_kyql8"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "on_stack_gained"
+}
+
+[sub_resource type="Resource" id="Resource_rlun0"]
+script = ExtResource("4_2qok2")
+ace_id = "CompareVar"
+params = {
+"op": ">",
+"value": "before",
+"var_name": "a.stacks"
+}
+
+[sub_resource type="Resource" id="Resource_pmkrg"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_rlun0")])
+actions = Array[Resource]([SubResource("Resource_wpdbl"), SubResource("Resource_kyql8")])
+event_uid = "42be5e"
+
+[sub_resource type="Resource" id="Resource_yq8s8"]
+script = ExtResource("8_mng6w")
+ace_id = "SetVar"
+params = {
+"value": "id",
+"var_name": "current_ability_id"
+}
+
+[sub_resource type="Resource" id="Resource_h512k"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "on_max_stacks_reached"
+}
+
+[sub_resource type="Resource" id="Resource_5xeft"]
+script = ExtResource("4_2qok2")
+ace_id = "CompareVar"
+params = {
+"op": "+",
+"value": "count > a.max_stacks",
+"var_name": "before"
+}
+
+[sub_resource type="Resource" id="Resource_m302u"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_5xeft")])
+actions = Array[Resource]([SubResource("Resource_yq8s8"), SubResource("Resource_h512k")])
+event_uid = "53cd31"
+
+[sub_resource type="Resource" id="Resource_f4lbk"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_rk4sd"]
+script = ExtResource("9_44b4b")
+id = "count"
+type_name = "int"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ojtf8"]
+script = ExtResource("10_geuiw")
+function_name = "add_stacks"
+description = "Adds charges up to max. Fires On Stack Gained, and On Max Stacks Reached if it would overflow."
+expose_as_ace = true
+ace_display_name = "Add Stacks"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_f4lbk"), SubResource("Resource_rk4sd")])
+events = Array[Resource]([SubResource("Resource_icx1g"), SubResource("Resource_jnfil"), SubResource("Resource_pmkrg"), SubResource("Resource_m302u")])
+
+[sub_resource type="Resource" id="Resource_o17h2"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnEarly"
+
+[sub_resource type="Resource" id="Resource_kpvqm"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "not abilities"
+}
+
+[sub_resource type="Resource" id="Resource_lderx"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_kpvqm")])
+actions = Array[Resource]([SubResource("Resource_o17h2")])
+event_uid = "479a31"
+
+[sub_resource type="Resource" id="Resource_6vjpm"]
+script = ExtResource("8_mng6w")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "a",
+"value": "abilities[id]",
+"var_type": "AbilityData"
+}
+
+[sub_resource type="Resource" id="Resource_ano4x"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_6vjpm")])
+event_uid = "a69c1e"
+
+[sub_resource type="Resource" id="Resource_0cxcs"]
+script = ExtResource("8_mng6w")
+ace_id = "ReturnEarly"
+
+[sub_resource type="Resource" id="Resource_a8kiv"]
+script = ExtResource("4_2qok2")
+ace_id = "CompareVar"
+params = {
+"op": "<=",
+"value": "0",
+"var_name": "a.stacks"
+}
+
+[sub_resource type="Resource" id="Resource_ihksp"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_a8kiv")])
+actions = Array[Resource]([SubResource("Resource_0cxcs")])
+event_uid = "8968e1"
+
+[sub_resource type="Resource" id="Resource_e4imh"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "stacks",
+"target": "a",
+"value": "a.stacks - 1"
+}
+
+[sub_resource type="Resource" id="Resource_l6p14"]
+script = ExtResource("8_mng6w")
+ace_id = "SetVar"
+params = {
+"value": "id",
+"var_name": "current_ability_id"
+}
+
+[sub_resource type="Resource" id="Resource_4gp8l"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "on_stack_consumed"
+}
+
+[sub_resource type="Resource" id="Resource_u5ddj"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_e4imh"), SubResource("Resource_l6p14"), SubResource("Resource_4gp8l")])
+event_uid = "ab32ae"
+
+[sub_resource type="Resource" id="Resource_vflu7"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "cooldown",
+"target": "a",
+"value": "a.max_cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_wxuf5"]
+script = ExtResource("4_2qok2")
+ace_id = "CompareVar"
+params = {
+"op": "<",
+"value": "a.max_stacks",
+"var_name": "a.stacks"
+}
+
+[sub_resource type="Resource" id="Resource_4rw8r"]
+script = ExtResource("4_2qok2")
+ace_id = "CompareVar"
+params = {
+"op": "<=",
+"value": "0.0",
+"var_name": "a.cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_u8qsn"]
+script = ExtResource("4_2qok2")
+ace_id = "CompareVar"
+params = {
+"op": ">",
+"value": "0.0",
+"var_name": "a.max_cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_vbffg"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_wxuf5"), SubResource("Resource_4rw8r"), SubResource("Resource_u8qsn")])
+actions = Array[Resource]([SubResource("Resource_vflu7")])
+event_uid = "99b3bd"
+
+[sub_resource type="Resource" id="Resource_qbwnc"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_qqsyy"]
+script = ExtResource("10_geuiw")
+function_name = "consume_stack"
+description = "Removes one charge without activating; starts regen if needed."
+expose_as_ace = true
+ace_display_name = "Consume Ability Stack"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_qbwnc")])
+events = Array[Resource]([SubResource("Resource_lderx"), SubResource("Resource_ano4x"), SubResource("Resource_ihksp"), SubResource("Resource_u5ddj"), SubResource("Resource_vbffg")])
+
+[sub_resource type="Resource" id="Resource_vsouv"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "enabled",
+"target": "(abilities[id] as AbilityData)",
+"value": "enabled"
+}
+
+[sub_resource type="Resource" id="Resource_03gjx"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "abilities"
+}
+
+[sub_resource type="Resource" id="Resource_fysg8"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_03gjx")])
+actions = Array[Resource]([SubResource("Resource_vsouv")])
+event_uid = "0b47f9"
+
+[sub_resource type="Resource" id="Resource_cewxk"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_cfls6"]
+script = ExtResource("9_44b4b")
+id = "enabled"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_e0ywd"]
+script = ExtResource("10_geuiw")
+function_name = "set_enabled"
+description = "Enables or disables activation."
+expose_as_ace = true
+ace_display_name = "Set Ability Enabled"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_cewxk"), SubResource("Resource_cfls6")])
+events = Array[Resource]([SubResource("Resource_fysg8")])
+
+[sub_resource type="Resource" id="Resource_gkwtd"]
+script = ExtResource("8_mng6w")
+ace_id = "SetAnimationTreeActive"
+params = {
+"active": "active",
+"target": "(abilities[id] as AbilityData)"
+}
+
+[sub_resource type="Resource" id="Resource_3ijfs"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "abilities"
+}
+
+[sub_resource type="Resource" id="Resource_eibem"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_3ijfs")])
+actions = Array[Resource]([SubResource("Resource_gkwtd")])
+event_uid = "a848e7"
+
+[sub_resource type="Resource" id="Resource_rxvq4"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_kdact"]
+script = ExtResource("9_44b4b")
+id = "active"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_gu1l8"]
+script = ExtResource("10_geuiw")
+function_name = "set_active"
+description = "Sets the active flag (for channeled / toggle abilities)."
+expose_as_ace = true
+ace_display_name = "Set Ability Active"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_rxvq4"), SubResource("Resource_kdact")])
+events = Array[Resource]([SubResource("Resource_eibem")])
+
+[sub_resource type="Resource" id="Resource_s8pu3"]
+script = ExtResource("8_mng6w")
+ace_id = "DictSetKey"
+params = {
+"key": "id] as AbilityData).data[key",
+"value": "str(value)",
+"var_name": "(abilities"
+}
+
+[sub_resource type="Resource" id="Resource_kedjv"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "abilities"
+}
+
+[sub_resource type="Resource" id="Resource_rkk4d"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_kedjv")])
+actions = Array[Resource]([SubResource("Resource_s8pu3")])
+event_uid = "a4d9eb"
+
+[sub_resource type="Resource" id="Resource_k0cp8"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_7hoxo"]
+script = ExtResource("9_44b4b")
+id = "key"
+initial_value = null
+initialValue = null
+
 [sub_resource type="Resource" id="Resource_67ndu"]
-script = ExtResource("5_2qok2")
-iterator_name = "id: String"
-collection_value = "_ids_with_tag(tag)"
+script = ExtResource("9_44b4b")
+id = "value"
+initial_value = null
+initialValue = null
 
 [sub_resource type="Resource" id="Resource_cuv13"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_7hoxo")])
-event_uid = "0aec00"
-pick_filters = Array[ExtResource("5_2qok2")]([SubResource("Resource_67ndu")])
+script = ExtResource("10_geuiw")
+function_name = "set_ability_data"
+description = "Stores a custom key/value (string) on an ability."
+expose_as_ace = true
+ace_display_name = "Set Ability Data"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_k0cp8"), SubResource("Resource_7hoxo"), SubResource("Resource_67ndu")])
+events = Array[Resource]([SubResource("Resource_rkk4d")])
 
 [sub_resource type="Resource" id="Resource_64mtd"]
-script = ExtResource("8_ugumu")
+script = ExtResource("8_mng6w")
+ace_id = "ReturnEarly"
+
+[sub_resource type="Resource" id="Resource_sel41"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "not abilities"
+}
+
+[sub_resource type="Resource" id="Resource_r3d1w"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_sel41")])
+actions = Array[Resource]([SubResource("Resource_64mtd")])
+event_uid = "05e676"
+
+[sub_resource type="Resource" id="Resource_dlobd"]
+script = ExtResource("8_mng6w")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "tags",
+"value": "(abilities[id] as AbilityData).tags",
+"var_type": "Array"
+}
+
+[sub_resource type="Resource" id="Resource_ttsyu"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_dlobd")])
+event_uid = "2aa712"
+
+[sub_resource type="Resource" id="Resource_disr2"]
+script = ExtResource("8_mng6w")
+ace_id = "ArrayAppend"
+params = {
+"value": "tag",
+"var_name": "tags"
+}
+
+[sub_resource type="Resource" id="Resource_r5exx"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "tag",
+"var_name": "not tags"
+}
+
+[sub_resource type="Resource" id="Resource_oy40n"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_r5exx")])
+actions = Array[Resource]([SubResource("Resource_disr2")])
+event_uid = "ef9893"
+
+[sub_resource type="Resource" id="Resource_1odxy"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_nnni2"]
+script = ExtResource("9_44b4b")
 id = "tag"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_sel41"]
-script = ExtResource("9_mng6w")
+[sub_resource type="Resource" id="Resource_c41jc"]
+script = ExtResource("10_geuiw")
+function_name = "add_tag"
+description = "Tags an ability (safe if it already has the tag)."
+expose_as_ace = true
+ace_display_name = "Add Tag"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_1odxy"), SubResource("Resource_nnni2")])
+events = Array[Resource]([SubResource("Resource_r3d1w"), SubResource("Resource_ttsyu"), SubResource("Resource_oy40n")])
+
+[sub_resource type="Resource" id="Resource_fwt7k"]
+script = ExtResource("8_mng6w")
+ace_id = "DictDeleteKey"
+params = {
+"key": "tag",
+"var_name": "(abilities[id] as AbilityData).tags"
+}
+
+[sub_resource type="Resource" id="Resource_toett"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "abilities"
+}
+
+[sub_resource type="Resource" id="Resource_dw14u"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_toett")])
+actions = Array[Resource]([SubResource("Resource_fwt7k")])
+event_uid = "16214a"
+
+[sub_resource type="Resource" id="Resource_75y26"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_58xog"]
+script = ExtResource("9_44b4b")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_l727i"]
+script = ExtResource("10_geuiw")
+function_name = "remove_tag"
+description = "Removes a tag from an ability."
+expose_as_ace = true
+ace_display_name = "Remove Tag"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_75y26"), SubResource("Resource_58xog")])
+events = Array[Resource]([SubResource("Resource_dw14u")])
+
+[sub_resource type="Resource" id="Resource_gbuqb"]
+script = ExtResource("8_mng6w")
+ace_id = "DictClear"
+params = {
+"var_name": "(abilities[id] as AbilityData).tags"
+}
+
+[sub_resource type="Resource" id="Resource_ompr4"]
+script = ExtResource("4_2qok2")
+ace_id = "DictHasKey"
+params = {
+"key": "id",
+"var_name": "abilities"
+}
+
+[sub_resource type="Resource" id="Resource_dih6l"]
+script = ExtResource("7_ugumu")
+conditions = Array[ExtResource("4_2qok2")]([SubResource("Resource_ompr4")])
+actions = Array[Resource]([SubResource("Resource_gbuqb")])
+event_uid = "7268f5"
+
+[sub_resource type="Resource" id="Resource_qbeli"]
+script = ExtResource("9_44b4b")
+id = "id"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_k3scl"]
+script = ExtResource("10_geuiw")
+function_name = "clear_tags"
+description = "Removes every tag from an ability."
+expose_as_ace = true
+ace_display_name = "Clear All Tags"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_qbeli")])
+events = Array[Resource]([SubResource("Resource_dih6l")])
+
+[sub_resource type="Resource" id="Resource_y313j"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "enabled",
+"target": "(abilities[id] as AbilityData)",
+"value": "enabled"
+}
+
+[sub_resource type="Resource" id="Resource_fj6rt"]
+script = ExtResource("6_nccum")
+iterator_name = "id: String"
+collection_value = "_ids_with_tag(tag)"
+
+[sub_resource type="Resource" id="Resource_1n5hc"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_y313j")])
+event_uid = "6ee3c0"
+pick_filters = Array[ExtResource("6_nccum")]([SubResource("Resource_fj6rt")])
+
+[sub_resource type="Resource" id="Resource_klomk"]
+script = ExtResource("9_44b4b")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ukjag"]
+script = ExtResource("9_44b4b")
+id = "enabled"
+type_name = "bool"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_reu5c"]
+script = ExtResource("10_geuiw")
+function_name = "set_tag_enabled"
+description = "Enables/disables every ability carrying a tag."
+expose_as_ace = true
+ace_display_name = "Set Abilities With Tag Enabled"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_klomk"), SubResource("Resource_ukjag")])
+events = Array[Resource]([SubResource("Resource_1n5hc")])
+
+[sub_resource type="Resource" id="Resource_gdri6"]
+script = ExtResource("8_mng6w")
+ace_id = "DictDeleteKey"
+params = {
+"key": "id",
+"var_name": "abilities"
+}
+
+[sub_resource type="Resource" id="Resource_1ktfj"]
+script = ExtResource("8_mng6w")
+ace_id = "SetVar"
+params = {
+"value": "id",
+"var_name": "current_ability_id"
+}
+
+[sub_resource type="Resource" id="Resource_7rw7s"]
+script = ExtResource("8_mng6w")
+ace_id = "EmitSignal"
+params = {
+"args": "",
+"signal_name": "on_ability_removed"
+}
+
+[sub_resource type="Resource" id="Resource_77cbx"]
+script = ExtResource("6_nccum")
+iterator_name = "id: String"
+collection_value = "_ids_with_tag(tag)"
+
+[sub_resource type="Resource" id="Resource_ckmdd"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_gdri6"), SubResource("Resource_1ktfj"), SubResource("Resource_7rw7s")])
+event_uid = "707976"
+pick_filters = Array[ExtResource("6_nccum")]([SubResource("Resource_77cbx")])
+
+[sub_resource type="Resource" id="Resource_18nyk"]
+script = ExtResource("9_44b4b")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_uy4l4"]
+script = ExtResource("10_geuiw")
+function_name = "remove_abilities_with_tag"
+description = "Deletes every ability with a tag. Fires On Ability Removed for each."
+expose_as_ace = true
+ace_display_name = "Remove All Abilities With Tag"
+ace_category = "Abilities"
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_18nyk")])
+events = Array[Resource]([SubResource("Resource_ckmdd")])
+
+[sub_resource type="Resource" id="Resource_eu54u"]
+script = ExtResource("8_mng6w")
+ace_id = "SetProperty"
+params = {
+"property": "cooldown",
+"target": "(abilities[id] as AbilityData)",
+"value": "0.0"
+}
+
+[sub_resource type="Resource" id="Resource_p2bp5"]
+script = ExtResource("6_nccum")
+iterator_name = "id: String"
+collection_value = "_ids_with_tag(tag)"
+
+[sub_resource type="Resource" id="Resource_7m58l"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_eu54u")])
+event_uid = "0aec00"
+pick_filters = Array[ExtResource("6_nccum")]([SubResource("Resource_p2bp5")])
+
+[sub_resource type="Resource" id="Resource_f06bx"]
+script = ExtResource("9_44b4b")
+id = "tag"
+initial_value = null
+initialValue = null
+
+[sub_resource type="Resource" id="Resource_ahoq1"]
+script = ExtResource("10_geuiw")
 function_name = "reset_cooldown_for_tag"
 description = "Sets cooldown to 0 for every ability with a tag."
 expose_as_ace = true
 ace_display_name = "Reset Cooldown For Abilities With Tag"
 ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_64mtd")])
-events = Array[Resource]([SubResource("Resource_cuv13")])
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_f06bx")])
+events = Array[Resource]([SubResource("Resource_7m58l")])
 
-[sub_resource type="Resource" id="Resource_r3d1w"]
-script = ExtResource("7_nccum")
+[sub_resource type="Resource" id="Resource_nt05g"]
+script = ExtResource("8_mng6w")
 ace_id = "SetVar"
 params = {
 "value": "maxf(0.0, multiplier)",
 "var_name": "cooldown_multiplier"
 }
 
-[sub_resource type="Resource" id="Resource_dlobd"]
-script = ExtResource("6_mdlaa")
-actions = Array[Resource]([SubResource("Resource_r3d1w")])
+[sub_resource type="Resource" id="Resource_bnxvf"]
+script = ExtResource("7_ugumu")
+actions = Array[Resource]([SubResource("Resource_nt05g")])
 event_uid = "c1f17c"
 
-[sub_resource type="Resource" id="Resource_ttsyu"]
-script = ExtResource("8_ugumu")
+[sub_resource type="Resource" id="Resource_c8l04"]
+script = ExtResource("9_44b4b")
 id = "multiplier"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_disr2"]
-script = ExtResource("9_mng6w")
+[sub_resource type="Resource" id="Resource_ov6if"]
+script = ExtResource("10_geuiw")
 function_name = "set_cooldown_multiplier"
 description = "Global cooldown scaling for all future Set Cooldown calls (0.8 = 20% cooldown reduction)."
 expose_as_ace = true
 ace_display_name = "Set Cooldown Multiplier"
 ace_category = "Abilities"
-params = Array[ExtResource("8_ugumu")]([SubResource("Resource_ttsyu")])
-events = Array[Resource]([SubResource("Resource_dlobd")])
+params = Array[ExtResource("9_44b4b")]([SubResource("Resource_c8l04")])
+events = Array[Resource]([SubResource("Resource_bnxvf")])
 
 [resource]
-script = ExtResource("10_44b4b")
+script = ExtResource("11_n4pln")
 behavior_mode = true
 custom_class_name = "SimpleAbilitiesBehavior"
 addon_tags = PackedStringArray()
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_geuiw"), SubResource("Resource_n4pln"), SubResource("Resource_uco02")])
+events = Array[Resource]([SubResource("Resource_0c4bb"), SubResource("Resource_uco02"), SubResource("Resource_gf5l5"), SubResource("Resource_l20oa"), SubResource("Resource_wph4b"), SubResource("Resource_f7itn"), SubResource("Resource_3m6jb"), SubResource("Resource_0qtj0"), SubResource("Resource_ou4if"), SubResource("Resource_aimsg")])
 variables = {
 "abilities": {
 "default": {},
@@ -1962,4 +2213,4 @@ variables = {
 "type": "String"
 }
 }
-functions = Array[Resource]([SubResource("Resource_kbvg2"), SubResource("Resource_cpskq"), SubResource("Resource_aimsg"), SubResource("Resource_vm1ej"), SubResource("Resource_qas7i"), SubResource("Resource_4wj6s"), SubResource("Resource_wqvko"), SubResource("Resource_y7l2t"), SubResource("Resource_owu57"), SubResource("Resource_7t8t8"), SubResource("Resource_byivf"), SubResource("Resource_df7ei"), SubResource("Resource_3354t"), SubResource("Resource_h8ksd"), SubResource("Resource_ionoo"), SubResource("Resource_pmkrg"), SubResource("Resource_ojtf8"), SubResource("Resource_4gp8l"), SubResource("Resource_vbffg"), SubResource("Resource_fysg8"), SubResource("Resource_eibem"), SubResource("Resource_k0cp8"), SubResource("Resource_sel41"), SubResource("Resource_disr2")])
+functions = Array[Resource]([SubResource("Resource_d1oml"), SubResource("Resource_a5pjh"), SubResource("Resource_ww1lv"), SubResource("Resource_8k8ro"), SubResource("Resource_y7l2t"), SubResource("Resource_12fe2"), SubResource("Resource_l6b4c"), SubResource("Resource_ua0dw"), SubResource("Resource_3tul6"), SubResource("Resource_56px4"), SubResource("Resource_6840f"), SubResource("Resource_ecu0b"), SubResource("Resource_ojtf8"), SubResource("Resource_qqsyy"), SubResource("Resource_e0ywd"), SubResource("Resource_gu1l8"), SubResource("Resource_cuv13"), SubResource("Resource_c41jc"), SubResource("Resource_l727i"), SubResource("Resource_k3scl"), SubResource("Resource_reu5c"), SubResource("Resource_uy4l4"), SubResource("Resource_ahoq1"), SubResource("Resource_ov6if")])

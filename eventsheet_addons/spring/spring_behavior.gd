@@ -15,6 +15,15 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("SpringBehavior behavior requires a Node2D parent.")
 
+## @ace_trigger
+## @ace_name("On Spring Reached")
+## @ace_category("Spring")
+signal spring_reached(spring_name: String)
+## @ace_trigger
+## @ace_name("On Spring Started")
+## @ace_category("Spring")
+signal spring_started(spring_name: String)
+
 var color_springs: Dictionary = {}
 ## 0 = oscillate forever, 1 = no overshoot.
 @export_range(0, 1, 0.01) var default_damping: float = 0.85
@@ -66,16 +75,6 @@ class ColorSpringEntry:
 			active = false
 			return true
 		return false
-
-## @ace_trigger
-## @ace_name("On Spring Reached")
-## @ace_category("Spring")
-signal spring_reached(spring_name: String)
-
-## @ace_trigger
-## @ace_name("On Spring Started")
-## @ace_category("Spring")
-signal spring_started(spring_name: String)
 
 ## @ace_expression
 ## @ace_name("Color Value")

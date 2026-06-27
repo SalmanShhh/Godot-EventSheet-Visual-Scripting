@@ -14,14 +14,14 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("MoveTo3DBehavior behavior requires a Node3D parent.")
 
-@export var max_speed: float = 5.0
-var moving: bool = false
-var waypoints: Array = []
-
 ## @ace_trigger
 ## @ace_name("On Arrived (3D)")
 ## @ace_category("Move To 3D")
 signal arrived
+
+@export var max_speed: float = 5.0
+var moving: bool = false
+var waypoints: Array = []
 
 func _process(delta: float) -> void:
 	if not moving or host == null or waypoints.is_empty():

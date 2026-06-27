@@ -32,69 +32,264 @@ func _wave(t: float) -> float:
 	return sin(cycle * TAU)"
 
 [sub_resource type="Resource" id="Resource_1wlap"]
-script = ExtResource("2_6dloj")
-code = "if not active or host == null:
-	return
-if not base_captured:
-	update_initial_state()
-time += delta
-var t := time / maxf(period, 0.001) + phase_degrees / 360.0
-wave_value = _wave(t)
-var offset := wave_value * magnitude
-if movement == \"horizontal\":
-	host.position.x = base_x + offset
-elif movement == \"vertical\":
-	host.position.y = base_y + offset
-elif movement == \"forwards-backwards\":
-	host.position = Vector2(base_x, base_y) + Vector2.from_angle(base_rotation) * offset
-elif movement == \"size\":
-	host.scale = Vector2(base_scale_x, base_scale_y) * (1.0 + wave_value * magnitude * 0.01)
-elif movement == \"angle\":
-	host.rotation = base_rotation + offset * 0.0174533
-elif movement == \"opacity\":
-	host.modulate.a = clampf(base_alpha + wave_value * magnitude * 0.01, 0.0, 1.0)"
+script = ExtResource("7_wp66b")
+ace_id = "ReturnEarly"
 
 [sub_resource type="Resource" id="Resource_2rghd"]
+script = ExtResource("3_ctwty")
+ace_id = "CompareVar"
+params = {
+"op": "active",
+"value": "or host == null",
+"var_name": "not"
+}
+
+[sub_resource type="Resource" id="Resource_1s08y"]
+script = ExtResource("6_ma42h")
+conditions = Array[ExtResource("3_ctwty")]([SubResource("Resource_2rghd")])
+actions = Array[Resource]([SubResource("Resource_1wlap")])
+event_uid = "05a02b"
+
+[sub_resource type="Resource" id="Resource_pkkss"]
+script = ExtResource("7_wp66b")
+ace_id = "CallFunction"
+params = {
+"args": "",
+"function_name": "update_initial_state"
+}
+
+[sub_resource type="Resource" id="Resource_lkxsk"]
+script = ExtResource("3_ctwty")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "not base_captured"
+}
+
+[sub_resource type="Resource" id="Resource_dtsks"]
+script = ExtResource("6_ma42h")
+conditions = Array[ExtResource("3_ctwty")]([SubResource("Resource_lkxsk")])
+actions = Array[Resource]([SubResource("Resource_pkkss")])
+event_uid = "1027e3"
+
+[sub_resource type="Resource" id="Resource_tj40q"]
+script = ExtResource("7_wp66b")
+ace_id = "AddVar"
+params = {
+"amount": "delta",
+"var_name": "time"
+}
+
+[sub_resource type="Resource" id="Resource_bbyxi"]
+script = ExtResource("2_6dloj")
+code = "var t := time / maxf(period, 0.001) + phase_degrees / 360.0"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_2adsf"]
+script = ExtResource("7_wp66b")
+ace_id = "SetVar"
+params = {
+"value": "_wave(t)",
+"var_name": "wave_value"
+}
+
+[sub_resource type="Resource" id="Resource_nlxt1"]
+script = ExtResource("2_6dloj")
+code = "var offset := wave_value * magnitude"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_o7e8v"]
+script = ExtResource("6_ma42h")
+actions = Array[Resource]([SubResource("Resource_tj40q"), SubResource("Resource_bbyxi"), SubResource("Resource_2adsf"), SubResource("Resource_nlxt1")])
+event_uid = "f1e99f"
+
+[sub_resource type="Resource" id="Resource_cihmo"]
+script = ExtResource("7_wp66b")
+ace_id = "SetProperty"
+params = {
+"property": "position.x",
+"target": "host",
+"value": "base_x + offset"
+}
+
+[sub_resource type="Resource" id="Resource_w7ecx"]
+script = ExtResource("3_ctwty")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "\"horizontal\"",
+"var_name": "movement"
+}
+
+[sub_resource type="Resource" id="Resource_bw3ru"]
+script = ExtResource("6_ma42h")
+conditions = Array[ExtResource("3_ctwty")]([SubResource("Resource_w7ecx")])
+actions = Array[Resource]([SubResource("Resource_cihmo")])
+event_uid = "78c02f"
+
+[sub_resource type="Resource" id="Resource_cls8b"]
+script = ExtResource("7_wp66b")
+ace_id = "SetProperty"
+params = {
+"property": "position.y",
+"target": "host",
+"value": "base_y + offset"
+}
+
+[sub_resource type="Resource" id="Resource_be2tc"]
+script = ExtResource("3_ctwty")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "\"vertical\"",
+"var_name": "movement"
+}
+
+[sub_resource type="Resource" id="Resource_i4aiu"]
+script = ExtResource("6_ma42h")
+conditions = Array[ExtResource("3_ctwty")]([SubResource("Resource_be2tc")])
+actions = Array[Resource]([SubResource("Resource_cls8b")])
+else_mode = 1
+event_uid = "b37a64"
+
+[sub_resource type="Resource" id="Resource_gmtwt"]
+script = ExtResource("7_wp66b")
+ace_id = "SetPosition2D"
+params = {
+"pos": "Vector2(base_x, base_y) + Vector2.from_angle(base_rotation) * offset",
+"target": "host"
+}
+
+[sub_resource type="Resource" id="Resource_ycetl"]
+script = ExtResource("3_ctwty")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "\"forwards-backwards\"",
+"var_name": "movement"
+}
+
+[sub_resource type="Resource" id="Resource_vb1jd"]
+script = ExtResource("6_ma42h")
+conditions = Array[ExtResource("3_ctwty")]([SubResource("Resource_ycetl")])
+actions = Array[Resource]([SubResource("Resource_gmtwt")])
+else_mode = 1
+event_uid = "3249bd"
+
+[sub_resource type="Resource" id="Resource_6xewd"]
+script = ExtResource("7_wp66b")
+ace_id = "SetScale3D"
+params = {
+"scale": "Vector2(base_scale_x, base_scale_y) * (1.0 + wave_value * magnitude * 0.01)",
+"target": "host"
+}
+
+[sub_resource type="Resource" id="Resource_xxh4y"]
+script = ExtResource("3_ctwty")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "\"size\"",
+"var_name": "movement"
+}
+
+[sub_resource type="Resource" id="Resource_ja15n"]
+script = ExtResource("6_ma42h")
+conditions = Array[ExtResource("3_ctwty")]([SubResource("Resource_xxh4y")])
+actions = Array[Resource]([SubResource("Resource_6xewd")])
+else_mode = 1
+event_uid = "81fef8"
+
+[sub_resource type="Resource" id="Resource_sd8gr"]
+script = ExtResource("7_wp66b")
+ace_id = "SetProperty"
+params = {
+"property": "rotation",
+"target": "host",
+"value": "base_rotation + offset * 0.0174533"
+}
+
+[sub_resource type="Resource" id="Resource_gu5ta"]
+script = ExtResource("3_ctwty")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "\"angle\"",
+"var_name": "movement"
+}
+
+[sub_resource type="Resource" id="Resource_f4f5t"]
+script = ExtResource("6_ma42h")
+conditions = Array[ExtResource("3_ctwty")]([SubResource("Resource_gu5ta")])
+actions = Array[Resource]([SubResource("Resource_sd8gr")])
+else_mode = 1
+event_uid = "c46610"
+
+[sub_resource type="Resource" id="Resource_mkj5f"]
+script = ExtResource("7_wp66b")
+ace_id = "SetProperty"
+params = {
+"property": "modulate.a",
+"target": "host",
+"value": "clampf(base_alpha + wave_value * magnitude * 0.01, 0.0, 1.0)"
+}
+
+[sub_resource type="Resource" id="Resource_5y7ms"]
+script = ExtResource("3_ctwty")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "\"opacity\"",
+"var_name": "movement"
+}
+
+[sub_resource type="Resource" id="Resource_i1064"]
+script = ExtResource("6_ma42h")
+conditions = Array[ExtResource("3_ctwty")]([SubResource("Resource_5y7ms")])
+actions = Array[Resource]([SubResource("Resource_mkj5f")])
+else_mode = 1
+event_uid = "60f3f7"
+
+[sub_resource type="Resource" id="Resource_nh517"]
 script = ExtResource("6_ma42h")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_1wlap")])
+sub_events = Array[Resource]([SubResource("Resource_1s08y"), SubResource("Resource_dtsks"), SubResource("Resource_o7e8v"), SubResource("Resource_bw3ru"), SubResource("Resource_i4aiu"), SubResource("Resource_vb1jd"), SubResource("Resource_ja15n"), SubResource("Resource_f4f5t"), SubResource("Resource_i1064")])
 event_uid = "83bd4f"
 
-[sub_resource type="Resource" id="Resource_1s08y"]
+[sub_resource type="Resource" id="Resource_ugjyq"]
 script = ExtResource("7_wp66b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "is_active"
 }
 
-[sub_resource type="Resource" id="Resource_pkkss"]
+[sub_resource type="Resource" id="Resource_ctpmc"]
 script = ExtResource("6_ma42h")
-actions = Array[Resource]([SubResource("Resource_1s08y")])
+actions = Array[Resource]([SubResource("Resource_ugjyq")])
 event_uid = "92db21"
 
-[sub_resource type="Resource" id="Resource_lkxsk"]
+[sub_resource type="Resource" id="Resource_u6uim"]
 script = ExtResource("8_lul5e")
 id = "is_active"
 type_name = "bool"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_dtsks"]
+[sub_resource type="Resource" id="Resource_ud2sk"]
 script = ExtResource("9_052by")
 function_name = "set_sine_active"
 description = "Pauses or resumes the oscillation."
 expose_as_ace = true
 ace_display_name = "Set Sine Active"
 ace_category = "Sine"
-params = Array[ExtResource("8_lul5e")]([SubResource("Resource_lkxsk")])
-events = Array[Resource]([SubResource("Resource_pkkss")])
+params = Array[ExtResource("8_lul5e")]([SubResource("Resource_u6uim")])
+events = Array[Resource]([SubResource("Resource_ctpmc")])
 
-[sub_resource type="Resource" id="Resource_tj40q"]
+[sub_resource type="Resource" id="Resource_ndxdi"]
 script = ExtResource("7_wp66b")
 ace_id = "ReturnEarly"
 
-[sub_resource type="Resource" id="Resource_bbyxi"]
+[sub_resource type="Resource" id="Resource_bvxcg"]
 script = ExtResource("3_ctwty")
 ace_id = "CompareVar"
 params = {
@@ -103,13 +298,13 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_2adsf"]
+[sub_resource type="Resource" id="Resource_6tqmh"]
 script = ExtResource("6_ma42h")
-conditions = Array[ExtResource("3_ctwty")]([SubResource("Resource_bbyxi")])
-actions = Array[Resource]([SubResource("Resource_tj40q")])
+conditions = Array[ExtResource("3_ctwty")]([SubResource("Resource_bvxcg")])
+actions = Array[Resource]([SubResource("Resource_ndxdi")])
 event_uid = "5f3d19"
 
-[sub_resource type="Resource" id="Resource_nlxt1"]
+[sub_resource type="Resource" id="Resource_4fr4y"]
 script = ExtResource("7_wp66b")
 ace_id = "SetVar"
 params = {
@@ -117,7 +312,7 @@ params = {
 "var_name": "base_x"
 }
 
-[sub_resource type="Resource" id="Resource_o7e8v"]
+[sub_resource type="Resource" id="Resource_ouu7n"]
 script = ExtResource("7_wp66b")
 ace_id = "SetVar"
 params = {
@@ -125,7 +320,7 @@ params = {
 "var_name": "base_y"
 }
 
-[sub_resource type="Resource" id="Resource_cihmo"]
+[sub_resource type="Resource" id="Resource_q808r"]
 script = ExtResource("7_wp66b")
 ace_id = "SetVar"
 params = {
@@ -133,7 +328,7 @@ params = {
 "var_name": "base_rotation"
 }
 
-[sub_resource type="Resource" id="Resource_w7ecx"]
+[sub_resource type="Resource" id="Resource_352d6"]
 script = ExtResource("7_wp66b")
 ace_id = "SetVar"
 params = {
@@ -141,7 +336,7 @@ params = {
 "var_name": "base_scale_x"
 }
 
-[sub_resource type="Resource" id="Resource_bw3ru"]
+[sub_resource type="Resource" id="Resource_nq0mm"]
 script = ExtResource("7_wp66b")
 ace_id = "SetVar"
 params = {
@@ -149,7 +344,7 @@ params = {
 "var_name": "base_scale_y"
 }
 
-[sub_resource type="Resource" id="Resource_cls8b"]
+[sub_resource type="Resource" id="Resource_7gbwu"]
 script = ExtResource("7_wp66b")
 ace_id = "SetVar"
 params = {
@@ -157,7 +352,7 @@ params = {
 "var_name": "base_alpha"
 }
 
-[sub_resource type="Resource" id="Resource_be2tc"]
+[sub_resource type="Resource" id="Resource_rmjcb"]
 script = ExtResource("7_wp66b")
 ace_id = "SetVar"
 params = {
@@ -165,21 +360,21 @@ params = {
 "var_name": "base_captured"
 }
 
-[sub_resource type="Resource" id="Resource_i4aiu"]
+[sub_resource type="Resource" id="Resource_emqqj"]
 script = ExtResource("6_ma42h")
-actions = Array[Resource]([SubResource("Resource_nlxt1"), SubResource("Resource_o7e8v"), SubResource("Resource_cihmo"), SubResource("Resource_w7ecx"), SubResource("Resource_bw3ru"), SubResource("Resource_cls8b"), SubResource("Resource_be2tc")])
+actions = Array[Resource]([SubResource("Resource_4fr4y"), SubResource("Resource_ouu7n"), SubResource("Resource_q808r"), SubResource("Resource_352d6"), SubResource("Resource_nq0mm"), SubResource("Resource_7gbwu"), SubResource("Resource_rmjcb")])
 event_uid = "8b3534"
 
-[sub_resource type="Resource" id="Resource_gmtwt"]
+[sub_resource type="Resource" id="Resource_gc2vq"]
 script = ExtResource("9_052by")
 function_name = "update_initial_state"
 description = "Re-captures the host's current position/scale/angle/opacity as the wave's base (C3 updateInitialState)."
 expose_as_ace = true
 ace_display_name = "Update Initial State"
 ace_category = "Sine"
-events = Array[Resource]([SubResource("Resource_2adsf"), SubResource("Resource_i4aiu")])
+events = Array[Resource]([SubResource("Resource_6tqmh"), SubResource("Resource_emqqj")])
 
-[sub_resource type="Resource" id="Resource_ycetl"]
+[sub_resource type="Resource" id="Resource_oul26"]
 script = ExtResource("7_wp66b")
 ace_id = "SetVar"
 params = {
@@ -187,29 +382,29 @@ params = {
 "var_name": "phase_degrees"
 }
 
-[sub_resource type="Resource" id="Resource_vb1jd"]
+[sub_resource type="Resource" id="Resource_hkaxx"]
 script = ExtResource("6_ma42h")
-actions = Array[Resource]([SubResource("Resource_ycetl")])
+actions = Array[Resource]([SubResource("Resource_oul26")])
 event_uid = "52bee2"
 
-[sub_resource type="Resource" id="Resource_6xewd"]
+[sub_resource type="Resource" id="Resource_efmur"]
 script = ExtResource("8_lul5e")
 id = "degrees"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_xxh4y"]
+[sub_resource type="Resource" id="Resource_xjjxd"]
 script = ExtResource("9_052by")
 function_name = "set_sine_phase"
 description = "Phase offset in degrees."
 expose_as_ace = true
 ace_display_name = "Set Phase"
 ace_category = "Sine"
-params = Array[ExtResource("8_lul5e")]([SubResource("Resource_6xewd")])
-events = Array[Resource]([SubResource("Resource_vb1jd")])
+params = Array[ExtResource("8_lul5e")]([SubResource("Resource_efmur")])
+events = Array[Resource]([SubResource("Resource_hkaxx")])
 
-[sub_resource type="Resource" id="Resource_ja15n"]
+[sub_resource type="Resource" id="Resource_cjqmc"]
 script = ExtResource("7_wp66b")
 ace_id = "SetVar"
 params = {
@@ -217,7 +412,7 @@ params = {
 "var_name": "time"
 }
 
-[sub_resource type="Resource" id="Resource_sd8gr"]
+[sub_resource type="Resource" id="Resource_dtr8s"]
 script = ExtResource("7_wp66b")
 ace_id = "SetVar"
 params = {
@@ -225,19 +420,19 @@ params = {
 "var_name": "base_captured"
 }
 
-[sub_resource type="Resource" id="Resource_gu5ta"]
+[sub_resource type="Resource" id="Resource_hilyu"]
 script = ExtResource("6_ma42h")
-actions = Array[Resource]([SubResource("Resource_ja15n"), SubResource("Resource_sd8gr")])
+actions = Array[Resource]([SubResource("Resource_cjqmc"), SubResource("Resource_dtr8s")])
 event_uid = "008b23"
 
-[sub_resource type="Resource" id="Resource_f4f5t"]
+[sub_resource type="Resource" id="Resource_4u46e"]
 script = ExtResource("9_052by")
 function_name = "reset_sine"
 description = "Restarts the wave from the current state."
 expose_as_ace = true
 ace_display_name = "Reset Sine"
 ace_category = "Sine"
-events = Array[Resource]([SubResource("Resource_gu5ta")])
+events = Array[Resource]([SubResource("Resource_hilyu")])
 
 [resource]
 script = ExtResource("10_4g6ho")
@@ -246,7 +441,7 @@ behavior_mode = true
 custom_class_name = "SineBehavior"
 addon_tags = PackedStringArray()
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_733ur"), SubResource("Resource_81y13"), SubResource("Resource_2rghd")])
+events = Array[Resource]([SubResource("Resource_733ur"), SubResource("Resource_81y13"), SubResource("Resource_nh517")])
 variables = {
 "active": {
 "default": true,
@@ -326,4 +521,4 @@ variables = {
 "type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_dtsks"), SubResource("Resource_gmtwt"), SubResource("Resource_xxh4y"), SubResource("Resource_f4f5t")])
+functions = Array[Resource]([SubResource("Resource_ud2sk"), SubResource("Resource_gc2vq"), SubResource("Resource_xjjxd"), SubResource("Resource_4u46e")])

@@ -1,23 +1,22 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_2luld"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="2_i1ys7"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_kccjq"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_wfgkc"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_g8qdt"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_l76gw"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_group.gd" id="7_8i5q1"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="8_fs8kx"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="9_x7hkf"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="10_3vm00"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="11_oan50"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_1dpyx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="2_2luld"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_i1ys7"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_kccjq"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_wfgkc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_g8qdt"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_group.gd" id="7_l76gw"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_8i5q1"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_fs8kx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_x7hkf"]
 
-[sub_resource type="Resource" id="Resource_o38o8"]
-script = ExtResource("1_2luld")
+[sub_resource type="Resource" id="Resource_3vm00"]
+script = ExtResource("1_1dpyx")
 text = "[b]Carousel of Juice[/b] — 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function). A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party, [b]ui_cancel[/b] calms it. Watch beat/intensity stream in Live Values."
 
-[sub_resource type="Resource" id="Resource_dd4l4"]
-script = ExtResource("2_i1ys7")
+[sub_resource type="Resource" id="Resource_oan50"]
+script = ExtResource("2_2luld")
 ace_id = "AddVar"
 params = {
 "amount": "1",
@@ -25,8 +24,8 @@ params = {
 }
 codegen_template = "{var_name} += {amount}"
 
-[sub_resource type="Resource" id="Resource_k3ipq"]
-script = ExtResource("2_i1ys7")
+[sub_resource type="Resource" id="Resource_o38o8"]
+script = ExtResource("2_2luld")
 ace_id = "CallFunction"
 params = {
 "args": "beat, intensity * 5.0",
@@ -34,8 +33,8 @@ params = {
 }
 codegen_template = "{function_name}({args})"
 
-[sub_resource type="Resource" id="Resource_58nhv"]
-script = ExtResource("3_kccjq")
+[sub_resource type="Resource" id="Resource_dd4l4"]
+script = ExtResource("3_i1ys7")
 ace_id = "EveryXSeconds"
 params = {
 "seconds": "0.5"
@@ -45,16 +44,16 @@ member_declaration = "var __every_beat_caro: float = 0.0"
 codegen_prelude = "__every_beat_caro += delta"
 codegen_on_true = "__every_beat_caro = fmod(__every_beat_caro, maxf(0.5, 0.001))"
 
-[sub_resource type="Resource" id="Resource_7vv6f"]
-script = ExtResource("6_l76gw")
+[sub_resource type="Resource" id="Resource_k3ipq"]
+script = ExtResource("6_g8qdt")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-conditions = Array[ExtResource("3_kccjq")]([SubResource("Resource_58nhv")])
-actions = Array[Resource]([SubResource("Resource_dd4l4"), SubResource("Resource_k3ipq")])
+conditions = Array[ExtResource("3_i1ys7")]([SubResource("Resource_dd4l4")])
+actions = Array[Resource]([SubResource("Resource_oan50"), SubResource("Resource_o38o8")])
 event_uid = "468482"
 
-[sub_resource type="Resource" id="Resource_x8v5x"]
-script = ExtResource("2_i1ys7")
+[sub_resource type="Resource" id="Resource_58nhv"]
+script = ExtResource("2_2luld")
 provider_id = "TweenBehavior"
 ace_id = "method:tween_rotation"
 params = {
@@ -64,8 +63,8 @@ params = {
 }
 codegen_template = "{target}.tween_rotation({degrees}, {duration})"
 
-[sub_resource type="Resource" id="Resource_mkpc0"]
-script = ExtResource("2_i1ys7")
+[sub_resource type="Resource" id="Resource_7vv6f"]
+script = ExtResource("2_2luld")
 provider_id = "FlashBehavior"
 ace_id = "method:flash"
 params = {
@@ -74,8 +73,8 @@ params = {
 }
 codegen_template = "{target}.flash({seconds})"
 
-[sub_resource type="Resource" id="Resource_p24di"]
-script = ExtResource("3_kccjq")
+[sub_resource type="Resource" id="Resource_x8v5x"]
+script = ExtResource("3_i1ys7")
 ace_id = "EveryXSeconds"
 params = {
 "seconds": "2.0"
@@ -85,24 +84,24 @@ member_declaration = "var __every_spin_caro: float = 0.0"
 codegen_prelude = "__every_spin_caro += delta"
 codegen_on_true = "__every_spin_caro = fmod(__every_spin_caro, maxf(2.0, 0.001))"
 
-[sub_resource type="Resource" id="Resource_61jcl"]
-script = ExtResource("6_l76gw")
+[sub_resource type="Resource" id="Resource_mkpc0"]
+script = ExtResource("6_g8qdt")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-conditions = Array[ExtResource("3_kccjq")]([SubResource("Resource_p24di")])
-actions = Array[Resource]([SubResource("Resource_x8v5x"), SubResource("Resource_mkpc0")])
+conditions = Array[ExtResource("3_i1ys7")]([SubResource("Resource_x8v5x")])
+actions = Array[Resource]([SubResource("Resource_58nhv"), SubResource("Resource_7vv6f")])
 event_uid = "5d627c"
 
-[sub_resource type="Resource" id="Resource_qyy6o"]
-script = ExtResource("7_8i5q1")
+[sub_resource type="Resource" id="Resource_p24di"]
+script = ExtResource("7_l76gw")
 group_name = "Juice"
-events = Array[Resource]([SubResource("Resource_7vv6f"), SubResource("Resource_61jcl")])
+events = Array[Resource]([SubResource("Resource_k3ipq"), SubResource("Resource_mkpc0")])
 group_uid = "8f2ad3"
 custom_color = Color(0.55, 0.4, 0.85, 1)
 runtime_toggleable = true
 
-[sub_resource type="Resource" id="Resource_q7wiq"]
-script = ExtResource("2_i1ys7")
+[sub_resource type="Resource" id="Resource_61jcl"]
+script = ExtResource("2_2luld")
 ace_id = "SetVar"
 params = {
 "value": "true",
@@ -110,8 +109,8 @@ params = {
 }
 codegen_template = "{var_name} = {value}"
 
-[sub_resource type="Resource" id="Resource_tsy8c"]
-script = ExtResource("2_i1ys7")
+[sub_resource type="Resource" id="Resource_qyy6o"]
+script = ExtResource("2_2luld")
 ace_id = "SetGroupActive"
 params = {
 "active": "true",
@@ -119,8 +118,8 @@ params = {
 }
 codegen_template = "set(\"__group_\" + {group} + \"_active\", {active})"
 
-[sub_resource type="Resource" id="Resource_op5bs"]
-script = ExtResource("2_i1ys7")
+[sub_resource type="Resource" id="Resource_q7wiq"]
+script = ExtResource("2_2luld")
 provider_id = "SpringBehavior"
 ace_id = "method:add_impulse"
 params = {
@@ -130,8 +129,8 @@ params = {
 }
 codegen_template = "{target}.add_impulse({spring_name}, {amount})"
 
-[sub_resource type="Resource" id="Resource_iu6wy"]
-script = ExtResource("2_i1ys7")
+[sub_resource type="Resource" id="Resource_tsy8c"]
+script = ExtResource("2_2luld")
 provider_id = "FlashBehavior"
 ace_id = "method:flash"
 params = {
@@ -140,24 +139,24 @@ params = {
 }
 codegen_template = "{target}.flash({seconds})"
 
-[sub_resource type="Resource" id="Resource_q64xw"]
-script = ExtResource("3_kccjq")
+[sub_resource type="Resource" id="Resource_op5bs"]
+script = ExtResource("3_i1ys7")
 ace_id = "IsActionJustPressed"
 params = {
 "action": "\"ui_accept\""
 }
 codegen_template = "Input.is_action_just_pressed(&{action})"
 
-[sub_resource type="Resource" id="Resource_sx6jy"]
-script = ExtResource("6_l76gw")
+[sub_resource type="Resource" id="Resource_iu6wy"]
+script = ExtResource("6_g8qdt")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-conditions = Array[ExtResource("3_kccjq")]([SubResource("Resource_q64xw")])
-actions = Array[Resource]([SubResource("Resource_q7wiq"), SubResource("Resource_tsy8c"), SubResource("Resource_op5bs"), SubResource("Resource_iu6wy")])
+conditions = Array[ExtResource("3_i1ys7")]([SubResource("Resource_op5bs")])
+actions = Array[Resource]([SubResource("Resource_61jcl"), SubResource("Resource_qyy6o"), SubResource("Resource_q7wiq"), SubResource("Resource_tsy8c")])
 event_uid = "a527b9"
 
-[sub_resource type="Resource" id="Resource_emvao"]
-script = ExtResource("2_i1ys7")
+[sub_resource type="Resource" id="Resource_q64xw"]
+script = ExtResource("2_2luld")
 ace_id = "SetVar"
 params = {
 "value": "false",
@@ -165,8 +164,8 @@ params = {
 }
 codegen_template = "{var_name} = {value}"
 
-[sub_resource type="Resource" id="Resource_qtukf"]
-script = ExtResource("2_i1ys7")
+[sub_resource type="Resource" id="Resource_sx6jy"]
+script = ExtResource("2_2luld")
 ace_id = "SetGroupActive"
 params = {
 "active": "false",
@@ -174,8 +173,8 @@ params = {
 }
 codegen_template = "set(\"__group_\" + {group} + \"_active\", {active})"
 
-[sub_resource type="Resource" id="Resource_cqs37"]
-script = ExtResource("2_i1ys7")
+[sub_resource type="Resource" id="Resource_emvao"]
+script = ExtResource("2_2luld")
 provider_id = "TweenBehavior"
 ace_id = "method:tween_rotation"
 params = {
@@ -185,25 +184,25 @@ params = {
 }
 codegen_template = "{target}.tween_rotation({degrees}, {duration})"
 
-[sub_resource type="Resource" id="Resource_bb0fg"]
-script = ExtResource("3_kccjq")
+[sub_resource type="Resource" id="Resource_qtukf"]
+script = ExtResource("3_i1ys7")
 ace_id = "IsActionJustPressed"
 params = {
 "action": "\"ui_cancel\""
 }
 codegen_template = "Input.is_action_just_pressed(&{action})"
 
-[sub_resource type="Resource" id="Resource_arj5u"]
-script = ExtResource("6_l76gw")
+[sub_resource type="Resource" id="Resource_cqs37"]
+script = ExtResource("6_g8qdt")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-conditions = Array[ExtResource("3_kccjq")]([SubResource("Resource_bb0fg")])
-actions = Array[Resource]([SubResource("Resource_emvao"), SubResource("Resource_qtukf"), SubResource("Resource_cqs37")])
+conditions = Array[ExtResource("3_i1ys7")]([SubResource("Resource_qtukf")])
+actions = Array[Resource]([SubResource("Resource_q64xw"), SubResource("Resource_sx6jy"), SubResource("Resource_emvao")])
 else_mode = 2
 event_uid = "36e435"
 
-[sub_resource type="Resource" id="Resource_vxtks"]
-script = ExtResource("2_i1ys7")
+[sub_resource type="Resource" id="Resource_bb0fg"]
+script = ExtResource("2_2luld")
 provider_id = "SpringBehavior"
 ace_id = "method:spring_host_scale"
 params = {
@@ -212,28 +211,42 @@ params = {
 }
 codegen_template = "{on_node}.spring_host_scale({target})"
 
-[sub_resource type="Resource" id="Resource_8lo4a"]
-script = ExtResource("6_l76gw")
+[sub_resource type="Resource" id="Resource_arj5u"]
+script = ExtResource("6_g8qdt")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_vxtks")])
+actions = Array[Resource]([SubResource("Resource_bb0fg")])
 else_mode = 1
 event_uid = "526d28"
 
+[sub_resource type="Resource" id="Resource_vxtks"]
+script = ExtResource("2_2luld")
+ace_id = "SetAnimationTreeActive"
+params = {
+"active": "true",
+"target": "c.get_node(\"SineBehavior\")"
+}
+
+[sub_resource type="Resource" id="Resource_8lo4a"]
+script = ExtResource("5_wfgkc")
+iterator_name = "c: Node"
+collection_value = "$Tiles.get_children()"
+
 [sub_resource type="Resource" id="Resource_d20ds"]
-script = ExtResource("8_fs8kx")
-code = "for c: Node in $Tiles.get_children():
-	c.get_node(\"SineBehavior\").active = true"
+script = ExtResource("6_g8qdt")
+actions = Array[Resource]([SubResource("Resource_vxtks")])
+event_uid = "7bcacc"
+pick_filters = Array[ExtResource("5_wfgkc")]([SubResource("Resource_8lo4a")])
 
 [sub_resource type="Resource" id="Resource_1w7jg"]
-script = ExtResource("6_l76gw")
+script = ExtResource("6_g8qdt")
 trigger_provider_id = "Core"
 trigger_id = "OnReady"
-actions = Array[Resource]([SubResource("Resource_d20ds")])
+sub_events = Array[Resource]([SubResource("Resource_d20ds")])
 event_uid = "401410"
 
 [sub_resource type="Resource" id="Resource_ak434"]
-script = ExtResource("2_i1ys7")
+script = ExtResource("2_2luld")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "t",
@@ -242,7 +255,7 @@ params = {
 }
 
 [sub_resource type="Resource" id="Resource_3iqft"]
-script = ExtResource("2_i1ys7")
+script = ExtResource("2_2luld")
 ace_id = "CallMethod"
 params = {
 "args": "\"SpringBehavior\").add_impulse(\"__scale\", kick",
@@ -251,7 +264,7 @@ params = {
 }
 
 [sub_resource type="Resource" id="Resource_n6nc4"]
-script = ExtResource("2_i1ys7")
+script = ExtResource("2_2luld")
 ace_id = "CallMethod"
 params = {
 "args": "\"SpringBehavior\").spring_host_scale(1.0",
@@ -260,7 +273,7 @@ params = {
 }
 
 [sub_resource type="Resource" id="Resource_62dol"]
-script = ExtResource("2_i1ys7")
+script = ExtResource("2_2luld")
 ace_id = "CallMethod"
 params = {
 "args": "\"TweenBehavior\").tween_rotation(t.rotation_degrees + 90.0, 0.5",
@@ -269,12 +282,12 @@ params = {
 }
 
 [sub_resource type="Resource" id="Resource_8vpcd"]
-script = ExtResource("6_l76gw")
+script = ExtResource("6_g8qdt")
 actions = Array[Resource]([SubResource("Resource_ak434"), SubResource("Resource_3iqft"), SubResource("Resource_n6nc4"), SubResource("Resource_62dol")])
 event_uid = "28d650"
 
 [sub_resource type="Resource" id="Resource_y7wcg"]
-script = ExtResource("9_x7hkf")
+script = ExtResource("8_8i5q1")
 id = "index"
 type = 2
 type_name = "int"
@@ -282,7 +295,7 @@ initial_value = null
 initialValue = null
 
 [sub_resource type="Resource" id="Resource_c4tn4"]
-script = ExtResource("9_x7hkf")
+script = ExtResource("8_8i5q1")
 id = "kick"
 type = 3
 type_name = "float"
@@ -290,17 +303,17 @@ initial_value = null
 initialValue = null
 
 [sub_resource type="Resource" id="Resource_sufqi"]
-script = ExtResource("10_3vm00")
+script = ExtResource("9_fs8kx")
 function_name = "juice_tile"
-params = Array[ExtResource("9_x7hkf")]([SubResource("Resource_y7wcg"), SubResource("Resource_c4tn4")])
+params = Array[ExtResource("8_8i5q1")]([SubResource("Resource_y7wcg"), SubResource("Resource_c4tn4")])
 events = Array[Resource]([SubResource("Resource_8vpcd")])
 
 [resource]
-script = ExtResource("11_oan50")
+script = ExtResource("10_x7hkf")
 host_class = "Node2D"
 custom_class_name = "CarouselOfJuice"
 addon_tags = PackedStringArray()
-events = Array[Resource]([SubResource("Resource_o38o8"), SubResource("Resource_qyy6o"), SubResource("Resource_sx6jy"), SubResource("Resource_arj5u"), SubResource("Resource_8lo4a"), SubResource("Resource_1w7jg")])
+events = Array[Resource]([SubResource("Resource_3vm00"), SubResource("Resource_p24di"), SubResource("Resource_iu6wy"), SubResource("Resource_cqs37"), SubResource("Resource_arj5u"), SubResource("Resource_1w7jg")])
 variables = {
 "beat": {
 "attributes": {

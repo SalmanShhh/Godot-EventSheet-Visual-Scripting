@@ -14,6 +14,11 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("TileMovementBehavior behavior requires a Node2D parent.")
 
+## @ace_trigger
+## @ace_name("On Step Finished")
+## @ace_category("Tile Movement")
+signal step_finished
+
 @export var default_controls: bool = true
 var from_x: float = 0.0
 var from_y: float = 0.0
@@ -25,11 +30,6 @@ var progress: float = 0.0
 @export var tile_size: float = 64.0
 var to_x: float = 0.0
 var to_y: float = 0.0
-
-## @ace_trigger
-## @ace_name("On Step Finished")
-## @ace_category("Tile Movement")
-signal step_finished
 
 ## @ace_hidden
 func to_grid(pixel: Vector2) -> Vector2i:

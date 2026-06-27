@@ -7,6 +7,19 @@
 class_name SaveSystemAddon
 extends Node
 
+## @ace_trigger
+## @ace_name("On Save Written")
+## @ace_category("Save System")
+signal save_written(slot_index: int)
+## @ace_trigger
+## @ace_name("On Before Save")
+## @ace_category("Save System")
+signal before_save(slot_index: int)
+## @ace_trigger
+## @ace_name("On After Load")
+## @ace_category("Save System")
+signal after_load(slot_index: int)
+
 var autosave_accumulator: float = 0.0
 ## Seconds between autosaves (0 = off). Fires On Before Save first.
 @export_range(0, 600, 1) var autosave_interval: float = 0.0
@@ -22,21 +35,6 @@ var autosave_accumulator: float = 0.0
 ## Active save slot (each slot is its own file).
 @export_group("Save System")
 @export_range(0, 9, 1) var slot: int = 0
-
-## @ace_trigger
-## @ace_name("On Save Written")
-## @ace_category("Save System")
-signal save_written(slot_index: int)
-
-## @ace_trigger
-## @ace_name("On Before Save")
-## @ace_category("Save System")
-signal before_save(slot_index: int)
-
-## @ace_trigger
-## @ace_name("On After Load")
-## @ace_category("Save System")
-signal after_load(slot_index: int)
 
 func _slot_path(target_slot: int = -1) -> String:
 	var chosen: int = slot if target_slot < 0 else target_slot

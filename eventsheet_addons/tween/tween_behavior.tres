@@ -1,28 +1,32 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_gnvbk"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_hlhhl"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="3_3yx42"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="4_cmlci"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="5_tqmve"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="6_wc40t"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="7_5v5yh"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_pti3s"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_y4qvn"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_paonx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_hlhhl"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="2_3yx42"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="3_cmlci"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="4_tqmve"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="5_wc40t"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="6_5v5yh"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="7_pti3s"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="8_y4qvn"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="9_paonx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="10_bxuom"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="11_elexq"]
 
-[sub_resource type="Resource" id="Resource_bxuom"]
-script = ExtResource("1_gnvbk")
+[sub_resource type="Resource" id="Resource_5ubra"]
+script = ExtResource("1_hlhhl")
 text = "Tweens, the behavior way: pick transition + easing in the Inspector, then call one action — Tween Position / Scale / Rotation / Alpha / any property."
 
-[sub_resource type="Resource" id="Resource_elexq"]
-script = ExtResource("2_hlhhl")
-code = "## @ace_trigger
-## @ace_name(\"On Tween Finished\")
-## @ace_category(\"Tween\")
-signal tween_finished
+[sub_resource type="Resource" id="Resource_rp2y6"]
+script = ExtResource("2_3yx42")
+signal_name = "tween_finished"
+params = PackedStringArray()
+trigger = true
+ace_name = "On Tween Finished"
+ace_category = "Tween"
 
-## @ace_condition
+[sub_resource type="Resource" id="Resource_6r4o1"]
+script = ExtResource("3_cmlci")
+code = "## @ace_condition
 ## @ace_name(\"Is Tweening\")
 ## @ace_category(\"Tween\")
 ## @ace_codegen_template(\"$TweenBehavior.is_tweening()\")
@@ -61,219 +65,223 @@ func _start_tween(property_path: String, final_value: Variant, duration: float) 
 	_active_tween.tween_property(host, NodePath(property_path), final_value, seconds).set_trans(_trans_id()).set_ease(_ease_id())
 	_active_tween.finished.connect(func() -> void: tween_finished.emit())"
 
-[sub_resource type="Resource" id="Resource_5ubra"]
-script = ExtResource("3_3yx42")
+[sub_resource type="Resource" id="Resource_ldndk"]
+script = ExtResource("4_tqmve")
 ace_id = "CallFunction"
 params = {
 "args": "property_path, final_value, duration",
 "function_name": "_start_tween"
 }
 
-[sub_resource type="Resource" id="Resource_rp2y6"]
-script = ExtResource("7_5v5yh")
-actions = Array[Resource]([SubResource("Resource_5ubra")])
+[sub_resource type="Resource" id="Resource_dapsx"]
+script = ExtResource("8_y4qvn")
+actions = Array[Resource]([SubResource("Resource_ldndk")])
 event_uid = "64b9df"
 
-[sub_resource type="Resource" id="Resource_6r4o1"]
-script = ExtResource("8_pti3s")
+[sub_resource type="Resource" id="Resource_bpmm2"]
+script = ExtResource("9_paonx")
 id = "property_path"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_ldndk"]
-script = ExtResource("8_pti3s")
+[sub_resource type="Resource" id="Resource_h2j5s"]
+script = ExtResource("9_paonx")
 id = "final_value"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_dapsx"]
-script = ExtResource("8_pti3s")
+[sub_resource type="Resource" id="Resource_q24d4"]
+script = ExtResource("9_paonx")
 id = "duration"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_bpmm2"]
-script = ExtResource("9_y4qvn")
+[sub_resource type="Resource" id="Resource_mcso3"]
+script = ExtResource("10_bxuom")
 function_name = "tween_property_to"
 description = "Tweens any host property (e.g. position:x) to a value."
 expose_as_ace = true
 ace_display_name = "Tween Property"
 ace_category = "Tween"
-params = Array[ExtResource("8_pti3s")]([SubResource("Resource_6r4o1"), SubResource("Resource_ldndk"), SubResource("Resource_dapsx")])
-events = Array[Resource]([SubResource("Resource_rp2y6")])
+params = Array[ExtResource("9_paonx")]([SubResource("Resource_bpmm2"), SubResource("Resource_h2j5s"), SubResource("Resource_q24d4")])
+events = Array[Resource]([SubResource("Resource_dapsx")])
 
-[sub_resource type="Resource" id="Resource_h2j5s"]
-script = ExtResource("3_3yx42")
+[sub_resource type="Resource" id="Resource_lxjd6"]
+script = ExtResource("4_tqmve")
 ace_id = "CallFunction"
 params = {
 "args": "\"position\", Vector2(x, y), duration",
 "function_name": "_start_tween"
 }
 
-[sub_resource type="Resource" id="Resource_q24d4"]
-script = ExtResource("7_5v5yh")
-actions = Array[Resource]([SubResource("Resource_h2j5s")])
+[sub_resource type="Resource" id="Resource_p8fn1"]
+script = ExtResource("8_y4qvn")
+actions = Array[Resource]([SubResource("Resource_lxjd6")])
 event_uid = "6eb389"
 
-[sub_resource type="Resource" id="Resource_mcso3"]
-script = ExtResource("8_pti3s")
+[sub_resource type="Resource" id="Resource_4sn2j"]
+script = ExtResource("9_paonx")
 id = "x"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_lxjd6"]
-script = ExtResource("8_pti3s")
+[sub_resource type="Resource" id="Resource_4tlnk"]
+script = ExtResource("9_paonx")
 id = "y"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_p8fn1"]
-script = ExtResource("8_pti3s")
+[sub_resource type="Resource" id="Resource_64u0s"]
+script = ExtResource("9_paonx")
 id = "duration"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_4sn2j"]
-script = ExtResource("9_y4qvn")
+[sub_resource type="Resource" id="Resource_y6s4t"]
+script = ExtResource("10_bxuom")
 function_name = "tween_position"
 description = "Moves the host to (x, y)."
 expose_as_ace = true
 ace_display_name = "Tween Position"
 ace_category = "Tween"
-params = Array[ExtResource("8_pti3s")]([SubResource("Resource_mcso3"), SubResource("Resource_lxjd6"), SubResource("Resource_p8fn1")])
-events = Array[Resource]([SubResource("Resource_q24d4")])
+params = Array[ExtResource("9_paonx")]([SubResource("Resource_4sn2j"), SubResource("Resource_4tlnk"), SubResource("Resource_64u0s")])
+events = Array[Resource]([SubResource("Resource_p8fn1")])
 
-[sub_resource type="Resource" id="Resource_4tlnk"]
-script = ExtResource("3_3yx42")
+[sub_resource type="Resource" id="Resource_hgohn"]
+script = ExtResource("4_tqmve")
 ace_id = "CallFunction"
 params = {
 "args": "\"scale\", Vector2(amount, amount), duration",
 "function_name": "_start_tween"
 }
 
-[sub_resource type="Resource" id="Resource_64u0s"]
-script = ExtResource("7_5v5yh")
-actions = Array[Resource]([SubResource("Resource_4tlnk")])
+[sub_resource type="Resource" id="Resource_jdd5u"]
+script = ExtResource("8_y4qvn")
+actions = Array[Resource]([SubResource("Resource_hgohn")])
 event_uid = "e061e8"
 
-[sub_resource type="Resource" id="Resource_y6s4t"]
-script = ExtResource("8_pti3s")
+[sub_resource type="Resource" id="Resource_te4qu"]
+script = ExtResource("9_paonx")
 id = "amount"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_hgohn"]
-script = ExtResource("8_pti3s")
+[sub_resource type="Resource" id="Resource_mjsqc"]
+script = ExtResource("9_paonx")
 id = "duration"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_jdd5u"]
-script = ExtResource("9_y4qvn")
+[sub_resource type="Resource" id="Resource_bjbwr"]
+script = ExtResource("10_bxuom")
 function_name = "tween_scale"
 description = "Scales the host uniformly."
 expose_as_ace = true
 ace_display_name = "Tween Scale"
 ace_category = "Tween"
-params = Array[ExtResource("8_pti3s")]([SubResource("Resource_y6s4t"), SubResource("Resource_hgohn")])
-events = Array[Resource]([SubResource("Resource_64u0s")])
+params = Array[ExtResource("9_paonx")]([SubResource("Resource_te4qu"), SubResource("Resource_mjsqc")])
+events = Array[Resource]([SubResource("Resource_jdd5u")])
 
-[sub_resource type="Resource" id="Resource_te4qu"]
-script = ExtResource("3_3yx42")
+[sub_resource type="Resource" id="Resource_m1lfn"]
+script = ExtResource("4_tqmve")
 ace_id = "CallFunction"
 params = {
 "args": "\"rotation_degrees\", degrees, duration",
 "function_name": "_start_tween"
 }
 
-[sub_resource type="Resource" id="Resource_mjsqc"]
-script = ExtResource("7_5v5yh")
-actions = Array[Resource]([SubResource("Resource_te4qu")])
+[sub_resource type="Resource" id="Resource_074cn"]
+script = ExtResource("8_y4qvn")
+actions = Array[Resource]([SubResource("Resource_m1lfn")])
 event_uid = "4a38ff"
 
-[sub_resource type="Resource" id="Resource_bjbwr"]
-script = ExtResource("8_pti3s")
+[sub_resource type="Resource" id="Resource_hlb2a"]
+script = ExtResource("9_paonx")
 id = "degrees"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_m1lfn"]
-script = ExtResource("8_pti3s")
+[sub_resource type="Resource" id="Resource_krmfy"]
+script = ExtResource("9_paonx")
 id = "duration"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_074cn"]
-script = ExtResource("9_y4qvn")
+[sub_resource type="Resource" id="Resource_vdsra"]
+script = ExtResource("10_bxuom")
 function_name = "tween_rotation"
 description = "Rotates the host to the given degrees."
 expose_as_ace = true
 ace_display_name = "Tween Rotation"
 ace_category = "Tween"
-params = Array[ExtResource("8_pti3s")]([SubResource("Resource_bjbwr"), SubResource("Resource_m1lfn")])
-events = Array[Resource]([SubResource("Resource_mjsqc")])
+params = Array[ExtResource("9_paonx")]([SubResource("Resource_hlb2a"), SubResource("Resource_krmfy")])
+events = Array[Resource]([SubResource("Resource_074cn")])
 
-[sub_resource type="Resource" id="Resource_hlb2a"]
-script = ExtResource("3_3yx42")
+[sub_resource type="Resource" id="Resource_1uhra"]
+script = ExtResource("4_tqmve")
 ace_id = "CallFunction"
 params = {
 "args": "\"modulate:a\", clampf(alpha, 0.0, 1.0), duration",
 "function_name": "_start_tween"
 }
 
-[sub_resource type="Resource" id="Resource_krmfy"]
-script = ExtResource("7_5v5yh")
-actions = Array[Resource]([SubResource("Resource_hlb2a")])
+[sub_resource type="Resource" id="Resource_vdt5h"]
+script = ExtResource("8_y4qvn")
+actions = Array[Resource]([SubResource("Resource_1uhra")])
 event_uid = "5d49e7"
 
-[sub_resource type="Resource" id="Resource_vdsra"]
-script = ExtResource("8_pti3s")
+[sub_resource type="Resource" id="Resource_b07th"]
+script = ExtResource("9_paonx")
 id = "alpha"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_1uhra"]
-script = ExtResource("8_pti3s")
+[sub_resource type="Resource" id="Resource_yqfto"]
+script = ExtResource("9_paonx")
 id = "duration"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_vdt5h"]
-script = ExtResource("9_y4qvn")
+[sub_resource type="Resource" id="Resource_8rg7p"]
+script = ExtResource("10_bxuom")
 function_name = "tween_alpha"
 description = "Fades the host's modulate alpha."
 expose_as_ace = true
 ace_display_name = "Tween Alpha"
 ace_category = "Tween"
-params = Array[ExtResource("8_pti3s")]([SubResource("Resource_vdsra"), SubResource("Resource_1uhra")])
-events = Array[Resource]([SubResource("Resource_krmfy")])
+params = Array[ExtResource("9_paonx")]([SubResource("Resource_b07th"), SubResource("Resource_yqfto")])
+events = Array[Resource]([SubResource("Resource_vdt5h")])
 
-[sub_resource type="Resource" id="Resource_b07th"]
-script = ExtResource("2_hlhhl")
-code = "_active_tween.kill()"
-lift_note = "no matching ACE template"
+[sub_resource type="Resource" id="Resource_fh4un"]
+script = ExtResource("4_tqmve")
+ace_id = "CallMethod"
+params = {
+"args": "",
+"method": "kill",
+"target": "_active_tween"
+}
 
-[sub_resource type="Resource" id="Resource_yqfto"]
-script = ExtResource("3_3yx42")
+[sub_resource type="Resource" id="Resource_513ss"]
+script = ExtResource("4_tqmve")
 ace_id = "SetVar"
 params = {
 "value": "null",
 "var_name": "_active_tween"
 }
 
-[sub_resource type="Resource" id="Resource_8rg7p"]
-script = ExtResource("4_cmlci")
+[sub_resource type="Resource" id="Resource_myffq"]
+script = ExtResource("5_wc40t")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -281,29 +289,29 @@ params = {
 "var_name": "_active_tween"
 }
 
-[sub_resource type="Resource" id="Resource_fh4un"]
-script = ExtResource("7_5v5yh")
-conditions = Array[ExtResource("4_cmlci")]([SubResource("Resource_8rg7p")])
-actions = Array[Resource]([SubResource("Resource_b07th"), SubResource("Resource_yqfto")])
+[sub_resource type="Resource" id="Resource_3qwhx"]
+script = ExtResource("8_y4qvn")
+conditions = Array[ExtResource("5_wc40t")]([SubResource("Resource_myffq")])
+actions = Array[Resource]([SubResource("Resource_fh4un"), SubResource("Resource_513ss")])
 event_uid = "b8d107"
 
-[sub_resource type="Resource" id="Resource_513ss"]
-script = ExtResource("9_y4qvn")
+[sub_resource type="Resource" id="Resource_sd481"]
+script = ExtResource("10_bxuom")
 function_name = "stop_tweens"
 description = "Kills the running tween (host stays where it is)."
 expose_as_ace = true
 ace_display_name = "Stop Tweens"
 ace_category = "Tween"
-events = Array[Resource]([SubResource("Resource_fh4un")])
+events = Array[Resource]([SubResource("Resource_3qwhx")])
 
 [resource]
-script = ExtResource("10_paonx")
+script = ExtResource("11_elexq")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "TweenBehavior"
 addon_tags = PackedStringArray("motion", "juice")
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_bxuom"), SubResource("Resource_elexq")])
+events = Array[Resource]([SubResource("Resource_5ubra"), SubResource("Resource_rp2y6"), SubResource("Resource_6r4o1")])
 variables = {
 "default_duration": {
 "attributes": {
@@ -331,4 +339,4 @@ variables = {
 "type": "String"
 }
 }
-functions = Array[Resource]([SubResource("Resource_bpmm2"), SubResource("Resource_4sn2j"), SubResource("Resource_jdd5u"), SubResource("Resource_074cn"), SubResource("Resource_vdt5h"), SubResource("Resource_513ss")])
+functions = Array[Resource]([SubResource("Resource_mcso3"), SubResource("Resource_y6s4t"), SubResource("Resource_bjbwr"), SubResource("Resource_vdsra"), SubResource("Resource_8rg7p"), SubResource("Resource_sd481")])

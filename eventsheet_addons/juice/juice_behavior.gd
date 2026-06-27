@@ -15,6 +15,23 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("JuiceBehavior behavior requires a CanvasItem parent.")
 
+## @ace_trigger
+## @ace_name("On Shake Stopped")
+## @ace_category("Juice")
+signal shake_stopped
+## @ace_trigger
+## @ace_name("On Zoom Finished")
+## @ace_category("Juice")
+signal zoom_finished
+## @ace_trigger
+## @ace_name("On Squash Finished")
+## @ace_category("Juice")
+signal squash_finished
+## @ace_trigger
+## @ace_name("On Slowmo Finished")
+## @ace_category("Juice")
+signal slowmo_finished
+
 # --- Designer knobs (tune the FEEL in the Inspector) ---
 ## Peak camera shake offset, in pixels, at full trauma.
 @export var max_offset: Vector2 = Vector2(24, 16)
@@ -61,26 +78,6 @@ var _slowmo_tween: Tween = null
 var _squash_spring_active: bool = false
 var _squash_value: Vector2 = Vector2.ONE
 var _squash_velocity: Vector2 = Vector2.ZERO
-
-## @ace_trigger
-## @ace_name("On Shake Stopped")
-## @ace_category("Juice")
-signal shake_stopped()
-
-## @ace_trigger
-## @ace_name("On Zoom Finished")
-## @ace_category("Juice")
-signal zoom_finished()
-
-## @ace_trigger
-## @ace_name("On Squash Finished")
-## @ace_category("Juice")
-signal squash_finished()
-
-## @ace_trigger
-## @ace_name("On Slowmo Finished")
-## @ace_category("Juice")
-signal slowmo_finished()
 
 ## The camera these effects drive: an explicit override (Use Camera), else the active Camera2D —
 ## auto-found, so Shake / Zoom just work from anywhere without wiring a path.

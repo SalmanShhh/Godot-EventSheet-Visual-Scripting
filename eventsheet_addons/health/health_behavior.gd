@@ -14,6 +14,39 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("SimpleHealthBehavior behavior requires a Node2D parent.")
 
+## @ace_trigger
+## @ace_name("On Damaged")
+## @ace_category("Health")
+signal on_damaged
+## @ace_trigger
+## @ace_name("On Death")
+## @ace_category("Health")
+signal on_death
+## @ace_trigger
+## @ace_name("On Healed")
+## @ace_category("Health")
+signal on_healed
+## @ace_trigger
+## @ace_name("On Health Changed")
+## @ace_category("Health")
+signal on_health_changed
+## @ace_trigger
+## @ace_name("On Revived")
+## @ace_category("Health")
+signal on_revived
+## @ace_trigger
+## @ace_name("On Health Pool Added")
+## @ace_category("Health")
+signal on_health_pool_added
+## @ace_trigger
+## @ace_name("On Health Pool Absorbed")
+## @ace_category("Health")
+signal on_health_pool_absorbed
+## @ace_trigger
+## @ace_name("On Health Pool Depleted")
+## @ace_category("Health")
+signal on_health_pool_depleted
+
 var current_health: float = 100.0
 ## queue_free the host the moment health reaches 0 (after On Death fires).
 @export var destroy_on_death: bool = false
@@ -37,46 +70,6 @@ class HealthPool:
 	var absorption_rate: float = 1.0
 	var last_absorbed: float = 0.0
 	var priority: float = 0.0
-
-## @ace_trigger
-## @ace_name("On Damaged")
-## @ace_category("Health")
-signal on_damaged
-
-## @ace_trigger
-## @ace_name("On Death")
-## @ace_category("Health")
-signal on_death
-
-## @ace_trigger
-## @ace_name("On Healed")
-## @ace_category("Health")
-signal on_healed
-
-## @ace_trigger
-## @ace_name("On Health Changed")
-## @ace_category("Health")
-signal on_health_changed
-
-## @ace_trigger
-## @ace_name("On Revived")
-## @ace_category("Health")
-signal on_revived
-
-## @ace_trigger
-## @ace_name("On Health Pool Added")
-## @ace_category("Health")
-signal on_health_pool_added
-
-## @ace_trigger
-## @ace_name("On Health Pool Absorbed")
-## @ace_category("Health")
-signal on_health_pool_absorbed
-
-## @ace_trigger
-## @ace_name("On Health Pool Depleted")
-## @ace_category("Health")
-signal on_health_pool_depleted
 
 ## @ace_condition
 ## @ace_name("Is Dead")

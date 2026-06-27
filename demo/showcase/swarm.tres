@@ -1,12 +1,12 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
 [ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_d3vt6"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_rager"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_y6fan"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_r4gi0"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_meg26"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_l1bx6"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_v6yy3"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="2_rager"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="3_y6fan"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="4_r4gi0"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="5_meg26"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="6_l1bx6"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="7_v6yy3"]
 [ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="8_tbpb0"]
 
 [sub_resource type="Resource" id="Resource_y87b2"]
@@ -14,26 +14,68 @@ script = ExtResource("1_d3vt6")
 text = "[b]Swarm[/b] — frame-spreading made visible. On Ready spawns 800 sprites into the \"swarm\" group; ONE For Each with a frame-spread budget of 90/frame wobbles them, so only a slice updates each frame and the colour refresh SWEEPS through the crowd — that visible wave IS the spreading. The FPS stays pinned even though the loop never touches the whole crowd in a single frame. Tick frame_spread_count on any For Each to get this — no behavior, no await."
 
 [sub_resource type="Resource" id="Resource_aeoa0"]
-script = ExtResource("2_rager")
-code = "var __cols: int = 40
-for __i: int in range(count):
-	var __dot: Sprite2D = load(\"res://demo/showcase/dot.tscn\").instantiate()
-	__dot.position = Vector2(48.0 + float(__i % __cols) * 27.0, 70.0 + float(__i / __cols) * 27.0)
-	add_child(__dot)"
+script = ExtResource("6_l1bx6")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "__cols",
+"value": "40",
+"var_type": "int"
+}
 
 [sub_resource type="Resource" id="Resource_2xjdq"]
-script = ExtResource("6_l1bx6")
-trigger_provider_id = "Core"
-trigger_id = "OnReady"
+script = ExtResource("5_meg26")
 actions = Array[Resource]([SubResource("Resource_aeoa0")])
-event_uid = "d44ddb"
+event_uid = "924de5"
 
 [sub_resource type="Resource" id="Resource_gyuot"]
-script = ExtResource("2_rager")
-code = "t += delta"
+script = ExtResource("6_l1bx6")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "__dot",
+"value": "load(\"res://demo/showcase/dot.tscn\").instantiate()",
+"var_type": "Sprite2D"
+}
 
 [sub_resource type="Resource" id="Resource_0p1qc"]
+script = ExtResource("6_l1bx6")
+ace_id = "SetPosition2D"
+params = {
+"pos": "Vector2(48.0 + float(__i % __cols) * 27.0, 70.0 + float(__i / __cols) * 27.0)",
+"target": "__dot"
+}
+
+[sub_resource type="Resource" id="Resource_jrn30"]
+script = ExtResource("6_l1bx6")
+ace_id = "AddChild"
+params = {
+"node": "__dot"
+}
+
+[sub_resource type="Resource" id="Resource_h1s8m"]
+script = ExtResource("4_r4gi0")
+iterator_name = "__i: int"
+collection_kind = 7
+collection_value = "count"
+
+[sub_resource type="Resource" id="Resource_7g88q"]
+script = ExtResource("5_meg26")
+actions = Array[Resource]([SubResource("Resource_gyuot"), SubResource("Resource_0p1qc"), SubResource("Resource_jrn30")])
+event_uid = "b9858c"
+pick_filters = Array[ExtResource("4_r4gi0")]([SubResource("Resource_h1s8m")])
+
+[sub_resource type="Resource" id="Resource_ortmn"]
+script = ExtResource("5_meg26")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+sub_events = Array[Resource]([SubResource("Resource_2xjdq"), SubResource("Resource_7g88q")])
+event_uid = "d44ddb"
+
+[sub_resource type="Resource" id="Resource_6c7hc"]
 script = ExtResource("7_v6yy3")
+code = "t += delta"
+
+[sub_resource type="Resource" id="Resource_j2qth"]
+script = ExtResource("6_l1bx6")
 ace_id = "SetTextFormatted"
 params = {
 "args": "count, Engine.get_frames_per_second()",
@@ -42,39 +84,55 @@ params = {
 }
 codegen_template = "{target}.text = {template} % [{args}]"
 
-[sub_resource type="Resource" id="Resource_jrn30"]
-script = ExtResource("6_l1bx6")
+[sub_resource type="Resource" id="Resource_hy1i6"]
+script = ExtResource("5_meg26")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_gyuot"), SubResource("Resource_0p1qc")])
+actions = Array[Resource]([SubResource("Resource_6c7hc"), SubResource("Resource_j2qth")])
 event_uid = "abc0ec"
 
-[sub_resource type="Resource" id="Resource_h1s8m"]
-script = ExtResource("2_rager")
-code = "dot.offset = Vector2(sin(t * 2.0 + dot.position.x * 0.02) * 10.0, cos(t * 2.4 + dot.position.y * 0.02) * 10.0)
-dot.modulate = Color.from_hsv(fmod(t * 0.08 + dot.position.x * 0.0008, 1.0), 0.65, 1.0)"
-
-[sub_resource type="Resource" id="Resource_7g88q"]
-script = ExtResource("5_meg26")
+[sub_resource type="Resource" id="Resource_s4y80"]
+script = ExtResource("4_r4gi0")
 iterator_name = "dot"
 collection_kind = 0
 collection_value = "swarm"
 frame_spread_count = 90
 
-[sub_resource type="Resource" id="Resource_ortmn"]
+[sub_resource type="Resource" id="Resource_6uurd"]
 script = ExtResource("6_l1bx6")
+ace_id = "SetCameraOffset"
+params = {
+"offset": "Vector2(sin(t * 2.0 + dot.position.x * 0.02) * 10.0, cos(t * 2.4 + dot.position.y * 0.02) * 10.0)",
+"target": "dot"
+}
+
+[sub_resource type="Resource" id="Resource_wxg3f"]
+script = ExtResource("6_l1bx6")
+ace_id = "SetModulate"
+params = {
+"color": "Color.from_hsv(fmod(t * 0.08 + dot.position.x * 0.0008, 1.0), 0.65, 1.0)",
+"target": "dot"
+}
+
+[sub_resource type="Resource" id="Resource_o20wf"]
+script = ExtResource("5_meg26")
+actions = Array[Resource]([SubResource("Resource_6uurd"), SubResource("Resource_wxg3f")])
+event_uid = "b80aa6"
+
+[sub_resource type="Resource" id="Resource_4eai2"]
+script = ExtResource("5_meg26")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_h1s8m")])
+sub_events = Array[Resource]([SubResource("Resource_o20wf")])
 event_uid = "7647f9"
-pick_filters = Array[ExtResource("5_meg26")]([SubResource("Resource_7g88q")])
+pick_filters = Array[ExtResource("4_r4gi0")]([SubResource("Resource_s4y80")])
 
 [resource]
 script = ExtResource("8_tbpb0")
 host_class = "Node2D"
 custom_class_name = "Swarm"
 addon_tags = PackedStringArray()
-events = Array[Resource]([SubResource("Resource_y87b2"), SubResource("Resource_2xjdq"), SubResource("Resource_jrn30"), SubResource("Resource_ortmn")])
+events = Array[Resource]([SubResource("Resource_y87b2"), SubResource("Resource_ortmn"), SubResource("Resource_hy1i6"), SubResource("Resource_4eai2")])
 variables = {
 "count": {
 "attributes": {

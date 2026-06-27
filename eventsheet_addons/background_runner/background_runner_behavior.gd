@@ -15,16 +15,16 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("BackgroundRunner behavior requires a Node parent.")
 
+## @ace_trigger
+## @ace_name("On Done")
+## @ace_category("Background")
+signal done(result: Variant)
+
 # In-flight tasks as [task_id, call_id]; results keyed by call_id, written off-thread under _mutex.
 var _tasks: Array = []
 var _results: Dictionary = {}
 var _next_id: int = 0
 var _mutex: Mutex = null
-
-## @ace_trigger
-## @ace_name("On Done")
-## @ace_category("Background")
-signal done(result: Variant)
 
 ## @ace_condition
 ## @ace_name("Is Running")

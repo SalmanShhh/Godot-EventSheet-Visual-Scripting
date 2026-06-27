@@ -60,12 +60,18 @@ func nearest_visible_in_group(group: String) -> Node2D:
 [sub_resource type="Resource" id="Resource_ljcjg"]
 script = ExtResource("2_0y3wa")
 code = "pass"
+lift_note = "no matching ACE template"
 
 [sub_resource type="Resource" id="Resource_454na"]
 script = ExtResource("6_wmmtp")
+actions = Array[Resource]([SubResource("Resource_ljcjg")])
+event_uid = "ac3131"
+
+[sub_resource type="Resource" id="Resource_poqdr"]
+script = ExtResource("6_wmmtp")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_ljcjg")])
+sub_events = Array[Resource]([SubResource("Resource_454na")])
 event_uid = "98ff5e"
 
 [resource]
@@ -75,7 +81,7 @@ behavior_mode = true
 custom_class_name = "LOSBehavior"
 addon_tags = PackedStringArray()
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_mnxbw"), SubResource("Resource_yeela"), SubResource("Resource_454na")])
+events = Array[Resource]([SubResource("Resource_mnxbw"), SubResource("Resource_yeela"), SubResource("Resource_poqdr")])
 variables = {
 "collision_mask": {
 "default": 1,

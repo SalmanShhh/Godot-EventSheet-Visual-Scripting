@@ -14,6 +14,23 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("DragDropBehavior behavior requires a Node2D parent.")
 
+## @ace_trigger
+## @ace_name("On Drag Started")
+## @ace_category("Drag & Drop")
+signal drag_started
+## @ace_trigger
+## @ace_name("On Dropped")
+## @ace_category("Drag & Drop")
+signal dropped
+## @ace_trigger
+## @ace_name("On Drag Cancelled")
+## @ace_category("Drag & Drop")
+signal drag_cancelled
+## @ace_trigger
+## @ace_name("On Snapped")
+## @ace_category("Drag & Drop")
+signal snapped
+
 var break_action: int = 0
 ## Gap that auto-ends the drag; 0 disables.
 @export var break_distance: float = 0.0
@@ -45,26 +62,6 @@ var throw_vel: Vector2 = Vector2.ZERO
 var override_throw: Vector2 = Vector2.ZERO
 var snap_target: Vector2 = Vector2.ZERO
 var throw_history: PackedVector2Array = PackedVector2Array()
-
-## @ace_trigger
-## @ace_name("On Drag Started")
-## @ace_category("Drag & Drop")
-signal drag_started
-
-## @ace_trigger
-## @ace_name("On Dropped")
-## @ace_category("Drag & Drop")
-signal dropped
-
-## @ace_trigger
-## @ace_name("On Drag Cancelled")
-## @ace_category("Drag & Drop")
-signal drag_cancelled
-
-## @ace_trigger
-## @ace_name("On Snapped")
-## @ace_category("Drag & Drop")
-signal snapped
 
 ## @ace_condition
 ## @ace_name("Is Dragging")

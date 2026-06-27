@@ -15,6 +15,15 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("TimeSlicerBehavior behavior requires a Node parent.")
 
+## @ace_trigger
+## @ace_name("On Process Item")
+## @ace_category("Time Slicer")
+signal process_item(item: Variant)
+## @ace_trigger
+## @ace_name("On Drained")
+## @ace_category("Time Slicer")
+signal drained
+
 var _last_count: int = 0
 var _paused: bool = false
 var _queue: Array = []
@@ -23,16 +32,6 @@ var _queue: Array = []
 ## Hard cap on items processed per frame (used when Mode includes count).
 @export var max_items_per_frame: int = 64
 @export_enum("both", "ms", "count") var mode: String = "both"
-
-## @ace_trigger
-## @ace_name("On Process Item")
-## @ace_category("Time Slicer")
-signal process_item(item: Variant)
-
-## @ace_trigger
-## @ace_name("On Drained")
-## @ace_category("Time Slicer")
-signal drained
 
 ## @ace_condition
 ## @ace_name("Is Busy")

@@ -1,115 +1,187 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_1ihjn"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_qhrj8"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_ui1lx"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_h4i66"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_6xk7j"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_2wm85"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_crwpp"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_ph37s"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_i0mc6"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_51g62"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_3bqpc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="2_1ihjn"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="3_qhrj8"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="4_ui1lx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="5_h4i66"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="6_6xk7j"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="7_2wm85"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="8_crwpp"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="9_ph37s"]
 
-[sub_resource type="Resource" id="Resource_5urnx"]
-script = ExtResource("1_1ihjn")
+[sub_resource type="Resource" id="Resource_i0mc6"]
+script = ExtResource("1_3bqpc")
 text = "Orbit 3D behavior (C3-style): circles the host around its starting point in the XZ plane (Y stays)."
 
+[sub_resource type="Resource" id="Resource_51g62"]
+script = ExtResource("6_6xk7j")
+ace_id = "ReturnEarly"
+
+[sub_resource type="Resource" id="Resource_5urnx"]
+script = ExtResource("2_1ihjn")
+ace_id = "CompareVar"
+params = {
+"op": "==",
+"value": "null",
+"var_name": "host"
+}
+
 [sub_resource type="Resource" id="Resource_3s5dy"]
-script = ExtResource("2_qhrj8")
-code = "if host == null:
-	return
-if not center_captured:
-	center_x = host.position.x
-	center_y = host.position.y
-	center_z = host.position.z
-	center_captured = true
-angle += deg_to_rad(speed_degrees) * delta
-host.position = Vector3(center_x + cos(angle) * radius, center_y, center_z + sin(angle) * radius)"
+script = ExtResource("5_h4i66")
+conditions = Array[ExtResource("2_1ihjn")]([SubResource("Resource_5urnx")])
+actions = Array[Resource]([SubResource("Resource_51g62")])
+event_uid = "eb829d"
 
 [sub_resource type="Resource" id="Resource_cp8gk"]
-script = ExtResource("6_2wm85")
-trigger_provider_id = "Core"
-trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_3s5dy")])
-event_uid = "54b5dd"
-
-[sub_resource type="Resource" id="Resource_5ogdh"]
-script = ExtResource("7_crwpp")
+script = ExtResource("6_6xk7j")
 ace_id = "SetVar"
 params = {
-"value": "x",
+"value": "host.position.x",
 "var_name": "center_x"
 }
 
-[sub_resource type="Resource" id="Resource_snjo7"]
-script = ExtResource("7_crwpp")
+[sub_resource type="Resource" id="Resource_5ogdh"]
+script = ExtResource("6_6xk7j")
 ace_id = "SetVar"
 params = {
-"value": "y",
+"value": "host.position.y",
 "var_name": "center_y"
 }
 
-[sub_resource type="Resource" id="Resource_srxho"]
-script = ExtResource("7_crwpp")
+[sub_resource type="Resource" id="Resource_snjo7"]
+script = ExtResource("6_6xk7j")
 ace_id = "SetVar"
 params = {
-"value": "z",
+"value": "host.position.z",
 "var_name": "center_z"
 }
 
-[sub_resource type="Resource" id="Resource_04duw"]
-script = ExtResource("7_crwpp")
+[sub_resource type="Resource" id="Resource_srxho"]
+script = ExtResource("6_6xk7j")
 ace_id = "SetVar"
 params = {
 "value": "true",
 "var_name": "center_captured"
 }
 
+[sub_resource type="Resource" id="Resource_04duw"]
+script = ExtResource("2_1ihjn")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "not center_captured"
+}
+
 [sub_resource type="Resource" id="Resource_khs5m"]
-script = ExtResource("6_2wm85")
-actions = Array[Resource]([SubResource("Resource_5ogdh"), SubResource("Resource_snjo7"), SubResource("Resource_srxho"), SubResource("Resource_04duw")])
-event_uid = "270650"
+script = ExtResource("5_h4i66")
+conditions = Array[ExtResource("2_1ihjn")]([SubResource("Resource_04duw")])
+actions = Array[Resource]([SubResource("Resource_cp8gk"), SubResource("Resource_5ogdh"), SubResource("Resource_snjo7"), SubResource("Resource_srxho")])
+event_uid = "9d7b2f"
 
 [sub_resource type="Resource" id="Resource_7i37o"]
-script = ExtResource("8_ph37s")
+script = ExtResource("6_6xk7j")
+ace_id = "AddVar"
+params = {
+"amount": "deg_to_rad(speed_degrees) * delta",
+"var_name": "angle"
+}
+
+[sub_resource type="Resource" id="Resource_1roa2"]
+script = ExtResource("6_6xk7j")
+ace_id = "SetPosition2D"
+params = {
+"pos": "Vector3(center_x + cos(angle) * radius, center_y, center_z + sin(angle) * radius)",
+"target": "host"
+}
+
+[sub_resource type="Resource" id="Resource_d6fw4"]
+script = ExtResource("5_h4i66")
+actions = Array[Resource]([SubResource("Resource_7i37o"), SubResource("Resource_1roa2")])
+event_uid = "3d5b6f"
+
+[sub_resource type="Resource" id="Resource_4mlo5"]
+script = ExtResource("5_h4i66")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+sub_events = Array[Resource]([SubResource("Resource_3s5dy"), SubResource("Resource_khs5m"), SubResource("Resource_d6fw4")])
+event_uid = "54b5dd"
+
+[sub_resource type="Resource" id="Resource_qc15k"]
+script = ExtResource("6_6xk7j")
+ace_id = "SetVar"
+params = {
+"value": "x",
+"var_name": "center_x"
+}
+
+[sub_resource type="Resource" id="Resource_3rkyh"]
+script = ExtResource("6_6xk7j")
+ace_id = "SetVar"
+params = {
+"value": "y",
+"var_name": "center_y"
+}
+
+[sub_resource type="Resource" id="Resource_qskxd"]
+script = ExtResource("6_6xk7j")
+ace_id = "SetVar"
+params = {
+"value": "z",
+"var_name": "center_z"
+}
+
+[sub_resource type="Resource" id="Resource_thhrt"]
+script = ExtResource("6_6xk7j")
+ace_id = "SetVar"
+params = {
+"value": "true",
+"var_name": "center_captured"
+}
+
+[sub_resource type="Resource" id="Resource_na6pt"]
+script = ExtResource("5_h4i66")
+actions = Array[Resource]([SubResource("Resource_qc15k"), SubResource("Resource_3rkyh"), SubResource("Resource_qskxd"), SubResource("Resource_thhrt")])
+event_uid = "270650"
+
+[sub_resource type="Resource" id="Resource_ew5pa"]
+script = ExtResource("7_2wm85")
 id = "x"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_1roa2"]
-script = ExtResource("8_ph37s")
+[sub_resource type="Resource" id="Resource_mqxap"]
+script = ExtResource("7_2wm85")
 id = "y"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_d6fw4"]
-script = ExtResource("8_ph37s")
+[sub_resource type="Resource" id="Resource_nqdn0"]
+script = ExtResource("7_2wm85")
 id = "z"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_4mlo5"]
-script = ExtResource("9_i0mc6")
+[sub_resource type="Resource" id="Resource_i6vxd"]
+script = ExtResource("8_crwpp")
 function_name = "set_orbit3d_center"
 description = "Orbits around the given point from now on."
 expose_as_ace = true
 ace_display_name = "Set Orbit 3D Center"
 ace_category = "Orbit 3D"
-params = Array[ExtResource("8_ph37s")]([SubResource("Resource_7i37o"), SubResource("Resource_1roa2"), SubResource("Resource_d6fw4")])
-events = Array[Resource]([SubResource("Resource_khs5m")])
+params = Array[ExtResource("7_2wm85")]([SubResource("Resource_ew5pa"), SubResource("Resource_mqxap"), SubResource("Resource_nqdn0")])
+events = Array[Resource]([SubResource("Resource_na6pt")])
 
 [resource]
-script = ExtResource("10_51g62")
+script = ExtResource("9_ph37s")
 host_class = "Node3D"
 behavior_mode = true
 custom_class_name = "Orbit3DBehavior"
 addon_tags = PackedStringArray()
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_5urnx"), SubResource("Resource_cp8gk")])
+events = Array[Resource]([SubResource("Resource_i0mc6"), SubResource("Resource_4mlo5")])
 variables = {
 "angle": {
 "default": 0.0,
@@ -147,4 +219,4 @@ variables = {
 "type": "float"
 }
 }
-functions = Array[Resource]([SubResource("Resource_4mlo5")])
+functions = Array[Resource]([SubResource("Resource_i6vxd")])

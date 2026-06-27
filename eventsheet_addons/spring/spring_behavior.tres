@@ -1,22 +1,39 @@
 [gd_resource type="Resource" script_class="EventSheetResource" format=3]
 
-[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_xhrlg"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_jtet6"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_k7qed"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_xngu2"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_7gr1r"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_qx3vc"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="7_almrk"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="8_0olq3"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="9_swf5b"]
-[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="10_kefu4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/comment_row.gd" id="1_jtet6"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/signal_row.gd" id="2_k7qed"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="3_xngu2"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="4_7gr1r"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="5_qx3vc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="6_almrk"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="7_0olq3"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="8_swf5b"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_param.gd" id="9_kefu4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_function.gd" id="10_m7rga"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="11_22bip"]
 
-[sub_resource type="Resource" id="Resource_m7rga"]
-script = ExtResource("1_xhrlg")
+[sub_resource type="Resource" id="Resource_dn21t"]
+script = ExtResource("1_jtet6")
 text = "Numeric springing: snappy, physical motion for ANY number. Name a spring, set its target, read its value — or use the host helpers (x/y/angle/scale) for instant juice."
 
-[sub_resource type="Resource" id="Resource_22bip"]
-script = ExtResource("2_jtet6")
+[sub_resource type="Resource" id="Resource_iqxm8"]
+script = ExtResource("2_k7qed")
+signal_name = "spring_reached"
+params = PackedStringArray("spring_name: String")
+trigger = true
+ace_name = "On Spring Reached"
+ace_category = "Spring"
+
+[sub_resource type="Resource" id="Resource_o5f7p"]
+script = ExtResource("2_k7qed")
+signal_name = "spring_started"
+params = PackedStringArray("spring_name: String")
+trigger = true
+ace_name = "On Spring Started"
+ace_category = "Spring"
+
+[sub_resource type="Resource" id="Resource_er0il"]
+script = ExtResource("3_xngu2")
 code = "## A single numeric spring's state, integrated each frame (typed — no dict casts in the hot loop).
 class SpringEntry:
 	var value: float = 0.0
@@ -59,16 +76,6 @@ class ColorSpringEntry:
 			active = false
 			return true
 		return false
-
-## @ace_trigger
-## @ace_name(\"On Spring Reached\")
-## @ace_category(\"Spring\")
-signal spring_reached(spring_name: String)
-
-## @ace_trigger
-## @ace_name(\"On Spring Started\")
-## @ace_category(\"Spring\")
-signal spring_started(spring_name: String)
 
 ## @ace_expression
 ## @ace_name(\"Color Value\")
@@ -141,33 +148,122 @@ func _apply_to_host(spring_name: String, value: float) -> void:
 		\"__angle\": host.rotation_degrees = value
 		\"__scale\": host.scale = Vector2(value, value)"
 
-[sub_resource type="Resource" id="Resource_dn21t"]
-script = ExtResource("2_jtet6")
+[sub_resource type="Resource" id="Resource_dl1ol"]
+script = ExtResource("3_xngu2")
 code = "# Each spring integrates itself (framerate-independent); host springs write to the parent.
-for spring_name: Variant in springs.keys():
-	var entry: SpringEntry = springs[spring_name]
-	if not entry.active:
-		continue
-	if entry.integrate(delta):
-		spring_reached.emit(str(spring_name))
-	_apply_to_host(str(spring_name), entry.value)
-# Colour springs integrate identically (Color supports +, - and *float component-wise).
-for color_name: Variant in color_springs.keys():
-	var centry: ColorSpringEntry = color_springs[color_name]
-	if not centry.active:
-		continue
-	if centry.integrate(delta):
-		spring_reached.emit(str(color_name))"
+for spring_name: Variant in springs.keys():"
+lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_iqxm8"]
-script = ExtResource("6_qx3vc")
+[sub_resource type="Resource" id="Resource_552gn"]
+script = ExtResource("8_swf5b")
+ace_id = "SetVar"
+params = {
+"value": "springs[spring_name]",
+"var_name": "	var entry: SpringEntry"
+}
+
+[sub_resource type="Resource" id="Resource_bnpvg"]
+script = ExtResource("3_xngu2")
+code = "	if not entry.active:
+		continue
+	if entry.integrate(delta):"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_8vls3"]
+script = ExtResource("8_swf5b")
+ace_id = "EmitSignal"
+params = {
+"args": "str(spring_name)",
+"signal_name": "		spring_reached"
+}
+
+[sub_resource type="Resource" id="Resource_0i7ck"]
+script = ExtResource("8_swf5b")
+ace_id = "CallFunction"
+params = {
+"args": "str(spring_name), entry.value",
+"function_name": "	_apply_to_host"
+}
+
+[sub_resource type="Resource" id="Resource_27kfm"]
+script = ExtResource("3_xngu2")
+code = "# Colour springs integrate identically (Color supports +, - and *float component-wise)."
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_8fecb"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_dl1ol"), SubResource("Resource_552gn"), SubResource("Resource_bnpvg"), SubResource("Resource_8vls3"), SubResource("Resource_0i7ck"), SubResource("Resource_27kfm")])
+event_uid = "3e4e95"
+
+[sub_resource type="Resource" id="Resource_4ghok"]
+script = ExtResource("8_swf5b")
+ace_id = "SetLocalVarTyped"
+params = {
+"name": "centry",
+"value": "color_springs[color_name]",
+"var_type": "ColorSpringEntry"
+}
+
+[sub_resource type="Resource" id="Resource_fc7br"]
+script = ExtResource("6_almrk")
+iterator_name = "color_name: Variant"
+collection_value = "color_springs.keys()"
+
+[sub_resource type="Resource" id="Resource_hd6c3"]
+script = ExtResource("3_xngu2")
+code = "continue"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_hw21p"]
+script = ExtResource("4_7gr1r")
+ace_id = "IsTreeActive"
+params = {
+"target": "not centry"
+}
+
+[sub_resource type="Resource" id="Resource_gmnao"]
+script = ExtResource("7_0olq3")
+conditions = Array[ExtResource("4_7gr1r")]([SubResource("Resource_hw21p")])
+actions = Array[Resource]([SubResource("Resource_hd6c3")])
+event_uid = "8436ff"
+
+[sub_resource type="Resource" id="Resource_v55em"]
+script = ExtResource("8_swf5b")
+ace_id = "EmitSignal"
+params = {
+"args": "str(color_name)",
+"signal_name": "spring_reached"
+}
+
+[sub_resource type="Resource" id="Resource_n8tm2"]
+script = ExtResource("4_7gr1r")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "centry.integrate(delta)"
+}
+
+[sub_resource type="Resource" id="Resource_vhsbd"]
+script = ExtResource("7_0olq3")
+conditions = Array[ExtResource("4_7gr1r")]([SubResource("Resource_n8tm2")])
+actions = Array[Resource]([SubResource("Resource_v55em")])
+event_uid = "bb0fc8"
+
+[sub_resource type="Resource" id="Resource_yumfq"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_4ghok")])
+sub_events = Array[Resource]([SubResource("Resource_gmnao"), SubResource("Resource_vhsbd")])
+event_uid = "614d6c"
+pick_filters = Array[ExtResource("6_almrk")]([SubResource("Resource_fc7br")])
+
+[sub_resource type="Resource" id="Resource_rugel"]
+script = ExtResource("7_0olq3")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_dn21t")])
-event_uid = "5332ef"
+sub_events = Array[Resource]([SubResource("Resource_8fecb"), SubResource("Resource_yumfq")])
+event_uid = "13711f"
 
-[sub_resource type="Resource" id="Resource_o5f7p"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_i4cst"]
+script = ExtResource("8_swf5b")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "entry",
@@ -175,13 +271,13 @@ params = {
 "var_type": "SpringEntry"
 }
 
-[sub_resource type="Resource" id="Resource_er0il"]
-script = ExtResource("2_jtet6")
+[sub_resource type="Resource" id="Resource_kijxg"]
+script = ExtResource("3_xngu2")
 code = "var was_active := entry.active"
 lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_dl1ol"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_cnaeb"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "from_value",
@@ -189,8 +285,8 @@ params = {
 "value": "entry.value"
 }
 
-[sub_resource type="Resource" id="Resource_552gn"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_d02j4"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "target",
@@ -198,65 +294,65 @@ params = {
 "value": "target"
 }
 
-[sub_resource type="Resource" id="Resource_bnpvg"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_cseej"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "true",
 "target": "entry"
 }
 
-[sub_resource type="Resource" id="Resource_8vls3"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_o5f7p"), SubResource("Resource_er0il"), SubResource("Resource_dl1ol"), SubResource("Resource_552gn"), SubResource("Resource_bnpvg")])
+[sub_resource type="Resource" id="Resource_u3qhl"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_i4cst"), SubResource("Resource_kijxg"), SubResource("Resource_cnaeb"), SubResource("Resource_d02j4"), SubResource("Resource_cseej")])
 event_uid = "d6c223"
 
-[sub_resource type="Resource" id="Resource_0i7ck"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_yfwlq"]
+script = ExtResource("8_swf5b")
 ace_id = "EmitSignal"
 params = {
 "args": "spring_name",
 "signal_name": "spring_started"
 }
 
-[sub_resource type="Resource" id="Resource_27kfm"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_1s7hb"]
+script = ExtResource("4_7gr1r")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "not was_active"
 }
 
-[sub_resource type="Resource" id="Resource_8fecb"]
-script = ExtResource("6_qx3vc")
-conditions = Array[ExtResource("3_k7qed")]([SubResource("Resource_27kfm")])
-actions = Array[Resource]([SubResource("Resource_0i7ck")])
+[sub_resource type="Resource" id="Resource_sevdf"]
+script = ExtResource("7_0olq3")
+conditions = Array[ExtResource("4_7gr1r")]([SubResource("Resource_1s7hb")])
+actions = Array[Resource]([SubResource("Resource_yfwlq")])
 event_uid = "2e8223"
 
-[sub_resource type="Resource" id="Resource_4ghok"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_6hdki"]
+script = ExtResource("9_kefu4")
 id = "spring_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_fc7br"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_yhbyb"]
+script = ExtResource("9_kefu4")
 id = "target"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_hd6c3"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_vy162"]
+script = ExtResource("10_m7rga")
 function_name = "spring_to"
 description = "Springs the named value toward a target."
 expose_as_ace = true
 ace_display_name = "Spring To"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_4ghok"), SubResource("Resource_fc7br")])
-events = Array[Resource]([SubResource("Resource_8vls3"), SubResource("Resource_8fecb")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_6hdki"), SubResource("Resource_yhbyb")])
+events = Array[Resource]([SubResource("Resource_u3qhl"), SubResource("Resource_sevdf")])
 
-[sub_resource type="Resource" id="Resource_hw21p"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_bvlsq"]
+script = ExtResource("8_swf5b")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "entry",
@@ -264,16 +360,16 @@ params = {
 "var_type": "SpringEntry"
 }
 
-[sub_resource type="Resource" id="Resource_gmnao"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_y6r42"]
+script = ExtResource("8_swf5b")
 ace_id = "SetRangeValue"
 params = {
 "target": "entry",
 "value": "from_value"
 }
 
-[sub_resource type="Resource" id="Resource_v55em"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_0f5e4"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "from_value",
@@ -281,16 +377,16 @@ params = {
 "value": "from_value"
 }
 
-[sub_resource type="Resource" id="Resource_n8tm2"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_eak7h"]
+script = ExtResource("8_swf5b")
 ace_id = "SetVelocity2D"
 params = {
 "host": "entry",
 "vel": "0.0"
 }
 
-[sub_resource type="Resource" id="Resource_vhsbd"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_6cyd2"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "target",
@@ -298,51 +394,51 @@ params = {
 "value": "to_value"
 }
 
-[sub_resource type="Resource" id="Resource_yumfq"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_yp4nv"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "true",
 "target": "entry"
 }
 
-[sub_resource type="Resource" id="Resource_rugel"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_hw21p"), SubResource("Resource_gmnao"), SubResource("Resource_v55em"), SubResource("Resource_n8tm2"), SubResource("Resource_vhsbd"), SubResource("Resource_yumfq")])
+[sub_resource type="Resource" id="Resource_4twk2"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_bvlsq"), SubResource("Resource_y6r42"), SubResource("Resource_0f5e4"), SubResource("Resource_eak7h"), SubResource("Resource_6cyd2"), SubResource("Resource_yp4nv")])
 event_uid = "5187ac"
 
-[sub_resource type="Resource" id="Resource_i4cst"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_yx52s"]
+script = ExtResource("9_kefu4")
 id = "spring_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_kijxg"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_prh0a"]
+script = ExtResource("9_kefu4")
 id = "from_value"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_cnaeb"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_x81aj"]
+script = ExtResource("9_kefu4")
 id = "to_value"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_d02j4"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_qpwek"]
+script = ExtResource("10_m7rga")
 function_name = "spring_between"
 description = "Snaps to a start value, then springs to the end value."
 expose_as_ace = true
 ace_display_name = "Spring Between"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_i4cst"), SubResource("Resource_kijxg"), SubResource("Resource_cnaeb")])
-events = Array[Resource]([SubResource("Resource_rugel")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_yx52s"), SubResource("Resource_prh0a"), SubResource("Resource_x81aj")])
+events = Array[Resource]([SubResource("Resource_4twk2")])
 
-[sub_resource type="Resource" id="Resource_cseej"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_nrf8s"]
+script = ExtResource("8_swf5b")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "entry",
@@ -350,16 +446,16 @@ params = {
 "var_type": "SpringEntry"
 }
 
-[sub_resource type="Resource" id="Resource_u3qhl"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_x3ya1"]
+script = ExtResource("8_swf5b")
 ace_id = "SetRangeValue"
 params = {
 "target": "entry",
 "value": "value"
 }
 
-[sub_resource type="Resource" id="Resource_yfwlq"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_nf08y"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "from_value",
@@ -367,8 +463,8 @@ params = {
 "value": "value"
 }
 
-[sub_resource type="Resource" id="Resource_1s7hb"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_pnmyx"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "target",
@@ -376,52 +472,52 @@ params = {
 "value": "value"
 }
 
-[sub_resource type="Resource" id="Resource_sevdf"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_svd3n"]
+script = ExtResource("8_swf5b")
 ace_id = "SetVelocity2D"
 params = {
 "host": "entry",
 "vel": "0.0"
 }
 
-[sub_resource type="Resource" id="Resource_6hdki"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_4epxa"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "false",
 "target": "entry"
 }
 
-[sub_resource type="Resource" id="Resource_yhbyb"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_cseej"), SubResource("Resource_u3qhl"), SubResource("Resource_yfwlq"), SubResource("Resource_1s7hb"), SubResource("Resource_sevdf"), SubResource("Resource_6hdki")])
+[sub_resource type="Resource" id="Resource_3km1f"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_nrf8s"), SubResource("Resource_x3ya1"), SubResource("Resource_nf08y"), SubResource("Resource_pnmyx"), SubResource("Resource_svd3n"), SubResource("Resource_4epxa")])
 event_uid = "d982b2"
 
-[sub_resource type="Resource" id="Resource_vy162"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_ipqot"]
+script = ExtResource("9_kefu4")
 id = "spring_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_bvlsq"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_3aw34"]
+script = ExtResource("9_kefu4")
 id = "value"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_y6r42"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_ok433"]
+script = ExtResource("10_m7rga")
 function_name = "set_spring"
 description = "Snaps the named spring (no motion)."
 expose_as_ace = true
 ace_display_name = "Set Spring Value"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_vy162"), SubResource("Resource_bvlsq")])
-events = Array[Resource]([SubResource("Resource_yhbyb")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_ipqot"), SubResource("Resource_3aw34")])
+events = Array[Resource]([SubResource("Resource_3km1f")])
 
-[sub_resource type="Resource" id="Resource_0f5e4"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_hyprm"]
+script = ExtResource("8_swf5b")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "entry",
@@ -429,90 +525,90 @@ params = {
 "var_type": "SpringEntry"
 }
 
-[sub_resource type="Resource" id="Resource_eak7h"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_go7wg"]
+script = ExtResource("8_swf5b")
 ace_id = "AddVelocity"
 params = {
 "delta_v": "amount",
 "host": "entry"
 }
 
-[sub_resource type="Resource" id="Resource_6cyd2"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_2k8ji"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "true",
 "target": "entry"
 }
 
-[sub_resource type="Resource" id="Resource_yp4nv"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_0f5e4"), SubResource("Resource_eak7h"), SubResource("Resource_6cyd2")])
+[sub_resource type="Resource" id="Resource_rkamo"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_hyprm"), SubResource("Resource_go7wg"), SubResource("Resource_2k8ji")])
 event_uid = "0ca45d"
 
-[sub_resource type="Resource" id="Resource_4twk2"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_57aw8"]
+script = ExtResource("9_kefu4")
 id = "spring_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_yx52s"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_dlhck"]
+script = ExtResource("9_kefu4")
 id = "amount"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_prh0a"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_tl340"]
+script = ExtResource("10_m7rga")
 function_name = "add_impulse"
 description = "Kicks the named spring's velocity (instant juice)."
 expose_as_ace = true
 ace_display_name = "Add Impulse"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_4twk2"), SubResource("Resource_yx52s")])
-events = Array[Resource]([SubResource("Resource_yp4nv")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_57aw8"), SubResource("Resource_dlhck")])
+events = Array[Resource]([SubResource("Resource_rkamo")])
 
-[sub_resource type="Resource" id="Resource_x81aj"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_cmxri"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "false",
 "target": "(springs[spring_name] as SpringEntry)"
 }
 
-[sub_resource type="Resource" id="Resource_qpwek"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_i2s2b"]
+script = ExtResource("4_7gr1r")
 ace_id = "DictHasKey"
 params = {
 "key": "spring_name",
 "var_name": "springs"
 }
 
-[sub_resource type="Resource" id="Resource_nrf8s"]
-script = ExtResource("6_qx3vc")
-conditions = Array[ExtResource("3_k7qed")]([SubResource("Resource_qpwek")])
-actions = Array[Resource]([SubResource("Resource_x81aj")])
+[sub_resource type="Resource" id="Resource_u4rxb"]
+script = ExtResource("7_0olq3")
+conditions = Array[ExtResource("4_7gr1r")]([SubResource("Resource_i2s2b")])
+actions = Array[Resource]([SubResource("Resource_cmxri")])
 event_uid = "ca77c8"
 
-[sub_resource type="Resource" id="Resource_x3ya1"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_pkghi"]
+script = ExtResource("9_kefu4")
 id = "spring_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_nf08y"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_w43bg"]
+script = ExtResource("10_m7rga")
 function_name = "stop_spring"
 description = "Freezes the named spring where it is."
 expose_as_ace = true
 ace_display_name = "Stop Spring"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_x3ya1")])
-events = Array[Resource]([SubResource("Resource_nrf8s")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_pkghi")])
+events = Array[Resource]([SubResource("Resource_u4rxb")])
 
-[sub_resource type="Resource" id="Resource_pnmyx"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_mvsfb"]
+script = ExtResource("8_swf5b")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "entry",
@@ -520,24 +616,24 @@ params = {
 "var_type": "SpringEntry"
 }
 
-[sub_resource type="Resource" id="Resource_svd3n"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_8o63r"]
+script = ExtResource("8_swf5b")
 ace_id = "SetDampedSpringStiffness"
 params = {
 "stiffness": "stiffness",
 "target": "entry"
 }
 
-[sub_resource type="Resource" id="Resource_4epxa"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_013s2"]
+script = ExtResource("8_swf5b")
 ace_id = "SetDampedSpringDamping"
 params = {
 "damping": "clampf(damping, 0.0, 1.0)",
 "target": "entry"
 }
 
-[sub_resource type="Resource" id="Resource_3km1f"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_m6ysj"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "precision",
@@ -545,50 +641,50 @@ params = {
 "value": "precision"
 }
 
-[sub_resource type="Resource" id="Resource_ipqot"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_pnmyx"), SubResource("Resource_svd3n"), SubResource("Resource_4epxa"), SubResource("Resource_3km1f")])
+[sub_resource type="Resource" id="Resource_3vt6l"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_mvsfb"), SubResource("Resource_8o63r"), SubResource("Resource_013s2"), SubResource("Resource_m6ysj")])
 event_uid = "1aa3e8"
 
-[sub_resource type="Resource" id="Resource_3aw34"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_mlxht"]
+script = ExtResource("9_kefu4")
 id = "spring_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_ok433"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_6rpmj"]
+script = ExtResource("9_kefu4")
 id = "stiffness"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_hyprm"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_fyeji"]
+script = ExtResource("9_kefu4")
 id = "damping"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_go7wg"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_btqao"]
+script = ExtResource("9_kefu4")
 id = "precision"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_2k8ji"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_0cnhx"]
+script = ExtResource("10_m7rga")
 function_name = "configure_spring"
 description = "Per-spring stiffness/damping/precision overrides."
 expose_as_ace = true
 ace_display_name = "Configure Spring"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_3aw34"), SubResource("Resource_ok433"), SubResource("Resource_hyprm"), SubResource("Resource_go7wg")])
-events = Array[Resource]([SubResource("Resource_ipqot")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_mlxht"), SubResource("Resource_6rpmj"), SubResource("Resource_fyeji"), SubResource("Resource_btqao")])
+events = Array[Resource]([SubResource("Resource_3vt6l")])
 
-[sub_resource type="Resource" id="Resource_rkamo"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_6vvp3"]
+script = ExtResource("8_swf5b")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "entry",
@@ -596,28 +692,28 @@ params = {
 "var_type": "SpringEntry"
 }
 
-[sub_resource type="Resource" id="Resource_57aw8"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_rkamo")])
+[sub_resource type="Resource" id="Resource_r4tw0"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_6vvp3")])
 event_uid = "56160d"
 
-[sub_resource type="Resource" id="Resource_dlhck"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_2ftuc"]
+script = ExtResource("8_swf5b")
 ace_id = "SetRangeValue"
 params = {
 "target": "entry",
 "value": "host.position.x"
 }
 
-[sub_resource type="Resource" id="Resource_tl340"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_k4bkr"]
+script = ExtResource("4_7gr1r")
 ace_id = "IsTreeActive"
 params = {
 "target": "not entry"
 }
 
-[sub_resource type="Resource" id="Resource_cmxri"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_47k71"]
+script = ExtResource("4_7gr1r")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -625,14 +721,14 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_i2s2b"]
-script = ExtResource("6_qx3vc")
-conditions = Array[ExtResource("3_k7qed")]([SubResource("Resource_tl340"), SubResource("Resource_cmxri")])
-actions = Array[Resource]([SubResource("Resource_dlhck")])
+[sub_resource type="Resource" id="Resource_4g7ep"]
+script = ExtResource("7_0olq3")
+conditions = Array[ExtResource("4_7gr1r")]([SubResource("Resource_k4bkr"), SubResource("Resource_47k71")])
+actions = Array[Resource]([SubResource("Resource_2ftuc")])
 event_uid = "4f0d52"
 
-[sub_resource type="Resource" id="Resource_u4rxb"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_5y85b"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "from_value",
@@ -640,8 +736,8 @@ params = {
 "value": "entry.value"
 }
 
-[sub_resource type="Resource" id="Resource_pkghi"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_2las7"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "target",
@@ -649,38 +745,38 @@ params = {
 "value": "target"
 }
 
-[sub_resource type="Resource" id="Resource_w43bg"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_syvqe"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "true",
 "target": "entry"
 }
 
-[sub_resource type="Resource" id="Resource_mvsfb"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_u4rxb"), SubResource("Resource_pkghi"), SubResource("Resource_w43bg")])
+[sub_resource type="Resource" id="Resource_b55fx"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_5y85b"), SubResource("Resource_2las7"), SubResource("Resource_syvqe")])
 event_uid = "b11ffc"
 
-[sub_resource type="Resource" id="Resource_8o63r"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_svu2j"]
+script = ExtResource("9_kefu4")
 id = "target"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_013s2"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_1libp"]
+script = ExtResource("10_m7rga")
 function_name = "spring_host_x"
 description = "Springs the host's X position."
 expose_as_ace = true
 ace_display_name = "Spring Host X"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_8o63r")])
-events = Array[Resource]([SubResource("Resource_57aw8"), SubResource("Resource_i2s2b"), SubResource("Resource_mvsfb")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_svu2j")])
+events = Array[Resource]([SubResource("Resource_r4tw0"), SubResource("Resource_4g7ep"), SubResource("Resource_b55fx")])
 
-[sub_resource type="Resource" id="Resource_m6ysj"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_dy15r"]
+script = ExtResource("8_swf5b")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "entry",
@@ -688,28 +784,28 @@ params = {
 "var_type": "SpringEntry"
 }
 
-[sub_resource type="Resource" id="Resource_3vt6l"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_m6ysj")])
+[sub_resource type="Resource" id="Resource_j2a7y"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_dy15r")])
 event_uid = "b47023"
 
-[sub_resource type="Resource" id="Resource_mlxht"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_dykg8"]
+script = ExtResource("8_swf5b")
 ace_id = "SetRangeValue"
 params = {
 "target": "entry",
 "value": "host.position.y"
 }
 
-[sub_resource type="Resource" id="Resource_6rpmj"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_yv8hn"]
+script = ExtResource("4_7gr1r")
 ace_id = "IsTreeActive"
 params = {
 "target": "not entry"
 }
 
-[sub_resource type="Resource" id="Resource_fyeji"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_nq58w"]
+script = ExtResource("4_7gr1r")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -717,14 +813,14 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_btqao"]
-script = ExtResource("6_qx3vc")
-conditions = Array[ExtResource("3_k7qed")]([SubResource("Resource_6rpmj"), SubResource("Resource_fyeji")])
-actions = Array[Resource]([SubResource("Resource_mlxht")])
+[sub_resource type="Resource" id="Resource_sgkxd"]
+script = ExtResource("7_0olq3")
+conditions = Array[ExtResource("4_7gr1r")]([SubResource("Resource_yv8hn"), SubResource("Resource_nq58w")])
+actions = Array[Resource]([SubResource("Resource_dykg8")])
 event_uid = "e96be4"
 
-[sub_resource type="Resource" id="Resource_0cnhx"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_8754y"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "from_value",
@@ -732,8 +828,8 @@ params = {
 "value": "entry.value"
 }
 
-[sub_resource type="Resource" id="Resource_6vvp3"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_kndj8"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "target",
@@ -741,38 +837,38 @@ params = {
 "value": "target"
 }
 
-[sub_resource type="Resource" id="Resource_r4tw0"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_50bd6"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "true",
 "target": "entry"
 }
 
-[sub_resource type="Resource" id="Resource_2ftuc"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_0cnhx"), SubResource("Resource_6vvp3"), SubResource("Resource_r4tw0")])
+[sub_resource type="Resource" id="Resource_sbqsi"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_8754y"), SubResource("Resource_kndj8"), SubResource("Resource_50bd6")])
 event_uid = "e0a379"
 
-[sub_resource type="Resource" id="Resource_k4bkr"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_rbanh"]
+script = ExtResource("9_kefu4")
 id = "target"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_47k71"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_ya0rd"]
+script = ExtResource("10_m7rga")
 function_name = "spring_host_y"
 description = "Springs the host's Y position."
 expose_as_ace = true
 ace_display_name = "Spring Host Y"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_k4bkr")])
-events = Array[Resource]([SubResource("Resource_3vt6l"), SubResource("Resource_btqao"), SubResource("Resource_2ftuc")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_rbanh")])
+events = Array[Resource]([SubResource("Resource_j2a7y"), SubResource("Resource_sgkxd"), SubResource("Resource_sbqsi")])
 
-[sub_resource type="Resource" id="Resource_4g7ep"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_u28ga"]
+script = ExtResource("8_swf5b")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "entry",
@@ -780,28 +876,28 @@ params = {
 "var_type": "SpringEntry"
 }
 
-[sub_resource type="Resource" id="Resource_5y85b"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_4g7ep")])
+[sub_resource type="Resource" id="Resource_68c6o"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_u28ga")])
 event_uid = "5fb51c"
 
-[sub_resource type="Resource" id="Resource_2las7"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_nw7ou"]
+script = ExtResource("8_swf5b")
 ace_id = "SetRangeValue"
 params = {
 "target": "entry",
 "value": "host.rotation_degrees"
 }
 
-[sub_resource type="Resource" id="Resource_syvqe"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_w8mre"]
+script = ExtResource("4_7gr1r")
 ace_id = "IsTreeActive"
 params = {
 "target": "not entry"
 }
 
-[sub_resource type="Resource" id="Resource_b55fx"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_jkqxu"]
+script = ExtResource("4_7gr1r")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -809,14 +905,14 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_svu2j"]
-script = ExtResource("6_qx3vc")
-conditions = Array[ExtResource("3_k7qed")]([SubResource("Resource_syvqe"), SubResource("Resource_b55fx")])
-actions = Array[Resource]([SubResource("Resource_2las7")])
+[sub_resource type="Resource" id="Resource_gsmte"]
+script = ExtResource("7_0olq3")
+conditions = Array[ExtResource("4_7gr1r")]([SubResource("Resource_w8mre"), SubResource("Resource_jkqxu")])
+actions = Array[Resource]([SubResource("Resource_nw7ou")])
 event_uid = "a124bb"
 
-[sub_resource type="Resource" id="Resource_1libp"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_jcif0"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "from_value",
@@ -824,8 +920,8 @@ params = {
 "value": "entry.value"
 }
 
-[sub_resource type="Resource" id="Resource_dy15r"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_nexa4"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "target",
@@ -833,38 +929,38 @@ params = {
 "value": "degrees"
 }
 
-[sub_resource type="Resource" id="Resource_j2a7y"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_vae7g"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "true",
 "target": "entry"
 }
 
-[sub_resource type="Resource" id="Resource_dykg8"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_1libp"), SubResource("Resource_dy15r"), SubResource("Resource_j2a7y")])
+[sub_resource type="Resource" id="Resource_pj1bl"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_jcif0"), SubResource("Resource_nexa4"), SubResource("Resource_vae7g")])
 event_uid = "e76e65"
 
-[sub_resource type="Resource" id="Resource_yv8hn"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_ih7rp"]
+script = ExtResource("9_kefu4")
 id = "degrees"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_nq58w"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_4v6rf"]
+script = ExtResource("10_m7rga")
 function_name = "spring_host_angle"
 description = "Springs the host's rotation (degrees)."
 expose_as_ace = true
 ace_display_name = "Spring Host Angle"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_yv8hn")])
-events = Array[Resource]([SubResource("Resource_5y85b"), SubResource("Resource_svu2j"), SubResource("Resource_dykg8")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_ih7rp")])
+events = Array[Resource]([SubResource("Resource_68c6o"), SubResource("Resource_gsmte"), SubResource("Resource_pj1bl")])
 
-[sub_resource type="Resource" id="Resource_sgkxd"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_tmwwv"]
+script = ExtResource("8_swf5b")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "entry",
@@ -872,28 +968,28 @@ params = {
 "var_type": "SpringEntry"
 }
 
-[sub_resource type="Resource" id="Resource_8754y"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_sgkxd")])
+[sub_resource type="Resource" id="Resource_ml287"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_tmwwv")])
 event_uid = "942235"
 
-[sub_resource type="Resource" id="Resource_kndj8"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_a30tt"]
+script = ExtResource("8_swf5b")
 ace_id = "SetRangeValue"
 params = {
 "target": "entry",
 "value": "host.scale.x"
 }
 
-[sub_resource type="Resource" id="Resource_50bd6"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_7vwjg"]
+script = ExtResource("4_7gr1r")
 ace_id = "IsTreeActive"
 params = {
 "target": "not entry"
 }
 
-[sub_resource type="Resource" id="Resource_sbqsi"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_rve2t"]
+script = ExtResource("4_7gr1r")
 ace_id = "CompareVar"
 params = {
 "op": "!=",
@@ -901,14 +997,14 @@ params = {
 "var_name": "host"
 }
 
-[sub_resource type="Resource" id="Resource_rbanh"]
-script = ExtResource("6_qx3vc")
-conditions = Array[ExtResource("3_k7qed")]([SubResource("Resource_50bd6"), SubResource("Resource_sbqsi")])
-actions = Array[Resource]([SubResource("Resource_kndj8")])
+[sub_resource type="Resource" id="Resource_mhmcp"]
+script = ExtResource("7_0olq3")
+conditions = Array[ExtResource("4_7gr1r")]([SubResource("Resource_7vwjg"), SubResource("Resource_rve2t")])
+actions = Array[Resource]([SubResource("Resource_a30tt")])
 event_uid = "e0ad83"
 
-[sub_resource type="Resource" id="Resource_ya0rd"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_l8gwv"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "from_value",
@@ -916,8 +1012,8 @@ params = {
 "value": "entry.value"
 }
 
-[sub_resource type="Resource" id="Resource_u28ga"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_32ofg"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "target",
@@ -925,38 +1021,38 @@ params = {
 "value": "target"
 }
 
-[sub_resource type="Resource" id="Resource_68c6o"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_u62mi"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "true",
 "target": "entry"
 }
 
-[sub_resource type="Resource" id="Resource_nw7ou"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_ya0rd"), SubResource("Resource_u28ga"), SubResource("Resource_68c6o")])
+[sub_resource type="Resource" id="Resource_xqf5q"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_l8gwv"), SubResource("Resource_32ofg"), SubResource("Resource_u62mi")])
 event_uid = "304f55"
 
-[sub_resource type="Resource" id="Resource_w8mre"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_nwe8y"]
+script = ExtResource("9_kefu4")
 id = "target"
 type_name = "float"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_jkqxu"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_3jjoe"]
+script = ExtResource("10_m7rga")
 function_name = "spring_host_scale"
 description = "Springs the host's uniform scale (squash & stretch!)."
 expose_as_ace = true
 ace_display_name = "Spring Host Scale"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_w8mre")])
-events = Array[Resource]([SubResource("Resource_8754y"), SubResource("Resource_rbanh"), SubResource("Resource_nw7ou")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_nwe8y")])
+events = Array[Resource]([SubResource("Resource_ml287"), SubResource("Resource_mhmcp"), SubResource("Resource_xqf5q")])
 
-[sub_resource type="Resource" id="Resource_gsmte"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_0m3x7"]
+script = ExtResource("8_swf5b")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "entry",
@@ -964,16 +1060,16 @@ params = {
 "var_type": "ColorSpringEntry"
 }
 
-[sub_resource type="Resource" id="Resource_jcif0"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_5s70u"]
+script = ExtResource("8_swf5b")
 ace_id = "SetRangeValue"
 params = {
 "target": "entry",
 "value": "color"
 }
 
-[sub_resource type="Resource" id="Resource_nexa4"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_1itjq"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "target",
@@ -981,52 +1077,52 @@ params = {
 "value": "color"
 }
 
-[sub_resource type="Resource" id="Resource_vae7g"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_chdbt"]
+script = ExtResource("8_swf5b")
 ace_id = "SetVelocity2D"
 params = {
 "host": "entry",
 "vel": "Color(0, 0, 0, 0)"
 }
 
-[sub_resource type="Resource" id="Resource_pj1bl"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_3q7f6"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "false",
 "target": "entry"
 }
 
-[sub_resource type="Resource" id="Resource_ih7rp"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_gsmte"), SubResource("Resource_jcif0"), SubResource("Resource_nexa4"), SubResource("Resource_vae7g"), SubResource("Resource_pj1bl")])
+[sub_resource type="Resource" id="Resource_bqi2t"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_0m3x7"), SubResource("Resource_5s70u"), SubResource("Resource_1itjq"), SubResource("Resource_chdbt"), SubResource("Resource_3q7f6")])
 event_uid = "91e547"
 
-[sub_resource type="Resource" id="Resource_4v6rf"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_uysko"]
+script = ExtResource("9_kefu4")
 id = "spring_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_tmwwv"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_5v3gr"]
+script = ExtResource("9_kefu4")
 id = "color"
 type_name = "Color"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_ml287"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_t8fj2"]
+script = ExtResource("10_m7rga")
 function_name = "set_color"
 description = "Snaps a named colour spring (no motion) — seed it before springing."
 expose_as_ace = true
 ace_display_name = "Set Color Value"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_4v6rf"), SubResource("Resource_tmwwv")])
-events = Array[Resource]([SubResource("Resource_ih7rp")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_uysko"), SubResource("Resource_5v3gr")])
+events = Array[Resource]([SubResource("Resource_bqi2t")])
 
-[sub_resource type="Resource" id="Resource_a30tt"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_dnanh"]
+script = ExtResource("8_swf5b")
 ace_id = "SetLocalVarTyped"
 params = {
 "name": "entry",
@@ -1034,13 +1130,13 @@ params = {
 "var_type": "ColorSpringEntry"
 }
 
-[sub_resource type="Resource" id="Resource_7vwjg"]
-script = ExtResource("2_jtet6")
+[sub_resource type="Resource" id="Resource_vw5va"]
+script = ExtResource("3_xngu2")
 code = "var was_active := entry.active"
 lift_note = "no matching ACE template"
 
-[sub_resource type="Resource" id="Resource_rve2t"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_dbm75"]
+script = ExtResource("8_swf5b")
 ace_id = "SetProperty"
 params = {
 "property": "target",
@@ -1048,256 +1144,256 @@ params = {
 "value": "target_color"
 }
 
-[sub_resource type="Resource" id="Resource_mhmcp"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_c6esw"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "true",
 "target": "entry"
 }
 
-[sub_resource type="Resource" id="Resource_l8gwv"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_a30tt"), SubResource("Resource_7vwjg"), SubResource("Resource_rve2t"), SubResource("Resource_mhmcp")])
+[sub_resource type="Resource" id="Resource_k5a8w"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_dnanh"), SubResource("Resource_vw5va"), SubResource("Resource_dbm75"), SubResource("Resource_c6esw")])
 event_uid = "00958d"
 
-[sub_resource type="Resource" id="Resource_32ofg"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_ttpkf"]
+script = ExtResource("8_swf5b")
 ace_id = "EmitSignal"
 params = {
 "args": "spring_name",
 "signal_name": "spring_started"
 }
 
-[sub_resource type="Resource" id="Resource_u62mi"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_6klg3"]
+script = ExtResource("4_7gr1r")
 ace_id = "ExpressionIsTrue"
 params = {
 "expr": "not was_active"
 }
 
-[sub_resource type="Resource" id="Resource_xqf5q"]
-script = ExtResource("6_qx3vc")
-conditions = Array[ExtResource("3_k7qed")]([SubResource("Resource_u62mi")])
-actions = Array[Resource]([SubResource("Resource_32ofg")])
+[sub_resource type="Resource" id="Resource_qjqk4"]
+script = ExtResource("7_0olq3")
+conditions = Array[ExtResource("4_7gr1r")]([SubResource("Resource_6klg3")])
+actions = Array[Resource]([SubResource("Resource_ttpkf")])
 event_uid = "d72c1d"
 
-[sub_resource type="Resource" id="Resource_nwe8y"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_3queu"]
+script = ExtResource("9_kefu4")
 id = "spring_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_3jjoe"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_ld8v5"]
+script = ExtResource("9_kefu4")
 id = "target_color"
 type_name = "Color"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_0m3x7"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_d3i6q"]
+script = ExtResource("10_m7rga")
 function_name = "spring_color"
 description = "Springs a named colour toward a target (read it back with Color Value — great for hit flashes)."
 expose_as_ace = true
 ace_display_name = "Spring Color"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_nwe8y"), SubResource("Resource_3jjoe")])
-events = Array[Resource]([SubResource("Resource_l8gwv"), SubResource("Resource_xqf5q")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_3queu"), SubResource("Resource_ld8v5")])
+events = Array[Resource]([SubResource("Resource_k5a8w"), SubResource("Resource_qjqk4")])
 
-[sub_resource type="Resource" id="Resource_5s70u"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_70ksa"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "false",
 "target": "(springs[spring_name] as SpringEntry)"
 }
 
-[sub_resource type="Resource" id="Resource_1itjq"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_t6kd5"]
+script = ExtResource("4_7gr1r")
 ace_id = "DictHasKey"
 params = {
 "key": "spring_name",
 "var_name": "springs"
 }
 
-[sub_resource type="Resource" id="Resource_chdbt"]
-script = ExtResource("6_qx3vc")
-conditions = Array[ExtResource("3_k7qed")]([SubResource("Resource_1itjq")])
-actions = Array[Resource]([SubResource("Resource_5s70u")])
+[sub_resource type="Resource" id="Resource_ng82o"]
+script = ExtResource("7_0olq3")
+conditions = Array[ExtResource("4_7gr1r")]([SubResource("Resource_t6kd5")])
+actions = Array[Resource]([SubResource("Resource_70ksa")])
 event_uid = "f7cf9e"
 
-[sub_resource type="Resource" id="Resource_3q7f6"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_fxhks"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "false",
 "target": "(color_springs[spring_name] as ColorSpringEntry)"
 }
 
-[sub_resource type="Resource" id="Resource_bqi2t"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_ikwqr"]
+script = ExtResource("4_7gr1r")
 ace_id = "DictHasKey"
 params = {
 "key": "spring_name",
 "var_name": "color_springs"
 }
 
-[sub_resource type="Resource" id="Resource_uysko"]
-script = ExtResource("6_qx3vc")
-conditions = Array[ExtResource("3_k7qed")]([SubResource("Resource_bqi2t")])
-actions = Array[Resource]([SubResource("Resource_3q7f6")])
+[sub_resource type="Resource" id="Resource_bj1xb"]
+script = ExtResource("7_0olq3")
+conditions = Array[ExtResource("4_7gr1r")]([SubResource("Resource_ikwqr")])
+actions = Array[Resource]([SubResource("Resource_fxhks")])
 event_uid = "41e6b0"
 
-[sub_resource type="Resource" id="Resource_5v3gr"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_mhn3i"]
+script = ExtResource("9_kefu4")
 id = "spring_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_t8fj2"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_6x6i7"]
+script = ExtResource("10_m7rga")
 function_name = "pause_spring"
 description = "Freezes a spring in place (resume continues it)."
 expose_as_ace = true
 ace_display_name = "Pause Spring"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_5v3gr")])
-events = Array[Resource]([SubResource("Resource_chdbt"), SubResource("Resource_uysko")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_mhn3i")])
+events = Array[Resource]([SubResource("Resource_ng82o"), SubResource("Resource_bj1xb")])
 
-[sub_resource type="Resource" id="Resource_dnanh"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_dbs5h"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "true",
 "target": "(springs[spring_name] as SpringEntry)"
 }
 
-[sub_resource type="Resource" id="Resource_vw5va"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_5ax51"]
+script = ExtResource("4_7gr1r")
 ace_id = "DictHasKey"
 params = {
 "key": "spring_name",
 "var_name": "springs"
 }
 
-[sub_resource type="Resource" id="Resource_dbm75"]
-script = ExtResource("6_qx3vc")
-conditions = Array[ExtResource("3_k7qed")]([SubResource("Resource_vw5va")])
-actions = Array[Resource]([SubResource("Resource_dnanh")])
+[sub_resource type="Resource" id="Resource_bsxdy"]
+script = ExtResource("7_0olq3")
+conditions = Array[ExtResource("4_7gr1r")]([SubResource("Resource_5ax51")])
+actions = Array[Resource]([SubResource("Resource_dbs5h")])
 event_uid = "63c054"
 
-[sub_resource type="Resource" id="Resource_c6esw"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_so06d"]
+script = ExtResource("8_swf5b")
 ace_id = "SetAnimationTreeActive"
 params = {
 "active": "true",
 "target": "(color_springs[spring_name] as ColorSpringEntry)"
 }
 
-[sub_resource type="Resource" id="Resource_k5a8w"]
-script = ExtResource("3_k7qed")
+[sub_resource type="Resource" id="Resource_ipkc2"]
+script = ExtResource("4_7gr1r")
 ace_id = "DictHasKey"
 params = {
 "key": "spring_name",
 "var_name": "color_springs"
 }
 
-[sub_resource type="Resource" id="Resource_ttpkf"]
-script = ExtResource("6_qx3vc")
-conditions = Array[ExtResource("3_k7qed")]([SubResource("Resource_k5a8w")])
-actions = Array[Resource]([SubResource("Resource_c6esw")])
+[sub_resource type="Resource" id="Resource_6x2jm"]
+script = ExtResource("7_0olq3")
+conditions = Array[ExtResource("4_7gr1r")]([SubResource("Resource_ipkc2")])
+actions = Array[Resource]([SubResource("Resource_so06d")])
 event_uid = "c72f6f"
 
-[sub_resource type="Resource" id="Resource_6klg3"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_6lh7h"]
+script = ExtResource("9_kefu4")
 id = "spring_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_qjqk4"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_vq032"]
+script = ExtResource("10_m7rga")
 function_name = "resume_spring"
 description = "Resumes a paused spring toward its target."
 expose_as_ace = true
 ace_display_name = "Resume Spring"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_6klg3")])
-events = Array[Resource]([SubResource("Resource_dbm75"), SubResource("Resource_ttpkf")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_6lh7h")])
+events = Array[Resource]([SubResource("Resource_bsxdy"), SubResource("Resource_6x2jm")])
 
-[sub_resource type="Resource" id="Resource_3queu"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_24pek"]
+script = ExtResource("8_swf5b")
 ace_id = "DictDeleteKey"
 params = {
 "key": "spring_name",
 "var_name": "springs"
 }
 
-[sub_resource type="Resource" id="Resource_ld8v5"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_s6oe4"]
+script = ExtResource("8_swf5b")
 ace_id = "DictDeleteKey"
 params = {
 "key": "spring_name",
 "var_name": "color_springs"
 }
 
-[sub_resource type="Resource" id="Resource_d3i6q"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_3queu"), SubResource("Resource_ld8v5")])
+[sub_resource type="Resource" id="Resource_mwqq2"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_24pek"), SubResource("Resource_s6oe4")])
 event_uid = "b70736"
 
-[sub_resource type="Resource" id="Resource_70ksa"]
-script = ExtResource("8_0olq3")
+[sub_resource type="Resource" id="Resource_s05gb"]
+script = ExtResource("9_kefu4")
 id = "spring_name"
 initial_value = null
 initialValue = null
 
-[sub_resource type="Resource" id="Resource_t6kd5"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_pygyx"]
+script = ExtResource("10_m7rga")
 function_name = "remove_spring"
 description = "Deletes a named spring (numeric and/or colour)."
 expose_as_ace = true
 ace_display_name = "Remove Spring"
 ace_category = "Spring"
-params = Array[ExtResource("8_0olq3")]([SubResource("Resource_70ksa")])
-events = Array[Resource]([SubResource("Resource_d3i6q")])
+params = Array[ExtResource("9_kefu4")]([SubResource("Resource_s05gb")])
+events = Array[Resource]([SubResource("Resource_mwqq2")])
 
-[sub_resource type="Resource" id="Resource_ng82o"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_pxwby"]
+script = ExtResource("8_swf5b")
 ace_id = "DictClear"
 params = {
 "var_name": "springs"
 }
 
-[sub_resource type="Resource" id="Resource_fxhks"]
-script = ExtResource("7_almrk")
+[sub_resource type="Resource" id="Resource_7b5ra"]
+script = ExtResource("8_swf5b")
 ace_id = "DictClear"
 params = {
 "var_name": "color_springs"
 }
 
-[sub_resource type="Resource" id="Resource_ikwqr"]
-script = ExtResource("6_qx3vc")
-actions = Array[Resource]([SubResource("Resource_ng82o"), SubResource("Resource_fxhks")])
+[sub_resource type="Resource" id="Resource_1jpc4"]
+script = ExtResource("7_0olq3")
+actions = Array[Resource]([SubResource("Resource_pxwby"), SubResource("Resource_7b5ra")])
 event_uid = "7cb693"
 
-[sub_resource type="Resource" id="Resource_bj1xb"]
-script = ExtResource("9_swf5b")
+[sub_resource type="Resource" id="Resource_gm4yt"]
+script = ExtResource("10_m7rga")
 function_name = "reset_springs"
 description = "Clears every spring on this behavior."
 expose_as_ace = true
 ace_display_name = "Reset All Springs"
 ace_category = "Spring"
-events = Array[Resource]([SubResource("Resource_ikwqr")])
+events = Array[Resource]([SubResource("Resource_1jpc4")])
 
 [resource]
-script = ExtResource("10_kefu4")
+script = ExtResource("11_22bip")
 host_class = "Node2D"
 behavior_mode = true
 custom_class_name = "SpringBehavior"
 addon_tags = PackedStringArray("motion", "juice")
 custom_class_icon = "res://eventsheet_addons/behavior.svg"
-events = Array[Resource]([SubResource("Resource_m7rga"), SubResource("Resource_22bip"), SubResource("Resource_iqxm8")])
+events = Array[Resource]([SubResource("Resource_dn21t"), SubResource("Resource_iqxm8"), SubResource("Resource_o5f7p"), SubResource("Resource_er0il"), SubResource("Resource_rugel")])
 variables = {
 "color_springs": {
 "default": {},
@@ -1344,4 +1440,4 @@ variables = {
 "type": "Dictionary"
 }
 }
-functions = Array[Resource]([SubResource("Resource_hd6c3"), SubResource("Resource_d02j4"), SubResource("Resource_y6r42"), SubResource("Resource_prh0a"), SubResource("Resource_nf08y"), SubResource("Resource_2k8ji"), SubResource("Resource_013s2"), SubResource("Resource_47k71"), SubResource("Resource_nq58w"), SubResource("Resource_jkqxu"), SubResource("Resource_ml287"), SubResource("Resource_0m3x7"), SubResource("Resource_t8fj2"), SubResource("Resource_qjqk4"), SubResource("Resource_t6kd5"), SubResource("Resource_bj1xb")])
+functions = Array[Resource]([SubResource("Resource_vy162"), SubResource("Resource_qpwek"), SubResource("Resource_ok433"), SubResource("Resource_tl340"), SubResource("Resource_w43bg"), SubResource("Resource_0cnhx"), SubResource("Resource_1libp"), SubResource("Resource_ya0rd"), SubResource("Resource_4v6rf"), SubResource("Resource_3jjoe"), SubResource("Resource_t8fj2"), SubResource("Resource_d3i6q"), SubResource("Resource_6x6i7"), SubResource("Resource_vq032"), SubResource("Resource_pygyx"), SubResource("Resource_gm4yt")])

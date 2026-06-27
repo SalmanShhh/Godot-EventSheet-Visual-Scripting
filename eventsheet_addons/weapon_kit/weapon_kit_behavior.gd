@@ -15,6 +15,23 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("WeaponKit behavior requires a Node2D parent.")
 
+## @ace_trigger
+## @ace_name("On Fire")
+## @ace_category("Weapon")
+signal fired
+## @ace_trigger
+## @ace_name("On Empty")
+## @ace_category("Weapon")
+signal emptied
+## @ace_trigger
+## @ace_name("On Reload Started")
+## @ace_category("Weapon")
+signal reload_started
+## @ace_trigger
+## @ace_name("On Reload Complete")
+## @ace_category("Weapon")
+signal reload_completed
+
 var _burst_left: int = 0
 var _cooldown: float = 0.0
 var _reload_timer: float = 0.0
@@ -37,26 +54,6 @@ var _reloading: bool = false
 @export var reload_time: float = 1.2
 ## Spare rounds a reload draws from.
 @export var reserve_ammo: int = 96
-
-## @ace_trigger
-## @ace_name("On Fire")
-## @ace_category("Weapon")
-signal fired
-
-## @ace_trigger
-## @ace_name("On Empty")
-## @ace_category("Weapon")
-signal emptied
-
-## @ace_trigger
-## @ace_name("On Reload Started")
-## @ace_category("Weapon")
-signal reload_started
-
-## @ace_trigger
-## @ace_name("On Reload Complete")
-## @ace_category("Weapon")
-signal reload_completed
 
 ## @ace_condition
 ## @ace_name("Can Fire")

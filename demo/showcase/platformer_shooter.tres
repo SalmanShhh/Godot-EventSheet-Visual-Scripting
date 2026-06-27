@@ -164,26 +164,124 @@ actions = Array[Resource]([SubResource("Resource_1xblb")])
 event_uid = "e7bbd8"
 
 [sub_resource type="Resource" id="Resource_8ka61"]
-script = ExtResource("7_vpfg4")
-code = "for __shot in get_tree().get_nodes_in_group(\"shots\"):
-	for __target in get_tree().get_nodes_in_group(\"targets\"):
-		if is_instance_valid(__shot) and is_instance_valid(__target) and __shot.global_position.distance_to(__target.global_position) < 42.0:
-			__shot.queue_free()
-			__target.queue_free()
-			score += 1
-			break
-for __node in get_tree().get_nodes_in_group(\"shots\") + get_tree().get_nodes_in_group(\"targets\"):
-	if __node.global_position.x < -60.0 or __node.global_position.x > 1300.0:
-		__node.queue_free()"
+script = ExtResource("5_d8wcs")
+iterator_name = "__shot"
+collection_value = "get_tree().get_nodes_in_group(\"shots\")"
 
 [sub_resource type="Resource" id="Resource_vpql5"]
+script = ExtResource("5_d8wcs")
+iterator_name = "__target"
+collection_value = "get_tree().get_nodes_in_group(\"targets\")"
+
+[sub_resource type="Resource" id="Resource_472ww"]
+script = ExtResource("2_cdguq")
+ace_id = "QueueFreeNode"
+params = {
+"target": "__shot"
+}
+
+[sub_resource type="Resource" id="Resource_orkm1"]
+script = ExtResource("2_cdguq")
+ace_id = "QueueFreeNode"
+params = {
+"target": "__target"
+}
+
+[sub_resource type="Resource" id="Resource_jvsre"]
+script = ExtResource("2_cdguq")
+ace_id = "AddVar"
+params = {
+"amount": "1",
+"var_name": "score"
+}
+
+[sub_resource type="Resource" id="Resource_u38qa"]
+script = ExtResource("7_vpfg4")
+code = "break"
+lift_note = "no matching ACE template"
+
+[sub_resource type="Resource" id="Resource_pv3ai"]
+script = ExtResource("3_sjy6o")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "is_instance_valid(__shot)"
+}
+
+[sub_resource type="Resource" id="Resource_helgt"]
+script = ExtResource("3_sjy6o")
+ace_id = "ExpressionIsTrue"
+params = {
+"expr": "is_instance_valid(__target)"
+}
+
+[sub_resource type="Resource" id="Resource_gqvsy"]
+script = ExtResource("3_sjy6o")
+ace_id = "CompareVar"
+params = {
+"op": "<",
+"value": "42.0",
+"var_name": "__shot.global_position.distance_to(__target.global_position)"
+}
+
+[sub_resource type="Resource" id="Resource_cgj0i"]
+script = ExtResource("6_350ct")
+conditions = Array[ExtResource("3_sjy6o")]([SubResource("Resource_pv3ai"), SubResource("Resource_helgt"), SubResource("Resource_gqvsy")])
+actions = Array[Resource]([SubResource("Resource_472ww"), SubResource("Resource_orkm1"), SubResource("Resource_jvsre"), SubResource("Resource_u38qa")])
+event_uid = "6bfcb3"
+
+[sub_resource type="Resource" id="Resource_nbcj1"]
+script = ExtResource("6_350ct")
+sub_events = Array[Resource]([SubResource("Resource_cgj0i")])
+event_uid = "01b732"
+pick_filters = Array[ExtResource("5_d8wcs")]([SubResource("Resource_vpql5")])
+
+[sub_resource type="Resource" id="Resource_205uk"]
+script = ExtResource("6_350ct")
+sub_events = Array[Resource]([SubResource("Resource_nbcj1")])
+event_uid = "0f35e6"
+pick_filters = Array[ExtResource("5_d8wcs")]([SubResource("Resource_8ka61")])
+
+[sub_resource type="Resource" id="Resource_lv10g"]
+script = ExtResource("5_d8wcs")
+iterator_name = "__node"
+collection_value = "get_tree().get_nodes_in_group(\"shots\") + get_tree().get_nodes_in_group(\"targets\")"
+
+[sub_resource type="Resource" id="Resource_ewyee"]
+script = ExtResource("2_cdguq")
+ace_id = "QueueFreeNode"
+params = {
+"target": "__node"
+}
+
+[sub_resource type="Resource" id="Resource_su2sv"]
+script = ExtResource("3_sjy6o")
+ace_id = "CompareVar"
+params = {
+"op": "<",
+"value": "-60.0 or __node.global_position.x > 1300.0",
+"var_name": "__node.global_position.x"
+}
+
+[sub_resource type="Resource" id="Resource_q0n6i"]
+script = ExtResource("6_350ct")
+conditions = Array[ExtResource("3_sjy6o")]([SubResource("Resource_su2sv")])
+actions = Array[Resource]([SubResource("Resource_ewyee")])
+event_uid = "65c8d5"
+
+[sub_resource type="Resource" id="Resource_6w205"]
+script = ExtResource("6_350ct")
+sub_events = Array[Resource]([SubResource("Resource_q0n6i")])
+event_uid = "5849b7"
+pick_filters = Array[ExtResource("5_d8wcs")]([SubResource("Resource_lv10g")])
+
+[sub_resource type="Resource" id="Resource_kb02o"]
 script = ExtResource("6_350ct")
 trigger_provider_id = "Core"
 trigger_id = "OnPhysicsProcess"
-actions = Array[Resource]([SubResource("Resource_8ka61")])
+sub_events = Array[Resource]([SubResource("Resource_205uk"), SubResource("Resource_6w205")])
 event_uid = "ec03f2"
 
-[sub_resource type="Resource" id="Resource_472ww"]
+[sub_resource type="Resource" id="Resource_etaac"]
 script = ExtResource("2_cdguq")
 ace_id = "SetTextFormatted"
 params = {
@@ -193,11 +291,11 @@ params = {
 }
 codegen_template = "{target}.text = {template} % [{args}]"
 
-[sub_resource type="Resource" id="Resource_orkm1"]
+[sub_resource type="Resource" id="Resource_563sn"]
 script = ExtResource("6_350ct")
 trigger_provider_id = "Core"
 trigger_id = "OnProcess"
-actions = Array[Resource]([SubResource("Resource_472ww")])
+actions = Array[Resource]([SubResource("Resource_etaac")])
 event_uid = "e1dfa0"
 
 [resource]
@@ -205,7 +303,7 @@ script = ExtResource("8_1lxfq")
 host_class = "Node2D"
 custom_class_name = "PlatformerShooter"
 addon_tags = PackedStringArray()
-events = Array[Resource]([SubResource("Resource_l5ijk"), SubResource("Resource_qhtgf"), SubResource("Resource_4b78r"), SubResource("Resource_vc2a2"), SubResource("Resource_qj8t7"), SubResource("Resource_4cihy"), SubResource("Resource_vpql5"), SubResource("Resource_orkm1")])
+events = Array[Resource]([SubResource("Resource_l5ijk"), SubResource("Resource_qhtgf"), SubResource("Resource_4b78r"), SubResource("Resource_vc2a2"), SubResource("Resource_qj8t7"), SubResource("Resource_4cihy"), SubResource("Resource_kb02o"), SubResource("Resource_563sn")])
 variables = {
 "score": {
 "attributes": {

@@ -14,6 +14,11 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("FollowBehavior behavior requires a Node2D parent.")
 
+## @ace_trigger
+## @ace_name("On Reached Target")
+## @ace_category("Follow")
+signal reached_target
+
 var _reached: bool = false
 var clock: float = 0.0
 @export var delay: float = 0.4
@@ -23,11 +28,6 @@ var history: Array = []
 @export var min_distance: float = 0.0
 @export_enum("smooth", "delayed") var mode: String = "smooth"
 @export var target_path: String = ""
-
-## @ace_trigger
-## @ace_name("On Reached Target")
-## @ace_category("Follow")
-signal reached_target
 
 func _process(delta: float) -> void:
 	if host == null or target_path == "":

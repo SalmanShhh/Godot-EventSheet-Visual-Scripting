@@ -15,6 +15,19 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("HTNAgent behavior requires a Node2D parent.")
 
+## @ace_trigger
+## @ace_name("On Task Started")
+## @ace_category("HTN")
+signal task_started(task_name: String)
+## @ace_trigger
+## @ace_name("On Plan Complete")
+## @ace_category("HTN")
+signal plan_complete
+## @ace_trigger
+## @ace_name("On Plan Failed")
+## @ace_category("HTN")
+signal plan_failed
+
 ## Mark Failed re-plans from the root instead of giving up.
 @export var auto_replan_on_fail: bool = true
 var compounds: Dictionary = {}
@@ -24,21 +37,6 @@ var primitives: Dictionary = {}
 ## Goal to plan for — a compound or primitive task name.
 @export var root_task: String = ""
 var world_state: Dictionary = {}
-
-## @ace_trigger
-## @ace_name("On Task Started")
-## @ace_category("HTN")
-signal task_started(task_name: String)
-
-## @ace_trigger
-## @ace_name("On Plan Complete")
-## @ace_category("HTN")
-signal plan_complete
-
-## @ace_trigger
-## @ace_name("On Plan Failed")
-## @ace_category("HTN")
-signal plan_failed
 
 ## @ace_condition
 ## @ace_name("Has Plan")
