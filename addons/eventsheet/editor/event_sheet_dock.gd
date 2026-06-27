@@ -91,6 +91,9 @@ var _preview_title: Label = null
 var _preview_list: ItemList = null
 var _global_var_list: ItemList = null
 var _local_var_list: ItemList = null
+## Functions overview (Construct-style): every sheet function at a glance, atop the GDScript panel.
+var _functions_list: ItemList = null
+var _functions_menu: PopupMenu = null
 
 var _current_sheet: EventSheetResource = null  # the ACTIVE tab's sheet
 var _current_sheet_path: String = ""           # the ACTIVE tab's path
@@ -3108,6 +3111,31 @@ func _ensure_code_panel() -> void:
     _side_panel.custom_minimum_size = Vector2(360.0, 0.0)
     _side_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _side_panel.visible = false
+    # Functions overview (Construct's function list): every sheet function at a glance, so they're
+    # discoverable without scrolling the rows. ＋ opens the function dialog; right-click deletes.
+    var functions_header: HBoxContainer = HBoxContainer.new()
+    var functions_title: Label = Label.new()
+    functions_title.text = "Functions"
+    functions_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    functions_header.add_child(functions_title)
+    var add_function_button: Button = Button.new()
+    add_function_button.text = "＋"
+    add_function_button.tooltip_text = "Add a function…"
+    add_function_button.pressed.connect(_open_function_dialog)
+    functions_header.add_child(add_function_button)
+    _side_panel.add_child(functions_header)
+    _functions_list = ItemList.new()
+    _functions_list.name = "EventSheetFunctionsList"
+    _functions_list.custom_minimum_size = Vector2(0.0, 96.0)
+    _functions_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _functions_list.allow_reselect = true
+    _functions_list.item_clicked.connect(_on_functions_list_item_clicked)
+    _side_panel.add_child(_functions_list)
+    _functions_menu = PopupMenu.new()
+    _functions_menu.add_item("Delete Function", 0)
+    _functions_menu.id_pressed.connect(_on_functions_menu_id_pressed)
+    _functions_list.add_child(_functions_menu)
+    _side_panel.add_child(HSeparator.new())
     var header: HBoxContainer = HBoxContainer.new()
     var title: Label = Label.new()
     title.text = "Generated GDScript"
@@ -3168,6 +3196,7 @@ func _apply_editor_code_settings(code_edit: CodeEdit) -> void:
 func _refresh_code_panel() -> void:
     if _code_edit == null or _side_panel == null or not _side_panel.visible:
         return
+    _refresh_functions_list()
     if _current_sheet == null:
         _code_edit.text = ""
         _code_source_map = []
@@ -3178,6 +3207,63 @@ func _refresh_code_panel() -> void:
     _code_source_map = compile_result.get("source_map", [])
     _code_panel_highlight = Vector2i(-1, -1)
     _update_code_panel_highlight()
+
+## Repopulates the Functions overview list from the active sheet (signature + an ✦ for ACE-exposed
+## functions). Cheap; runs whenever the side panel refreshes (i.e. on any edit while it's open).
+func _refresh_functions_list() -> void:
+    if _functions_list == null:
+        return
+    _functions_list.clear()
+    if _current_sheet == null:
+        return
+    for function_resource: Variant in _current_sheet.functions:
+        if function_resource is EventFunction:
+            _functions_list.add_item(_format_function_signature(function_resource as EventFunction))
+
+## "name(a, b)" plus a trailing ✦ when the function is exposed as an ACE (a reusable action/condition/
+## expression in other sheets) — the at-a-glance signature shown in the Functions list.
+func _format_function_signature(function: EventFunction) -> String:
+    var param_ids: PackedStringArray = PackedStringArray()
+    for param_variant: Variant in function.params:
+        if param_variant is ACEParam:
+            param_ids.append((param_variant as ACEParam).id)
+    var signature: String = "%s(%s)" % [function.function_name, ", ".join(param_ids)]
+    return (signature + "  ✦") if function.expose_as_ace else signature
+
+## Right-click a function to delete it (the list is otherwise read-only — editing is via the rows).
+func _on_functions_list_item_clicked(index: int, at_position: Vector2, mouse_button_index: int) -> void:
+    if mouse_button_index != MOUSE_BUTTON_RIGHT or _functions_menu == null:
+        return
+    _functions_list.select(index)
+    _functions_menu.position = Vector2i(_functions_list.get_screen_position() + at_position)
+    _functions_menu.reset_size()
+    _functions_menu.popup()
+
+func _on_functions_menu_id_pressed(id: int) -> void:
+    if id == 0:
+        _delete_selected_function()
+
+## Removes the selected function from the sheet (undoable) and refreshes the list + preview.
+func _delete_selected_function() -> void:
+    if _current_sheet == null or _functions_list == null:
+        return
+    var selected: PackedInt32Array = _functions_list.get_selected_items()
+    if selected.is_empty():
+        return
+    var index: int = selected[0]
+    if index < 0 or index >= _current_sheet.functions.size():
+        return
+    var removed_name: String = ""
+    if _current_sheet.functions[index] is EventFunction:
+        removed_name = (_current_sheet.functions[index] as EventFunction).function_name
+    var changed: bool = _perform_undoable_sheet_edit("Delete Function", func() -> bool:
+        if index < _current_sheet.functions.size():
+            _current_sheet.functions.remove_at(index)
+            return true
+        return false)
+    if changed:
+        _mark_dirty("Deleted function %s()." % removed_name)
+        _refresh_functions_list()
 
 ## Highlights the generated lines for the currently selected sheet row and scrolls to them.
 func _update_code_panel_highlight() -> void:

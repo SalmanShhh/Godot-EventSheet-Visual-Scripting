@@ -39,6 +39,12 @@ signals were hand-written `## @ace_trigger` code blocks. Both now de-code automa
   dropping work. Save writes the tab and closes only if the save succeeds; a clean tab still closes
   instantly. `has_unsaved_tabs()` exposes the dirty state for editor-level prompts (`unsaved_close_test`).
 
+### Added — Functions overview panel
+
+- The side panel now lists every sheet **Function** at a glance (Construct's function list) above the
+  generated GDScript: each shows its signature and an ✦ when it's exposed as an ACE. **＋** opens the
+  Add Function dialog; right-clicking a function deletes it (undoable). Covered by `functions_panel_test`.
+
 ### Added — Behaviour-as-ACEs parity (foundation)
 
 Toward authoring whole behaviour packs as event sheets with **no GDScript blocks** — so a behaviour
