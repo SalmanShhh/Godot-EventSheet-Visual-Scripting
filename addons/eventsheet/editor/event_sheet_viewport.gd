@@ -2105,10 +2105,11 @@ func _build_variable_row(
         _make_span(":", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)),
         _make_span(type_name if not type_name.is_empty() else "Variant", SemanticSpan.SpanType.VALUE, variable_meta.merged({"editable": false}, true))
     ]
-    # Drop the redundant "global" scope pill — every sheet/class variable is one, so a pill on each row
-    # reads as noise (a behaviour's variables are its own properties, not project-wide globals like C3's).
-    # Keep the pill only for a genuinely event-scoped "local", which IS worth flagging.
-    if badge_label != "local" and not row_data.spans.is_empty():
+    # Drop the scope pill entirely — it confused users. The "global"/"sheet" pill was already redundant
+    # (every sheet/class variable is one), and the "local" pill on event-scoped vars read as noise too:
+    # scope is already obvious from the row's nesting under its event, and the @export badge carries the
+    # meaningful distinction (Inspector-visible vs internal). So no variable shows a scope pill now.
+    if not row_data.spans.is_empty():
         row_data.spans.remove_at(0)
     if is_constant:
         row_data.spans.append(
@@ -3413,6 +3414,29 @@ func _get_tooltip(at_position: Vector2) -> String:
         return tip
     return tooltip_text
 
+## Render a hover tooltip's BBCode ([b]/[i]/[color]) when the text carries any — so an ACE/function
+## description authored with markup reads styled, not as raw tags. Plain descriptions (the common case) and
+## the GDScript-preview fallback have no markup, so this returns null and Godot uses its default tooltip.
+func _make_custom_tooltip(for_text: String) -> Object:
+    if not EventSheetBBCodeLite.has_markup(for_text):
+        return null
+    var panel := PanelContainer.new()
+    var style := StyleBoxFlat.new()
+    style.bg_color = Color(0.11, 0.11, 0.13, 0.98)
+    style.border_color = Color(1.0, 1.0, 1.0, 0.16)
+    style.set_border_width_all(1)
+    style.set_corner_radius_all(4)
+    style.set_content_margin_all(8.0)
+    panel.add_theme_stylebox_override("panel", style)
+    var rich := RichTextLabel.new()
+    rich.bbcode_enabled = true
+    rich.fit_content = true
+    rich.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    rich.custom_minimum_size = Vector2(300.0, 0.0)
+    rich.text = for_text
+    panel.add_child(rich)
+    return panel
+
 ## The plain-language description for an ACE — from its registered definition (custom/behaviour ACEs) or
 ## its built-in descriptor (filled from the generated descriptions map). "" when none is set.
 func _ace_description(provider_id: String, ace_id: String) -> String:
@@ -4054,9 +4078,17 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
     # Precompute value-highlight ranges for condition/trigger/action text (single choke point;
     # build-time only, so the draw path stays cheap).
     if str(span.metadata.get("kind", "")) in ["condition", "trigger", "action"] and not text.is_empty():
-        var ranges: Array = _value_ranges_for(text)
-        if not ranges.is_empty():
-            span.metadata["value_ranges"] = ranges
+        if EventSheetBBCodeLite.has_markup(text):
+            # BBCode-lite ([b]/[i]/[color]) in a cell's display text — e.g. a custom ACE's
+            # @ace_display_template("[color=red]Destroy[/color] {object}"). Parse to styled segments and draw
+            # the STRIPPED text, so the cell width / colour swatch / hit-test all align with what's shown.
+            # The author's explicit styling supersedes the automatic value-highlight for this cell.
+            span.metadata["bbcode_segments"] = EventSheetBBCodeLite.parse(text, Color.WHITE)
+            span.text = EventSheetBBCodeLite.strip(text)
+        else:
+            var ranges: Array = _value_ranges_for(text)
+            if not ranges.is_empty():
+                span.metadata["value_ranges"] = ranges
     return span
 
 func _get_variable_metadata_for_row(row_data: EventRowData) -> Dictionary:

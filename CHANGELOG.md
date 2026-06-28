@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added — BBCode in condition/action cell text + ACE descriptions on hover
+
+- BBCode-lite (`[b]`/`[i]`/`[color=…]`) already styled **comments**; it now also renders in the **display
+  text of condition/action cells** (e.g. a custom ACE's `@ace_display_template("[color=red]Destroy[/color]
+  {object}")`) and in **ACE descriptions on hover**. In a cell, the parsed text drives layout (the stripped
+  text, so the colour swatch + width stay aligned) and the author's styling supersedes the auto
+  value-highlight for that cell; the markup detector is conservative, so a plain value like `[1, 2, 3]` is
+  never mistaken for markup. The hover tooltip becomes a rich (BBCode) panel only when the description has
+  markup — plain descriptions keep the native tooltip. The picker's description panel already rendered
+  BBCode. (`bbcode_and_pill_test`.)
+
+### Removed — The confusing scope pill on variable rows
+
+- Variable rows no longer show a scope pill. The "global" pill was already hidden as redundant; the "local"
+  pill on event-scoped variables read as noise too — scope is already obvious from the row's nesting under
+  its event, and the `@export` badge carries the meaningful distinction (Inspector-visible vs. internal).
+
 ### Changed — Dragging a node into a field prefers its scene-unique `%Name`
 
 - Dropping a Scene-dock node onto an expression / path field already inserted a `$Path` reference; it now
