@@ -110,7 +110,7 @@ static func run() -> bool:
 	save_instance.free()
 
 	# Release showcase (the release ritual): loads, parses, scene instantiates.
-	var showcase_sheet: EventSheetResource = load("res://demo/showcase/showcase_carousel.tres")
+	var showcase_sheet: EventSheetResource = GDScriptImporter.new().import_external("res://demo/showcase/showcase_carousel.gd")
 	all_passed = _check("release showcase ships clean GDScript (Live Values off)",
 		showcase_sheet != null and not showcase_sheet.emit_live_values, true) and all_passed
 	all_passed = _check("showcase script loads",

@@ -4,10 +4,11 @@
 
 ### Changed — Behaviour packs are single `.gd` files (no `.tres`)
 
-Every bundled behaviour/addon pack is now ONE hand-editable `.gd` — the `.gd` **is** the event sheet AND
-the runtime script. The paired `.tres` source and the "AUTO-GENERATED / DO NOT EDIT" banner are gone (31
-`.tres` deleted). Opening a pack `.gd` re-derives its rows losslessly, and `tools/audit_addons.gd` is now
-self-hosting: it imports each `.gd`, recompiles, and asserts byte-identical (`audited=31 drifted=0`).
+Every bundled behaviour/addon pack — and the 5 demo showcases — is now ONE hand-editable `.gd`: the `.gd`
+**is** the event sheet AND the runtime script. The paired `.tres` sources and the "AUTO-GENERATED / DO NOT
+EDIT" banner are gone (31 pack `.tres` + 5 showcase `.tres` deleted). Opening a `.gd` re-derives its rows
+losslessly; `tools/audit_addons.gd` is now self-hosting (import each pack `.gd`, recompile, assert
+byte-identical: `audited=31 drifted=0`), and `showcase_examples_test` pins the same round-trip per showcase.
 
 - **Safe by construction:** behaviour discovery already scanned `.gd` (the `## @ace_*` annotations live
   there, not the `.tres`), scenes attach the `.gd` by `class_name`, and no pack referenced another via

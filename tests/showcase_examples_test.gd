@@ -12,7 +12,7 @@ static func run() -> bool:
 	var passed: bool = true
 
 	# Flagship: Carousel of Juice — function reuse, runtime group, if/elif/else, behaviors.
-	passed = _check_sheet("showcase_carousel", "res://demo/showcase/showcase_carousel.tres", [
+	passed = _check_sheet("showcase_carousel", "res://demo/showcase/showcase_carousel.gd", [
 		"func juice_tile(index: int, kick: float)",
 		"juice_tile(beat, intensity * 5.0)",
 		"__group_juice_active",
@@ -23,7 +23,7 @@ static func run() -> bool:
 		"res://demo/showcase/showcase_carousel.tscn", ["SpringBehavior", "TweenBehavior"]) and passed
 
 	# Starfall — enum + match FSM, group pick-filter, spawner.
-	passed = _check_sheet("starfall", "res://demo/showcase/starfall.tres", [
+	passed = _check_sheet("starfall", "res://demo/showcase/starfall.gd", [
 		"enum State { PLAYING, GAME_OVER }",
 		"match state:",
 		"for star in get_tree().get_nodes_in_group(\"stars\")",
@@ -35,7 +35,7 @@ static func run() -> bool:
 	passed = _check("star sub-scene exists", ResourceLoader.exists("res://demo/showcase/star.tscn"), true) and passed
 
 	# Quest FSM — enum + match, Dictionary/Array collections, signals, function.
-	passed = _check_sheet("quest_fsm", "res://demo/showcase/quest_fsm.tres", [
+	passed = _check_sheet("quest_fsm", "res://demo/showcase/quest_fsm.gd", [
 		"enum QuestState {",
 		"signal item_collected(id: String)",
 		"signal quest_advanced(phase: int)",
@@ -50,7 +50,7 @@ static func run() -> bool:
 		"res://demo/showcase/quest_fsm.tscn", ["Icon", "Screen"]) and passed
 
 	# Platformer-Shooter — the new Platformer + Weapon Kit packs combined.
-	passed = _check_sheet("platformer_shooter", "res://demo/showcase/platformer_shooter.tres", [
+	passed = _check_sheet("platformer_shooter", "res://demo/showcase/platformer_shooter.gd", [
 		"$Player/PlatformerMovement.jump()",
 		"$Player/PlatformerMovement.jump_released()",
 		"$Player/PlatformerMovement.facing_direction()",
@@ -65,7 +65,7 @@ static func run() -> bool:
 		ResourceLoader.exists("res://demo/showcase/shot.tscn") and ResourceLoader.exists("res://demo/showcase/target.tscn"), true) and passed
 
 	# Swarm — frame-spreading: a Budgeted For Each over a spawned crowd (the visible-sweep demo).
-	passed = _check_sheet("swarm", "res://demo/showcase/swarm.tres", [
+	passed = _check_sheet("swarm", "res://demo/showcase/swarm.gd", [
 		"var __loop_cursor_",
 		"Array(get_tree().get_nodes_in_group(\"swarm\"))",
 		"load(\"res://demo/showcase/dot.tscn\").instantiate()",
@@ -82,13 +82,16 @@ static func run() -> bool:
 	return passed
 
 static func _check_sheet(label: String, path: String, required: Array) -> bool:
-	var sheet: EventSheetResource = load(path) as EventSheetResource
-	var ok: bool = _check("%s loads as EventSheetResource" % label, sheet is EventSheetResource, true)
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
+	var ok: bool = _check("%s opens as a sheet" % label, sheet is EventSheetResource, true)
 	if sheet == null:
 		return false
 	var result: Dictionary = SheetCompiler.compile(sheet, "user://%s_showcase_test.gd" % label)
 	ok = _check("%s compiles to GDScript" % label, bool(result.get("success", false)), true) and ok
 	var output: String = str(result.get("output", ""))
+	# The .gd IS the showcase sheet now (no .tres): opening it and recompiling must reproduce it exactly
+	# (the lossless round-trip / GDScript<->event-sheet consistency gate, the same one audit_addons pins).
+	ok = _check("%s recompiles to its shipped .gd byte-identically" % label, output == FileAccess.get_file_as_string(path), true) and ok
 	# The compiled output must PARSE as GDScript, not just be non-empty. Strip the
 	# `class_name X` line first: the showcase .gd is already registered as that global class,
 	# so re-registering it via reload() would error on the duplicate name (not a parse fault).

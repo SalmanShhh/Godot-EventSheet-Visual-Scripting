@@ -18,8 +18,8 @@ static func run() -> bool:
 	all_passed = _check("a behaviour pack .gd is its own output (compiles in place, no .tres)",
 		EventSheetProjectDoctor.output_path_for("res://eventsheet_addons/spring/spring_behavior.gd"),
 		"res://eventsheet_addons/spring/spring_behavior.gd") and all_passed
-	all_passed = _check("showcase pairs with the builder's sibling (the doctor's first catch)",
-		EventSheetProjectDoctor.output_path_for("res://demo/showcase/showcase_carousel.tres"),
+	all_passed = _check("a showcase .gd is its own output (compiles in place, no .tres)",
+		EventSheetProjectDoctor.output_path_for("res://demo/showcase/showcase_carousel.gd"),
 		"res://demo/showcase/showcase_carousel.gd") and all_passed
 	# Regression: the export-integrity pass ran earlier in this suite — it must refresh
 	# the showcase's existing pair, never recreate the parallel _generated duplicate.

@@ -83,8 +83,8 @@ func _attach_behavior(parent: Node, node_name: String, path: String, root: Node,
 		node.set(key, props[key])
 	return node
 
-## Save sheet -> reload (so it has a real path) -> compile to gd -> assert success.
-func _compile(sheet: EventSheetResource, tres_path: String, gd_path: String) -> bool:
+## Compile sheet straight to a banner-less .gd (no .tres) — the .gd IS the showcase sheet, hand-editable.
+func _compile(sheet: EventSheetResource, _tres_path: String, gd_path: String) -> bool:
 	# Code-free by default: reverse-lift each function's RawCode body into ACE rows where it recompiles
 	# byte-identically (same build-time pass the behaviour packs use). The showcase ships identical
 	# GDScript but reads as events.
@@ -99,16 +99,13 @@ func _compile(sheet: EventSheetResource, tres_path: String, gd_path: String) -> 
 	# Deterministic row uids so rebuilding an unchanged showcase is byte-identical (no diff
 	# churn) — same fix the behavior-pack builder uses.
 	PackLib._assign_stable_uids(sheet)
-	var save_err: Error = ResourceSaver.save(sheet, tres_path)
-	var saved: EventSheetResource = load(tres_path)
-	if saved == null:
-		print("[build_examples] FAIL load %s" % tres_path)
-		return false
-	saved.take_over_path(tres_path)
-	var result: Dictionary = SheetCompiler.compile(saved, gd_path)
+	# .gd-only: the showcase .gd IS the sheet (no .tres companion), banner-less so it's hand-editable.
+	# Normal synthesizing compile — do NOT set external_source_path (that path is only for opening an
+	# existing .gd). Round-trip is covered by the showcase tests + import_external.
+	var result: Dictionary = SheetCompiler.compile(sheet, gd_path, true)
 	var success: bool = bool(result.get("success", false))
-	print("[build_examples] %s save=%d compile=%s warnings=%s errors=%s" % [
-		tres_path.get_file(), save_err, str(success), str(result.get("warnings", [])), str(result.get("errors", []))])
+	print("[build_examples] %s compile=%s warnings=%s errors=%s" % [
+		gd_path.get_file(), str(success), str(result.get("warnings", [])), str(result.get("errors", []))])
 	return success
 
 func _save_scene(root: Node, path: String) -> bool:
