@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added — Inline colour picker on the cell swatch (no dialog)
+
+- The little **colour swatch** drawn on a condition/action cell (for any ACE with a `Color` param) is now
+  **clickable**: a single click opens a **ColorPicker right there** — no params dialog — and the picked
+  colour is written straight back into the ACE, exactly like Construct. The pick commits **once on close**,
+  so dragging the picker is one clean undo step. (`color_swatch_picker_test`.)
+
 ### Added — Deprecate an ACE without breaking existing projects
 
 - An ACE can now be marked **deprecated** (the Construct-style covenant): it **keeps compiling** so sheets

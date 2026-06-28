@@ -13,6 +13,8 @@ signal ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dic
 ## The fastest gesture: double-click a highlighted VALUE inside an ACE to edit just
 ## that parameter (no full dialog). Emitted with the resolved ACE + param id.
 signal param_value_edit_requested(ace: Resource, param_id: String, current_text: String)
+## Clicking the inline colour swatch on a condition/action cell — opens the colour picker (no dialog).
+signal color_swatch_edit_requested(ace: Resource, param_id: String, current_color: Color)
 signal ace_drop_requested(
     source_entries: Array,
     target_row: EventRowData,
@@ -954,6 +956,19 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
             return
         var row_data: EventRowData = _row_at(row_index)
         var metadata: Dictionary = hit.get("span_metadata", {})
+        # Click the inline colour swatch -> open the colour picker directly (no params dialog), like
+        # Construct. The renderer stored the swatch's drawn rect in span.metadata; if the click landed inside
+        # it and the cell's ACE has a Color param, hand off to the dock's picker popup.
+        if row_data != null and metadata.get("swatch_color") is Color and metadata.get("swatch_rect") is Rect2 \
+                and (metadata["swatch_rect"] as Rect2).has_point(local_position) and row_data.source_resource is EventRow:
+            var swatch_kind: String = str(metadata.get("kind", ""))
+            var swatch_ace: Resource = (row_data.source_resource as EventRow).trigger if swatch_kind == "trigger" else _resolve_ace_resource(row_data.source_resource, "action" if swatch_kind == "action" else "condition", int(metadata.get("ace_index", -1)))
+            if swatch_ace != null:
+                var color_param: String = _first_color_param_id(swatch_ace)
+                if not color_param.is_empty():
+                    color_swatch_edit_requested.emit(swatch_ace, color_param, metadata["swatch_color"] as Color)
+                    accept_event()
+                    return
         if row_data != null and str(metadata.get("kind", "")) == "add_action":
             ace_picker_requested.emit(row_data, "action")
             accept_event()
@@ -1626,6 +1641,17 @@ func _first_color_in_params(ace: Resource) -> Variant:
             if parsed is Color:
                 return parsed
     return null
+
+## The param KEY holding that first Color literal ("" when none) — needed to write a picked colour back.
+func _first_color_param_id(ace: Resource) -> String:
+    var params: Variant = ace.get("params")
+    if not (params is Dictionary):
+        return ""
+    for key: Variant in (params as Dictionary).keys():
+        var value: Variant = (params as Dictionary)[key]
+        if value is String and (value as String).strip_edges().begins_with("Color(") and str_to_var((value as String).strip_edges()) is Color:
+            return str(key)
+    return ""
 
 # uid (str instance id) -> error message, from set_row_diagnostics(). Re-applied to row_data
 # on every rebuild so the marker survives edits/scrolling (the "error → row" deep-link).

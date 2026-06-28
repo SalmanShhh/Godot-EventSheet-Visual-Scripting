@@ -542,6 +542,9 @@ func _draw_spans(
             var swatch_rect: Rect2 = Rect2(text_x + swatch_advance + 6.0, span.rect.position.y + (span.rect.size.y - swatch_size) * 0.5, swatch_size, swatch_size)
             control.draw_rect(swatch_rect, swatch as Color, true)
             control.draw_rect(swatch_rect, Color(0.0, 0.0, 0.0, 0.55), false, 1.0)
+            # Record where the swatch landed so a click can hit-test it and open the inline colour picker
+            # (no dialog) — the viewport reads span.metadata["swatch_rect"] in _handle_mouse_button.
+            span.metadata["swatch_rect"] = swatch_rect
         # Strike through the text when the ACE is disabled OR its whole row (event/group/
         # comment) is disabled, so "commented out" reads clearly like in code.
         if not ace_enabled or (row_data != null and row_data.disabled):

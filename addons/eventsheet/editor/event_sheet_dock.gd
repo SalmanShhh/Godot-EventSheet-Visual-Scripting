@@ -921,6 +921,7 @@ func _build_ui() -> void:
     _viewport.span_edit_requested.connect(_on_viewport_span_edit_requested)
     _viewport.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
     _viewport.param_value_edit_requested.connect(_on_param_value_edit_requested)
+    _viewport.color_swatch_edit_requested.connect(_on_color_swatch_edit_requested)
     _viewport.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
     _viewport.comment_edit_requested.connect(_open_comment_dialog)
     _viewport.group_edit_requested.connect(_on_group_edit_requested)
@@ -4295,6 +4296,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
     view.span_edit_requested.connect(_on_viewport_span_edit_requested)
     view.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
     view.param_value_edit_requested.connect(_on_param_value_edit_requested)
+    view.color_swatch_edit_requested.connect(_on_color_swatch_edit_requested)
     view.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
     view.comment_edit_requested.connect(_open_comment_dialog)
     view.group_edit_requested.connect(_on_group_edit_requested)
@@ -4538,6 +4540,10 @@ var _param_edit_popup: PopupPanel = null
 var _param_edit_field: LineEdit = null
 var _param_edit_target: Resource = null
 var _param_edit_key: String = ""
+var _color_swatch_popup: PopupPanel = null
+var _color_swatch_picker: ColorPicker = null
+var _color_swatch_target: Resource = null
+var _color_swatch_key: String = ""
 
 ## Double-clicking a highlighted value opens this one-field editor at the mouse.
 func _on_param_value_edit_requested(ace: Resource, param_id: String, current_text: String) -> void:
@@ -4572,6 +4578,42 @@ func _commit_inline_param_edit() -> void:
     if changed:
         _refresh_after_edit()
         _mark_dirty("Parameter updated.")
+
+## Clicking a cell's colour swatch opens a ColorPicker right there (no params dialog), like Construct.
+## The pick is committed once, when the popup closes — so dragging the picker is one clean undo step, not
+## one per colour change.
+func _on_color_swatch_edit_requested(ace: Resource, param_id: String, current_color: Color) -> void:
+    if _color_swatch_popup == null:
+        _color_swatch_popup = PopupPanel.new()
+        _color_swatch_picker = ColorPicker.new()
+        _color_swatch_picker.edit_alpha = true
+        _color_swatch_picker.custom_minimum_size = Vector2(280.0, 0.0)
+        _color_swatch_popup.add_child(_color_swatch_picker)
+        add_child(_color_swatch_popup)
+        # Commit once on close (final colour) rather than on every continuous color_changed.
+        _color_swatch_popup.popup_hide.connect(func() -> void: _commit_color_swatch_edit(_color_swatch_picker.color))
+    _color_swatch_target = ace
+    _color_swatch_key = param_id
+    _color_swatch_picker.color = current_color
+    _color_swatch_popup.reset_size()
+    _color_swatch_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), _color_swatch_popup.size))
+
+func _commit_color_swatch_edit(new_color: Color) -> void:
+    if _color_swatch_target == null or _color_swatch_key.is_empty():
+        return
+    var target: Resource = _color_swatch_target
+    var key: String = _color_swatch_key
+    var new_text: String = ACEParamsDialog.color_to_literal(new_color)
+    var changed: bool = _perform_undoable_sheet_edit("Edit Colour", func() -> bool:
+        var params: Dictionary = target.get("params")
+        if str(params.get(key, "")) == new_text:
+            return false
+        params[key] = new_text
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Colour updated.")
 
 ## Toggles debug compiles: gutter breakpoints (F9) emit real `breakpoint` statements.
 func _toggle_breakpoint_emission() -> void:
