@@ -2579,16 +2579,14 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
     if definition == null:
         _set_status("Couldn't load this row for editing (its action or condition definition is missing).", true)
         return
-    if definition.parameters.is_empty():
-        # No params to edit — go straight to the picker, preselected on this ACE, so the obvious move is
-        # to swap it for another (or re-pick the same one).
+    # Triggers always go to the picker (clicking a trigger means "change what fires this event"), as does
+    # any ACE with no params to edit — both land in the picker preselected on the current ACE, so the
+    # obvious move is to swap it (or re-pick the same one). An ACE WITH params (action/condition) opens
+    # the params editor instead, which carries its own "Back" button to this same preselected picker.
+    if definition.parameters.is_empty() or str(edit_context.get("mode", "")) == "replace_trigger":
         edit_context["preselect_ace_id"] = definition.id
         _ace_picker.open(str(edit_context.get("mode", "")), false, event_row, edit_context)
         return
-    # Any ACE with params — condition, action, OR trigger — opens the params editor with existing values
-    # prefilled and a "Back" button that returns to the picker preselected on this ACE. One consistent
-    # edit-and-swap flow across all three (conditions used to jump straight to the picker, which read as
-    # inconsistent: actions got a params dialog + Back, conditions didn't).
     _ace_params.open_with_values(definition, edit_context, edit_context.get("existing_params", {}))
 
 func _on_viewport_variable_edit_requested(row_data: EventRowData, metadata: Dictionary) -> void:

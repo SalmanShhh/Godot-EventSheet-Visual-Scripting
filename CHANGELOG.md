@@ -9,12 +9,13 @@
   global, and "global" misreads a behaviour's per-instance properties as project-wide. The pill is gone
   for the default scope; a genuinely event-scoped **`local`** variable still gets its pill (the one case
   worth flagging). Matches how Construct lists globals without tagging each one.
-- **Consistent "Back to picker" across ACE edits.** Editing an action, condition, OR trigger that has
-  parameters now opens the same params editor with a **Back** button that returns to the picker
-  *preselected on that ACE* — previously conditions jumped straight to the picker while actions got a
-  params dialog, which read as inconsistent. Right-click **Replace Condition / Replace Action** now also
-  preselects the current ACE in the picker instead of opening on the first match, and editing a
-  no-parameter ACE opens the picker preselected too.
+- **Consistent "Back to picker" across ACE edits.** Editing an action or condition that has parameters
+  opens a params editor with a **Back** button that returns to the picker *preselected on that ACE*.
+  **Triggers** — and any ACE with no parameters — open the picker directly, preselected, since clicking
+  a trigger means "change what fires this event" and a paramless ACE has nothing to edit. Right-click
+  **Replace Condition / Replace Action** now also preselect the current ACE instead of opening on the
+  first match. (Previously conditions jumped to the picker while actions got a params dialog, which read
+  as inconsistent.)
 - **"Open in Godot" → "Open in Godot Script Editor".** All four buttons (block popup, provider dialog,
   generated panel, toolbar) and the preview hints now use the clearer, consistent label.
 
