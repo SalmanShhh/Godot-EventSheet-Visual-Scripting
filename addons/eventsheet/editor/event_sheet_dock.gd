@@ -194,18 +194,27 @@ func _ready() -> void:
     _build_ui()
     _ensure_editor_dialogs_initialized()
     _refresh_ace_registry()
-    if _current_sheet == null:
-        _current_sheet = _build_demo_sheet()
-        _viewport.set_debug_overlay_states({})
-    setup(_current_sheet)
-    # Last session's tabs come back on editor startup (never in headless tests —
-    # they drive setup() directly).
+    # Restore last session's tabs FIRST (editor only; headless tests drive setup() directly). Only fall
+    # back to a blank starting sheet when nothing came back — otherwise an untitled demo stacks on top of
+    # the user's real tabs. The plugin ALSO calls setup() right after add_child() (which already ran this
+    # _ready), so the setup() below is a no-op once tabs exist — see setup()'s guard. This is what stopped
+    # the "two untitled sheets on open" (a demo from _ready + a demo from the plugin's setup()).
     if Engine.is_editor_hint() and is_inside_tree():
         _restore_session()
+    if _open_tabs.is_empty():
+        if _current_sheet == null:
+            _current_sheet = _build_demo_sheet()
+            _viewport.set_debug_overlay_states({})
+        setup(_current_sheet)
 
 func setup(sheet: EventSheetResource = null) -> void:
     _build_ui()
     _ensure_editor_dialogs_initialized()
+    # Idempotent initial state: a null setup() asks for "a blank starting sheet". If tabs already exist
+    # (the plugin calls setup() right after add_child(), which already ran _ready), don't stack a second
+    # untitled demo — keep what's open. A null setup() with no tabs still seeds one demo, as before.
+    if sheet == null and not _open_tabs.is_empty():
+        return
     var target_sheet: EventSheetResource = sheet if sheet != null else _build_demo_sheet()
     var target_path: String = sheet.resource_path if sheet != null else ""
     _open_sheet_in_tab(target_sheet, target_path)
@@ -556,7 +565,7 @@ func _build_provider_dialog() -> void:
     remove_button.pressed.connect(_on_provider_remove_pressed)
     buttons.add_child(remove_button)
     var open_in_godot_button: Button = Button.new()
-    open_in_godot_button.text = "Open in Godot"
+    open_in_godot_button.text = "Open in Godot Script Editor"
     open_in_godot_button.tooltip_text = "Open the selected provider script in Godot's script editor."
     open_in_godot_button.pressed.connect(_on_provider_open_in_godot_pressed)
     buttons.add_child(open_in_godot_button)
@@ -1339,7 +1348,7 @@ func _load_sheet_from_path(path: String) -> void:
         # surface for what GDScript maps to which events, surfaced in the preview banner.
         _last_lift_report = EventSheetLiftReport.for_sheet(imported)
         _refresh_preview_banner()
-        _set_status("Opened %s — viewing it as a sheet. Just start editing to change it here, or \"Open in Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(_last_lift_report)])
+        _set_status("Opened %s — viewing it as a sheet. Just start editing to change it here, or \"Open in Godot Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(_last_lift_report)])
         return
     var loaded: Resource = ResourceLoader.load(resolved_path)
     if loaded is EventSheetResource:
@@ -2571,15 +2580,15 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
         _set_status("Couldn't load this row for editing (its action or condition definition is missing).", true)
         return
     if definition.parameters.is_empty():
+        # No params to edit — go straight to the picker, preselected on this ACE, so the obvious move is
+        # to swap it for another (or re-pick the same one).
+        edit_context["preselect_ace_id"] = definition.id
         _ace_picker.open(str(edit_context.get("mode", "")), false, event_row, edit_context)
         return
-    # Double-clicking a CONDITION opens the replace picker preselected on it (user
-    # call: "I expect to replace it"): pick another to swap it out, or re-pick the
-    # same one to edit its params — existing values prefill through the context.
-    if str(edit_context.get("mode", "")) == "replace_condition":
-        edit_context["preselect_ace_id"] = definition.id
-        _ace_picker.open("replace_condition", false, event_row, edit_context)
-        return
+    # Any ACE with params — condition, action, OR trigger — opens the params editor with existing values
+    # prefilled and a "Back" button that returns to the picker preselected on this ACE. One consistent
+    # edit-and-swap flow across all three (conditions used to jump straight to the picker, which read as
+    # inconsistent: actions got a params dialog + Back, conditions didn't).
     _ace_params.open_with_values(definition, edit_context, edit_context.get("existing_params", {}))
 
 func _on_viewport_variable_edit_requested(row_data: EventRowData, metadata: Dictionary) -> void:
@@ -3203,7 +3212,7 @@ func _ensure_code_panel() -> void:
     title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     header.add_child(title)
     var open_in_godot_button: Button = Button.new()
-    open_in_godot_button.text = "Open in Godot"
+    open_in_godot_button.text = "Open in Godot Script Editor"
     open_in_godot_button.tooltip_text = "Open the .gd source in Godot's own script editor (code-backed sheets). For a .tres sheet, Save As… a .gd first."
     open_in_godot_button.pressed.connect(_open_generated_in_godot)
     header.add_child(open_in_godot_button)
@@ -3465,7 +3474,7 @@ func _ensure_raw_code_dialog() -> void:
     _raw_code_dialog.confirmed.connect(_on_raw_code_dialog_confirmed)
     # "Open in Godot" hands the block off to Godot's own script editor (more room, full tooling); the
     # in-popup editor stays for quick inline edits. custom_action fires for non-OK/Cancel buttons.
-    var open_in_godot: Button = _raw_code_dialog.add_button("Open in Godot", false, "open_in_godot")
+    var open_in_godot: Button = _raw_code_dialog.add_button("Open in Godot Script Editor", false, "open_in_godot")
     open_in_godot.tooltip_text = "Edit this block in Godot's script editor — your changes return when you come back to the sheet."
     _raw_code_dialog.custom_action.connect(func(action: StringName) -> void:
         if String(action) == "open_in_godot":
@@ -6101,6 +6110,9 @@ func _on_condition_context_menu_id_pressed(id: int) -> void:
         CONDITION_MENU_REPLACE:
             var replace_context: Dictionary = _build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
             if not replace_context.is_empty():
+                var replace_def: ACEDefinition = replace_context.get("definition", null)
+                if replace_def != null:
+                    replace_context["preselect_ace_id"] = replace_def.id
                 _ace_picker.open(str(replace_context.get("mode", "replace_condition")), false, _context_row.source_resource, replace_context)
         CONDITION_MENU_INVERT:
             _toggle_context_condition_inversion()
@@ -6122,6 +6134,9 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
         ACTION_MENU_REPLACE:
             var replace_context: Dictionary = _build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
             if not replace_context.is_empty():
+                var replace_def: ACEDefinition = replace_context.get("definition", null)
+                if replace_def != null:
+                    replace_context["preselect_ace_id"] = replace_def.id
                 _ace_picker.open("replace_action", false, _context_row.source_resource, replace_context)
         ACTION_MENU_EDIT_ACE_COMMENT:
             _open_ace_comment_dialog(_context_ace_resource("action"))
@@ -6507,7 +6522,7 @@ func _build_preview_banner() -> PanelContainer:
     edit_button.pressed.connect(_on_preview_edit_requested)
     row.add_child(edit_button)
     var script_button: Button = Button.new()
-    script_button.text = "Open in Script Editor"
+    script_button.text = "Open in Godot Script Editor"
     script_button.tooltip_text = "Edit the .gd directly in Godot's script editor — your changes reload here when you come back to this tab."
     script_button.pressed.connect(_on_preview_open_in_script_editor)
     row.add_child(script_button)
@@ -6525,7 +6540,7 @@ func _refresh_preview_banner() -> void:
     var source_name: String = _current_sheet.external_source_path.get_file()
     if source_name.is_empty():
         source_name = "this sheet"
-    _preview_label.text = "👁  Viewing %s as a sheet — just start editing to change it here, or \"Open in Script Editor\" for the code.  (%s)" % [source_name, EventSheetLiftReport.summary(_last_lift_report)]
+    _preview_label.text = "👁  Viewing %s as a sheet — just start editing to change it here, or \"Open in Godot Script Editor\" for the code.  (%s)" % [source_name, EventSheetLiftReport.summary(_last_lift_report)]
 
 ## "Edit Events": turn the preview into a normal GDScript-backed sheet (Save then compiles
 ## back to the .gd). The banner flips to a plain warning so the consequence stays obvious.
@@ -6541,7 +6556,7 @@ func _on_preview_edit_requested() -> void:
         source_name = "this sheet"
     _set_status("Now editing %s — Save (Ctrl+S) saves your changes to the file, or use Save As… to keep a separate copy." % source_name)
 
-## "Open in Script Editor": hand the .gd to Godot's own script editor for direct code edits.
+## "Open in Godot Script Editor": hand the .gd to Godot's own script editor for direct code edits.
 func _on_preview_open_in_script_editor() -> void:
     if _current_sheet == null or _current_sheet.external_source_path.is_empty():
         return

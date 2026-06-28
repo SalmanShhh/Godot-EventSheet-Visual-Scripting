@@ -39,12 +39,12 @@ static func run() -> bool:
 
 	# Affordances are wired: the block popup, provider dialog, and generated panel each expose "Open in Godot".
 	all_passed = _check("block popup has an 'Open in Godot' button",
-		_find_button(dock._raw_code_dialog, "Open in Godot") != null, true) and all_passed
+		_find_button(dock._raw_code_dialog, "Open in Godot Script Editor") != null, true) and all_passed
 	dock._build_provider_dialog()
 	all_passed = _check("provider dialog has an 'Open in Godot' button",
-		_find_button(dock._provider_dialog, "Open in Godot") != null, true) and all_passed
+		_find_button(dock._provider_dialog, "Open in Godot Script Editor") != null, true) and all_passed
 	all_passed = _check("generated panel has an 'Open in Godot' button",
-		_find_button(dock._side_panel, "Open in Godot") != null, true) and all_passed
+		_find_button(dock._side_panel, "Open in Godot Script Editor") != null, true) and all_passed
 
 	dock.free()
 	return all_passed

@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Changed — Clearer ACE editing, variables, and startup
+
+- **No more redundant "global" pill on variables.** Class/sheet-level variables (every variable a
+  behaviour declares) rendered a blue `global` pill on each row — pure noise, since they're *all*
+  global, and "global" misreads a behaviour's per-instance properties as project-wide. The pill is gone
+  for the default scope; a genuinely event-scoped **`local`** variable still gets its pill (the one case
+  worth flagging). Matches how Construct lists globals without tagging each one.
+- **Consistent "Back to picker" across ACE edits.** Editing an action, condition, OR trigger that has
+  parameters now opens the same params editor with a **Back** button that returns to the picker
+  *preselected on that ACE* — previously conditions jumped straight to the picker while actions got a
+  params dialog, which read as inconsistent. Right-click **Replace Condition / Replace Action** now also
+  preselects the current ACE in the picker instead of opening on the first match, and editing a
+  no-parameter ACE opens the picker preselected too.
+- **"Open in Godot" → "Open in Godot Script Editor".** All four buttons (block popup, provider dialog,
+  generated panel, toolbar) and the preview hints now use the clearer, consistent label.
+
+### Fixed
+
+- **Two untitled sheets on project open.** The dock's `_ready()` seeded a demo sheet *and* the plugin
+  called `setup()` again right after `add_child()` (which had already run `_ready()`) — two untitled
+  tabs. `setup(null)` is now idempotent (no-op once a tab exists) and `_ready()` restores the last
+  session first, only seeding a blank sheet when nothing was restored. Covered by `dock_startup_test`.
+
 ### Added — Behaviour bodies read as Construct event sheets (if/else + signals as rows)
 
 The bundled behaviours stopped reading like event sheets exactly where it mattered most: a behaviour's
