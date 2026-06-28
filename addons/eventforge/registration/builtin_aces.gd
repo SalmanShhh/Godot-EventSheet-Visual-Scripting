@@ -30,9 +30,29 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# Cross-node: give every host-only node-scoped ACE an optional "On node" target so it can act on
 	# another node, not just the host. Covenant-safe — a blank target compiles to the original host
 	# call, byte-for-byte (see _make_node_scoped_targetable + the {target.} idiom in ActionCodegen).
+	_ensure_descriptions()
 	for descriptor: ACEDescriptor in descriptors:
 		_make_node_scoped_targetable(descriptor)
+		# Built-ins set no description in their make_descriptor calls — fill it from the generated
+		# plain-language map so the picker + hover-tooltips explain every row (custom ACEs keep their own).
+		if descriptor.description.strip_edges().is_empty():
+			descriptor.description = str(_descriptions.get("%s:%s" % [descriptor.provider_id, descriptor.ace_id], ""))
 	return descriptors
+
+# Plain-language descriptions for the built-in ACEs (generated into ace_descriptions.json since
+# make_descriptor sets none). Loaded once; missing file → empty map (descriptions just stay blank).
+const DESCRIPTIONS_PATH := "res://addons/eventforge/registration/ace_descriptions.json"
+static var _descriptions: Dictionary = {}
+static var _descriptions_loaded: bool = false
+
+static func _ensure_descriptions() -> void:
+	if _descriptions_loaded:
+		return
+	_descriptions_loaded = true
+	if FileAccess.file_exists(DESCRIPTIONS_PATH):
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(DESCRIPTIONS_PATH))
+		if parsed is Dictionary:
+			_descriptions = parsed
 
 ## GDScript keywords that can lead a statement: a template line starting with one is control flow, not
 ## a member operation, so it can never be safely prefixed with another node.

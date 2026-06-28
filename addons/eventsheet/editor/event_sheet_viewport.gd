@@ -3302,13 +3302,25 @@ func _get_tooltip(at_position: Vector2) -> String:
         var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
         if row_data != null and row_data.source_resource is EventRow:
             var ace_resource: Resource = _resolve_ace_resource(row_data.source_resource, kind, int(metadata.get("ace_index", -1)))
-            var code: String = ""
+            # Show the plain-language DESCRIPTION of the ACE / function (what it does) on hover. Built-in
+            # ACEs get theirs from the generated map; custom ACEs + functions carry their own.
+            var description: String = ""
             if ace_resource is ACECondition:
                 var condition: ACECondition = ace_resource as ACECondition
-                code = _codegen_preview_for(condition.provider_id, condition.ace_id, condition.params if not condition.params.is_empty() else condition.parameters)
+                description = _ace_description(condition.provider_id, condition.ace_id)
             elif ace_resource is ACEAction:
                 var action: ACEAction = ace_resource as ACEAction
-                code = _codegen_preview_for(action.provider_id, action.ace_id, action.params if not action.params.is_empty() else action.parameters)
+                description = _function_call_description(action) if _is_function_call_action(action) else _ace_description(action.provider_id, action.ace_id)
+            if not description.strip_edges().is_empty():
+                return description
+            # No description (rare) → fall back to the GDScript the row compiles to, so hover is never empty.
+            var code: String = ""
+            if ace_resource is ACECondition:
+                var c: ACECondition = ace_resource as ACECondition
+                code = _codegen_preview_for(c.provider_id, c.ace_id, c.params if not c.params.is_empty() else c.parameters)
+            elif ace_resource is ACEAction:
+                var a: ACEAction = ace_resource as ACEAction
+                code = _codegen_preview_for(a.provider_id, a.ace_id, a.params if not a.params.is_empty() else a.parameters)
             if not code.strip_edges().is_empty():
                 return "GDScript:\n%s" % code
     # Raw GDScript blocks are the one row whose codegen is literally themselves — advertise
@@ -3325,6 +3337,28 @@ func _get_tooltip(at_position: Vector2) -> String:
             tip += "\n⚠ Stayed as code: %s" % raw_block.lift_note
         return tip
     return tooltip_text
+
+## The plain-language description for an ACE — from its registered definition (custom/behaviour ACEs) or
+## its built-in descriptor (filled from the generated descriptions map). "" when none is set.
+func _ace_description(provider_id: String, ace_id: String) -> String:
+    var definition: ACEDefinition = _find_definition(provider_id, ace_id)
+    if definition != null and not str(definition.description).strip_edges().is_empty():
+        return str(definition.description)
+    var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
+    if descriptor != null and not str(descriptor.description).strip_edges().is_empty():
+        return str(descriptor.description)
+    return ""
+
+## The description of the Function a Call-Function action targets (the named verb you created), or "".
+func _function_call_description(action: ACEAction) -> String:
+    var call_params: Dictionary = action.params if not action.params.is_empty() else action.parameters
+    var function_name: String = str(call_params.get("function_name", "")).strip_edges()
+    if function_name.is_empty() or _sheet == null:
+        return ""
+    for function_entry: Variant in _sheet.functions:
+        if function_entry is EventFunction and (function_entry as EventFunction).function_name == function_name:
+            return str((function_entry as EventFunction).description).strip_edges()
+    return ""
 
 ## The GDScript snippet an ACE compiles to: its codegen template with parameter values
 ## substituted (definition metadata first, then the base descriptor registry).

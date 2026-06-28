@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added — Plain-language descriptions on hover (every ACE, function, and parameter)
+
+- Hovering a **condition / action / function-call** row in the sheet now shows its **plain-language
+  description** — what it does, in friendly English — instead of the GDScript it compiles to. (Parameters
+  already showed their description on hover in the editor; ACEs in the picker already had a description
+  panel.) A Call-Function row shows the targeted function's own description.
+- Built-in ACEs carried **no** written description before (their `make_descriptor` calls set none), so a
+  concise one-liner was authored for **all 523** of them (e.g. *Add Child* → "Attaches another node as a
+  child of this one at runtime, e.g. spawning a bullet."). They live in
+  `addons/eventforge/registration/ace_descriptions.json` and are applied at registry-assembly time, so the
+  picker's description panel + tooltips are now populated everywhere too. (`ace_descriptions_test`.)
+
 ### Changed — Fewer syntax errors: auto-closed brackets + an always-on structural guard
 
 - The editable code fields — the **ƒx expression boxes** and the **GDScript-block dialog** — now
