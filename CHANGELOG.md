@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added — Pick nodes by TYPE (Godot's node-heavy objects, without the path pain)
+
+- A Godot object is a deep node tree — a player can be dozens of nodes — so reaching "the AnimationPlayer
+  of this object" used to mean a brittle path (`$Body/Visuals/Anim`) or a GDScript block. New **Nodes:
+  Picking** ACEs resolve a child by **class anywhere in the subtree** instead: **Find Children Of Type**
+  (every match, for a For Each), **First Child Of Type** (the first, null-safe via `pop_front`), and
+  **Has Child Of Type** (a gate). Target the type, not the path — no code. (`node_type_aces_test`.)
+
 ### Added — Extract to Function: turn a pile of rows into one named verb
 
 - Right-click an event's actions → **"Extract Actions to Function…"** → name them, and a stack of
