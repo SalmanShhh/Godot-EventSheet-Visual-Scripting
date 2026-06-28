@@ -3635,19 +3635,16 @@ func _ensure_enum_dialog() -> void:
         return
     _enum_dialog = ConfirmationDialog.new()
     _enum_dialog.title = "Edit Enum"
-    var form: VBoxContainer = VBoxContainer.new()
-    form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    _enum_name_edit = _add_sheet_type_field(form, "Enum name", "State")
-    var members_label: Label = Label.new()
-    members_label.text = "Members (one per line; optional \"NAME = 4\" values)"
-    members_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    members_label.custom_minimum_size = Vector2(380.0, 0.0)
-    form.add_child(members_label)
+    var form: VBoxContainer = EventSheetPopupUI.form_box()
+    _enum_name_edit = LineEdit.new()
+    _enum_name_edit.placeholder_text = "State"
+    form.add_child(EventSheetPopupUI.form_row("Enum name", _enum_name_edit))
+    form.add_child(EventSheetPopupUI.hint_label("Members (one per line; optional \"NAME = 4\" values)"))
     _enum_members_edit = TextEdit.new()
     _enum_members_edit.custom_minimum_size = Vector2(380.0, 150.0)
     _enum_members_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
     form.add_child(_enum_members_edit)
-    _enum_dialog.add_child(form)
+    _enum_dialog.add_child(EventSheetPopupUI.margined(form))
     _enum_dialog.confirmed.connect(_on_enum_dialog_confirmed)
     add_child(_enum_dialog)
 
@@ -3797,19 +3794,16 @@ func _ensure_signal_dialog() -> void:
         return
     _signal_dialog = ConfirmationDialog.new()
     _signal_dialog.title = "Edit Signal"
-    var form: VBoxContainer = VBoxContainer.new()
-    form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    _signal_name_edit = _add_sheet_type_field(form, "Signal name", "hit")
-    var params_label: Label = Label.new()
-    params_label.text = "Parameters (one per line; optional \"damage: int\" types)"
-    params_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    params_label.custom_minimum_size = Vector2(380.0, 0.0)
-    form.add_child(params_label)
+    var form: VBoxContainer = EventSheetPopupUI.form_box()
+    _signal_name_edit = LineEdit.new()
+    _signal_name_edit.placeholder_text = "hit"
+    form.add_child(EventSheetPopupUI.form_row("Signal name", _signal_name_edit))
+    form.add_child(EventSheetPopupUI.hint_label("Parameters (one per line; optional \"damage: int\" types)"))
     _signal_params_edit = TextEdit.new()
     _signal_params_edit.custom_minimum_size = Vector2(380.0, 120.0)
     _signal_params_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
     form.add_child(_signal_params_edit)
-    _signal_dialog.add_child(form)
+    _signal_dialog.add_child(EventSheetPopupUI.margined(form))
     _signal_dialog.confirmed.connect(_on_signal_dialog_confirmed)
     add_child(_signal_dialog)
 
@@ -3859,21 +3853,18 @@ func _ensure_match_dialog() -> void:
         return
     _match_dialog = ConfirmationDialog.new()
     _match_dialog.title = "Edit Match (switch)"
-    var form: VBoxContainer = VBoxContainer.new()
-    form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    _match_expression_edit = _add_sheet_type_field(form, "Match expression", "state")
-    var branches_label: Label = Label.new()
-    branches_label.text = "Branches (GDScript match-body syntax — patterns + indented bodies)"
-    branches_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    branches_label.custom_minimum_size = Vector2(380.0, 0.0)
-    form.add_child(branches_label)
+    var form: VBoxContainer = EventSheetPopupUI.form_box()
+    _match_expression_edit = LineEdit.new()
+    _match_expression_edit.placeholder_text = "state"
+    form.add_child(EventSheetPopupUI.form_row("Match expression", _match_expression_edit))
+    form.add_child(EventSheetPopupUI.hint_label("Branches (GDScript match-body syntax — patterns + indented bodies)"))
     _match_branches_edit = TextEdit.new()
     _match_branches_edit.custom_minimum_size = Vector2(480.0, 200.0)
     _match_branches_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
     form.add_child(_match_branches_edit)
     _match_hint = Label.new()
     form.add_child(_match_hint)
-    _match_dialog.add_child(form)
+    _match_dialog.add_child(EventSheetPopupUI.margined(form))
     _match_dialog.confirmed.connect(_on_match_dialog_confirmed)
     add_child(_match_dialog)
 
