@@ -288,7 +288,7 @@ static func run() -> bool:
 	var edit_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetEditMenu", true, false) as MenuButton
 	var view_menu: MenuButton = toolbar_editor._toolbar.find_child("EventSheetViewMenu", true, false) as MenuButton
 	all_passed = _check("Sheet/Add/Edit/View menus carry the consolidated actions",
-		sheet_menu != null and sheet_menu.get_popup().item_count == 11
+		sheet_menu != null and sheet_menu.get_popup().item_count == 12  # +1: New Behaviour Addon…
 		and add_menu != null and add_menu.get_popup().item_count == 4
 		and edit_menu != null and edit_menu.get_popup().item_count == 10
 		and view_menu != null and view_menu.get_popup().item_count == 17, true) and all_passed

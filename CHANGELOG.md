@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added — "New Behaviour Addon…" — author a custom addon in one step
+
+- **Sheet ▸ New Behaviour Addon…** opens a small dialog (name, base class, category, description) that
+  scaffolds a **ready-to-edit, richly-commented behaviour script** under `res://eventsheet_addons/` — where
+  it's auto-discovered as a custom ACE provider. The skeleton **teaches the `@ace_*` vocabulary by example**:
+  a `signal` → trigger, methods → action / condition / expression, an `@export var` → a property, each with
+  the common annotations (`@ace_name`/`@ace_category`/`@ace_description`/`@ace_param_hint`) in place and a
+  "more knobs" reference (`@ace_hidden`/`@ace_deprecated`/`@ace_display_template`/…). It validates the class
+  name, previews the target path, writes the file, refreshes the registry, and opens it for editing. The
+  generated skeleton is guaranteed to be valid GDScript for every offered base class. (`behaviour_addon_scaffold_test`.)
+
 ### Added — BBCode in condition/action cell text + ACE descriptions on hover
 
 - BBCode-lite (`[b]`/`[i]`/`[color=…]`) already styled **comments**; it now also renders in the **display

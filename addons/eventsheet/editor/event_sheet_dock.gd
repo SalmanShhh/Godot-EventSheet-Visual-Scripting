@@ -600,6 +600,155 @@ func _on_provider_remove_pressed() -> void:
         return
     remove_ace_provider_script(_provider_list.get_item_text(selected[0]))
 
+# ── New Behaviour Addon scaffold (Sheet ▸ New Behaviour Addon…) ──
+# preload (not the global class_name) so the dock parses even before a project re-import registers the
+# freshly-added scaffold class in the global class cache.
+const BehaviourAddonScaffold := preload("res://addons/eventsheet/editor/behaviour_addon_scaffold.gd")
+var _new_addon_dialog: Window = null
+var _new_addon_name_edit: LineEdit = null
+var _new_addon_base_option: OptionButton = null
+var _new_addon_category_edit: LineEdit = null
+var _new_addon_desc_edit: LineEdit = null
+var _new_addon_path_label: Label = null
+var _new_addon_status_label: Label = null
+
+func _on_new_behaviour_addon_requested() -> void:
+    _build_new_addon_dialog()
+    _new_addon_name_edit.text = ""
+    _new_addon_category_edit.text = ""
+    _new_addon_desc_edit.text = ""
+    _refresh_new_addon_preview()
+    _new_addon_dialog.popup_centered(Vector2i(540, 360))
+    _new_addon_name_edit.grab_focus()
+
+func _build_new_addon_dialog() -> void:
+    if _new_addon_dialog != null:
+        return
+    _new_addon_dialog = Window.new()
+    _new_addon_dialog.title = "New Behaviour Addon"
+    _new_addon_dialog.visible = false
+    _new_addon_dialog.min_size = Vector2i(480, 320)
+    _new_addon_dialog.close_requested.connect(func() -> void: _new_addon_dialog.hide())
+    add_child(_new_addon_dialog)
+
+    var margin: MarginContainer = MarginContainer.new()
+    margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
+        margin.add_theme_constant_override(side, 12)
+    _new_addon_dialog.add_child(margin)
+
+    var content: VBoxContainer = VBoxContainer.new()
+    content.add_theme_constant_override("separation", 8)
+    margin.add_child(content)
+
+    var hint: Label = Label.new()
+    hint.text = "Creates a ready-to-edit behaviour script under res://eventsheet_addons/. Its signals become triggers, methods become actions/conditions, and @export vars become properties — all auto-discovered as custom ACEs. The skeleton is richly commented to teach the @ace_* annotations."
+    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    content.add_child(hint)
+
+    var form: GridContainer = GridContainer.new()
+    form.columns = 2
+    form.add_theme_constant_override("h_separation", 10)
+    form.add_theme_constant_override("v_separation", 6)
+    content.add_child(form)
+
+    form.add_child(_new_addon_form_label("Name"))
+    _new_addon_name_edit = LineEdit.new()
+    _new_addon_name_edit.placeholder_text = "PlayerCombat"
+    _new_addon_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _new_addon_name_edit.text_changed.connect(func(_t: String) -> void: _refresh_new_addon_preview())
+    _new_addon_name_edit.text_submitted.connect(func(_t: String) -> void: _on_create_behaviour_addon())
+    form.add_child(_new_addon_name_edit)
+
+    form.add_child(_new_addon_form_label("Base class"))
+    _new_addon_base_option = OptionButton.new()
+    for base: String in BehaviourAddonScaffold.BASE_CLASSES:
+        _new_addon_base_option.add_item(base)
+    _new_addon_base_option.select(0)
+    _new_addon_base_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    form.add_child(_new_addon_base_option)
+
+    form.add_child(_new_addon_form_label("Category"))
+    _new_addon_category_edit = LineEdit.new()
+    _new_addon_category_edit.placeholder_text = "(defaults to the name)"
+    _new_addon_category_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    form.add_child(_new_addon_category_edit)
+
+    form.add_child(_new_addon_form_label("Description"))
+    _new_addon_desc_edit = LineEdit.new()
+    _new_addon_desc_edit.placeholder_text = "What this behaviour does (one line)."
+    _new_addon_desc_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    form.add_child(_new_addon_desc_edit)
+
+    _new_addon_path_label = Label.new()
+    _new_addon_path_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _new_addon_path_label.modulate = Color(1.0, 1.0, 1.0, 0.6)
+    content.add_child(_new_addon_path_label)
+
+    _new_addon_status_label = Label.new()
+    _new_addon_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _new_addon_status_label.modulate = Color(1.0, 0.55, 0.55)
+    content.add_child(_new_addon_status_label)
+
+    var spacer: Control = Control.new()
+    spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    content.add_child(spacer)
+
+    var buttons: HBoxContainer = HBoxContainer.new()
+    buttons.alignment = BoxContainer.ALIGNMENT_END
+    buttons.add_theme_constant_override("separation", 6)
+    content.add_child(buttons)
+    var cancel_button: Button = Button.new()
+    cancel_button.text = "Cancel"
+    cancel_button.pressed.connect(func() -> void: _new_addon_dialog.hide())
+    buttons.add_child(cancel_button)
+    var create_button: Button = Button.new()
+    create_button.text = "Create"
+    create_button.pressed.connect(_on_create_behaviour_addon)
+    buttons.add_child(create_button)
+
+func _new_addon_form_label(text: String) -> Label:
+    var label: Label = Label.new()
+    label.text = text
+    return label
+
+func _refresh_new_addon_preview() -> void:
+    if _new_addon_path_label == null:
+        return
+    var addon_name: String = _new_addon_name_edit.text.strip_edges()
+    if addon_name.is_empty():
+        _new_addon_path_label.text = "Will be created under res://eventsheet_addons/…"
+    else:
+        _new_addon_path_label.text = "Will be created at: %s" % BehaviourAddonScaffold.suggested_path(addon_name)
+    if _new_addon_status_label != null:
+        _new_addon_status_label.text = ""
+
+func _on_create_behaviour_addon() -> void:
+    var addon_name: String = _new_addon_name_edit.text.strip_edges()
+    if not BehaviourAddonScaffold.is_valid_class_name(addon_name):
+        _new_addon_status_label.text = "\"%s\" isn't a usable class name — use letters/digits/underscore starting with a letter, and not a reserved or existing class name." % addon_name
+        return
+    var path: String = BehaviourAddonScaffold.suggested_path(addon_name)
+    if FileAccess.file_exists(path):
+        _new_addon_status_label.text = "A file already exists at %s — pick another name." % path
+        return
+    var base: String = _new_addon_base_option.get_item_text(_new_addon_base_option.selected)
+    var source: String = BehaviourAddonScaffold.generate(addon_name, base, _new_addon_category_edit.text, _new_addon_desc_edit.text)
+    DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+    var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+    if file == null:
+        _new_addon_status_label.text = "Couldn't write %s — check folder permissions." % path
+        return
+    file.store_string(source)
+    file.close()
+    _new_addon_dialog.hide()
+    # Register the new file + its class_name, then rebuild the registry so its ACEs appear in the picker.
+    if Engine.is_editor_hint():
+        EditorInterface.get_resource_filesystem().scan()
+    _refresh_ace_registry()
+    _open_gdscript_path_in_godot(path)
+    _set_status("Created behaviour addon \"%s\" at %s — edit it, save, and its ACEs appear in the picker." % [addon_name, path])
+
 func _build_ui() -> void:
     if _toolbar != null:
         return
@@ -644,6 +793,11 @@ func _build_ui() -> void:
     sheet_popup.add_item("Sheet Type…", 4)
     sheet_popup.add_item("Manage Includes…", 8)
     sheet_popup.add_item("Custom Actions…", 5)
+    sheet_popup.add_item("New Behaviour Addon…", 9)
+    sheet_popup.set_item_tooltip(
+        sheet_popup.get_item_index(9),
+        "Scaffold a ready-to-edit behaviour script in res://eventsheet_addons/ — its signals become triggers, methods become actions/conditions, and @export vars become properties, all auto-discovered as custom ACEs."
+    )
     sheet_popup.add_item("Export Addon…", 6)
     sheet_popup.id_pressed.connect(func(id: int) -> void:
         match id:
@@ -656,6 +810,7 @@ func _build_ui() -> void:
             6: _export_addon_pack()
             7: _export_gdscript_requested()
             8: _open_include_manager()
+            9: _on_new_behaviour_addon_requested()
     )
     _toolbar.add_child(sheet_menu)
     _add_toolbar_button("Save", _on_save_requested, "Save the sheet — compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
