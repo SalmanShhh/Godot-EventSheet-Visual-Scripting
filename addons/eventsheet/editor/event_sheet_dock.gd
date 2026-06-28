@@ -17,6 +17,7 @@ const ACTION_MENU_EDIT := 1
 const ACTION_MENU_ADD := 2
 const ACTION_MENU_REPLACE := 3
 const ACTION_MENU_DELETE := 4
+const ACTION_MENU_EXTRACT_FN := 40
 const ACTION_MENU_TOGGLE_ENABLED := 5
 const ACTION_MENU_EDIT_ACE_COMMENT := 21
 const ROW_MENU_ADD_SUB_EVENT := 1
@@ -1088,6 +1089,9 @@ func _build_context_menus() -> void:
     _action_context_menu.add_item("Edit Note…", ACTION_MENU_EDIT_ACE_COMMENT)
     _action_context_menu.add_item("Detach Comment To Row", ACTION_MENU_DETACH_COMMENT)
     _action_context_menu.add_item("Delete Action", ACTION_MENU_DELETE)
+    _action_context_menu.add_separator()
+    # The "create abstraction" gesture: turn this event's actions into one named, reusable verb.
+    _action_context_menu.add_item("Extract Actions to Function…", ACTION_MENU_EXTRACT_FN)
     _action_context_menu.id_pressed.connect(_on_action_context_menu_id_pressed)
     add_child(_action_context_menu)
 
@@ -1526,48 +1530,75 @@ func _do_extract_to_include(path: String, rows: Array[Resource]) -> void:
     if changed:
         _mark_dirty("Extracted %d row(s) into %s (now included)." % [rows.size(), target.get_file()])
 
-## Extracts an event's inline GDScript actions into a new reusable Function (exposed as an
-## ACE) and replaces them with a single Call to it — turning one-off code into a named,
-## re-callable unit. Static + pure (operates on the passed sheet), so it is headlessly
-## testable; the dock wraps it in an undoable edit. Returns the new function, or null when
-## the event has no inline GDScript action. Order-preserving when those actions are
-## contiguous (the common case — GDScript actions are usually grouped together).
-static func extract_event_gdscript_to_function(sheet: EventSheetResource, event: EventRow) -> EventFunction:
-    if sheet == null or event == null:
+## Extracts the given actions of an event into a new NAMED, reusable Function (exposed as an ACE) and
+## replaces them with a single Call — turning a pile of statement-level rows into one named CONCEPT (the
+## "create abstraction" gesture). Unlike the old GDScript-only extractor, this works on ANY action —
+## structured ACE actions AND GDScript blocks — and PRESERVES them as rows in the function body (wrapped
+## in a trigger-less, condition-less event, which the shared event-body compile path emits as plain
+## statements, structure intact). Static + pure (operates on the passed sheet) so it is headlessly
+## testable; the dock wraps it in an undoable edit + a name prompt. Returns the new function, or null when
+## there is nothing to extract.
+##
+## Scope note: the function compiles to a METHOD on the same class, so it can freely read sheet variables
+## and host members WITHOUT parameters. It does NOT capture event-LOCAL variables or For-Each iterators
+## (those are trigger/loop-scoped) — extracting actions that depend on them needs params, a later
+## refinement. The actions are taken in their original event order, so a non-contiguous selection still
+## extracts deterministically (consolidated where the first one was).
+static func extract_actions_to_function(sheet: EventSheetResource, event: EventRow, actions_to_extract: Array, raw_name: String) -> EventFunction:
+    if sheet == null or event == null or actions_to_extract.is_empty():
         return null
-    var code_rows: Array[RawCodeRow] = []
-    var first_index: int = -1
-    for index: int in event.actions.size():
-        if event.actions[index] is RawCodeRow:
-            code_rows.append(event.actions[index] as RawCodeRow)
-            if first_index == -1:
-                first_index = index
-    if code_rows.is_empty():
+    # Keep only the requested actions that actually belong to this event, in their original order.
+    var ordered: Array = []
+    for action: Variant in event.actions:
+        if actions_to_extract.has(action) and action is Resource:
+            ordered.append(action)
+    if ordered.is_empty():
         return null
-    var function_name: String = _unique_extracted_function_name(sheet, "extracted_action")
-    var code_lines: PackedStringArray = PackedStringArray()
-    for row: RawCodeRow in code_rows:
-        code_lines.append(row.code)
+    var insert_at: int = event.actions.find(ordered[0])
+    var function_name: String = _unique_extracted_function_name(sheet, _sanitize_function_name(raw_name))
+    var display_name: String = raw_name.strip_edges()
     var function: EventFunction = EventFunction.new()
     function.function_name = function_name
     function.expose_as_ace = true
-    function.ace_display_name = function_name.capitalize()
+    function.ace_display_name = display_name if not display_name.is_empty() else function_name.capitalize()
     function.ace_category = "Functions"
-    function.description = "Extracted from a GDScript block — reusable as an ACE."
-    var body: RawCodeRow = RawCodeRow.new()
-    body.code = "\n".join(code_lines)
-    function.events.append(body)
+    function.description = "Extracted from an event — reusable as an ACE."
+    # Function body: one trigger-less, condition-less event holding the extracted actions in order. A
+    # condition-less event emits its actions directly (no `if` wrapper), so structured AND raw actions
+    # both survive — and the function renders showing those same rows.
+    var body_event: EventRow = EventRow.new()
+    var body_actions: Array[Resource] = []
+    for action: Variant in ordered:
+        body_actions.append(action as Resource)
+    body_event.actions = body_actions
+    function.events.append(body_event)
     sheet.functions.append(function)
-    # Remove the extracted rows, then drop a Call to the new function where the first one was.
-    for row: RawCodeRow in code_rows:
-        event.actions.erase(row)
+    # Remove the extracted actions, then drop a Call to the new function where the first one was.
+    for action: Variant in ordered:
+        event.actions.erase(action)
     var call_action: ACEAction = ACEAction.new()
     call_action.provider_id = "Core"
     call_action.ace_id = "CallFunction"
     call_action.codegen_template = "{function_name}({args})"
     call_action.params = {"function_name": function_name, "args": ""}
-    event.actions.insert(clampi(first_index, 0, event.actions.size()), call_action)
+    event.actions.insert(clampi(insert_at, 0, event.actions.size()), call_action)
     return function
+
+## Turns arbitrary entered text into a valid snake_case GDScript identifier — so a user typing
+## "Apply Physics" yields the method `apply_physics` (while ace_display_name keeps the readable text).
+static func _sanitize_function_name(raw: String) -> String:
+    var cleaned: String = ""
+    for ch: String in raw.strip_edges().to_lower():
+        if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9"):
+            cleaned += ch
+        elif cleaned.length() > 0 and not cleaned.ends_with("_"):
+            cleaned += "_"
+    cleaned = cleaned.trim_suffix("_")
+    if cleaned.is_empty():
+        return "extracted_action"
+    if cleaned[0] >= "0" and cleaned[0] <= "9":
+        cleaned = "_" + cleaned
+    return cleaned
 
 ## A function name not already used by the sheet (extracted_action, extracted_action_2, …).
 static func _unique_extracted_function_name(sheet: EventSheetResource, base: String) -> String:
@@ -1582,28 +1613,75 @@ static func _unique_extracted_function_name(sheet: EventSheetResource, base: Str
         suffix += 1
     return "%s_%d" % [base, suffix]
 
-## Row "More" menu action: extract the right-clicked event's GDScript actions to a Function.
-func _extract_gdscript_to_function_requested() -> void:
+## Right-click action: extract the event's actions into a NAMED reusable Function (the "create
+## abstraction" gesture). Reachable from an action's menu or the event row menu. Extracts ALL of the
+## event's actions — turning this event's "do" into one named verb — then prompts for a name and runs the
+## edit undoably. (A future refinement can honour a partial action selection.)
+func _extract_to_function_requested() -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
-        _set_status("Right-click an event with a GDScript action to extract it.", true)
+        _set_status("Right-click an event or one of its actions to extract.", true)
         return
     var event: EventRow = _context_row.source_resource as EventRow
-    var has_code: bool = false
-    for action: Variant in event.actions:
-        if action is RawCodeRow:
-            has_code = true
-            break
-    if not has_code:
-        _set_status("That event has no inline GDScript action to extract.", true)
+    if event.actions.is_empty():
+        _set_status("That event has no actions to extract into a function.", true)
         return
-    # The name is deterministic from the current functions (unchanged by the edit), so
-    # compute it here for the status message (GDScript closures can't return it out).
-    var function_name: String = _unique_extracted_function_name(_current_sheet, "extracted_action")
-    var changed: bool = _perform_undoable_sheet_edit("Extract GDScript to Function", func() -> bool:
-        return extract_event_gdscript_to_function(_current_sheet, event) != null
+    var to_extract: Array = event.actions.duplicate()
+    _prompt_extract_function_name(func(entered_name: String) -> void:
+        var changed: bool = _perform_undoable_sheet_edit("Extract to Function", func() -> bool:
+            return extract_actions_to_function(_current_sheet, event, to_extract, entered_name) != null
+        )
+        if changed:
+            _refresh_functions_list()
+            _mark_dirty("Extracted %d action(s) into a reusable Function — now callable as an ACE (Functions)." % to_extract.size())
     )
-    if changed:
-        _mark_dirty("Extracted GDScript into %s() — now callable as an ACE (Functions)." % function_name)
+
+# ── Extract-to-Function name prompt (one field: name the new concept) ──
+var _extract_function_name_dialog: ConfirmationDialog = null
+var _extract_function_name_edit: LineEdit = null
+var _extract_function_callback: Callable = Callable()
+
+## Prompts for the function name, then invokes callback(name). Pre-filled with a unique default (so Enter
+## just works) but selected — the user is nudged to type a real, meaningful name, because naming the
+## concept ("Apply Physics") is the whole point of extracting.
+func _prompt_extract_function_name(callback: Callable) -> void:
+    if _extract_function_name_dialog == null:
+        _extract_function_name_dialog = ConfirmationDialog.new()
+        _extract_function_name_dialog.title = "Extract to Function"
+        _extract_function_name_dialog.ok_button_text = "Extract"
+        _extract_function_name_dialog.min_size = Vector2i(380, 0)
+        var box: VBoxContainer = EventSheetPopupUI.form_box()
+        _extract_function_name_edit = LineEdit.new()
+        _extract_function_name_edit.placeholder_text = "apply_physics"
+        _extract_function_name_edit.text_submitted.connect(func(_t: String) -> void:
+            _apply_extract_function()
+            _extract_function_name_dialog.hide()
+        )
+        box.add_child(EventSheetPopupUI.form_row("Name this action", _extract_function_name_edit))
+        var hint: Label = Label.new()
+        hint.text = "These actions become one reusable verb: call it anywhere, and it appears in the picker. Type a meaningful name (e.g. \"Apply Physics\")."
+        hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        hint.custom_minimum_size = Vector2(340.0, 0.0)
+        hint.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+        box.add_child(hint)
+        _extract_function_name_dialog.add_child(EventSheetPopupUI.margined(box))
+        _extract_function_name_dialog.confirmed.connect(_apply_extract_function)
+        add_child(_extract_function_name_dialog)
+    _extract_function_callback = callback
+    _extract_function_name_edit.text = _unique_extracted_function_name(_current_sheet, "do_something") if _current_sheet != null else "do_something"
+    _extract_function_name_dialog.popup_centered()
+    _extract_function_name_edit.grab_focus()
+    _extract_function_name_edit.select_all()
+
+## One-shot apply: nulls the callback first so the confirmed + text_submitted signals can't double-fire.
+func _apply_extract_function() -> void:
+    if not _extract_function_callback.is_valid():
+        return
+    var entered: String = _extract_function_name_edit.text.strip_edges()
+    var callback: Callable = _extract_function_callback
+    _extract_function_callback = Callable()
+    if entered.is_empty():
+        return
+    callback.call(entered)
 
 var _breakpoint_condition_dialog: AcceptDialog = null
 var _breakpoint_condition_edit: LineEdit = null
@@ -5985,7 +6063,7 @@ func _build_row_more_submenu(is_event: bool) -> void:
         m.add_item("Add Sub-Condition", ROW_MENU_ADD_SUB_CONDITION)
         m.add_item("Make Else", ROW_MENU_MAKE_ELSE)
         m.add_item("Make Else-If", ROW_MENU_MAKE_ELIF)
-        m.add_item("Extract GDScript to Function", ROW_MENU_EXTRACT_GDSCRIPT_FN)
+        m.add_item("Extract Actions to Function…", ROW_MENU_EXTRACT_GDSCRIPT_FN)
         m.add_item("Add Comment Sub-Event", ROW_MENU_ADD_COMMENT_SUB_EVENT)
         m.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
         m.add_item("Set Breakpoint Condition…", ROW_MENU_BREAKPOINT_CONDITION)
@@ -6171,6 +6249,8 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
                 _set_status("Right-click an action-cell comment to detach it.", true)
         ACTION_MENU_DELETE:
             _delete_context_ace()
+        ACTION_MENU_EXTRACT_FN:
+            _extract_to_function_requested()
 
 func _on_row_context_menu_id_pressed(id: int) -> void:
     if _context_row == null:
@@ -6216,7 +6296,7 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
         ROW_MENU_MAKE_ELIF:
             _set_context_else_mode(EventRow.ElseMode.ELIF)
         ROW_MENU_EXTRACT_GDSCRIPT_FN:
-            _extract_gdscript_to_function_requested()
+            _extract_to_function_requested()
         ROW_MENU_BREAKPOINT_CONDITION:
             _set_breakpoint_condition_requested()
         ROW_MENU_TOGGLE_ENABLED:
