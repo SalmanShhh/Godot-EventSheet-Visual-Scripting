@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added — Drop a scene node onto a param to reference it (no dialog)
+
+- Dragging a node from the **Scene dock** straight onto a **condition/action param value** now fills that
+  param with the node reference — preferring a scene-unique **`%Name`** for deep nodes (the same converter
+  the params dialog uses), undoable. The deep-node-friendly, Construct-style gesture: no dialog, and dropping
+  on a *specific* param value resolves the "which parameter?" ambiguity. The drop is only accepted when the
+  cursor is over such a value, so it reads as droppable exactly where it works. (`node_drop_on_cell_test`.)
+
 ### Added — "New Behaviour Addon…" — author a custom addon in one step
 
 - **Sheet ▸ New Behaviour Addon…** opens a small dialog (name, base class, category, description) that

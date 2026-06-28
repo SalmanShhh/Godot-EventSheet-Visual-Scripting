@@ -1080,6 +1080,7 @@ func _build_ui() -> void:
     _viewport.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
     _viewport.param_value_edit_requested.connect(_on_param_value_edit_requested)
     _viewport.color_swatch_edit_requested.connect(_on_color_swatch_edit_requested)
+    _viewport.param_node_drop_requested.connect(_on_param_node_drop_requested)
     _viewport.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
     _viewport.comment_edit_requested.connect(_open_comment_dialog)
     _viewport.group_edit_requested.connect(_on_group_edit_requested)
@@ -4455,6 +4456,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
     view.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
     view.param_value_edit_requested.connect(_on_param_value_edit_requested)
     view.color_swatch_edit_requested.connect(_on_color_swatch_edit_requested)
+    view.param_node_drop_requested.connect(_on_param_node_drop_requested)
     view.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
     view.comment_edit_requested.connect(_open_comment_dialog)
     view.group_edit_requested.connect(_on_group_edit_requested)
@@ -4772,6 +4774,22 @@ func _commit_color_swatch_edit(new_color: Color) -> void:
     if changed:
         _refresh_after_edit()
         _mark_dirty("Colour updated.")
+
+## A scene node was dropped onto a condition/action param value — set that param to the node reference
+## (e.g. %Player), undoable. The deep-node-friendly C3-style gesture: drag from the Scene dock, no dialog.
+func _on_param_node_drop_requested(ace: Resource, param_id: String, node_reference: String) -> void:
+    if ace == null or param_id.is_empty():
+        return
+    var changed: bool = _perform_undoable_sheet_edit("Drop Node Reference", func() -> bool:
+        var params: Dictionary = ace.get("params")
+        if str(params.get(param_id, "")) == node_reference:
+            return false
+        params[param_id] = node_reference
+        return true
+    )
+    if changed:
+        _refresh_after_edit()
+        _mark_dirty("Set %s to %s." % [param_id, node_reference])
 
 ## Toggles debug compiles: gutter breakpoints (F9) emit real `breakpoint` statements.
 func _toggle_breakpoint_emission() -> void:

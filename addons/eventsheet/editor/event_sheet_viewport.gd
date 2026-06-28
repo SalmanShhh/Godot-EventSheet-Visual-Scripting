@@ -15,6 +15,8 @@ signal ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dic
 signal param_value_edit_requested(ace: Resource, param_id: String, current_text: String)
 ## Clicking the inline colour swatch on a condition/action cell — opens the colour picker (no dialog).
 signal color_swatch_edit_requested(ace: Resource, param_id: String, current_color: Color)
+## Dropping a scene-tree node onto a condition/action param VALUE — sets that param to the node reference.
+signal param_node_drop_requested(ace: Resource, param_id: String, node_reference: String)
 signal ace_drop_requested(
     source_entries: Array,
     target_row: EventRowData,
@@ -4221,18 +4223,31 @@ func _get_scroll_width() -> float:
         return scroll.size.x
     return size.x if size.x > 0.0 else 640.0
 
-func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
+    # A scene-tree node dragged ONTO a condition/action param value → fill that param with the node
+    # reference (only accept the drop when it's over such a value, so the cursor reads as droppable there).
+    if _is_node_path_drag(data) and not _param_value_at(_to_logical_position(at_position)).is_empty():
+        return true
     return not _resolve_dropped_source_objects(data).is_empty() \
         or not _resolve_dropped_asset_paths(data).is_empty()
 
-func _drop_data(_at_position: Vector2, data: Variant) -> void:
+func _drop_data(at_position: Vector2, data: Variant) -> void:
+    # Scene-tree node dropped on a param value: set that param to the node reference (prefers %unique-names
+    # via the same converter the params dialog uses), no dialog — the deep-node-friendly C3-style gesture.
+    if _is_node_path_drag(data):
+        var target: Dictionary = _param_value_at(_to_logical_position(at_position))
+        if not target.is_empty():
+            var reference: String = ACEParamsDialog.drop_data_to_expression(data)
+            if not reference.is_empty():
+                param_node_drop_requested.emit(target.get("ace"), str(target.get("param_id", "")), reference)
+                return
     # FileSystem asset drops carry intent: a scene or sound dropped ON an event row
     # becomes a pre-filled action (the dock builds it). Recognized assets are accepted
     # anywhere on the canvas so an empty-space drop can explain itself instead of
     # silently bouncing.
     var asset_paths: PackedStringArray = _resolve_dropped_asset_paths(data)
     if not asset_paths.is_empty():
-        var row_index: int = _find_row_index_at_y(_at_position.y)
+        var row_index: int = _find_row_index_at_y(at_position.y)
         var row_data: EventRowData = _row_at(row_index) if row_index >= 0 else null
         asset_dropped.emit(row_data.source_resource if row_data != null else null, asset_paths)
         return
@@ -4280,3 +4295,33 @@ func _resolve_dropped_source_objects(data: Variant) -> Array[Object]:
             if not objects.is_empty():
                 return objects
     return objects
+
+## True for a Scene-dock node drag (type "nodes" carrying NodePath/String entries) — as opposed to an
+## Object-valued "nodes" payload, which is a behaviour-source drag handled by _resolve_dropped_source_objects.
+static func _is_node_path_drag(data: Variant) -> bool:
+    if not (data is Dictionary):
+        return false
+    var payload: Dictionary = data as Dictionary
+    if str(payload.get("type", "")) != "nodes":
+        return false
+    var nodes: Variant = payload.get("nodes", [])
+    return nodes is Array and not (nodes as Array).is_empty() and not ((nodes as Array)[0] is Object)
+
+## The {ace, param_id, current} under a logical position when it sits on an editable condition/action param
+## VALUE, else {}. Shared by double-click-to-edit and the node-drop-onto-param gesture.
+func _param_value_at(local_position: Vector2) -> Dictionary:
+    var hit: Dictionary = _hit_test(local_position)
+    var span_index: int = int(hit.get("span_index", -1))
+    var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+    var meta: Dictionary = hit.get("span_metadata", {}) if hit.get("span_metadata", {}) is Dictionary else {}
+    var kind: String = str(meta.get("kind", ""))
+    if kind in ["condition", "trigger", "action"] and row_data != null and row_data.source_resource is EventRow and span_index >= 0 and span_index < row_data.spans.size():
+        var value_hit: Array = _value_text_at(row_data.spans[span_index], local_position.x, _get_font(), _get_font_size())
+        if not value_hit.is_empty():
+            var lane: String = "action" if kind == "action" else "condition"
+            var ace: Resource = (row_data.source_resource as EventRow).trigger if kind == "trigger" else _resolve_ace_resource(row_data.source_resource, lane, int(meta.get("ace_index", -1)))
+            if ace != null:
+                var param: String = param_id_for_value(ace, str(value_hit[0]), int(value_hit[1]))
+                if not param.is_empty():
+                    return {"ace": ace, "param_id": param, "current": str(value_hit[0])}
+    return {}
