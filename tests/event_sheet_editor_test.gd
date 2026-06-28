@@ -1518,11 +1518,11 @@ static func run() -> bool:
         dock._load_sheet_from_path(temp_path)
         all_passed = _check("open workflow loads EventSheet resource", dock.get_current_sheet() is EventSheetResource, true) and all_passed
         all_passed = _check("save/load keeps global const flag", bool(dock.get_current_sheet().variables.get("ammo", {}).get("const", false)), true) and all_passed
-    # Default-filename normalization derives from an unsaved/unnamed sheet, so it falls back
-    # to the generic event_sheet.tres rather than the just-loaded file's name.
+    # Default-filename normalization derives from an unsaved/unnamed sheet, so it falls back to the
+    # generic event_sheet.gd (the default sheet format — no .tres needed) rather than the loaded name.
     dock.setup(EventSheetResource.new())
-    all_passed = _check("save normalization adds default filename", dock._normalize_sheet_save_path("res://"), "res://event_sheet.tres") and all_passed
-    all_passed = _check("save normalization appends tres extension", dock._normalize_sheet_save_path("res://sheets/editor_sheet"), "res://sheets/editor_sheet.tres") and all_passed
+    all_passed = _check("save normalization adds default filename", dock._normalize_sheet_save_path("res://"), "res://event_sheet.gd") and all_passed
+    all_passed = _check("save normalization appends gd extension", dock._normalize_sheet_save_path("res://sheets/editor_sheet"), "res://sheets/editor_sheet.gd") and all_passed
 
     # Drag-drop ACE preview opens popup window content.
     var preview_defs: Array[ACEDefinition] = []

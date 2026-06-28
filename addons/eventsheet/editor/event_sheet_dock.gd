@@ -2,7 +2,9 @@
 class_name EventSheetDock
 extends Control
 
-const EVENT_SHEET_FILTERS: Array[String] = ["*.tres ; EventSheetResource", "*.res ; EventSheetResource", "*.gd ; GDScript (open as EventSheet)"]
+# .gd is listed first so it is the default format for New Sheet / Save As — a sheet is just plain
+# GDScript (no .tres needed). .tres/.res stay available (e.g. library sheets used via Includes).
+const EVENT_SHEET_FILTERS: Array[String] = ["*.gd ; GDScript EventSheet", "*.tres ; EventSheetResource", "*.res ; EventSheetResource"]
 const VARIABLE_USAGE_MAX_DEPTH := 8
 const CONDITION_MENU_EDIT := 1
 const CONDITION_MENU_ADD := 2
@@ -2035,6 +2037,10 @@ func _save_sheet_to_path(path: String) -> void:
         _set_status("Nothing to save.", true)
         return
     var resolved_path: String = _normalize_sheet_save_path(path)
+    # Saving as .gd makes the sheet a plain GDScript file (no .tres) — the default format.
+    if resolved_path.get_extension().to_lower() == "gd":
+        _save_sheet_as_gdscript(resolved_path)
+        return
     # Save As .tres converts a GDScript-backed sheet into a normal sheet: the .gd stops
     # being the source of truth (it is left untouched on disk).
     if not _current_sheet.external_source_path.is_empty():
@@ -2048,6 +2054,37 @@ func _save_sheet_to_path(path: String) -> void:
         _set_status("Saved as: %s" % resolved_path.get_file())
     else:
         _set_status("Save failed (error %d)." % err, true)
+
+## Saves the sheet as a plain .gd (no .tres): compiles it to that path, then re-opens the .gd as the
+## GDScript-backed source of truth, so the file IS the sheet and future edits round-trip through it.
+## SheetCompiler.compile already picks the right path — full header for a structured sheet, order-
+## preserving for an already-backed one. The reopened sheet is editable (not the read-only preview a
+## casual Open gives), since the user just authored it. Returns whether it saved.
+func _save_sheet_as_gdscript(path: String) -> bool:
+    # omit_generated_banner: this .gd is the user's hand-editable source of truth, NOT a regenerated
+    # companion — it must not carry the "DO NOT EDIT / regenerated on every compile" banner.
+    var compile_result: Dictionary = SheetCompiler.compile(_current_sheet, path, true)
+    if not bool(compile_result.get("success", false)):
+        _set_status("Couldn't save as GDScript: %s" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
+        return false
+    var backed: EventSheetResource = GDScriptImporter.new().import_external(path)
+    if backed == null:
+        _set_status("Saved %s, but couldn't reopen it as a sheet." % path.get_file(), true)
+        return false
+    backed.read_only = false  # the user just authored it — open it editable, not as a preview
+    # Replace the ACTIVE tab's sheet in place. Calling setup() would append a SECOND tab (its dedup
+    # matches by object identity, and `backed` is a freshly-imported resource), duplicating the sheet.
+    if _active_tab_index >= 0 and _active_tab_index < _open_tabs.size():
+        _open_tabs[_active_tab_index] = {"sheet": backed, "path": path, "dirty": false}
+        _activate_tab(_active_tab_index)  # reloads the viewport + sets _current_sheet/_path/_dirty + clears undo
+    else:
+        setup(backed)
+        _current_sheet_path = path
+        _dirty = false
+    _external_mtime = FileAccess.get_modified_time(path)
+    _refresh_preview_banner()
+    _set_status("Saved as GDScript: %s — the .gd is now the source of truth." % path.get_file())
+    return true
 
 func _on_add_event_requested() -> void:
     if not _ensure_sheet_for_editing():
@@ -2748,9 +2785,9 @@ func _suggest_sheet_filename() -> String:
         candidate_path = _current_sheet.resource_path
     var file_name: String = candidate_path.get_file()
     if file_name.is_empty():
-        file_name = "event_sheet.tres"
+        file_name = "event_sheet.gd"  # .gd is the default sheet format (no .tres needed)
     elif file_name.get_extension().is_empty():
-        file_name += ".tres"
+        file_name += ".gd"
     return file_name
 
 ## Returns the preferred directory for open/save dialogs, defaulting to res://.
@@ -2783,9 +2820,9 @@ func _normalize_sheet_save_path(path: String) -> String:
         file_name = resolved_path.get_file()
     var extension: String = file_name.get_extension().to_lower()
     if extension.is_empty():
-        resolved_path += ".tres"
-    elif extension not in ["tres", "res"]:
-        resolved_path = "%s.tres" % resolved_path.get_basename()
+        resolved_path += ".gd"  # default sheet format
+    elif extension not in ["tres", "res", "gd"]:
+        resolved_path = "%s.gd" % resolved_path.get_basename()
     return resolved_path
 
 func _find_resource_location(target: Resource) -> Dictionary:
