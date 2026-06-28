@@ -642,8 +642,11 @@ write.
 - **A wrong method name fails silently.** `position = {pos}` is safe; a typo like `move_too({pos})`
   compiles fine and crashes only when the generated code runs. Compile, parse, then run it in a test.
 - **Templates are frozen once shipped.** Changing an `ace_id` or `codegen_template` breaks every sheet
-  that used it. To change behavior, add a new ACE and deprecate the old one (hide it with
-  `@ace_hidden` on Path 1), do not edit the shipped template.
+  that used it. To change behavior, add a new ACE and **deprecate** the old one — on Path 1, annotate it
+  `## @ace_deprecated("Use <NewName> instead")`: it keeps compiling in sheets that already use it (so
+  nothing breaks), but is hidden from the picker, flagged on hover with the replacement, and warned at
+  compile. (`@ace_hidden` only hides a member; use `@ace_deprecated` to retire one with a pointer to its
+  successor.) Do not edit the shipped template.
 - **Use tabs, not spaces, for nested template lines.** The compiler emits tabs; a space-indented line
   in a multi-line template produces mixed indentation and a parse error.
 - **Name every local with `{uid}`.** Two copies of a multi-line ACE in one event will collide on a

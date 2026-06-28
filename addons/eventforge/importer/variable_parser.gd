@@ -1,7 +1,9 @@
 # EventForge — Variable parser
 # Parses top-level `@export var`/`var` declarations from GDScript source into the sheet
-# variable dictionary format ({ name: {type, default, exported} }). Indented declarations
-# (function locals) are ignored.
+# variable dictionary format ({ name: {type, default, exported, options, hint} }). Indented
+# declarations (function locals) are ignored. This handles the var line itself only — the standalone
+# `@export_group`/`@export_subgroup` lines that precede a variable are recovered separately, by the
+# importer's `_absorb_tree_variable_group()` (which folds them onto the lifted variable's attributes).
 @tool
 extends RefCounted
 class_name VariableParser

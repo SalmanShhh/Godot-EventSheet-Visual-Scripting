@@ -1,10 +1,12 @@
 # EventForge — GDScript importer
 # Parses generated/handwritten GDScript back into an EventSheetResource: the `extends`
-# host class, top-level exported variables, and functions (whose bodies are preserved as
-# RawCodeRow passthrough so they round-trip through the compiler).
+# host class, top-level exported variables (with their Inspector @export_group/@export_subgroup
+# grouping absorbed onto the variable), enums, signals, and functions.
 #
-# NOTE: function bodies are NOT yet reverse-mapped into ACE conditions/actions — they are
-# preserved verbatim as raw code. Full ACE-level round-trip is future work.
+# ACE-level lifting IS shipped: EventSheetACELifter.attempt_lift() reverse-matches generated `if`
+# chains and action templates back into real events/conditions/actions, gated by a byte-identical
+# verify-lift (anything that doesn't reproduce exactly stays a verbatim RawCodeRow — the lossless rule
+# always wins). See docs/GDSCRIPT-PAIRING-SPEC.md.
 @tool
 extends RefCounted
 class_name GDScriptImporter

@@ -61,6 +61,15 @@ Round-trip note: Tier 2 emits **canonical shapes** (like `_emit_enum_line` /
 reverse-matching stays exact. Setter bodies that the user edits by hand simply fail the
 lift and stay verbatim blocks (lossless rule holds).
 
+Variable **grouping** (`@export_group`/`@export_subgroup`) round-trips for **both** variable kinds —
+sheet-level (dict) variables *and* tree-placed `LocalVariable`s. On import the standalone group lines are
+recovered onto the variable's `attributes` by the importer's `_absorb_tree_variable_group()` (gated by the
+byte-identical verify-lift), and `_emit_tree_variable_line` re-emits them matching `_emit_variables`
+byte-for-byte — so a reopened grouped variable is a clean grouped variable, not a stray `@export_group`
+GDScript block. The variable **tooltip** (`## doc`) and the Tier-2 structured attributes (Show If / Clamp /
+On-Changed) are not yet lifted back — they stay byte-stable verbatim blocks on reopen (the lossless *byte*
+rule holds; only the editable semantics degrade).
+
 ### Tier 3 — Odin-level custom drawers (EditorInspectorPlugin; optional, last)
 
 Progress bars, color palettes, preview thumbnails, inline curve editors. Mechanism: a

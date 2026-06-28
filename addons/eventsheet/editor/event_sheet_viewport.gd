@@ -1887,8 +1887,7 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
             "group": str((variable.attributes as Dictionary).get("group", "")) if variable.exported and variable.attributes is Dictionary else "",
             "subgroup": str((variable.attributes as Dictionary).get("subgroup", "")) if variable.exported and variable.attributes is Dictionary else "",
             "source_resource": variable,
-            "row_uid": "variable_tree_%d" % variable.get_instance_id(),
-            "badge_label": "global"  # class-level member (exported/private is visibility, not scope) — no scope pill
+            "row_uid": "variable_tree_%d" % variable.get_instance_id()
         }
     )
 
@@ -2091,33 +2090,15 @@ func _build_variable_row(
         "variable_index": variable_index,
         "is_constant": is_constant
     }
-    var badge_label: String = str(options.get("badge_label", scope_label))
-    var scope_badge_colors: Dictionary = _get_scope_badge_colors(badge_label)
+    # No scope pill: it confused users. The "global"/"sheet" pill was already redundant (every sheet/class
+    # variable is one), and the "local" pill on event-scoped vars read as noise too — scope is obvious from
+    # the row's nesting under its event, and the @export badge carries the meaningful distinction
+    # (Inspector-visible vs internal). So a variable row leads straight with its name.
     row_data.spans = [
-        _make_span(
-            badge_label,
-            SemanticSpan.SpanType.KEYWORD,
-            variable_meta.merged(
-                {
-                    "editable": false,
-                    "badge": true,
-                    "badge_style": "scope",
-                    "badge_bg": scope_badge_colors.get("bg", EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_BG),
-                    "badge_fg": scope_badge_colors.get("fg", EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_FG)
-                },
-                true
-            )
-        ),
         _make_span(var_name if not var_name.is_empty() else "(unnamed)", SemanticSpan.SpanType.OBJECT, variable_meta.merged({"editable": false}, true)),
         _make_span(":", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)),
         _make_span(type_name if not type_name.is_empty() else "Variant", SemanticSpan.SpanType.VALUE, variable_meta.merged({"editable": false}, true))
     ]
-    # Drop the scope pill entirely — it confused users. The "global"/"sheet" pill was already redundant
-    # (every sheet/class variable is one), and the "local" pill on event-scoped vars read as noise too:
-    # scope is already obvious from the row's nesting under its event, and the @export badge carries the
-    # meaningful distinction (Inspector-visible vs internal). So no variable shows a scope pill now.
-    if not row_data.spans.is_empty():
-        row_data.spans.remove_at(0)
     if is_constant:
         row_data.spans.append(
             _make_span(
@@ -4057,17 +4038,6 @@ func _format_variable_value(value: Variant) -> String:
     if value is String:
         return '"%s"' % str(value)
     return str(value)
-
-func _get_scope_badge_colors(scope_label: String) -> Dictionary:
-    if scope_label == "local":
-        return {
-            "bg": EventSheetPalette.COLOR_SCOPE_LOCAL_BADGE_BG,
-            "fg": EventSheetPalette.COLOR_SCOPE_LOCAL_BADGE_FG
-        }
-    return {
-        "bg": EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_BG,
-        "fg": EventSheetPalette.COLOR_SCOPE_GLOBAL_BADGE_FG
-    }
 
 static var _value_regex: RegEx = null
 
