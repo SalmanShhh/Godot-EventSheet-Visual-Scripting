@@ -1625,20 +1625,40 @@ static func _warn_if_deprecated(provider_id: String, ace_id: String, warnings: A
 static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	if local_var == null or local_var.name.strip_edges().is_empty():
 		return ""
+	var var_line: String
 	if local_var.is_constant:
-		return "const %s: %s = %s" % [local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+		var_line = "const %s: %s = %s" % [local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
 	# @onready: deferred init (node refs like $Path). The default is a raw EXPRESSION, emitted
 	# verbatim (not a quoted literal) so `$Sprite2D` / `get_node(...)` stay code, not strings.
-	if local_var.onready:
-		return "@onready var %s: %s = %s" % [local_var.name, local_var.type_name, str(local_var.default_value)]
+	elif local_var.onready:
+		var_line = "@onready var %s: %s = %s" % [local_var.name, local_var.type_name, str(local_var.default_value)]
 	# Combo: exported String with options -> @export_enum dropdown in the Inspector.
-	if local_var.exported and local_var.type_name == "String" and not local_var.options.is_empty():
-		return "%s var %s: String = %s" % [_export_enum_prefix(local_var.options), local_var.name, _to_code_literal(local_var.default_value)]
+	elif local_var.exported and local_var.type_name == "String" and not local_var.options.is_empty():
+		var_line = "%s var %s: String = %s" % [_export_enum_prefix(local_var.options), local_var.name, _to_code_literal(local_var.default_value)]
 	# Hinted export (@export_range / @export_file / @export_flags / …): the annotation is kept verbatim.
-	if not local_var.export_hint.strip_edges().is_empty():
-		return "%s var %s: %s = %s" % [local_var.export_hint, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
-	var export_prefix: String = "@export " if local_var.exported else ""
-	return "%svar %s: %s = %s" % [export_prefix, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+	elif not local_var.export_hint.strip_edges().is_empty():
+		var_line = "%s var %s: %s = %s" % [local_var.export_hint, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+	else:
+		var export_prefix: String = "@export " if local_var.exported else ""
+		var_line = "%svar %s: %s = %s" % [export_prefix, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+	# Inspector grouping rides in front, matching the dict-var path (_emit_variables) byte-for-byte so the
+	# round-trip lift can absorb it back onto the variable instead of stranding it as a GDScript block.
+	return _tree_variable_group_prefix(local_var) + var_line
+
+## @export_group/@export_subgroup lines emitted before an EXPORTED tree variable that carries Inspector
+## grouping. Empty for non-exported or un-grouped vars (the common case — existing emission stays
+## byte-identical). Must match _emit_variables' format exactly (the verify-lift compares against it).
+static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
+	if not local_var.exported or not (local_var.attributes is Dictionary) or local_var.attributes.is_empty():
+		return ""
+	var prefix: String = ""
+	var group: String = str(local_var.attributes.get("group", "")).strip_edges()
+	if not group.is_empty():
+		prefix += "@export_group(\"%s\")\n" % group
+	var subgroup: String = str(local_var.attributes.get("subgroup", "")).strip_edges()
+	if not subgroup.is_empty():
+		prefix += "@export_subgroup(\"%s\")\n" % subgroup
+	return prefix
 
 ## Canonical @export_enum prefix ("@export_enum(\"a\", \"b\")") — verify-lift relies on
 ## this exact form.

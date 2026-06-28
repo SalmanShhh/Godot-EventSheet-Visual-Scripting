@@ -95,6 +95,7 @@ func import_external_source(source: String) -> EventSheetResource:
 			continue
 		var lifted: LocalVariable = _try_lift_variable(line)
 		if lifted != null:
+			_absorb_tree_variable_group(lifted, pending, line)
 			_flush_pending(pending, sheet)
 			sheet.events.append(lifted)
 			index += 1
@@ -201,6 +202,52 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:
 		return null
 	return lifted
+
+## When a tree variable lifts, pull a directly-preceding @export_group / @export_subgroup off the pending
+## block onto the variable's attributes — but only if the variable's canonical re-emission then reproduces
+## those exact lines plus the var line (the verify-lift rule). A wrong guess is reverted, so a grouped var
+## becomes a clean grouped variable instead of a stray @export_group GDScript block — without ever risking
+## the byte-exact round-trip. (Order matches _emit_variables: @export_group then @export_subgroup.)
+func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArray, var_line: String) -> void:
+	var subgroup_value: String = ""
+	var group_value: String = ""
+	var meta_count: int = 0
+	var cursor: int = pending.size() - 1
+	if cursor >= 0 and pending[cursor].begins_with("@export_subgroup(\""):
+		subgroup_value = _extract_first_quoted(pending[cursor])
+		meta_count += 1
+		cursor -= 1
+	if cursor >= 0 and pending[cursor].begins_with("@export_group(\""):
+		group_value = _extract_first_quoted(pending[cursor])
+		meta_count += 1
+		cursor -= 1
+	var candidate: Dictionary = {}
+	if not group_value.is_empty():
+		candidate["group"] = group_value
+	if not subgroup_value.is_empty():
+		candidate["subgroup"] = subgroup_value
+	if candidate.is_empty():
+		return
+	lifted.attributes = candidate
+	var absorbed: PackedStringArray = PackedStringArray()
+	for index: int in range(pending.size() - meta_count, pending.size()):
+		absorbed.append(pending[index])
+	absorbed.append(var_line)
+	if SheetCompiler._emit_tree_variable_line(lifted) != "\n".join(absorbed):
+		lifted.attributes = {}  # reverted — leave the group lines in the verbatim block
+		return
+	for _removed: int in range(meta_count):
+		pending.remove_at(pending.size() - 1)
+
+## The text inside the first "..." pair on a line ("" if none).
+func _extract_first_quoted(line: String) -> String:
+	var open_quote: int = line.find("\"")
+	if open_quote < 0:
+		return ""
+	var close_quote: int = line.find("\"", open_quote + 1)
+	if close_quote < 0:
+		return ""
+	return line.substr(open_quote + 1, close_quote - open_quote - 1)
 
 ## Lifts a canonical single-line enum (`enum Name { A, B = 4 }`) to an EnumRow when the
 ## compiler's emission reproduces the line exactly (the verify-lift rule); multi-line or

@@ -1882,6 +1882,10 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
         {
             "is_constant": variable.is_constant,
             "exported": variable.exported,
+            # Inspector grouping (@export_group/@export_subgroup) recovered onto the variable on import —
+            # shown as the "Group › Subgroup" chip, so a reopened grouped variable still reads as grouped.
+            "group": str((variable.attributes as Dictionary).get("group", "")) if variable.exported and variable.attributes is Dictionary else "",
+            "subgroup": str((variable.attributes as Dictionary).get("subgroup", "")) if variable.exported and variable.attributes is Dictionary else "",
             "source_resource": variable,
             "row_uid": "variable_tree_%d" % variable.get_instance_id(),
             "badge_label": "global"  # class-level member (exported/private is visibility, not scope) — no scope pill

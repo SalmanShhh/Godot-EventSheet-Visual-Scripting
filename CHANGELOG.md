@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed — Inspector grouping survives reopening a `.gd` sheet
+
+- A variable's **`@export_group` / `@export_subgroup`** now round-trips through a `.gd` reopen. Before, those
+  lines couldn't be lifted, so a reopened grouped variable **degraded into a stray `@export_group` GDScript
+  block + an ungrouped variable** (violating "no GDScript block" and losing the grouping). Now the importer
+  **absorbs the group lines onto the variable** — gated by the verify-lift rule, so it's byte-exact-safe (a
+  wrong guess just leaves a block, never corrupts) — and the reopened variable reads as a clean grouped
+  variable with its **"Group › Subgroup"** chip. `LocalVariable` gained an `attributes` dict; the tree-var
+  emission re-emits the group lines matching the dict-var path exactly. (`variable_group_roundtrip_test`;
+  zero showcase drift.)
+
 ### Added — `@export_subgroup` for nested Inspector grouping
 
 - A variable can now also carry an **Inspector subgroup** (the variable dialog's new "Inspector subgroup"
