@@ -13,7 +13,10 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
-	descriptors.append(F.make_descriptor("Core", "LoopBreak", "Break Loop", ACEDescriptor.ACEType.ACTION, "break", "", [], "Loops", "Break out of the loop"))
-	descriptors.append(F.make_descriptor("Core", "LoopContinue", "Continue Loop", ACEDescriptor.ACEType.ACTION, "continue", "", [], "Loops", "Skip to the next loop item"))
-	descriptors.append(F.make_descriptor("Core", "CurrentItem", "Current Loop Item", ACEDescriptor.ACEType.EXPRESSION, "item", "", [], "Loops", "current loop item"))
+	descriptors.append(F.make_descriptor("Core", "LoopBreak", "Break Loop", ACEDescriptor.ACEType.ACTION, "break", "", [], "Loops", "Break out of the loop")
+		.described("Stops the current loop early and skips any remaining items."))
+	descriptors.append(F.make_descriptor("Core", "LoopContinue", "Continue Loop", ACEDescriptor.ACEType.ACTION, "continue", "", [], "Loops", "Skip to the next loop item")
+		.described("Skips to the next item in the loop, ignoring the rest of this pass."))
+	descriptors.append(F.make_descriptor("Core", "CurrentItem", "Current Loop Item", ACEDescriptor.ACEType.EXPRESSION, "item", "", [], "Loops", "current loop item")
+		.described("Gives you the item the loop is currently working on inside a For Each."))
 	return descriptors

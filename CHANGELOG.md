@@ -16,9 +16,14 @@
   panel.) A Call-Function row shows the targeted function's own description.
 - Built-in ACEs carried **no** written description before (their `make_descriptor` calls set none), so a
   concise one-liner was authored for **all 523** of them (e.g. *Add Child* → "Attaches another node as a
-  child of this one at runtime, e.g. spawning a bullet."). They live in
-  `addons/eventforge/registration/ace_descriptions.json` and are applied at registry-assembly time, so the
-  picker's description panel + tooltips are now populated everywhere too. (`ace_descriptions_test`.)
+  child of this one at runtime, e.g. spawning a bullet."), populating the picker's description panel +
+  tooltips everywhere too. (`ace_descriptions_test`.)
+- **Descriptions live in the files, next to the ACE.** Each built-in's description is now authored **inline**
+  on its descriptor via a chainable `.described("…")` — `make_descriptor(…).described("…")` — so an ACE's
+  help sits in the same module file as its definition, exactly how a custom behaviour addon authors it
+  (addons already use `## @ace_description(…)`). This makes packs self-contained and easy to update with no
+  central registry to edit; the old generated `ace_descriptions.json` is gone. The test now **enforces full
+  coverage** — a new built-in without a `.described(…)` fails, so no undescribed ACE can ship.
 
 ### Changed — Fewer syntax errors: auto-closed brackets + an always-on structural guard
 

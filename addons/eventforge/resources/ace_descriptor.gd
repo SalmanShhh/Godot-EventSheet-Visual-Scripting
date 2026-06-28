@@ -76,6 +76,14 @@ func get_display_text() -> String:
 		return displayText
 	return get_list_name()
 
+## Sets the plain-language description and returns self, so a module authors help INLINE, right next to the
+## descriptor: `F.make_descriptor(...).described("What it does, in friendly English.")`. This keeps every
+## ACE's help in its own file — the same self-contained way custom addons use `## @ace_description(...)` —
+## so behaviour packs are easy to author, integrate, and update without touching any central registry.
+func described(text: String) -> ACEDescriptor:
+	description = text
+	return self
+
 ## Returns params dictionary pre-populated from descriptor defaults.
 func build_default_params() -> Dictionary:
 	var output: Dictionary = {}
