@@ -8618,7 +8618,11 @@ func _mark_dirty(message: String) -> void:
 func _set_status(text: String, is_error: bool = false) -> void:
     if _status_label == null:
         return
-    _status_label.text = text
+    # A leading ⚠ marks errors textually (not just by colour — colour-blind-safe and more salient so
+    # a "won't compile / save failed" isn't missed). The full text is on the tooltip since the status
+    # bar truncates long messages.
+    _status_label.text = ("⚠  %s" % text) if is_error else text
+    _status_label.tooltip_text = text
     _status_label.modulate = Color(1.0, 0.48, 0.48) if is_error else Color(1.0, 1.0, 1.0)
 
 func _refresh_title_strip() -> void:

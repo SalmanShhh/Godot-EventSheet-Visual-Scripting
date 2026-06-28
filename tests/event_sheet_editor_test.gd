@@ -1106,7 +1106,7 @@ static func run() -> bool:
     dock_viewport._clear_ace_drag()
     all_passed = _check("invalid trigger drag keeps source trigger in place", (dock.get_current_sheet().events[0] as EventRow).trigger != null, true) and all_passed
     all_passed = _check("invalid trigger drag keeps target trigger in place", ((dock.get_current_sheet().events[1] as EventRow).trigger as ACECondition).ace_id, "OnProcess") and all_passed
-    all_passed = _check("invalid trigger drag updates status label", dock._status_label.text, "This event already has a trigger.") and all_passed
+    all_passed = _check("invalid trigger drag updates status label", dock._status_label.text.ends_with("This event already has a trigger."), true) and all_passed
 
     var group_fold_sheet := EventSheetResource.new()
     var fold_group := EventGroup.new()
