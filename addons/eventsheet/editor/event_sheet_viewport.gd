@@ -2007,6 +2007,8 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
     names.sort()
     for var_name in names:
         var descriptor: Dictionary = sheet.variables.get(var_name, {})
+        var is_exported: bool = bool(descriptor.get("exported", descriptor.get("exposed", true)))
+        var var_attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
         rows.append(
             _build_variable_row(
                 "global",
@@ -2018,7 +2020,11 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
                     "is_constant": bool(descriptor.get("const", descriptor.get("is_constant", false))),
                     # Match the compiler default (exported unless explicitly false) so the @export badge
                     # agrees with what actually emits as an Inspector-visible @export var.
-                    "exported": bool(descriptor.get("exported", descriptor.get("exposed", true)))
+                    "exported": is_exported,
+                    # The Inspector group (@export_group) this exported var lands in — shown as a chip on the
+                    # row so it's obvious in the sheet which vars share an Inspector section. Only meaningful
+                    # for exported vars (the compiler emits @export_group for those).
+                    "group": str(var_attributes.get("group", "")) if is_exported else ""
                 }
             )
         )
@@ -2135,6 +2141,27 @@ func _build_variable_row(
                         "badge_style": "scope",
                         "badge_bg": Color(0.22, 0.34, 0.55, 0.92),
                         "badge_fg": Color(0.76, 0.86, 1.0, 1.0)
+                    },
+                    true
+                )
+            )
+        )
+    # Inspector group chip: an exported var with an @export_group shows its section name (e.g. "Combat"),
+    # so it reads at a glance which sheet variables share an Inspector group — the "group them in the sheet"
+    # half of the @export_group feature (the variable dialog's Inspector-group field sets it).
+    var inspector_group: String = str(options.get("group", "")).strip_edges()
+    if not inspector_group.is_empty():
+        row_data.spans.append(
+            _make_span(
+                inspector_group,
+                SemanticSpan.SpanType.KEYWORD,
+                variable_meta.merged(
+                    {
+                        "editable": false,
+                        "badge": true,
+                        "badge_style": "scope",
+                        "badge_bg": Color(0.30, 0.26, 0.44, 0.92),
+                        "badge_fg": Color(0.85, 0.80, 1.0, 1.0)
                     },
                     true
                 )

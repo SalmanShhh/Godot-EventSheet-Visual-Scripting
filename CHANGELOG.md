@@ -27,11 +27,15 @@
   `ACEDefinition.metadata` the picker and hover read. This is the compatibility covenant in code: never
   rename or delete a shipped `ace_id`, deprecate it instead. (`ace_deprecation_test`.)
 
-### Added — "@export" badge on variable rows
+### Added — "@export" badge + Inspector-group chip on variable rows
 
 - A sheet variable exposed to the Godot Inspector now carries a blue **"@export"** pill on its row, so
   while scrolling a sheet you can tell at a glance which variables show in the Inspector vs. stay internal.
   Tracks the compiler's default (exported unless explicitly off). (`variable_export_badge_test`.)
+- A variable assigned an **Inspector group** (the variable dialog's "Inspector group" field, which compiles
+  to `@export_group("Name")`) now shows that **group name as a chip** on its row — so it's legible in the
+  sheet which exported variables share an Inspector section, the "group them in the sheet" half of the
+  `@export_group` feature. (`variable_export_group_test`, which also pins the `@export_group` emission.)
 
 ### Added — Plain-language descriptions on hover (every ACE, function, and parameter)
 
