@@ -48,6 +48,34 @@ static func run() -> bool:
 		all_passed = _check("resolves to a typed find_children call (target + type substituted)",
 			output.contains("$Player.find_children(\"*\", \"Area2D\", true, false)"), true) and all_passed
 
+	# ── Object-level animation verbs: act on the OBJECT, auto-resolve its player (no path / no block) ──
+	for anim_id: String in ["PlayAnimationInObject", "StopAnimationInObject", "PlaySpriteAnimationInObject", "IsObjectAnimating"]:
+		all_passed = _check("%s registered under Animation" % anim_id,
+			by_id.has(anim_id) and (by_id[anim_id] as ACEDescriptor).category == "Animation", true) and all_passed
+
+	# Play Animation (in object) compiles to a null-guarded, typed auto-resolve that plays — and PARSES
+	# (the multi-line {uid} template, baked here as the dock bakes it per row).
+	if by_id.has("PlayAnimationInObject"):
+		var anim_sheet: EventSheetResource = EventSheetResource.new()
+		anim_sheet.host_class = "Node2D"
+		var anim_event: EventRow = EventRow.new()
+		anim_event.trigger_provider_id = "Core"
+		anim_event.trigger_id = "OnReady"
+		var anim_action: ACEAction = ACEAction.new()
+		anim_action.provider_id = "Core"
+		anim_action.ace_id = "PlayAnimationInObject"
+		anim_action.codegen_template = (by_id["PlayAnimationInObject"] as ACEDescriptor).codegen_template.replace("{uid}", "t0")
+		anim_action.params = {"target": "$Player", "anim": "\"walk\""}
+		anim_event.actions.append(anim_action)
+		anim_sheet.events.append(anim_event)
+		var anim_out: String = str(SheetCompiler.compile(anim_sheet, "user://anim_in_object.gd").get("output", ""))
+		all_passed = _check("Play Animation (in object) auto-resolves the AnimationPlayer, guards null, and plays",
+			anim_out.contains("find_children(\"*\", \"AnimationPlayer\", true, false).pop_front() as AnimationPlayer") \
+			and anim_out.contains("if __ap_t0:") and anim_out.contains("__ap_t0.play(&\"walk\")"), true) and all_passed
+		var anim_script: GDScript = GDScript.new()
+		anim_script.source_code = anim_out
+		all_passed = _check("Play Animation (in object) output parses as GDScript", anim_script.reload() == OK, true) and all_passed
+
 	return all_passed
 
 static func _is(by_id: Dictionary, ace_id: String, ace_type: int) -> bool:
