@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed — Node picker prefers scene-unique names (`%Name`) for deep nodes
+
+- Picking a node that carries a **scene-unique name** now hands back **`%Name`** — a flat handle that
+  collapses a deep `$A/B/C/D` path to `%D` and survives the node being moved — instead of the brittle
+  relative path. The picker tree also shows the `%`handle so you can see which deep nodes are
+  `%`-accessible at a glance. Godot's own answer to node-heavy objects, surfaced where you pick.
+  (`node_picker_test`.)
+
 ### Changed — Function calls read as named verbs (show abstraction level)
 
 - A **Call to a sheet Function** now renders as **"ƒ <Verb Name>"** (its friendly name, under a `ƒ` chip)

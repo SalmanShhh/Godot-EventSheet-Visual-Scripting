@@ -101,6 +101,29 @@ static func run() -> bool:
 	all_passed = _check("keypad keys map to KEY_KP_*",
 		ACEParamsDialog.key_constant_for(KEY_KP_ADD), "KEY_KP_ADD") and all_passed
 
+	# Unique-name (%) references collapse deep paths — Godot's answer to node-heavy objects. Picking a
+	# scene-unique deep node hands back %Name (a flat handle) instead of the brittle $A/B/C path.
+	var arena: Node2D = Node2D.new()
+	arena.name = "Arena"
+	var arena_visuals: Node2D = Node2D.new()
+	arena_visuals.name = "Visuals"
+	arena.add_child(arena_visuals)
+	arena_visuals.owner = arena
+	var arena_body: Sprite2D = Sprite2D.new()
+	arena_body.name = "Body"
+	arena_visuals.add_child(arena_body)
+	arena_body.owner = arena
+	all_passed = _check("a non-unique deep node uses the $path",
+		ACEParamsDialog._best_node_reference(arena, "Visuals/Body"), "$\"Visuals/Body\"") and all_passed
+	arena_body.unique_name_in_owner = true
+	all_passed = _check("a scene-unique deep node collapses to %Name",
+		ACEParamsDialog._best_node_reference(arena, "Visuals/Body"), "%Body") and all_passed
+	dialog._node_picker_search.text = ""
+	dialog._populate_node_picker_from_root(arena)
+	all_passed = _check("the picker tree shows the %handle for a unique node",
+		_tree_column(dialog._node_picker_tree, 0).has("%Body"), true) and all_passed
+	arena.free()
+
 	host.free()
 	root.free()
 	return all_passed

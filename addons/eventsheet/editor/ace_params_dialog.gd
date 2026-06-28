@@ -568,6 +568,18 @@ static func _node_reference(relative_path: String) -> String:
 		return "$%s" % relative_path
 	return "$\"%s\"" % relative_path
 
+## The shortest robust reference for a picked node — Godot's answer to deep, node-heavy objects. When the
+## node carries a scene-unique name (owner-scoped to this scene), returns "%Name": a flat handle that
+## collapses a deep $A/B/C/D path to %D AND survives the node being moved in the tree. Otherwise falls back
+## to the relative $path. Experienced Godot users mark key deep nodes unique for exactly this — so picking
+## one should hand back the % shortcut, not the brittle path.
+static func _best_node_reference(scene_root: Node, relative_path: String) -> String:
+	if scene_root != null and not relative_path.is_empty() and relative_path != ".":
+		var node: Node = scene_root.get_node_or_null(NodePath(relative_path))
+		if node != null and node.unique_name_in_owner and (node.owner == scene_root or node == scene_root):
+			return "%" + str(node.name)
+	return _node_reference(relative_path)
+
 ## Audio params: a path field plus a ▶ button that previews the sound in the editor
 ## (loads the stream into a throwaway player under the dialog; ■ stops it).
 ## Shared scaffold for path-style fields (audio/scene/…): container + expanding
@@ -954,7 +966,10 @@ func _append_node_picker_rows(node: Node, scene_root: Node, parent_item: TreeIte
 	var relative: String = str(scene_root.get_path_to(node))
 	if _chip_filter_allows(node) and node_matches_query(node, relative, query):
 		var item: TreeItem = _node_picker_tree.create_item(parent_item)
-		item.set_text(0, relative if node != scene_root else node.name)
+		# Show the %handle for scene-unique nodes (what picking them yields) so the deep-path shortcut is
+		# visible at a glance; the metadata stays the relative path, resolved back to %Name on use.
+		var is_unique: bool = node != scene_root and node.unique_name_in_owner and node.owner == scene_root
+		item.set_text(0, ("%" + str(node.name)) if is_unique else (relative if node != scene_root else node.name))
 		item.set_text(1, node.get_class())
 		item.set_metadata(0, relative if node != scene_root else ".")
 	for child: Node in node.get_children():
@@ -1115,7 +1130,8 @@ func _on_node_picker_activated() -> void:
 	if relative.begins_with("scene::"):
 		reference = format_quoted_literal(relative.trim_prefix("scene::"))
 	else:
-		reference = "self" if relative == "." else _node_reference(relative)
+		var picker_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
+		reference = "self" if relative == "." else _best_node_reference(picker_root, relative)
 		var existing_index: int = _node_picker_recents.find(relative)
 		if existing_index >= 0:
 			_node_picker_recents.remove_at(existing_index)
