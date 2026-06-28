@@ -130,6 +130,10 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	# `##` block right after `extends`, so it round-trips byte-identically.
 	for description_line: String in _class_description_lines(sheet):
 		lines.append(description_line)
+	# Family without a type: the @ace_family marker (and the derived family_<class> group) both need a
+	# class name, so a flagged-but-unnamed sheet would silently be no family at all — surface it.
+	if sheet.is_family and sheet.custom_class_name.strip_edges().is_empty():
+		(result["warnings"] as Array).append("Sheet is marked as a Family but has no custom class name; a Family needs a type its instances share — give it a Custom Node class name. The @ace_family marker was skipped.")
 
 	var source_map: Array = result["source_map"]
 	if sheet.behavior_mode:

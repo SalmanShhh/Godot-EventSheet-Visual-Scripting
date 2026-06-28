@@ -53,6 +53,17 @@ static func run() -> bool:
 	all_passed = _check("the per-instance action runs inside the loop body",
 		game_out.contains("enemy.modulate = Color.RED"), true) and all_passed
 
+	# ── A family flag with no class name warns (it would silently be no family at all) ──
+	var unnamed: EventSheetResource = EventSheetResource.new()
+	unnamed.host_class = "Node2D"
+	unnamed.is_family = true  # but no custom_class_name
+	var unnamed_result: Dictionary = SheetCompiler.compile(unnamed, "user://__family_unnamed.gd")
+	var warned: bool = false
+	for warning: String in unnamed_result.get("warnings", []):
+		if warning.contains("Family") and warning.contains("class name"):
+			warned = true
+	all_passed = _check("a Family with no class name warns", warned, true) and all_passed
+
 	return all_passed
 
 ## Compiles a one-class sheet with the given family flag, re-imports it, and returns the recovered flag.

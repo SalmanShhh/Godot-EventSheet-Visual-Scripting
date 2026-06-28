@@ -5633,6 +5633,7 @@ var _sheet_type_icon_edit: LineEdit = null
 var _sheet_type_description_edit: TextEdit = null
 var _sheet_type_host_edit: LineEdit = null
 var _sheet_type_tool_check: CheckBox = null
+var _sheet_type_family_check: CheckBox = null
 var _sheet_type_tags_edit: LineEdit = null
 var _sheet_type_includes_edit: LineEdit = null
 var _sheet_type_uses_edit: LineEdit = null
@@ -5656,6 +5657,7 @@ func _open_sheet_type_dialog() -> void:
     _sheet_type_description_edit.text = _current_sheet.class_description
     _sheet_type_host_edit.text = _current_sheet.host_class
     _sheet_type_tool_check.button_pressed = _current_sheet.tool_mode
+    _sheet_type_family_check.button_pressed = _current_sheet.is_family
     _sheet_type_tags_edit.text = ", ".join(_current_sheet.addon_tags)
     _sheet_type_includes_edit.text = ", ".join(PackedStringArray(_current_sheet.includes))
     _sheet_type_uses_edit.text = ", ".join(PackedStringArray(_current_sheet.uses_addons))
@@ -5684,6 +5686,12 @@ func _ensure_sheet_type_dialog() -> void:
     _sheet_type_tool_check = CheckBox.new()
     _sheet_type_tool_check.text = "@tool — runs inside the editor (EXPERIMENTAL, editor-version-coupled)"
     form.add_child(_sheet_type_tool_check)
+    # Family flag (Construct-style horizontal abstraction): a named sheet's instances are collected into
+    # group family_<class>, so other sheets can write ONE rule over all of them ("for each Enemy: …").
+    # Only meaningful for a Custom Node / Behavior (it needs a class name); cleared for a plain sheet.
+    _sheet_type_family_check = CheckBox.new()
+    _sheet_type_family_check.text = "Family — collect instances into a group so one rule can target all of them"
+    form.add_child(_sheet_type_family_check)
     _sheet_type_tags_edit = _add_sheet_type_field(form, "Tags (comma-separated)", "movement, retro, jam")
     _sheet_type_includes_edit = _add_sheet_type_field(form, "Includes (addon sheets)", "res://eventsheet_addons/screen_shake/screen_shake.tres, …")
     _sheet_type_uses_edit = _add_sheet_type_field(form, "Uses (addon classes)", "ScreenShake, MathHelpers — owned helper instances")
@@ -5789,12 +5797,15 @@ func _on_sheet_type_confirmed() -> void:
         VariableDialog.parse_options(_sheet_type_uses_edit.text),
         VariableDialog.parse_options(_sheet_type_requires_edit.text),
         _sheet_type_autoload_edit.text,
-        _sheet_type_description_edit.text
+        _sheet_type_description_edit.text,
+        _sheet_type_family_check.button_pressed
     )
 
 ## Applies the chosen sheet type (0 = plain, 1 = custom node, 2 = behavior) undoably and
-## refreshes every identity surface (banner, tab badge, header, lint context).
-func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray(), include_paths: PackedStringArray = PackedStringArray(), uses_classes: PackedStringArray = PackedStringArray(), requires_classes: PackedStringArray = PackedStringArray(), autoload_name_text: String = "", class_description_text: String = "") -> void:
+## refreshes every identity surface (banner, tab badge, header, lint context). `family_enabled` marks
+## a named sheet as a Family (instances collected into group family_<class>); it's cleared for a plain
+## sheet, which has no class name to derive a family group from.
+func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray(), include_paths: PackedStringArray = PackedStringArray(), uses_classes: PackedStringArray = PackedStringArray(), requires_classes: PackedStringArray = PackedStringArray(), autoload_name_text: String = "", class_description_text: String = "", family_enabled: bool = false) -> void:
     if _current_sheet == null:
         return
     var changed: bool = _perform_undoable_sheet_edit("Set Sheet Type", func() -> bool:
@@ -5811,6 +5822,9 @@ func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_p
         _current_sheet.tool_mode = tool_enabled or type_index == 3
         _current_sheet.custom_class_name = class_name_text.strip_edges() if type_index != 0 else ""
         _current_sheet.custom_class_icon = icon_path.strip_edges() if type_index != 0 else ""
+        # Family rides with the named-type identity: a plain sheet has no class to form a group from, so
+        # clear it there (mirrors custom_class_name) to avoid a stale flag that would emit nothing.
+        _current_sheet.is_family = family_enabled and type_index != 0
         # Plain sheets aren't addons: clear tags like the class name/icon (otherwise a
         # type switch would leave stale tags that never emit — silent confusion).
         _current_sheet.addon_tags = addon_tags if type_index != 0 else PackedStringArray()
