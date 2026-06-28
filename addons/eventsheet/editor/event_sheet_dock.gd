@@ -8244,6 +8244,17 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 
 # ── Variable dialog signal handler ────────────────────────────────────────────
 
+## The Inspector-grouping subset a tree-placed LocalVariable carries (group/subgroup) — the only attributes
+## the tree-var emission supports. Keeps a reopened grouped variable editable: the dialog populates these
+## (via the edit context) and this stores back what the user changes, so the group isn't stuck or cleared.
+static func _tree_group_attributes(source: Dictionary) -> Dictionary:
+    var result: Dictionary = {}
+    for attr_key: String in ["group", "subgroup"]:
+        var attr_value: String = str(source.get(attr_key, "")).strip_edges()
+        if not attr_value.is_empty():
+            result[attr_key] = attr_value
+    return result
+
 func _on_variable_dialog_confirmed(
     var_name: String,
     type_name: String,
@@ -8292,6 +8303,7 @@ func _on_variable_dialog_confirmed(
                 existing.default_value = default_value
                 existing.is_constant = resolved_constant
                 existing.exported = exported
+                existing.attributes = _tree_group_attributes(attributes)
                 message["text"] = "Updated variable %s." % var_name
                 return true
             var tree_var: LocalVariable = LocalVariable.new()
@@ -8301,6 +8313,7 @@ func _on_variable_dialog_confirmed(
             tree_var.default_value = default_value
             tree_var.is_constant = resolved_constant
             tree_var.exported = exported
+            tree_var.attributes = _tree_group_attributes(attributes)
             var anchor: Variant = context.get("insert_below", null)
             if anchor is Resource:
                 var location: Dictionary = _find_resource_location(anchor as Resource)
@@ -8445,7 +8458,7 @@ func _edit_context_variable() -> void:
             return
         _variable_dlg.open_for_edit(
             "tree",
-            {"editing": true, "variable_resource": tree_var},
+            {"editing": true, "variable_resource": tree_var, "attributes": tree_var.attributes},
             tree_var.name,
             tree_var.type_name,
             tree_var.default_value,

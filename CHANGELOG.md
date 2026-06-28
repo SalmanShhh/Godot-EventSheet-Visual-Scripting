@@ -10,8 +10,10 @@
   **absorbs the group lines onto the variable** — gated by the verify-lift rule, so it's byte-exact-safe (a
   wrong guess just leaves a block, never corrupts) — and the reopened variable reads as a clean grouped
   variable with its **"Group › Subgroup"** chip. `LocalVariable` gained an `attributes` dict; the tree-var
-  emission re-emits the group lines matching the dict-var path exactly. (`variable_group_roundtrip_test`;
-  zero showcase drift.)
+  emission re-emits the group lines matching the dict-var path exactly. The reopened variable is also fully
+  **editable** — the dialog now populates its group/subgroup and the apply saves them for tree variables
+  (previously the tree path ignored attributes, so a reopened group was stuck or silently cleared on edit).
+  (`variable_group_roundtrip_test`; zero showcase drift.)
 
 ### Added — `@export_subgroup` for nested Inspector grouping
 

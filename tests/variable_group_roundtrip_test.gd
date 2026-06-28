@@ -57,6 +57,14 @@ static func run() -> bool:
 		all_passed = _check("an ungrouped var emits a single line",
 			SheetCompiler._emit_tree_variable_line(plain), "@export var speed: float = 5.0") and all_passed
 
+	# Editability: the dialog's apply keeps only group/subgroup on a tree variable (the attributes the tree
+	# path round-trips), so a reopened grouped var stays editable instead of stuck or cleared.
+	all_passed = _check("tree-var apply keeps only group + subgroup",
+		EventSheetDock._tree_group_attributes({"group": "Combat", "subgroup": "Melee", "tooltip": "x", "range": {"min": "0"}}),
+		{"group": "Combat", "subgroup": "Melee"}) and all_passed
+	all_passed = _check("an ungrouped tree-var apply yields empty attributes",
+		EventSheetDock._tree_group_attributes({"tooltip": "x"}), {}) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
