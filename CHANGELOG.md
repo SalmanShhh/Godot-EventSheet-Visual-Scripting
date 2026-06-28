@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed — "Open as Event Sheet" is easier to find
+
+- Right-clicking **any `.gd`** (or an EventSheet `.tres`) in the **FileSystem dock** offers **"Open as
+  Event Sheet"** — a GDScript-backed sheet opens an arbitrary script losslessly. The item now carries the
+  Script icon so it stands out among Godot's native file actions (the script editor's right-click item too).
+  The availability decision is now a pure, unit-tested seam (`should_offer_open_as_sheet`,
+  `open_as_sheet_menu_test`) so the entry point can't silently regress. You can also open any `.gd` via the
+  dock's **Sheet ▸ Open…** browser (`.gd` is the first filter).
+
 ### Changed — Faster Construct-style event authoring
 
 - **Double-click empty space opens the ACE picker** (new-event mode) instead of dropping a blank event you
