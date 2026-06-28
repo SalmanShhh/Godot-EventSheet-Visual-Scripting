@@ -45,12 +45,34 @@ static func run() -> bool:
 	all_passed = _check("the logic row is NOT swallowed by the strip",
 		_has_raw_row_with(rows, "velocity.y += gravity"), true) and all_passed
 
-	# ── A single scaffolding row is left inline (not worth a strip) ──
+	all_passed = _check("the strip is recognized as the synthetic header (inert for selection)",
+		strip != null and viewport._is_synthetic_scaffolding_strip(strip), true) and all_passed
+
+	# ── A SINGLE multi-line prelude block collapses too (the importer bundles a whole prelude into ONE
+	# RawCodeRow, so the threshold is line-based, not row-based — else the strip would never fire). ──
+	var prelude_only: EventSheetResource = EventSheetResource.new()
+	prelude_only.events.append(_raw("class_name Foe\nextends Node2D\n## @ace_family(Foe)"))  # 3 lines, 1 row
+	prelude_only.events.append(_raw("position += velocity"))
+	all_passed = _check("a single ≥3-line prelude block collapses into a strip",
+		_first_strip(viewport._build_rows_from_sheet(prelude_only)) != null, true) and all_passed
+
+	# ── A SHORT (<3 line) single scaffold row is left inline (not worth hiding) ──
 	var lone: EventSheetResource = EventSheetResource.new()
-	lone.events.append(_raw("class_name Solo\nextends Node"))
+	lone.events.append(_raw("extends Node"))  # 1 line
 	lone.events.append(_raw("velocity.y += gravity"))
-	all_passed = _check("a single scaffolding row stays inline (no strip)",
+	all_passed = _check("a sub-threshold (<3 line) scaffold row stays inline (no strip)",
 		_first_strip(viewport._build_rows_from_sheet(lone)) == null, true) and all_passed
+
+	# ── A compile-error marker on a prelude block SURVIVES into the collapsed strip (not dropped) ──
+	var flagged_sheet: EventSheetResource = EventSheetResource.new()
+	var flagged_prelude: RawCodeRow = _raw("class_name Bad\nextends Node\n## @ace_family(Bad)")
+	flagged_sheet.events.append(flagged_prelude)
+	flagged_sheet.events.append(_raw("position += velocity"))
+	viewport._row_diagnostics = {str(flagged_prelude.get_instance_id()): "boom"}
+	var flagged_strip: EventRowData = _first_strip(viewport._build_rows_from_sheet(flagged_sheet))
+	var marker_survived: bool = flagged_strip != null and not flagged_strip.children.is_empty() \
+		and flagged_strip.children[0].error_message == "boom"
+	all_passed = _check("a diagnostic on a prelude block survives into the strip", marker_survived, true) and all_passed
 	viewport.free()
 
 	return all_passed

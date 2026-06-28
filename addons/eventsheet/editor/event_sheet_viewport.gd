@@ -1511,20 +1511,31 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
     root_rows.append_array(_build_global_variable_rows(sheet))
     # Blocks spec P1 — collapse the LEADING run of class scaffolding (prelude / annotations /
     # host-binding) into one foldable "Class setup" strip, so an opened .gd reads as logic, not
-    # boilerplate. Only the leading run, only when it's worth it (≥2 rows), and the detector is
-    # conservative so real logic is never swept in. Pure editor view-state: the underlying RawCodeRows
-    # are unchanged + still selected/edited normally as the strip's children.
+    # boilerplate. The threshold is LINE-based, not row-based: the importer bundles a whole prelude into
+    # ONE multi-line RawCodeRow, so requiring ≥3 boilerplate lines (rather than ≥2 rows) is what makes the
+    # strip actually fire on real opened .gd files. The detector is conservative so real logic is never
+    # swept in. Pure editor view-state: the underlying RawCodeRows are unchanged + still selected/edited
+    # normally as the strip's children. Measure the run first (cheap, no row build) so a sub-threshold
+    # prelude isn't built twice.
+    var scaffold_end: int = 0
+    var scaffold_lines: int = 0
+    while scaffold_end < sheet.events.size() \
+            and sheet.events[scaffold_end] is RawCodeRow \
+            and is_scaffolding_code((sheet.events[scaffold_end] as RawCodeRow).code):
+        scaffold_lines += maxi((sheet.events[scaffold_end] as RawCodeRow).code.split("\n").size(), 1)
+        scaffold_end += 1
     var event_start: int = 0
-    var scaffold_rows: Array[EventRowData] = []
-    while event_start < sheet.events.size() \
-            and sheet.events[event_start] is RawCodeRow \
-            and is_scaffolding_code((sheet.events[event_start] as RawCodeRow).code):
-        scaffold_rows.append(_build_raw_code_row(sheet.events[event_start] as RawCodeRow, 1))
-        event_start += 1
-    if scaffold_rows.size() >= 2:
-        root_rows.append(_build_scaffolding_strip_row(sheet, scaffold_rows))
-    else:
-        event_start = 0  # not worth a strip — fall through and render the rows inline as before
+    if scaffold_lines >= 3:
+        var scaffold_rows: Array[EventRowData] = []
+        for scaffold_index in range(scaffold_end):
+            # Build children through the shared dispatcher (not _build_raw_code_row directly) so a
+            # compile-error marker on a prelude block survives into the strip instead of being dropped.
+            var child: EventRowData = _build_row_from_resource(sheet.events[scaffold_index], 1)
+            if child != null:
+                scaffold_rows.append(child)
+        if not scaffold_rows.is_empty():
+            root_rows.append(_build_scaffolding_strip_row(sheet, scaffold_rows))
+            event_start = scaffold_end
     for entry_index in range(event_start, sheet.events.size()):
         var row_data: EventRowData = _build_row_from_resource(sheet.events[entry_index], 0)
         if row_data != null:
@@ -1568,6 +1579,12 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
         })
     ]
     return row_data
+
+## True for the synthetic "Class setup" header built above: a null-source SECTION row whose uid marks it
+## as the scaffolding strip. Used to keep it inert for selection/delete (it owns no resource of its own —
+## its children do), while still allowing the fold arrow (which is gated only on `children`).
+func _is_synthetic_scaffolding_strip(row_data: EventRowData) -> bool:
+    return row_data != null and row_data.source_resource == null and row_data.row_uid.begins_with("scaffolding_strip_")
 
 ## A clickable footer row that appends a new event into owner_resource (a group or the
 ## sheet). source_resource stays null on purpose so selection/delete/drag paths (which act on
@@ -3107,7 +3124,11 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
             # so drop any span-only provenance — they must survive a later span on/off toggle.
             _selected_row_uids[row_uid] = true
             _span_only_row_uids.erase(row_uid)
-            if not row_data.children.is_empty():
+            # The synthetic "Class setup" strip is an inert view-only header (null source): selecting it
+            # must NOT cascade-select its prelude children, or pressing Delete would silently wipe
+            # class_name/extends/annotations (when expanded) or no-op confusingly (when folded). Expand it
+            # and select an individual block to act on the prelude.
+            if not row_data.children.is_empty() and not _is_synthetic_scaffolding_strip(row_data):
                 for descendant_uid in _collect_descendant_row_uids(row_data):
                     _selected_row_uids[str(descendant_uid)] = true
                     _span_only_row_uids.erase(str(descendant_uid))

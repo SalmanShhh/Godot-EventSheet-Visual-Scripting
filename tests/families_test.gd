@@ -31,6 +31,17 @@ static func run() -> bool:
 	# ── Round-trip: re-importing the compiled .gd recovers the family flag ──
 	var reimported: EventSheetResource = GDScriptImporter.new().import_external_source(family_out)
 	all_passed = _check("re-importing the .gd recovers is_family", reimported.is_family, true) and all_passed
+	# Byte gate: an opened .gd recompiles to itself EXACTLY — pins the @ace_family marker's PLACEMENT
+	# (not just its presence), so it can't drift or double-emit. Must go through the real opened-file path:
+	# write to a .gd, import_external (which sets external_source_path), then recompile via the
+	# order-preserving external path (the same lossless route every opened .gd takes).
+	var rt_path: String = "user://__family_rt.gd"
+	var rt_file: FileAccess = FileAccess.open(rt_path, FileAccess.WRITE)
+	rt_file.store_string(family_out)
+	rt_file.close()
+	var reopened: EventSheetResource = GDScriptImporter.new().import_external(rt_path)
+	var recompiled: String = str(SheetCompiler.compile(reopened, "user://__family_rt2.gd").get("output", ""))
+	all_passed = _check("the family .gd recompiles byte-identically (opened-file round-trip)", recompiled == family_out, true) and all_passed
 	all_passed = _check("a non-family sheet stays non-family after round-trip",
 		not _roundtrip_is_family("Plain", false), true) and all_passed
 
