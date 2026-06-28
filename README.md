@@ -76,9 +76,10 @@ for a full, regenerated example.
    plugin later is clean and reversible — see the [uninstall guide](docs/UNINSTALL.md).
 2. **Project → Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
-4. **New…** → *Platformer Starter* (or open `demo/sheets/player.tres`), add events —
-   live search understands C3 phrases like *"every tick"* or *"go to layout"* — and
-   press **Compile**. The generated `.gd` is the script you attach and ship.
+4. **New…** → *Platformer Starter*. A sheet is just a plain **`.gd` file** by default (no
+   `.tres` needed) — add events (live search understands C3 phrases like *"every tick"* or
+   *"go to layout"*) and Run. Prefer code? **Open in Godot** edits the same `.gd` in Godot's
+   own script editor, and the visual sheet and the code stay in sync.
 5. Coming from Construct? Read the [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) —
    it maps every C3 concept, behavior, and plugin to its home here.
 6. Learning by building? The [recipes](docs/RECIPES.md) walk through a platformer, health,
@@ -103,9 +104,11 @@ for a full, regenerated example.
   through the generated `.gd` in Godot's own debugger — no bespoke runtime to learn. F9 conditional
   breakpoints work from the sheet, and the in-editor Live Values / Event Trace are an optional
   convenience layered on top, not the only way in.
-- **Two-way street.** Open *any* `.gd` file as a sheet (lossless, byte-identical
-  round-trips), paste GDScript and it converts to events, write GDScript that calls
-  sheet-built classes like any other class.
+- **A sheet is just `.gd` — no `.tres` needed.** New sheets save as plain GDScript by default;
+  open *any* `.gd` as a sheet (lossless, byte-identical round-trips), edit it visually **or**
+  directly in Godot's own script editor (**Open in Godot**) with the two kept in sync, paste
+  GDScript and it converts to events, and write GDScript that calls sheet-built classes like any
+  other class.
 - **C3 muscle memory works.** The grammar, the picker, behaviors-as-components, combos,
   waits, press-a-key capture, the 31-pack addon set (including ports of custom C3 addons —
   Virtual Cursor, an event-driven Drag & Drop, a Health pack with absorption + shield
