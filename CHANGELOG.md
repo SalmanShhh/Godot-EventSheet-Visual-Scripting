@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added — Extract to Function: turn a pile of rows into one named verb
+
+- Right-click an event's actions → **"Extract Actions to Function…"** → name them, and a stack of
+  statement-level rows becomes ONE reusable, named function — the *create-abstraction* gesture. Answers
+  the "why not just type the line?" question directly: you write it once, **name the concept** ("Apply
+  Physics"), and never type it again; the function shows in the picker as a verb callable from any sheet.
+- Elevates the old GDScript-only extractor: now works on **structured ACE actions** too (not just code
+  blocks) and **preserves them as rows** in the function body. The typed name is snake_cased to a valid
+  method (`apply_physics`) while the readable label is kept for the picker. Undoable; exposed as an ACE.
+  Reachable from the action right-click menu and the event **More ▸** menu. (`extract_to_function_test`.)
+- **Keeps the generated `.gd` valid** (the load-bearing invariant): a name that's a GDScript keyword or a
+  host/native method (`queue_free`) is uniquified past it rather than emitting an override; and extracting
+  actions that reference an event-local variable or For-Each iterator is **refused with the offending
+  name** instead of silently producing a script that won't parse.
+
 ### Added — Families: one rule for every instance of a type (Construct-style horizontal abstraction)
 
 - A sheet can now be marked a **Family** (Sheet Type ▸ "Family", on a Custom Node / Behavior): its

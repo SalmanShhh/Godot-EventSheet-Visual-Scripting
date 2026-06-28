@@ -68,7 +68,54 @@ static func run() -> bool:
 	script.source_code = output
 	all_passed = _check("compiled output parses", script.reload() == OK, true) and all_passed
 
+	# ── Guard: a GDScript reserved keyword as a name must NOT yield `func func():` (unparseable) ──
+	var kw_sheet: EventSheetResource = EventSheetResource.new()
+	kw_sheet.host_class = "Node2D"
+	var kw_event: EventRow = EventRow.new()
+	kw_event.actions.append(_queue_free_action())
+	kw_sheet.events.append(kw_event)
+	var kw_fn: EventFunction = EventSheetDock.extract_actions_to_function(kw_sheet, kw_event, kw_event.actions.duplicate(), "func")
+	all_passed = _check("a reserved keyword name is not used verbatim", kw_fn != null and kw_fn.function_name != "func", true) and all_passed
+	var kw_script: GDScript = GDScript.new()
+	kw_script.source_code = str(SheetCompiler.compile(kw_sheet, "user://extract_kw.gd").get("output", ""))
+	all_passed = _check("a keyword-named extract still parses", kw_script.reload() == OK, true) and all_passed
+
+	# ── Guard: a host/native method name (queue_free on a Node2D) must NOT be overridden ──
+	var hm_sheet: EventSheetResource = EventSheetResource.new()
+	hm_sheet.host_class = "Node2D"
+	var hm_event: EventRow = EventRow.new()
+	hm_event.actions.append(_queue_free_action())
+	hm_sheet.events.append(hm_event)
+	var hm_fn: EventFunction = EventSheetDock.extract_actions_to_function(hm_sheet, hm_event, hm_event.actions.duplicate(), "queue free")
+	all_passed = _check("a host-method name is not overridden", hm_fn != null and hm_fn.function_name != "queue_free", true) and all_passed
+
+	# ── Guard: extracting an action that captures an event-local var is REFUSED (would not parse) ──
+	var sc_sheet: EventSheetResource = EventSheetResource.new()
+	sc_sheet.host_class = "Node2D"
+	var sc_event: EventRow = EventRow.new()
+	var sc_local: LocalVariable = LocalVariable.new()
+	sc_local.name = "speed"
+	sc_local.type_name = "float"
+	sc_event.local_variables.append(sc_local)
+	var sc_action: RawCodeRow = RawCodeRow.new()
+	sc_action.code = "print(speed)"
+	sc_event.actions.append(sc_action)
+	sc_sheet.events.append(sc_event)
+	all_passed = _check("extract is refused when an action captures an event-local var",
+		EventSheetDock.extract_actions_to_function(sc_sheet, sc_event, sc_event.actions.duplicate(), "use_speed") == null, true) and all_passed
+	# A whole-word match only: "speedometer" must NOT be mistaken for the local "speed".
+	sc_action.code = "print(speedometer)"
+	all_passed = _check("scope check is whole-word (speedometer != speed)",
+		EventSheetDock.extract_actions_to_function(sc_sheet, sc_event, sc_event.actions.duplicate(), "use_speed") != null, true) and all_passed
+
 	return all_passed
+
+static func _queue_free_action() -> ACEAction:
+	var a: ACEAction = ACEAction.new()
+	a.provider_id = "Core"
+	a.ace_id = "QueueFree"
+	a.codegen_template = "queue_free()"
+	return a
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

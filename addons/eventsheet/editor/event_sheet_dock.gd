@@ -1090,8 +1090,10 @@ func _build_context_menus() -> void:
     _action_context_menu.add_item("Detach Comment To Row", ACTION_MENU_DETACH_COMMENT)
     _action_context_menu.add_item("Delete Action", ACTION_MENU_DELETE)
     _action_context_menu.add_separator()
-    # The "create abstraction" gesture: turn this event's actions into one named, reusable verb.
-    _action_context_menu.add_item("Extract Actions to Function…", ACTION_MENU_EXTRACT_FN)
+    # The "create abstraction" gesture: turn this event's actions into one named, reusable verb. Labelled
+    # "All" so the all-or-nothing scope is explicit (it extracts every action of the event, not just the
+    # right-clicked one).
+    _action_context_menu.add_item("Extract All Actions to Function…", ACTION_MENU_EXTRACT_FN)
     _action_context_menu.id_pressed.connect(_on_action_context_menu_id_pressed)
     add_child(_action_context_menu)
 
@@ -1530,6 +1532,37 @@ func _do_extract_to_include(path: String, rows: Array[Resource]) -> void:
     if changed:
         _mark_dirty("Extracted %d row(s) into %s (now included)." % [rows.size(), target.get_file()])
 
+## The first event-SCOPED identifier (an event-local variable or a For-Each iterator name) referenced by
+## the given actions, or "" if none. An extracted function is a SEPARATE method, so it can't see these —
+## extracting an action that uses one would emit a script that won't parse. The dock refuses with this
+## name (a clear message) instead of silently producing a broken .gd. Whole-word match so "speed" doesn't
+## trip on "speedometer". Scans GDScript blocks, ACE param/template text, and a Match action's subject.
+static func _scope_capture_offender(event: EventRow, actions: Array) -> String:
+    var scoped: PackedStringArray = PackedStringArray()
+    for local_entry: Variant in event.local_variables:
+        if local_entry is LocalVariable and not (local_entry as LocalVariable).name.strip_edges().is_empty():
+            scoped.append((local_entry as LocalVariable).name.strip_edges())
+    for filter_entry: Variant in event.pick_filters:
+        if filter_entry is PickFilter and not (filter_entry as PickFilter).iterator_name.strip_edges().is_empty():
+            scoped.append((filter_entry as PickFilter).iterator_name.strip_edges())
+    if scoped.is_empty():
+        return ""
+    var text: String = ""
+    for action: Variant in actions:
+        if action is RawCodeRow:
+            text += "\n" + (action as RawCodeRow).code
+        elif action is ACEAction:
+            text += "\n" + (action as ACEAction).codegen_template
+            for value: Variant in (action as ACEAction).params.values():
+                text += "\n" + str(value)
+        elif action is MatchRow:
+            text += "\n" + (action as MatchRow).match_expression
+    for name: String in scoped:
+        var word: RegEx = RegEx.new()
+        if word.compile("\\b" + name + "\\b") == OK and word.search(text) != null:
+            return name
+    return ""
+
 ## Extracts the given actions of an event into a new NAMED, reusable Function (exposed as an ACE) and
 ## replaces them with a single Call — turning a pile of statement-level rows into one named CONCEPT (the
 ## "create abstraction" gesture). Unlike the old GDScript-only extractor, this works on ANY action —
@@ -1553,6 +1586,11 @@ static func extract_actions_to_function(sheet: EventSheetResource, event: EventR
         if actions_to_extract.has(action) and action is Resource:
             ordered.append(action)
     if ordered.is_empty():
+        return null
+    # Refuse if any action references an event-SCOPED name (a local variable or For-Each iterator): the
+    # extracted function is a separate method that can't see those, so extracting would emit a .gd that
+    # won't parse. The dock checks this first to show WHICH name; this guard makes the core safe too.
+    if not _scope_capture_offender(event, ordered).is_empty():
         return null
     var insert_at: int = event.actions.find(ordered[0])
     var function_name: String = _unique_extracted_function_name(sheet, _sanitize_function_name(raw_name))
@@ -1600,16 +1638,30 @@ static func _sanitize_function_name(raw: String) -> String:
         cleaned = "_" + cleaned
     return cleaned
 
-## A function name not already used by the sheet (extracted_action, extracted_action_2, …).
-static func _unique_extracted_function_name(sheet: EventSheetResource, base: String) -> String:
-    var existing: Dictionary = {}
+## True when `candidate` can't be the extracted method's name — because it's a GDScript reserved word, an
+## existing sheet function, or a method ALREADY on the host/base class. Each of those would emit a .gd
+## that fails to parse (`func if():`, a `queue_free` override under warnings-as-errors) or silently
+## shadows a built-in — so the uniquifier skips past them, keeping the generated script valid (the
+## load-bearing invariant). Reuses the shared keyword list the variable/enum dialogs already guard with.
+static func _function_name_is_taken(sheet: EventSheetResource, candidate: String) -> bool:
+    if EventSheetIdentifierRules.RESERVED.has(candidate):
+        return true
     for function_resource: Variant in sheet.functions:
-        if function_resource is EventFunction:
-            existing[(function_resource as EventFunction).function_name] = true
-    if not existing.has(base):
+        if function_resource is EventFunction and (function_resource as EventFunction).function_name == candidate:
+            return true
+    var host: String = sheet.host_class.strip_edges()
+    # no_inheritance = false (default) so inherited methods like Node.queue_free count too.
+    if not host.is_empty() and ClassDB.class_exists(host) and ClassDB.class_has_method(host, candidate):
+        return true
+    return false
+
+## A function name that is valid AND free (not reserved, not an existing function, not a host method) —
+## extracted_action, apply_physics_2, queue_free_2, func_2, …
+static func _unique_extracted_function_name(sheet: EventSheetResource, base: String) -> String:
+    if not _function_name_is_taken(sheet, base):
         return base
     var suffix: int = 2
-    while existing.has("%s_%d" % [base, suffix]):
+    while _function_name_is_taken(sheet, "%s_%d" % [base, suffix]):
         suffix += 1
     return "%s_%d" % [base, suffix]
 
@@ -1626,6 +1678,11 @@ func _extract_to_function_requested() -> void:
         _set_status("That event has no actions to extract into a function.", true)
         return
     var to_extract: Array = event.actions.duplicate()
+    # Refuse (with the offending name) rather than silently emit a script that won't parse.
+    var captured: String = _scope_capture_offender(event, to_extract)
+    if not captured.is_empty():
+        _set_status("Can't extract: these actions use \"%s\", which lives in this event's scope (a local variable or loop iterator) — a function can't see it. Move it to a sheet variable first, then extract." % captured, true)
+        return
     _prompt_extract_function_name(func(entered_name: String) -> void:
         var changed: bool = _perform_undoable_sheet_edit("Extract to Function", func() -> bool:
             return extract_actions_to_function(_current_sheet, event, to_extract, entered_name) != null
@@ -6063,7 +6120,7 @@ func _build_row_more_submenu(is_event: bool) -> void:
         m.add_item("Add Sub-Condition", ROW_MENU_ADD_SUB_CONDITION)
         m.add_item("Make Else", ROW_MENU_MAKE_ELSE)
         m.add_item("Make Else-If", ROW_MENU_MAKE_ELIF)
-        m.add_item("Extract Actions to Function…", ROW_MENU_EXTRACT_GDSCRIPT_FN)
+        m.add_item("Extract All Actions to Function…", ROW_MENU_EXTRACT_GDSCRIPT_FN)
         m.add_item("Add Comment Sub-Event", ROW_MENU_ADD_COMMENT_SUB_EVENT)
         m.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
         m.add_item("Set Breakpoint Condition…", ROW_MENU_BREAKPOINT_CONDITION)
