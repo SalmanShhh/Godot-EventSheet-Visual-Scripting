@@ -1989,7 +1989,10 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
                 descriptor.get("default", null),
                 0,
                 {
-                    "is_constant": bool(descriptor.get("const", descriptor.get("is_constant", false)))
+                    "is_constant": bool(descriptor.get("const", descriptor.get("is_constant", false))),
+                    # Match the compiler default (exported unless explicitly false) so the @export badge
+                    # agrees with what actually emits as an Inspector-visible @export var.
+                    "exported": bool(descriptor.get("exported", descriptor.get("exposed", true)))
                 }
             )
         )
@@ -2087,6 +2090,25 @@ func _build_variable_row(
                         "badge_style": "const",
                         "badge_bg": EventSheetPalette.COLOR_CONST_BADGE_BG,
                         "badge_fg": EventSheetPalette.COLOR_CONST_BADGE_FG
+                    },
+                    true
+                )
+            )
+        )
+    # Inspector tag: a variable exposed via @export gets a blue "@export" pill, so it's obvious at a glance
+    # while scrolling which sheet variables show up in the Godot Inspector vs. stay internal to the sheet.
+    if bool(options.get("exported", false)):
+        row_data.spans.append(
+            _make_span(
+                "@export",
+                SemanticSpan.SpanType.KEYWORD,
+                variable_meta.merged(
+                    {
+                        "editable": false,
+                        "badge": true,
+                        "badge_style": "scope",
+                        "badge_bg": Color(0.22, 0.34, 0.55, 0.92),
+                        "badge_fg": Color(0.76, 0.86, 1.0, 1.0)
                     },
                     true
                 )

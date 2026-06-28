@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added — "@export" badge on variable rows
+
+- A sheet variable exposed to the Godot Inspector now carries a blue **"@export"** pill on its row, so
+  while scrolling a sheet you can tell at a glance which variables show in the Inspector vs. stay internal.
+  Tracks the compiler's default (exported unless explicitly off). (`variable_export_badge_test`.)
+
 ### Added — Plain-language descriptions on hover (every ACE, function, and parameter)
 
 - Hovering a **condition / action / function-call** row in the sheet now shows its **plain-language
