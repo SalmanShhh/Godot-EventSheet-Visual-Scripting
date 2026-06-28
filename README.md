@@ -10,7 +10,7 @@ project balloons to thousands of events.
 > [!WARNING]
 > **Purely experimental — early, vibecoded, and not yet validated.** This plugin is an
 > experiment, not a production tool: it has been built almost entirely through
-> AI-assisted ("vibe") coding. The test suite is large (2,500+ CI-gated assertions)
+> AI-assisted ("vibe") coding. The test suite is large (3,400+ CI-gated assertions)
 > and every feature ships with regression tests, but the project has **not yet been
 > validated by real-world use**. It is **very early in development** and **subject to
 > large, sweeping changes** between releases — do not build anything you can't afford
@@ -133,7 +133,7 @@ for a full, regenerated example.
 - **Some C3 plugins intentionally have no equivalent** (Multiplayer, Drawing Canvas,
   XML): the migration guide points to the native Godot feature instead — that honesty
   keeps the project maintainable.
-- **Purely experimental, vibecoded project.** Built AI-first with a large CI-gated suite (2,500+
+- **Purely experimental, vibecoded project.** Built AI-first with a large CI-gated suite (3,400+
   assertions) standing in for mileage it hasn't earned yet — real-world validation is
   still ahead, and large sweeping changes between releases are likely (see the warning
   up top).
@@ -165,14 +165,17 @@ still ships as plain GDScript).
 ### The editor (C3-parity UX on a virtualized canvas)
 - Two-lane condition/action rows, object icons + labels, flat cells, whole-cell click
   targets, drag/drop with insertion arrows, groups (with descriptions), comments
-  (multiline, colored, color swatches for Color params), multi-select (box / Ctrl /
+  (multiline, colored), **click-to-pick colour swatches** on Color params (opens an inline
+  `ColorPicker` right on the cell — no dialog), **drag a Scene-dock node onto a param value**
+  to fill it with the node's `%reference`, multi-select (box / Ctrl /
   Shift-range), copy/paste,
   enable/disable with strikethrough, full undo/redo.
 - **Find & Replace (Ctrl+F)** — one undoable Replace All across comments, params,
   blocks and pick filters; script-editor shortcuts (**F9 real breakpoints** that pause
   the Godot debugger in debug compiles, **Ctrl+/** to toggle rows, Alt+Up/Down to move
   rows), slow-double-click rename, quick-add bar ("type to insert" with C3 synonyms),
-  **BBCode comments** (`[b]`/`[i]`/`[color]`), per-ACE notes, **starter templates**
+  **BBCode** (`[b]`/`[i]`/`[color]`) in comments, **condition/action cell text, and hover
+  descriptions**, **plain-language hover descriptions** on every ACE & function, per-ACE notes, **starter templates**
   (Platformer / Top-down / First-Person 3D / Third-Person 3D), a **Command Palette
   (Ctrl+P)**, a **Simple Mode** that hides advanced rows *and the advanced picker entries*
   (Run GDScript / Evaluate / Breakpoint / Assert) for newcomers, and multi-view
@@ -195,6 +198,8 @@ still ships as plain GDScript).
   free), **signals** (declared as rows, validated connections), **match rows** (C3's
   switch), **collection variables** (`Array[int]`, `Dictionary[String, int]`, literal
   defaults with live validation), **combo variables** (`@export_enum` dropdowns),
+  **Inspector-grouped `@export` variables** (`@export_group` / `@export_subgroup`, badged +
+  "Group › Subgroup"-chipped on the row, lossless and editable across a `.gd` reopen),
   GDScript blocks (class-level and in-flow), local variables, includes (C3-style
   library sheets), **Wait / Wait For Signal** (`await`), and **Autoload (Singleton)
   sheets** — Game State / Event Bus / Save System built as sheets, registered
@@ -248,7 +253,10 @@ still ships as plain GDScript).
 - **Custom ACE addons**: drop a script in `res://eventsheet_addons/` — `class_name` is
   the provider, `@ace_*` annotations shape everything (`@ace_param_options` for fixed
   combos, `@ace_param_autocomplete` for an editable type-or-pick combo, `@ace_param_hint`
-  for ƒx/color/signal pickers). Annotated signals become triggers. Full how-to (all three
+  for ƒx/color/signal pickers). Annotated signals become triggers. **Sheet ▸ New Behaviour
+  Addon…** scaffolds a richly-commented skeleton that teaches these annotations by example;
+  **`## @ace_deprecated("…")`** retires an ACE without breaking old sheets (keeps compiling,
+  hidden from the picker, flagged on hover with its replacement). Full how-to (all three
   authoring paths, the template language, schema + widget tables, testing): the
   [Custom ACEs guide](docs/CUSTOM-ACES-GUIDE.md).
 - **Export Addon…** turns the current behavior sheet into a published pack folder with
@@ -282,6 +290,20 @@ still ships as plain GDScript).
 
 ## Current status
 
+- **Unreleased (since `v0.9.0`)** — **first-class variables, addon authoring & cell legibility.**
+  **Variables** gained Inspector attributes that round-trip losslessly: an **`@export` badge** on the row,
+  **`@export_group` / `@export_subgroup`** grouping (with "Group › Subgroup" chips) that now **survives
+  reopening a `.gd` and stays editable** (the importer absorbs the group lines back onto the variable, gated
+  by the verify-lift rule). **Authoring custom addons** got a UX pass — a **"New Behaviour Addon…"** scaffold
+  that writes a richly-commented skeleton teaching the `@ace_*` vocabulary, **plain-language descriptions on
+  hover for every built-in ACE** (authored *inline*, in the files, so behaviour packs are self-contained),
+  and **ACE deprecation** (a Construct-style covenant: a deprecated ACE keeps compiling, is hidden from the
+  picker, flagged on hover with its replacement, and warned at compile). **Cell legibility** — **BBCode**
+  (`[b]`/`[i]`/`[color]`) now renders in condition/action cell text *and* hover descriptions (comments
+  already did), an **inline colour picker** opens straight from the cell colour swatch (no dialog),
+  **dragging a Scene-dock node onto a param value** fills it with the node's **`%reference`**
+  (deep-node-friendly, prefers scene-unique `%Name`), and the confusing variable scope pill was removed. See
+  [CHANGELOG.md](CHANGELOG.md).
 - **Version**: **`v0.9.0` — “Performance & Game Feel”**: making games that **scale** and
   **feel good**. **Frame-spreading & time-budgeting** — a **Time Slicer** behavior (a managed work
   queue that drains within a per-frame ms/count budget — enqueue, react to *On Process Item*, no loop
@@ -303,7 +325,7 @@ still ships as plain GDScript).
   and the code-free authoring set. **31 behavior packs.** Playable showcases: `showcase_carousel.tscn`
   (flagship), `starfall.tscn`, `quest_fsm.tscn`, `platformer_shooter.tscn`, and `swarm.tscn`.
   See [CHANGELOG.md](CHANGELOG.md).
-- **Quality**: 2,500+ test assertions, all green, CI-gated on every push (any `[FAIL]`
+- **Quality**: 3,400+ test assertions, all green, CI-gated on every push (any `[FAIL]`
   fails the build, and the Project Doctor gate fails it on sheet/output drift);
   byte-exact golden round-trips guard the lossless rules. **Verified on Godot 4.7 stable**
   (full suite + an in-editor smoke run).
@@ -326,6 +348,7 @@ still ships as plain GDScript).
 | `v0.7.0` — **The Native Workflow Update**: Rename Everywhere, snippets, bulk ops, session restore, asset drops, attach + Run Scene; Godot-native entry points (Scene-dock attach, Inspector button, settings, rebindable shortcuts, go-to-sheet-row, docs links, welcome); if/elif/else reverse-lift + Lift Report | ✅ shipped |
 | `v0.8.0` — **The Team & Scale Update**: Godot 4.7 support + Modern-theme visuals & onboarding declutter (Simple Mode, Command Palette, Export-GDScript eject); **team/VCS** — semantic 3-way **merge driver**, symbol-aware **Find References** + Go-to-Definition, **includes manager** + Extract-to-Include + **provenance**, **byte-stable regeneration**; new packs (Drag & Drop, Virtual Cursor, Health, Line of Sight 3D, **Weapon Kit**, utility-driven **HTN Agent** — 26 total) + **C3-addon parity** (Platformer juice, Spring colour springs); **3D raycast/world-query ACEs** + 3D starters; richer Array/Dict/Vector/String **Helper ACEs** + import "why-it-stayed-code" hints; behavior-declared **autocomplete**; theme **Quick Style**; clean-removal guide + gate; platformer-shooter showcase; opt-in MCP scripting/automation (off by default) | ✅ shipped |
 | `v0.9.0` — **Performance & Game Feel**: frame-spreading & time-budgeting (**Time Slicer** pack, in-place **Budgeted For Each**, budget/coroutine ACEs, **Run In Background** off-thread pack, Doctor unbounded-loop advisory) + a runnable **Swarm** demo; a **Juice** pack (trauma screenshake, smooth/anchored zoom, squash & stretch tween+spring, **slow-mo** with easing); **Nearest/Furthest** picking (composes with Line of Sight); a self-contained **“using EventSheets with your existing code”** guide; **On Signal** typed parameters; an **error-prevention sweep** (on-save For-Each linting, coroutine-under-On-Process Doctor check, Juice `time_scale` teardown); plus the editor-DX batch — **error → row deep-linking** (jump to + mark the offending row), a **group editor popup** (name + description), a **Create-Node-parity ACE picker** (Favorites/Recent panes + description panel), a **Watch** box + **live event-trace** row highlighting, and a **shadowing-variable guard**; **code-free authoring** (visual expression builder, reflection method/property pickers, Promote-Block-to-Function, visual Array/Dictionary data editor, conditional breakpoints); first-class **UI/menu vocabulary** (Button On Pressed/Toggled + focus navigation), native **2D raycast** ACEs, **particles**, **AnimationTree**, **tilemaps**, **shader materials**, **runtime input rebinding**, **physics joints**, **24 Collision ACEs**, **loop** Break/Continue/Current-Item, **Else/Else-If** authoring + compiled Pick-Filter conditions; **Advanced Random** pack (27th), **ACE sub-categories**, read-only **.gd preview**, an **ACE safety audit** (a compile-coverage test for all 446 built-in ACEs + nine runtime-safety fixes), and **pick-filter authoring** (a commit guard + Where/Order-by ƒx autocomplete) | ✅ shipped |
+| _Unreleased (since `v0.9.0`)_ — **first-class variables, authoring & legibility**: variable **`@export` badge** + **`@export_group`/`@export_subgroup`** grouping with **lossless, editable `.gd` round-trip**; **"New Behaviour Addon…"** scaffold + **plain-language descriptions on every built-in ACE** (inline, file-based) + **ACE deprecation** covenant; **BBCode in cell text + hover descriptions**, an **inline cell colour picker**, **drag a Scene node onto a param** (`%Name`-preferring), and removal of the scope pill | 🚧 in progress |
 | _Roadmap_ — a Menu/HUD behavior pack + UI starter demo; 2D **point/shape overlap** queries; **scene-transition** + **dialogue** packs; a **loop-index** expression; community feedback rounds | 🗺 planned |
 
 Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
