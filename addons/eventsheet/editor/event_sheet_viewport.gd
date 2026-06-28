@@ -3784,6 +3784,10 @@ func _group_name(group: EventGroup) -> String:
 ## Event-sheet-style object label shown before each condition/action (e.g. "System",
 ## "Sprite", "CharacterBody2D"). Core ACEs read as "System"; node-typed ACEs use the class.
 func _object_label_for(provider_id: String, ace_id: String) -> String:
+    # A call to a sheet Function is an abstraction you CREATED (e.g. via Extract to Function) — show it as
+    # a named verb under a "ƒ" chip, not a generic "System" action, so the eye reads it as higher-level.
+    if (provider_id.is_empty() or provider_id == "Core") and ace_id == "CallFunction":
+        return "ƒ"
     var definition: ACEDefinition = _find_definition(provider_id, ace_id)
     if definition != null:
         var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()
@@ -3792,6 +3796,30 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
     if provider_id.is_empty() or provider_id == "Core":
         return "System"
     return provider_id
+
+## A call to a sheet Function — the row IS an abstraction (a named verb), so the renderer marks it "ƒ"
+## (see _object_label_for) and shows the verb's name instead of "Call name()".
+func _is_function_call_action(action: ACEAction) -> bool:
+    return action != null and (action.provider_id.is_empty() or action.provider_id == "Core") and action.ace_id == "CallFunction"
+
+## The friendly verb name for a function-call action: the target Function's ace_display_name if it set one
+## (e.g. "Apply Physics"), else its humanized name. Appends the argument list only when the call passes
+## args, so a plain call reads as a clean verb while a parameterised one still reads fully.
+func _function_call_label(action: ACEAction) -> String:
+    var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
+    var fn_name: String = str(params_dict.get("function_name", "")).strip_edges()
+    if fn_name.is_empty():
+        return ""
+    var label: String = fn_name.capitalize()
+    if _sheet != null:
+        for function_entry: Variant in _sheet.functions:
+            if function_entry is EventFunction and (function_entry as EventFunction).function_name == fn_name:
+                var display: String = str((function_entry as EventFunction).ace_display_name).strip_edges()
+                if not display.is_empty():
+                    label = display
+                break
+    var args: String = str(params_dict.get("args", "")).strip_edges()
+    return "%s(%s)" % [label, args] if not args.is_empty() else label
 
 func _format_condition_descriptor(condition: ACECondition) -> String:
     var base_text: String = _format_condition_descriptor_base(condition)
@@ -3858,6 +3886,11 @@ func _format_action_descriptor(action: ACEAction) -> String:
     return base_text
 
 func _format_action_descriptor_base(action: ACEAction) -> String:
+    # Function calls read as the named verb (under the "ƒ" chip), not the raw "Call name()" template.
+    if _is_function_call_action(action):
+        var verb: String = _function_call_label(action)
+        if not verb.is_empty():
+            return verb
     var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
     var generated_definition: ACEDefinition = _find_definition(action.provider_id, action.ace_id)
     if generated_definition != null:

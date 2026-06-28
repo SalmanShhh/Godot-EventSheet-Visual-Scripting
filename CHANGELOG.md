@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed — Function calls read as named verbs (show abstraction level)
+
+- A **Call to a sheet Function** now renders as **"ƒ <Verb Name>"** (its friendly name, under a `ƒ` chip)
+  instead of the generic "System → `Call my_function()`". The abstractions you *create* — e.g. via Extract
+  to Function — read as first-class verbs, so a sheet is **less verbose** and you can see at a glance which
+  rows are higher-level vs. 1:1 with code. Pure editor view-state — no codegen change. (`function_verb_rendering_test`.)
+
 ### Added — Pick nodes by TYPE (Godot's node-heavy objects, without the path pain)
 
 - A Godot object is a deep node tree — a player can be dozens of nodes — so reaching "the AnimationPlayer
