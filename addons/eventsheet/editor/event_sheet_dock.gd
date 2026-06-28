@@ -1339,7 +1339,7 @@ func _load_sheet_from_path(path: String) -> void:
         # surface for what GDScript maps to which events, surfaced in the preview banner.
         _last_lift_report = EventSheetLiftReport.for_sheet(imported)
         _refresh_preview_banner()
-        _set_status("Opened %s — viewing it as a sheet. Click \"Edit Events\" in the banner to edit it here, or \"Open in Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(_last_lift_report)])
+        _set_status("Opened %s — viewing it as a sheet. Just start editing to change it here, or \"Open in Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(_last_lift_report)])
         return
     var loaded: Resource = ResourceLoader.load(resolved_path)
     if loaded is EventSheetResource:
@@ -2535,17 +2535,16 @@ func _collect_sheet_variable_names() -> PackedStringArray:
     names.sort()
     return names
 
-## True (and shows a hint) when the current sheet is a read-only preview — used to stop
-## editing dialogs (the ACE picker, etc.) from even opening, so a preview has no dead ends.
-func _blocked_by_read_only() -> bool:
+## A .gd opens as a read-only preview, but the FIRST intentional edit unlocks it automatically — no
+## "click Edit Events" wall (that extra click is the friction now that .gd is the default format).
+## Pure viewing stays protected: Save keeps its own read-only guard, so a casual look + Ctrl+S can
+## still never overwrite a file you only opened to look at.
+func _unlock_preview_for_edit() -> void:
     if _current_sheet != null and _current_sheet.read_only:
-        _set_status("You're viewing this sheet — click \"Edit Events\" in the banner to start editing.", true)
-        return true
-    return false
+        _on_preview_edit_requested()
 
 func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> void:
-    if _blocked_by_read_only():
-        return
+    _unlock_preview_for_edit()
     if row_data == null or not (row_data.source_resource is EventRow):
         return
     match lane:
@@ -6535,7 +6534,7 @@ func _refresh_preview_banner() -> void:
     var source_name: String = _current_sheet.external_source_path.get_file()
     if source_name.is_empty():
         source_name = "this sheet"
-    _preview_label.text = "👁  Viewing %s as a sheet — click \"Edit Events\" to edit it here, or \"Open in Script Editor\" for the code.  (%s)" % [source_name, EventSheetLiftReport.summary(_last_lift_report)]
+    _preview_label.text = "👁  Viewing %s as a sheet — just start editing to change it here, or \"Open in Script Editor\" for the code.  (%s)" % [source_name, EventSheetLiftReport.summary(_last_lift_report)]
 
 ## "Edit Events": turn the preview into a normal GDScript-backed sheet (Save then compiles
 ## back to the .gd). The banner flips to a plain warning so the consequence stays obvious.
@@ -8845,11 +8844,10 @@ func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> bool:
     if _current_sheet == null or not operation.is_valid():
         return false
-    # Read-only preview (a .gd opened just to look at it): every mutation funnels through
-    # here, so one guard makes the whole sheet non-editable until the user clicks "Edit Events".
-    if _current_sheet.read_only:
-        _set_status("You're viewing this sheet — click \"Edit Events\" in the banner to start editing.", true)
-        return false
+    # A .gd preview unlocks on the first real edit (this is the mutation funnel), so editing your
+    # own sheet never hits a "click Edit Events" wall. Saving keeps its own read-only guard, so a
+    # casual look + Ctrl+S still can't overwrite a file you only opened to view.
+    _unlock_preview_for_edit()
     var before: EventSheetResource = _capture_sheet_snapshot()
     var changed: bool = bool(operation.call())
     if not changed:
