@@ -122,6 +122,20 @@ static func run() -> bool:
 	dialog._populate_node_picker_from_root(arena)
 	all_passed = _check("the picker tree shows the %handle for a unique node",
 		_tree_column(dialog._node_picker_tree, 0).has("%Body"), true) and all_passed
+	# One-click "Make %unique": offered for a non-root, non-unique, scene-owned node; withdrawn once unique.
+	var arena_hud: Control = Control.new()
+	arena_hud.name = "HUD"
+	arena.add_child(arena_hud)
+	arena_hud.owner = arena
+	all_passed = _check("a fresh deep node can be made unique",
+		ACEParamsDialog._node_is_uniqueable(arena, "HUD"), true) and all_passed
+	arena_hud.unique_name_in_owner = true
+	all_passed = _check("an already-unique node is not offered Make-unique",
+		ACEParamsDialog._node_is_uniqueable(arena, "HUD"), false) and all_passed
+	all_passed = _check("the scene root itself is not uniqueable",
+		ACEParamsDialog._node_is_uniqueable(arena, "."), false) and all_passed
+	all_passed = _check("the picker exposes a Make-unique button",
+		dialog._node_picker_unique_button != null, true) and all_passed
 	arena.free()
 
 	host.free()

@@ -830,6 +830,7 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 # surface first; "Used in sheet" lists every $Ref this sheet already makes, tinted red
 # when the node no longer exists in the edited scene (broken-reference audit).
 var _node_picker_window: AcceptDialog = null
+var _node_picker_unique_button: Button = null
 var _node_picker_tree: Tree = null
 var _node_picker_search: LineEdit = null
 var _node_picker_target_key: String = ""
@@ -870,6 +871,12 @@ func _ensure_node_picker_ui() -> void:
 		_node_picker_window.get_ok_button().disabled = true
 		_node_picker_window.close_requested.connect(func() -> void: _node_picker_window.hide())
 		_node_picker_window.confirmed.connect(_on_node_picker_activated)
+		# One-click "Make %unique": turns the selected deep node into a scene-unique node (undoable) and
+		# hands back %Name — so ANY node, not just pre-marked ones, gets a flat path-free handle. The button
+		# enables only for a non-root node that isn't already unique (see _on_node_picker_selection_changed).
+		_node_picker_unique_button = _node_picker_window.add_button("Make %unique", true, "make_unique")
+		_node_picker_unique_button.disabled = true
+		_node_picker_window.custom_action.connect(_on_node_picker_custom_action)
 		var box: VBoxContainer = EventSheetPopupUI.form_box()
 		_node_picker_search = LineEdit.new()
 		_node_picker_search.clear_button_enabled = true
@@ -1120,6 +1127,10 @@ func _on_node_picker_selection_changed() -> void:
 	var selected: TreeItem = _node_picker_tree.get_selected() if _node_picker_tree != null else null
 	if _node_picker_window != null:
 		_node_picker_window.get_ok_button().disabled = selected == null or selected.get_metadata(0) == null
+	if _node_picker_unique_button != null:
+		var meta: Variant = selected.get_metadata(0) if selected != null else null
+		var scene_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
+		_node_picker_unique_button.disabled = meta == null or not _node_is_uniqueable(scene_root, str(meta))
 
 func _on_node_picker_activated() -> void:
 	var selected: TreeItem = _node_picker_tree.get_selected()
@@ -1145,6 +1156,51 @@ func _on_node_picker_activated() -> void:
 	elif field is LineEdit:
 		(field as LineEdit).insert_text_at_caret(reference)
 	_node_picker_window.hide()
+
+func _on_node_picker_custom_action(action: StringName) -> void:
+	if str(action) == "make_unique":
+		_make_picked_node_unique()
+
+## Marks the picked node scene-unique (undoable) and hands back %Name — so ANY deep node, not just
+## pre-marked ones, becomes a flat path-free handle in one click, without leaving the sheet for the scene
+## editor. No-op outside the editor or for a non-uniqueable selection.
+func _make_picked_node_unique() -> void:
+	if not Engine.is_editor_hint():
+		return
+	var selected: TreeItem = _node_picker_tree.get_selected() if _node_picker_tree != null else null
+	if selected == null:
+		return
+	var scene_root: Node = EditorInterface.get_edited_scene_root()
+	var relative: String = str(selected.get_metadata(0)) if selected.get_metadata(0) != null else ""
+	if not _node_is_uniqueable(scene_root, relative):
+		return
+	var node: Node = scene_root.get_node_or_null(NodePath(relative))
+	if node == null:
+		return
+	var undo: EditorUndoRedoManager = EditorInterface.get_editor_undo_redo()
+	if undo != null:
+		undo.create_action("Mark \"%s\" as scene-unique" % node.name)
+		undo.add_do_property(node, "unique_name_in_owner", true)
+		undo.add_undo_property(node, "unique_name_in_owner", false)
+		undo.commit_action()
+	else:
+		node.unique_name_in_owner = true
+	var field: Variant = _fields.get(_node_picker_target_key)
+	var reference: String = "%" + str(node.name)
+	if field is TextEdit:
+		(field as TextEdit).insert_text_at_caret(reference)
+		_validate_expression_field(field)
+	elif field is LineEdit:
+		(field as LineEdit).insert_text_at_caret(reference)
+	_node_picker_window.hide()
+
+## True when the node at relative_path can be made scene-unique: it exists, isn't the scene root or a
+## cross-scene entry, is owned by this scene, and isn't already unique. Pure → unit-testable.
+static func _node_is_uniqueable(scene_root: Node, relative_path: String) -> bool:
+	if scene_root == null or relative_path.is_empty() or relative_path == "." or relative_path.begins_with("scene::"):
+		return false
+	var node: Node = scene_root.get_node_or_null(NodePath(relative_path))
+	return node != null and node != scene_root and node.owner == scene_root and not node.unique_name_in_owner
 
 ## Literal node-path references in an expression that can be checked against a scene: bare `$Name`,
 ## `$"Quoted/Path"`, and `get_node("Path")`. Unique-name (`%Name`) refs are handled separately by

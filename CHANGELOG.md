@@ -8,6 +8,9 @@
   collapses a deep `$A/B/C/D` path to `%D` and survives the node being moved — instead of the brittle
   relative path. The picker tree also shows the `%`handle so you can see which deep nodes are
   `%`-accessible at a glance. Godot's own answer to node-heavy objects, surfaced where you pick.
+- And a one-click **"Make %unique"** button in the picker turns *any* selected deep node into a
+  scene-unique node (undoable) and hands back its `%Name` — so you don't have to leave the sheet for the
+  scene editor to get a path-free handle. Offered only for a non-root node that isn't already unique.
   (`node_picker_test`.)
 
 ### Changed — Function calls read as named verbs (show abstraction level)
