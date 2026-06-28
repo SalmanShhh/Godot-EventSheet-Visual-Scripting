@@ -3417,9 +3417,9 @@ func _on_viewport_raw_code_edit_requested(raw_resource: Resource, in_flow: bool)
     _raw_code_target = raw_row
     _raw_code_in_flow = in_flow
     _raw_code_hint.text = (
-        "Statements emitted inside this event's body (after its conditions)."
+        "Runs inside this event, right after its conditions pass — full GDScript, with the sheet's variables and host in scope. Written verbatim into the .gd."
         if in_flow
-        else "Plain GDScript, emitted verbatim at class level (helper functions, @onready vars, signals…)."
+        else "Top-level GDScript — helper functions, @onready vars, signals… anything no ACE covers. Written verbatim into the .gd and callable from your events."
     )
     _raw_code_edit.text = raw_row.code
     _validate_raw_code()
