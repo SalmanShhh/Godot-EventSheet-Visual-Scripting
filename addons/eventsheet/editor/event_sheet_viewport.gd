@@ -1961,6 +1961,11 @@ func _build_variable_row(
         _make_span(":", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)),
         _make_span(type_name if not type_name.is_empty() else "Variant", SemanticSpan.SpanType.VALUE, variable_meta.merged({"editable": false}, true))
     ]
+    # Drop the redundant "global" scope pill — every sheet/class variable is one, so a pill on each row
+    # reads as noise (a behaviour's variables are its own properties, not project-wide globals like C3's).
+    # Keep the pill only for a genuinely event-scoped "local", which IS worth flagging.
+    if badge_label != "local" and not row_data.spans.is_empty():
+        row_data.spans.remove_at(0)
     if is_constant:
         row_data.spans.append(
             _make_span(

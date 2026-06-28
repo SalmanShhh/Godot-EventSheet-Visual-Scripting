@@ -1336,9 +1336,9 @@ static func run() -> bool:
     all_passed = _check("const badge renders in variable rows", _rows_contain_text(dock_viewport.get_flat_rows(), "const"), true) and all_passed
     var variable_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     var global_variable_row: EventRowData = variable_rows[0].get("row")
-    all_passed = _check("variable scope label uses centered badge metadata", bool((global_variable_row.spans[0].metadata as Dictionary).get("badge", false)), true) and all_passed
+    all_passed = _check("global variable row drops the redundant 'global' pill (name renders first)", not bool((global_variable_row.spans[0].metadata as Dictionary).get("badge", false)) and str(global_variable_row.spans[0].text) == "ammo", true) and all_passed
     var variable_layout: Dictionary = dock_viewport.get_row_layout_for_test(0, 640.0)
-    all_passed = _check("variable badge and name do not overlap", global_variable_row.spans[0].rect.end.x < global_variable_row.spans[1].rect.position.x, true) and all_passed
+    all_passed = _check("variable name and type spans do not overlap", global_variable_row.spans[0].rect.end.x < global_variable_row.spans[1].rect.position.x, true) and all_passed
     var variable_double_click := InputEventMouseButton.new()
     variable_double_click.pressed = true
     variable_double_click.button_index = MOUSE_BUTTON_LEFT

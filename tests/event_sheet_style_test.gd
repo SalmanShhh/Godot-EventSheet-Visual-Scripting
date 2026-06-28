@@ -175,12 +175,11 @@ static func run() -> bool:
 	var value_index: int = _find_span_index_by_text(global_row, "100")
 	var global_row_rect: Rect2 = global_layout.get("row_rect", Rect2())
 	passed = _check(
-		"variable badge, name, and const spans remain ordered",
-		scope_index >= 0
+		"variable name, const, and value spans remain ordered (redundant 'global' pill removed)",
+		scope_index == -1
 			and name_index >= 0
 			and const_index >= 0
 			and value_index >= 0
-			and global_row.spans[scope_index].rect.end.x < global_row.spans[name_index].rect.position.x
 			and global_row.spans[name_index].rect.end.x < global_row.spans[const_index].rect.position.x
 			and global_row.spans[value_index].rect.end.x <= global_row_rect.end.x - EventSheetPalette.ROW_HORIZONTAL_PADDING,
 		true
