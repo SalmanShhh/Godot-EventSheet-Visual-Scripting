@@ -1357,7 +1357,7 @@ func _load_sheet_from_path(path: String) -> void:
 func _save_backed_sheet() -> bool:
     var compile_result: Dictionary = SheetCompiler.compile(_current_sheet, _current_sheet.external_source_path)
     if not bool(compile_result.get("success", false)):
-        _set_status("Save failed: %s" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
+        _set_status("This sheet doesn't compile yet — fix the error, then save again. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
         return false
     _dirty = false
     _external_mtime = FileAccess.get_modified_time(_current_sheet.external_source_path)
@@ -1404,7 +1404,9 @@ func _on_save_requested() -> void:
             var auto_result: Dictionary = SheetCompiler.compile(_current_sheet, "")
             if not bool(auto_result.get("success", false)):
                 _run_diagnostics()
-                _set_status("Saved, but the sheet doesn't compile: %s" % str(auto_result.get("errors")), true)
+                # Friendly + actionable first (diagnostics just flagged + jumped to the bad row), with
+                # the raw compiler detail kept in parentheses for anyone who wants it.
+                _set_status("Saved, but it won't run yet — a row has an error. Jumped to the first; hover the red row for the fix. (%s)" % ", ".join(PackedStringArray(auto_result.get("errors", []))), true)
                 _refresh_title_strip()
                 return
         # Row-level lint: flag any bad ƒx expression / GDScript block ON its row + jump to the
