@@ -27,7 +27,36 @@ func import_external(script_path: String) -> EventSheetResource:
 		return null
 	var sheet: EventSheetResource = import_external_source(FileAccess.get_file_as_string(script_path))
 	sheet.external_source_path = script_path
+	_recover_autoload_identity(sheet, script_path)
 	return sheet
+
+## A .gd registered in the project's [autoload] section IS an autoload sheet — recover that identity
+## from ProjectSettings (the single source of truth) so opening the .gd round-trips autoload_mode +
+## autoload_name without needing a marker comment in the file. Unregistered .gd files open as plain
+## sheets (and Project Doctor already flags an autoload sheet that isn't registered).
+static func _recover_autoload_identity(sheet: EventSheetResource, script_path: String) -> void:
+	if sheet == null or script_path.is_empty():
+		return
+	for property: Dictionary in ProjectSettings.get_property_list():
+		var setting_name: String = str(property.get("name", ""))
+		if not setting_name.begins_with("autoload/"):
+			continue
+		# Autoload values are the script path, optionally prefixed with "*" (enabled singleton).
+		if _autoload_target_matches(str(ProjectSettings.get_setting(setting_name, "")).trim_prefix("*"), script_path):
+			sheet.autoload_mode = true
+			sheet.autoload_name = setting_name.trim_prefix("autoload/")
+			return
+
+## Whether an [autoload] target points at script_path. Handles both res:// values and uid:// values
+## (Godot 4.4+ frequently stores autoloads by UID once a .uid sidecar exists) by resolving the uid.
+static func _autoload_target_matches(target: String, script_path: String) -> bool:
+	if target == script_path:
+		return true
+	if target.begins_with("uid://"):
+		var uid: int = ResourceUID.text_to_id(target)
+		if uid != ResourceUID.INVALID_ID and ResourceUID.has_id(uid):
+			return ResourceUID.get_id_path(uid) == script_path
+	return false
 
 func import_external_source(source: String) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -103,6 +132,18 @@ func import_external_source(source: String) -> EventSheetResource:
 		var icon_match: RegExMatch = icon_regex.search(source)
 		if icon_match != null:
 			sheet.custom_class_icon = icon_match.get_string(1)
+	# Recover addon tags (`## @ace_tags(a, b)`) so picker categorization / search round-trips. The
+	# annotation line stays in the verbatim prelude block, so this is metadata only — no double-emit.
+	var tags_regex: RegEx = RegEx.new()
+	if tags_regex.compile("(?m)^## @ace_tags\\(([^)]*)\\)") == OK:
+		var tags_match: RegExMatch = tags_regex.search(source)
+		if tags_match != null:
+			var recovered_tags: PackedStringArray = PackedStringArray()
+			for tag: String in tags_match.get_string(1).split(","):
+				var trimmed_tag: String = tag.strip_edges()
+				if not trimmed_tag.is_empty():
+					recovered_tags.append(trimmed_tag)
+			sheet.addon_tags = recovered_tags
 	# Recover the class description: the `##` doc block immediately after `extends` (no blank
 	# between). The host-member doc and signal annotations are separated from `extends` by a blank
 	# line, so they never match. Metadata only in external mode (the lines stay verbatim).
