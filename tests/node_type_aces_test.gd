@@ -76,6 +76,30 @@ static func run() -> bool:
 		anim_script.source_code = anim_out
 		all_passed = _check("Play Animation (in object) output parses as GDScript", anim_script.reload() == OK, true) and all_passed
 
+	# ── More object verbs (flip / frame / restart / particles) register; restart's 2-statement guarded
+	# body is the riskiest multi-line — compile + parse it. ──
+	for verb_id: String in ["FlipSpriteInObject", "SetSpriteFrameInObject", "RestartAnimationInObject", "EmitParticlesInObject"]:
+		all_passed = _check("%s registered" % verb_id, by_id.has(verb_id), true) and all_passed
+	if by_id.has("RestartAnimationInObject"):
+		var r_sheet: EventSheetResource = EventSheetResource.new()
+		r_sheet.host_class = "Node2D"
+		var r_event: EventRow = EventRow.new()
+		r_event.trigger_provider_id = "Core"
+		r_event.trigger_id = "OnReady"
+		var r_action: ACEAction = ACEAction.new()
+		r_action.provider_id = "Core"
+		r_action.ace_id = "RestartAnimationInObject"
+		r_action.codegen_template = (by_id["RestartAnimationInObject"] as ACEDescriptor).codegen_template.replace("{uid}", "r1")
+		r_action.params = {"target": "self", "anim": "\"run\""}
+		r_event.actions.append(r_action)
+		r_sheet.events.append(r_event)
+		var r_out: String = str(SheetCompiler.compile(r_sheet, "user://restart_anim.gd").get("output", ""))
+		all_passed = _check("Restart Animation (in object) stops then plays under a null guard",
+			r_out.contains("if __ap_r1:") and r_out.contains("__ap_r1.stop()") and r_out.contains("__ap_r1.play(&\"run\")"), true) and all_passed
+		var r_script: GDScript = GDScript.new()
+		r_script.source_code = r_out
+		all_passed = _check("Restart Animation (in object) output parses as GDScript", r_script.reload() == OK, true) and all_passed
+
 	return all_passed
 
 static func _is(by_id: Dictionary, ace_id: String, ace_type: int) -> bool:

@@ -9,11 +9,12 @@
   Picking** ACEs resolve a child by **class anywhere in the subtree** instead: **Find Children Of Type**
   (every match, for a For Each), **First Child Of Type** (the first, null-safe via `pop_front`), and
   **Has Child Of Type** (a gate). Target the type, not the path — no code. (`node_type_aces_test`.)
-- Built on that, **object-level animation verbs** (the Construct mental model — act on the *object*, not
-  its deep node): **Play Animation / Stop Animation / Play Sprite Animation / Is Animating "(in object)"**
-  auto-find the object's `AnimationPlayer`/`AnimatedSprite2D` and act on it. "Play animation walk on Player"
-  now needs no path to the AnimationPlayer and no GDScript block — null-safe and collision-safe (the same
-  `{uid}`-baked temp-var pattern the audio Play Sound ACEs use).
+- Built on that, **object-level component verbs** (the Construct mental model — act on the *object*, not
+  its deep node): **Play / Stop / Play Sprite / Restart Animation**, **Is Animating**, **Flip Sprite**,
+  **Set Sprite Frame**, and **Emit Particles** — all "(in object)" — auto-find the object's
+  `AnimationPlayer` / `AnimatedSprite2D` / `GPUParticles2D` and act on it. "Play animation walk on Player",
+  "flip Player", "emit Player's particles" now need no path to the deep child and no GDScript block —
+  null-safe and collision-safe (the same `{uid}`-baked temp-var pattern the audio Play Sound ACEs use).
 
 ### Added — Extract to Function: turn a pile of rows into one named verb
 
