@@ -23,13 +23,23 @@ static func run() -> bool:
 		_row_has_chip(rows, "attack", "Combat"), true) and all_passed
 	all_passed = _check("an ungrouped variable has no group chip",
 		_row_has_chip(rows, "speed", "Combat"), false) and all_passed
+
+	# A subgroup (@export_subgroup) reads as "Group › Subgroup" in the one chip.
+	var sub_sheet: EventSheetResource = EventSheetResource.new()
+	sub_sheet.variables = {"melee_dmg": {"type": "int", "default": 5, "exported": true, "attributes": {"group": "Combat", "subgroup": "Melee"}}}
+	all_passed = _check("the row chip combines group and subgroup",
+		_row_has_chip(viewport._build_global_variable_rows(sub_sheet), "melee_dmg", "Combat › Melee"), true) and all_passed
 	viewport.free()
 
-	# Emission: that group attribute compiles to @export_group("Combat").
+	# Emission: the group + subgroup attributes compile to @export_group / @export_subgroup.
 	var lines: PackedStringArray = SheetCompiler._emit_variables(
 		{"attack": {"type": "int", "default": 10, "exported": true, "attributes": {"group": "Combat"}}})
 	all_passed = _check("the group compiles to @export_group",
 		"\n".join(lines).contains("@export_group(\"Combat\")"), true) and all_passed
+	var sub_lines: PackedStringArray = SheetCompiler._emit_variables(
+		{"melee_dmg": {"type": "int", "default": 5, "exported": true, "attributes": {"group": "Combat", "subgroup": "Melee"}}})
+	all_passed = _check("a subgroup compiles to @export_subgroup under the group",
+		"\n".join(sub_lines).contains("@export_group(\"Combat\")") and "\n".join(sub_lines).contains("@export_subgroup(\"Melee\")"), true) and all_passed
 
 	return all_passed
 

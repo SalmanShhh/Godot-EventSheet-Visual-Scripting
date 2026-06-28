@@ -1356,6 +1356,10 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 				lines.append("## %s" % str(attributes.get("tooltip")).strip_edges())
 			if exported and not str(attributes.get("group", "")).strip_edges().is_empty():
 				lines.append("@export_group(\"%s\")" % str(attributes.get("group")).strip_edges())
+			# Nested Inspector grouping for complex objects with many tunables: @export_subgroup follows the
+			# group and nests under it (Godot applies it to the following @export vars).
+			if exported and not str(attributes.get("subgroup", "")).strip_edges().is_empty():
+				lines.append("@export_subgroup(\"%s\")" % str(attributes.get("subgroup")).strip_edges())
 			if exported and type_name == "String" and not combo_options.is_empty():
 				for unsupported_key: String in ["clamp", "on_changed", "read_only", "show_if", "lock_unless", "drawer"]:
 					if attributes.has(unsupported_key):

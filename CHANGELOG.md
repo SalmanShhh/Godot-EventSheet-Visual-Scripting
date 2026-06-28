@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added — `@export_subgroup` for nested Inspector grouping
+
+- A variable can now also carry an **Inspector subgroup** (the variable dialog's new "Inspector subgroup"
+  field), compiling to `@export_subgroup("…")` nested under its `@export_group`. For a complex object with
+  many tunables, this organizes the Inspector into nested sections (e.g. *Combat ▸ Melee* / *Combat ▸
+  Ranged*). The row chip reads **"Group › Subgroup"** so the nesting is legible in the sheet too.
+  (`variable_export_group_test`.)
+
 ### Added — Drop a scene node onto a param to reference it (no dialog)
 
 - Dragging a node from the **Scene dock** straight onto a **condition/action param value** now fills that

@@ -2026,7 +2026,8 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
                     # The Inspector group (@export_group) this exported var lands in — shown as a chip on the
                     # row so it's obvious in the sheet which vars share an Inspector section. Only meaningful
                     # for exported vars (the compiler emits @export_group for those).
-                    "group": str(var_attributes.get("group", "")) if is_exported else ""
+                    "group": str(var_attributes.get("group", "")) if is_exported else "",
+                    "subgroup": str(var_attributes.get("subgroup", "")) if is_exported else ""
                 }
             )
         )
@@ -2154,9 +2155,13 @@ func _build_variable_row(
     # half of the @export_group feature (the variable dialog's Inspector-group field sets it).
     var inspector_group: String = str(options.get("group", "")).strip_edges()
     if not inspector_group.is_empty():
+        # A subgroup (@export_subgroup) reads as "Group › Subgroup" in the one chip, so deeply-tuned objects
+        # show their nested Inspector section at a glance.
+        var inspector_subgroup: String = str(options.get("subgroup", "")).strip_edges()
+        var chip_text: String = inspector_group if inspector_subgroup.is_empty() else "%s › %s" % [inspector_group, inspector_subgroup]
         row_data.spans.append(
             _make_span(
-                inspector_group,
+                chip_text,
                 SemanticSpan.SpanType.KEYWORD,
                 variable_meta.merged(
                     {

@@ -35,6 +35,7 @@ var _attr_toggle: Button = null
 var _attr_section: VBoxContainer = null
 var _attr_tooltip_edit: LineEdit = null
 var _attr_group_edit: LineEdit = null
+var _attr_subgroup_edit: LineEdit = null
 var _attr_range_edit: LineEdit = null
 var _attr_multiline_check: CheckBox = null
 var _attr_show_if_edit: LineEdit = null
@@ -175,6 +176,9 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_group_edit = LineEdit.new()
 	_attr_group_edit.placeholder_text = "Inspector section header (e.g. Combat)"
 	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector group", _attr_group_edit))
+	_attr_subgroup_edit = LineEdit.new()
+	_attr_subgroup_edit.placeholder_text = "Nested section under the group (e.g. Melee)"
+	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector subgroup", _attr_subgroup_edit))
 	_attr_range_edit = LineEdit.new()
 	_attr_range_edit.placeholder_text = "min, max, step (numeric: slider)"
 	_attr_section.add_child(EventSheetPopupUI.form_row("Range", _attr_range_edit))
@@ -422,6 +426,7 @@ func open_for_edit(
 	var existing_attributes: Dictionary = context.get("attributes") if context.get("attributes") is Dictionary else {}
 	_attr_tooltip_edit.text = str(existing_attributes.get("tooltip", ""))
 	_attr_group_edit.text = str(existing_attributes.get("group", ""))
+	_attr_subgroup_edit.text = str(existing_attributes.get("subgroup", ""))
 	var existing_range: Variant = existing_attributes.get("range")
 	_attr_range_edit.text = "%s, %s, %s" % [existing_range.get("min"), existing_range.get("max"), existing_range.get("step")] if existing_range is Dictionary else ""
 	_attr_multiline_check.button_pressed = bool(existing_attributes.get("multiline", false))
@@ -503,6 +508,8 @@ func _on_confirmed() -> void:
 		attributes["tooltip"] = _attr_tooltip_edit.text.strip_edges()
 	if not _attr_group_edit.text.strip_edges().is_empty():
 		attributes["group"] = _attr_group_edit.text.strip_edges()
+	if not _attr_subgroup_edit.text.strip_edges().is_empty():
+		attributes["subgroup"] = _attr_subgroup_edit.text.strip_edges()
 	# Numeric-only attributes are gated on the type so a leftover value from a
 	# previous type (the field is now HIDDEN by _refresh_contextual_rows) is inert
 	# rather than erroring about a field the user can no longer see.
