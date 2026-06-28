@@ -69,4 +69,4 @@ static func summary(entries: Array[Dictionary]) -> String:
 	for entry: Dictionary in entries:
 		var kind: String = str(entry.get("kind"))
 		counts[kind] = int(counts.get(kind, 0)) + 1
-	return "%d event(s), %d function(s), %d code block(s) lifted-or-kept" % [int(counts["event"]), int(counts["function"]), int(counts["code"])]
+	return "%d event(s), %d function(s), %d code section(s)" % [int(counts["event"]), int(counts["function"]), int(counts["code"])]

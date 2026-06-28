@@ -1339,7 +1339,7 @@ func _load_sheet_from_path(path: String) -> void:
         # surface for what GDScript maps to which events, surfaced in the preview banner.
         _last_lift_report = EventSheetLiftReport.for_sheet(imported)
         _refresh_preview_banner()
-        _set_status("Preview of %s (read-only): %s. Click \"Edit Events\" in the banner to make changes." % [resolved_path.get_file(), EventSheetLiftReport.summary(_last_lift_report)])
+        _set_status("Opened %s — viewing it as a sheet. Click \"Edit Events\" in the banner to edit it here, or \"Open in Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(_last_lift_report)])
         return
     var loaded: Resource = ResourceLoader.load(resolved_path)
     if loaded is EventSheetResource:
@@ -1372,7 +1372,7 @@ func _on_save_requested() -> void:
     # "Edit Events" (then this becomes a normal GDScript-backed save), or forks via Save As.
     if _current_sheet.read_only:
         var source_name: String = _current_sheet.external_source_path.get_file()
-        _set_status("Read-only preview of %s — click \"Edit Events\" to save back to it, or use Save As… for a separate sheet." % source_name, true)
+        _set_status("You're viewing %s — click \"Edit Events\" in the banner to edit and save it, or use Save As… to keep a separate copy." % source_name, true)
         return
     # GDScript-backed sheets save by compiling back to their .gd source (order-preserving;
     # an untouched sheet reproduces the file byte-identically).
@@ -2532,7 +2532,7 @@ func _collect_sheet_variable_names() -> PackedStringArray:
 ## editing dialogs (the ACE picker, etc.) from even opening, so a preview has no dead ends.
 func _blocked_by_read_only() -> bool:
     if _current_sheet != null and _current_sheet.read_only:
-        _set_status("Read-only preview — click \"Edit Events\" in the banner to make changes.", true)
+        _set_status("You're viewing this sheet — click \"Edit Events\" in the banner to start editing.", true)
         return true
     return false
 
@@ -6502,16 +6502,16 @@ func _build_preview_banner() -> PanelContainer:
     _preview_label = Label.new()
     _preview_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _preview_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-    _preview_label.text = "Read-only preview"
+    _preview_label.text = "Viewing as a sheet"
     row.add_child(_preview_label)
     var edit_button: Button = Button.new()
     edit_button.text = "Edit Events"
-    edit_button.tooltip_text = "Unlock editing. Afterwards, Save (Ctrl+S) overwrites the .gd file — use Save As… to keep a separate sheet instead."
+    edit_button.tooltip_text = "Start editing this sheet here. From then on, Save (Ctrl+S) updates the file — or use Save As… to keep the original and save a copy."
     edit_button.pressed.connect(_on_preview_edit_requested)
     row.add_child(edit_button)
     var script_button: Button = Button.new()
     script_button.text = "Open in Script Editor"
-    script_button.tooltip_text = "Open the .gd file in Godot's script editor to edit the code directly."
+    script_button.tooltip_text = "Edit the .gd directly in Godot's script editor — your changes reload here when you come back to this tab."
     script_button.pressed.connect(_on_preview_open_in_script_editor)
     row.add_child(script_button)
     return panel
@@ -6528,7 +6528,7 @@ func _refresh_preview_banner() -> void:
     var source_name: String = _current_sheet.external_source_path.get_file()
     if source_name.is_empty():
         source_name = "this sheet"
-    _preview_label.text = "👁  Read-only preview of %s — viewing a GDScript file as events.  (%s)" % [source_name, EventSheetLiftReport.summary(_last_lift_report)]
+    _preview_label.text = "👁  Viewing %s as a sheet — click \"Edit Events\" to edit it here, or \"Open in Script Editor\" for the code.  (%s)" % [source_name, EventSheetLiftReport.summary(_last_lift_report)]
 
 ## "Edit Events": turn the preview into a normal GDScript-backed sheet (Save then compiles
 ## back to the .gd). The banner flips to a plain warning so the consequence stays obvious.
@@ -8824,7 +8824,7 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> b
     # Read-only preview (a .gd opened just to look at it): every mutation funnels through
     # here, so one guard makes the whole sheet non-editable until the user clicks "Edit Events".
     if _current_sheet.read_only:
-        _set_status("Read-only preview — click \"Edit Events\" in the banner to make changes.", true)
+        _set_status("You're viewing this sheet — click \"Edit Events\" in the banner to start editing.", true)
         return false
     var before: EventSheetResource = _capture_sheet_snapshot()
     var changed: bool = bool(operation.call())
