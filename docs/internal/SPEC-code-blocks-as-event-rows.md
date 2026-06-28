@@ -1,6 +1,11 @@
 # Spec — Rendering GDScript blocks as event rows (improving the code-free experience)
 
-**Status:** Proposed (design). **Audience:** maintainers / tools engineers. **Goal:** make a GDScript
+**Status:** **P1 implemented** — `is_scaffolding_code()` (unit-tested classifier), the foldable
+"Class setup" strip that collapses a leading run of scaffolding rows, type-aware block styling, and an
+inline `lift_note` "⚠ code" badge — all editor view-state, zero codegen change (see
+`event_sheet_viewport.gd` + `blocks_scaffolding_test`). P2 (on-demand "convert to rows", code→ACE
+autocomplete, coverage meter) and P3 (statement-level partial lift, vocabulary authoring) remain
+proposed. **Audience:** maintainers / tools engineers. **Goal:** make a GDScript
 block in an event sheet feel like a first-class, understandable part of the sheet — and shrink how much
 of a sheet *is* a block — so designers get closer to "no code anywhere" while experts keep full power.
 

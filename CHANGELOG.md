@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+### Added — Families: one rule for every instance of a type (Construct-style horizontal abstraction)
+
+- A sheet can now be marked a **Family** (Sheet Type ▸ "Family", on a Custom Node / Behavior): its
+  instances are collected into the group `family_<class>`, so **other sheets can write ONE rule over all
+  of them** — a family-scoped For Each compiles to `get_tree().get_nodes_in_group("family_enemy")`. The
+  sheet's variables become the family's per-instance variables and its exposed functions become its
+  per-object ACEs. This is the *horizontal* reuse event sheets were missing (logic-per-type, not
+  per-object). See `docs/internal/SPEC-families-instance-vars-custom-aces.md`.
+- **Lossless + honest:** the Family is recorded as a metadata-only `## @ace_family(<Class>)` annotation
+  (exactly like `@ace_tags` — no emitted code, so it round-trips byte-exact and can never double-emit).
+  Membership is an explicit **Add To Group** action with the family's group, never auto-injected code.
+  The compiler warns if a sheet is flagged a Family but has no class name.
+- **Showcase:** **Family Arena** (`demo/showcase/family_arena.tscn`) — an `Enemy` Family (instance vars
+  `health`/`fall_speed`, a `take_damage` ACE) driven entirely by family-scoped rules. Pinned by
+  `families_test` + `showcase_examples_test` (the byte-identity gate is also the `@ace_family` round-trip
+  proof). This is v1; loose families + implicit picking are designed and deferred.
+
+### Changed — GDScript blocks read as logic, not boilerplate
+
+- An opened `.gd`'s **class scaffolding** (the `class_name`/`extends`/`@icon`/`@ace_*` prelude, the
+  host-binding `_enter_tree`, blank separators) now collapses into ONE foldable **"Class setup" strip**
+  (folded by default, one click to expand) instead of a wall of grey blocks. Real logic is never swept in
+  — the classifier (`is_scaffolding_code`, unit-tested) is conservative: any unrecognized line keeps the
+  whole block as logic. A lone scaffold row stays inline.
+- **Type-aware block styling:** boilerplate renders dimmer + labelled "setup"; real logic keeps the
+  brighter "GDScript" badge. A block the importer couldn't lift now shows an inline amber **"⚠ code"**
+  badge (its `lift_note`) beside the hover tooltip — a wall of blocks becomes a triage list.
+- Pure editor view-state — **zero codegen change**, the `.gd` stays byte-exact. See
+  `docs/internal/SPEC-code-blocks-as-event-rows.md` (P1) + `blocks_scaffolding_test`.
+
 ### Changed — "Open as Event Sheet" is easier to find
 
 - Right-clicking **any `.gd`** (or an EventSheet `.tres`) in the **FileSystem dock** offers **"Open as

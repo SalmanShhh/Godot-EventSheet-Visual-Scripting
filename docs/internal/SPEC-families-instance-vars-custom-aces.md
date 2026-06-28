@@ -1,6 +1,11 @@
 # Spec — Families, instance variables & family-bound custom ACEs (the "Families trio")
 
-**Status:** Proposed (design). **Audience:** maintainers / tools engineers. **Goal:** add C3's *horizontal*
+**Status:** **v1 implemented** — a sheet flagged `is_family` emits a metadata-only `## @ace_family(<Class>)`
+marker (round-trips byte-exact), derives its group via `family_group()`, is toggled from the Sheet Type
+dialog, warns when unnamed, and a family-scoped event reuses `PickFilter`(GROUP). Demonstrated by the
+**Family Arena** showcase (`demo/showcase/enemy.gd` + `family_arena.gd`). v2 (loose families, one-gesture
+"Make Family") and v3 (implicit picking / SOL) remain proposed. **Audience:** maintainers / tools
+engineers. **Goal:** add C3's *horizontal*
 abstraction — write one rule that applies to *every instance of a type-set* — on top of Godot's own
 primitives (groups, base classes, exported vars, methods), compiling to idiomatic GDScript that
 round-trips byte-exact.
