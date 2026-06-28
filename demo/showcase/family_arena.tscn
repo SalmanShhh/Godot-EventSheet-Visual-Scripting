@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/family_arena.gd" id="1_bqlue"]
+
+[node name="FamilyArena" type="Node2D" unique_id=305177744]
+script = ExtResource("1_bqlue")
+
+[node name="Info" type="Label" parent="." unique_id=1466107718]
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 24.0
+offset_bottom = 18.0
+theme_override_font_sizes/font_size = 22
+text = "18 Enemies · one family For Each moves them all"

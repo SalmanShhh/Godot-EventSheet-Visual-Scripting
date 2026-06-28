@@ -75,6 +75,25 @@ static func run() -> bool:
 	passed = _check_scene("swarm scene has Info HUD", "res://demo/showcase/swarm.tscn", ["Info"]) and passed
 	passed = _check("dot sub-scene exists", ResourceLoader.exists("res://demo/showcase/dot.tscn"), true) and passed
 
+	# Family Arena — the Families trio: an Enemy Family (instances + a family ACE) driven by family-scoped
+	# rules. The byte-identity check inside _check_sheet doubles as the @ace_family round-trip proof.
+	passed = _check_sheet("enemy", "res://demo/showcase/enemy.gd", [
+		"## @ace_family(Enemy)",
+		"class_name Enemy",
+		"extends Sprite2D",
+		"self.add_to_group(\"family_enemy\")",
+		"func take_damage(amount: int)",
+		"@export var health: int = 3",
+	]) and passed
+	passed = _check_sheet("family_arena", "res://demo/showcase/family_arena.gd", [
+		"class_name FamilyArena",
+		"for enemy in get_tree().get_nodes_in_group(\"family_enemy\"):",
+		"enemy.position.y += enemy.fall_speed * delta",
+		"__e.take_damage(1)",
+	]) and passed
+	passed = _check_scene("family_arena scene has Info HUD", "res://demo/showcase/family_arena.tscn", ["Info"]) and passed
+	passed = _check("enemy sub-scene exists", ResourceLoader.exists("res://demo/showcase/enemy.tscn"), true) and passed
+
 	# Discovery: the flagship is the one the plugin opens; the secondaries never compete.
 	passed = _check("flagship is the discovered showcase",
 		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/showcase_carousel.tscn") and passed

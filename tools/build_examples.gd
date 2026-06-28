@@ -17,6 +17,7 @@ func _init() -> void:
 	all_ok = _build_quest_fsm() and all_ok
 	all_ok = _build_platformer_shooter() and all_ok
 	all_ok = _build_swarm() and all_ok
+	all_ok = _build_family_arena() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -734,3 +735,101 @@ func _build_swarm() -> bool:
 	label.text = "800 sprites   ·   Budgeted For Each: 90/frame   ·   60 FPS"
 	root.add_child(label); label.owner = root
 	return _save_scene(root, "res://demo/showcase/swarm.tscn")
+
+# ── 6. Family Arena (the Families trio: horizontal abstraction) ───────────────
+# Demonstrates a FAMILY end-to-end: an `Enemy` Sprite2D whose instances auto-join the family_enemy
+# group, with instance variables (health, fall_speed) and a family-bound ACE (take_damage). A separate
+# FamilyArena sheet then writes ONE rule per behaviour over ALL enemies (a family For Each), so adding an
+# enemy type changes no rules. Also exercises the @ace_family round-trip via the showcase byte-identity gate.
+func _build_family_arena() -> bool:
+	var tex: ImageTexture = _make_texture()
+
+	# Enemy — a Sprite2D custom node marked as a Family. health/fall_speed are its instance variables.
+	var enemy: EventSheetResource = EventSheetResource.new()
+	enemy.host_class = "Sprite2D"
+	enemy.custom_class_name = "Enemy"
+	enemy.is_family = true
+	enemy.addon_tags = PackedStringArray(["family", "demo"])
+	enemy.class_description = "A falling enemy, marked as a Family so one rule can move or damage every Enemy at once."
+	enemy.variables = {
+		"health": {"type": "int", "default": 3, "exported": true,
+			"attributes": {"tooltip": "Hits this enemy survives before it dies."}},
+		"fall_speed": {"type": "float", "default": 90.0, "exported": true,
+			"attributes": {"tooltip": "How fast (px/sec) this enemy falls."}}
+	}
+	# On Ready: join the family group (membership — the "Add To Family" gesture is Add To Group with the
+	# family's group) and give each instance its own look + speed.
+	var enemy_ready: EventRow = EventRow.new()
+	enemy_ready.trigger_provider_id = "Core"; enemy_ready.trigger_id = "OnReady"
+	enemy_ready.actions.append(_action("Core", "AddToGroup", "{target}.add_to_group({group})", {"target": "self", "group": "\"family_enemy\""}))
+	enemy_ready.actions.append(_raw("fall_speed = randf_range(60.0, 140.0)\nmodulate = Color.from_hsv(randf(), 0.6, 1.0)\nscale = Vector2(0.4, 0.4)"))
+	enemy.events.append(enemy_ready)
+	# take_damage(amount) — the family-bound ACE: lose health, free at zero.
+	var take_damage: EventFunction = EventFunction.new()
+	take_damage.function_name = "take_damage"
+	take_damage.enabled = true
+	take_damage.expose_as_ace = true
+	take_damage.ace_display_name = "Take Damage"
+	take_damage.ace_category = "Enemy"
+	var p_amount: ACEParam = ACEParam.new(); p_amount.id = "amount"; p_amount.type_name = "int"; p_amount.type = TYPE_INT
+	take_damage.params = [p_amount]
+	take_damage.events = [_raw("health -= amount\nif health <= 0:\n\tqueue_free()")]
+	enemy.functions.append(take_damage)
+	if not _compile(enemy, "res://demo/showcase/enemy.tres", "res://demo/showcase/enemy.gd"):
+		return false
+	# Enemy sub-scene: a Sprite2D bearing the compiled Enemy script.
+	var enemy_node: Sprite2D = Sprite2D.new()
+	enemy_node.name = "Enemy"
+	enemy_node.set_script(load("res://demo/showcase/enemy.gd"))
+	enemy_node.texture = tex
+	if not _save_scene(enemy_node, "res://demo/showcase/enemy.tscn"):
+		return false
+
+	# FamilyArena — spawns Enemies, then drives them all with FAMILY-SCOPED rules.
+	var arena: EventSheetResource = EventSheetResource.new()
+	arena.host_class = "Node2D"
+	arena.custom_class_name = "FamilyArena"
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Family Arena[/b] — the Families trio in one screen. [b]Enemy[/b] is a Family: a Sprite2D whose instances auto-join the family_enemy group, each carrying its own health + fall_speed. This sheet writes ONE rule per behaviour over ALL of them — a family For Each makes every Enemy fall by its own speed and recycle at the bottom, and a timer damages a random one through the Enemy: Take Damage ACE. Add a new enemy type and not one rule changes — that's horizontal reuse, the thing event sheets were missing."
+	arena.events.append(about)
+	arena.variables = {
+		"spawn_count": {"type": "int", "default": 18, "exported": true,
+			"attributes": {"tooltip": "How many Enemies to spawn.", "range": {"min": "4", "max": "60", "step": "1"}}}
+	}
+	# On Ready: spawn the Enemies into a grid.
+	var spawn: EventRow = EventRow.new()
+	spawn.trigger_provider_id = "Core"; spawn.trigger_id = "OnReady"
+	spawn.actions.append(_raw("var __cols: int = 6\nfor __i: int in range(spawn_count):\n\tvar __e: Sprite2D = load(\"res://demo/showcase/enemy.tscn\").instantiate()\n\t__e.position = Vector2(80.0 + float(__i % __cols) * 90.0, 40.0 + float(__i / __cols) * 80.0)\n\tadd_child(__e)"))
+	arena.events.append(spawn)
+	# On Process: ONE family rule moves every Enemy by its own instance fall_speed + recycles it.
+	var fall: EventRow = EventRow.new()
+	fall.trigger_provider_id = "Core"; fall.trigger_id = "OnProcess"
+	var pf: PickFilter = PickFilter.new()
+	pf.enabled = true
+	pf.collection_kind = PickFilter.CollectionKind.GROUP
+	pf.collection_value = "family_enemy"
+	pf.iterator_name = "enemy"
+	fall.pick_filters.append(pf)
+	fall.actions.append(_raw("enemy.position.y += enemy.fall_speed * delta\nif enemy.position.y > 560.0:\n\tenemy.position.y = -20.0"))
+	arena.events.append(fall)
+	# Every 0.5s: damage a random Enemy via the family ACE + refresh the HUD count.
+	var strike: EventRow = EventRow.new()
+	strike.trigger_provider_id = "Core"; strike.trigger_id = "OnProcess"
+	strike.conditions.append(_every("strike_fam", "0.5"))
+	strike.actions.append(_raw("var __e = get_tree().get_nodes_in_group(\"family_enemy\").pick_random()\nif __e != null:\n\t__e.take_damage(1)"))
+	strike.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$Info", "template": "\"%d Enemies · one family For Each moves them all\"", "args": "get_tree().get_node_count_in_group(\"family_enemy\")"}))
+	arena.events.append(strike)
+	if not _compile(arena, "res://demo/showcase/family_arena.tres", "res://demo/showcase/family_arena.gd"):
+		return false
+
+	# Scene: the FamilyArena root + a HUD label.
+	var root: Node2D = Node2D.new()
+	root.name = "FamilyArena"
+	root.set_script(load("res://demo/showcase/family_arena.gd"))
+	var label: Label = Label.new()
+	label.name = "Info"
+	label.position = Vector2(24, 18)
+	label.add_theme_font_size_override("font_size", 22)
+	label.text = "18 Enemies · one family For Each moves them all"
+	root.add_child(label); label.owner = root
+	return _save_scene(root, "res://demo/showcase/family_arena.tscn")
