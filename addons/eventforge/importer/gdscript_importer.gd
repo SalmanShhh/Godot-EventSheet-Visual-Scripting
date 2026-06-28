@@ -144,6 +144,12 @@ func import_external_source(source: String) -> EventSheetResource:
 				if not trimmed_tag.is_empty():
 					recovered_tags.append(trimmed_tag)
 			sheet.addon_tags = recovered_tags
+	# Recover the Family marker (`## @ace_family(Name)`) so a family-typed sheet re-opens as a family.
+	# Metadata only (the line stays in the verbatim prelude) — exactly like @ace_tags above, so it can't
+	# double-emit. The group/vars/ACEs are all derived from the class, so the bare name is enough.
+	var family_regex: RegEx = RegEx.new()
+	if family_regex.compile("(?m)^## @ace_family\\(") == OK:
+		sheet.is_family = family_regex.search(source) != null
 	# Recover the class description: the `##` doc block immediately after `extends` (no blank
 	# between). The host-member doc and signal annotations are separated from `extends` by a blank
 	# line, so they never match. Metadata only in external mode (the lines stay verbatim).

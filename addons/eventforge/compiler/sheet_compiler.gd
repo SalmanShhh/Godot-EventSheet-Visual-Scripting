@@ -107,6 +107,12 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	if not sheet.custom_class_name.strip_edges().is_empty():
 		if not sheet.addon_tags.is_empty():
 			lines.append("## @ace_tags(%s)" % ", ".join(sheet.addon_tags))
+		# Family marker (metadata only, exactly like @ace_tags above): declares that this class is an
+		# event-sheet Family, so other sheets can write one rule over ALL its instances. No code is
+		# emitted from this flag — membership is an explicit "Add To Family" action — so the annotation
+		# round-trips byte-exact and can never double-emit.
+		if sheet.is_family:
+			lines.append("## @ace_family(%s)" % sheet.custom_class_name.strip_edges())
 		if not sheet.custom_class_icon.strip_edges().is_empty():
 			lines.append("@icon(\"%s\")" % sheet.custom_class_icon)
 		lines.append("class_name %s" % sheet.custom_class_name.strip_edges())

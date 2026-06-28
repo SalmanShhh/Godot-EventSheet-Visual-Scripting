@@ -50,6 +50,15 @@ class_name EventSheetResource
 ## `extends` line, so Godot shows it for the custom node type (Create Node dialog tooltip + the
 ## script doc). Multi-line is supported; round-trips through the importer. Plain prose, no @tags.
 @export_multiline var class_description: String = ""
+## When true, this sheet's class is an event-sheet FAMILY (Construct-style): every instance is collected
+## into the group `family_<snake_class_name>`, so OTHER sheets can write ONE rule that applies to all of
+## them — "for each Enemy where health < 20: flash" compiles to a loop over
+## get_tree().get_nodes_in_group("family_enemy"). The family's `variables` are its per-instance variables
+## and its exposed `functions` are its per-object ACEs. Emitted ONLY as a `## @ace_family(<name>)`
+## annotation (metadata, exactly like @ace_tags — no code, so it round-trips byte-exact). Membership is an
+## explicit "Add To Family" action (compiles to add_to_group) the family authors, NEVER auto-emitted code
+## (which would double on re-import). Requires a custom_class_name.
+@export var is_family: bool = false
 @export var events: Array[Resource] = []
 @export var variables: Dictionary = {}
 ## Compile-time includes (event-sheet-style): paths to other event sheets (res://….tres) whose
@@ -82,3 +91,13 @@ class_name EventSheetResource
 ## (the banner's "Edit Events" button) re-enables normal editing. Preview is the safe default
 ## when opening a .gd, so a casual look can never overwrite a hand-written script.
 @export var read_only: bool = false
+
+## The runtime group a Family's instances live in, derived from the class name (e.g. class "Enemy" →
+## "family_enemy"). One rule over the family iterates this group. Empty when the sheet has no class name
+## (a family needs a custom_class_name — the type instances share). The "Add To Family" action and any
+## family-scoped For-Each both reference this single source of truth.
+func family_group() -> String:
+	var class_id: String = custom_class_name.strip_edges()
+	if class_id.is_empty():
+		return ""
+	return "family_" + class_id.to_snake_case()
