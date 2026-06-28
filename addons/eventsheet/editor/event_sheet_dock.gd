@@ -6538,10 +6538,11 @@ func _on_preview_edit_requested() -> void:
     _current_sheet.read_only = false
     _refresh_preview_banner()
     _refresh_title_strip()
+    _persist_session()  # remember the unlock so the sheet doesn't come back locked next restart
     var source_name: String = _current_sheet.external_source_path.get_file()
     if source_name.is_empty():
         source_name = "this sheet"
-    _set_status("Editing %s — Save (Ctrl+S) overwrites the file. Use Save As… to keep a separate sheet." % source_name)
+    _set_status("Now editing %s — Save (Ctrl+S) saves your changes to the file, or use Save As… to keep a separate copy." % source_name)
 
 ## "Open in Script Editor": hand the .gd to Godot's own script editor for direct code edits.
 func _on_preview_open_in_script_editor() -> void:
@@ -6861,6 +6862,9 @@ func _persist_session() -> void:
         return
     _sync_active_tab_state()
     var paths: PackedStringArray = PackedStringArray()
+    # Paths the user has unlocked for editing (clicked "Edit Events" on a .gd preview), so a sheet
+    # they were editing comes back editable next restart instead of re-locked as a preview.
+    var editable_paths: PackedStringArray = PackedStringArray()
     var active_in_saved: int = -1
     for index in _open_tabs.size():
         var tab_path: String = str(_open_tabs[index].get("path", ""))
@@ -6869,8 +6873,12 @@ func _persist_session() -> void:
         if index == _active_tab_index:
             active_in_saved = paths.size()
         paths.append(tab_path)
+        var tab_sheet: EventSheetResource = _open_tabs[index].get("sheet") as EventSheetResource
+        if tab_sheet != null and not tab_sheet.read_only:
+            editable_paths.append(tab_path)
     var session: ConfigFile = ConfigFile.new()
     session.set_value("session", "paths", paths)
+    session.set_value("session", "editable", editable_paths)
     session.set_value("session", "active", active_in_saved)
     session.save(SESSION_PATH)
 
@@ -6884,12 +6892,17 @@ func _restore_session() -> void:
     var session: ConfigFile = ConfigFile.new()
     if session.load(SESSION_PATH) == OK:
         var paths: PackedStringArray = PackedStringArray(session.get_value("session", "paths", PackedStringArray()))
+        var editable_paths: PackedStringArray = PackedStringArray(session.get_value("session", "editable", PackedStringArray()))
         var active: int = int(session.get_value("session", "active", -1))
         var opened: int = 0
         for sheet_path: String in paths:
             if FileAccess.file_exists(sheet_path):
                 _load_sheet_from_path(sheet_path)
                 opened += 1
+                # Restore the prior "Edit Events" unlock so the sheet isn't re-locked on restart.
+                if sheet_path in editable_paths and _current_sheet != null and _current_sheet.read_only:
+                    _current_sheet.read_only = false
+                    _refresh_preview_banner()
         if active >= 0 and active < paths.size():
             var active_path: String = paths[active]
             for index in _open_tabs.size():
