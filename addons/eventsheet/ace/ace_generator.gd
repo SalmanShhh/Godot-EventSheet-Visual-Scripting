@@ -153,7 +153,8 @@ static func _apply_deprecation_metadata(definition: ACEDefinition, overrides: Di
         return
     definition.metadata["deprecated"] = true
     var message: String = str(overrides.get("deprecation_message", "")).strip_edges()
-    var note: String = "[Deprecated]"
+    # Parenthesised (not "[Deprecated]") so it survives a rich (BBCode) hover/tooltip — see deprecation_note().
+    var note: String = "(Deprecated)"
     if not message.is_empty():
         note += " " + message
     definition.metadata["deprecation_note"] = note

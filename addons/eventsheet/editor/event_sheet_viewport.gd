@@ -3960,6 +3960,7 @@ func _function_call_label(action: ACEAction) -> String:
     return "%s(%s)" % [label, args] if not args.is_empty() else label
 
 func _format_condition_descriptor(condition: ACECondition) -> String:
+    _pending_display_bbcode = _display_template_has_markup(condition.provider_id, condition.ace_id)
     var base_text: String = _format_condition_descriptor_base(condition)
     var ace_note: String = str(condition.comment).strip_edges()
     if not ace_note.is_empty():
@@ -4017,6 +4018,7 @@ func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []
     return false
 
 func _format_action_descriptor(action: ACEAction) -> String:
+    _pending_display_bbcode = _display_template_has_markup(action.provider_id, action.ace_id)
     var base_text: String = _format_action_descriptor_base(action)
     var ace_note: String = str(action.comment).strip_edges()
     if not ace_note.is_empty():
@@ -4069,6 +4071,13 @@ static func _value_ranges_for(text: String) -> Array:
         ranges.append([regex_match.get_start(), regex_match.get_end() - regex_match.get_start()])
     return ranges
 
+# One-shot flag set by _format_condition/action_descriptor (their ONLY callers each pass the result straight
+# into a _make_span call) when the ACE's display TEMPLATE carries BBCode markup — i.e. the author opted into
+# styling via @ace_display_template. _make_span consumes + clears it. Gating on the TEMPLATE (not the
+# substituted text) is what stops a USER's param value or note that happens to contain [b]/[color] from being
+# silently stripped/styled in the cell.
+var _pending_display_bbcode: bool = false
+
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
     var span := SemanticSpan.new()
     span.text = text
@@ -4078,18 +4087,28 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
     # Precompute value-highlight ranges for condition/trigger/action text (single choke point;
     # build-time only, so the draw path stays cheap).
     if str(span.metadata.get("kind", "")) in ["condition", "trigger", "action"] and not text.is_empty():
-        if EventSheetBBCodeLite.has_markup(text):
-            # BBCode-lite ([b]/[i]/[color]) in a cell's display text — e.g. a custom ACE's
-            # @ace_display_template("[color=red]Destroy[/color] {object}"). Parse to styled segments and draw
-            # the STRIPPED text, so the cell width / colour swatch / hit-test all align with what's shown.
-            # The author's explicit styling supersedes the automatic value-highlight for this cell.
+        if _pending_display_bbcode:
+            # The author's display TEMPLATE carried markup — parse to styled segments and draw the STRIPPED
+            # text, so the cell width / colour swatch / hit-test all align with what's shown. The author's
+            # explicit styling supersedes the automatic value-highlight for this cell.
             span.metadata["bbcode_segments"] = EventSheetBBCodeLite.parse(text, Color.WHITE)
             span.text = EventSheetBBCodeLite.strip(text)
         else:
             var ranges: Array = _value_ranges_for(text)
             if not ranges.is_empty():
                 span.metadata["value_ranges"] = ranges
+    _pending_display_bbcode = false
     return span
+
+## True when an ACE's display TEMPLATE (not the substituted text) carries BBCode markup — the author opted
+## into styling via @ace_display_template. Built-in/custom descriptors resolve their template the same way
+## format_display does.
+func _display_template_has_markup(provider_id: String, ace_id: String) -> bool:
+    var definition: ACEDefinition = _find_definition(provider_id, ace_id)
+    if definition != null:
+        return EventSheetBBCodeLite.has_markup(str(definition.metadata.get("display_template", definition.display_name)))
+    var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
+    return descriptor != null and EventSheetBBCodeLite.has_markup(descriptor.get_display_text())
 
 func _get_variable_metadata_for_row(row_data: EventRowData) -> Dictionary:
     if row_data == null:

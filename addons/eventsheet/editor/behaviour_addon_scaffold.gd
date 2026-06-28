@@ -36,6 +36,11 @@ static func is_valid_class_name(addon_name: String) -> bool:
 		return false
 	if ClassDB.class_exists(name):
 		return false
+	# A duplicate class_name is a HARD project-wide parse error, not just a bad file — so also reject names
+	# already taken by a global script class (ClassDB only knows engine classes).
+	for global_class: Dictionary in ProjectSettings.get_global_class_list():
+		if str(global_class.get("class", "")) == name:
+			return false
 	return true
 
 ## The folder + file a freshly-scaffolded addon lives in (auto-discovered by the addon scanner).
@@ -48,8 +53,8 @@ static func suggested_path(addon_name: String) -> String:
 static func generate(addon_name: String, base_class: String = "Node", category: String = "", description: String = "") -> String:
 	var name: String = addon_name.strip_edges()
 	var base: String = base_class.strip_edges() if not base_class.strip_edges().is_empty() else "Node"
-	var cat: String = category.strip_edges() if not category.strip_edges().is_empty() else name
-	var desc: String = description.strip_edges() if not description.strip_edges().is_empty() else "Describe what this behaviour does in one line."
+	var cat: String = _sanitize_inline(category) if not _sanitize_inline(category).is_empty() else name
+	var desc: String = _sanitize_inline(description) if not _sanitize_inline(description).is_empty() else "Describe what this behaviour does in one line."
 	var tag: String = _to_snake_case(name)
 
 	var lines: PackedStringArray = PackedStringArray()
@@ -114,12 +119,28 @@ static func generate(addon_name: String, base_class: String = "Node", category: 
 	lines.append("")
 	return "\n".join(lines)
 
-## PascalCase / mixed → snake_case for the folder + file name.
+## Makes a user string safe to drop into a `## @ace_*("...")` doc-comment annotation: a newline would split
+## the comment line (a parse error on the next line), and a double-quote confuses the analyzer's quote-trim
+## extraction — so collapse newlines to spaces and quotes to apostrophes.
+static func _sanitize_inline(text: String) -> String:
+	return text.replace("\r", " ").replace("\n", " ").replace("\"", "'").strip_edges()
+
+## PascalCase / mixed → snake_case for the folder + file name. Splits only at a lowercase→Uppercase boundary
+## (or before the last capital of an acronym that starts a word), so "HUDManager" → "hud_manager",
+## "ABCWidget" → "abc_widget", "Box2D" → "box2d" — not "h_u_d_manager". Collapses repeats; trims edges.
 static func _to_snake_case(text: String) -> String:
+	var cleaned: String = text.strip_edges().replace(" ", "_").replace("-", "_")
 	var out: String = ""
-	for i in range(text.length()):
-		var c: String = text[i]
-		if c.to_upper() == c and c.to_lower() != c and i > 0:
-			out += "_"
+	for i in range(cleaned.length()):
+		var c: String = cleaned[i]
+		var is_upper: bool = c != c.to_lower() and c == c.to_upper()
+		if is_upper and i > 0:
+			var prev: String = cleaned[i - 1]
+			var prev_is_lower_letter: bool = prev != "_" and prev == prev.to_lower() and prev != prev.to_upper()
+			var next_is_lower_letter: bool = i + 1 < cleaned.length() and cleaned[i + 1] == cleaned[i + 1].to_lower() and cleaned[i + 1] != cleaned[i + 1].to_upper()
+			if (prev_is_lower_letter or next_is_lower_letter) and not out.ends_with("_"):
+				out += "_"
 		out += c.to_lower()
-	return out.replace(" ", "_").replace("-", "_")
+	while out.contains("__"):
+		out = out.replace("__", "_")
+	return out.trim_prefix("_").trim_suffix("_")

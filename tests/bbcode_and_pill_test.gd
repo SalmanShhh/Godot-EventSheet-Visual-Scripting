@@ -12,16 +12,21 @@ static func run() -> bool:
 	var all_passed: bool = true
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 
-	# R4 — BBCode in a condition/action cell: styled segments + stripped text for layout.
+	# R4 — when the AUTHOR's display template carried markup (the one-shot flag is set), the cell renders
+	# styled, with the stripped text driving layout.
+	viewport._pending_display_bbcode = true
 	var styled: SemanticSpan = viewport._make_span("[b]Destroy[/b] [color=red]enemy[/color]", SemanticSpan.SpanType.VALUE, {"kind": "condition"})
-	all_passed = _check("BBCode cell text is stripped for layout", styled.text, "Destroy enemy") and all_passed
-	all_passed = _check("BBCode cell sets styled segments",
+	all_passed = _check("author-markup cell text is stripped for layout", styled.text, "Destroy enemy") and all_passed
+	all_passed = _check("author-markup cell sets styled segments",
 		styled.metadata.get("bbcode_segments") is Array and (styled.metadata["bbcode_segments"] as Array).size() >= 2, true) and all_passed
 
-	# A plain cell with stray brackets must NOT be treated as markup (has_markup is conservative).
-	var plain: SemanticSpan = viewport._make_span("Set array to [1, 2, 3]", SemanticSpan.SpanType.VALUE, {"kind": "action"})
-	all_passed = _check("plain cell text is left as-is", plain.text, "Set array to [1, 2, 3]") and all_passed
-	all_passed = _check("plain cell has no bbcode segments", plain.metadata.has("bbcode_segments"), false) and all_passed
+	# R4 FIX (review): a USER param value/note containing literal BBCode, in a PLAIN-template cell (flag
+	# clear), is drawn LITERALLY — never stripped or styled. This is the footgun the adversarial review caught
+	# (e.g. a "Set RichTextLabel text to [b]Hi[/b]" action whose text is the user's own BBCode).
+	viewport._pending_display_bbcode = false
+	var user_value: SemanticSpan = viewport._make_span("Set label to [b]Hi[/b]", SemanticSpan.SpanType.VALUE, {"kind": "action"})
+	all_passed = _check("a user value with literal BBCode is left intact (plain template)", user_value.text, "Set label to [b]Hi[/b]") and all_passed
+	all_passed = _check("a plain-template cell has no bbcode segments", user_value.metadata.has("bbcode_segments"), false) and all_passed
 
 	# R4 — hover tooltip: a custom rich widget only when the description has markup.
 	all_passed = _check("a BBCode description yields a custom tooltip widget",

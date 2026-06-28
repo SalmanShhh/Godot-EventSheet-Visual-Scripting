@@ -18,7 +18,7 @@ static func run() -> bool:
 	all_passed = _check(".deprecated() sets is_deprecated", descriptor.is_deprecated, true) and all_passed
 	all_passed = _check("deprecation_note() combines message + replacement",
 		descriptor.deprecation_note(),
-		"[Deprecated] Move Toward is smoother. Use Core::MoveToward instead.") and all_passed
+		"(Deprecated) Move Toward is smoother. Use Core::MoveToward instead.") and all_passed
 	all_passed = _check("a non-deprecated descriptor has an empty note",
 		ACEDescriptor.new().deprecation_note(), "") and all_passed
 
@@ -26,14 +26,14 @@ static func run() -> bool:
 	var definition: ACEDefinition = EventSheetACEAdapter.from_eventforge_descriptor(descriptor)
 	all_passed = _check("adapter carries the deprecated flag", bool(definition.metadata.get("deprecated", false)), true) and all_passed
 	all_passed = _check("adapter carries the deprecation note",
-		str(definition.metadata.get("deprecation_note", "")).begins_with("[Deprecated]"), true) and all_passed
+		str(definition.metadata.get("deprecation_note", "")).begins_with("(Deprecated)"), true) and all_passed
 
 	# 3. Generator — a custom addon's @ace_deprecated override sets the same metadata.
 	var custom: ACEDefinition = ACEDefinition.new()
 	EventSheetACEGenerator._apply_deprecation_metadata(custom, {"deprecated": true, "deprecation_message": "Use knock_back() instead."})
 	all_passed = _check("generator marks a custom ACE deprecated", bool(custom.metadata.get("deprecated", false)), true) and all_passed
 	all_passed = _check("generator note includes the message",
-		str(custom.metadata.get("deprecation_note", "")), "[Deprecated] Use knock_back() instead.") and all_passed
+		str(custom.metadata.get("deprecation_note", "")), "(Deprecated) Use knock_back() instead.") and all_passed
 
 	# 4 + 5. Registry-backed paths: temporarily deprecate a real built-in to exercise the compile warning
 	#        and the viewport hover, then restore the cache so later tests see the clean built-ins.
@@ -53,8 +53,8 @@ static func run() -> bool:
 			all_passed = _check("the warning names the ACE + its replacement",
 				str(warnings[0]).contains("Print Log") and str(warnings[0]).contains("Core::Log"), true) and all_passed
 		var viewport: EventSheetViewport = EventSheetViewport.new()
-		all_passed = _check("hover description is prefixed [Deprecated]",
-			viewport._ace_description("Core", "PrintLog").begins_with("[Deprecated]"), true) and all_passed
+		all_passed = _check("hover description is prefixed (Deprecated)",
+			viewport._ace_description("Core", "PrintLog").begins_with("(Deprecated)"), true) and all_passed
 		viewport.free()
 	else:
 		all_passed = _check("found Core::PrintLog to deprecate for the test", false, true) and all_passed

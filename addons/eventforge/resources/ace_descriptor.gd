@@ -107,7 +107,9 @@ func deprecated(message: String = "", replacement: String = "") -> ACEDescriptor
 func deprecation_note() -> String:
 	if not is_deprecated:
 		return ""
-	var note: String = "[Deprecated]"
+	# Parenthesised, not "[Deprecated]" — square brackets would be parsed as an (unknown) BBCode tag and
+	# eaten when this note prefixes a description that renders in a rich (BBCode) hover tooltip.
+	var note: String = "(Deprecated)"
 	if not deprecation_message.strip_edges().is_empty():
 		note += " " + deprecation_message.strip_edges()
 	if not replacement_ace_id.strip_edges().is_empty():

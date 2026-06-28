@@ -51,6 +51,21 @@ static func run() -> bool:
 	all_passed = _check("an expression method is annotated", sample.contains("@ace_expression") and sample.contains("func current_strength"), true) and all_passed
 	all_passed = _check("an @export property is present", sample.contains("@export var strength"), true) and all_passed
 
+	# ── Adversarial-review regression cases ──
+	# Finding 1: a duplicate class_name is a HARD project error, so an existing GLOBAL script class is rejected.
+	all_passed = _check("rejects an existing global script class", Scaffold.is_valid_class_name("ACEAction"), false) and all_passed
+	# Finding 4: _to_snake_case must not mangle acronyms / digits.
+	all_passed = _check("snake_case keeps an acronym intact (HUDManager)", Scaffold._to_snake_case("HUDManager"), "hud_manager") and all_passed
+	all_passed = _check("snake_case keeps a leading acronym (ABCWidget)", Scaffold._to_snake_case("ABCWidget"), "abc_widget") and all_passed
+	all_passed = _check("snake_case keeps a digit run (Box2DBody)", Scaffold._to_snake_case("Box2DBody"), "box2d_body") and all_passed
+	all_passed = _check("snake_case the simple case (PlayerCombat)", Scaffold._to_snake_case("PlayerCombat"), "player_combat") and all_passed
+	# Findings 2 + 3: newlines / quotes in category + description never corrupt the generated GDScript.
+	var dirty: String = Scaffold.generate("DirtyInput", "Node", "Multi\nLine", "Has \"quotes\" and\nnewlines")
+	var dirty_script: GDScript = GDScript.new()
+	dirty_script.source_code = dirty
+	all_passed = _check("newline/quote-laden category & description still parse", dirty_script.reload(), OK) and all_passed
+	all_passed = _check("embedded double-quotes are neutralised in the annotation", dirty.contains("Has 'quotes'"), true) and all_passed
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

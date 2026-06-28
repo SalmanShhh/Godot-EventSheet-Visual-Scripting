@@ -734,7 +734,10 @@ func _on_create_behaviour_addon() -> void:
         return
     var base: String = _new_addon_base_option.get_item_text(_new_addon_base_option.selected)
     var source: String = BehaviourAddonScaffold.generate(addon_name, base, _new_addon_category_edit.text, _new_addon_desc_edit.text)
-    DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+    var folder: String = path.get_base_dir()
+    if DirAccess.make_dir_recursive_absolute(folder) != OK and not DirAccess.dir_exists_absolute(folder):
+        _new_addon_status_label.text = "Couldn't create the folder %s — check permissions." % folder
+        return
     var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
     if file == null:
         _new_addon_status_label.text = "Couldn't write %s — check folder permissions." % path
