@@ -5988,12 +5988,14 @@ func _build_row_more_submenu(is_event: bool) -> void:
 func _on_viewport_empty_space_double_clicked() -> void:
     if not _ensure_sheet_for_editing():
         return
-    var created: bool = _perform_undoable_sheet_edit("Add Event", func() -> bool:
-        _current_sheet.events.append(EventRow.new())
-        return true
-    )
-    if created:
-        _mark_dirty("Added event.")
+    # Double-clicking empty space reads as "I want a new event here" — open the ACE picker in new-event
+    # mode so the user picks the first condition/trigger immediately, rather than dropping a blank event
+    # they then have to fill. Selection is cleared first so the new event lands at the end (where they
+    # clicked), not nested under whatever happened to be selected. Mirrors the "Add Event" toolbar button
+    # and the "+ Add event…" footer, so every "make a new event" path opens the same picker.
+    if _viewport != null:
+        _viewport.clear_selection()
+    _on_add_event_requested()
 
 func _on_viewport_empty_space_context_menu_requested(global_position: Vector2) -> void:
     _context_row = null
@@ -6025,6 +6027,12 @@ func _configure_context_menu(menu: PopupMenu) -> void:
     if menu == _condition_context_menu:
         var invert_index: int = menu.get_item_index(CONDITION_MENU_INVERT)
         if invert_index >= 0:
+            # A trigger ("On X" event header) can't be inverted — there's no "not On X", and the compiler
+            # never reads trigger.negated, so it would have silently no-op'd. Only regular conditions
+            # invert (compiled as `not (…)`). Disable the item + explain when the user right-clicked a trigger.
+            var inverting_trigger: bool = str(_context_hit.get("span_metadata", {}).get("kind", "")) == "trigger"
+            menu.set_item_disabled(invert_index, inverting_trigger)
+            menu.set_item_tooltip(invert_index, "Triggers can't be inverted — there's no \"not On X\"." if inverting_trigger else "")
             menu.set_item_text(invert_index, "Remove Inversion" if _context_condition_is_negated() else "Invert Condition")
         var condition_toggle_index: int = menu.get_item_index(CONDITION_MENU_TOGGLE_ENABLED)
         if condition_toggle_index >= 0:
@@ -7055,9 +7063,9 @@ func _toggle_context_condition_inversion() -> void:
     var kind: String = str(metadata.get("kind", ""))
     var ace_index: int = int(metadata.get("ace_index", -1))
     var toggled: bool = _perform_undoable_sheet_edit("Invert Condition", func() -> bool:
-        if kind == "trigger" and event_row.trigger != null:
-            event_row.trigger.negated = not event_row.trigger.negated
-            return true
+        # Only regular conditions invert (compiled as `not (…)`). A trigger has no "not On X", and the
+        # compiler never reads trigger.negated — toggling it was a SILENT no-op that left a misleading
+        # "inverted" trigger on the sheet. The menu disables Invert for triggers; this guards the path too.
         if kind == "condition" and ace_index >= 0 and ace_index < event_row.conditions.size():
             event_row.conditions[ace_index].negated = not event_row.conditions[ace_index].negated
             return true

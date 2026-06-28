@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Changed — Faster Construct-style event authoring
+
+- **Double-click empty space opens the ACE picker** (new-event mode) instead of dropping a blank event you
+  then have to fill. Every "new event" path — the **Add Event** toolbar button, the "+ Add event…" footer,
+  the empty-space right-click menu, and now double-click — opens the same picker.
+- **Triggers can no longer be "inverted."** The condition right-click menu disables "Invert Condition" for
+  a trigger (there's no "not On X"). This also fixed a **silent no-op**: the compiler never read
+  `trigger.negated`, so the old item claimed to invert a trigger while the generated code never changed —
+  and it no longer leaves a misleading inverted-trigger on the sheet. Regular conditions still invert
+  (compiled `not (…)`).
+- Confirmed + regression-tested (`interaction_features_test`): **OR / AND condition blocks** (right-click
+  an event → "Convert to OR Block" / "Make AND Block") and **selecting an event from its conditions-lane
+  bounds** (right-click the lane background → the event menu with the OR/AND toggle) both work.
+
+### Added — Design spec: GDScript blocks as event rows
+
+- `docs/internal/SPEC-code-blocks-as-event-rows.md` — a UI/UX spec for improving how GDScript blocks render
+  in event sheets (collapse structural scaffolding, clarify un-lifted logic, on-demand convert-to-rows,
+  vocabulary expansion), to push the code-free experience further without breaking the byte-exact round-trip.
+
 ### Changed — Behaviour packs are single `.gd` files (no `.tres`)
 
 Every bundled behaviour/addon pack — and the 5 demo showcases — is now ONE hand-editable `.gd`: the `.gd`
@@ -114,13 +134,13 @@ signals were hand-written `## @ace_trigger` code blocks. Both now de-code automa
 
 - The **New Sheet Function** dialog is rebuilt to match Construct 3:
   - **Usable as** picks Action / Condition / Expression in one control — the easy get/set toggle. An
-    Expression is a getter that returns a typed value, a Condition is a yes/no test (bool), an Action
-    is a void doer (a setter); it sets the return type for you.
+	Expression is a getter that returns a typed value, a Condition is a yes/no test (bool), an Action
+	is a void doer (a setter); it sets the return type for you.
   - **Parameters** are full C3 rows: name · type · **default value** · **description**. Defaults emit
-    as optional GDScript args (`amount: int = 5`) via a dedicated `ACEParam.gdscript_default` (kept
-    separate from the picker pre-fill, and validated trailing so the function always parses).
+	as optional GDScript args (`amount: int = 5`) via a dedicated `ACEParam.gdscript_default` (kept
+	separate from the picker pre-fill, and validated trailing so the function always parses).
   - **Run only when** adds guard conditions — GDScript boolean expressions that wrap the function body
-    in an `if` (e.g. *only run when a node setting is enabled*), authored as Expression Is True rows.
+	in an `if` (e.g. *only run when a node setting is enabled*), authored as Expression Is True rows.
   - Covered by `function_dialog_test`; param defaults round-trip through the importer.
 
 ### Added — Behaviour-as-ACEs parity (foundation)
@@ -311,15 +331,15 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
 - **Nine built-in ACEs that compiled but crashed, leaked, or misbehaved at runtime — surfaced by a new
   compile-coverage test and an adversarial template audit, each reproduced and fixed against Godot 4.7:**
   - **Save JSON File** guards the `FileAccess` handle (and closes it) instead of chaining `.store_string()`
-    on a possible `null` — a missing parent dir or read-only path crashed the save outright.
+	on a possible `null` — a missing parent dir or read-only path crashed the save outright.
   - **Focus Next / Focus Previous** guard the `null` from `find_next/prev_valid_focus()` before calling
-    `grab_focus()` — single / edge-case menus no longer null-deref.
+	`grab_focus()` — single / edge-case menus no longer null-deref.
   - **Find Children (by name)** passes `owned = false`, so it finds runtime-spawned nodes instead of
-    silently returning `[]` (the `owned` default excluded instantiated enemies — the advertised use case).
+	silently returning `[]` (the `owned` default excluded instantiated enemies — the advertised use case).
   - **Nearest / Furthest Node In Group** are host-typed to `Node2D` (they read `global_position`), so the
-    picker no longer offers them on plain-Node / Control sheets where they fail to compile.
+	picker no longer offers them on plain-Node / Control sheets where they fail to compile.
   - **Every X Seconds** accumulates with `get_process_delta_time()` instead of a bare `delta`, so it
-    compiles under any trigger, not only `_process` / `_physics_process`.
+	compiles under any trigger, not only `_process` / `_physics_process`.
   - **Look At (3D)** defaults its target to `Vector3(0, 0, -1)` rather than the node's own origin, which
 	otherwise error-spammed "look_at() failed" every call on a node at the world origin.
   - **Play Sound / Play Sound At** free the throwaway one-shot player when the stream fails to load,

@@ -1191,12 +1191,13 @@ static func run() -> bool:
     empty_double_click.double_click = true
     empty_double_click.position = Vector2(64.0, row_rect.end.y + 120.0)
     dock_viewport._handle_mouse_button(empty_double_click)
-    all_passed = _check("double-clicking empty space appends a new event", dock.get_current_sheet().events.size(), 2) and all_passed
-    all_passed = _check("empty-space double-click inserts EventRow", dock.get_current_sheet().events[1] is EventRow, true) and all_passed
-    dock._on_undo_requested()
-    all_passed = _check("undo removes empty-space double-click insertion", dock.get_current_sheet().events.size(), 1) and all_passed
-    dock._on_redo_requested()
-    all_passed = _check("redo restores empty-space double-click insertion", dock.get_current_sheet().events.size(), 2) and all_passed
+    # Double-clicking empty space now OPENS THE ACE PICKER (new-event mode) rather than dropping a blank
+    # event the user must then fill — so the event count is unchanged until they pick something.
+    all_passed = _check("double-clicking empty space opens the ACE picker in new-event mode",
+        dock._ace_picker._context.get("mode", ""), "new_event") and all_passed
+    all_passed = _check("empty-space double-click drops no blank event (the picker commits it)",
+        dock.get_current_sheet().events.size(), 1) and all_passed
+    dock._ace_picker.close()
     var empty_menu_click := InputEventMouseButton.new()
     empty_menu_click.pressed = true
     empty_menu_click.button_index = MOUSE_BUTTON_RIGHT
@@ -1207,9 +1208,10 @@ static func run() -> bool:
     all_passed = _check("empty context menu second item is new condition", dock._empty_space_context_menu.get_item_text(1), "New Condition") and all_passed
     all_passed = _check("empty context menu third item is add variable", dock._empty_space_context_menu.get_item_text(2), "Add New Variable") and all_passed
     dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_NEW_EVENT)
-    all_passed = _check("empty context menu new event action inserts event", dock.get_current_sheet().events.size(), 3) and all_passed
-    dock._on_undo_requested()
-    all_passed = _check("undo reverts empty context menu new event action", dock.get_current_sheet().events.size(), 2) and all_passed
+    # "New Event" routes through the same ACE picker as the toolbar / double-click (new-event mode) now,
+    # instead of dropping a blank event — so the event count holds until the user picks something.
+    all_passed = _check("empty context menu new event routes through the ACE picker", dock._ace_picker._context.get("mode", ""), "new_event") and all_passed
+    all_passed = _check("empty context menu new event drops no blank event", dock.get_current_sheet().events.size(), 1) and all_passed
     dock_viewport.clear_selection()
     dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_NEW_CONDITION)
     all_passed = _check("empty context menu new condition routes through ace picker", dock._ace_picker._context.get("mode", ""), "new_condition_event") and all_passed
