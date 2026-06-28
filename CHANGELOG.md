@@ -33,6 +33,20 @@ signals were hand-written `## @ace_trigger` code blocks. Both now de-code automa
 - Covered by `event_body_lift_test`, `signal_row_lift_test`, `function_declaration_lift_test`; all 31
   packs + showcases regenerate byte-stable (drift = 0).
 
+### Changed — Picker dialogs match the editor theme
+
+- The **Pick Node** and **Insert Expression** popups were bare `Window`s — they opened as separate
+  native OS windows (default Godot icon, content flush to the edges) instead of editor-embedded dialogs.
+  Both are now `AcceptDialog`s like every other plugin dialog: editor-themed panel + title bar, standard
+  12px content margins, a search clear button, and a confirm button (**Use Node** / **Insert**, enabled
+  only when a row is selected) alongside the existing double-click / Enter. The result tree is
+  height-bounded by a holder so the dialog opens at a comfortable size and scrolls internally.
+- The ACE picker's **⭐ Favorites** and **★ Recent** side panes now sit in filled inset cards — a new
+  `EventSheetPopupUI.panel_section()` helper (editor `dark_color_2` fill, hairline border, rounded
+  corners, falling back to a neutral dark fill outside the editor), matching Godot's *Create New Node*
+  dialog. The description panel gets the same card. The bare lists floating on the dialog background are
+  gone. Covered by `tools/render_node_picker_preview.gd` + the existing `render_picker_preview.gd`.
+
 ### Added — Behaviour class descriptions
 
 - A sheet now has a **Description** (`class_description`), set in the **Sheet Type…** dialog. It

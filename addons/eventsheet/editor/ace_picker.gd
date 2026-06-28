@@ -231,21 +231,23 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	split.split_offset = 200
 	body_holder.add_child(split)
 	var side: VBoxContainer = VBoxContainer.new()
-	side.custom_minimum_size = Vector2(180.0, 0.0)
-	side.add_theme_constant_override("separation", 4)
+	side.custom_minimum_size = Vector2(190.0, 0.0)
+	side.add_theme_constant_override("separation", 8)
 	split.add_child(side)
 	var favorites_label: Label = Label.new()
 	favorites_label.text = "⭐ Favorites"
 	favorites_label.add_theme_color_override("font_color", GROUP_COLOR_NEUTRAL)
-	side.add_child(favorites_label)
 	_favorites_list = _make_side_tree()
-	side.add_child(_favorites_list)
+	var favorites_card: PanelContainer = EventSheetPopupUI.panel_section(_titled_pane(favorites_label, _favorites_list))
+	favorites_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	side.add_child(favorites_card)
 	var recent_label: Label = Label.new()
 	recent_label.text = "★ Recent"
 	recent_label.add_theme_color_override("font_color", GROUP_COLOR_NEUTRAL)
-	side.add_child(recent_label)
 	_recent_list = _make_side_tree()
-	side.add_child(_recent_list)
+	var recent_card: PanelContainer = EventSheetPopupUI.panel_section(_titled_pane(recent_label, _recent_list))
+	recent_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	side.add_child(recent_card)
 	_tree = Tree.new()
 	_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -263,6 +265,8 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	# hugs its content's minimum size, and a fit_content + autowrap RichTextLabel reports a huge
 	# min height during that pass (it wraps at ~0 width), which would balloon the whole dialog.
 	_info_panel = PanelContainer.new()
+	# Same filled inset card as the Favorites/Recent panes, so the description reads as a distinct panel.
+	_info_panel.add_theme_stylebox_override("panel", EventSheetPopupUI.inset_panel_stylebox())
 	_info_panel.custom_minimum_size = Vector2(0.0, 72.0)
 	content.add_child(_info_panel)
 	var info_margin: MarginContainer = MarginContainer.new()
@@ -942,10 +946,22 @@ func _make_side_tree() -> Tree:
 	tree.columns = 1
 	tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	tree.custom_minimum_size = Vector2(0.0, 90.0)
+	tree.custom_minimum_size = Vector2(0.0, 80.0)
+	# Transparent tree background so the panel_section card fill behind it reads as the pane background.
+	tree.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	tree.item_selected.connect(_on_side_item_selected.bind(tree))
 	tree.item_activated.connect(_on_side_item_activated.bind(tree))
 	return tree
+
+## A side pane's body — its title label stacked above the list — as one VBox to drop into a
+## panel_section() card, so each of Favorites / Recent reads as a self-contained titled panel.
+func _titled_pane(title: Label, list: Tree) -> VBoxContainer:
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(title)
+	box.add_child(list)
+	return box
 
 ## Fills the Favorites + Recent panes from the persisted lists, filtered to the current mode.
 func _refresh_side_panes() -> void:

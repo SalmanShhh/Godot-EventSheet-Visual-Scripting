@@ -47,7 +47,7 @@ var _add_another_button: Button = null
 var _lint_context_provider: Callable = Callable()
 
 # Insert Expression picker (lazy).
-var _expression_window: Window = null
+var _expression_window: AcceptDialog = null
 var _expression_tree: Tree = null
 var _expression_search: LineEdit = null
 var _expression_target_key: String = ""
@@ -817,7 +817,7 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 # Filter chips (2D/3D/UI/Audio/Physics) pre-filter by base class. Recently picked nodes
 # surface first; "Used in sheet" lists every $Ref this sheet already makes, tinted red
 # when the node no longer exists in the edited scene (broken-reference audit).
-var _node_picker_window: Window = null
+var _node_picker_window: AcceptDialog = null
 var _node_picker_tree: Tree = null
 var _node_picker_search: LineEdit = null
 var _node_picker_target_key: String = ""
@@ -844,25 +844,30 @@ func _open_node_picker(key: String) -> void:
 	_node_picker_target_key = key
 	_ensure_node_picker_ui()
 	_populate_node_picker()
-	_node_picker_window.popup_centered()
+	_node_picker_window.get_ok_button().disabled = true
+	_node_picker_window.popup_centered(Vector2i(520, 560))
 	_node_picker_search.grab_focus()
 
 ## Builds the picker UI lazily (separate from _open so headless tests can drive it).
 func _ensure_node_picker_ui() -> void:
 	if _node_picker_window == null:
-		_node_picker_window = Window.new()
+		_node_picker_window = AcceptDialog.new()
 		_node_picker_window.title = "Pick Node"
-		_node_picker_window.size = Vector2i(480, 460)
+		_node_picker_window.min_size = Vector2i(480, 460)
+		_node_picker_window.ok_button_text = "Use Node"
+		_node_picker_window.get_ok_button().disabled = true
 		_node_picker_window.close_requested.connect(func() -> void: _node_picker_window.hide())
-		var box: VBoxContainer = VBoxContainer.new()
-		box.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_node_picker_window.confirmed.connect(_on_node_picker_activated)
+		var box: VBoxContainer = EventSheetPopupUI.form_box()
 		_node_picker_search = LineEdit.new()
+		_node_picker_search.clear_button_enabled = true
 		_node_picker_search.placeholder_text = "Search…  (also group:enemies, script:Enemy, scene:Coin)"
 		_node_picker_search.text_changed.connect(func(_t: String) -> void: _populate_node_picker())
 		# Enter commits the first result (parity with the main ACE picker's type-and-Enter).
 		_node_picker_search.text_submitted.connect(func(_t: String) -> void: _activate_first_node_picker_match())
 		box.add_child(_node_picker_search)
 		var chip_row: HBoxContainer = HBoxContainer.new()
+		chip_row.add_theme_constant_override("separation", 4)
 		for chip_label: String in NODE_PICKER_CHIP_CLASSES.keys():
 			var chip: Button = Button.new()
 			chip.text = chip_label
@@ -883,10 +888,20 @@ func _ensure_node_picker_ui() -> void:
 		_node_picker_tree.set_column_title(1, "Class")
 		_node_picker_tree.column_titles_visible = true
 		_node_picker_tree.hide_root = true
+		_node_picker_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_node_picker_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		_node_picker_tree.item_activated.connect(_on_node_picker_activated)
-		box.add_child(_node_picker_tree)
-		_node_picker_window.add_child(box)
+		_node_picker_tree.item_selected.connect(_on_node_picker_selection_changed)
+		# A bare Control holder bounds the dialog height: a Tree reports its full content height as its
+		# minimum and an AcceptDialog would grow to fit it. The tree fills the holder + scrolls internally.
+		var tree_holder: Control = Control.new()
+		tree_holder.custom_minimum_size = Vector2(0.0, 320.0)
+		tree_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tree_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_node_picker_tree.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		tree_holder.add_child(_node_picker_tree)
+		box.add_child(tree_holder)
+		_node_picker_window.add_child(EventSheetPopupUI.margined(box))
 		_dialog.add_child(_node_picker_window)
 
 func _populate_node_picker() -> void:
@@ -1083,6 +1098,13 @@ func _activate_first_expression_match() -> void:
 	if first != null:
 		first.select(0)
 		_on_expression_activated()
+
+## Enables the "Use Node" button only when a row that carries a node reference is highlighted, so the
+## confirm action can never commit an empty/heading row.
+func _on_node_picker_selection_changed() -> void:
+	var selected: TreeItem = _node_picker_tree.get_selected() if _node_picker_tree != null else null
+	if _node_picker_window != null:
+		_node_picker_window.get_ok_button().disabled = selected == null or selected.get_metadata(0) == null
 
 func _on_node_picker_activated() -> void:
 	var selected: TreeItem = _node_picker_tree.get_selected()
@@ -1630,17 +1652,21 @@ func _open_expression_picker(target_key: String) -> void:
 	_expression_target_key = target_key
 	_ensure_expression_window()
 	_refresh_expression_tree()
+	_expression_window.get_ok_button().disabled = true
 	_expression_window.popup_centered(Vector2i(560, 460))
 	_expression_search.grab_focus()
 
 func _ensure_expression_window() -> void:
 	if _expression_window != null:
 		return
-	_expression_window = Window.new()
+	_expression_window = AcceptDialog.new()
 	_expression_window.title = "Insert Expression"
 	_expression_window.visible = false
 	_expression_window.min_size = Vector2i(480, 360)
+	_expression_window.ok_button_text = "Insert"
+	_expression_window.get_ok_button().disabled = true
 	_expression_window.close_requested.connect(func() -> void: _expression_window.hide())
+	_expression_window.confirmed.connect(_on_expression_activated)
 	_dialog.add_child(_expression_window)
 
 	var margin: MarginContainer = MarginContainer.new()
@@ -1668,7 +1694,16 @@ func _ensure_expression_window() -> void:
 	_expression_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_expression_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_expression_tree.item_activated.connect(_on_expression_activated)
-	content.add_child(_expression_tree)
+	_expression_tree.item_selected.connect(_on_expression_selection_changed)
+	# Bare Control holder bounds the dialog height (a Tree reports its full content height as its
+	# minimum, which an AcceptDialog would otherwise grow to fit).
+	var expr_holder: Control = Control.new()
+	expr_holder.custom_minimum_size = Vector2(0.0, 300.0)
+	expr_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	expr_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_expression_tree.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	expr_holder.add_child(_expression_tree)
+	content.add_child(expr_holder)
 
 func _refresh_expression_tree() -> void:
 	if _expression_tree == null or _registry == null:
@@ -1724,6 +1759,12 @@ func _add_member_expression_group(root: TreeItem, label: String, members: Array,
 ## property. Static + pure, so it is unit-testable without a dialog.
 static func member_expression_fragment(member: String, is_method: bool) -> String:
 	return (member + "()") if is_method else member
+
+## Enables the "Insert" button only when a real expression row is highlighted.
+func _on_expression_selection_changed() -> void:
+	var selected: TreeItem = _expression_tree.get_selected() if _expression_tree != null else null
+	if _expression_window != null:
+		_expression_window.get_ok_button().disabled = selected == null or selected.get_metadata(0) == null
 
 func _on_expression_activated() -> void:
 	var item: TreeItem = _expression_tree.get_selected()

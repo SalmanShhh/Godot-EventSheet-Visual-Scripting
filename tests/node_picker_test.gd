@@ -81,6 +81,18 @@ static func run() -> bool:
 		missing_flags.has("MISSING") and missing_flags.has(""), true) and all_passed
 	dialog._node_picker_used_toggle.button_pressed = false
 
+	# The themed picker's "Use Node" button enables only when a real node row is highlighted.
+	dialog._populate_node_picker_from_root(root)
+	var ok_button: Button = dialog._node_picker_window.get_ok_button()
+	dialog._on_node_picker_selection_changed()
+	all_passed = _check("Use Node disabled with nothing selected", ok_button.disabled, true) and all_passed
+	var first_row: TreeItem = dialog._node_picker_tree.get_root().get_first_child()
+	if first_row != null:
+		first_row.select(0)
+	dialog._on_node_picker_selection_changed()
+	all_passed = _check("Use Node enables when a node row is selected",
+		first_row != null and not ok_button.disabled, true) and all_passed
+
 	# Cross-scene scan finds the demo player scene by node/class.
 	var hits: Array = ACEParamsDialog.scan_scene_files("CharacterBody2D", "res://demo")
 	all_passed = _check("scene: scan finds nodes across .tscn files", hits.size() >= 1, true) and all_passed
