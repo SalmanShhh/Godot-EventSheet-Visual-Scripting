@@ -3619,6 +3619,16 @@ func _ensure_raw_code_dialog() -> void:
 func _validate_raw_code() -> void:
     if _raw_code_edit == null or _raw_code_lint_label == null:
         return
+    # Live hard-block: a STRUCTURAL error (unbalanced brackets / unterminated string) disables Save
+    # immediately — always wrong, so it can never lock the user out on a lint false positive (a runtime-only
+    # symbol). Semantic lint errors keep Save enabled but are caught on confirm (which re-opens the dialog).
+    var structural: String = EventSheetGDScriptLint.structural_syntax_error(_raw_code_edit.text)
+    if _raw_code_dialog != null:
+        _raw_code_dialog.get_ok_button().disabled = not structural.is_empty()
+    if not structural.is_empty():
+        _raw_code_lint_label.text = "✗ %s" % structural
+        _raw_code_lint_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
+        return
     var lint_result: Dictionary = EventSheetGDScriptLint.lint(_raw_code_edit.text, _raw_code_in_flow, _current_sheet)
     if bool(lint_result.get("ok", true)):
         _raw_code_lint_label.text = "✓ Compiles"

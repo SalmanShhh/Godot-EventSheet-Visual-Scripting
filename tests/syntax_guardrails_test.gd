@@ -56,6 +56,21 @@ static func run() -> bool:
 		dialog._first_structural_error_field() == null, true) and all_passed
 	broken_field.free()
 
+	# ── The GDScript-block dialog LIVE-disables Save the instant brackets are unbalanced ──
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.setup(null)
+	dock._ensure_raw_code_dialog()
+	dock._raw_code_in_flow = true
+	dock._raw_code_edit.text = "velocity.x = (speed * 2"  # unbalanced
+	dock._validate_raw_code()
+	all_passed = _check("code-block Save is disabled while a bracket is unbalanced",
+		dock._raw_code_dialog.get_ok_button().disabled, true) and all_passed
+	dock._raw_code_edit.text = "velocity.x = speed * 2"  # balanced again
+	dock._validate_raw_code()
+	all_passed = _check("code-block Save re-enables once the structure is sound",
+		dock._raw_code_dialog.get_ok_button().disabled, false) and all_passed
+	dock.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

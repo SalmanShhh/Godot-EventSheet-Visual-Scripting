@@ -11,7 +11,10 @@
 - A new **structural syntax check** (unbalanced `()[]{}` / unterminated strings — always an error,
   unlike an undeclared identifier that may be a runtime-spawned node) now **blocks Apply** in the param
   dialog with a clear message, and runs **even when the symbol-aware lint can't** (an "unhealthy" lint
-  context), closing the one path where malformed code could slip through. (`syntax_guardrails_test`.)
+  context), closing the one path where malformed code could slip through.
+- The **GDScript-block dialog live-disables Save** the instant a bracket goes unbalanced (immediate
+  feedback rather than a reject-on-click). Safe to hard-disable because a structural error is *never*
+  valid — no lockout from a lint false positive. (`syntax_guardrails_test`.)
 
 ### Changed — Node picker prefers scene-unique names (`%Name`) for deep nodes
 
