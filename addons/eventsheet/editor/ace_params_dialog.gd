@@ -552,13 +552,16 @@ static func drop_data_to_expression(data: Variant) -> String:
 				return ""
 			var node_path: String = str(nodes[0])
 			var relative: String = node_path.get_file()
+			var scene_root: Node = null
 			if Engine.is_editor_hint():
-				var scene_root: Node = EditorInterface.get_edited_scene_root()
+				scene_root = EditorInterface.get_edited_scene_root()
 				if scene_root != null:
 					var root_prefix: String = str(scene_root.get_path())
 					if node_path.begins_with(root_prefix + "/"):
 						relative = node_path.trim_prefix(root_prefix + "/")
-			return _node_reference(relative)
+			# Prefer a scene-unique %Name (collapses a deep $A/B/C/D path to %D, reparent-proof) when the
+			# dragged node carries one — the same flat handle the node picker hands back; else the $path.
+			return _best_node_reference(scene_root, relative)
 	return ""
 
 ## $Name for identifier-safe paths, $"Path/To Node" otherwise.

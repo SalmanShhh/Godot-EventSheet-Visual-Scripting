@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed — Dragging a node into a field prefers its scene-unique `%Name`
+
+- Dropping a Scene-dock node onto an expression / path field already inserted a `$Path` reference; it now
+  prefers a scene-unique **`%Name`** when the dragged node carries one — a flat handle that collapses a deep
+  `$A/B/C/D` path to `%D` and survives the node being moved — the same handle the node picker hands back.
+  The deep-node-friendly way to reference Godot's node-heavy objects by dragging. (`node_drag_reference_test`.)
+
 ### Added — Inline colour picker on the cell swatch (no dialog)
 
 - The little **colour swatch** drawn on a condition/action cell (for any ACE with a `Color` param) is now
