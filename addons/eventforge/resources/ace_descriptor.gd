@@ -36,6 +36,13 @@ var codegen_on_true: String = ""
 @export var signal_name: String = ""
 @export var return_type: int = TYPE_NIL
 @export var codegen_template: String = ""
+## Deprecation (a Construct-style covenant): a deprecated ACE KEEPS COMPILING so existing sheets never
+## break, but it is hidden from the picker (can't be added anew) and flagged on hover with its suggested
+## replacement. Set inline via `.deprecated("Use X instead", "Provider::NewId")`. replacement_ace_id is the
+## "<provider>::<ace_id>" of what to use instead (optional).
+@export var is_deprecated: bool = false
+@export var deprecation_message: String = ""
+@export var replacement_ace_id: String = ""
 
 ## Curated poll -> signal-twin map (the shared "reactivity" datum): the handful of polling CONDITIONS
 ## that have a clean reactive trigger, so the editor can nudge "react to a signal instead of checking
@@ -83,6 +90,29 @@ func get_display_text() -> String:
 func described(text: String) -> ACEDescriptor:
 	description = text
 	return self
+
+## Marks this ACE deprecated and returns self, so it chains after make_descriptor like .described():
+## `F.make_descriptor(...).deprecated("Use Move Toward instead", "Core::MoveToward")`. The ACE keeps
+## working — existing sheets that already use it compile byte-for-byte unchanged — but it's hidden from the
+## picker so it can't be added to new work, and its hover/tooltip flags it with the replacement. This is the
+## compatibility covenant: never rename or delete a shipped ace_id, deprecate it instead.
+func deprecated(message: String = "", replacement: String = "") -> ACEDescriptor:
+	is_deprecated = true
+	deprecation_message = message
+	replacement_ace_id = replacement
+	return self
+
+## A one-line "[Deprecated] …" note for hover/tooltips, or "" when not deprecated. Defined once here so the
+## picker, the viewport hover, and any future Project-Doctor hint all phrase it identically.
+func deprecation_note() -> String:
+	if not is_deprecated:
+		return ""
+	var note: String = "[Deprecated]"
+	if not deprecation_message.strip_edges().is_empty():
+		note += " " + deprecation_message.strip_edges()
+	if not replacement_ace_id.strip_edges().is_empty():
+		note += " Use %s instead." % replacement_ace_id.strip_edges()
+	return note
 
 ## Returns params dictionary pre-populated from descriptor defaults.
 func build_default_params() -> Dictionary:

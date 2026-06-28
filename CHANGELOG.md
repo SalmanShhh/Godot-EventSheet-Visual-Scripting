@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added — Deprecate an ACE without breaking existing projects
+
+- An ACE can now be marked **deprecated** (the Construct-style covenant): it **keeps compiling** so sheets
+  that already use it never break, but it is **hidden from the picker** (can't be added to new work),
+  **flagged on hover** with its suggested replacement, and **warned about at compile time** (one nudge per
+  distinct deprecated ACE — never an error).
+- Built-ins use a chainable `.deprecated("why", "Provider::NewId")` next to the descriptor; custom behaviour
+  addons use a `## @ace_deprecated("Use X instead")` annotation — both flow to the same
+  `ACEDefinition.metadata` the picker and hover read. This is the compatibility covenant in code: never
+  rename or delete a shipped `ace_id`, deprecate it instead. (`ace_deprecation_test`.)
+
 ### Added — "@export" badge on variable rows
 
 - A sheet variable exposed to the Godot Inspector now carries a blue **"@export"** pill on its row, so

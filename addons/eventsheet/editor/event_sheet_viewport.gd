@@ -3363,13 +3363,18 @@ func _get_tooltip(at_position: Vector2) -> String:
 ## The plain-language description for an ACE — from its registered definition (custom/behaviour ACEs) or
 ## its built-in descriptor (filled from the generated descriptions map). "" when none is set.
 func _ace_description(provider_id: String, ace_id: String) -> String:
+    var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
+    # A deprecated ACE stays in the sheet and keeps compiling, but its hover is prefixed with the
+    # "[Deprecated] … Use X instead." note so an existing usage clearly steers the user to the replacement.
+    var prefix: String = ""
+    if descriptor != null and descriptor.is_deprecated:
+        prefix = descriptor.deprecation_note() + "\n"
     var definition: ACEDefinition = _find_definition(provider_id, ace_id)
     if definition != null and not str(definition.description).strip_edges().is_empty():
-        return str(definition.description)
-    var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
+        return prefix + str(definition.description)
     if descriptor != null and not str(descriptor.description).strip_edges().is_empty():
-        return str(descriptor.description)
-    return ""
+        return prefix + str(descriptor.description)
+    return prefix.strip_edges()
 
 ## The description of the Function a Call-Function action targets (the named verb you created), or "".
 func _function_call_description(action: ACEAction) -> String:

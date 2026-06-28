@@ -114,6 +114,8 @@ func _build_overrides(directives: Array[String], exported: bool = false) -> Dict
     var overrides := {
         "exported": exported,
         "hidden": false,
+        "deprecated": false,
+        "deprecation_message": "",
         "category": "",
         "name": "",
         "description": "",
@@ -124,6 +126,11 @@ func _build_overrides(directives: Array[String], exported: bool = false) -> Dict
         var directive: String = directive_text.strip_edges()
         if directive.begins_with("@ace_hidden"):
             overrides["hidden"] = true
+        elif directive.begins_with("@ace_deprecated"):
+            # `## @ace_deprecated("Use knock_back() instead")` — the ACE keeps working (existing sheets
+            # compile) but is hidden from the picker and flagged on hover, mirroring built-in .deprecated().
+            overrides["deprecated"] = true
+            overrides["deprecation_message"] = _extract_annotation_value(directive)
         elif directive.begins_with("@ace_category"):
             overrides["category"] = _extract_annotation_value(directive)
         elif directive.begins_with("@ace_name"):

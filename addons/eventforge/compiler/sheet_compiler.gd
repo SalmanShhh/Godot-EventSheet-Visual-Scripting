@@ -199,6 +199,9 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 			source_map.append({"uid": str(signal_row.get_instance_id()), "start": signal_start, "end": lines.size(), "kind": "signal"})
 	var tree_variables: Array = []
 	_collect_tree_variables(all_events, tree_variables)
+	# Nudge (never an error): a deprecated ACE still compiles, but warn once per distinct one so the user
+	# is steered to its replacement even without hovering the row.
+	_collect_deprecated_aces(all_events, result["warnings"], {})
 	var sheet_function_names: Dictionary = {}
 	for known_function: Variant in all_functions:
 		if known_function is EventFunction:
@@ -1575,6 +1578,44 @@ static func _collect_tree_variables(entries: Array, into: Array) -> void:
 			_collect_tree_variables(group.events if not group.events.is_empty() else group.rows, into)
 		elif entry is EventRow:
 			_collect_tree_variables((entry as EventRow).sub_events, into)
+
+## Walks every trigger / condition / action and adds ONE compile warning per distinct deprecated ACE.
+## Deprecated ACEs still compile byte-for-byte (the covenant), so this is a nudge toward the replacement,
+## not a build break. `seen` dedupes so a deprecated ACE used ten times warns once.
+static func _collect_deprecated_aces(entries: Array, warnings: Array, seen: Dictionary) -> void:
+	for entry: Variant in entries:
+		if entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_collect_deprecated_aces(group.events if not group.events.is_empty() else group.rows, warnings, seen)
+		elif entry is EventRow:
+			var row: EventRow = entry as EventRow
+			_warn_if_deprecated(row.trigger_provider_id, row.trigger_id, warnings, seen)
+			for condition: Variant in row.conditions:
+				if condition is ACECondition:
+					_warn_if_deprecated((condition as ACECondition).provider_id, (condition as ACECondition).ace_id, warnings, seen)
+			for action: Variant in row.actions:
+				if action is ACEAction:
+					_warn_if_deprecated((action as ACEAction).provider_id, (action as ACEAction).ace_id, warnings, seen)
+			_collect_deprecated_aces(row.sub_events, warnings, seen)
+
+## Appends a deprecation warning for one ACE if its descriptor is marked deprecated (and not already seen).
+static func _warn_if_deprecated(provider_id: String, ace_id: String, warnings: Array, seen: Dictionary) -> void:
+	if provider_id.strip_edges().is_empty() or ace_id.strip_edges().is_empty():
+		return
+	var key: String = "%s::%s" % [provider_id, ace_id]
+	if seen.has(key):
+		return
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
+	if descriptor == null or not descriptor.is_deprecated:
+		return
+	seen[key] = true
+	var detail: String = descriptor.deprecation_message.strip_edges()
+	if not descriptor.replacement_ace_id.strip_edges().is_empty():
+		detail += (" " if not detail.is_empty() else "") + "Use %s instead." % descriptor.replacement_ace_id.strip_edges()
+	var message: String = "%s (%s) is deprecated." % [descriptor.get_list_name(), key]
+	if not detail.is_empty():
+		message += " " + detail
+	warnings.append(message)
 
 ## Emits the class-level declaration for one tree-placed variable (const / @export var / var).
 static func _emit_tree_variable_line(local_var: LocalVariable) -> String:

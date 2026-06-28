@@ -662,7 +662,13 @@ func _item_label(definition: ACEDefinition) -> String:
 
 func _item_tooltip(definition: ACEDefinition) -> String:
 	var body: String = definition.description if not definition.description.is_empty() else definition.display_name
-	return "[%s]  %s" % [_ace_type_label(definition.ace_type), body]
+	var tip: String = "[%s]  %s" % [_ace_type_label(definition.ace_type), body]
+	# Deprecated entries are filtered out of the picker, but a still-surfaced one (e.g. via search/recents)
+	# carries its deprecation note so the user is steered to the replacement.
+	var note: String = str(definition.metadata.get("deprecation_note", ""))
+	if not note.is_empty():
+		tip += "\n" + note
+	return tip
 
 func _ace_type_label(ace_type: int) -> String:
 	match ace_type:
@@ -712,6 +718,10 @@ func _bold_font() -> Font:
 
 func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:
 	if definition == null:
+		return false
+	# Deprecated ACEs are hidden from the picker so they can't be added to NEW work — but they still
+	# compile in sheets that already use them (the compatibility covenant; see ACEDescriptor.deprecated).
+	if bool(definition.metadata.get("deprecated", false)):
 		return false
 	# Simple Mode hides the advanced / code-drop ACEs (Run GDScript, Evaluate, Breakpoint, …).
 	if _simple_mode_provider.is_valid() and bool(_simple_mode_provider.call()) and _SIMPLE_MODE_DENYLIST.has(definition.provider_id + "::" + definition.id):

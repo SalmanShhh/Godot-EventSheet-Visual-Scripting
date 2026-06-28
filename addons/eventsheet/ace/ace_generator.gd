@@ -44,7 +44,9 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
         var overrides: Dictionary = signal_overrides.get(signal_name, {})
         if bool(overrides.get("hidden", false)):
             continue
-        output.append(_build_signal_definition(provider_id, signal_name, signal_info, overrides))
+        var signal_definition: ACEDefinition = _build_signal_definition(provider_id, signal_name, signal_info, overrides)
+        _apply_deprecation_metadata(signal_definition, overrides)
+        output.append(signal_definition)
 
     for property_info in target.get_property_list():
         var property_name: String = str(property_info.get("name", ""))
@@ -55,7 +57,10 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
             continue
         if not bool(property_overrides_entry.get("exported", false)):
             continue
-        output.append_array(_build_property_definitions(provider_id, property_name, property_info, property_overrides_entry))
+        var property_definitions: Array[ACEDefinition] = _build_property_definitions(provider_id, property_name, property_info, property_overrides_entry)
+        for property_definition: ACEDefinition in property_definitions:
+            _apply_deprecation_metadata(property_definition, property_overrides_entry)
+        output.append_array(property_definitions)
 
     for method_info in target.get_method_list():
         var method_name: String = str(method_info.get("name", ""))
@@ -66,7 +71,9 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
         var method_entry_overrides: Dictionary = method_overrides.get(method_name, {})
         if bool(method_entry_overrides.get("hidden", false)):
             continue
-        output.append(_build_method_definition(provider_id, method_name, method_info, method_entry_overrides))
+        var method_definition: ACEDefinition = _build_method_definition(provider_id, method_name, method_info, method_entry_overrides)
+        _apply_deprecation_metadata(method_definition, method_entry_overrides)
+        output.append(method_definition)
     # Provider description derives from the script's top doc comment (zero-config addons).
     var class_description: String = str(source_metadata.get("class_description", ""))
     if not class_description.is_empty():
@@ -137,6 +144,19 @@ static func _parameterize_node_target(definition: ACEDefinition) -> void:
     var reordered: Array = [target_param]
     reordered.append_array(definition.parameters)
     definition.parameters = reordered
+
+## Carries an addon's `## @ace_deprecated("…")` into the definition's metadata, matching how a built-in's
+## .deprecated() flows via the adapter — so the picker hides it and the hover flags it, while the ACE keeps
+## compiling in sheets that already use it (the compatibility covenant).
+static func _apply_deprecation_metadata(definition: ACEDefinition, overrides: Dictionary) -> void:
+    if definition == null or not bool(overrides.get("deprecated", false)):
+        return
+    definition.metadata["deprecated"] = true
+    var message: String = str(overrides.get("deprecation_message", "")).strip_edges()
+    var note: String = "[Deprecated]"
+    if not message.is_empty():
+        note += " " + message
+    definition.metadata["deprecation_note"] = note
 
 func _build_signal_definition(provider_id: String, signal_name: String, signal_info: Dictionary, overrides: Dictionary) -> ACEDefinition:
     var definition := ACEDefinition.new()
