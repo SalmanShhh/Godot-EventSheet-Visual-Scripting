@@ -21,7 +21,8 @@ permissions:
   contents: write
 
 env:
-  GODOT_VERSION: "4.5.1"
+  # Match the version the plugin is developed + tested on (kept in sync with ci.yml).
+  GODOT_VERSION: "4.7"
 
 jobs:
   release:

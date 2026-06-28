@@ -67,12 +67,16 @@ static func run() -> bool:
 	var scene_root: Node2D = Node2D.new()
 	scene_root.name = "Main"
 	var enemy: Node2D = Node2D.new()
-	enemy.name = "Enemy"
+	# The node name must NOT match any registered global class_name: $-completion resolves a global class
+	# of the same name FIRST (the behavior-child convention), so a class-named node would complete the
+	# CLASS's members instead of this node's actual script. (Regression: a "Enemy" showcase class_name
+	# shadowed a node named "Enemy" once an import populated the global-class cache, reddening CI.)
+	enemy.name = "MoveToChild"
 	enemy.set_script(load("res://eventsheet_addons/move_to/move_to_behavior.gd"))
 	scene_root.add_child(enemy)
 	EventSheetGDScriptLint.scene_root_provider = func() -> Node: return scene_root
 	var labels: Array[String] = []
-	for candidate in EventSheetGDScriptLint.completion_for_context("$Enemy.", null):
+	for candidate in EventSheetGDScriptLint.completion_for_context("$MoveToChild.", null):
 		labels.append(str(candidate.get("label", "")))
 	all_passed = _check("scene children complete their script methods", labels.has("move_to_position"), true) and all_passed
 	all_passed = _check("scene children complete their signals", labels.has("arrived"), true) and all_passed
@@ -80,7 +84,7 @@ static func run() -> bool:
 	var flat: Array[String] = []
 	for candidate in EventSheetGDScriptLint.completion_candidates(null):
 		flat.append(str(candidate.get("label", "")))
-	all_passed = _check("scene children appear as $Name candidates", flat.has("$Enemy"), true) and all_passed
+	all_passed = _check("scene children appear as $Name candidates", flat.has("$MoveToChild"), true) and all_passed
 	EventSheetGDScriptLint.scene_root_provider = Callable()
 	scene_root.free()
 

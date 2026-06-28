@@ -10,7 +10,9 @@ on:
   pull_request:
 
 env:
-  GODOT_VERSION: "4.5.1"
+  # Match the version the plugin is developed + tested on (the "current iteration"). 4.7 Linux build:
+  # github.com/godotengine/godot-builds/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+  GODOT_VERSION: "4.7"
 
 jobs:
   test:
