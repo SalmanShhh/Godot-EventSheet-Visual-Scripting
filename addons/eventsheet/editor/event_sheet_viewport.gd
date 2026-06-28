@@ -1509,14 +1509,65 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
     if sheet == null:
         return root_rows
     root_rows.append_array(_build_global_variable_rows(sheet))
-    for entry in sheet.events:
-        var row_data: EventRowData = _build_row_from_resource(entry, 0)
+    # Blocks spec P1 — collapse the LEADING run of class scaffolding (prelude / annotations /
+    # host-binding) into one foldable "Class setup" strip, so an opened .gd reads as logic, not
+    # boilerplate. Only the leading run, only when it's worth it (≥2 rows), and the detector is
+    # conservative so real logic is never swept in. Pure editor view-state: the underlying RawCodeRows
+    # are unchanged + still selected/edited normally as the strip's children.
+    var event_start: int = 0
+    var scaffold_rows: Array[EventRowData] = []
+    while event_start < sheet.events.size() \
+            and sheet.events[event_start] is RawCodeRow \
+            and is_scaffolding_code((sheet.events[event_start] as RawCodeRow).code):
+        scaffold_rows.append(_build_raw_code_row(sheet.events[event_start] as RawCodeRow, 1))
+        event_start += 1
+    if scaffold_rows.size() >= 2:
+        root_rows.append(_build_scaffolding_strip_row(sheet, scaffold_rows))
+    else:
+        event_start = 0  # not worth a strip — fall through and render the rows inline as before
+    for entry_index in range(event_start, sheet.events.size()):
+        var row_data: EventRowData = _build_row_from_resource(sheet.events[entry_index], 0)
         if row_data != null:
             root_rows.append(row_data)
     # Event-sheet-style trailing "Add event…" footer at the end of the sheet.
     if show_add_event_footers:
         root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
     return root_rows
+
+## A synthetic, foldable header that collapses a run of class-scaffolding rows (its children) into one
+## line. source_resource stays null so selection / delete / drag treat the header as inert (like the
+## add-event footer); the real RawCodeRows live on as its children and edit exactly as before. Folded by
+## default (boilerplate hidden) yet session-remembered via _fold_state, behind a clear "Class setup" label
+## with the line count — discoverable, one click to expand. The existing fold machinery (children +
+## _flatten_row + the fold arrow, all gated on `children`, not row_type) drives the collapse for free.
+func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Array[EventRowData]) -> EventRowData:
+    var row_data := EventRowData.new()
+    row_data.indent = 0
+    row_data.row_type = EventRowData.RowType.SECTION
+    row_data.source_resource = null
+    row_data.row_uid = "scaffolding_strip_%d" % sheet.get_instance_id()
+    row_data.children = scaffold_rows
+    row_data.folded = bool(_fold_state.get(row_data.row_uid, true))  # hidden by default
+    var line_total: int = 0
+    for child: EventRowData in scaffold_rows:
+        line_total += child.line_count
+    row_data.spans = [
+        _make_span("Class setup", SemanticSpan.SpanType.KEYWORD, {
+            "editable": false,
+            "badge": true,
+            "badge_style": "scope",
+            "badge_bg": Color(0.18, 0.19, 0.21, 0.9),
+            "badge_fg": Color(0.5, 0.52, 0.56, 1.0),
+            "kind": "scaffolding_strip",
+            "line_index": 0
+        }),
+        _make_span("class_name, host binding & annotations — %d lines" % line_total, SemanticSpan.SpanType.COMMENT, {
+            "editable": false,
+            "kind": "scaffolding_strip",
+            "text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.8)
+        })
+    ]
+    return row_data
 
 ## A clickable footer row that appends a new event into owner_resource (a group or the
 ## sheet). source_resource stays null on purpose so selection/delete/drag paths (which act on
@@ -1699,6 +1750,28 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
     ]
     return row_data
 
+## True when a top-level GDScript block is pure class SCAFFOLDING — the structural boilerplate a
+## behaviour / custom-node / family sheet always carries (class prelude, `## …` doc + `## @ace_*`
+## annotations, the generated host-binding `_enter_tree`, blank separators) rather than game LOGIC.
+## Drives both type-aware styling (scaffolding rendered muted) and the leading-run collapse below, so an
+## opened .gd reads as logic instead of boilerplate. Pure + static so the classification is unit-testable
+## without standing up the viewport. CONSERVATIVE by design: any line that isn't recognizably scaffolding
+## makes the whole block "logic", so real code is never mistaken for boilerplate and hidden.
+static func is_scaffolding_code(code: String) -> bool:
+    for raw_line: String in code.split("\n"):
+        var line: String = raw_line.strip_edges()
+        if line.is_empty():
+            continue  # blank separator
+        # Prelude declarations + any doc/annotation comment (`##`, `## @ace_*`).
+        if line.begins_with("class_name ") or line.begins_with("extends ") \
+                or line.begins_with("@icon") or line.begins_with("@tool") or line.begins_with("##"):
+            continue
+        # The generated host binding (behaviour sheets): `func _enter_tree(): host = get_parent() as X`.
+        if line.begins_with("func _enter_tree") or line.begins_with("host = get_parent"):
+            continue
+        return false  # any other statement is real content → treat the whole block as logic
+    return true
+
 ## A GDScript block row: verbatim code shown line-by-line, edited via the dock's code dialog
 ## (double-click), compiled at class level. The event-sheet-style "inline code" escape hatch.
 func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
@@ -1710,16 +1783,35 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
     row_data.disabled = not raw_row.enabled or bool(_row_disabled_state.get(row_data.row_uid, false))
     var code_lines: PackedStringArray = raw_row.code.split("\n")
     row_data.line_count = maxi(code_lines.size(), 1)
+    # Type-aware styling (blocks spec P1): boilerplate reads dimmer + labelled "setup" so the eye skips it,
+    # while real logic keeps the brighter "GDScript" badge + primary text. Same row, no codegen change.
+    var is_scaffold: bool = is_scaffolding_code(raw_row.code)
+    var badge_label: String = "setup" if is_scaffold else "GDScript"
+    var badge_fg: Color = Color(0.5, 0.52, 0.56, 1.0) if is_scaffold else Color(0.62, 0.65, 0.7, 1.0)
+    var line_fg: Color = EventSheetPalette.TEXT_MUTED if is_scaffold else EventSheetPalette.TEXT_PRIMARY
     var spans: Array[SemanticSpan] = []
-    spans.append(_make_span("GDScript", SemanticSpan.SpanType.KEYWORD, {
+    spans.append(_make_span(badge_label, SemanticSpan.SpanType.KEYWORD, {
         "editable": false,
         "badge": true,
         "badge_style": "scope",
         "badge_bg": Color(0.2, 0.21, 0.23, 0.9),
-        "badge_fg": Color(0.62, 0.65, 0.7, 1.0),
+        "badge_fg": badge_fg,
         "kind": "raw_code",
         "line_index": 0
     }))
+    # The importer sets lift_note on a block it could NOT lift into structured rows ("no matching ACE
+    # template"). Surface it as an inline amber badge — the actionable "why this stayed code" cue — in
+    # addition to the hover tooltip, so a wall of blocks becomes a triage list at a glance.
+    if not raw_row.lift_note.strip_edges().is_empty():
+        spans.append(_make_span("⚠ code", SemanticSpan.SpanType.KEYWORD, {
+            "editable": false,
+            "badge": true,
+            "badge_style": "scope",
+            "badge_bg": Color(0.38, 0.3, 0.1, 0.9),
+            "badge_fg": Color(0.95, 0.82, 0.5, 1.0),
+            "kind": "lift_note",
+            "line_index": 0
+        }))
     for line_index in range(code_lines.size()):
         spans.append(_make_span(
             code_lines[line_index] if not code_lines[line_index].is_empty() else " ",
@@ -1728,7 +1820,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
                 "editable": false,
                 "kind": "raw_code",
                 "line_index": line_index,
-                "text_color": EventSheetPalette.TEXT_PRIMARY
+                "text_color": line_fg
             }
         ))
     row_data.spans = spans
