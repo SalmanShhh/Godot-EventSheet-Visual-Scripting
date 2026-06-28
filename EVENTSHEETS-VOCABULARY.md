@@ -47,29 +47,21 @@ Node script extending `Node2D`.
 #### Properties
 - `count: int` (default `800`) — How many sprites to spawn.
 
-### SimpleAbilitiesBehavior (`res://eventsheet_addons/abilities/abilities_behavior.tres`)
-Behavior — attach under any `Node` node.
+## Script packs
 
-#### Properties
-- `cooldown_multiplier: float` (default `1.0`) — Global multiplier applied to every Set Cooldown (0.8 = 20% cooldown reduction).
+### SimpleAbilitiesBehavior (`res://eventsheet_addons/abilities/abilities_behavior.gd`)
 
 #### Triggers
 - **On Ability Activated**
-- **On Ability Ready**
-- **On Ability Created**
-- **On Ability Removed**
-- **On Stack Consumed**
-- **On Stack Gained**
-- **On Max Stacks Reached**
 
 #### Conditions
-- **Has Ability**
-- **Is Ability Ready**
-- **Is Ability Active**
-- **Is Ability Enabled**
-- **Has Stacks Available**
-- **Ability Has Tag**
-- **Current Ability Is**
+- **Has Ability** (`id: String`)
+- **Is Ability Ready** (`id: String`)
+- **Is Ability Active** (`id: String`)
+- **Is Ability Enabled** (`id: String`)
+- **Has Stacks Available** (`id: String`)
+- **Ability Has Tag** (`id: String, tag: String`)
+- **Current Ability Is** (`id: String`)
 
 #### Actions
 - **Create Ability** (`id: String`) — Grants an empty ability (no cooldown, 1 stack, enabled). Fires On Ability Created if new.
@@ -99,28 +91,29 @@ Behavior — attach under any `Node` node.
 
 #### Expressions
 - **Current Ability ID**
-- **Cooldown Remaining**
-- **Cooldown Progress**
-- **Stacks**
-- **Max Stacks**
-- **Stack Cooldown Remaining**
-- **Stack Progress**
-- **Expiration Time**
-- **Expiration Progress**
-- **Max Expiration Time**
+- **Cooldown Remaining** (`id: String`)
+- **Cooldown Progress** (`id: String`)
+- **Stacks** (`id: String`)
+- **Max Stacks** (`id: String`)
+- **Stack Cooldown Remaining** (`id: String`)
+- **Stack Progress** (`id: String`)
+- **Expiration Time** (`id: String`)
+- **Expiration Progress** (`id: String`)
+- **Max Expiration Time** (`id: String`)
 - **Ability Count**
 - **List Active Abilities**
 - **Ready Abilities**
-- **Ability Data**
-- **Count Abilities By Tag**
-- **Ability By Tag Index**
-- **List Abilities By Tag**
+- **Ability Data** (`id: String, key: String`)
+- **Count Abilities By Tag** (`tag: String`)
+- **Ability By Tag Index** (`tag: String, index: int`)
+- **List Abilities By Tag** (`tag: String`)
 
-### AdvancedRandomAddon (`res://eventsheet_addons/advanced_random/advanced_random_addon.tres`)
-Autoload singleton `AdvancedRandom` — its ACEs are project-wide.
+### AdvancedRandomAddon (`res://eventsheet_addons/advanced_random/advanced_random_addon.gd`)
+@ace_tags(random, noise, procedural)
 
-#### Properties
-- `seed_on_start: int` (default `0`) — Seed applied on _ready (0 = a fresh random seed each run; any other value = reproducible runs).
+#### Conditions
+- **Chance** (`percent: float`) — True roughly percent of the time (0-100) — e.g. Chance(5) for a 5% event.
+- **One In** (`n: int`) — True with a 1-in-n probability.
 
 #### Actions
 - **Set Seed** (`seed_value: int`) — Sets the seed for BOTH numbers and noise — same seed reproduces the same sequence.
@@ -145,14 +138,12 @@ Autoload singleton `AdvancedRandom` — its ACEs are project-wide.
 - **Pick From** (`options: Array`) — A uniformly-random element of the array (null if empty).
 - **Weighted Index** (`weights: Array`) — An index chosen in proportion to the weights array (heavier = likelier).
 - **Shuffle Bag Pick** (`bag_name: String`) — Draws the next item from a named bag — every item appears once before any repeat.
-- **Chance** (`percent: float`) — True roughly percent of the time (0-100) — e.g. Chance(5) for a 5% event.
-- **One In** (`n: int`) — True with a 1-in-n probability.
 
-### BackgroundRunner (`res://eventsheet_addons/background_runner/background_runner_behavior.tres`)
-Behavior — attach under any `Node` node.
+### BackgroundRunner (`res://eventsheet_addons/background_runner/background_runner_behavior.gd`)
+@ace_tags(performance, threading)
 
 #### Triggers
-- **On Done**
+- **On Done** (`result: Variant`)
 
 #### Conditions
 - **Is Running**
@@ -164,64 +155,44 @@ Behavior — attach under any `Node` node.
 #### Expressions
 - **Tasks Running**
 
-### BulletBehavior (`res://eventsheet_addons/bullet/bullet_behavior.tres`)
-Behavior — attach under any `Node2D` node.
-
-#### Properties
-- `acceleration: float` (default `0.0`)
-- `align_rotation: bool` (default `true`)
-- `enabled_movement: bool` (default `true`)
-- `gravity: float` (default `0.0`)
-- `speed: float` (default `300.0`)
+### BulletBehavior (`res://eventsheet_addons/bullet/bullet_behavior.gd`)
 
 #### Actions
 - **Set Bullet Speed** (`value: float`) — Changes speed, keeping the current direction.
 - **Set Angle Of Motion** (`degrees: float`) — Redirects the bullet (degrees).
 - **Set Bullet Enabled** (`is_enabled: bool`) — Pauses or resumes the movement.
 
-### Bullet3DBehavior (`res://eventsheet_addons/bullet_3d/bullet_3d_behavior.tres`)
-Behavior — attach under any `Node3D` node.
-
-#### Properties
-- `gravity: float` (default `0.0`)
-- `speed: float` (default `10.0`)
+### Bullet3DBehavior (`res://eventsheet_addons/bullet_3d/bullet_3d_behavior.gd`)
 
 #### Actions
 - **Launch Forward** — (Re)launches along the host's current forward direction.
 - **Set Bullet 3D Speed** (`value: float`) — Changes speed, keeping the current direction.
 
-### CarBehavior (`res://eventsheet_addons/car/car_behavior.tres`)
-Behavior — attach under any `CharacterBody2D` node.
-
-#### Properties
-- `acceleration: float` (default `300.0`)
-- `deceleration: float` (default `400.0`)
-- `drift_angle_threshold: float` (default `15.0`)
-- `drift_recover: float` (default `0.15`)
-- `max_speed: float` (default `400.0`)
-- `steer_degrees: float` (default `180.0`)
-- `turn_while_stopped: bool` (default `false`)
+### CarBehavior (`res://eventsheet_addons/car/car_behavior.gd`)
 
 #### Triggers
 - **On Drift Started**
-- **On Drift Recovered**
 
 #### Actions
 - **Stop Car** — Kills all momentum.
 
-### DragDropBehavior (`res://eventsheet_addons/drag_drop/drag_drop_behavior.tres`)
-Behavior — attach under any `Node2D` node.
+### DemoHealthAddon (`res://eventsheet_addons/demo_health_addon.gd`)
+Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ and their annotated members become project-wide ACEs automatically — no manifest, no JSON, no per-sheet setup. Provider name comes from class_name, this comment is the addon description, and @ace_* annotations customize each ACE.
 
-#### Properties
-- `break_distance: float` (default `0.0`) — Gap that auto-ends the drag; 0 disables.
-- `enabled: bool` (default `true`) — Active at start; disabling mid-drag cancels silently.
-- `follow_speed: float` (default `0.0`) — Max catch-up speed (px/s); 0 = instant snap each tick.
+#### Triggers
+- **On Healed** (`amount: int`) — Fires after health is restored.
+
+#### Conditions
+- **Is Hurt** (`threshold: int`) — True while health is below the given threshold.
+
+#### Actions
+- **Heal** (`amount: int`) — Restores health by an amount.
+- **Announce Heal** (`amount: int`) — Prints a heal announcement. No @ace_codegen_template on purpose: the generated script owns a DemoHealthAddon instance and calls this directly (instance-backed ACE — the zero-config default for template-less addon methods).
+
+### DragDropBehavior (`res://eventsheet_addons/drag_drop/drag_drop_behavior.gd`)
 
 #### Triggers
 - **On Drag Started**
-- **On Dropped**
-- **On Drag Cancelled**
-- **On Snapped**
 
 #### Conditions
 - **Is Dragging**
@@ -259,20 +230,12 @@ Behavior — attach under any `Node2D` node.
 - **Snap Target Y**
 - **Snapped Object UID**
 
-### EightDirectionMovement (`res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.tres`)
-Behavior — attach under any `CharacterBody2D` node.
-
-#### Properties
-- `move_speed: float` (default `200.0`)
+### EightDirectionMovement (`res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.gd`)
 
 #### Actions
 - **Set Move Speed** (`speed: float`) — Changes the movement speed.
 
-### FlashBehavior (`res://eventsheet_addons/flash/flash_behavior.tres`)
-Behavior — attach under any `CanvasItem` node.
-
-#### Properties
-- `interval: float` (default `0.1`)
+### FlashBehavior (`res://eventsheet_addons/flash/flash_behavior.gd`)
 
 #### Triggers
 - **On Flash Finished**
@@ -281,15 +244,7 @@ Behavior — attach under any `CanvasItem` node.
 - **Flash** (`seconds: float`) — Blinks the host for the given number of seconds.
 - **Stop Flash** — Stops flashing and restores visibility.
 
-### FollowBehavior (`res://eventsheet_addons/follow/follow_behavior.tres`)
-Behavior — attach under any `Node2D` node.
-
-#### Properties
-- `delay: float` (default `0.4`)
-- `follow_speed: float` (default `5.0`)
-- `min_distance: float` (default `0.0`)
-- `mode: String` (default `smooth`)
-- `target_path: String` (default ``)
+### FollowBehavior (`res://eventsheet_addons/follow/follow_behavior.gd`)
 
 #### Triggers
 - **On Reached Target**
@@ -298,30 +253,17 @@ Behavior — attach under any `Node2D` node.
 - **Start Following** (`path: String`) — Follows the node at the given path.
 - **Stop Following** — Stops trailing the target.
 
-### SimpleHealthBehavior (`res://eventsheet_addons/health/health_behavior.tres`)
-Behavior — attach under any `Node2D` node.
-
-#### Properties
-- `destroy_on_death: bool` (default `false`) — queue_free the host the moment health reaches 0 (after On Death fires).
-- `invulnerable: bool` (default `false`) — Start invulnerable: takeDamage is a no-op while true.
-- `max_health: float` (default `100.0`) — Starting max HP; current_health initialises to this.
+### SimpleHealthBehavior (`res://eventsheet_addons/health/health_behavior.gd`)
 
 #### Triggers
 - **On Damaged**
-- **On Death**
-- **On Healed**
-- **On Health Changed**
-- **On Revived**
-- **On Health Pool Added**
-- **On Health Pool Absorbed**
-- **On Health Pool Depleted**
 
 #### Conditions
 - **Is Dead**
 - **Is Invulnerable**
 - **Has Any Health Pool**
-- **Has Health Pool**
-- **Health Pool Is Type**
+- **Has Health Pool** (`type: String`)
+- **Health Pool Is Type** (`type: String`)
 
 #### Actions
 - **Take Damage** (`amount: float`) — Applies damage; health pools absorb in ascending-priority order before real HP.
@@ -348,36 +290,30 @@ Behavior — attach under any `Node2D` node.
 - **Health Absorption Rate**
 - **Last Damage**
 - **Last Heal**
-- **Health Pool**
-- **Health Pool Decay Rate**
-- **Health Pool Absorption Rate**
-- **Health Pool Priority**
+- **Health Pool** (`type: String`)
+- **Health Pool Decay Rate** (`type: String`)
+- **Health Pool Absorption Rate** (`type: String`)
+- **Health Pool Priority** (`type: String`)
 - **Last Pool Damage Absorbed**
 - **Last Health Pool Type**
 
-### HTNAgent (`res://eventsheet_addons/htn_agent/htn_agent_behavior.tres`)
-Behavior — attach under any `Node2D` node.
-
-#### Properties
-- `auto_replan_on_fail: bool` (default `true`) — Mark Failed re-plans from the root instead of giving up.
-- `root_task: String` (default ``) — Goal to plan for — a compound or primitive task name.
+### HTNAgent (`res://eventsheet_addons/htn_agent/htn_agent_behavior.gd`)
+@ace_tags(ai, planning)
 
 #### Triggers
-- **On Task Started**
-- **On Plan Complete**
-- **On Plan Failed**
+- **On Task Started** (`task_name: String`)
 
 #### Conditions
 - **Has Plan**
-- **Current Task Is**
+- **Current Task Is** (`task_name: String`)
 
 #### Actions
-- **Set World State** (`key: String, value: Variant`) — Writes a fact the planner reads in method preconditions.
+- **Set World State** (`key: String, value`) — Writes a fact the planner reads in method preconditions.
 - **Clear World State** (`key: String`) — Removes a world-state key.
 - **Add Primitive Task** (`task_name: String`) — Registers a leaf task your sheet executes directly.
 - **Add Compound Task** (`task_name: String`) — Registers a task that decomposes via methods.
 - **Add Method** (`task_name: String, method_id: String, utility: float`) — Adds (or re-scores) a way to accomplish a compound task; highest utility wins.
-- **Add Method Condition** (`task_name: String, method_id: String, key: String, op: String, value: Variant`) — A precondition (world-state key, operator, value) the method needs to be chosen.
+- **Add Method Condition** (`task_name: String, method_id: String, key: String, op: String, value`) — A precondition (world-state key, operator, value) the method needs to be chosen.
 - **Add Method Subtask** (`task_name: String, method_id: String, subtask: String`) — Appends a subtask (primitive or compound) to a method, in order.
 - **Set Method Utility** (`task_name: String, method_id: String, utility: float`) — Updates a method's utility at runtime (utility-driven re-prioritising).
 - **Clear Task Network** — Wipes all tasks/methods (keeps world state).
@@ -389,16 +325,13 @@ Behavior — attach under any `Node2D` node.
 #### Expressions
 - **Current Task**
 - **Plan Length**
-- **World Value**
+- **World Value** (`key: String`)
 
-### JuiceBehavior (`res://eventsheet_addons/juice/juice_behavior.tres`)
-Behavior — attach under any `CanvasItem` node.
+### JuiceBehavior (`res://eventsheet_addons/juice/juice_behavior.gd`)
+@ace_tags(camera, juice)
 
 #### Triggers
 - **On Shake Stopped**
-- **On Zoom Finished**
-- **On Squash Finished**
-- **On Slowmo Finished**
 
 #### Conditions
 - **Is Shaking**
@@ -418,56 +351,35 @@ Behavior — attach under any `CanvasItem` node.
 #### Expressions
 - **Trauma**
 
-### LOSBehavior (`res://eventsheet_addons/line_of_sight/line_of_sight_behavior.tres`)
-Behavior — attach under any `Node2D` node.
-
-#### Properties
-- `collision_mask: int` (default `1`)
-- `cone_of_view_degrees: float` (default `360.0`)
-- `sight_range: float` (default `400.0`)
+### LOSBehavior (`res://eventsheet_addons/line_of_sight/line_of_sight_behavior.gd`)
 
 #### Conditions
-- **Has Line Of Sight To**
-- **Has LOS Between**
+- **Has Line Of Sight To** (`point: Vector2`)
+- **Has LOS Between** (`from_point: Vector2, to_point: Vector2`)
 
 #### Expressions
-- **Nearest Visible In Group**
+- **Nearest Visible In Group** (`group: String`)
 
-### LOS3DBehavior (`res://eventsheet_addons/line_of_sight_3d/line_of_sight_3d_behavior.tres`)
-Behavior — attach under any `Node3D` node.
-
-#### Properties
-- `collision_mask: int` (default `1`)
-- `cone_of_view_degrees: float` (default `360.0`)
-- `sight_range: float` (default `1000.0`)
+### LOS3DBehavior (`res://eventsheet_addons/line_of_sight_3d/line_of_sight_3d_behavior.gd`)
 
 #### Conditions
-- **Has Line Of Sight To**
-- **Has LOS Between**
+- **Has Line Of Sight To** (`point: Vector3`)
+- **Has LOS Between** (`from_point: Vector3, to_point: Vector3`)
 
 #### Expressions
-- **Nearest Visible In Group**
+- **Nearest Visible In Group** (`group: String`)
 
-### MoveToBehavior (`res://eventsheet_addons/move_to/move_to_behavior.tres`)
-Behavior — attach under any `Node2D` node.
-
-#### Properties
-- `max_speed: float` (default `200.0`)
-- `rotate_toward_motion: bool` (default `false`)
+### MoveToBehavior (`res://eventsheet_addons/move_to/move_to_behavior.gd`)
 
 #### Triggers
 - **On Arrived**
 
 #### Actions
 - **Move To Position** (`x: float, y: float`) — Replaces the queue and glides toward the point.
-- **Add Waypoint** (`x: float, y: float`) — Appends a stop to the queue (C3 waypoints).
+- **Add Waypoint** (`x: float, y: float`) — Appends a stop to the queue (waypoints).
 - **Stop Moving** — Clears the queue without firing On Arrived.
 
-### MoveTo3DBehavior (`res://eventsheet_addons/move_to_3d/move_to_3d_behavior.tres`)
-Behavior — attach under any `Node3D` node.
-
-#### Properties
-- `max_speed: float` (default `5.0`)
+### MoveTo3DBehavior (`res://eventsheet_addons/move_to_3d/move_to_3d_behavior.gd`)
 
 #### Triggers
 - **On Arrived (3D)**
@@ -477,57 +389,23 @@ Behavior — attach under any `Node3D` node.
 - **Add Waypoint (3D)** (`x: float, y: float, z: float`) — Appends a stop to the queue.
 - **Stop Moving (3D)** — Clears the queue without firing On Arrived.
 
-### OrbitBehavior (`res://eventsheet_addons/orbit/orbit_behavior.tres`)
-Behavior — attach under any `Node2D` node.
-
-#### Properties
-- `match_rotation: bool` (default `false`)
-- `offset_angle_degrees: float` (default `0.0`)
-- `primary_radius: float` (default `100.0`)
-- `secondary_radius: float` (default `0.0`)
-- `speed_degrees: float` (default `90.0`)
+### OrbitBehavior (`res://eventsheet_addons/orbit/orbit_behavior.gd`)
 
 #### Actions
 - **Set Orbit Center** (`x: float, y: float`) — Orbits around the given point from now on.
 - **Set Orbit Speed** (`degrees_per_second: float`) — Degrees per second (negative reverses).
 - **Set Orbit Radii** (`primary: float, secondary: float`) — Primary/secondary radii (secondary 0 = circle).
 
-### Orbit3DBehavior (`res://eventsheet_addons/orbit_3d/orbit_3d_behavior.tres`)
-Behavior — attach under any `Node3D` node.
-
-#### Properties
-- `radius: float` (default `3.0`)
-- `speed_degrees: float` (default `90.0`)
+### Orbit3DBehavior (`res://eventsheet_addons/orbit_3d/orbit_3d_behavior.gd`)
 
 #### Actions
 - **Set Orbit 3D Center** (`x: float, y: float, z: float`) — Orbits around the given point from now on.
 
-### PlatformerMovement (`res://eventsheet_addons/platformer_movement/platformer_movement_behavior.tres`)
-Behavior — attach under any `CharacterBody2D` node.
-
-#### Properties
-- `acceleration: float` (default `1500.0`) — How fast you reach top speed when pressing a direction.
-- `coyote_time: float` (default `0.1`) — Grace window (s) to still jump just after walking off a ledge.
-- `deceleration: float` (default `1800.0`) — How fast you stop when no direction is pressed.
-- `enable_wall_jump: bool` (default `false`) — Jump off walls (kicks away from the wall).
-- `enable_wall_slide: bool` (default `false`) — Cling and slow your fall when pressing into a wall.
-- `gravity: float` (default `980.0`) — Downward acceleration (px/s²).
-- `jump_buffer_time: float` (default `0.1`) — Press jump this many seconds early and it still fires on landing.
-- `jump_cut_factor: float` (default `0.45`) — Fraction of upward speed kept when jump is released early.
-- `jump_velocity: float` (default `-400.0`) — Upward velocity of a jump (negative = up).
-- `max_fall_speed: float` (default `1000.0`) — Terminal velocity — gravity never pulls you faster than this.
-- `max_jumps: int` (default `1`) — Total jumps before touching ground (2 = double jump).
-- `move_speed: float` (default `200.0`) — Top horizontal run speed (px/s).
-- `variable_jump_height: bool` (default `true`) — Releasing jump early cuts the rise (hold = higher).
-- `wall_jump_push: float` (default `260.0`) — Horizontal kick away from the wall on a wall jump.
-- `wall_jump_velocity: float` (default `-380.0`) — Upward velocity of a wall jump (negative = up).
-- `wall_slide_speed: float` (default `80.0`) — Max fall speed while wall sliding (px/s).
+### PlatformerMovement (`res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd`)
+@ace_tags(movement, platformer)
 
 #### Triggers
 - **On Jumped**
-- **On Landed**
-- **On Double Jumped**
-- **On Wall Jumped**
 
 #### Conditions
 - **Is Moving**
@@ -547,25 +425,18 @@ Behavior — attach under any `CharacterBody2D` node.
 - **Air Time**
 - **Facing Direction**
 
-### SaveSystemAddon (`res://eventsheet_addons/save_system/save_system_addon.tres`)
-Autoload singleton `SaveSystem` — its ACEs are project-wide.
-
-#### Properties
-- `autosave_interval: float` (default `0.0`) — Seconds between autosaves (0 = off). Fires On Before Save first.
-- `encryption_key: String` (default ``) — Non-empty = encrypted saves (keep the key out of screenshots!).
-- `file_pattern: String` (default `save_{slot}.cfg`) — {slot} becomes the slot number.
-- `format: String` (default `config`)
-- `save_directory: String` (default `user://`) — Where save files live.
-- `section: String` (default `save`) — ConfigFile section / JSON namespace for values.
-- `slot: int` (default `0`) — Active save slot (each slot is its own file).
+### SaveSystemAddon (`res://eventsheet_addons/save_system/save_system_addon.gd`)
+@ace_tags(persistence)
 
 #### Triggers
-- **On Save Written**
-- **On Before Save**
-- **On After Load**
+- **On Save Written** (`slot_index: int`)
+
+#### Conditions
+- **Has Save Key** (`key: String`) — Whether the key exists in the active slot.
+- **Slot Exists** (`slot_index: int`) — Whether the slot has a save file.
 
 #### Actions
-- **Save Value** (`key: String, value: Variant`) — Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.
+- **Save Value** (`key: String, value`) — Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.
 - **Save Number** (`key: String, value: float`) — Writes a number under the key (active slot).
 - **Save Text** (`key: String, value: String`) — Writes a string under the key (active slot).
 - **Delete Slot** — Removes the active slot's save file.
@@ -573,61 +444,35 @@ Autoload singleton `SaveSystem` — its ACEs are project-wide.
 - **Load Game** — Broadcasts On After Load — every sheet reads its state back.
 
 #### Expressions
-- **Load Value** (`key: String, default_value: Variant`) — Reads any value (your default when missing).
+- **Load Value** (`key: String, default_value`) — Reads any value (your default when missing).
 - **Load Number** (`key: String`) — Reads a number (0 when missing).
 - **Load Text** (`key: String`) — Reads a string ("" when missing).
-- **Has Save Key** (`key: String`) — Whether the key exists in the active slot.
-- **Slot Exists** (`slot_index: int`) — Whether the slot has a save file.
 - **List Slots** — Slot numbers that have save files (for menus).
 - **Slot Modified Time** (`slot_index: int`) — Unix mtime of the slot's file (0 when missing).
 
-### SineBehavior (`res://eventsheet_addons/sine/sine_behavior.tres`)
-Behavior — attach under any `Node2D` node.
-
-#### Properties
-- `active: bool` (default `true`)
-- `magnitude: float` (default `50.0`)
-- `movement: String` (default `horizontal`)
-- `period: float` (default `4.0`)
-- `phase_degrees: float` (default `0.0`)
-- `wave: String` (default `sine`)
+### SineBehavior (`res://eventsheet_addons/sine/sine_behavior.gd`)
 
 #### Actions
 - **Set Sine Active** (`is_active: bool`) — Pauses or resumes the oscillation.
-- **Update Initial State** — Re-captures the host's current position/scale/angle/opacity as the wave's base (C3 updateInitialState).
+- **Update Initial State** — Re-captures the host's current position/scale/angle/opacity as the wave's base (updateInitialState).
 - **Set Phase** (`degrees: float`) — Phase offset in degrees.
 - **Reset Sine** — Restarts the wave from the current state.
 
-### Sine3DBehavior (`res://eventsheet_addons/sine_3d/sine_3d_behavior.tres`)
-Behavior — attach under any `Node3D` node.
-
-#### Properties
-- `active: bool` (default `true`)
-- `magnitude: float` (default `2.0`)
-- `movement: String` (default `y`)
-- `period: float` (default `4.0`)
-- `phase_degrees: float` (default `0.0`)
-- `wave: String` (default `sine`)
+### Sine3DBehavior (`res://eventsheet_addons/sine_3d/sine_3d_behavior.gd`)
 
 #### Actions
 - **Set Sine 3D Active** (`is_active: bool`) — Pauses or resumes the oscillation.
 - **Set Phase** (`degrees: float`) — Phase offset in degrees.
 - **Reset Sine 3D** — Restarts the wave from the current state.
 
-### SpringBehavior (`res://eventsheet_addons/spring/spring_behavior.tres`)
-Behavior — attach under any `Node2D` node.
-
-#### Properties
-- `default_damping: float` (default `0.85`) — 0 = oscillate forever, 1 = no overshoot.
-- `default_precision: float` (default `0.01`) — Distance + speed below which a spring counts as settled.
-- `default_stiffness: float` (default `170.0`) — Spring force toward the target (higher = snappier).
+### SpringBehavior (`res://eventsheet_addons/spring/spring_behavior.gd`)
+@ace_tags(motion, juice)
 
 #### Triggers
-- **On Spring Reached**
-- **On Spring Started**
+- **On Spring Reached** (`spring_name: String`)
 
 #### Conditions
-- **Is Springing**
+- **Is Springing** (`spring_name: String`)
 
 #### Actions
 - **Spring To** (`spring_name: String, target: float`) — Springs the named value toward a target.
@@ -648,58 +493,42 @@ Behavior — attach under any `Node2D` node.
 - **Reset All Springs** — Clears every spring on this behavior.
 
 #### Expressions
-- **Color Value**
-- **Spring Value**
-- **Spring Velocity**
-- **Spring Progress**
+- **Color Value** (`spring_name: String`)
+- **Spring Value** (`spring_name: String`)
+- **Spring Velocity** (`spring_name: String`)
+- **Spring Progress** (`spring_name: String`)
 
-### StateMachineBehavior (`res://eventsheet_addons/state_machine/state_machine_behavior.tres`)
-Behavior — attach under any `Node` node.
-
-#### Properties
-- `state: String` (default `idle`)
+### StateMachineBehavior (`res://eventsheet_addons/state_machine/state_machine_behavior.gd`)
 
 #### Triggers
-- **On State Changed**
+- **On State Changed** (`previous: String, next: String`)
 
 #### Conditions
-- **Is In State**
+- **Is In State** (`state_name: String`) — True while the machine is in the given state.
 
 #### Actions
 - **Set State** (`next: String`) — Switches to the given state and fires On State Changed.
 
-### TileMovementBehavior (`res://eventsheet_addons/tile_movement/tile_movement_behavior.tres`)
-Behavior — attach under any `Node2D` node.
-
-#### Properties
-- `default_controls: bool` (default `true`)
-- `move_time: float` (default `0.15`)
-- `tile_size: float` (default `64.0`)
+### TileMovementBehavior (`res://eventsheet_addons/tile_movement/tile_movement_behavior.gd`)
 
 #### Triggers
 - **On Step Finished**
 
 #### Actions
-- **Simulate Step** (`direction: String`) — Steps one tile in a direction: left, right, up or down (C3 simulate control).
+- **Simulate Step** (`direction: String`) — Steps one tile in a direction: left, right, up or down (simulate control).
 - **Teleport To Tile** (`tile_x: float, tile_y: float`) — Snaps to a tile coordinate instantly.
 
-### TimeSlicerBehavior (`res://eventsheet_addons/time_slicer/time_slicer_behavior.tres`)
-Behavior — attach under any `Node` node.
-
-#### Properties
-- `frame_budget_ms: float` (default `4.0`) — Max milliseconds per frame spent draining the queue (used when Mode includes ms).
-- `max_items_per_frame: int` (default `64`) — Hard cap on items processed per frame (used when Mode includes count).
-- `mode: String` (default `both`)
+### TimeSlicerBehavior (`res://eventsheet_addons/time_slicer/time_slicer_behavior.gd`)
+@ace_tags(performance, scheduling)
 
 #### Triggers
-- **On Process Item**
-- **On Drained**
+- **On Process Item** (`item: Variant`)
 
 #### Conditions
 - **Is Busy**
 
 #### Actions
-- **Enqueue Item** (`item: Variant`) — Adds one item to the work queue (processed later within the per-frame budget).
+- **Enqueue Item** (`item`) — Adds one item to the work queue (processed later within the per-frame budget).
 - **Enqueue Items** (`items: Array`) — Adds every element of an array to the work queue.
 - **Enqueue Group** (`group: String`) — Adds every node in a group to the work queue (e.g. process all enemies, spread over frames).
 - **Clear Queue** — Drops all pending items without processing them.
@@ -711,12 +540,7 @@ Behavior — attach under any `Node` node.
 - **Items Remaining**
 - **Last Frame Item Count**
 
-### TimerBehavior (`res://eventsheet_addons/timer/timer_behavior.tres`)
-Behavior — attach under any `Node` node.
-
-#### Properties
-- `duration: float` (default `1.0`)
-- `repeating: bool` (default `false`)
+### TimerBehavior (`res://eventsheet_addons/timer/timer_behavior.gd`)
 
 #### Triggers
 - **On Timer**
@@ -725,13 +549,8 @@ Behavior — attach under any `Node` node.
 - **Start Timer** (`seconds: float`) — Starts (or restarts) the countdown with the given duration.
 - **Stop Timer** — Stops the countdown without firing On Timer.
 
-### TweenBehavior (`res://eventsheet_addons/tween/tween_behavior.tres`)
-Behavior — attach under any `Node2D` node.
-
-#### Properties
-- `default_duration: float` (default `0.3`) — Seconds used when a tween call passes 0.
-- `easing: String` (default `out`)
-- `transition: String` (default `sine`)
+### TweenBehavior (`res://eventsheet_addons/tween/tween_behavior.gd`)
+@ace_tags(motion, juice)
 
 #### Triggers
 - **On Tween Finished**
@@ -747,36 +566,19 @@ Behavior — attach under any `Node2D` node.
 - **Tween Alpha** (`alpha: float, duration: float`) — Fades the host's modulate alpha.
 - **Stop Tweens** — Kills the running tween (host stays where it is).
 
-### VirtualCursor (`res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior.tres`)
-Behavior — attach under any `CharacterBody2D` node.
-
-#### Properties
-- `acceleration: float` (default `1800.0`) — Speed-up rate while axis held (px/s^2).
-- `allow_sliding: bool` (default `true`) — Slide along solids instead of hard-stop.
-- `constrain_to_layout: bool` (default `false`) — Clamp inside the viewport/constraint bounds.
-- `deceleration: float` (default `2400.0`) — Slow-down rate when axis released (px/s^2).
-- `default_controls: bool` (default `true`) — Read ui_left/right/up/down each tick (keyboard+gamepad).
-- `enabled: bool` (default `true`) — Master on/off.
-- `max_speed: float` (default `600.0`) — Max cursor speed (px/s).
+### VirtualCursor (`res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior.gd`)
 
 #### Triggers
-- **On Interact Pressed**
-- **On Interact Released**
-- **On Layout Edge Hit**
-- **On Homing Target Entered**
-- **On Homing Target Exited**
-- **On Homing Snapped**
-- **On Solid Hit**
-- **On Bounce**
+- **On Interact Pressed** (`id: String`)
 
 #### Conditions
-- **Is Interact Held**
+- **Is Interact Held** (`id: String`)
 - **Is Moving**
 - **Is In Homing Range**
 - **Is Blocked**
 - **Is Enabled**
 - **Is Ignoring Input**
-- **Is Hovering**
+- **Is Hovering** (`target: Node2D`)
 
 #### Actions
 - **Press Interact** (`id: String`) — Marks a named interact button held and fires On Interact Pressed.
@@ -827,25 +629,11 @@ Behavior — attach under any `CharacterBody2D` node.
 - **Count Homing Targets**
 - **Bounce Mode**
 
-### WeaponKit (`res://eventsheet_addons/weapon_kit/weapon_kit_behavior.tres`)
-Behavior — attach under any `Node2D` node.
-
-#### Properties
-- `auto_reload: bool` (default `true`) — Reload automatically when the magazine runs dry.
-- `burst_count: int` (default `3`) — Shots per burst when fire_mode = 2.
-- `current_ammo: int` (default `12`) — Rounds loaded right now (set to your magazine size to start full).
-- `fire_mode: int` (default `0`) — 0 = single, 1 = auto (both cooldown-gated), 2 = burst.
-- `fire_rate: float` (default `8.0`) — Shots per second (the cooldown between shots is 1 / fire_rate).
-- `infinite_reserve: bool` (default `false`) — Reloads never spend reserve ammo.
-- `max_ammo: int` (default `12`) — Magazine size (rounds before a reload).
-- `reload_time: float` (default `1.2`) — Seconds a reload takes.
-- `reserve_ammo: int` (default `96`) — Spare rounds a reload draws from.
+### WeaponKit (`res://eventsheet_addons/weapon_kit/weapon_kit_behavior.gd`)
+@ace_tags(combat, shooter)
 
 #### Triggers
 - **On Fire**
-- **On Empty**
-- **On Reload Started**
-- **On Reload Complete**
 
 #### Conditions
 - **Can Fire**
@@ -868,18 +656,3 @@ Behavior — attach under any `Node2D` node.
 - **Ammo Percent**
 - **Reload Progress**
 - **Cooldown Progress**
-
-## Script packs
-
-### DemoHealthAddon (`res://eventsheet_addons/demo_health_addon.gd`)
-Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ and their annotated members become project-wide ACEs automatically — no manifest, no JSON, no per-sheet setup. Provider name comes from class_name, this comment is the addon description, and @ace_* annotations customize each ACE.
-
-#### Triggers
-- **On Healed** (`amount: int`) — Fires after health is restored.
-
-#### Conditions
-- **Is Hurt** (`threshold: int`) — True while health is below the given threshold.
-
-#### Actions
-- **Heal** (`amount: int`) — Restores health by an amount.
-- **Announce Heal** (`amount: int`) — Prints a heal announcement. No @ace_codegen_template on purpose: the generated script owns a DemoHealthAddon instance and calls this directly (instance-backed ACE — the zero-config default for template-less addon methods).

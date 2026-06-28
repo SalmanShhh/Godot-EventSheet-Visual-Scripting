@@ -15,8 +15,8 @@ static func run() -> bool:
 	all_passed = _check("demo sheet pairs with its _generated script",
 		EventSheetProjectDoctor.output_path_for("res://demo/sheets/player.tres"),
 		"res://demo/sheets/player_generated.gd") and all_passed
-	all_passed = _check("pack sheet pairs with its shipped sibling",
-		EventSheetProjectDoctor.output_path_for("res://eventsheet_addons/spring/spring_behavior.tres"),
+	all_passed = _check("a behaviour pack .gd is its own output (compiles in place, no .tres)",
+		EventSheetProjectDoctor.output_path_for("res://eventsheet_addons/spring/spring_behavior.gd"),
 		"res://eventsheet_addons/spring/spring_behavior.gd") and all_passed
 	all_passed = _check("showcase pairs with the builder's sibling (the doctor's first catch)",
 		EventSheetProjectDoctor.output_path_for("res://demo/showcase/showcase_carousel.tres"),

@@ -1747,7 +1747,7 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
             "exported": variable.exported,
             "source_resource": variable,
             "row_uid": "variable_tree_%d" % variable.get_instance_id(),
-            "badge_label": "global" if variable.exported else "local"
+            "badge_label": "global"  # class-level member (exported/private is visibility, not scope) — no scope pill
         }
     )
 

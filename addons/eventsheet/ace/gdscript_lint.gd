@@ -286,6 +286,11 @@ static func _sheet_variable_names(sheet: EventSheetResource) -> Array[String]:
 		names.append(str(key))
 	for entry in sheet.events:
 		if entry is LocalVariable and not (entry as LocalVariable).name.strip_edges().is_empty():
+			# build_scratch_source already declares `var host: <Type>` for behaviour sheets, and opening a
+			# behaviour .gd recovers that accessor as a `host` variable row — skip it here so the scratch
+			# script doesn't get a duplicate `var host` (which fails to parse and spuriously errors the lint).
+			if sheet.behavior_mode and (entry as LocalVariable).name == "host":
+				continue
 			names.append((entry as LocalVariable).name)
 	names.sort()
 	return names

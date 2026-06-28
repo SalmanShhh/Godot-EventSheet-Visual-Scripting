@@ -52,9 +52,12 @@ static func run() -> bool:
 		tween_source.contains("@export_enum(\"linear\", \"sine\""), true) and all_passed
 
 	# Save System addon (pack 21): autoload-mode persistence vocabulary.
-	var save_sheet: EventSheetResource = load("res://eventsheet_addons/save_system/save_system_addon.tres")
-	all_passed = _check("save pack is an autoload sheet",
-		save_sheet.autoload_mode and save_sheet.autoload_name == "SaveSystem", true) and all_passed
+	# The .gd IS the sheet now (no .tres). Autoload identity (autoload_mode/name) is project-level — it
+	# lives in ProjectSettings [autoload], not the file — so a bundled, un-installed pack carries it via
+	# its baked "SaveSystem.<call>" ACE templates (asserted below), not a sheet flag.
+	var save_sheet: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/save_system/save_system_addon.gd")
+	all_passed = _check("save pack imports as a sheet (class SaveSystemAddon)",
+		save_sheet != null and save_sheet.custom_class_name == "SaveSystemAddon", true) and all_passed
 	var save_source: String = FileAccess.get_file_as_string("res://eventsheet_addons/save_system/save_system_addon.gd")
 	all_passed = _check("save ACEs call through the SaveSystem singleton",
 		save_source.contains("@ace_codegen_template(\"SaveSystem.save_number({key}, {value})\")"), true) and all_passed

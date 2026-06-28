@@ -1,9 +1,9 @@
 # EventForge — Sample behavior packs (Platformer / Eight-Direction)
 #
-# The shipped packs are behavior sheets (.tres sources) plus their compiled scripts in
-# res://eventsheet_addons/, where the zero-config scanner publishes their ACEs. Guards:
-# the committed script never drifts from its sheet (recompile == file), the scripts load
-# as real classes (GDScript interop), and the published ACEs resolve with their templates.
+# The shipped packs are single behaviour .gd files in res://eventsheet_addons/ — each .gd IS the event
+# sheet AND the runtime script (no .tres companion), and the zero-config scanner publishes their ACEs.
+# Guards: re-importing a pack .gd and recompiling reproduces it byte-for-byte (the lossless round-trip /
+# no-drift gate), the scripts load as real classes (GDScript interop), and the ACEs resolve with templates.
 @tool
 extends RefCounted
 class_name SampleBehaviorPackTest
@@ -52,7 +52,7 @@ static func run() -> bool:
 
 	for base_path in PACKS:
 		var pack_name: String = base_path.get_file()
-		var sheet: EventSheetResource = load(base_path + ".tres") as EventSheetResource
+		var sheet: EventSheetResource = GDScriptImporter.new().import_external(base_path + ".gd")
 		all_passed = _check("%s sheet loads as a behavior" % pack_name, sheet != null and sheet.behavior_mode, true) and all_passed
 		if sheet == null:
 			continue
@@ -119,7 +119,7 @@ static func run() -> bool:
 	editor.free()
 
 	# The movement block lints against the behavior context (host accessor + sheet vars).
-	var platformer_sheet: EventSheetResource = load(PACKS[0] + ".tres") as EventSheetResource
+	var platformer_sheet: EventSheetResource = GDScriptImporter.new().import_external(PACKS[0] + ".gd")
 	var lint_result: Dictionary = EventSheetGDScriptLint.lint(
 		"host.velocity.x = Input.get_axis(\"ui_left\", \"ui_right\") * move_speed", true, platformer_sheet)
 	all_passed = _check("pack code lints in behavior context", bool(lint_result.get("ok", false)), true) and all_passed

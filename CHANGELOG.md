@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Changed — Behaviour packs are single `.gd` files (no `.tres`)
+
+Every bundled behaviour/addon pack is now ONE hand-editable `.gd` — the `.gd` **is** the event sheet AND
+the runtime script. The paired `.tres` source and the "AUTO-GENERATED / DO NOT EDIT" banner are gone (31
+`.tres` deleted). Opening a pack `.gd` re-derives its rows losslessly, and `tools/audit_addons.gd` is now
+self-hosting: it imports each `.gd`, recompiles, and asserts byte-identical (`audited=31 drifted=0`).
+
+- **Safe by construction:** behaviour discovery already scanned `.gd` (the `## @ace_*` annotations live
+  there, not the `.tres`), scenes attach the `.gd` by `class_name`, and no pack referenced another via
+  Includes — so deleting the `.tres` changes nothing at runtime or in the picker.
+- **Builder:** `tools/pack_builders/_lib.gd` compiles straight to a banner-less `.gd`
+  (`omit_generated_banner=true`); no `ResourceSaver.save`.
+- **Pairing reconceived:** `output_path_for(pack.gd)` / `sheet_for_script(pack.gd)` resolve to the `.gd`
+  itself (it compiles in place and IS its own sheet) rather than a `.tres` sibling.
+- **Lint completeness:** opening a behaviour `.gd` recovers its `host` accessor as a variable row; the
+  block linter no longer double-declares `var host` (which had spuriously errored on every behaviour pack).
+- **Variable pills:** a behaviour's class-level members (`host`, tuning + private state) no longer carry a
+  scope pill — class scope is the default; only genuinely event-scoped `local`s are badged.
+
 ### Changed — Clearer ACE editing, variables, and startup
 
 - **No more redundant "global" pill on variables.** Class/sheet-level variables (every variable a

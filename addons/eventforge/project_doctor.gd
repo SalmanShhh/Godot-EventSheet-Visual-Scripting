@@ -51,6 +51,9 @@ static func run() -> Dictionary:
 ## <name>.gd, else the <name>_generated.gd a save WOULD create), so the doctor,
 ## compile-on-save and the export-integrity pass can never disagree about pairing.
 static func output_path_for(sheet_path: String) -> String:
+	# A code-backed (.gd) sheet IS its own output — editing + saving recompiles it in place, no companion.
+	if sheet_path.get_extension().to_lower() == "gd":
+		return sheet_path
 	var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
 	if sheet == null:
 		return sheet_path.get_basename() + "_generated.gd"
@@ -139,6 +142,10 @@ static func sheet_for_script(script_path: String) -> String:
 	var sibling: String = script_path.get_basename().trim_suffix("_generated") + ".tres"
 	if FileAccess.file_exists(sibling) and ResourceLoader.load(sibling, "", ResourceLoader.CACHE_MODE_REUSE) is EventSheetResource and output_path_for(sibling) == script_path:
 		return sibling
+	# A behaviour/addon pack .gd IS its own sheet (no .tres companion) — it pairs to itself. EventForge
+	# sheets carry `## @ace_*` annotations (exposed ACEs / tags / triggers); hand-written scripts do not.
+	if script_path.get_extension().to_lower() == "gd" and RegEx.create_from_string("(?m)^## @ace_").search(FileAccess.get_file_as_string(script_path)) != null:
+		return script_path
 	return ""
 
 ## Every scene that references a script path — the reverse lookup the attachment

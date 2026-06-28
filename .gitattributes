@@ -25,4 +25,3 @@
 # non-sheet .tres keep the default driver; add your own project's sheet folder the same way.
 demo/sheets/**.tres merge=eventsheet
 demo/showcase/*.tres merge=eventsheet
-eventsheet_addons/**.tres merge=eventsheet

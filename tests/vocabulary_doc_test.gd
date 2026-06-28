@@ -51,12 +51,12 @@ static func run() -> bool:
 	# The full document: sheets sorted, packs covered, generated scripts not duplicated.
 	var document: String = EventSheetVocabularyDoc.generate()
 	all_passed = _check("document covers pack sheets and the demo sheet",
-		document.contains("### SpringBehavior (`res://eventsheet_addons/spring/spring_behavior.tres`)")
+		document.contains("### SpringBehavior (`res://eventsheet_addons/spring/spring_behavior.gd`)")
 		and document.contains("res://demo/sheets/player.tres"), true) and all_passed
 	all_passed = _check("hand-written script packs get their own section",
 		document.contains("### DemoHealthAddon (`res://eventsheet_addons/demo_health_addon.gd`)"), true) and all_passed
-	all_passed = _check("compiler-generated pack scripts are not listed twice",
-		document.contains("`res://eventsheet_addons/spring/spring_behavior.gd`"), false) and all_passed
+	all_passed = _check("a pack .gd is listed once as a script pack (the .gd IS the sheet now)",
+		document.contains("`res://eventsheet_addons/spring/spring_behavior.gd`"), true) and all_passed
 	all_passed = _check("the document is deterministic",
 		EventSheetVocabularyDoc.generate(), document) and all_passed
 

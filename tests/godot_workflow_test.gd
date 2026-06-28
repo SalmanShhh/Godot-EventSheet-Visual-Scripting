@@ -55,9 +55,9 @@ static func run() -> bool:
 	all_passed = _check("the Source header pairs generated scripts to their sheet",
 		EventSheetProjectDoctor.sheet_for_script("user://boss_fight_sheet_generated.gd"),
 		"user://boss_fight_sheet.tres") and all_passed
-	all_passed = _check("pack siblings pair through the pairing rule",
+	all_passed = _check("a behaviour pack .gd pairs to itself (the .gd IS the sheet, no .tres)",
 		EventSheetProjectDoctor.sheet_for_script("res://eventsheet_addons/spring/spring_behavior.gd"),
-		"res://eventsheet_addons/spring/spring_behavior.tres") and all_passed
+		"res://eventsheet_addons/spring/spring_behavior.gd") and all_passed
 	all_passed = _check("hand-written scripts pair to nothing",
 		EventSheetProjectDoctor.sheet_for_script("res://addons/eventforge/plugin.gd"), "") and all_passed
 	# The generated script extends the host_class (Node2D here), so 4.7's stricter

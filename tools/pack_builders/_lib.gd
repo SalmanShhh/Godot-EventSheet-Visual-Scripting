@@ -1,6 +1,7 @@
-# Pack-builder shared library (no class_name: tool scripts stay out of the global
-# namespace). save_pack enforces the no-drift rule: take_over_path BEFORE compiling so
-# the generated "# Source:" header matches a recompile of the shipped .tres.
+# Pack-builder shared library (no class_name: tool scripts stay out of the global namespace). save_pack
+# compiles the in-memory sheet straight to a banner-less .gd — the .gd IS the pack (the editable event
+# sheet AND the runtime script), with no .tres companion. audit_addons enforces no-drift: every shipped
+# .gd must re-import and recompile to itself byte-for-byte.
 @tool
 
 # Lives WITH the shipped packs (eventsheet_addons/), not the editor addon (addons/eventsheet/), so a
@@ -14,7 +15,7 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 	if not icon_path.strip_edges().is_empty() and sheet.custom_class_icon.strip_edges().is_empty():
 		sheet.custom_class_icon = icon_path
 	# Code-free by default: reverse-lift each function's RawCode body into ACE rows where it recompiles
-	# byte-identically (per-function gated). The pack ships the SAME GDScript, but the .tres reads as
+	# byte-identically (per-function gated). The pack ships the SAME GDScript, but the .gd reads as
 	# events — algorithmic kernels (spring/sine/physics) become Set/Add/Set-Property rows, not code
 	# blocks. Bodies that can't round-trip (inner classes, exotic flow) keep their RawCode. Deterministic.
 	EventSheetACELifter.lift_function_bodies(sheet)
@@ -32,28 +33,26 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 	# private `func _perform_jump()`) become EventFunction rows — exposed ones publish as ACEs, private
 	# ones stay un-exposed. Exposed functions gain the sheet's `@ace_icon` (the published condition/
 	# expression shows the behaviour icon in the picker), a deliberate cosmetic change to the generated
-	# .gd; drift stays 0 because the .tres and .gd regenerate together.
+	# .gd; drift stays 0 because the .gd regenerates deterministically (re-import + recompile is identity).
 	EventSheetACELifter.lift_function_declarations(sheet, false)
 	# Stamp DETERMINISTIC row UIDs before saving. EventRow/EventGroup otherwise mint a random
-	# uid in _init(), so every regeneration churns the .tres of EVERY pack — exploding git
+	# uid in _init(), so every regeneration churns the .gd of EVERY pack — exploding git
 	# diffs even for packs that did not change. Deriving the uid from the row's structural
 	# path makes an unchanged pack rebuild byte-for-byte identical (version-control friendly),
 	# and gives each row a stable identity for diff/blame. Scoped to pack builds only — hand-
 	# authored sheets keep the persistent uid assigned the first time the row was created.
 	_assign_stable_uids(sheet)
 	DirAccess.make_dir_recursive_absolute(base_path.get_base_dir())
-	var save_error: Error = ResourceSaver.save(sheet, base_path + ".tres")
-	if save_error != OK:
-		push_error("Failed to save %s.tres (%d)" % [base_path, save_error])
-		return false
-	# Adopt the saved path BEFORE compiling so the generated "# Source:" header matches what
-	# a recompile of the loaded .tres produces (the no-drift test depends on it).
-	sheet.take_over_path(base_path + ".tres")
-	var compile_result: Dictionary = SheetCompiler.compile(sheet, base_path + ".gd")
+	# The .gd IS the pack — no .tres companion. Compile the in-memory sheet straight to a banner-less .gd
+	# (omit_generated_banner=true) that doubles as the editable event sheet AND the runtime script;
+	# opening it re-derives the rows losslessly. Do NOT set external_source_path here — this build uses
+	# the normal synthesizing compile (it emits class_name/extends/signals/functions from the sheet);
+	# the order-preserving _compile_external path is only for a sheet opened FROM an existing .gd.
+	var compile_result: Dictionary = SheetCompiler.compile(sheet, base_path + ".gd", true)
 	if not bool(compile_result.get("success", false)):
 		push_error("Failed to compile %s.gd: %s" % [base_path, compile_result.get("errors")])
 		return false
-	print("[build_sample_behaviors] built %s (.tres + .gd), warnings: %s" % [base_path.get_file(), compile_result.get("warnings")])
+	print("[build_sample_behaviors] built %s (.gd), warnings: %s" % [base_path.get_file(), compile_result.get("warnings")])
 	return true
 
 ## Walks the sheet and assigns each EventRow/EventGroup a uid derived from its structural
