@@ -2045,7 +2045,8 @@ func _save_sheet_to_path(path: String) -> void:
         return
     # Save As .tres converts a GDScript-backed sheet into a normal sheet: the .gd stops
     # being the source of truth (it is left untouched on disk).
-    if not _current_sheet.external_source_path.is_empty():
+    var was_backed: bool = not _current_sheet.external_source_path.is_empty()
+    if was_backed:
         _current_sheet.external_source_path = ""
     var err: Error = ResourceSaver.save(_current_sheet, resolved_path)
     if err == OK:
@@ -2053,7 +2054,11 @@ func _save_sheet_to_path(path: String) -> void:
         _current_sheet_path = resolved_path
         _dirty = false
         _refresh_title_strip()
-        _set_status("Saved as: %s" % resolved_path.get_file())
+        if was_backed:
+            # Don't silently change the format under an expert: name the consequence.
+            _set_status("Saved as %s — now a .tres sheet; the .gd is no longer the source (left untouched on disk)." % resolved_path.get_file())
+        else:
+            _set_status("Saved as: %s" % resolved_path.get_file())
     else:
         _set_status("Save failed (error %d)." % err, true)
 
