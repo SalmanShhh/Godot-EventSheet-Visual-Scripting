@@ -3596,6 +3596,7 @@ func _ensure_raw_code_dialog() -> void:
     if Engine.is_editor_hint() and ClassDB.class_exists("GDScriptSyntaxHighlighter"):
         _raw_code_edit.syntax_highlighter = ClassDB.instantiate("GDScriptSyntaxHighlighter")
     _raw_code_edit.code_completion_enabled = true
+    EventSheetPopupUI.configure_code_editor(_raw_code_edit)  # auto-close brackets/quotes at the source
     _raw_code_edit.text_changed.connect(_validate_raw_code)
     _raw_code_edit.code_completion_requested.connect(_populate_raw_code_completion)
     layout_box.add_child(_raw_code_edit)

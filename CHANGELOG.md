@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed — Fewer syntax errors: auto-closed brackets + an always-on structural guard
+
+- The editable code fields — the **ƒx expression boxes** and the **GDScript-block dialog** — now
+  **auto-close brackets and quotes** (`(` → `()`, `"` → `""`, with the caret inside) and highlight
+  matching brackets, so the most common user syntax error (an unbalanced pair) is rarely typed in the
+  first place.
+- A new **structural syntax check** (unbalanced `()[]{}` / unterminated strings — always an error,
+  unlike an undeclared identifier that may be a runtime-spawned node) now **blocks Apply** in the param
+  dialog with a clear message, and runs **even when the symbol-aware lint can't** (an "unhealthy" lint
+  context), closing the one path where malformed code could slip through. (`syntax_guardrails_test`.)
+
 ### Changed — Node picker prefers scene-unique names (`%Name`) for deep nodes
 
 - Picking a node that carries a **scene-unique name** now hands back **`%Name`** — a flat handle that

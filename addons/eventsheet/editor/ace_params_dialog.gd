@@ -786,6 +786,7 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	edit.scroll_fit_content_height = true
 	edit.gutters_draw_line_numbers = false
 	edit.code_completion_enabled = true
+	EventSheetPopupUI.configure_code_editor(edit)  # auto-close brackets/quotes — prevent syntax errors at the source
 	# Expressions are plain GDScript — say so explicitly so event-sheet users learn there is no
 	# separate expression language to memorize.
 	edit.placeholder_text = "GDScript expression (e.g. health + 10)"
@@ -1656,6 +1657,27 @@ func _first_invalid_expression() -> Control:
 			return field
 	return null
 
+## The first expression field with a STRUCTURAL syntax error (unbalanced brackets / unterminated string),
+## or null. Context-free, so it catches malformed code even when the symbol-aware lint can't run (an
+## unhealthy lint context) — the always-on backstop that closes _first_invalid_expression's skip path.
+func _first_structural_error_field() -> Control:
+	for key: Variant in _fields.keys():
+		var field: Control = _fields[key]
+		if field is CodeEdit and not EventSheetGDScriptLint.structural_syntax_error(str(field.get("text"))).is_empty():
+			return field
+	return null
+
+## The expression field that should block Apply, with its message, or {} when clear. Structural errors
+## (always wrong, no context needed) take priority over the symbol-aware lint and run unconditionally.
+func _blocking_expression_field() -> Dictionary:
+	var structural_field: Control = _first_structural_error_field()
+	if structural_field != null:
+		return {"field": structural_field, "message": "✗ %s" % EventSheetGDScriptLint.structural_syntax_error(str(structural_field.get("text")))}
+	var invalid_field: Control = _first_invalid_expression() if _lint_context_healthy() else null
+	if invalid_field != null:
+		return {"field": invalid_field, "message": "✗ An expression doesn't compile — fix it before applying."}
+	return {}
+
 ## True unless the lint scratch ITSELF is broken (a sheet variable shadowing a host
 ## member makes the scratch unparseable, so every expression "fails" and the OK
 ## guardrail would lock the user out — verified by linting a bare literal).
@@ -1668,12 +1690,14 @@ func _lint_context_healthy() -> bool:
 func _on_confirmed() -> void:
 	if _definition == null or _apply_blocked:
 		return
-	# Guardrail (event-sheet-style): block the commit while any expression doesn't compile.
-	var invalid_field: Control = _first_invalid_expression() if _lint_context_healthy() else null
-	if invalid_field != null:
+	# Guardrail (event-sheet-style): block the commit while any expression is malformed. A structural
+	# syntax error (unbalanced brackets / unterminated string) blocks ALWAYS; a symbol-aware lint error
+	# blocks when the lint context is healthy.
+	var blocker: Dictionary = _blocking_expression_field()
+	if not blocker.is_empty():
 		if _hint != null:
-			_hint.text = "✗ An expression doesn't compile — fix it before applying."
-		invalid_field.grab_focus()
+			_hint.text = str(blocker.get("message", ""))
+		(blocker.get("field") as Control).grab_focus()
 		if _dialog != null and is_instance_valid(_dialog) and _dialog.is_inside_tree():
 			_dialog.call_deferred("popup_centered", Vector2i(520, 380))
 		return
@@ -1705,11 +1729,11 @@ func _on_custom_action(action: StringName) -> void:
 		# Same validation gate as OK; only chain when it passed (definition cleared).
 		if _definition == null or _apply_blocked:
 			return
-		var invalid_field: Control = _first_invalid_expression() if _lint_context_healthy() else null
-		if invalid_field != null:
+		var blocker: Dictionary = _blocking_expression_field()
+		if not blocker.is_empty():
 			if _hint != null:
-				_hint.text = "✗ An expression doesn't compile — fix it before applying."
-			invalid_field.grab_focus()
+				_hint.text = str(blocker.get("message", ""))
+			(blocker.get("field") as Control).grab_focus()
 			return
 		_commit(true)
 		_close()

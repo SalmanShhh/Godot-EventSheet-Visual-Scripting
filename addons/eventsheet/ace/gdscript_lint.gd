@@ -31,6 +31,81 @@ static func lint_expression(expression: String, sheet: EventSheetResource) -> Di
 		return {"ok": true, "error": ""}
 	return lint("var __expression_check__ = (%s)" % expression.strip_edges(), true, sheet)
 
+## A purely STRUCTURAL GDScript syntax error in `code` — unbalanced ()/[]/{}, a mismatched bracket, or an
+## unterminated string — or "" when structurally sound. These are ALWAYS errors regardless of whether the
+## identifiers are declared, so the editor can hard-block committing them with ZERO false positives (unlike
+## the symbol-aware lint, which flags runtime-only refs like a $spawned node or a dynamic var). Brackets
+## and quotes inside strings and `#` comments are skipped so they don't miscount; `\` escapes and triple
+## quoted strings are handled. Context-free + pure → unit-testable; the always-on companion to lint().
+static func structural_syntax_error(code: String) -> String:
+	var openers: PackedStringArray = PackedStringArray()   # stack of open-bracket chars
+	var open_lines: PackedInt32Array = PackedInt32Array()  # the line each opener sits on (for the message)
+	var closer_to_opener: Dictionary = {")": "(", "]": "[", "}": "{"}
+	var i: int = 0
+	var n: int = code.length()
+	var line: int = 1
+	while i < n:
+		var ch: String = code[i]
+		if ch == "\n":
+			line += 1
+			i += 1
+		elif ch == "#":
+			while i < n and code[i] != "\n":
+				i += 1  # skip the comment to end of line
+		elif ch == "\"" or ch == "'":
+			var start_line: int = line
+			var quote: String = ch
+			if code.substr(i, 3) == quote.repeat(3):
+				# Triple-quoted (multi-line) string.
+				i += 3
+				var triple_closed: bool = false
+				while i < n:
+					if code.substr(i, 3) == quote.repeat(3):
+						i += 3
+						triple_closed = true
+						break
+					if code[i] == "\\":
+						i += 2
+						continue
+					if code[i] == "\n":
+						line += 1
+					i += 1
+				if not triple_closed:
+					return "Unterminated multi-line string starting on line %d." % start_line
+			else:
+				i += 1
+				var closed: bool = false
+				while i < n:
+					if code[i] == "\\":
+						i += 2
+						continue
+					if code[i] == quote:
+						i += 1
+						closed = true
+						break
+					if code[i] == "\n":
+						break  # a single-line string can't span lines
+					i += 1
+				if not closed:
+					return "Unterminated string (missing closing %s) on line %d." % [quote, start_line]
+		elif ch == "(" or ch == "[" or ch == "{":
+			openers.append(ch)
+			open_lines.append(line)
+			i += 1
+		elif ch == ")" or ch == "]" or ch == "}":
+			if openers.is_empty():
+				return "Unmatched closing \"%s\" on line %d." % [ch, line]
+			if openers[openers.size() - 1] != str(closer_to_opener[ch]):
+				return "Mismatched bracket \"%s\" on line %d." % [ch, line]
+			openers.remove_at(openers.size() - 1)
+			open_lines.remove_at(open_lines.size() - 1)
+			i += 1
+		else:
+			i += 1
+	if not openers.is_empty():
+		return "Unclosed \"%s\" from line %d — add its closing bracket." % [openers[openers.size() - 1], open_lines[open_lines.size() - 1]]
+	return ""
+
 ## The scratch script used for linting: host-class extends + sheet symbol stubs + the code.
 static func build_scratch_source(code: String, in_flow: bool, sheet: EventSheetResource) -> String:
 	var lines: PackedStringArray = PackedStringArray()

@@ -17,6 +17,18 @@ const LABEL_MIN_WIDTH := 120.0
 ## width makes that pass wrap at a sane width while the label still wraps wider at runtime.
 const HINT_WRAP_WIDTH := 360.0
 
+## Hardens a CodeEdit against the most common user syntax errors: auto-CLOSES brackets and quotes (typing
+## "(" inserts "()" with the caret inside, '"' inserts ""), so an unbalanced pair is hard to leave behind,
+## and matching brackets highlight. Applied to every EDITABLE code field — the ƒx expression boxes and the
+## GDScript-block dialog — so users (especially non-coders) rarely produce a bracket/quote syntax error in
+## the first place. Pure setter on the passed control → unit-testable, safe headless.
+static func configure_code_editor(edit: CodeEdit) -> void:
+	if edit == null:
+		return
+	edit.auto_brace_completion_enabled = true
+	edit.auto_brace_completion_highlight_matching = true
+	edit.auto_brace_completion_pairs = {"(": ")", "[": "]", "{": "}", "\"": "\"", "'": "'"}
+
 ## An aligned "Label   [field]" row — the consistent form layout for the plugin's dialogs. The
 ## label takes a fixed leading width so stacked rows align; the field expands to fill the rest.
 static func form_row(label_text: String, field: Control, label_min_width: float = LABEL_MIN_WIDTH) -> HBoxContainer:
