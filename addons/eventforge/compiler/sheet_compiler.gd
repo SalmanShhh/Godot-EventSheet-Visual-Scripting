@@ -81,7 +81,10 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	_runtime_group_members = []
 	# Event-sheet-style includes: merge included sheets' rows/variables/functions (compile-time
 	# only; the root sheet wins collisions, cycles are skipped with warnings).
-	var all_events: Array = sheet.events.duplicate()
+	# C3-parity ORDER: an included (library) sheet's events run BEFORE the root sheet's own events —
+	# shared setup/library logic initializes first, matching Construct's "include at the top". So the
+	# merged list is seeded with the includes, and the root's own events are appended last.
+	var all_events: Array = []
 	var all_functions: Array = sheet.functions.duplicate()
 	var merged_variables: Dictionary = sheet.variables.duplicate(true)
 	if not sheet.includes.is_empty():
@@ -92,6 +95,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 		if not (result["errors"] as Array).is_empty():
 			result["success"] = false
 			return result
+	all_events.append_array(sheet.events)
 
 	var lines: PackedStringArray = PackedStringArray()
 	if not omit_generated_banner:
@@ -684,9 +688,21 @@ static func _merge_includes(sheet: EventSheetResource, all_events: Array, all_fu
 		all_events.append_array(included.events)
 		_merge_includes(included, all_events, all_functions, merged_variables, visited, warnings, errors, depth + 1)
 
-## Flattens trigger-bearing rows for emission: EventRows kept, ENABLED groups recursed
-## (a disabled group drops all of its children — group-disable semantics), and group
-## comments collected as deferred comment lines.
+## Counts the EventRows nested anywhere under a row list (recursing groups) — drives the
+## "N rows omitted" figure in the disabled-group breadcrumb.
+static func _count_event_rows(rows: Array) -> int:
+	var total: int = 0
+	for row: Variant in rows:
+		if row is EventRow:
+			total += 1
+		elif row is EventGroup:
+			var inner: EventGroup = row as EventGroup
+			total += _count_event_rows(inner.events if not inner.events.is_empty() else inner.rows)
+	return total
+
+## Flattens trigger-bearing rows for emission: EventRows kept, ENABLED groups recursed (a disabled
+## group is dropped but leaves a breadcrumb comment — group-disable semantics), and group comments
+## collected as deferred comment lines.
 static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "") -> void:
 	for row: Variant in rows:
 		if row is EventRow:
@@ -709,6 +725,16 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 					if not already_known:
 						_runtime_group_members.append([child_guard, group.enabled])
 				_flatten_trigger_rows(group.events if not group.events.is_empty() else group.rows, into_events, deferred_comment_lines, child_guard)
+			else:
+				# Don't silently drop a disabled group: leave a breadcrumb so the omission is visible
+				# in the generated code. Disabling a group intentionally excludes its events (the
+				# editor's "Set Group Active" toggle), but vanishing them with no trace is a footgun.
+				var omitted: int = _count_event_rows(group.events if not group.events.is_empty() else group.rows)
+				if omitted > 0:
+					var disabled_label: String = (group.group_name if not group.group_name.is_empty() else group.name).strip_edges()
+					if disabled_label.is_empty():
+						disabled_label = "group"
+					deferred_comment_lines.append("(disabled group \"%s\" — %d row%s omitted)" % [disabled_label, omitted, "" if omitted == 1 else "s"])
 		elif row is CommentRow and (row as CommentRow).enabled and not (row as CommentRow).text.strip_edges().is_empty():
 			deferred_comment_lines.append_array((row as CommentRow).text.split("
 "))
