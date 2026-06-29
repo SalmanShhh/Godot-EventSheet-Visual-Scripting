@@ -11,7 +11,7 @@ refinements are now SHIPPED**: the variable-dialog Basic/Advanced tiering + refi
 forgiving Range parser + dial-reach prompt + magnitude-in-the-preview + "Curve preview" rename (P2), the
 C3-first relabels + per-type hover hints (P3), and the Simple Mode choice on the Welcome dialog (P4). **Still
 PROPOSED**: restructuring the Type dropdown to lead with Number/Text/Yes-No and push the Godot types under an
-"Advanced" group (needs a type-alias mapping layer — its own slice), and the Clamp↔Range pre-validation.
+"Advanced" group (needs a type-alias mapping layer — its own slice).
 
 ## Why — the user model and the cost of overload
 
@@ -211,8 +211,8 @@ may appear as a trailing `(@export)`-style hint or in a tooltip, for the Godot-f
 ## Phasing (highest leverage first)
 
 1. ✅ **SHIPPED — Variable-dialog tiering** — the flat `_attr_section` split into T1 ("More options") and a
-   nested T2 ("Advanced"); auto-expand refined to non-trivial attributes. (_Clamp↔Range pre-validation still
-   to do._)
+   nested T2 ("Advanced"); auto-expand refined to non-trivial attributes; Clamp↔Range pre-validation (the
+   Clamp checkbox is disabled, with a hint, until a valid Range is entered, instead of erroring on OK).
 2. ✅ **SHIPPED — Drawer-config de-overload** — the relaxed/forgiving Range parser (a bare max works), the
    Vector2 "max reach" prompt, the magnitude-in-the-preview caption, the "Curve preview" rename. (The reach is
    prompted via the contextual Range field rather than a separate "Dial reach" field — same effect, less UI.)

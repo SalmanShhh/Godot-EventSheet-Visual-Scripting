@@ -211,7 +211,9 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_section.add_child(EventSheetPopupUI.form_row("Tooltip", _attr_tooltip_edit))
 	_attr_range_edit = LineEdit.new()
 	_attr_range_edit.placeholder_text = _RANGE_PLACEHOLDER_NUMERIC
-	_attr_range_edit.text_changed.connect(func(_t: String) -> void: _refresh_drawer_preview())
+	_attr_range_edit.text_changed.connect(func(_t: String) -> void:
+		_refresh_drawer_preview()
+		_refresh_clamp_gate())
 	_attr_section.add_child(EventSheetPopupUI.form_row("Range", _attr_range_edit))
 	_attr_drawer_option = OptionButton.new()
 	_attr_drawer_option.add_item("Default field")
@@ -764,6 +766,7 @@ func _refresh_contextual_rows() -> void:
 	# The drawer picker offers only the one drawer the current type can host (or hides when there is none).
 	_rebuild_drawer_options(_drawer_kind_for_type(type_name))
 	_refresh_drawer_preview()
+	_refresh_clamp_gate()
 
 ## The single drawer kind a variable type can host (or "" — most types host no drawer).
 static func _drawer_kind_for_type(type_name: String) -> String:
@@ -851,6 +854,20 @@ func _parse_range_bounds() -> Dictionary:
 static func _format_bound(value: float) -> String:
 	# 0.001 is a cosmetic "close enough to whole" tolerance — display-only, never used for storage or compares.
 	return str(int(round(value))) if absf(value - round(value)) < 0.001 else str(value)
+
+## Pre-validate the Clamp↔Range dependency (docs/PROGRESSIVE-DISCLOSURE-SPEC.md): Clamp needs a min+max to
+## clamp to, so disable the checkbox (with a hint) until a valid Range is entered — making the dependency
+## visible BEFORE confirm instead of erroring on OK. No-op when Clamp is hidden (non-numeric types).
+func _refresh_clamp_gate() -> void:
+	if _attr_clamp_check == null or not _attr_clamp_check.visible:
+		return
+	var has_range: bool = _attr_range_edit != null and not _parse_range_parts(_attr_range_edit.text.split(",")).is_empty()
+	_attr_clamp_check.disabled = not has_range
+	if has_range:
+		_attr_clamp_check.tooltip_text = "Clamp the value to the Range on every assignment."
+	else:
+		_attr_clamp_check.set_pressed_no_signal(false)
+		_attr_clamp_check.tooltip_text = "Enter a Range (a max, or min, max) above first — Clamp keeps the value inside it."
 
 ## Rebuilds the live preview to show the actual drawer widget (display-only) at a representative value.
 func _refresh_drawer_preview() -> void:
