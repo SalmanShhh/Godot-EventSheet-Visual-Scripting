@@ -103,9 +103,14 @@ var _current_sheet_path: String = ""           # the ACTIVE tab's path
 var _dirty: bool = false                        # the ACTIVE tab's dirty flag
 # Open sheet tabs. Each entry: {sheet: EventSheetResource, path: String, dirty: bool}.
 # The active tab's live state mirrors _current_sheet/_current_sheet_path/_dirty.
+## Emitted whenever the open-tab set, the active tab, or a tab's dirty flag changes — the
+## Open Sheets dock (a left editor dock) listens and re-renders its list.
+signal open_tabs_changed
+
 var _open_tabs: Array[Dictionary] = []
 var _active_tab_index: int = -1
 var _tab_bar: TabBar = null
+var _recent_closed_paths: Array[String] = []  # MRU of recently-closed tab paths (capped) — the Open Sheets dock offers to reopen them
 var _suppress_tab_signal: bool = false
 # Provider class -> autoload name (rebuilt with the registry): lets picked bus triggers
 # bake "autoload:<Name>" sources so consumers connect by singleton name.
@@ -273,6 +278,7 @@ func _sync_active_tab_state() -> void:
 func _close_tab(index: int) -> void:
     if index < 0 or index >= _open_tabs.size():
         return
+    _remember_closed_path(str(_open_tabs[index].get("path", "")))
     _open_tabs.remove_at(index)
     _active_tab_index = -1
     if _open_tabs.is_empty():
@@ -292,6 +298,7 @@ func _refresh_tab_bar() -> void:
         _tab_bar.current_tab = _active_tab_index
     _tab_bar.visible = _open_tabs.size() >= 1
     _suppress_tab_signal = false
+    open_tabs_changed.emit()
 
 func _update_active_tab_title() -> void:
     if _tab_bar == null or _active_tab_index < 0 or _active_tab_index >= _tab_bar.get_tab_count():
@@ -299,6 +306,57 @@ func _update_active_tab_title() -> void:
     _suppress_tab_signal = true
     _tab_bar.set_tab_title(_active_tab_index, _format_tab_title(_current_sheet, _current_sheet_path, _dirty))
     _suppress_tab_signal = false
+    open_tabs_changed.emit()
+
+## Push a just-closed sheet's path onto the recently-closed MRU (deduped, capped). Unsaved /
+## empty paths are skipped — there's nothing to reopen.
+func _remember_closed_path(path: String) -> void:
+    if path.strip_edges().is_empty():
+        return
+    _recent_closed_paths.erase(path)
+    _recent_closed_paths.push_front(path)
+    while _recent_closed_paths.size() > 12:
+        _recent_closed_paths.pop_back()
+
+## ── Open Sheets dock API (a left editor dock; see open_sheets_dock.gd) ───────────────
+## A read-only snapshot of the tab strip: each open tab's display title / path / dirty flag,
+## the active index, and recently-closed paths not currently open (offered as "reopen").
+func get_open_sheets_state() -> Dictionary:
+    var open: Array = []
+    var open_paths: Dictionary = {}
+    for tab: Dictionary in _open_tabs:
+        var p: String = str(tab.get("path", ""))
+        if not p.is_empty():
+            open_paths[p] = true
+        open.append({
+            "title": _format_tab_title(tab.get("sheet"), p, bool(tab.get("dirty", false))),
+            "path": p,
+            "dirty": bool(tab.get("dirty", false)),
+        })
+    var recent: Array[String] = []
+    for p2: String in _recent_closed_paths:
+        if not open_paths.has(p2):
+            recent.append(p2)
+    return {"open": open, "active": _active_tab_index, "recent": recent}
+
+## Switch to an open tab by index (Open Sheets dock click). A one-click reselect of the
+## already-active sheet must re-focus, not reload — reloading clears the viewport and wipes
+## the sheet's undo/redo history, so swallow the no-op here (the dock allows reselect).
+func activate_open_tab(index: int) -> void:
+    if index == _active_tab_index:
+        return
+    _activate_tab(index)
+
+## Reopen a recently-closed sheet by path (Open Sheets dock click). Drops it from the MRU
+## first — _load_sheet_from_path opens or re-focuses it as a tab.
+func reopen_sheet_path(path: String) -> void:
+    if path.strip_edges().is_empty():
+        return
+    _recent_closed_paths.erase(path)
+    # Drop the row from the dock now, so a failed load (a deleted/renamed file) can't leave a
+    # dead "recently closed" entry behind. A successful load re-emits via _refresh_tab_bar.
+    open_tabs_changed.emit()
+    _load_sheet_from_path(path)
 
 func _format_tab_title(sheet: EventSheetResource, path: String, dirty: bool) -> String:
     var title: String = _format_sheet_title(sheet, path)
