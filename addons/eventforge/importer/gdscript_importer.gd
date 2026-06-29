@@ -273,13 +273,19 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		candidate["subgroup"] = subgroup_value
 	if candidate.is_empty():
 		return
-	lifted.attributes = candidate
+	# MERGE, don't overwrite: a drawer (+ its range bounds) may already have been recovered onto the variable
+	# by _extract_drawer_from_hint, and the grouping/tooltip rides alongside it. Overwriting here dropped the
+	# drawer whenever a variable carried BOTH a custom drawer AND an @export_group (the common showcase case).
+	var saved_attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
+	var merged: Dictionary = saved_attrs.duplicate()
+	merged.merge(candidate, true)
+	lifted.attributes = merged
 	var absorbed: PackedStringArray = PackedStringArray()
 	for index: int in range(pending.size() - meta_count, pending.size()):
 		absorbed.append(pending[index])
 	absorbed.append(var_line)
 	if SheetCompiler._emit_tree_variable_line(lifted) != "\n".join(absorbed):
-		lifted.attributes = {}  # reverted — leave the group lines in the verbatim block
+		lifted.attributes = saved_attrs  # reverted — keep whatever was already recovered (e.g. the drawer)
 		return
 	for _removed: int in range(meta_count):
 		pending.remove_at(pending.size() - 1)

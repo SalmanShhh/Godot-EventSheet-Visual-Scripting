@@ -95,6 +95,21 @@ static func run() -> bool:
 	all_passed = _eq("texture_preview on a String emits no marker",
 		_emit_for("String", "", {"drawer": "texture_preview"}).contains("eventsheet:"), false) and all_passed
 
+	# A drawer + @export_group + @export_subgroup + tooltip on the SAME variable must ALL round-trip — the
+	# group absorb must MERGE with (not overwrite) the drawer the hint-extraction already recovered.
+	var combo_line: String = "## Aim it.\n@export_group(\"Aim\")\n@export_subgroup(\"Tuning\")\n@export_custom(PROPERTY_HINT_NONE, \"eventsheet:vector_dial:120\") var aim: Vector2 = Vector2(0.0, 0.0)"
+	var combo_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + combo_line + "\n")
+	var combo_var: LocalVariable = _find(combo_sheet, "aim")
+	all_passed = _eq("a drawer+group+subgroup+tooltip var lifts (not a block)", combo_var != null, true) and all_passed
+	if combo_var != null:
+		var ca: Dictionary = combo_var.attributes as Dictionary
+		all_passed = _eq("the combined var keeps its drawer", str(ca.get("drawer", "")), "vector_dial") and all_passed
+		all_passed = _eq("the combined var keeps its group", str(ca.get("group", "")), "Aim") and all_passed
+		all_passed = _eq("the combined var keeps its subgroup", str(ca.get("subgroup", "")), "Tuning") and all_passed
+		all_passed = _eq("the combined var keeps its tooltip", str(ca.get("tooltip", "")), "Aim it.") and all_passed
+		all_passed = _eq("the combined var re-emits byte-identically",
+			SheetCompiler._emit_tree_variable_line(combo_var), combo_line) and all_passed
+
 	# Edit cycle: re-confirming a Vector2 dial variable must keep its range (the dial's max magnitude); the
 	# apply previously gated range on is_numeric, dropping it for Vector2 and resetting the dial to max 100.
 	all_passed = _vector_dial_range_persists() and all_passed
