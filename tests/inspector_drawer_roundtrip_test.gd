@@ -114,6 +114,21 @@ static func run() -> bool:
 	# apply previously gated range on is_numeric, dropping it for Vector2 and resetting the dial to max 100.
 	all_passed = _vector_dial_range_persists() and all_passed
 
+	# Forgiving Range parse (progressive disclosure P2): a bare max, min+max, or min+max+step all parse; a
+	# blank max or >3 parts error. Shared by the apply and the live preview so they never disagree.
+	all_passed = _eq("Range '150' parses as max 150 (min 0, step 1)",
+		VariableDialog._parse_range_parts(PackedStringArray(["150"])), {"min": "0", "max": "150", "step": "1"}) and all_passed
+	all_passed = _eq("Range '0, 200' parses min + max",
+		VariableDialog._parse_range_parts(PackedStringArray(["0", "200"])), {"min": "0", "max": "200", "step": "1"}) and all_passed
+	all_passed = _eq("Range '0, 100, 5' parses min + max + step",
+		VariableDialog._parse_range_parts(PackedStringArray(["0", "100", "5"])), {"min": "0", "max": "100", "step": "5"}) and all_passed
+	all_passed = _eq("Range with a blank max errors",
+		VariableDialog._parse_range_parts(PackedStringArray([""])), {}) and all_passed
+	all_passed = _eq("Range with 4 parts errors",
+		VariableDialog._parse_range_parts(PackedStringArray(["1", "2", "3", "4"])), {}) and all_passed
+	all_passed = _eq("the curve drawer label reads 'Curve preview' (it doesn't edit in place)",
+		VariableDialog._drawer_label_for_kind("curve_editor"), "Curve preview") and all_passed
+
 	return all_passed
 
 static func _vector_dial_range_persists() -> bool:

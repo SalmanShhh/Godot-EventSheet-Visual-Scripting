@@ -567,15 +567,19 @@ func _on_confirmed() -> void:
 	var range_applies: bool = is_numeric or type_name == "Vector2"
 	var range_text: String = _attr_range_edit.text.strip_edges()
 	if not range_text.is_empty() and range_applies:
+		# Forgiving: 1 part = max (min 0, step 1); 2 = min, max (step 1); 3 = min, max, step. A dial uses only
+		# its max, so a designer shouldn't have to type a min/step it ignores — config is optional with sensible
+		# defaults, and config beyond a max never hard-errors.
 		var range_parts: PackedStringArray = range_text.split(",", false)
-		if range_parts.size() != 3:
+		var parsed_range: Dictionary = _parse_range_parts(range_parts)
+		if parsed_range.is_empty():
 			if _default_help != null:
 				_default_help.visible = true
-				_default_help.text = "✗ Range needs 'min, max, step'."
+				_default_help.text = "✗ Range is a max (e.g. 200), or min, max, step (e.g. 0, 100, 1)."
 			if _dialog.is_inside_tree():
 				_dialog.call_deferred("popup_centered", Vector2i(440, 260))
 			return
-		attributes["range"] = {"min": range_parts[0].strip_edges(), "max": range_parts[1].strip_edges(), "step": range_parts[2].strip_edges()}
+		attributes["range"] = parsed_range
 	if _attr_multiline_check.button_pressed and type_name == "String":
 		attributes["multiline"] = true
 	for conditional in [["show_if", _attr_show_if_edit], ["lock_unless", _attr_lock_unless_edit], ["on_changed", _attr_on_changed_edit]]:
@@ -720,6 +724,9 @@ func _refresh_contextual_rows() -> void:
 		# Range now lives in a labelled row — hide the whole row, not just the field, so its
 		# "Range" label doesn't linger on non-numeric types. Vector2 keeps it too: its max drives the dial.
 		_attr_range_edit.get_parent().visible = numeric or type_name == "Vector2"
+		# For a Vector2 the Range is just the dial's reach (only max is read), so prompt for one number, not the
+		# numeric "min, max, step" — the forgiving parser accepts a bare max.
+		_attr_range_edit.placeholder_text = "max reach — the dial's magnitude (e.g. 150)" if type_name == "Vector2" else "min, max, step (numeric: slider)"
 		_attr_clamp_check.visible = numeric
 		_attr_multiline_check.visible = type_name == "String"
 	# The drawer picker offers only the one drawer the current type can host (or hides when there is none).
@@ -753,7 +760,9 @@ static func _drawer_label_for_kind(kind: String) -> String:
 		"texture_preview":
 			return "Texture preview"
 		"curve_editor":
-			return "Curve editor"
+			# "preview", not "editor": the drawer renders + picks a Curve; you shape its points in Godot's
+			# stock Curve editor after assigning. The label shouldn't promise in-place point editing.
+			return "Curve preview"
 	return ""
 
 ## The drawer kind currently chosen in the dialog ("" = Default field).
@@ -780,17 +789,35 @@ func _rebuild_drawer_options(kind: String) -> void:
 		(show_row as Control).visible = not kind.is_empty()
 	_attr_drawer_option.select(1 if (not kind.is_empty() and previous == kind) else 0)
 
-## {min, max} parsed from the Range field — drives the progress_bar / dial bounds in both the preview and marker.
+## Forgiving Range parse, shared by the apply (_on_confirmed) and the preview (_parse_range_bounds) so they
+## never disagree: 1 part = max (min 0, step 1); 2 = min, max (step 1); 3 = min, max, step. Returns {} (an
+## error) only for 0 or >3 parts, or a blank max. The drawer/marker reads only min & max.
+static func _parse_range_parts(parts: PackedStringArray) -> Dictionary:
+	var trimmed: PackedStringArray = PackedStringArray()
+	for part: String in parts:
+		trimmed.append(part.strip_edges())
+	match trimmed.size():
+		1:
+			return {} if trimmed[0].is_empty() else {"min": "0", "max": trimmed[0], "step": "1"}
+		2:
+			return {} if trimmed[1].is_empty() else {"min": trimmed[0] if not trimmed[0].is_empty() else "0", "max": trimmed[1], "step": "1"}
+		3:
+			return {} if trimmed[1].is_empty() else {"min": trimmed[0] if not trimmed[0].is_empty() else "0", "max": trimmed[1], "step": trimmed[2] if not trimmed[2].is_empty() else "1"}
+	return {}
+
+## {min, max} (as floats) parsed from the Range field — drives the progress_bar / dial bounds in the preview,
+## using the SAME forgiving rule as the apply so a 1-part "150" reads as max 150 in both.
 func _parse_range_bounds() -> Dictionary:
-	var result: Dictionary = {"min": 0.0, "max": 100.0}
 	if _attr_range_edit == null:
-		return result
-	var parts: PackedStringArray = _attr_range_edit.text.split(",")
-	if parts.size() >= 1 and not parts[0].strip_edges().is_empty():
-		result["min"] = parts[0].strip_edges().to_float()
-	if parts.size() >= 2 and not parts[1].strip_edges().is_empty():
-		result["max"] = parts[1].strip_edges().to_float()
-	return result
+		return {"min": 0.0, "max": 100.0}
+	var parsed: Dictionary = _parse_range_parts(_attr_range_edit.text.split(",", false))
+	if parsed.is_empty():
+		return {"min": 0.0, "max": 100.0}
+	return {"min": str(parsed.get("min", "0")).to_float(), "max": str(parsed.get("max", "100")).to_float()}
+
+## Compact display of a numeric bound: drop a trailing ".0" so 150.0 reads "150", but keep 1.5 as "1.5".
+static func _format_bound(value: float) -> String:
+	return str(int(round(value))) if absf(value - round(value)) < 0.001 else str(value)
 
 ## Rebuilds the live preview to show the actual drawer widget (display-only) at a representative value.
 func _refresh_drawer_preview() -> void:
@@ -804,7 +831,16 @@ func _refresh_drawer_preview() -> void:
 		return
 	_drawer_preview_box.visible = true
 	var caption: Label = Label.new()
-	caption.text = "Drawer preview"
+	# Surface the one bound that matters next to the preview, so the link between the distant "Range" field and
+	# the dial's reach / the bar's span is visible instead of hidden.
+	var bounds: Dictionary = _parse_range_bounds()
+	match kind:
+		"vector_dial":
+			caption.text = "Drawer preview · reach %s" % _format_bound(bounds["max"])
+		"progress_bar":
+			caption.text = "Drawer preview · %s–%s" % [_format_bound(bounds["min"]), _format_bound(bounds["max"])]
+		_:
+			caption.text = "Drawer preview"
 	caption.add_theme_font_size_override("font_size", 10)
 	caption.modulate = Color(0.72, 0.76, 0.84)
 	_drawer_preview_box.add_child(caption)
