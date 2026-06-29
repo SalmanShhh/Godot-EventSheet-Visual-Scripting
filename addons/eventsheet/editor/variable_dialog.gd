@@ -72,13 +72,13 @@ const TYPE_OPTIONS: PackedStringArray = [
 	"Dictionary[String, String]", "Dictionary[String, Variant]"
 ]
 
-## Plain-language hover hints for the Type dropdown, in terms a Construct 3 migrant already owns (C3 has only
-## Number / Text / Boolean). The stored type name is unchanged — these are on-demand explanations, not renames.
+## Plain-language hover hints for the Type dropdown, in everyday terms (the three common kinds are a
+## number, text, and yes/no). The stored type name is unchanged — these are on-demand explanations, not renames.
 const TYPE_HINTS: Dictionary = {
-	"int": "A whole number, no decimals (like a C3 Number used for a count or score).",
-	"float": "A number that can have decimals — the everyday C3 Number.",
-	"bool": "Yes / no, on / off (true / false) — a C3 Boolean.",
-	"String": "Text — a C3 String.",
+	"int": "A whole number, no decimals (for a count or score).",
+	"float": "A number that can have decimals — the everyday number type.",
+	"bool": "Yes / no, on / off (true / false).",
+	"String": "Text.",
 	"Vector2": "An x/y pair: a direction, velocity, or position.",
 	"Color": "An RGBA colour.",
 	"Texture2D": "An image / sprite resource.",
@@ -137,7 +137,7 @@ func init_dialog(parent_node: Node) -> void:
 	_type_option = OptionButton.new()
 	for option: String in TYPE_OPTIONS:
 		_type_option.add_item(option)
-		# C3-friendly hover hints, on demand (docs/PROGRESSIVE-DISCLOSURE-SPEC.md): a Construct migrant has no
+		# Plain-language hover hints, on demand (docs/PROGRESSIVE-DISCLOSURE-SPEC.md): a newcomer has no
 		# model for int-vs-float or Variant, so each type explains itself in plain terms without renaming it.
 		if TYPE_HINTS.has(option):
 			_type_option.set_item_tooltip(_type_option.item_count - 1, str(TYPE_HINTS[option]))
@@ -289,7 +289,7 @@ func init_dialog(parent_node: Node) -> void:
 	access_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	access_row.add_child(access_label)
 	_exported_check = CheckBox.new()
-	_exported_check.text = "Editable in the Inspector (like a C3 property)"
+	_exported_check.text = "Editable in the Inspector (a designer property)"
 	_exported_check.tooltip_text = "On: a designer can tweak this per-instance in the Inspector (@export var).\nOff: internal script state — a plain private var (the default for a new variable)."
 	_exported_check.toggled.connect(func(_pressed: bool) -> void: _update_attr_gating())
 	access_row.add_child(_exported_check)

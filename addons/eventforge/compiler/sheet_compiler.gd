@@ -81,8 +81,8 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	_runtime_group_members = []
 	# Event-sheet-style includes: merge included sheets' rows/variables/functions (compile-time
 	# only; the root sheet wins collisions, cycles are skipped with warnings).
-	# C3-parity ORDER: an included (library) sheet's events run BEFORE the root sheet's own events —
-	# shared setup/library logic initializes first, matching Construct's "include at the top". So the
+	# Include ORDER: an included (library) sheet's events run BEFORE the root sheet's own events —
+	# shared setup/library logic initializes first (the common "include the library at the top"). So the
 	# merged list is seeded with the includes, and the root's own events are appended last.
 	var all_events: Array = []
 	var all_functions: Array = sheet.functions.duplicate()

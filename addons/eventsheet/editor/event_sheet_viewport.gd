@@ -958,8 +958,8 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
             return
         var row_data: EventRowData = _row_at(row_index)
         var metadata: Dictionary = hit.get("span_metadata", {})
-        # Click the inline colour swatch -> open the colour picker directly (no params dialog), like
-        # Construct. The renderer stored the swatch's drawn rect in span.metadata; if the click landed inside
+        # Click the inline colour swatch -> open the colour picker directly (no params dialog). The
+        # renderer stored the swatch's drawn rect in span.metadata; if the click landed inside
         # it and the cell's ACE has a Color param, hand off to the dock's picker popup.
         if row_data != null and metadata.get("swatch_color") is Color and metadata.get("swatch_rect") is Rect2 \
                 and (metadata["swatch_rect"] as Rect2).has_point(local_position) and row_data.source_resource is EventRow:
@@ -4212,7 +4212,7 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
     # Scene-tree node dropped on a param value: set that param to the node reference (prefers %unique-names
-    # via the same converter the params dialog uses), no dialog — the deep-node-friendly C3-style gesture.
+    # via the same converter the params dialog uses), no dialog — the deep-node-friendly gesture.
     if _is_node_path_drag(data):
         var target: Dictionary = _param_value_at(_to_logical_position(at_position))
         if not target.is_empty():

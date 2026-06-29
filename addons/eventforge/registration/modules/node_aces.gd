@@ -53,7 +53,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "HasChildOfType", "Has Child Of Type", ACEDescriptor.ACEType.CONDITION, "not {target}.find_children(\"*\", {type}, true, false).is_empty()", "", [F.make_param("target", "String", "self", "Target", "Node to search beneath.", "expression"), F.make_param("type", "String", "\"Area2D\"", "Type", "Node class name to test for anywhere in the subtree.", "expression")], "Nodes: Picking", "{target} has a {type}")
 		.described("True when at least one descendant node of the given class exists beneath this node."))
 
-	# ── Object-level component verbs (the Construct mental model: act on the OBJECT, not its deep node) ──
+	# ── Object-level component verbs (the object-level mental model: act on the OBJECT, not its deep node) ──
 	# The animation ACEs above this file's peers are host-scoped to the AnimationPlayer/AnimatedSprite2D, so
 	# they force you to TARGET that deep child by path. These take the object and AUTO-RESOLVE its player by
 	# type, so "Play Animation walk on Player" needs no path and no GDScript block. Null-safe (guarded) and
@@ -66,7 +66,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Plays a named sprite animation via the object's AnimatedSprite2D, found automatically."))
 	descriptors.append(F.make_descriptor("Core", "IsObjectAnimating", "Is Animating (in object)", ACEDescriptor.ACEType.CONDITION, "{target}.find_children(\"*\", \"AnimationPlayer\", true, false).any(func(__p): return __p.is_playing())", "", [F.make_param("target", "String", "self", "Target", "The OBJECT to test — true if any AnimationPlayer beneath it is playing.", "expression")], "Animation", "{target} is animating")
 		.described("True when any AnimationPlayer beneath the object is currently playing."))
-	# More object-level verbs (same auto-resolve-by-type pattern): the everyday sprite/effect ops a C3 user
+	# More object-level verbs (same auto-resolve-by-type pattern): the everyday sprite/effect ops a designer
 	# expects on an object, without targeting the deep child by path or dropping to a GDScript block.
 	descriptors.append(F.make_descriptor("Core", "FlipSpriteInObject", "Flip Sprite (in object)", ACEDescriptor.ACEType.ACTION, "var __as_{uid} := {target}.find_children(\"*\", \"AnimatedSprite2D\", true, false).pop_front() as AnimatedSprite2D\nif __as_{uid}:\n\t__as_{uid}.flip_h = {mirrored}", "", [F.make_param("target", "String", "self", "Target", "The OBJECT (its AnimatedSprite2D is found automatically).", "expression"), F.make_param("mirrored", "String", "true", "Mirrored", "Mirror the sprite horizontally (e.g. facing direction).", "", ["true", "false"])], "Animation", "flip sprite {mirrored} in {target}")
 		.described("Mirrors the object's sprite horizontally, e.g. flipping to face left or right."))

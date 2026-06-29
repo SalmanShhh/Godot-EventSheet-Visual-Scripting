@@ -4797,7 +4797,7 @@ func _commit_inline_param_edit() -> void:
         _refresh_after_edit()
         _mark_dirty("Parameter updated.")
 
-## Clicking a cell's colour swatch opens a ColorPicker right there (no params dialog), like Construct.
+## Clicking a cell's colour swatch opens a ColorPicker right there (no params dialog), inline.
 ## The pick is committed once, when the popup closes — so dragging the picker is one clean undo step, not
 ## one per colour change.
 func _on_color_swatch_edit_requested(ace: Resource, param_id: String, current_color: Color) -> void:
@@ -4834,7 +4834,7 @@ func _commit_color_swatch_edit(new_color: Color) -> void:
         _mark_dirty("Colour updated.")
 
 ## A scene node was dropped onto a condition/action param value — set that param to the node reference
-## (e.g. %Player), undoable. The deep-node-friendly C3-style gesture: drag from the Scene dock, no dialog.
+## (e.g. %Player), undoable. The deep-node-friendly gesture: drag from the Scene dock, no dialog.
 func _on_param_node_drop_requested(ace: Resource, param_id: String, node_reference: String) -> void:
     if ace == null or param_id.is_empty():
         return
@@ -6108,7 +6108,7 @@ func _ensure_sheet_type_dialog() -> void:
     _sheet_type_tool_check = CheckBox.new()
     _sheet_type_tool_check.text = "@tool — runs inside the editor (EXPERIMENTAL, editor-version-coupled)"
     form.add_child(_sheet_type_tool_check)
-    # Family flag (Construct-style horizontal abstraction): a named sheet's instances are collected into
+    # Family flag (horizontal abstraction): a named sheet's instances are collected into
     # group family_<class>, so other sheets can write ONE rule over all of them ("for each Enemy: …").
     # Only meaningful for a Custom Node / Behavior (it needs a class name); cleared for a plain sheet.
     _sheet_type_family_check = CheckBox.new()

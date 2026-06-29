@@ -36,7 +36,7 @@ var codegen_on_true: String = ""
 @export var signal_name: String = ""
 @export var return_type: int = TYPE_NIL
 @export var codegen_template: String = ""
-## Deprecation (a Construct-style covenant): a deprecated ACE KEEPS COMPILING so existing sheets never
+## Deprecation (a stability covenant): a deprecated ACE KEEPS COMPILING so existing sheets never
 ## break, but it is hidden from the picker (can't be added anew) and flagged on hover with its suggested
 ## replacement. Set inline via `.deprecated("Use X instead", "Provider::NewId")`. replacement_ace_id is the
 ## "<provider>::<ace_id>" of what to use instead (optional).

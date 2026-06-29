@@ -50,7 +50,7 @@ class_name EventSheetResource
 ## `extends` line, so Godot shows it for the custom node type (Create Node dialog tooltip + the
 ## script doc). Multi-line is supported; round-trips through the importer. Plain prose, no @tags.
 @export_multiline var class_description: String = ""
-## When true, this sheet's class is an event-sheet FAMILY (Construct-style): every instance is collected
+## When true, this sheet's class is an event-sheet FAMILY: every instance is collected
 ## into the group `family_<snake_class_name>`, so OTHER sheets can write ONE rule that applies to all of
 ## them — "for each Enemy where health < 20: flash" compiles to a loop over
 ## get_tree().get_nodes_in_group("family_enemy"). The family's `variables` are its per-instance variables
