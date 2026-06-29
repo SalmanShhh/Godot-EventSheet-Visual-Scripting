@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Changed — Progressive disclosure in the Variable dialog (docs/PROGRESSIVE-DISCLOSURE-SPEC.md)
+
+- The Inspector-attribute block no longer throws ~10 fields at once. It's **two tiers**: a **Basic** "More
+  options" (Tooltip, Range, "Show as" drawer + live preview, Multiline) and a nested **Advanced** disclosure
+  (grouping, show-if/lock-unless/on-changed, clamp, read-only). The Advanced tier auto-unfurls only when the
+  variable actually uses one of its attributes — a tooltip-only variable no longer opens the whole block.
+- **Drawer config de-overloaded:** the Range field accepts a **bare max** (so a dial's reach is just "150",
+  not "min, max, step") with a forgiving parser shared by the apply and preview; a Vector2 prompts "max reach";
+  the preview caption shows the relevant bound ("· reach 150" / "· 0–100"); "Curve editor" → "Curve preview".
+- **C3-first wording:** "Editable in the Inspector (like a C3 property)" (the `@export` term moves to the
+  tooltip), "Group under heading" / "Sub-heading", "Constant (can't change at runtime)", and plain-language
+  per-type hover hints on the Type dropdown — Godot jargon stays out of the primary labels.
+- **Simple Mode is discoverable:** the Welcome dialog's first run offers a "Simple mode" checkbox, so a
+  newcomer meets the audience choice instead of getting the full registry by default.
+  (`inspector_drawer_roundtrip_test`; renders of the tiered/relabeled dialog + the Welcome; suite green.)
+
 ### Added — Tier 3 Inspector drawers: dial, swatches, texture, curve (the full set)
 
 - The Inspector drawers (docs/INSPECTOR-ATTRIBUTES-SPEC.md) go from one drawer to **five**: a numeric

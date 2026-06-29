@@ -6,9 +6,12 @@ This documents the principle, the canonical tier model, the **existing** disclos
 shipped), and the per-surface targets so a later phase can implement the refinements without re-deriving them.
 
 Status at a glance: the **backbone is shipped** (export-gating, the collapsible Inspector-options section,
-type-gating, the per-type drawer picker, Simple Mode, the ACE-picker three-tier model). The **refinements are
-proposed** (tiering the flat attribute list, C3-first relabelling, splitting the dial's reach out of the Range
-field, making Simple Mode discoverable). Each section marks SHIPPED vs PROPOSED.
+type-gating, the per-type drawer picker, Simple Mode, the ACE-picker three-tier model). **Phases 1–4 of the
+refinements are now SHIPPED**: the variable-dialog Basic/Advanced tiering + refined auto-expand (P1), the
+forgiving Range parser + dial-reach prompt + magnitude-in-the-preview + "Curve preview" rename (P2), the
+C3-first relabels + per-type hover hints (P3), and the Simple Mode choice on the Welcome dialog (P4). **Still
+PROPOSED**: restructuring the Type dropdown to lead with Number/Text/Yes-No and push the Godot types under an
+"Advanced" group (needs a type-alias mapping layer — its own slice), and the Clamp↔Range pre-validation.
 
 ## Why — the user model and the cost of overload
 
@@ -205,15 +208,18 @@ may appear as a trailing `(@export)`-style hint or in a tooltip, for the Godot-f
 - A field whose label borrows a meaning it doesn't have (a "Range" that's really just a dial's reach; a "Curve
   editor" that only previews).
 
-## Suggested phasing (highest leverage first)
+## Phasing (highest leverage first)
 
-1. **Variable-dialog tiering** — split the flat `_attr_section` into T1 ("More options") and a nested T2
-   ("Advanced"); refine auto-expand to non-trivial attributes; pre-validate Clamp↔Range. (Biggest single win.)
-2. **Drawer-config de-overload** — the dedicated "Dial reach (max)" field, the relaxed Range parser, the
-   magnitude-in-the-preview caption, the placeholder-not-committed pre-fill, the "Curve preview" rename.
-3. **C3-first relabelling** — the Type dropdown (Number/Text/Yes-No + Advanced/Godot types), the "Editable in
-   the Inspector" surfacing, "Show as" / "Group under heading" renames.
-4. **Simple Mode discoverability** — the Simple/Expert choice in the Welcome dialog on first run.
+1. ✅ **SHIPPED — Variable-dialog tiering** — the flat `_attr_section` split into T1 ("More options") and a
+   nested T2 ("Advanced"); auto-expand refined to non-trivial attributes. (_Clamp↔Range pre-validation still
+   to do._)
+2. ✅ **SHIPPED — Drawer-config de-overload** — the relaxed/forgiving Range parser (a bare max works), the
+   Vector2 "max reach" prompt, the magnitude-in-the-preview caption, the "Curve preview" rename. (The reach is
+   prompted via the contextual Range field rather than a separate "Dial reach" field — same effect, less UI.)
+3. ✅ **SHIPPED (in part) — C3-first relabelling** — "Show as", "Group under heading", "Sub-heading", "Editable
+   in the Inspector (like a C3 property)", "Constant (can't change at runtime)", per-type hover hints.
+   (_PROPOSED:_ the Type dropdown's Number/Text/Yes-No restructure — a round-trip-sensitive slice of its own.)
+4. ✅ **SHIPPED — Simple Mode discoverability** — the Simple/Expert checkbox on the Welcome dialog's first run.
 
 Each lands the usual way: tests where behavior is testable (the dialog already supports headless edit-cycle
 tests), a render-harness check for the visual tiers, a CHANGELOG entry, and this spec updated as items move
