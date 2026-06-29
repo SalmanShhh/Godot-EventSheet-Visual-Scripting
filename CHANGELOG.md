@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.9.5] - 2026-06-29 - Code-Free Authoring & First-Class Variables
+
 ### Changed — Progressive disclosure in the Variable dialog (docs/PROGRESSIVE-DISCLOSURE-SPEC.md)
 
 - The Inspector-attribute block no longer throws ~10 fields at once. It's **two tiers**: a **Basic** "More
