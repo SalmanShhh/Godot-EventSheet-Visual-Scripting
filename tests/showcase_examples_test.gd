@@ -94,6 +94,22 @@ static func run() -> bool:
 	passed = _check_scene("family_arena scene has Info HUD", "res://demo/showcase/family_arena.tscn", ["Info"]) and passed
 	passed = _check("enemy sub-scene exists", ResourceLoader.exists("res://demo/showcase/enemy.tscn"), true) and passed
 
+	# Inspector Playground — every Tier 3 custom drawer + @export grouping across the new value types
+	# (Vector2/Color/Texture2D/Curve). The byte-identity check inside _check_sheet doubles as the drawer +
+	# grouping round-trip proof (open the .gd → recompile → byte-identical).
+	passed = _check_sheet("inspector_playground", "res://demo/showcase/inspector_playground.gd", [
+		"class_name InspectorPlayground",
+		"@export_group(\"Aim\")",
+		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:vector_dial:120\") var aim_dir: Vector2",
+		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:swatch_row\") var body_tint: Color",
+		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:texture_preview\") var body_icon: Texture2D = null",
+		"@export_subgroup(\"Tuning\")",
+		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:curve_editor\") var stat_curve: Curve = null",
+		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:100\") var stat_health: int = 80",
+	]) and passed
+	passed = _check_scene("inspector_playground scene has Body + Emblem + Info",
+		"res://demo/showcase/inspector_playground.tscn", ["Body", "Emblem", "Info"]) and passed
+
 	# Discovery: the flagship is the one the plugin opens; the secondaries never compete.
 	passed = _check("flagship is the discovered showcase",
 		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/showcase_carousel.tscn") and passed

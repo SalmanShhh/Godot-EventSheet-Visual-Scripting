@@ -18,6 +18,7 @@ func _init() -> void:
 	all_ok = _build_platformer_shooter() and all_ok
 	all_ok = _build_swarm() and all_ok
 	all_ok = _build_family_arena() and all_ok
+	all_ok = _build_inspector_playground() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -833,3 +834,83 @@ func _build_family_arena() -> bool:
 	label.text = "18 Enemies · one family For Each moves them all"
 	root.add_child(label); label.owner = root
 	return _save_scene(root, "res://demo/showcase/family_arena.tscn")
+
+# ── 7. Inspector Playground (Tier 3 custom drawers + @export grouping) ────────
+# Shows off the Custom Inspector features: every exported variable uses a different drawer (direction dial,
+# colour swatch row, texture preview, curve, progress bars) across the new value types (Vector2/Color/
+# Texture2D/Curve), all sorted into @export_group / @export_subgroup Inspector sections. Select the node and
+# open the Inspector to see the rich drawers; press Play and the ship drifts/tints/scales from those same
+# designer-tweakable variables — zero code.
+func _build_inspector_playground() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "InspectorPlayground"
+	sheet.emit_live_values = false
+	# Names are group-prefixed (aim_/body_/stat_) so the dict-variable emission's alphabetical order keeps each
+	# @export_group's members consecutive. Texture2D/Curve default to null (resource exports have no literal
+	# default — assigned in the Inspector).
+	sheet.variables = {
+		"aim_dir": {"type": "Vector2", "default": Vector2(70, -35), "exported": true,
+			"attributes": {"tooltip": "Drift direction + speed — drag the dial.", "group": "Aim", "drawer": "vector_dial", "range": {"min": "0", "max": "120", "step": "1"}}},
+		"body_icon": {"type": "Texture2D", "default": null, "exported": true,
+			"attributes": {"tooltip": "Emblem texture — drop one in.", "group": "Body", "drawer": "texture_preview"}},
+		"body_tint": {"type": "Color", "default": Color("#3aa6e0"), "exported": true,
+			"attributes": {"tooltip": "Hull colour — click a swatch.", "group": "Body", "drawer": "swatch_row"}},
+		"stat_curve": {"type": "Curve", "default": null, "exported": true,
+			"attributes": {"tooltip": "Pulse shape over time.", "group": "Stats", "subgroup": "Tuning", "drawer": "curve_editor"}},
+		"stat_health": {"type": "int", "default": 80, "exported": true,
+			"attributes": {"tooltip": "Health — drag the bar.", "group": "Stats", "subgroup": "Tuning", "drawer": "progress_bar", "range": {"min": "0", "max": "100", "step": "1"}}},
+		"stat_speed": {"type": "float", "default": 90.0, "exported": true,
+			"attributes": {"tooltip": "Drift amplitude — drag the bar.", "group": "Stats", "subgroup": "Tuning", "drawer": "progress_bar", "range": {"min": "0", "max": "200", "step": "1"}}}
+	}
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Inspector Playground[/b] — select this node and open the Inspector: every exported variable uses a [b]custom drawer[/b] (a direction dial, a colour swatch row, a texture preview, a curve, progress bars) sorted into [b]@export_group[/b] sections. Tweak them and press Play — the ship drifts along the dial, scales with health, and wears your colour. All from designer-tweakable variables, zero code."
+	sheet.events.append(about)
+
+	# OnReady: adopt the emblem texture if the designer assigned one.
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	ready_row.actions.append(_raw("if body_icon != null:\n\t$Emblem.texture = body_icon"))
+	sheet.events.append(ready_row)
+
+	# OnProcess: drive the ship live from the tunable variables, so Inspector edits show instantly.
+	var move_row: EventRow = EventRow.new()
+	move_row.trigger_provider_id = "Core"
+	move_row.trigger_id = "OnProcess"
+	move_row.actions.append(_raw(
+		"var t: float = Time.get_ticks_msec() / 1000.0\n" +
+		"var phase: float = sin(t * 2.0) * 0.5 + 0.5\n" +
+		"if stat_curve != null and stat_curve.point_count > 0:\n\tphase = stat_curve.sample(phase)\n" +
+		"$Body.position = aim_dir.normalized() * (phase - 0.5) * stat_speed\n" +
+		"$Body.rotation = aim_dir.angle()\n" +
+		"$Body.color = body_tint\n" +
+		"$Body.scale = Vector2.ONE * (0.6 + stat_health / 100.0)"))
+	sheet.events.append(move_row)
+
+	if not _compile(sheet, "res://demo/showcase/inspector_playground.tres", "res://demo/showcase/inspector_playground.gd"):
+		return false
+
+	# Scene: a ship Body (Polygon2D, tinted live by body_tint) + a centred Emblem (Sprite2D, default texture).
+	var root: Node2D = Node2D.new()
+	root.name = "TunableShip"
+	root.position = Vector2(288, 180)
+	root.set_script(load("res://demo/showcase/inspector_playground.gd"))
+	var body: Polygon2D = Polygon2D.new()
+	body.name = "Body"
+	body.polygon = PackedVector2Array([Vector2(30, 0), Vector2(-20, 18), Vector2(-8, 0), Vector2(-20, -18)])
+	body.color = Color("#3aa6e0")
+	root.add_child(body); body.owner = root
+	var emblem: Sprite2D = Sprite2D.new()
+	emblem.name = "Emblem"
+	emblem.texture = _make_texture()
+	emblem.scale = Vector2(0.5, 0.5)
+	root.add_child(emblem); emblem.owner = root
+	var info: Label = Label.new()
+	info.name = "Info"
+	info.position = Vector2(-268, -160)
+	info.add_theme_font_size_override("font_size", 16)
+	info.text = "Select this node → the Inspector shows custom drawers\n(dial · swatches · texture · curve · bars) in @export groups.\nTweak them and the ship responds."
+	root.add_child(info); info.owner = root
+	return _save_scene(root, "res://demo/showcase/inspector_playground.tscn")

@@ -13,15 +13,20 @@
 - **They round-trip.** A drawer reopened from a `.gd` sheet is recovered into an editable `attributes.drawer`
   (with its bounds), not stranded as a verbatim `@export_custom` block — verify-lift-gated, so a wrong guess
   reverts to a byte-stable block rather than corrupting. One emitter (`_drawer_export_prefix`) drives both the
-  dict-var and tree-var paths identically.
+  dict-var and tree-var paths identically. A variable that carries BOTH a drawer **and** an `@export_group`
+  round-trips correctly — the group absorb now *merges* with (rather than overwrites) the drawer the
+  hint-extraction recovered (a bug the Inspector Playground showcase surfaced).
 - **New host value types.** Vector2, Color, Texture2D and Curve are now first-class sheet-variable types
   (so the dial/swatch/texture/curve drawers have something to attach to); Vector2/Color literals emit and lift
   back byte-exact.
 - **Authoring UX.** The Variable dialog offers exactly the one drawer the chosen type can host and shows a
   **live preview of the actual widget** — the same reusable Controls that render in the Inspector — updating as
   the type / drawer / bounds change.
-  (`inspector_drawer_roundtrip_test`, `inspector_attributes_test`; render harnesses
-  `render_drawer_widgets_preview` + `render_variable_drawer_dialog`; suite 3450 green, zero showcase drift.)
+- **Showcase.** A new **Inspector Playground** (`demo/showcase/inspector_playground.tscn`) puts all five
+  drawers + `@export` grouping across the new value types on one tunable node — select it to see the rich
+  grouped Inspector, press Play and the ship drifts/tints/scales from those same designer-tweakable variables.
+  (`inspector_drawer_roundtrip_test`, `inspector_attributes_test`, `showcase_examples_test`; render harnesses
+  `render_drawer_widgets_preview` + `render_variable_drawer_dialog`; suite 3474 green, zero showcase drift.)
 
 ### Fixed — Inspector grouping + tooltips survive reopening a `.gd` sheet
 
