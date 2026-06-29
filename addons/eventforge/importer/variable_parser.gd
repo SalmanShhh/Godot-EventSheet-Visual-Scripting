@@ -79,4 +79,10 @@ func _parse_literal(text: String) -> Variant:
 		var parsed: Variant = str_to_var(value)
 		if parsed != null:
 			return parsed
+	# Constructor literals for game-value types (Vector2/Color): str_to_var yields the typed value, whose
+	# canonical re-emission (sheet_compiler._to_code_literal) the verify-lift gates byte-for-byte.
+	if value.ends_with(")") and (value.begins_with("Vector2(") or value.begins_with("Color(")):
+		var built: Variant = str_to_var(value)
+		if built is Vector2 or built is Color:
+			return built
 	return value

@@ -49,7 +49,10 @@ var _attr_drawer_option: OptionButton = null
 ## live validation; typed containers (Godot 4 Array[T] / Dictionary[K, V]) also check
 ## element types for builtin T.
 const TYPE_OPTIONS: PackedStringArray = [
-	"int", "float", "bool", "String", "Variant",
+	"int", "float", "bool", "String",
+	# Common game-value types — also the hosts for the Tier 3 drawers (dial / swatches / texture / curve).
+	"Vector2", "Color", "Texture2D", "Curve",
+	"Variant",
 	"Array", "Array[int]", "Array[float]", "Array[String]",
 	"Dictionary", "Dictionary[String, int]", "Dictionary[String, float]",
 	"Dictionary[String, String]", "Dictionary[String, Variant]"
@@ -587,6 +590,25 @@ static func _parse_default(type_name: String, raw: String) -> Variant:
 			return value.to_lower() in ["true", "1", "yes"]
 		"String":
 			return value
+		"Vector2":
+			if value.begins_with("Vector2(") and value.ends_with(")"):
+				var literal_v: Variant = str_to_var(value)
+				return literal_v if literal_v is Vector2 else Vector2.ZERO
+			var xy: PackedStringArray = value.split(",")
+			return Vector2(xy[0].strip_edges().to_float(), xy[1].strip_edges().to_float()) if xy.size() == 2 else Vector2.ZERO
+		"Color":
+			if value.begins_with("Color(") and value.ends_with(")"):
+				var literal_c: Variant = str_to_var(value)
+				return literal_c if literal_c is Color else Color.WHITE
+			if value.begins_with("#"):
+				return Color.from_string(value, Color.WHITE)
+			var rgba: PackedStringArray = value.split(",")
+			if rgba.size() >= 3:
+				return Color(rgba[0].strip_edges().to_float(), rgba[1].strip_edges().to_float(), rgba[2].strip_edges().to_float(), rgba[3].strip_edges().to_float() if rgba.size() >= 4 else 1.0)
+			return Color.WHITE
+		"Texture2D", "Curve":
+			# Resource-typed exports default to null; the value is assigned in the Inspector (or via a drawer).
+			return null
 		_:
 			return value
 

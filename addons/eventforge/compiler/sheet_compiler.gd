@@ -1753,6 +1753,16 @@ static func _to_code_literal(value: Variant) -> String:
 			for key: Variant in dictionary_value.keys():
 				entries.append("%s: %s" % [_to_code_literal(key), _to_code_literal(dictionary_value[key])])
 			return "{%s}" % ", ".join(entries)
+		# Constructor literals for the common game-value types (so Vector2/Color variables emit valid,
+		# str_to_var-parseable GDScript that the importer round-trips — str(Vector2) would give "(0, 0)").
+		# Components reuse the float rule, whose str() form is shortest-round-trippable, keeping re-emission
+		# byte-stable.
+		TYPE_VECTOR2:
+			var v2: Vector2 = value
+			return "Vector2(%s, %s)" % [_to_code_literal(v2.x), _to_code_literal(v2.y)]
+		TYPE_COLOR:
+			var col: Color = value
+			return "Color(%s, %s, %s, %s)" % [_to_code_literal(col.r), _to_code_literal(col.g), _to_code_literal(col.b), _to_code_literal(col.a)]
 		_:
 			return str(value)
 

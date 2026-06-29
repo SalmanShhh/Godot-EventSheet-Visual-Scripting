@@ -60,6 +60,17 @@ static func run() -> bool:
 	all_passed = _eq("read-only export_custom is not absorbed as a drawer",
 		ro != null and (ro.attributes as Dictionary).has("drawer"), false) and all_passed
 
+	# --- New value types round-trip byte-exact (the hosts for the dial / swatch / texture / curve drawers). ---
+	all_passed = _type_roundtrip("Vector2", "@export var dir: Vector2 = Vector2(5.0, -3.0)", "dir") and all_passed
+	all_passed = _type_roundtrip("Color", "@export var tint: Color = Color(0.5, 0.25, 0.75, 1.0)", "tint") and all_passed
+	all_passed = _type_roundtrip("Texture2D", "@export var icon: Texture2D = null", "icon") and all_passed
+	all_passed = _type_roundtrip("Curve", "@export var falloff: Curve = null", "falloff") and all_passed
+
+	# With the value types round-tripping, the Vector2/Color drawers now round-trip FULLY (the var lifts, then
+	# the drawer extracts) — not just emit.
+	all_passed = _roundtrip("vector_dial", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:vector_dial:150\") var aim: Vector2 = Vector2(0.0, 0.0)", "aim", "vector_dial") and all_passed
+	all_passed = _roundtrip("swatch_row", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:swatch_row\") var hue: Color = Color(1.0, 1.0, 1.0, 1.0)", "hue", "swatch_row") and all_passed
+
 	return all_passed
 
 static func _emit_for(type_name: String, default_value: Variant, attributes: Dictionary) -> String:
@@ -95,6 +106,16 @@ static func _roundtrip(label: String, var_line: String, var_name: String, expect
 			has_block = true
 	var recovered: bool = lv != null and str((lv.attributes as Dictionary).get("drawer", "")) == expected_drawer
 	return _eq("%s round-trips into an editable drawer (no block)" % label, recovered and not has_block, true)
+
+static func _type_roundtrip(label: String, var_line: String, var_name: String) -> bool:
+	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + var_line + "\n")
+	var lv: LocalVariable = _find(sheet, var_name)
+	var has_block: bool = false
+	for entry: Variant in sheet.events:
+		if entry is RawCodeRow and (entry as RawCodeRow).code.contains("var " + var_name):
+			has_block = true
+	var ok: bool = lv != null and not has_block and SheetCompiler._emit_tree_variable_line(lv) == var_line
+	return _eq("a %s variable round-trips byte-exact (no block)" % label, ok, true)
 
 static func _eq(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:
