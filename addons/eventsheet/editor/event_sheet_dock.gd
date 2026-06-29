@@ -7129,9 +7129,12 @@ func show_welcome_if_first_run() -> void:
 func show_welcome() -> void:
     if _welcome_window == null:
         _build_welcome_window()
-    # The checkbox reflects the CURRENT setting on every open, not first-run state.
+    # The checkboxes reflect the CURRENT settings on every open, not first-run state.
     var native_check: CheckBox = _welcome_window.get_meta("native_check") as CheckBox
     native_check.set_pressed_no_signal(bool(ProjectSettings.get_setting("eventsheets/editor/open_code_panel_by_default", false)))
+    var simple_check: CheckBox = _welcome_window.get_meta("simple_check") as CheckBox
+    if simple_check != null:
+        simple_check.set_pressed_no_signal(_simple_mode)
     _welcome_window.popup_centered()
 
 ## An AcceptDialog so the window sizes itself to the content (the hand-sized Window
@@ -7171,6 +7174,14 @@ func _build_welcome_window() -> void:
         _welcome_window.hide()
         _open_template_menu())
     box.add_child(starter_button)
+    # Surface the Simple/Expert choice on the one newcomer-guaranteed surface (the Welcome). Simple Mode is the
+    # canonical audience flag but is otherwise off-by-default and menu-buried — see PROGRESSIVE-DISCLOSURE-SPEC.
+    var simple_check: CheckBox = CheckBox.new()
+    simple_check.text = "Simple mode — hide advanced rows & menu items"
+    simple_check.tooltip_text = "New to event sheets? Simple mode keeps the picker and menus to the essentials. Everything still works in Expert mode — toggle any time in View → Simple Mode."
+    simple_check.toggled.connect(func(on: bool) -> void: set_simple_mode(on))
+    box.add_child(simple_check)
+    _welcome_window.set_meta("simple_check", simple_check)
     var native_check: CheckBox = CheckBox.new()
     native_check.text = "Open the GDScript panel with every sheet"
     native_check.tooltip_text = "The Godot-native default: every sheet opens with its generated script beside it (eventsheets/editor/open_code_panel_by_default)."
