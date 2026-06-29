@@ -81,6 +81,14 @@ static func run() -> bool:
 	all_passed = _eq("String hosts no drawer (combo/multiline instead)", VariableDialog._drawer_kind_for_type("String"), "") and all_passed
 	all_passed = _eq("Array hosts no drawer", VariableDialog._drawer_kind_for_type("Array"), "") and all_passed
 
+	# Dialog default-field round-trip for value types: the displayed literal must parse back to the same value
+	# (the str() form "(0, 0)" would not — _parse_default reads the Vector2(...)/Color(...) constructor form).
+	all_passed = _eq("a Vector2 default round-trips through the dialog field",
+		VariableDialog._parse_default("Vector2", SheetCompiler._to_code_literal(Vector2(5.0, -3.0))), Vector2(5.0, -3.0)) and all_passed
+	all_passed = _eq("a Color default round-trips through the dialog field",
+		VariableDialog._parse_default("Color", SheetCompiler._to_code_literal(Color(0.5, 0.25, 0.75, 1.0))), Color(0.5, 0.25, 0.75, 1.0)) and all_passed
+	all_passed = _eq("a resource default parses to null", VariableDialog._parse_default("Texture2D", ""), null) and all_passed
+
 	return all_passed
 
 static func _emit_for(type_name: String, default_value: Variant, attributes: Dictionary) -> String:

@@ -411,8 +411,12 @@ func open_for_edit(
 	_dialog.title = title
 	_name_edit.text = name
 	_refresh_name_warning()
-	# Containers display as canonical GDScript literals (str() doesn't escape strings).
-	if default_value is Array or default_value is Dictionary:
+	# Show the canonical GDScript literal for containers and value types — str() loses the constructor
+	# ("(0, 0)" instead of "Vector2(0, 0)"), which _parse_default then can't read back. null (a resource
+	# default) shows as an empty field rather than the literal "<null>".
+	if default_value == null:
+		_default_edit.text = ""
+	elif default_value is Array or default_value is Dictionary or default_value is Vector2 or default_value is Color:
 		_default_edit.text = SheetCompiler._to_code_literal(default_value)
 	else:
 		_default_edit.text = str(default_value)
@@ -842,7 +846,8 @@ func _refresh_default_hint() -> void:
 	var type_name: String = _type_option.get_item_text(_type_option.selected)
 	if not is_collection_type(type_name):
 		_default_help.visible = false
-		_default_edit.placeholder_text = "0"
+		# Resource-typed exports have no literal default (they're assigned in the Inspector), so don't suggest "0".
+		_default_edit.placeholder_text = "(none)" if type_name in ["Texture2D", "Curve"] else "0"
 		return
 	_default_edit.placeholder_text = "{\"key\": 1}" if type_name.begins_with("Dictionary") else "[1, 2, 3]"
 	if _default_edit.text.strip_edges().is_empty():
