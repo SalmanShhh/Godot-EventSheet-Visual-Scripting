@@ -223,7 +223,18 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		group_value = _extract_first_quoted(pending[cursor])
 		meta_count += 1
 		cursor -= 1
+	var tooltip_value: String = ""
+	# A doc comment immediately before the var (no blank line — a blank line would sit at pending's tail
+	# instead) is the variable's tooltip, per Godot's `##` doc-comment convention. Exclude `## @...`
+	# annotation lines (@ace_tags / @icon / …), which are recovered elsewhere and are never tooltips.
+	if cursor >= 0 and pending[cursor].begins_with("## ") and not pending[cursor].begins_with("## @"):
+		tooltip_value = pending[cursor].substr(3).strip_edges()
+		if not tooltip_value.is_empty():
+			meta_count += 1
+			cursor -= 1
 	var candidate: Dictionary = {}
+	if not tooltip_value.is_empty():
+		candidate["tooltip"] = tooltip_value
 	if not group_value.is_empty():
 		candidate["group"] = group_value
 	if not subgroup_value.is_empty():

@@ -8244,12 +8244,12 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 
 # ── Variable dialog signal handler ────────────────────────────────────────────
 
-## The Inspector-grouping subset a tree-placed LocalVariable carries (group/subgroup) — the only attributes
-## the tree-var emission supports. Keeps a reopened grouped variable editable: the dialog populates these
-## (via the edit context) and this stores back what the user changes, so the group isn't stuck or cleared.
+## The Inspector attributes a tree-placed LocalVariable round-trips (tooltip + group/subgroup) — the subset
+## the tree-var emission supports. Keeps a reopened variable editable: the dialog populates these (via the
+## edit context) and this stores back what the user changes, so they aren't stuck or cleared.
 static func _tree_group_attributes(source: Dictionary) -> Dictionary:
     var result: Dictionary = {}
-    for attr_key: String in ["group", "subgroup"]:
+    for attr_key: String in ["tooltip", "group", "subgroup"]:
         var attr_value: String = str(source.get(attr_key, "")).strip_edges()
         if not attr_value.is_empty():
             result[attr_key] = attr_value

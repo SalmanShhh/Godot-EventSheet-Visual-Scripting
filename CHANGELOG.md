@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-### Fixed — Inspector grouping survives reopening a `.gd` sheet
+### Fixed — Inspector grouping + tooltips survive reopening a `.gd` sheet
 
 - A variable's **`@export_group` / `@export_subgroup`** now round-trips through a `.gd` reopen. Before, those
   lines couldn't be lifted, so a reopened grouped variable **degraded into a stray `@export_group` GDScript
@@ -13,6 +13,9 @@
   emission re-emits the group lines matching the dict-var path exactly. The reopened variable is also fully
   **editable** — the dialog now populates its group/subgroup and the apply saves them for tree variables
   (previously the tree path ignored attributes, so a reopened group was stuck or silently cleared on edit).
+  The variable **tooltip** round-trips the same way — a `## doc` immediately before the variable is recovered
+  as its tooltip (Godot's doc-comment convention), no longer stranded as a `## …` GDScript block; a `## @ace…`
+  annotation line is excluded so it's never mistaken for a tooltip.
   (`variable_group_roundtrip_test`; zero showcase drift.)
 
 ### Added — `@export_subgroup` for nested Inspector grouping

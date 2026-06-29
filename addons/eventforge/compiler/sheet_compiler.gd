@@ -1652,6 +1652,11 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	if not local_var.exported or not (local_var.attributes is Dictionary) or local_var.attributes.is_empty():
 		return ""
 	var prefix: String = ""
+	# Tooltip first, then group/subgroup — same canonical order as the dict-var path (_emit_variables), so the
+	# importer's absorb can verify-lift the whole block. The ## doc attaches to the following @export var.
+	var tooltip: String = str(local_var.attributes.get("tooltip", "")).strip_edges()
+	if not tooltip.is_empty():
+		prefix += "## %s\n" % tooltip
 	var group: String = str(local_var.attributes.get("group", "")).strip_edges()
 	if not group.is_empty():
 		prefix += "@export_group(\"%s\")\n" % group
