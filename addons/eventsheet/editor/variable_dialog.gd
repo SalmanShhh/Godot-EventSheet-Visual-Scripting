@@ -33,6 +33,11 @@ var _enum_fill_menu: MenuButton = null
 var _enum_provider: Callable = Callable()
 var _attr_toggle: Button = null
 var _attr_section: VBoxContainer = null
+# A second, nested disclosure inside _attr_section: the "Advanced" tier holds the wiring/organizational
+# attributes (grouping, show-if/lock-unless/on-changed, clamp, read-only) so the Basic tier (tooltip, range,
+# drawer, multiline) reads first. See docs/PROGRESSIVE-DISCLOSURE-SPEC.md.
+var _attr_advanced_toggle: Button = null
+var _attr_advanced_section: VBoxContainer = null
 var _attr_tooltip_edit: LineEdit = null
 var _attr_group_edit: LineEdit = null
 var _attr_subgroup_edit: LineEdit = null
@@ -161,11 +166,14 @@ func init_dialog(parent_node: Node) -> void:
 	# Inspector attributes (Tiers 1–3) live behind a disclosure (user call: the dialog
 	# threw everything at once) — collapsed for new variables, auto-expanded when the
 	# variable being edited already uses any of them. Exported globals only.
+	# Inspector attributes behind a disclosure ("More options") — the dialog used to throw everything at once.
+	# Collapsed for new variables, auto-expanded when an edited variable already uses an attribute. Exported
+	# globals only. Progressive disclosure: docs/PROGRESSIVE-DISCLOSURE-SPEC.md.
 	_attr_toggle = Button.new()
 	_attr_toggle.flat = true
 	_attr_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_attr_toggle.toggle_mode = true
-	_attr_toggle.text = "▸  Inspector options (tooltip, range, show-if…)"
+	_attr_toggle.text = "▸  More options (tooltip, range, drawer…)"
 	_attr_toggle.tooltip_text = "Optional Inspector polish for exported globals — everything compiles to plain Godot annotations."
 	_attr_toggle.toggled.connect(func(expanded: bool) -> void:
 		_attr_toggle.text = ("▾" if expanded else "▸") + _attr_toggle.text.substr(1)
@@ -174,49 +182,65 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_section = VBoxContainer.new()
 	_attr_section.visible = false
 	form.add_child(_attr_section)
+	# ── BASIC tier: the friendly polish a designer reaches for first ──
 	_attr_tooltip_edit = LineEdit.new()
 	_attr_tooltip_edit.placeholder_text = "shown when hovering the property"
 	_attr_section.add_child(EventSheetPopupUI.form_row("Tooltip", _attr_tooltip_edit))
-	_attr_group_edit = LineEdit.new()
-	_attr_group_edit.placeholder_text = "Inspector section header (e.g. Combat)"
-	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector group", _attr_group_edit))
-	_attr_subgroup_edit = LineEdit.new()
-	_attr_subgroup_edit.placeholder_text = "Nested section under the group (e.g. Melee)"
-	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector subgroup", _attr_subgroup_edit))
 	_attr_range_edit = LineEdit.new()
 	_attr_range_edit.placeholder_text = "min, max, step (numeric: slider)"
 	_attr_range_edit.text_changed.connect(func(_t: String) -> void: _refresh_drawer_preview())
 	_attr_section.add_child(EventSheetPopupUI.form_row("Range", _attr_range_edit))
-	_attr_multiline_check = CheckBox.new()
-	_attr_multiline_check.text = "Multiline (String: big text box)"
-	_attr_section.add_child(_attr_multiline_check)
-	_attr_show_if_edit = LineEdit.new()
-	_attr_show_if_edit.placeholder_text = "bool variable (hidden when false)"
-	_attr_section.add_child(EventSheetPopupUI.form_row("Show if", _attr_show_if_edit))
-	_attr_lock_unless_edit = LineEdit.new()
-	_attr_lock_unless_edit.placeholder_text = "bool variable (read-only when false)"
-	_attr_section.add_child(EventSheetPopupUI.form_row("Lock unless", _attr_lock_unless_edit))
-	_attr_on_changed_edit = LineEdit.new()
-	_attr_on_changed_edit.placeholder_text = "sheet function called after assignment"
-	_attr_section.add_child(EventSheetPopupUI.form_row("On changed", _attr_on_changed_edit))
-	var attr_checks: HBoxContainer = HBoxContainer.new()
-	_attr_clamp_check = CheckBox.new()
-	_attr_clamp_check.text = "Clamp to range"
-	attr_checks.add_child(_attr_clamp_check)
 	_attr_drawer_option = OptionButton.new()
 	_attr_drawer_option.add_item("Default field")
-	_attr_drawer_option.tooltip_text = "Swap the Inspector field for a richer drawer.\nGraceful: a plain field without the editor plugin (parity preserved)."
+	_attr_drawer_option.tooltip_text = "Swap the Inspector field for a richer drawer (dial, swatches, curve…).\nGraceful: a plain field without the editor plugin (parity preserved)."
 	_attr_drawer_option.item_selected.connect(func(_i: int) -> void: _refresh_drawer_preview())
-	attr_checks.add_child(_attr_drawer_option)
-	_attr_read_only_check = CheckBox.new()
-	_attr_read_only_check.text = "Read-only"
-	attr_checks.add_child(_attr_read_only_check)
-	_attr_section.add_child(attr_checks)
+	_attr_section.add_child(EventSheetPopupUI.form_row("Show as", _attr_drawer_option))
 	# Live "what the drawer looks like" preview — the actual widget, updated as the type / drawer / bounds change.
 	_drawer_preview_box = VBoxContainer.new()
 	_drawer_preview_box.visible = false
 	_drawer_preview_box.add_theme_constant_override("separation", 3)
 	_attr_section.add_child(_drawer_preview_box)
+	_attr_multiline_check = CheckBox.new()
+	_attr_multiline_check.text = "Multiline (String: big text box)"
+	_attr_section.add_child(_attr_multiline_check)
+	# ── ADVANCED tier (nested disclosure): wiring + organization that assumes other vars/funcs exist or
+	# Godot-Inspector fluency — kept out of the common path so the Basic tier reads cleanly. ──
+	_attr_advanced_toggle = Button.new()
+	_attr_advanced_toggle.flat = true
+	_attr_advanced_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_attr_advanced_toggle.toggle_mode = true
+	_attr_advanced_toggle.text = "▸  Advanced (grouping, conditions, clamp…)"
+	_attr_advanced_toggle.tooltip_text = "Inspector grouping, conditional show/lock, an on-changed callback, clamp, read-only — for variables that reference other variables or functions."
+	_attr_advanced_toggle.toggled.connect(func(expanded: bool) -> void:
+		_attr_advanced_toggle.text = ("▾" if expanded else "▸") + _attr_advanced_toggle.text.substr(1)
+		_attr_advanced_section.visible = expanded)
+	_attr_section.add_child(_attr_advanced_toggle)
+	_attr_advanced_section = VBoxContainer.new()
+	_attr_advanced_section.visible = false
+	_attr_section.add_child(_attr_advanced_section)
+	_attr_group_edit = LineEdit.new()
+	_attr_group_edit.placeholder_text = "Inspector section header (e.g. Combat)"
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Inspector group", _attr_group_edit))
+	_attr_subgroup_edit = LineEdit.new()
+	_attr_subgroup_edit.placeholder_text = "Nested section under the group (e.g. Melee)"
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Inspector subgroup", _attr_subgroup_edit))
+	_attr_show_if_edit = LineEdit.new()
+	_attr_show_if_edit.placeholder_text = "bool variable (hidden when false)"
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Show if", _attr_show_if_edit))
+	_attr_lock_unless_edit = LineEdit.new()
+	_attr_lock_unless_edit.placeholder_text = "bool variable (read-only when false)"
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Lock unless", _attr_lock_unless_edit))
+	_attr_on_changed_edit = LineEdit.new()
+	_attr_on_changed_edit.placeholder_text = "sheet function called after assignment"
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("On changed", _attr_on_changed_edit))
+	var attr_checks: HBoxContainer = HBoxContainer.new()
+	_attr_clamp_check = CheckBox.new()
+	_attr_clamp_check.text = "Clamp to range"
+	attr_checks.add_child(_attr_clamp_check)
+	_attr_read_only_check = CheckBox.new()
+	_attr_read_only_check.text = "Read-only"
+	attr_checks.add_child(_attr_read_only_check)
+	_attr_advanced_section.add_child(attr_checks)
 	_default_help = Label.new()
 	_default_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_default_help.custom_minimum_size = Vector2(380.0, 0.0)
@@ -444,12 +468,23 @@ func open_for_edit(
 	_attr_on_changed_edit.text = str(existing_attributes.get("on_changed", ""))
 	_attr_clamp_check.button_pressed = bool(existing_attributes.get("clamp", false))
 	_attr_read_only_check.button_pressed = bool(existing_attributes.get("read_only", false))
-	# Progressive disclosure: the Inspector section starts collapsed for new variables
-	# and auto-expands when the variable already uses any attribute.
+	# Progressive disclosure: "More options" starts collapsed for new variables and auto-expands when the
+	# edited variable already uses any attribute. The nested "Advanced" tier auto-expands ONLY when an
+	# advanced attribute is set — a tooltip-only variable shouldn't unfurl the whole advanced block.
 	if _attr_toggle != null:
-		_attr_toggle.button_pressed = not existing_attributes.is_empty()
-		_attr_section.visible = not existing_attributes.is_empty()
+		var has_any: bool = not existing_attributes.is_empty()
+		_attr_toggle.button_pressed = has_any
+		_attr_section.visible = has_any
 		_attr_toggle.text = ("▾" if _attr_section.visible else "▸") + _attr_toggle.text.substr(1)
+	if _attr_advanced_toggle != null:
+		var has_advanced: bool = false
+		for adv_key: String in ["group", "subgroup", "show_if", "lock_unless", "on_changed", "clamp", "read_only"]:
+			if existing_attributes.has(adv_key):
+				has_advanced = true
+				break
+		_attr_advanced_toggle.button_pressed = has_advanced
+		_attr_advanced_section.visible = has_advanced
+		_attr_advanced_toggle.text = ("▾" if has_advanced else "▸") + _attr_advanced_toggle.text.substr(1)
 	# Inspector attributes only apply to an exported var, so gate their disclosure on the toggle.
 	_update_attr_gating()
 	_refresh_const_ui()
@@ -739,7 +774,10 @@ func _rebuild_drawer_options(kind: String) -> void:
 	if not kind.is_empty():
 		_attr_drawer_option.add_item(_drawer_label_for_kind(kind))
 		_attr_drawer_option.set_item_metadata(1, kind)
-	_attr_drawer_option.visible = not kind.is_empty()
+	# Hide the whole "Show as" row (label + option) for types with no drawer, not just the OptionButton.
+	var show_row: Node = _attr_drawer_option.get_parent()
+	if show_row is Control:
+		(show_row as Control).visible = not kind.is_empty()
 	_attr_drawer_option.select(1 if (not kind.is_empty() and previous == kind) else 0)
 
 ## {min, max} parsed from the Range field — drives the progress_bar / dial bounds in both the preview and marker.
