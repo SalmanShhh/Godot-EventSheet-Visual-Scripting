@@ -62,7 +62,7 @@ func _build_sheet() -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "CharacterBody2D"
 	sheet.variables = {
-		"hp": {"type": "int", "default": 100},
+		"hp": {"type": "int", "default": 100, "exported": true},
 		"speed": {"type": "float", "default": 200.0}
 	}
 	var group: EventGroup = EventGroup.new()
@@ -97,7 +97,7 @@ func _build_sheet() -> EventSheetResource:
 	inline_block.code = "velocity.x = lerp(velocity.x, 0.0, 0.2)"
 	move_event.actions.append(inline_block)
 	var move_note: CommentRow = CommentRow.new()
-	move_note.text = "Keeps the body moving along the floor"
+	move_note.text = "Keeps the body moving along the [b]floor[/b]"
 	move_event.sub_events.append(move_note)
 	sheet.events.append(move_event)
 
@@ -120,6 +120,17 @@ func _build_sheet() -> EventSheetResource:
 	tree_var.default_value = 0
 	sheet.events.append(tree_var)
 
+	# An exported, Inspector-grouped variable: shows the @export badge + the "Group › Subgroup" chip.
+	var grouped_var: LocalVariable = LocalVariable.new()
+	grouped_var.name = "max_health"
+	grouped_var.type_name = "int"
+	grouped_var.default_value = 100
+	grouped_var.exported = true
+	grouped_var.attributes = {"group": "Combat", "subgroup": "Defense"}
+	sheet.events.append(grouped_var)
+
+	# A sheet-built heal() function (a class-level block row — the viewport renders in-sheet rows; full
+	# function sections live in the dock, which would add toolbar chrome and spoil this clean hero shot).
 	var raw_block: RawCodeRow = RawCodeRow.new()
 	raw_block.code = "func heal(amount: int) -> void:\n\thp += amount"
 	sheet.events.append(raw_block)

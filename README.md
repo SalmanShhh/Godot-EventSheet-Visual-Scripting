@@ -9,7 +9,7 @@
 
 Godot EventSheets (engine codename *EventForge* — the prefix you'll see on internal class names) brings the event-sheet workflow C3 users love into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** — no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a guarded, tested contract).
 
-![The event sheet editor: two-lane condition/action rows, type-annotated variables (with @export badges for Inspector-exposed ones), trigger arrows, an inline GDScript block, and a sheet-built heal() function.](docs/previews/editor-event-sheet.png)
+![The event sheet editor: two-lane condition/action rows, type-annotated variables (with @export badges and a "Combat › Defense" Inspector-grouping chip), trigger arrows, a negated condition, BBCode in a comment, an inline GDScript block, and a sheet-built heal() function.](docs/previews/editor-event-sheet.png)
 
 ![The ACE picker: search actions, conditions, and triggers by their Construct-style vocabulary, with Favorites and Recent panes and the generated GDScript shown live in the description panel.](docs/previews/editor-ace-picker.png)
 
