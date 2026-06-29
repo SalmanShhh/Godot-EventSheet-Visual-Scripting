@@ -39,7 +39,7 @@ Notes:
 | Tool | What it does |
 | --- | --- |
 | `list_sheets` | Every `.tres` event sheet in the project. |
-| `read_sheet {path}` | Structured JSON of a sheet — rows (events/groups/comments/variables/enums/GDScript blocks), variables, functions, identity. Also accepts any `.gd` path (opened read-only as a GDScript-backed sheet). |
+| `read_sheet {path}` | Structured JSON of a sheet — rows (events/groups/comments/variables/enums/GDScript blocks), variables, functions, identity. Variable JSON carries every value type (incl. Vector2/Color/Texture2D/Curve) and the `attributes.{drawer, group, subgroup, range, tooltip}` Inspector fields verbatim — the read/compile path is type-agnostic, so new constructs flow through with no allowlist to update. Also accepts any `.gd` path (opened read-only as a GDScript-backed sheet). |
 | `list_aces {query?}` | The full ACE vocabulary — builtins **plus zero-config addons** — with categories, codegen templates, and param hints. |
 | `compile_sheet {path, write_output?}` | Compiles a sheet. **Dry-run by default** (returns the generated GDScript without touching files); `write_output: true` writes the real output. |
 | `lint_block {code, in_flow?, sheet_path?}` | Compile-checks GDScript against a sheet's context (its variables, enums, host class). |

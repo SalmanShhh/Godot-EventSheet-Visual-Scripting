@@ -128,6 +128,15 @@ static func run() -> bool:
 		VariableDialog._parse_range_parts(PackedStringArray(["1", "2", "3", "4"])), {}) and all_passed
 	all_passed = _eq("the curve drawer label reads 'Curve preview' (it doesn't edit in place)",
 		VariableDialog._drawer_label_for_kind("curve_editor"), "Curve preview") and all_passed
+	# Exercise the REAL split path (allow_empty), not just explicit arrays: positions must be preserved so a
+	# blank/trailing/middle empty field is caught, not silently shifted. (split(",", false) dropped empties and
+	# read "0,,5" as max 5.)
+	all_passed = _eq("Range '0,,5' (blank max slot) errors via the real split",
+		VariableDialog._parse_range_parts("0,,5".split(",")), {}) and all_passed
+	all_passed = _eq("Range '0,' (trailing comma = blank max) errors via the real split",
+		VariableDialog._parse_range_parts("0,".split(",")), {}) and all_passed
+	all_passed = _eq("Range '0, 100, 5' parses via the real split",
+		VariableDialog._parse_range_parts("0, 100, 5".split(",")), {"min": "0", "max": "100", "step": "5"}) and all_passed
 
 	return all_passed
 

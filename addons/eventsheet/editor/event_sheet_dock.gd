@@ -7131,7 +7131,8 @@ func show_welcome() -> void:
         _build_welcome_window()
     # The checkboxes reflect the CURRENT settings on every open, not first-run state.
     var native_check: CheckBox = _welcome_window.get_meta("native_check") as CheckBox
-    native_check.set_pressed_no_signal(bool(ProjectSettings.get_setting("eventsheets/editor/open_code_panel_by_default", false)))
+    if native_check != null:
+        native_check.set_pressed_no_signal(bool(ProjectSettings.get_setting("eventsheets/editor/open_code_panel_by_default", false)))
     var simple_check: CheckBox = _welcome_window.get_meta("simple_check") as CheckBox
     if simple_check != null:
         simple_check.set_pressed_no_signal(_simple_mode)

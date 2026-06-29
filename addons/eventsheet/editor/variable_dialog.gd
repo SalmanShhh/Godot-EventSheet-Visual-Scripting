@@ -38,6 +38,14 @@ var _attr_section: VBoxContainer = null
 # drawer, multiline) reads first. See docs/PROGRESSIVE-DISCLOSURE-SPEC.md.
 var _attr_advanced_toggle: Button = null
 var _attr_advanced_section: VBoxContainer = null
+## Attribute keys whose fields live in the nested Advanced tier. MUST mirror the fields parented under
+## _attr_advanced_section in init_dialog — if you move a field between the Basic and Advanced tiers, update
+## this too, or open_for_edit's auto-expand will disagree with where the field actually sits.
+const _ADVANCED_ATTR_KEYS: Array[String] = ["group", "subgroup", "show_if", "lock_unless", "on_changed", "clamp", "read_only"]
+## The Range field's placeholder per type — one source of truth so the initial build and the per-type swap in
+## _refresh_contextual_rows can't drift. Vector2 prompts a single dial reach; numeric prompts min, max, step.
+const _RANGE_PLACEHOLDER_NUMERIC: String = "min, max, step (numeric: slider)"
+const _RANGE_PLACEHOLDER_VECTOR2: String = "max reach — the dial's magnitude (e.g. 150)"
 var _attr_tooltip_edit: LineEdit = null
 var _attr_group_edit: LineEdit = null
 var _attr_subgroup_edit: LineEdit = null
@@ -181,9 +189,6 @@ func init_dialog(parent_node: Node) -> void:
 		_options_edit.text = str(_enum_fill_menu.get_popup().get_item_metadata(index)))
 	_options_row.add_child(_enum_fill_menu)
 	form.add_child(_options_row)
-	# Inspector attributes (Tiers 1–3) live behind a disclosure (user call: the dialog
-	# threw everything at once) — collapsed for new variables, auto-expanded when the
-	# variable being edited already uses any of them. Exported globals only.
 	# Inspector attributes behind a disclosure ("More options") — the dialog used to throw everything at once.
 	# Collapsed for new variables, auto-expanded when an edited variable already uses an attribute. Exported
 	# globals only. Progressive disclosure: docs/PROGRESSIVE-DISCLOSURE-SPEC.md.
@@ -205,7 +210,7 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_tooltip_edit.placeholder_text = "shown when hovering the property"
 	_attr_section.add_child(EventSheetPopupUI.form_row("Tooltip", _attr_tooltip_edit))
 	_attr_range_edit = LineEdit.new()
-	_attr_range_edit.placeholder_text = "min, max, step (numeric: slider)"
+	_attr_range_edit.placeholder_text = _RANGE_PLACEHOLDER_NUMERIC
 	_attr_range_edit.text_changed.connect(func(_t: String) -> void: _refresh_drawer_preview())
 	_attr_section.add_child(EventSheetPopupUI.form_row("Range", _attr_range_edit))
 	_attr_drawer_option = OptionButton.new()
@@ -432,6 +437,13 @@ func _update_attr_gating() -> void:
 		_attr_toggle.text = "▸" + _attr_toggle.text.substr(1)
 		if _attr_section != null:
 			_attr_section.visible = false
+		# Also collapse the nested Advanced tier so a later re-expand starts from the Basic-first state (rather
+		# than leaving the advanced block remembered-open from an earlier export-on session).
+		if _attr_advanced_toggle != null:
+			_attr_advanced_toggle.set_pressed_no_signal(false)
+			_attr_advanced_toggle.text = "▸" + _attr_advanced_toggle.text.substr(1)
+			if _attr_advanced_section != null:
+				_attr_advanced_section.visible = false
 
 func open_for_edit(
 	scope: String,
@@ -496,7 +508,7 @@ func open_for_edit(
 		_attr_toggle.text = ("▾" if _attr_section.visible else "▸") + _attr_toggle.text.substr(1)
 	if _attr_advanced_toggle != null:
 		var has_advanced: bool = false
-		for adv_key: String in ["group", "subgroup", "show_if", "lock_unless", "on_changed", "clamp", "read_only"]:
+		for adv_key: String in _ADVANCED_ATTR_KEYS:
 			if existing_attributes.has(adv_key):
 				has_advanced = true
 				break
@@ -588,7 +600,9 @@ func _on_confirmed() -> void:
 		# Forgiving: 1 part = max (min 0, step 1); 2 = min, max (step 1); 3 = min, max, step. A dial uses only
 		# its max, so a designer shouldn't have to type a min/step it ignores — config is optional with sensible
 		# defaults, and config beyond a max never hard-errors.
-		var range_parts: PackedStringArray = range_text.split(",", false)
+		# allow_empty=TRUE: keep empty slots so positions are preserved ("0,,5" → ["0","","5"], a blank max that
+		# _parse_range_parts correctly rejects). split(",", false) would drop the empty and silently misread it.
+		var range_parts: PackedStringArray = range_text.split(",")
 		var parsed_range: Dictionary = _parse_range_parts(range_parts)
 		if parsed_range.is_empty():
 			if _default_help != null:
@@ -744,7 +758,7 @@ func _refresh_contextual_rows() -> void:
 		_attr_range_edit.get_parent().visible = numeric or type_name == "Vector2"
 		# For a Vector2 the Range is just the dial's reach (only max is read), so prompt for one number, not the
 		# numeric "min, max, step" — the forgiving parser accepts a bare max.
-		_attr_range_edit.placeholder_text = "max reach — the dial's magnitude (e.g. 150)" if type_name == "Vector2" else "min, max, step (numeric: slider)"
+		_attr_range_edit.placeholder_text = _RANGE_PLACEHOLDER_VECTOR2 if type_name == "Vector2" else _RANGE_PLACEHOLDER_NUMERIC
 		_attr_clamp_check.visible = numeric
 		_attr_multiline_check.visible = type_name == "String"
 	# The drawer picker offers only the one drawer the current type can host (or hides when there is none).
@@ -828,13 +842,14 @@ static func _parse_range_parts(parts: PackedStringArray) -> Dictionary:
 func _parse_range_bounds() -> Dictionary:
 	if _attr_range_edit == null:
 		return {"min": 0.0, "max": 100.0}
-	var parsed: Dictionary = _parse_range_parts(_attr_range_edit.text.split(",", false))
+	var parsed: Dictionary = _parse_range_parts(_attr_range_edit.text.split(","))  # allow_empty: positions preserved (see _on_confirmed)
 	if parsed.is_empty():
 		return {"min": 0.0, "max": 100.0}
 	return {"min": str(parsed.get("min", "0")).to_float(), "max": str(parsed.get("max", "100")).to_float()}
 
 ## Compact display of a numeric bound: drop a trailing ".0" so 150.0 reads "150", but keep 1.5 as "1.5".
 static func _format_bound(value: float) -> String:
+	# 0.001 is a cosmetic "close enough to whole" tolerance — display-only, never used for storage or compares.
 	return str(int(round(value))) if absf(value - round(value)) < 0.001 else str(value)
 
 ## Rebuilds the live preview to show the actual drawer widget (display-only) at a representative value.
