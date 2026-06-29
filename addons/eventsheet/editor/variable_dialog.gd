@@ -64,6 +64,20 @@ const TYPE_OPTIONS: PackedStringArray = [
 	"Dictionary[String, String]", "Dictionary[String, Variant]"
 ]
 
+## Plain-language hover hints for the Type dropdown, in terms a Construct 3 migrant already owns (C3 has only
+## Number / Text / Boolean). The stored type name is unchanged — these are on-demand explanations, not renames.
+const TYPE_HINTS: Dictionary = {
+	"int": "A whole number, no decimals (like a C3 Number used for a count or score).",
+	"float": "A number that can have decimals — the everyday C3 Number.",
+	"bool": "Yes / no, on / off (true / false) — a C3 Boolean.",
+	"String": "Text — a C3 String.",
+	"Vector2": "An x/y pair: a direction, velocity, or position.",
+	"Color": "An RGBA colour.",
+	"Texture2D": "An image / sprite resource.",
+	"Curve": "A shape over 0–1 (easing, falloff, ramps).",
+	"Variant": "Any type — untyped (advanced; prefer a specific type when you can).",
+}
+
 ## Initialise and attach the dialog to parent_node.
 ## Must be called before open().
 func init_dialog(parent_node: Node) -> void:
@@ -115,6 +129,10 @@ func init_dialog(parent_node: Node) -> void:
 	_type_option = OptionButton.new()
 	for option: String in TYPE_OPTIONS:
 		_type_option.add_item(option)
+		# C3-friendly hover hints, on demand (docs/PROGRESSIVE-DISCLOSURE-SPEC.md): a Construct migrant has no
+		# model for int-vs-float or Variant, so each type explains itself in plain terms without renaming it.
+		if TYPE_HINTS.has(option):
+			_type_option.set_item_tooltip(_type_option.item_count - 1, str(TYPE_HINTS[option]))
 	_type_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_type_option.item_selected.connect(func(_index: int) -> void:
 		_refresh_const_ui()
@@ -220,10 +238,10 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_section.add_child(_attr_advanced_section)
 	_attr_group_edit = LineEdit.new()
 	_attr_group_edit.placeholder_text = "Inspector section header (e.g. Combat)"
-	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Inspector group", _attr_group_edit))
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Group under heading", _attr_group_edit))
 	_attr_subgroup_edit = LineEdit.new()
-	_attr_subgroup_edit.placeholder_text = "Nested section under the group (e.g. Melee)"
-	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Inspector subgroup", _attr_subgroup_edit))
+	_attr_subgroup_edit.placeholder_text = "nested section under the group (e.g. Melee)"
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Sub-heading", _attr_subgroup_edit))
 	_attr_show_if_edit = LineEdit.new()
 	_attr_show_if_edit.placeholder_text = "bool variable (hidden when false)"
 	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Show if", _attr_show_if_edit))
@@ -254,7 +272,7 @@ func init_dialog(parent_node: Node) -> void:
 	const_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	const_row.add_child(const_label)
 	_const_check = CheckBox.new()
-	_const_check.text = "Constant (const)"
+	_const_check.text = "Constant (can't change at runtime)"
 	const_row.add_child(_const_check)
 	form.add_child(const_row)
 
@@ -264,7 +282,7 @@ func init_dialog(parent_node: Node) -> void:
 	access_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	access_row.add_child(access_label)
 	_exported_check = CheckBox.new()
-	_exported_check.text = "Designer-tweakable in the Inspector (@export)"
+	_exported_check.text = "Editable in the Inspector (like a C3 property)"
 	_exported_check.tooltip_text = "On: a designer can tweak this per-instance in the Inspector (@export var).\nOff: internal script state — a plain private var (the default for a new variable)."
 	_exported_check.toggled.connect(func(_pressed: bool) -> void: _update_attr_gating())
 	access_row.add_child(_exported_check)
