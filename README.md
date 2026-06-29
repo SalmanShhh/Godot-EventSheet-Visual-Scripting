@@ -167,7 +167,7 @@ Full feature-by-feature ledger: [CHANGELOG.md](CHANGELOG.md).
 | `eventsheet_addons/` | Zero-config ACE addons + the 31 behavior packs |
 | `demo/` | Demo sheets, themes, and the golden compiled output |
 | `tests/` | Headless suite — `tests/run_tests.gd` (full) and `tests/run_perf.gd` (headless-safe gate) |
-| `docs/` | Contract specs (GDScript pairing, inspector attributes, addon composition, progressive disclosure, includes) + guides (C3 migration, recipes, performance, MCP, glossary, uninstall) |
+| `docs/` | Contract specs (GDScript pairing, inspector attributes, addon composition, progressive disclosure, includes, event-group round-trip) + guides (C3 migration, recipes, performance, MCP, glossary, uninstall) |
 
 ## Verifying a change
 
