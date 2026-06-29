@@ -3,9 +3,12 @@
 Unity-style (and Odin-Inspector-style) **attributes on exported variables**, mapped onto
 what Godot actually supports. Status: **Tiers 1–2 SHIPPED** (tooltip/group/range/multiline; clamp/on-changed
 setters, Show If / Lock Unless via generated `_validate_property`, static read-only —
-`tests/inspector_attributes_test.gd`); tool buttons SHIPPED; **Tier 3 SHIPPED** (progress-bar drawer +
-the `eventsheet:<drawer>` marker mechanism — every tier of this spec is delivered). This documents the
-design so a later phase can implement it without re-deriving the constraints.
+`tests/inspector_attributes_test.gd`); tool buttons SHIPPED; **Tier 3 SHIPPED IN FULL** — all five drawers
+(`progress_bar`, `vector_dial`, `swatch_row`, `texture_preview`, `curve_editor`) via the `eventsheet:<drawer>`
+marker, each round-tripping into an editable `attributes.drawer` (not a stray `@export_custom` block), with a
+per-type picker + live widget preview in the Variable dialog and four new host value types (Vector2 / Color /
+Texture2D / Curve) — `tests/inspector_drawer_roundtrip_test.gd`. This documents the design so the constraints
+don't have to be re-derived.
 
 ## Goal
 
@@ -70,15 +73,38 @@ GDScript block. The variable **tooltip** (`## doc`) and the Tier-2 structured at
 On-Changed) are not yet lifted back — they stay byte-stable verbatim blocks on reopen (the lossless *byte*
 rule holds; only the editable semantics degrade).
 
-### Tier 3 — Odin-level custom drawers (EditorInspectorPlugin; optional, last)
+### Tier 3 — Odin-level custom drawers (EditorInspectorPlugin) — SHIPPED IN FULL
 
-Progress bars, color palettes, preview thumbnails, inline curve editors. Mechanism: a
-single `EditorInspectorPlugin` shipped with the *editor* plugin (NOT with generated
-code) that recognizes an `@export_custom(PROPERTY_HINT_…, "eventsheet:<drawer>")` hint
-string. Critically: **generated scripts stay plain GDScript** — without the plugin the
-property still renders as a normal field (graceful degradation, parity preserved).
-Candidates: `progress_bar`, `swatch_row`, `vector_dial`. This tier is cosmetic; ship
-last, behind the same editor-version caution as tool sheets.
+A single `EditorInspectorPlugin` (`addons/eventsheet/editor/attribute_drawers.gd`, registered in
+`eventforge/plugin.gd`) recognizes an `@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>")` hint string
+and swaps in a richer control. **Generated scripts stay plain GDScript** — without the plugin (or in an
+exported game) the property renders as a normal field (graceful degradation, parity preserved).
+
+The five drawers, their host types, and marker forms:
+
+| Drawer | Host type | Marker | Control |
+|---|---|---|---|
+| `progress_bar` | int / float | `eventsheet:progress_bar:<min>:<max>` | drag-to-set bar |
+| `vector_dial` | Vector2 | `eventsheet:vector_dial:<max>` | draggable direction + magnitude dial |
+| `swatch_row` | Color | `eventsheet:swatch_row` | palette presets + picker |
+| `texture_preview` | Texture2D / String | `eventsheet:texture_preview` | thumbnail + resource/path field |
+| `curve_editor` | Curve | `eventsheet:curve_editor` | inline curve render + resource field |
+
+Implementation notes:
+- **One emitter, both var paths.** `SheetCompiler._drawer_export_prefix(attributes, type_name)` builds the
+  marker (type-gated) for both `_emit_variables` (dict vars) and `_emit_tree_variable_line` (tree vars).
+- **Round-trip.** `GDScriptImporter._extract_drawer_from_hint` recovers the marker into `attributes.drawer`
+  (+ `range` bounds for progress_bar/vector_dial), verify-lift-gated — so a reopened drawer is an editable
+  drawer, never a verbatim block. progress_bar/texture_preview/curve_editor have clean defaults and round-trip
+  fully; vector_dial/swatch_row round-trip once the host Vector2/Color default round-trips (see below).
+- **Host value types.** Vector2 / Color / Texture2D / Curve are first-class variable types now
+  (`variable_dialog.TYPE_OPTIONS`); `_to_code_literal` emits `Vector2(x, y)` / `Color(r, g, b, a)` and
+  `variable_parser` lifts those constructor literals back via `str_to_var`.
+- **Authoring UX.** The Variable dialog offers exactly the one drawer the chosen type can host, and shows a
+  **live preview** of the actual widget (the reusable Controls in `drawer_widgets.gd`) that updates as the
+  type / drawer / bounds change. Those same Controls back both the Inspector drawers and the preview.
+- Tests: `tests/inspector_drawer_roundtrip_test.gd` (emission, type-gating, recovery, the new value types, the
+  per-type picker); render harnesses `tools/render_drawer_widgets_preview.gd` + `render_variable_drawer_dialog.gd`.
 
 ## Data model
 

@@ -294,7 +294,11 @@ still ships as plain GDScript).
   **Variables** gained Inspector attributes that round-trip losslessly: an **`@export` badge** on the row,
   **`@export_group` / `@export_subgroup`** grouping (with "Group › Subgroup" chips) that now **survives
   reopening a `.gd` and stays editable** (the importer absorbs the group lines back onto the variable, gated
-  by the verify-lift rule). **Authoring custom addons** got a UX pass — a **"New Behaviour Addon…"** scaffold
+  by the verify-lift rule). **Tier 3 Inspector drawers** are now complete — a numeric **progress bar**, a
+  Vector2 **direction dial**, a Color **swatch row**, a **texture preview**, and an inline **curve** — each
+  round-tripping into an editable drawer and authored via a per-type picker with a **live widget preview**
+  (Vector2/Color/Texture2D/Curve are first-class variable types now; without the editor plugin the property is
+  a plain field, so generated games stay parity-clean). **Authoring custom addons** got a UX pass — a **"New Behaviour Addon…"** scaffold
   that writes a richly-commented skeleton teaching the `@ace_*` vocabulary, **plain-language descriptions on
   hover for every built-in ACE** (authored *inline*, in the files, so behaviour packs are self-contained),
   and **ACE deprecation** (a Construct-style covenant: a deprecated ACE keeps compiling, is hidden from the

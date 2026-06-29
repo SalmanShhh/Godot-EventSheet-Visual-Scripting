@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Added — Tier 3 Inspector drawers: dial, swatches, texture, curve (the full set)
+
+- The Inspector drawers (docs/INSPECTOR-ATTRIBUTES-SPEC.md) go from one drawer to **five**: a numeric
+  **progress bar**, a Vector2 **direction dial** (drag a handle to set direction + magnitude), a Color
+  **swatch row** (palette presets + picker), a **texture preview** thumbnail (Texture2D / path), and an inline
+  **curve** render. Each compiles to an `@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>")` marker that
+  an `EditorInspectorPlugin` swaps for the rich control — and **without** the plugin (or in an exported game)
+  the property is a plain field, so the parity covenant is untouched.
+- **They round-trip.** A drawer reopened from a `.gd` sheet is recovered into an editable `attributes.drawer`
+  (with its bounds), not stranded as a verbatim `@export_custom` block — verify-lift-gated, so a wrong guess
+  reverts to a byte-stable block rather than corrupting. One emitter (`_drawer_export_prefix`) drives both the
+  dict-var and tree-var paths identically.
+- **New host value types.** Vector2, Color, Texture2D and Curve are now first-class sheet-variable types
+  (so the dial/swatch/texture/curve drawers have something to attach to); Vector2/Color literals emit and lift
+  back byte-exact.
+- **Authoring UX.** The Variable dialog offers exactly the one drawer the chosen type can host and shows a
+  **live preview of the actual widget** — the same reusable Controls that render in the Inspector — updating as
+  the type / drawer / bounds change.
+  (`inspector_drawer_roundtrip_test`, `inspector_attributes_test`; render harnesses
+  `render_drawer_widgets_preview` + `render_variable_drawer_dialog`; suite 3450 green, zero showcase drift.)
+
 ### Fixed — Inspector grouping + tooltips survive reopening a `.gd` sheet
 
 - A variable's **`@export_group` / `@export_subgroup`** now round-trips through a `.gd` reopen. Before, those
