@@ -1682,7 +1682,9 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 				return ""
 			marker = "eventsheet:swatch_row"
 		"texture_preview":
-			if type_name != "Texture2D" and type_name != "String":
+			# Texture2D only — matches the dialog's per-type picker (a String-path variant was an inconsistency:
+			# the picker never offered it, so editing such a var would silently drop the drawer).
+			if type_name != "Texture2D":
 				return ""
 			marker = "eventsheet:texture_preview"
 		"curve_editor":

@@ -202,14 +202,6 @@ class DrawerTexturePreview:
 		_texture = t
 		queue_redraw()
 
-	func set_path(path: String) -> void:
-		var trimmed: String = path.strip_edges().strip_edges()
-		if trimmed.is_empty() or not ResourceLoader.exists(trimmed):
-			set_texture(null)
-			return
-		var res: Resource = ResourceLoader.load(trimmed)
-		set_texture(res as Texture2D)
-
 	func _draw() -> void:
 		var rect: Rect2 = Rect2(Vector2.ZERO, size)
 		# checkerboard so transparent textures read clearly

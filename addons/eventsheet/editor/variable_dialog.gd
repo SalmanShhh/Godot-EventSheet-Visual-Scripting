@@ -411,15 +411,7 @@ func open_for_edit(
 	_dialog.title = title
 	_name_edit.text = name
 	_refresh_name_warning()
-	# Show the canonical GDScript literal for containers and value types — str() loses the constructor
-	# ("(0, 0)" instead of "Vector2(0, 0)"), which _parse_default then can't read back. null (a resource
-	# default) shows as an empty field rather than the literal "<null>".
-	if default_value == null:
-		_default_edit.text = ""
-	elif default_value is Array or default_value is Dictionary or default_value is Vector2 or default_value is Color:
-		_default_edit.text = SheetCompiler._to_code_literal(default_value)
-	else:
-		_default_edit.text = str(default_value)
+	_default_edit.text = _default_display_text(default_value)
 	var selected_index: int = 0
 	for index: int in range(_type_option.item_count):
 		if _type_option.get_item_text(index) == type_name:
@@ -535,8 +527,11 @@ func _on_confirmed() -> void:
 	# previous type (the field is now HIDDEN by _refresh_contextual_rows) is inert
 	# rather than erroring about a field the user can no longer see.
 	var is_numeric: bool = type_name == "int" or type_name == "float"
+	# Vector2 keeps a range too — its max drives the direction dial's magnitude, and the Range row is shown
+	# for it (_refresh_contextual_rows). Without this it'd be dropped on apply, resetting the dial to max 100.
+	var range_applies: bool = is_numeric or type_name == "Vector2"
 	var range_text: String = _attr_range_edit.text.strip_edges()
-	if not range_text.is_empty() and is_numeric:
+	if not range_text.is_empty() and range_applies:
 		var range_parts: PackedStringArray = range_text.split(",", false)
 		if range_parts.size() != 3:
 			if _default_help != null:
@@ -590,6 +585,18 @@ static func parse_options(raw: String) -> PackedStringArray:
 		if not entry.strip_edges().is_empty():
 			options.append(entry.strip_edges())
 	return options
+
+## The text shown in the Default field for a value — the inverse of _parse_default, and the pair MUST
+## round-trip. Containers and the value types (Vector2/Color) use the canonical GDScript literal so
+## _parse_default can read them back; str() would give the unparseable "(0, 0)" form, silently zeroing the
+## first component on the next edit. null (a resource default) shows as an empty field, not the literal
+## "<null>". A test pins `_parse_default(type, _default_display_text(v)) == v`.
+static func _default_display_text(value: Variant) -> String:
+	if value == null:
+		return ""
+	if value is Array or value is Dictionary or value is Vector2 or value is Color:
+		return SheetCompiler._to_code_literal(value)
+	return str(value)
 
 static func _parse_default(type_name: String, raw: String) -> Variant:
 	var value: String = raw.strip_edges()

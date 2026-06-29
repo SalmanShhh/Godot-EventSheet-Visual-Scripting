@@ -41,12 +41,14 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 			add_property_editor(name, SwatchRowProperty.new())
 			return true
 		"texture_preview":
-			if type != TYPE_OBJECT and type != TYPE_STRING:
+			# Resource-class guard: a generated sheet only ever pairs this marker with a Texture2D (the compiler
+			# type-gates it), but a hand-edited marker on another resource would otherwise attach a wrong picker.
+			if type != TYPE_OBJECT or not _value_is_kind(_object, name, "Texture2D"):
 				return false
-			add_property_editor(name, TexturePreviewProperty.new(type == TYPE_STRING))
+			add_property_editor(name, TexturePreviewProperty.new())
 			return true
 		"curve_editor":
-			if type != TYPE_OBJECT:
+			if type != TYPE_OBJECT or not _value_is_kind(_object, name, "Curve"):
 				return false
 			add_property_editor(name, CurveEditorProperty.new())
 			return true
@@ -64,6 +66,18 @@ static func parse_drawer_hint(hint_string: String) -> Dictionary:
 	if parts.size() > 3:
 		parsed["max"] = parts[3].to_float()
 	return parsed
+
+## Best-effort resource-class guard for the TYPE_OBJECT drawers. A generated sheet only ever pairs the marker
+## with the right resource type (the compiler type-gates emission), but a hand-edited marker could mismatch —
+## e.g. a curve_editor on a Texture2D var. A null value (the default) is allowed (can't tell yet, and the
+## picker is harmless); a present value of the wrong class fails, so we degrade to a plain field.
+static func _value_is_kind(object: Object, name: String, type_class: String) -> bool:
+	if object == null:
+		return true
+	var value: Variant = object.get(name)
+	if value == null:
+		return true
+	return value is Object and (value as Object).is_class(type_class)
 
 # ── EditorProperty wrappers (each embeds a reusable widget and forwards edits) ──
 
@@ -119,35 +133,22 @@ class SwatchRowProperty:
 	func _update_property() -> void:
 		_row.set_value(get_edited_object().get(get_edited_property()))
 
-## Texture preview: a resource picker (Texture2D) or path field (String) above a live thumbnail.
+## Texture preview: a Texture2D resource picker above a live thumbnail.
 class TexturePreviewProperty:
 	extends EditorProperty
 	var _preview: EventSheetDrawerWidgets.DrawerTexturePreview
-	var _picker: EditorResourcePicker = null
-	var _path_edit: LineEdit = null
-	var _is_string: bool = false
+	var _picker: EditorResourcePicker
 
-	func _init(is_string: bool) -> void:
-		_is_string = is_string
+	func _init() -> void:
 		var box: VBoxContainer = VBoxContainer.new()
-		if is_string:
-			_path_edit = LineEdit.new()
-			_path_edit.placeholder_text = "res://path/to/texture.png"
-			_path_edit.text_submitted.connect(_on_path_submitted)
-			box.add_child(_path_edit)
-		else:
-			_picker = EditorResourcePicker.new()
-			_picker.base_type = "Texture2D"
-			_picker.resource_changed.connect(_on_resource_changed)
-			box.add_child(_picker)
+		_picker = EditorResourcePicker.new()
+		_picker.base_type = "Texture2D"
+		_picker.resource_changed.connect(_on_resource_changed)
+		box.add_child(_picker)
 		_preview = EventSheetDrawerWidgets.DrawerTexturePreview.new()
 		box.add_child(_preview)
 		add_child(box)
 		set_bottom_editor(box)
-
-	func _on_path_submitted(text: String) -> void:
-		_preview.set_path(text)
-		emit_changed(get_edited_property(), text)
 
 	func _on_resource_changed(resource: Resource) -> void:
 		_preview.set_texture(resource as Texture2D)
@@ -155,14 +156,8 @@ class TexturePreviewProperty:
 
 	func _update_property() -> void:
 		var value: Variant = get_edited_object().get(get_edited_property())
-		if _is_string:
-			if _path_edit != null:
-				_path_edit.text = str(value)
-			_preview.set_path(str(value))
-		else:
-			if _picker != null:
-				_picker.edited_resource = value as Resource
-			_preview.set_texture(value as Texture2D)
+		_picker.edited_resource = value as Resource
+		_preview.set_texture(value as Texture2D)
 
 ## Curve editor: a Curve resource picker above a live inline render of the curve's shape.
 class CurveEditorProperty:

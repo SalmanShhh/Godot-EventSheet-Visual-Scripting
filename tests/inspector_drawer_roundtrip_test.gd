@@ -81,15 +81,43 @@ static func run() -> bool:
 	all_passed = _eq("String hosts no drawer (combo/multiline instead)", VariableDialog._drawer_kind_for_type("String"), "") and all_passed
 	all_passed = _eq("Array hosts no drawer", VariableDialog._drawer_kind_for_type("Array"), "") and all_passed
 
-	# Dialog default-field round-trip for value types: the displayed literal must parse back to the same value
-	# (the str() form "(0, 0)" would not — _parse_default reads the Vector2(...)/Color(...) constructor form).
-	all_passed = _eq("a Vector2 default round-trips through the dialog field",
-		VariableDialog._parse_default("Vector2", SheetCompiler._to_code_literal(Vector2(5.0, -3.0))), Vector2(5.0, -3.0)) and all_passed
-	all_passed = _eq("a Color default round-trips through the dialog field",
-		VariableDialog._parse_default("Color", SheetCompiler._to_code_literal(Color(0.5, 0.25, 0.75, 1.0))), Color(0.5, 0.25, 0.75, 1.0)) and all_passed
-	all_passed = _eq("a resource default parses to null", VariableDialog._parse_default("Texture2D", ""), null) and all_passed
+	# Dialog default-field round-trip: the EXACT text the dialog displays for a value must parse back to that
+	# value. This drives _default_display_text → _parse_default (the real edit cycle). Before the fix the
+	# display used str() — "(5.0, -3.0)" — which _parse_default silently zeroed the first component on edit.
+	all_passed = _eq("a Vector2 default survives a display→edit cycle",
+		VariableDialog._parse_default("Vector2", VariableDialog._default_display_text(Vector2(5.0, -3.0))), Vector2(5.0, -3.0)) and all_passed
+	all_passed = _eq("a Color default survives a display→edit cycle",
+		VariableDialog._parse_default("Color", VariableDialog._default_display_text(Color(0.5, 0.25, 0.75, 1.0))), Color(0.5, 0.25, 0.75, 1.0)) and all_passed
+	all_passed = _eq("a resource (null) default displays empty and parses back to null",
+		VariableDialog._parse_default("Texture2D", VariableDialog._default_display_text(null)), null) and all_passed
+
+	# texture_preview is Texture2D-only (matches the dialog picker) — a String never gets the marker.
+	all_passed = _eq("texture_preview on a String emits no marker",
+		_emit_for("String", "", {"drawer": "texture_preview"}).contains("eventsheet:"), false) and all_passed
+
+	# Edit cycle: re-confirming a Vector2 dial variable must keep its range (the dial's max magnitude); the
+	# apply previously gated range on is_numeric, dropping it for Vector2 and resetting the dial to max 100.
+	all_passed = _vector_dial_range_persists() and all_passed
 
 	return all_passed
+
+static func _vector_dial_range_persists() -> bool:
+	var dlg: VariableDialog = VariableDialog.new()
+	var parent: Node = Node.new()
+	dlg.init_dialog(parent)
+	dlg.set_sheet_provider(func() -> Variant: return null)
+	var captured: Dictionary = {}
+	dlg.variable_confirmed.connect(func(_n: String, _t: String, _d: Variant, _s: String, _c: Dictionary, _k: bool, _e: bool, _o: PackedStringArray, attributes: Dictionary) -> void:
+		captured["attributes"] = attributes
+	)
+	dlg.open_for_edit("tree", {"editing": true, "attributes": {"drawer": "vector_dial", "range": {"min": "0", "max": "150", "step": "1"}}},
+		"aim", "Vector2", Vector2(0.0, 0.0), false, "edit", false, true)
+	dlg._on_confirmed()
+	parent.free()
+	var attrs: Dictionary = captured.get("attributes", {})
+	var range_dict: Variant = attrs.get("range")
+	var ok: bool = str(attrs.get("drawer", "")) == "vector_dial" and range_dict is Dictionary and str((range_dict as Dictionary).get("max", "")) == "150"
+	return _eq("a vector_dial's range (dial max) survives the dialog apply", ok, true)
 
 static func _emit_for(type_name: String, default_value: Variant, attributes: Dictionary) -> String:
 	var lv: LocalVariable = LocalVariable.new()
