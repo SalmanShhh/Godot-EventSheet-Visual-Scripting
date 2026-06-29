@@ -183,7 +183,11 @@ static func run() -> bool:
 	all_passed = _check("drawer output parses (degrades to a plain field)",
 		drawer_script.reload(true) == OK, true) and all_passed
 	all_passed = _check("drawer hints parse on the editor side",
-		EventSheetAttributeDrawers.parse_drawer_hint("eventsheet:progress_bar:0:200"), {"drawer": "progress_bar", "min": 0.0, "max": 200.0}) and all_passed
+		EventSheetAttributeDrawers.parse_drawer_hint("eventsheet:progress_bar:0:200"), {"drawer": "progress_bar", "args": ["0", "200"], "min": 0.0, "max": 200.0}) and all_passed
+	all_passed = _check("vector_dial hint exposes its magnitude arg",
+		EventSheetAttributeDrawers.parse_drawer_hint("eventsheet:vector_dial:150"), {"drawer": "vector_dial", "args": ["150"], "min": 150.0}) and all_passed
+	all_passed = _check("argless drawer hint parses to just its kind",
+		EventSheetAttributeDrawers.parse_drawer_hint("eventsheet:swatch_row"), {"drawer": "swatch_row", "args": []}) and all_passed
 	all_passed = _check("non-marker hints stay untouched",
 		EventSheetAttributeDrawers.parse_drawer_hint("0,200,1"), {}) and all_passed
 	drawer_sheet.variables["hp"]["attributes"]["read_only"] = true
