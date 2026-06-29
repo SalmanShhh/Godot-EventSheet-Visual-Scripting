@@ -71,6 +71,16 @@ static func run() -> bool:
 	all_passed = _roundtrip("vector_dial", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:vector_dial:150\") var aim: Vector2 = Vector2(0.0, 0.0)", "aim", "vector_dial") and all_passed
 	all_passed = _roundtrip("swatch_row", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:swatch_row\") var hue: Color = Color(1.0, 1.0, 1.0, 1.0)", "hue", "swatch_row") and all_passed
 
+	# --- Dialog: the per-type picker offers exactly the one drawer each host type can use. ---
+	all_passed = _eq("int hosts the progress_bar drawer", VariableDialog._drawer_kind_for_type("int"), "progress_bar") and all_passed
+	all_passed = _eq("float hosts the progress_bar drawer", VariableDialog._drawer_kind_for_type("float"), "progress_bar") and all_passed
+	all_passed = _eq("Vector2 hosts the vector_dial drawer", VariableDialog._drawer_kind_for_type("Vector2"), "vector_dial") and all_passed
+	all_passed = _eq("Color hosts the swatch_row drawer", VariableDialog._drawer_kind_for_type("Color"), "swatch_row") and all_passed
+	all_passed = _eq("Texture2D hosts the texture_preview drawer", VariableDialog._drawer_kind_for_type("Texture2D"), "texture_preview") and all_passed
+	all_passed = _eq("Curve hosts the curve_editor drawer", VariableDialog._drawer_kind_for_type("Curve"), "curve_editor") and all_passed
+	all_passed = _eq("String hosts no drawer (combo/multiline instead)", VariableDialog._drawer_kind_for_type("String"), "") and all_passed
+	all_passed = _eq("Array hosts no drawer", VariableDialog._drawer_kind_for_type("Array"), "") and all_passed
+
 	return all_passed
 
 static func _emit_for(type_name: String, default_value: Variant, attributes: Dictionary) -> String:

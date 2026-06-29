@@ -44,6 +44,7 @@ var _attr_on_changed_edit: LineEdit = null
 var _attr_clamp_check: CheckBox = null
 var _attr_read_only_check: CheckBox = null
 var _attr_drawer_option: OptionButton = null
+var _drawer_preview_box: VBoxContainer = null
 
 ## Offered types. Collections accept GDScript literal defaults ({"key": 1}, [1, 2]) with
 ## live validation; typed containers (Godot 4 Array[T] / Dictionary[K, V]) also check
@@ -184,6 +185,7 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector subgroup", _attr_subgroup_edit))
 	_attr_range_edit = LineEdit.new()
 	_attr_range_edit.placeholder_text = "min, max, step (numeric: slider)"
+	_attr_range_edit.text_changed.connect(func(_t: String) -> void: _refresh_drawer_preview())
 	_attr_section.add_child(EventSheetPopupUI.form_row("Range", _attr_range_edit))
 	_attr_multiline_check = CheckBox.new()
 	_attr_multiline_check.text = "Multiline (String: big text box)"
@@ -203,12 +205,18 @@ func init_dialog(parent_node: Node) -> void:
 	attr_checks.add_child(_attr_clamp_check)
 	_attr_drawer_option = OptionButton.new()
 	_attr_drawer_option.add_item("Default field")
-	_attr_drawer_option.add_item("Progress bar (numeric)")
+	_attr_drawer_option.tooltip_text = "Swap the Inspector field for a richer drawer.\nGraceful: a plain field without the editor plugin (parity preserved)."
+	_attr_drawer_option.item_selected.connect(func(_i: int) -> void: _refresh_drawer_preview())
 	attr_checks.add_child(_attr_drawer_option)
 	_attr_read_only_check = CheckBox.new()
 	_attr_read_only_check.text = "Read-only"
 	attr_checks.add_child(_attr_read_only_check)
 	_attr_section.add_child(attr_checks)
+	# Live "what the drawer looks like" preview — the actual widget, updated as the type / drawer / bounds change.
+	_drawer_preview_box = VBoxContainer.new()
+	_drawer_preview_box.visible = false
+	_drawer_preview_box.add_theme_constant_override("separation", 3)
+	_attr_section.add_child(_drawer_preview_box)
 	_default_help = Label.new()
 	_default_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_default_help.custom_minimum_size = Vector2(380.0, 0.0)
@@ -431,14 +439,15 @@ func open_for_edit(
 	_attr_group_edit.text = str(existing_attributes.get("group", ""))
 	_attr_subgroup_edit.text = str(existing_attributes.get("subgroup", ""))
 	var existing_range: Variant = existing_attributes.get("range")
-	_attr_range_edit.text = "%s, %s, %s" % [existing_range.get("min"), existing_range.get("max"), existing_range.get("step")] if existing_range is Dictionary else ""
+	# Default a missing step to 1: a drawer-recovered range carries only min/max, and the apply needs all
+	# three parts (so a reopened progress_bar/dial re-saves cleanly instead of erroring on "min, max").
+	_attr_range_edit.text = "%s, %s, %s" % [str((existing_range as Dictionary).get("min", "0")), str((existing_range as Dictionary).get("max", "100")), str((existing_range as Dictionary).get("step", "1"))] if existing_range is Dictionary else ""
 	_attr_multiline_check.button_pressed = bool(existing_attributes.get("multiline", false))
 	_attr_show_if_edit.text = str(existing_attributes.get("show_if", ""))
 	_attr_lock_unless_edit.text = str(existing_attributes.get("lock_unless", ""))
 	_attr_on_changed_edit.text = str(existing_attributes.get("on_changed", ""))
 	_attr_clamp_check.button_pressed = bool(existing_attributes.get("clamp", false))
 	_attr_read_only_check.button_pressed = bool(existing_attributes.get("read_only", false))
-	_attr_drawer_option.select(1 if str(existing_attributes.get("drawer", "")) == "progress_bar" else 0)
 	# Progressive disclosure: the Inspector section starts collapsed for new variables
 	# and auto-expands when the variable already uses any attribute.
 	if _attr_toggle != null:
@@ -450,6 +459,11 @@ func open_for_edit(
 	_refresh_const_ui()
 	_refresh_default_hint()
 	_refresh_contextual_rows()
+	# Re-select the drawer the variable already uses (after _refresh_contextual_rows rebuilt the per-type options).
+	var existing_drawer: String = str(existing_attributes.get("drawer", ""))
+	if not existing_drawer.is_empty() and _attr_drawer_option.item_count > 1 and str(_attr_drawer_option.get_item_metadata(1)) == existing_drawer:
+		_attr_drawer_option.select(1)
+		_refresh_drawer_preview()
 	_type_option.disabled = lock_type
 	_type_help.visible = lock_type
 	_type_help.text = "Type is locked because this variable is already in use."
@@ -554,8 +568,9 @@ func _on_confirmed() -> void:
 		attributes["clamp"] = true
 	if _attr_read_only_check.button_pressed:
 		attributes["read_only"] = true
-	if _attr_drawer_option.selected == 1 and is_numeric:
-		attributes["drawer"] = "progress_bar"
+	var drawer_kind: String = _selected_drawer_kind()
+	if not drawer_kind.is_empty():
+		attributes["drawer"] = drawer_kind
 	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes)
 
 ## Returns the trimmed text from the name field.
@@ -657,11 +672,124 @@ func _refresh_contextual_rows() -> void:
 	_enum_fill_menu.visible = _options_row.visible and _enum_provider.is_valid() and not (_enum_provider.call() as Array).is_empty()
 	if _attr_range_edit != null:
 		# Range now lives in a labelled row — hide the whole row, not just the field, so its
-		# "Range" label doesn't linger on non-numeric types.
-		_attr_range_edit.get_parent().visible = numeric
+		# "Range" label doesn't linger on non-numeric types. Vector2 keeps it too: its max drives the dial.
+		_attr_range_edit.get_parent().visible = numeric or type_name == "Vector2"
 		_attr_clamp_check.visible = numeric
-		_attr_drawer_option.visible = numeric
 		_attr_multiline_check.visible = type_name == "String"
+	# The drawer picker offers only the one drawer the current type can host (or hides when there is none).
+	_rebuild_drawer_options(_drawer_kind_for_type(type_name))
+	_refresh_drawer_preview()
+
+## The single drawer kind a variable type can host (or "" — most types host no drawer).
+static func _drawer_kind_for_type(type_name: String) -> String:
+	match type_name:
+		"int", "float":
+			return "progress_bar"
+		"Vector2":
+			return "vector_dial"
+		"Color":
+			return "swatch_row"
+		"Texture2D":
+			return "texture_preview"
+		"Curve":
+			return "curve_editor"
+	return ""
+
+## Human label for the drawer option entry.
+static func _drawer_label_for_kind(kind: String) -> String:
+	match kind:
+		"progress_bar":
+			return "Progress bar"
+		"vector_dial":
+			return "Direction dial"
+		"swatch_row":
+			return "Swatch row"
+		"texture_preview":
+			return "Texture preview"
+		"curve_editor":
+			return "Curve editor"
+	return ""
+
+## The drawer kind currently chosen in the dialog ("" = Default field).
+func _selected_drawer_kind() -> String:
+	if _attr_drawer_option == null or _attr_drawer_option.selected <= 0:
+		return ""
+	var meta: Variant = _attr_drawer_option.get_item_metadata(_attr_drawer_option.selected)
+	return str(meta) if meta != null else ""
+
+## Rebuilds the drawer OptionButton to offer Default + (when the type hosts one) its single drawer, preserving
+## the current choice when the kind is unchanged so a refresh doesn't silently reset the user's selection.
+func _rebuild_drawer_options(kind: String) -> void:
+	if _attr_drawer_option == null:
+		return
+	var previous: String = _selected_drawer_kind()
+	_attr_drawer_option.clear()
+	_attr_drawer_option.add_item("Default field")
+	if not kind.is_empty():
+		_attr_drawer_option.add_item(_drawer_label_for_kind(kind))
+		_attr_drawer_option.set_item_metadata(1, kind)
+	_attr_drawer_option.visible = not kind.is_empty()
+	_attr_drawer_option.select(1 if (not kind.is_empty() and previous == kind) else 0)
+
+## {min, max} parsed from the Range field — drives the progress_bar / dial bounds in both the preview and marker.
+func _parse_range_bounds() -> Dictionary:
+	var result: Dictionary = {"min": 0.0, "max": 100.0}
+	if _attr_range_edit == null:
+		return result
+	var parts: PackedStringArray = _attr_range_edit.text.split(",")
+	if parts.size() >= 1 and not parts[0].strip_edges().is_empty():
+		result["min"] = parts[0].strip_edges().to_float()
+	if parts.size() >= 2 and not parts[1].strip_edges().is_empty():
+		result["max"] = parts[1].strip_edges().to_float()
+	return result
+
+## Rebuilds the live preview to show the actual drawer widget (display-only) at a representative value.
+func _refresh_drawer_preview() -> void:
+	if _drawer_preview_box == null:
+		return
+	for child: Node in _drawer_preview_box.get_children():
+		child.queue_free()
+	var kind: String = _selected_drawer_kind()
+	if kind.is_empty():
+		_drawer_preview_box.visible = false
+		return
+	_drawer_preview_box.visible = true
+	var caption: Label = Label.new()
+	caption.text = "Drawer preview"
+	caption.add_theme_font_size_override("font_size", 10)
+	caption.modulate = Color(0.72, 0.76, 0.84)
+	_drawer_preview_box.add_child(caption)
+	var widget: Control = _make_drawer_preview_widget(kind)
+	if widget != null:
+		_drawer_preview_box.add_child(widget)
+
+## Instantiates a reusable drawer widget for the preview, sized/valued so the user sees what it looks like.
+func _make_drawer_preview_widget(kind: String) -> Control:
+	var bounds: Dictionary = _parse_range_bounds()
+	match kind:
+		"progress_bar":
+			var bar: EventSheetDrawerWidgets.DrawerProgressBar = EventSheetDrawerWidgets.DrawerProgressBar.new(bounds["min"], bounds["max"])
+			bar.editable = false
+			bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			bar.set_value(lerpf(bounds["min"], bounds["max"], 0.65))
+			return bar
+		"vector_dial":
+			var dial: EventSheetDrawerWidgets.DrawerVectorDial = EventSheetDrawerWidgets.DrawerVectorDial.new(bounds["max"])
+			dial.editable = false
+			dial.set_value(Vector2(bounds["max"] * 0.5, -bounds["max"] * 0.3))
+			return dial
+		"swatch_row":
+			var row: EventSheetDrawerWidgets.DrawerSwatchRow = EventSheetDrawerWidgets.DrawerSwatchRow.new()
+			row.editable = false
+			row.set_value(Color("#e23b3b"))
+			return row
+		"texture_preview":
+			return EventSheetDrawerWidgets.DrawerTexturePreview.new()
+		"curve_editor":
+			var cw: EventSheetDrawerWidgets.DrawerCurvePreview = EventSheetDrawerWidgets.DrawerCurvePreview.new()
+			cw.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			return cw
+	return null
 
 ## Wires the sheet-enum source for the one-click combo fill (returns
 ## Array[Dictionary{name, members}]).
