@@ -1372,11 +1372,12 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 				export_prefix = "@export_range(%s, %s, %s) " % [str(range_spec.get("min", "0")), str(range_spec.get("max", "100")), str(range_spec.get("step", "1"))]
 			elif exported and bool(attributes.get("multiline", false)) and type_name == "String":
 				export_prefix = "@export_multiline "
-			# Tier 3 drawers: the marker rides an @export_custom hint string; without the
-			# editor plugin the property degrades to a plain field (parity preserved).
-			if exported and str(attributes.get("drawer", "")) == "progress_bar" and (type_name == "int" or type_name == "float"):
-				var drawer_range: Dictionary = attributes.get("range") if attributes.get("range") is Dictionary else {}
-				export_prefix = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:%s:%s\") " % [str(drawer_range.get("min", "0")), str(drawer_range.get("max", "100"))]
+			# Tier 3 drawers: a marker rides an @export_custom hint string; without the editor plugin the
+			# property degrades to a plain field (parity preserved). One helper drives both var paths.
+			if exported:
+				var drawer_prefix: String = _drawer_export_prefix(attributes, type_name)
+				if not drawer_prefix.is_empty():
+					export_prefix = drawer_prefix
 			# Read-only wins over range/multiline/drawers (a locked field needs no slider).
 			if exported and bool(attributes.get("read_only", false)):
 				export_prefix = "@export_custom(PROPERTY_HINT_NONE, \"\", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY) "
@@ -1625,6 +1626,11 @@ static func _warn_if_deprecated(provider_id: String, ace_id: String, warnings: A
 static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	if local_var == null or local_var.name.strip_edges().is_empty():
 		return ""
+	# Tier 3 custom-drawer prefix (if any): a structured @export_custom marker, computed once so it can both
+	# gate its branch and fill it. Empty for non-drawer vars, so their emission stays byte-unchanged.
+	var drawer_prefix: String = ""
+	if local_var.exported and local_var.attributes is Dictionary:
+		drawer_prefix = _drawer_export_prefix(local_var.attributes, local_var.type_name)
 	var var_line: String
 	if local_var.is_constant:
 		var_line = "const %s: %s = %s" % [local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
@@ -1635,6 +1641,10 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# Combo: exported String with options -> @export_enum dropdown in the Inspector.
 	elif local_var.exported and local_var.type_name == "String" and not local_var.options.is_empty():
 		var_line = "%s var %s: String = %s" % [_export_enum_prefix(local_var.options), local_var.name, _to_code_literal(local_var.default_value)]
+	# Tier 3 drawer: a structured @export_custom marker (progress_bar / vector_dial / swatch_row / …), emitted
+	# from attributes so it round-trips identically to the dict-var path instead of staying a verbatim hint.
+	elif not drawer_prefix.is_empty():
+		var_line = "%svar %s: %s = %s" % [drawer_prefix, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
 	# Hinted export (@export_range / @export_file / @export_flags / …): the annotation is kept verbatim.
 	elif not local_var.export_hint.strip_edges().is_empty():
 		var_line = "%s var %s: %s = %s" % [local_var.export_hint, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
@@ -1644,6 +1654,44 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# Inspector grouping rides in front, matching the dict-var path (_emit_variables) byte-for-byte so the
 	# round-trip lift can absorb it back onto the variable instead of stranding it as a GDScript block.
 	return _tree_variable_group_prefix(local_var) + var_line
+
+## Tier 3 custom-drawer @export_custom prefix (docs/INSPECTOR-ATTRIBUTES-SPEC.md). The `eventsheet:<drawer>`
+## marker rides an @export_custom hint string; the editor's EventSheetAttributeDrawers plugin recognises it
+## and swaps in a richer control, while WITHOUT the plugin (or in an exported game) the property degrades to
+## a plain field — the parity covenant is untouched. Returns "" when there's no drawer or the var type can't
+## host it (so emission is unchanged). One helper drives BOTH _emit_variables (dict) and _emit_tree_variable_
+## line (tree) so a drawer round-trips identically on either path. progress_bar/vector_dial read their numeric
+## bounds from attributes.range; the other drawers carry no config.
+static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> String:
+	var drawer: String = str(attributes.get("drawer", "")).strip_edges()
+	if drawer.is_empty():
+		return ""
+	var bounds: Dictionary = attributes.get("range") if attributes.get("range") is Dictionary else {}
+	var marker: String = ""
+	match drawer:
+		"progress_bar":
+			if type_name != "int" and type_name != "float":
+				return ""
+			marker = "eventsheet:progress_bar:%s:%s" % [str(bounds.get("min", "0")), str(bounds.get("max", "100"))]
+		"vector_dial":
+			if type_name != "Vector2":
+				return ""
+			marker = "eventsheet:vector_dial:%s" % str(bounds.get("max", "100"))
+		"swatch_row":
+			if type_name != "Color":
+				return ""
+			marker = "eventsheet:swatch_row"
+		"texture_preview":
+			if type_name != "Texture2D" and type_name != "String":
+				return ""
+			marker = "eventsheet:texture_preview"
+		"curve_editor":
+			if type_name != "Curve":
+				return ""
+			marker = "eventsheet:curve_editor"
+		_:
+			return ""
+	return "@export_custom(PROPERTY_HINT_NONE, \"%s\") " % marker
 
 ## @export_group/@export_subgroup lines emitted before an EXPORTED tree variable that carries Inspector
 ## grouping. Empty for non-exported or un-grouped vars (the common case — existing emission stays

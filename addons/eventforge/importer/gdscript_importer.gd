@@ -203,7 +203,39 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	lifted.export_hint = str(descriptor.get("hint", ""))
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:
 		return null
+	_extract_drawer_from_hint(lifted, line)
 	return lifted
+
+## Tier 3 round-trip: if the lifted variable's export_hint is a custom-drawer marker
+## (`@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>…")`), pull it into structured
+## attributes.drawer (+ range bounds for progress_bar/vector_dial) and clear export_hint — so a reopened
+## drawer is an editable drawer in the Variable dialog, not a verbatim @export_custom block. Verify-gated:
+## if re-emission from the structured form doesn't reproduce the exact line, revert (byte-safety wins).
+func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
+	var hint: String = lifted.export_hint.strip_edges()
+	if not hint.begins_with("@export_custom(") or hint.find("\"eventsheet:") == -1:
+		return
+	var marker: String = _extract_first_quoted(hint)
+	if not marker.begins_with("eventsheet:"):
+		return
+	var parts: PackedStringArray = marker.split(":")
+	if parts.size() < 2 or str(parts[1]).strip_edges().is_empty():
+		return
+	var saved_hint: String = lifted.export_hint
+	var saved_attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
+	var attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
+	attrs["drawer"] = parts[1]
+	# progress_bar carries min:max, vector_dial carries a single max magnitude — recovered into the same
+	# `range` dict the emitter reads, so the marker re-emits byte-for-byte.
+	if parts[1] == "progress_bar" and parts.size() >= 4:
+		attrs["range"] = {"min": parts[2], "max": parts[3]}
+	elif parts[1] == "vector_dial" and parts.size() >= 3:
+		attrs["range"] = {"max": parts[2]}
+	lifted.attributes = attrs
+	lifted.export_hint = ""
+	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+		lifted.export_hint = saved_hint
+		lifted.attributes = saved_attrs
 
 ## When a tree variable lifts, pull a directly-preceding @export_group / @export_subgroup off the pending
 ## block onto the variable's attributes — but only if the variable's canonical re-emission then reproduces

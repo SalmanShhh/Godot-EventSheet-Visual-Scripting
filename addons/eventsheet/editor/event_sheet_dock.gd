@@ -8244,15 +8244,21 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 
 # ── Variable dialog signal handler ────────────────────────────────────────────
 
-## The Inspector attributes a tree-placed LocalVariable round-trips (tooltip + group/subgroup) — the subset
-## the tree-var emission supports. Keeps a reopened variable editable: the dialog populates these (via the
-## edit context) and this stores back what the user changes, so they aren't stuck or cleared.
+## The Inspector attributes a tree-placed LocalVariable round-trips (tooltip + group/subgroup + a Tier 3
+## drawer with its bounds) — the subset the tree-var emission supports. Keeps a reopened variable editable:
+## the dialog populates these (via the edit context) and this stores back what the user changes, so they
+## aren't stuck or cleared.
 static func _tree_group_attributes(source: Dictionary) -> Dictionary:
     var result: Dictionary = {}
-    for attr_key: String in ["tooltip", "group", "subgroup"]:
+    for attr_key: String in ["tooltip", "group", "subgroup", "drawer"]:
         var attr_value: String = str(source.get(attr_key, "")).strip_edges()
         if not attr_value.is_empty():
             result[attr_key] = attr_value
+    # A Tier 3 drawer's numeric bounds (progress_bar/vector_dial) ride along as the range dict so the
+    # @export_custom marker can re-emit them; the tree path can't express the other dict-only attributes,
+    # so they're intentionally dropped (degrade to a plain field, never a corrupt one).
+    if result.has("drawer") and source.get("range") is Dictionary and not (source.get("range") as Dictionary).is_empty():
+        result["range"] = (source.get("range") as Dictionary).duplicate()
     return result
 
 func _on_variable_dialog_confirmed(
