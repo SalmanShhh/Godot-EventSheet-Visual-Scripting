@@ -30,7 +30,7 @@ the removal below is safe.
 | `*_generated.gd` — the compiled scripts your scenes attach | `addons/eventforge/` |
 | `eventsheet_addons/**/*.gd` — behavior packs are plain `class_name` classes the game uses | `addons/eventsheet/` |
 | Your **autoload-sheet singletons** (they point at compiled `.gd`, not at the plugin) | The **`EventForgeBridge`** autoload (editor-only vocabulary) |
-| Generated scenes (`.tscn`) and resources | The `.tres` sheet *sources* (optional — only needed to re-edit visually) |
+| Generated scenes (`.tscn`) and resources | The legacy `.tres` sheet sources, if any (optional — default `.gd` sheets stay editable as plain code; a `.tres` is only needed to re-edit those specific sheets) |
 
 The one subtlety: an **autoload sheet** registers a singleton pointing at its *compiled*
 `.gd`. That singleton stays — deleting it would break your game. Only the plugin's own

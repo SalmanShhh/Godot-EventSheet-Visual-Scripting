@@ -4,8 +4,10 @@ Short, concrete walkthroughs. Each assumes the plugin is enabled and you've open
 **EventSheet** tab. New to the vocabulary? Keep the [glossary](GLOSSARY.md) open. Coming from
 Construct 3? The [migration guide](C3-MIGRATION-GUIDE.md) maps every concept.
 
-The golden loop for all of these: **New sheet → set the host class → add events (pick
-Conditions + Actions) → Compile → attach the generated `.gd` to your node → Run.**
+The golden loop for all of these: **New sheet (a `.gd`) → set the host class → add events (pick
+Conditions + Actions) → save → set the `.gd` as your node's script → Run.** A sheet *is* just
+GDScript now (no `.tres` needed) — so "Open in Godot" edits the same file in the script editor, and
+any `.gd` auto-previews as an event sheet.
 
 ---
 
@@ -20,7 +22,7 @@ jump height, wall jump — all the juice).
    set its speed/jump in the Inspector.
 4. One event: trigger **On Process** → action **Move And Slide**. The pack reads input and drives
    `velocity`; Move And Slide applies it.
-5. **Compile**, attach the `.gd`, press Play.
+5. **Save** — the sheet *is* the `.gd`; set it as the node's script and press Play.
 
 Want it from scratch instead of the pack? Three events: *On Process* → set horizontal velocity
 from input; *Is on floor* + *jump pressed* → set `velocity.y`; *On Process* → Move And Slide.
@@ -72,7 +74,11 @@ When something misbehaves, you have three tools — no `print()` required.
 
 ## 5. Author your own behavior / ACEs
 
-No JSON, no boilerplate. Two routes:
+No JSON, no boilerplate. Every bundled behaviour pack is a single `.gd` file that compiles with
+**zero GDScript blocks** — you can author yours the same way. Start from **Sheet ▸ New Behaviour
+Addon…** (it scaffolds a ready-to-edit provider), and **`@ace_expose_all`** exposes a whole script's
+public API as ACEs at once. Full walkthrough: [MAKE-A-BEHAVIOUR-WITHOUT-CODE.md](MAKE-A-BEHAVIOUR-WITHOUT-CODE.md).
+Two routes:
 
 - **A behavior pack:** build the logic as an event sheet, then **Export Addon…** turns it into a
   published pack folder.
@@ -92,8 +98,11 @@ No JSON, no boilerplate. Two routes:
   also has live validation + autocomplete as you type.
 - **"It compiled but nothing happens."** Check the script is actually **attached** to the node
   (Tools ▸ Attach to Selected Node) and the **host class** matches the node type.
-- **Editing the generated `.gd` by hand.** Don't — re-compiling overwrites it. Use a **GDScript
-  block** row in the sheet instead (it's emitted verbatim, and round-trips).
+- **Editing the `.gd` in Godot's script editor.** Go ahead — a sheet *is* its `.gd`, so your edits
+  round-trip back to events (function bodies, `if/else`, loops, and `match` all de-code into rows);
+  re-open it as a sheet to keep editing visually. (Only the *output* of a legacy `.tres`-sourced sheet
+  is overwritten on recompile — there, edit the sheet, not the output. For verbatim code that should
+  stay untouched, a **GDScript block** row is still emitted as-is and round-trips.)
 
 ## 7. Helper ACEs that save a code drop
 
@@ -386,6 +395,41 @@ func _on_big_hit() -> void:
     $JuiceBehavior.slowmo(0.05, 0.08, "realtime")
     $JuiceBehavior.spring_squash(0.3)
 ```
+
+---
+
+## 13. Designer knobs — first-class variables & Inspector drawers
+
+Turn a variable into a tunable knob your designers see in the Inspector, with a **live widget** for
+its type — no custom editor code.
+
+1. Add a **Variable** (e.g. `aim_dir : Vector2`). In the dialog, tick **"Editable in the Inspector"**
+   (`@export`) — an **@export badge** appears on the row.
+2. Pick a **"Show as"** drawer for the type and watch the **live preview**: a Vector2 gets a
+   **direction dial**, a Color a **swatch row**, an `int`/`float` a **progress bar** (set the reach,
+   e.g. just `150`), a Texture2D a **preview thumbnail**, a Curve an inline **curve**.
+3. Organize many knobs with **"Group under heading"** / **"Sub-heading"** (`@export_group` /
+   `@export_subgroup`) — they show a **"Group › Subgroup"** chip on the row and nest in the Inspector.
+4. Select the node and the Inspector shows the rich, grouped drawers; press Play and the game reads
+   from those same designer-tweaked values. The **Inspector Playground** showcase
+   (`demo/showcase/inspector_playground.tscn`) demonstrates all five drawers at once.
+
+Without the editor plugin (or in an exported game) each property is just a plain field — the parity
+covenant is untouched. New here? The dialog starts simple (Basic "More options") and only unfurls the
+Advanced knobs when a variable actually uses them; first run also offers a **Simple Mode**.
+
+---
+
+## 14. Reuse & scale — Extract-to-Function & Families
+
+Two ways to stop repeating yourself.
+
+- **Extract-to-Function.** Select a run of actions you keep re-typing → **Extract to Function…** →
+  name it. The selection becomes one named, reusable **ƒ verb** you can call anywhere; the original
+  rows are replaced by the call. It's the "create an abstraction" gesture — a named verb, not a copy.
+- **Families.** When the same logic should run across *many* objects, set **Sheet Type → Family**:
+  the sheet's events iterate over a whole **family** of nodes (family-scoped), so one sheet drives the
+  group. The **Family Arena** showcase (`demo/showcase/family_arena.tscn`) shows it end to end.
 
 ---
 

@@ -184,7 +184,9 @@ overwritten on recompile; the sheet is the source of truth.)
 
 You're not limited to writing new sheets. **Reverse-lift** opens an existing `.gd` file *as* a sheet (or you
 paste GDScript and get events back), so you can bring code you already have into the visual editor and keep
-editing it either way.
+editing it either way. It de-codes function bodies, `if/elif/else`, `for`/`while`/`repeat` loops, and `match`
+into structured rows — so a `.gd` you already have opens as real events, not an opaque block, and round-trips
+losslessly.
 
 ---
 

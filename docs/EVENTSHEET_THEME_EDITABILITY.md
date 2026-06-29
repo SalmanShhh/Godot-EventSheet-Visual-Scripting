@@ -1,7 +1,7 @@
 # EventSheet Theme + Editability Guide
 
 > Updated 2026-06. A designer-friendly **visual theme editor** (live preview + grouped
-> token controls) is the final planned 1.0 phase.
+> token controls) ships as the **Theme Editor dialog**.
 
 This editor uses Godot-native resources/scenes instead of runtime CSS. The goal is still the same as a Construct-style theme.css workflow: designers can duplicate a theme package, tune tokens, reload the editor, and keep shipping reusable presets.
 
@@ -51,6 +51,7 @@ These themes are bundled in `res://demo/themes/`:
 - `soft_light_theme.tres` — softer default for long authoring sessions
 - `designer_template_theme.tres` — neutral starting point meant to be duplicated
 - `designer_template_theme_manifest.cfg` — token/package template for designer installs
+- plus popular presets: `catppuccin_mocha`, `dracula`, `gruvbox_dark`, `monokai`, `nord`, `solarized_light`
 
 ## Custom theme import/install
 

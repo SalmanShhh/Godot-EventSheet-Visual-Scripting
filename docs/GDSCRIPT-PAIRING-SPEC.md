@@ -85,7 +85,7 @@ referenced variables** (`required_variables`; existing ones are never overwritte
 codegen templates keep addon ACEs compiling without their addon installed; the snippet
 lists the provider names it uses so the addon script can be dropped into
 `res://eventsheet_addons/`. Out of scope per snippet: themes (per-project) and asset paths
-in params. Whole sheets continue to share as self-contained `.tres` files.
+in params. Whole sheets continue to share as self-contained files (`.gd` by default, or `.tres`).
 
 ### Using behaviors / sheet code FROM hand-written GDScript
 
@@ -387,6 +387,13 @@ and the file stays verbatim blocks (the lossless rule is never traded away). Pra
 effect: EventForge-generated scripts re-open as fully editable events; hand-written files
 lift opportunistically or not at all, never lossily.
 
+Also round-tripping (verify-lift-gated, same all-or-nothing rule): variable
+`@export_group`/`@export_subgroup` + tooltips, the five Tier-3 Inspector drawers
+(`@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>")`), **sub-events** (nested `if` blocks ↔
+`sub_events`), and class-scope `##` sheet metadata (tags / autoload / `@ace_tags` / `@ace_family`).
+Event GROUPS and Includes don't round-trip through `.gd` yet — see `GROUPS-ROUNDTRIP-SPEC.md` /
+`INCLUDES-SPEC.md`.
+
 ### Importer round-trip (structural)
 
 `GDScriptImporter` parses generated or handwritten GDScript back into a sheet: `extends`
@@ -408,8 +415,9 @@ Everything in this section SHIPPED and is kept as the design record:
   `@export` properties (per-instance inspector config); sheet functions marked "expose as
   ACE" compile **with `@ace_*` annotations emitted**, so dropping the compiled script into
   `res://eventsheet_addons/` publishes the behavior's own ACEs to every sheet —
-  zero-config, closing the loop (sheet → script → addon). Distribution = the compiled `.gd`
-  (runtime truth) + the source `.tres` (editable); behaviors are plain nodes at runtime, so
+  zero-config, closing the loop (sheet → script → addon). Distribution = a single editable `.gd`
+  (it is both runtime truth and editable source via the lossless round-trip; a `.tres` companion is
+  optional); behaviors are plain nodes at runtime, so
   no runtime registry/bridge is required. Known considerations: tick ordering between host
   sheets and behavior nodes (document Godot's tree processing order; optionally explicit
   tick functions), triggers on a behavior's signals from the host sheet require

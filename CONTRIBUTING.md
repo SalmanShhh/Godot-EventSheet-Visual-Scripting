@@ -1,7 +1,7 @@
 # Contributing to Godot EventSheets
 
 Thanks for helping! This file is the distilled institutional knowledge — the rules that
-keep 2,000+ assertions green and users' projects safe. Read it once; it will save you
+keep 3,400+ assertions green and users' projects safe. Read it once; it will save you
 hours.
 
 ## Dev setup
@@ -63,7 +63,7 @@ its lifter counterpart in the same commit and regenerate goldens:
 ```text
 godot --headless --script tools/regenerate_demo_golden.gd
 godot --headless --script tools/build_sample_behaviors.gd  # then tools/audit_addons.gd (drifted=0)
-godot --headless --script tools/build_examples.gd          # the playable showcases (carousel/starfall/quest_fsm)
+godot --headless --script tools/build_examples.gd          # the playable showcases (carousel/starfall/quest_fsm/platformer_shooter/swarm/family_arena/inspector_playground)
 godot --headless --script tools/build_theme_presets.gd     # after theme-token additions
 ```
 

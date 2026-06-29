@@ -1,4 +1,4 @@
-# Inspector Attributes — Spec (later phase)
+# Inspector Attributes — Spec
 
 Unity-style (and Odin-Inspector-style) **attributes on exported variables**, mapped onto
 what Godot actually supports. Status: **Tiers 1–2 SHIPPED** (tooltip/group/range/multiline; clamp/on-changed
@@ -164,10 +164,10 @@ a String — same philosophy as the existing syntax-error prevention).
 - Custom property *types* (Odin value drawers for arbitrary classes) → Godot wants
   `Resource` subclasses for that; map via a doc recipe, not a feature.
 
-## Suggested phasing when scheduled
+## Phasing (all delivered)
 
-1. Tier 1 (schema + dialog expander + emission + lift + tests) — one slice.
-2. Tier 2 setters/On-Changed/Show-If — one slice (the `_validate_property` canonical
-   shape is the risky bit; spec the exact bytes first in tests).
-3. Tool buttons + configuration warnings — small follow-up.
-4. Tier 3 drawers — optional, after user demand proves itself.
+1. Tier 1 (schema + dialog expander + emission + lift + tests) — ✅ shipped.
+2. Tier 2 setters/On-Changed/Show-If — ✅ shipped (the `_validate_property` canonical
+   shape was the risky bit; pinned byte-exact in tests).
+3. Tool buttons + configuration warnings — ✅ shipped.
+4. Tier 3 drawers — ✅ shipped (all five drawers via an `EditorInspectorPlugin`, round-tripped).

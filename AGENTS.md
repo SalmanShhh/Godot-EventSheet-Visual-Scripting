@@ -64,6 +64,9 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - `docs/UNINSTALL.md` — clean-removal guide (keep/remove table; the zero-runtime-dependency covenant as a guided teardown)
 - `docs/INSPECTOR-ATTRIBUTES-SPEC.md` — Unity/Odin-style attributes (all tiers shipped)
 - `docs/ADDON-COMPOSITION-SPEC.md` — meta-packs, uses/requires, project policy (shipped)
+- `docs/PROGRESSIVE-DISCLOSURE-SPEC.md` — tiered disclosure of dialog complexity (C3-migrant-first; shipped)
+- `docs/INCLUDES-SPEC.md` — Construct "Include event sheet" → compile-time merge (not yet `.gd` round-tripping)
+- `docs/GROUPS-ROUNDTRIP-SPEC.md` — event-group round-trip status (groups dissolve through `.gd`)
 - `CONTRIBUTING.md` — dev setup, verification loop, house rules, gotcha list
 - `CHANGELOG.md` — the authoritative feature ledger per release
 

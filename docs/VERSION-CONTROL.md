@@ -1,8 +1,9 @@
 # Version Control for Event Sheets
 
-Event sheets are saved as Godot `.tres` resources. Out of the box those diff and merge like
-any serialized resource — noisy and, on a real conflict, effectively unmergeable. Three
-things make sheets behave like first-class, team-friendly source:
+By default an event sheet is a plain **`.gd`** file — it diffs and merges like any source code, no
+tooling required. Legacy **`.tres`** sheets are Godot resources that diff and merge like serialized
+resource soup — noisy and, on a real conflict, effectively unmergeable. Three tools make those `.tres`
+sheets behave like first-class, team-friendly source (the `.gd` default already is):
 
 ## 1. LF + byte-stable regeneration (automatic)
 `.gitattributes` enforces LF, and the pack/showcase builders stamp **deterministic row UIDs**,

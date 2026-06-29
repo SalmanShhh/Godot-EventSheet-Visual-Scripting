@@ -5,7 +5,9 @@ like Construct 3's behaviours — using **only event-sheet rows**. No GDScript b
 vocabulary so you can find every piece.
 
 The bundled **Flash, 8-Direction Movement, Timer, State Machine, and Move To** behaviours are each
-authored this way (zero GDScript) — open their sheets to see real examples.
+authored this way (zero GDScript) — open their sheets to see real examples. Each pack is a single
+**`.gd` file** (no `.tres`), and the importer can open *any* `.gd` as events, so the examples read as
+sheets you can study and tweak.
 
 ---
 
@@ -15,7 +17,9 @@ authored this way (zero GDScript) — open their sheets to see real examples.
 host (a `CharacterBody2D`, `Node2D`, …). Inside the sheet, **`host`** is that parent — node ACEs target
 it automatically (e.g. *Move And Slide* becomes `host.move_and_slide()`).
 
-- **Designer knobs** → add an **exported** variable (shows in the Inspector: `move_speed`, `gravity`).
+- **Designer knobs** → add an **exported** variable (an **@export badge** shows on the row + in the
+  Inspector: `move_speed`, `gravity`). Typed knobs get a live Inspector **drawer** (direction dial,
+  colour swatch, curve, progress bar, texture preview); group many with `@export_group` / `@export_subgroup`.
 - **Internal state** → add a **non-exported** variable (`remaining`, `flashing`, a coyote timer).
 - **Scratch values** inside one event → **Set Local Variable (typed)**.
 

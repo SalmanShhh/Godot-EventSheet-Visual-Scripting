@@ -9,23 +9,23 @@ event flow, or write the expression directly — `ƒx` fields are plain GDScript
 
 | Construct 3 | Godot EventSheets |
 |---|---|
-| Event sheet | Event sheet (`.tres`), attached to a host node class; compiles to a `.gd` script |
+| Event sheet | **A `.gd` file** bound to a host node class — the sheet *is* GDScript (lossless, editable round-trip). `.tres` still works but isn't required or the default |
 | Object type | Godot node class (CharacterBody2D, Area2D, Timer…) — ACEs group under it |
 | Behavior (Platform, 8Direction…) | **Behavior sheet** → attachable Node component with a typed `host` accessor (samples: PlatformerMovement, EightDirectionMovement) |
 | Plugin / addon (JSON manifests) | **Zero-config addon**: a script in `res://eventsheet_addons/` with `@ace_*` annotations — no manifests |
-| Instance variables | Sheet variables (typed; exported ones appear in the Inspector per instance) |
+| Instance variables | Sheet variables (typed; `@export` ones appear in the Inspector per instance). Group with `@export_group`/`@export_subgroup`; typed vars (Vector2/Color/Texture2D/Curve…) get live Inspector **drawers** — a direction dial, colour swatch, texture preview, progress bar, or curve (see the **Inspector Playground** showcase) |
 | Local/temp variables | Variables placed inside the event flow → function locals |
 | Global variables | Sheet variables on a shared/autoload sheet, or any autoload — plain GDScript rules |
 | Groups | Groups (collapsible, nestable, with local variables) |
 | Comments (colored) | Comments — multiline, per-comment colors, attachable into an event's actions |
 | Sub-events | Sub-events (compile nested under the parent's conditions) |
 | Else | Else / Else-If events (compile to `elif` / `else`) |
-| Families | No direct equivalent — use Godot groups/class inheritance (`get_tree().get_nodes_in_group()`), or a behavior shared across nodes |
+| Families | **Families** — declare a sheet as a Family (Sheet Type → Family) for family-scoped iteration; see the **Family Arena** showcase. Godot node groups / a behavior shared across nodes remain the lower-level path |
 | Layouts | Scenes |
 | Layers | CanvasLayers / scene tree order |
 | The expression language | **GDScript** — there is no separate language to learn |
 | Scripting (JS blocks) | GDScript blocks: class-level or in-flow inside events, with lint + completion |
-| Functions (event sheets) | Sheet functions — callable as actions, optionally **exposed as ACEs** project-wide |
+| Functions (event sheets) | Sheet functions — callable as actions, optionally **exposed as ACEs** project-wide. Turn a selection of actions into one via **Extract-to-Function** (calls render as a first-class **ƒ** verb) |
 | Timer behavior | **TimerBehavior pack** (Start/Stop Timer, On Timer) — or a Timer node + `On Timeout` |
 | Flash / Tween behaviors | **FlashBehavior pack** (Flash, On Flash Finished); tweens via a GDScript block (`create_tween()…`) |
 
@@ -139,9 +139,10 @@ trauma screenshake, smooth zoom, squash & stretch), the **Save System** singleto
 Attach as a child node; properties live in the Inspector; their ACEs appear in the picker
 automatically.
 
-**Families** → Godot **node groups** + behaviors-as-components: put nodes in a group
-(`add_to_group`), pick them with the group pick filter, and attach shared behavior packs
-for shared ACEs — same workflows, native machinery, no fake feature to maintain.
+**Families** → declare a sheet as a **Family** (Sheet Type → Family) and its events iterate over a
+whole family of nodes (family-scoped) — see the **Family Arena** showcase. Underneath it's Godot's own
+machinery: put nodes in a group (`add_to_group`), pick them with the group pick filter, and attach
+shared behavior packs for shared ACEs — so you can also drop to that lower level directly.
 
 **Lane 3 — use the Godot feature directly**: Multiplayer (high-level multiplayer API),
 Drawing Canvas (`_draw`), 3D plugins (Godot 3D), Binary Data (`PackedByteArray`),
@@ -166,6 +167,9 @@ i18n (Godot translations).
   case needs no loop — **Nearest Node In Group** / **Furthest Node In Group** pick the closest/farthest
   group member by distance, and the Line of Sight packs add **Nearest Visible In Group** for
   occlusion-correct "attack the nearest enemy I can actually see."
+- **Node-picking relief for Godot's deep trees:** pick child nodes **by type** (no path-hunting),
+  one-click **"Make %unique"** to collapse a deep `$A/B/C` path to a reparent-proof `%Name`, or drag a
+  node from the Scene dock straight onto a parameter value to reference it.
 - **Scenes replace layouts** and instancing replaces "create object by name" — spawn via
   `preload("res://enemy.tscn").instantiate()` in a block or action.
 
