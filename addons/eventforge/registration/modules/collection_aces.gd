@@ -108,6 +108,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Restarts the current scene from scratch, useful for retrying a level."))
 	descriptors.append(F.make_descriptor("Core", "QuitGame", "Quit Game", ACEDescriptor.ACEType.ACTION, "get_tree().quit()", "", [], "Scene", "Quit the game")
 		.described("Closes the game and exits to desktop."))
+	# Pairs with the On Close Requested trigger: by default the window's X quits instantly, so set this in
+	# On Ready to "Intercept" and the close waits for your On Close Requested handler (save / confirm), which
+	# then calls Quit Game explicitly. The friendly dropdown shows "Intercept"/"Allow" but inserts false/true.
+	descriptors.append(F.make_descriptor("Core", "HandleQuitRequest", "Handle Quit Myself", ACEDescriptor.ACEType.ACTION, "get_tree().set_auto_accept_quit({mode})", "", [F.make_param("mode", "String", "false", "On close", "Whether the app quits instantly or waits for you to handle it.", "", [{"key": "false", "label": "Intercept (handle it myself)"}, {"key": "true", "label": "Allow (quit immediately)"}])], "Scene", "Handle quit myself: {mode}")
+		.described("Stops the window's close button from quitting instantly, so On Close Requested can run first (save progress, pop a confirm dialog) and you quit explicitly with Quit Game. Choose \"Allow\" to restore Godot's default immediate quit."))
 	descriptors.append(F.make_descriptor("Core", "SetPaused", "Set Game Paused", ACEDescriptor.ACEType.ACTION, "get_tree().paused = {paused}", "", [F.make_param("paused", "String", "true", "Paused", "Pause state.", "", ["true", "false"])], "Scene", "Set paused to {paused}")
 		.described("Pauses or resumes the whole game by toggling the scene tree's pause state."))
 	descriptors.append(F.make_descriptor("Core", "SpawnScene", "Spawn Scene Instance", ACEDescriptor.ACEType.ACTION, "add_child(load({path}).instantiate())", "", [F.make_param("path", "String", "\"res://enemy.tscn\"", "Scene", "Scene file to instance as a child.", "expression")], "Scene", "Spawn {path}")
