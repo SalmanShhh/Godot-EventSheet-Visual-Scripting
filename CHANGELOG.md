@@ -10,8 +10,12 @@
   after movement), **On Physics Post Tick** (`get_tree().physics_frame`), and **On Close Requested**
   (`get_window().close_requested` — the window's X / an app-quit request, for save-on-quit or a confirm
   dialog). (`tests/global_trigger_test.gd`)
+- New **Handle Quit Myself** action (`get_tree().set_auto_accept_quit(…)`, friendly Intercept/Allow
+  dropdown): set it to *Intercept* in On Ready so the window's X no longer quits instantly — On Close
+  Requested runs first (save / confirm), then you call **Quit Game** explicitly. The full save-on-quit flow,
+  no GDScript.
 - *(The scene **actions** already shipped — Quit Game, Go To Scene, Restart Scene — so this fills in the
-  missing exit/post-frame **triggers**.)*
+  missing exit/post-frame **triggers** + the quit-interception action.)*
 
 ### Added — Console logging ACEs (combo-driven) + friendly label↔value dropdowns
 
