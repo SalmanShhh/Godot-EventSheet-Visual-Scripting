@@ -18,18 +18,37 @@ class_name EventForgeConsoleACEs
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
 # The "As" output-stream dropdown: shows a friendly label, inserts the matching Godot call. Reused by
-# every verb that can target any of the three streams (the {key,label} option form drives that split).
+# every verb that can target a stream (the {key,label} option form drives the label↔value split).
 const LEVEL_OPTIONS: Array = [
 	{"key": "print", "label": "Message"},
 	{"key": "push_warning", "label": "Warning"},
 	{"key": "push_error", "label": "Error"},
+	{"key": "print_rich", "label": "Rich text (BBCode)"},
 ]
+
+# The marker that rides a bare Log line so it reverse-lifts back AS the combined verb (see ConsoleLog).
+const LOG_MARKER: String = "  # @ace:Core.ConsoleLog"
 
 static func _level_param() -> ACEParam:
 	return F.make_param("level", "String", "print", "As", "Which console stream to write to.", "", LEVEL_OPTIONS)
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
+
+	# Bare immediate log to any stream — the C3 "Log message" with a type dropdown. The trailing
+	# `# @ace:Core.ConsoleLog` marker rides the line so it reverse-lifts back AS this combined verb:
+	# without it, a `push_warning("x")` line is identical to (and shadowed by) the specific Push Warning
+	# verb, so it would silently reopen as that. The marker makes this verb's reverse-template distinct
+	# (Push Warning's `$`-anchored regex rejects the trailing comment), so a marked line lifts here and a
+	# plain hand-written one still lifts to Push Warning. The call runs untouched in-game — the comment
+	# is inert. The only cost is that one comment in the generated line.
+	descriptors.append(F.make_descriptor("Core", "ConsoleLog", "Log", ACEDescriptor.ACEType.ACTION,
+		"{level}({message})" + LOG_MARKER, "",
+		[
+			F.make_param("message", "String", "\"hello\"", "Message", "Value/expression to write to the console.", "expression"),
+			_level_param(),
+		], "Debug", "log {message}")
+		.described("Writes a message to the console as a Message, Warning, Error, or Rich text — one verb for all four."))
 
 	# Conditional log — write only when a test holds, without wrapping it in its own event row.
 	descriptors.append(F.make_descriptor("Core", "ConsoleLogIf", "Log If", ACEDescriptor.ACEType.ACTION,
