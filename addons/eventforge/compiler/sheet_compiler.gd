@@ -1505,6 +1505,8 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 				export_prefix = "@export_range(%s, %s, %s) " % [str(range_spec.get("min", "0")), str(range_spec.get("max", "100")), str(range_spec.get("step", "1"))]
 			elif exported and bool(attributes.get("multiline", false)) and type_name == "String":
 				export_prefix = "@export_multiline "
+			elif exported and bool(attributes.get("no_alpha", false)) and type_name == "Color":
+				export_prefix = "@export_color_no_alpha "
 			# Tier 3 drawers: a marker rides an @export_custom hint string; without the editor plugin the
 			# property degrades to a plain field (parity preserved). One helper drives both var paths.
 			if exported:
@@ -1778,6 +1780,10 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# from attributes so it round-trips identically to the dict-var path instead of staying a verbatim hint.
 	elif not drawer_prefix.is_empty():
 		var_line = "%svar %s: %s = %s" % [drawer_prefix, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+	# Color with the "no alpha" attribute → @export_color_no_alpha (a solid RGB-only swatch in the Inspector).
+	# Structured (from attributes) so it round-trips into the dialog tick, not a verbatim hint.
+	elif local_var.exported and local_var.attributes is Dictionary and bool((local_var.attributes as Dictionary).get("no_alpha", false)) and local_var.type_name == "Color":
+		var_line = "@export_color_no_alpha var %s: %s = %s" % [local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
 	# Hinted export (@export_range / @export_file / @export_flags / …): the annotation is kept verbatim.
 	elif not local_var.export_hint.strip_edges().is_empty():
 		var_line = "%s var %s: %s = %s" % [local_var.export_hint, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]

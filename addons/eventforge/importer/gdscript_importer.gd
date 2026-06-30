@@ -207,7 +207,24 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:
 		return null
 	_extract_drawer_from_hint(lifted, line)
+	_extract_color_no_alpha(lifted, line)
 	return lifted
+
+## @export_color_no_alpha round-trip: pull the bare hint into the structured `no_alpha` attribute so a
+## reopened Color shows the dialog's "No alpha" tick instead of a verbatim hint. Verify-gated like the
+## drawer recovery — if the structured re-emission doesn't reproduce the line exactly, revert.
+func _extract_color_no_alpha(lifted: LocalVariable, line: String) -> void:
+	if lifted.export_hint.strip_edges() != "@export_color_no_alpha":
+		return
+	var saved_hint: String = lifted.export_hint
+	var saved_attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
+	var attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
+	attrs["no_alpha"] = true
+	lifted.attributes = attrs
+	lifted.export_hint = ""
+	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+		lifted.export_hint = saved_hint
+		lifted.attributes = saved_attrs
 
 ## Tier 3 round-trip: if the lifted variable's export_hint is a custom-drawer marker
 ## (`@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>…")`), pull it into structured

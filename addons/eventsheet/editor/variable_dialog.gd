@@ -56,6 +56,7 @@ var _attr_group_edit: LineEdit = null
 var _attr_subgroup_edit: LineEdit = null
 var _attr_range_edit: LineEdit = null
 var _attr_multiline_check: CheckBox = null
+var _attr_no_alpha_check: CheckBox = null
 var _attr_show_if_edit: LineEdit = null
 var _attr_lock_unless_edit: LineEdit = null
 var _attr_on_changed_edit: LineEdit = null
@@ -261,6 +262,10 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_multiline_check = CheckBox.new()
 	_attr_multiline_check.text = "Multiline (String: big text box)"
 	_attr_section.add_child(_attr_multiline_check)
+	# Color-only: @export_color_no_alpha — a solid RGB swatch (the Inspector hides the alpha slider).
+	_attr_no_alpha_check = CheckBox.new()
+	_attr_no_alpha_check.text = "No alpha (Color: solid RGB, no transparency)"
+	_attr_section.add_child(_attr_no_alpha_check)
 	# ── ADVANCED tier (nested disclosure): wiring + organization that assumes other vars/funcs exist or
 	# Godot-Inspector fluency — kept out of the common path so the Basic tier reads cleanly. ──
 	_attr_advanced_toggle = Button.new()
@@ -571,6 +576,7 @@ func open_for_edit(
 	# three parts (so a reopened progress_bar/dial re-saves cleanly instead of erroring on "min, max").
 	_attr_range_edit.text = "%s, %s, %s" % [str((existing_range as Dictionary).get("min", "0")), str((existing_range as Dictionary).get("max", "100")), str((existing_range as Dictionary).get("step", "1"))] if existing_range is Dictionary else ""
 	_attr_multiline_check.button_pressed = bool(existing_attributes.get("multiline", false))
+	_attr_no_alpha_check.button_pressed = bool(existing_attributes.get("no_alpha", false))
 	_attr_show_if_edit.text = str(existing_attributes.get("show_if", ""))
 	_attr_lock_unless_edit.text = str(existing_attributes.get("lock_unless", ""))
 	_attr_on_changed_edit.text = str(existing_attributes.get("on_changed", ""))
@@ -692,6 +698,8 @@ func _on_confirmed() -> void:
 		attributes["range"] = parsed_range
 	if _attr_multiline_check.button_pressed and type_name == "String":
 		attributes["multiline"] = true
+	if _attr_no_alpha_check.button_pressed and type_name == "Color":
+		attributes["no_alpha"] = true
 	for conditional in [["show_if", _attr_show_if_edit], ["lock_unless", _attr_lock_unless_edit], ["on_changed", _attr_on_changed_edit]]:
 		var conditional_value: String = (conditional[1] as LineEdit).text.strip_edges()
 		if conditional_value.is_empty():
@@ -839,6 +847,7 @@ func _refresh_contextual_rows() -> void:
 		_attr_range_edit.placeholder_text = _RANGE_PLACEHOLDER_VECTOR2 if type_name == "Vector2" else _RANGE_PLACEHOLDER_NUMERIC
 		_attr_clamp_check.visible = numeric
 		_attr_multiline_check.visible = type_name == "String"
+		_attr_no_alpha_check.visible = type_name == "Color"
 	# The drawer picker offers only the one drawer the current type can host (or hides when there is none).
 	_rebuild_drawer_options(_drawer_kind_for_type(type_name))
 	_refresh_drawer_preview()
