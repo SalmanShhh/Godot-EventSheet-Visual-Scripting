@@ -52,9 +52,9 @@ func _on_frame() -> void:
 		return
 	if _frames == 14:
 		_save(_ed._sheet_type_dialog, "sheet_type")
-		_ed._ensure_pick_dialog()
-		_ed._pick_dialog.popup_centered(Vector2i(520, 300))
+		_ed._pick._ensure_pick_dialog()
+		_ed._pick._pick_dialog.popup_centered(Vector2i(520, 300))
 		return
 	if _frames == 20:
-		_save(_ed._pick_dialog, "pick")
+		_save(_ed._pick._pick_dialog, "pick")
 		quit(0)

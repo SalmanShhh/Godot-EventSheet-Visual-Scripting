@@ -110,20 +110,20 @@ static func run() -> bool:
 		viewport._count_event_lines(event), row_data.line_count) and all_passed
 
 	# Authoring dialog round-trip (add via the same path the row menu uses).
-	editor._ensure_pick_dialog()
-	editor._pick_target_event = event
-	editor._pick_target_index = -1
-	editor._pick_iterator_edit.text = "coin"
-	editor._pick_kind_option.select(0)
-	editor._pick_collection_edit.text = "coins"
-	editor._pick_predicate_edit.text = ""
-	editor._pick_first_n_spin.value = 0
-	editor._on_pick_filter_confirmed()
+	editor._pick._ensure_pick_dialog()
+	editor._pick._pick_target_event = event
+	editor._pick._pick_target_index = -1
+	editor._pick._pick_iterator_edit.text = "coin"
+	editor._pick._pick_kind_option.select(0)
+	editor._pick._pick_collection_edit.text = "coins"
+	editor._pick._pick_predicate_edit.text = ""
+	editor._pick._pick_first_n_spin.value = 0
+	editor._pick._on_pick_filter_confirmed()
 	all_passed = _check("dialog adds a pick filter", event.pick_filters.size(), 2) and all_passed
 	all_passed = _check("dialog values land on the resource",
 		(event.pick_filters[1] as PickFilter).iterator_name == "coin" and (event.pick_filters[1] as PickFilter).collection_value == "coins", true) and all_passed
-	editor._pick_target_index = 1
-	editor._on_pick_filter_deleted()
+	editor._pick._pick_target_index = 1
+	editor._pick._on_pick_filter_deleted()
 	all_passed = _check("dialog delete removes the filter", event.pick_filters.size(), 1) and all_passed
 	editor.free()
 

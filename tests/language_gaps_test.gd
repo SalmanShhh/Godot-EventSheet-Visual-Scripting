@@ -143,16 +143,16 @@ static func run() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(EventSheetResource.new())
 	editor.set_undo_redo_manager(NoopUndoManager.new())
-	editor._ensure_pick_dialog()
-	editor._apply_pick_preset(5)  # While
+	editor._pick._ensure_pick_dialog()
+	editor._pick._apply_pick_preset(5)  # While
 	all_passed = _check("While preset selects the while kind",
-		editor._pick_option_to_kind(editor._pick_kind_option.selected), PickFilter.CollectionKind.WHILE) and all_passed
-	editor._apply_pick_preset(8)  # Pick by highest value
+		editor._pick._pick_option_to_kind(editor._pick._pick_kind_option.selected), PickFilter.CollectionKind.WHILE) and all_passed
+	editor._pick._apply_pick_preset(8)  # Pick by highest value
 	all_passed = _check("highest-value preset = ordered descending first-1",
-		editor._pick_desc_check.button_pressed and int(editor._pick_first_n_spin.value) == 1 and not editor._pick_order_edit.text.is_empty(), true) and all_passed
-	editor._apply_pick_preset(11)  # Pick random
+		editor._pick._pick_desc_check.button_pressed and int(editor._pick._pick_first_n_spin.value) == 1 and not editor._pick._pick_order_edit.text.is_empty(), true) and all_passed
+	editor._pick._apply_pick_preset(11)  # Pick random
 	all_passed = _check("random preset wraps pick_random",
-		editor._pick_collection_edit.text.contains(".pick_random()"), true) and all_passed
+		editor._pick._pick_collection_edit.text.contains(".pick_random()"), true) and all_passed
 	editor.free()
 
 	# Runtime-toggleable groups (Set Group Active, opt-in).
