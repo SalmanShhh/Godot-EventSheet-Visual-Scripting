@@ -1,5 +1,6 @@
 class_name CarouselOfJuice
 extends Node2D
+## @ace_group(uid="juice", name="Juice", toggleable=true)
 
 ## Beats elapsed.
 @export_range(0, 9999, 1) var beat: int = 0
@@ -15,11 +16,13 @@ var __every_spin_caro: float = 0.0
 
 func _process(delta: float) -> void:
 	__every_beat_caro += delta
+	# @group:juice
 	if __group_juice_active and __every_beat_caro >= maxf(0.5, 0.001):
 		__every_beat_caro = fmod(__every_beat_caro, maxf(0.5, 0.001))
 		beat += 1
 		juice_tile(beat, intensity * 5.0)
 	__every_spin_caro += delta
+	# @group:juice
 	if __group_juice_active and __every_spin_caro >= maxf(2.0, 0.001):
 		__every_spin_caro = fmod(__every_spin_caro, maxf(2.0, 0.001))
 		$TweenBehavior.tween_rotation(rotation_degrees + 360.0, 1.8)
