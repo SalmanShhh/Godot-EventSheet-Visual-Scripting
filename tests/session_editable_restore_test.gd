@@ -24,7 +24,7 @@ static func run() -> bool:
 	# Session A: open the .gd (read-only preview), unlock it via "Edit Events", which persists.
 	var dock_a: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock_a.setup(null)
-	dock_a._session_tracking = true  # restore normally flips this on; do it manually for the test
+	dock_a._session._session_tracking = true  # restore normally flips this on; do it manually for the test
 	dock_a._load_sheet_from_path(PROBE)
 	all_passed = _check("opening a .gd is a read-only preview", dock_a._current_sheet.read_only, true) and all_passed
 	dock_a._on_preview_edit_requested()

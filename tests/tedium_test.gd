@@ -216,7 +216,7 @@ static func run() -> bool:
 	session_editor.setup(ResourceLoader.load("user://session_a.tres", "", ResourceLoader.CACHE_MODE_IGNORE))
 	session_editor.set_undo_redo_manager(NoopUndoManager.new())
 	session_editor._open_sheet_in_tab(ResourceLoader.load("user://session_b.tres", "", ResourceLoader.CACHE_MODE_IGNORE), "user://session_b.tres")
-	session_editor._session_tracking = true
+	session_editor._session._session_tracking = true
 	session_editor._persist_session()
 	var written: ConfigFile = ConfigFile.new()
 	written.load("user://eventsheets_session.cfg")

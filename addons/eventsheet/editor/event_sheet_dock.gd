@@ -149,6 +149,7 @@ var _find_refs: EventSheetFindReferencesPanel = EventSheetFindReferencesPanel.ne
 var _pick: EventSheetPickFilterDialog = EventSheetPickFilterDialog.new()  # "For Each" pick-filter dialog (dock/pick_filter_dialog.gd)
 var _ai: EventSheetAIGenerateWindow = EventSheetAIGenerateWindow.new()  # Edit ▸ Generate from Description… window (dock/ai_generate_window.gd)
 var _sheet_type: EventSheetSheetTypeDialog = EventSheetSheetTypeDialog.new()  # Sheet ▸ Sheet Type… dialog shell (dock/sheet_type_dialog.gd)
+var _session: EventSheetSessionStore = EventSheetSessionStore.new()  # open-tabs restore across restarts (event_sheet_session_store.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -216,6 +217,7 @@ func _ensure_editor_dialogs_initialized() -> void:
     _pick.init(self)
     _ai.init(self)
     _sheet_type.init(self)
+    _session.init(self)
     # Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
     _variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
     _variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
@@ -5954,71 +5956,11 @@ func _play_scene_path(scene_path: String) -> void:
         EditorInterface.play_custom_scene(scene_path)
     _set_status("Running %s." % scene_path.get_file())
 
-# ── Session restore: the open tabs survive an editor restart
-# (user://eventsheets_session.cfg; eventsheets/editor/restore_session, default on) ────
-const SESSION_PATH := "user://eventsheets_session.cfg"
-# Persisting starts only after _restore_session has run: the dock's own startup
-# (demo tab activation) would otherwise clobber the saved session before it's read.
-var _session_tracking: bool = false
-
-## Saved-tab paths + the active index. Unsaved sheets (no path) are skipped — there's
-## no file to reopen.
-func _persist_session() -> void:
-    if not _session_tracking:
-        return
-    _sync_active_tab_state()
-    var paths: PackedStringArray = PackedStringArray()
-    # Paths the user has unlocked for editing (clicked "Edit Events" on a .gd preview), so a sheet
-    # they were editing comes back editable next restart instead of re-locked as a preview.
-    var editable_paths: PackedStringArray = PackedStringArray()
-    var active_in_saved: int = -1
-    for index in _open_tabs.size():
-        var tab_path: String = str(_open_tabs[index].get("path", ""))
-        if tab_path.is_empty():
-            continue
-        if index == _active_tab_index:
-            active_in_saved = paths.size()
-        paths.append(tab_path)
-        var tab_sheet: EventSheetResource = _open_tabs[index].get("sheet") as EventSheetResource
-        if tab_sheet != null and not tab_sheet.read_only:
-            editable_paths.append(tab_path)
-    var session: ConfigFile = ConfigFile.new()
-    session.set_value("session", "paths", paths)
-    session.set_value("session", "editable", editable_paths)
-    session.set_value("session", "active", active_in_saved)
-    session.save(SESSION_PATH)
-
-## Reopens last session's tabs (missing files skipped silently — a deleted sheet
-## shouldn't block startup), then turns persistence on.
-func _restore_session() -> void:
-    # Setting off = sessions fully dormant (no restore, no writes); the last saved
-    # session survives untouched for whenever it's re-enabled.
-    if not bool(ProjectSettings.get_setting("eventsheets/editor/restore_session", true)):
-        return
-    var session: ConfigFile = ConfigFile.new()
-    if session.load(SESSION_PATH) == OK:
-        var paths: PackedStringArray = PackedStringArray(session.get_value("session", "paths", PackedStringArray()))
-        var editable_paths: PackedStringArray = PackedStringArray(session.get_value("session", "editable", PackedStringArray()))
-        var active: int = int(session.get_value("session", "active", -1))
-        var opened: int = 0
-        for sheet_path: String in paths:
-            if FileAccess.file_exists(sheet_path):
-                _load_sheet_from_path(sheet_path)
-                opened += 1
-                # Restore the prior "Edit Events" unlock so the sheet isn't re-locked on restart.
-                if sheet_path in editable_paths and _current_sheet != null and _current_sheet.read_only:
-                    _current_sheet.read_only = false
-                    _refresh_preview_banner()
-        if active >= 0 and active < paths.size():
-            var active_path: String = paths[active]
-            for index in _open_tabs.size():
-                if str(_open_tabs[index].get("path", "")) == active_path:
-                    _activate_tab(index)
-                    break
-        if opened > 0:
-            _set_status("Session restored: %d sheet(s)." % opened)
-    _session_tracking = true
-    _persist_session()
+# ── Session restore (open tabs survive an editor restart) → event_sheet_session_store.gd ──
+func _persist_session() -> void:  # startup, tab edits, "Edit Events" unlock + session tests
+    _session.persist()
+func _restore_session() -> void:  # called once on setup
+    _session.restore()
 
 # ── Row snippets — save the selection, insert from the project library
 # (EventSheetSnippetLibrary; the clipboard text format is the file format) ────────────
