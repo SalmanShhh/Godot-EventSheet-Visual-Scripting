@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added — `@export_color_no_alpha` (a "No alpha" tick on Color variables)
+
+- Color variables (already a first-class type) gain the Godot **`@export_color_no_alpha`** inspector hint as
+  a dialog-authored option: a Color-only **"No alpha (solid RGB, no transparency)"** checkbox in the
+  Variable dialog's "More options" (mirroring the String multiline tick). It compiles to
+  `@export_color_no_alpha` and **round-trips structurally** — reopening the `.gd` re-checks the tick (and it
+  survives editing), not a verbatim hint — verify-lift-gated like the drawers. (`tests/color_no_alpha_test.gd`)
+
 ### Added — RegEx text module (Construct 3-style Regex functions)
 
 - A new **RegEx** ACE module (its own file) of pattern-matching verbs, Godot-`RegEx`-backed and
