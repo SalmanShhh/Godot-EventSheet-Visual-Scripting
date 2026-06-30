@@ -33,6 +33,7 @@ var _enum_fill_menu: MenuButton = null
 var _enum_provider: Callable = Callable()
 var _attr_toggle: Button = null
 var _attr_section: VBoxContainer = null
+var _attr_section_card: PanelContainer = null  # themed inset card wrapping _attr_section (matches the picker's panels)
 # A second, nested disclosure inside _attr_section: the "Advanced" tier holds the wiring/organizational
 # attributes (grouping, show-if/lock-unless/on-changed, clamp, read-only) so the Basic tier (tooltip, range,
 # drawer, multiline) reads first.
@@ -200,11 +201,14 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_toggle.tooltip_text = "Optional Inspector polish for exported globals — everything compiles to plain Godot annotations."
 	_attr_toggle.toggled.connect(func(expanded: bool) -> void:
 		_attr_toggle.text = ("▾" if expanded else "▸") + _attr_toggle.text.substr(1)
-		_attr_section.visible = expanded)
+		_attr_section_card.visible = expanded)
 	form.add_child(_attr_toggle)
 	_attr_section = VBoxContainer.new()
-	_attr_section.visible = false
-	form.add_child(_attr_section)
+	# Themed inset card (the same sunken-panel surface the ACE picker uses), so the optional-attributes
+	# block reads as a distinct panel instead of flat form rows floating on the dialog background.
+	_attr_section_card = EventSheetPopupUI.panel_section(_attr_section)
+	_attr_section_card.visible = false
+	form.add_child(_attr_section_card)
 	# ── BASIC tier: the friendly polish a designer reaches for first ──
 	_attr_tooltip_edit = LineEdit.new()
 	_attr_tooltip_edit.placeholder_text = "shown when hovering the property"
@@ -437,8 +441,8 @@ func _update_attr_gating() -> void:
 	if not can_export:
 		_attr_toggle.set_pressed_no_signal(false)
 		_attr_toggle.text = "▸" + _attr_toggle.text.substr(1)
-		if _attr_section != null:
-			_attr_section.visible = false
+		if _attr_section_card != null:
+			_attr_section_card.visible = false
 		# Also collapse the nested Advanced tier so a later re-expand starts from the Basic-first state (rather
 		# than leaving the advanced block remembered-open from an earlier export-on session).
 		if _attr_advanced_toggle != null:
@@ -506,8 +510,8 @@ func open_for_edit(
 	if _attr_toggle != null:
 		var has_any: bool = not existing_attributes.is_empty()
 		_attr_toggle.button_pressed = has_any
-		_attr_section.visible = has_any
-		_attr_toggle.text = ("▾" if _attr_section.visible else "▸") + _attr_toggle.text.substr(1)
+		_attr_section_card.visible = has_any
+		_attr_toggle.text = ("▾" if _attr_section_card.visible else "▸") + _attr_toggle.text.substr(1)
 	if _attr_advanced_toggle != null:
 		var has_advanced: bool = false
 		for adv_key: String in _ADVANCED_ATTR_KEYS:

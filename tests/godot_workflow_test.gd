@@ -370,12 +370,12 @@ static func run() -> bool:
 		return [{"name": "State", "members": PackedStringArray(["IDLE", "RUN", "HURT = 4"])}])
 	variable_dialog.open_for_edit("global", {}, "speed", "float", "1.0", false, "Edit Variable", false, true)
 	all_passed = _check("inspector options start collapsed for plain variables",
-		variable_dialog._attr_section.visible, false) and all_passed
+		variable_dialog._attr_section_card.visible, false) and all_passed
 	all_passed = _check("combo options hide for non-String types",
 		variable_dialog._options_row.visible, false) and all_passed
 	variable_dialog.open_for_edit("global", {"attributes": {"tooltip": "hi"}}, "title", "String", "\"x\"", false, "Edit Variable", false, true)
 	all_passed = _check("existing attributes auto-expand the section",
-		variable_dialog._attr_section.visible and variable_dialog._options_row.visible, true) and all_passed
+		variable_dialog._attr_section_card.visible and variable_dialog._options_row.visible, true) and all_passed
 	variable_dialog._populate_enum_fill_menu()
 	var enum_popup: PopupMenu = variable_dialog._enum_fill_menu.get_popup()
 	all_passed = _check("sheet enums fill the combo with member names (values stripped)",
