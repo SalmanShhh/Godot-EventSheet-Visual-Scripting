@@ -106,7 +106,7 @@ func ensure_window() -> void:
 ## Debugger-plugin sink (wired by the plugin entry point): one values frame -> the
 ## editable tree + inline chips next to variable rows in every pane (rung 3).
 func update_values(values: Dictionary) -> void:
-    for pane: EventSheetViewport in [_dock._viewport, _dock._split_viewport, _dock._detached_viewport]:
+    for pane: EventSheetViewport in [_dock._viewport, _dock._multi_view._split_viewport, _dock._detached_viewport]:
         if pane != null:
             pane.set_live_values(values)
     ensure_window()

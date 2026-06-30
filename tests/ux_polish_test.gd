@@ -79,7 +79,7 @@ static func run() -> bool:
 	editor._find_cursor = 0
 	editor._open_match_in_split()
 	all_passed = _check("find match opens in the split pane",
-		editor._split_viewport != null and editor._split_viewport.get_flat_rows().size() > 0, true) and all_passed
+		editor._multi_view._split_viewport != null and editor._multi_view._split_viewport.get_flat_rows().size() > 0, true) and all_passed
 	editor.free()
 
 	# Single-param inline editing: value -> param resolution (incl. equal-value

@@ -33,7 +33,7 @@ static func run() -> bool:
 
 	# Open the split.
 	editor._toggle_split_view()
-	var split: EventSheetViewport = editor._split_viewport
+	var split: EventSheetViewport = editor._multi_view._split_viewport
 	all_passed = _check("split pane exists", split != null, true) and all_passed
 	all_passed = _check("split pane shows the same sheet",
 		split.get_flat_rows().size(), primary.get_flat_rows().size()) and all_passed
@@ -114,7 +114,7 @@ static func run() -> bool:
 
 	# Closing restores the original layout and the primary keeps working.
 	editor._toggle_split_view()
-	all_passed = _check("closing clears the split", editor._split_viewport == null, true) and all_passed
+	all_passed = _check("closing clears the split", editor._multi_view._split_viewport == null, true) and all_passed
 	all_passed = _check("active view falls back to the primary after close",
 		editor._active_view() == primary, true) and all_passed
 	editor._refresh_after_edit()
