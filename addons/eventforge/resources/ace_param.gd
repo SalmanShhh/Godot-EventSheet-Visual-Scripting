@@ -6,7 +6,9 @@
 #   "int" / "integer"         → integer SpinBox
 #   "float" / "double"        → float SpinBox
 #   "String" / "string"       → text field (default)
-#   Any type with options[]   → enum dropdown
+#   Any type with options[]   → enum dropdown (combo). Entries are either a plain "value" string
+#                               (label == value) or a {"key": <inserted value>, "label": <shown text>}
+#                               dict, so a dropdown can show "Warning" while inserting `push_warning`.
 #   Any type with hint = "variable_reference"
 #                             → variable dropdown populated from sheet variables
 #   String params with hint = "expression"
@@ -31,7 +33,8 @@ class_name ACEParam
 @export var gdscript_default: String = ""
 @export var initial_value: Variant = null
 @export var initialValue: Variant = null # event-sheet-style alias.
-@export var options: Array[String] = []
+# Untyped so entries may be plain value strings OR {"key","label"} dicts (friendly label ↔ inserted value).
+@export var options: Array = []
 ## Suggestions for an EDITABLE autocomplete combo (event-sheet-style): unlike `options`
 ## (a fixed dropdown), the user may type any value AND pick/filter from these. A behavior
 ## opts in per-param via `## @ace_param_autocomplete(param "a", "b", …)`; empty = plain field.

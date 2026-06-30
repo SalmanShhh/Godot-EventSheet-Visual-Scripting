@@ -35,7 +35,9 @@ static func make_descriptor(provider_id: String, ace_id: String, display_name: S
 ## "key_capture" = press-a-key, "audio_path" = path + preview ▶, "color", …);
 ## `options` makes it a fixed dropdown; `autocomplete` makes it an editable suggest combo
 ## (type freely + filter/pick). Mirrors EventForgeBuiltinACEs._make_param exactly.
-static func make_param(param_id: String, type_name: String, default_value: Variant = "", display_name: String = "", description: String = "", hint: String = "", options: Array[String] = [], autocomplete: Array[String] = []) -> ACEParam:
+## `options` entries are either a plain value string (label == value) or a {"key": <inserted value>,
+## "label": <shown text>} dict, so a dropdown can read "Warning" while inserting `push_warning`.
+static func make_param(param_id: String, type_name: String, default_value: Variant = "", display_name: String = "", description: String = "", hint: String = "", options: Array = [], autocomplete: Array[String] = []) -> ACEParam:
 	var parameter: ACEParam = ACEParam.new()
 	parameter.id = param_id
 	parameter.name = param_id

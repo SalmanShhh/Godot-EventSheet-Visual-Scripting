@@ -48,12 +48,25 @@ static func _map_params(params: Array[ACEParam]) -> Array:
         if param == null:
             continue
         var key: String = param.id if not param.id.is_empty() else param.name
+        # Options are normalized to {key, label}: a plain string is key == label; a {"key"/"value", "label"}
+        # dict keeps a friendly label distinct from the inserted value (e.g. "Warning" → `push_warning`).
         var normalized_options: Array = []
         for option in param.options:
-            var option_text: String = str(option)
-            if option_text.is_empty():
-                continue
-            normalized_options.append({"key": option_text, "label": option_text})
+            if option is Dictionary:
+                var option_dict: Dictionary = option as Dictionary
+                var option_key: String = str(option_dict.get("key", ""))
+                if option_key.is_empty():
+                    option_key = str(option_dict.get("value", ""))
+                if option_key.is_empty():
+                    option_key = str(option_dict.get("label", ""))
+                if option_key.is_empty():
+                    continue
+                normalized_options.append({"key": option_key, "label": str(option_dict.get("label", option_key))})
+            else:
+                var option_text: String = str(option)
+                if option_text.is_empty():
+                    continue
+                normalized_options.append({"key": option_text, "label": option_text})
         var autocomplete_values: Array = []
         for suggestion in param.autocomplete:
             var suggestion_text: String = str(suggestion)
