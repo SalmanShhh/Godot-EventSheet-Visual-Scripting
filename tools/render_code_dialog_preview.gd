@@ -33,8 +33,7 @@ func _on_frame() -> void:
 		_dock._with_node_dialog.popup_centered(Vector2i(460, 160))
 		_dock._ensure_sheet_type_dialog()
 		_dock._sheet_type_dialog.popup_centered(Vector2i(460, 300))
-		_dock._build_welcome_window()
-		_dock._welcome_window.popup_centered()
+		_dock.show_welcome()  # extracted EventSheetWelcomeWindow (dock/welcome_window.gd)
 		return
 	if _frames < 10 or _dock == null or _dock._raw_code_dialog == null:
 		return
@@ -42,7 +41,7 @@ func _on_frame() -> void:
 	print("[code_dialog_dbg] raw_code.size=%s (target 680x460)" % str(dialog.size))
 	print("[code_dialog_dbg] with_node.size=%s (target 460x160)" % str(_dock._with_node_dialog.size))
 	print("[code_dialog_dbg] sheet_type.size=%s (target 460x300)" % str(_dock._sheet_type_dialog.size))
-	print("[code_dialog_dbg] welcome.size=%s (no target; sizes to content)" % str(_dock._welcome_window.size))
+	print("[code_dialog_dbg] welcome.size=%s (no target; sizes to content)" % str(_dock._welcome._welcome_window.size))
 	var image: Image = dialog.get_texture().get_image()
 	image.save_png("res://_code_dialog_preview.png")
 	print("[code_dialog_preview] saved res://_code_dialog_preview.png (%dx%d)" % [image.get_width(), image.get_height()])

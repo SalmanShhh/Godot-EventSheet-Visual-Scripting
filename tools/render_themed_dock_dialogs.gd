@@ -43,11 +43,10 @@ func _on_frame() -> void:
 		root.add_child(_ed)
 		_ed.setup(EventSheetResource.new())
 		_ed.set_undo_redo_manager(NoopUndoManager.new())
-		_ed._build_welcome_window()
-		_ed._welcome_window.popup_centered()
+		_ed.show_welcome()  # builds + pops the extracted EventSheetWelcomeWindow
 		return
 	if _frames == 8:
-		_save(_ed._welcome_window, "welcome")
+		_save(_ed._welcome._welcome_window, "welcome")
 		_ed._ensure_sheet_type_dialog()
 		_ed._sheet_type_dialog.popup_centered(Vector2i(460, 300))
 		return

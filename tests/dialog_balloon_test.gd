@@ -32,7 +32,7 @@ static func run() -> bool:
 	dock._ensure_enum_dialog()
 	dock._ensure_signal_dialog()
 	dock._ensure_match_dialog()
-	dock._build_welcome_window()  # the first-launch dialog — an autowrap blurb here ballooned it to ~5000px
+	dock._welcome._build()  # the first-launch dialog (now dock/welcome_window.gd) — an autowrap blurb here ballooned it to ~5000px
 	for probe: Array in [
 		["Edit GDScript Block", dock._raw_code_dialog],
 		["Scope Actions To Node", dock._with_node_dialog],
@@ -40,7 +40,7 @@ static func run() -> bool:
 		["Edit Enum", dock._enum_dialog],
 		["Edit Signal", dock._signal_dialog],
 		["Edit Match", dock._match_dialog],
-		["Welcome", dock._welcome_window],
+		["Welcome", dock._welcome._welcome_window],
 	]:
 		var unbounded: Array[String] = _unbounded_autowrap_labels(probe[1] as Window)
 		all_passed = _check("%s has no unbounded autowrap label" % probe[0], unbounded, [] as Array[String]) and all_passed

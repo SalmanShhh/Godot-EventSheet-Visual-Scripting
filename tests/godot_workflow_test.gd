@@ -294,20 +294,22 @@ static func run() -> bool:
 		and view_menu != null and view_menu.get_popup().item_count == 18, true) and all_passed  # +1: Open Sheets Panel
 
 	# ── Welcome window: self-sizing dialog, margined, reopenable, checkbox synced ─
-	toolbar_editor._build_welcome_window()
+	# The window now lives in the extracted EventSheetWelcomeWindow (dock/welcome_window.gd); the dock
+	# keeps thin show_welcome / show_welcome_if_first_run delegates. Build via the helper directly.
+	toolbar_editor._welcome._build()
 	all_passed = _check("welcome self-sizes to its content (AcceptDialog)",
-		toolbar_editor._welcome_window is AcceptDialog, true) and all_passed
+		toolbar_editor._welcome._welcome_window is AcceptDialog, true) and all_passed
 	# The body is wrapped in the shared EventSheetPopupUI.margined() helper now (a MarginContainer
 	# child of the dialog) rather than a hand-named "WelcomeMargin" — assert real margins remain.
 	var welcome_margin: MarginContainer = null
-	for child: Node in toolbar_editor._welcome_window.get_children():
+	for child: Node in toolbar_editor._welcome._welcome_window.get_children():
 		if child is MarginContainer:
 			welcome_margin = child as MarginContainer
 			break
 	all_passed = _check("welcome content sits inside real margins",
 		welcome_margin != null and welcome_margin.get_theme_constant("margin_left") >= 8, true) and all_passed
 	all_passed = _check("welcome exposes the native-default checkbox for reopen sync",
-		toolbar_editor._welcome_window.get_meta("native_check") is CheckBox, true) and all_passed
+		toolbar_editor._welcome._welcome_window.get_meta("native_check") is CheckBox, true) and all_passed
 	toolbar_editor.free()
 
 	# ── Merged block cells: GDScript + action comments group their lines so the
