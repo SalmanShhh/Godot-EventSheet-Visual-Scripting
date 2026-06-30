@@ -2,13 +2,18 @@
 
 ## [Unreleased]
 
-### Added — `@export_color_no_alpha` (a "No alpha" tick on Color variables)
+### Added — more inspector export options: color-no-alpha, easing curve, placeholder
 
-- Color variables (already a first-class type) gain the Godot **`@export_color_no_alpha`** inspector hint as
-  a dialog-authored option: a Color-only **"No alpha (solid RGB, no transparency)"** checkbox in the
-  Variable dialog's "More options" (mirroring the String multiline tick). It compiles to
-  `@export_color_no_alpha` and **round-trips structurally** — reopening the `.gd` re-checks the tick (and it
-  survives editing), not a verbatim hint — verify-lift-gated like the drawers. (`tests/color_no_alpha_test.gd`)
+- Three more Godot `@export_*` flavours are now dialog-authored options in the Variable dialog's "More
+  options", each compiling to the native annotation and **round-tripping structurally** (the dialog control
+  re-fills on reopen and survives editing, verify-lift-gated like the drawers):
+  - **`@export_color_no_alpha`** — a Color-only "No alpha (solid RGB, no transparency)" tick.
+  - **`@export_exp_easing`** — a float-only "Easing curve" tick (an exponential-ease handle in the Inspector).
+  - **`@export_placeholder("…")`** — a String-only "Placeholder" field (grey hint text shown when empty).
+  - (`tests/color_no_alpha_test.gd`)
+- New how-to **[Inspector Drawers & Export Options Guide](docs/INSPECTOR-DRAWERS-GUIDE.md)** with rendered
+  images: the five Tier-3 drawers (progress bar / dial / swatch / texture / curve), every export option, and
+  the Tier-2 behaviours (clamp / on-changed / show-if), each with the exact emitted GDScript + use cases.
 
 ### Added — RegEx text module (Construct 3-style Regex functions)
 
