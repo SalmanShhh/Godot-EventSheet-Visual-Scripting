@@ -1788,6 +1788,22 @@ func _ensure_expression_window() -> void:
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_expression_window.add_child(margin)
 
+	# Operator palette — click to drop an operator at the expression's caret, so a non-coder builds
+	# comparisons + maths (health > 10, score + 1) without hunting for punctuation. Inserts and stays
+	# open; pair it with the tree below to assemble a whole expression by clicking.
+	content.add_child(EventSheetPopupUI.section_header("Operators"))
+	var ops_flow: HFlowContainer = HFlowContainer.new()
+	for op: String in ["+", "-", "*", "/", "%", "==", "!=", "<", ">", "and", "or", "not", "(", ")"]:
+		var op_button: Button = Button.new()
+		op_button.text = op
+		op_button.tooltip_text = "Insert  %s  at the cursor" % op
+		op_button.focus_mode = Control.FOCUS_NONE  # don't steal the caret from the expression field
+		# Parentheses snug; everything else is space-padded so tokens never fuse (score+1 → score + 1).
+		var snippet: String = op if (op == "(" or op == ")") else " %s " % op
+		op_button.pressed.connect(_insert_into_expression_target.bind(snippet))
+		ops_flow.add_child(op_button)
+	content.add_child(ops_flow)
+
 	_expression_search = LineEdit.new()
 	_expression_search.placeholder_text = "Search expressions..."
 	_expression_search.clear_button_enabled = true
@@ -1887,13 +1903,22 @@ func _on_expression_activated() -> void:
 		insert_text = str(metadata)
 	if insert_text.is_empty():
 		return
-	var target: Control = _fields.get(_expression_target_key, null)
-	if target is LineEdit:
-		var line_edit: LineEdit = target as LineEdit
-		line_edit.text = insert_text
-		line_edit.grab_focus()
-		line_edit.caret_column = line_edit.text.length()
-	_expression_window.hide()
+	# Insert at the caret so results compose into a larger expression (e.g. health + sin(time)). The OK
+	# button still closes the window (AcceptDialog auto-hides on confirm); double-clicking a tree result
+	# leaves the window open so several can be chained. The old code only handled LineEdit — and the
+	# expression field is always a CodeEdit — so picking a result silently did nothing. This fixes it.
+	_insert_into_expression_target(insert_text)
+
+## Inserts a snippet at the caret of the expression field that opened the picker (the CodeEdit for
+## _expression_target_key) and re-validates it. Shared by the tree results and the operator palette.
+func _insert_into_expression_target(snippet: String) -> void:
+	var target: Variant = _fields.get(_expression_target_key)
+	if target is TextEdit:  # CodeEdit extends TextEdit
+		(target as TextEdit).insert_text_at_caret(snippet)
+		_validate_expression_field(target as Control)
+	elif target is LineEdit:
+		(target as LineEdit).insert_text_at_caret(snippet)
+		_validate_expression_field(target as Control)
 
 ## Returns the code template inserted for an expression definition (with default params).
 func _expression_template(definition: ACEDefinition) -> String:
