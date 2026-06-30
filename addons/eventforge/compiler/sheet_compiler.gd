@@ -1507,6 +1507,10 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 				export_prefix = "@export_multiline "
 			elif exported and bool(attributes.get("no_alpha", false)) and type_name == "Color":
 				export_prefix = "@export_color_no_alpha "
+			elif exported and bool(attributes.get("exp_easing", false)) and type_name == "float":
+				export_prefix = "@export_exp_easing "
+			elif exported and type_name == "String" and not str(attributes.get("placeholder", "")).strip_edges().is_empty() and not str(attributes.get("placeholder", "")).contains("\""):
+				export_prefix = "@export_placeholder(\"%s\") " % str(attributes.get("placeholder")).strip_edges()
 			# Tier 3 drawers: a marker rides an @export_custom hint string; without the editor plugin the
 			# property degrades to a plain field (parity preserved). One helper drives both var paths.
 			if exported:
@@ -1784,6 +1788,12 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# Structured (from attributes) so it round-trips into the dialog tick, not a verbatim hint.
 	elif local_var.exported and local_var.attributes is Dictionary and bool((local_var.attributes as Dictionary).get("no_alpha", false)) and local_var.type_name == "Color":
 		var_line = "@export_color_no_alpha var %s: %s = %s" % [local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+	# float "exponential easing" → @export_exp_easing (a curve handle in the Inspector for attenuation values).
+	elif local_var.exported and local_var.attributes is Dictionary and bool((local_var.attributes as Dictionary).get("exp_easing", false)) and local_var.type_name == "float":
+		var_line = "@export_exp_easing var %s: %s = %s" % [local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+	# String "placeholder" → @export_placeholder("hint") (grey hint text shown in the empty field).
+	elif local_var.exported and local_var.type_name == "String" and local_var.attributes is Dictionary and not str((local_var.attributes as Dictionary).get("placeholder", "")).strip_edges().is_empty() and not str((local_var.attributes as Dictionary).get("placeholder", "")).contains("\""):
+		var_line = "@export_placeholder(\"%s\") var %s: %s = %s" % [str((local_var.attributes as Dictionary).get("placeholder")).strip_edges(), local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
 	# Hinted export (@export_range / @export_file / @export_flags / …): the annotation is kept verbatim.
 	elif not local_var.export_hint.strip_edges().is_empty():
 		var_line = "%s var %s: %s = %s" % [local_var.export_hint, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]

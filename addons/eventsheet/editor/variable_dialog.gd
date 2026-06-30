@@ -57,6 +57,9 @@ var _attr_subgroup_edit: LineEdit = null
 var _attr_range_edit: LineEdit = null
 var _attr_multiline_check: CheckBox = null
 var _attr_no_alpha_check: CheckBox = null
+var _attr_exp_easing_check: CheckBox = null
+var _attr_placeholder_edit: LineEdit = null
+var _attr_placeholder_row: Control = null
 var _attr_show_if_edit: LineEdit = null
 var _attr_lock_unless_edit: LineEdit = null
 var _attr_on_changed_edit: LineEdit = null
@@ -177,7 +180,9 @@ func init_dialog(parent_node: Node) -> void:
 	_whole_numbers_check = CheckBox.new()
 	_whole_numbers_check.text = "Whole numbers only"
 	_whole_numbers_check.tooltip_text = "A whole number (no decimals) — stored as an int. Unticked stores a float."
-	_whole_numbers_check.toggled.connect(func(_on: bool) -> void: _refresh_default_hint())
+	_whole_numbers_check.toggled.connect(func(_on: bool) -> void:
+		_refresh_default_hint()
+		_refresh_contextual_rows())
 	_whole_numbers_row.add_child(_whole_numbers_check)
 	_whole_numbers_row.visible = false
 	form.add_child(_whole_numbers_row)
@@ -266,6 +271,15 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_no_alpha_check = CheckBox.new()
 	_attr_no_alpha_check.text = "No alpha (Color: solid RGB, no transparency)"
 	_attr_section.add_child(_attr_no_alpha_check)
+	# float-only: @export_exp_easing — an easing-curve handle in the Inspector (for 0-1 attenuation values).
+	_attr_exp_easing_check = CheckBox.new()
+	_attr_exp_easing_check.text = "Easing curve (float: exponential ease handle)"
+	_attr_section.add_child(_attr_exp_easing_check)
+	# String-only: @export_placeholder — grey hint text shown while the field is empty.
+	_attr_placeholder_edit = LineEdit.new()
+	_attr_placeholder_edit.placeholder_text = "grey hint shown when the field is empty"
+	_attr_placeholder_row = EventSheetPopupUI.form_row("Placeholder", _attr_placeholder_edit)
+	_attr_section.add_child(_attr_placeholder_row)
 	# ── ADVANCED tier (nested disclosure): wiring + organization that assumes other vars/funcs exist or
 	# Godot-Inspector fluency — kept out of the common path so the Basic tier reads cleanly. ──
 	_attr_advanced_toggle = Button.new()
@@ -577,6 +591,8 @@ func open_for_edit(
 	_attr_range_edit.text = "%s, %s, %s" % [str((existing_range as Dictionary).get("min", "0")), str((existing_range as Dictionary).get("max", "100")), str((existing_range as Dictionary).get("step", "1"))] if existing_range is Dictionary else ""
 	_attr_multiline_check.button_pressed = bool(existing_attributes.get("multiline", false))
 	_attr_no_alpha_check.button_pressed = bool(existing_attributes.get("no_alpha", false))
+	_attr_exp_easing_check.button_pressed = bool(existing_attributes.get("exp_easing", false))
+	_attr_placeholder_edit.text = str(existing_attributes.get("placeholder", ""))
 	_attr_show_if_edit.text = str(existing_attributes.get("show_if", ""))
 	_attr_lock_unless_edit.text = str(existing_attributes.get("lock_unless", ""))
 	_attr_on_changed_edit.text = str(existing_attributes.get("on_changed", ""))
@@ -700,6 +716,11 @@ func _on_confirmed() -> void:
 		attributes["multiline"] = true
 	if _attr_no_alpha_check.button_pressed and type_name == "Color":
 		attributes["no_alpha"] = true
+	if _attr_exp_easing_check.button_pressed and type_name == "float":
+		attributes["exp_easing"] = true
+	var placeholder_text: String = _attr_placeholder_edit.text.strip_edges()
+	if not placeholder_text.is_empty() and not placeholder_text.contains("\"") and type_name == "String":
+		attributes["placeholder"] = placeholder_text
 	for conditional in [["show_if", _attr_show_if_edit], ["lock_unless", _attr_lock_unless_edit], ["on_changed", _attr_on_changed_edit]]:
 		var conditional_value: String = (conditional[1] as LineEdit).text.strip_edges()
 		if conditional_value.is_empty():
@@ -848,6 +869,8 @@ func _refresh_contextual_rows() -> void:
 		_attr_clamp_check.visible = numeric
 		_attr_multiline_check.visible = type_name == "String"
 		_attr_no_alpha_check.visible = type_name == "Color"
+		_attr_exp_easing_check.visible = type_name == "float"
+		_attr_placeholder_row.visible = type_name == "String"
 	# The drawer picker offers only the one drawer the current type can host (or hides when there is none).
 	_rebuild_drawer_options(_drawer_kind_for_type(type_name))
 	_refresh_drawer_preview()

@@ -208,6 +208,8 @@ func _try_lift_variable(line: String) -> LocalVariable:
 		return null
 	_extract_drawer_from_hint(lifted, line)
 	_extract_color_no_alpha(lifted, line)
+	_extract_exp_easing(lifted, line)
+	_extract_placeholder(lifted, line)
 	return lifted
 
 ## @export_color_no_alpha round-trip: pull the bare hint into the structured `no_alpha` attribute so a
@@ -220,6 +222,36 @@ func _extract_color_no_alpha(lifted: LocalVariable, line: String) -> void:
 	var saved_attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
 	var attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
 	attrs["no_alpha"] = true
+	lifted.attributes = attrs
+	lifted.export_hint = ""
+	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+		lifted.export_hint = saved_hint
+		lifted.attributes = saved_attrs
+
+## @export_exp_easing round-trip: bare hint → structured `exp_easing` attribute (the float easing tick).
+func _extract_exp_easing(lifted: LocalVariable, line: String) -> void:
+	if lifted.export_hint.strip_edges() != "@export_exp_easing":
+		return
+	var saved_hint: String = lifted.export_hint
+	var saved_attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
+	var attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
+	attrs["exp_easing"] = true
+	lifted.attributes = attrs
+	lifted.export_hint = ""
+	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+		lifted.export_hint = saved_hint
+		lifted.attributes = saved_attrs
+
+## @export_placeholder("hint") round-trip: pull the quoted hint text into the structured `placeholder`
+## attribute (the dialog's Placeholder field). Verify-gated like the others.
+func _extract_placeholder(lifted: LocalVariable, line: String) -> void:
+	if not lifted.export_hint.strip_edges().begins_with("@export_placeholder("):
+		return
+	var text: String = _extract_first_quoted(lifted.export_hint)
+	var saved_hint: String = lifted.export_hint
+	var saved_attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
+	var attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
+	attrs["placeholder"] = text
 	lifted.attributes = attrs
 	lifted.export_hint = ""
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:
