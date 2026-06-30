@@ -46,11 +46,17 @@ var _add_another_button: Button = null
 # Sheet-context source for live ƒx validation (set by the dock; returns the active sheet).
 var _lint_context_provider: Callable = Callable()
 
-# Insert Expression picker (lazy).
-var _expression_window: AcceptDialog = null
-var _expression_tree: Tree = null
-var _expression_search: LineEdit = null
-var _expression_target_key: String = ""
+# The 🔍 scene-node picker and the ƒx Insert-Expression picker are self-contained dialog
+# subsystems extracted to their own files (each owns its widgets + state) to keep this file
+# maintainable. They reach back here through a _host reference for the shared bits that stay on
+# this dialog: _fields, _validate_expression_field, _first_metadata_row, _best_node_reference,
+# the ACE registry and the host-class reflection. This dialog keeps a thin delegate for every
+# entry point so callers/tests and the by-class-name static calls are unchanged.
+# Instantiated at declaration (not in init_dialog) so the pure delegates (e.g. _expression_template)
+# work for tests that exercise this dialog's logic without calling init_dialog / a display server.
+# init_dialog wires each one's _host back-reference via init(self).
+var _node_picker: ACEParamsNodePicker = ACEParamsNodePicker.new()
+var _expression_picker: ACEParamsExpressionPicker = ACEParamsExpressionPicker.new()
 
 ## Initialise and attach the dialog to parent_node. Must be called before open().
 ## registry powers the Insert Expression picker; variable_names_provider returns the
@@ -60,6 +66,8 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry = null, vari
 	_variable_names_provider = variable_names_provider
 	if _dialog != null:
 		return
+	_node_picker.init(self)
+	_expression_picker.init(self)
 	_dialog = ConfirmationDialog.new()
 	_dialog.title = "Parameters"
 	_dialog.visible = false
@@ -834,30 +842,46 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	return container
 
 # ── Scene node picker (large-project search) ──────────────────────────────────────────
-# Search modes (all case-insensitive):
-#   plain text        -> matches node NAME, CLASS or PATH ("Area2D" finds every area)
-#   group:enemies     -> nodes in that Godot group
-#   script:Enemy      -> nodes whose attached script matches (global class or filename)
-#   scene:query       -> CROSS-SCENE: scans res:// .tscn files for matching node headers
-# Filter chips (2D/3D/UI/Audio/Physics) pre-filter by base class. Recently picked nodes
-# surface first; "Used in sheet" lists every $Ref this sheet already makes, tinted red
-# when the node no longer exists in the edited scene (broken-reference audit).
-var _node_picker_window: AcceptDialog = null
-var _node_picker_unique_button: Button = null
-var _node_picker_tree: Tree = null
-var _node_picker_search: LineEdit = null
-var _node_picker_target_key: String = ""
-var _node_picker_chips: Dictionary = {}  # chip label -> Button (toggle)
-var _node_picker_used_toggle: Button = null
-var _node_picker_recents: PackedStringArray = PackedStringArray()
+# The 🔍 picker dialog (search modes, filter chips, recents, used-in-sheet audit) lives in its own
+# file — see ACEParamsNodePicker (ace_params_node_picker.gd). The methods/state below are thin
+# delegates so callers, the 🔍 button's .bind, and the by-class-name static calls
+# (ACEParamsDialog.node_matches_query, .extract_sheet_node_references, .scan_scene_files,
+# ._node_is_uniqueable) keep working unchanged.
 
-const NODE_PICKER_CHIP_CLASSES: Dictionary = {
-	"2D": ["Node2D"], "3D": ["Node3D"], "UI": ["Control"],
-	"Audio": ["AudioStreamPlayer", "AudioStreamPlayer2D", "AudioStreamPlayer3D"],
-	"Physics": ["CollisionObject2D", "CollisionObject3D", "Joint2D", "Joint3D"]
-}
-const NODE_PICKER_RECENTS_CAP := 8
-const NODE_PICKER_SCENE_SCAN_CAP := 200
+func _open_node_picker(key: String) -> void:
+	_node_picker._open_node_picker(key)
+
+## Builds the picker UI lazily — delegate kept for tests that drive it headlessly.
+func _ensure_node_picker_ui() -> void:
+	_node_picker._ensure_node_picker_ui()
+
+## Population delegate kept for tests that drive an explicit tree.
+func _populate_node_picker_from_root(scene_root: Node) -> void:
+	_node_picker._populate_node_picker_from_root(scene_root)
+
+## Selection-changed delegate kept for tests.
+func _on_node_picker_selection_changed() -> void:
+	_node_picker._on_node_picker_selection_changed()
+
+## Query matching with the group:/script: prefixes (plain = name/class/path).
+## Static delegate — reached as ACEParamsDialog.node_matches_query by tests/tools.
+static func node_matches_query(node: Node, relative_path: String, query: String) -> bool:
+	return ACEParamsNodePicker.node_matches_query(node, relative_path, query)
+
+## Every $Name / $"Path" reference the sheet makes (params, blocks, pick filters).
+## Static delegate — reached as ACEParamsDialog.extract_sheet_node_references by tests/tools.
+static func extract_sheet_node_references(sheet: EventSheetResource) -> PackedStringArray:
+	return ACEParamsNodePicker.extract_sheet_node_references(sheet)
+
+## Cross-scene search: regex-scans .tscn node headers under res://.
+## Static delegate — reached as ACEParamsDialog.scan_scene_files by tests/tools.
+static func scan_scene_files(query: String, base_dir: String = "res://") -> Array:
+	return ACEParamsNodePicker.scan_scene_files(query, base_dir)
+
+## True when the node at relative_path can be made scene-unique. Pure → unit-testable.
+## Static delegate — reached as ACEParamsDialog._node_is_uniqueable by tests.
+static func _node_is_uniqueable(scene_root: Node, relative_path: String) -> bool:
+	return ACEParamsNodePicker._node_is_uniqueable(scene_root, relative_path)
 
 ## Stops any in-flight audio preview (called when the dialog hides — a preview must
 ## never outlive the dialog that started it).
@@ -865,249 +889,6 @@ func _stop_audio_preview() -> void:
 	if _preview_player != null and is_instance_valid(_preview_player):
 		_preview_player.queue_free()
 	_preview_player = null
-
-func _open_node_picker(key: String) -> void:
-	_node_picker_target_key = key
-	_ensure_node_picker_ui()
-	_populate_node_picker()
-	_node_picker_window.get_ok_button().disabled = true
-	_node_picker_window.popup_centered(Vector2i(520, 560))
-	_node_picker_search.grab_focus()
-
-## Builds the picker UI lazily (separate from _open so headless tests can drive it).
-func _ensure_node_picker_ui() -> void:
-	if _node_picker_window == null:
-		_node_picker_window = AcceptDialog.new()
-		_node_picker_window.title = "Pick Node"
-		_node_picker_window.min_size = Vector2i(480, 460)
-		_node_picker_window.ok_button_text = "Use Node"
-		_node_picker_window.get_ok_button().disabled = true
-		_node_picker_window.close_requested.connect(func() -> void: _node_picker_window.hide())
-		_node_picker_window.confirmed.connect(_on_node_picker_activated)
-		# One-click "Make %unique": turns the selected deep node into a scene-unique node (undoable) and
-		# hands back %Name — so ANY node, not just pre-marked ones, gets a flat path-free handle. The button
-		# enables only for a non-root node that isn't already unique (see _on_node_picker_selection_changed).
-		_node_picker_unique_button = _node_picker_window.add_button("Make %unique", true, "make_unique")
-		_node_picker_unique_button.disabled = true
-		_node_picker_window.custom_action.connect(_on_node_picker_custom_action)
-		var box: VBoxContainer = EventSheetPopupUI.form_box()
-		# Find card: the search box + the filter chips, grouped in a titled inset card.
-		var find_box: VBoxContainer = EventSheetPopupUI.form_box()
-		_node_picker_search = LineEdit.new()
-		_node_picker_search.clear_button_enabled = true
-		_node_picker_search.placeholder_text = "Search…  (also group:enemies, script:Enemy, scene:Coin)"
-		_node_picker_search.text_changed.connect(func(_t: String) -> void: _populate_node_picker())
-		# Enter commits the first result (parity with the main ACE picker's type-and-Enter).
-		_node_picker_search.text_submitted.connect(func(_t: String) -> void: _activate_first_node_picker_match())
-		find_box.add_child(_node_picker_search)
-		var chip_row: HBoxContainer = HBoxContainer.new()
-		chip_row.add_theme_constant_override("separation", 4)
-		for chip_label: String in NODE_PICKER_CHIP_CLASSES.keys():
-			var chip: Button = Button.new()
-			chip.text = chip_label
-			chip.toggle_mode = true
-			chip.toggled.connect(func(_on: bool) -> void: _populate_node_picker())
-			chip_row.add_child(chip)
-			_node_picker_chips[chip_label] = chip
-		_node_picker_used_toggle = Button.new()
-		_node_picker_used_toggle.text = "Used in sheet"
-		_node_picker_used_toggle.toggle_mode = true
-		_node_picker_used_toggle.tooltip_text = "List every node reference this sheet makes (red = missing from the scene)."
-		_node_picker_used_toggle.toggled.connect(func(_on: bool) -> void: _populate_node_picker())
-		chip_row.add_child(_node_picker_used_toggle)
-		find_box.add_child(chip_row)
-		box.add_child(EventSheetPopupUI.titled_card("Find a node", find_box))
-		_node_picker_tree = Tree.new()
-		_node_picker_tree.columns = 2
-		_node_picker_tree.set_column_title(0, "Node")
-		_node_picker_tree.set_column_title(1, "Class")
-		_node_picker_tree.column_titles_visible = true
-		_node_picker_tree.hide_root = true
-		_node_picker_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_node_picker_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		_node_picker_tree.item_activated.connect(_on_node_picker_activated)
-		_node_picker_tree.item_selected.connect(_on_node_picker_selection_changed)
-		# A bare Control holder bounds the dialog height: a Tree reports its full content height as its
-		# minimum and an AcceptDialog would grow to fit it. The tree fills the holder + scrolls internally.
-		var tree_holder: Control = Control.new()
-		tree_holder.custom_minimum_size = Vector2(0.0, 320.0)
-		tree_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		tree_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		_node_picker_tree.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		tree_holder.add_child(_node_picker_tree)
-		var results_card: PanelContainer = EventSheetPopupUI.titled_card("Results", tree_holder)
-		results_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		box.add_child(results_card)
-		_node_picker_window.add_child(EventSheetPopupUI.margined(box))
-		_dialog.add_child(_node_picker_window)
-
-func _populate_node_picker() -> void:
-	var scene_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
-	_populate_node_picker_from_root(scene_root)
-
-## Population factored from the editor entry point so tests can drive an explicit tree.
-func _populate_node_picker_from_root(scene_root: Node) -> void:
-	_node_picker_tree.clear()
-	var root_item: TreeItem = _node_picker_tree.create_item()
-	var query: String = _node_picker_search.text.strip_edges()
-	# Used-in-sheet audit view.
-	if _node_picker_used_toggle != null and _node_picker_used_toggle.button_pressed:
-		var sheet: EventSheetResource = null
-		if _lint_context_provider.is_valid():
-			sheet = _lint_context_provider.call() as EventSheetResource
-		for reference: String in extract_sheet_node_references(sheet):
-			var item: TreeItem = _node_picker_tree.create_item(root_item)
-			var exists: bool = scene_root != null and scene_root.has_node(NodePath(reference))
-			item.set_text(0, reference)
-			item.set_text(1, "" if exists else "MISSING")
-			item.set_metadata(0, reference)
-			if not exists:
-				item.set_custom_color(0, Color(0.9, 0.35, 0.35))
-				item.set_custom_color(1, Color(0.9, 0.35, 0.35))
-		return
-	# Cross-scene search: scan .tscn node headers.
-	if query.to_lower().begins_with("scene:"):
-		for hit: Dictionary in scan_scene_files(query.substr(6).strip_edges()):
-			var scene_item: TreeItem = _node_picker_tree.create_item(root_item)
-			scene_item.set_text(0, "%s  —  %s" % [str(hit.get("node", "")), str(hit.get("file", ""))])
-			scene_item.set_text(1, str(hit.get("class", "")))
-			scene_item.set_metadata(0, "scene::" + str(hit.get("file", "")))
-		return
-	if scene_root == null:
-		var empty: TreeItem = _node_picker_tree.create_item(root_item)
-		empty.set_text(0, "(no scene open)")
-		return
-	# Recents first (when not searching).
-	if query.is_empty():
-		for recent: String in _node_picker_recents:
-			if scene_root.has_node(NodePath(recent)):
-				var recent_item: TreeItem = _node_picker_tree.create_item(root_item)
-				recent_item.set_text(0, "★ " + recent)
-				recent_item.set_text(1, scene_root.get_node(NodePath(recent)).get_class())
-				recent_item.set_metadata(0, recent)
-	_append_node_picker_rows(scene_root, scene_root, root_item, query)
-
-func _append_node_picker_rows(node: Node, scene_root: Node, parent_item: TreeItem, query: String) -> void:
-	var relative: String = str(scene_root.get_path_to(node))
-	if _chip_filter_allows(node) and node_matches_query(node, relative, query):
-		var item: TreeItem = _node_picker_tree.create_item(parent_item)
-		# Show the %handle for scene-unique nodes (what picking them yields) so the deep-path shortcut is
-		# visible at a glance; the metadata stays the relative path, resolved back to %Name on use.
-		var is_unique: bool = node != scene_root and node.unique_name_in_owner and node.owner == scene_root
-		item.set_text(0, ("%" + str(node.name)) if is_unique else (relative if node != scene_root else node.name))
-		item.set_text(1, node.get_class())
-		item.set_metadata(0, relative if node != scene_root else ".")
-	for child: Node in node.get_children():
-		_append_node_picker_rows(child, scene_root, parent_item, query)
-
-## True when no chip is active, or the node inherits any active chip's base classes.
-func _chip_filter_allows(node: Node) -> bool:
-	var any_active: bool = false
-	for chip_label: String in _node_picker_chips.keys():
-		var chip: Button = _node_picker_chips[chip_label]
-		if not chip.button_pressed:
-			continue
-		any_active = true
-		for base_class: String in NODE_PICKER_CHIP_CLASSES[chip_label]:
-			if node.is_class(base_class):
-				return true
-	return not any_active
-
-## Query matching with the group:/script: prefixes (plain = name/class/path).
-static func node_matches_query(node: Node, relative_path: String, query: String) -> bool:
-	if query.is_empty():
-		return true
-	var lowered: String = query.to_lower()
-	if lowered.begins_with("group:"):
-		return node.is_in_group(StringName(query.substr(6).strip_edges()))
-	if lowered.begins_with("script:"):
-		var wanted: String = lowered.substr(7).strip_edges()
-		var script: Script = node.get_script() as Script
-		if script == null:
-			return false
-		return str(script.get_global_name()).to_lower().contains(wanted) \
-			or script.resource_path.get_file().to_lower().contains(wanted)
-	return node.name.to_lower().contains(lowered) \
-		or node.get_class().to_lower().contains(lowered) \
-		or relative_path.to_lower().contains(lowered)
-
-## Every $Name / $"Path" reference the sheet makes (params, blocks, pick filters).
-static func extract_sheet_node_references(sheet: EventSheetResource) -> PackedStringArray:
-	var references: PackedStringArray = PackedStringArray()
-	if sheet == null:
-		return references
-	var reference_regex: RegEx = RegEx.new()
-	reference_regex.compile("\\$(?:\"([^\"]+)\"|([A-Za-z_][A-Za-z0-9_/]*))")
-	var haystacks: PackedStringArray = PackedStringArray()
-	_collect_reference_haystacks(sheet.events, haystacks)
-	for function_entry: Variant in sheet.functions:
-		if function_entry is EventFunction:
-			_collect_reference_haystacks((function_entry as EventFunction).events if not (function_entry as EventFunction).events.is_empty() else (function_entry as EventFunction).rows, haystacks)
-	for haystack: String in haystacks:
-		for regex_match: RegExMatch in reference_regex.search_all(haystack):
-			var reference: String = regex_match.get_string(1) if not regex_match.get_string(1).is_empty() else regex_match.get_string(2)
-			if not references.has(reference):
-				references.append(reference)
-	return references
-
-static func _collect_reference_haystacks(rows: Array, into: PackedStringArray) -> void:
-	for row: Variant in rows:
-		if row is RawCodeRow:
-			into.append((row as RawCodeRow).code)
-		elif row is EventGroup:
-			var group: EventGroup = row as EventGroup
-			_collect_reference_haystacks(group.events if not group.events.is_empty() else group.rows, into)
-		elif row is EventRow:
-			var event_row: EventRow = row as EventRow
-			for ace: Variant in event_row.conditions + event_row.actions:
-				if ace is RawCodeRow:
-					into.append((ace as RawCodeRow).code)
-				elif ace is MatchRow:
-					into.append((ace as MatchRow).branches_text)
-				elif ace is Resource and ace.get("params") is Dictionary:
-					for value: Variant in (ace.get("params") as Dictionary).values():
-						if value is String:
-							into.append(value)
-			for pick: Variant in event_row.pick_filters:
-				if pick is PickFilter:
-					into.append((pick as PickFilter).collection_value)
-					into.append((pick as PickFilter).predicate_expression)
-			_collect_reference_haystacks(event_row.sub_events, into)
-
-## Cross-scene search: regex-scans .tscn node headers (text format) under res://.
-## Returns [{file, node, class}] capped at NODE_PICKER_SCENE_SCAN_CAP.
-static func scan_scene_files(query: String, base_dir: String = "res://") -> Array:
-	var hits: Array = []
-	if query.is_empty():
-		return hits
-	var header_regex: RegEx = RegEx.new()
-	header_regex.compile("\\[node name=\"([^\"]+)\"(?: type=\"([^\"]+)\")?")
-	var pending: PackedStringArray = PackedStringArray([base_dir])
-	var lowered: String = query.to_lower()
-	while not pending.is_empty() and hits.size() < NODE_PICKER_SCENE_SCAN_CAP:
-		var directory_path: String = pending[pending.size() - 1]
-		pending.remove_at(pending.size() - 1)
-		var directory: DirAccess = DirAccess.open(directory_path)
-		if directory == null:
-			continue
-		directory.list_dir_begin()
-		var entry: String = directory.get_next()
-		while not entry.is_empty():
-			var full_path: String = directory_path.path_join(entry)
-			if directory.current_is_dir():
-				if not entry.begins_with("."):
-					pending.append(full_path)
-			elif entry.get_extension() == "tscn":
-				var content: String = FileAccess.get_file_as_string(full_path)
-				for regex_match: RegExMatch in header_regex.search_all(content):
-					var node_name: String = regex_match.get_string(1)
-					var node_class: String = regex_match.get_string(2)
-					if node_name.to_lower().contains(lowered) or node_class.to_lower().contains(lowered):
-						hits.append({"file": full_path, "node": node_name, "class": node_class})
-						if hits.size() >= NODE_PICKER_SCENE_SCAN_CAP:
-							break
-			entry = directory.get_next()
-	return hits
 
 ## Depth-first: the first tree item carrying metadata — a real result row, skipping non-selectable
 ## group folders and empty-state placeholders. Lets Enter in the sub-picker search boxes commit the
@@ -1124,101 +905,6 @@ func _first_metadata_row(item: TreeItem) -> TreeItem:
 			return nested
 		child = child.get_next()
 	return null
-
-## Enter in the node-picker search box commits the first matching node.
-func _activate_first_node_picker_match() -> void:
-	var first: TreeItem = _first_metadata_row(_node_picker_tree.get_root()) if _node_picker_tree != null else null
-	if first != null:
-		first.select(0)
-		_on_node_picker_activated()
-
-## Enter in the expression-picker search box commits the first matching expression.
-func _activate_first_expression_match() -> void:
-	var first: TreeItem = _first_metadata_row(_expression_tree.get_root()) if _expression_tree != null else null
-	if first != null:
-		first.select(0)
-		_on_expression_activated()
-
-## Enables the "Use Node" button only when a row that carries a node reference is highlighted, so the
-## confirm action can never commit an empty/heading row.
-func _on_node_picker_selection_changed() -> void:
-	var selected: TreeItem = _node_picker_tree.get_selected() if _node_picker_tree != null else null
-	if _node_picker_window != null:
-		_node_picker_window.get_ok_button().disabled = selected == null or selected.get_metadata(0) == null
-	if _node_picker_unique_button != null:
-		var meta: Variant = selected.get_metadata(0) if selected != null else null
-		var scene_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
-		_node_picker_unique_button.disabled = meta == null or not _node_is_uniqueable(scene_root, str(meta))
-
-func _on_node_picker_activated() -> void:
-	var selected: TreeItem = _node_picker_tree.get_selected()
-	if selected == null:
-		return
-	var relative: String = str(selected.get_metadata(0))
-	var reference: String
-	if relative.begins_with("scene::"):
-		reference = format_quoted_literal(relative.trim_prefix("scene::"))
-	else:
-		var picker_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
-		reference = "self" if relative == "." else _best_node_reference(picker_root, relative)
-		var existing_index: int = _node_picker_recents.find(relative)
-		if existing_index >= 0:
-			_node_picker_recents.remove_at(existing_index)
-		_node_picker_recents.insert(0, relative)
-		if _node_picker_recents.size() > NODE_PICKER_RECENTS_CAP:
-			_node_picker_recents.resize(NODE_PICKER_RECENTS_CAP)
-	var field: Variant = _fields.get(_node_picker_target_key)
-	if field is TextEdit:
-		(field as TextEdit).insert_text_at_caret(reference)
-		_validate_expression_field(field)
-	elif field is LineEdit:
-		(field as LineEdit).insert_text_at_caret(reference)
-	_node_picker_window.hide()
-
-func _on_node_picker_custom_action(action: StringName) -> void:
-	if str(action) == "make_unique":
-		_make_picked_node_unique()
-
-## Marks the picked node scene-unique (undoable) and hands back %Name — so ANY deep node, not just
-## pre-marked ones, becomes a flat path-free handle in one click, without leaving the sheet for the scene
-## editor. No-op outside the editor or for a non-uniqueable selection.
-func _make_picked_node_unique() -> void:
-	if not Engine.is_editor_hint():
-		return
-	var selected: TreeItem = _node_picker_tree.get_selected() if _node_picker_tree != null else null
-	if selected == null:
-		return
-	var scene_root: Node = EditorInterface.get_edited_scene_root()
-	var relative: String = str(selected.get_metadata(0)) if selected.get_metadata(0) != null else ""
-	if not _node_is_uniqueable(scene_root, relative):
-		return
-	var node: Node = scene_root.get_node_or_null(NodePath(relative))
-	if node == null:
-		return
-	var undo: EditorUndoRedoManager = EditorInterface.get_editor_undo_redo()
-	if undo != null:
-		undo.create_action("Mark \"%s\" as scene-unique" % node.name)
-		undo.add_do_property(node, "unique_name_in_owner", true)
-		undo.add_undo_property(node, "unique_name_in_owner", false)
-		undo.commit_action()
-	else:
-		node.unique_name_in_owner = true
-	var field: Variant = _fields.get(_node_picker_target_key)
-	var reference: String = "%" + str(node.name)
-	if field is TextEdit:
-		(field as TextEdit).insert_text_at_caret(reference)
-		_validate_expression_field(field)
-	elif field is LineEdit:
-		(field as LineEdit).insert_text_at_caret(reference)
-	_node_picker_window.hide()
-
-## True when the node at relative_path can be made scene-unique: it exists, isn't the scene root or a
-## cross-scene entry, is owned by this scene, and isn't already unique. Pure → unit-testable.
-static func _node_is_uniqueable(scene_root: Node, relative_path: String) -> bool:
-	if scene_root == null or relative_path.is_empty() or relative_path == "." or relative_path.begins_with("scene::"):
-		return false
-	var node: Node = scene_root.get_node_or_null(NodePath(relative_path))
-	return node != null and node != scene_root and node.owner == scene_root and not node.unique_name_in_owner
 
 ## Literal node-path references in an expression that can be checked against a scene: bare `$Name`,
 ## `$"Quoted/Path"`, and `get_node("Path")`. Unique-name (`%Name`) refs are handled separately by
@@ -1760,253 +1446,39 @@ func _set_back_visible(visible: bool) -> void:
 		_back_button.visible = visible
 
 # ── Insert Expression picker ────────────────────────────────────────────────
+# The ƒx visual expression builder lives in its own file — see ACEParamsExpressionPicker
+# (ace_params_expression_picker.gd). The methods/state below are thin delegates so callers, the ƒx
+# button's .bind, and the by-class-name static calls (ACEParamsDialog.member_expression_fragment,
+# .variable_member_fragment) keep working unchanged.
 
 func _open_expression_picker(target_key: String) -> void:
-	_expression_target_key = target_key
-	_ensure_expression_window()
-	_refresh_expression_tree()
-	_expression_window.get_ok_button().disabled = true
-	_expression_window.popup_centered(Vector2i(560, 460))
-	_expression_search.grab_focus()
+	_expression_picker._open_expression_picker(target_key)
 
+## Builds the Insert-Expression window lazily — delegate kept for tests that drive it headlessly.
 func _ensure_expression_window() -> void:
-	if _expression_window != null:
-		return
-	_expression_window = AcceptDialog.new()
-	_expression_window.title = "Insert Expression"
-	_expression_window.visible = false
-	_expression_window.min_size = Vector2i(480, 360)
-	_expression_window.ok_button_text = "Insert"
-	_expression_window.get_ok_button().disabled = true
-	_expression_window.close_requested.connect(func() -> void: _expression_window.hide())
-	_expression_window.confirmed.connect(_on_expression_activated)
-	_dialog.add_child(_expression_window)
+	_expression_picker._ensure_expression_window()
 
-	# Standard body margins + a consistent form box (matches the picker + node picker).
-	var content: VBoxContainer = EventSheetPopupUI.form_box()
-	var margin: MarginContainer = EventSheetPopupUI.margined(content)
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_expression_window.add_child(margin)
-
-	# Operator palette — click to drop an operator at the expression's caret, so a non-coder builds
-	# comparisons + maths (health > 10, score + 1) without hunting for punctuation. Inserts and stays
-	# open; pair it with the tree below to assemble a whole expression by clicking.
-	content.add_child(EventSheetPopupUI.section_header("Operators"))
-	var ops_flow: HFlowContainer = HFlowContainer.new()
-	for op: String in ["+", "-", "*", "/", "%", "==", "!=", "<", ">", "and", "or", "not", "(", ")"]:
-		var op_button: Button = Button.new()
-		op_button.text = op
-		op_button.tooltip_text = "Insert  %s  at the cursor" % op
-		op_button.focus_mode = Control.FOCUS_NONE  # don't steal the caret from the expression field
-		# Parentheses snug; everything else is space-padded so tokens never fuse (score+1 → score + 1).
-		var snippet: String = op if (op == "(" or op == ")") else " %s " % op
-		op_button.pressed.connect(_insert_into_expression_target.bind(snippet))
-		ops_flow.add_child(op_button)
-	content.add_child(ops_flow)
-
-	_expression_search = LineEdit.new()
-	_expression_search.placeholder_text = "Search expressions..."
-	_expression_search.clear_button_enabled = true
-	_expression_search.text_changed.connect(func(_text: String) -> void: _refresh_expression_tree())
-	# Enter commits the first result (parity with the main ACE picker's type-and-Enter).
-	_expression_search.text_submitted.connect(func(_text: String) -> void: _activate_first_expression_match())
-	content.add_child(_expression_search)
-
-	_expression_tree = Tree.new()
-	_expression_tree.hide_root = true
-	_expression_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_expression_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_expression_tree.item_activated.connect(_on_expression_activated)
-	_expression_tree.item_selected.connect(_on_expression_selection_changed)
-	# Bare Control holder bounds the dialog height (a Tree reports its full content height as its
-	# minimum, which an AcceptDialog would otherwise grow to fit).
-	var expr_holder: Control = Control.new()
-	expr_holder.custom_minimum_size = Vector2(0.0, 300.0)
-	expr_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	expr_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_expression_tree.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	expr_holder.add_child(_expression_tree)
-	var expr_card: PanelContainer = EventSheetPopupUI.titled_card("Expressions", expr_holder)
-	expr_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_child(expr_card)
-
+## Rebuilds the expression tree — delegate kept for tests.
 func _refresh_expression_tree() -> void:
-	if _expression_tree == null or _registry == null:
-		return
-	_expression_tree.clear()
-	var root: TreeItem = _expression_tree.create_item()
-	var query: String = _expression_search.text.strip_edges()
-	var group_nodes: Dictionary = {}
-	for definition: ACEDefinition in _registry.search(query):
-		if definition.ace_type != ACEDefinition.ACEType.EXPRESSION:
-			continue
-		var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()
-		var group_key: String = node_type if not node_type.is_empty() else (definition.category if not definition.category.is_empty() else "General")
-		if not group_nodes.has(group_key):
-			var group_item: TreeItem = _expression_tree.create_item(root)
-			group_item.set_text(0, group_key)
-			group_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NODE_TYPE if not node_type.is_empty() else ACEPickerDialog.GROUP_COLOR_NEUTRAL)
-			group_item.set_selectable(0, false)
-			group_nodes[group_key] = group_item
-		var item: TreeItem = _expression_tree.create_item(group_nodes[group_key])
-		item.set_text(0, definition.display_name)
-		item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
-		if not definition.description.is_empty():
-			item.set_tooltip_text(0, definition.description)
-		item.set_metadata(0, definition)
-	# Visual expression builder: also list the host object's OWN members (reflected),
-	# so any property/method is pickable without typing — not just registered ACEs.
-	var host_class: String = _host_class_for_context()
-	_add_member_expression_group(root, "This Object — Properties", reflected_members(host_class, "property"), false, query)
-	_add_member_expression_group(root, "This Object — Methods", reflected_members(host_class, "method"), true, query)
-	# Beyond `self`: the sheet's own variables as one-click leaves, plus — while searching — the typed
-	# members of any class-backed variable (enemy.health) so reflection isn't limited to the host.
-	_add_sheet_variable_expressions(root, query)
+	_expression_picker._refresh_expression_tree()
 
-## Adds a reflected-members group to the expression picker; methods insert as `name()`,
-## properties as `name`. Honors the search query (case-insensitive substring filter).
-func _add_member_expression_group(root: TreeItem, label: String, members: Array, is_method: bool, query: String) -> void:
-	var lowered: String = query.to_lower()
-	var group_item: TreeItem = null
-	for member: Variant in members:
-		var member_name: String = str(member)
-		if not lowered.is_empty() and not member_name.to_lower().contains(lowered):
-			continue
-		if group_item == null:
-			group_item = _expression_tree.create_item(root)
-			group_item.set_text(0, label)
-			group_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NODE_TYPE)
-			group_item.set_selectable(0, false)
-		var fragment: String = member_expression_fragment(member_name, is_method)
-		var item: TreeItem = _expression_tree.create_item(group_item)
-		item.set_text(0, fragment)
-		item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
-		item.set_metadata(0, fragment)
-
-## The insert fragment for a reflected member: `name()` for a method, `name` for a
-## property. Static + pure, so it is unit-testable without a dialog.
-static func member_expression_fragment(member: String, is_method: bool) -> String:
-	return (member + "()") if is_method else member
-
-## The insert fragment for a member reached THROUGH a variable: `enemy.health` / `enemy.move()`.
-## Static + pure, so it is unit-testable without a dialog.
-static func variable_member_fragment(var_name: String, member: String, is_method: bool) -> String:
-	return var_name + "." + member_expression_fragment(member, is_method)
-
-## Lists the sheet's own variables as one-click leaves (insert `name`), and — while searching — the
-## members of any variable whose declared type is a reflectable class, so `enemy.health` is one pick.
-## This is the visual builder's non-self reflection: the host members come from _host_class_for_context,
-## these reach the OTHER objects the sheet names. Member chaining is query-gated: a class can carry 100+
-## members, so showing them all for every variable would bury the idle tree — they surface as you type.
-func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
-	if not _lint_context_provider.is_valid():
-		return
-	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
-	if sheet == null or sheet.variables == null or sheet.variables.is_empty():
-		return
-	var lowered: String = query.to_lower()
-	# (1) The variables themselves — always shown (filtered by the search).
-	var var_group: TreeItem = null
-	for var_name: Variant in sheet.variables.keys():
-		var name_str: String = str(var_name)
-		if not lowered.is_empty() and not name_str.to_lower().contains(lowered):
-			continue
-		if var_group == null:
-			var_group = _expression_tree.create_item(root)
-			var_group.set_text(0, "Sheet Variables")
-			var_group.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NEUTRAL)
-			var_group.set_selectable(0, false)
-		var item: TreeItem = _expression_tree.create_item(var_group)
-		item.set_text(0, name_str)
-		item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
-		var vdef: Variant = sheet.variables[var_name]
-		var vtype: String = str((vdef as Dictionary).get("type", "")).strip_edges() if vdef is Dictionary else ""
-		if not vtype.is_empty():
-			item.set_tooltip_text(0, "%s : %s" % [name_str, vtype])
-		item.set_metadata(0, name_str)
-	# (2) Member chaining (enemy.velocity) — only while searching, and only for class-backed variables.
-	if lowered.is_empty():
-		return
-	for var_name: Variant in sheet.variables.keys():
-		var vdef: Variant = sheet.variables[var_name]
-		var vtype: String = str((vdef as Dictionary).get("type", "")).strip_edges() if vdef is Dictionary else ""
-		if vtype.is_empty() or not ClassDB.class_exists(vtype):
-			continue
-		_add_variable_member_group(root, str(var_name), vtype, lowered)
-
-## A per-variable group of `varname.member` fragments (properties, then methods), filtered by the query.
-func _add_variable_member_group(root: TreeItem, var_name: String, var_type: String, lowered_query: String) -> void:
-	var group_item: TreeItem = null
-	for kind: String in ["property", "method"]:
-		var is_method: bool = kind == "method"
-		for member: Variant in reflected_members(var_type, kind):
-			var fragment: String = variable_member_fragment(var_name, str(member), is_method)
-			if not fragment.to_lower().contains(lowered_query):
-				continue
-			if group_item == null:
-				group_item = _expression_tree.create_item(root)
-				group_item.set_text(0, "%s (%s)" % [var_name, var_type])
-				group_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NODE_TYPE)
-				group_item.set_selectable(0, false)
-			var item: TreeItem = _expression_tree.create_item(group_item)
-			item.set_text(0, fragment)
-			item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
-			item.set_metadata(0, fragment)
-
-## Enables the "Insert" button only when a real expression row is highlighted.
-func _on_expression_selection_changed() -> void:
-	var selected: TreeItem = _expression_tree.get_selected() if _expression_tree != null else null
-	if _expression_window != null:
-		_expression_window.get_ok_button().disabled = selected == null or selected.get_metadata(0) == null
-
-func _on_expression_activated() -> void:
-	var item: TreeItem = _expression_tree.get_selected()
-	if item == null:
-		return
-	var metadata: Variant = item.get_metadata(0)
-	var insert_text: String = ""
-	if metadata is ACEDefinition:
-		insert_text = _expression_template(metadata as ACEDefinition)
-	elif metadata is String:
-		insert_text = str(metadata)
-	if insert_text.is_empty():
-		return
-	# Insert at the caret so results compose into a larger expression (e.g. health + sin(time)). The OK
-	# button still closes the window (AcceptDialog auto-hides on confirm); double-clicking a tree result
-	# leaves the window open so several can be chained. The old code only handled LineEdit — and the
-	# expression field is always a CodeEdit — so picking a result silently did nothing. This fixes it.
-	_insert_into_expression_target(insert_text)
-
-## Inserts a snippet at the caret of the expression field that opened the picker (the CodeEdit for
-## _expression_target_key) and re-validates it. Shared by the tree results and the operator palette.
+## Inserts a snippet at the caret of the expression field — delegate kept for tests.
 func _insert_into_expression_target(snippet: String) -> void:
-	var target: Variant = _fields.get(_expression_target_key)
-	if target is TextEdit:  # CodeEdit extends TextEdit
-		(target as TextEdit).insert_text_at_caret(snippet)
-		_validate_expression_field(target as Control)
-	elif target is LineEdit:
-		(target as LineEdit).insert_text_at_caret(snippet)
-		_validate_expression_field(target as Control)
+	_expression_picker._insert_into_expression_target(snippet)
 
-## Returns the code template inserted for an expression definition (with default params).
+## The code template inserted for an expression definition — delegate kept for tests.
 func _expression_template(definition: ACEDefinition) -> String:
-	var template: String = str(definition.metadata.get("codegen_template", ""))
-	if template.is_empty():
-		var display: String = definition.format_display({})
-		return display if not display.is_empty() else definition.display_name
-	# Substitute default parameter values into the codegen template placeholders.
-	for index in range(definition.parameters.size()):
-		var parameter: Variant = definition.parameters[index]
-		if not (parameter is Dictionary):
-			continue
-		var param_dict: Dictionary = parameter as Dictionary
-		var param_key: String = str(param_dict.get("id", ""))
-		if param_key.is_empty():
-			continue
-		var param_value: String = str(param_dict.get("default_value", param_dict.get("default", "")))
-		template = template.replace("{%d}" % index, param_value)
-		template = template.replace("{%s}" % param_key, param_value)
-	return template
+	return _expression_picker._expression_template(definition)
+
+## The insert fragment for a reflected member (`name()` / `name`). Static + pure.
+## Static delegate — reached as ACEParamsDialog.member_expression_fragment by tests.
+static func member_expression_fragment(member: String, is_method: bool) -> String:
+	return ACEParamsExpressionPicker.member_expression_fragment(member, is_method)
+
+## The insert fragment for a member reached THROUGH a variable (`enemy.health`). Static + pure.
+## Static delegate — reached as ACEParamsDialog.variable_member_fragment by tests.
+static func variable_member_fragment(var_name: String, member: String, is_method: bool) -> String:
+	return ACEParamsExpressionPicker.variable_member_fragment(var_name, member, is_method)
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 

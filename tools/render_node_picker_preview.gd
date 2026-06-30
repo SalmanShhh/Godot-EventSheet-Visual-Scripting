@@ -41,7 +41,7 @@ func _on_frame() -> void:
 		_dialog.init_dialog(root)
 		_dialog._ensure_node_picker_ui()
 		_dialog._populate_node_picker_from_root(scene)
-		_picker = _dialog._node_picker_window
+		_picker = _dialog._node_picker._node_picker_window
 		_picker.popup_centered(Vector2i(520, 560))
 		return
 	if _frames < 10 or _picker == null:

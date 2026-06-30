@@ -17,7 +17,7 @@ static func run() -> bool:
 	edit.text = "health"
 	host.add_child(edit)
 	dlg._fields["value"] = edit
-	dlg._expression_target_key = "value"
+	dlg._expression_picker._expression_target_key = "value"
 	edit.set_caret_column(edit.text.length())  # caret at end, as after focusing the field
 
 	# Operator palette (" + ") then a chained value ("10") compose at the caret — the regression guard:
@@ -31,7 +31,7 @@ static func run() -> bool:
 	line.text = "x"
 	host.add_child(line)
 	dlg._fields["other"] = line
-	dlg._expression_target_key = "other"
+	dlg._expression_picker._expression_target_key = "other"
 	line.caret_column = line.text.length()
 	dlg._insert_into_expression_target(" > 5")
 	all_passed = _check("inserts into a LineEdit target too", line.text, "x > 5") and all_passed
@@ -52,18 +52,18 @@ static func run() -> bool:
 	sheet.variables = {"enemy": {"type": "CharacterBody2D"}, "score": {"type": "int"}}
 	dlg2.set_lint_context_provider(func() -> EventSheetResource: return sheet)
 	dlg2._ensure_expression_window()  # builds _expression_search + _expression_tree (no popup, headless-safe)
-	dlg2._expression_target_key = "value"
+	dlg2._expression_picker._expression_target_key = "value"
 
 	# Empty search → the sheet's variables show as one-click leaves.
-	dlg2._expression_search.text = ""
+	dlg2._expression_picker._expression_search.text = ""
 	dlg2._refresh_expression_tree()
-	all_passed = _check("sheet variable leaf 'enemy' is listed", _tree_has_item(dlg2._expression_tree, "enemy"), true) and all_passed
-	all_passed = _check("sheet variable leaf 'score' is listed", _tree_has_item(dlg2._expression_tree, "score"), true) and all_passed
+	all_passed = _check("sheet variable leaf 'enemy' is listed", _tree_has_item(dlg2._expression_picker._expression_tree, "enemy"), true) and all_passed
+	all_passed = _check("sheet variable leaf 'score' is listed", _tree_has_item(dlg2._expression_picker._expression_tree, "score"), true) and all_passed
 
 	# Searching 'velocity' → enemy.velocity is offered (CharacterBody2D reflection); score (int) adds nothing.
-	dlg2._expression_search.text = "velocity"
+	dlg2._expression_picker._expression_search.text = "velocity"
 	dlg2._refresh_expression_tree()
-	all_passed = _check("chained member 'enemy.velocity' is offered", _tree_has_item(dlg2._expression_tree, "enemy.velocity"), true) and all_passed
+	all_passed = _check("chained member 'enemy.velocity' is offered", _tree_has_item(dlg2._expression_picker._expression_tree, "enemy.velocity"), true) and all_passed
 	host2.free()
 	return all_passed
 
