@@ -297,9 +297,15 @@ static func run() -> bool:
 	toolbar_editor._build_welcome_window()
 	all_passed = _check("welcome self-sizes to its content (AcceptDialog)",
 		toolbar_editor._welcome_window is AcceptDialog, true) and all_passed
-	var welcome_margin: MarginContainer = toolbar_editor._welcome_window.find_child("WelcomeMargin", true, false) as MarginContainer
+	# The body is wrapped in the shared EventSheetPopupUI.margined() helper now (a MarginContainer
+	# child of the dialog) rather than a hand-named "WelcomeMargin" — assert real margins remain.
+	var welcome_margin: MarginContainer = null
+	for child: Node in toolbar_editor._welcome_window.get_children():
+		if child is MarginContainer:
+			welcome_margin = child as MarginContainer
+			break
 	all_passed = _check("welcome content sits inside real margins",
-		welcome_margin != null and welcome_margin.get_theme_constant("margin_left") == 14, true) and all_passed
+		welcome_margin != null and welcome_margin.get_theme_constant("margin_left") >= 8, true) and all_passed
 	all_passed = _check("welcome exposes the native-default checkbox for reopen sync",
 		toolbar_editor._welcome_window.get_meta("native_check") is CheckBox, true) and all_passed
 	toolbar_editor.free()

@@ -598,31 +598,23 @@ func _build_provider_dialog() -> void:
     _provider_dialog.close_requested.connect(func() -> void: _provider_dialog.hide())
     add_child(_provider_dialog)
 
-    var margin: MarginContainer = MarginContainer.new()
+    var content: VBoxContainer = EventSheetPopupUI.form_box()
+    var margin: MarginContainer = EventSheetPopupUI.margined(content)
     margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    margin.add_theme_constant_override("margin_left", 10)
-    margin.add_theme_constant_override("margin_right", 10)
-    margin.add_theme_constant_override("margin_top", 10)
-    margin.add_theme_constant_override("margin_bottom", 10)
     _provider_dialog.add_child(margin)
 
-    var content: VBoxContainer = VBoxContainer.new()
-    content.add_theme_constant_override("separation", 8)
-    margin.add_child(content)
+    content.add_child(EventSheetPopupUI.hint_label("Register GDScript files whose methods, signals and exported variables become custom ACEs.\nZero-config alternative: drop scripts into res://eventsheet_addons/ and they register project-wide automatically."))
 
-    var hint: Label = Label.new()
-    hint.text = "Register GDScript files whose methods, signals and exported variables become custom ACEs.\nZero-config alternative: drop scripts into res://eventsheet_addons/ and they register project-wide automatically."
-    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    content.add_child(hint)
+    var providers_box: VBoxContainer = EventSheetPopupUI.form_box()
 
     _provider_list = ItemList.new()
     _provider_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _provider_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    content.add_child(_provider_list)
+    providers_box.add_child(_provider_list)
 
     var buttons: HBoxContainer = HBoxContainer.new()
     buttons.add_theme_constant_override("separation", 6)
-    content.add_child(buttons)
+    providers_box.add_child(buttons)
     var add_button: Button = Button.new()
     add_button.text = "Add…"
     add_button.pressed.connect(_on_provider_add_pressed)
@@ -636,6 +628,10 @@ func _build_provider_dialog() -> void:
     open_in_godot_button.tooltip_text = "Open the selected provider script in Godot's script editor."
     open_in_godot_button.pressed.connect(_on_provider_open_in_godot_pressed)
     buttons.add_child(open_in_godot_button)
+
+    var providers_card: PanelContainer = EventSheetPopupUI.titled_card("Providers", providers_box)
+    providers_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    content.add_child(providers_card)
 
     _provider_file_dialog = FileDialog.new()
     _provider_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
@@ -707,54 +703,46 @@ func _build_new_addon_dialog() -> void:
     content.add_theme_constant_override("separation", 8)
     margin.add_child(content)
 
-    var hint: Label = Label.new()
-    hint.text = "Creates a ready-to-edit behaviour script under res://eventsheet_addons/. Its signals become triggers, methods become actions/conditions, and @export vars become properties — all auto-discovered as custom ACEs. The skeleton is richly commented to teach the @ace_* annotations."
-    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    content.add_child(hint)
+    content.add_child(EventSheetPopupUI.hint_label("Creates a ready-to-edit behaviour script under res://eventsheet_addons/. Its signals become triggers, methods become actions/conditions, and @export vars become properties — all auto-discovered as custom ACEs. The skeleton is richly commented to teach the @ace_* annotations."))
 
-    var form: GridContainer = GridContainer.new()
-    form.columns = 2
-    form.add_theme_constant_override("h_separation", 10)
-    form.add_theme_constant_override("v_separation", 6)
-    content.add_child(form)
+    # "Properties" card — name / base class / category / description, grouped into a themed inset
+    # card so this dialog matches the picker / variable / function dialogs instead of flat gray.
+    var properties_box: VBoxContainer = EventSheetPopupUI.form_box()
+    content.add_child(EventSheetPopupUI.titled_card("Properties", properties_box))
 
-    form.add_child(_new_addon_form_label("Name"))
     _new_addon_name_edit = LineEdit.new()
     _new_addon_name_edit.placeholder_text = "PlayerCombat"
-    _new_addon_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _new_addon_name_edit.text_changed.connect(func(_t: String) -> void: _refresh_new_addon_preview())
     _new_addon_name_edit.text_submitted.connect(func(_t: String) -> void: _on_create_behaviour_addon())
-    form.add_child(_new_addon_name_edit)
+    properties_box.add_child(EventSheetPopupUI.form_row("Name", _new_addon_name_edit))
 
-    form.add_child(_new_addon_form_label("Base class"))
     _new_addon_base_option = OptionButton.new()
     for base: String in BehaviourAddonScaffold.BASE_CLASSES:
         _new_addon_base_option.add_item(base)
     _new_addon_base_option.select(0)
-    _new_addon_base_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    form.add_child(_new_addon_base_option)
+    properties_box.add_child(EventSheetPopupUI.form_row("Base class", _new_addon_base_option))
 
-    form.add_child(_new_addon_form_label("Category"))
     _new_addon_category_edit = LineEdit.new()
     _new_addon_category_edit.placeholder_text = "(defaults to the name)"
-    _new_addon_category_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    form.add_child(_new_addon_category_edit)
+    properties_box.add_child(EventSheetPopupUI.form_row("Category", _new_addon_category_edit))
 
-    form.add_child(_new_addon_form_label("Description"))
     _new_addon_desc_edit = LineEdit.new()
     _new_addon_desc_edit.placeholder_text = "What this behaviour does (one line)."
-    _new_addon_desc_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    form.add_child(_new_addon_desc_edit)
+    properties_box.add_child(EventSheetPopupUI.form_row("Description", _new_addon_desc_edit))
+
+    # "Preview" card — the suggested target path + (error) status feedback.
+    var preview_box: VBoxContainer = EventSheetPopupUI.form_box()
+    content.add_child(EventSheetPopupUI.titled_card("Preview", preview_box))
 
     _new_addon_path_label = Label.new()
     _new_addon_path_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     _new_addon_path_label.modulate = Color(1.0, 1.0, 1.0, 0.6)
-    content.add_child(_new_addon_path_label)
+    preview_box.add_child(_new_addon_path_label)
 
     _new_addon_status_label = Label.new()
     _new_addon_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     _new_addon_status_label.modulate = Color(1.0, 0.55, 0.55)
-    content.add_child(_new_addon_status_label)
+    preview_box.add_child(_new_addon_status_label)
 
     var spacer: Control = Control.new()
     spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -2048,6 +2036,9 @@ func _find_references_requested() -> void:
         _find_refs_window.close_requested.connect(func() -> void: _find_refs_window.hide())
         var box: VBoxContainer = VBoxContainer.new()
         box.set_anchors_preset(Control.PRESET_FULL_RECT)
+        var body: VBoxContainer = EventSheetPopupUI.form_box()
+        body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        var find_box: VBoxContainer = EventSheetPopupUI.form_box()
         var row: HBoxContainer = HBoxContainer.new()
         _find_refs_edit = LineEdit.new()
         _find_refs_edit.placeholder_text = "Symbol — a variable / function / signal name…"
@@ -2058,7 +2049,8 @@ func _find_references_requested() -> void:
         find_button.text = "Find References"
         find_button.pressed.connect(_run_find_references)
         row.add_child(find_button)
-        box.add_child(row)
+        find_box.add_child(row)
+        body.add_child(EventSheetPopupUI.titled_card("Find symbol", find_box))
         _find_refs_tree = Tree.new()
         _find_refs_tree.hide_root = true
         _find_refs_tree.columns = 3
@@ -2068,7 +2060,10 @@ func _find_references_requested() -> void:
         _find_refs_tree.column_titles_visible = true
         _find_refs_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
         _find_refs_tree.item_activated.connect(_on_find_reference_activated)
-        box.add_child(_find_refs_tree)
+        var results_card: PanelContainer = EventSheetPopupUI.titled_card("Results", _find_refs_tree)
+        results_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        body.add_child(results_card)
+        box.add_child(EventSheetPopupUI.margined(body))
         _find_refs_window.add_child(box)
         add_child(_find_refs_window)
     var seed: String = _selected_symbol_text()
@@ -2253,7 +2248,9 @@ func _build_include_manager() -> void:
     _include_list = ItemList.new()
     _include_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _include_list.item_selected.connect(func(_index: int) -> void: _refresh_include_preview())
-    left.add_child(_include_list)
+    var list_card: PanelContainer = EventSheetPopupUI.titled_card("Included sheets", _include_list)
+    list_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    left.add_child(list_card)
     var buttons: HBoxContainer = HBoxContainer.new()
     var add_button: Button = Button.new(); add_button.text = "Add…"; add_button.pressed.connect(_include_add_requested); buttons.add_child(add_button)
     var remove_button: Button = Button.new(); remove_button.text = "Remove"; remove_button.pressed.connect(_include_remove_selected); buttons.add_child(remove_button)
@@ -2266,7 +2263,7 @@ func _build_include_manager() -> void:
     _include_preview = RichTextLabel.new()
     _include_preview.bbcode_enabled = true
     _include_preview.custom_minimum_size = Vector2(0.0, 76.0)
-    right.add_child(_include_preview)
+    right.add_child(EventSheetPopupUI.titled_card("Preview", _include_preview))
     # Provenance view — the included sheet's actual rows, read-only (a preview copy; edits here
     # never touch the source). "Open Source Sheet" is the jump-to-source.
     var preview_scroll: ScrollContainer = ScrollContainer.new()
@@ -2274,12 +2271,17 @@ func _build_include_manager() -> void:
     _include_preview_viewport = EventSheetViewport.new()
     _include_preview_viewport.set_ace_registry(_ace_registry)
     preview_scroll.add_child(_include_preview_viewport)
-    right.add_child(preview_scroll)
     var open_source: Button = Button.new()
     open_source.text = "Open Source Sheet…"
     open_source.tooltip_text = "Open the included sheet to edit it (changes flow to every sheet that includes it)."
     open_source.pressed.connect(_open_selected_include_source)
-    right.add_child(open_source)
+    var contents_box: VBoxContainer = EventSheetPopupUI.form_box()
+    contents_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    contents_box.add_child(preview_scroll)
+    contents_box.add_child(open_source)
+    var contents_card: PanelContainer = EventSheetPopupUI.titled_card("Contents", contents_box)
+    contents_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    right.add_child(contents_card)
     split.add_child(right)
     _include_manager_window.add_child(split)
     add_child(_include_manager_window)
@@ -5383,8 +5385,9 @@ func _open_project_doctor() -> void:
         _doctor_window.title = "Project Doctor"
         _doctor_window.size = Vector2i(680, 440)
         _doctor_window.close_requested.connect(func() -> void: _doctor_window.hide())
-        var box: VBoxContainer = VBoxContainer.new()
-        box.set_anchors_preset(Control.PRESET_FULL_RECT)
+        var box: VBoxContainer = EventSheetPopupUI.form_box()
+        var body: MarginContainer = EventSheetPopupUI.margined(box)
+        body.set_anchors_preset(Control.PRESET_FULL_RECT)
         _doctor_tree = Tree.new()
         _doctor_tree.hide_root = true
         _doctor_tree.columns = 3
@@ -5397,12 +5400,14 @@ func _open_project_doctor() -> void:
         _doctor_tree.set_column_custom_minimum_width(1, 180)
         _doctor_tree.column_titles_visible = true
         _doctor_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-        box.add_child(_doctor_tree)
+        var findings_card: PanelContainer = EventSheetPopupUI.titled_card("Findings", _doctor_tree)
+        findings_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        box.add_child(findings_card)
         var rerun_button: Button = Button.new()
         rerun_button.text = "Re-run checks"
         rerun_button.pressed.connect(_run_project_doctor)
         box.add_child(rerun_button)
-        _doctor_window.add_child(box)
+        _doctor_window.add_child(body)
         add_child(_doctor_window)
     _doctor_window.popup_centered()
     _run_project_doctor()
@@ -5452,12 +5457,16 @@ func _open_sheet_backups() -> void:
         _backups_list = ItemList.new()
         _backups_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
         _backups_list.item_activated.connect(func(_index: int) -> void: _on_restore_backup_pressed())
-        box.add_child(_backups_list)
+        var list_card: PanelContainer = EventSheetPopupUI.panel_section(_backups_list)
+        list_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        box.add_child(list_card)
         var restore_button: Button = Button.new()
         restore_button.text = "Restore into editor (unsaved — Save to keep)"
         restore_button.pressed.connect(_on_restore_backup_pressed)
         box.add_child(restore_button)
-        _backups_window.add_child(box)
+        var body: MarginContainer = EventSheetPopupUI.margined(box)
+        body.set_anchors_preset(Control.PRESET_FULL_RECT)
+        _backups_window.add_child(body)
         add_child(_backups_window)
     _backups_list.clear()
     for backup_path: String in EventSheetBackups.list_backups(_current_sheet_path):
@@ -5723,9 +5732,10 @@ func _ensure_pick_dialog() -> void:
     if _pick_dialog != null:
         return
     _pick_dialog = ConfirmationDialog.new()
-    var form: VBoxContainer = VBoxContainer.new()
+    var form: VBoxContainer = EventSheetPopupUI.form_box()
     form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    _pick_iterator_edit = _add_sheet_type_field(form, "Iterator name", "item")
+    var loop_box: VBoxContainer = EventSheetPopupUI.form_box()
+    _pick_iterator_edit = _add_sheet_type_field(loop_box, "Iterator name", "item")
     var kind_row: HBoxContainer = HBoxContainer.new()
     var kind_label: Label = Label.new()
     kind_label.text = "Collection"
@@ -5739,23 +5749,29 @@ func _ensure_pick_dialog() -> void:
     _pick_kind_option.add_item("While (condition)") # → while value
     _pick_kind_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     kind_row.add_child(_pick_kind_option)
-    form.add_child(kind_row)
-    _pick_collection_edit = _add_sheet_type_field(form, "Group / expression", "enemies   or   range(3)")
-    _pick_predicate_edit = _add_expression_field(form, "Where (GDScript)", "item.health < 50   (optional)")
-    _pick_order_edit = _add_expression_field(form, "Order by (GDScript)", "item.global_position.distance_to(position)   (optional)")
+    loop_box.add_child(kind_row)
+    _pick_collection_edit = _add_sheet_type_field(loop_box, "Group / expression", "enemies   or   range(3)")
+    form.add_child(EventSheetPopupUI.titled_card("Loop", loop_box))
+    var filter_box: VBoxContainer = EventSheetPopupUI.form_box()
+    _pick_predicate_edit = _add_expression_field(filter_box, "Where (GDScript)", "item.health < 50   (optional)")
+    _pick_order_edit = _add_expression_field(filter_box, "Order by (GDScript)", "item.global_position.distance_to(position)   (optional)")
     _pick_desc_check = CheckBox.new()
     _pick_desc_check.text = "Descending (highest first)"
-    form.add_child(_pick_desc_check)
+    filter_box.add_child(_pick_desc_check)
+    form.add_child(EventSheetPopupUI.titled_card("Filter & order", filter_box))
+    var preset_box: VBoxContainer = EventSheetPopupUI.form_box()
     var preset_label: Label = Label.new()
     preset_label.text = "Presets (loops & picking)"
     preset_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     preset_label.custom_minimum_size = Vector2(380.0, 0.0)
-    form.add_child(preset_label)
+    preset_box.add_child(preset_label)
     _pick_preset_option = OptionButton.new()
     for preset_name: String in ["Custom…", "For (indexed)", "For Each", "For Each (ordered)", "Repeat", "While", "Pick all (group)", "Pick by comparison / evaluate", "Pick by highest value", "Pick by lowest value", "Pick nth instance", "Pick random instance", "Pick last created", "Pick overlapping point"]:
         _pick_preset_option.add_item(preset_name)
     _pick_preset_option.item_selected.connect(_apply_pick_preset)
-    form.add_child(_pick_preset_option)
+    preset_box.add_child(_pick_preset_option)
+    form.add_child(EventSheetPopupUI.titled_card("Presets", preset_box))
+    var limit_box: VBoxContainer = EventSheetPopupUI.form_box()
     var n_row: HBoxContainer = HBoxContainer.new()
     var n_label: Label = Label.new()
     n_label.text = "Pick first N (0 = all)"
@@ -5765,12 +5781,13 @@ func _ensure_pick_dialog() -> void:
     _pick_first_n_spin.min_value = 0
     _pick_first_n_spin.max_value = 9999
     n_row.add_child(_pick_first_n_spin)
-    form.add_child(n_row)
+    limit_box.add_child(n_row)
+    form.add_child(EventSheetPopupUI.titled_card("Limit", limit_box))
     _pick_delete_button = Button.new()
     _pick_delete_button.text = "Delete This Pick Filter"
     _pick_delete_button.pressed.connect(_on_pick_filter_deleted)
     form.add_child(_pick_delete_button)
-    _pick_dialog.add_child(form)
+    _pick_dialog.add_child(EventSheetPopupUI.margined(form))
     _pick_dialog.confirmed.connect(_on_pick_filter_confirmed)
     add_child(_pick_dialog)
 
@@ -5948,23 +5965,19 @@ func _ensure_comment_dialog() -> void:
         return
     _comment_dialog = ConfirmationDialog.new()
     _comment_dialog.title = "Edit Comment"
-    var form: VBoxContainer = VBoxContainer.new()
+    var form: VBoxContainer = EventSheetPopupUI.form_box()
     form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _comment_text_edit = TextEdit.new()
     _comment_text_edit.custom_minimum_size = Vector2(520.0, 200.0)
     _comment_text_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _comment_text_edit.placeholder_text = "Comment text (multiline supported)"
     form.add_child(_comment_text_edit)
-    var color_row: HBoxContainer = HBoxContainer.new()
-    var color_label: Label = Label.new()
-    color_label.text = "Background color (alpha 0 = theme default)"
-    color_row.add_child(color_label)
     _comment_color_button = ColorPickerButton.new()
     _comment_color_button.custom_minimum_size = Vector2(64.0, 0.0)
     _comment_color_button.color = Color(0, 0, 0, 0)
-    color_row.add_child(_comment_color_button)
-    form.add_child(color_row)
-    _comment_dialog.add_child(form)
+    form.add_child(EventSheetPopupUI.form_row("Background", _comment_color_button))
+    form.add_child(EventSheetPopupUI.hint_label("Alpha 0 = theme default."))
+    _comment_dialog.add_child(EventSheetPopupUI.margined(form))
     _comment_dialog.confirmed.connect(_on_comment_dialog_confirmed)
     add_child(_comment_dialog)
 
@@ -6006,13 +6019,9 @@ func _ensure_with_node_dialog() -> void:
         return
     _with_node_dialog = ConfirmationDialog.new()
     _with_node_dialog.title = "Scope Actions To Node"
-    var form: VBoxContainer = VBoxContainer.new()
-    form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    var hint: Label = Label.new()
-    hint.text = "Actions in this event act on this node instead of the host.\nUse $Enemy, get_node(\"UI/Score\"), or a variable. Leave blank to act on this node."
-    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    # Width-bound so the autowrap label can't report a runaway min height and balloon the dialog.
-    hint.custom_minimum_size = Vector2(420.0, 0.0)
+    var form: VBoxContainer = EventSheetPopupUI.form_box()
+    # Width-bound hint (helper handles autowrap + width clamp) so the label can't balloon the dialog.
+    var hint: Label = EventSheetPopupUI.hint_label("Actions in this event act on this node instead of the host.\nUse $Enemy, get_node(\"UI/Score\"), or a variable. Leave blank to act on this node.", 420.0)
     form.add_child(hint)
     _with_node_target_edit = LineEdit.new()
     _with_node_target_edit.placeholder_text = "$Enemy"
@@ -6022,7 +6031,7 @@ func _ensure_with_node_dialog() -> void:
         _on_with_node_dialog_confirmed()
     )
     form.add_child(_with_node_target_edit)
-    _with_node_dialog.add_child(form)
+    _with_node_dialog.add_child(EventSheetPopupUI.margined(form))
     _with_node_dialog.confirmed.connect(_on_with_node_dialog_confirmed)
     add_child(_with_node_dialog)
 
@@ -6170,8 +6179,7 @@ func _ensure_sheet_type_dialog() -> void:
         return
     _sheet_type_dialog = ConfirmationDialog.new()
     _sheet_type_dialog.title = "Sheet Type"
-    var form: VBoxContainer = VBoxContainer.new()
-    form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    var form: VBoxContainer = EventSheetPopupUI.form_box()
     _sheet_type_option = OptionButton.new()
     _sheet_type_option.add_item("Event Sheet")           # plain: compiles onto the host node
     _sheet_type_option.add_item("Custom Node")           # class_name + @icon → Create Node dialog
@@ -6179,31 +6187,35 @@ func _ensure_sheet_type_dialog() -> void:
     _sheet_type_option.add_item("Editor Tool (EditorScript)")  # EXPERIMENTAL: events -> editor tooling
     _sheet_type_option.add_item("Autoload (Singleton)")  # extends Node; registered project-wide
     form.add_child(_sheet_type_option)
-    _sheet_type_name_edit = _add_sheet_type_field(form, "Class name", "PatrolBehavior")
-    _sheet_type_icon_edit = _add_sheet_type_field(form, "Icon (res://…)", "res://icons/patrol.svg")
-    _sheet_type_description_edit = _add_sheet_type_multiline_field(form, "Description", "What this behaviour/node does — shown in Godot's Create Node dialog.")
-    _sheet_type_host_edit = _add_sheet_type_field(form, "Host / base class", "CharacterBody2D")
+    # Identity card — class name / icon / description / host, the fields that name the generated type.
+    var ident_box: VBoxContainer = EventSheetPopupUI.form_box()
+    _sheet_type_name_edit = _add_sheet_type_field(ident_box, "Class name", "PatrolBehavior")
+    _sheet_type_icon_edit = _add_sheet_type_field(ident_box, "Icon (res://…)", "res://icons/patrol.svg")
+    _sheet_type_description_edit = _add_sheet_type_multiline_field(ident_box, "Description", "What this behaviour/node does — shown in Godot's Create Node dialog.")
+    _sheet_type_host_edit = _add_sheet_type_field(ident_box, "Host / base class", "CharacterBody2D")
+    form.add_child(EventSheetPopupUI.titled_card("Identity", ident_box))
+    # Behaviour card — the two compile-mode toggles (@tool + Family).
+    var behaviour_box: VBoxContainer = EventSheetPopupUI.form_box()
     _sheet_type_tool_check = CheckBox.new()
     _sheet_type_tool_check.text = "@tool — runs inside the editor (EXPERIMENTAL, editor-version-coupled)"
-    form.add_child(_sheet_type_tool_check)
+    behaviour_box.add_child(_sheet_type_tool_check)
     # Family flag (horizontal abstraction): a named sheet's instances are collected into
     # group family_<class>, so other sheets can write ONE rule over all of them ("for each Enemy: …").
     # Only meaningful for a Custom Node / Behavior (it needs a class name); cleared for a plain sheet.
     _sheet_type_family_check = CheckBox.new()
     _sheet_type_family_check.text = "Family — collect instances into a group so one rule can target all of them"
-    form.add_child(_sheet_type_family_check)
-    _sheet_type_tags_edit = _add_sheet_type_field(form, "Tags (comma-separated)", "movement, retro, jam")
-    _sheet_type_includes_edit = _add_sheet_type_field(form, "Includes (addon sheets)", "res://eventsheet_addons/screen_shake/screen_shake.tres, …")
-    _sheet_type_uses_edit = _add_sheet_type_field(form, "Uses (addon classes)", "ScreenShake, MathHelpers — owned helper instances")
-    _sheet_type_requires_edit = _add_sheet_type_field(form, "Requires (sibling behaviors)", "ScreenShake — shows the warning badge when the sibling is missing")
-    _sheet_type_autoload_edit = _add_sheet_type_field(form, "Autoload name (singleton)", "GameState — global identifier every sheet can call")
-    var hint: Label = Label.new()
-    hint.text = "Custom nodes appear in Godot's Create Node dialog with their icon.\nBehaviors attach as child nodes and act on their parent via the typed `host` accessor."
-    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    # Width-bound so the autowrap label can't report a runaway min height and balloon the dialog.
-    hint.custom_minimum_size = Vector2(420.0, 0.0)
-    form.add_child(hint)
-    _sheet_type_dialog.add_child(form)
+    behaviour_box.add_child(_sheet_type_family_check)
+    form.add_child(EventSheetPopupUI.titled_card("Behaviour", behaviour_box))
+    # Composition card — how this sheet wires to addon sheets / classes / behaviors / autoload.
+    var composition_box: VBoxContainer = EventSheetPopupUI.form_box()
+    _sheet_type_tags_edit = _add_sheet_type_field(composition_box, "Tags (comma-separated)", "movement, retro, jam")
+    _sheet_type_includes_edit = _add_sheet_type_field(composition_box, "Includes (addon sheets)", "res://eventsheet_addons/screen_shake/screen_shake.tres, …")
+    _sheet_type_uses_edit = _add_sheet_type_field(composition_box, "Uses (addon classes)", "ScreenShake, MathHelpers — owned helper instances")
+    _sheet_type_requires_edit = _add_sheet_type_field(composition_box, "Requires (sibling behaviors)", "ScreenShake — shows the warning badge when the sibling is missing")
+    _sheet_type_autoload_edit = _add_sheet_type_field(composition_box, "Autoload name (singleton)", "GameState — global identifier every sheet can call")
+    form.add_child(EventSheetPopupUI.titled_card("Composition", composition_box))
+    form.add_child(EventSheetPopupUI.hint_label("Custom nodes appear in Godot's Create Node dialog with their icon.\nBehaviors attach as child nodes and act on their parent via the typed `host` accessor.", 420.0))
+    _sheet_type_dialog.add_child(EventSheetPopupUI.margined(form))
     _sheet_type_dialog.confirmed.connect(_on_sheet_type_confirmed)
     add_child(_sheet_type_dialog)
 
@@ -7282,13 +7294,13 @@ func _build_welcome_window() -> void:
     dialog.title = "Godot EventSheets — welcome"
     dialog.ok_button_text = "Close"
     _welcome_window = dialog
-    var margin: MarginContainer = MarginContainer.new()
-    margin.name = "WelcomeMargin"
-    for side: String in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
-        margin.add_theme_constant_override(side, 14)
-    var box: VBoxContainer = VBoxContainer.new()
+    # Themed onboarding: a form_box of titled_card sections (matching the picker / variable /
+    # function dialogs) wrapped in margined() so it doesn't touch the window edges. The outer box
+    # carries the 440px width-bound that previously sat on the flat content VBox, so the
+    # content-sized AcceptDialog keeps the same width.
+    var box: VBoxContainer = EventSheetPopupUI.form_box()
     box.custom_minimum_size = Vector2(440.0, 0.0)
-    box.add_theme_constant_override("separation", 10)
+    var about_box: VBoxContainer = EventSheetPopupUI.form_box()
     var blurb: Label = Label.new()
     blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     # Width-bound the autowrap label itself: the parent box's custom_minimum_size.x does NOT bound a
@@ -7296,7 +7308,9 @@ func _build_welcome_window() -> void:
     # balloons this AcceptDialog (it sizes to content min) to thousands of px tall on first launch.
     blurb.custom_minimum_size = Vector2(440.0, 0.0)
     blurb.text = "Event sheets that compile to plain GDScript — zero runtime, performance parity, and every sheet shows you its honest generated code."
-    box.add_child(blurb)
+    about_box.add_child(blurb)
+    box.add_child(EventSheetPopupUI.titled_card("About EventSheets", about_box))
+    var start_box: VBoxContainer = EventSheetPopupUI.form_box()
     var showcase_button: Button = Button.new()
     showcase_button.text = "Open the playable showcase scene"
     showcase_button.pressed.connect(func() -> void:
@@ -7304,36 +7318,34 @@ func _build_welcome_window() -> void:
         if Engine.is_editor_hint() and is_inside_tree() and not showcase_scene.is_empty():
             EditorInterface.open_scene_from_path(showcase_scene)
         _welcome_window.hide())
-    box.add_child(showcase_button)
+    start_box.add_child(showcase_button)
     var starter_button: Button = Button.new()
     starter_button.text = "New sheet from a starter template"
     starter_button.pressed.connect(func() -> void:
         _welcome_window.hide()
         _open_template_menu())
-    box.add_child(starter_button)
+    start_box.add_child(starter_button)
+    box.add_child(EventSheetPopupUI.titled_card("Get Started", start_box))
     # Surface the Simple/Expert choice on the one newcomer-guaranteed surface (the Welcome). Simple Mode is the
     # canonical audience flag but is otherwise off-by-default and menu-buried.
+    var prefs_box: VBoxContainer = EventSheetPopupUI.form_box()
     var simple_check: CheckBox = CheckBox.new()
     simple_check.text = "Simple mode — hide advanced rows & menu items"
     simple_check.tooltip_text = "New to event sheets? Simple mode keeps the picker and menus to the essentials. Everything still works in Expert mode — toggle any time in View → Simple Mode."
     simple_check.toggled.connect(func(on: bool) -> void: set_simple_mode(on))
-    box.add_child(simple_check)
+    prefs_box.add_child(simple_check)
     _welcome_window.set_meta("simple_check", simple_check)
     var native_check: CheckBox = CheckBox.new()
     native_check.text = "Open the GDScript panel with every sheet"
     native_check.tooltip_text = "The Godot-native default: every sheet opens with its generated script beside it (eventsheets/editor/open_code_panel_by_default)."
     native_check.toggled.connect(func(on: bool) -> void:
         ProjectSettings.set_setting("eventsheets/editor/open_code_panel_by_default", true if on else null))
-    box.add_child(native_check)
+    prefs_box.add_child(native_check)
     _welcome_window.set_meta("native_check", native_check)
-    var docs_label: Label = Label.new()
-    docs_label.text = "Coming from another event-sheet tool? The migration guide maps the vocabulary.\nReopen this window any time: Tools → Welcome…"
-    docs_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    docs_label.custom_minimum_size = Vector2(440.0, 0.0)  # width-bound (see blurb above) so it can't balloon the dialog
-    docs_label.add_theme_font_size_override("font_size", 11)
-    box.add_child(docs_label)
-    margin.add_child(box)
-    dialog.add_child(margin)
+    box.add_child(EventSheetPopupUI.titled_card("Preferences", prefs_box))
+    # Footer migration/reopen note — a muted, width-bounded hint at the bottom (not its own card).
+    box.add_child(EventSheetPopupUI.hint_label("Coming from another event-sheet tool? The migration guide maps the vocabulary.\nReopen this window any time: Tools → Welcome…", 440.0))
+    dialog.add_child(EventSheetPopupUI.margined(box))
     add_child(dialog)
 
 # ── Loop closers: attach the behavior where you're looking, run the scene that
@@ -7631,7 +7643,9 @@ func _open_ace_comment_dialog(target: Resource) -> void:
         _ace_comment_edit = LineEdit.new()
         _ace_comment_edit.placeholder_text = "Why this condition/action exists…"
         _ace_comment_edit.custom_minimum_size = Vector2(360.0, 0.0)
-        _ace_comment_dialog.add_child(_ace_comment_edit)
+        var body_box: VBoxContainer = EventSheetPopupUI.form_box()
+        body_box.add_child(_ace_comment_edit)
+        _ace_comment_dialog.add_child(EventSheetPopupUI.margined(body_box))
         _ace_comment_dialog.confirmed.connect(_on_ace_comment_confirmed)
         add_child(_ace_comment_dialog)
     _ace_comment_target = target
