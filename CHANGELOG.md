@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added — Global-signal triggers (On Post Tick, On Close Requested)
+
+- Triggers can now connect a signal on a **global source** — `get_tree()` or `get_window()` — not just
+  self / an autoload / a node path. Adds three triggers: **On Post Tick** (`get_tree().process_frame` — runs
+  once *after* every node's `_process` this frame, for logic that must come last, e.g. a camera that follows
+  after movement), **On Physics Post Tick** (`get_tree().physics_frame`), and **On Close Requested**
+  (`get_window().close_requested` — the window's X / an app-quit request, for save-on-quit or a confirm
+  dialog). (`tests/global_trigger_test.gd`)
+- *(The scene **actions** already shipped — Quit Game, Go To Scene, Restart Scene — so this fills in the
+  missing exit/post-frame **triggers**.)*
+
 ### Added — Console logging ACEs (combo-driven) + friendly label↔value dropdowns
 
 - A **Console** vocabulary of C3 Browser/console-style logging verbs, each driven by a single **"As"**
