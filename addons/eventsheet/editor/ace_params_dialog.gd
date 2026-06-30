@@ -92,7 +92,11 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry = null, vari
 	_form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_form.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_form.add_theme_constant_override("separation", 4)
-	scroll.add_child(_form)
+	# Sunken inset card so the parameter rows read as a themed panel (matches the picker + function dialog).
+	var form_card: PanelContainer = EventSheetPopupUI.panel_section(_form)
+	form_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	form_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(form_card)
 
 func set_registry(registry: EventSheetACERegistry) -> void:
 	_registry = registry
@@ -142,6 +146,9 @@ func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 		child.queue_free()
 	_hint = Label.new()
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# Width-bound so the autowrap label can't report a runaway one-glyph-per-line min height and
+	# balloon the dialog on the initial zero-width pass (it still wraps wider at runtime).
+	_hint.custom_minimum_size = Vector2(EventSheetPopupUI.HINT_WRAP_WIDTH, 0.0)
 	_hint.add_theme_color_override("font_color", Color(0.80, 0.85, 0.95, 0.95))
 	_form.add_child(_hint)
 	# Native-node ACEs link to the engine's own class reference — the vocabulary IS
@@ -194,8 +201,10 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 		var description_label: Label = Label.new()
 		description_label.text = description
 		description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		# Width-bound (no balloon on the zero-width pass) and a touch brighter for legibility.
+		description_label.custom_minimum_size = Vector2(EventSheetPopupUI.HINT_WRAP_WIDTH, 0.0)
 		description_label.add_theme_font_size_override("font_size", 11)
-		description_label.add_theme_color_override("font_color", Color(0.66, 0.70, 0.78, 0.9))
+		description_label.add_theme_color_override("font_color", Color(0.74, 0.78, 0.86, 0.95))
 		_form.add_child(description_label)
 
 ## Build a typed input widget for one parameter entry. The value-extraction node is
@@ -882,13 +891,15 @@ func _ensure_node_picker_ui() -> void:
 		_node_picker_unique_button.disabled = true
 		_node_picker_window.custom_action.connect(_on_node_picker_custom_action)
 		var box: VBoxContainer = EventSheetPopupUI.form_box()
+		# Find card: the search box + the filter chips, grouped in a titled inset card.
+		var find_box: VBoxContainer = EventSheetPopupUI.form_box()
 		_node_picker_search = LineEdit.new()
 		_node_picker_search.clear_button_enabled = true
 		_node_picker_search.placeholder_text = "Search…  (also group:enemies, script:Enemy, scene:Coin)"
 		_node_picker_search.text_changed.connect(func(_t: String) -> void: _populate_node_picker())
 		# Enter commits the first result (parity with the main ACE picker's type-and-Enter).
 		_node_picker_search.text_submitted.connect(func(_t: String) -> void: _activate_first_node_picker_match())
-		box.add_child(_node_picker_search)
+		find_box.add_child(_node_picker_search)
 		var chip_row: HBoxContainer = HBoxContainer.new()
 		chip_row.add_theme_constant_override("separation", 4)
 		for chip_label: String in NODE_PICKER_CHIP_CLASSES.keys():
@@ -904,7 +915,8 @@ func _ensure_node_picker_ui() -> void:
 		_node_picker_used_toggle.tooltip_text = "List every node reference this sheet makes (red = missing from the scene)."
 		_node_picker_used_toggle.toggled.connect(func(_on: bool) -> void: _populate_node_picker())
 		chip_row.add_child(_node_picker_used_toggle)
-		box.add_child(chip_row)
+		find_box.add_child(chip_row)
+		box.add_child(EventSheetPopupUI.titled_card("Find a node", find_box))
 		_node_picker_tree = Tree.new()
 		_node_picker_tree.columns = 2
 		_node_picker_tree.set_column_title(0, "Node")
@@ -923,7 +935,9 @@ func _ensure_node_picker_ui() -> void:
 		tree_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		_node_picker_tree.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		tree_holder.add_child(_node_picker_tree)
-		box.add_child(tree_holder)
+		var results_card: PanelContainer = EventSheetPopupUI.titled_card("Results", tree_holder)
+		results_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		box.add_child(results_card)
 		_node_picker_window.add_child(EventSheetPopupUI.margined(box))
 		_dialog.add_child(_node_picker_window)
 
@@ -1768,17 +1782,11 @@ func _ensure_expression_window() -> void:
 	_expression_window.confirmed.connect(_on_expression_activated)
 	_dialog.add_child(_expression_window)
 
-	var margin: MarginContainer = MarginContainer.new()
+	# Standard body margins + a consistent form box (matches the picker + node picker).
+	var content: VBoxContainer = EventSheetPopupUI.form_box()
+	var margin: MarginContainer = EventSheetPopupUI.margined(content)
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 8)
-	margin.add_theme_constant_override("margin_right", 8)
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_bottom", 8)
 	_expression_window.add_child(margin)
-
-	var content: VBoxContainer = VBoxContainer.new()
-	content.add_theme_constant_override("separation", 6)
-	margin.add_child(content)
 
 	_expression_search = LineEdit.new()
 	_expression_search.placeholder_text = "Search expressions..."
@@ -1802,7 +1810,9 @@ func _ensure_expression_window() -> void:
 	expr_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_expression_tree.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	expr_holder.add_child(_expression_tree)
-	content.add_child(expr_holder)
+	var expr_card: PanelContainer = EventSheetPopupUI.titled_card("Expressions", expr_holder)
+	expr_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(expr_card)
 
 func _refresh_expression_tree() -> void:
 	if _expression_tree == null or _registry == null:
