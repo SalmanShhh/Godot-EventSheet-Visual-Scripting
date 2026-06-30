@@ -143,6 +143,7 @@ var _starter: EventSheetStarterTemplates = EventSheetStarterTemplates.new()  # N
 var _comments: EventSheetCommentAndScopeDialogs = EventSheetCommentAndScopeDialogs.new()  # comment/with-node dialogs (dock/comment_and_scope_dialogs.gd)
 var _struct_rows: EventSheetStructRowDialogs = EventSheetStructRowDialogs.new()  # enum/signal/match row editors (dock/struct_row_dialogs.gd)
 var _inline_params: EventSheetInlineParamEditor = EventSheetInlineParamEditor.new()  # double-click value / swatch / node-drop editors (dock/inline_param_editor.gd)
+var _doctor: EventSheetProjectDoctorPanel = EventSheetProjectDoctorPanel.new()  # Tools ▸ Project Doctor health-audit window (dock/project_doctor_panel.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -204,6 +205,7 @@ func _ensure_editor_dialogs_initialized() -> void:
     _comments.init(self)
     _struct_rows.init(self)
     _inline_params.init(self)
+    _doctor.init(self)
     # Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
     _variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
     _variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
@@ -4801,11 +4803,9 @@ func _open_project_find(initial_query: String = "") -> void:
         _project_find = EventSheetProjectFind.new(self)
     _project_find.open(initial_query)
 
-# ── Project Doctor — the one-stop health audit (Tools menu; core lives in
-# EventSheetProjectDoctor so the headless CLI and CI run the same checks) ─────────────
-var _doctor_window: Window = null
-var _doctor_tree: Tree = null
-
+# ── Project Doctor — health-audit window → dock/project_doctor_panel.gd ──
+func _open_project_doctor() -> void:  # Tools menu (id 7)
+    _doctor.open()
 ## Runs EventSheetDiagnostics over the current sheet, paints per-row error markers on the active
 ## view, and jumps to the first flagged row. Returns the flagged-row count. The "error → row"
 ## deep-link: a bad ƒx expression or GDScript block lands you ON the offending row, not a status
@@ -4974,55 +4974,6 @@ func _shortcut_capture_gui_input(event: InputEvent, action: String, capture: But
     EventSheetShortcuts.set_binding(action, binding)
     _shortcuts_capturing_action = ""
     _refresh_shortcuts_editor()
-func _open_project_doctor() -> void:
-    if _doctor_window == null:
-        _doctor_window = Window.new()
-        _doctor_window.title = "Project Doctor"
-        _doctor_window.size = Vector2i(680, 440)
-        _doctor_window.close_requested.connect(func() -> void: _doctor_window.hide())
-        var box: VBoxContainer = EventSheetPopupUI.form_box()
-        var body: MarginContainer = EventSheetPopupUI.margined(box)
-        body.set_anchors_preset(Control.PRESET_FULL_RECT)
-        _doctor_tree = Tree.new()
-        _doctor_tree.hide_root = true
-        _doctor_tree.columns = 3
-        _doctor_tree.set_column_title(0, "Severity")
-        _doctor_tree.set_column_title(1, "Where")
-        _doctor_tree.set_column_title(2, "Finding")
-        _doctor_tree.set_column_expand(0, false)
-        _doctor_tree.set_column_custom_minimum_width(0, 80)
-        _doctor_tree.set_column_expand(1, false)
-        _doctor_tree.set_column_custom_minimum_width(1, 180)
-        _doctor_tree.column_titles_visible = true
-        _doctor_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-        var findings_card: PanelContainer = EventSheetPopupUI.titled_card("Findings", _doctor_tree)
-        findings_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-        box.add_child(findings_card)
-        var rerun_button: Button = Button.new()
-        rerun_button.text = "Re-run checks"
-        rerun_button.pressed.connect(_run_project_doctor)
-        box.add_child(rerun_button)
-        _doctor_window.add_child(body)
-        add_child(_doctor_window)
-    _doctor_window.popup_centered()
-    _run_project_doctor()
-
-func _run_project_doctor() -> void:
-    _doctor_tree.clear()
-    var root_item: TreeItem = _doctor_tree.create_item()
-    var report: Dictionary = EventSheetProjectDoctor.run()
-    for finding: Dictionary in (report.get("findings", []) as Array):
-        var item: TreeItem = _doctor_tree.create_item(root_item)
-        var severity: String = str(finding.get("severity"))
-        item.set_text(0, severity.to_upper())
-        item.set_custom_color(0, Color(0.92, 0.42, 0.42) if severity == "error"
-            else (Color(0.93, 0.78, 0.4) if severity == "warning" else Color(0.6, 0.72, 0.86)))
-        item.set_text(1, str(finding.get("path")).get_file())
-        item.set_tooltip_text(1, str(finding.get("path")))
-        item.set_text(2, str(finding.get("message")))
-    var errors: int = int(report.get("errors", 0))
-    _set_status("Project Doctor: %d error(s), %d warning(s), %d note(s)." % [errors, int(report.get("warnings", 0)), int(report.get("infos", 0))], errors > 0)
-
 ## Writes the always-current project vocabulary reference (EventSheetVocabularyDoc) —
 ## the answer to "what can I say in this project?" as one committed markdown file.
 func _generate_vocabulary_doc() -> void:
