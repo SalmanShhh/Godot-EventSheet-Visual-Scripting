@@ -47,11 +47,11 @@ func _on_frame() -> void:
 		return
 	if _frames == 8:
 		_save(_ed._welcome._welcome_window, "welcome")
-		_ed._ensure_sheet_type_dialog()
-		_ed._sheet_type_dialog.popup_centered(Vector2i(460, 300))
+		_ed._sheet_type._ensure_sheet_type_dialog()
+		_ed._sheet_type._sheet_type_dialog.popup_centered(Vector2i(460, 300))
 		return
 	if _frames == 14:
-		_save(_ed._sheet_type_dialog, "sheet_type")
+		_save(_ed._sheet_type._sheet_type_dialog, "sheet_type")
 		_ed._pick._ensure_pick_dialog()
 		_ed._pick._pick_dialog.popup_centered(Vector2i(520, 300))
 		return

@@ -28,7 +28,7 @@ static func run() -> bool:
 	dock.setup(null)
 	dock._ensure_raw_code_dialog()
 	dock._comments._ensure_with_node_dialog()
-	dock._ensure_sheet_type_dialog()
+	dock._sheet_type._ensure_sheet_type_dialog()
 	dock._struct_rows._ensure_enum_dialog()
 	dock._struct_rows._ensure_signal_dialog()
 	dock._struct_rows._ensure_match_dialog()
@@ -36,7 +36,7 @@ static func run() -> bool:
 	for probe: Array in [
 		["Edit GDScript Block", dock._raw_code_dialog],
 		["Scope Actions To Node", dock._comments._with_node_dialog],
-		["Sheet Type", dock._sheet_type_dialog],
+		["Sheet Type", dock._sheet_type._sheet_type_dialog],
 		["Edit Enum", dock._struct_rows._enum_dialog],
 		["Edit Signal", dock._struct_rows._signal_dialog],
 		["Edit Match", dock._struct_rows._match_dialog],
