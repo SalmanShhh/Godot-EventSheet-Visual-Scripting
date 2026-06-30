@@ -55,10 +55,12 @@ func ensure_window() -> void:
     window.close_requested.connect(func() -> void: window.hide())
     var live_box: VBoxContainer = VBoxContainer.new()
     live_box.set_anchors_preset(Control.PRESET_FULL_RECT)
+    # Group 1 — the Live Values stream: status line + the editable values tree, in one titled card.
+    var stream_box: VBoxContainer = EventSheetPopupUI.form_box()
     label = RichTextLabel.new()
     label.fit_content = true
     label.text = "Waiting for a running game…  (double-click a value to EDIT it live)"
-    live_box.add_child(label)
+    stream_box.add_child(label)
     tree = Tree.new()
     tree.hide_root = true
     tree.columns = 2
@@ -67,10 +69,14 @@ func ensure_window() -> void:
     tree.column_titles_visible = true
     tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
     tree.item_edited.connect(_on_live_value_edited)
-    live_box.add_child(tree)
-    var watch_header: Label = Label.new()
-    watch_header.text = "Watch — expressions over the variables above (double-click a row to remove)"
-    live_box.add_child(watch_header)
+    stream_box.add_child(tree)
+    var stream_card: PanelContainer = EventSheetPopupUI.titled_card("Live Values", stream_box)
+    stream_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    stream_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    live_box.add_child(stream_card)
+    # Group 2 — Watch: the hint + the input row + the watch tree, in one titled card.
+    var watch_box: VBoxContainer = EventSheetPopupUI.form_box()
+    watch_box.add_child(EventSheetPopupUI.hint_label("Expressions over the streamed values above (double-click a row to remove)."))
     var watch_row: HBoxContainer = HBoxContainer.new()
     watch_input = LineEdit.new()
     watch_input.placeholder_text = "e.g. health <= 0"
@@ -81,7 +87,7 @@ func ensure_window() -> void:
     add_watch_button.text = "Watch"
     add_watch_button.pressed.connect(_add_watch_from_input)
     watch_row.add_child(add_watch_button)
-    live_box.add_child(watch_row)
+    watch_box.add_child(watch_row)
     watch_tree = Tree.new()
     watch_tree.hide_root = true
     watch_tree.columns = 2
@@ -90,8 +96,11 @@ func ensure_window() -> void:
     watch_tree.column_titles_visible = true
     watch_tree.custom_minimum_size = Vector2(0.0, 110.0)
     watch_tree.item_activated.connect(_remove_selected_watch)
-    live_box.add_child(watch_tree)
-    window.add_child(live_box)
+    watch_box.add_child(watch_tree)
+    var watch_card: PanelContainer = EventSheetPopupUI.titled_card("Watch", watch_box)
+    watch_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    live_box.add_child(watch_card)
+    window.add_child(EventSheetPopupUI.margined(live_box))
     _dock.add_child(window)
 
 ## Debugger-plugin sink (wired by the plugin entry point): one values frame -> the

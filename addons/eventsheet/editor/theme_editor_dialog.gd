@@ -188,18 +188,12 @@ func _ensure_dialog() -> void:
 ## button regenerates every colour token via EventSheetGodotTheme.apply, so re-skinning is
 ## "pick a colour, click Generate" instead of tuning thirty fields by hand.
 func _build_quick_style(form: VBoxContainer) -> void:
-	var header: Label = Label.new()
-	header.text = "Quick Style — recolour everything at once"
-	header.add_theme_font_size_override("font_size", 15)
-	form.add_child(header)
-	var hint: Label = Label.new()
-	hint.text = "Pick a base + accent, then Generate. Fine-tune individual tokens below."
-	hint.add_theme_color_override("font_color", Color(0.8, 0.85, 0.95, 0.7))
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	form.add_child(hint)
-	_quick_base = _quick_color_row(form, "Base (background tone)", Color("#252525"))
-	_quick_accent = _quick_color_row(form, "Accent (groups, selection)", Color("#569eff"))
-	_quick_font = _quick_color_row(form, "Text", Color("#ced0d2"))
+	# Quick Style as a themed inset card with an accent header (consistent with the token sections below).
+	var quick_box: VBoxContainer = EventSheetPopupUI.form_box()
+	quick_box.add_child(EventSheetPopupUI.hint_label("Pick a base + accent, then Generate. Fine-tune individual tokens below."))
+	_quick_base = _quick_color_row(quick_box, "Base (background tone)", Color("#252525"))
+	_quick_accent = _quick_color_row(quick_box, "Accent (groups, selection)", Color("#569eff"))
+	_quick_font = _quick_color_row(quick_box, "Text", Color("#ced0d2"))
 	var buttons: HBoxContainer = HBoxContainer.new()
 	var generate: Button = Button.new()
 	generate.text = "Generate Theme"
@@ -211,8 +205,8 @@ func _build_quick_style(form: VBoxContainer) -> void:
 	reset.tooltip_text = "Restore the bundled default look."
 	reset.pressed.connect(_reset_to_default)
 	buttons.add_child(reset)
-	form.add_child(buttons)
-	form.add_child(HSeparator.new())
+	quick_box.add_child(buttons)
+	form.add_child(EventSheetPopupUI.titled_card("Quick Style — recolour everything at once", quick_box))
 
 ## One labelled colour picker, returned so Quick Style can read it back on Generate.
 func _quick_color_row(form: VBoxContainer, label_text: String, default_color: Color) -> ColorPickerButton:
@@ -263,10 +257,8 @@ func _rebuild_detail_form() -> void:
 
 ## One labeled control per editable token, reflectively.
 func _build_section(form: VBoxContainer, title: String, style_resource: Resource) -> void:
-	var header: Label = Label.new()
-	header.text = title
-	header.add_theme_font_size_override("font_size", 15)
-	form.add_child(header)
+	# Each style section is a themed inset card with an accent header (matches the picker's panels).
+	var section_box: VBoxContainer = EventSheetPopupUI.form_box()
 	for token: Dictionary in editable_tokens(style_resource):
 		var token_name: String = str(token.get("name"))
 		var row: HBoxContainer = HBoxContainer.new()
@@ -295,7 +287,8 @@ func _build_section(form: VBoxContainer, title: String, style_resource: Resource
 				spin.value = float(style_resource.get(token_name))
 				spin.value_changed.connect(func(value: float) -> void: _on_token_edited(style_resource, token_name, value if int(token.get("type")) == TYPE_FLOAT else int(value)))
 				row.add_child(spin)
-		form.add_child(row)
+		section_box.add_child(row)
+	form.add_child(EventSheetPopupUI.titled_card(title, section_box))
 
 func _on_token_edited(style_resource: Resource, token_name: String, value: Variant) -> void:
 	if apply_token(style_resource, token_name, value) and _preview_viewport != null:

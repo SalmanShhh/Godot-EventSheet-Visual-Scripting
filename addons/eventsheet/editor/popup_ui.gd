@@ -68,7 +68,7 @@ static func hint_label(text: String, wrap_width: float = HINT_WRAP_WIDTH) -> Lab
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.custom_minimum_size = Vector2(wrap_width, 0.0)
-	label.modulate = Color(1.0, 1.0, 1.0, 0.66)
+	label.modulate = Color(1.0, 1.0, 1.0, 0.74)
 	return label
 
 ## Inner padding (px) baked into a panel_section()'s background, so its contents don't touch the edges.
@@ -86,6 +86,33 @@ static func panel_section(content: Control, pad: float = PANEL_SECTION_PAD) -> P
 	panel.add_theme_stylebox_override("panel", style)
 	panel.add_child(content)
 	return panel
+
+## A section-title label for grouping a dialog into legible blocks — full opacity, a touch larger,
+## tinted with the editor's accent so a section reads as a heading rather than just another form row.
+## Falls back to a neutral blue outside the editor (headless tests / non-editor runtime).
+static func section_header(text: String) -> Label:
+	var label: Label = Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 13)
+	var accent: Color = Color(0.58, 0.74, 1.0)
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var editor_interface: Object = Engine.get_singleton("EditorInterface")
+		if editor_interface != null and editor_interface.has_method("get_editor_theme"):
+			var theme: Theme = editor_interface.get_editor_theme()
+			if theme != null and theme.has_color("accent_color", "Editor"):
+				accent = theme.get_color("accent_color", "Editor")
+	label.add_theme_color_override("font_color", accent)
+	return label
+
+## A titled inset card — a section_header above panel_section(content). The standard "labelled section"
+## block, so every dialog groups its content into the same legible, themed panels instead of a flat
+## wall of rows. The caller still sets the returned panel's size flags if it should expand.
+static func titled_card(title: String, content: Control, pad: float = PANEL_SECTION_PAD) -> PanelContainer:
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override("separation", ROW_SEPARATION)
+	box.add_child(section_header(title))
+	box.add_child(content)
+	return panel_section(box, pad)
 
 ## The StyleBoxFlat behind panel_section() (and any card that wants the matching look): a filled inset
 ## with a subtle border + 4px corners. Editor-theme-aware — the fill comes from the editor's `dark_color_2`

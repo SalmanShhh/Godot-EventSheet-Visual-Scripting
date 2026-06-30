@@ -43,6 +43,7 @@ var _params_box: VBoxContainer = null
 var _guards_box: VBoxContainer = null
 var _expose_check: CheckBox = null
 var _expose_section: VBoxContainer = null
+var _expose_card: PanelContainer = null  # themed inset card wrapping _expose_section (shown when "Expose" is ticked)
 var _expose_name_edit: LineEdit = null
 var _expose_category_edit: LineEdit = null
 var _problem_label: Label = null
@@ -81,59 +82,47 @@ func init_dialog(parent_node: Node) -> void:
 	_value_type_row = EventSheetPopupUI.form_row("Value type", _value_type_option)
 	form.add_child(_value_type_row)
 
-	# Parameters — event-sheet-style rows: name · type · default · description.
-	var params_row: HBoxContainer = HBoxContainer.new()
-	var params_label: Label = Label.new()
-	params_label.text = "Parameters"
-	params_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
-	params_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	params_row.add_child(params_label)
-	var params_col: VBoxContainer = VBoxContainer.new()
-	params_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Parameters — a titled card holding the event-sheet-style rows (name · type · default · description).
+	var params_content: VBoxContainer = VBoxContainer.new()
+	params_content.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
 	_params_box = VBoxContainer.new()
-	params_col.add_child(_params_box)
+	params_content.add_child(_params_box)
 	var add_param_button: Button = Button.new()
 	add_param_button.text = "+ Add parameter"
 	add_param_button.tooltip_text = "Each parameter has a name, type, optional default value, and description."
 	add_param_button.pressed.connect(func() -> void: add_param_row())
-	params_col.add_child(add_param_button)
-	params_row.add_child(params_col)
-	form.add_child(params_row)
+	params_content.add_child(add_param_button)
+	form.add_child(EventSheetPopupUI.titled_card("Parameters", params_content))
 
-	# Run only when — guard conditions that wrap the function body in an `if`.
-	var guards_row: HBoxContainer = HBoxContainer.new()
-	var guards_label: Label = Label.new()
-	guards_label.text = "Run only when"
-	guards_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
-	guards_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	guards_row.add_child(guards_label)
-	var guards_col: VBoxContainer = VBoxContainer.new()
-	guards_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Run only when — a titled card of guard conditions that wrap the function body in an `if`.
+	var guards_content: VBoxContainer = VBoxContainer.new()
+	guards_content.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
 	_guards_box = VBoxContainer.new()
-	guards_col.add_child(_guards_box)
+	guards_content.add_child(_guards_box)
 	var add_guard_button: Button = Button.new()
 	add_guard_button.text = "+ Add condition"
 	add_guard_button.tooltip_text = "A GDScript boolean expression — the body runs only when all hold (e.g. host.enabled)."
 	add_guard_button.pressed.connect(func() -> void: add_guard_row())
-	guards_col.add_child(add_guard_button)
-	guards_row.add_child(guards_col)
-	form.add_child(guards_row)
+	guards_content.add_child(add_guard_button)
+	form.add_child(EventSheetPopupUI.titled_card("Run only when", guards_content))
 
 	# Expose as an ACE other sheets can pick.
 	_expose_check = CheckBox.new()
 	_expose_check.text = "Expose as a reusable ACE (other sheets can pick it)"
 	_expose_check.tooltip_text = "Publishes the function into pickers as the chosen Usable-as kind."
-	_expose_check.toggled.connect(func(on: bool) -> void: _expose_section.visible = on)
+	_expose_check.toggled.connect(func(on: bool) -> void: _expose_card.visible = on)
 	form.add_child(_expose_check)
 	_expose_section = EventSheetPopupUI.form_box()
-	_expose_section.visible = false
 	_expose_name_edit = LineEdit.new()
 	_expose_name_edit.placeholder_text = "defaults from the function name"
 	_expose_section.add_child(EventSheetPopupUI.form_row("Display name", _expose_name_edit))
 	_expose_category_edit = LineEdit.new()
 	_expose_category_edit.placeholder_text = "e.g. Combat"
 	_expose_section.add_child(EventSheetPopupUI.form_row("Picker category", _expose_category_edit))
-	form.add_child(_expose_section)
+	# Themed inset card, shown only when "Expose" is ticked.
+	_expose_card = EventSheetPopupUI.panel_section(_expose_section)
+	_expose_card.visible = false
+	form.add_child(_expose_card)
 
 	_problem_label = Label.new()
 	_problem_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -157,7 +146,7 @@ func open() -> void:
 	_name_edit.text = ""
 	_description_edit.text = ""
 	_expose_check.button_pressed = false
-	_expose_section.visible = false
+	_expose_card.visible = false
 	_expose_name_edit.text = ""
 	_expose_category_edit.text = ""
 	_problem_label.visible = false

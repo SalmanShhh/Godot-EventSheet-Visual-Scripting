@@ -86,9 +86,14 @@ func open_publish_preview() -> void:
         _publish_preview_window.size = Vector2i(440, 460)
         _publish_preview_window.close_requested.connect(func() -> void: _publish_preview_window.hide())
         _publish_preview_text = RichTextLabel.new()
-        _publish_preview_text.set_anchors_preset(Control.PRESET_FULL_RECT)
         _publish_preview_text.bbcode_enabled = true
-        _publish_preview_window.add_child(_publish_preview_text)
+        _publish_preview_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        var card: PanelContainer = EventSheetPopupUI.titled_card("Published surface", _publish_preview_text)
+        card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        var body: MarginContainer = EventSheetPopupUI.margined(card)
+        body.set_anchors_preset(Control.PRESET_FULL_RECT)
+        _publish_preview_window.add_child(body)
         _dock.add_child(_publish_preview_window)
     _publish_preview_text.text = publish_surface_text(collect_publish_surface(_dock._current_sheet))
     _publish_preview_window.popup_centered()

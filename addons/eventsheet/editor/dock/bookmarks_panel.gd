@@ -29,7 +29,12 @@ func open() -> void:
             if target != null and _dock._viewport != null:
                 _dock._viewport.reveal_resource(target)
         )
-        window.add_child(list)
+        var card: Control = EventSheetPopupUI.titled_card("Bookmarked Rows", list)
+        card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        var body: Control = EventSheetPopupUI.margined(card)
+        body.set_anchors_preset(Control.PRESET_FULL_RECT)
+        window.add_child(body)
         _dock.add_child(window)
     refresh()
     window.popup_centered()

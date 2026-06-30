@@ -30,6 +30,7 @@ func _open_project_find(initial_query: String = "") -> void:
         _project_find_window.close_requested.connect(func() -> void: _project_find_window.hide())
         var box: VBoxContainer = VBoxContainer.new()
         box.set_anchors_preset(Control.PRESET_FULL_RECT)
+        box.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
         var query_row: HBoxContainer = HBoxContainer.new()
         _project_find_edit = LineEdit.new()
         _project_find_edit.placeholder_text = "Find across every sheet in the project…"
@@ -40,7 +41,7 @@ func _open_project_find(initial_query: String = "") -> void:
         find_button.text = "Find"
         find_button.pressed.connect(_run_project_find)
         query_row.add_child(find_button)
-        box.add_child(query_row)
+        box.add_child(EventSheetPopupUI.titled_card("Find", query_row))
         var replace_row: HBoxContainer = HBoxContainer.new()
         _project_replace_edit = LineEdit.new()
         _project_replace_edit.placeholder_text = "Replace with… (applies to every match below)"
@@ -50,7 +51,8 @@ func _open_project_find(initial_query: String = "") -> void:
         replace_button.text = "Replace in Project"
         replace_button.pressed.connect(_run_project_replace)
         replace_row.add_child(replace_button)
-        box.add_child(replace_row)
+        box.add_child(EventSheetPopupUI.titled_card("Replace", replace_row))
+        box.add_child(EventSheetPopupUI.hint_label("Replace in Project writes closed sheets to disk immediately — only the open sheet's change is undoable."))
         _project_find_results = Tree.new()
         _project_find_results.hide_root = true
         _project_find_results.columns = 2
@@ -59,8 +61,11 @@ func _open_project_find(initial_query: String = "") -> void:
         _project_find_results.column_titles_visible = true
         _project_find_results.size_flags_vertical = Control.SIZE_EXPAND_FILL
         _project_find_results.item_activated.connect(_on_project_find_activated)
-        box.add_child(_project_find_results)
-        _project_find_window.add_child(box)
+        var results_card: PanelContainer = EventSheetPopupUI.titled_card("Results", _project_find_results)
+        results_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        results_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        box.add_child(results_card)
+        _project_find_window.add_child(EventSheetPopupUI.margined(box))
         _dock.add_child(_project_find_window)
     if not initial_query.is_empty():
         _project_find_edit.text = initial_query
