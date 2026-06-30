@@ -67,7 +67,7 @@ static func run() -> bool:
 		var template_editor: EventSheetEditor = EventSheetEditor.new()
 		template_editor.setup(EventSheetResource.new())
 		template_editor.set_undo_redo_manager(NoopUndoManager.new())
-		template_editor._new_sheet_from_template(template_id)
+		template_editor._starter._new_sheet_from_template(template_id)
 		var template_sheet: EventSheetResource = template_editor._current_sheet
 		var template_output: String = str(SheetCompiler.compile(template_sheet, "user://eventsheets_tpl_%d.gd" % template_id).get("output", ""))
 		var template_script: GDScript = GDScript.new()

@@ -82,7 +82,7 @@ static func run() -> bool:
 	noted.comment = "guards the tutorial"
 	all_passed = _check("ACE comments render dimmed after the text",
 		note_editor.get_viewport_control()._format_condition_descriptor(noted).contains("⊳ guards the tutorial"), true) and all_passed
-	note_editor._new_sheet_from_template(1)
+	note_editor._starter._new_sheet_from_template(1)
 	var template_sheet: EventSheetResource = note_editor._current_sheet
 	var template_events: int = 0
 	for row in template_sheet.events:

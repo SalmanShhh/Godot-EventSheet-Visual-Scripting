@@ -95,11 +95,11 @@ static func run() -> bool:
 
 	# New… menu: built-ins + separator + the project template; adopting id 100 swaps
 	# the template copy in as an unsaved sheet.
-	editor._build_template_menu_items()
+	editor._starter._build_template_menu_items()
 	all_passed = _check("template menu lists built-ins and the project template",
-		editor._template_menu.item_count == 11
-		and editor._project_template_paths == PackedStringArray(["user://tpl_dir/boss_fight.tres"]), true) and all_passed
-	editor._new_sheet_from_template(100)
+		editor._starter._template_menu.item_count == 11
+		and editor._starter._project_template_paths == PackedStringArray(["user://tpl_dir/boss_fight.tres"]), true) and all_passed
+	editor._starter._new_sheet_from_template(100)
 	all_passed = _check("adopting a project template starts an unsaved copy",
 		editor._current_sheet.custom_class_name == "BossFight"
 		and editor._current_sheet_path.is_empty() and editor._dirty, true) and all_passed

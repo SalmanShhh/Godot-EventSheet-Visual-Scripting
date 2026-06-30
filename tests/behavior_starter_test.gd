@@ -11,7 +11,7 @@ class_name BehaviorStarterTest
 
 static func run() -> bool:
 	var all_passed: bool = true
-	var sheet: EventSheetResource = EventSheetDock._build_behavior_component_starter()
+	var sheet: EventSheetResource = EventSheetStarterTemplates._build_behavior_component_starter()
 
 	# Shape: a behavior component with a typed host and an EXPORTED designer knob.
 	all_passed = _check("starter is a behavior component (not a god-sheet)", sheet.behavior_mode, true) and all_passed
