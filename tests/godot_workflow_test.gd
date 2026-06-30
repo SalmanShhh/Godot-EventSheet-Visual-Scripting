@@ -509,11 +509,8 @@ static func run() -> bool:
 	leftover_dialog.open_for_edit("global", {}, "label", "float", "1.0", false, "Edit Variable", false, true)
 	leftover_dialog._attr_range_edit.text = "0, 100, 1"
 	leftover_dialog._attr_clamp_check.button_pressed = true
-	var string_index: int = 0
-	for type_index: int in range(leftover_dialog._type_option.item_count):
-		if leftover_dialog._type_option.get_item_text(type_index) == "String":
-			string_index = type_index
-	leftover_dialog._type_option.select(string_index)
+	# "Text" is the friendly dropdown label that stores the String type (Number/Text/Yes-No aliases).
+	leftover_dialog._select_stored_type("String")
 	leftover_dialog._refresh_contextual_rows()
 	leftover_dialog._default_edit.text = "\"hi\""
 	var captured_attrs: Array = [null]

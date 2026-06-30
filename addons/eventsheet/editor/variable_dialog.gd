@@ -16,6 +16,10 @@ var _name_edit: LineEdit = null
 var _name_warning: Label = null
 var _sheet_provider: Callable = Callable()
 var _type_option: OptionButton = null
+# "Whole numbers only" — shown only when the friendly "Number" type is selected; ticked stores int,
+# unticked stores float. The dialog's display is friendly; the stored type stays a real Godot type.
+var _whole_numbers_check: CheckBox = null
+var _whole_numbers_row: HBoxContainer = null
 var _default_edit: LineEdit = null
 var _items_button: Button = null
 var _items_window: Window = null
@@ -76,6 +80,9 @@ const TYPE_OPTIONS: PackedStringArray = [
 ## Plain-language hover hints for the Type dropdown, in everyday terms (the three common kinds are a
 ## number, text, and yes/no). The stored type name is unchanged — these are on-demand explanations, not renames.
 const TYPE_HINTS: Dictionary = {
+	"Number": "A number — a count, score, position, speed… Tick \"Whole numbers only\" for integers.",
+	"Text": "Text — words, names, messages.",
+	"Yes-No": "A yes/no, on/off switch (true / false).",
 	"int": "A whole number, no decimals (for a count or score).",
 	"float": "A number that can have decimals — the everyday number type.",
 	"bool": "Yes / no, on / off (true / false).",
@@ -136,14 +143,23 @@ func init_dialog(parent_node: Node) -> void:
 	type_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	type_row.add_child(type_label)
 	_type_option = OptionButton.new()
+	# Friendly labels first (Number / Text / Yes-No), then a separator, then the advanced Godot types
+	# under their own names. Only the DISPLAY changes — _selected_stored_type() always returns a real
+	# Godot type (int/float/String/bool/…), so the stored type_name and the .gd round-trip are unchanged.
+	for friendly: String in ["Number", "Text", "Yes-No"]:
+		_type_option.add_item(friendly)
+		_type_option.set_item_tooltip(_type_option.item_count - 1, str(TYPE_HINTS[friendly]))
+	_type_option.add_separator("Advanced types")
 	for option: String in TYPE_OPTIONS:
+		# int / float collapse into "Number" + a "Whole numbers only" tick; bool → Yes-No; String → Text.
+		if option == "int" or option == "float" or option == "bool" or option == "String":
+			continue
 		_type_option.add_item(option)
-		# Plain-language hover hints, on demand: a newcomer has no
-		# model for int-vs-float or Variant, so each type explains itself in plain terms without renaming it.
 		if TYPE_HINTS.has(option):
 			_type_option.set_item_tooltip(_type_option.item_count - 1, str(TYPE_HINTS[option]))
 	_type_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_type_option.item_selected.connect(func(_index: int) -> void:
+		_refresh_whole_numbers_row()
 		_refresh_const_ui()
 		_refresh_default_hint()
 		_refresh_contextual_rows()
@@ -151,6 +167,19 @@ func init_dialog(parent_node: Node) -> void:
 	)
 	type_row.add_child(_type_option)
 	form.add_child(type_row)
+
+	# "Whole numbers only" — the int/float distinction, surfaced only when "Number" is the chosen type.
+	_whole_numbers_row = HBoxContainer.new()
+	var whole_spacer: Control = Control.new()
+	whole_spacer.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
+	_whole_numbers_row.add_child(whole_spacer)
+	_whole_numbers_check = CheckBox.new()
+	_whole_numbers_check.text = "Whole numbers only"
+	_whole_numbers_check.tooltip_text = "A whole number (no decimals) — stored as an int. Unticked stores a float."
+	_whole_numbers_check.toggled.connect(func(_on: bool) -> void: _refresh_default_hint())
+	_whole_numbers_row.add_child(_whole_numbers_check)
+	_whole_numbers_row.visible = false
+	form.add_child(_whole_numbers_row)
 
 	var default_row: HBoxContainer = HBoxContainer.new()
 	var default_label: Label = Label.new()
@@ -315,11 +344,58 @@ func init_dialog(parent_node: Node) -> void:
 
 ## A 130px-label + expanding-field row, matching the main form's columns, so the optional
 ## Inspector fields line up with Name/Type/Default above instead of running full-width.
+## ── Friendly type mapping (display ↔ stored Godot type) ──────────────────────
+## The real Godot type the current selection stores (written to LocalVariable.type_name and
+## round-tripped). Friendly labels map back to int/float/String/bool; advanced types are literal.
+## Only the DROPDOWN DISPLAY is friendly — the stored type is unchanged, so compile/import round-trip.
+func _selected_stored_type() -> String:
+	if _type_option == null or _type_option.selected < 0:
+		return "int"
+	var label: String = _type_option.get_item_text(_type_option.selected)
+	match label:
+		"Number":
+			return "int" if _whole_numbers_check != null and _whole_numbers_check.button_pressed else "float"
+		"Text":
+			return "String"
+		"Yes-No":
+			return "bool"
+		_:
+			return label
+
+## Selects the dropdown entry (+ the Whole-numbers tick) that stores `type_name` — the reverse of
+## _selected_stored_type, used to prefill the dialog when editing an existing variable.
+func _select_stored_type(type_name: String) -> void:
+	var target: String = type_name
+	match type_name:
+		"int":
+			target = "Number"
+			if _whole_numbers_check != null:
+				_whole_numbers_check.button_pressed = true
+		"float":
+			target = "Number"
+			if _whole_numbers_check != null:
+				_whole_numbers_check.button_pressed = false
+		"String":
+			target = "Text"
+		"bool":
+			target = "Yes-No"
+	for index: int in range(_type_option.item_count):
+		if _type_option.get_item_text(index) == target:
+			_type_option.select(index)
+			break
+	_refresh_whole_numbers_row()
+
+## Shows the "Whole numbers only" tick only while the friendly "Number" type is selected.
+func _refresh_whole_numbers_row() -> void:
+	if _whole_numbers_row == null:
+		return
+	var label: String = _type_option.get_item_text(_type_option.selected) if _type_option != null and _type_option.selected >= 0 else ""
+	_whole_numbers_row.visible = label == "Number"
+
 ## ── Structured data editor (Array/Dictionary "Edit items…") ──────────────────
 ## True when the chosen type is a collection, so the structured items editor applies.
 func _selected_type_is_collection() -> bool:
-	var type_name: String = _type_option.get_item_text(_type_option.selected) if _type_option != null and _type_option.selected >= 0 else ""
-	return type_name.begins_with("Array") or type_name.begins_with("Dictionary")
+	return _selected_stored_type().begins_with("Array") or _selected_stored_type().begins_with("Dictionary")
 
 func _refresh_items_button() -> void:
 	if _items_button != null:
@@ -331,7 +407,7 @@ func _refresh_items_button() -> void:
 func _open_items_editor() -> void:
 	if _items_window == null:
 		_build_items_window()
-	var is_dict: bool = _type_option.get_item_text(_type_option.selected).begins_with("Dictionary")
+	var is_dict: bool = _selected_stored_type().begins_with("Dictionary")
 	_items_edit.text = "\n".join(collection_literal_items(_default_edit.text))
 	_items_edit.placeholder_text = "one \"key\": value per line" if is_dict else "one value per line"
 	_items_window.title = "Edit Dictionary Items" if is_dict else "Edit Array Items"
@@ -367,7 +443,7 @@ func _build_items_window() -> void:
 	box.add_child(buttons)
 
 func _apply_items_editor() -> void:
-	var is_dict: bool = _type_option.get_item_text(_type_option.selected).begins_with("Dictionary")
+	var is_dict: bool = _selected_stored_type().begins_with("Dictionary")
 	var items: PackedStringArray = PackedStringArray()
 	for line: String in _items_edit.text.split("\n"):
 		if not line.strip_edges().is_empty():
@@ -472,12 +548,8 @@ func open_for_edit(
 	_name_edit.text = name
 	_refresh_name_warning()
 	_default_edit.text = _default_display_text(default_value)
-	var selected_index: int = 0
-	for index: int in range(_type_option.item_count):
-		if _type_option.get_item_text(index) == type_name:
-			selected_index = index
-			break
-	_type_option.select(selected_index)
+	# Select the friendly dropdown entry (+ Whole-numbers tick) that stores this Godot type.
+	_select_stored_type(type_name)
 	_refresh_items_button()
 	_const_check.button_pressed = is_constant
 	# Local variables are inherently private to the script body, so the export toggle only
@@ -559,7 +631,7 @@ func _on_confirmed() -> void:
 		if _dialog.is_inside_tree():
 			_dialog.call_deferred("popup_centered", Vector2i(460, 260))
 		return
-	var type_name: String = _type_option.get_item_text(_type_option.selected)
+	var type_name: String = _selected_stored_type()
 	# Guardrail (event-sheet-style): an invalid collection literal never commits — the dialog
 	# reopens with the text intact so the user fixes or cancels deliberately.
 	var verdict: Dictionary = validate_default(type_name, _default_edit.text)
@@ -754,7 +826,7 @@ static func validate_default(type_name: String, raw: String) -> Dictionary:
 func _refresh_contextual_rows() -> void:
 	if _type_option == null or _options_row == null:
 		return
-	var type_name: String = _type_option.get_item_text(maxi(_type_option.selected, 0))
+	var type_name: String = _selected_stored_type()
 	var numeric: bool = type_name in ["int", "float"]
 	_options_row.visible = type_name == "String"
 	_enum_fill_menu.visible = _options_row.visible and _enum_provider.is_valid() and not (_enum_provider.call() as Array).is_empty()
@@ -978,7 +1050,7 @@ func _populate_enum_fill_menu() -> void:
 func _refresh_default_hint() -> void:
 	if _default_help == null or _type_option == null or _default_edit == null:
 		return
-	var type_name: String = _type_option.get_item_text(_type_option.selected)
+	var type_name: String = _selected_stored_type()
 	if not is_collection_type(type_name):
 		_default_help.visible = false
 		# Resource-typed exports have no literal default (they're assigned in the Inspector), so don't suggest "0".
@@ -995,7 +1067,7 @@ func _refresh_default_hint() -> void:
 func _refresh_const_ui() -> void:
 	if _const_check == null or _const_help == null or _type_option == null:
 		return
-	var type_name: String = _type_option.get_item_text(_type_option.selected)
+	var type_name: String = _selected_stored_type()
 	var supports_const: bool = _supports_constant(type_name)
 	_const_check.disabled = not supports_const
 	if not supports_const:
