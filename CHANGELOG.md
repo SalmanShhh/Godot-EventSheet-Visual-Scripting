@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added — Console logging ACEs (combo-driven) + friendly label↔value dropdowns
+
+- A **Console** vocabulary of C3 Browser/console-style logging verbs, each driven by a single **"As"**
+  dropdown — **Message / Warning / Error** — that *shows* a friendly label but *inserts* the matching Godot
+  call (`print` / `push_warning` / `push_error`): **Log If** (write only when a condition holds, no wrapping
+  event row), **Log (Debug Builds Only)** (`if OS.is_debug_build(): …` — skipped in exported release games),
+  **Log Value** ("name = value" to any stream), and **To Text** (`var_to_str(...)`). All emit bare native
+  one-liners (parity-clean) and reverse-lift cleanly as themselves. (`tests/console_aces_test.gd`)
+- **New: friendly combo labels.** A fixed-options ("combo") param can now carry `{"key": <inserted value>,
+  "label": <shown text>}` entries, so a dropdown reads "Warning" while inserting `push_warning`. `ACEParam.options`
+  is untyped, `make_param` accepts the dict form, and the adapter preserves the label↔value split — reusable for
+  any future combo (e.g. comparison operators could read "equals" instead of `==`).
+  - *Note:* the plain immediate **Print / Push Warning / Push Error** verbs are kept (not deprecated): the
+    reverse-lift is most-specific-first, so a bare combined `Log` would lift back to the specific verb on `.gd`
+    reopen — the combo lives on the distinct-template verbs that round-trip as themselves.
+
 ### Added — Event groups round-trip through `.gd` (docs/GROUPS-ROUNDTRIP-SPEC.md)
 
 - Event groups now **survive a `.gd` round-trip**. Compiling a grouped sheet emits a class-scope
