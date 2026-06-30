@@ -105,8 +105,8 @@ static func run() -> bool:
 	param_editor.setup(param_sheet)
 	param_editor.set_undo_redo_manager(NoopUndoManager.new())
 	param_editor._on_param_value_edit_requested(ace, "y", "10")
-	param_editor._param_edit_field.text = "42"
-	param_editor._commit_inline_param_edit()
+	param_editor._inline_params._param_edit_field.text = "42"
+	param_editor._inline_params._commit_inline_param_edit()
 	all_passed = _check("inline edits land on just that param",
 		str(ace.params.get("y")) == "42" and str(ace.params.get("x")) == "10", true) and all_passed
 	param_editor.free()
