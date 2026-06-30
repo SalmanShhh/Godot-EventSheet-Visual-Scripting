@@ -2135,7 +2135,7 @@ func _ai_generate_clicked() -> void:
         _apply_ai_gdscript(EventSheetAIGeneration.resolve_gdscript(description, _current_sheet))
         return
     if not EventSheetAIGeneration.is_live_configured():
-        _set_status("Set eventsheets/ai/api_key (+ endpoint, model) in Project Settings to generate in-editor — or use the MCP server (docs/MCP-SERVER.md).", true)
+        _set_status("Set eventsheets/ai/api_key (+ endpoint, model) in Project Settings to generate in-editor — or use the MCP server.", true)
         return
     _ai_request_live(description)
 
@@ -4683,7 +4683,7 @@ func _export_addon_pack(base_dir_override: String = "") -> void:
         readme_file.store_string(_generate_pack_readme(pack_sheet))
         readme_file.close()
     # Lane A composition: packs travel complete — bundle included sheets unless the
-    # project policy says reference-only (docs/ADDON-COMPOSITION-SPEC.md).
+    # project policy says reference-only.
     var bundled_count: int = 0
     if str(SheetCompiler._addon_policy("export_bundling", "bundle")) == "bundle":
         for include_path: String in pack_sheet.includes:
@@ -7234,7 +7234,7 @@ func _build_welcome_window() -> void:
         _open_template_menu())
     box.add_child(starter_button)
     # Surface the Simple/Expert choice on the one newcomer-guaranteed surface (the Welcome). Simple Mode is the
-    # canonical audience flag but is otherwise off-by-default and menu-buried — see PROGRESSIVE-DISCLOSURE-SPEC.
+    # canonical audience flag but is otherwise off-by-default and menu-buried.
     var simple_check: CheckBox = CheckBox.new()
     simple_check.text = "Simple mode — hide advanced rows & menu items"
     simple_check.tooltip_text = "New to event sheets? Simple mode keeps the picker and menus to the essentials. Everything still works in Expert mode — toggle any time in View → Simple Mode."
@@ -7249,7 +7249,7 @@ func _build_welcome_window() -> void:
     box.add_child(native_check)
     _welcome_window.set_meta("native_check", native_check)
     var docs_label: Label = Label.new()
-    docs_label.text = "Coming from another event-sheet tool? The migration guide in docs/ maps the vocabulary.\nReopen this window any time: Tools → Welcome…"
+    docs_label.text = "Coming from another event-sheet tool? The migration guide maps the vocabulary.\nReopen this window any time: Tools → Welcome…"
     docs_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     docs_label.custom_minimum_size = Vector2(440.0, 0.0)  # width-bound (see blurb above) so it can't balloon the dialog
     docs_label.add_theme_font_size_override("font_size", 11)

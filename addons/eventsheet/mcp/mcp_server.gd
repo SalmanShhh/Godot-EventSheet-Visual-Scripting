@@ -3,7 +3,7 @@
 # sheets, browse the ACE registry, compile (dry-run by default), lint GDScript blocks,
 # and apply snippets/GDScript as rows. JSON-RPC 2.0; the stdio transport lives in
 # run_mcp_server.gd — this class is transport-free so tests drive handle_message
-# directly. See docs/MCP-SERVER.md for client setup.
+# directly.
 @tool
 extends RefCounted
 class_name EventSheetMCPServer
@@ -200,7 +200,7 @@ func _serialize_ace(ace: Resource) -> Dictionary:
 	}
 
 ## The full ACE vocabulary (builtins + zero-config addons), optionally filtered.
-## Composition-policy enforcement over MCP (docs/ADDON-COMPOSITION-SPEC.md): when the
+## Composition-policy enforcement over MCP: when the
 ## project restricts include sources to a tag, addon ACEs without that tag disappear
 ## from list_aces — an AI assistant told "only approved addons" is policy-BOUND, not
 ## policy-advised. Core builtins always list.

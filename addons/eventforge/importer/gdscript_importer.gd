@@ -6,7 +6,7 @@
 # ACE-level lifting IS shipped: EventSheetACELifter.attempt_lift() reverse-matches generated `if`
 # chains and action templates back into real events/conditions/actions, gated by a byte-identical
 # verify-lift (anything that doesn't reproduce exactly stays a verbatim RawCodeRow — the lossless rule
-# always wins). See docs/GDSCRIPT-PAIRING-SPEC.md.
+# always wins).
 @tool
 extends RefCounted
 class_name GDScriptImporter

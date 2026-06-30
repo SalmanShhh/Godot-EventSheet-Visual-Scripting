@@ -35,7 +35,7 @@ var _attr_toggle: Button = null
 var _attr_section: VBoxContainer = null
 # A second, nested disclosure inside _attr_section: the "Advanced" tier holds the wiring/organizational
 # attributes (grouping, show-if/lock-unless/on-changed, clamp, read-only) so the Basic tier (tooltip, range,
-# drawer, multiline) reads first. See docs/PROGRESSIVE-DISCLOSURE-SPEC.md.
+# drawer, multiline) reads first.
 var _attr_advanced_toggle: Button = null
 var _attr_advanced_section: VBoxContainer = null
 ## Attribute keys whose fields live in the nested Advanced tier. MUST mirror the fields parented under
@@ -137,7 +137,7 @@ func init_dialog(parent_node: Node) -> void:
 	_type_option = OptionButton.new()
 	for option: String in TYPE_OPTIONS:
 		_type_option.add_item(option)
-		# Plain-language hover hints, on demand (docs/PROGRESSIVE-DISCLOSURE-SPEC.md): a newcomer has no
+		# Plain-language hover hints, on demand: a newcomer has no
 		# model for int-vs-float or Variant, so each type explains itself in plain terms without renaming it.
 		if TYPE_HINTS.has(option):
 			_type_option.set_item_tooltip(_type_option.item_count - 1, str(TYPE_HINTS[option]))
@@ -191,7 +191,7 @@ func init_dialog(parent_node: Node) -> void:
 	form.add_child(_options_row)
 	# Inspector attributes behind a disclosure ("More options") — the dialog used to throw everything at once.
 	# Collapsed for new variables, auto-expanded when an edited variable already uses an attribute. Exported
-	# globals only. Progressive disclosure: docs/PROGRESSIVE-DISCLOSURE-SPEC.md.
+	# globals only. (Progressive disclosure.)
 	_attr_toggle = Button.new()
 	_attr_toggle.flat = true
 	_attr_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -855,7 +855,7 @@ static func _format_bound(value: float) -> String:
 	# 0.001 is a cosmetic "close enough to whole" tolerance — display-only, never used for storage or compares.
 	return str(int(round(value))) if absf(value - round(value)) < 0.001 else str(value)
 
-## Pre-validate the Clamp↔Range dependency (docs/PROGRESSIVE-DISCLOSURE-SPEC.md): Clamp needs a min+max to
+## Pre-validate the Clamp↔Range dependency: Clamp needs a min+max to
 ## clamp to, so disable the checkbox (with a hint) until a valid Range is entered — making the dependency
 ## visible BEFORE confirm instead of erroring on OK. No-op when Clamp is hidden (non-numeric types).
 func _refresh_clamp_gate() -> void:

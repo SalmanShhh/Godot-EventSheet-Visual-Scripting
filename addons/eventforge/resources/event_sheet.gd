@@ -69,7 +69,7 @@ class_name EventSheetResource
 ## Lane B composition (has-a): addon CLASS NAMES this sheet uses as owned helper
 ## instances — each emits `var __uses_<snake> := <Class>.new()` so ƒx/blocks can call
 ## them (suits RefCounted provider/helper addons; Node-behavior auto-attach is the
-## planned Lane B.2). See docs/ADDON-COMPOSITION-SPEC.md.
+## planned Lane B.2).
 @export var uses_addons: Array[String] = []
 ## Lane B.2 composition: behavior CLASS NAMES this pack expects as SIBLING nodes —
 ## compiles to _get_configuration_warnings(), so Godot shows the ⚠ badge when a
@@ -83,8 +83,8 @@ class_name EventSheetResource
 @export var ace_provider_scripts: Array[String] = []
 ## Non-empty when this sheet was opened FROM a GDScript file (GDScript-backed sheet): the
 ## .gd file is the single source of truth — saving compiles back to it (order-preserving,
-## no generated header), and no .tres exists unless the user saves-as. See
-## docs/GDSCRIPT-PAIRING-SPEC.md "Open any GDScript as a sheet".
+## no generated header), and no .tres exists unless the user saves-as. This is what
+## lets you open any GDScript as a sheet.
 @export var external_source_path: String = ""
 ## When true this sheet is a read-only PREVIEW (e.g. a .gd opened just to look at it): the
 ## editor blocks all mutations and refuses to save back over the source file. Clearing it

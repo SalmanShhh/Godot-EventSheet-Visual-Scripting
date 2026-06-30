@@ -72,8 +72,8 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Pauses this event for a number of seconds before continuing."))
 	descriptors.append(F.make_descriptor("Core", "AwaitSignal", "Wait For Signal", ACEDescriptor.ACEType.ACTION, "await {signal_expression}", "", [F.make_param("signal_expression", "String", "get_tree().process_frame", "Signal", "Signal to wait for (e.g. $Timer.timeout).", "expression")], "Time", "Wait for {signal_expression}")
 		.described("Pauses this event until a chosen signal fires, like a timer finishing."))
-	# Frame budgeting (ADVANCED — frame-spreading Solution 3, see docs/PERFORMANCE.md): hand-roll loop
-	# spreading. The handler becomes an implicit coroutine, so use these ONLY inside a one-shot trigger
+	# Frame budgeting (ADVANCED — frame-spreading): hand-roll loop spreading.
+	# The handler becomes an implicit coroutine, so use these ONLY inside a one-shot trigger
 	# (On Ready / On Signal / a custom function) with a run-once guard — NEVER inside a re-firing On
 	# Process, where overlapping suspended runs would duplicate work. For the easy path use the Time Slicer pack.
 	descriptors.append(F.make_descriptor("Core", "AwaitNextFrame", "Await Next Frame", ACEDescriptor.ACEType.ACTION, "await get_tree().process_frame", "", [], "Performance", "await next frame")

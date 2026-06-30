@@ -1,5 +1,4 @@
 # Godot EventSheets — reusable visual Controls for Tier 3 custom Inspector drawers.
-# (docs/INSPECTOR-ATTRIBUTES-SPEC.md)
 #
 # These are plain Controls (NOT EditorProperty), so the SAME widget is reused in two places: the Inspector
 # drawers (attribute_drawers.gd wraps each in an EditorProperty and forwards edits) AND the Variable dialog's

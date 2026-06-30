@@ -294,7 +294,7 @@ static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold
 			continue
 		if event.actions.size() >= threshold:
 			_add(findings, "info", "unbounded-loop", sheet_path,
-				"A per-frame For Each here loops over '%s' with %d actions, uncapped and unbudgeted - if it's slow, spread it across frames with the Time Slicer pack or a Budgeted For Each. See docs/PERFORMANCE.md." % [pick.iterator_name, event.actions.size()])
+				"A per-frame For Each here loops over '%s' with %d actions, uncapped and unbudgeted - if it's slow, spread it across frames with the Time Slicer pack or a Budgeted For Each." % [pick.iterator_name, event.actions.size()])
 			break
 	for sub: Variant in event.sub_events:
 		if sub is EventRow:
@@ -326,7 +326,7 @@ static func _scan_coroutine_misuse(event: EventRow, sheet_path: String, findings
 			flagged = "await"
 		if not flagged.is_empty():
 			_add(findings, "warning", "coroutine-in-per-frame", sheet_path,
-				"A coroutine action ('%s') runs under a per-frame trigger (On Process / On Physics Process). The next tick fires while the previous run may still be suspended, so the handler overlaps itself and double-processes. Move it to a one-shot trigger (On Ready / On Signal / a custom function), or use the Time Slicer pack. See docs/PERFORMANCE.md." % flagged)
+				"A coroutine action ('%s') runs under a per-frame trigger (On Process / On Physics Process). The next tick fires while the previous run may still be suspended, so the handler overlaps itself and double-processes. Move it to a one-shot trigger (On Ready / On Signal / a custom function), or use the Time Slicer pack." % flagged)
 			break
 	for sub: Variant in event.sub_events:
 		if sub is EventRow:

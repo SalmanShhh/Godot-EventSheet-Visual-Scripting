@@ -2,7 +2,7 @@
 # Compile-checks block snippets against the sheet's context: the scratch script extends the
 # sheet's host class and stubs the sheet's variables/functions, so references to them (and
 # host members) resolve. Godot does not expose the ScriptEditor analyzer to plugins; this
-# parse+analyze pass is the supported approximation (see GDSCRIPT-PAIRING-SPEC).
+# parse+analyze pass is the supported approximation.
 @tool
 class_name EventSheetGDScriptLint
 extends RefCounted

@@ -70,7 +70,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 
 	# GDScript-backed sheets (opened FROM a .gd file) compile via the order-preserving
 	# external path: no generated header, no synthesized extends, rows emit in sheet order
-	# so an untouched file reproduces byte-identically. See GDSCRIPT-PAIRING-SPEC.
+	# so an untouched file reproduces byte-identically.
 	if not sheet.external_source_path.is_empty():
 		return _compile_external(sheet, result, output_path)
 
@@ -603,7 +603,7 @@ static func _insert_provider_member_declarations(lines: PackedStringArray, resul
 	member_names.sort()
 	var declarations: PackedStringArray = PackedStringArray()
 	declarations.append("")
-	declarations.append("# Owned addon-provider instances (instance-backed ACEs; see GDSCRIPT-PAIRING-SPEC).")
+	declarations.append("# Owned addon-provider instances (instance-backed ACEs).")
 	for member_name: Variant in member_names:
 		var provider_class: String = str(providers[member_name])
 		declarations.append("var %s := %s.new()" % [str(member_name), provider_class])
@@ -613,7 +613,7 @@ static func _insert_provider_member_declarations(lines: PackedStringArray, resul
 ## Recursively merges included sheets (see EventSheetResource.includes): variables and
 ## functions skip name collisions with a warning (root wins), rows append in include
 ## order. Compile-time only — included rows never enter the editing model.
-## Composition policy (docs/ADDON-COMPOSITION-SPEC.md): ProjectSettings gates under
+## Composition policy: ProjectSettings gates under
 ## "eventsheets/addons/*". THE INVARIANT: policy never changes emitted bytes — it only
 ## decides allowed (error), flagged (warning) or clean. Defaults are permissive so jams
 ## never meet the policy system.
@@ -1374,7 +1374,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			var default_value: Variant = descriptor.get("default", "null")
 			var exported: bool = bool(descriptor.get("exported", true))
 			var combo_options: PackedStringArray = PackedStringArray(descriptor.get("options", []))
-			# Inspector attributes (Tier 1 — see docs/INSPECTOR-ATTRIBUTES-SPEC.md):
+			# Inspector attributes (Tier 1):
 			# canonical order is tooltip doc-comment, group, then the export line. The
 			# doc comment is Godot's native Inspector tooltip.
 			var attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
@@ -1681,7 +1681,7 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# round-trip lift can absorb it back onto the variable instead of stranding it as a GDScript block.
 	return _tree_variable_group_prefix(local_var) + var_line
 
-## Tier 3 custom-drawer @export_custom prefix (docs/INSPECTOR-ATTRIBUTES-SPEC.md). The `eventsheet:<drawer>`
+## Tier 3 custom-drawer @export_custom prefix. The `eventsheet:<drawer>`
 ## marker rides an @export_custom hint string; the editor's EventSheetAttributeDrawers plugin recognises it
 ## and swaps in a richer control, while WITHOUT the plugin (or in an exported game) the property degrades to
 ## a plain field — the parity covenant is untouched. Returns "" when there's no drawer or the var type can't

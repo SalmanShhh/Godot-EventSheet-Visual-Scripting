@@ -1,4 +1,4 @@
-# Godot EventSheets — Inspector attribute drawers (Tier 3, docs/INSPECTOR-ATTRIBUTES-SPEC.md)
+# Godot EventSheets — Inspector attribute drawers (Tier 3)
 #
 # One EditorInspectorPlugin recognizes the `eventsheet:<drawer>` marker that the compiler bakes into
 # @export_custom hint strings, and swaps in a richer editor control. THE DEGRADATION CONTRACT: generated

@@ -2,8 +2,8 @@
 #
 # Triggers (lifecycle + common signals), InputMap conditions (HIDDEN-OPTIMIZATION RULE:
 # templates may use expert idioms like &"name" StringName literals — the picker shows
-# friendly labels, generated code stays readable, user fx/blocks are NEVER rewritten;
-# see GDSCRIPT-PAIRING-SPEC), variable get/set/compare, and the small native-node
+# friendly labels, generated code stays readable, user fx/blocks are NEVER rewritten),
+# variable get/set/compare, and the small native-node
 # action set (Node2D/CharacterBody2D/RigidBody2D/Timer/AnimationPlayer).
 # Module contract: see ace_factory.gd — ace_ids/templates are API (compatibility
 # covenant); this file only changes where the descriptors are AUTHORED.
@@ -71,7 +71,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# HIDDEN-OPTIMIZATION RULE: templates may use expert idioms a beginner wouldn't type
 	# (&"name" StringName literals below skip the per-call String->StringName hash in hot
 	# loops) — the picker shows friendly labels, the generated code stays readable, and
-	# user fx/blocks are NEVER rewritten. See GDSCRIPT-PAIRING-SPEC "Hidden optimization".
+	# user fx/blocks are NEVER rewritten.
 	# Input (action names come from the project's InputMap + the ui_* defaults)
 	descriptors.append(F.make_descriptor("Core", "IsActionPressed", "Is Action Pressed", ACEDescriptor.ACEType.CONDITION, "Input.is_action_pressed(&{action})", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action (from the InputMap).", "", F.input_action_options())], "Input", "{action} is pressed")
 		.described("True while the named input action is held down, for continuous controls like running."))
