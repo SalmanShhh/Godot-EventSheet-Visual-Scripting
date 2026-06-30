@@ -46,6 +46,15 @@
   layer keeps the **stored** type a real Godot type, so only the dropdown's display changes — the `.gd`
   round-trip is byte-unchanged. (`tests/friendly_types_test.gd`; commit 7fb473e)
 
+### Changed — Constant variables round-trip from a hand-written `.gd`
+
+- A `const NAME: T = v` declaration written directly in a `.gd` now **lifts back into a first-class constant
+  variable** when reopened as a sheet (its green **"const"** pill + dialog editing), instead of degrading to a
+  verbatim GDScript block. Authoring a constant (the dialog's "Constant (can't change at runtime)" tick + the
+  row's right-click toggle), compiling to `const x: T = v`, and the const pill were already shipped — this
+  closes the import half, so constants are end-to-end. Byte-verify-gated, so a non-canonical const (inferred
+  type, expression default) still degrades safely to verbatim. (`tests/const_roundtrip_test.gd`; commit fe770c2)
+
 ### Changed — Consistent inset-card theming across dialogs & panels
 
 - Dialogs and panels (the Variable dialog, the ACE params dialog + its node/expression pickers, the dock's
