@@ -10,7 +10,6 @@ const EVENT_SHEET_EDITOR_PATH: String = "res://addons/eventforge/editor/event_sh
 const MAIN_SCREEN_ROOT_NAME: String = "EventSheetWorkspace"
 
 var _event_sheet_editor: Control = null
-var _open_sheets_dock: EventSheetOpenSheetsDock = null
 var _export_integrity_plugin: EditorExportPlugin = null
 var _live_values_debugger: EventSheetLiveValuesDebugger = null
 var _ace_param_inspector_plugin: ACEParamInspectorPlugin = null
@@ -34,46 +33,6 @@ func _get_plugin_icon() -> Texture2D:
 func _make_visible(visible: bool) -> void:
 	if _event_sheet_editor != null:
 		_event_sheet_editor.visible = visible
-	# The Open Sheets dock rides with the workspace: attached to the left dock area while the
-	# EventSheet screen is active, detached otherwise so it never clutters 2D/3D/Script.
-	_set_open_sheets_dock_attached(visible)
-
-## Builds the Open Sheets dock and binds it to the workspace's tab model. The dock is a pure
-## view — it surfaces the open + recently-closed sheets and forwards clicks back to the editor
-## (switch tab / reopen), so switching between many sheets is one click instead of hunting the
-## tab strip. It holds no sheet state.
-func _setup_open_sheets_dock() -> void:
-	if _event_sheet_editor == null:
-		return
-	_open_sheets_dock = EventSheetOpenSheetsDock.new()
-	_open_sheets_dock.activate_requested.connect(func(index: int) -> void:
-		if _event_sheet_editor != null and _event_sheet_editor.has_method("activate_open_tab"):
-			_event_sheet_editor.call("activate_open_tab", index))
-	_open_sheets_dock.reopen_requested.connect(func(path: String) -> void:
-		if _event_sheet_editor != null and _event_sheet_editor.has_method("reopen_sheet_path"):
-			_event_sheet_editor.call("reopen_sheet_path", path))
-	if _event_sheet_editor.has_signal("open_tabs_changed"):
-		_event_sheet_editor.connect("open_tabs_changed", _refresh_open_sheets_dock)
-
-## Re-pull the tab snapshot into the dock (on every open_tabs_changed and on attach).
-func _refresh_open_sheets_dock() -> void:
-	if _open_sheets_dock == null or _event_sheet_editor == null:
-		return
-	if not _event_sheet_editor.has_method("get_open_sheets_state"):
-		return
-	var state: Dictionary = _event_sheet_editor.call("get_open_sheets_state")
-	_open_sheets_dock.set_state(state.get("open", []), int(state.get("active", -1)), state.get("recent", []))
-
-## Attach the dock to the left dock area when the workspace shows; detach when it hides.
-func _set_open_sheets_dock_attached(attached: bool) -> void:
-	if _open_sheets_dock == null:
-		return
-	var in_tree: bool = _open_sheets_dock.get_parent() != null
-	if attached and not in_tree:
-		add_control_to_dock(DOCK_SLOT_LEFT_BR, _open_sheets_dock)
-		_refresh_open_sheets_dock()
-	elif not attached and in_tree:
-		remove_control_from_docks(_open_sheets_dock)
 
 ## Checks whether the selected object can be edited by this plugin.
 func _handles(object: Object) -> bool:
@@ -228,7 +187,6 @@ func _enter_tree() -> void:
 			if editor_candidate is Node:
 				(editor_candidate as Node).queue_free()
 			# Non-Node objects here are RefCounted and released automatically.
-	_setup_open_sheets_dock()
 	if _event_sheet_editor != null:
 		print("[Godot EventSheets] plugin loaded")
 	else:
@@ -262,11 +220,6 @@ func _exit_tree() -> void:
 	if _ace_param_inspector_plugin != null:
 		remove_inspector_plugin(_ace_param_inspector_plugin)
 		_ace_param_inspector_plugin = null
-	if _open_sheets_dock != null:
-		if _open_sheets_dock.get_parent() != null:
-			remove_control_from_docks(_open_sheets_dock)
-		_open_sheets_dock.queue_free()
-		_open_sheets_dock = null
 	if _event_sheet_editor != null:
 		if _event_sheet_editor.get_parent() != null:
 			_event_sheet_editor.get_parent().remove_child(_event_sheet_editor)

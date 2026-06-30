@@ -1,41 +1,73 @@
 @tool
 class_name EventSheetOpenSheetsDock
 extends VBoxContainer
-# A left editor DOCK that lists the open (and recently-closed) event sheets, so switching
-# between many sheets is a single click + filter instead of hunting the tab strip — the
-# event-sheet answer to the script editor's "Filter Scripts" list.
+# A left-hand in-workspace PANEL that lists the open (and recently-closed) event sheets, so
+# switching between many sheets is a single click + filter instead of hunting the tab strip —
+# the event-sheet answer to the script editor's "Filter Scripts" list. It can be collapsed to a
+# thin strip (the ◀ header button) or removed entirely (the View ▸ Open Sheets Panel toggle).
 #
-# It is a PURE VIEW over EventSheetDock's tab model: it holds no sheet state, never touches
-# resources, and only emits "the user clicked row N / reopen this path". The plugin wires it
-# to the workspace (see plugin.gd): EventSheetDock.open_tabs_changed -> set_state(...), and
-# these signals -> EventSheetDock.activate_open_tab / reopen_sheet_path.
+# It is a PURE VIEW over EventSheetDock's tab model: it holds no sheet state and never touches
+# resources. The workspace (event_sheet_dock.gd) feeds it the open-tab snapshot via set_state()
+# whenever the tabs change, and acts on its two signals — activate_requested switches to that
+# tab, reopen_requested reopens a closed sheet by path.
 
 ## The user clicked an OPEN sheet — switch to that tab (index into the open list).
 signal activate_requested(index: int)
 ## The user clicked a recently-CLOSED sheet — reopen it from its path.
 signal reopen_requested(path: String)
+## The panel was collapsed to a strip / restored — the workspace resizes the split pane to match.
+signal collapse_toggled(collapsed: bool)
 
 const _MUTED: Color = Color(0.62, 0.62, 0.66)  # recently-closed rows read as secondary
+const _EXPANDED_WIDTH: float = 180.0
+const _COLLAPSED_WIDTH: float = 26.0
 
+var _header: HBoxContainer = null
+var _title: Label = null
+var _collapse_button: Button = null
+var _body: VBoxContainer = null
 var _filter: LineEdit = null
 var _list: ItemList = null
+var _collapsed: bool = false
 
-# Last state pushed by the plugin, kept so re-filtering doesn't need a fresh snapshot.
+# Last state pushed by the workspace, kept so re-filtering doesn't need a fresh snapshot.
 var _open: Array = []
 var _recent: Array = []
 var _active: int = -1
 
 func _init() -> void:
 	name = "Open Sheets"
-	custom_minimum_size = Vector2(180.0, 140.0)
+	custom_minimum_size = Vector2(_EXPANDED_WIDTH, 140.0)
 	add_theme_constant_override("separation", 2)
+
+	# Header: a title + a ◀ button that collapses the panel to a thin strip (minimise) without
+	# removing it — the View menu does full removal.
+	_header = HBoxContainer.new()
+	_title = Label.new()
+	_title.text = "Open Sheets"
+	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_header.add_child(_title)
+	_collapse_button = Button.new()
+	_collapse_button.flat = true
+	_collapse_button.text = "◀"
+	_collapse_button.tooltip_text = "Collapse the panel to a strip"
+	_collapse_button.pressed.connect(func() -> void: set_collapsed(not _collapsed))
+	_header.add_child(_collapse_button)
+	add_child(_header)
+
+	# Body (filter + list) — hidden when the panel is collapsed.
+	_body = VBoxContainer.new()
+	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_body.add_theme_constant_override("separation", 2)
+	add_child(_body)
 
 	_filter = LineEdit.new()
 	_filter.placeholder_text = "Filter sheets…"
 	_filter.clear_button_enabled = true
 	_filter.tooltip_text = "Filter the open sheets by name or path."
 	_filter.text_changed.connect(func(_t: String) -> void: _render())
-	add_child(_filter)
+	_body.add_child(_filter)
 
 	_list = ItemList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -43,7 +75,21 @@ func _init() -> void:
 	_list.allow_reselect = true  # re-clicking the active sheet still re-focuses it
 	_list.auto_height = false
 	_list.item_selected.connect(_on_item_chosen)  # one click switches — that's the whole point
-	add_child(_list)
+	_body.add_child(_list)
+
+## Collapse the panel to a thin strip (just the ▸ button) or restore it. Keeps the panel in
+## place but reclaims its width; the View-menu toggle removes it entirely.
+func set_collapsed(collapsed: bool) -> void:
+	_collapsed = collapsed
+	_body.visible = not collapsed
+	_title.visible = not collapsed
+	custom_minimum_size = Vector2(_COLLAPSED_WIDTH if collapsed else _EXPANDED_WIDTH, custom_minimum_size.y)
+	_collapse_button.text = "▸" if collapsed else "◀"
+	_collapse_button.tooltip_text = "Expand the Open Sheets panel" if collapsed else "Collapse the panel to a strip"
+	collapse_toggled.emit(collapsed)
+
+func is_collapsed() -> bool:
+	return _collapsed
 
 ## Replace the view with a fresh snapshot from EventSheetDock.get_open_sheets_state().
 ## `open` is [{title, path, dirty}], `active` the active index, `recent` a list of paths.

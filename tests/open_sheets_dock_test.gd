@@ -6,6 +6,18 @@ class_name OpenSheetsDockTest
 # back to the right tab index / path via item metadata, and the model snapshot excludes
 # still-open sheets from "recently closed" (so the dock never offers to "reopen" what's open).
 
+class NoopUndoManager:
+	extends RefCounted
+	func create_action(_a = null) -> void: pass
+	func add_do_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func add_undo_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func commit_action() -> void: pass
+	func has_undo() -> bool: return false
+	func has_redo() -> bool: return false
+	func undo() -> void: pass
+	func redo() -> void: pass
+	func clear_history() -> void: pass
+
 static func run() -> bool:
 	var all_passed: bool = true
 
@@ -80,6 +92,28 @@ static func run() -> bool:
 	all_passed = _check("re-selecting the active tab from the dock is a no-op (no reload)",
 		sheet_dock._current_sheet_path, "SENTINEL") and all_passed
 	sheet_dock.free()
+
+	# ── Collapse to a strip + restore (the minimise affordance) ──
+	var cdock: EventSheetOpenSheetsDock = EventSheetOpenSheetsDock.new()
+	cdock.set_collapsed(true)
+	all_passed = _check("collapse hides the body + shrinks the panel",
+		not cdock._body.visible and cdock.is_collapsed() and cdock.custom_minimum_size.x < 60.0, true) and all_passed
+	cdock.set_collapsed(false)
+	all_passed = _check("expand restores the body + width",
+		cdock._body.visible and not cdock.is_collapsed() and cdock.custom_minimum_size.x >= 120.0, true) and all_passed
+	cdock.free()
+
+	# ── Workspace integration: the panel mounts left of the viewport and survives Split View ──
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.set_undo_redo_manager(NoopUndoManager.new())
+	editor.setup(EventSheetResource.new())
+	all_passed = _check("panel is mounted inside the workspace body",
+		editor._open_sheets_panel != null and editor._open_sheets_panel.get_parent() == editor._workspace_body, true) and all_passed
+	editor._toggle_split_view()
+	all_passed = _check("panel stays put across a Split View toggle (viewport reparent is isolated)",
+		editor._open_sheets_panel.get_parent() == editor._workspace_body, true) and all_passed
+	editor._toggle_split_view()  # close the split again
+	editor.free()
 
 	return all_passed
 

@@ -83,6 +83,14 @@ var _provider_list: ItemList = null
 var _provider_file_dialog: FileDialog = null
 var _split: HSplitContainer = null
 var _scroll: ScrollContainer = null
+# Open Sheets panel: a left in-workspace pane (the "Filter Scripts"-style list). _workspace_body
+# is a stable HSplit holding [_open_sheets_panel | _content_host]; _content_host wraps _scroll, so
+# the code-panel/split-view machinery (which reparents _scroll relative to its parent) stays inside
+# it and never disturbs the panel. Toggled from the View menu; collapsible to a strip.
+var _workspace_body: HSplitContainer = null
+var _content_host: VBoxContainer = null
+var _open_sheets_panel: EventSheetOpenSheetsDock = null
+const _OPEN_SHEETS_PANEL_META: String = "eventsheets_open_sheets_panel"  # editor metadata: {shown, collapsed}
 var _column_header: SheetColumnHeader = null
 var _identity_banner: SheetIdentityBanner = null
 var _preview_banner: PanelContainer = null
@@ -938,6 +946,8 @@ func _build_ui() -> void:
     view_popup.set_item_checked(view_popup.get_item_index(11), _simple_mode)
     view_popup.add_separator()
     view_popup.add_item("GDScript Panel (toggle)", 0)
+    view_popup.add_check_item("Open Sheets Panel", 13)
+    view_popup.set_item_checked(view_popup.get_item_index(13), bool(_read_open_sheets_panel_prefs().get("shown", true)))
     view_popup.add_check_item("Add-Event Rows", 9)
     view_popup.set_item_checked(view_popup.get_item_index(9), true)
     view_popup.add_separator()
@@ -968,6 +978,7 @@ func _build_ui() -> void:
             9: _toggle_add_event_rows(view_popup)
             11: set_simple_mode(not _simple_mode)
             12: _toggle_mcp_server(view_popup)
+            13: _toggle_open_sheets_panel(view_popup)
     )
     # Toggles say what they toggle on hover (user call: hovering a toggle should
     # explain it).
@@ -1111,7 +1122,26 @@ func _build_ui() -> void:
     _scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
     _scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-    root.add_child(_scroll)
+    # Wrap the viewport in _content_host, then sit it beside the Open Sheets panel in _workspace_body.
+    _content_host = VBoxContainer.new()
+    _content_host.name = "EventSheetContentHost"
+    _content_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _content_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _content_host.add_child(_scroll)
+    _open_sheets_panel = EventSheetOpenSheetsDock.new()
+    _open_sheets_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _open_sheets_panel.activate_requested.connect(activate_open_tab)
+    _open_sheets_panel.reopen_requested.connect(reopen_sheet_path)
+    _open_sheets_panel.collapse_toggled.connect(_on_open_sheets_panel_collapsed)
+    open_tabs_changed.connect(_refresh_open_sheets_panel)
+    _workspace_body = HSplitContainer.new()
+    _workspace_body.name = "EventSheetWorkspaceBody"
+    _workspace_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _workspace_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _workspace_body.add_child(_open_sheets_panel)
+    _workspace_body.add_child(_content_host)
+    root.add_child(_workspace_body)
+    _apply_open_sheets_panel_prefs()
 
     _viewport = EventSheetViewport.new()
     _viewport.name = "EventSheetViewport"
@@ -3498,6 +3528,54 @@ var _code_edit: CodeEdit = null
 var _code_source_map: Array = []
 var _code_panel_highlight: Vector2i = Vector2i(-1, -1)
 const CODE_PANEL_HIGHLIGHT_COLOR := Color(0.35, 0.55, 0.95, 0.18)
+
+## ── Open Sheets panel (the left in-workspace pane) ──────────────────────────────────────
+## Push the current open-tab snapshot into the panel (on every open_tabs_changed + on build).
+func _refresh_open_sheets_panel() -> void:
+    if _open_sheets_panel == null:
+        return
+    var state: Dictionary = get_open_sheets_state()
+    _open_sheets_panel.set_state(state.get("open", []), int(state.get("active", -1)), state.get("recent", []))
+
+## View ▸ Open Sheets Panel: show/hide the whole left pane (remembered per project).
+func _toggle_open_sheets_panel(view_popup: PopupMenu) -> void:
+    if _open_sheets_panel == null:
+        return
+    _open_sheets_panel.visible = not _open_sheets_panel.visible
+    if view_popup != null:
+        view_popup.set_item_checked(view_popup.get_item_index(13), _open_sheets_panel.visible)
+    _save_open_sheets_panel_prefs()
+
+## The panel collapsed to / expanded from a strip: snap the split divider to match, and remember it.
+func _on_open_sheets_panel_collapsed(collapsed: bool) -> void:
+    if _workspace_body != null:
+        _workspace_body.split_offset = 26 if collapsed else 200
+    _save_open_sheets_panel_prefs()
+
+## Per-project editor metadata for the panel's shown/collapsed state (survives editor restarts).
+func _read_open_sheets_panel_prefs() -> Dictionary:
+    if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+        var meta: Variant = EditorInterface.get_editor_settings().get_project_metadata("eventsheets", _OPEN_SHEETS_PANEL_META, {})
+        if meta is Dictionary:
+            return meta
+    return {}
+
+func _save_open_sheets_panel_prefs() -> void:
+    if not (Engine.is_editor_hint() and Engine.has_singleton("EditorInterface")):
+        return
+    EditorInterface.get_editor_settings().set_project_metadata("eventsheets", _OPEN_SHEETS_PANEL_META, {
+        "shown": _open_sheets_panel != null and _open_sheets_panel.visible,
+        "collapsed": _open_sheets_panel != null and _open_sheets_panel.is_collapsed(),
+    })
+
+## Apply the remembered shown/collapsed state when the workspace is built.
+func _apply_open_sheets_panel_prefs() -> void:
+    if _open_sheets_panel == null:
+        return
+    var prefs: Dictionary = _read_open_sheets_panel_prefs()
+    _open_sheets_panel.visible = bool(prefs.get("shown", true))
+    _open_sheets_panel.set_collapsed(bool(prefs.get("collapsed", false)))
+    _refresh_open_sheets_panel()
 
 func _toggle_code_panel() -> void:
     _ensure_code_panel()
