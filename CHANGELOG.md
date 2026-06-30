@@ -5,12 +5,20 @@
 ### Added — Event groups round-trip through `.gd` (docs/GROUPS-ROUNDTRIP-SPEC.md)
 
 - Event groups now **survive a `.gd` round-trip**. Compiling a grouped sheet emits a class-scope
-  `## @ace_group(uid="…", name, parent?, color?, collapsed?, toggleable?)` declaration per group plus a
+  `## @ace_group(uid="…", name, parent?, description?, color?, collapsed?, toggleable?)` declaration per group plus a
   per-row `# @group:<slug>` membership tag; reopening the `.gd` reconstructs the `EventGroup` rows (name,
   colour, collapsed/toggleable, nesting) even though the compiler scatters a group's rows across trigger
   handlers. The whole pass is **verify-lift-gated** — a sheet that can't re-emit identically degrades to a
   flat/verbatim block rather than corrupting; the group `uid` is a deterministic name-slug so re-saves stay
   byte-stable. (`tests/group_roundtrip_test.gd`; demoed in `demo/showcase/showcase_carousel.gd`; commit 90367eb)
+
+### Changed — Compiler: includes run first; disabled groups leave a breadcrumb
+
+- An **included** (library) sheet's events now compile/run **before** the root sheet's own events (matching
+  Construct's "include the library at the top"), so shared setup / `_ready` initialises first. Sheets with no
+  includes stay byte-identical. A **disabled** event group is no longer dropped silently: the generated `.gd`
+  now carries a `# (disabled group "<name>" — N rows omitted)` breadcrumb (the group's events still don't run).
+  (`tests/include_order_disabled_group_test.gd`; commit 5164393)
 
 ### Added — Visual expression builder: operator palette + variable/member picking
 
@@ -23,6 +31,13 @@
   path only handled `LineEdit`, but the expression field is always a `CodeEdit`. The palette and the tree
   results now share a caret-insert helper that handles `CodeEdit`/`TextEdit` and `LineEdit`.
 
+### Added — Open Sheets panel (open + recently-closed, in-workspace)
+
+- A filterable list of **open and recently-closed sheets** now lives in the EventSheet workspace (left of the
+  viewport, like the script editor's Filter Scripts list). One click switches to an open sheet or reopens a
+  recent one. Toggle it from **View › Open Sheets Panel**, or collapse it to a thin strip with the header
+  arrow — both states persist per-project. (`tests/open_sheets_dock_test.gd`; commits a777758, e6c2fd4)
+
 ### Changed — Friendly variable types (Number / Text / Yes-No)
 
 - The Variable dialog's Type dropdown leads with beginner-friendly **Number / Text / Yes-No** labels, with the
@@ -30,6 +45,13 @@
   "Number" + a **"Whole numbers only"** tick; Text → String, Yes-No → bool. A `_selected_stored_type()` alias
   layer keeps the **stored** type a real Godot type, so only the dropdown's display changes — the `.gd`
   round-trip is byte-unchanged. (`tests/friendly_types_test.gd`; commit 7fb473e)
+
+### Changed — Consistent inset-card theming across dialogs & panels
+
+- Dialogs and panels (the Variable dialog, the ACE params dialog + its node/expression pickers, the dock's
+  multi-section popups) now share the same editor-theme-aware **sunken inset-card** surfaces, with new
+  `section_header` / `titled_card` legibility helpers. Cosmetic only — no behaviour change.
+  (commits 18b4cf9, fa63b3e, 5df8ea8, a1e7903)
 
 ## [0.9.5] - 2026-06-29 - Code-Free Authoring & First-Class Variables
 
