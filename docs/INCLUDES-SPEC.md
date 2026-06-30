@@ -7,10 +7,11 @@ a later phase can act without re-deriving the constraints.
 
 Status at a glance: the **core feature is SHIPPED** — an `includes: Array[String]` list that compile-merges
 other sheets' variables/functions/rows, with a depth limit, cycle detection, policy gating, an Include Manager
-(add/remove/reorder + read-only provenance preview), and Extract-to-Include. Two **semantically-important gaps
-remain PROPOSED**: included events run in the *wrong order* vs C3 (appended, not at the include's position),
-and includes **don't round-trip through a `.gd` sheet** (the default format), so a `.gd`-backed sheet silently
-drops them.
+(add/remove/reorder + read-only provenance preview), and Extract-to-Include. The **execution-order gap is now
+SHIPPED too** (commit 5164393): included events run **before** the root's own events, matching C3's
+"include the library at the top". **One semantically-important gap remains PROPOSED**: includes **don't
+round-trip through a `.gd` sheet** (the default format), so a `.gd`-backed sheet silently drops them — and
+that one is **blocked on a design decision** (see "Parity gaps" below), not just effort.
 
 ## What Construct 3 does (the reference)
 
@@ -50,8 +51,10 @@ to other event sheets). Merged by `addons/eventforge/compiler/sheet_compiler.gd`
     `events` rides along here: EventRows, groups, comments, enums, signals, tree/local variables, and
     class-level GDScript blocks (`RawCodeRow`). So enums/signals/blocks merge *through* the events channel, not
     as dedicated cases.
-- **Order:** root-first, includes **appended**, recursion **depth-first** (a chain A→B→C emits A, B, C). Root
-  always wins collisions; among includes, the first-merged wins.
+- **Order:** **includes-first** (an included sheet's events run *before* the root's — `all_events` is seeded
+  with the includes and the root's own events are appended last; `sheet_compiler.gd` ~94–108), recursion
+  **depth-first** (a chain A→B→C emits A, B, C). Root always wins variable/function collisions; among includes,
+  the first-merged wins.
 - **Depth limit:** policy `max_include_depth` (default **2**); past it, a warning (default) or error.
 - **Cycles / duplicates:** a `visited` set keyed by include **path string** breaks cycles (A→B→A) and dedupes
   diamonds (the same path merges at most once).
@@ -80,27 +83,34 @@ the transitive chain for the preview.
 | Read-only included events + jump-to-source | ◑ a read-only **provenance preview** in the Manage Includes window (not yet inline in the main viewport) |
 | Extract events to a shared sheet | ✅ **Extract-to-Include** (one action; better than C3's manual move) |
 
-## Parity gaps (PROPOSED)
+## Parity gaps
 
 ### Must-fix — semantics & default-path parity
 
-- **Execution ORDER is inverted (HIGH — the only semantically *wrong* difference).** Included events are
-  appended **after** the root sheet's events (`_merge_includes` … `all_events.append_array`, ~line 684), but C3
-  runs included events at the include node's position — conventionally at the **top**, *before* the layout's
-  own events. So shared/library logic a C3 user expects to run first currently runs last.
-  **Fix:** emit included events **before** the root's (matching the common "include the library at the top"
-  pattern), or make includes positional (see *include-at-a-point* below, which subsumes this).
+- **Execution ORDER (HIGH — was the only semantically *wrong* difference) — ✅ SHIPPED (commit 5164393).**
+  Included events now run **before** the root sheet's own events: `compile()` seeds `all_events` with the
+  includes and appends the root's events last (`sheet_compiler.gd` ~94–108), matching C3's "include the library
+  at the top" so shared/library logic initialises first. A no-includes sheet stays byte-identical. Pinned by
+  `tests/include_order_disabled_group_test.gd`.
 
-- **`.gd` sheets don't round-trip includes (HIGH).** The compiler merges included rows inline with **no
-  marker/comment**, and the importer recovers no include list — so saving a sheet as `.gd` and reopening it
-  **silently drops its includes** (the external/`.gd` path explicitly skips includes,
-  `sheet_compiler.gd:474–475`). Since **`.gd` is now the default sheet format**, includes are effectively
-  unavailable on the default path. This is the only major sheet-level metadata *without* a round-trip marker —
-  contrast `@ace_tags` / `@ace_family` / `@icon`, which round-trip via class-scope comment markers recovered in
-  `gdscript_importer.gd`.
-  **Fix:** emit a class-scope marker the importer recovers, e.g. `## @ace_includes(res://a.tres, res://b.tres)`
-  (parsed alongside `@ace_tags`), so includes survive a `.gd` save/open. Pin it with a test that compiles a
-  sheet-with-includes through the `.gd` path, re-imports, and asserts the list is preserved.
+- **`.gd` sheets don't round-trip includes (HIGH) — PROPOSED, but blocked on a design decision.** The compiler
+  merges included rows inline with **no marker/comment**, and the importer recovers no include list — so saving
+  a sheet as `.gd` and reopening it **silently drops its includes** (the external/`.gd` path explicitly skips
+  includes — `_compile_external` warns "GDScript-backed sheets ignore Includes/Uses/Requires", ~`sheet_compiler.gd:505`).
+  Since **`.gd` is now the default sheet format**, includes are effectively unavailable on the default path. This
+  is the only major sheet-level metadata *without* a round-trip marker — contrast `@ace_tags` / `@ace_family` /
+  `@icon`, which round-trip via class-scope comment markers recovered in `gdscript_importer.gd`.
+  **The blocker isn't effort — it's a contract conflict.** A `.gd` is a single-file, byte-exact, *self-contained*
+  source of truth. Flattening merged foreign rows inline makes the file unable to distinguish authored-here from
+  merged-from-include on the next import (they'd duplicate/double-emit on every round-trip); keeping them out
+  keeps the file self-contained but means includes do nothing. **Resolve first:** should a `.gd` stay
+  self-contained byte-exact (then includes can only be marker-persisted metadata that re-merges at compile,
+  making the file depend on foreign sheets), or stay literally lossless 1:1 (then foreign rows can't be merged)?
+  **Safe first step:** emit an `## @ace_includes(res://a.tres, res://b.tres)` marker recovered by the importer
+  (alongside `@ace_tags`) as **metadata-only**, so the list stops silently vanishing — and defer the re-merge
+  semantics until the contract decision is made. ⚠️ A re-merge implementation is **NOT** bounded by the
+  byte-verify net: a single-compile byte check won't catch rows silently *doubling* on each resave, so any test
+  must be compile → import → compile → diff.
 
 ### Feature gaps — closer to C3
 
@@ -142,8 +152,9 @@ the transitive chain for the preview.
 
 ## Suggested phasing (highest parity-value first)
 
-1. **Order + `.gd` round-trip** — the two semantically-important items. Emit included events before the root's
-   (or go positional), and add the `## @ace_includes(...)` marker so includes survive `.gd`. Test both.
+1. **`.gd` round-trip** — the remaining semantically-important item (the **order fix shipped** in 5164393). Needs
+   the contract decision first (see "Parity gaps"); safe first step is the metadata-only `## @ace_includes(...)`
+   marker so the list stops silently vanishing, deferring re-merge semantics. Test compile → import → compile.
 2. **Unify Extract-to-Include** — point the dock at the uid-preserving helper; add a dock-flow test.
 3. **Include-at-a-point** — a placeable include row (subsumes #1's order fix into a positional model).
 4. **Project-global auto-include** — the always-include list / global-library flag.
