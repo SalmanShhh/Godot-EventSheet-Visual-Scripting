@@ -54,7 +54,7 @@ static func run() -> bool:
 				str(warnings[0]).contains("Print Log") and str(warnings[0]).contains("Core::Log"), true) and all_passed
 		var viewport: EventSheetViewport = EventSheetViewport.new()
 		all_passed = _check("hover description is prefixed (Deprecated)",
-			viewport._ace_description("Core", "PrintLog").begins_with("(Deprecated)"), true) and all_passed
+			viewport._tooltip_helper.ace_description("Core", "PrintLog").begins_with("(Deprecated)"), true) and all_passed
 		viewport.free()
 	else:
 		all_passed = _check("found Core::PrintLog to deprecate for the test", false, true) and all_passed

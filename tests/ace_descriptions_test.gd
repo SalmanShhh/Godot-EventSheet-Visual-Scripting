@@ -30,7 +30,7 @@ static func run() -> bool:
 	# The viewport resolves an ACE's description (the hover source).
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	all_passed = _check("viewport resolves a built-in ACE description",
-		not viewport._ace_description("Core", "AddChild").strip_edges().is_empty(), true) and all_passed
+		not viewport._tooltip_helper.ace_description("Core", "AddChild").strip_edges().is_empty(), true) and all_passed
 
 	# A Call-Function row shows the targeted Function's own description.
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -44,7 +44,7 @@ static func run() -> bool:
 	call.ace_id = "CallFunction"
 	call.params = {"function_name": "apply_physics", "args": ""}
 	all_passed = _check("a function-call hover shows the function's description",
-		viewport._function_call_description(call), "Applies gravity and friction to the body.") and all_passed
+		viewport._tooltip_helper.function_call_description(call), "Applies gravity and friction to the body.") and all_passed
 	viewport.free()
 
 	return all_passed

@@ -199,6 +199,8 @@ var _box_select_current: Vector2 = Vector2.ZERO
 func _init() -> void:
     _configure_viewport()
     _live_values_helper.init(self)
+    _tooltip_helper.init(self)
+    _empty_state_helper.init(self)
 
 func _ready() -> void:
     _configure_viewport()
@@ -813,8 +815,8 @@ func _draw() -> void:
         background_color,
         true
     )
-    if _is_sheet_visually_empty():
-        _draw_empty_state(width)
+    if _empty_state_helper.is_sheet_visually_empty():
+        _empty_state_helper.draw_empty_state(width)
         return
     var visible_range: Vector2i = get_visible_row_range()
     if visible_range.x < 0:
@@ -2982,6 +2984,12 @@ func get_host_context_label() -> String:
 # ── Live values (rung 3): inline chips next to variable rows (see ViewportLiveValuesHelper) ──
 var _live_values_helper: ViewportLiveValuesHelper = ViewportLiveValuesHelper.new()
 
+# ── Hover tooltips (ACE/function descriptions + GDScript codegen preview; see ViewportTooltipHelper) ──
+var _tooltip_helper: ViewportTooltipHelper = ViewportTooltipHelper.new()
+
+# ── Empty state (getting-started overlay drawn over a sheet with no authored rows; see ViewportEmptyStateHelper) ──
+var _empty_state_helper: ViewportEmptyStateHelper = ViewportEmptyStateHelper.new()
+
 ## Streamed name->value frame (debug runs). Redraws value chips on variable rows.
 func set_live_values(values: Dictionary) -> void:
     _live_values_helper.set_live_values(values)
@@ -2989,40 +2997,6 @@ func set_live_values(values: Dictionary) -> void:
 ## The "= value" chip for a row, or "" (variable rows whose name has a live frame).
 func live_value_chip_for(row_data: EventRowData) -> String:
     return _live_values_helper.chip_for(row_data)
-
-## True when the sheet has no authored rows — either genuinely empty, or holding only the
-## trailing "+ Add event…" footer affordance(s). Drives the getting-started empty state so a
-## brand-new sheet shows guidance instead of a lone footer row.
-func _is_sheet_visually_empty() -> bool:
-    for entry: Dictionary in _flat_rows:
-        var row_data: EventRowData = entry.get("row")
-        if row_data != null and not _row_is_add_event_footer(row_data):
-            return false
-    return true
-
-## Calm getting-started state for an empty sheet: one clear heading, one primary call to
-## action, and a single de-emphasized tip — instead of a dense run-on of shortcuts that
-## reads as clutter the moment a new user opens a sheet.
-func _draw_empty_state(width: float) -> void:
-    var font: Font = _get_font()
-    var font_size: int = _get_font_size()
-    var heading: String = "This event sheet is empty"
-    var primary: String = "Double-click anywhere — or press E — to add your first event."
-    var tip: String = "Tip: the picker understands plain language. Try typing \"every tick\"."
-    if _sheet != null and _sheet.behavior_mode:
-        heading = "Empty behavior sheet"
-        primary = "Double-click anywhere — or press E — to add an event that drives the %s this attaches to." % _sheet.host_class
-        # Keep the default plain-language picker tip — behavior sheets benefit from it just as much.
-    var left: float = 18.0
-    var max_w: float = max(width - 36.0, 1.0)
-    var heading_size: int = EventSheetPalette.resolve_font_size(font_size, 0, 2)
-    var line_gap: float = 8.0
-    var y: float = 36.0 + float(heading_size)
-    draw_string(font, Vector2(left, y), heading, HORIZONTAL_ALIGNMENT_LEFT, max_w, heading_size, EventSheetPalette.TEXT_PRIMARY)
-    y += float(font_size) + line_gap + 6.0
-    draw_string(font, Vector2(left, y), primary, HORIZONTAL_ALIGNMENT_LEFT, max_w, font_size, EventSheetPalette.TEXT_SECONDARY)
-    y += float(font_size) + line_gap
-    draw_string(font, Vector2(left, y), tip, HORIZONTAL_ALIGNMENT_LEFT, max_w, EventSheetPalette.resolve_font_size(font_size, -1), EventSheetPalette.TEXT_MUTED)
 
 func _update_canvas_min_size() -> void:
     var zoom: float = max(_zoom_factor, 0.001)
@@ -3352,20 +3326,20 @@ func _get_tooltip(at_position: Vector2) -> String:
             var description: String = ""
             if ace_resource is ACECondition:
                 var condition: ACECondition = ace_resource as ACECondition
-                description = _ace_description(condition.provider_id, condition.ace_id)
+                description = _tooltip_helper.ace_description(condition.provider_id, condition.ace_id)
             elif ace_resource is ACEAction:
                 var action: ACEAction = ace_resource as ACEAction
-                description = _function_call_description(action) if _is_function_call_action(action) else _ace_description(action.provider_id, action.ace_id)
+                description = _tooltip_helper.function_call_description(action) if _is_function_call_action(action) else _tooltip_helper.ace_description(action.provider_id, action.ace_id)
             if not description.strip_edges().is_empty():
                 return description
             # No description (rare) → fall back to the GDScript the row compiles to, so hover is never empty.
             var code: String = ""
             if ace_resource is ACECondition:
                 var c: ACECondition = ace_resource as ACECondition
-                code = _codegen_preview_for(c.provider_id, c.ace_id, c.params if not c.params.is_empty() else c.parameters)
+                code = _tooltip_helper.codegen_preview_for(c.provider_id, c.ace_id, c.params if not c.params.is_empty() else c.parameters)
             elif ace_resource is ACEAction:
                 var a: ACEAction = ace_resource as ACEAction
-                code = _codegen_preview_for(a.provider_id, a.ace_id, a.params if not a.params.is_empty() else a.parameters)
+                code = _tooltip_helper.codegen_preview_for(a.provider_id, a.ace_id, a.params if not a.params.is_empty() else a.parameters)
             if not code.strip_edges().is_empty():
                 return "GDScript:\n%s" % code
     # Raw GDScript blocks are the one row whose codegen is literally themselves — advertise
@@ -3387,72 +3361,12 @@ func _get_tooltip(at_position: Vector2) -> String:
 ## description authored with markup reads styled, not as raw tags. Plain descriptions (the common case) and
 ## the GDScript-preview fallback have no markup, so this returns null and Godot uses its default tooltip.
 func _make_custom_tooltip(for_text: String) -> Object:
-    if not EventSheetBBCodeLite.has_markup(for_text):
-        return null
-    var panel := PanelContainer.new()
-    var style := StyleBoxFlat.new()
-    style.bg_color = Color(0.11, 0.11, 0.13, 0.98)
-    style.border_color = Color(1.0, 1.0, 1.0, 0.16)
-    style.set_border_width_all(1)
-    style.set_corner_radius_all(4)
-    style.set_content_margin_all(8.0)
-    panel.add_theme_stylebox_override("panel", style)
-    var rich := RichTextLabel.new()
-    rich.bbcode_enabled = true
-    rich.fit_content = true
-    rich.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    rich.custom_minimum_size = Vector2(300.0, 0.0)
-    rich.text = for_text
-    panel.add_child(rich)
-    return panel
+    return _tooltip_helper.build_custom_tooltip(for_text)
 
-## The plain-language description for an ACE — from its registered definition (custom/behaviour ACEs) or
-## its built-in descriptor (filled from the generated descriptions map). "" when none is set.
-func _ace_description(provider_id: String, ace_id: String) -> String:
-    var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
-    # A deprecated ACE stays in the sheet and keeps compiling, but its hover is prefixed with the
-    # "[Deprecated] … Use X instead." note so an existing usage clearly steers the user to the replacement.
-    var prefix: String = ""
-    if descriptor != null and descriptor.is_deprecated:
-        prefix = descriptor.deprecation_note() + "\n"
-    var definition: ACEDefinition = _find_definition(provider_id, ace_id)
-    if definition != null and not str(definition.description).strip_edges().is_empty():
-        return prefix + str(definition.description)
-    if descriptor != null and not str(descriptor.description).strip_edges().is_empty():
-        return prefix + str(descriptor.description)
-    return prefix.strip_edges()
-
-## The description of the Function a Call-Function action targets (the named verb you created), or "".
-func _function_call_description(action: ACEAction) -> String:
-    var call_params: Dictionary = action.params if not action.params.is_empty() else action.parameters
-    var function_name: String = str(call_params.get("function_name", "")).strip_edges()
-    if function_name.is_empty() or _sheet == null:
-        return ""
-    for function_entry: Variant in _sheet.functions:
-        if function_entry is EventFunction and (function_entry as EventFunction).function_name == function_name:
-            return str((function_entry as EventFunction).description).strip_edges()
-    return ""
-
-## The GDScript snippet an ACE compiles to: its codegen template with parameter values
-## substituted (definition metadata first, then the base descriptor registry).
-func _codegen_preview_for(provider_id: String, ace_id: String, params: Dictionary) -> String:
-    var template: String = ""
-    var definition: ACEDefinition = _find_definition(provider_id, ace_id)
-    if definition != null:
-        template = str(definition.metadata.get("codegen_template", ""))
-    if template.strip_edges().is_empty():
-        var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
-        if descriptor != null:
-            template = descriptor.codegen_template
-    return fill_codegen_template(template, params)
-
+## Static shim kept for callers that reach in by class name (e.g. tests/gdscript_pairing_test.gd
+## calls EventSheetViewport.fill_codegen_template(...)). Forwards to the helper's pure implementation.
 static func fill_codegen_template(template: String, params: Dictionary) -> String:
-    if template.strip_edges().is_empty():
-        return ""
-    var filled: String = template
-    for key in params.keys():
-        filled = filled.replace("{%s}" % str(key), str(params[key]))
-    return filled
+    return ViewportTooltipHelper.fill_codegen_template(template, params)
 
 func _hit_test(position: Vector2) -> Dictionary:
     var row_index: int = _find_row_index_at_y(position.y)

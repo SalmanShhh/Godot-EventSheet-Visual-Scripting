@@ -75,7 +75,7 @@ static func run() -> bool:
 		EventSheetViewport.fill_codegen_template("health += {amount}", {"amount": 5}), "health += 5") and all_passed
 	all_passed = _check("empty template yields empty preview",
 		EventSheetViewport.fill_codegen_template("", {"x": 1}), "") and all_passed
-	var preview: String = viewport._codegen_preview_for("Core", "Always", {})
+	var preview: String = viewport._tooltip_helper.codegen_preview_for("Core", "Always", {})
 	all_passed = _check("Core/Always previews its codegen ('true')", preview, "true") and all_passed
 	viewport.free()
 
