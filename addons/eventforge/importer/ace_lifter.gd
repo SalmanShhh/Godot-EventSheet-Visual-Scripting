@@ -131,6 +131,9 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 			boundary.code = boundary.code.substr(0, boundary.code.length() - 1)
 		elif boundary.code.strip_edges().is_empty():
 			sheet.events.remove_at(sheet.events.size() - 1)
+	# Reconstruct event groups from the recovered `## @ace_group` declarations + the per-row `# @group:`
+	# tags the lift captured (transient meta on the rows). A no-op when the source declares no groups.
+	lifted_events = _reconstruct_groups(lifted_events, _recover_group_declarations(source))
 	for event: Variant in lifted_events:
 		sheet.events.append(event)
 	for comment: Variant in lifted_comments:
@@ -143,7 +146,13 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	sheet.external_source_path = "user://eventforge_lift_verify.gd"
 	var output: String = str(SheetCompiler.compile(sheet, "user://eventforge_lift_verify.gd").get("output", ""))
 	sheet.external_source_path = saved_path
-	if output == source:
+	# Group markers (## @ace_group declarations + # @group:<slug> row tags) are cosmetic comments with
+	# zero runtime weight — the groups dissolve into the flat trigger sections at compile, so a sheet
+	# whose groups interleave within one trigger bucket may re-emit a marker in a slightly different
+	# place. Strip them from BOTH sides before the byte-compare so such a sheet still lifts (with
+	# approximate grouping) rather than falling back to a verbatim block; the runtime-bearing code
+	# still has to match exactly. When a sheet has no groups this strips nothing (identity compare).
+	if _strip_group_markers(output) == _strip_group_markers(source):
 		return true
 	sheet.events = backup
 	sheet.functions = functions_backup
@@ -157,6 +166,100 @@ static func _retry_or_fail(sheet: EventSheetResource, source: String, lift_funct
 	if lift_functions:
 		return attempt_lift(sheet, source, false)
 	return false
+
+## Removes the cosmetic event-group marker lines (`## @ace_group(…)` declarations and `# @group:<slug>`
+## row tags) so the lift's byte-verify compares only the runtime-bearing code. Stripping nothing when a
+## sheet has no groups, so it leaves the strict byte-compare untouched for the common case.
+static func _strip_group_markers(text: String) -> String:
+	var kept: PackedStringArray = PackedStringArray()
+	for line: String in text.split("\n"):
+		var trimmed: String = line.strip_edges()
+		if trimmed.begins_with("## @ace_group(") or trimmed.begins_with("# @group:"):
+			continue
+		kept.append(line)
+	return "\n".join(kept)
+
+## Recovers every `## @ace_group(uid="…", name="…", parent?, description?, color?, collapsed?,
+## toggleable?)` declaration from the source into a {slug → fields} registry, the reverse of the
+## compiler's _emit_group_declarations. Used to rebuild EventGroup resources during the lift.
+static func _recover_group_declarations(source: String) -> Dictionary:
+	var registry: Dictionary = {}
+	var decl_regex: RegEx = RegEx.new()
+	if decl_regex.compile("(?m)^## @ace_group\\((.*)\\)\\s*$") != OK:
+		return registry
+	for decl_match: RegExMatch in decl_regex.search_all(source):
+		var fields: Dictionary = _parse_group_fields(decl_match.get_string(1))
+		var slug: String = str(fields.get("uid", ""))
+		if not slug.is_empty():
+			registry[slug] = fields
+	return registry
+
+## Parses an @ace_group field list (`uid="x", name="y", collapsed=true`) into a typed dict: quoted
+## values become Strings, bare true/false become bools. Tolerant of order + missing optional fields.
+static func _parse_group_fields(inner: String) -> Dictionary:
+	var fields: Dictionary = {}
+	var field_regex: RegEx = RegEx.new()
+	if field_regex.compile("([a-z_]+)=(\"[^\"]*\"|true|false)") != OK:
+		return fields
+	for field_match: RegExMatch in field_regex.search_all(inner):
+		var key: String = field_match.get_string(1)
+		var raw: String = field_match.get_string(2)
+		if raw == "true":
+			fields[key] = true
+		elif raw == "false":
+			fields[key] = false
+		else:
+			fields[key] = raw.substr(1, raw.length() - 2)  # strip the surrounding quotes
+	return fields
+
+## Rebuilds EventGroup resources from the flat lifted event list using the recovered `## @ace_group`
+## registry — the reverse of the compiler dissolving groups into the trigger sections. Each EventRow
+## carrying the transient `__group_slug` meta is routed into its group; a group nests under its parent
+## by slug, and its top-level ancestor is inserted into the output at the position its first member is
+## met. Ungrouped events keep their place. Groups whose rows scatter across trigger buckets reconstruct
+## approximately (member order may differ) — the byte-verify in attempt_lift gates the whole thing, so
+## a mis-grouping reverts to verbatim rather than corrupting. Returns the new top-level events array.
+static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
+	if registry.is_empty():
+		return events
+	var groups: Dictionary = {}      # slug -> EventGroup
+	var parent_of: Dictionary = {}   # slug -> parent slug ("" = top level)
+	for slug: String in registry:
+		var fields: Dictionary = registry[slug]
+		var group: EventGroup = EventGroup.new()
+		group.group_name = str(fields.get("name", slug))
+		group.name = group.group_name
+		group.description = str(fields.get("description", ""))
+		group.color_tag = str(fields.get("color", ""))
+		group.collapsed = bool(fields.get("collapsed", false))
+		group.expanded = not group.collapsed
+		group.runtime_toggleable = bool(fields.get("toggleable", false))
+		groups[slug] = group
+		parent_of[slug] = str(fields.get("parent", ""))
+	var output: Array = []
+	var placed: Dictionary = {}       # slug -> true once its subtree is linked into output/parent
+	for event: Variant in events:
+		var slug: String = ""
+		if event is EventRow and (event as EventRow).has_meta("__group_slug"):
+			slug = str((event as EventRow).get_meta("__group_slug"))
+			(event as EventRow).remove_meta("__group_slug")
+		if slug.is_empty() or not groups.has(slug):
+			output.append(event)
+			continue
+		(groups[slug] as EventGroup).events.append(event)
+		# Link this group's ancestor chain into place on first encounter: the group nests into its
+		# parent's events (or lands in the output if top-level), walking up until an already-placed
+		# ancestor or the top level.
+		var chain_slug: String = slug
+		while not chain_slug.is_empty() and not bool(placed.get(chain_slug, false)):
+			placed[chain_slug] = true
+			var parent_slug: String = str(parent_of.get(chain_slug, ""))
+			if parent_slug.is_empty() or not groups.has(parent_slug):
+				output.append(groups[chain_slug])
+			else:
+				(groups[parent_slug] as EventGroup).events.append(groups[chain_slug])
+			chain_slug = parent_slug
+	return output
 
 ## Build-time de-coding for behaviour packs: replaces each sheet function's single-RawCode body with
 ## lifted ACE rows (the same reverse grammar that opens a .gd as events), kept ONLY when the whole
@@ -691,6 +794,11 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 	var current: EventRow = null
 	var pending_raw: PackedStringArray = PackedStringArray()
 	var chain_open: bool = false
+	# An event-group marker (`# @group:<slug>`) the compiler emits before a grouped event's `if`,
+	# captured here and stamped on the next opened event as transient meta — attempt_lift then rebuilds
+	# real EventGroups from these. Skipping the line keeps it out of the lifted body; the group re-emits
+	# it on recompile and the byte-verify strips group markers, so it still round-trips.
+	var pending_group_slug: String = ""
 	var index: int = start
 	while index < lines.size():
 		var line: String = lines[index]
@@ -699,6 +807,10 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		if not line.begins_with(indent):
 			break  # dedent: this body is done; the caller resumes here
 		var rest: String = line.substr(depth)
+		if rest.begins_with("# @group:"):
+			pending_group_slug = rest.substr(9)  # 9 == len("# @group:")
+			index += 1
+			continue
 		var at_this_depth: bool = not rest.begins_with("\t")
 		var is_if: bool = at_this_depth and rest.begins_with("if ") and rest.ends_with(":")
 		var is_elif: bool = at_this_depth and chain_open and rest.begins_with("elif ") and rest.ends_with(":")
@@ -710,6 +822,9 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			elif is_elif:
 				expression = rest.substr(5, rest.length() - 6)
 			var block_event: EventRow = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+			if is_if and not pending_group_slug.is_empty():
+				block_event.set_meta("__group_slug", pending_group_slug)
+				pending_group_slug = ""
 			if not is_if:
 				block_event.else_mode = EventRow.ElseMode.ELSE
 			var representable: bool = expression.is_empty() or _parse_conditions(expression, block_event, reverse_entries)

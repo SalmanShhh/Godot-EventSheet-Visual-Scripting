@@ -40,6 +40,14 @@ static var _throttle_process_emitted: bool = false
 static var _runtime_group_guards: Dictionary = {}
 # [group snake-name, initially_active] pairs for member emission, in encounter order.
 static var _runtime_group_members: Array = []
+# Event-group round-trip (EventGroup ↔ GDScript). Groups dissolve into the flat trigger sections at
+# compile, so they're preserved with cosmetic comment markers the importer reconstructs them from:
+# a class-scope `## @ace_group(...)` declaration per group, and a `# @group:<slug>` line before each
+# member event. _group_slugs maps each EventGroup → its deterministic slug; _row_group_path maps each
+# direct member EventRow → its group's slug. Both are filled per-compile (see _collect_groups) and
+# read during emit; they carry NO runtime weight (the markers are comments).
+static var _group_slugs: Dictionary = {}
+static var _row_group_path: Dictionary = {}
 # Host-targeting prefix for {host.} ACE templates: "host" inside a behavior sheet (where node-scoped
 # ACEs must call on the parent host, not the behavior Node itself), "" everywhere else. Per-compile.
 static var _behavior_host_default: String = ""
@@ -79,6 +87,8 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	_throttle_process_emitted = false
 	_runtime_group_guards = {}
 	_runtime_group_members = []
+	_group_slugs = {}
+	_row_group_path = {}
 	# Event-sheet-style includes: merge included sheets' rows/variables/functions (compile-time
 	# only; the root sheet wins collisions, cycles are skipped with warnings).
 	# Include ORDER: an included (library) sheet's events run BEFORE the root sheet's own events —
@@ -96,6 +106,11 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 			result["success"] = false
 			return result
 	all_events.append_array(sheet.events)
+	# Event-group round-trip: collect every group → deterministic slug now (includes' groups are
+	# already merged in), so the `## @ace_group` declarations can emit after the class description and
+	# the per-row `# @group:` tags emit in the trigger sections. Fills _group_slugs read during emit.
+	var group_decls: Array = []
+	_collect_groups(all_events, group_decls, {})
 
 	var lines: PackedStringArray = PackedStringArray()
 	if not omit_generated_banner:
@@ -134,6 +149,10 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	# `##` block right after `extends`, so it round-trips byte-identically.
 	for description_line: String in _class_description_lines(sheet):
 		lines.append(description_line)
+	# Event-group declarations: one `## @ace_group(...)` per group at class scope, right after the doc
+	# block. Main path only — the external/.gd path keeps these verbatim in its preserved prelude, so
+	# emitting here too would duplicate them (compile() returns into _compile_external before this).
+	_emit_group_declarations(lines, group_decls)
 	# Family without a type: the @ace_family marker (and the derived family_<class> group) both need a
 	# class name, so a flagged-but-unnamed sheet would silently be no family at all — surface it.
 	if sheet.is_family and sheet.custom_class_name.strip_edges().is_empty():
@@ -475,6 +494,14 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	_emit_event_trace_flag = false
 	_live_values_payload = ""
 	_throttle_process_emitted = false
+	# Event groups dissolve into the trigger sections on this path too, so refill the per-compile slug
+	# map for THIS sheet (compile() returns into _compile_external before the main path's reset/collect
+	# runs). The `## @ace_group` declarations ride along verbatim in the preserved prelude rows — we only
+	# need _group_slugs populated so _emit_event_body re-emits the `# @group:` markers (else an imported
+	# grouped sheet would lose them on the next save).
+	_group_slugs = {}
+	_row_group_path = {}
+	_collect_groups(sheet.events, [], {})
 	if not sheet.includes.is_empty() or not sheet.uses_addons.is_empty() or not sheet.requires_behaviors.is_empty():
 		(result["warnings"] as Array).append("GDScript-backed sheets ignore Includes/Uses/Requires — the .gd file is the source of truth (write the equivalent code directly).")
 	var lines: PackedStringArray = PackedStringArray()
@@ -700,14 +727,83 @@ static func _count_event_rows(rows: Array) -> int:
 			total += _count_event_rows(inner.events if not inner.events.is_empty() else inner.rows)
 	return total
 
+## A deterministic, GDScript-safe slug for a group name — NOT the random group_uid (which would make
+## the emitted markers churn on every save). Lowercase, snake-cased, non-alphanumerics collapsed to a
+## single underscore, with a numeric suffix on collision so two same-named groups stay distinct.
+## `used` accumulates the slugs already handed out this compile.
+static func _group_slug(group_name: String, used: Dictionary) -> String:
+	var slug: String = group_name.strip_edges().to_snake_case()
+	var sanitizer: RegEx = RegEx.new()
+	sanitizer.compile("[^a-z0-9]+")
+	slug = sanitizer.sub(slug, "_", true)
+	while slug.begins_with("_"):
+		slug = slug.substr(1)
+	while slug.ends_with("_"):
+		slug = slug.substr(0, slug.length() - 1)
+	if slug.is_empty():
+		slug = "group"
+	var candidate: String = slug
+	var suffix: int = 2
+	while used.has(candidate):
+		candidate = "%s_%d" % [slug, suffix]
+		suffix += 1
+	used[candidate] = true
+	return candidate
+
+## Walks the event tree assigning every EventGroup a deterministic slug (filling _group_slugs) and
+## appending an ordered {slug, parent, group} record to `decls` (parents before children, so the
+## importer can rebuild nesting). Recurses into group bodies, mirroring _flatten_trigger_rows' walk.
+static func _collect_groups(rows: Array, decls: Array, used: Dictionary, parent_slug: String = "") -> void:
+	for row: Variant in rows:
+		if row is EventGroup:
+			var group: EventGroup = row as EventGroup
+			var group_name: String = group.group_name if not group.group_name.is_empty() else group.name
+			var slug: String = _group_slug(group_name, used)
+			_group_slugs[group] = slug
+			decls.append({"slug": slug, "parent": parent_slug, "group": group})
+			_collect_groups(group.events if not group.events.is_empty() else group.rows, decls, used, slug)
+
+## True when free text can be written inside a double-quoted annotation field without breaking it.
+static func _group_text_is_safe(text: String) -> bool:
+	return not text.contains("\"") and not text.contains("\n")
+
+## Emits the class-scope `## @ace_group(...)` declaration block (one line per group, parents first).
+## Only non-default fields are written, and any free-text field with a quote or newline is dropped so
+## the single-line annotation always parses — the round-trip degrades gracefully (the group still
+## reconstructs from its slug) rather than emitting a line the importer can't read back.
+static func _emit_group_declarations(lines: PackedStringArray, decls: Array) -> void:
+	for decl: Dictionary in decls:
+		var group: EventGroup = decl["group"] as EventGroup
+		var group_name: String = group.group_name if not group.group_name.is_empty() else group.name
+		var parts: PackedStringArray = PackedStringArray()
+		parts.append("uid=\"%s\"" % str(decl["slug"]))
+		parts.append("name=\"%s\"" % (group_name if _group_text_is_safe(group_name) else ""))
+		if not str(decl["parent"]).is_empty():
+			parts.append("parent=\"%s\"" % str(decl["parent"]))
+		var description: String = group.description.strip_edges()
+		if not description.is_empty() and _group_text_is_safe(description):
+			parts.append("description=\"%s\"" % description)
+		var color: String = group.color_tag.strip_edges()
+		if not color.is_empty() and _group_text_is_safe(color):
+			parts.append("color=\"%s\"" % color)
+		if group.collapsed:
+			parts.append("collapsed=true")
+		if group.runtime_toggleable:
+			parts.append("toggleable=true")
+		lines.append("## @ace_group(%s)" % ", ".join(parts))
+
 ## Flattens trigger-bearing rows for emission: EventRows kept, ENABLED groups recursed (a disabled
 ## group is dropped but leaves a breadcrumb comment — group-disable semantics), and group comments
 ## collected as deferred comment lines.
-static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "") -> void:
+static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "", group_slug: String = "") -> void:
 	for row: Variant in rows:
 		if row is EventRow:
 			if not runtime_guard.is_empty():
 				_runtime_group_guards[row] = runtime_guard
+			# Tag the row with its group's slug so _emit_event_body can emit a `# @group:` marker before
+			# it — the breadcrumb the importer reconstructs the EventGroup from.
+			if not group_slug.is_empty():
+				_row_group_path[row] = group_slug
 			into_events.append(row)
 		elif row is EventGroup:
 			var group: EventGroup = row as EventGroup
@@ -724,7 +820,7 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 							already_known = true
 					if not already_known:
 						_runtime_group_members.append([child_guard, group.enabled])
-				_flatten_trigger_rows(group.events if not group.events.is_empty() else group.rows, into_events, deferred_comment_lines, child_guard)
+				_flatten_trigger_rows(group.events if not group.events.is_empty() else group.rows, into_events, deferred_comment_lines, child_guard, _group_slugs.get(group, ""))
 			else:
 				# Don't silently drop a disabled group: leave a breadcrumb so the omission is visible
 				# in the generated code. Disabling a group intentionally excludes its events (the
@@ -984,6 +1080,11 @@ static func _emit_event_body(
 		for prelude_line: String in stateful_preludes:
 			lines.append(indent + prelude_line)
 			had_body = true
+		# Group breadcrumb: a `# @group:<slug>` line before a grouped event's block, so the importer can
+		# reconstruct the EventGroup. Only top-of-group events (else_mode NONE) are tagged — chained
+		# else/elif rows belong to the same group as the `if` they continue.
+		if event_row.else_mode == EventRow.ElseMode.NONE and _row_group_path.has(event_row):
+			lines.append("%s# @group:%s" % [indent, str(_row_group_path[event_row])])
 		# Resolve the block header: if / elif / else, per the chaining rules above.
 		var wants_chain: bool = event_row.else_mode != EventRow.ElseMode.NONE
 		if wants_chain and not stateful_preludes.is_empty():
