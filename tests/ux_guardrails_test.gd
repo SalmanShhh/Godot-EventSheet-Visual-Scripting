@@ -127,13 +127,13 @@ static func run() -> bool:
 	editor._on_variable_dialog_confirmed("class", "int", 1, "global", {}, false, false)
 	all_passed = _check("keyword names are blocked", sheet.variables.size(), before_count) and all_passed
 
-	editor._ensure_enum_dialog()
+	editor._struct_rows._ensure_enum_dialog()
 	var guarded_enum: EnumRow = EnumRow.new()
 	sheet.events.append(guarded_enum)
-	editor._enum_target = guarded_enum
-	editor._enum_name_edit.text = "player state"
-	editor._enum_members_edit.text = "idle mode\nRUN = 4"
-	editor._on_enum_dialog_confirmed()
+	editor._struct_rows._enum_target = guarded_enum
+	editor._struct_rows._enum_name_edit.text = "player state"
+	editor._struct_rows._enum_members_edit.text = "idle mode\nRUN = 4"
+	editor._struct_rows._on_enum_dialog_confirmed()
 	all_passed = _check("enum names auto-correct",
 		guarded_enum.enum_name == "player_state" and guarded_enum.members[0] == "idle_mode" and guarded_enum.members[1] == "RUN = 4", true) and all_passed
 

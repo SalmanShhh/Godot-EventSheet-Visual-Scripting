@@ -123,22 +123,22 @@ static func run() -> bool:
 			match_span_found = true
 	all_passed = _check("match renders as action cells", match_span_found, true) and all_passed
 
-	editor._ensure_signal_dialog()
-	editor._signal_target = hit
-	editor._signal_name_edit.text = "took damage"
-	editor._signal_params_edit.text = "amount: int"
-	editor._on_signal_dialog_confirmed()
+	editor._struct_rows._ensure_signal_dialog()
+	editor._struct_rows._signal_target = hit
+	editor._struct_rows._signal_name_edit.text = "took damage"
+	editor._struct_rows._signal_params_edit.text = "amount: int"
+	editor._struct_rows._on_signal_dialog_confirmed()
 	all_passed = _check("signal dialog sanitizes + applies",
 		hit.signal_name == "took_damage" and hit.params == PackedStringArray(["amount: int"]), true) and all_passed
 
-	editor._ensure_match_dialog()
-	editor._match_target = match_row
-	editor._match_expression_edit.text = "state"
-	editor._match_branches_edit.text = "State.RUN\n\tbroken missing colon"
-	editor._on_match_dialog_confirmed()
+	editor._struct_rows._ensure_match_dialog()
+	editor._struct_rows._match_target = match_row
+	editor._struct_rows._match_expression_edit.text = "state"
+	editor._struct_rows._match_branches_edit.text = "State.RUN\n\tbroken missing colon"
+	editor._struct_rows._on_match_dialog_confirmed()
 	all_passed = _check("broken match never commits", match_row.branches_text.contains("State.IDLE:"), true) and all_passed
-	editor._match_branches_edit.text = "State.RUN:\n\tstate = State.IDLE"
-	editor._on_match_dialog_confirmed()
+	editor._struct_rows._match_branches_edit.text = "State.RUN:\n\tstate = State.IDLE"
+	editor._struct_rows._on_match_dialog_confirmed()
 	all_passed = _check("valid match applies", match_row.branches_text, "State.RUN:\n\tstate = State.IDLE") and all_passed
 	editor.free()
 

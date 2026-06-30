@@ -105,11 +105,11 @@ static func run() -> bool:
 	if enum_row_data != null:
 		all_passed = _check("enum row shows the declaration",
 			enum_row_data.spans[1].text, "State { IDLE, RUN, HURT = 4 }") and all_passed
-	editor._ensure_enum_dialog()
-	editor._enum_target = state
-	editor._enum_name_edit.text = "PlayerState"
-	editor._enum_members_edit.text = "IDLE\nDASH"
-	editor._on_enum_dialog_confirmed()
+	editor._struct_rows._ensure_enum_dialog()
+	editor._struct_rows._enum_target = state
+	editor._struct_rows._enum_name_edit.text = "PlayerState"
+	editor._struct_rows._enum_members_edit.text = "IDLE\nDASH"
+	editor._struct_rows._on_enum_dialog_confirmed()
 	all_passed = _check("dialog applies name + members",
 		state.enum_name == "PlayerState" and state.members == PackedStringArray(["IDLE", "DASH"]), true) and all_passed
 	editor.free()
