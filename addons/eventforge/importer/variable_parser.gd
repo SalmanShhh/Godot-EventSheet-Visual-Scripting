@@ -34,6 +34,13 @@ func parse(source: String) -> Dictionary:
 		elif line.begins_with("@export "):
 			exported = true
 			line = line.substr("@export ".length()).strip_edges()
+		# A `const NAME: T = v` declaration is a first-class constant variable: normalize it to the `var`
+		# shape so the name/type/default parsing below is shared, and flag it so the lift restores
+		# is_constant (the compiler re-emits `const …`, so the verify-lift byte-gate confirms the match).
+		var is_constant: bool = false
+		if line.begins_with("const "):
+			is_constant = true
+			line = "var " + line.substr("const ".length())
 		if not line.begins_with("var "):
 			continue
 		var rest: String = line.substr(4).strip_edges()
@@ -53,7 +60,8 @@ func parse(source: String) -> Dictionary:
 			"default": _parse_literal(default_text),
 			"exported": exported,
 			"options": combo_options,
-			"hint": hint
+			"hint": hint,
+			"constant": is_constant
 		}
 	return variables
 
