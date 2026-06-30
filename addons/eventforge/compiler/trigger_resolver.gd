@@ -35,6 +35,18 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _lifecycle("_unhandled_input", "event: InputEvent")
 		"OnEditorRun":
 			return _lifecycle("_run", "")
+		"OnPostTick":
+			# Godot's "post-tick": SceneTree.process_frame fires ONCE after every node's _process this
+			# frame — for logic that must run after everything else updated (a camera that follows after
+			# movement, end-of-frame cleanup). Connected on get_tree() (the "@tree" global source), not self.
+			return _signal_backed("_on_post_tick", "", "process_frame", "@tree")
+		"OnPhysicsPostTick":
+			# The physics-tick sibling: SceneTree.physics_frame, after every _physics_process this step.
+			return _signal_backed("_on_physics_post_tick", "", "physics_frame", "@tree")
+		"OnCloseRequested":
+			# The window's close button (X) / an app-quit request — for save-on-quit or a confirm dialog.
+			# Connected on the root window (the "@window" global source), not self.
+			return _signal_backed("_on_close_requested", "", "close_requested", "@window")
 		"OnBodyEntered":
 			return _signal_backed("_on%s_body_entered" % source_token, "body: Node", "body_entered", source_path)
 		"OnAreaEntered":

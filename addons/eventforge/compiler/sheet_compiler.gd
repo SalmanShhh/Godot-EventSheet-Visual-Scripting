@@ -899,7 +899,13 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 				)
 				continue
 		var source_prefix: String = ""
-		if source_path.begins_with("autoload:"):
+		if source_path == "@tree":
+			# Global SceneTree signals (process_frame / physics_frame) — post-tick triggers connect here.
+			source_prefix = "get_tree()."
+		elif source_path == "@window":
+			# Root-window signals (close_requested) — the On Close Requested trigger connects here.
+			source_prefix = "get_window()."
+		elif source_path.begins_with("autoload:"):
 			# Bus triggers: autoloads are global — connect by name, no node paths.
 			source_prefix = "%s." % source_path.trim_prefix("autoload:")
 		elif not source_path.is_empty():
