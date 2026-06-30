@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added — RegEx text module (Construct 3-style Regex functions)
+
+- A new **RegEx** ACE module (its own file) of pattern-matching verbs, Godot-`RegEx`-backed and
+  parity-clean: **Text Matches Regex** (condition), **Regex Replace** (replace every match), **Regex First
+  Match**, **Regex Match Count**, **Regex All Matches**, and **Regex Capture Group** — mirroring C3's
+  `RegexReplace` / `RegexSearch` / `RegexMatchCount`. The `search_all`-based verbs are **null-safe** (empty
+  string / empty array on a miss, never an error). Plus **Format Decimals** (`String.num`) for the
+  decimal-places gap. Each compiles to a direct `RegEx.create_from_string(…)` one-liner — no editor plugin or
+  pre-built RegEx object. (`tests/regex_aces_test.gd` pins runtime behaviour, not just parse.)
+
 ### Added — Global-signal triggers (On Post Tick, On Close Requested)
 
 - Triggers can now connect a signal on a **global source** — `get_tree()` or `get_window()` — not just
