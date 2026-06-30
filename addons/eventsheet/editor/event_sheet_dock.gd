@@ -151,6 +151,7 @@ var _shortcuts: EventSheetShortcutsDialog = EventSheetShortcutsDialog.new()  # T
 var _rename: EventSheetRenameRefactor = EventSheetRenameRefactor.new()  # variable rename engine + "Rename Everywhere" dialog (event_sheet_rename_refactor.gd)
 var _variables: EventSheetVariablesManager = EventSheetVariablesManager.new()  # global/local/tree variable authoring + usage scan (dock/variables_manager.gd)
 var _multi_view: EventSheetMultiViewManager = EventSheetMultiViewManager.new()  # split-view subsystem: second pane over the same sheet (dock/multi_view_manager.gd)
+var _command_palette: EventSheetCommandPalette = EventSheetCommandPalette.new()  # Ctrl+P command palette: list + fuzzy filter + popup shell (dock/command_palette.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -168,13 +169,8 @@ var _active_theme_style: EventSheetEditorStyle = null
 ## per-project in editor metadata; defaults off so existing/expert users are unaffected.
 var _simple_mode: bool = false
 var _view_popup: PopupMenu = null
-# Command palette (Ctrl+P): keyboard-first access to every dock action — the affordance
-# power users reach for first. The command list + fuzzy filter are pure/testable; the popup
-# is the GUI shell built lazily.
-var _command_palette_window: Window = null
-var _command_palette_search: LineEdit = null
-var _command_palette_list: ItemList = null
-var _command_palette_matches: Array = []
+# Command palette (Ctrl+P): keyboard-first access to every dock action — list + fuzzy filter +
+# popup shell live on _command_palette (dock/command_palette.gd); the action targets stay here.
 
 func _init() -> void:
     if not _undo_redo_adapter.has_manager():
@@ -220,6 +216,7 @@ func _ensure_editor_dialogs_initialized() -> void:
     _rename.init(self)
     _variables.init(self)
     _multi_view.init(self)
+    _command_palette.init(self)
     # Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
     _variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
     _variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
@@ -3610,150 +3607,15 @@ func _active_view() -> EventSheetViewport:
         return _active_viewport_ref
     return _viewport
 
-## Toggles a second, read/navigate-only pane over the SAME sheet (debugging, reading,
-## comparing distant regions). Breakpoints/bookmarks/disabled state are shared by
-## reference; scroll/zoom/selection/folds are per-pane.
-## Every command the palette can run: {title, run}. Kept in one place so the palette,
-## (future) menus, and tests share the same source of truth.
-func _command_palette_commands() -> Array[Dictionary]:
-    return [
-        {"title": "New Sheet…", "run": _open_template_menu},
-        {"title": "Open Sheet…", "run": _on_open_requested},
-        {"title": "Save Sheet", "run": _on_save_requested},
-        {"title": "Save Sheet As…", "run": _on_save_as_requested},
-        {"title": "Export Generated GDScript…", "run": _export_gdscript_requested},
-        {"title": "Run Scene", "run": _run_from_sheet},
-        {"title": "Add Event", "run": _on_add_event_requested},
-        {"title": "Add Condition", "run": _on_add_condition_requested},
-        {"title": "Add Action", "run": _on_add_action_requested},
-        {"title": "Add Global Variable…", "run": _on_add_global_variable_requested},
-        {"title": "Add Function…", "run": _open_function_dialog},
-        {"title": "Toggle GDScript Panel", "run": _toggle_code_panel},
-        {"title": "Toggle Simple Mode", "run": func() -> void: set_simple_mode(not _simple_mode)},
-        {"title": "Zoom In", "run": _on_zoom_in_requested},
-        {"title": "Zoom Out", "run": _on_zoom_out_requested},
-        {"title": "Sheet Type…", "run": _open_sheet_type_dialog},
-        {"title": "Export Addon Pack…", "run": _export_addon_pack},
-        {"title": "Open Welcome", "run": show_welcome},
-    ]
-
-## Pure fuzzy filter (testable): returns the commands whose title matches `query` as a
-## prefix > substring > subsequence, best first. Empty query returns everything in order.
-static func filter_commands(commands: Array, query: String) -> Array:
-    var q: String = query.strip_edges().to_lower()
-    if q.is_empty():
-        return commands.duplicate()
-    var scored: Array = []
-    for index: int in range(commands.size()):
-        var title: String = str((commands[index] as Dictionary).get("title", "")).to_lower()
-        var score: int = _command_match_score(title, q)
-        if score >= 0:
-            scored.append({"cmd": commands[index], "score": score, "index": index})
-    scored.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-        if a["score"] != b["score"]:
-            return a["score"] < b["score"]
-        return a["index"] < b["index"])
-    var result: Array = []
-    for entry: Dictionary in scored:
-        result.append(entry["cmd"])
-    return result
-
-static func _command_match_score(title: String, q: String) -> int:
-    if title.begins_with(q):
-        return 0
-    if title.contains(q):
-        return 1
-    # Subsequence: every query char appears in order (typo-tolerant "ae" → "Add Event").
-    var ti: int = 0
-    for qi: int in range(q.length()):
-        var found: bool = false
-        while ti < title.length():
-            if title[ti] == q[qi]:
-                found = true
-                ti += 1
-                break
-            ti += 1
-        if not found:
-            return -1
-    return 2
-
-func _open_command_palette() -> void:
-    if not Engine.is_editor_hint() and DisplayServer.get_name() == "headless":
-        return
-    if _command_palette_window == null:
-        _build_command_palette_window()
-    _command_palette_search.text = ""
-    _refresh_command_palette("")
-    _command_palette_window.popup_centered(Vector2i(520, 420))
-    _command_palette_search.grab_focus()
-
-func _build_command_palette_window() -> void:
-    _command_palette_window = Window.new()
-    _command_palette_window.title = "Command Palette"
-    _command_palette_window.transient = true
-    _command_palette_window.exclusive = false
-    _command_palette_window.close_requested.connect(func() -> void: _command_palette_window.hide())
-    var margin := MarginContainer.new()
-    margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    for side: String in ["left", "right", "top", "bottom"]:
-        margin.add_theme_constant_override("margin_%s" % side, 8)
-    _command_palette_window.add_child(margin)
-    var box := VBoxContainer.new()
-    margin.add_child(box)
-    _command_palette_search = LineEdit.new()
-    _command_palette_search.placeholder_text = "Type a command…  (↑/↓ to choose, Enter to run, Esc to close)"
-    _command_palette_search.clear_button_enabled = true
-    _command_palette_search.text_changed.connect(_refresh_command_palette)
-    _command_palette_search.gui_input.connect(_on_command_palette_search_input)
-    box.add_child(_command_palette_search)
-    _command_palette_list = ItemList.new()
-    _command_palette_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _command_palette_list.item_activated.connect(func(idx: int) -> void: _run_command_palette_index(idx))
-    box.add_child(_command_palette_list)
-    add_child(_command_palette_window)
-
-func _refresh_command_palette(query: String) -> void:
-    _command_palette_matches = filter_commands(_command_palette_commands(), query)
-    if _command_palette_list == null:
-        return
-    _command_palette_list.clear()
-    for cmd: Dictionary in _command_palette_matches:
-        _command_palette_list.add_item(str(cmd.get("title", "")))
-    if _command_palette_list.item_count > 0:
-        _command_palette_list.select(0)
-
-func _on_command_palette_search_input(event: InputEvent) -> void:
-    if not (event is InputEventKey) or not (event as InputEventKey).pressed:
-        return
-    var key: InputEventKey = event as InputEventKey
-    match key.keycode:
-        KEY_ESCAPE:
-            _command_palette_window.hide()
-        KEY_ENTER, KEY_KP_ENTER:
-            var sel: PackedInt32Array = _command_palette_list.get_selected_items()
-            _run_command_palette_index(sel[0] if sel.size() > 0 else 0)
-        KEY_DOWN:
-            _move_command_palette_selection(1)
-        KEY_UP:
-            _move_command_palette_selection(-1)
-
-func _move_command_palette_selection(delta: int) -> void:
-    if _command_palette_list == null or _command_palette_list.item_count == 0:
-        return
-    var sel: PackedInt32Array = _command_palette_list.get_selected_items()
-    var current: int = sel[0] if sel.size() > 0 else 0
-    var next: int = clampi(current + delta, 0, _command_palette_list.item_count - 1)
-    _command_palette_list.select(next)
-    _command_palette_list.ensure_current_is_visible()
-
-func _run_command_palette_index(index: int) -> void:
-    if index < 0 or index >= _command_palette_matches.size():
-        return
-    var run: Callable = (_command_palette_matches[index] as Dictionary).get("run", Callable())
-    if _command_palette_window != null:
-        _command_palette_window.hide()
-    if run.is_valid():
-        run.call()
+# ── Command palette (Ctrl+P): list + fuzzy filter + popup shell → dock/command_palette.gd ──
+# Thin delegates preserve the original names/signatures so the shortcut caller and tests don't change.
+# filter_commands is static-by-class-name (tests call EventSheetDock.filter_commands); it forwards to the helper's static.
+static func filter_commands(commands: Array, query: String) -> Array:  # event_sheet_editor_test (static, by class name)
+    return EventSheetCommandPalette.filter_commands(commands, query)
+func _command_palette_commands() -> Array[Dictionary]:  # event_sheet_editor_test
+    return _command_palette._command_palette_commands()
+func _open_command_palette() -> void:  # Ctrl+P shortcut (_gui_input)
+    _command_palette._open_command_palette()
 
 ## True when beginner-friendly Simple mode is active (advanced/code menu entries hidden).
 func is_simple_mode() -> bool:
