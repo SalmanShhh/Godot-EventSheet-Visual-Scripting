@@ -152,6 +152,7 @@ var _rename: EventSheetRenameRefactor = EventSheetRenameRefactor.new()  # variab
 var _variables: EventSheetVariablesManager = EventSheetVariablesManager.new()  # global/local/tree variable authoring + usage scan (dock/variables_manager.gd)
 var _multi_view: EventSheetMultiViewManager = EventSheetMultiViewManager.new()  # split-view subsystem: second pane over the same sheet (dock/multi_view_manager.gd)
 var _command_palette: EventSheetCommandPalette = EventSheetCommandPalette.new()  # Ctrl+P command palette: list + fuzzy filter + popup shell (dock/command_palette.gd)
+var _external_watcher: EventSheetExternalWatcher = EventSheetExternalWatcher.new()  # GDScript-backed sheet file-watch + reload-on-disk-change dialog (dock/external_watcher.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -217,6 +218,7 @@ func _ensure_editor_dialogs_initialized() -> void:
     _variables.init(self)
     _multi_view.init(self)
     _command_palette.init(self)
+    _external_watcher.init(self)
     # Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
     _variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
     _variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
@@ -1094,49 +1096,21 @@ func _notification(what: int) -> void:
         if _code_edit != null:
             _apply_editor_code_settings(_code_edit)
 
-# ── External sheet file watching (GDScript-backed sheets) ────────────────────
-# mtime of the active external .gd at open/save time; divergence = changed on disk.
+# ── External sheet file watching (GDScript-backed sheets; see EventSheetExternalWatcher) ──────
+# mtime of the active external .gd at open/save time; divergence = changed on disk. Kept on the
+# dock because it's written from several load/save sites here; the watcher reads/writes it through us.
 var _external_mtime: int = 0
-var _external_reload_dialog: ConfirmationDialog = null
 
 ## True when the active GDScript-backed sheet's file changed on disk since open/save.
 func _external_sheet_changed_on_disk() -> bool:
-    if _current_sheet == null or _current_sheet.external_source_path.is_empty():
-        return false
-    var disk_mtime: int = FileAccess.get_modified_time(_current_sheet.external_source_path)
-    return disk_mtime != 0 and _external_mtime != 0 and disk_mtime != _external_mtime
+    return _external_watcher.sheet_changed_on_disk()
 
 ## Re-imports the active external sheet from disk (fresh lossless import + ACE lift).
 func _reload_external_sheet() -> void:
-    if _current_sheet == null or _current_sheet.external_source_path.is_empty():
-        return
-    _load_sheet_from_path(_current_sheet.external_source_path)
-    _set_status("Reloaded from disk: %s" % _current_sheet_path.get_file())
+    _external_watcher.reload_external_sheet()
 
 func _prompt_external_reload_if_changed() -> void:
-    if not _external_sheet_changed_on_disk():
-        return
-    # A read-only PREVIEW has no editor changes to lose, so it re-renders LIVE: silently re-import the
-    # file the moment it changes on disk (edit the .gd in the script editor, refocus the Event Sheets
-    # tab, and the rows track it). The confirm dialog is only for an unlocked, editable sheet.
-    if _current_sheet != null and _current_sheet.read_only:
-        _reload_external_sheet()
-        return
-    if _external_reload_dialog == null:
-        _external_reload_dialog = ConfirmationDialog.new()
-        _external_reload_dialog.title = "File Changed On Disk"
-        _external_reload_dialog.ok_button_text = "Reload"
-        _external_reload_dialog.cancel_button_text = "Keep Editor Version"
-        _external_reload_dialog.confirmed.connect(_reload_external_sheet)
-        # Keeping the editor version: remember the new mtime so we only ask once per change.
-        _external_reload_dialog.canceled.connect(func() -> void:
-            if _current_sheet != null:
-                _external_mtime = FileAccess.get_modified_time(_current_sheet.external_source_path)
-        )
-        add_child(_external_reload_dialog)
-    _external_reload_dialog.dialog_text = "%s was modified outside the sheet editor.
-Reload it (re-import + event lifting)? Unsaved sheet edits will be lost." % _current_sheet.external_source_path.get_file()
-    _external_reload_dialog.popup_centered(Vector2i(460, 160))
+    _external_watcher.prompt_external_reload_if_changed()
 
 func _build_preview_window() -> void:
     if _preview_window != null:
