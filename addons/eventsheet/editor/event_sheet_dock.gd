@@ -151,6 +151,7 @@ var _ai: EventSheetAIGenerateWindow = EventSheetAIGenerateWindow.new()  # Edit �
 var _sheet_type: EventSheetSheetTypeDialog = EventSheetSheetTypeDialog.new()  # Sheet ▸ Sheet Type… dialog shell (dock/sheet_type_dialog.gd)
 var _session: EventSheetSessionStore = EventSheetSessionStore.new()  # open-tabs restore across restarts (event_sheet_session_store.gd)
 var _shortcuts: EventSheetShortcutsDialog = EventSheetShortcutsDialog.new()  # Tools ▸ Keyboard Shortcuts editor (event_sheet_shortcuts_dialog.gd)
+var _rename: EventSheetRenameRefactor = EventSheetRenameRefactor.new()  # variable rename engine + "Rename Everywhere" dialog (event_sheet_rename_refactor.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -220,6 +221,7 @@ func _ensure_editor_dialogs_initialized() -> void:
     _sheet_type.init(self)
     _session.init(self)
     _shortcuts.init(self)
+    _rename.init(self)
     # Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
     _variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
     _variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
@@ -3596,91 +3598,14 @@ func _open_signal_dialog(signal_resource: Resource) -> void:  # viewport signal_
 
 func _open_match_dialog(match_resource: Resource) -> void:  # viewport match_edit_requested
     _struct_rows.open_match_dialog(match_resource)
-# ── Variable rename refactor ──────────────────────────────────────────────────────────
 
-## Whole-word renames a variable across everything that embeds GDScript text — ACE params,
-## GDScript blocks (class-level, in-flow, function bodies), and pick-filter expressions —
-## so a rename never silently breaks compiled code (event-sheet-style refactor safety).
-## Returns the number of replacements. Call inside the same undoable edit as the rename.
-func _rename_variable_references(old_name: String, new_name: String) -> int:
-    if old_name.is_empty() or old_name == new_name or _current_sheet == null:
-        return 0
-    var regex: RegEx = RegEx.new()
-    if regex.compile("\\b%s\\b" % old_name) != OK:  # names are sanitized identifiers — regex-safe
-        return 0
-    var counter: Dictionary = {"count": 0}
-    _rename_in_rows(_current_sheet.events, regex, new_name, counter)
-    for function_resource: Variant in _current_sheet.functions:
-        if function_resource is EventFunction:
-            var function_rows: Array = (function_resource as EventFunction).events if not (function_resource as EventFunction).events.is_empty() else (function_resource as EventFunction).rows
-            _rename_in_rows(function_rows, regex, new_name, counter)
-    return int(counter.get("count", 0))
-
-func _rename_in_rows(rows: Array, regex: RegEx, new_name: String, counter: Dictionary) -> void:
-    for row: Variant in rows:
-        if row is RawCodeRow:
-            (row as RawCodeRow).code = _regex_rename(regex, (row as RawCodeRow).code, new_name, counter)
-        elif row is EventGroup:
-            var group: EventGroup = row as EventGroup
-            _rename_in_rows(group.events if not group.events.is_empty() else group.rows, regex, new_name, counter)
-        elif row is EventRow:
-            var event_row: EventRow = row as EventRow
-            if event_row.trigger != null:
-                _rename_in_params(event_row.trigger, regex, new_name, counter)
-            for condition: Variant in event_row.conditions:
-                if condition is ACECondition:
-                    _rename_in_params(condition, regex, new_name, counter)
-            for action: Variant in event_row.actions:
-                if action is ACEAction:
-                    _rename_in_params(action, regex, new_name, counter)
-                elif action is RawCodeRow:
-                    (action as RawCodeRow).code = _regex_rename(regex, (action as RawCodeRow).code, new_name, counter)
-            for pick: Variant in event_row.pick_filters:
-                if pick is PickFilter:
-                    (pick as PickFilter).collection_value = _regex_rename(regex, (pick as PickFilter).collection_value, new_name, counter)
-                    (pick as PickFilter).predicate_expression = _regex_rename(regex, (pick as PickFilter).predicate_expression, new_name, counter)
-            if not event_row.with_node_target.is_empty():
-                event_row.with_node_target = _regex_rename(regex, event_row.with_node_target, new_name, counter)
-            _rename_in_rows(event_row.sub_events, regex, new_name, counter)
-
-## String params hold GDScript expressions / variable references — rename inside them.
-## Baked codegen templates can embed the variable too, but their {placeholder} tokens must
-## never be touched (they're param names, not variables).
-func _rename_in_params(ace: Resource, regex: RegEx, new_name: String, counter: Dictionary) -> void:
-    var params: Dictionary = ace.get("params")
-    for key: Variant in params.keys():
-        if params[key] is String:
-            params[key] = _regex_rename(regex, params[key], new_name, counter)
-    var template: String = str(ace.get("codegen_template"))
-    if not template.is_empty():
-        ace.set("codegen_template", _rename_in_template(template, regex, new_name, counter))
-
-## Renames only OUTSIDE {placeholder} segments of a codegen template.
-func _rename_in_template(template: String, regex: RegEx, new_name: String, counter: Dictionary) -> String:
-    var output: String = ""
-    var cursor: int = 0
-    while cursor < template.length():
-        var open: int = template.find("{", cursor)
-        if open == -1:
-            output += _regex_rename(regex, template.substr(cursor), new_name, counter)
-            break
-        var close: int = template.find("}", open)
-        if close == -1:
-            output += _regex_rename(regex, template.substr(cursor), new_name, counter)
-            break
-        output += _regex_rename(regex, template.substr(cursor, open - cursor), new_name, counter)
-        output += template.substr(open, close - open + 1)
-        cursor = close + 1
-    return output
-
-func _regex_rename(regex: RegEx, text: String, new_name: String, counter: Dictionary) -> String:
-    if text.is_empty():
-        return text
-    var hits: int = regex.search_all(text).size()
-    if hits == 0:
-        return text
-    counter["count"] = int(counter.get("count", 0)) + hits
-    return regex.sub(text, new_name, true)
+# ── Rename refactoring (variable rename engine + "Rename Everywhere" dialog) → event_sheet_rename_refactor.gd ──
+func _rename_variable_references(old_name: String, new_name: String) -> int:  # variables tree (2 sites)
+    return _rename.rename_variable_references(old_name, new_name)
+func _open_rename_dialog(old_name: String) -> void:  # variable context menu
+    _rename.open(old_name)
+func _rename_in_includers(old_name: String, new_name: String, candidate_paths: PackedStringArray) -> PackedStringArray:  # tedium_test
+    return _rename.rename_in_includers(old_name, new_name, candidate_paths)
 
 # ── Multi-view: split view (same sheet, two panes — VSCode-style) ─────────────────────
 var _split_container: HSplitContainer = null
@@ -5345,41 +5270,6 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
         VARIABLE_MENU_TOGGLE_CONST:
             _toggle_context_variable_constant()
 
-# ── True Rename (core in EventSheetRefactor; word-boundary, every model surface) ──────
-var _rename_window: Window = null
-var _rename_edit: LineEdit = null
-var _rename_old_name: String = ""
-
-func _open_rename_dialog(old_name: String) -> void:
-    if old_name.is_empty():
-        return
-    _rename_old_name = old_name
-    if _rename_window == null:
-        _rename_window = Window.new()
-        _rename_window.title = "Rename Everywhere"
-        _rename_window.size = Vector2i(380, 110)
-        _rename_window.close_requested.connect(func() -> void: _rename_window.hide())
-        var box: VBoxContainer = VBoxContainer.new()
-        box.set_anchors_preset(Control.PRESET_FULL_RECT)
-        _rename_edit = LineEdit.new()
-        _rename_edit.text_submitted.connect(func(_t: String) -> void: _confirm_rename())
-        box.add_child(_rename_edit)
-        var apply_button: Button = Button.new()
-        apply_button.text = "Rename in this sheet + every sheet that includes it"
-        apply_button.pressed.connect(_confirm_rename)
-        box.add_child(apply_button)
-        _rename_window.add_child(box)
-        add_child(_rename_window)
-    _rename_edit.text = old_name
-    _rename_window.popup_centered()
-    _rename_edit.grab_focus()
-    _rename_edit.select_all()
-
-func _confirm_rename() -> void:
-    var renamed: bool = _perform_symbol_rename(_rename_old_name, _rename_edit.text.strip_edges())
-    if renamed:
-        _rename_window.hide()
-
 ## The create-variable quick-fix behind the params dialog's "+ var" button: declares
 ## the identifier as a float (the "number" default — retype via Edit Variable) so
 ## the expression lints clean without leaving the dialog.
@@ -5389,29 +5279,6 @@ func _create_variable_quickfix(variable_name: String) -> bool:
     return _perform_undoable_sheet_edit("Create variable %s" % variable_name, func() -> bool:
         _current_sheet.variables[variable_name] = {"type": "float", "default": 0.0, "exported": true}
         return true)
-
-## The full rename: validate, undoably rewrite the open sheet, then rewrite + save
-## every project sheet whose `includes` lists this one (Replace-in-Project contract:
-## closed sheets save directly, the status names every touched file).
-func _perform_symbol_rename(old_name: String, new_name: String) -> bool:
-    if _current_sheet == null:
-        return false
-    var problem: String = EventSheetRefactor.validate_new_name(_current_sheet, old_name, new_name)
-    if not problem.is_empty():
-        _set_status(problem, true)
-        return false
-    var renamed: bool = _perform_undoable_sheet_edit("Rename %s" % old_name, func() -> bool:
-        return EventSheetRefactor.rename_symbol(_current_sheet, old_name, new_name) > 0)
-    if not renamed:
-        _set_status("\"%s\" appears nowhere in this sheet." % old_name, true)
-        return false
-    var touched: PackedStringArray = PackedStringArray()
-    if not _current_sheet_path.is_empty():
-        touched = _rename_in_includers(old_name, new_name, EventSheetProjectFind.list_project_sheets())
-    _refresh_title_strip()
-    _set_status("Renamed %s → %s%s." % [old_name, new_name,
-        " (also in: %s)" % ", ".join(touched) if not touched.is_empty() else ""])
-    return true
 
 # ── Bulk operations on the multi-selection (one undo action each) ─────────────────────
 
@@ -5928,21 +5795,6 @@ func _open_insert_snippet() -> void:
 func _insert_snippet_path(snippet_path: String) -> void:
     if not _paste_snippet_text(EventSheetSnippetLibrary.read_snippet(snippet_path)):
         _set_status("That file isn't a sheet snippet: %s" % snippet_path.get_file(), true)
-
-## Rewrites + saves every candidate sheet whose `includes` lists the open sheet
-## (closed sheets save directly — the Replace-in-Project contract).
-func _rename_in_includers(old_name: String, new_name: String, candidate_paths: PackedStringArray) -> PackedStringArray:
-    var touched: PackedStringArray = PackedStringArray()
-    for sheet_path: String in candidate_paths:
-        if sheet_path == _current_sheet_path:
-            continue
-        var other: EventSheetResource = load(sheet_path) as EventSheetResource
-        if other == null or not other.includes.has(_current_sheet_path):
-            continue
-        if EventSheetRefactor.rename_symbol(other, old_name, new_name) > 0:
-            ResourceSaver.save(other, sheet_path)
-            touched.append(sheet_path.get_file())
-    return touched
 
 func _delete_context_ace() -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
