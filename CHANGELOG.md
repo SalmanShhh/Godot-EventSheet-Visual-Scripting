@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Added — Event groups round-trip through `.gd` (docs/GROUPS-ROUNDTRIP-SPEC.md)
+
+- Event groups now **survive a `.gd` round-trip**. Compiling a grouped sheet emits a class-scope
+  `## @ace_group(uid="…", name, parent?, color?, collapsed?, toggleable?)` declaration per group plus a
+  per-row `# @group:<slug>` membership tag; reopening the `.gd` reconstructs the `EventGroup` rows (name,
+  colour, collapsed/toggleable, nesting) even though the compiler scatters a group's rows across trigger
+  handlers. The whole pass is **verify-lift-gated** — a sheet that can't re-emit identically degrades to a
+  flat/verbatim block rather than corrupting; the group `uid` is a deterministic name-slug so re-saves stay
+  byte-stable. (`tests/group_roundtrip_test.gd`; demoed in `demo/showcase/showcase_carousel.gd`; commit 90367eb)
+
+### Added — Visual expression builder: operator palette + variable/member picking
+
+- The `ƒx` "Insert Expression" window now leads with an **operator palette** (`+ - * / % == != < > and or not
+  ( )`) that inserts at the caret, lists the sheet's own **variables** as one-click leaves, and — while
+  searching — reflects a class-backed variable's members as ready-to-insert `enemy.velocity` /
+  `enemy.get_velocity()` fragments. Non-coders build comparisons and reach other objects' members without
+  typing. (`tests/expression_builder_test.gd`; commits d6ab5e6, fde24a1)
+- **Fixed (silent bug):** picking a result from the expression tree used to silently do nothing — the insert
+  path only handled `LineEdit`, but the expression field is always a `CodeEdit`. The palette and the tree
+  results now share a caret-insert helper that handles `CodeEdit`/`TextEdit` and `LineEdit`.
+
+### Changed — Friendly variable types (Number / Text / Yes-No)
+
+- The Variable dialog's Type dropdown leads with beginner-friendly **Number / Text / Yes-No** labels, with the
+  Godot types (Vector2, Color, Array, …) under an "Advanced types" separator. **int vs float** collapses into
+  "Number" + a **"Whole numbers only"** tick; Text → String, Yes-No → bool. A `_selected_stored_type()` alias
+  layer keeps the **stored** type a real Godot type, so only the dropdown's display changes — the `.gd`
+  round-trip is byte-unchanged. (`tests/friendly_types_test.gd`; commit 7fb473e)
+
 ## [0.9.5] - 2026-06-29 - Code-Free Authoring & First-Class Variables
 
 ### Changed — Progressive disclosure in the Variable dialog (docs/PROGRESSIVE-DISCLOSURE-SPEC.md)

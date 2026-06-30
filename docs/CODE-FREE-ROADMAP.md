@@ -20,7 +20,12 @@ This doc specs five features that plug those leaks. Status: ✅ shipped · 🟡 
 
 **Shipped:** the `ƒx` "Insert Expression" picker now also lists the sheet host class's own
 reflected members under **This Object — Properties** and **This Object — Methods**; picking one
-inserts `name` (property) or `name()` (method). (commit fb9acdd)
+inserts `name` (property) or `name()` (method) (commit fb9acdd). It now also leads with an
+**operator palette** (`+ - * / % == != < > and or not ( )`) that drops an operator at the caret,
+lists the sheet's own **variables** as one-click leaves, and — while searching — reflects a
+class-backed variable's members as ready-to-insert `enemy.velocity` fragments (commits d6ab5e6,
+fde24a1). Wiring this also fixed a silent bug: tree results used to no-op into the CodeEdit field
+(the insert path only handled LineEdit).
 
 **Problem.** The `ƒx` fields are text boxes with autocomplete + a node picker — you still *type*
 `node.property` / `node.method()`. Most "code" in a visual sheet lives here.
@@ -36,8 +41,9 @@ expression param:
 
 **Where (as shipped).** No separate dialog was needed — the host-member groups render inside
 `ace_params_dialog.gd`'s existing expression picker, alongside the expression templates on the
-`ƒx` button, and reflection reuses the `reflected_members` helper. The operator-palette /
-pick-chaining / signal-filtering sketched in the design above remain future polish.
+`ƒx` button, and reflection reuses the `reflected_members` helper. The **operator palette** and
+**pick-chaining** (as `varname.member` reflection of the sheet's class-backed variables) shipped in
+d6ab5e6 / fde24a1; **signal-filtering** by the param's expected type remains future polish.
 
 ## 2. Reflection-to-ACE + Call Method / Set Property pickers ✅
 

@@ -70,8 +70,12 @@ recovered onto the variable's `attributes` by the importer's `_absorb_tree_varia
 byte-identical verify-lift), and `_emit_tree_variable_line` re-emits them matching `_emit_variables`
 byte-for-byte — so a reopened grouped variable is a clean grouped variable, not a stray `@export_group`
 GDScript block. The variable **tooltip** (`## doc`) and the Tier-2 structured attributes (Show If / Clamp /
-On-Changed) are not yet lifted back — they stay byte-stable verbatim blocks on reopen (the lossless *byte*
-rule holds; only the editable semantics degrade).
+On-Changed) are not lifted back — they stay byte-stable verbatim blocks on reopen (the lossless *byte*
+rule holds; only the editable semantics degrade). **This is a deliberate deferral:** the structured lift
+would need the tree-variable emit path extended to reproduce setter blocks + `@export_range`, plus
+external-compile wiring — round-trip-core surgery disproportionate to a re-editability-only gain, since the
+data already round-trips losslessly. Revisit if re-editing these in the dialog (vs the script editor) becomes
+a felt need.
 
 ### Tier 3 — Odin-level custom drawers (EditorInspectorPlugin) — SHIPPED IN FULL
 
