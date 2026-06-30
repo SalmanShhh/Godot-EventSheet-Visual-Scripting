@@ -157,6 +157,16 @@ Min, max, and step for a numeric variable. Type `min, max, step` (a bare `max` i
 @export_range(0, 100, 1) var health: int = 100
 ```
 
+### Easing curve (float)
+
+An exponential-easing handle in the Inspector, for attenuation / falloff values that read better as a curve than a number. Tick **"Easing curve"** on a `float`.
+
+```gdscript
+@export_exp_easing var attenuation: float = 1.0
+```
+
+This round-trips **structured**: reopen the `.gd` and the tick is still checked.
+
 ### Multiline (String)
 
 A big multi-line text box instead of a single line. Tick **"Multiline"** on a `String`.
@@ -164,6 +174,18 @@ A big multi-line text box instead of a single line. Tick **"Multiline"** on a `S
 ```gdscript
 @export_multiline var intro_text: String = "Welcome..."
 ```
+
+### Placeholder (String)
+
+Grey hint text shown while a `String` field is empty, so a designer knows what to type. Fill the **"Placeholder"** field on a `String`.
+
+![A String variable with a Placeholder and the Multiline tick](images/export-string-options.png)
+
+```gdscript
+@export_placeholder("Enter your name") var player_name: String = ""
+```
+
+Round-trips **structured** (the hint text comes back into the dialog field). Skip a placeholder that contains a double-quote; it falls back to a plain `@export`.
 
 ### Options dropdown (combo / enum)
 
@@ -255,6 +277,8 @@ func _validate_property(property: Dictionary) -> void:
 | Multiline | More options | String | `@export_multiline` |
 | Options (combo) | More options | String | `@export_enum("a", "b")` |
 | No alpha | More options | Color | `@export_color_no_alpha` |
+| Easing curve | More options | float | `@export_exp_easing` |
+| Placeholder | More options | String | `@export_placeholder("hint")` |
 | Show as: Progress bar | More options | int / float | `@export_custom(... "eventsheet:progress_bar:min:max")` |
 | Show as: Direction dial | More options | Vector2 | `@export_custom(... "eventsheet:vector_dial:reach")` |
 | Show as: Swatch row | More options | Color | `@export_custom(... "eventsheet:swatch_row")` |
@@ -396,4 +420,4 @@ Variable: current_combo  (Number)
 - **Clamp needs a Range.** "Clamp to range" only generates its setter when the variable is numeric and has a Range; without one it is ignored.
 - **On changed names a sheet function.** The function must exist in the sheet, or the compiler warns that the target is unknown.
 - **Show if / Lock unless point at a bool variable.** The predicate is another variable's name; misspell it and the compiler flags it.
-- **Everything round-trips, but re-editability varies.** Drawers, ranges, and No alpha come back as live dialog fields. Some plain annotations round-trip byte-for-byte yet reopen as a verbatim hint rather than a ticked box; the value is never lost either way.
+- **Everything round-trips, but re-editability varies.** Drawers, ranges, No alpha, Easing curve, and Placeholder come back as live dialog fields you can re-edit. Some plainer annotations round-trip byte-for-byte yet reopen as a verbatim hint rather than a ticked box; the value is never lost either way.
