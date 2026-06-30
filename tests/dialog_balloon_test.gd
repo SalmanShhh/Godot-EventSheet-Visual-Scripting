@@ -27,7 +27,7 @@ static func run() -> bool:
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.setup(null)
 	dock._ensure_raw_code_dialog()
-	dock._ensure_with_node_dialog()
+	dock._comments._ensure_with_node_dialog()
 	dock._ensure_sheet_type_dialog()
 	dock._ensure_enum_dialog()
 	dock._ensure_signal_dialog()
@@ -35,7 +35,7 @@ static func run() -> bool:
 	dock._welcome._build()  # the first-launch dialog (now dock/welcome_window.gd) — an autowrap blurb here ballooned it to ~5000px
 	for probe: Array in [
 		["Edit GDScript Block", dock._raw_code_dialog],
-		["Scope Actions To Node", dock._with_node_dialog],
+		["Scope Actions To Node", dock._comments._with_node_dialog],
 		["Sheet Type", dock._sheet_type_dialog],
 		["Edit Enum", dock._enum_dialog],
 		["Edit Signal", dock._signal_dialog],

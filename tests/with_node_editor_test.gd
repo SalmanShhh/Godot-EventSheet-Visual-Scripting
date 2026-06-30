@@ -48,16 +48,16 @@ static func run() -> bool:
 		all_passed = _check("line counting includes the scope row", viewport._count_event_lines(event), row_data.line_count) and all_passed
 
 	# Dialog round-trip (no popup): the dialog the chip + "Scope Actions To Node…" menu open writes back.
-	editor._ensure_with_node_dialog()
-	editor._with_node_dialog_target = event
-	editor._with_node_target_edit.text = "$Boss"
-	editor._on_with_node_dialog_confirmed()
+	editor._comments._ensure_with_node_dialog()
+	editor._comments._with_node_dialog_target = event
+	editor._comments._with_node_target_edit.text = "$Boss"
+	editor._comments._on_with_node_dialog_confirmed()
 	all_passed = _check("dialog updates the scope target", event.with_node_target, "$Boss") and all_passed
 
 	# Clearing the field drops the scope (the chip disappears, actions go back to the host).
-	editor._with_node_dialog_target = event
-	editor._with_node_target_edit.text = ""
-	editor._on_with_node_dialog_confirmed()
+	editor._comments._with_node_dialog_target = event
+	editor._comments._with_node_target_edit.text = ""
+	editor._comments._on_with_node_dialog_confirmed()
 	all_passed = _check("clearing the target removes the scope", event.with_node_target, "") and all_passed
 	all_passed = _check("a cleared row is no longer a With-node scope", event.is_with_node_scope(), false) and all_passed
 

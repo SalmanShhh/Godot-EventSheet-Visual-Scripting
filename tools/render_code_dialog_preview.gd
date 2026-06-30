@@ -29,8 +29,8 @@ func _on_frame() -> void:
 		row.code = "var damage := 10\nhost.take_damage(damage)\nprint(\"hit for \", damage)"
 		_dock._on_viewport_raw_code_edit_requested(row, true)
 		# Also size-check the other dialogs the balloon fix touched (no special state needed).
-		_dock._ensure_with_node_dialog()
-		_dock._with_node_dialog.popup_centered(Vector2i(460, 160))
+		_dock._comments._ensure_with_node_dialog()
+		_dock._comments._with_node_dialog.popup_centered(Vector2i(460, 160))
 		_dock._ensure_sheet_type_dialog()
 		_dock._sheet_type_dialog.popup_centered(Vector2i(460, 300))
 		_dock.show_welcome()  # extracted EventSheetWelcomeWindow (dock/welcome_window.gd)
@@ -39,7 +39,7 @@ func _on_frame() -> void:
 		return
 	var dialog: Window = _dock._raw_code_dialog
 	print("[code_dialog_dbg] raw_code.size=%s (target 680x460)" % str(dialog.size))
-	print("[code_dialog_dbg] with_node.size=%s (target 460x160)" % str(_dock._with_node_dialog.size))
+	print("[code_dialog_dbg] with_node.size=%s (target 460x160)" % str(_dock._comments._with_node_dialog.size))
 	print("[code_dialog_dbg] sheet_type.size=%s (target 460x300)" % str(_dock._sheet_type_dialog.size))
 	print("[code_dialog_dbg] welcome.size=%s (no target; sizes to content)" % str(_dock._welcome._welcome_window.size))
 	var image: Image = dialog.get_texture().get_image()
