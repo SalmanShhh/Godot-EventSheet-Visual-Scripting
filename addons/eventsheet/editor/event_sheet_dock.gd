@@ -153,6 +153,7 @@ var _variables: EventSheetVariablesManager = EventSheetVariablesManager.new()  #
 var _multi_view: EventSheetMultiViewManager = EventSheetMultiViewManager.new()  # split-view subsystem: second pane over the same sheet (dock/multi_view_manager.gd)
 var _command_palette: EventSheetCommandPalette = EventSheetCommandPalette.new()  # Ctrl+P command palette: list + fuzzy filter + popup shell (dock/command_palette.gd)
 var _menu_bar: EventSheetMenuBar = EventSheetMenuBar.new()  # top toolbar + grouped Sheet/Add/Edit/View/Tools menus + theme picker + quick-add (dock/menu_bar.gd)
+var _context_menus: EventSheetContextMenus = EventSheetContextMenus.new()  # right-click context menus: condition/action/row/variable/empty-space build + per-click configure (dock/context_menus.gd)
 var _external_watcher: EventSheetExternalWatcher = EventSheetExternalWatcher.new()  # GDScript-backed sheet file-watch + reload-on-disk-change dialog (dock/external_watcher.gd)
 var _sheet_io: EventSheetSheetIO = EventSheetSheetIO.new()  # sheet FILE-IO: open-from-disk + every write-back path (Save/Save As/Export/Save-as-.gd) (dock/sheet_io.gd)
 var _condition_context_menu: PopupMenu = null
@@ -225,6 +226,7 @@ func _ensure_editor_dialogs_initialized() -> void:
     _variables.init(self)
     _multi_view.init(self)
     _command_palette.init(self)
+    _context_menus.init(self)
     _external_watcher.init(self)
     _sheet_io.init(self)
     # Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
@@ -862,7 +864,12 @@ func _build_ui() -> void:
     add_child(_exposed_node)
     _exposed_node.setup(_ace_registry, _editor_param_store, _current_sheet, _param_resolver)
     _exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
-    _build_context_menus()
+    # The right-click context menus (condition/action/row/variable/empty-space) are built by the
+    # extracted EventSheetContextMenus; build_all() constructs each and assigns it back onto the dock
+    # (the _*_context_menu / _row_*_submenu members the dock + tests read by name). init() only stores
+    # the _dock back-reference, so wiring it here — before any context-menu site runs — is enough.
+    _context_menus.init(self)
+    _context_menus.build_all()
     _build_preview_window()
     _build_theme_file_dialog()
 
@@ -943,75 +950,6 @@ func _build_theme_file_dialog() -> void:
     _theme_file_dialog.filters = PackedStringArray(THEME_FILTERS)
     _theme_file_dialog.file_selected.connect(_on_theme_file_selected)
     add_child(_theme_file_dialog)
-
-func _build_context_menus() -> void:
-    if _condition_context_menu != null:
-        return
-    _condition_context_menu = PopupMenu.new()
-    _condition_context_menu.add_item("Edit Condition", CONDITION_MENU_EDIT)
-    _condition_context_menu.add_item("Add Condition", CONDITION_MENU_ADD)
-    _condition_context_menu.add_item("Replace Condition", CONDITION_MENU_REPLACE)
-    _condition_context_menu.add_separator()
-    _condition_context_menu.add_item("Invert Condition", CONDITION_MENU_INVERT)
-    _condition_context_menu.add_item("Disable Condition", CONDITION_MENU_TOGGLE_ENABLED)
-    _condition_context_menu.add_item("Edit Note…", CONDITION_MENU_EDIT_ACE_COMMENT)
-    _condition_context_menu.add_separator()
-    _condition_context_menu.add_item("Delete Condition", CONDITION_MENU_DELETE)
-    _condition_context_menu.id_pressed.connect(_on_condition_context_menu_id_pressed)
-    add_child(_condition_context_menu)
-
-    _action_context_menu = PopupMenu.new()
-    _action_context_menu.add_item("Edit Action", ACTION_MENU_EDIT)
-    _action_context_menu.add_item("Add Action", ACTION_MENU_ADD)
-    _action_context_menu.add_item("Replace Action", ACTION_MENU_REPLACE)
-    _action_context_menu.add_separator()
-    _action_context_menu.add_item("Disable Action", ACTION_MENU_TOGGLE_ENABLED)
-    _action_context_menu.add_item("Edit Note…", ACTION_MENU_EDIT_ACE_COMMENT)
-    _action_context_menu.add_item("Detach Comment To Row", ACTION_MENU_DETACH_COMMENT)
-    _action_context_menu.add_item("Delete Action", ACTION_MENU_DELETE)
-    _action_context_menu.add_separator()
-    # The "create abstraction" gesture: turn this event's actions into one named, reusable verb. Labelled
-    # "All" so the all-or-nothing scope is explicit (it extracts every action of the event, not just the
-    # right-clicked one).
-    _action_context_menu.add_item("Extract All Actions to Function…", ACTION_MENU_EXTRACT_FN)
-    _action_context_menu.id_pressed.connect(_on_action_context_menu_id_pressed)
-    add_child(_action_context_menu)
-
-    # The row menu is rebuilt per right-click (_build_row_context_menu) showing only
-    # what applies to the clicked row type + selection — it used to be a flat ~30-item
-    # list shown for everything. Insert/More are submenus, built the same way.
-    _row_context_menu = PopupMenu.new()
-    _row_context_menu.add_theme_font_size_override("font_size", 14)
-    _row_context_menu.id_pressed.connect(_on_row_context_menu_id_pressed)
-    add_child(_row_context_menu)
-    _row_insert_submenu = PopupMenu.new()
-    _row_insert_submenu.name = "RowInsertSubmenu"
-    _row_insert_submenu.id_pressed.connect(_on_row_context_menu_id_pressed)
-    _row_context_menu.add_child(_row_insert_submenu)
-    _row_more_submenu = PopupMenu.new()
-    _row_more_submenu.name = "RowMoreSubmenu"
-    _row_more_submenu.id_pressed.connect(_on_row_context_menu_id_pressed)
-    _row_context_menu.add_child(_row_more_submenu)
-
-    _variable_context_menu = PopupMenu.new()
-    _variable_context_menu.add_item("Edit Variable", VARIABLE_MENU_EDIT)
-    _variable_context_menu.add_item("Rename Everywhere…", VARIABLE_MENU_RENAME)
-    _variable_context_menu.add_item("Convert Scope", VARIABLE_MENU_CONVERT_SCOPE)
-    _variable_context_menu.add_item("Toggle Constant", VARIABLE_MENU_TOGGLE_CONST)
-    _variable_context_menu.id_pressed.connect(_on_variable_context_menu_id_pressed)
-    add_child(_variable_context_menu)
-
-    _empty_space_context_menu = PopupMenu.new()
-    _empty_space_context_menu.name = "EventSheetEmptySpaceContextMenu"
-    _empty_space_context_menu.add_item("New Event", EMPTY_MENU_NEW_EVENT)
-    _empty_space_context_menu.add_item("New Condition", EMPTY_MENU_NEW_CONDITION)
-    _empty_space_context_menu.add_item("Add New Variable", EMPTY_MENU_ADD_VARIABLE)
-    _empty_space_context_menu.add_separator()
-    # Inserting a saved snippet is "add to the sheet" — it belongs on the canvas menu,
-    # not buried in a row's More submenu.
-    _empty_space_context_menu.add_item("Insert Snippet…", EMPTY_MENU_INSERT_SNIPPET)
-    _empty_space_context_menu.id_pressed.connect(_on_empty_space_context_menu_id_pressed)
-    add_child(_empty_space_context_menu)
 
 func _unhandled_key_input(event: InputEvent) -> void:
     if not (event is InputEventKey):
@@ -4116,98 +4054,15 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
     _build_row_context_menu(row_data)
     _show_popup_menu(_row_context_menu, global_position)
 
-## Rebuilds the row context menu for the clicked row: only the items that apply to its
-## type (event / group / comment) at the top, universal clipboard/lifecycle next, and
-## the rest folded into Insert ▸ / More ▸ submenus — replacing the old flat ~30-item
-## list shown for every row regardless of type.
+# Row context menu + its Insert ▸ / More ▸ submenus are built by EventSheetContextMenus
+# (dock/context_menus.gd). Thin delegates: the viewport row-menu site + tests still call
+# _build_row_context_menu / _build_row_more_submenu on the dock by name. _build_row_insert_submenu
+# is internal to the helper (only _build_row_context_menu calls it), so it keeps no delegate.
 func _build_row_context_menu(row_data: EventRowData) -> void:
-    var menu: PopupMenu = _row_context_menu
-    menu.clear()
-    var row_type: int = row_data.row_type if row_data != null else EventRowData.RowType.EVENT
-    var is_event: bool = row_type == EventRowData.RowType.EVENT
-    var is_group: bool = row_type == EventRowData.RowType.GROUP
-    var is_comment: bool = row_type == EventRowData.RowType.COMMENT
-    var multi: bool = _get_selected_rows_from_context().size() > 1
-    # Type-specific authoring first. (Open/Close Group and the disable label below are
-    # relabeled to the live state by _configure_context_menu before the popup shows.)
-    var added_type_items: bool = true
-    if is_event:
-        menu.add_item("Add Sub-Event", ROW_MENU_ADD_SUB_EVENT)
-        menu.add_item("Convert to OR Block", ROW_MENU_TOGGLE_CONDITION_BLOCK)
-    elif is_group:
-        menu.add_item("Open / Close Group", ROW_MENU_TOGGLE_GROUP_FOLD)
-        menu.add_item("Edit Description…", ROW_MENU_EDIT_GROUP_DESC)
-        menu.add_item("Group Color…", ROW_MENU_GROUP_COLOR)
-        menu.add_item("Runtime Toggleable", ROW_MENU_GROUP_RUNTIME)
-    elif is_comment:
-        menu.add_item("Edit Comment…", ROW_MENU_EDIT_COMMENT)
-        menu.add_item("Attach To Event Above", ROW_MENU_ATTACH_COMMENT)
-    else:
-        # SECTION / unknown rows get only the universal items — no leading separator.
-        added_type_items = false
-    if added_type_items:
-        menu.add_separator()
-    # Universal clipboard + lifecycle (Disable/Duplicate act on the selection, or the
-    # clicked row when nothing is selected — _top_level_selected_resources).
-    menu.add_item("Copy", ROW_MENU_COPY)
-    menu.add_item("Paste", ROW_MENU_PASTE)
-    menu.add_item("Duplicate Selection" if multi else "Duplicate", ROW_MENU_BULK_DUPLICATE)
-    # Single row uses the singular id so _configure_context_menu can relabel it
-    # "Disable Row" / "Enable Row" to the row's live state; multi uses the bulk id.
-    if multi:
-        menu.add_item("Disable / Enable Selection", ROW_MENU_BULK_TOGGLE_ENABLED)
-    else:
-        menu.add_item("Disable Row", ROW_MENU_TOGGLE_ENABLED)
-    if multi:
-        menu.add_item("Group Selection into New Group", ROW_MENU_BULK_GROUP)
-    menu.add_separator()
-    _build_row_insert_submenu()
-    menu.add_submenu_item("Insert Below", "RowInsertSubmenu")
-    _build_row_more_submenu(is_event)
-    if _row_more_submenu.item_count > 0:
-        menu.add_submenu_item("More", "RowMoreSubmenu")
-    menu.add_separator()
-    menu.add_item("Delete", ROW_MENU_DELETE)
+    _context_menus._build_row_context_menu(row_data)
 
-## The Insert ▸ submenu — insert a sibling row of any type below the clicked one.
-func _build_row_insert_submenu() -> void:
-    var m: PopupMenu = _row_insert_submenu
-    m.clear()
-    m.add_item("Event", ROW_MENU_ADD_EVENT_BELOW)
-    m.add_item("Group", ROW_MENU_ADD_GROUP_BELOW)
-    m.add_item("Comment", ROW_MENU_ADD_COMMENT_BELOW)
-    m.add_item("Variable", ROW_MENU_ADD_VARIABLE_BELOW)
-    if _simple_mode:
-        # Simple mode keeps Insert to the four everyday row types; the code-leaning ones
-        # (raw GDScript, signal handlers, enums) stay available in Expert mode.
-        return
-    m.add_item("GDScript Block", ROW_MENU_ADD_GDSCRIPT_BELOW)
-    m.add_item("Signal Handler", ROW_MENU_ADD_SIGNAL)
-    m.add_item("Enum", ROW_MENU_ADD_ENUM)
-
-## The More ▸ submenu — advanced authoring (events only) + navigation + snippets.
 func _build_row_more_submenu(is_event: bool) -> void:
-    var m: PopupMenu = _row_more_submenu
-    m.clear()
-    # Advanced/code-leaning authoring is Expert-only; Simple mode keeps More to navigation
-    # and snippet reuse so a beginner's right-click stays short and unintimidating.
-    if is_event and not _simple_mode:
-        m.add_item("Add Sub-Condition", ROW_MENU_ADD_SUB_CONDITION)
-        m.add_item("Make Else", ROW_MENU_MAKE_ELSE)
-        m.add_item("Make Else-If", ROW_MENU_MAKE_ELIF)
-        m.add_item("Extract All Actions to Function…", ROW_MENU_EXTRACT_GDSCRIPT_FN)
-        m.add_item("Add Comment Sub-Event", ROW_MENU_ADD_COMMENT_SUB_EVENT)
-        m.add_item("Add GDScript Action", ROW_MENU_ADD_GDSCRIPT_ACTION)
-        m.add_item("Set Breakpoint Condition…", ROW_MENU_BREAKPOINT_CONDITION)
-        m.add_item("Add Pick Filter (For Each)…", ROW_MENU_ADD_PICK_FILTER)
-        m.add_item("Scope Actions To Node…", ROW_MENU_SCOPE_TO_NODE)
-        m.add_item("Add Match To Actions…", ROW_MENU_ADD_MATCH)
-        m.add_separator()
-    m.add_item("Find Usages (project)", ROW_MENU_FIND_USAGES)
-    m.add_item("Open in Split", ROW_MENU_OPEN_IN_SPLIT)
-    m.add_separator()
-    m.add_item("Save Selection as Snippet…", ROW_MENU_SAVE_SNIPPET)
-    m.add_item("Insert Snippet…", ROW_MENU_INSERT_SNIPPET)
+    _context_menus._build_row_more_submenu(is_event)
 
 func _on_viewport_empty_space_double_clicked() -> void:
     if not _ensure_sheet_for_editing():
@@ -4240,94 +4095,15 @@ func _on_empty_space_context_menu_id_pressed(id: int) -> void:
         EMPTY_MENU_INSERT_SNIPPET:
             _open_insert_snippet()
 
+# Context-menu popup + per-click configuration live in EventSheetContextMenus (dock/context_menus.gd).
+# Thin delegates: the viewport context-menu sites + tests still call _show_popup_menu / _configure_context_menu
+# on the dock by name. _configure_context_menu reads live dock state (_context_row, _context_hit,
+# _variables._context_variable, the selection) to relabel/enable per-row-type items each time.
 func _show_popup_menu(menu: PopupMenu, global_position: Vector2) -> void:
-    if menu == null:
-        return
-    _configure_context_menu(menu)
-    menu.reset_size()
-    menu.popup(Rect2i(Vector2i(global_position), Vector2i.ONE))
+    _context_menus._show_popup_menu(menu, global_position)
 
 func _configure_context_menu(menu: PopupMenu) -> void:
-    if menu == _condition_context_menu:
-        var invert_index: int = menu.get_item_index(CONDITION_MENU_INVERT)
-        if invert_index >= 0:
-            # A trigger ("On X" event header) can't be inverted — there's no "not On X", and the compiler
-            # never reads trigger.negated, so it would have silently no-op'd. Only regular conditions
-            # invert (compiled as `not (…)`). Disable the item + explain when the user right-clicked a trigger.
-            var inverting_trigger: bool = str(_context_hit.get("span_metadata", {}).get("kind", "")) == "trigger"
-            menu.set_item_disabled(invert_index, inverting_trigger)
-            menu.set_item_tooltip(invert_index, "Triggers can't be inverted — there's no \"not On X\"." if inverting_trigger else "")
-            menu.set_item_text(invert_index, "Remove Inversion" if _context_condition_is_negated() else "Invert Condition")
-        var condition_toggle_index: int = menu.get_item_index(CONDITION_MENU_TOGGLE_ENABLED)
-        if condition_toggle_index >= 0:
-            menu.set_item_text(
-                condition_toggle_index,
-                "Enable Condition" if _context_ace_is_disabled() else "Disable Condition"
-            )
-    elif menu == _row_context_menu:
-        var toggle_index: int = menu.get_item_index(ROW_MENU_TOGGLE_CONDITION_BLOCK)
-        if toggle_index >= 0:
-            var selected_events: Array[EventRow] = _get_selected_event_rows_from_context()
-            var has_events: bool = not selected_events.is_empty()
-            menu.set_item_disabled(toggle_index, not has_events)
-            if has_events:
-                menu.set_item_text(
-                    toggle_index,
-                    (
-                        "Convert to AND Block"
-                        if _event_rows_use_or_mode(selected_events)
-                        else "Convert to OR Block"
-                    )
-                )
-        var sub_condition_index: int = menu.get_item_index(ROW_MENU_ADD_SUB_CONDITION)
-        if sub_condition_index >= 0:
-            var context_event: EventRow = _context_row.source_resource as EventRow if _context_row != null else null
-            menu.set_item_disabled(sub_condition_index, context_event == null)
-        var group_toggle_index: int = menu.get_item_index(ROW_MENU_TOGGLE_GROUP_FOLD)
-        if group_toggle_index >= 0:
-            var context_group: EventGroup = null
-            if _context_row != null and _context_row.source_resource is EventGroup:
-                context_group = _context_row.source_resource as EventGroup
-            menu.set_item_disabled(group_toggle_index, context_group == null)
-            if context_group != null:
-                menu.set_item_text(
-                    group_toggle_index,
-                    "Open Group" if context_group.is_collapsed() else "Close Group"
-                )
-        var row_toggle_index: int = menu.get_item_index(ROW_MENU_TOGGLE_ENABLED)
-        if row_toggle_index >= 0:
-            menu.set_item_text(
-                row_toggle_index,
-                "Enable Row" if _context_row_is_disabled() else "Disable Row"
-            )
-    elif menu == _variable_context_menu:
-        var has_variable: bool = not _variables._context_variable.is_empty()
-        var convert_index: int = menu.get_item_index(VARIABLE_MENU_CONVERT_SCOPE)
-        if convert_index >= 0:
-            menu.set_item_disabled(convert_index, not has_variable)
-            if has_variable:
-                var scope_label: String = str(_variables._context_variable.get("scope", "global"))
-                menu.set_item_text(
-                    convert_index,
-                    "Convert to Global" if scope_label == "local" else "Convert to Local"
-                )
-        var const_index: int = menu.get_item_index(VARIABLE_MENU_TOGGLE_CONST)
-        if const_index >= 0:
-            var supports_const: bool = has_variable and bool(_variables._context_variable.get("supports_const", false))
-            menu.set_item_disabled(const_index, not supports_const)
-            if has_variable:
-                var is_constant: bool = bool(_variables._context_variable.get("is_constant", false))
-                menu.set_item_text(
-                    const_index,
-                    "Unset Constant" if is_constant else "Set Constant"
-                )
-    elif menu == _action_context_menu:
-        var action_toggle_index: int = menu.get_item_index(ACTION_MENU_TOGGLE_ENABLED)
-        if action_toggle_index >= 0:
-            menu.set_item_text(
-                action_toggle_index,
-                "Enable Action" if _context_ace_is_disabled() else "Disable Action"
-            )
+    _context_menus._configure_context_menu(menu)
 
 func _on_condition_context_menu_id_pressed(id: int) -> void:
     if _context_row == null or not (_context_row.source_resource is EventRow):
