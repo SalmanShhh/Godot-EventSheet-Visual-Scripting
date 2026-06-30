@@ -1,18 +1,20 @@
 # Event Groups — Round-trip Spec (EventSheet groups ↔ GDScript)
 
-How C3-style **event groups** should survive a GDScript round-trip — compile a sheet to `.gd`, reopen the
-`.gd` as a sheet, and get your groups back. Today they **don't**: the compiler dissolves groups into their
-events, so reopening a `.gd` returns a flat, ungrouped sheet. Grounded in the actual compiler/importer; marks
-SHIPPED vs PROPOSED.
+How C3-style **event groups** survive a GDScript round-trip — compile a sheet to `.gd`, reopen the
+`.gd` as a sheet, and get your groups back. **SHIPPED** (commit 90367eb): the compiler emits recoverable group
+markers and the importer reconstructs the `EventGroup` rows, verify-lift-gated. Grounded in the actual
+compiler/importer.
 
 > Not to be confused with **`@export_group`** — that's the *variable* Inspector-grouping feature, which already
 > round-trips (see INSPECTOR-ATTRIBUTES-SPEC + `_absorb_tree_variable_group`). This spec is about **event
 > groups** (`EventGroup` rows — the named, collapsible, toggleable containers of *events*).
 
-Status at a glance: event groups are **SHIPPED as compile-time organization only** — they exist in the editing
-model and dissolve at compile. **Round-trip is PROPOSED** and non-trivial: a group's rows are flattened *and
-re-bucketed by trigger*, so they don't even stay contiguous in the output — a simple `#region` boundary won't
-recover them. The fix needs a recoverable per-group marker + per-row membership tag, verify-lift-gated.
+Status at a glance: event groups **round-trip** — **SHIPPED** (commit 90367eb). A group's rows are flattened
+*and re-bucketed by trigger* at compile, so they don't stay contiguous in the output; round-trip is recovered
+by a class-scope `## @ace_group(...)` declaration per group plus a per-row `# @group:<slug>` membership tag,
+and the importer reassembles a group from all rows carrying its slug regardless of which handler function each
+scattered into. The whole pass is verify-lift-gated, so a sheet that can't round-trip degrades to flat/verbatim
+rather than corrupting.
 
 ## What Construct 3 groups are (the reference)
 
@@ -75,7 +77,15 @@ spanning `OnProcess` + `OnReady` is split across `_process` and `_ready`). So a 
 `#endregion` boundary **cannot** bracket a group in general. Any round-trip scheme must carry **per-row group
 membership** that survives the scattering, plus a per-group metadata declaration.
 
-## Fix design (PROPOSED)
+## Fix design (SHIPPED — commit 90367eb)
+
+> **As built**, matching the design below with two refinements: (1) the group `uid` is a **deterministic
+> name-slug** (`to_snake_case` of the group name, de-duplicated) rather than a random id, so re-saves stay
+> stable; nesting is carried by a `parent="<slug>"` key in the declaration (not a `>` in the row tag). (2) The
+> byte-verify **strips the group-marker lines** before comparing, so a sheet whose groups interleave across
+> triggers still recovers approximate grouping instead of falling back to a raw verbatim block. The importer
+> entry point is `_reconstruct_groups` (ace_lifter.gd), not a standalone `_try_lift_group`. Test:
+> `tests/group_roundtrip_test.gd`.
 
 The pattern mirrors the proven ones — `@ace_tags`/`@ace_family` round-trip via class-scope `##` markers
 (`gdscript_importer.gd` ~138–155), and `@export_group` variable grouping round-trips via
@@ -129,5 +139,7 @@ philosophy (`compile()` ~362):
 3. **Full fidelity** — nesting, `collapsed`/`color`/`description`, and re-nesting group-locals; raise the
    editor's inline group provenance to match.
 
-Each lands the usual way: a round-trip test, a CHANGELOG entry, a render-harness check that a reopened sheet
-shows its groups, and this spec updated as items move PROPOSED → SHIPPED.
+Phases 1–2 landed the usual way (commit 90367eb): a round-trip test (`tests/group_roundtrip_test.gd`), a
+CHANGELOG entry, and a render-harness check that a reopened sheet shows its groups. Phase 3 (exact intra-group
+cross-trigger ordering fidelity) remains approximate **by design** — the verify-lift keeps it byte-safe, so a
+grouping that can't re-emit identically degrades to flat rather than corrupting.

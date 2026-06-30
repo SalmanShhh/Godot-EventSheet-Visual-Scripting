@@ -9,9 +9,11 @@ Status at a glance: the **backbone is shipped** (export-gating, the collapsible 
 type-gating, the per-type drawer picker, Simple Mode, the ACE-picker three-tier model). **Phases 1–4 of the
 refinements are now SHIPPED**: the variable-dialog Basic/Advanced tiering + refined auto-expand (P1), the
 forgiving Range parser + dial-reach prompt + magnitude-in-the-preview + "Curve preview" rename (P2), the
-C3-first relabels + per-type hover hints (P3), and the Simple Mode choice on the Welcome dialog (P4). **Still
-PROPOSED**: restructuring the Type dropdown to lead with Number/Text/Yes-No and push the Godot types under an
-"Advanced" group (needs a type-alias mapping layer — its own slice).
+C3-first relabels + per-type hover hints (P3), the Simple Mode choice on the Welcome dialog (P4), and the Type
+dropdown's **Number / Text / Yes-No** restructure with a "Whole numbers only" tick + advanced Godot types under
+a separator (P5, commit 7fb473e). The type-alias layer is `_selected_stored_type()` / `_select_stored_type()`,
+which keeps the **stored** type a real Godot type (int/float/String/bool/…), so only the dropdown's *display*
+changes — the `.gd` round-trip is byte-unchanged.
 
 ## Why — the user model and the cost of overload
 
@@ -216,9 +218,10 @@ may appear as a trailing `(@export)`-style hint or in a tooltip, for the Godot-f
 2. ✅ **SHIPPED — Drawer-config de-overload** — the relaxed/forgiving Range parser (a bare max works), the
    Vector2 "max reach" prompt, the magnitude-in-the-preview caption, the "Curve preview" rename. (The reach is
    prompted via the contextual Range field rather than a separate "Dial reach" field — same effect, less UI.)
-3. ✅ **SHIPPED (in part) — C3-first relabelling** — "Show as", "Group under heading", "Sub-heading", "Editable
-   in the Inspector (like a C3 property)", "Constant (can't change at runtime)", per-type hover hints.
-   (_PROPOSED:_ the Type dropdown's Number/Text/Yes-No restructure — a round-trip-sensitive slice of its own.)
+3. ✅ **SHIPPED — C3-first relabelling** — "Show as", "Group under heading", "Sub-heading", "Editable
+   in the Inspector (like a C3 property)", "Constant (can't change at runtime)", per-type hover hints, and the
+   Type dropdown's **Number / Text / Yes-No** restructure (commit 7fb473e — round-trip-safe via
+   `_selected_stored_type()`; a "Whole numbers only" tick splits int vs float).
 4. ✅ **SHIPPED — Simple Mode discoverability** — the Simple/Expert checkbox on the Welcome dialog's first run.
 
 Each lands the usual way: tests where behavior is testable (the dialog already supports headless edit-cycle
