@@ -1859,6 +1859,9 @@ func _refresh_expression_tree() -> void:
 	var host_class: String = _host_class_for_context()
 	_add_member_expression_group(root, "This Object — Properties", reflected_members(host_class, "property"), false, query)
 	_add_member_expression_group(root, "This Object — Methods", reflected_members(host_class, "method"), true, query)
+	# Beyond `self`: the sheet's own variables as one-click leaves, plus — while searching — the typed
+	# members of any class-backed variable (enemy.health) so reflection isn't limited to the host.
+	_add_sheet_variable_expressions(root, query)
 
 ## Adds a reflected-members group to the expression picker; methods insert as `name()`,
 ## properties as `name`. Honors the search query (case-insensitive substring filter).
@@ -1884,6 +1887,71 @@ func _add_member_expression_group(root: TreeItem, label: String, members: Array,
 ## property. Static + pure, so it is unit-testable without a dialog.
 static func member_expression_fragment(member: String, is_method: bool) -> String:
 	return (member + "()") if is_method else member
+
+## The insert fragment for a member reached THROUGH a variable: `enemy.health` / `enemy.move()`.
+## Static + pure, so it is unit-testable without a dialog.
+static func variable_member_fragment(var_name: String, member: String, is_method: bool) -> String:
+	return var_name + "." + member_expression_fragment(member, is_method)
+
+## Lists the sheet's own variables as one-click leaves (insert `name`), and — while searching — the
+## members of any variable whose declared type is a reflectable class, so `enemy.health` is one pick.
+## This is the visual builder's non-self reflection: the host members come from _host_class_for_context,
+## these reach the OTHER objects the sheet names. Member chaining is query-gated: a class can carry 100+
+## members, so showing them all for every variable would bury the idle tree — they surface as you type.
+func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
+	if not _lint_context_provider.is_valid():
+		return
+	var sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
+	if sheet == null or sheet.variables == null or sheet.variables.is_empty():
+		return
+	var lowered: String = query.to_lower()
+	# (1) The variables themselves — always shown (filtered by the search).
+	var var_group: TreeItem = null
+	for var_name: Variant in sheet.variables.keys():
+		var name_str: String = str(var_name)
+		if not lowered.is_empty() and not name_str.to_lower().contains(lowered):
+			continue
+		if var_group == null:
+			var_group = _expression_tree.create_item(root)
+			var_group.set_text(0, "Sheet Variables")
+			var_group.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NEUTRAL)
+			var_group.set_selectable(0, false)
+		var item: TreeItem = _expression_tree.create_item(var_group)
+		item.set_text(0, name_str)
+		item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
+		var vdef: Variant = sheet.variables[var_name]
+		var vtype: String = str((vdef as Dictionary).get("type", "")).strip_edges() if vdef is Dictionary else ""
+		if not vtype.is_empty():
+			item.set_tooltip_text(0, "%s : %s" % [name_str, vtype])
+		item.set_metadata(0, name_str)
+	# (2) Member chaining (enemy.velocity) — only while searching, and only for class-backed variables.
+	if lowered.is_empty():
+		return
+	for var_name: Variant in sheet.variables.keys():
+		var vdef: Variant = sheet.variables[var_name]
+		var vtype: String = str((vdef as Dictionary).get("type", "")).strip_edges() if vdef is Dictionary else ""
+		if vtype.is_empty() or not ClassDB.class_exists(vtype):
+			continue
+		_add_variable_member_group(root, str(var_name), vtype, lowered)
+
+## A per-variable group of `varname.member` fragments (properties, then methods), filtered by the query.
+func _add_variable_member_group(root: TreeItem, var_name: String, var_type: String, lowered_query: String) -> void:
+	var group_item: TreeItem = null
+	for kind: String in ["property", "method"]:
+		var is_method: bool = kind == "method"
+		for member: Variant in reflected_members(var_type, kind):
+			var fragment: String = variable_member_fragment(var_name, str(member), is_method)
+			if not fragment.to_lower().contains(lowered_query):
+				continue
+			if group_item == null:
+				group_item = _expression_tree.create_item(root)
+				group_item.set_text(0, "%s (%s)" % [var_name, var_type])
+				group_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NODE_TYPE)
+				group_item.set_selectable(0, false)
+			var item: TreeItem = _expression_tree.create_item(group_item)
+			item.set_text(0, fragment)
+			item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
+			item.set_metadata(0, fragment)
 
 ## Enables the "Insert" button only when a real expression row is highlighted.
 func _on_expression_selection_changed() -> void:

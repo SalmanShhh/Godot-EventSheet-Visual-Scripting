@@ -35,9 +35,51 @@ static func run() -> bool:
 	line.caret_column = line.text.length()
 	dlg._insert_into_expression_target(" > 5")
 	all_passed = _check("inserts into a LineEdit target too", line.text, "x > 5") and all_passed
-
 	host.free()
+
+	# (c) Non-self reflection — a class-backed sheet variable's members are pickable as `enemy.member`.
+	all_passed = _check("variable member fragment (property)",
+		ACEParamsDialog.variable_member_fragment("enemy", "health", false), "enemy.health") and all_passed
+	all_passed = _check("variable member fragment (method)",
+		ACEParamsDialog.variable_member_fragment("enemy", "move_and_slide", true), "enemy.move_and_slide()") and all_passed
+
+	# Build the Insert-Expression tree over a sheet with enemy: CharacterBody2D and assert the reflection.
+	var host2: Node = Node.new()
+	var dlg2: ACEParamsDialog = ACEParamsDialog.new()
+	dlg2.init_dialog(host2, EventSheetACERegistry.new())
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.variables = {"enemy": {"type": "CharacterBody2D"}, "score": {"type": "int"}}
+	dlg2.set_lint_context_provider(func() -> EventSheetResource: return sheet)
+	dlg2._ensure_expression_window()  # builds _expression_search + _expression_tree (no popup, headless-safe)
+	dlg2._expression_target_key = "value"
+
+	# Empty search → the sheet's variables show as one-click leaves.
+	dlg2._expression_search.text = ""
+	dlg2._refresh_expression_tree()
+	all_passed = _check("sheet variable leaf 'enemy' is listed", _tree_has_item(dlg2._expression_tree, "enemy"), true) and all_passed
+	all_passed = _check("sheet variable leaf 'score' is listed", _tree_has_item(dlg2._expression_tree, "score"), true) and all_passed
+
+	# Searching 'velocity' → enemy.velocity is offered (CharacterBody2D reflection); score (int) adds nothing.
+	dlg2._expression_search.text = "velocity"
+	dlg2._refresh_expression_tree()
+	all_passed = _check("chained member 'enemy.velocity' is offered", _tree_has_item(dlg2._expression_tree, "enemy.velocity"), true) and all_passed
+	host2.free()
 	return all_passed
+
+## Recursively true when the tree contains an item whose column-0 text equals `text`.
+static func _tree_has_item(tree: Tree, text: String) -> bool:
+	return tree != null and _walk_item(tree.get_root(), text)
+
+static func _walk_item(item: TreeItem, text: String) -> bool:
+	if item == null:
+		return false
+	var child: TreeItem = item.get_first_child()
+	while child != null:
+		if child.get_text(0) == text or _walk_item(child, text):
+			return true
+		child = child.get_next()
+	return false
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:
