@@ -6,17 +6,23 @@
 
 - A **Console** vocabulary of C3 Browser/console-style logging verbs, each driven by a single **"As"**
   dropdown — **Message / Warning / Error** — that *shows* a friendly label but *inserts* the matching Godot
-  call (`print` / `push_warning` / `push_error`): **Log If** (write only when a condition holds, no wrapping
-  event row), **Log (Debug Builds Only)** (`if OS.is_debug_build(): …` — skipped in exported release games),
-  **Log Value** ("name = value" to any stream), and **To Text** (`var_to_str(...)`). All emit bare native
-  one-liners (parity-clean) and reverse-lift cleanly as themselves. (`tests/console_aces_test.gd`)
+  call (`print` / `push_warning` / `push_error` / `print_rich`): **Log** (one verb for all four streams),
+  **Log If** (write only when a condition holds, no wrapping event row), **Log (Debug Builds Only)**
+  (`if OS.is_debug_build(): …` — skipped in exported release games), **Log Value** ("name = value" to any
+  stream), and **To Text** (`var_to_str(...)`). All emit bare native one-liners (parity-clean).
+  (`tests/console_aces_test.gd`)
+- The bare **Log** round-trips *as itself* via a trailing `# @ace:Core.ConsoleLog` marker: the emitted
+  `push_warning("x")  # @ace:Core.ConsoleLog` line runs untouched in-game (the comment is inert), but reopens
+  as the combined Log rather than collapsing to the specific Push Warning — while a *plain* hand-written
+  `push_warning("x")` still lifts to Push Warning. The other Console verbs need no marker (their templates are
+  already distinct).
 - **New: friendly combo labels.** A fixed-options ("combo") param can now carry `{"key": <inserted value>,
   "label": <shown text>}` entries, so a dropdown reads "Warning" while inserting `push_warning`. `ACEParam.options`
   is untyped, `make_param` accepts the dict form, and the adapter preserves the label↔value split — reusable for
   any future combo (e.g. comparison operators could read "equals" instead of `==`).
-  - *Note:* the plain immediate **Print / Push Warning / Push Error** verbs are kept (not deprecated): the
-    reverse-lift is most-specific-first, so a bare combined `Log` would lift back to the specific verb on `.gd`
-    reopen — the combo lives on the distinct-template verbs that round-trip as themselves.
+  - *Note:* the plain immediate **Print / Push Warning / Push Error** verbs are kept (not deprecated). The
+    reverse-lift is most-specific-first, so a *plain* `push_warning("x")` still lifts to Push Warning; the
+    combined **Log** stays distinct only because of its `# @ace:Core.ConsoleLog` marker (above).
 
 ### Added — Event groups round-trip through `.gd` (docs/GROUPS-ROUNDTRIP-SPEC.md)
 
