@@ -159,6 +159,8 @@ var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application
 var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
 var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-preview banner + "Edit Events" unlock + Open-in-Godot script-editor glue + lift-report window (dock/preview_glue.gd)
 var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # author quick-actions: quick-add match+apply + Run Scene + Save/Insert row snippets (dock/author_actions.gd)
+var _export_pack: EventSheetExportPack = EventSheetExportPack.new()  # Sheet ▸ Export Addon Pack: writes eventsheet_addons/<class>/ (.tres + .gd + README, bundles includes) (dock/export_pack.gd)
+var _function_dialog_glue: EventSheetFunctionDialogGlue = EventSheetFunctionDialogGlue.new()  # Add ▾ ▸ Function… dialog wiring + apply-to-sheet (dock/function_dialog.gd)
 var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # editor theme: load/apply/pick style + theme file dialog + theme editor + live-reload binding to the active .tres (dock/theme_manager.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
@@ -247,6 +249,8 @@ func _ensure_editor_dialogs_initialized() -> void:
 	_row_edit_ops.init(self)
 	_preview_glue.init(self)
 	_author_actions.init(self)
+	_export_pack.init(self)
+	_function_dialog_glue.init(self)
 	_theme_manager.init(self)
 	# Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
 	_variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
@@ -2662,55 +2666,11 @@ func _close_split_view() -> void:
 func _sync_split_sheet() -> void:
 	_multi_view._sync_split_sheet()
 
-# ── Export as Addon Pack (coverage Phase C) ─# ── Export as Addon Pack (coverage Phase C) ────────────────────────────────────────
-
-## One-click addon publishing: writes the current behavior sheet (+ compiled script) into
-## eventsheet_addons/<class_snake>/ where the zero-config scanner publishes its ACEs
-## project-wide — the same layout the bundled packs use. base_dir_override is for tests.
+# ── Export as Addon Pack (coverage Phase C) → dock/export_pack.gd ─────────────────────
+# (Body lives in the helper; this delegate keeps the name the menu_bar Sheet menu (id 6), the
+# command palette, and the phase-c / addon-composition tests reach by.)
 func _export_addon_pack(base_dir_override: String = "") -> void:
-	if _current_sheet == null:
-		return
-	if not _current_sheet.behavior_mode or _current_sheet.custom_class_name.strip_edges().is_empty():
-		_set_status("Addon packs are behavior sheets — enable behavior mode and set a class name first (Sheet Type).", true)
-		return
-	var class_name_text: String = _current_sheet.custom_class_name.strip_edges()
-	if not EventSheetIdentifierRules.is_valid(class_name_text):
-		_set_status("\"%s\" can't be a class name (letters/digits/underscores, not a keyword)." % class_name_text, true)
-		return
-	var folder_name: String = class_name_text.to_snake_case()
-	var base_dir: String = base_dir_override if not base_dir_override.is_empty() else "res://eventsheet_addons/%s" % folder_name
-	var base_path: String = "%s/%s" % [base_dir, folder_name]
-	DirAccess.make_dir_recursive_absolute(base_dir)
-	var pack_sheet: EventSheetResource = _current_sheet.duplicate(true)
-	var save_error: Error = ResourceSaver.save(pack_sheet, base_path + ".tres")
-	if save_error != OK:
-		_set_status("Export failed: couldn't save %s.tres (error %d)." % [base_path, save_error], true)
-		return
-	# Adopt the saved path BEFORE compiling so the generated "# Source:" header matches a
-	# recompile of the exported .tres (the same no-drift rule the bundled packs follow).
-	pack_sheet.take_over_path(base_path + ".tres")
-	var compile_result: Dictionary = SheetCompiler.compile(pack_sheet, base_path + ".gd")
-	if not bool(compile_result.get("success", false)):
-		_set_status("Export failed: the sheet doesn't compile (%s)." % str(compile_result.get("errors")), true)
-		return
-	# Auto-docs: shared packs are documented by default.
-	var readme_file: FileAccess = FileAccess.open("%s/README.md" % base_dir, FileAccess.WRITE)
-	if readme_file != null:
-		readme_file.store_string(_generate_pack_readme(pack_sheet))
-		readme_file.close()
-	# Lane A composition: packs travel complete — bundle included sheets unless the
-	# project policy says reference-only.
-	var bundled_count: int = 0
-	if str(SheetCompiler._addon_policy("export_bundling", "bundle")) == "bundle":
-		for include_path: String in pack_sheet.includes:
-			if ResourceLoader.exists(include_path):
-				var bundle_target: String = "%s/%s" % [base_dir, include_path.get_file()]
-				if bundle_target != include_path and DirAccess.copy_absolute(include_path, bundle_target) == OK:
-					bundled_count += 1
-	if Engine.is_editor_hint() and is_inside_tree():
-		EditorInterface.get_resource_filesystem().scan()
-	var bundle_note: String = " (+%d bundled include(s))" % bundled_count if bundled_count > 0 else ""
-	_set_status("Exported addon pack to %s (.tres + .gd)%s — its ACEs are now published project-wide." % [base_dir, bundle_note])
+	_export_pack._export_addon_pack(base_dir_override)
 
 # ── Godot-feel: find bar, keyboard row ops, editor-native defaults ─# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ─# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ────────────────────
 var _find_bar: HBoxContainer = null
@@ -3804,62 +3764,15 @@ func _on_provider_open_in_godot_pressed() -> void:
 func _open_lift_report() -> void:
 	_preview_glue._open_lift_report()
 
-# ── Sheet functions: the dialog with the expanding param list (Add ▾ → Function…) ────
-var _function_dialog: EventSheetFunctionDialog = null
-
+# ── Sheet functions: the Add ▾ → Function… dialog glue → dock/function_dialog.gd ─────
+# (Bodies live in EventSheetFunctionDialogGlue; these delegates keep the names reached from
+# outside: the in-file Add-Function button + menu_bar Add menu (id 3) + command palette hit
+# _open_function_dialog, and the function_dialog + godot_workflow tests call _apply_function_data.)
 func _open_function_dialog() -> void:
-	if not _ensure_sheet_for_editing():
-		return
-	if _function_dialog == null:
-		_function_dialog = EventSheetFunctionDialog.new()
-		_function_dialog.init_dialog(self)
-		_function_dialog.set_taken_names_provider(func() -> PackedStringArray:
-			var taken: PackedStringArray = PackedStringArray()
-			if _current_sheet != null:
-				for variable_name: Variant in _current_sheet.variables:
-					taken.append(str(variable_name))
-				for function_entry: Variant in _current_sheet.functions:
-					if function_entry is EventFunction:
-						taken.append((function_entry as EventFunction).function_name)
-			return taken)
-		_function_dialog.function_confirmed.connect(_apply_function_data)
-	_function_dialog.open()
+	_function_dialog_glue._open_function_dialog()
 
-## Creates the EventFunction from validated dialog data (undoable). The body is
-## authored as rows afterwards; CallFunction and the publish surface pick it up.
 func _apply_function_data(data: Dictionary) -> void:
-	var changed: bool = _perform_undoable_sheet_edit("Add Function", func() -> bool:
-		var event_function: EventFunction = EventFunction.new()
-		event_function.function_name = str(data.get("name"))
-		event_function.return_type = int(data.get("return_type", TYPE_NIL))
-		event_function.description = str(data.get("description", ""))
-		for param_entry: Dictionary in (data.get("params", []) as Array):
-			var param: ACEParam = ACEParam.new()
-			param.id = str(param_entry.get("id"))
-			param.type_name = str(param_entry.get("type_name", "Variant"))
-			param.gdscript_default = str(param_entry.get("default", ""))
-			param.description = str(param_entry.get("description", ""))
-			event_function.params.append(param)
-		event_function.expose_as_ace = bool(data.get("expose", false))
-		event_function.ace_display_name = str(data.get("ace_display_name", ""))
-		event_function.ace_category = str(data.get("ace_category", ""))
-		# "Run only when" guards: the body runs inside an `if <guards>:` — an event-sheet-style
-		# function gate (e.g. only act when a node setting is enabled). Each expression becomes an
-		# Expression Is True condition on a wrapper row the body actions are authored under.
-		var guards: PackedStringArray = PackedStringArray(data.get("guards", PackedStringArray()))
-		if not guards.is_empty():
-			var guard_row: EventRow = EventRow.new()
-			for guard_expression: String in guards:
-				var condition: ACECondition = ACECondition.new()
-				condition.provider_id = "Core"
-				condition.ace_id = "ExpressionIsTrue"
-				condition.params = {"expr": guard_expression}
-				guard_row.conditions.append(condition)
-			event_function.events.append(guard_row)
-		_current_sheet.functions.append(event_function)
-		return true)
-	if changed:
-		_mark_dirty("Added function %s()." % str(data.get("name")))
+	_function_dialog_glue._apply_function_data(data)
 
 # ── Welcome (Tools → Welcome…) — the window lives in dock/welcome_window.gd ──
 func show_welcome_if_first_run() -> void:  # plugin calls this at editor startup (first run pops it)
