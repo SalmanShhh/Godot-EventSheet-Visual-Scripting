@@ -558,6 +558,31 @@ func _build_variable_row(
 
 # ── Event-span assembly (the "model → SemanticSpans" pass) ───────────────────────────────────────
 
+## Sets the tempo glyph + hue on a trigger-badge meta from the event's trigger_id, and returns the glyph
+## (glance layer §11). SIGNAL keeps the shipped green ➜ from the event style — the common case stays
+## byte-identical; every-tick (⟳) / input (⌨) / once (▶) get their own fill so how OFTEN an event runs
+## reads at a distance. Shared by both trigger-badge paths (authored ACECondition + lifted trigger_id).
+func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, trigger_id: String) -> String:
+	var tempo: String = TriggerResolver.tempo_class_for(trigger_id)
+	meta["tempo"] = tempo
+	match tempo:
+		TriggerResolver.TEMPO_EVERY_TICK:
+			meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_BG
+			meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_EVERY_TICK_FG
+			return "⟳"
+		TriggerResolver.TEMPO_INPUT:
+			meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_INPUT_BG
+			meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_INPUT_FG
+			return "⌨"
+		TriggerResolver.TEMPO_ONCE:
+			meta["badge_bg"] = EventSheetPalette.COLOR_TEMPO_ONCE_BG
+			meta["badge_fg"] = EventSheetPalette.COLOR_TEMPO_ONCE_FG
+			return "▶"
+		_:
+			meta["badge_bg"] = event_style.trigger_badge_background_color
+			meta["badge_fg"] = event_style.trigger_badge_foreground_color
+			return "➜"
+
 func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 	var spans: Array[SemanticSpan] = []
 	var condition_line_index: int = 0
@@ -597,12 +622,12 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 		)
 	if event_row.trigger != null:
 		var trigger_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-		trigger_badge_meta["badge_bg"] = event_style.trigger_badge_background_color
-		trigger_badge_meta["badge_fg"] = event_style.trigger_badge_foreground_color
+		# Tempo badge (glance layer §11): the glyph + hue say HOW OFTEN this event runs, from trigger_id.
+		var trigger_glyph: String = _apply_trigger_tempo(trigger_badge_meta, event_style, event_row.trigger_id)
 		trigger_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 		trigger_badge_meta["line_index"] = condition_line_index
 		trigger_badge_meta["badge_style"] = "trigger"
-		spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, trigger_badge_meta))
+		spans.append(_make_span(trigger_glyph, SemanticSpan.SpanType.KEYWORD, trigger_badge_meta))
 		spans.append(
 			_make_span(
 				_format_condition_descriptor(event_row.trigger),
@@ -622,12 +647,13 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 		condition_line_index += 1
 	elif not event_row.trigger_id.is_empty():
 		var trigger_id_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-		trigger_id_badge_meta["badge_bg"] = event_style.trigger_badge_background_color
-		trigger_id_badge_meta["badge_fg"] = event_style.trigger_badge_foreground_color
+		# Same tempo badge on the lifted / lifecycle path (trigger_id with no authored ACECondition) —
+		# this is where On Physics Process etc. render, so the ⟳ hot-path glyph lands here too.
+		var trigger_id_glyph: String = _apply_trigger_tempo(trigger_id_badge_meta, event_style, event_row.trigger_id)
 		trigger_id_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 		trigger_id_badge_meta["line_index"] = condition_line_index
 		trigger_id_badge_meta["badge_style"] = "trigger"
-		spans.append(_make_span("➜", SemanticSpan.SpanType.KEYWORD, trigger_id_badge_meta))
+		spans.append(_make_span(trigger_id_glyph, SemanticSpan.SpanType.KEYWORD, trigger_id_badge_meta))
 		spans.append(
 			_make_span(
 				event_row.trigger_id,

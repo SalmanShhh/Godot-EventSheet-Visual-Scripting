@@ -115,7 +115,9 @@ static func run() -> bool:
     var first_demo_row: EventRowData = demo_rows[0].get("row")
     all_passed = _check("demo sheet exposes semantic spans", first_demo_row.spans.size() > 0, true) and all_passed
     all_passed = _check("demo flow exposes reflected ace registry", ace_registry.get_reflected_provider_ids().is_empty(), false) and all_passed
-    all_passed = _check("demo rows render trigger arrow badge", _rows_contain_text(demo_rows, "➜"), true) and all_passed
+    # The demo's trigger is On Process (every-tick), so its tempo badge is ⟳ (glance layer §11), not the
+    # signal ➜. A signal trigger would render ➜; every-tick/input/once each get their own glyph.
+    all_passed = _check("demo rows render the every-tick tempo badge", _rows_contain_text(demo_rows, "⟳"), true) and all_passed
     # The demo's events must COMPILE so the Generated GDScript panel matches the sheet. The old demo
     # used non-compiling reflected rows (and set .trigger instead of trigger_id), so the panel showed
     # only the vars + a comment — the preview disagreed with the events shown. Its Core-ACE rows now
@@ -309,7 +311,8 @@ static func run() -> bool:
             and or_row_data.spans[second_condition_index].rect.position.y > or_row_data.spans[first_condition_index].rect.position.y,
         true
     ) and all_passed
-    var trigger_badge_index: int = _find_span_index_by_text(or_row_data, "➜")
+    # or_event uses the On Ready trigger, so its tempo badge is ▶ (once), not the signal ➜ (glance §11).
+    var trigger_badge_index: int = _find_span_index_by_text(or_row_data, "▶")
     var first_or_badge_index: int = _find_span_index_by_text(or_row_data, "OR")
     var negated_badge_index: int = _find_span_index_by_text(or_row_data, "✕")
     all_passed = _check(

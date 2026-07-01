@@ -74,6 +74,17 @@ const COLOR_CHIP_FG = Color("#9aa1ad")
 const COLOR_CAT_CHIP_BG = Color("#34304f")
 const COLOR_CAT_CHIP_FG = Color("#b3a8dd")
 
+# ── Trigger tempo badges (glance layer §11) ──────────────────────────────────────────────────────
+# How OFTEN an event runs, as a filled badge on the trigger row. SIGNAL keeps the shipped green arrow
+# (from the event style) so the common case is byte-identical; the other three tempo classes get their
+# own hot/cool/quiet fills here. Classified by TriggerResolver.tempo_class_for(trigger_id).
+const COLOR_TEMPO_EVERY_TICK_BG = Color("#b5651d")  # ⟳ hot amber-orange — the per-frame hot path
+const COLOR_TEMPO_EVERY_TICK_FG = Color("#ffeccc")
+const COLOR_TEMPO_INPUT_BG = Color("#2f6bb0")       # ⌨ object blue — an input event
+const COLOR_TEMPO_INPUT_FG = Color("#e3f0ff")
+const COLOR_TEMPO_ONCE_BG = Color("#6a54b0")        # ▶ muted violet — runs once
+const COLOR_TEMPO_ONCE_FG = Color("#efe8ff")
+
 static func clamp_font_size(value: int) -> int:
 	return max(value, MIN_FONT_SIZE)
 

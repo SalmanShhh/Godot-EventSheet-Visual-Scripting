@@ -85,6 +85,31 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 				return _signal_backed("_on%s_%s" % [source_token, custom_signal], event.trigger_args, custom_signal, source_path)
 			return {"function_name": "", "args": "", "signal_name": "", "source_path": ""}
 
+# ── Trigger tempo (glance layer, spec §11) ───────────────────────────────────────────────────────
+# The four TEMPO classes a trigger id falls into — HOW OFTEN the event runs, the #1 comprehension +
+# perf fact, surfaced as a coloured badge on the row. Co-located with resolve_trigger ON PURPOSE so the
+# two id censuses can never drift; trigger_tempo_exhaustiveness_test asserts every id resolve_trigger
+# recognises also has a tempo class.
+const TEMPO_EVERY_TICK := "every_tick"  # ⟳ runs every frame — the hot path
+const TEMPO_INPUT := "input"            # ⌨ an input event
+const TEMPO_ONCE := "once"              # ▶ runs once (setup)
+const TEMPO_SIGNAL := "signal"          # ➜ reacts to a signal — the honest default
+
+## Classifies a trigger id into its tempo class. Every-tick = per-frame lifecycle + the post-tick twins;
+## input = the input handlers; once = _ready / editor-run; everything else — signal-backed triggers,
+## "signal:<name>" custom signals, and any UNKNOWN id — is a signal (the honest default, matching the
+## shipped green ➜ badge so unclassified ids never look broken).
+static func tempo_class_for(trigger_id: String) -> String:
+	match trigger_id:
+		"OnProcess", "OnPhysicsProcess", "OnPostTick", "OnPhysicsPostTick":
+			return TEMPO_EVERY_TICK
+		"OnInput", "OnUnhandledInput":
+			return TEMPO_INPUT
+		"OnReady", "OnEditorRun":
+			return TEMPO_ONCE
+		_:
+			return TEMPO_SIGNAL
+
 static func _lifecycle(function_name: String, args: String) -> Dictionary:
 	return {"function_name": function_name, "args": args, "signal_name": "", "source_path": ""}
 
