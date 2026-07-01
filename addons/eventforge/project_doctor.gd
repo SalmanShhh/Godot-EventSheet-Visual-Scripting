@@ -25,6 +25,7 @@ static func run() -> Dictionary:
 	# auditing them would only manufacture noise.
 	var sheet_paths: PackedStringArray = EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets())
 	check_generated_outputs(sheet_paths, findings)
+	check_debug_residue(sheet_paths, findings)
 	check_autoload_registration(sheet_paths, findings)
 	check_scene_attachment(sheet_paths, findings)
 	check_unused_variables(sheet_paths, findings)
@@ -80,6 +81,42 @@ static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Ar
 			_add(findings, "error", "stale-output", sheet_path,
 				"%s is stale — re-save the sheet (or re-run the pack builder) to refresh it." % output_path.get_file())
 	DirAccess.remove_absolute(SCRATCH_PATH)
+
+## Debug residue: a sheet saved with a debug-emit toggle ON compiles debug instrumentation INTO its
+## committed script — `breakpoint` statements (which HALT the running game into the debugger), the
+## live-values telemetry receiver (`__live_values_timer`, `sheet_compiler.gd:304`), or the per-event
+## trace buffer (`__eventsheets_fired`, `:306/:1138`). The byte-identity check above PASSES on these
+## because the residue is faithfully in sync with the sheet — so only THIS check catches "in sync, but
+## shipping debug code." A warning (some teams keep live-values on during development); the one-click
+## fix is strip_debug_flags() + re-save (the Doctor panel's "strip + resave"). Never fails CI on its own,
+## but the documented CI recipe can escalate it for release branches.
+static func check_debug_residue(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null:
+			continue
+		var flags: PackedStringArray = PackedStringArray()
+		if sheet.emit_breakpoints:
+			flags.append("breakpoints")
+		if sheet.emit_live_values:
+			flags.append("live-values telemetry")
+		if sheet.emit_event_trace:
+			flags.append("event trace")
+		if not flags.is_empty():
+			_add(findings, "warning", "debug-residue", sheet_path,
+				"Debug instrumentation (%s) is compiled into the committed script — turn it off (Debug menu) and re-save before shipping." % ", ".join(flags))
+
+## Clears every debug-emit toggle on a sheet — the data half of the Doctor panel's "strip + resave" fix
+## (the caller re-saves, which recompiles the residue out). Returns true only if something was on, so the
+## caller re-saves only when needed.
+static func strip_debug_flags(sheet: EventSheetResource) -> bool:
+	if sheet == null:
+		return false
+	var was_on: bool = sheet.emit_breakpoints or sheet.emit_live_values or sheet.emit_event_trace
+	sheet.emit_breakpoints = false
+	sheet.emit_live_values = false
+	sheet.emit_event_trace = false
+	return was_on
 
 ## Autoload sheets only run when project.godot points their singleton name at the
 ## compiled script (the dock's Tools → Register Autoload does this in one click).
