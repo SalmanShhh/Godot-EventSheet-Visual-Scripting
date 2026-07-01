@@ -157,6 +157,7 @@ var _context_menus: EventSheetContextMenus = EventSheetContextMenus.new()  # rig
 var _external_watcher: EventSheetExternalWatcher = EventSheetExternalWatcher.new()  # GDScript-backed sheet file-watch + reload-on-disk-change dialog (dock/external_watcher.gd)
 var _sheet_io: EventSheetSheetIO = EventSheetSheetIO.new()  # sheet FILE-IO: open-from-disk + every write-back path (Save/Save As/Export/Save-as-.gd) (dock/sheet_io.gd)
 var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application (condition/action/trigger baking + insert) + row/ACE drag-drop reorder (dock/ace_apply.gd)
+var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -188,6 +189,9 @@ func _init() -> void:
     # Same reason as _sheet_io: a test may apply an ACE (or exercise drag-drop) on a fresh .new()
     # editor before _ready. init() only stores _dock, so wiring it here (and again in the cluster) is safe.
     _ace_apply.init(self)
+    # Row/ACE edit-ops helper: same fresh-.new()-before-_ready reasoning — tests exercise ops like
+    # _bulk_set_enabled_on / _toggle_selected_enabled / _indent_selected_event before the tree init runs.
+    _row_edit_ops.init(self)
     _build_ui()
 
 var _editor_dialogs_initialized: bool = false
@@ -234,6 +238,7 @@ func _ensure_editor_dialogs_initialized() -> void:
     _external_watcher.init(self)
     _sheet_io.init(self)
     _ace_apply.init(self)
+    _row_edit_ops.init(self)
     # Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
     _variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
     _variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
@@ -3843,74 +3848,16 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
             else:
                 _set_status("Select a group to edit its description.", true)
 
-# ── Bulk operations on the multi-selection (one undo action each) ─────────────────────
-
-## Disables every selected row that can be disabled — or re-enables them all when the
-## first one is already off (uniform result, never a mixed toggle).
+# ── Bulk operations on the multi-selection — bodies in EventSheetRowEditOps (dock/row_edit_ops.gd).
+# Thin delegates: the toolbar bulk actions + tedium_test call these on the dock by name.
 func _bulk_set_enabled_on(targets: Array) -> void:
-    var rows: Array = targets.filter(func(resource: Variant) -> bool:
-        return resource is EventRow or resource is EventGroup)
-    if rows.is_empty():
-        _set_status("Select event or group rows to disable/enable.", true)
-        return
-    var make_enabled: bool = not bool(rows[0].get("enabled"))
-    var changed: bool = _perform_undoable_sheet_edit("Toggle Selection", func() -> bool:
-        for row: Variant in rows:
-            (row as Resource).set("enabled", make_enabled)
-        return true)
-    if changed:
-        _mark_dirty("%s %d row(s)." % ["Enabled" if make_enabled else "Disabled", rows.size()])
+    _row_edit_ops._bulk_set_enabled_on(targets)
 
-## Duplicates every selected row in place (each copy lands right under its source,
-## event uids re-baked so stateful conditions never share accumulators).
 func _bulk_duplicate_rows(targets: Array) -> void:
-    if targets.is_empty():
-        _set_status("Nothing selected to duplicate.", true)
-        return
-    var changed: bool = _perform_undoable_sheet_edit("Duplicate Selection", func() -> bool:
-        var any: bool = false
-        for resource: Variant in targets:
-            var location: Dictionary = _find_resource_location(resource)
-            if location.is_empty():
-                continue
-            var copy: Resource = (resource as Resource).duplicate(true)
-            _refresh_clone_uids(copy)
-            (location.get("container") as Array).insert(int(location.get("index")) + 1, copy)
-            any = true
-        return any)
-    if changed:
-        _mark_dirty("Duplicated %d row(s)." % targets.size())
+    _row_edit_ops._bulk_duplicate_rows(targets)
 
-## Wraps a same-parent selection in a fresh group (selection order preserved).
-## Returns "" or the user-facing problem — mixed-parent selections are refused
-## because silent cross-depth reparenting is how sheets get scrambled.
 func _bulk_group_rows(targets: Array) -> String:
-    if targets.is_empty():
-        return "Nothing selected to group."
-    var first_location: Dictionary = _find_resource_location(targets[0])
-    if first_location.is_empty():
-        return "Couldn't locate the selection."
-    var container: Array = first_location.get("container")
-    for resource: Variant in targets:
-        var location: Dictionary = _find_resource_location(resource)
-        # is_same: Array == compares CONTENTS; the parent rail needs identity.
-        if location.is_empty() or not is_same(location.get("container"), container):
-            return "Group Selection needs rows with the same parent."
-    var ordered: Array = targets.duplicate()
-    ordered.sort_custom(func(a: Variant, b: Variant) -> bool:
-        return container.find(a) < container.find(b))
-    var changed: bool = _perform_undoable_sheet_edit("Group Selection", func() -> bool:
-        var group: EventGroup = EventGroup.new()
-        group.group_name = "Group"
-        var insert_at: int = container.find(ordered[0])
-        for resource: Variant in ordered:
-            container.erase(resource)
-            group.events.append(resource)
-        container.insert(mini(insert_at, container.size()), group)
-        return true)
-    if changed:
-        _mark_dirty("Grouped %d row(s)." % ordered.size())
-    return ""
+    return _row_edit_ops._bulk_group_rows(targets)
 
 ## Fresh uids on a duplicated row tree (groups recurse; EventRows re-bake stateful
 ## member uids — the paste contract).
@@ -4359,63 +4306,71 @@ func _insert_snippet_path(snippet_path: String) -> void:
     if not _paste_snippet_text(EventSheetSnippetLibrary.read_snippet(snippet_path)):
         _set_status("That file isn't a sheet snippet: %s" % snippet_path.get_file(), true)
 
+# ── Context-driven row/ACE edit ops — bodies in EventSheetRowEditOps (dock/row_edit_ops.gd).
+# The four dispatchers below (_on_*_context_menu_id_pressed) call these by bare name, context_menus.gd
+# reads the is-disabled / is-negated probes via _dock.<name>, multi_view_manager wires
+# _delete_selected_content, and the tests call the enable/indent/outdent/insert ops directly — so the
+# dock keeps a thin one-line delegate (original name + signature) for each. The ops read the shared
+# _context_row / _context_hit state (which stays on this dock) back through _dock inside the helper.
 func _delete_context_ace() -> void:
-    if _context_row == null or not (_context_row.source_resource is EventRow):
-        return
-    var event_row: EventRow = _context_row.source_resource as EventRow
-    var metadata: Dictionary = _context_hit.get("span_metadata", {})
-    var ace_index: int = int(metadata.get("ace_index", -1))
-    var kind: String = str(metadata.get("kind", ""))
-    var deleted: bool = _perform_undoable_sheet_edit("Delete ACE", func() -> bool:
-        match kind:
-            "trigger":
-                if event_row.trigger != null:
-                    event_row.trigger = null
-                    return true
-            "condition":
-                if ace_index >= 0 and ace_index < event_row.conditions.size():
-                    event_row.conditions.remove_at(ace_index)
-                    return true
-            "action":
-                if ace_index >= 0 and ace_index < event_row.actions.size():
-                    event_row.actions.remove_at(ace_index)
-                    return true
-        return false
-    )
-    if deleted:
-        _mark_dirty("Deleted ACE.")
+    _row_edit_ops._delete_context_ace()
 
 func _toggle_context_condition_inversion() -> void:
-    if _context_row == null or not (_context_row.source_resource is EventRow):
-        return
-    var event_row: EventRow = _context_row.source_resource as EventRow
-    var metadata: Dictionary = _context_hit.get("span_metadata", {})
-    var kind: String = str(metadata.get("kind", ""))
-    var ace_index: int = int(metadata.get("ace_index", -1))
-    var toggled: bool = _perform_undoable_sheet_edit("Invert Condition", func() -> bool:
-        # Only regular conditions invert (compiled as `not (…)`). A trigger has no "not On X", and the
-        # compiler never reads trigger.negated — toggling it was a SILENT no-op that left a misleading
-        # "inverted" trigger on the sheet. The menu disables Invert for triggers; this guards the path too.
-        if kind == "condition" and ace_index >= 0 and ace_index < event_row.conditions.size():
-            event_row.conditions[ace_index].negated = not event_row.conditions[ace_index].negated
-            return true
-        return false
-    )
-    if toggled:
-        _mark_dirty("Updated condition inversion.")
+    _row_edit_ops._toggle_context_condition_inversion()
 
-## The ACE resource the context menu was opened on (condition/trigger/action lanes).
 func _context_ace_resource(lane: String) -> Resource:
-    if _context_row == null or not (_context_row.source_resource is EventRow):
-        return null
-    var event_row: EventRow = _context_row.source_resource as EventRow
-    var metadata: Dictionary = _context_hit.get("span_metadata", {})
-    var ace_index: int = int(metadata.get("ace_index", -1))
-    if lane == "condition":
-        if str(metadata.get("kind", "")) == "trigger":
-            return event_row.trigger
-        return event_row.conditions[ace_index] if ace_index >= 0 and ace_index < event_row.conditions.size() else null
-    return event_row.actions[ace_index] if ace_index >= 0 and ace_index < event_row.actions.size() else null
+    return _row_edit_ops._context_ace_resource(lane)
+
+func _context_ace_is_disabled() -> bool:
+    return _row_edit_ops._context_ace_is_disabled()
+
+func _toggle_context_ace_enabled() -> void:
+    _row_edit_ops._toggle_context_ace_enabled()
+
+func _toggle_selected_enabled() -> void:
+    _row_edit_ops._toggle_selected_enabled()
+
+func _context_row_is_disabled() -> bool:
+    return _row_edit_ops._context_row_is_disabled()
+
+func _toggle_context_row_enabled() -> void:
+    _row_edit_ops._toggle_context_row_enabled()
+
+func _toggle_context_condition_block() -> void:
+    _row_edit_ops._toggle_context_condition_block()
+
+func _set_context_else_mode(mode: int) -> void:
+    _row_edit_ops._set_context_else_mode(mode)
+
+func _toggle_context_group_fold() -> void:
+    _row_edit_ops._toggle_context_group_fold()
+
+func _delete_selected_content() -> void:
+    _row_edit_ops._delete_selected_content()
+
+func _delete_selected_rows() -> void:
+    _row_edit_ops._delete_selected_rows()
+
+func _insert_child_event_for_context_row() -> void:
+    _row_edit_ops._insert_child_event_for_context_row()
+
+func _insert_child_comment_for_context_row() -> void:
+    _row_edit_ops._insert_child_comment_for_context_row()
+
+func _open_sub_condition_picker_for_context_row() -> void:
+    _row_edit_ops._open_sub_condition_picker_for_context_row()
+
+func _indent_selected_event() -> bool:
+    return _row_edit_ops._indent_selected_event()
+
+func _outdent_selected_event() -> bool:
+    return _row_edit_ops._outdent_selected_event()
+
+func _insert_context_row_below(resource_entry: Resource, message: String) -> void:
+    _row_edit_ops._insert_context_row_below(resource_entry, message)
+
+func _context_condition_is_negated() -> bool:
+    return _row_edit_ops._context_condition_is_negated()
 
 # ── Per-ACE comments (condition/action notes) ──────────────────────────────────────
 var _ace_comment_dialog: ConfirmationDialog = null
@@ -4458,461 +4413,6 @@ func _on_ace_comment_confirmed() -> void:
 # ── Starter templates ("new from template") — menu + sheet construction in dock/starter_templates.gd ──
 func _open_template_menu() -> void:  # New-Sheet shortcut (id 0) + command palette + Welcome button
     _starter.open_menu()
-
-func _context_ace_is_disabled() -> bool:
-    if _context_row == null or not (_context_row.source_resource is EventRow):
-        return false
-    var event_row: EventRow = _context_row.source_resource as EventRow
-    var metadata: Dictionary = _context_hit.get("span_metadata", {})
-    var kind: String = str(metadata.get("kind", ""))
-    var ace_index: int = int(metadata.get("ace_index", -1))
-    match kind:
-        "trigger":
-            return event_row.trigger != null and not event_row.trigger.enabled
-        "condition":
-            return ace_index >= 0 and ace_index < event_row.conditions.size() and not event_row.conditions[ace_index].enabled
-        "action":
-            return ace_index >= 0 and ace_index < event_row.actions.size() and event_row.actions[ace_index] is ACEAction and not ((event_row.actions[ace_index] as ACEAction).enabled)
-    return false
-
-func _toggle_context_ace_enabled() -> void:
-    if _context_row == null or not (_context_row.source_resource is EventRow):
-        return
-    var event_row: EventRow = _context_row.source_resource as EventRow
-    var metadata: Dictionary = _context_hit.get("span_metadata", {})
-    var kind: String = str(metadata.get("kind", ""))
-    var ace_index: int = int(metadata.get("ace_index", -1))
-    var changed: bool = _perform_undoable_sheet_edit("Toggle ACE Enabled", func() -> bool:
-        match kind:
-            "trigger":
-                if event_row.trigger != null:
-                    event_row.trigger.enabled = not event_row.trigger.enabled
-                    return true
-            "condition":
-                if ace_index >= 0 and ace_index < event_row.conditions.size():
-                    event_row.conditions[ace_index].enabled = not event_row.conditions[ace_index].enabled
-                    return true
-            "action":
-                if ace_index >= 0 and ace_index < event_row.actions.size() and event_row.actions[ace_index] is ACEAction:
-                    var target_action: ACEAction = event_row.actions[ace_index] as ACEAction
-                    target_action.enabled = not target_action.enabled
-                    return true
-        return false
-    )
-    if changed:
-        _mark_dirty("Updated ACE enabled state.")
-
-## Disables (or re-enables) everything currently selected at once: individual conditions /
-## actions when ACE spans are selected, otherwise the selected rows (events/groups/comments).
-## If anything in the selection is enabled it disables the whole lot; otherwise it enables it.
-func _toggle_selected_enabled() -> void:
-    if _viewport == null:
-        return
-    var span_targets: Array = _active_view().get_selected_span_targets()
-    var row_targets: Array[EventRowData] = []
-    if span_targets.is_empty():
-        row_targets = _get_selected_rows_from_context()
-    if span_targets.is_empty() and row_targets.is_empty():
-        return
-    var any_enabled: bool = false
-    for target in span_targets:
-        if _ace_target_enabled(target):
-            any_enabled = true
-            break
-    if not any_enabled:
-        for row_data in row_targets:
-            if _row_data_resource_enabled(row_data):
-                any_enabled = true
-                break
-    var new_enabled: bool = not any_enabled
-    var changed: bool = _perform_undoable_sheet_edit("Toggle Enabled", func() -> bool:
-        var did_change: bool = false
-        for target in span_targets:
-            if _set_ace_target_enabled(target, new_enabled):
-                did_change = true
-        for row_data in row_targets:
-            if _set_row_data_resource_enabled(row_data, new_enabled):
-                did_change = true
-        return did_change
-    )
-    if changed:
-        _mark_dirty("%s selection." % ("Enabled" if new_enabled else "Disabled"))
-
-func _ace_target_enabled(target: Dictionary) -> bool:
-    var event_row: EventRow = target.get("source_resource", null) as EventRow
-    if event_row == null:
-        return true
-    var ace_index: int = int(target.get("ace_index", -1))
-    match str(target.get("kind", "")):
-        "trigger":
-            return event_row.trigger == null or event_row.trigger.enabled
-        "condition":
-            return ace_index < 0 or ace_index >= event_row.conditions.size() or event_row.conditions[ace_index].enabled
-        "action":
-            return ace_index < 0 or ace_index >= event_row.actions.size() or not (event_row.actions[ace_index] is ACEAction) or (event_row.actions[ace_index] as ACEAction).enabled
-    return true
-
-func _set_ace_target_enabled(target: Dictionary, enabled: bool) -> bool:
-    var event_row: EventRow = target.get("source_resource", null) as EventRow
-    if event_row == null:
-        return false
-    var ace_index: int = int(target.get("ace_index", -1))
-    match str(target.get("kind", "")):
-        "trigger":
-            if event_row.trigger != null:
-                event_row.trigger.enabled = enabled
-                return true
-        "condition":
-            if ace_index >= 0 and ace_index < event_row.conditions.size():
-                event_row.conditions[ace_index].enabled = enabled
-                return true
-        "action":
-            if ace_index >= 0 and ace_index < event_row.actions.size() and event_row.actions[ace_index] is ACEAction:
-                (event_row.actions[ace_index] as ACEAction).enabled = enabled
-                return true
-    return false
-
-func _row_data_resource_enabled(row_data: EventRowData) -> bool:
-    if row_data == null or row_data.source_resource == null:
-        return true
-    var resource: Resource = row_data.source_resource
-    if resource is EventRow:
-        return (resource as EventRow).enabled
-    if resource is EventGroup:
-        return (resource as EventGroup).enabled
-    if resource is CommentRow:
-        return (resource as CommentRow).enabled
-    return true
-
-func _set_row_data_resource_enabled(row_data: EventRowData, enabled: bool) -> bool:
-    if row_data == null or row_data.source_resource == null:
-        return false
-    var resource: Resource = row_data.source_resource
-    if resource is EventRow:
-        (resource as EventRow).enabled = enabled
-        return true
-    if resource is EventGroup:
-        (resource as EventGroup).enabled = enabled
-        return true
-    if resource is CommentRow:
-        (resource as CommentRow).enabled = enabled
-        return true
-    return false
-
-func _context_row_is_disabled() -> bool:
-    if _context_row == null or _context_row.source_resource == null:
-        return false
-    if _context_row.source_resource is EventRow:
-        return not (_context_row.source_resource as EventRow).enabled
-    if _context_row.source_resource is EventGroup:
-        return not (_context_row.source_resource as EventGroup).enabled
-    if _context_row.source_resource is CommentRow:
-        return not (_context_row.source_resource as CommentRow).enabled
-    return false
-
-func _toggle_context_row_enabled() -> void:
-    if _context_row == null or _context_row.source_resource == null:
-        return
-    var changed: bool = _perform_undoable_sheet_edit("Toggle Row Enabled", func() -> bool:
-        if _context_row.source_resource is EventRow:
-            var event_row: EventRow = _context_row.source_resource as EventRow
-            event_row.enabled = not event_row.enabled
-            return true
-        if _context_row.source_resource is EventGroup:
-            var group: EventGroup = _context_row.source_resource as EventGroup
-            group.enabled = not group.enabled
-            return true
-        if _context_row.source_resource is CommentRow:
-            var comment_row: CommentRow = _context_row.source_resource as CommentRow
-            comment_row.enabled = not comment_row.enabled
-            return true
-        return false
-    )
-    if changed:
-        _mark_dirty("Updated row enabled state.")
-
-func _toggle_context_condition_block() -> void:
-    var selected_events: Array[EventRow] = _get_selected_event_rows_from_context()
-    if selected_events.is_empty():
-        return
-    var target_mode: int = (
-        EventRow.ConditionMode.AND
-        if _event_rows_use_or_mode(selected_events)
-        else EventRow.ConditionMode.OR
-    )
-    var toggled: bool = _perform_undoable_sheet_edit("Toggle Condition Block", func() -> bool:
-        for event_row in selected_events:
-            event_row.condition_mode = target_mode
-        return true
-    )
-    if toggled:
-        _mark_dirty("Updated condition block.")
-
-## Sets (or toggles off) Else / Else-If chaining on the selected events. They compile to
-## `else:` / `elif:` chained onto the previous sibling's `if` (sheet_compiler ~873) and the
-## viewport prefixes them with "Else"/"Else if". Clicking the active mode again clears it.
-func _set_context_else_mode(mode: int) -> void:
-    var selected_events: Array[EventRow] = _get_selected_event_rows_from_context()
-    if selected_events.is_empty():
-        return
-    var all_already: bool = true
-    for event_row in selected_events:
-        if event_row.else_mode != mode:
-            all_already = false
-            break
-    var target_mode: int = EventRow.ElseMode.NONE if all_already else mode
-    var changed: bool = _perform_undoable_sheet_edit("Set Else Mode", func() -> bool:
-        for event_row in selected_events:
-            event_row.else_mode = target_mode
-        return true
-    )
-    if changed:
-        _mark_dirty("Updated Else mode.")
-
-func _toggle_context_group_fold() -> void:
-    if _context_row == null or not (_context_row.source_resource is EventGroup):
-        return
-    var context_group: EventGroup = _context_row.source_resource as EventGroup
-    context_group.set_collapsed_state(not context_group.is_collapsed())
-    _viewport.toggle_row_fold_by_uid(_context_row.row_uid)
-    _mark_dirty("Updated group fold state.")
-
-func _delete_context_row() -> void:
-    if _context_row == null or _context_row.source_resource == null:
-        return
-    var target_resource: Resource = _context_row.source_resource
-    var location: Dictionary = _find_resource_location(target_resource)
-    if location.is_empty():
-        return
-    var container: Array = location.get("container", [])
-    var index: int = int(location.get("index", -1))
-    if index < 0 or index >= container.size():
-        return
-    var deleted: bool = _perform_undoable_sheet_edit("Delete Row", func() -> bool:
-        container.remove_at(index)
-        return true
-    )
-    if deleted:
-        _mark_dirty("Deleted row.")
-
-func _delete_selected_content() -> void:
-    if _delete_selected_spans():
-        return
-    _delete_selected_rows()
-
-func _delete_selected_spans() -> bool:
-    if _viewport == null:
-        return false
-    var selected_targets: Array = _active_view().get_selected_span_targets()
-    if selected_targets.is_empty():
-        return false
-    var deleted: bool = _perform_undoable_sheet_edit("Delete ACE", func() -> bool:
-        var targets_by_row: Dictionary = {}
-        for target in selected_targets:
-            if not (target is Dictionary):
-                continue
-            var target_dict: Dictionary = target as Dictionary
-            var row_uid: String = str(target_dict.get("row_uid", ""))
-            if row_uid.is_empty():
-                continue
-            if not targets_by_row.has(row_uid):
-                targets_by_row[row_uid] = []
-            (targets_by_row[row_uid] as Array).append(target_dict)
-        for row_targets in targets_by_row.values():
-            var targets_for_row: Array = row_targets as Array
-            targets_for_row.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-                return int(a.get("ace_index", -1)) > int(b.get("ace_index", -1))
-            )
-            for target_dict in targets_for_row:
-                var event_row: EventRow = target_dict.get("source_resource", null) as EventRow
-                if event_row == null:
-                    continue
-                var kind: String = str(target_dict.get("kind", ""))
-                var ace_index: int = int(target_dict.get("ace_index", -1))
-                match kind:
-                    "trigger":
-                        if event_row.trigger != null:
-                            event_row.trigger = null
-                    "condition":
-                        if ace_index >= 0 and ace_index < event_row.conditions.size():
-                            event_row.conditions.remove_at(ace_index)
-                    "action":
-                        if ace_index >= 0 and ace_index < event_row.actions.size():
-                            event_row.actions.remove_at(ace_index)
-        return true
-    )
-    if not deleted:
-        return false
-    _viewport.clear_selection()
-    _mark_dirty("Deleted ACE.")
-    return true
-
-func _delete_selected_rows() -> void:
-    var selected_rows: Array[EventRowData] = _get_selected_rows_from_context()
-    if selected_rows.is_empty():
-        _delete_context_row()
-        return
-    var resources_to_delete: Array[Resource] = []
-    for row_data in selected_rows:
-        var source_resource: Resource = row_data.source_resource if row_data != null else null
-        if source_resource == null:
-            continue
-        var covered_by_parent: bool = false
-        for existing_resource in resources_to_delete:
-            if _resource_contains_descendant(existing_resource, source_resource):
-                covered_by_parent = true
-                break
-        if covered_by_parent:
-            continue
-        var filtered_resources: Array[Resource] = []
-        for existing_resource in resources_to_delete:
-            if not _resource_contains_descendant(source_resource, existing_resource):
-                filtered_resources.append(existing_resource)
-        resources_to_delete = filtered_resources
-        resources_to_delete.append(source_resource)
-    if resources_to_delete.is_empty():
-        return
-    var deleted: bool = _perform_undoable_sheet_edit("Delete Row", func() -> bool:
-        resources_to_delete.sort_custom(func(a: Resource, b: Resource) -> bool:
-            return _resource_sort_key(a) > _resource_sort_key(b)
-        )
-        for resource_entry in resources_to_delete:
-            var location: Dictionary = _find_resource_location(resource_entry)
-            if location.is_empty():
-                continue
-            var container: Array = location.get("container", [])
-            var index: int = int(location.get("index", -1))
-            if index >= 0 and index < container.size():
-                container.remove_at(index)
-        return true
-    )
-    if deleted:
-        _viewport.clear_selection()
-        _mark_dirty("Deleted row.")
-
-func _insert_child_event_for_context_row() -> void:
-    if _context_row == null or not (_context_row.source_resource is EventRow):
-        return
-    var changed: bool = _perform_undoable_sheet_edit("Add Sub Event", func() -> bool:
-        (_context_row.source_resource as EventRow).sub_events.append(EventRow.new())
-        return true
-    )
-    if changed:
-        _mark_dirty("Added sub-event.")
-
-## Nests a comment inside the right-clicked event (as a sub-event), so it can describe the
-## events beneath it. Comments are the one non-event row allowed as a sub-event.
-func _insert_child_comment_for_context_row() -> void:
-    if _context_row == null or not (_context_row.source_resource is EventRow):
-        _set_status("Add a comment sub-event from an event row.", true)
-        return
-    var changed: bool = _perform_undoable_sheet_edit("Add Comment Sub-Event", func() -> bool:
-        var comment: CommentRow = CommentRow.new()
-        comment.text = "Comment"
-        (_context_row.source_resource as EventRow).sub_events.append(comment)
-        return true
-    )
-    if changed:
-        _refresh_after_edit()
-        _mark_dirty("Added comment sub-event.")
-
-func _open_sub_condition_picker_for_context_row() -> void:
-    if _context_row == null or not (_context_row.source_resource is EventRow):
-        return
-    _ace_picker.open("new_sub_condition_event", false, _context_row.source_resource)
-
-## The currently selected EventRow resource, or null when the selection is not an event.
-func _selected_event_resource() -> EventRow:
-    if _viewport == null:
-        return null
-    var resource: Variant = _active_view().get_selected_context().get("source_resource", null)
-    return resource as EventRow if resource is EventRow else null
-
-## Nests the selected event under the event directly above it (its preceding sibling),
-## moving it into that event's sub_events. Returns true when the move happened.
-func _indent_selected_event() -> bool:
-    if not _ensure_sheet_for_editing():
-        return false
-    var target: EventRow = _selected_event_resource()
-    if target == null:
-        return false
-    var location: Dictionary = _find_resource_location(target)
-    var container: Array = location.get("container", [])
-    var index: int = int(location.get("index", -1))
-    if index <= 0:
-        _set_status("Nothing above to nest this event under.", true)
-        return false
-    var previous: Variant = container[index - 1]
-    if not (previous is EventRow):
-        _set_status("Events can only be nested under another event.", true)
-        return false
-    var changed: bool = _perform_undoable_sheet_edit("Indent Event", func() -> bool:
-        container.remove_at(index)
-        (previous as EventRow).sub_events.append(target)
-        return true
-    )
-    if changed:
-        _mark_dirty("Nested event under the one above.")
-    return changed
-
-## Un-nests the selected sub-event, moving it out to its parent's container just after the
-## parent. Returns true when the move happened.
-func _outdent_selected_event() -> bool:
-    if not _ensure_sheet_for_editing():
-        return false
-    var target: EventRow = _selected_event_resource()
-    if target == null:
-        return false
-    var parent_info: Dictionary = _find_parent_event(target)
-    var parent: Variant = parent_info.get("parent", null)
-    if not bool(parent_info.get("found", false)) or not (parent is EventRow):
-        _set_status("Event is already at the top level.", true)
-        return false
-    var parent_event: EventRow = parent as EventRow
-    var parent_location: Dictionary = _find_resource_location(parent_event)
-    var parent_container: Array = parent_location.get("container", [])
-    var parent_index: int = int(parent_location.get("index", -1))
-    if parent_index < 0:
-        return false
-    var changed: bool = _perform_undoable_sheet_edit("Outdent Event", func() -> bool:
-        parent_event.sub_events.erase(target)
-        parent_container.insert(parent_index + 1, target)
-        return true
-    )
-    if changed:
-        _mark_dirty("Un-nested event to the parent level.")
-    return changed
-
-## Finds the EventRow whose sub_events directly contains target.
-## Returns {found: bool, parent: EventRow|null} (parent is null at root/group level).
-func _find_parent_event(target: Resource) -> Dictionary:
-    if _current_sheet == null:
-        return {"found": false, "parent": null}
-    return _find_parent_event_recursive(target, _current_sheet.events, null)
-
-func _find_parent_event_recursive(target: Resource, container: Array, parent: EventRow) -> Dictionary:
-    for entry in container:
-        if entry == target:
-            return {"found": true, "parent": parent}
-        if entry is EventGroup:
-            var grouped: Dictionary = _find_parent_event_recursive(target, _group_children_array(entry as EventGroup), null)
-            if bool(grouped.get("found", false)):
-                return grouped
-        elif entry is EventRow:
-            var nested: Dictionary = _find_parent_event_recursive(target, (entry as EventRow).sub_events, entry as EventRow)
-            if bool(nested.get("found", false)):
-                return nested
-    return {"found": false, "parent": null}
-
-func _insert_context_row_below(resource_entry: Resource, message: String) -> void:
-    if resource_entry == null or _context_row == null:
-        return
-    var changed: bool = _perform_undoable_sheet_edit("Insert Row", func() -> bool:
-        _insert_row_below_selection(resource_entry, _context_row.source_resource)
-        return true
-    )
-    if changed:
-        _mark_dirty(message)
 
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
     _refresh_variable_panel()
@@ -5040,32 +4540,6 @@ func _get_selected_event_rows_from_context() -> Array[EventRow]:
         if row_data != null and row_data.source_resource is EventRow:
             event_rows.append(row_data.source_resource as EventRow)
     return event_rows
-
-func _resource_sort_key(resource_entry: Resource) -> int:
-    return _find_row_index_for_resource(resource_entry)
-
-func _find_row_index_for_resource(resource_entry: Resource) -> int:
-    if _viewport == null or resource_entry == null:
-        return -1
-    var flat_rows: Array[Dictionary] = _viewport.get_flat_rows()
-    for index in range(flat_rows.size()):
-        var row_data: EventRowData = flat_rows[index].get("row")
-        if row_data != null and row_data.source_resource == resource_entry:
-            return index
-    return -1
-
-func _context_condition_is_negated() -> bool:
-    if _context_row == null or not (_context_row.source_resource is EventRow):
-        return false
-    var event_row: EventRow = _context_row.source_resource as EventRow
-    var metadata: Dictionary = _context_hit.get("span_metadata", {})
-    var kind: String = str(metadata.get("kind", ""))
-    var ace_index: int = int(metadata.get("ace_index", -1))
-    if kind == "trigger" and event_row.trigger != null:
-        return event_row.trigger.negated
-    if kind == "condition" and ace_index >= 0 and ace_index < event_row.conditions.size():
-        return event_row.conditions[ace_index].negated
-    return false
 
 func _build_ace_edit_context(event_row: EventRow, span_index: int, metadata: Dictionary) -> Dictionary:
     if event_row == null:
