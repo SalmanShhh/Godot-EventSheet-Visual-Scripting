@@ -169,7 +169,10 @@ static func run() -> bool:
     var group_row: EventRowData = flat_rows[1].get("row")
     var event_row_data: EventRowData = flat_rows[2].get("row")
     all_passed = _check("comment rows render a single editable label span", comment_row_data.spans.size(), 1) and all_passed
-    all_passed = _check("group row renders a single editable title span (no redundant Group badge)", group_row.spans.size(), 1) and all_passed
+    # The group header leads with the editable title span (no redundant "Group" badge); a muted chapter
+    # fingerprint span (glance §11) may trail it when the group holds events.
+    all_passed = _check("group row leads with an editable title span (no redundant Group badge)",
+        str((group_row.spans[0].metadata as Dictionary).get("edit_kind", "")) == "group_name" and not bool((group_row.spans[0].metadata as Dictionary).get("badge", false)), true) and all_passed
     all_passed = _check("group row tagged correctly", group_row.row_type, EventRowData.RowType.GROUP) and all_passed
     all_passed = _check("group row no longer renders the redundant 'Group' badge text", _row_contains_text(group_row, "Group"), false) and all_passed
     all_passed = _check("group row shows its title", _row_contains_text(group_row, "Rules"), true) and all_passed
