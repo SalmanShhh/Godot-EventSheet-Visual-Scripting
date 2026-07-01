@@ -54,6 +54,26 @@ const COLOR_GROUP_FOLD_BG = Color(0.55, 0.48, 0.94, 0.20)
 const COLOR_CONST_BADGE_BG = Color("#3e5c34")
 const COLOR_CONST_BADGE_FG = Color("#eafde5")
 
+# ── ACE role taxonomy ──────────────────────────────────────────────────────────────────────────
+# The shared block-role colours for the function dialog's "kind of verb" cards + its live picker
+# preview, and (later) the Behaviour Anatomy panel's Define-blocks. Action reuses the action-lane
+# gold (COLOR_ACTION); Condition + Expression are kept DISTINCT from the trigger (#d291ff) / group
+# purples so the three roles read as one legible colour family. Each carries a bright accent for the
+# card + a tinted badge bg/fg pair for the pill.
+const COLOR_CONDITION = Color("#5cc2a6")   # teal — a yes/no test
+const COLOR_EXPRESSION = Color("#c07ad8")  # magenta-violet — a value (distinct from trigger/category purple)
+const COLOR_ACE_ACTION_BADGE_BG = Color("#463414")
+const COLOR_ACE_ACTION_BADGE_FG = Color("#f2c879")
+const COLOR_ACE_CONDITION_BADGE_BG = Color("#123a30")
+const COLOR_ACE_CONDITION_BADGE_FG = Color("#77d3b7")
+const COLOR_ACE_EXPRESSION_BADGE_BG = Color("#3a2247")
+const COLOR_ACE_EXPRESSION_BADGE_FG = Color("#d7a6ea")
+# Chips reused by the preview: neutral param chips vs the picker-category chip.
+const COLOR_CHIP_BG = Color("#2c313a")
+const COLOR_CHIP_FG = Color("#9aa1ad")
+const COLOR_CAT_CHIP_BG = Color("#34304f")
+const COLOR_CAT_CHIP_FG = Color("#b3a8dd")
+
 static func clamp_font_size(value: int) -> int:
 	return max(value, MIN_FONT_SIZE)
 
