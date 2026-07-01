@@ -126,7 +126,6 @@ var _param_resolver: ParamDefaultResolver = ParamDefaultResolver.new()
 var _exposed_node: EventSheetExposedNode = EventSheetExposedNode.new()
 var _ace_sources: Array[Object] = []  # instances we created (sheet providers / demo); freed on refresh
 var _manual_ace_sources: Array[Object] = []  # externally supplied (caller-owned, not freed)
-var _clipboard: Dictionary = {}
 var _undo_redo_adapter: EventSheetUndoRedoAdapter = EventSheetUndoRedoAdapter.new()
 
 # ── Extracted sub-components ─────────────────────────────────────────────────
@@ -162,6 +161,8 @@ var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # 
 var _export_pack: EventSheetExportPack = EventSheetExportPack.new()  # Sheet ▸ Export Addon Pack: writes eventsheet_addons/<class>/ (.tres + .gd + README, bundles includes) (dock/export_pack.gd)
 var _function_dialog_glue: EventSheetFunctionDialogGlue = EventSheetFunctionDialogGlue.new()  # Add ▾ ▸ Function… dialog wiring + apply-to-sheet (dock/function_dialog.gd)
 var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # editor theme: load/apply/pick style + theme file dialog + theme editor + live-reload binding to the active .tres (dock/theme_manager.gd)
+var _find_bar_glue: EventSheetFindBar = EventSheetFindBar.new()  # Ctrl+F find bar + Replace-All across the sheet + _replace_in_rows recursion (dock/find_bar.gd)
+var _clipboard_glue: EventSheetClipboard = EventSheetClipboard.new()  # copy/paste: internal clipboard + portable snippets + raw-GDScript paste (owns _clipboard state) (dock/clipboard.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -252,6 +253,8 @@ func _ensure_editor_dialogs_initialized() -> void:
 	_export_pack.init(self)
 	_function_dialog_glue.init(self)
 	_theme_manager.init(self)
+	_find_bar_glue.init(self)
+	_clipboard_glue.init(self)
 	# Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
 	_variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
 	_variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
@@ -1662,159 +1665,27 @@ func _on_zoom_out_requested() -> void:
 	_viewport.zoom_out()
 	_set_status("Zoom: %d%%" % int(round(_viewport.get_zoom_factor() * 100.0)))
 
-func _on_copy_requested() -> void:
-	var context: Dictionary = _active_view().get_selected_context()
-	var selected_resource: Resource = context.get("source_resource", null)
-	if selected_resource == null:
-		_set_status("Nothing selected to copy.", true)
-		return
-	var metadata: Dictionary = context.get("span_metadata", {})
-	if selected_resource is EventRow and not metadata.is_empty():
-		var event_row: EventRow = selected_resource as EventRow
-		var kind: String = str(metadata.get("kind", ""))
-		var ace_index: int = int(metadata.get("ace_index", -1))
-		if kind == "condition" and ace_index >= 0 and ace_index < event_row.conditions.size():
-			_clipboard = {"type": "condition", "payload": event_row.conditions[ace_index].duplicate(true)}
-			_set_status("Copied condition.")
-			return
-		if kind == "action" and ace_index >= 0 and ace_index < event_row.actions.size() and event_row.actions[ace_index] is ACEAction:
-			_clipboard = {"type": "action", "payload": (event_row.actions[ace_index] as ACEAction).duplicate(true)}
-			_set_status("Copied action.")
-			return
-		if kind == "trigger" and event_row.trigger != null:
-			_clipboard = {"type": "trigger", "payload": event_row.trigger.duplicate(true)}
-			_set_status("Copied trigger.")
-			return
-	# Row copies are written in two forms: the internal clipboard (rich, same-session
-	# pastes) and a portable text snippet on the SYSTEM clipboard, so rows can be shared
-	# across projects, editor instances, and forum/Discord posts (see EventSheetSnippet).
-	var top_level: Array = _top_level_selected_resources()
-	if top_level.is_empty():
-		top_level = [selected_resource]
-	DisplayServer.clipboard_set(EventSheetSnippet.serialize_rows(top_level, _current_sheet))
-	_clipboard = {"type": "row", "payload": selected_resource.duplicate(true)}
-	_set_status("Copied %d row(s) — shareable snippet placed on the clipboard." % top_level.size())
-
-## Top-most selected row resources: children of a selected ancestor are skipped because
-## they already travel inside their parent's serialized form.
-func _top_level_selected_resources() -> Array:
-	var resources: Array = []
-	for row_data in _get_selected_rows_from_context():
-		if row_data == null or row_data.source_resource == null:
-			continue
-		if not resources.has(row_data.source_resource):
-			resources.append(row_data.source_resource)
-	var top_level: Array = []
-	for resource in resources:
-		var has_selected_ancestor: bool = false
-		for other in resources:
-			if other != resource and _resource_contains_descendant(other, resource):
-				has_selected_ancestor = true
-				break
-		if not has_selected_ancestor:
-			top_level.append(resource)
-	return top_level
-
-func _on_paste_requested() -> void:
-	# Paste priority: portable snippets (in-app copies refresh them too) → raw GDScript
-	# copied from anywhere (auto-converted to events/rows) → the internal clipboard for
-	# same-session rich pastes.
-	if _paste_snippet_text(DisplayServer.clipboard_get()):
-		return
-	if _paste_gdscript_text(DisplayServer.clipboard_get()):
-		return
-	if _clipboard.is_empty():
-		_set_status("Clipboard is empty.", true)
-		return
-	if not _ensure_sheet_for_editing():
-		return
-	var clip_type: String = str(_clipboard.get("type", ""))
-	var payload: Variant = _clipboard.get("payload", null)
-	var context: Dictionary = _active_view().get_selected_context()
-	var selected_resource: Resource = context.get("source_resource", null)
-	var result := {"label": ""}
-	var changed: bool = _perform_undoable_sheet_edit("Paste", func() -> bool:
-		match clip_type:
-			"row":
-				if payload is Resource:
-					_insert_row_below_selection((payload as Resource).duplicate(true))
-					result["label"] = "Pasted row."
-					return true
-			"condition":
-				if selected_resource is EventRow and payload is ACECondition:
-					(selected_resource as EventRow).conditions.append((payload as ACECondition).duplicate(true))
-					result["label"] = "Pasted condition."
-					return true
-			"action":
-				if selected_resource is EventRow and payload is ACEAction:
-					(selected_resource as EventRow).actions.append((payload as ACEAction).duplicate(true))
-					result["label"] = "Pasted action."
-					return true
-			"trigger":
-				if selected_resource is EventRow and payload is ACECondition:
-					(selected_resource as EventRow).trigger = (payload as ACECondition).duplicate(true)
-					result["label"] = "Pasted trigger."
-					return true
-		return false
-	)
-	if not changed:
-		_set_status("Paste target is not valid for clipboard payload.", true)
-	else:
-		_mark_dirty(str(result.get("label", "Pasted.")))
-
-## Pastes a shareable snippet from text (see EventSheetSnippet). Returns false when the
-## text is not a snippet so the caller falls back to the internal clipboard. Pasted events
-## get fresh UIDs; sheet variables the snippet references are created when missing (never
-## overwritten), so the pasted rows compile immediately.
-func _paste_snippet_text(text: String) -> bool:
-	if not EventSheetSnippet.is_snippet_text(text):
-		return false
-	if not _ensure_sheet_for_editing():
-		return true
-	var snippet: Dictionary = EventSheetSnippet.deserialize(text)
-	var rows: Array = snippet.get("rows", [])
-	if rows.is_empty():
-		_set_status("Clipboard snippet is empty or invalid.", true)
-		return true
-	# Dictionary so the undoable lambda can mutate it (GDScript lambdas capture by value).
-	var counters: Dictionary = {"variables_created": 0}
-	var required_variables: Dictionary = snippet.get("required_variables", {})
-	var changed: bool = _perform_undoable_sheet_edit("Paste Snippet", func() -> bool:
-		for variable_name in required_variables.keys():
-			if not _current_sheet.variables.has(variable_name):
-				_current_sheet.variables[variable_name] = required_variables[variable_name]
-				counters["variables_created"] = int(counters["variables_created"]) + 1
-		var anchor: Resource = _active_view().get_selected_context().get("source_resource", null)
-		for row in rows:
-			if row is EventRow:
-				_assign_fresh_event_uids(row as EventRow)
-			_insert_row_below_selection(row, anchor)
-			anchor = row  # keeps pasted rows in their original order, each after the last
-		return true
-	)
-	if changed:
-		var provider_names: PackedStringArray = PackedStringArray()
-		for provider in snippet.get("providers", []):
-			provider_names.append(str(provider))
-		var provider_note: String = "" if provider_names.is_empty() else " Uses providers: %s." % ", ".join(provider_names)
-		_mark_dirty("Pasted snippet: %d row(s), %d variable(s) created.%s" % [rows.size(), int(counters["variables_created"]), provider_note])
-	return true
-
-## Appends an in-flow GDScript block to the right-clicked event's actions (event-sheet-style inline
-## scripting: statements emitted inside the event body).
-func _add_gdscript_action_to_context_row() -> void:
-	if _context_row == null or not (_context_row.source_resource is EventRow):
-		_set_status("Add a GDScript action from an event row.", true)
-		return
-	var target_event: EventRow = _context_row.source_resource as EventRow
-	var changed: bool = _perform_undoable_sheet_edit("Add GDScript Action", func() -> bool:
-		var inline_raw: RawCodeRow = RawCodeRow.new()
-		inline_raw.code = "pass"
-		target_event.actions.append(inline_raw)
-		return true
-	)
-	if changed:
-		_mark_dirty("Added GDScript action.")
+# ── Clipboard / copy-paste → dock/clipboard.gd ──────────────────────────────────────
+# The copy/paste cluster (internal clipboard + portable snippets + raw-GDScript paste) lives in
+# EventSheetClipboard, which also OWNS the internal `_clipboard` state (no external reader). Thin
+# delegates keep the original names/signatures so menu_bar (_dock._on_copy_requested /
+# _dock._on_paste_requested), author_actions (_dock._top_level_selected_resources /
+# _dock._paste_snippet_text), gdscript_paste_test (editor._paste_gdscript_text),
+# inflow_gdscript_test (editor._add_gdscript_action_to_context_row) and the copy/paste tests resolve
+# unchanged. `_ensure_sheet_for_editing` / `_ensure_selected_event` (the pre-edit guards that sat
+# interleaved right after this block) stay on the dock, just below.
+func _on_copy_requested() -> void:  # menu_bar Edit menu + event_sheet_editor_test
+	_clipboard_glue._on_copy_requested()
+func _top_level_selected_resources() -> Array:  # author_actions + bulk row ops
+	return _clipboard_glue._top_level_selected_resources()
+func _on_paste_requested() -> void:  # menu_bar Edit menu + event_sheet_editor_test
+	_clipboard_glue._on_paste_requested()
+func _paste_snippet_text(text: String) -> bool:  # author_actions _insert_snippet_path + snippet_share_test
+	return _clipboard_glue._paste_snippet_text(text)
+func _add_gdscript_action_to_context_row() -> void:  # row context menu + inflow_gdscript_test
+	_clipboard_glue._add_gdscript_action_to_context_row()
+func _paste_gdscript_text(text: String) -> bool:  # paste flow + gdscript_paste_test
+	return _clipboard_glue._paste_gdscript_text(text)
 
 func _ensure_sheet_for_editing() -> bool:
 	if _current_sheet != null:
@@ -2399,56 +2270,6 @@ func _on_raw_code_dialog_confirmed() -> void:
 		_refresh_after_edit()
 		_mark_dirty("Updated GDScript block.")
 
-# ── Paste GDScript as events ─────────────────────────────────────────────────
-
-## Returns true when the clipboard text reads like GDScript (conservative: a paste that is
-## not code must fall through to the internal clipboard untouched).
-static func _looks_like_gdscript(text: String) -> bool:
-	var code_line: RegEx = RegEx.new()
-	if code_line.compile("(?m)^(func |var |@export|@onready|signal |extends |class_name |if .*:|for .*:|while .*:|match .*:)") != OK:
-		return false
-	return code_line.search(text) != null
-
-## Pastes raw GDScript copied from anywhere, converted through the same pipeline that
-## opens .gd files as sheets: the lossless rule keeps every line (unrecognized code stays
-## verbatim GDScript block rows), declarations verify-lift to variable rows, and trigger
-## functions ACE-lift into real events when the round-trip verifies. Returns false for
-## non-code clipboards so the regular paste paths continue.
-func _paste_gdscript_text(text: String) -> bool:
-	if text.strip_edges().is_empty() or EventSheetSnippet.is_snippet_text(text):
-		return false
-	if not _looks_like_gdscript(text):
-		return false
-	if not _ensure_sheet_for_editing():
-		return false
-	var imported: EventSheetResource = GDScriptImporter.new().import_external_source(text)
-	if imported.events.is_empty():
-		return false
-	var rows: Array = imported.events.duplicate()
-	var lifted_events: int = 0
-	var context: Dictionary = _active_view().get_selected_context()
-	var anchor: Resource = context.get("source_resource", null)
-	var changed: bool = _perform_undoable_sheet_edit("Paste GDScript", func() -> bool:
-		var insert_after: Resource = anchor
-		for row: Variant in rows:
-			if row is EventRow:
-				_assign_fresh_event_uids(row)
-			_insert_row_below_selection(row, insert_after)
-			insert_after = row
-		return true
-	)
-	if not changed:
-		return false
-	for row: Variant in rows:
-		if row is EventRow:
-			lifted_events += 1
-	_refresh_after_edit()
-	if lifted_events > 0:
-		_mark_dirty("Pasted GDScript: %d row(s), %d event(s) auto-converted." % [rows.size(), lifted_events])
-	else:
-		_mark_dirty("Pasted GDScript as %d block row(s) — no trigger functions to convert." % rows.size())
-	return true
-
 # ── Visual theme editor → dock/theme_manager.gd ────────────────────────────────
 # menu_bar.gd's View menu opens the editor; theme_editor_dialog.gd's "Apply To Current Sheet" reaches
 # apply_theme_style via _dock.has_method("apply_theme_style") + _dock.call("apply_theme_style", …), so
@@ -2745,143 +2566,26 @@ func _toggle_breakpoint_emission() -> void:
 	_current_sheet.emit_breakpoints = not _current_sheet.emit_breakpoints
 	_set_status("Debug compile ON: breakpointed events emit `breakpoint` (recompile to apply)." if _current_sheet.emit_breakpoints else "Debug compile OFF: breakpoints render only.")
 
-## Ctrl+F: a script-editor-style find bar (Enter/F3 next, Shift+F3 previous, Esc hides).
-func _show_find_bar() -> void:
-	_ensure_find_bar()
-	_find_bar.visible = true
-	_find_edit.grab_focus()
-	_find_edit.select_all()
-
-func _ensure_find_bar() -> void:
-	if _find_bar != null:
-		return
-	_find_bar = HBoxContainer.new()
-	_find_bar.name = "EventSheetFindBar"
-	_find_edit = LineEdit.new()
-	_find_edit.placeholder_text = "Find in sheet…  (Enter: next, Esc: close)"
-	_find_edit.custom_minimum_size = Vector2(220.0, 0.0)
-	_find_edit.text_changed.connect(_on_find_text_changed)
-	_find_edit.text_submitted.connect(func(_text: String) -> void: _find_step(1))
-	_find_edit.gui_input.connect(func(input_event: InputEvent) -> void:
-		if input_event is InputEventKey and (input_event as InputEventKey).pressed and (input_event as InputEventKey).keycode == KEY_ESCAPE:
-			_find_bar.visible = false
-			if _viewport != null:
-				_viewport.grab_focus()
-	)
-	_find_bar.add_child(_find_edit)
-	_find_count_label = Label.new()
-	_find_count_label.text = ""
-	_find_bar.add_child(_find_count_label)
-	_replace_edit = LineEdit.new()
-	_replace_edit.placeholder_text = "Replace with…"
-	_replace_edit.custom_minimum_size = Vector2(160.0, 0.0)
-	_find_bar.add_child(_replace_edit)
-	var replace_button: Button = Button.new()
-	replace_button.text = "Replace All"
-	replace_button.pressed.connect(_replace_all_in_sheet)
-	_find_bar.add_child(replace_button)
-	var split_match_button: Button = Button.new()
-	split_match_button.text = "Open in Split"
-	split_match_button.tooltip_text = "Open the current match in the split pane."
-	split_match_button.pressed.connect(_open_match_in_split)
-	_find_bar.add_child(split_match_button)
-	var close_button: Button = Button.new()
-	close_button.text = "✕"
-	close_button.flat = true
-	close_button.pressed.connect(func() -> void: _find_bar.visible = false)
-	_find_bar.add_child(close_button)
-	_toolbar.add_child(_find_bar)
-
-func _on_find_text_changed(text: String) -> void:
-	_find_resource_matches = _viewport.search_all(text) if _viewport != null else []
-	_find_cursor = -1
-	if _find_resource_matches.is_empty():
-		_find_count_label.text = "no matches" if not text.strip_edges().is_empty() else ""
-		return
-	_find_step(1)
-
-func _find_step(direction: int) -> void:
-	# Matches recompute on every step (results go stale after any edit) and search the
-	# FULL tree — find lands inside folded groups by unfolding the path to the match.
-	if _find_edit == null or _viewport == null or _find_edit.text.strip_edges().is_empty():
-		return
-	_find_resource_matches = _viewport.search_all(_find_edit.text)
-	if _find_resource_matches.is_empty():
-		if _find_count_label != null:
-			_find_count_label.text = "no matches"
-		return
-	_find_cursor = wrapi(_find_cursor + direction, 0, _find_resource_matches.size())
-	_find_count_label.text = "%d of %d" % [_find_cursor + 1, _find_resource_matches.size()]
-	_viewport.reveal_resource(_find_resource_matches[_find_cursor])
-
-## Replace All: substitutes the find text across comments, GDScript blocks, string
-## params, pick-filter expressions, group names/descriptions and match branches —
-## one undoable edit, count reported.
-func _replace_all_in_sheet() -> void:
-	if _viewport == null or _current_sheet == null or _find_edit == null or _replace_edit == null:
-		return
-	var find_text: String = _find_edit.text
-	if find_text.is_empty():
-		_set_status("Type something in Find first.", true)
-		return
-	var replace_text: String = _replace_edit.text
-	var counter: Dictionary = {"count": 0}
-	var changed: bool = _perform_undoable_sheet_edit("Replace All", func() -> bool:
-		_replace_in_rows(_current_sheet.events, find_text, replace_text, counter)
-		for function_resource: Variant in _current_sheet.functions:
-			if function_resource is EventFunction:
-				_replace_in_rows((function_resource as EventFunction).events if not (function_resource as EventFunction).events.is_empty() else (function_resource as EventFunction).rows, find_text, replace_text, counter)
-		return int(counter.get("count", 0)) > 0
-	)
-	if changed:
-		_refresh_after_edit()
-		_mark_dirty("Replaced %d occurrence(s)." % int(counter.get("count", 0)))
-	else:
-		_set_status("No matches for \"%s\"." % find_text)
-
-func _replace_in_rows(rows: Array, find_text: String, replace_text: String, counter: Dictionary) -> void:
-	for row: Variant in rows:
-		if row is CommentRow:
-			counter["count"] = int(counter.get("count", 0)) + (row as CommentRow).text.count(find_text)
-			(row as CommentRow).text = (row as CommentRow).text.replace(find_text, replace_text)
-		elif row is RawCodeRow:
-			counter["count"] = int(counter.get("count", 0)) + (row as RawCodeRow).code.count(find_text)
-			(row as RawCodeRow).code = (row as RawCodeRow).code.replace(find_text, replace_text)
-		elif row is EventGroup:
-			var group: EventGroup = row as EventGroup
-			counter["count"] = int(counter.get("count", 0)) + group.group_name.count(find_text) + group.description.count(find_text)
-			group.group_name = group.group_name.replace(find_text, replace_text)
-			group.name = group.group_name
-			group.description = group.description.replace(find_text, replace_text)
-			_replace_in_rows(group.events if not group.events.is_empty() else group.rows, find_text, replace_text, counter)
-		elif row is EventRow:
-			var event_row: EventRow = row as EventRow
-			for ace: Variant in event_row.conditions + event_row.actions:
-				if ace is RawCodeRow:
-					counter["count"] = int(counter.get("count", 0)) + (ace as RawCodeRow).code.count(find_text)
-					(ace as RawCodeRow).code = (ace as RawCodeRow).code.replace(find_text, replace_text)
-				elif ace is MatchRow:
-					counter["count"] = int(counter.get("count", 0)) + (ace as MatchRow).branches_text.count(find_text)
-					(ace as MatchRow).branches_text = (ace as MatchRow).branches_text.replace(find_text, replace_text)
-				elif ace is Resource and ace.get("params") is Dictionary:
-					if ace.get("comment") is String and not str(ace.get("comment")).is_empty():
-						counter["count"] = int(counter.get("count", 0)) + str(ace.get("comment")).count(find_text)
-						ace.set("comment", str(ace.get("comment")).replace(find_text, replace_text))
-					var params: Dictionary = ace.get("params")
-					for key: Variant in params.keys():
-						if params[key] is String:
-							counter["count"] = int(counter.get("count", 0)) + (params[key] as String).count(find_text)
-							params[key] = (params[key] as String).replace(find_text, replace_text)
-			for pick: Variant in event_row.pick_filters:
-				if pick is PickFilter:
-					counter["count"] = int(counter.get("count", 0)) + (pick as PickFilter).collection_value.count(find_text) + (pick as PickFilter).predicate_expression.count(find_text) + (pick as PickFilter).order_by_expression.count(find_text)
-					(pick as PickFilter).collection_value = (pick as PickFilter).collection_value.replace(find_text, replace_text)
-					(pick as PickFilter).predicate_expression = (pick as PickFilter).predicate_expression.replace(find_text, replace_text)
-					(pick as PickFilter).order_by_expression = (pick as PickFilter).order_by_expression.replace(find_text, replace_text)
-			if not event_row.with_node_target.is_empty():
-				counter["count"] = int(counter.get("count", 0)) + event_row.with_node_target.count(find_text)
-				event_row.with_node_target = event_row.with_node_target.replace(find_text, replace_text)
-			_replace_in_rows(event_row.sub_events, find_text, replace_text, counter)
+# ── Find & Replace bar → dock/find_bar.gd ───────────────────────────────────────────
+# The Ctrl+F find bar + Replace-All-across-the-sheet cluster lives in EventSheetFindBar. The
+# find-bar WIDGET members (_find_bar/_find_edit/_find_count_label/_replace_edit) and the match
+# cursor state (_find_resource_matches/_find_cursor) stay declared on the dock; the helper's
+# _ensure_find_bar() constructs the widgets and assigns them back. Thin delegates keep the
+# original names/signatures so the in-file .connect(_show_find_bar) site, multi_view_manager
+# (_dock._show_find_bar / _dock._find_step), project_find (_dock._ensure_find_bar /
+# _dock._replace_in_rows / _dock._replace_all_in_sheet) and the tests resolve unchanged.
+func _show_find_bar() -> void:  # _viewport.find_requested + multi_view_manager
+	_find_bar_glue._show_find_bar()
+func _ensure_find_bar() -> void:  # project_find + tests
+	_find_bar_glue._ensure_find_bar()
+func _on_find_text_changed(text: String) -> void:  # _find_edit.text_changed + godot_feel_test
+	_find_bar_glue._on_find_text_changed(text)
+func _find_step(direction: int) -> void:  # multi_view find_step_requested + tests
+	_find_bar_glue._find_step(direction)
+func _replace_all_in_sheet() -> void:  # Replace All button + project_find + tests
+	_find_bar_glue._replace_all_in_sheet()
+func _replace_in_rows(rows: Array, find_text: String, replace_text: String, counter: Dictionary) -> void:  # project_find + with_node_editor_test
+	_find_bar_glue._replace_in_rows(rows, find_text, replace_text, counter)
 
 # ── Group color tags ──────────────────────────────────────────────────────────────────
 var _group_color_popup: PopupPanel = null
