@@ -60,7 +60,6 @@ const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
 const VARIABLE_MENU_RENAME := 4
-const THEME_FILTERS: Array[String] = ["*.tres ; EventSheetEditorStyle", "*.res ; EventSheetEditorStyle"]
 const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
 const EMPTY_MENU_ADD_VARIABLE := 3
@@ -160,6 +159,7 @@ var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application
 var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
 var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-preview banner + "Edit Events" unlock + Open-in-Godot script-editor glue + lift-report window (dock/preview_glue.gd)
 var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # author quick-actions: quick-add match+apply + Run Scene + Save/Insert row snippets (dock/author_actions.gd)
+var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # editor theme: load/apply/pick style + theme file dialog + theme editor + live-reload binding to the active .tres (dock/theme_manager.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -167,10 +167,8 @@ var _row_insert_submenu: PopupMenu = null
 var _row_more_submenu: PopupMenu = null
 var _variable_context_menu: PopupMenu = null
 var _empty_space_context_menu: PopupMenu = null
-var _theme_file_dialog: FileDialog = null
 var _context_row: EventRowData = null
 var _context_hit: Dictionary = {}
-var _active_theme_style: EventSheetEditorStyle = null
 ## Simple mode (progressive disclosure for artist-first / first-time users): trims the
 ## right-click menus to the everyday authoring verbs and hides the advanced/code-leaning
 ## entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums). Persisted
@@ -197,6 +195,9 @@ func _init() -> void:
 	# Preview-glue helper MUST be wired before _build_ui(): _build_ui calls
 	# _preview_glue.build_preview_banner(), which assigns _preview_banner/_preview_label back on the dock.
 	_preview_glue.init(self)
+	# Theme-manager MUST be wired before _build_ui() too: _build_ui() calls
+	# _theme_manager.build_theme_file_dialog() (via the dock delegate). init() only stores _dock.
+	_theme_manager.init(self)
 	_build_ui()
 
 var _editor_dialogs_initialized: bool = false
@@ -246,6 +247,7 @@ func _ensure_editor_dialogs_initialized() -> void:
 	_row_edit_ops.init(self)
 	_preview_glue.init(self)
 	_author_actions.init(self)
+	_theme_manager.init(self)
 	# Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
 	_variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
 	_variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
@@ -313,9 +315,9 @@ func _activate_tab(index: int) -> void:
 	_refresh_ace_registry()
 	_viewport.set_sheet(_current_sheet)
 	_sync_split_sheet()
-	_sync_active_theme_binding()
+	_theme_manager._sync_active_theme_binding()
 	_refresh_title_strip()
-	_refresh_theme_picker_selection()
+	_theme_manager._refresh_theme_picker_selection()
 	_refresh_exposed_node()
 	_refresh_variable_panel()
 	_refresh_tab_bar()
@@ -527,52 +529,18 @@ func get_editor_param_store() -> EditorParamStore:
 func get_exposed_node() -> EventSheetExposedNode:
 	return _exposed_node
 
-func use_default_theme() -> bool:
-	if _current_sheet == null or _current_sheet.editor_style == null:
-		return false
-	# Out of undo history, like every theme switch (presentation, not content).
-	_current_sheet.editor_style = null
-	_refresh_after_edit()
-	return true
+# ── Editor theme (load/apply/pick style + file dialog + theme editor + live-reload binding)
+# → dock/theme_manager.gd. The dock keeps thin delegates (same names/signatures) for the tests
+# (dock.use_default_theme / .load_theme_style_from_path / .reload_active_theme), menu_bar.gd, and
+# theme_editor_dialog.gd (which does _dock.call("apply_theme_style", …)).
+func use_default_theme() -> bool:  # event_sheet_style_test
+	return _theme_manager.use_default_theme()
 
-func load_theme_style_from_path(path: String) -> bool:
-	if _current_sheet == null:
-		return false
-	var resolved_path: String = path.strip_edges()
-	if resolved_path.is_empty():
-		_set_status("Theme load failed: no file selected.", true)
-		return false
-	var loaded: Resource = ResourceLoader.load(resolved_path)
-	if not (loaded is EventSheetEditorStyle):
-		_set_status("Theme load failed: %s is not an EventSheetEditorStyle." % resolved_path.get_file(), true)
-		return false
-	# Theme switches stay OUT of the undo history (user call: undo is for sheet
-	# content — ACEs and variables — never presentation). Still marks dirty: the
-	# style is persisted on the sheet.
-	_current_sheet.editor_style = loaded as EventSheetEditorStyle
-	_refresh_after_edit()
-	_mark_dirty("Applied theme: %s." % resolved_path.get_file())
-	return true
+func load_theme_style_from_path(path: String) -> bool:  # event_sheet_style_test
+	return _theme_manager.load_theme_style_from_path(path)
 
-func reload_active_theme() -> bool:
-	if _current_sheet == null:
-		_set_status("Reload theme failed: no sheet loaded.", true)
-		return false
-	var active_style: EventSheetEditorStyle = _current_sheet.editor_style
-	if active_style == null:
-		_set_status("Reload theme failed: no active style.", true)
-		return false
-	var style_path: String = active_style.resource_path
-	if style_path.is_empty():
-		_set_status("Reload theme failed: active style is unsaved.", true)
-		return false
-	var reloaded: Resource = ResourceLoader.load(style_path, "", ResourceLoader.CACHE_MODE_REPLACE)
-	if not (reloaded is EventSheetEditorStyle):
-		_set_status("Reload theme failed: could not load resource.", true)
-		return false
-	_current_sheet.editor_style = reloaded as EventSheetEditorStyle
-	_refresh_after_edit()
-	return true
+func reload_active_theme() -> bool:  # event_sheet_style_test
+	return _theme_manager.reload_active_theme()
 
 func set_undo_redo_manager(undo_redo: Variant) -> void:
 	if undo_redo == null:
@@ -892,9 +860,9 @@ func _build_ui() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
-		if _active_theme_style != null and _active_theme_style.changed.is_connected(_on_active_theme_style_changed):
-			_active_theme_style.changed.disconnect(_on_active_theme_style_changed)
-		_active_theme_style = null
+		# Disconnect the active theme style's `changed` signal + null the field. The live-reload
+		# binding is owned by EventSheetThemeManager, so its teardown lives there too.
+		_theme_manager.teardown_theme_binding()
 		_release_ace_sources()
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
 		# GDScript-backed sheets: refocusing the editor is the moment external edits (the
@@ -956,17 +924,8 @@ func _build_preview_window() -> void:
 	_preview_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(_preview_list)
 
-func _build_theme_file_dialog() -> void:
-	if _theme_file_dialog != null:
-		return
-	_theme_file_dialog = FileDialog.new()
-	_theme_file_dialog.name = "EventSheetThemeFileDialog"
-	_theme_file_dialog.title = "Load EventSheet Theme"
-	_theme_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
-	_theme_file_dialog.access = FileDialog.ACCESS_RESOURCES
-	_theme_file_dialog.filters = PackedStringArray(THEME_FILTERS)
-	_theme_file_dialog.file_selected.connect(_on_theme_file_selected)
-	add_child(_theme_file_dialog)
+func _build_theme_file_dialog() -> void:  # called by _build_ui() — theme file dialog now in dock/theme_manager.gd
+	_theme_manager.build_theme_file_dialog()
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not (event is InputEventKey):
@@ -1084,68 +1043,26 @@ func _on_open_requested() -> void:
 	add_child(dialog)
 	dialog.popup_centered(Vector2i(860, 580))
 
-func _on_load_theme_requested() -> void:
-	if _theme_file_dialog == null:
-		_build_theme_file_dialog()
-	if _theme_file_dialog == null:
-		_set_status("Theme picker unavailable.", true)
-		return
-	_theme_file_dialog.current_dir = _suggest_sheet_directory()
-	_theme_file_dialog.popup_centered(Vector2i(760, 520))
-
-func _on_theme_file_selected(path: String) -> void:
-	load_theme_style_from_path(path)
+# Theme delegates → dock/theme_manager.gd. menu_bar.gd's View menu drives _on_load_theme_requested /
+# _on_reload_theme_requested; the toolbar picker connects _on_theme_preset_selected + calls
+# _populate_theme_picker / _refresh_theme_picker_selection back through the dock.
+func _on_load_theme_requested() -> void:  # menu_bar.gd View menu
+	_theme_manager._on_load_theme_requested()
 
 func _on_set_default_theme_requested() -> void:
-	if use_default_theme():
-		_mark_dirty("Applied default theme.")
-	else:
-		_set_status("Default theme already active.", true)
+	_theme_manager._on_set_default_theme_requested()
 
-func _on_reload_theme_requested() -> void:
-	if reload_active_theme():
-		_set_status("Reloaded active theme.")
-	else:
-		_set_status("Reload theme failed: no active style resource path.", true)
+func _on_reload_theme_requested() -> void:  # menu_bar.gd View menu
+	_theme_manager._on_reload_theme_requested()
 
-## Populates the toolbar theme switcher with "Default" plus the discovered bundled themes.
-func _populate_theme_picker() -> void:
-	if _theme_picker == null:
-		return
-	_theme_picker.clear()
-	# The default IS the editor-derived style (see _apply_editor_native_defaults) —
-	# label it so a Godot dev knows the sheet already matches their editor.
-	_theme_picker.add_item("Match Editor (default)")
-	_theme_picker.set_item_metadata(0, "")
-	for preset: Dictionary in EventSheetThemePresets.list_presets():
-		_theme_picker.add_item(str(preset.get("name", "Theme")))
-		_theme_picker.set_item_metadata(_theme_picker.item_count - 1, str(preset.get("path", "")))
-	_refresh_theme_picker_selection()
+func _populate_theme_picker() -> void:  # menu_bar.gd (after building the toolbar theme picker)
+	_theme_manager._populate_theme_picker()
 
-## Selects the switcher entry matching the current sheet's active theme (Default if none).
 func _refresh_theme_picker_selection() -> void:
-	if _theme_picker == null:
-		return
-	var active_path: String = ""
-	if _current_sheet != null and _current_sheet.editor_style != null:
-		active_path = _current_sheet.editor_style.resource_path
-	var target_index: int = 0
-	for i in range(_theme_picker.item_count):
-		if str(_theme_picker.get_item_metadata(i)) == active_path:
-			target_index = i
-			break
-	_theme_picker.selected = target_index
+	_theme_manager._refresh_theme_picker_selection()
 
-## Applies the chosen theme preset (or the built-in default) to the current sheet.
-func _on_theme_preset_selected(index: int) -> void:
-	if _theme_picker == null:
-		return
-	var path: String = str(_theme_picker.get_item_metadata(index))
-	if path.is_empty():
-		_on_set_default_theme_requested()
-	else:
-		load_theme_style_from_path(path)
-	_refresh_theme_picker_selection()
+func _on_theme_preset_selected(index: int) -> void:  # menu_bar.gd theme-picker item_selected
+	_theme_manager._on_theme_preset_selected(index)
 
 # Sheet FILE-IO delegates → dock/sheet_io.gd (EventSheetSheetIO). Bodies live there; the dock keeps
 # these thin forwarders so external callers (plugin.gd, the dock/ helpers, menu_bar, command_palette)
@@ -2528,28 +2445,15 @@ func _paste_gdscript_text(text: String) -> bool:
 		_mark_dirty("Pasted GDScript as %d block row(s) — no trigger functions to convert." % rows.size())
 	return true
 
-# ── Visual theme editor ───────────────────────────────────────────────────────
-var _theme_editor: EventSheetThemeEditor = null
+# ── Visual theme editor → dock/theme_manager.gd ────────────────────────────────
+# menu_bar.gd's View menu opens the editor; theme_editor_dialog.gd's "Apply To Current Sheet" reaches
+# apply_theme_style via _dock.has_method("apply_theme_style") + _dock.call("apply_theme_style", …), so
+# both keep dock delegates.
+func _open_theme_editor() -> void:  # menu_bar.gd View menu
+	_theme_manager._open_theme_editor()
 
-func _open_theme_editor() -> void:
-	if _theme_editor == null:
-		_theme_editor = EventSheetThemeEditor.new()
-	_theme_editor.open(self, _active_theme_style)
-
-## Called by the theme editor's "Apply To Current Sheet": assigns the working style to the
-## active sheet undoably and repaints.
-func apply_theme_style(style: EventSheetEditorStyle) -> void:
-	if _current_sheet == null or style == null:
-		return
-	var changed: bool = _perform_undoable_sheet_edit("Apply Theme", func() -> bool:
-		_current_sheet.editor_style = style
-		return true
-	)
-	if changed:
-		_active_theme_style = style
-		_refresh_after_edit()
-		_refresh_theme_picker_selection()
-		_mark_dirty("Theme applied from the theme editor.")
+func apply_theme_style(style: EventSheetEditorStyle) -> void:  # theme_editor_dialog.gd Apply-To-Current-Sheet
+	_theme_manager.apply_theme_style(style)
 
 # ── Inspector per-row param edits ───────────────────────────────────
 
@@ -3380,7 +3284,9 @@ func _move_selected_row(direction: int) -> void:
 func _apply_editor_native_defaults(apply_zoom: bool = true) -> void:
 	if not Engine.is_editor_hint() or _viewport == null:
 		return
-	if _active_theme_style == null:
+	# The active style lives on EventSheetThemeManager now; read it through the getter to decide
+	# whether to derive the "Match Editor" default (apply_theme_style is the dock's delegate below).
+	if _theme_manager.get_active_theme_style() == null:
 		var derived: EventSheetEditorStyle = EventSheetEditorThemeDeriver.derive_from_editor()
 		if derived != null:
 			apply_theme_style(derived)
@@ -4308,30 +4214,16 @@ func _refresh_after_edit() -> void:
 		return
 	_viewport.set_sheet(_current_sheet)
 	_sync_split_sheet()
-	_sync_active_theme_binding()
+	_theme_manager._sync_active_theme_binding()
 	_refresh_exposed_node()
 	_refresh_variable_panel()
 	_refresh_code_panel()
 
+# Live-reload binding to the active theme .tres → dock/theme_manager.gd. Called from _activate_tab /
+# _refresh_after_edit (via _theme_manager._sync_active_theme_binding directly); the delegate stays for
+# any external caller reaching the original name.
 func _sync_active_theme_binding() -> void:
-	var next_style: EventSheetEditorStyle = (
-		_current_sheet.editor_style
-		if _current_sheet != null and _current_sheet.editor_style != null
-		else null
-	)
-	if _active_theme_style == next_style:
-		return
-	if _active_theme_style != null and _active_theme_style.changed.is_connected(_on_active_theme_style_changed):
-		_active_theme_style.changed.disconnect(_on_active_theme_style_changed)
-	_active_theme_style = next_style
-	if _active_theme_style != null and not _active_theme_style.changed.is_connected(_on_active_theme_style_changed):
-		_active_theme_style.changed.connect(_on_active_theme_style_changed)
-
-func _on_active_theme_style_changed() -> void:
-	if _viewport == null or _current_sheet == null:
-		return
-	_viewport.set_sheet(_current_sheet)
-	_set_status("Theme change detected and reloaded.")
+	_theme_manager._sync_active_theme_binding()
 
 func _mark_dirty(message: String) -> void:
 	_dirty = true
