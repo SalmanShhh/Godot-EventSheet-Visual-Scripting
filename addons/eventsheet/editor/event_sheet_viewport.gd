@@ -2403,6 +2403,10 @@ func _get_tooltip(at_position: Vector2) -> String:
 	if kind in ["condition", "trigger", "action"]:
 		var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
 		if row_data != null and row_data.source_resource is EventRow:
+			# Glance layer §11: LEAD the tooltip with the whole event read as one plain-English sentence
+			# (built from the same descriptors the cells draw), then the hovered cell's own description.
+			var sentence: String = _row_builder.row_sentence(row_data.source_resource as EventRow)
+			var sentence_prefix: String = "%s\n\n" % sentence if not sentence.is_empty() else ""
 			var ace_resource: Resource = _resolve_ace_resource(row_data.source_resource, kind, int(metadata.get("ace_index", -1)))
 			# Show the plain-language DESCRIPTION of the ACE / function (what it does) on hover. Built-in
 			# ACEs get theirs from the generated map; custom ACEs + functions carry their own.
@@ -2414,7 +2418,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 				var action: ACEAction = ace_resource as ACEAction
 				description = _tooltip_helper.function_call_description(action) if _is_function_call_action(action) else _tooltip_helper.ace_description(action.provider_id, action.ace_id)
 			if not description.strip_edges().is_empty():
-				return description
+				return sentence_prefix + description
 			# No description (rare) → fall back to the GDScript the row compiles to, so hover is never empty.
 			var code: String = ""
 			if ace_resource is ACECondition:
@@ -2424,7 +2428,10 @@ func _get_tooltip(at_position: Vector2) -> String:
 				var a: ACEAction = ace_resource as ACEAction
 				code = _tooltip_helper.codegen_preview_for(a.provider_id, a.ace_id, a.params if not a.params.is_empty() else a.parameters)
 			if not code.strip_edges().is_empty():
-				return "GDScript:\n%s" % code
+				return sentence_prefix + "GDScript:\n%s" % code
+			# Nothing else to say → at least the sentence (a trigger cell with no ACE description).
+			if not sentence_prefix.is_empty():
+				return sentence.strip_edges()
 	# Raw GDScript blocks are the one row whose codegen is literally themselves — advertise
 	# that the block compiles verbatim (the escape hatch is transparent, not a black box).
 	var raw_row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))

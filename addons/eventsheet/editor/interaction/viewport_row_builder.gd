@@ -1187,6 +1187,106 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 		return action.ace_id
 	return descriptor.format_display(params_dict)
 
+# ── Row-as-sentence (glance layer §11) ───────────────────────────────────────────────────────────
+const _SENTENCE_MAX_ACTIONS := 3
+## Friendly lead phrases for the lifecycle trigger ids — the tempo triggers read as a cadence, not a
+## method name. Signal-backed triggers fall back to the capitalized id ("OnBodyEntered" → "On Body
+## Entered"); an authored ACECondition trigger uses its own descriptor.
+const _FRIENDLY_TRIGGER := {
+	"OnProcess": "every frame",
+	"OnPhysicsProcess": "every physics tick",
+	"OnPostTick": "after every frame",
+	"OnPhysicsPostTick": "after every physics tick",
+	"OnReady": "ready",
+	"OnEditorRun": "run in the editor",
+	"OnInput": "input arrives",
+	"OnUnhandledInput": "unhandled input arrives",
+}
+
+## The whole event read as ONE plain-English sentence for the hover tooltip — "When <trigger> — if <c1>
+## and <c2> — do: <a1>, <a2> (+1 more)". Assembled EXCLUSIVELY from the same descriptor strings the cells
+## draw (the _base formatters, which don't touch the bbcode render flag), so it can NEVER disagree with
+## the row. In-flow RawCode actions have no descriptor, so they summarise honestly as "then N lines of
+## code" — the sentence never invents prose for raw statements. "" when there is nothing to say.
+func row_sentence(event_row: EventRow) -> String:
+	if event_row == null:
+		return ""
+	var head: String = _sentence_head(event_row)
+	var conditions_clause: String = _sentence_conditions(event_row)
+	var actions_clause: String = _sentence_actions(event_row)
+	var clauses: PackedStringArray = PackedStringArray()
+	if not head.is_empty():
+		if head == "Else if" and not conditions_clause.is_empty():
+			clauses.append("%s %s" % [head, conditions_clause])
+		elif not conditions_clause.is_empty():
+			clauses.append(head)
+			clauses.append("if %s" % conditions_clause)
+		else:
+			clauses.append(head)
+	elif not conditions_clause.is_empty():
+		clauses.append("If %s" % conditions_clause)
+	if not actions_clause.is_empty():
+		clauses.append(actions_clause)
+	return " — ".join(clauses)
+
+func _sentence_head(event_row: EventRow) -> String:
+	if event_row.else_mode == EventRow.ElseMode.ELSE:
+		return "Else"
+	if event_row.else_mode == EventRow.ElseMode.ELIF:
+		return "Else if"
+	var trigger_text: String = _sentence_trigger(event_row)
+	return "When %s" % trigger_text if not trigger_text.is_empty() else ""
+
+func _sentence_trigger(event_row: EventRow) -> String:
+	if event_row.trigger != null:
+		return _format_condition_descriptor_base(event_row.trigger)
+	if not event_row.trigger_id.is_empty():
+		return str(_FRIENDLY_TRIGGER.get(event_row.trigger_id, event_row.trigger_id.capitalize()))
+	var inline_index: int = _find_inline_trigger_condition_index(event_row)
+	if inline_index >= 0 and inline_index < event_row.conditions.size():
+		return _format_condition_descriptor_base(event_row.conditions[inline_index])
+	return ""
+
+func _sentence_conditions(event_row: EventRow) -> String:
+	var inline_trigger_index: int = _find_inline_trigger_condition_index(event_row)
+	var texts: PackedStringArray = PackedStringArray()
+	for condition_index in range(event_row.conditions.size()):
+		if condition_index == inline_trigger_index:
+			continue  # the inline trigger reads as the head, not a condition
+		var condition: ACECondition = event_row.conditions[condition_index]
+		if condition == null:
+			continue
+		var text: String = _format_condition_descriptor_base(condition)
+		if condition.negated:
+			text = "not " + text
+		texts.append(text)
+	if texts.is_empty():
+		return ""
+	var joiner: String = " or " if event_row.condition_mode == EventRow.ConditionMode.OR else " and "
+	return joiner.join(texts)
+
+func _sentence_actions(event_row: EventRow) -> String:
+	var descriptors: PackedStringArray = PackedStringArray()
+	var raw_lines: int = 0
+	for action_variant: Variant in event_row.actions:
+		if action_variant is ACEAction:
+			descriptors.append(_format_action_descriptor_base(action_variant as ACEAction))
+		elif action_variant is RawCodeRow:
+			var code: String = (action_variant as RawCodeRow).code.strip_edges()
+			if not code.is_empty():
+				raw_lines += code.split("\n").size()
+	var shown: int = mini(descriptors.size(), _SENTENCE_MAX_ACTIONS)
+	var pieces: PackedStringArray = PackedStringArray()
+	for index: int in range(shown):
+		pieces.append(descriptors[index])
+	var body: String = ", ".join(pieces)
+	var remaining: int = descriptors.size() - shown
+	if remaining > 0:
+		body += " (+%d more)" % remaining
+	if raw_lines > 0:
+		body += ("" if body.is_empty() else ", ") + "then %d %s of code" % [raw_lines, "line" if raw_lines == 1 else "lines"]
+	return "do: %s" % body if not body.is_empty() else ""
+
 func _format_variable_value(value: Variant) -> String:
 	if value == null:
 		return "null"
