@@ -3,10 +3,10 @@ class_name ACEDefinition
 extends Resource
 
 enum ACEType {
-    CONDITION,
-    ACTION,
-    EXPRESSION,
-    TRIGGER
+	CONDITION,
+	ACTION,
+	EXPRESSION,
+	TRIGGER
 }
 
 var provider_id: String = ""
@@ -43,37 +43,37 @@ var widget_hint: String = ""
 var category_override: String = ""
 
 func get_identifier() -> String:
-    return "%s::%s" % [provider_id, id]
+	return "%s::%s" % [provider_id, id]
 
 func get_search_text() -> String:
-    var tag_text: String = ""
-    var tags: Variant = metadata.get("tags", [])
-    if tags is Array and not (tags as Array).is_empty():
-        var tag_parts: PackedStringArray = PackedStringArray()
-        for tag in tags:
-            tag_parts.append(str(tag))
-        tag_text = " ".join(tag_parts)
-    return "%s %s %s %s %s" % [display_name, category, description, str(metadata.get("source_name", "")), tag_text]
+	var tag_text: String = ""
+	var tags: Variant = metadata.get("tags", [])
+	if tags is Array and not (tags as Array).is_empty():
+		var tag_parts: PackedStringArray = PackedStringArray()
+		for tag in tags:
+			tag_parts.append(str(tag))
+		tag_text = " ".join(tag_parts)
+	return "%s %s %s %s %s" % [display_name, category, description, str(metadata.get("source_name", "")), tag_text]
 
 ## Returns the category to display in the inspector (respects category_override).
 func get_inspector_category() -> String:
-    return category_override if not category_override.is_empty() else category
+	return category_override if not category_override.is_empty() else category
 
 func format_display(params_dict: Dictionary = {}) -> String:
-    var template: String = str(metadata.get("display_template", display_name))
-    if template.is_empty():
-        return display_name
-    var output: String = template
-    for index: int in range(parameters.size()):
-        var parameter: Variant = parameters[index]
-        if not (parameter is Dictionary):
-            continue
-        var parameter_dict: Dictionary = parameter
-        var key: String = str(parameter_dict.get("id", ""))
-        if key.is_empty():
-            continue
-        var fallback: Variant = parameter_dict.get("default_value", parameter_dict.get("default", ""))
-        var value: Variant = params_dict.get(key, fallback)
-        output = output.replace("{%d}" % index, str(value))
-        output = output.replace("{%s}" % key, str(value))
-    return output
+	var template: String = str(metadata.get("display_template", display_name))
+	if template.is_empty():
+		return display_name
+	var output: String = template
+	for index: int in range(parameters.size()):
+		var parameter: Variant = parameters[index]
+		if not (parameter is Dictionary):
+			continue
+		var parameter_dict: Dictionary = parameter
+		var key: String = str(parameter_dict.get("id", ""))
+		if key.is_empty():
+			continue
+		var fallback: Variant = parameter_dict.get("default_value", parameter_dict.get("default", ""))
+		var value: Variant = params_dict.get(key, fallback)
+		output = output.replace("{%d}" % index, str(value))
+		output = output.replace("{%s}" % key, str(value))
+	return output

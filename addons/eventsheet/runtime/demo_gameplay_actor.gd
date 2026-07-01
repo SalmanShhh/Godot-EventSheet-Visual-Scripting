@@ -9,25 +9,25 @@ signal died
 
 ## @ace_category Movement
 func jump() -> void:
-    velocity.y = -320.0
+	velocity.y = -320.0
 
 ## @ace_category Combat
 ## @ace_description Deals damage to the actor.
 func take_damage(amount: int) -> void:
-    health -= amount
-    if health <= 0:
-        died.emit()
+	health -= amount
+	if health <= 0:
+		died.emit()
 
 ## @ace_category Combat
 func heal(amount: int) -> void:
-    health += amount
+	health += amount
 
 func is_dead() -> bool:
-    return health <= 0
+	return health <= 0
 
 func get_health() -> int:
-    return health
+	return health
 
 ## @ace_hidden
 func hidden_editor_helper() -> void:
-    pass
+	pass
