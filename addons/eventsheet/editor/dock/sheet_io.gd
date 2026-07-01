@@ -42,9 +42,9 @@ func _load_sheet_from_path(path: String) -> void:
 		_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
 		# The lift report explains the structure/code boundary per block — the teaching
 		# surface for what GDScript maps to which events, surfaced in the preview banner.
-		_dock._last_lift_report = EventSheetLiftReport.for_sheet(imported)
+		_dock._preview_glue._last_lift_report = EventSheetLiftReport.for_sheet(imported)
 		_dock._refresh_preview_banner()
-		_dock._set_status("Opened %s — viewing it as a sheet. Just start editing to change it here, or \"Open in Godot Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(_dock._last_lift_report)])
+		_dock._set_status("Opened %s — viewing it as a sheet. Just start editing to change it here, or \"Open in Godot Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(_dock._preview_glue._last_lift_report)])
 		return
 	var loaded: Resource = ResourceLoader.load(resolved_path)
 	if loaded is EventSheetResource:
