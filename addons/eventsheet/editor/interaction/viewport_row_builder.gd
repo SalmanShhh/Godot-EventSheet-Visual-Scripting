@@ -146,6 +146,49 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	var declaration: String = signal_row.signal_name
 	if not signal_row.params.is_empty():
 		declaration += "(%s)" % ", ".join(signal_row.params)
+	# A trigger signal (a `## @ace_trigger` block folded onto the row on import) is a first-class
+	# "declare a trigger ACE" block, NOT raw scaffolding: it renders like a Variable row — a "trigger"
+	# badge, the friendly ACE name, an optional category chip — with the underlying `signal …` declaration
+	# kept muted beside it so it's still obvious what emits. Double-click still opens the signal dialog.
+	if signal_row.trigger:
+		var trigger_title: String = signal_row.ace_name.strip_edges()
+		if trigger_title.is_empty():
+			trigger_title = signal_row.signal_name
+		row_data.spans = [
+			_make_span(
+				"trigger",
+				SemanticSpan.SpanType.KEYWORD,
+				{"badge": true, "text_color": event_style.behavior_accent_color, "kind": "signal_row"}
+			),
+			_make_span(
+				trigger_title,
+				SemanticSpan.SpanType.OBJECT,
+				{"kind": "signal_row", "text_color": event_style.object_label_color}
+			)
+		]
+		# Picker category chip (@ace_category), styled like the Variable row's Inspector-group chip.
+		if not signal_row.ace_category.strip_edges().is_empty():
+			row_data.spans.append(
+				_make_span(
+					signal_row.ace_category.strip_edges(),
+					SemanticSpan.SpanType.KEYWORD,
+					{
+						"badge": true,
+						"badge_style": "scope",
+						"badge_bg": Color(0.30, 0.26, 0.44, 0.92),
+						"badge_fg": Color(0.85, 0.80, 1.0, 1.0),
+						"kind": "signal_row"
+					}
+				)
+			)
+		row_data.spans.append(
+			_make_span(
+				"signal %s" % declaration,
+				SemanticSpan.SpanType.VALUE,
+				{"kind": "signal_row", "text_color": EventSheetPalette.TEXT_MUTED}
+			)
+		)
+		return row_data
 	row_data.spans = [
 		_make_span(
 			"signal",

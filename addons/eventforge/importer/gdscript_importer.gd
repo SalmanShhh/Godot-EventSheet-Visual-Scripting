@@ -110,6 +110,7 @@ func import_external_source(source: String) -> EventSheetResource:
 			continue
 		var lifted_signal: SignalRow = _try_lift_signal(line)
 		if lifted_signal != null:
+			_absorb_signal_trigger_annotations(lifted_signal, pending, line)
 			_flush_pending(pending, sheet)
 			sheet.events.append(lifted_signal)
 			index += 1
@@ -390,6 +391,58 @@ func _try_lift_signal(line: String) -> SignalRow:
 	if SheetCompiler._emit_signal_line(lifted) != line:
 		return null
 	return lifted
+
+## When a signal lifts, pull a directly-preceding `## @ace_trigger` (+ optional `## @ace_name` /
+## `## @ace_category`) block off the pending lines onto the SignalRow — the reverse of the compiler's
+## _emit_signal_annotations — so a behaviour's exposed trigger signal reads as ONE first-class "trigger"
+## row instead of stranding those annotations in a separate GDScript "setup" block above a bare signal.
+## Verify-gated exactly like _absorb_tree_variable_group: the SignalRow's canonical re-emission
+## (annotation block + declaration) must reproduce those exact source lines, or the guess is reverted
+## (byte-safety always wins). Only a `## @ace_trigger`-anchored block is absorbed; a plain signal keeps
+## its bare row, and a stray `## @ace_name` with no `## @ace_trigger` above the signal is left untouched.
+func _absorb_signal_trigger_annotations(lifted: SignalRow, pending: PackedStringArray, signal_line: String) -> void:
+	# _emit_signal_annotations lays the block down as `## @ace_trigger`, then optional `## @ace_name`,
+	# then optional `## @ace_category`. Walk up pending's tail collecting that contiguous run; it must be
+	# headed by `## @ace_trigger` (anything else means this isn't a trigger-annotation block).
+	var run_start: int = pending.size()
+	var ace_name: String = ""
+	var ace_category: String = ""
+	var cursor: int = pending.size() - 1
+	while cursor >= 0:
+		var text: String = pending[cursor].strip_edges()
+		if text == "## @ace_trigger":
+			run_start = cursor
+			break  # the anchor heads the block — stop (lines above belong to whatever precedes it)
+		elif text.begins_with("## @ace_name(\"") and text.ends_with("\")"):
+			ace_name = _extract_first_quoted(pending[cursor])
+			run_start = cursor
+			cursor -= 1
+		elif text.begins_with("## @ace_category(\"") and text.ends_with("\")"):
+			ace_category = _extract_first_quoted(pending[cursor])
+			run_start = cursor
+			cursor -= 1
+		else:
+			break
+	if run_start >= pending.size() or pending[run_start].strip_edges() != "## @ace_trigger":
+		return  # no `## @ace_trigger` anchor → a plain signal; leave the pending block untouched
+	lifted.trigger = true
+	lifted.ace_name = ace_name
+	lifted.ace_category = ace_category
+	var absorbed: PackedStringArray = PackedStringArray()
+	for index: int in range(run_start, pending.size()):
+		absorbed.append(pending[index])
+	absorbed.append(signal_line)
+	var expected: PackedStringArray = SheetCompiler._emit_signal_annotations(lifted)
+	expected.append(SheetCompiler._emit_signal_line(lifted))
+	if "\n".join(expected) != "\n".join(absorbed):
+		# The block wasn't in canonical form (reordered / extra directives) — revert to a plain signal so
+		# the annotations stay verbatim in their block and the round-trip is never risked.
+		lifted.trigger = false
+		lifted.ace_name = ""
+		lifted.ace_category = ""
+		return
+	for _removed: int in range(pending.size() - run_start):
+		pending.remove_at(pending.size() - 1)
 
 func _flush_pending(pending: PackedStringArray, sheet: EventSheetResource) -> void:
 	if pending.is_empty():

@@ -530,8 +530,15 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		elif entry is SignalRow:
 			var external_signal_line: String = _emit_signal_line(entry as SignalRow)
 			if not external_signal_line.is_empty():
+				# A trigger signal carries its `## @ace_trigger` (+ @ace_name / @ace_category) block ABOVE
+				# the declaration, exactly like the main path (:216-222) — so a behaviour's exposed trigger
+				# signal round-trips as a first-class row instead of stranding those annotations in a separate
+				# GDScript block. Plain signals emit none (byte-identical → existing .gd sheets never change).
+				var external_signal_start: int = lines.size() + 1
+				for external_annotation_line: String in _emit_signal_annotations(entry as SignalRow):
+					lines.append(external_annotation_line)
 				lines.append(external_signal_line)
-				source_map.append({"uid": str((entry as SignalRow).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "signal"})
+				source_map.append({"uid": str((entry as SignalRow).get_instance_id()), "start": external_signal_start, "end": lines.size(), "kind": "signal"})
 	# External sheets: raw rows include the original file's verbatim segments, so signals
 	# declared anywhere in the source validate self-connections.
 	var external_raw_rows: Array = []
