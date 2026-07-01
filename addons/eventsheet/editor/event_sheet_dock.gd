@@ -156,6 +156,7 @@ var _menu_bar: EventSheetMenuBar = EventSheetMenuBar.new()  # top toolbar + grou
 var _context_menus: EventSheetContextMenus = EventSheetContextMenus.new()  # right-click context menus: condition/action/row/variable/empty-space build + per-click configure (dock/context_menus.gd)
 var _external_watcher: EventSheetExternalWatcher = EventSheetExternalWatcher.new()  # GDScript-backed sheet file-watch + reload-on-disk-change dialog (dock/external_watcher.gd)
 var _sheet_io: EventSheetSheetIO = EventSheetSheetIO.new()  # sheet FILE-IO: open-from-disk + every write-back path (Save/Save As/Export/Save-as-.gd) (dock/sheet_io.gd)
+var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application (condition/action/trigger baking + insert) + row/ACE drag-drop reorder (dock/ace_apply.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -184,6 +185,9 @@ func _init() -> void:
     # fresh .new() editor BEFORE _ready/setup run the rest of the lazy init cluster. The helper's
     # _dock.setup() then triggers _ensure_editor_dialogs_initialized() exactly as the inline body did.
     _sheet_io.init(self)
+    # Same reason as _sheet_io: a test may apply an ACE (or exercise drag-drop) on a fresh .new()
+    # editor before _ready. init() only stores _dock, so wiring it here (and again in the cluster) is safe.
+    _ace_apply.init(self)
     _build_ui()
 
 var _editor_dialogs_initialized: bool = false
@@ -229,6 +233,7 @@ func _ensure_editor_dialogs_initialized() -> void:
     _context_menus.init(self)
     _external_watcher.init(self)
     _sheet_io.init(self)
+    _ace_apply.init(self)
     # Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
     _variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
     _variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
@@ -1893,266 +1898,102 @@ func _ensure_selected_event() -> bool:
     _set_status("Select an event row first.", true)
     return false
 
-# ── ACE picker signal handler ────────────────────────────────────────────────
+# ── ACE application + drag-drop — delegates to EventSheetACEApply ─────────────
+# The ACE-application + row/ACE drag-drop bodies now live in dock/ace_apply.gd. These thin
+# forwarders keep the original names + signatures so the connect() sites above, the sibling
+# dock/ helpers (variables_manager / comment_and_scope_dialogs reach _find_resource_location /
+# _group_children_array), multi_view_manager (connects _on_viewport_ace_picker_requested /
+# _on_viewport_ace_edit_requested by name), and the tests all resolve unchanged.
 
 func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> void:
-    if definition.parameters.is_empty():
-        _apply_ace_definition(definition, {}, context)
-        return
-    var initial_values: Dictionary = context.get("existing_params", {})
-    context["from_picker"] = true
-    _ace_params.open_with_values(definition, context, initial_values)
+    _ace_apply._on_ace_picker_selected(definition, context)
 
-## Re-opens the ACE picker when the params dialog requests Back.
 func _on_ace_params_back_requested(definition: ACEDefinition, context: Dictionary) -> void:
-    var mode: String = str(context.get("mode", "new_event"))
-    var signals_only: bool = bool(context.get("signals_only", false))
-    var selected_resource: Resource = context.get("selected_resource", null)
-    # Preselect the ACE you were editing so Back lands on it in the picker (swap it, or re-pick the
-    # same one to tweak params) — matching the edit-and-swap.
-    if definition != null:
-        context["preselect_ace_id"] = definition.id
-    _ace_picker.open(mode, signals_only, selected_resource, context)
+    _ace_apply._on_ace_params_back_requested(definition, context)
 
-## A .gd opens as a read-only preview, but the FIRST intentional edit unlocks it automatically — no
-## "click Edit Events" wall (that extra click is the friction now that .gd is the default format).
-## Pure viewing stays protected: Save keeps its own read-only guard, so a casual look + Ctrl+S can
-## still never overwrite a file you only opened to look at.
 func _unlock_preview_for_edit() -> void:
-    if _current_sheet != null and _current_sheet.read_only:
-        _on_preview_edit_requested()
+    _ace_apply._unlock_preview_for_edit()
 
 func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> void:
-    _unlock_preview_for_edit()
-    if row_data == null or not (row_data.source_resource is EventRow):
-        return
-    match lane:
-        "action":
-            _ace_picker.open("append_action", false, row_data.source_resource)
-        _:
-            _ace_picker.open("append_condition", false, row_data.source_resource)
+    _ace_apply._on_viewport_ace_picker_requested(row_data, lane)
 
 func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary) -> void:
-    if row_data == null or not (row_data.source_resource is EventRow):
-        return
-    var event_row: EventRow = row_data.source_resource as EventRow
-    # Action-cell comments edit in the comment dialog, not the ACE editor.
-    if bool(metadata.get("action_comment", false)):
-        var comment_index: int = int(metadata.get("ace_index", -1))
-        if comment_index >= 0 and comment_index < event_row.actions.size() and event_row.actions[comment_index] is CommentRow:
-            _open_comment_dialog(event_row.actions[comment_index])
-            return
-    var edit_context: Dictionary = _build_ace_edit_context(event_row, span_index, metadata)
-    if edit_context.is_empty():
-        return
-    var definition: ACEDefinition = edit_context.get("definition", null)
-    if definition == null:
-        _set_status("Couldn't load this row for editing (its action or condition definition is missing).", true)
-        return
-    # Triggers always go to the picker (clicking a trigger means "change what fires this event"), as does
-    # any ACE with no params to edit — both land in the picker preselected on the current ACE, so the
-    # obvious move is to swap it (or re-pick the same one). An ACE WITH params (action/condition) opens
-    # the params editor instead, which carries its own "Back" button to this same preselected picker.
-    if definition.parameters.is_empty() or str(edit_context.get("mode", "")) == "replace_trigger":
-        edit_context["preselect_ace_id"] = definition.id
-        _ace_picker.open(str(edit_context.get("mode", "")), false, event_row, edit_context)
-        return
-    _ace_params.open_with_values(definition, edit_context, edit_context.get("existing_params", {}))
-
-# ── ACE params dialog signal handler ────────────────────────────────────────
+    _ace_apply._on_viewport_ace_edit_requested(row_data, span_index, metadata)
 
 func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
-    _apply_ace_definition(definition, values, context)
-    # "Apply & Add Another": reopen the picker in the same append mode so the next
-    # condition/action can be added without re-summoning the picker by hand.
-    if bool(context.get("chain_add", false)):
-        var mode: String = str(context.get("mode", ""))
-        var selected_resource: Resource = context.get("selected_resource", null)
-        if mode in ["append_condition", "append_action"] and selected_resource is EventRow:
-            _ace_picker.open(mode, false, selected_resource, {})
+    _ace_apply._on_ace_params_confirmed(definition, values, context)
 
 func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, context: Dictionary) -> void:
-    if definition == null:
-        return
-    var mode: String = str(context.get("mode", "new_event"))
-    var selected_resource: Resource = context.get("selected_resource", null)
-    var message := {"text": ""}
-    var changed: bool = _perform_undoable_sheet_edit("Apply ACE", func() -> bool:
-        match mode:
-            "new_condition_event":
-                var condition_event: EventRow = EventRow.new()
-                if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
-                    condition_event.trigger = _create_condition_from_definition(definition, params)
-                    _bake_trigger_signature(condition_event, definition)
-                else:
-                    condition_event.conditions.append(_create_condition_from_definition(definition, params))
-                var insert_into: Variant = context.get("insert_into", null)
-                if insert_into is EventGroup:
-                    _group_children_array(insert_into as EventGroup).append(condition_event)
-                elif insert_into is EventSheetResource:
-                    (insert_into as EventSheetResource).events.append(condition_event)
-                else:
-                    _insert_row_below_selection(condition_event)
-                message["text"] = "Added event."
-                return true
-            "new_sub_condition_event":
-                if selected_resource is EventRow:
-                    var child_condition_event: EventRow = EventRow.new()
-                    if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
-                        child_condition_event.trigger = _create_condition_from_definition(definition, params)
-                        _bake_trigger_signature(child_condition_event, definition)
-                    else:
-                        child_condition_event.conditions.append(_create_condition_from_definition(definition, params))
-                    (selected_resource as EventRow).sub_events.append(child_condition_event)
-                    message["text"] = "Added sub-condition."
-                    return true
-            "append_condition":
-                if selected_resource is EventRow:
-                    var target_event: EventRow = selected_resource as EventRow
-                    var condition_entry: ACECondition = _create_condition_from_definition(definition, params)
-                    # Only use the trigger slot when the event has no trigger yet; otherwise
-                    # append as a normal condition so an existing trigger (e.g. "Every tick")
-                    # is never overwritten by adding a condition.
-                    if definition.ace_type == ACEDefinition.ACEType.TRIGGER and target_event.trigger == null and target_event.trigger_id.is_empty():
-                        target_event.trigger = condition_entry
-                        _bake_trigger_signature(target_event, definition)
-                    else:
-                        target_event.conditions.append(condition_entry)
-                    message["text"] = "Added condition."
-                    return true
-            "append_action":
-                if selected_resource is EventRow:
-                    var action_entry: ACEAction = _create_action_from_definition(definition, params)
-                    (selected_resource as EventRow).actions.append(action_entry)
-                    message["text"] = "Added action."
-                    return true
-            "replace_trigger":
-                if selected_resource is EventRow:
-                    (selected_resource as EventRow).trigger = _create_condition_from_definition(definition, params)
-                    _bake_trigger_signature(selected_resource as EventRow, definition)
-                    message["text"] = "Updated trigger."
-                    return true
-            "replace_condition":
-                if selected_resource is EventRow:
-                    var condition_index: int = int(context.get("ace_index", -1))
-                    if condition_index >= 0 and condition_index < (selected_resource as EventRow).conditions.size():
-                        (selected_resource as EventRow).conditions[condition_index] = _create_condition_from_definition(definition, params)
-                        message["text"] = "Updated condition."
-                        return true
-            "replace_action":
-                if selected_resource is EventRow:
-                    var action_index: int = int(context.get("ace_index", -1))
-                    if action_index >= 0 and action_index < (selected_resource as EventRow).actions.size():
-                        (selected_resource as EventRow).actions[action_index] = _create_action_from_definition(definition, params)
-                        message["text"] = "Updated action."
-                        return true
-            _:
-                var event_row: EventRow = EventRow.new()
-                if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
-                    event_row.trigger = _create_condition_from_definition(definition, params)
-                    _bake_trigger_signature(event_row, definition)
-                elif definition.ace_type == ACEDefinition.ACEType.CONDITION:
-                    event_row.conditions.append(_create_condition_from_definition(definition, params))
-                elif definition.ace_type == ACEDefinition.ACEType.ACTION:
-                    event_row.actions.append(_create_action_from_definition(definition, params))
-                _insert_row_below_selection(event_row)
-                message["text"] = "Added event."
-                return true
-        return false
-    )
-    if changed:
-        _mark_dirty(str(message.get("text", "Applied ACE.")))
+    _ace_apply._apply_ace_definition(definition, params, context)
 
-## Bakes a trigger definition's identity + argument signature onto the event row, so the
-## compiler can group it, generate a connectable handler (`func _on_<signal>(args)`), and
-## emit the `_ready` connection — all without registry access at compile time. Fixes the
-## gap where picker-created trigger events never set trigger_id and silently skipped
-## compilation. Mirrors codegen_template baking on conditions/actions.
 func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> void:
-    if event_row == null or definition == null or definition.ace_type != ACEDefinition.ACEType.TRIGGER:
-        return
-    event_row.trigger_provider_id = definition.provider_id
-    event_row.trigger_id = definition.id
-    # Bus triggers: autoload providers connect by singleton name (project-wide signals).
-    if _autoload_provider_names.has(definition.provider_id):
-        event_row.trigger_source_path = "autoload:%s" % str(_autoload_provider_names[definition.provider_id])
-    var parts: PackedStringArray = PackedStringArray()
-    for parameter in definition.parameters:
-        if not (parameter is Dictionary):
-            continue
-        var param_id: String = str((parameter as Dictionary).get("id", ""))
-        if param_id.is_empty():
-            continue
-        var param_type: int = int((parameter as Dictionary).get("type", TYPE_NIL))
-        parts.append(param_id if param_type == TYPE_NIL else "%s: %s" % [param_id, type_string(param_type)])
-    event_row.trigger_args = ", ".join(parts)
+    _ace_apply._bake_trigger_signature(event_row, definition)
 
 func _create_condition_from_definition(definition: ACEDefinition, params: Dictionary) -> ACECondition:
-    var condition: ACECondition = ACECondition.new()
-    condition.provider_id = definition.provider_id
-    condition.ace_id = definition.id
-    condition.params = _resolve_definition_params(definition, params)
-    # Bake the custom/addon codegen template so the ACE compiles standalone.
-    condition.codegen_template = _baked_template_for(definition)
-    # Stateful conditions (Every X Seconds…): bake a fresh uid into the member/prelude/
-    # on-true/template so every applied instance owns its own state.
-    var member_template: String = str(definition.metadata.get("member_template", ""))
-    if not member_template.is_empty():
-        var stateful_uid: String = _fresh_uid_token()
-        condition.member_declaration = member_template.replace("{uid}", stateful_uid)
-        condition.codegen_prelude = str(definition.metadata.get("codegen_prelude", "")).replace("{uid}", stateful_uid)
-        condition.codegen_on_true = str(definition.metadata.get("codegen_on_true", "")).replace("{uid}", stateful_uid)
-        condition.codegen_template = condition.codegen_template.replace("{uid}", stateful_uid)
-    return condition
+    return _ace_apply._create_condition_from_definition(definition, params)
 
 func _create_action_from_definition(definition: ACEDefinition, params: Dictionary) -> ACEAction:
-    var action: ACEAction = ACEAction.new()
-    action.provider_id = definition.provider_id
-    action.ace_id = definition.id
-    action.params = _resolve_definition_params(definition, params)
-    # Bake the custom/addon codegen template so the ACE compiles standalone.
-    action.codegen_template = _baked_template_for(definition)
-    # Multi-statement action templates declare locals — bake a fresh uid per instance.
-    if action.codegen_template.contains("{uid}"):
-        action.codegen_template = action.codegen_template.replace("{uid}", _fresh_uid_token())
-    return action
+    return _ace_apply._create_action_from_definition(definition, params)
 
-## The codegen template baked onto applied ACEs. Explicit @ace_codegen_template wins; addon
-## METHODS without one become **instance-backed**: the call targets a per-provider member
-## (`__eventsheet_provider_<Class>.method({args})`) that the compiler declares as a plain
-## owned instance of the addon class — so template-less addon ACEs compile and run in
-## exported games with zero EventForge dependency (the addon script ships like any class).
 func _baked_template_for(definition: ACEDefinition) -> String:
-    var explicit: String = str(definition.metadata.get("codegen_template", ""))
-    if not explicit.strip_edges().is_empty():
-        return explicit
-    if str(definition.metadata.get("semantic_source", "")) != "reflection":
-        return ""
-    if str(definition.metadata.get("source_kind", "")) != "method":
-        return ""
-    var method_name: String = str(definition.metadata.get("source_name", ""))
-    if method_name.is_empty() or definition.provider_id.is_empty():
-        return ""
-    var argument_tokens: PackedStringArray = PackedStringArray()
-    for parameter in definition.parameters:
-        if parameter is Dictionary and not str((parameter as Dictionary).get("id", "")).is_empty():
-            argument_tokens.append("{%s}" % str((parameter as Dictionary).get("id", "")))
-    return "__eventsheet_provider_%s.%s(%s)" % [definition.provider_id, method_name, ", ".join(argument_tokens)]
+    return _ace_apply._baked_template_for(definition)
 
 func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionary) -> Dictionary:
-    return _param_resolver.resolve_all(definition, row_params if row_params != null else {})
+    return _ace_apply._resolve_definition_params(definition, row_params)
 
 func _insert_row_below_selection(row_resource: Resource, explicit_selected_resource: Resource = null) -> void:
-    if _current_sheet == null or row_resource == null:
-        return
-    var selected_resource: Resource = explicit_selected_resource if explicit_selected_resource != null else _active_view().get_selected_context().get("source_resource", null)
-    if selected_resource == null:
-        _current_sheet.events.append(row_resource)
-        return
-    var location: Dictionary = _find_resource_location(selected_resource)
-    var container: Array = location.get("container", _current_sheet.events)
-    var index: int = int(location.get("index", container.size() - 1))
-    container.insert(index + 1, row_resource)
+    _ace_apply._insert_row_below_selection(row_resource, explicit_selected_resource)
+
+func _find_resource_location(target: Resource) -> Dictionary:
+    return _ace_apply._find_resource_location(target)
+
+func _find_resource_location_in_array(target: Resource, container: Array) -> Dictionary:
+    return _ace_apply._find_resource_location_in_array(target, container)
+
+func _group_children_array(group: EventGroup) -> Array:
+    return _ace_apply._group_children_array(group)
+
+func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String = "before", copy_mode: bool = false) -> void:
+    _ace_apply._on_row_drop_requested(source_row, target_row, drop_mode, copy_mode)
+
+func _on_rows_drop_requested(source_rows: Array, target_row: EventRowData, drop_mode: String = "before", copy_mode: bool = false) -> void:
+    _ace_apply._on_rows_drop_requested(source_rows, target_row, drop_mode, copy_mode)
+
+func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String, copy_mode: bool = false) -> void:
+    _ace_apply._move_rows(source_rows, target_row, drop_mode, copy_mode)
+
+func _on_viewport_ace_drop_requested(source_entries: Array, target_row: EventRowData, target_lane: String, target_ace_index: int, insert_mode: String, copy_mode: bool = false) -> void:
+    _ace_apply._on_viewport_ace_drop_requested(source_entries, target_row, target_lane, target_ace_index, insert_mode, copy_mode)
+
+func _normalize_ace_drag_entries(source_entries: Array, lane: String) -> Array:
+    return _ace_apply._normalize_ace_drag_entries(source_entries, lane)
+
+func _remove_drag_entry_from_source(entry: Dictionary) -> void:
+    _ace_apply._remove_drag_entry_from_source(entry)
+
+func _drag_entry_is_trigger_like(entry: Dictionary) -> bool:
+    return _ace_apply._drag_entry_is_trigger_like(entry)
+
+func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []) -> bool:
+    return _ace_apply._event_has_trigger_like(event_row, excluded_resources)
+
+func _is_trigger_condition(condition: ACECondition) -> bool:
+    return _ace_apply._is_trigger_condition(condition)
+
+func _event_ace_array(event_row: EventRow, lane: String) -> Array:
+    return _ace_apply._event_ace_array(event_row, lane)
+
+func _resolve_event_ace_resource(event_row: EventRow, lane: String, ace_index: int) -> Resource:
+    return _ace_apply._resolve_event_ace_resource(event_row, lane, ace_index)
+
+func _on_ace_preview_requested(source_label: String, definitions: Array[ACEDefinition]) -> void:
+    _ace_apply._on_ace_preview_requested(source_label, definitions)
+
+func _ace_type_label(ace_type: int) -> String:
+    return _ace_apply._ace_type_label(ace_type)
+
+func _on_viewport_drag_status_requested(message: String, is_error: bool) -> void:
+    _ace_apply._on_viewport_drag_status_requested(message, is_error)
 
 ## Returns the best available EventSheet file name suggestion for save dialogs.
 ## Returns the preferred directory for open/save dialogs, defaulting to res:// (open + theme dialogs).
@@ -2162,294 +2003,6 @@ func _suggest_sheet_directory() -> String:
 ## Ensures save paths always include a valid filename and EventSheet resource extension.
 func _normalize_sheet_save_path(path: String) -> String:
     return _sheet_io._normalize_sheet_save_path(path)
-
-func _find_resource_location(target: Resource) -> Dictionary:
-    return _find_resource_location_in_array(target, _current_sheet.events)
-
-func _find_resource_location_in_array(target: Resource, container: Array) -> Dictionary:
-    for index in range(container.size()):
-        var entry: Resource = container[index]
-        if entry == target:
-            return {"container": container, "index": index}
-        if entry is EventGroup:
-            var group_children: Array = _group_children_array(entry as EventGroup)
-            var nested_group: Dictionary = _find_resource_location_in_array(target, group_children)
-            if not nested_group.is_empty():
-                return nested_group
-        elif entry is EventRow:
-            var nested_event: Dictionary = _find_resource_location_in_array(target, (entry as EventRow).sub_events)
-            if not nested_event.is_empty():
-                return nested_event
-    return {}
-
-func _group_children_array(group: EventGroup) -> Array:
-    if not group.events.is_empty():
-        return group.events
-    return group.rows
-
-func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String = "before", copy_mode: bool = false) -> void:
-    if source_row == null:
-        return
-    _move_rows([source_row], target_row, drop_mode, copy_mode)
-
-func _on_rows_drop_requested(
-    source_rows: Array,
-    target_row: EventRowData,
-    drop_mode: String = "before",
-    copy_mode: bool = false
-) -> void:
-    _move_rows(source_rows, target_row, drop_mode, copy_mode)
-
-func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String, copy_mode: bool = false) -> void:
-    if target_row == null or _current_sheet == null or source_rows.is_empty():
-        return
-    var target_resource: Resource = target_row.source_resource
-    if target_resource == null:
-        return
-    var source_resources: Array[Resource] = []
-    for source_row in source_rows:
-        if not (source_row is EventRowData):
-            continue
-        var source_resource: Resource = (source_row as EventRowData).source_resource
-        if source_resource == null or source_resource == target_resource or source_resources.has(source_resource):
-            continue
-        if not copy_mode and _resource_contains_descendant(source_resource, target_resource):
-            _set_status("Cannot move a row into one of its descendants.", true)
-            return
-        source_resources.append(source_resource)
-    if source_resources.is_empty():
-        return
-    var moved: bool = _perform_undoable_sheet_edit("Drag Row", func() -> bool:
-        var inserted_resources: Array[Resource] = []
-        if copy_mode:
-            for source_resource in source_resources:
-                inserted_resources.append(source_resource.duplicate(true))
-        else:
-            inserted_resources = source_resources
-            for source_resource in source_resources:
-                var source_location: Dictionary = _find_resource_location(source_resource)
-                if source_location.is_empty():
-                    continue
-                var source_container: Array = source_location.get("container", [])
-                var source_index: int = int(source_location.get("index", -1))
-                if source_index >= 0 and source_index < source_container.size():
-                    source_container.remove_at(source_index)
-        var target_container: Array = []
-        var insertion_index: int = 0
-        if drop_mode == "inside":
-            if target_resource is EventGroup:
-                target_container = _group_children_array(target_resource as EventGroup)
-                insertion_index = target_container.size()
-            elif target_resource is EventRow:
-                target_container = (target_resource as EventRow).sub_events
-                insertion_index = target_container.size()
-        else:
-            var target_location: Dictionary = _find_resource_location(target_resource)
-            if target_location.is_empty():
-                return false
-            target_container = target_location.get("container", [])
-            insertion_index = int(target_location.get("index", 0))
-            if drop_mode == "after":
-                insertion_index += 1
-        for offset in range(inserted_resources.size()):
-            target_container.insert(insertion_index + offset, inserted_resources[offset])
-        return true
-    )
-    if moved:
-        _mark_dirty("Copied row via drag and drop." if copy_mode else "Moved row via drag and drop.")
-
-func _on_viewport_ace_drop_requested(
-    source_entries: Array,
-    target_row: EventRowData,
-    target_lane: String,
-    target_ace_index: int,
-    insert_mode: String,
-    copy_mode: bool = false
-) -> void:
-    if target_row == null or not ["condition", "action"].has(target_lane):
-        return
-    var target_event: EventRow = target_row.source_resource as EventRow
-    if target_event == null:
-        return
-    var normalized_entries: Array = _normalize_ace_drag_entries(source_entries, target_lane)
-    if normalized_entries.is_empty():
-        return
-    var trigger_entries: Array = []
-    var excluded_trigger_resources: Array = []
-    for entry in normalized_entries:
-        if _drag_entry_is_trigger_like(entry):
-            trigger_entries.append(entry)
-            if not copy_mode:
-                var trigger_resource: Resource = entry.get("resource", null) as Resource
-                if trigger_resource != null:
-                    excluded_trigger_resources.append(trigger_resource)
-    if target_lane == "condition":
-        if trigger_entries.size() > 1:
-            _set_status("Events can only have one trigger.", true)
-            return
-        if not trigger_entries.is_empty() and _event_has_trigger_like(target_event, excluded_trigger_resources):
-            _set_status("This event already has a trigger.", true)
-            return
-    var target_anchor: Resource = _resolve_event_ace_resource(target_event, target_lane, target_ace_index)
-    if not copy_mode and target_anchor != null:
-        for entry in normalized_entries:
-            if entry.get("resource", null) == target_anchor:
-                target_anchor = null
-                break
-    var moved: bool = _perform_undoable_sheet_edit("Drag ACE", func() -> bool:
-        var moving_resources: Array = []
-        var moved_trigger: ACECondition = null
-        for entry in normalized_entries:
-            var source_resource: Resource = entry.get("resource", null) as Resource
-            if source_resource == null:
-                continue
-            var inserted_resource: Resource = source_resource.duplicate(true) if copy_mode else source_resource
-            if _drag_entry_is_trigger_like(entry):
-                moved_trigger = inserted_resource as ACECondition
-            else:
-                moving_resources.append(inserted_resource)
-        if not copy_mode:
-            var removal_groups: Dictionary = {}
-            for entry in normalized_entries:
-                var source_event: EventRow = entry.get("event_row")
-                var removal_entries: Array = removal_groups.get(source_event, []).duplicate()
-                removal_entries.append(entry)
-                removal_groups[source_event] = removal_entries
-            for source_event in removal_groups.keys():
-                var entries_to_remove: Array = removal_groups.get(source_event, []).duplicate()
-                entries_to_remove.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-                    return int(a.get("ace_index", -1)) > int(b.get("ace_index", -1))
-                )
-                for removal_entry in entries_to_remove:
-                    _remove_drag_entry_from_source(removal_entry)
-        if moved_trigger != null:
-            target_event.trigger = moved_trigger
-        var target_array: Array = _event_ace_array(target_event, target_lane)
-        var insertion_index: int = target_array.size()
-        if target_anchor != null:
-            var anchor_index: int = target_array.find(target_anchor)
-            if anchor_index >= 0:
-                insertion_index = anchor_index + (1 if insert_mode == "after" else 0)
-        for offset in range(moving_resources.size()):
-            target_array.insert(insertion_index + offset, moving_resources[offset])
-        return moved_trigger != null or not moving_resources.is_empty()
-    )
-    if moved:
-        _mark_dirty("Copied ACE via drag and drop." if copy_mode else "Moved ACE via drag and drop.")
-
-func _normalize_ace_drag_entries(source_entries: Array, lane: String) -> Array:
-    var normalized: Array = []
-    for entry in source_entries:
-        if not (entry is Dictionary):
-            continue
-        var entry_dict: Dictionary = entry
-        var source_event: EventRow = entry_dict.get("source_resource", null) as EventRow
-        var kind: String = str(entry_dict.get("kind", ""))
-        var ace_index: int = int(entry_dict.get("ace_index", -1))
-        var lane_matches: bool = (
-            kind == "action" if lane == "action" else kind in ["condition", "trigger"]
-        )
-        if source_event == null or not lane_matches or ace_index < 0:
-            continue
-        var ace_resource: Resource = _resolve_event_ace_resource(source_event, kind, ace_index)
-        if ace_resource == null:
-            continue
-        normalized.append({
-            "event_row": source_event,
-            "kind": kind,
-            "ace_index": ace_index,
-            "resource": ace_resource
-        })
-    return normalized
-
-func _remove_drag_entry_from_source(entry: Dictionary) -> void:
-    var source_event: EventRow = entry.get("event_row", null) as EventRow
-    if source_event == null:
-        return
-    var kind: String = str(entry.get("kind", ""))
-    var ace_index: int = int(entry.get("ace_index", -1))
-    match kind:
-        "trigger":
-            if source_event.trigger == entry.get("resource", null):
-                source_event.trigger = null
-        "condition":
-            if ace_index >= 0 and ace_index < source_event.conditions.size():
-                source_event.conditions.remove_at(ace_index)
-        "action":
-            if ace_index >= 0 and ace_index < source_event.actions.size():
-                source_event.actions.remove_at(ace_index)
-
-func _drag_entry_is_trigger_like(entry: Dictionary) -> bool:
-    if str(entry.get("kind", "")) == "trigger":
-        return true
-    var resource: Resource = entry.get("resource", null) as Resource
-    return resource is ACECondition and _is_trigger_condition(resource as ACECondition)
-
-func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []) -> bool:
-    if event_row == null:
-        return false
-    if event_row.trigger != null and not excluded_resources.has(event_row.trigger):
-        return true
-    if not event_row.trigger_id.is_empty():
-        return true
-    for condition in event_row.conditions:
-        if not (condition is ACECondition):
-            continue
-        if excluded_resources.has(condition):
-            continue
-        if _is_trigger_condition(condition as ACECondition):
-            return true
-    return false
-
-func _is_trigger_condition(condition: ACECondition) -> bool:
-    if condition == null:
-        return false
-    var definition: ACEDefinition = _find_definition(condition.provider_id, condition.ace_id)
-    if definition != null:
-        return definition.ace_type == ACEDefinition.ACEType.TRIGGER
-    var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
-    return descriptor != null and descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER
-
-func _event_ace_array(event_row: EventRow, lane: String) -> Array:
-    if lane == "condition":
-        return event_row.conditions
-    return event_row.actions
-
-func _resolve_event_ace_resource(event_row: EventRow, lane: String, ace_index: int) -> Resource:
-    if event_row == null or ace_index < 0:
-        return null
-    if lane == "trigger":
-        return event_row.trigger
-    var ace_array: Array = _event_ace_array(event_row, lane)
-    if ace_index < ace_array.size() and ace_array[ace_index] is Resource:
-        return ace_array[ace_index]
-    return null
-
-func _on_ace_preview_requested(source_label: String, definitions: Array[ACEDefinition]) -> void:
-    if _preview_window == null or _preview_list == null:
-        return
-    _preview_window.title = "Dropped Node Preview — %s (%d)" % [source_label, definitions.size()]
-    _preview_title.text = "Dropped Node Preview — %s (%d)" % [source_label, definitions.size()]
-    _preview_list.clear()
-    for definition in definitions:
-        _preview_list.add_item("[%s] %s" % [_ace_type_label(definition.ace_type), definition.format_display()])
-    if definitions.is_empty():
-        _preview_list.add_item("No actions or conditions were found on the dropped node.")
-    _preview_window.popup_centered(Vector2i(560, 320))
-
-func _ace_type_label(ace_type: int) -> String:
-    match ace_type:
-        ACEDefinition.ACEType.CONDITION:
-            return "Condition"
-        ACEDefinition.ACEType.TRIGGER:
-            return "Trigger"
-        ACEDefinition.ACEType.EXPRESSION:
-            return "Expression"
-        _:
-            return "Action"
-
-func _on_viewport_drag_status_requested(message: String, is_error: bool) -> void:
-    _set_status(message, is_error)
 
 var _raw_code_dialog: ConfirmationDialog = null
 var _raw_code_edit: CodeEdit = null
