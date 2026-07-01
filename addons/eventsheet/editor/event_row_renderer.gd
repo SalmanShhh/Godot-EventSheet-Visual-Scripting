@@ -73,7 +73,9 @@ func _draw_text_with_values(
 	font: Font,
 	font_size: int,
 	base_color: Color,
-	value_color: Color = COLOR_VALUE
+	value_color: Color = COLOR_VALUE,
+	string_color: Color = COLOR_VALUE,
+	bool_color: Color = COLOR_VALUE
 ) -> void:
 	var cursor: int = 0
 	var x: float = baseline.x
@@ -89,9 +91,17 @@ func _draw_text_with_values(
 		if not plain.is_empty() and x < limit:
 			_draw_text(control, Vector2(x, baseline.y), plain, limit - x, font, font_size, base_color)
 			x += font.get_string_size(plain, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+		# Typed value tint (glance §11): the trailing kind picks the hue; numbers keep value_color.
+		var value_col: Color = value_color
+		if (range_entry as Array).size() >= 3:
+			match str(range_entry[2]):
+				"string":
+					value_col = string_color
+				"bool":
+					value_col = bool_color
 		var value_text: String = text.substr(start, length)
 		if not value_text.is_empty() and x < limit:
-			_draw_text(control, Vector2(x, baseline.y), value_text, limit - x, font, font_size, value_color)
+			_draw_text(control, Vector2(x, baseline.y), value_text, limit - x, font, font_size, value_col)
 			x += font.get_string_size(value_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
 		cursor = start + length
 		if x >= limit:
@@ -533,7 +543,7 @@ func _draw_spans(
 			_draw_text(control, Vector2(text_x, baseline_y), draw_text, text_width, font, draw_font_size, color)
 		else:
 			var value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
-			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, value_color)
+			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, value_color, EventSheetPalette.COLOR_VALUE_STRING, EventSheetPalette.COLOR_VALUE_BOOL)
 		# Color params get a small swatch right after the text (event-sheet-style color preview).
 		var swatch: Variant = metadata.get("swatch_color")
 		if swatch is Color:

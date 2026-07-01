@@ -1296,15 +1296,24 @@ func _format_variable_value(value: Variant) -> String:
 
 static var _value_regex: RegEx = null
 
-## Ranges ([start, length]) of parameter-like values (numbers, quoted strings, booleans)
-## inside ACE display text, so the renderer can highlight them event-sheet-style.
+## Ranges ([start, length, kind]) of parameter-like values inside ACE display text, so the renderer can
+## highlight them event-sheet-style AND tint by TYPE (glance layer §11): kind is "string" (quoted),
+## "bool" (true/false), or "number". The three come straight from which regex alternate matched, so the
+## tint can never disagree with the highlight. The trailing kind is additive — consumers that read only
+## [start] / [length] (the value hit-test) are unaffected.
 static func _value_ranges_for(text: String) -> Array:
 	if _value_regex == null:
 		_value_regex = RegEx.new()
 		_value_regex.compile("\"[^\"]*\"|\\b-?\\d+(?:\\.\\d+)?\\b|\\b(?:true|false|True|False)\\b")
 	var ranges: Array = []
 	for regex_match in _value_regex.search_all(text):
-		ranges.append([regex_match.get_start(), regex_match.get_end() - regex_match.get_start()])
+		var matched: String = regex_match.get_string()
+		var kind: String = "number"
+		if matched.begins_with("\""):
+			kind = "string"
+		elif matched.to_lower() == "true" or matched.to_lower() == "false":
+			kind = "bool"
+		ranges.append([regex_match.get_start(), regex_match.get_end() - regex_match.get_start(), kind])
 	return ranges
 
 # One-shot flag set by _format_condition/action_descriptor (their ONLY callers each pass the result straight

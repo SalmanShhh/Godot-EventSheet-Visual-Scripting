@@ -85,6 +85,14 @@ const COLOR_TEMPO_INPUT_FG = Color("#e3f0ff")
 const COLOR_TEMPO_ONCE_BG = Color("#6a54b0")        # ▶ muted violet — runs once
 const COLOR_TEMPO_ONCE_FG = Color("#efe8ff")
 
+# ── Typed value tints (glance layer §11) ─────────────────────────────────────────────────────────
+# The value-highlight pass in cells tints parameter literals by TYPE so "where are the magic numbers"
+# is a colour question. Numbers keep the shipped value-green (COLOR_VALUE / event_style value colour);
+# strings + booleans get these two new hues (kept clear of the amber action/⚠ family — amber is the
+# most overloaded hue in the system, per the §5 one-legend colour law).
+const COLOR_VALUE_STRING = Color("#79b8f2")  # text literals — a calm blue
+const COLOR_VALUE_BOOL = Color("#c99af0")    # true / false — a soft violet
+
 static func clamp_font_size(value: int) -> int:
 	return max(value, MIN_FONT_SIZE)
 
