@@ -58,6 +58,9 @@ static func run() -> bool:
 	var floors: Dictionary = {
 		"abilities": 40, "virtual_cursor": 40, "drag_drop": 30,
 		"spring": 15, "weapon_kit": 12, "juice": 10, "platformer_movement": 10,
+		# Unlocked by the untyped-parameter fix (a bare `final_value` param re-emitted as
+		# `final_value: String` — ACEParam's default type — and failed the byte-verify).
+		"htn_agent": 15, "tween": 8, "time_slicer": 8,
 	}
 	for pack: Variant in floors:
 		var path: String = "res://eventsheet_addons/%s/%s_behavior.gd" % [pack, pack]

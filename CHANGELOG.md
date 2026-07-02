@@ -28,6 +28,10 @@
   weapon_kit 18, juice 17, platformer 13 — each a Define block you can double-click into the ACE
   Studio, instead of an annotation wall. Every pack still round-trips byte-identically (drift = 0).
   (`tests/per_function_lift_test.gd`)
+- **Untyped parameters now lift**: a bare parameter (`final_value` with no `: Type`) was re-emitted
+  with ACEParam's default type (`final_value: String`), failing the byte-verify and blocking the
+  whole pack. It now round-trips bare — unlocking htn_agent (23 verbs), tween (10), and
+  time_slicer (10): **292 real functions** lift across the packs in total.
 
 ### Added — variable folders: drag one variable onto another to group them
 

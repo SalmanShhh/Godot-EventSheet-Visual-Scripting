@@ -706,6 +706,10 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 			param.type_name = argument_text.substr(colon + 2)
 		else:
 			param.id = argument_text
+			# An untyped parameter must STAY untyped: ACEParam defaults type_name to "String", which
+			# would re-emit `final_value: String` for a source `final_value` and fail the byte-verify.
+			# "Variant" is the emitter's render-bare sentinel, so the header round-trips exactly.
+			param.type_name = "Variant"
 		event_function.params.append(param)
 	event_function.expose_as_ace = bool(annotations.get("expose", false))
 	event_function.ace_display_name = str(annotations.get("name", ""))
