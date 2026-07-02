@@ -61,6 +61,9 @@ static func run() -> bool:
 		# Unlocked by the untyped-parameter fix (a bare `final_value` param re-emitted as
 		# `final_value: String` — ACEParam's default type — and failed the byte-verify).
 		"htn_agent": 15, "tween": 8, "time_slicer": 8,
+		# Unlocked by the deep-statement guard (a line INSIDE an unlifted control block used to
+		# template-match as a standalone action and re-emit one tab shallower).
+		"health": 25, "follow": 1, "tile_movement": 1,
 	}
 	for pack: Variant in floors:
 		var path: String = "res://eventsheet_addons/%s/%s_behavior.gd" % [pack, pack]

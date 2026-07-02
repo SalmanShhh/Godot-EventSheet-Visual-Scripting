@@ -64,17 +64,17 @@ static func run() -> bool:
 	empty_dock.free()
 
 	# ── Covenant: the view is a pure read — opening a REAL pack still round-trips byte-identically.
-	# Honest current reality: an opened pack's verbs stay RawCodeRow func blocks (they are NOT lifted
-	# into sheet.functions — that shell-lift is future work), so no section appears for it yet. The
-	# section serves editor-authored sheets, whose functions previously never appeared on the canvas.
+	# Since the per-function shell-lift, an opened pack's verbs arrive as REAL EventFunctions, so the
+	# Published verbs section appears for packs too — one Define child per lifted function.
 	var pack_path: String = "res://eventsheet_addons/health/health_behavior.gd"
 	var source: String = (FileAccess.open(pack_path, FileAccess.READ)).get_as_text()
 	dock._load_sheet_from_path(pack_path)  # the real user open path (verify-lift included)
 	var opened: EventSheetResource = dock.get_current_sheet()
-	ok = _check("an opened pack keeps its verbs as func blocks for now (none lifted to sheet.functions)",
-		opened.functions.size(), 0) and ok
-	ok = _check("so no empty section appears for it",
-		_find_row_by_uid_prefix(dock._active_view(), "published_verbs_") == null, true) and ok
+	ok = _check("an opened pack lifts real functions", opened.functions.size() > 20, true) and ok
+	var pack_header: EventRowData = _find_row_by_uid_prefix(dock._active_view(), "published_verbs_")
+	ok = _check("the pack shows its verbs section", pack_header != null, true) and ok
+	ok = _check("one Define child per lifted function",
+		pack_header.children.size() if pack_header != null else -1, opened.functions.size()) and ok
 	var reemitted: String = str(SheetCompiler.compile(opened, pack_path).get("output", ""))
 	ok = _check("round-trip stays byte-identical with the view built (drift=0)", reemitted == source, true) and ok
 

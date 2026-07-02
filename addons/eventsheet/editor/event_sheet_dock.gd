@@ -2171,7 +2171,11 @@ func _select_sheet_row_for_code_line(line: int) -> void:
 		return
 	for entry: Variant in EventSheetLineRowMapper.entries_for_line(_code_source_map, line):
 		var resource: Resource = instance_from_id(int(str((entry as Dictionary).get("uid", "0")))) as Resource
-		if resource != null and _viewport.select_resource(resource):
+		if resource == null:
+			continue
+		# reveal_resource falls back where plain selection can't reach: a lifted function's Define
+		# block lives inside the folded "Published verbs" section, and reveal unfolds ancestors.
+		if _viewport.select_resource(resource) or _viewport.reveal_resource(resource):
 			_update_code_panel_highlight()
 			return
 

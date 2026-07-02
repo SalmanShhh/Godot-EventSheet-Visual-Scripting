@@ -47,21 +47,22 @@ static func run() -> bool:
 
 	ok = _check("checked a meaningful number of packs", checked_packs > 5, true) and ok
 
-	# End-to-end on health: the heal block's mapped range now covers its actual output lines.
+	# End-to-end on health: heal now lifts as a REAL EventFunction, and its mapped range must cover
+	# its whole emission — the annotation block through the final body line.
 	var health: String = FileAccess.get_file_as_string("res://eventsheet_addons/health/health_behavior.gd")
 	var health_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(health)
 	health_sheet.external_source_path = "res://eventsheet_addons/health/health_behavior.gd"
 	var health_result: Dictionary = SheetCompiler.compile(health_sheet, "user://_ext_map_test.gd")
 	var health_lines: PackedStringArray = str(health_result.get("output", "")).split("\n")
-	var heal_row: RawCodeRow = null
-	for row: Variant in health_sheet.events:
-		if row is RawCodeRow and str((row as RawCodeRow).code).begins_with("func heal(amount: float)"):
-			heal_row = row as RawCodeRow
-	var heal_range: Vector2i = EventSheetLineRowMapper.range_for_resource(health_result.get("source_map", []), heal_row)
-	ok = _check("the heal block's mapped FIRST line is its func signature",
-		heal_range.x >= 1 and health_lines[heal_range.x - 1] == "func heal(amount: float) -> void:", true) and ok
-	ok = _check("the heal block's mapped LAST line is its final body line",
-		heal_range.y >= 1 and health_lines[heal_range.y - 1].strip_edges() == "on_health_changed.emit()", true) and ok
+	var heal_fn: EventFunction = null
+	for entry: Variant in health_sheet.functions:
+		if entry is EventFunction and (entry as EventFunction).function_name == "heal":
+			heal_fn = entry as EventFunction
+	ok = _check("heal lifts as a real function", heal_fn != null, true) and ok
+	var heal_range: Vector2i = EventSheetLineRowMapper.range_for_resource(health_result.get("source_map", []), heal_fn)
+	var heal_text: String = "\n".join(health_lines.slice(maxi(heal_range.x - 1, 0), heal_range.y)) if heal_range.x > 0 else ""
+	ok = _check("heal's mapped range contains its signature", heal_text.contains("func heal(amount: float) -> void:"), true) and ok
+	ok = _check("heal's mapped range reaches its final body line", heal_text.contains("on_health_changed.emit()"), true) and ok
 
 	return ok
 

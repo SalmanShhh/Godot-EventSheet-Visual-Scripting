@@ -31,7 +31,14 @@
 - **Untyped parameters now lift**: a bare parameter (`final_value` with no `: Type`) was re-emitted
   with ACEParam's default type (`final_value: String`), failing the byte-verify and blocking the
   whole pack. It now round-trips bare — unlocking htn_agent (23 verbs), tween (10), and
-  time_slicer (10): **292 real functions** lift across the packs in total.
+  time_slicer (10).
+- **Every pack now lifts — 331 real functions in total.** The last blocker: a statement INSIDE an
+  unlifted control block (e.g. `pool.amount = maxf(…)` nested in health's absorption loop) could
+  template-match as a standalone action and re-emit one tab shallower, failing the verify. Deeper
+  lines now always stay raw with their nesting intact — unlocking **health (34 verbs)**, follow, and
+  tile_movement. An error-jump into a lifted verb now unfolds the Published-verbs section to reach
+  its Define block. The few remaining raw helpers (custom return types like `-> HealthPool`) keep
+  their verb shells.
 
 ### Added — variable folders: drag one variable onto another to group them
 

@@ -42,14 +42,18 @@ static func run() -> bool:
 		str(untouched.get("output", "")), untouched.get("source_map", []), disk_before)
 	ok = _check("an untouched open diffs as identical (drift=0 in diff form)", bool(clean_summary.get("identical")), true) and ok
 
-	# Retune one value in a raw block (a param-level edit) and diff again — WITHOUT saving. With the
-	# external-path source-map offset fixed, the opened-pack diff now attributes the change to EXACTLY
-	# the edited row (a single row), not just "somewhere near it".
+	# Retune one line in a block that STAYS raw (heal lifts into a real EventFunction now, so the
+	# probe edits _get_pool — kept raw by its custom `-> HealthPool` return type) and diff again,
+	# WITHOUT saving. The opened-pack diff attributes the change to EXACTLY the edited row.
 	var edited: RawCodeRow = null
 	for row: Variant in sheet.events:
-		if row is RawCodeRow and (row as RawCodeRow).code.contains("func heal(amount: float)"):
+		if row is RawCodeRow and (row as RawCodeRow).code.contains("func _get_pool(type: String)"):
 			edited = row as RawCodeRow
-	edited.code = edited.code.replace("current_health + amount", "current_health + amount * 2.0")
+	ok = _check("a raw block remains to edit (custom return type keeps _get_pool raw)", edited != null, true) and ok
+	if edited == null:
+		dock.free()
+		return ok
+	edited.code = edited.code.replace("health_pools[type] = HealthPool.new()", "health_pools[type] = _make_pool()")
 	var after: Dictionary = SheetCompiler.compile(sheet, "user://eventforge_diff_test.gd")
 	var summary: Dictionary = EventSheetSheetDiff.summarize(
 		str(after.get("output", "")), after.get("source_map", []), disk_before)
@@ -61,7 +65,7 @@ static func run() -> bool:
 		str((rows[0] as Dictionary).get("label", "")).length() > 0, true) and ok
 	ok = _check("the replaced disk line is listed as removed",
 		Array(summary.get("removed_lines", PackedStringArray())).any(
-			func(line: Variant) -> bool: return str(line).contains("current_health + amount, max_health")), true) and ok
+			func(line: Variant) -> bool: return str(line) == "health_pools[type] = HealthPool.new()"), true) and ok
 	ok = _check("the diff NEVER wrote the real file", FileAccess.get_file_as_string(pack_path), disk_before) and ok
 	dock.free()
 

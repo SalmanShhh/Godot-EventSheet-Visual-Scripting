@@ -33,39 +33,54 @@ static func run() -> bool:
 	ok = _check("an @ace_trigger block is left to the signal fold, not shelled",
 		ViewportRowBuilder.define_shell_info("## @ace_trigger\n## @ace_name(\"On Hit\")").is_empty(), true) and ok
 
-	# ── Rendering over a REAL opened pack ──
-	var pack_path: String = "res://eventsheet_addons/health/health_behavior.gd"
-	var source: String = (FileAccess.open(pack_path, FileAccess.READ)).get_as_text()
+	# ── Rendering over an opened sheet whose annotated verb CAN'T lift (a custom return type keeps
+	# it raw) — the shell is the honest fallback for whatever the per-function lift leaves behind,
+	# so the annotation wall still reads as one Define-style line. ──
+	var source: String = "
+".join(PackedStringArray([
+		"@tool",
+		"extends Node",
+		"",
+		"func _warmup() -> PetHandle:",
+		"	return null",
+		"",
+		"## @ace_action",
+		"## @ace_name(\"Summon Pet\")",
+		"## @ace_category(\"Pets\")",
+		"## @ace_codegen_template(\"$X.summon()\")",
+		"func summon() -> PetHandle:",
+		"	return PetHandle.new()",
+	])) + "
+"
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
-	dock.setup(EventSheetResource.new())
-	dock._load_sheet_from_path(pack_path)
+	var opened: EventSheetResource = GDScriptImporter.new().import_external_source(source)
+	opened.external_source_path = "user://_raw_shell_source.gd"
+	dock.setup(opened)
+	ok = _check("the custom-return verb stayed raw (nothing lifted)", opened.functions.size(), 0) and ok
 	var view: EventSheetViewport = dock._active_view()
-	var shells: Array = []
-	var take_damage_row: EventRowData = null
+	var shell_row: EventRowData = null
 	for entry: Dictionary in view.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
-		if row_data == null or not (row_data.source_resource is RawCodeRow):
-			continue
-		if row_data.spans.size() > 0 and str(row_data.spans[0].text) in ["Action", "Condition", "Expression"]:
-			shells.append(row_data)
-			for span: SemanticSpan in row_data.spans:
-				if str(span.text) == "Take Damage":
-					take_damage_row = row_data
-	ok = _check("an opened pack renders MANY verb shells (health publishes dozens)", shells.size() > 20, true) and ok
-	ok = _check("Take Damage's shell is among them", take_damage_row != null, true) and ok
-	ok = _check("a shell visually collapses to one line", take_damage_row.line_count if take_damage_row != null else -1, 1) and ok
+		if row_data != null and row_data.source_resource is RawCodeRow 				and row_data.spans.size() > 0 and str(row_data.spans[0].text) == "Action":
+			shell_row = row_data
+	ok = _check("the unliftable verb renders as a shell", shell_row != null, true) and ok
+	var has_name: bool = false
+	var has_chip: bool = false
+	if shell_row != null:
+		for span: SemanticSpan in shell_row.spans:
+			if str(span.text) == "Summon Pet":
+				has_name = true
+			if str(span.text) == "Pets":
+				has_chip = true
+	ok = _check("named from its @ace_name", has_name, true) and ok
+	ok = _check("a shell visually collapses to one line", shell_row.line_count if shell_row != null else -1, 1) and ok
 	ok = _check("the shell keeps its RawCodeRow (pure view — editing/round-trip untouched)",
-		take_damage_row != null and (take_damage_row.source_resource as RawCodeRow).code.contains("## @ace_codegen_template"), true) and ok
-	var category_chip: bool = false
-	if take_damage_row != null:
-		for span: SemanticSpan in take_damage_row.spans:
-			if str(span.text) == "Health":
-				category_chip = true
-	ok = _check("the category rides as a chip", category_chip, true) and ok
+		shell_row != null and (shell_row.source_resource as RawCodeRow).code.contains("## @ace_codegen_template"), true) and ok
+	ok = _check("the category rides as a chip", has_chip, true) and ok
 
-	# ── Covenant: view-only — the opened pack still round-trips byte-identically ──
-	var reemitted: String = str(SheetCompiler.compile(dock.get_current_sheet(), pack_path).get("output", ""))
+	# ── Covenant: view-only — the sheet still round-trips byte-identically ──
+	var reemitted: String = str(SheetCompiler.compile(dock.get_current_sheet(), "user://_raw_shell_source.gd").get("output", ""))
 	ok = _check("drift stays 0 with shells rendered", reemitted == source, true) and ok
 
 	dock.free()

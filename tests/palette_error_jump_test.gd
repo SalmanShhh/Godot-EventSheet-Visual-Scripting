@@ -49,8 +49,10 @@ static func run() -> bool:
 	ok = _check("the pack opened as a sheet", dock.get_current_sheet().external_source_path, pack_path) and ok
 	var selected: Resource = dock._active_view().get_selected_context().get("source_resource", null)
 	ok = _check("a row was selected", selected != null, true) and ok
-	ok = _check("the selected row is the one that emitted the line (take_damage's block)",
-		selected is RawCodeRow and (selected as RawCodeRow).code.contains("func take_damage"), true) and ok
+	# take_damage lifts as a REAL EventFunction now, so the jump lands on its Define block — the
+	# reveal path unfolds the Published verbs section to reach it.
+	ok = _check("the selected row is the one that emitted the line (take_damage's Define block)",
+		selected is EventFunction and (selected as EventFunction).function_name == "take_damage", true) and ok
 
 	# ── Commands still fuzz when there's no location ──
 	dock._command_palette._refresh_command_palette("add event")

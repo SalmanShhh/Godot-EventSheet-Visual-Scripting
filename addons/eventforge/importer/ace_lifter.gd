@@ -178,6 +178,19 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	# still has to match exactly. When a sheet has no groups this strips nothing (identity compare).
 	if _strip_group_markers(output) == _strip_group_markers(source):
 		return true
+	if OS.get_environment("EVENTFORGE_LIFT_DEBUG") == "1":
+		var src_lines: PackedStringArray = source.split("\n")
+		var out_lines: PackedStringArray = output.split("\n")
+		for diff_index in range(mini(src_lines.size(), out_lines.size())):
+			if src_lines[diff_index] != out_lines[diff_index]:
+				print("[lift-debug] FIRST DIFF line ", diff_index + 1)
+				print("[lift-debug]   src: <", src_lines[diff_index], ">")
+				print("[lift-debug]   out: <", out_lines[diff_index], ">")
+				# Print surrounding OUTPUT context so the mis-emitted construct is identifiable.
+				for context_index in range(maxi(diff_index - 6, 0), mini(diff_index + 3, out_lines.size())):
+					print("[lift-debug]   out L", context_index + 1, ": <", out_lines[context_index], ">")
+				break
+		print("[lift-debug] src=", src_lines.size(), " out=", out_lines.size(), " lines")
 	sheet.events = backup
 	sheet.functions = functions_backup
 	if boundary != null:
@@ -941,7 +954,13 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		if current == null:
 			current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
 			rows.append(current)
-		_consume_action_line(current, rest, 0, pending_raw, reverse_entries)
+		if at_this_depth:
+			_consume_action_line(current, rest, 0, pending_raw, reverse_entries)
+		else:
+			# A DEEPER line lives inside an unlifted control block above it. Template-matching it
+			# would tear it out as a standalone ACTION that re-emits at the event's depth — one tab
+			# shallower than the source — and fail the byte-verify. Keep it raw, tabs intact.
+			pending_raw.append(rest)
 		index += 1
 		chain_open = false
 	_flush_raw(current, pending_raw)
