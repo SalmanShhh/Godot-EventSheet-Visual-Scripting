@@ -443,7 +443,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 		var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
 		var function_had_body: bool = _emit_event_body(function_events, lines, source_map, 1, result["warnings"])
 		if not function_had_body:
-			lines.append("\tpass")
+			lines.append(_empty_function_stub(event_function))
 		source_map.append({"uid": str(event_function.get_instance_id()), "start": function_start, "end": lines.size(), "kind": "function"})
 
 	for deferred: String in deferred_rows:
@@ -562,7 +562,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		lines.append("func %s(%s) -> %s:" % [event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
 		var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
 		if not _emit_event_body(function_events, lines, source_map, 1, result["warnings"]):
-			lines.append("\tpass")
+			lines.append(_empty_function_stub(event_function))
 		source_map.append({"uid": str(event_function.get_instance_id()), "start": function_start, "end": lines.size(), "kind": "function"})
 
 	# Top-level comments emit last, one blank before each line (main path's deferred format).
@@ -1435,6 +1435,30 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 		# no node paths (the whole point of an autoload).
 		call_prefix = "%s." % sheet.autoload_name.strip_edges()
 	lines.append("## @ace_codegen_template(\"%s%s(%s)\")" % [call_prefix, event_function.function_name, ", ".join(argument_tokens)])
+
+## The stub emitted for a function whose body has no rows yet ("published before implemented").
+## `pass` only parses for void — a bool/typed function needs a type-correct `return <default>` or the
+## whole generated script fails to load, taking every OTHER verb on the sheet down with it.
+static func _empty_function_stub(event_function: EventFunction) -> String:
+	match event_function.return_type:
+		TYPE_NIL:
+			return "\tpass"
+		TYPE_BOOL:
+			return "\treturn false"
+		TYPE_INT:
+			return "\treturn 0"
+		TYPE_FLOAT:
+			return "\treturn 0.0"
+		TYPE_STRING:
+			return "\treturn \"\""
+		TYPE_VECTOR2:
+			return "\treturn Vector2.ZERO"
+		TYPE_VECTOR3:
+			return "\treturn Vector3.ZERO"
+		_:
+			# Variant (TYPE_MAX sentinel) and any other typed return: null is assignable everywhere
+			# it parses; exotic value types can refine this case as they join the dialog's list.
+			return "\treturn null"
 
 ## Builds the typed parameter list for a sheet function (e.g. "amount: int, label: String").
 ## "-> void" unless the function declares a Variant.Type return (TYPE_NIL = void).
