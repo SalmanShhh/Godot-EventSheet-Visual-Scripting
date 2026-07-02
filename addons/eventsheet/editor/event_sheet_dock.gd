@@ -2555,6 +2555,40 @@ func _ensure_live_values_window() -> void:
 func update_live_values(values: Dictionary) -> void:
 	_ensure_live_values_panel().update_values(values)
 
+## Paused-at-row sink (wired by the plugin): the running game announced it is pausing at a sheet
+## breakpoint — find that event across the open tabs (by its stable event_uid), switch to its tab
+## if needed, and reveal the row, so the pause lands on the EVENT rather than on generated code.
+func reveal_paused_row(uid: String) -> void:
+	if uid.is_empty():
+		return
+	for tab_index: int in range(_open_tabs.size()):
+		var tab_sheet: EventSheetResource = _open_tabs[tab_index].get("sheet")
+		var paused_event: EventRow = _find_event_by_uid(tab_sheet.events if tab_sheet != null else [], uid)
+		if paused_event == null:
+			continue
+		if tab_index != _active_tab_index:
+			_activate_tab(tab_index)
+		var view: EventSheetViewport = _active_view()
+		if view != null:
+			view.reveal_resource(paused_event)
+		_set_status("⏸ Paused at this row (sheet breakpoint).")
+		return
+
+static func _find_event_by_uid(rows: Array, uid: String) -> EventRow:
+	for row: Variant in rows:
+		if row is EventRow:
+			if (row as EventRow).event_uid == uid:
+				return row as EventRow
+			var in_sub: EventRow = _find_event_by_uid((row as EventRow).sub_events, uid)
+			if in_sub != null:
+				return in_sub
+		elif row is EventGroup:
+			var group: EventGroup = row as EventGroup
+			var found: EventRow = _find_event_by_uid(group.events if not group.events.is_empty() else group.rows, uid)
+			if found != null:
+				return found
+	return null
+
 ## Live event-trace sink (wired by the plugin): highlight the firing rows in every pane.
 func update_fired_events(uids: PackedStringArray) -> void:
 	for pane: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:

@@ -80,6 +80,10 @@
   source map (most-specific range first, walks past freed resources). The GDScript panel's
   click-to-select and row-highlight delegate to it; runtime-error → row deep-links build on it next.
   (`tests/line_row_mapper_test.gd`)
+- **Paused-at-row**: when a running game hits a sheet breakpoint, the sheet now shows WHICH row —
+  the generated code announces its row id right before pausing (debugger-guarded, zero cost in
+  exported games), and the editor switches to that sheet's tab and selects the event. Works through
+  the same live channel as Live Values; no core-debugger access needed. (`tests/paused_row_test.gd`)
 - **Debug-residue Doctor check**: a sheet saved with breakpoints / live-values / event-trace emission
   still enabled ships `breakpoint` + telemetry lines in the committed `.gd` — the Doctor now flags it
   and offers a one-click strip. (`tests/doctor_debug_residue_test.gd`)

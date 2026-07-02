@@ -11,6 +11,10 @@ signal values_received(values: Dictionary)
 ## Emitted whenever a running game streams the set of event UIDs that fired since the last tick
 ## (debugging rung 3 — live event trace). The editor highlights those rows.
 signal fired_events_received(uids: PackedStringArray)
+## Emitted when the running game is about to pause at a sheet breakpoint: the generated code
+## announces its row uid right before the `breakpoint` statement (core debugger messages never reach
+## editor plugins, so the code reports its own location), and the editor reveals that row.
+signal paused_row_received(uid: String)
 
 var _last_session_id: int = -1
 
@@ -25,7 +29,16 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 	if message == "eventsheets:fired_events":
 		fired_events_received.emit(parse_fired(data))
 		return true
+	if message == "eventsheets:paused_row":
+		paused_row_received.emit(parse_paused(data))
+		return true
 	return false
+
+## The paused-row payload is a single event uid; empty on a malformed message (fails closed —
+## the dock's reveal treats "" as a no-op). Static like the other parsers so tests can drive it
+## without an editor (EditorDebuggerPlugin cannot be instantiated headless).
+static func parse_paused(data: Array) -> String:
+	return str(data[0]) if data.size() > 0 else ""
 
 ## The fired-events payload is the PackedStringArray of event UIDs (received as an Array).
 static func parse_fired(data: Array) -> PackedStringArray:

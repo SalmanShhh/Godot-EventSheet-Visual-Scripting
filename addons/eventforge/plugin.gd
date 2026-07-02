@@ -166,6 +166,8 @@ func _enter_tree() -> void:
 				_live_values_debugger.values_received.connect(_event_sheet_editor.update_live_values)
 			if _live_values_debugger != null and _event_sheet_editor.has_method("update_fired_events"):
 				_live_values_debugger.fired_events_received.connect(_event_sheet_editor.update_fired_events)
+			if _live_values_debugger != null and _event_sheet_editor.has_method("reveal_paused_row"):
+				_live_values_debugger.paused_row_received.connect(_event_sheet_editor.reveal_paused_row)
 			if _live_values_debugger != null and _event_sheet_editor.has_method("set_live_values_debugger"):
 				_event_sheet_editor.set_live_values_debugger(_live_values_debugger)
 			_event_sheet_editor.name = MAIN_SCREEN_ROOT_NAME

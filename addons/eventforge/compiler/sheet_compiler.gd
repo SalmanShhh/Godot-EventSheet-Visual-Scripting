@@ -1156,10 +1156,17 @@ static func _emit_event_body(
 			had_body = true
 		if _emit_breakpoints_flag and event_row.debug_break:
 			var break_condition: String = event_row.debug_break_condition.strip_edges()
+			# Announce WHICH row is about to pause before the breakpoint statement: the editor-side
+			# debugger bridge captures "eventsheets:paused_row" and reveals that row on the sheet —
+			# core debugger messages (stack dumps) never reach editor plugins, so the generated code
+			# reports its own location over the same custom channel live-values already uses.
+			var announce: String = "if EngineDebugger.is_active(): EngineDebugger.send_message(\"eventsheets:paused_row\", [\"%s\"])" % event_row.event_uid
 			if break_condition.is_empty():
+				lines.append(body_indent + announce)
 				lines.append(body_indent + "breakpoint")
 			else:
 				lines.append("%sif %s:" % [body_indent, break_condition])
+				lines.append("%s	%s" % [body_indent, announce])
 				lines.append("%s	breakpoint" % body_indent)
 			had_body = true
 		var body_start_size: int = lines.size()
