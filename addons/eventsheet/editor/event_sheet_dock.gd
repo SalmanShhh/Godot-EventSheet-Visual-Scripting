@@ -2122,19 +2122,15 @@ func _update_code_panel_highlight() -> void:
 	var selected: Resource = _active_view().get_selected_context().get("source_resource", null) if _viewport != null else null
 	if selected == null:
 		return
-	var uid: String = str(selected.get_instance_id())
-	for entry: Variant in _code_source_map:
-		if not (entry is Dictionary) or str((entry as Dictionary).get("uid", "")) != uid:
-			continue
-		var start_line: int = int((entry as Dictionary).get("start", 0)) - 1
-		var end_line: int = mini(int((entry as Dictionary).get("end", 0)) - 1, _code_edit.get_line_count() - 1)
-		if start_line < 0 or end_line < start_line:
-			continue
-		for line in range(start_line, end_line + 1):
-			_code_edit.set_line_background_color(line, CODE_PANEL_HIGHLIGHT_COLOR)
-		_code_edit.set_caret_line(start_line)
-		_code_panel_highlight = Vector2i(start_line, end_line)
+	var emitted: Vector2i = EventSheetLineRowMapper.range_for_resource(_code_source_map, selected)
+	var start_line: int = emitted.x - 1
+	var end_line: int = mini(emitted.y - 1, _code_edit.get_line_count() - 1)
+	if start_line < 0 or end_line < start_line:
 		return
+	for line in range(start_line, end_line + 1):
+		_code_edit.set_line_background_color(line, CODE_PANEL_HIGHLIGHT_COLOR)
+	_code_edit.set_caret_line(start_line)
+	_code_panel_highlight = Vector2i(start_line, end_line)
 
 ## Reverse provenance: clicking a line of generated code selects the sheet row that
 ## produced it. Reacts only to mouse releases (never caret moves), so the forward
@@ -2161,25 +2157,13 @@ func goto_generated_line(line: int) -> void:
 		_code_edit.set_caret_line(maxi(line - 1, 0))
 	_select_sheet_row_for_code_line(line)
 
-## Picks the most specific source-map entry containing the line (smallest range wins, so
-## in-flow blocks beat their event and events beat their trigger function), then walks
-## outward until something selects — inner entries may reference resources without rows of
-## their own (e.g. an in-flow block inside an event's actions).
+## Most-specific-first line→row lookup (the shared mapper), walking outward until something
+## selects — inner entries may reference resources without rows of their own (e.g. an in-flow
+## block inside an event's actions).
 func _select_sheet_row_for_code_line(line: int) -> void:
 	if _viewport == null:
 		return
-	var containing: Array = []
-	for entry: Variant in _code_source_map:
-		if not (entry is Dictionary):
-			continue
-		var start: int = int((entry as Dictionary).get("start", 0))
-		var end: int = int((entry as Dictionary).get("end", 0))
-		if line >= start and line <= end:
-			containing.append(entry)
-	containing.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return (int(a.get("end", 0)) - int(a.get("start", 0))) < (int(b.get("end", 0)) - int(b.get("start", 0)))
-	)
-	for entry: Variant in containing:
+	for entry: Variant in EventSheetLineRowMapper.entries_for_line(_code_source_map, line):
 		var resource: Resource = instance_from_id(int(str((entry as Dictionary).get("uid", "0")))) as Resource
 		if resource != null and _viewport.select_resource(resource):
 			_update_code_panel_highlight()
