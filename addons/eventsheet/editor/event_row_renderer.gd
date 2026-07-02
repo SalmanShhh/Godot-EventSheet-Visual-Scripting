@@ -277,9 +277,17 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	_draw_icon(control, icon_rect, row_data)
 	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill)
 	if drag_rect.size != Vector2.ZERO:
-		control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
-		if drag_rect.size.y <= 4.0:
-			_draw_insert_marker_arrows(control, drag_rect, EventSheetPalette.COLOR_DRAG_LINE)
+		if bool(layout.get("drag_rect_outline", false)):
+			# Group-fold drop: outline the whole target row (a filled row-sized rect would bury the
+			# text) with a soft tint, so the gesture reads "fold INTO this", not "insert here".
+			var group_fill: Color = EventSheetPalette.COLOR_DRAG_LINE
+			group_fill.a *= 0.2
+			control.draw_rect(drag_rect, group_fill, true)
+			control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, false, 2.0)
+		else:
+			control.draw_rect(drag_rect, EventSheetPalette.COLOR_DRAG_LINE, true)
+			if drag_rect.size.y <= 4.0:
+				_draw_insert_marker_arrows(control, drag_rect, EventSheetPalette.COLOR_DRAG_LINE)
 	if ace_drag_rect.size != Vector2.ZERO:
 		var ace_drag_color: Color = EventSheetPalette.COLOR_BREAKPOINT if ace_drag_error else EventSheetPalette.COLOR_DRAG_LINE
 		control.draw_rect(ace_drag_rect, ace_drag_color, ace_drag_rect.size.y <= 4.0, 2.0)

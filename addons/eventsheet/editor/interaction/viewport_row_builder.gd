@@ -686,7 +686,17 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
 	if sheet == null:
 		return rows
 	var names: Array = sheet.variables.keys()
-	names.sort()
+	# Ungrouped variables first (name-sorted), then each Inspector group as a contiguous block —
+	# grouped variables must sit ADJACENT so the bubble outline can wrap them as one visual folder.
+	# View-order only: the variables dictionary and the compiled output are untouched.
+	names.sort_custom(func(a: Variant, b: Variant) -> bool:
+		var group_a: String = _global_variable_group(sheet, str(a))
+		var group_b: String = _global_variable_group(sheet, str(b))
+		if group_a != group_b:
+			if group_a.is_empty() or group_b.is_empty():
+				return group_a.is_empty()  # ungrouped sorts first
+			return group_a < group_b
+		return str(a) < str(b))
 	for var_name in names:
 		var descriptor: Dictionary = sheet.variables.get(var_name, {})
 		var is_exported: bool = bool(descriptor.get("exported", descriptor.get("exposed", true)))
@@ -712,6 +722,38 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
 			)
 		)
 	return rows
+
+## An exported global's Inspector group ("" when none/unexported) — the adjacency-sort key above.
+static func _global_variable_group(sheet: EventSheetResource, var_name: String) -> String:
+	var descriptor: Variant = sheet.variables.get(var_name, {})
+	if not (descriptor is Dictionary):
+		return ""
+	if not bool((descriptor as Dictionary).get("exported", (descriptor as Dictionary).get("exposed", true))):
+		return ""
+	var attributes: Variant = (descriptor as Dictionary).get("attributes")
+	return str((attributes as Dictionary).get("group", "")).strip_edges() if attributes is Dictionary else ""
+
+## Runs of consecutive variable rows sharing one Inspector group — the bubbles the viewport outlines
+## around grouped variables so a folder reads as one visual unit. [{start, end, group}] over the flat
+## row list (0-based inclusive indices). Static + pure → geometry is testable without a canvas.
+static func variable_group_runs(flat_rows: Array) -> Array:
+	var runs: Array = []
+	var current_group: String = ""
+	var run_start: int = -1
+	for index: int in range(flat_rows.size() + 1):  # +1: a trailing sentinel closes the last run
+		var group: String = ""
+		if index < flat_rows.size():
+			var row_data: EventRowData = (flat_rows[index] as Dictionary).get("row")
+			if row_data != null and not row_data.spans.is_empty() and row_data.spans[0].metadata is Dictionary \
+					and str((row_data.spans[0].metadata as Dictionary).get("kind", "")) == "variable":
+				group = str((row_data.spans[0].metadata as Dictionary).get("variable_group", ""))
+		if group == current_group and not group.is_empty():
+			continue
+		if not current_group.is_empty() and run_start >= 0:
+			runs.append({"start": run_start, "end": index - 1, "group": current_group})
+		current_group = group
+		run_start = index if not group.is_empty() else -1
+	return runs
 
 func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
@@ -765,7 +807,10 @@ func _build_variable_row(
 		"variable_scope": scope_label,
 		"variable_name": var_name,
 		"variable_index": variable_index,
-		"is_constant": is_constant
+		"is_constant": is_constant,
+		# The Inspector group rides in the row metadata (not just the chip) so the grouping gestures —
+		# the drag-into-folder drop, the bubble outline, chip-rename — can read it without re-lookup.
+		"variable_group": str(options.get("group", "")).strip_edges()
 	}
 	# No scope pill: it confused users. The "global"/"sheet" pill was already redundant (every sheet/class
 	# variable is one), and the "local" pill on event-scoped vars read as noise too — scope is obvious from
@@ -831,7 +876,10 @@ func _build_variable_row(
 						"badge": true,
 						"badge_style": "scope",
 						"badge_bg": EventSheetPalette.COLOR_CAT_CHIP_BG,
-						"badge_fg": EventSheetPalette.COLOR_CAT_CHIP_FG
+						"badge_fg": EventSheetPalette.COLOR_CAT_CHIP_FG,
+						# Marks THIS span as the group chip (variable_meta rides on every span of the
+						# row, so the rename gesture needs to know it hit the chip, not the name).
+						"group_chip": true
 					},
 					true
 				)

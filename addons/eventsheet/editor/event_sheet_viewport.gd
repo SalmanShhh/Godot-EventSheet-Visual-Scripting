@@ -4,6 +4,8 @@ extends Control
 
 signal selection_changed(row_data: EventRowData)
 signal row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String, copy_mode: bool)
+signal variable_group_requested(source_row: EventRowData, target_row: EventRowData)
+signal variable_group_rename_requested(group_name: String)
 signal rows_drop_requested(source_rows: Array, target_row: EventRowData, drop_mode: String, copy_mode: bool)
 signal ace_preview_requested(source_label: String, definitions: Array[ACEDefinition])
 signal asset_dropped(target_event: Resource, asset_paths: PackedStringArray)
@@ -1029,9 +1031,30 @@ func _draw() -> void:
 			var grip_color: Color = Color(1.0, 1.0, 1.0, 0.28)
 			for dot_row in range(3):
 				draw_circle(Vector2(row_rect.position.x + 5.0, row_rect.position.y + row_rect.size.y * 0.5 + (dot_row - 1) * 5.0), 1.4, grip_color)
+	_draw_variable_group_bubbles(width)
 	_draw_box_selection_overlay()
 	_draw_param_cursor(font, font_size)
 	_draw_drag_ghost(font, font_size)
+
+## The variable-folder bubbles: one rounded outline + soft tint around each run of consecutive
+## variable rows sharing an Inspector group, so a grouped set reads as ONE visual folder (the
+## Discord-folder look) instead of rows that merely repeat a chip. Drawn OVER the rows (their
+## alternating backgrounds are opaque), so the tint stays faint enough to never fight the text.
+func _draw_variable_group_bubbles(width: float) -> void:
+	var runs: Array = ViewportRowBuilder.variable_group_runs(_flat_rows)
+	if runs.is_empty():
+		return
+	var bubble: StyleBoxFlat = StyleBoxFlat.new()
+	bubble.bg_color = Color(EventSheetPalette.COLOR_CAT_CHIP_BG.r, EventSheetPalette.COLOR_CAT_CHIP_BG.g, EventSheetPalette.COLOR_CAT_CHIP_BG.b, 0.16)
+	bubble.border_color = Color(EventSheetPalette.COLOR_CAT_CHIP_FG.r, EventSheetPalette.COLOR_CAT_CHIP_FG.g, EventSheetPalette.COLOR_CAT_CHIP_FG.b, 0.55)
+	bubble.set_border_width_all(1)
+	bubble.set_corner_radius_all(7)
+	for run: Dictionary in runs:
+		var start_index: int = int(run.get("start"))
+		var end_index: int = int(run.get("end"))
+		var top: float = _get_row_top(start_index)
+		var bottom: float = _get_row_top(end_index) + _get_row_height(end_index)
+		bubble.draw(get_canvas_item(), Rect2(3.0, top + 1.0, width - 6.0, bottom - top - 2.0))
 
 ## Event-sheet-style drag ghost: a faint (~0.66 opacity) label of the dragged content following the
 ## cursor while an ACE/row drag has an active target (i.e. after actual mouse motion).
@@ -1274,6 +1297,12 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			if _maybe_request_ace_edit(hit, row_index):
 				accept_event()
 				return
+			# The variable-group chip renames the folder (empty name in the popup ungroups).
+			if bool(double_click_meta.get("group_chip", false)) \
+					and not str(double_click_meta.get("variable_group", "")).is_empty():
+				variable_group_rename_requested.emit(str(double_click_meta.get("variable_group")))
+				accept_event()
+				return
 			if _maybe_request_variable_edit(hit, row_index):
 				accept_event()
 				return
@@ -1321,7 +1350,12 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			else:
 				var source_row: EventRowData = _row_at(_drag_row_index)
 				if source_row != null:
-					row_drop_requested.emit(source_row, target_row, _drag_target_mode, _drag_row_copy_mode)
+					if _drag_target_mode == "group":
+						# Variable dropped ONTO a variable: fold them into one Inspector-group
+						# "folder" (named right after, like a fresh Discord folder) — not a reorder.
+						variable_group_requested.emit(source_row, target_row)
+					else:
+						row_drop_requested.emit(source_row, target_row, _drag_target_mode, _drag_row_copy_mode)
 	_clear_row_drag()
 	queue_redraw()
 
@@ -2239,6 +2273,10 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
 		match _drag_target_mode:
 			"after":
 				drag_rect = Rect2(0.0, row_rect.end.y - 1.0, width, 2.0)
+			"group":
+				# The whole target row outlines (not a thin insert line): dropping here FOLDS the
+				# dragged variable into this one's Inspector-group folder.
+				drag_rect = Rect2(2.0, row_rect.position.y + 1.0, width - 4.0, row_rect.size.y - 2.0)
 			"inside":
 				# Indent the drop line to the child level so it clearly reads as "nest this
 				# as a sub-event of the target", not just "drop after".
@@ -2280,6 +2318,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
 		"lane_divider_x": lane_divider_x,
 		"alternating": index % 2 == 1,
 		"debug_text": row_data.debug_state,
+		"drag_rect_outline": _drag_row_index >= 0 and _drag_target_index == index and _drag_target_mode == "group",
 		"drag_rect": drag_rect,
 		"ace_drag_rect": ace_drag_rect,
 		"ace_drag_error": not _drag_ace_drop_valid and _drag_ace_target_row_index == index,
@@ -2764,16 +2803,28 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
 	var relative_y: float = clampf(position.y - row_top, 0.0, row_height)
 	var inside_zone_top: float = row_height * DROP_ZONE_INSIDE_TOP
 	var inside_zone_bottom: float = row_height * DROP_ZONE_INSIDE_BOTTOM
+	var is_in_inside_zone: bool = (
+		relative_y >= inside_zone_top and relative_y <= inside_zone_bottom
+	)
+	# Dragging a variable onto another variable's middle band folds them into one Inspector-group
+	# "folder" (edges keep meaning reorder-before/after, exactly like dropping between rows).
+	if is_in_inside_zone and _drag_row_indices.size() == 1 \
+			and _row_is_variable(_row_at(_drag_row_index)) and _row_is_variable(row_data) \
+			and row_index != _drag_row_index:
+		return "group"
 	var supports_inside_drop: bool = row_data.row_type in [
 		EventRowData.RowType.EVENT,
 		EventRowData.RowType.GROUP
 	]
-	var is_in_inside_zone: bool = (
-		relative_y >= inside_zone_top and relative_y <= inside_zone_bottom
-	)
 	if supports_inside_drop and is_in_inside_zone:
 		return "inside"
 	return "after" if relative_y > row_height * DROP_ZONE_AFTER_THRESHOLD else "before"
+
+## True for any variable row (global dict var or tree LocalVariable) — the grouping gesture's guard.
+func _row_is_variable(row_data: EventRowData) -> bool:
+	return row_data != null and not row_data.spans.is_empty() \
+		and row_data.spans[0].metadata is Dictionary \
+		and str((row_data.spans[0].metadata as Dictionary).get("kind", "")) == "variable"
 
 func _resolve_lane_drop_target(row_data: EventRowData, lane: String, position: Vector2) -> Dictionary:
 	var target_kind: String = "action" if lane == "action" else "condition"

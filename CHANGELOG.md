@@ -18,6 +18,20 @@
   **Stat pool** (spend / restore / percent) — every verb annotated, so a freshly created addon opens
   code-free immediately. (`tests/recipe_scaffold_test.gd`)
 
+### Added — variable folders: drag one variable onto another to group them
+
+- **Grouping variables is now a drag**: drop a variable onto another (its middle band highlights
+  with a fold-into outline) and both join one Inspector-group folder — a naming popup opens already
+  selected, so the flow is drag → type the name → Enter, exactly like creating a Discord folder.
+  Dropping onto an already-grouped variable joins its folder. Edges of the row still mean reorder.
+- **Grouped variables render inside a bubble**: each folder's members sit adjacent and wrapped in a
+  rounded outline + soft tint, so a group reads as one visual unit rather than rows repeating a chip.
+- **Double-click the group chip to rename** the folder everywhere at once; clearing the name in that
+  popup dissolves the folder (every member ungroups).
+- Folders ARE the shipped `@export_group` attribute underneath — they show up as Inspector sections
+  in Godot and round-trip through the `.gd` exactly like groups set from the Variable dialog.
+  (`tests/variable_grouping_test.gd`)
+
 ### Added — the sheet at a glance: badges, sentences, manifest, anatomy
 
 - **Trigger tempo badges**: every trigger row shows how often it runs — ⟳ every tick · ⌨ input ·
