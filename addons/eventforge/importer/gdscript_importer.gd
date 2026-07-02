@@ -205,6 +205,12 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	# A `const` declaration restores a first-class constant variable (green "const" pill, editable in the
 	# dialog) instead of degrading to a verbatim block. Byte-gated below like every other lift.
 	lifted.is_constant = bool(descriptor.get("constant", false))
+	# A String default that appeared UNQUOTED in the source is a bare code expression (Vector2.ZERO,
+	# Color.RED, Type.CONST), not a literal — mark it so it re-emits verbatim rather than quoted. The
+	# byte-verify below still gates it: if the flagged re-emission doesn't reproduce the line, revert.
+	if lifted.default_value is String and not lifted.is_constant and not lifted.onready \
+			and line.contains("= %s" % str(lifted.default_value)) and not line.contains("\"%s\"" % str(lifted.default_value)):
+		lifted.expression_default = true
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:
 		return null
 	_extract_drawer_from_hint(lifted, line)

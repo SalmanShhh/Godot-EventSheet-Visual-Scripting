@@ -1873,7 +1873,11 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 		var_line = "%s var %s: %s = %s" % [local_var.export_hint, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
 	else:
 		var export_prefix: String = "@export " if local_var.exported else ""
-		var_line = "%svar %s: %s = %s" % [export_prefix, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+		# A bare-expression default (Vector2.ZERO, Color.RED, Type.CONST) emits VERBATIM; a literal
+		# goes through _to_code_literal (which quotes strings). This keeps a `= Vector2.ZERO` var a
+		# first-class row instead of stranding it as a GDScript block over a quoted `"Vector2.ZERO"`.
+		var default_code: String = str(local_var.default_value) if local_var.expression_default else _to_code_literal(local_var.default_value)
+		var_line = "%svar %s: %s = %s" % [export_prefix, local_var.name, local_var.type_name, default_code]
 	# Inspector grouping rides in front, matching the dict-var path (_emit_variables) byte-for-byte so the
 	# round-trip lift can absorb it back onto the variable instead of stranding it as a GDScript block.
 	return _tree_variable_group_prefix(local_var) + var_line
