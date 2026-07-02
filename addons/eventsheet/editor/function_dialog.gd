@@ -44,6 +44,11 @@ const VALUE_TYPES: Array[Dictionary] = [
 const PARAM_TYPES: PackedStringArray = ["float", "int", "bool", "String", "Vector2", "Vector3", "Variant"]
 
 var _dialog: ConfirmationDialog = null
+# Non-empty while editing an existing function (its CURRENT name): switches the dialog to edit mode —
+# the taken-names check allows the function's own name, and the confirmed payload carries the original
+# name so the apply updates that function instead of appending a new one.
+var _original_name: String = ""
+var _guards_card: Control = null
 var _name_edit: LineEdit = null
 var _description_edit: LineEdit = null
 var _usable_option: OptionButton = null           # hidden backing model for the three cards
@@ -131,7 +136,8 @@ func init_dialog(parent_node: Node) -> void:
 	add_guard_button.tooltip_text = "A GDScript boolean expression — the body runs only when all hold (e.g. host.enabled)."
 	add_guard_button.pressed.connect(func() -> void: add_guard_row())
 	guards_content.add_child(add_guard_button)
-	form.add_child(EventSheetPopupUI.titled_card("Run only when", guards_content))
+	_guards_card = EventSheetPopupUI.titled_card("Run only when", guards_content)
+	form.add_child(_guards_card)
 
 	# Expose as an ACE other sheets can pick.
 	_expose_check = CheckBox.new()
@@ -170,10 +176,12 @@ func set_taken_names_provider(provider: Callable) -> void:
 	_taken_names_provider = provider
 
 func open() -> void:
-	for child: Node in _params_box.get_children():
-		child.queue_free()
-	for child: Node in _guards_box.get_children():
-		child.queue_free()
+	_original_name = ""
+	_dialog.title = "Define a Verb"
+	_dialog.ok_button_text = "Create Function"
+	_guards_card.visible = true
+	_clear_rows(_params_box)
+	_clear_rows(_guards_box)
 	_name_edit.text = ""
 	_description_edit.text = ""
 	_expose_check.button_pressed = false
@@ -185,7 +193,45 @@ func open() -> void:
 	_select_usable(0)
 	if _dialog.is_inside_tree():
 		_dialog.popup_centered()
-	_name_edit.grab_focus()
+		_name_edit.grab_focus()
+
+## Opens the dialog pre-filled from an existing function (edit mode) — the sheet's Define blocks
+## double-click into here. The verb-kind card is derived from the return type exactly the way the
+## canvas classifies it (void = Action, bool = Condition, typed = Expression), so the pre-selected
+## card always matches the badge the user clicked. The "Run only when" card is hidden: guards live
+## as condition rows inside the function's body, and re-emitting them from here would stack a second
+## wrapper row onto the body instead of editing the first.
+func open_for_edit(event_function: EventFunction) -> void:
+	open()
+	_original_name = event_function.function_name
+	_dialog.title = "Edit Verb — %s" % event_function.function_name
+	_dialog.ok_button_text = "Save Changes"
+	_guards_card.visible = false
+	_name_edit.text = event_function.function_name
+	_description_edit.text = event_function.description
+	if event_function.return_type == TYPE_NIL:
+		_select_usable(0)
+	elif event_function.return_type == TYPE_BOOL:
+		_select_usable(1)
+	else:
+		for index: int in range(VALUE_TYPES.size()):
+			if int(VALUE_TYPES[index].get("type")) == event_function.return_type:
+				_value_type_option.select(index)
+		_select_usable(2)
+	for param: ACEParam in event_function.params:
+		add_param_row(param.id, param.type_name, param.gdscript_default, param.description)
+	_expose_check.button_pressed = event_function.expose_as_ace
+	_expose_card.visible = event_function.expose_as_ace
+	_expose_name_edit.text = event_function.ace_display_name
+	_expose_category_edit.text = event_function.ace_category
+	_refresh_studio()
+
+## queue_free alone leaves children in the tree until end of frame, so a prefill added right after
+## would coexist with the stale rows and collect_params() would read both — detach immediately.
+func _clear_rows(box: Container) -> void:
+	for child: Node in box.get_children():
+		box.remove_child(child)
+		child.queue_free()
 
 # ── The "what kind of verb" cards ────────────────────────────────────────────────────────────────
 
@@ -415,8 +461,9 @@ func _usable_kind() -> String:
 	return str(USABLE_AS[maxi(_usable_option.selected, 0)].get("kind"))
 
 ## One expanding row per parameter: name · type · default · description · remove. Field edits refresh
-## the live preview so the picker entry + signature track what's being typed.
-func add_param_row(suggested_name: String = "") -> void:
+## the live preview so the picker entry + signature track what's being typed. The optional trailing
+## args prefill the row (edit mode re-opens an existing verb's parameters).
+func add_param_row(suggested_name: String = "", type_name_value: String = "", default_value: String = "", description_value: String = "") -> void:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	var param_name: LineEdit = LineEdit.new()
@@ -428,15 +475,20 @@ func add_param_row(suggested_name: String = "") -> void:
 	var param_type: OptionButton = OptionButton.new()
 	for type_name: String in PARAM_TYPES:
 		param_type.add_item(type_name)
+	var preset_type: int = PARAM_TYPES.find(type_name_value)
+	if preset_type >= 0:
+		param_type.select(preset_type)
 	param_type.item_selected.connect(func(_index: int) -> void: _refresh_studio())
 	row.add_child(param_type)
 	var param_default: LineEdit = LineEdit.new()
+	param_default.text = default_value
 	param_default.placeholder_text = "default"
 	param_default.tooltip_text = "Optional default value (a GDScript expression). Defaulted params must come last."
 	param_default.custom_minimum_size = Vector2(80.0, 0.0)
 	param_default.text_changed.connect(func(_t: String) -> void: _refresh_studio())
 	row.add_child(param_default)
 	var param_desc: LineEdit = LineEdit.new()
+	param_desc.text = description_value
 	param_desc.placeholder_text = "description"
 	param_desc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(param_desc)
@@ -526,7 +578,9 @@ func build_function_data() -> Dictionary:
 	var function_name: String = _name_edit.text.strip_edges().to_snake_case()
 	if function_name.is_empty() or not function_name.is_valid_identifier():
 		return {"problem": "Verb names must be valid identifiers (e.g. take_damage)."}
-	if _taken_names_provider.is_valid() and (_taken_names_provider.call() as PackedStringArray).has(function_name):
+	# In edit mode the function's own current name is not a collision — only OTHER taken names are.
+	if function_name != _original_name and _taken_names_provider.is_valid() \
+			and (_taken_names_provider.call() as PackedStringArray).has(function_name):
 		return {"problem": "\"%s\" already exists on this sheet (function or variable)." % function_name}
 	var params: Array[Dictionary] = collect_params()
 	# GDScript requires defaulted parameters to be trailing — refuse a gap so the generated
@@ -539,6 +593,7 @@ func build_function_data() -> Dictionary:
 			return {"problem": "Parameters with a default value must come after those without (\"%s\" has no default)." % str(param.get("id"))}
 	return {
 		"problem": "",
+		"editing": _original_name,  # "" = create a new function; non-empty = update the one so named
 		"name": function_name,
 		"return_type": _return_type_for_kind(_usable_kind()),
 		"params": params,

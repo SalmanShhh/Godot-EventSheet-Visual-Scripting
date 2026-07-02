@@ -836,6 +836,7 @@ func _build_ui() -> void:
 	_viewport.with_node_edit_requested.connect(_open_with_node_dialog)
 	_viewport.enum_edit_requested.connect(_open_enum_dialog)
 	_viewport.signal_edit_requested.connect(_open_signal_dialog)
+	_viewport.function_edit_requested.connect(_function_dialog_glue._open_function_dialog_for)
 	_viewport.match_edit_requested.connect(_open_match_dialog)
 	_viewport.row_disable_toggle_requested.connect(_toggle_selected_rows_enabled)
 	_viewport.row_move_requested.connect(_move_selected_row)

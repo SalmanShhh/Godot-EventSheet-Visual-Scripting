@@ -47,6 +47,7 @@ signal with_node_edit_requested(event_row: Resource)
 signal enum_edit_requested(enum_row: Resource)
 ## Emitted when a signal row is double-clicked.
 signal signal_edit_requested(signal_row: Resource)
+signal function_edit_requested(event_function: Resource)
 ## Emitted when a match action cell is double-clicked.
 signal match_edit_requested(match_row: Resource)
 ## Emitted on Ctrl+/ — the dock toggles the selected rows' enabled state (undoable).
@@ -1046,6 +1047,11 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			# Signal rows open the signal dialog.
 			if row_data != null and row_data.source_resource is SignalRow:
 				signal_edit_requested.emit(row_data.source_resource)
+				accept_event()
+				return
+			# Define blocks (published verbs) open the ACE Studio on that function.
+			if row_data != null and row_data.source_resource is EventFunction:
+				function_edit_requested.emit(row_data.source_resource)
 				accept_event()
 				return
 			# Pick-filter rows open the pick-filter dialog.

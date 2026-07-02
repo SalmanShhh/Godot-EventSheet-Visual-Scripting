@@ -48,24 +48,40 @@ var _function_dialog: EventSheetFunctionDialog = null
 func _open_function_dialog() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
-	if _function_dialog == null:
-		_function_dialog = EventSheetFunctionDialog.new()
-		_function_dialog.init_dialog(_dock)
-		_function_dialog.set_taken_names_provider(func() -> PackedStringArray:
-			var taken: PackedStringArray = PackedStringArray()
-			if _dock._current_sheet != null:
-				for variable_name: Variant in _dock._current_sheet.variables:
-					taken.append(str(variable_name))
-				for function_entry: Variant in _dock._current_sheet.functions:
-					if function_entry is EventFunction:
-						taken.append((function_entry as EventFunction).function_name)
-			return taken)
-		_function_dialog.function_confirmed.connect(_apply_function_data)
+	_ensure_dialog()
 	_function_dialog.open()
+
+## Double-clicking a Define block on the canvas edits that verb in the same dialog (edit mode:
+## pre-filled fields, the apply updates the existing function instead of appending a new one).
+func _open_function_dialog_for(event_function: Resource) -> void:
+	if not (event_function is EventFunction) or _dock._current_sheet == null:
+		return
+	_ensure_dialog()
+	_function_dialog.open_for_edit(event_function as EventFunction)
+
+func _ensure_dialog() -> void:
+	if _function_dialog != null:
+		return
+	_function_dialog = EventSheetFunctionDialog.new()
+	_function_dialog.init_dialog(_dock)
+	_function_dialog.set_taken_names_provider(func() -> PackedStringArray:
+		var taken: PackedStringArray = PackedStringArray()
+		if _dock._current_sheet != null:
+			for variable_name: Variant in _dock._current_sheet.variables:
+				taken.append(str(variable_name))
+			for function_entry: Variant in _dock._current_sheet.functions:
+				if function_entry is EventFunction:
+					taken.append((function_entry as EventFunction).function_name)
+		return taken)
+	_function_dialog.function_confirmed.connect(_apply_function_data)
 
 ## Creates the EventFunction from validated dialog data (undoable). The body is
 ## authored as rows afterwards; CallFunction and the publish surface pick it up.
+## A payload carrying a non-empty "editing" name updates that existing function instead.
 func _apply_function_data(data: Dictionary) -> void:
+	if not str(data.get("editing", "")).is_empty():
+		_apply_function_edit(data)
+		return
 	var changed: bool = _dock._perform_undoable_sheet_edit("Add Function", func() -> bool:
 		var event_function: EventFunction = EventFunction.new()
 		event_function.function_name = str(data.get("name"))
@@ -98,3 +114,62 @@ func _apply_function_data(data: Dictionary) -> void:
 		return true)
 	if changed:
 		_dock._mark_dirty("Added function %s()." % str(data.get("name")))
+
+## Updates an existing function in place (undoable). The target is found by its ORIGINAL name in the
+## LIVE sheet — never by a held object reference, because the undo funnel's commit restores a duplicated
+## snapshot that replaces every resource. Only the dialog-owned fields are written; the body
+## (events/local_variables) and the tool-button label stay untouched. Confirming with nothing changed
+## returns false so the sheet is not dirtied — an accidental open-and-OK on a lifted helper stays
+## byte-safe. Call sites are NOT rewritten on rename (same as renaming via the Functions dialog list).
+func _apply_function_edit(data: Dictionary) -> void:
+	var original_name: String = str(data.get("editing"))
+	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Function", func() -> bool:
+		var target: EventFunction = null
+		for function_entry: Variant in _dock._current_sheet.functions:
+			if function_entry is EventFunction and (function_entry as EventFunction).function_name == original_name:
+				target = function_entry as EventFunction
+		if target == null:
+			return false
+		var new_params: Array[ACEParam] = []
+		for param_entry: Dictionary in (data.get("params", []) as Array):
+			var param: ACEParam = ACEParam.new()
+			param.id = str(param_entry.get("id"))
+			param.type_name = str(param_entry.get("type_name", "Variant"))
+			param.gdscript_default = str(param_entry.get("default", ""))
+			param.description = str(param_entry.get("description", ""))
+			new_params.append(param)
+		# build_function_data auto-defaults an empty display name to name.capitalize(); when the stored
+		# value is empty, that default is NOT an edit — normalize it back so an untouched open-and-OK
+		# compares equal (and stays byte-safe for reverse-lifted helpers).
+		var incoming_display: String = str(data.get("ace_display_name", ""))
+		if target.ace_display_name.is_empty() and incoming_display == str(data.get("name")).capitalize():
+			incoming_display = ""
+		if _function_fingerprint(target.function_name, target.return_type, target.description,
+				target.expose_as_ace, target.ace_display_name, target.ace_category, target.params) \
+				== _function_fingerprint(str(data.get("name")), int(data.get("return_type", TYPE_NIL)),
+				str(data.get("description", "")), bool(data.get("expose", false)),
+				incoming_display, str(data.get("ace_category", "")), new_params):
+			return false
+		target.function_name = str(data.get("name"))
+		target.return_type = int(data.get("return_type", TYPE_NIL))
+		target.description = str(data.get("description", ""))
+		target.params = new_params
+		target.expose_as_ace = bool(data.get("expose", false))
+		target.ace_display_name = incoming_display
+		target.ace_category = str(data.get("ace_category", ""))
+		# A real edit makes this an authored function: normal annotation emission resumes (the flag
+		# only ever suppressed annotations to keep an UNTOUCHED reverse-lifted helper byte-identical).
+		target.lifted_unannotated = false
+		return true)
+	if changed:
+		_dock._mark_dirty("Edited function %s()." % str(data.get("name")))
+
+## One comparable string per (name, type, description, expose, display, category, params) tuple —
+## the "did the dialog actually change anything" check above.
+static func _function_fingerprint(function_name: String, return_type: int, description: String,
+		exposed: bool, display_name: String, category: String, params: Array) -> String:
+	var parts: PackedStringArray = PackedStringArray([
+		function_name, str(return_type), description, str(exposed), display_name, category])
+	for param: ACEParam in params:
+		parts.append("%s|%s|%s|%s" % [param.id, param.type_name, param.gdscript_default, param.description])
+	return "\n".join(parts)
