@@ -146,10 +146,16 @@ func _quick_add(query: String) -> bool:
 		_dock._set_status("Quick add: nothing matches \"%s\"." % query.strip_edges(), true)
 		return false
 	var definition: ACEDefinition = matched.get("definition")
-	var mode: String = "" if definition.ace_type == ACEDefinition.ACEType.ACTION else "new_condition_event"
+	var selected_resource: Resource = _dock._active_view().get_selected_context().get("source_resource", null)
+	# An action lands ON the selected event (append_action — same as the toolbar's Add Action);
+	# "" was falling into the apply's default branch, which wraps the action in a NEW event —
+	# the fallback that's only right when nothing is selected.
+	var mode: String = "new_condition_event"
+	if definition.ace_type == ACEDefinition.ACEType.ACTION:
+		mode = "append_action" if selected_resource is EventRow else ""
 	var context: Dictionary = {
 		"mode": mode,
-		"selected_resource": _dock._active_view().get_selected_context().get("source_resource", null)
+		"selected_resource": selected_resource
 	}
 	_dock._apply_ace_definition(definition, matched.get("params", {}), context)
 	return true

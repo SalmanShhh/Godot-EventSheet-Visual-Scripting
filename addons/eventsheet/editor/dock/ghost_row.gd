@@ -122,10 +122,18 @@ func _apply_selected() -> void:
 		index = 0
 	var candidate: Dictionary = _candidates[index]
 	var definition: ACEDefinition = candidate.get("definition")
-	var mode: String = "" if definition.ace_type == ACEDefinition.ACEType.ACTION else "new_condition_event"
+	var selected_resource: Resource = _dock._active_view().get_selected_context().get("source_resource", null)
+	# Mode mirrors the classic picker flows: an action APPENDS to the selected event (mode "" would
+	# fall into the apply's default branch and wrap it in a NEW event — only right with no selection);
+	# a condition summoned by the C key also appends; triggers and the E key start a new event.
+	var mode: String = "new_condition_event"
+	if definition.ace_type == ACEDefinition.ACEType.ACTION:
+		mode = "append_action" if selected_resource is EventRow else ""
+	elif definition.ace_type == ACEDefinition.ACEType.CONDITION and _origin == "condition" and selected_resource is EventRow:
+		mode = "append_condition"
 	var context: Dictionary = {
 		"mode": mode,
-		"selected_resource": _dock._active_view().get_selected_context().get("source_resource", null)
+		"selected_resource": selected_resource
 	}
 	if _popup != null:
 		_popup.hide()
