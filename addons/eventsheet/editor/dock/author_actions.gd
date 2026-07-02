@@ -53,19 +53,31 @@ func init(dock: Control) -> void:
 ## with the picker's synonym phrasing honored); trailing words fill its parameters
 ## positionally as raw values. Returns {definition, params} or {}.
 func _quick_match(query: String) -> Dictionary:
+	var ranked: Array = _quick_match_ranked(query, 1)
+	if ranked.is_empty():
+		return {}
+	return {"definition": (ranked[0] as Dictionary).get("definition"), "params": (ranked[0] as Dictionary).get("params")}
+
+## The ranked quick-add candidates for a query — the same scoring _quick_match uses, kept as a LIST so
+## the Ghost Row can offer the top matches while the quick-add bar takes the best. Each entry is
+## {definition, params, score}: exact name = 100, name + trailing params = 90, name-prefix = 60,
+## substring = 40; higher scores first, and shorter matched names break ties (the query "process"
+## should rank OnProcess above OnPhysicsProcess). Trailing words fill each candidate's own parameters
+## positionally (quote-aware). Empty when nothing matches.
+func _quick_match_ranked(query: String, limit: int = 5) -> Array:
 	var text: String = query.strip_edges().to_lower()
 	if text.is_empty() or _dock._ace_registry == null:
-		return {}
+		return []
 	var queries: Array[String] = [text]
 	for synonym_query: String in ACEPickerDialog._c3_synonym_queries(text):
 		queries.append(synonym_query.to_lower())
-	var best: ACEDefinition = null
-	var best_score: int = 0
-	var best_rest: String = ""
-	var best_name_length: int = 1 << 30
+	var candidates: Array = []
 	for definition: ACEDefinition in _dock._ace_registry.get_all_definitions():
 		if bool(definition.metadata.get("hidden", false)):
 			continue
+		var best_score: int = 0
+		var best_rest: String = ""
+		var best_name_length: int = 1 << 30
 		for candidate_name: String in [definition.display_name.to_lower(), definition.id.to_lower()]:
 			if candidate_name.is_empty():
 				continue
@@ -81,22 +93,24 @@ func _quick_match(query: String) -> Dictionary:
 					score = 60
 				elif candidate_name.contains(candidate_query):
 					score = 40
-				# Shorter matched names win ties (the query "process" should pick
-				# OnProcess, not OnPhysicsProcess).
 				if score > best_score or (score == best_score and candidate_name.length() < best_name_length):
-					best = definition
 					best_score = score
 					best_rest = rest
 					best_name_length = candidate_name.length()
-	if best == null or best_score == 0:
-		return {}
-	var params: Dictionary = {}
-	var values: PackedStringArray = tokenize_quick_params(best_rest)
-	for index in range(mini(values.size(), best.parameters.size())):
-		var parameter: Variant = best.parameters[index]
-		if parameter is Dictionary:
-			params[str((parameter as Dictionary).get("id", ""))] = values[index]
-	return {"definition": best, "params": params}
+		if best_score == 0:
+			continue
+		var params: Dictionary = {}
+		var values: PackedStringArray = tokenize_quick_params(best_rest)
+		for index in range(mini(values.size(), definition.parameters.size())):
+			var parameter: Variant = definition.parameters[index]
+			if parameter is Dictionary:
+				params[str((parameter as Dictionary).get("id", ""))] = values[index]
+		candidates.append({"definition": definition, "params": params, "score": best_score, "name_length": best_name_length})
+	candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["score"]) != int(b["score"]):
+			return int(a["score"]) > int(b["score"])
+		return int(a["name_length"]) < int(b["name_length"]))
+	return candidates.slice(0, limit)
 
 ## Splits a quick-add query's trailing parameter text into positional values, QUOTE-AWARE: a
 ## `"`-opened run stays ONE token with its quotes kept (param values are raw GDScript expressions, so

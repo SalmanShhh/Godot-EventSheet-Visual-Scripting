@@ -158,6 +158,7 @@ var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application
 var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
 var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-preview banner + "Edit Events" unlock + Open-in-Godot script-editor glue + lift-report window (dock/preview_glue.gd)
 var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # author quick-actions: quick-add match+apply + Run Scene + Save/Insert row snippets (dock/author_actions.gd)
+var _ghost_row: EventSheetGhostRow = EventSheetGhostRow.new()  # zero-dialog add: E/C/A open a type-a-sentence popup at the selected row (dock/ghost_row.gd)
 var _export_pack: EventSheetExportPack = EventSheetExportPack.new()  # Sheet ▸ Export Addon Pack: writes eventsheet_addons/<class>/ (.tres + .gd + README, bundles includes) (dock/export_pack.gd)
 var _function_dialog_glue: EventSheetFunctionDialogGlue = EventSheetFunctionDialogGlue.new()  # Add ▾ ▸ Function… dialog wiring + apply-to-sheet (dock/function_dialog.gd)
 var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # editor theme: load/apply/pick style + theme file dialog + theme editor + live-reload binding to the active .tres (dock/theme_manager.gd)
@@ -250,6 +251,7 @@ func _ensure_editor_dialogs_initialized() -> void:
 	_row_edit_ops.init(self)
 	_preview_glue.init(self)
 	_author_actions.init(self)
+	_ghost_row.init(self)
 	_export_pack.init(self)
 	_function_dialog_glue.init(self)
 	_theme_manager.init(self)
@@ -951,7 +953,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	# Rebindable shortcuts (EventSheetShortcuts — edit via Tools ▸ Keyboard Shortcuts, saved per-user):
 	# exact modifier matching, so a chord never shadows its plain form. Entries:
 	# [action, suppressed-while-typing, handler]. Core reflexes by default: E event,
-	# C condition, A action, Q comment, G group, X toggle.
+	# C condition, A action (each opens the Ghost Row — the type-a-sentence add popup; the Ctrl
+	# chords + toolbar keep the classic pickers), Q comment, G group, X toggle.
 	for entry: Array in [
 		["add_condition_chord", true, _on_add_condition_requested],
 		["add_action_chord", true, _on_add_action_requested],
@@ -966,9 +969,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		["redo", false, _on_redo_requested],
 		["undo", false, _on_undo_requested],
 		["add_comment", true, _on_add_comment_requested],
-		["add_event", true, _on_add_event_requested],
-		["add_condition", true, _on_add_condition_requested],
-		["add_action", true, _on_add_action_requested],
+		["add_event", true, _open_ghost_event],
+		["add_condition", true, _open_ghost_condition],
+		["add_action", true, _open_ghost_action],
 		["add_group", true, _on_add_group_requested],
 		["toggle_enabled", true, _toggle_selected_enabled],
 		["add_blank_subevent", true, _on_add_blank_subevent_key],
@@ -2976,6 +2979,21 @@ func _quick_match(query: String) -> Dictionary:  # intellisense_test
 
 func _quick_add(query: String) -> bool:  # menu_bar.gd quick-add closure + intellisense_test
 	return _author_actions._quick_add(query)
+
+func _quick_match_ranked(query: String, limit: int = 5) -> Array:  # dock/ghost_row.gd suggestion list
+	return _author_actions._quick_match_ranked(query, limit)
+
+# The E/C/A single keys open the Ghost Row (type-a-sentence add at the selected row, zero dialogs);
+# the toolbar buttons + the Ctrl chords keep the classic full pickers, and Ctrl+Enter inside the ghost
+# row reaches them too — the browsable catalog is never more than one keystroke away.
+func _open_ghost_event() -> void:
+	_ghost_row.open("event")
+
+func _open_ghost_condition() -> void:
+	_ghost_row.open("condition")
+
+func _open_ghost_action() -> void:
+	_ghost_row.open("action")
 
 # ── Pick-filter dialog ("for each" picking) → dock/pick_filter_dialog.gd ──
 func _open_pick_filter_dialog(event_resource: Resource, pick_index: int = -1) -> void:  # viewport/view pick_filter_edit_requested + row menu
