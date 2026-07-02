@@ -981,6 +981,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		["add_blank_subevent", true, _on_add_blank_subevent_key],
 		["invert_condition", true, _on_invert_condition_key],
 		["replace_ace", true, _on_replace_ace_key],
+		["history_back", true, _navigate.go_back],
+		["history_forward", true, _navigate.go_forward],
 	]:
 		if EventSheetShortcuts.matches(key_event, str(entry[0])):
 			if bool(entry[1]) and typing:

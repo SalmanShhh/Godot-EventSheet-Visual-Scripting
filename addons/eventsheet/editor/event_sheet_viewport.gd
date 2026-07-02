@@ -1431,12 +1431,14 @@ func _handle_key(event: InputEventKey) -> void:
 		_select_row(_selected_row_index + 1, _selected_span_index)
 		ensure_selection_visible()
 		accept_event()
-	elif event.keycode == KEY_LEFT:
+	elif event.keycode == KEY_LEFT and not event.alt_pressed:
+		# Plain Left folds; Alt+Left is the dock's jump-history Back and must pass through.
 		var left_row: EventRowData = _row_at(_selected_row_index)
 		if left_row != null and not left_row.children.is_empty() and not left_row.folded:
 			_toggle_row_fold(_selected_row_index)
 			accept_event()
-	elif event.keycode == KEY_RIGHT:
+	elif event.keycode == KEY_RIGHT and not event.alt_pressed:
+		# Plain Right unfolds; Alt+Right is the dock's jump-history Forward.
 		var right_row: EventRowData = _row_at(_selected_row_index)
 		if right_row != null and not right_row.children.is_empty() and right_row.folded:
 			_toggle_row_fold(_selected_row_index)

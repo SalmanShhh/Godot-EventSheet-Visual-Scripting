@@ -107,7 +107,9 @@ func _sheet_matches(query: String) -> Array:
 	var matches: Array = []
 	for entry: Dictionary in filter_sheets(_dock.list_project_sheets(), query):
 		var path: String = str(entry["path"])
-		matches.append({"title": "# %s" % str(entry["title"]), "run": func() -> void: _dock._load_sheet_from_path(path)})
+		matches.append({"title": "# %s" % str(entry["title"]), "run": func() -> void:
+			_dock._navigate.record_current()  # a palette jump is history too — Alt+Left returns
+			_dock._navigate.open_or_focus(path)})
 	return matches
 
 ## Every named symbol in a sheet — exposed functions (ƒ), signals (➜), and tree variables (@) — as

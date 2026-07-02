@@ -23,6 +23,8 @@ const DEFAULTS: Dictionary = {
 	"add_blank_subevent": "B",
 	"invert_condition": "I",
 	"replace_ace": "R",
+	"history_back": "Alt+Left",
+	"history_forward": "Alt+Right",
 	"save": "Ctrl+S",
 	"save_as": "Ctrl+Shift+S",
 	"open": "Ctrl+O",
@@ -48,6 +50,8 @@ const LABELS: Dictionary = {
 	"add_blank_subevent": "Add blank sub-event",
 	"invert_condition": "Invert selected condition",
 	"replace_ace": "Replace selected trigger / condition / action",
+	"history_back": "Jump back (navigation history)",
+	"history_forward": "Jump forward (navigation history)",
 	"duplicate": "Duplicate event",
 	"copy": "Copy rows",
 	"paste": "Paste rows",
@@ -65,7 +69,7 @@ const LABELS: Dictionary = {
 ## Display order for the editor (DEFAULTS key order isn't guaranteed stable).
 const ORDER: Array = [
 	"add_event", "add_condition", "add_action", "add_comment", "add_group", "toggle_enabled",
-	"add_blank_subevent", "invert_condition", "replace_ace",
+	"add_blank_subevent", "invert_condition", "replace_ace", "history_back", "history_forward",
 	"duplicate", "copy", "paste", "undo", "redo", "save", "save_as", "open",
 	"add_event_chord", "add_condition_chord", "add_action_chord", "add_variable_chord",
 ]
