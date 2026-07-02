@@ -130,6 +130,75 @@ func _apply_selected() -> void:
 	if _popup != null:
 		_popup.hide()
 	_dock._apply_ace_definition(definition, candidate.get("params", {}), context)
+	_continue_into_params(definition, candidate.get("params", {}))
+
+# The just-applied ACE's first param the sentence did NOT fill, staged for the follow-up editor.
+# Kept as a member so tests can assert the continuation target without a window.
+var _last_follow_up: Dictionary = {}
+
+## Post-insert continuation: when the sentence left parameters unfilled ("heal" with no amount), the
+## one-field param editor opens straight onto the first of them — pre-filled with the resolved default
+## and select-all'd — so `A → heal ⏎ → 5 ⏎` completes with zero dialogs. A fully-specified sentence
+## ("heal 5") applies silently. Either way the affected row is revealed, so pressing an add key again
+## continues the stream right below it.
+func _continue_into_params(definition: ACEDefinition, filled: Dictionary) -> void:
+	_last_follow_up = {}
+	var found: Dictionary = _find_applied_ace(definition)
+	if found.is_empty():
+		return
+	var view: EventSheetViewport = _dock._active_view()
+	if view != null:
+		view.reveal_resource(found.get("row"))
+	var ace: Resource = found.get("ace")
+	for parameter: Variant in definition.parameters:
+		if not (parameter is Dictionary):
+			continue
+		var param_id: String = str((parameter as Dictionary).get("id", ""))
+		if param_id.is_empty() or filled.has(param_id):
+			continue
+		_last_follow_up = {"ace": ace, "param_id": param_id}
+		if not Engine.is_editor_hint() and DisplayServer.get_name() == "headless":
+			return
+		_dock._inline_params.on_param_value_edit_requested(ace, param_id, str((ace.get("params") as Dictionary).get(param_id, "")))
+		return
+
+## Locates the LIVE just-applied ACE. The apply runs through the undo funnel, whose commit restores a
+## duplicated snapshot — the resources it created are replaced — so the only reliable handle is a
+## reverse walk of the live sheet for the newest ACE with this definition's id. {row, ace} or {}.
+func _find_applied_ace(definition: ACEDefinition) -> Dictionary:
+	var sheet: EventSheetResource = _dock.get_current_sheet()
+	if sheet == null:
+		return {}
+	for index: int in range(sheet.events.size() - 1, -1, -1):
+		var found: Dictionary = _find_in_row(sheet.events[index], definition.id)
+		if not found.is_empty():
+			return found
+	return {}
+
+func _find_in_row(row: Variant, ace_id: String) -> Dictionary:
+	if row is EventGroup:
+		var group_rows: Array = (row as EventGroup).events if not (row as EventGroup).events.is_empty() else (row as EventGroup).rows
+		for index: int in range(group_rows.size() - 1, -1, -1):
+			var found: Dictionary = _find_in_row(group_rows[index], ace_id)
+			if not found.is_empty():
+				return found
+		return {}
+	if not (row is EventRow):
+		return {}
+	var event_row: EventRow = row as EventRow
+	for index: int in range(event_row.sub_events.size() - 1, -1, -1):
+		var found: Dictionary = _find_in_row(event_row.sub_events[index], ace_id)
+		if not found.is_empty():
+			return found
+	for index: int in range(event_row.actions.size() - 1, -1, -1):
+		if event_row.actions[index] is ACEAction and (event_row.actions[index] as ACEAction).ace_id == ace_id:
+			return {"row": event_row, "ace": event_row.actions[index]}
+	for index: int in range(event_row.conditions.size() - 1, -1, -1):
+		if event_row.conditions[index].ace_id == ace_id:
+			return {"row": event_row, "ace": event_row.conditions[index]}
+	if event_row.trigger != null and event_row.trigger.ace_id == ace_id:
+		return {"row": event_row, "ace": event_row.trigger}
+	return {}
 
 ## Ctrl+Enter — the browsable catalog is one keystroke away; which picker opens follows the add-kind
 ## that summoned the ghost row.

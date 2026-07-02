@@ -52,6 +52,15 @@ static func run() -> bool:
 		ok = _check("the applied action carries the filled param",
 			str((live_event.actions[0] as ACEAction).params.get("amount", "")), "5") and ok
 
+	# ── Post-insert continuation: an unfilled param stages the follow-up hop; a full sentence doesn't ──
+	ok = _check("a fully-specified sentence stages NO follow-up", dock._ghost_row._last_follow_up.is_empty(), true) and ok
+	dock._ghost_row._refresh("heal")  # no amount given → the follow-up should target it
+	dock._ghost_row._apply_selected()
+	var follow_up: Dictionary = dock._ghost_row._last_follow_up
+	ok = _check("an unfilled param stages the follow-up hop", str(follow_up.get("param_id", "")), "amount") and ok
+	ok = _check("the follow-up targets the LIVE just-applied ACE",
+		follow_up.get("ace") is ACEAction and str((follow_up.get("ace") as ACEAction).ace_id) == str((dock._ghost_row._candidates[0] as Dictionary).get("definition").id), true) and ok
+
 	# ── Guards: empty query applies nothing; garbage applies nothing ──
 	dock._ghost_row._refresh("")
 	dock._ghost_row._apply_selected()

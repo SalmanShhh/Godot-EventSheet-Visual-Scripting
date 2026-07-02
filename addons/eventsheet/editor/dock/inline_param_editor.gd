@@ -36,6 +36,11 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 	_param_edit_target = ace
 	_param_edit_key = param_id
 	_param_edit_field.text = current_text
+	# Name the param being edited (placeholder when empty + tooltip always), so a blind popup never
+	# leaves the user guessing which value they're typing — e.g. the ghost row's follow-up hop lands
+	# here on a param the sentence didn't fill.
+	_param_edit_field.placeholder_text = param_id
+	_param_edit_field.tooltip_text = "Editing \"%s\"" % param_id
 	_param_edit_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i(200, 36)))
 	_param_edit_field.grab_focus()
 	_param_edit_field.select_all()
