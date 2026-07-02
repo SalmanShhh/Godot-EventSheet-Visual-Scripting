@@ -82,7 +82,7 @@ static func _command_match_score(title: String, q: String) -> int:
 			return -1
 	return 2
 
-## Pure fuzzy filter over project sheet PATHS for the `#` mode (Navigate §13.3): returns [{title, path}]
+## Pure fuzzy filter over project sheet PATHS for the `#` mode: returns [{title, path}]
 ## whose file name matches `query` (the leading `#` already stripped) as prefix > substring > subsequence,
 ## best first; empty query = all, name-sorted. Static → testable without a window, like filter_commands.
 static func filter_sheets(sheet_paths: PackedStringArray, query: String) -> Array:
@@ -202,7 +202,7 @@ func _build_command_palette_window() -> void:
 	_dock.add_child(_command_palette_window)
 
 func _refresh_command_palette(query: String) -> void:
-	# Navigate §13.3 prefix modes: `#` opens any project sheet, `@` jumps to a symbol in the ACTIVE
+	# Prefix modes: `#` opens any project sheet, `@` jumps to a symbol in the ACTIVE
 	# sheet (function / signal / variable); anything else fuzzy-runs a command.
 	if query.begins_with("#"):
 		_command_palette_matches = _sheet_matches(query.substr(1))

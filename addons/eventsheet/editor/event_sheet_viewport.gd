@@ -2403,7 +2403,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 	if kind in ["condition", "trigger", "action"]:
 		var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
 		if row_data != null and row_data.source_resource is EventRow:
-			# Glance layer §11: LEAD the tooltip with the whole event read as one plain-English sentence
+			# LEAD the tooltip with the whole event read as one plain-English sentence
 			# (built from the same descriptors the cells draw), then the hovered cell's own description.
 			var sentence: String = _row_builder.row_sentence(row_data.source_resource as EventRow)
 			var sentence_prefix: String = "%s\n\n" % sentence if not sentence.is_empty() else ""

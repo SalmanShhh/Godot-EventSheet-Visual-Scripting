@@ -12,7 +12,7 @@ signal edit_requested
 
 const BANNER_HEIGHT := 24.0
 const ICON_SIZE := 14.0
-## The Publishes Manifest (glance layer §11): a second band listing what the behaviour PUBLISHES —
+## The Publishes Manifest: a second band listing what the behaviour PUBLISHES —
 ## its ACE dictionary pinned above the sheet. Role hues match the block/badge families elsewhere.
 const MANIFEST_HEIGHT := 18.0
 const MANIFEST_FONT_SIZE := 12
@@ -28,13 +28,13 @@ var _is_behavior: bool = false
 var _icon: Texture2D = null
 var _manifest_segments: Array = []  # [{text, color}] — the non-empty role pills, computed on refresh
 # Sheet health chip (right end of the identity line): the last diagnostics result, pushed ONLY on a
-# save / Check-Sheet run — never an ambient recompile (the §11 cost law). `_health_known` gates its draw
+# save / Check-Sheet run — never an ambient recompile (a full compile is far too costly to run per keystroke). `_health_known` gates its draw
 # so a freshly-opened, not-yet-checked sheet shows no (possibly false) green.
 var _health_known: bool = false
 var _health_count: int = 0
 var _health_sheet: EventSheetResource = null
 
-## The health chip {text, color} for the banner's right end (glance §11): the calm "works" signal (green
+## The health chip {text, color} for the banner's right end: the calm "works" signal (green
 ## ✓) or the flag count (amber ⚠). Static → testable.
 static func health_chip(issue_count: int) -> Dictionary:
 	if issue_count <= 0:
@@ -144,7 +144,7 @@ func update_from_sheet(sheet: EventSheetResource) -> void:
 	if sheet != _health_sheet:
 		_health_known = false
 		_health_sheet = sheet
-	# Publishes Manifest (glance §11): what this behaviour exposes, pinned above the sheet.
+	# Publishes Manifest: what this behaviour exposes, pinned above the sheet.
 	_manifest_segments = _build_manifest_segments(manifest_for(sheet))
 	var total_height: float = BANNER_HEIGHT + (MANIFEST_HEIGHT if not _manifest_segments.is_empty() else 0.0)
 	custom_minimum_size = Vector2(0.0, total_height)

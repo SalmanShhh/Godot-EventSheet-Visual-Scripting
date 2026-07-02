@@ -74,7 +74,7 @@ static func run() -> bool:
 		pasted_group != null and pasted_group.description == "The core loop", true) and all_passed
 
 	# ── Slow double-click (injected clock) ───────────────────────────────────
-	# The editable description span is now last (a muted chapter-fingerprint span, glance §11, sits
+	# The editable description span is now last (a muted chapter-fingerprint span sits
 	# between the title and description); slow-clicking it is what begins inline editing.
 	var group_title_span: int = group_row.spans.size() - 1
 	all_passed = _check("first slow click never edits",

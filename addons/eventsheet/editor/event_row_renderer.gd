@@ -91,7 +91,7 @@ func _draw_text_with_values(
 		if not plain.is_empty() and x < limit:
 			_draw_text(control, Vector2(x, baseline.y), plain, limit - x, font, font_size, base_color)
 			x += font.get_string_size(plain, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-		# Typed value tint (glance §11): the trailing kind picks the hue; numbers keep value_color.
+		# Typed value tint: the trailing kind picks the hue; numbers keep value_color.
 		var value_col: Color = value_color
 		if (range_entry as Array).size() >= 3:
 			match str(range_entry[2]):

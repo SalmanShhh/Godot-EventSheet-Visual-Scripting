@@ -1,4 +1,4 @@
-# EventForge — the row-as-sentence hover (glance layer §11). ViewportRowBuilder.row_sentence reads a
+# EventForge — the row-as-sentence hover. ViewportRowBuilder.row_sentence reads a
 # whole event as one plain-English sentence, built ONLY from the descriptor strings the cells draw, with
 # raw-code actions summarised honestly as "then N lines of code". Pins the structure (trigger lead / if /
 # do / else / negation / truncation / raw count) without asserting exact ACE phrasing (that would be brittle).

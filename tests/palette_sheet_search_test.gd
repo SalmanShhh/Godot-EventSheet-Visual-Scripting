@@ -1,4 +1,4 @@
-# EventForge — the command palette's `#` sheet-search mode (Navigate §13.3). EventSheetCommandPalette
+# EventForge — the command palette's `#` sheet-search mode. EventSheetCommandPalette
 # .filter_sheets fuzzily matches project sheet paths by file name (prefix > substring > subsequence),
 # best first, so Ctrl+P # jumps to any sheet in the project. Pins the match/rank without a live window.
 @tool

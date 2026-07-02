@@ -103,7 +103,7 @@ func _quick_match(query: String) -> Dictionary:
 ## a string param needs them), while unquoted runs split on spaces. The naive split(" ") mis-filled
 ## `play "jump land"` as two params ("jump / land"). An unterminated quote is forgiven — the rest of
 ## the text becomes the final token. Static + pure (headless-testable); the same tokenizer the Ghost
-## Row's zero-dialog add reuses (its spec hard gate).
+## Row's zero-dialog add reuses.
 static func tokenize_quick_params(rest: String) -> PackedStringArray:
 	var tokens: PackedStringArray = PackedStringArray()
 	var current: String = ""

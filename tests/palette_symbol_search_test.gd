@@ -1,4 +1,4 @@
-# EventForge — the command palette's `@` symbol-search mode (Navigate §13.3). collect_symbols gathers a
+# EventForge — the command palette's `@` symbol-search mode. collect_symbols gathers a
 # sheet's named symbols (functions ƒ, signals ➜, tree variables @), incl. ones nested in groups, and
 # filter_symbols fuzzy-matches them by bare name — so Ctrl+P @ jumps to any symbol in the active sheet.
 @tool

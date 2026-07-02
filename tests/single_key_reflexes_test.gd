@@ -1,4 +1,4 @@
-# EventForge — the single-key reflexes B / I / R (in-sheet flow, spec §12.1) + the shortcut-map
+# EventForge — the single-key reflexes B / I / R + the shortcut-map
 # collision audit. B adds a blank sub-event under the selected event, I inverts the selected condition,
 # R replaces the selected ACE — each seeding the context state from the SELECTION and reusing the
 # right-click handlers verbatim. The audit asserts every DEFAULTS binding is pairwise-unique.

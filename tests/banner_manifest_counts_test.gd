@@ -1,4 +1,4 @@
-# EventForge — the Publishes Manifest census (glance layer §11). SheetIdentityBanner.manifest_for counts
+# EventForge — the Publishes Manifest census. SheetIdentityBanner.manifest_for counts
 # what a behaviour publishes — trigger signals, exposed functions by return type, exported knobs — from
 # both structured rows AND un-lifted `## @ace_*` RawCode. Pins the counts + that _build_manifest_segments
 # drops zero roles and pluralises.
@@ -44,7 +44,7 @@ static func run() -> bool:
 	ok = _check("plural knobs", str(segments[1]["text"]), "@ 3 knobs") and ok
 	ok = _check("null sheet → all zero", int(SheetIdentityBanner.manifest_for(null)["triggers"]), 0) and ok
 
-	# Health chip (glance §11): calm green when clean, amber flag count otherwise; save-time push only.
+	# Health chip: calm green when clean, amber flag count otherwise; save-time push only.
 	ok = _check("clean health chip text", str(SheetIdentityBanner.health_chip(0)["text"]), "✓ no issues") and ok
 	ok = _check("flagged health chip text", str(SheetIdentityBanner.health_chip(3)["text"]), "⚠ 3 flagged") and ok
 	var banner: SheetIdentityBanner = SheetIdentityBanner.new()

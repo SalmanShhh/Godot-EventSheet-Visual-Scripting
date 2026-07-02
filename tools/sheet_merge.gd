@@ -5,7 +5,7 @@
 # stable row UIDs (event_uid/group_uid) + content signatures, so two people editing
 # DIFFERENT rows merge cleanly, and only genuine same-row edits surface as conflicts.
 #
-# Git wiring (see docs/VERSION-CONTROL.md):
+# Git wiring:
 #   .gitattributes:  *.tres merge=eventsheet
 #   .git/config:     [merge "eventsheet"]
 #                        name = EventSheets semantic merge

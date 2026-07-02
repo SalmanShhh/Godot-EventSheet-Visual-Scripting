@@ -13,7 +13,7 @@
 #  • "Run only when" adds guard conditions (GDScript boolean expressions) that wrap the body in an `if`.
 #  • Expose-as-ACE publishes it into other sheets' pickers.
 #
-# See docs/internal/SPEC-code-free-addon-authoring-ux.md (§2, the ACE Studio) for the design. The
+# The
 # `_usable_option` / `_value_type_option` OptionButtons remain the backing model (hidden) so
 # build_function_data() and the unit tests that drive them by index are unchanged.
 @tool

@@ -1,4 +1,4 @@
-# Godot EventSheets — Tier 3 custom-drawer round-trip (docs/INSPECTOR-ATTRIBUTES-SPEC.md).
+# Godot EventSheets — Tier 3 custom-drawer round-trip.
 #
 # Each drawer compiles to an `@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>…")` marker — graceful
 # degradation: without the editor plugin (or in an exported game) the property is a plain field. This pins

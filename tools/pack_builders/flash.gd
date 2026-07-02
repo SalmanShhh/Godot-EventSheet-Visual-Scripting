@@ -6,7 +6,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## "Flash" behavior: toggles host visibility at an interval for a duration.
 ##
 ## Authored entirely as ACE rows — ZERO RawCode — the first bundled pack to prove the
-## behaviour-as-ACEs path end to end (docs/internal/SPEC-behaviour-as-aces-parity.md). The signal is a
+## behaviour-as-ACEs path end to end. The signal is a
 ## trigger SignalRow; the tick is a gated On Process event with sub-events; the two exposed functions
 ## are ACE-action bodies. Node-scoped writes target the parent host via the {host.} / explicit-target
 ## idiom. Guarded by flash_pack_zero_rawcode_test.

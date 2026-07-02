@@ -1,5 +1,4 @@
-# Behaviour-pack GDScript-block census (dev/audit tool, not shipped logic). Reproduces the numbers in
-# docs/internal/SPEC-behaviour-gdscript-blocks-audit.md. Run headless:
+# Behaviour-pack GDScript-block census (dev/audit tool, not shipped logic). Run headless:
 #   godot --headless --path . --script tools/audit_pack_blocks.gd
 # For every eventsheet_addons/**/*.gd it opens the file two ways and counts the surviving RawCodeRows:
 #   Lens A (user-open): import_external → attempt_lift only (what you see opening the .gd today).
@@ -8,7 +7,7 @@
 #     would erase blocks — it is 0 today (the residue is genuine vocabulary/grammar gaps, not lift reach).
 # Each remaining block is tagged with a heuristic reason (blank / scaffold / host-binding / exposed
 # getter/action / helper-func-body / match / numeric / other) so the audit categorises without guessing.
-# NOTE: _classify is a pure-TEXT heuristic and knowingly impure (see the spec's §4-H) — treat the
+# NOTE: _classify is a pure-TEXT heuristic and knowingly impure — treat the
 # per-category counts as an audit lens, not gospel. Writes a JSON dump to user:// (never committed).
 @tool
 extends SceneTree

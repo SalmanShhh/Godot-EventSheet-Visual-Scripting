@@ -85,7 +85,7 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 				return _signal_backed("_on%s_%s" % [source_token, custom_signal], event.trigger_args, custom_signal, source_path)
 			return {"function_name": "", "args": "", "signal_name": "", "source_path": ""}
 
-# ── Trigger tempo (glance layer, spec §11) ───────────────────────────────────────────────────────
+# ── Trigger tempo ───────────────────────────────────────────────────────
 # The four TEMPO classes a trigger id falls into — HOW OFTEN the event runs, the #1 comprehension +
 # perf fact, surfaced as a coloured badge on the row. Co-located with resolve_trigger ON PURPOSE so the
 # two id censuses can never drift; trigger_tempo_exhaustiveness_test asserts every id resolve_trigger

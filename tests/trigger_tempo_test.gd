@@ -1,4 +1,4 @@
-# EventForge — trigger tempo classification (glance layer, spec §11). TriggerResolver.tempo_class_for
+# EventForge — trigger tempo classification. TriggerResolver.tempo_class_for
 # maps every trigger id to one of four TEMPO classes (every-tick / input / once / signal) so a row's
 # badge says HOW OFTEN it runs. Pins the mapping + exhaustiveness: every id resolve_trigger recognises
 # classifies to a known class, and any unknown id falls to signal (the honest default).

@@ -277,7 +277,7 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
 		}
 	)
 
-## A group's chapter fingerprint (glance §11): "N events · ⟳a · ➜b · ⌨c · ▶d · ⚠e" — its child events
+## A group's chapter fingerprint: "N events · ⟳a · ➜b · ⌨c · ▶d · ⚠e" — its child events
 ## counted by trigger TEMPO class (reusing TriggerResolver.tempo_class_for) plus the RawCode (⚠) blocks
 ## inside, so a collapsed group still shows its weight + hotness. Recurses nested groups/sub-events.
 ## Static + pure → unit-testable; "" when the group holds no events or code.
@@ -348,7 +348,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 			}
 		)
 	]
-	# Chapter fingerprint (glance §11): a muted trailing span on the header line — child events by tempo
+	# Chapter fingerprint: a muted trailing span on the header line — child events by tempo
 	# class + ⚠-code blocks — so a COLLAPSED group still tells you its weight + hotness (fold-all becomes
 	# a real table of contents). Flows after the title on line 0, so it survives fold.
 	var fingerprint: String = group_fingerprint(group)
@@ -621,8 +621,8 @@ func _build_variable_row(
 
 # ── Event-span assembly (the "model → SemanticSpans" pass) ───────────────────────────────────────
 
-## Sets the tempo glyph + hue on a trigger-badge meta from the event's trigger_id, and returns the glyph
-## (glance layer §11). SIGNAL keeps the shipped green ➜ from the event style — the common case stays
+## Sets the tempo glyph + hue on a trigger-badge meta from the event's trigger_id, and returns the glyph.
+## SIGNAL keeps the shipped green ➜ from the event style — the common case stays
 ## byte-identical; every-tick (⟳) / input (⌨) / once (▶) get their own fill so how OFTEN an event runs
 ## reads at a distance. Shared by both trigger-badge paths (authored ACECondition + lifted trigger_id).
 func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, trigger_id: String) -> String:
@@ -685,7 +685,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 		)
 	if event_row.trigger != null:
 		var trigger_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-		# Tempo badge (glance layer §11): the glyph + hue say HOW OFTEN this event runs, from trigger_id.
+		# Tempo badge: the glyph + hue say HOW OFTEN this event runs, from trigger_id.
 		var trigger_glyph: String = _apply_trigger_tempo(trigger_badge_meta, event_style, event_row.trigger_id)
 		trigger_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
 		trigger_badge_meta["line_index"] = condition_line_index
@@ -1250,7 +1250,7 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 		return action.ace_id
 	return descriptor.format_display(params_dict)
 
-# ── Row-as-sentence (glance layer §11) ───────────────────────────────────────────────────────────
+# ── Row-as-sentence hover ───────────────────────────────────────────────────────────
 const _SENTENCE_MAX_ACTIONS := 3
 ## Friendly lead phrases for the lifecycle trigger ids — the tempo triggers read as a cadence, not a
 ## method name. Signal-backed triggers fall back to the capitalized id ("OnBodyEntered" → "On Body
@@ -1360,7 +1360,7 @@ func _format_variable_value(value: Variant) -> String:
 static var _value_regex: RegEx = null
 
 ## Ranges ([start, length, kind]) of parameter-like values inside ACE display text, so the renderer can
-## highlight them event-sheet-style AND tint by TYPE (glance layer §11): kind is "string" (quoted),
+## highlight them event-sheet-style AND tint by TYPE: kind is "string" (quoted),
 ## "bool" (true/false), or "number". The three come straight from which regex alternate matched, so the
 ## tint can never disagree with the highlight. The trailing kind is additive — consumers that read only
 ## [start] / [length] (the value hit-test) are unaffected.

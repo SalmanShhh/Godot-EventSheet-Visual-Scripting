@@ -6,7 +6,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## Move To behavior (event-sheet parity), authored entirely as ACE rows (ZERO RawCode): glides through a
 ## waypoint queue and fires On Arrived at the final stop. The per-step position math
 ## (move_toward / angle / distance_to) lives in ACE expression params — the visual event-sheet model — so there is
-## no GDScript block. See docs/internal/SPEC-behaviour-as-aces-parity.md.
+## no GDScript block.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true

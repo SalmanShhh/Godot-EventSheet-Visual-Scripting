@@ -5,8 +5,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 ## Top-down 8-direction movement, authored entirely as ACE rows (ZERO RawCode) — the new behaviour
 ## physics vocabulary in action: a typed input-vector local, Set Velocity, and Move And Slide, all
-## host-targeted via {host.}. The movement behaviour the user asked to be code-free. See
-## docs/internal/SPEC-behaviour-as-aces-parity.md.
+## host-targeted via {host.}. The movement behaviour the user asked to be code-free.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true

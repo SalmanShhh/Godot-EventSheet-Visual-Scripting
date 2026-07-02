@@ -1,4 +1,4 @@
-# EventForge — typed value tinting (glance layer §11). ViewportRowBuilder._value_ranges_for tags each
+# EventForge — typed value tinting. ViewportRowBuilder._value_ranges_for tags each
 # highlighted parameter literal with its TYPE ("number" / "string" / "bool") so the renderer can tint it
 # by kind. The kind comes straight from which regex alternate matched, so the tint can't disagree with
 # the highlight; the [start, length] prefix stays index-accessible for the value hit-test (backward-compat).

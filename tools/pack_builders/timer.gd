@@ -4,7 +4,7 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 ## "Timer" behavior: attach under any node; Start/Stop ACEs; "On Timer" trigger.
-## Authored entirely as ACE rows (ZERO RawCode) — see docs/internal/SPEC-behaviour-as-aces-parity.md.
+## Authored entirely as ACE rows (ZERO RawCode).
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true

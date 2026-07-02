@@ -5,7 +5,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 ## Minimal state machine, authored entirely as ACE rows (ZERO RawCode) — including the Is In State
 ## CONDITION, now a bool-returning sheet function (the three-way function expose: bool -> condition).
-## On State Changed is a trigger SignalRow. See docs/internal/SPEC-behaviour-as-aces-parity.md.
+## On State Changed is a trigger SignalRow.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true

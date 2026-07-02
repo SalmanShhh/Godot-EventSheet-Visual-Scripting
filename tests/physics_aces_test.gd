@@ -1,5 +1,5 @@
-# EventForge — behaviour-building physics + input + typed-local vocabulary (§2.2–2.4 of the
-# behaviour-as-ACEs parity spec). Pins the codegen templates of the new Movement ACEs, that they
+# EventForge — behaviour-building physics + input + typed-local vocabulary.
+# Pins the codegen templates of the new Movement ACEs, that they
 # host-target inside a behaviour (and stay bare on a normal sheet), plus the input-axis consumer
 # and the typed local. Compiles each ACE through ActionCodegen, which is what the sheet compiler
 # calls — so a wrong template or a missing param surfaces here before it reaches generated code.

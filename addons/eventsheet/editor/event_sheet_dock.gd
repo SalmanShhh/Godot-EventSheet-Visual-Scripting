@@ -2739,7 +2739,7 @@ func _run_diagnostics() -> int:
 	var count: int = view.set_row_diagnostics(diagnostics)
 	if count > 0:
 		view.reveal_and_select_first_diagnostic()
-	# Push the result to the banner's health chip (glance §11) — save-time / on-demand only, so the chip
+	# Push the result to the banner's health chip — save-time / on-demand only, so the chip
 	# reflects a real check, never an ambient recompile.
 	if _identity_banner != null:
 		_identity_banner.set_health(count)
@@ -3583,7 +3583,7 @@ func _insert_child_event_for_context_row() -> void:
 func _insert_child_comment_for_context_row() -> void:
 	_row_edit_ops._insert_child_comment_for_context_row()
 
-# ── Single-key reflexes (in-sheet flow §12.1): B blank sub-event · I invert · R replace ─────────────
+# ── Single-key reflexes: B blank sub-event · I invert · R replace ─────────────
 ## Seeds the context-menu state (_context_row/_context_hit) from the CURRENT selection, so the
 ## single-key reflexes reuse the right-click handlers verbatim — one behavior, two entry points.
 ## False when no row is selected.

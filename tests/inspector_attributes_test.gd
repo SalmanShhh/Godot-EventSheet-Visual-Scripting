@@ -1,4 +1,4 @@
-# Godot EventSheets — Inspector attributes, Tier 1 (docs/INSPECTOR-ATTRIBUTES-SPEC.md):
+# Godot EventSheets — Inspector attributes, Tier 1:
 # tooltip / group / range / multiline on exported globals; canonical emission order;
 # lossless raw fallback for external files.
 @tool
