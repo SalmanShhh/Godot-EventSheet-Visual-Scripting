@@ -1,5 +1,8 @@
-# EventForge — the Functions overview panel (the function list). Every sheet function shows
-# at a glance with its signature (and an ✦ when exposed as an ACE); right-click deletes one.
+# EventForge — the Functions overview panel. Now its OWN dockable left-rail panel (it used to be
+# welded inside the Generated-GDScript side panel, so seeing your functions meant opening the code
+# view): a fold header ("▸ Functions · N") expands on demand, ＋ adds a function, every sheet
+# function shows its signature (✦ = exposed as an ACE), right-click deletes one, and the collapsed
+# header still carries the count so the sheet's weight reads without expanding.
 @tool
 extends RefCounted
 class_name FunctionsPanelTest
@@ -24,20 +27,29 @@ static func run() -> bool:
 	sheet.functions.append(exposed)
 
 	dock.setup(sheet)
-	dock._ensure_code_panel()
-	dock._side_panel.visible = true
-	dock._refresh_functions_list()
 
+	# ── Independent of the code view: the panel lives in the left rail, populated on setup ──
+	ok = _check("the panel exists WITHOUT the GDScript view open", dock._functions_panel != null and dock._side_panel == null, true) and ok
+	ok = _check("it is docked in the left rail", dock._workspace_body.is_ancestor_of(dock._functions_panel), true) and ok
 	ok = _check("panel lists both functions", dock._functions_list.item_count, 2) and ok
 	ok = _check("signature shows the parameter", dock._functions_list.get_item_text(0), "do_thing(amount)") and ok
 	ok = _check("exposed function gets the badge", dock._functions_list.get_item_text(1).ends_with("✦"), true) and ok
 
-	# Right-click delete removes it from the sheet (undoable) and refreshes the list.
+	# ── Fold behaviour: collapsed header still tells the count; expanding shows the list ──
+	dock._functions_panel.set_expanded(false)
+	ok = _check("collapsed hides the list", dock._functions_list.visible, false) and ok
+	ok = _check("the collapsed header still carries the count",
+		dock._functions_panel._header_button.text.contains("Functions · 2"), true) and ok
+	dock._functions_panel.set_expanded(true)
+	ok = _check("expanding shows the list", dock._functions_list.visible, true) and ok
+
+	# ── Right-click delete removes it from the sheet (undoable) and refreshes list + count ──
 	dock._functions_list.select(0)
 	dock._delete_selected_function()
 	ok = _check("delete removes the function from the sheet", sheet.functions.size(), 1) and ok
 	ok = _check("list refreshes after delete", dock._functions_list.item_count, 1) and ok
 	ok = _check("the remaining function is the survivor", (sheet.functions[0] as EventFunction).function_name, "compute") and ok
+	ok = _check("the header count follows", dock._functions_panel._header_button.text.contains("Functions · 1"), true) and ok
 
 	dock.free()
 	return ok

@@ -89,6 +89,7 @@ var _workspace_body: HSplitContainer = null
 var _content_host: VBoxContainer = null
 var _open_sheets_panel: EventSheetOpenSheetsDock = null
 var _anatomy_panel: BehaviourAnatomyPanel = null  # left rail, under Open Sheets (behaviour_anatomy_panel.gd)
+var _functions_panel: EventSheetFunctionsPanel = null  # left rail, dockable fold-expand Functions overview (functions_panel.gd)
 const _OPEN_SHEETS_PANEL_META: String = "eventsheets_open_sheets_panel"  # editor metadata: {shown, collapsed}
 var _column_header: SheetColumnHeader = null
 var _identity_banner: SheetIdentityBanner = null
@@ -332,6 +333,7 @@ func _activate_tab(index: int) -> void:
 	_viewport.set_sheet(_current_sheet)
 	_sync_split_sheet()
 	_refresh_anatomy_panel()
+	_refresh_functions_list()
 	_theme_manager._sync_active_theme_binding()
 	_refresh_title_strip()
 	_theme_manager._refresh_theme_picker_selection()
@@ -798,6 +800,17 @@ func _build_ui() -> void:
 	_open_sheets_panel.reopen_requested.connect(reopen_sheet_path)
 	_open_sheets_panel.collapse_toggled.connect(_on_open_sheets_panel_collapsed)
 	open_tabs_changed.connect(_refresh_open_sheets_panel)
+	# The Functions overview is its own dockable rail panel (fold-expandable on demand) — it used
+	# to live inside the Generated-GDScript side panel, so seeing your functions meant opening the
+	# code view. The list's click/right-click handlers stay on the dock.
+	_functions_panel = EventSheetFunctionsPanel.new()
+	_functions_panel.add_requested.connect(_open_function_dialog)
+	_functions_list = _functions_panel.list
+	_functions_list.item_clicked.connect(_on_functions_list_item_clicked)
+	_functions_menu = PopupMenu.new()
+	_functions_menu.add_item("Delete Function", 0)
+	_functions_menu.id_pressed.connect(_on_functions_menu_id_pressed)
+	_functions_list.add_child(_functions_menu)
 	# The Anatomy panel shares the left rail below Open Sheets: the active behaviour's organs
 	# (knobs/state/triggers/actions/conditions/expressions/uses) at a glance, click to jump.
 	_anatomy_panel = BehaviourAnatomyPanel.new()
@@ -809,6 +822,7 @@ func _build_ui() -> void:
 	left_rail.name = "EventSheetLeftRail"
 	left_rail.add_theme_constant_override("separation", 8)
 	left_rail.add_child(_open_sheets_panel)
+	left_rail.add_child(_functions_panel)
 	left_rail.add_child(_anatomy_panel)
 	_workspace_body = HSplitContainer.new()
 	_workspace_body.name = "EventSheetWorkspaceBody"
@@ -1892,9 +1906,11 @@ func _refresh_anatomy_panel() -> void:
 func _on_open_sheets_panel_collapsed(collapsed: bool) -> void:
 	if _workspace_body != null:
 		_workspace_body.split_offset = 26 if collapsed else 200
-	# The whole left rail narrows to the strip — the Anatomy panel can't fit, so it follows.
+	# The whole left rail narrows to the strip — the Functions/Anatomy panels can't fit, so they follow.
 	if _anatomy_panel != null:
 		_anatomy_panel.visible = not collapsed
+	if _functions_panel != null:
+		_functions_panel.visible = not collapsed
 	_save_open_sheets_panel_prefs()
 
 ## Per-project editor metadata for the panel's shown/collapsed state (survives editor restarts).
@@ -1922,6 +1938,8 @@ func _apply_open_sheets_panel_prefs() -> void:
 	_open_sheets_panel.set_collapsed(bool(prefs.get("collapsed", false)))
 	if _anatomy_panel != null:
 		_anatomy_panel.visible = not bool(prefs.get("collapsed", false))
+	if _functions_panel != null:
+		_functions_panel.visible = not bool(prefs.get("collapsed", false))
 	_refresh_open_sheets_panel()
 
 func _toggle_code_panel() -> void:
@@ -1957,31 +1975,8 @@ func _ensure_code_panel() -> void:
 	_side_panel.custom_minimum_size = Vector2(360.0, 0.0)
 	_side_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_side_panel.visible = false
-	# Functions overview (the function list): every sheet function at a glance, so they're
-	# discoverable without scrolling the rows. ＋ opens the function dialog; right-click deletes.
-	var functions_header: HBoxContainer = HBoxContainer.new()
-	var functions_title: Label = Label.new()
-	functions_title.text = "Functions"
-	functions_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	functions_header.add_child(functions_title)
-	var add_function_button: Button = Button.new()
-	add_function_button.text = "＋"
-	add_function_button.tooltip_text = "Add a function…"
-	add_function_button.pressed.connect(_open_function_dialog)
-	functions_header.add_child(add_function_button)
-	_side_panel.add_child(functions_header)
-	_functions_list = ItemList.new()
-	_functions_list.name = "EventSheetFunctionsList"
-	_functions_list.custom_minimum_size = Vector2(0.0, 96.0)
-	_functions_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_functions_list.allow_reselect = true
-	_functions_list.item_clicked.connect(_on_functions_list_item_clicked)
-	_side_panel.add_child(_functions_list)
-	_functions_menu = PopupMenu.new()
-	_functions_menu.add_item("Delete Function", 0)
-	_functions_menu.id_pressed.connect(_on_functions_menu_id_pressed)
-	_functions_list.add_child(_functions_menu)
-	_side_panel.add_child(HSeparator.new())
+	# (The Functions overview used to live here; it is now its own dockable left-rail panel —
+	# see functions_panel.gd — so it no longer requires the code view to be open.)
 	var header: HBoxContainer = HBoxContainer.new()
 	var title: Label = Label.new()
 	title.text = "Generated GDScript"
@@ -2065,11 +2060,14 @@ func _refresh_functions_list() -> void:
 	if _functions_list == null:
 		return
 	_functions_list.clear()
-	if _current_sheet == null:
-		return
-	for function_resource: Variant in _current_sheet.functions:
-		if function_resource is EventFunction:
-			_functions_list.add_item(_format_function_signature(function_resource as EventFunction))
+	var count: int = 0
+	if _current_sheet != null:
+		for function_resource: Variant in _current_sheet.functions:
+			if function_resource is EventFunction:
+				_functions_list.add_item(_format_function_signature(function_resource as EventFunction))
+				count += 1
+	if _functions_panel != null:
+		_functions_panel.set_count(count)  # the collapsed header still tells the sheet's weight
 
 ## "name(a, b)" plus a trailing ✦ when the function is exposed as an ACE (a reusable action/condition/
 ## expression in other sheets) — the at-a-glance signature shown in the Functions list.
@@ -3975,6 +3973,7 @@ func _refresh_after_edit() -> void:
 	_refresh_variable_panel()
 	_refresh_code_panel()
 	_refresh_anatomy_panel()
+	_refresh_functions_list()
 
 # Live-reload binding to the active theme .tres → dock/theme_manager.gd. Called from _activate_tab /
 # _refresh_after_edit (via _theme_manager._sync_active_theme_binding directly); the delegate stays for

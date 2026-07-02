@@ -72,6 +72,11 @@
 - **Published-verb shells**: an opened pack's `## @ace_*` annotation walls render as ONE Define-style
   header line each ("Action · Take Damage · Health · publishes the func below"), a pure view — the
   byte round-trip is untouched. (`tests/raw_shell_render_test.gd`)
+- **The Functions overview is its own dockable panel**: it used to be welded inside the
+  Generated-GDScript side panel, so seeing your functions meant opening the code view. It now docks
+  in the left rail behind a fold header ("▸ Functions · N" — the count reads even collapsed), expands
+  on demand, keeps its ＋ add / right-click delete behaviour, and remembers its expand state
+  per-project. (`tests/functions_panel_test.gd`)
 - **Behaviour Anatomy panel**: a left-rail read model showing the active sheet as seven organs —
   Properties · State · Triggers · Actions · Conditions · Expressions · Uses — with counts in role
   colours; double-click an entry to jump to its row. Works identically for editor-authored sheets
