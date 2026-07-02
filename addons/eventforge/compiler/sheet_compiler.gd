@@ -241,8 +241,12 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 			var declaration: String = _emit_tree_variable_line(tree_entry as LocalVariable)
 			if declaration.is_empty():
 				continue
-			lines.append(declaration)
-			source_map.append({"uid": str((tree_entry as LocalVariable).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "variable"})
+			# Split multi-line declarations (a `## doc` comment above the `@export var`) so lines.size()
+			# and every later row's map range count the true line total, not one element for two lines.
+			var tree_var_start: int = lines.size() + 1
+			for declaration_line: String in declaration.split("\n"):
+				lines.append(declaration_line)
+			source_map.append({"uid": str((tree_entry as LocalVariable).get_instance_id()), "start": tree_var_start, "end": lines.size(), "kind": "variable"})
 
 	# Group-local variables: class members under a per-group header comment.
 	var group_local_sets: Array = []
@@ -253,8 +257,10 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 		for local_entry: Variant in group_set.get("locals", []):
 			var local_line: String = _emit_tree_variable_line(local_entry as LocalVariable)
 			if not local_line.is_empty():
-				lines.append(local_line)
-				source_map.append({"uid": str((local_entry as LocalVariable).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "variable"})
+				var local_var_start: int = lines.size() + 1
+				for local_declaration_line: String in local_line.split("\n"):
+					lines.append(local_declaration_line)
+				source_map.append({"uid": str((local_entry as LocalVariable).get_instance_id()), "start": local_var_start, "end": lines.size(), "kind": "variable"})
 
 	# Runtime-toggleable group flags (Set Group Active targets these members). Collected
 	# in a dedicated early pass — the flatten that ALSO maps guards runs later, in the
@@ -510,9 +516,14 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	var deferred_comment_lines_external: PackedStringArray = PackedStringArray()
 	for entry: Variant in sheet.events:
 		if entry is LocalVariable:
-			var declaration: String = _emit_tree_variable_line(entry as LocalVariable)
-			lines.append(declaration)
-			source_map.append({"uid": str((entry as LocalVariable).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "variable"})
+			# The declaration can be MULTI-LINE (a `## doc` comment above the `@export var` line).
+			# Append each output line separately so lines.size() — and every row's map range after
+			# this one — counts the true line total; appending the whole string as one element would
+			# undercount and drift the source map for the rest of the file.
+			var variable_start: int = lines.size() + 1
+			for declaration_line: String in _emit_tree_variable_line(entry as LocalVariable).split("\n"):
+				lines.append(declaration_line)
+			source_map.append({"uid": str((entry as LocalVariable).get_instance_id()), "start": variable_start, "end": lines.size(), "kind": "variable"})
 		elif entry is RawCodeRow:
 			var block_start: int = lines.size() + 1
 			for code_line: String in (entry as RawCodeRow).code.split("\n"):

@@ -94,6 +94,12 @@
 
 ### Fixed
 
+- **Opened-pack line↔row mapping was a few rows off**: on the external (opened `.gd`) compile path a
+  doc-commented `@export` variable emits its `##` line plus the declaration but the source map counted
+  it as one line, cascading a small offset onto every row after it — so click-to-select, error→row,
+  paused-at-row, and the sheet diff landed a few rows off on opened packs. The variable now records
+  its true multi-line span; a golden test proves every raw row's map points at its own code across
+  all packs, with the byte-exact round-trip (drift=0) intact. (`tests/external_source_map_test.gd`)
 - **Quick-add and Ghost-Row actions appended a brand-new event** instead of landing on the selected
   one (the apply's default branch wrapped them); they now use the same append mode as the toolbar's
   Add Action. (`tests/ghost_row_test.gd`)

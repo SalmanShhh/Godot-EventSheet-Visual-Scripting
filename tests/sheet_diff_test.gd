@@ -42,10 +42,9 @@ static func run() -> bool:
 		str(untouched.get("output", "")), untouched.get("source_map", []), disk_before)
 	ok = _check("an untouched open diffs as identical (drift=0 in diff form)", bool(clean_summary.get("identical")), true) and ok
 
-	# Retune one value in a raw block (a param-level edit) and diff again — WITHOUT saving. On the
-	# opened-pack (external) path the diff DETECTS the change and reports live, jumpable rows plus the
-	# removed disk line; exact row attribution is limited by a known external-path source-map offset
-	# (a live row a few lines off — see the editor-authored case below for exactness).
+	# Retune one value in a raw block (a param-level edit) and diff again — WITHOUT saving. With the
+	# external-path source-map offset fixed, the opened-pack diff now attributes the change to EXACTLY
+	# the edited row (a single row), not just "somewhere near it".
 	var edited: RawCodeRow = null
 	for row: Variant in sheet.events:
 		if row is RawCodeRow and (row as RawCodeRow).code.contains("func heal(amount: float)"):
@@ -56,12 +55,10 @@ static func run() -> bool:
 		str(after.get("output", "")), after.get("source_map", []), disk_before)
 	ok = _check("the edit is seen", bool(summary.get("identical")), false) and ok
 	var rows: Array = summary.get("rows", [])
-	ok = _check("at least one changed row is reported", rows.size() >= 1, true) and ok
-	for entry: Dictionary in rows:
-		ok = _check("every reported row is a live, jumpable member of the sheet",
-			entry.get("resource") is Resource and sheet.events.has(entry.get("resource")), true) and ok
-		ok = _check("every reported row is labelled from its emitted code",
-			str(entry.get("label", "")).length() > 0, true) and ok
+	ok = _check("exactly one row changes on save", rows.size(), 1) and ok
+	ok = _check("it is EXACTLY the edited heal block (offset fix)", (rows[0] as Dictionary).get("resource") == edited, true) and ok
+	ok = _check("the changed row is labelled from its emitted code",
+		str((rows[0] as Dictionary).get("label", "")).length() > 0, true) and ok
 	ok = _check("the replaced disk line is listed as removed",
 		Array(summary.get("removed_lines", PackedStringArray())).any(
 			func(line: Variant) -> bool: return str(line).contains("current_health + amount, max_health")), true) and ok
