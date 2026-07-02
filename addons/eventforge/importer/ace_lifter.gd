@@ -67,20 +67,27 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 		var ready_row: RawCodeRow = sheet.events[index] as RawCodeRow
 		if ready_row != null and ready_row.code.begins_with("func _ready() -> void:"):
 			connections = _parse_connections(ready_row.code.split("\n"))
-	# Lift every run row (all-or-nothing). Annotation blocks attach to the NEXT function.
+	# Lift the run PER FUNCTION with re-anchoring: when a function's body (or a stray row) can't
+	# lift, everything scanned so far — including it — stays raw and the run RE-ANCHORS just after
+	# it, so the longest cleanly-lifting TRAILING subset still becomes real functions instead of one
+	# hairy body reverting the whole file. Only a trailing subset can lift at all: emission places
+	# sheet.functions after the in-place raw rows, so a raw leftover BETWEEN lifted functions would
+	# reorder the file (the byte-verify at the end still gates whatever the scan produced).
 	var lifted_events: Array = []
 	var lifted_functions: Array = []
 	var lifted_comments: Array = []
 	var saw_function: bool = false
+	var anchor_index: int = first_run_index
 	for index in range(first_run_index, sheet.events.size()):
 		var row: RawCodeRow = sheet.events[index] as RawCodeRow
+		var failed: bool = false
 		match _run_row_kind(row.code, lift_functions):
 			"blank":
 				continue  # separator; emission re-adds it
 			"annotations":
 				pending_annotations = _parse_annotations(row.code)
 				if pending_annotations.is_empty():
-					return _retry_or_fail(sheet, source, lift_functions)
+					failed = true
 			"comments":
 				# Trailing top-level comments (deferred emission): one CommentRow per
 				# blank-separated chunk.
@@ -89,33 +96,50 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 					comment.text = chunk.trim_prefix("# ").replace("\n# ", "\n")
 					lifted_comments.append(comment)
 			"func":
-				saw_function = true
 				var header: String = row.code.split("\n")[0]
 				if LIFECYCLE_TRIGGERS.has(header) or _is_connected_handler(header, connections):
 					if not pending_annotations.is_empty():
-						return _retry_or_fail(sheet, source, lift_functions)
-					# Lenient ifs: unmatched control flow becomes in-flow GDScript inside
-					# the event instead of failing the file (byte-verify still gates).
-					var lift: Dictionary = _lift_function(row.code.split("\n"), connections, true)
-					if not bool(lift.get("ok", false)):
-						return _retry_or_fail(sheet, source, lift_functions)
-					lifted_events.append_array(lift.get("events", []))
+						failed = true
+					else:
+						# Lenient ifs: unmatched control flow becomes in-flow GDScript inside
+						# the event instead of failing the file (byte-verify still gates).
+						var lift: Dictionary = _lift_function(row.code.split("\n"), connections, true)
+						if bool(lift.get("ok", false)):
+							saw_function = true
+							lifted_events.append_array(lift.get("events", []))
+						else:
+							failed = true
 				else:
 					if not lift_functions:
-						return false
-					var function_lift: Dictionary = _lift_sheet_function(row.code.split("\n"), pending_annotations)
-					pending_annotations = {}
-					if not bool(function_lift.get("ok", false)):
-						return _retry_or_fail(sheet, source, lift_functions)
-					lifted_functions.append(function_lift.get("function"))
+						failed = true  # event-only pass: helper funcs stay raw; the run restarts after
+					else:
+						var function_lift: Dictionary = _lift_sheet_function(row.code.split("\n"), pending_annotations)
+						pending_annotations = {}
+						if bool(function_lift.get("ok", false)):
+							saw_function = true
+							lifted_functions.append(function_lift.get("function"))
+						else:
+							failed = true
 			_:
-				return _retry_or_fail(sheet, source, lift_functions)
+				failed = true
+		if failed:
+			# This row (and everything collected before it) stays raw; restart the run after it.
+			lifted_events.clear()
+			lifted_functions.clear()
+			lifted_comments.clear()
+			pending_annotations = {}
+			saw_function = false
+			anchor_index = index + 1
 	if not saw_function or (lifted_events.is_empty() and lifted_functions.is_empty()):
-		return false
+		return _retry_or_fail(sheet, source, lift_functions) if anchor_index != first_run_index else false
 
 	var backup: Array[Resource] = sheet.events.duplicate()
 	var functions_backup: Array[Resource] = sheet.functions.duplicate()
-	sheet.events.resize(first_run_index)
+	# The boundary-annotation split (glued to the prelude row) belongs to the FIRST run function —
+	# it only applies when the anchor never moved past it.
+	if anchor_index != first_run_index:
+		boundary_annotations_text = ""
+	sheet.events.resize(anchor_index)
 	# Emission inserts one blank line before each section; the import attached that blank
 	# (and possibly the first function's annotation block) to the preceding row, so drop
 	# them to avoid doubling. The backup array is SHALLOW — the boundary row's original

@@ -18,6 +18,17 @@
   **Stat pool** (spend / restore / percent) — every verb annotated, so a freshly created addon opens
   code-free immediately. (`tests/recipe_scaffold_test.gd`)
 
+### Added — per-function shell-lift: opened packs' verbs become real, editable functions
+
+- Opening a behaviour `.gd` used to lift its annotated verbs into real EventFunctions only when
+  EVERY function in the trailing run lifted — one hairy body reverted the whole file to raw code.
+  The lift now recovers **per function**: anything unliftable stays as raw code in place and the
+  longest cleanly-lifting trailing run still becomes real functions, byte-verified as always.
+  In practice: abilities opens with 49 real verbs, virtual_cursor 54, drag_drop 36, spring 22,
+  weapon_kit 18, juice 17, platformer 13 — each a Define block you can double-click into the ACE
+  Studio, instead of an annotation wall. Every pack still round-trips byte-identically (drift = 0).
+  (`tests/per_function_lift_test.gd`)
+
 ### Added — variable folders: drag one variable onto another to group them
 
 - **Grouping variables is now a drag**: drop a variable onto another (its middle band highlights
