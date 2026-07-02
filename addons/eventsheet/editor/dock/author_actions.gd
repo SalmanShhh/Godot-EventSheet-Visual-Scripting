@@ -91,12 +91,36 @@ func _quick_match(query: String) -> Dictionary:
 	if best == null or best_score == 0:
 		return {}
 	var params: Dictionary = {}
-	var values: PackedStringArray = best_rest.split(" ", false)
+	var values: PackedStringArray = tokenize_quick_params(best_rest)
 	for index in range(mini(values.size(), best.parameters.size())):
 		var parameter: Variant = best.parameters[index]
 		if parameter is Dictionary:
 			params[str((parameter as Dictionary).get("id", ""))] = values[index]
 	return {"definition": best, "params": params}
+
+## Splits a quick-add query's trailing parameter text into positional values, QUOTE-AWARE: a
+## `"`-opened run stays ONE token with its quotes kept (param values are raw GDScript expressions, so
+## a string param needs them), while unquoted runs split on spaces. The naive split(" ") mis-filled
+## `play "jump land"` as two params ("jump / land"). An unterminated quote is forgiven — the rest of
+## the text becomes the final token. Static + pure (headless-testable); the same tokenizer the Ghost
+## Row's zero-dialog add reuses (its spec hard gate).
+static func tokenize_quick_params(rest: String) -> PackedStringArray:
+	var tokens: PackedStringArray = PackedStringArray()
+	var current: String = ""
+	var in_quotes: bool = false
+	for character in rest:
+		if character == "\"":
+			in_quotes = not in_quotes
+			current += character
+		elif character == " " and not in_quotes:
+			if not current.is_empty():
+				tokens.append(current)
+				current = ""
+		else:
+			current += character
+	if not current.is_empty():
+		tokens.append(current)
+	return tokens
 
 ## Applies the best match: triggers/conditions become a new event; actions append via the
 ## standard apply flow (below the current selection). Returns true when something landed.
