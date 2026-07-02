@@ -2,6 +2,109 @@
 
 ## [Unreleased]
 
+### Added — the ACE Studio: define and edit a behaviour's verbs in plain language
+
+- The sheet-function dialog is now the **ACE Studio**: "What kind of verb is this?" is three
+  plain-language cards — **Does something** (Action, amber) · **Is it true?** (Condition, teal) ·
+  **A value** (Expression, violet) — with a **live picker preview** ("this is what other people will
+  see") and a quiet **"Ships as:" `func …` strip** built from the compiler's own formatters, so the
+  preview can never disagree with the generated code. (`tests/ace_studio_signature_test.gd`)
+- **Edit a verb in place**: double-clicking a Define block on the canvas opens the same Studio
+  pre-filled (name, kind card, params, expose block). Confirming with nothing changed is a hard
+  no-op — an accidental open-and-OK on a reverse-lifted helper stays byte-identical on save.
+  (`tests/function_edit_dialog_test.gd`)
+- **Starter recipes** in the New Behaviour Addon dialog: alongside the teaching skeleton, "Start
+  from" offers two small complete behaviours — **Cooldown** (start / is-ready / time-left) and
+  **Stat pool** (spend / restore / percent) — every verb annotated, so a freshly created addon opens
+  code-free immediately. (`tests/recipe_scaffold_test.gd`)
+
+### Added — the sheet at a glance: badges, sentences, manifest, anatomy
+
+- **Trigger tempo badges**: every trigger row shows how often it runs — ⟳ every tick · ⌨ input ·
+  ▶ once · ➜ signal — as a coloured badge classified from the trigger id. (`tests/trigger_tempo_test.gd`)
+- **Rows read as sentences on hover** ("then 3 lines of code" for raw blocks — honest, never
+  invented); **typed value tints** (numbers/strings/bools each get a hue); **group fingerprints**
+  ("4 events · ⟳1 · ➜2 · ⚠1" on collapsed group headers). (`tests/row_sentence_test.gd`,
+  `tests/typed_value_tint_test.gd`, `tests/group_fingerprint_test.gd`)
+- **Publishes-Manifest banner**: a second banner band counts what the sheet publishes — "➜ 8 triggers ·
+  ⚡ 16 actions · cond 5 · ƒx 12 · @ 3 knobs" — including un-lifted annotated verbs in opened packs;
+  plus a save-time **health chip** ("✓ no issues" / "⚠ N flagged").
+  (`tests/banner_manifest_counts_test.gd`)
+- **Define blocks**: a sheet's functions (previously invisible outside the Functions dialog) render
+  as a foldable **Published verbs** section — role badge · friendly name · `→ type` chip · category
+  chip · the compiler-emitted signature. (`tests/define_block_rows_test.gd`)
+- **Published-verb shells**: an opened pack's `## @ace_*` annotation walls render as ONE Define-style
+  header line each ("Action · Take Damage · Health · publishes the func below"), a pure view — the
+  byte round-trip is untouched. (`tests/raw_shell_render_test.gd`)
+- **Behaviour Anatomy panel**: a left-rail read model showing the active sheet as seven organs —
+  Properties · State · Triggers · Actions · Conditions · Expressions · Uses — with counts in role
+  colours; double-click an entry to jump to its row. Works identically for editor-authored sheets
+  and opened packs. (`tests/anatomy_panel_test.gd`)
+
+### Added — speed-of-thought editing: Ghost Row, Param Hop, bulk retune
+
+- **The Ghost Row**: pressing E / C / A opens a type-a-sentence popup at the selected row instead of
+  the full picker — `A → heal 5 ⏎` appends the action with zero dialogs (Ctrl+Enter still opens the
+  browsable picker). **Post-insert continuation**: leave a param out (`heal ⏎`) and the one-field
+  editor opens straight onto it, pre-filled and select-all'd. (`tests/ghost_row_test.gd`)
+- **The Param Hop**: Enter on a row with parameter values starts a keyboard cursor; Tab / Shift+Tab
+  cycle the values (with a muted param-name hint at the cursor); Enter opens the one-field editor
+  anchored at the value; Esc returns to row scope — retuning `300 → 450` is Enter · Tab · type · Enter,
+  zero mouse. (`tests/param_hop_test.gd`)
+- **Bulk retune**: box-select N rows, edit one shared value, **Ctrl+Enter applies it to the same
+  verb's same param on every selected row** in one undo step — structure-aware, so `amount` on Heal
+  never bleeds into `amount` on Poison. (`tests/bulk_param_apply_test.gd`)
+- **Single-key grammar**: **B** adds a blank sub-event, **I** inverts the selected condition, **R**
+  replaces the selected ACE — all rebindable. (`tests/single_key_reflexes_test.gd`)
+
+### Added — navigate like the script editor
+
+- **Ctrl+Click a behaviour's name opens it as a sheet** (go-to-definition across the
+  consumer-sheet → behaviour boundary); unresolvable cells keep Ctrl multi-select.
+  (`tests/navigate_test.gd`)
+- **Alt+Left / Alt+Right jump history**, path-deduped so going Back re-focuses the existing tab
+  instead of opening a duplicate. (`tests/navigate_history_test.gd`)
+- **Ctrl+P prefixes**: `#` fuzzy-searches project sheets and opens one; `@` searches the current
+  sheet's symbols (functions ƒ · signals ➜ · variables @) and jumps to the row.
+  (`tests/palette_sheet_search_test.gd`, `tests/palette_symbol_search_test.gd`)
+
+### Added — generated code stays joined to the sheet
+
+- **EventSheetLineRowMapper**: one shared generated-line ↔ sheet-row lookup over the compiler's
+  source map (most-specific range first, walks past freed resources). The GDScript panel's
+  click-to-select and row-highlight delegate to it; runtime-error → row deep-links build on it next.
+  (`tests/line_row_mapper_test.gd`)
+- **Debug-residue Doctor check**: a sheet saved with breakpoints / live-values / event-trace emission
+  still enabled ships `breakpoint` + telemetry lines in the committed `.gd` — the Doctor now flags it
+  and offers a one-click strip. (`tests/doctor_debug_residue_test.gd`)
+
+### Fixed
+
+- **Quick-add and Ghost-Row actions appended a brand-new event** instead of landing on the selected
+  one (the apply's default branch wrapped them); they now use the same append mode as the toolbar's
+  Add Action. (`tests/ghost_row_test.gd`)
+- **A bodiless typed verb broke the whole generated script**: the empty-body stub was always `pass`,
+  which only parses for void — each return type now stubs its own default (`return false`, `0.0`,
+  `""`, `Vector2.ZERO`, …), so "publish the verb first, implement after" can't take the sheet down.
+  (`tests/type_correct_stub_test.gd`)
+- **The generated file's source map drifted after member insertion**: provider/stateful declarations
+  are inserted near the top after the map is built, so line → row lookups (click-to-select) landed a
+  few rows off on any sheet using a provider-instance ACE. The map now shifts with the text.
+  (`tests/line_row_mapper_test.gd`)
+- **Double-clicking a value on an object-labelled row edited the wrong spot**: the hit-test measured
+  from the span origin while the text draws after the icon/label prefixes — both now share one
+  geometry helper. (`tests/param_hop_test.gd`)
+- The read-only `.gd` preview banner showed the previous tab's counts after a tab switch; it now
+  recomputes per refresh. (`tests/preview_banner_tab_test.gd`)
+- The New Behaviour dialog clipped at the right edge (the recipe dropdown forced the width) and cut
+  off its buttons; it now ellipsizes and fits its whole form.
+
+### Changed
+
+- **Colour-law sweep**: the banner manifest pills, health chip, and structural row badges now draw
+  from named `EventSheetPalette` constants instead of per-file hex; the two ad-hoc category-chip
+  purples were unified with the ACE Studio's chip colours.
+
 ### Added — more inspector export options: color-no-alpha, easing curve, placeholder
 
 - Three more Godot `@export_*` flavours are now dialog-authored options in the Variable dialog's "More
