@@ -75,7 +75,9 @@
 - **Behaviour Anatomy panel**: a left-rail read model showing the active sheet as seven organs —
   Properties · State · Triggers · Actions · Conditions · Expressions · Uses — with counts in role
   colours; double-click an entry to jump to its row. Works identically for editor-authored sheets
-  and opened packs. (`tests/anatomy_panel_test.gd`)
+  and opened packs. Entries render in the same pill/badge language as the canvas's Define blocks
+  (role-coloured pills per organ, accent-underlined headers, click a header to fold its organ) —
+  drawn read-only, so the rail can never mutate the sheet. (`tests/anatomy_panel_test.gd`)
 
 ### Added — speed-of-thought editing: Ghost Row, Param Hop, bulk retune
 

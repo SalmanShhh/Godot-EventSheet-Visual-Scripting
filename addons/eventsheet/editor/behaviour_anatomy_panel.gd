@@ -4,15 +4,19 @@ extends VBoxContainer
 # The Behaviour Anatomy panel — a left-rail READ MODEL that shows the active sheet as an organism
 # with always-visible "organs": Properties (exported knobs) · State (internal vars) · Triggers ·
 # Actions · Conditions · Expressions · Uses (outside vocabulary it calls). A behaviour's whole
-# public shape becomes one glance, and clicking an entry jumps the canvas to its row.
+# public shape becomes one glance, and double-clicking an entry jumps the canvas to its row.
 #
-# PURE VIEW: it holds no sheet state and never writes — the census below only READS the sheet, so
-# the byte round-trip is untouched. Entries are gathered from BOTH authoring layers: structured
-# resources (SignalRow triggers, exposed EventFunctions) and, for opened packs whose verbs are still
-# literal code, the `## @ace_*` annotation shells (the same classifier the canvas shells use), so an
-# opened pack and an editor-authored sheet read through the same seven organs.
+# The organ list is CUSTOM-DRAWN with the same pill/badge language as the canvas's Define blocks
+# (role-coloured pills, muted labels) rather than a generic Tree — so a verb reads the same in the
+# rail as on the sheet. Deliberately NOT an embedded live viewport: the panel must never expose the
+# editing machinery on shared resources, and a draw-only list can't mutate anything by construction.
+#
+# PURE VIEW: the census below only READS the sheet, so the byte round-trip is untouched. Entries are
+# gathered from BOTH authoring layers: structured resources (SignalRow triggers, exposed
+# EventFunctions, dict + tree variables) and, for opened packs whose verbs are still literal code,
+# the `## @ace_*` annotation shells (the same classifier the canvas shells use).
 
-## The user clicked an entry — the workspace reveals that resource's row on the canvas.
+## The user double-clicked an entry — the workspace reveals that resource's row on the canvas.
 signal reveal_requested(resource: Resource)
 
 const _ORGAN_ACCENTS: Dictionary = {
@@ -24,8 +28,25 @@ const _ORGAN_ACCENTS: Dictionary = {
 	"expressions": EventSheetPalette.COLOR_EXPRESSION,
 	"uses": EventSheetPalette.TEXT_SECONDARY,
 }
+## The pill drawn before an entry, per organ: [text, bg, fg]. Verb organs reuse the canvas's ACE
+## badge pairs so the rail and the sheet speak one colour language.
+const _ORGAN_PILLS: Dictionary = {
+	"properties": ["@", Color("#2c313a"), Color("#9cc4ef")],
+	"state": ["·", Color("#2c313a"), Color("#9aa1ad")],
+	"triggers": ["➜", Color("#233b2b"), Color("#7fd494")],
+	"actions": ["A", Color("#463414"), Color("#f2c879")],
+	"conditions": ["?", Color("#123a30"), Color("#77d3b7")],
+	"expressions": ["ƒ", Color("#3a2247"), Color("#d7a6ea")],
+	"uses": ["↗", Color("#2c313a"), Color("#9aa1ad")],
+}
+const _HEADER_HEIGHT: float = 24.0
+const _ENTRY_HEIGHT: float = 20.0
 
-var _tree: Tree = null
+var _canvas: Control = null
+var _scroll: ScrollContainer = null
+var _rows: Array = []            # [{header: bool, organ, title, count, accent} | {header: false, organ, label, resource}]
+var _folded: Dictionary = {}     # organ id -> true (session view state)
+var _hover_index: int = -1
 
 func _init() -> void:
 	name = "Anatomy"
@@ -36,45 +57,126 @@ func _init() -> void:
 	title.add_theme_font_size_override("font_size", 12)
 	title.add_theme_color_override("font_color", EventSheetPalette.TEXT_SECONDARY)
 	add_child(title)
-	_tree = Tree.new()
-	_tree.hide_root = true
-	_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_tree.item_activated.connect(_on_item_activated)
-	add_child(_tree)
+	_scroll = ScrollContainer.new()
+	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	add_child(_scroll)
+	_canvas = Control.new()
+	_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_canvas.draw.connect(_draw_rows)
+	_canvas.gui_input.connect(_on_canvas_input)
+	_canvas.mouse_exited.connect(func() -> void:
+		_hover_index = -1
+		_canvas.queue_redraw())
+	_scroll.add_child(_canvas)
 
-## Rebuilds the organ tree from the sheet (called by the workspace on tab switch + after edits).
+## Rebuilds the organ list from the sheet (called by the workspace on tab switch + after edits).
 func refresh(sheet: EventSheetResource) -> void:
-	_tree.clear()
-	var root: TreeItem = _tree.create_item()
+	_last_sheet = sheet  # fold toggles re-run the census against the same sheet
+	_rows.clear()
 	for organ: Dictionary in collect_anatomy(sheet):
+		var organ_id: String = str(organ.get("id"))
 		var entries: Array = organ.get("entries", [])
-		var organ_item: TreeItem = _tree.create_item(root)
-		organ_item.set_text(0, "%s · %d" % [str(organ.get("title")), entries.size()])
-		organ_item.set_custom_color(0, _ORGAN_ACCENTS.get(str(organ.get("id")), EventSheetPalette.TEXT_SECONDARY))
-		organ_item.set_selectable(0, false)
-		if entries.is_empty():
-			var ghost: TreeItem = _tree.create_item(organ_item)
-			ghost.set_text(0, "(empty)")
-			ghost.set_custom_color(0, EventSheetPalette.TEXT_MUTED)
-			ghost.set_selectable(0, false)
-			organ_item.collapsed = true
+		_rows.append({
+			"header": true,
+			"organ": organ_id,
+			"title": str(organ.get("title")),
+			"count": entries.size(),
+			"accent": _ORGAN_ACCENTS.get(organ_id, EventSheetPalette.TEXT_SECONDARY),
+		})
+		if bool(_folded.get(organ_id, false)):
 			continue
 		for entry: Dictionary in entries:
-			var item: TreeItem = _tree.create_item(organ_item)
-			item.set_text(0, str(entry.get("label")))
-			if entry.get("resource") is Resource:
-				item.set_metadata(0, entry.get("resource"))
-			else:
-				item.set_custom_color(0, EventSheetPalette.TEXT_SECONDARY)
+			_rows.append({
+				"header": false,
+				"organ": organ_id,
+				"label": str(entry.get("label")),
+				"resource": entry.get("resource") if entry.get("resource") is Resource else null,
+			})
+	_canvas.custom_minimum_size = Vector2(0.0, _row_offset(_rows.size()))
+	_canvas.queue_redraw()
 
-func _on_item_activated() -> void:
-	var selected: TreeItem = _tree.get_selected()
-	if selected != null and selected.get_metadata(0) is Resource:
-		reveal_requested.emit(selected.get_metadata(0))
+func _row_offset(index: int) -> float:
+	var y: float = 0.0
+	for row_index: int in range(mini(index, _rows.size())):
+		y += _HEADER_HEIGHT if bool((_rows[row_index] as Dictionary).get("header")) else _ENTRY_HEIGHT
+	return y
+
+func _row_index_at(y: float) -> int:
+	var cursor: float = 0.0
+	for index: int in range(_rows.size()):
+		cursor += _HEADER_HEIGHT if bool((_rows[index] as Dictionary).get("header")) else _ENTRY_HEIGHT
+		if y < cursor:
+			return index
+	return -1
+
+## The panel's whole render: organ headers (accent title · count · underline) and entry rows drawn
+## with the Define-block pill language. Small lists — a full redraw is cheap.
+func _draw_rows() -> void:
+	var font: Font = get_theme_default_font()
+	var width: float = _canvas.size.x
+	var y: float = 0.0
+	for index: int in range(_rows.size()):
+		var row: Dictionary = _rows[index]
+		var height: float = _HEADER_HEIGHT if bool(row.get("header")) else _ENTRY_HEIGHT
+		if index == _hover_index:
+			_canvas.draw_rect(Rect2(0.0, y, width, height), Color(1.0, 1.0, 1.0, 0.06), true)
+		if bool(row.get("header")):
+			var accent: Color = row.get("accent")
+			var header_text: String = "%s · %d" % [str(row.get("title")), int(row.get("count"))]
+			if bool(_folded.get(str(row.get("organ")), false)):
+				header_text = "▸ " + header_text
+			_canvas.draw_string(font, Vector2(4.0, y + 16.0), header_text, HORIZONTAL_ALIGNMENT_LEFT, width - 8.0, 12, accent)
+			_canvas.draw_rect(Rect2(4.0, y + height - 3.0, width - 8.0, 1.0), Color(accent.r, accent.g, accent.b, 0.35), true)
+		else:
+			var pill: Array = _ORGAN_PILLS.get(str(row.get("organ")), ["·", Color("#2c313a"), Color("#9aa1ad")])
+			var pill_rect: Rect2 = Rect2(8.0, y + 3.0, 16.0, height - 6.0)
+			var pill_box: StyleBoxFlat = StyleBoxFlat.new()
+			pill_box.bg_color = pill[1]
+			pill_box.set_corner_radius_all(3)
+			pill_box.draw(_canvas.get_canvas_item(), pill_rect)
+			_canvas.draw_string(font, Vector2(pill_rect.position.x + 4.0, y + 14.0), str(pill[0]), HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10, pill[2])
+			var label_color: Color = EventSheetPalette.TEXT_PRIMARY if row.get("resource") != null else EventSheetPalette.TEXT_SECONDARY
+			_canvas.draw_string(font, Vector2(30.0, y + 14.0), str(row.get("label")), HORIZONTAL_ALIGNMENT_LEFT, width - 34.0, 11, label_color)
+		y += height
+
+func _on_canvas_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		var hover: int = _row_index_at((event as InputEventMouseMotion).position.y)
+		if hover != _hover_index:
+			_hover_index = hover
+			_canvas.queue_redraw()
+		return
+	if not (event is InputEventMouseButton) or not (event as InputEventMouseButton).pressed \
+			or (event as InputEventMouseButton).button_index != MOUSE_BUTTON_LEFT:
+		return
+	var index: int = _row_index_at((event as InputEventMouseButton).position.y)
+	if index < 0:
+		return
+	var row: Dictionary = _rows[index]
+	if bool(row.get("header")):
+		# Click a header to fold/unfold its organ (view state only).
+		var organ_id: String = str(row.get("organ"))
+		_folded[organ_id] = not bool(_folded.get(organ_id, false))
+		_refresh_from_rows()
+	elif (event as InputEventMouseButton).double_click and row.get("resource") is Resource:
+		reveal_requested.emit(row.get("resource"))
+
+## Re-derives the visible rows after a fold toggle without re-running the census: rebuild from the
+## header rows we already have is not possible (entries were dropped), so ask the workspace model.
+func _refresh_from_rows() -> void:
+	# The dock refreshes us on every edit; for a fold toggle just re-run refresh via the last sheet.
+	if _last_sheet != null:
+		refresh(_last_sheet)
+
+var _last_sheet: EventSheetResource = null
+
+# ── The census (static → headless-testable) ──────────────────────────────────────────────────────
 
 ## The seven organs, ordered, as [{id, title, entries: [{label, resource?}]}] — static + pure so the
 ## census is unit-testable without a panel. `resource` is present when the entry has a canvas row to
-## jump to (signals, functions, annotation shells); variables and providers are informational.
+## jump to (signals, functions, annotation shells, tree variables); dict globals and providers are
+## informational.
 static func collect_anatomy(sheet: EventSheetResource) -> Array:
 	var organs: Dictionary = {
 		"properties": [], "state": [], "triggers": [],
@@ -143,7 +245,7 @@ static func _collect_row(row: Variant, organs: Dictionary, providers: Dictionary
 		(organs["triggers"] as Array).append({"label": label, "resource": signal_row})
 		return
 	if row is RawCodeRow:
-		# Opened packs keep verbs as annotation shells — same classifier as the canvas shell rows.
+		# Opened packs keep UNLIFTABLE verbs as annotation shells — same classifier as the canvas.
 		var shell: Dictionary = ViewportRowBuilder.define_shell_info((row as RawCodeRow).code)
 		if not shell.is_empty():
 			(organs[str(shell.get("kind")) + "s"] as Array).append(

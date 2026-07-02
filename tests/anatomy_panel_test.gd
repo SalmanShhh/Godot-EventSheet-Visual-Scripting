@@ -78,15 +78,23 @@ static func run() -> bool:
 	var reemitted: String = str(SheetCompiler.compile(dock.get_current_sheet(), pack_path).get("output", ""))
 	ok = _check("the census never writes (drift stays 0)", reemitted == source, true) and ok
 
-	# ── The panel + dock wiring ──
+	# ── The panel + dock wiring (v2: custom-drawn rows, not a Tree) ──
 	ok = _check("the dock built the panel", dock._anatomy_panel != null, true) and ok
-	var organ_rows: int = 0
-	var root: TreeItem = dock._anatomy_panel._tree.get_root()
-	var child: TreeItem = root.get_first_child() if root != null else null
-	while child != null:
-		organ_rows += 1
-		child = child.get_next()
-	ok = _check("seven organs always visible", organ_rows, 7) and ok
+	var header_count: int = 0
+	var entry_with_resource: int = 0
+	for row: Variant in dock._anatomy_panel._rows:
+		if bool((row as Dictionary).get("header")):
+			header_count += 1
+		elif (row as Dictionary).get("resource") is Resource:
+			entry_with_resource += 1
+	ok = _check("seven organ headers always visible", header_count, 7) and ok
+	ok = _check("entries carry jumpable resources", entry_with_resource > 0, true) and ok
+	# Folding an organ hides its entries but keeps the header (view state only).
+	var before_rows: int = dock._anatomy_panel._rows.size()
+	dock._anatomy_panel._folded["triggers"] = true
+	dock._anatomy_panel.refresh(dock.get_current_sheet())
+	ok = _check("a folded organ hides its entries", dock._anatomy_panel._rows.size() < before_rows, true) and ok
+	dock._anatomy_panel._folded.clear()
 
 	dock.free()
 	return ok
