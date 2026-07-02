@@ -192,7 +192,7 @@ func _build_command_palette_window() -> void:
 	var box := VBoxContainer.new()
 	margin.add_child(box)
 	_command_palette_search = LineEdit.new()
-	_command_palette_search.placeholder_text = "Type a command…  (# sheet · @ symbol · ↑/↓ Enter Esc)"
+	_command_palette_search.placeholder_text = "Type a command…  (# sheet · @ symbol · paste an error line)"
 	_command_palette_search.clear_button_enabled = true
 	_command_palette_search.text_changed.connect(_refresh_command_palette)
 	_command_palette_search.gui_input.connect(_on_command_palette_search_input)
@@ -203,10 +203,36 @@ func _build_command_palette_window() -> void:
 	box.add_child(_command_palette_list)
 	_dock.add_child(_command_palette_window)
 
+## A script location in pasted text — "res://path.gd:42" anywhere inside it, so a whole error or
+## stack-trace line copied from the Output panel works verbatim. {path, line} or {} when the text
+## carries no script location. Static + pure (testable without a window).
+static func parse_error_location(text: String) -> Dictionary:
+	var regex: RegEx = RegEx.new()
+	if regex.compile("(res://[^\\s:\"']+\\.gd):(\\d+)") != OK:
+		return {}
+	var found: RegExMatch = regex.search(text)
+	if found == null:
+		return {}
+	return {"path": found.get_string(1), "line": int(found.get_string(2))}
+
+## The error-jump entry: opens the located .gd AS A SHEET and selects the row that emitted the line
+## (the line↔row mapper) — a runtime error pastes straight back onto the event that caused it.
+func _error_jump_matches(location: Dictionary) -> Array:
+	var path: String = str(location.get("path"))
+	var line: int = int(location.get("line"))
+	return [{"title": "⚠ Jump to the row behind %s:%d" % [path.get_file(), line], "run": func() -> void:
+		_dock._navigate.record_current()  # an error jump is history too — Alt+Left returns
+		_dock._navigate.open_or_focus(path)
+		_dock.goto_generated_line(line)}]
+
 func _refresh_command_palette(query: String) -> void:
-	# Prefix modes: `#` opens any project sheet, `@` jumps to a symbol in the ACTIVE
-	# sheet (function / signal / variable); anything else fuzzy-runs a command.
-	if query.begins_with("#"):
+	# Prefix modes: `#` opens any project sheet, `@` jumps to a symbol in the ACTIVE sheet
+	# (function / signal / variable), a pasted error/stack line jumps to the row that emitted it;
+	# anything else fuzzy-runs a command.
+	var error_location: Dictionary = parse_error_location(query)
+	if not error_location.is_empty():
+		_command_palette_matches = _error_jump_matches(error_location)
+	elif query.begins_with("#"):
 		_command_palette_matches = _sheet_matches(query.substr(1))
 	elif query.begins_with("@"):
 		_command_palette_matches = _symbol_matches(query.substr(1))

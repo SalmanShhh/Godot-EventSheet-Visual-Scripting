@@ -70,6 +70,12 @@
 
 ### Added — generated code stays joined to the sheet
 
+- **Paste an error line, land on the row**: paste any Godot error or stack-trace line
+  (`res://….gd:42` anywhere in the text) into the command palette (Ctrl+P) and its single entry
+  opens that generated `.gd` **as a sheet** and selects the row that emitted the line — a runtime
+  error goes straight back to the event that caused it, and Alt+Left returns.
+  (`tests/palette_error_jump_test.gd`)
+
 - **EventSheetLineRowMapper**: one shared generated-line ↔ sheet-row lookup over the compiler's
   source map (most-specific range first, walks past freed resources). The GDScript panel's
   click-to-select and row-highlight delegate to it; runtime-error → row deep-links build on it next.
