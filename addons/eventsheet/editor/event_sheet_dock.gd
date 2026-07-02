@@ -971,6 +971,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		["add_action", true, _on_add_action_requested],
 		["add_group", true, _on_add_group_requested],
 		["toggle_enabled", true, _toggle_selected_enabled],
+		["add_blank_subevent", true, _on_add_blank_subevent_key],
+		["invert_condition", true, _on_invert_condition_key],
+		["replace_ace", true, _on_replace_ace_key],
 	]:
 		if EventSheetShortcuts.matches(key_event, str(entry[0])):
 			if bool(entry[1]) and typing:
@@ -3579,6 +3582,56 @@ func _insert_child_event_for_context_row() -> void:
 
 func _insert_child_comment_for_context_row() -> void:
 	_row_edit_ops._insert_child_comment_for_context_row()
+
+# ── Single-key reflexes (in-sheet flow §12.1): B blank sub-event · I invert · R replace ─────────────
+## Seeds the context-menu state (_context_row/_context_hit) from the CURRENT selection, so the
+## single-key reflexes reuse the right-click handlers verbatim — one behavior, two entry points.
+## False when no row is selected.
+func _seed_context_from_selection() -> bool:
+	var view: EventSheetViewport = _active_view()
+	if view == null:
+		return false
+	var context: Dictionary = view.get_selected_context()
+	if context.get("row_data") == null:
+		return false
+	_context_row = context.get("row_data")
+	_context_hit = {"span_index": int(context.get("span_index", -1)), "span_metadata": context.get("span_metadata", {})}
+	return true
+
+## B — add a blank sub-event under the selected event (the context menu's Add Sub-Event, keyed).
+func _on_add_blank_subevent_key() -> void:
+	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
+		_set_status("Select an event first — B adds a blank sub-event under it.", true)
+		return
+	_insert_child_event_for_context_row()
+
+## I — invert the selected condition (click its cell, then press I; compiles as `not (…)`).
+func _on_invert_condition_key() -> void:
+	var kind: String = ""
+	if _seed_context_from_selection():
+		kind = str((_context_hit.get("span_metadata", {}) as Dictionary).get("kind", ""))
+	if kind == "trigger":
+		_set_status("Triggers can't be inverted — there's no \"not On X\".", true)
+		return
+	if kind != "condition":
+		_set_status("Select a condition cell first — I inverts it.", true)
+		return
+	_toggle_context_condition_inversion()
+
+## R — replace the selected trigger / condition / action via the picker, pre-selected on the current
+## ACE and keeping params whose ids match (the context menu's Replace, keyed).
+func _on_replace_ace_key() -> void:
+	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
+		_set_status("Select a trigger, condition, or action cell first — R replaces it.", true)
+		return
+	var replace_context: Dictionary = _build_ace_edit_context(_context_row.source_resource as EventRow, int(_context_hit.get("span_index", -1)), _context_hit.get("span_metadata", {}))
+	if replace_context.is_empty():
+		_set_status("Select a trigger, condition, or action cell first — R replaces it.", true)
+		return
+	var replace_def: ACEDefinition = replace_context.get("definition", null)
+	if replace_def != null:
+		replace_context["preselect_ace_id"] = replace_def.id
+	_ace_picker.open(str(replace_context.get("mode", "replace_condition")), false, _context_row.source_resource, replace_context)
 
 func _open_sub_condition_picker_for_context_row() -> void:
 	_row_edit_ops._open_sub_condition_picker_for_context_row()

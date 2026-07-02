@@ -20,6 +20,9 @@ const DEFAULTS: Dictionary = {
 	"add_action": "A",
 	"add_group": "G",
 	"toggle_enabled": "X",
+	"add_blank_subevent": "B",
+	"invert_condition": "I",
+	"replace_ace": "R",
 	"save": "Ctrl+S",
 	"save_as": "Ctrl+Shift+S",
 	"open": "Ctrl+O",
@@ -42,6 +45,9 @@ const LABELS: Dictionary = {
 	"add_comment": "Add comment",
 	"add_group": "Add group",
 	"toggle_enabled": "Toggle enabled / disabled",
+	"add_blank_subevent": "Add blank sub-event",
+	"invert_condition": "Invert selected condition",
+	"replace_ace": "Replace selected trigger / condition / action",
 	"duplicate": "Duplicate event",
 	"copy": "Copy rows",
 	"paste": "Paste rows",
@@ -59,6 +65,7 @@ const LABELS: Dictionary = {
 ## Display order for the editor (DEFAULTS key order isn't guaranteed stable).
 const ORDER: Array = [
 	"add_event", "add_condition", "add_action", "add_comment", "add_group", "toggle_enabled",
+	"add_blank_subevent", "invert_condition", "replace_ace",
 	"duplicate", "copy", "paste", "undo", "redo", "save", "save_as", "open",
 	"add_event_chord", "add_condition_chord", "add_action_chord", "add_variable_chord",
 ]
