@@ -41,7 +41,10 @@ func open() -> void:
 	_desc_edit.text = ""
 	_refresh_preview()
 	if _dialog.is_inside_tree():  # headless tests: fields are reset, there is no window to pop
-		_dialog.popup_centered(Vector2i(540, 360))
+		# Tall enough for the whole form INCLUDING the Preview card and the Create/Cancel row —
+		# 360 used to cut the dialog off below the Description field, and the wrapped intro hint
+		# takes seven lines at this width.
+		_dialog.popup_centered(Vector2i(560, 640))
 		_name_edit.grab_focus()
 
 func _build_dialog() -> void:
@@ -50,7 +53,7 @@ func _build_dialog() -> void:
 	_dialog = Window.new()
 	_dialog.title = "New Behaviour Addon"
 	_dialog.visible = false
-	_dialog.min_size = Vector2i(480, 320)
+	_dialog.min_size = Vector2i(520, 520)
 	_dialog.close_requested.connect(func() -> void: _dialog.hide())
 	_dock.add_child(_dialog)
 
@@ -74,6 +77,13 @@ func _build_dialog() -> void:
 	for recipe: Dictionary in BehaviourAddonScaffold.RECIPES:
 		_recipe_option.add_item(str(recipe.get("label")))
 	_recipe_option.select(0)
+	# The long recipe labels must not dictate the dialog width: without this the button sizes to its
+	# longest item and pushes every form row past the window edge (right-side clipping). The closed
+	# button clips + ellipsizes; the dropdown list still shows each label in full.
+	_recipe_option.fit_to_longest_item = false
+	_recipe_option.clip_text = true
+	_recipe_option.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_recipe_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	properties_box.add_child(EventSheetPopupUI.form_row("Start from", _recipe_option))
 
 	_base_option = OptionButton.new()
