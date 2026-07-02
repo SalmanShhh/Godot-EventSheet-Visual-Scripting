@@ -32,9 +32,6 @@ class_name EventSheetPreviewGlue
 # new_addon_panel → `_open_gdscript_path_in_godot`; ace_apply → `_on_preview_edit_requested`) — so
 # those callers resolve unchanged.
 #
-# STATE NOTE: `_last_lift_report` lives here now. sheet_io reaches it through the dock's
-# `_preview_glue` handle (`_dock._preview_glue._last_lift_report`) when it seeds the report on open.
-#
 # CLOSURE NOTES:
 #   • `_open_raw_code_block_in_godot` hands a lambda to `_dock._perform_undoable_sheet_edit(...)` that
 #     captures the LOCALS `target` + `code` (not helper/dock members) — so it survives verbatim; only
@@ -47,9 +44,7 @@ var _dock: Control = null
 func init(dock: Control) -> void:
 	_dock = dock
 
-# ── Lift report: what lifted to events and why each block stayed code
-# (EventSheetLiftReport; refreshed for the current sheet on open) ─────────────────────
-var _last_lift_report: Array[Dictionary] = []
+# ── Lift report: what lifted to events and why each block stayed code ─────────────────────
 var _lift_report_window: Window = null
 var _lift_report_tree: Tree = null
 
@@ -97,7 +92,11 @@ func _refresh_preview_banner() -> void:
 	var source_name: String = _dock._current_sheet.external_source_path.get_file()
 	if source_name.is_empty():
 		source_name = "this sheet"
-	_dock._preview_label.text = "👁  Viewing %s as a sheet — just start editing to change it here, or \"Open in Godot Script Editor\" for the code.  (%s)" % [source_name, EventSheetLiftReport.summary(_last_lift_report)]
+	# The lift summary is recomputed from the ACTIVE sheet on every refresh — a cached report went
+	# stale the moment you switched tabs between two previews (the banner kept the other sheet's
+	# counts). Recomputing is a cheap row walk, and previews are read-only so refreshes are rare.
+	var report: Array[Dictionary] = EventSheetLiftReport.for_sheet(_dock._current_sheet)
+	_dock._preview_label.text = "👁  Viewing %s as a sheet — just start editing to change it here, or \"Open in Godot Script Editor\" for the code.  (%s)" % [source_name, EventSheetLiftReport.summary(report)]
 
 ## "Edit Events": turn the preview into a normal GDScript-backed sheet (Save then compiles
 ## back to the .gd). The banner flips to a plain warning so the consequence stays obvious.
