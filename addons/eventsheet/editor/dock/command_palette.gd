@@ -34,6 +34,7 @@ func _command_palette_commands() -> Array[Dictionary]:
 		{"title": "Add Global Variable…", "run": _dock._on_add_global_variable_requested},
 		{"title": "Add Function…", "run": _dock._open_function_dialog},
 		{"title": "Toggle GDScript Panel", "run": _dock._toggle_code_panel},
+		{"title": "What Changed Since Save…", "run": func() -> void: _dock._sheet_diff.open()},
 		{"title": "Toggle Simple Mode", "run": func() -> void: _dock.set_simple_mode(not _dock._simple_mode)},
 		{"title": "Zoom In", "run": _dock._on_zoom_in_requested},
 		{"title": "Zoom Out", "run": _dock._on_zoom_out_requested},

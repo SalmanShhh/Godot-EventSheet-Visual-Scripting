@@ -70,6 +70,10 @@
 
 ### Added — generated code stays joined to the sheet
 
+- **What Changed Since Save**: a Sheet ▸ command (also in Ctrl+P) that shows which rows a save would
+  touch, in event language — each row labelled from its emitted code and double-clickable to jump,
+  plus any lines a save would remove. Compiles to a scratch path only, so asking never writes the
+  real file. (`tests/sheet_diff_test.gd`)
 - **Paste an error line, land on the row**: paste any Godot error or stack-trace line
   (`res://….gd:42` anywhere in the text) into the command palette (Ctrl+P) and its single entry
   opens that generated `.gd` **as a sheet** and selects the row that emitted the line — a runtime
