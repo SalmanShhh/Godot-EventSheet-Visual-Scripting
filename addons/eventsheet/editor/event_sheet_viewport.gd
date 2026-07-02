@@ -28,6 +28,8 @@ signal ace_drop_requested(
 signal context_menu_requested(row_data: EventRowData, hit: Dictionary, global_position: Vector2)
 signal empty_space_context_menu_requested(global_position: Vector2)
 signal empty_space_double_clicked
+## Ctrl+Click on a cell the dock can resolve to a definition (see navigation_probe below).
+signal navigate_requested(row_data: EventRowData, span_index: int, metadata: Dictionary)
 signal drag_status_requested(message: String, is_error: bool)
 signal variable_edit_requested(row_data: EventRowData, metadata: Dictionary)
 ## Emitted when a comment needs the dialog editor (multiline comment rows and action-cell
@@ -880,7 +882,20 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventKey:
 		_handle_key(event as InputEventKey)
 
+# The dock installs this probe: (row_data, span_metadata) -> bool, true when Ctrl+Clicking that cell
+# can jump somewhere real (e.g. a behaviour-pack verb opens its behaviour as a sheet). Kept as a probe
+# so cells with no jump target keep Ctrl+Click's multi-select meaning.
+var navigation_probe: Callable = Callable()
+
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
+	# Ctrl-hover affordance: the hand cursor advertises the Ctrl+Click jump on resolvable cells.
+	if navigation_probe.is_valid() and (event.ctrl_pressed or event.meta_pressed):
+		var nav_hit: Dictionary = _hit_test(_to_logical_position(event.position))
+		var nav_row: EventRowData = _row_at(int(nav_hit.get("row_index", -1)))
+		var navigable: bool = nav_row != null and bool(navigation_probe.call(nav_row, nav_hit.get("span_metadata", {})))
+		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if navigable else Control.CURSOR_ARROW
+	elif mouse_default_cursor_shape == Control.CURSOR_POINTING_HAND:
+		mouse_default_cursor_shape = Control.CURSOR_ARROW
 	var local_position: Vector2 = _to_logical_position(event.position)
 	if _dragging_lane_divider:
 		_set_lane_ratio_from_x(local_position.x)
@@ -987,6 +1002,13 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 		if bool(hit.get("fold", false)):
 			_select_from_click(row_index, span_index, false)
 			_toggle_row_fold(row_index)
+			return
+		# Ctrl+Click go-to-definition: when the clicked cell resolves to a jump target (the dock's
+		# probe decides), navigate instead of toggling multi-select — unresolvable cells keep
+		# Ctrl+Click's multi-select meaning, so both gestures coexist.
+		if (event.ctrl_pressed or event.meta_pressed) and not event.double_click and row_data != null 				and navigation_probe.is_valid() and bool(navigation_probe.call(row_data, metadata)):
+			navigate_requested.emit(row_data, span_index, metadata)
+			accept_event()
 			return
 		if event.shift_pressed and _selection_anchor_index >= 0:
 			# Shift+click extends a whole-row range from the anchor to the clicked row.
