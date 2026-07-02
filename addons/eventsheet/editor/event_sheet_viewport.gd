@@ -1555,6 +1555,9 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	if sheet == null:
 		return root_rows
 	root_rows.append_array(_build_global_variable_rows(sheet))
+	# The sheet's published verbs (its functions) as a foldable Define-block section — without this,
+	# `sheet.functions` never appears on the canvas and a behaviour pack's vocabulary is invisible.
+	root_rows.append_array(_row_builder._build_published_verbs_rows(sheet))
 	# Blocks spec P1 — collapse the LEADING run of class scaffolding (prelude / annotations /
 	# host-binding) into one foldable "Class setup" strip, so an opened .gd reads as logic, not
 	# boilerplate. The threshold is LINE-based, not row-based: the importer bundles a whole prelude into

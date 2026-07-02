@@ -89,6 +89,149 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 	]
 	return row_data
 
+## The sheet's functions as visible rows — one foldable "Published verbs" section whose children are
+## Define blocks, one per EventFunction. Functions live in `sheet.functions`, a SEPARATE array from
+## `sheet.events`, so without this they never appear on the canvas at all: a behaviour pack's whole
+## vocabulary (its actions/conditions/expressions) was invisible until you opened the Functions dialog.
+## This is a pure READ view — it never writes to either array and never affects codegen — so the
+## byte-exact round-trip of the underlying .gd is untouched. Folded by default with a fingerprint
+## ("⚡2 · ?1 · ƒx3") so a pack still tells its vocabulary weight at a glance, like a collapsed group.
+func _build_published_verbs_rows(sheet: EventSheetResource) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	if sheet == null or sheet.functions.is_empty():
+		return rows
+	var children: Array[EventRowData] = []
+	var counts: Dictionary = {"action": 0, "condition": 0, "expression": 0, "internal": 0}
+	for entry: Variant in sheet.functions:
+		if not (entry is EventFunction):
+			continue
+		var event_function: EventFunction = entry as EventFunction
+		var role: String = define_role_for(event_function)
+		if event_function.expose_as_ace:
+			counts[role] = int(counts[role]) + 1
+		else:
+			counts["internal"] = int(counts["internal"]) + 1
+		children.append(_build_define_function_row(event_function, 1))
+	if children.is_empty():
+		return rows
+	var header := EventRowData.new()
+	header.indent = 0
+	header.row_type = EventRowData.RowType.SECTION
+	header.source_resource = null  # inert for selection/delete, like the add-event footer
+	header.row_uid = "published_verbs_%d" % sheet.get_instance_id()
+	header.children = children
+	header.folded = bool(_viewport._fold_state.get(header.row_uid, true))
+	var fingerprint_parts: PackedStringArray = PackedStringArray()
+	if int(counts["action"]) > 0:
+		fingerprint_parts.append("⚡%d" % int(counts["action"]))
+	if int(counts["condition"]) > 0:
+		fingerprint_parts.append("?%d" % int(counts["condition"]))
+	if int(counts["expression"]) > 0:
+		fingerprint_parts.append("ƒx%d" % int(counts["expression"]))
+	if int(counts["internal"]) > 0:
+		fingerprint_parts.append("%d internal" % int(counts["internal"]))
+	header.spans = [
+		_make_span("Published verbs", SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": Color(0.18, 0.19, 0.21, 0.9),
+			"badge_fg": Color(0.72, 0.74, 0.78, 1.0),
+			"kind": "published_verbs",
+			"line_index": 0
+		}),
+		_make_span(" · ".join(fingerprint_parts), SemanticSpan.SpanType.COMMENT, {
+			"editable": false,
+			"kind": "published_verbs",
+			"text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.8)
+		})
+	]
+	rows.append(header)
+	return rows
+
+## Which verb kind a function publishes as, by its return type: void does something (Action),
+## bool answers a question (Condition), any other value is handed out (Expression). This mirrors
+## the ACE Studio's three cards, so the row badge always matches the card that would edit it.
+static func define_role_for(event_function: EventFunction) -> String:
+	if event_function.return_type == TYPE_NIL:
+		return "action"
+	if event_function.return_type == TYPE_BOOL:
+		return "condition"
+	return "expression"
+
+## One Define block: role badge in its ACE-role colour, the friendly published name, a `→ type`
+## chip for value-returning verbs, the category chip, an "internal" chip when the function is NOT
+## exposed as an ACE (a plain helper other sheets can't pick), and the muted real signature built
+## by the COMPILER's own emitters — so what the row claims can never disagree with codegen.
+func _build_define_function_row(event_function: EventFunction, indent: int) -> EventRowData:
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = event_function
+	row_data.row_uid = "define_fn_%d" % event_function.get_instance_id()
+	row_data.disabled = not event_function.enabled
+	var role: String = define_role_for(event_function)
+	var badge_colors: Dictionary = {
+		"action": [EventSheetPalette.COLOR_ACE_ACTION_BADGE_BG, EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG],
+		"condition": [EventSheetPalette.COLOR_ACE_CONDITION_BADGE_BG, EventSheetPalette.COLOR_ACE_CONDITION_BADGE_FG],
+		"expression": [EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_BG, EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_FG],
+	}
+	var display_name: String = event_function.ace_display_name.strip_edges()
+	if display_name.is_empty():
+		display_name = event_function.function_name.capitalize()
+	var spans: Array[SemanticSpan] = [
+		_make_span(role.capitalize(), SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": (badge_colors[role] as Array)[0],
+			"badge_fg": (badge_colors[role] as Array)[1],
+			"kind": "define_function"
+		}),
+		_make_span(display_name, SemanticSpan.SpanType.OBJECT, {
+			"kind": "define_function",
+			"text_color": _viewport._get_event_style().object_label_color
+		})
+	]
+	if role != "action":
+		spans.append(_make_span("→ %s" % SheetCompiler._function_return_type_name(event_function), SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+			"badge_fg": EventSheetPalette.COLOR_CHIP_FG,
+			"kind": "define_function"
+		}))
+	if not event_function.ace_category.strip_edges().is_empty():
+		spans.append(_make_span(event_function.ace_category.strip_edges(), SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_CAT_CHIP_BG,
+			"badge_fg": EventSheetPalette.COLOR_CAT_CHIP_FG,
+			"kind": "define_function"
+		}))
+	if not event_function.expose_as_ace:
+		spans.append(_make_span("internal", SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+			"badge_fg": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.9),
+			"kind": "define_function"
+		}))
+	spans.append(_make_span(
+		"func %s(%s) -> %s" % [
+			event_function.function_name,
+			SheetCompiler._emit_function_params(event_function),
+			SheetCompiler._function_return_type_name(event_function)
+		],
+		SemanticSpan.SpanType.VALUE,
+		{"editable": false, "kind": "define_function", "text_color": EventSheetPalette.TEXT_MUTED}
+	))
+	row_data.spans = spans
+	return row_data
+
 ## First Color(...) literal among an ACE's param values (null when none) — drives the
 ## little color swatch drawn after the condition/action text.
 func _first_color_in_params(ace: Resource) -> Variant:
