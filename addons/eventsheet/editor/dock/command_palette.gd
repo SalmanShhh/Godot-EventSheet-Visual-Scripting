@@ -110,6 +110,62 @@ func _sheet_matches(query: String) -> Array:
 		matches.append({"title": "# %s" % str(entry["title"]), "run": func() -> void: _dock._load_sheet_from_path(path)})
 	return matches
 
+## Every named symbol in a sheet — exposed functions (ƒ), signals (➜), and tree variables (@) — as
+## [{title, name, resource}]. `name` is the bare identifier (fuzzy-match target); `title` carries the
+## kind glyph; `resource` is what the palette reveals. Static + pure over the sheet → testable. Recurses
+## groups so a symbol inside a group is still findable.
+static func collect_symbols(sheet: EventSheetResource) -> Array:
+	var symbols: Array = []
+	if sheet == null:
+		return symbols
+	for function_variant: Variant in sheet.functions:
+		if function_variant is EventFunction and not (function_variant as EventFunction).function_name.strip_edges().is_empty():
+			symbols.append({"title": "ƒ %s" % (function_variant as EventFunction).function_name, "name": (function_variant as EventFunction).function_name, "resource": function_variant})
+	_collect_symbol_rows(sheet.events, symbols)
+	return symbols
+
+static func _collect_symbol_rows(rows: Array, symbols: Array) -> void:
+	for row: Variant in rows:
+		if row is SignalRow and not (row as SignalRow).signal_name.strip_edges().is_empty():
+			symbols.append({"title": "➜ %s" % (row as SignalRow).signal_name, "name": (row as SignalRow).signal_name, "resource": row})
+		elif row is LocalVariable and not (row as LocalVariable).name.strip_edges().is_empty():
+			symbols.append({"title": "@ %s" % (row as LocalVariable).name, "name": (row as LocalVariable).name, "resource": row})
+		elif row is EventGroup:
+			var group: EventGroup = row as EventGroup
+			_collect_symbol_rows(group.events if not group.events.is_empty() else group.rows, symbols)
+
+## Pure fuzzy filter over collected symbols by their `name` (prefix > substring > subsequence), best
+## first, name-sorted. Empty query = all in collection order. Static → testable.
+static func filter_symbols(symbols: Array, query: String) -> Array:
+	var q: String = query.strip_edges().to_lower()
+	if q.is_empty():
+		return symbols.duplicate()
+	var scored: Array = []
+	for index: int in range(symbols.size()):
+		var name: String = str((symbols[index] as Dictionary).get("name", "")).to_lower()
+		var score: int = _command_match_score(name, q)
+		if score >= 0:
+			scored.append({"sym": symbols[index], "score": score, "index": index})
+	scored.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["score"]) != int(b["score"]):
+			return int(a["score"]) < int(b["score"])
+		return int(a["index"]) < int(b["index"]))
+	var result: Array = []
+	for entry: Dictionary in scored:
+		result.append(entry["sym"])
+	return result
+
+## The `@` mode's palette entries: matching symbols in the active sheet as {title, run} that reveal them.
+func _symbol_matches(query: String) -> Array:
+	var matches: Array = []
+	for symbol: Variant in filter_symbols(collect_symbols(_dock._current_sheet), query):
+		var resource: Resource = (symbol as Dictionary).get("resource")
+		matches.append({"title": str((symbol as Dictionary).get("title", "")), "run": func() -> void:
+			var view: EventSheetViewport = _dock._active_view()
+			if view != null:
+				view.reveal_resource(resource)})
+	return matches
+
 func _open_command_palette() -> void:
 	if not Engine.is_editor_hint() and DisplayServer.get_name() == "headless":
 		return
@@ -134,7 +190,7 @@ func _build_command_palette_window() -> void:
 	var box := VBoxContainer.new()
 	margin.add_child(box)
 	_command_palette_search = LineEdit.new()
-	_command_palette_search.placeholder_text = "Type a command…  (# to open a sheet · ↑/↓ Enter Esc)"
+	_command_palette_search.placeholder_text = "Type a command…  (# sheet · @ symbol · ↑/↓ Enter Esc)"
 	_command_palette_search.clear_button_enabled = true
 	_command_palette_search.text_changed.connect(_refresh_command_palette)
 	_command_palette_search.gui_input.connect(_on_command_palette_search_input)
@@ -146,9 +202,12 @@ func _build_command_palette_window() -> void:
 	_dock.add_child(_command_palette_window)
 
 func _refresh_command_palette(query: String) -> void:
-	# `#` prefix (Navigate §13.3): search + open any sheet in the project instead of running a command.
+	# Navigate §13.3 prefix modes: `#` opens any project sheet, `@` jumps to a symbol in the ACTIVE
+	# sheet (function / signal / variable); anything else fuzzy-runs a command.
 	if query.begins_with("#"):
 		_command_palette_matches = _sheet_matches(query.substr(1))
+	elif query.begins_with("@"):
+		_command_palette_matches = _symbol_matches(query.substr(1))
 	else:
 		_command_palette_matches = filter_commands(_command_palette_commands(), query)
 	if _command_palette_list == null:
