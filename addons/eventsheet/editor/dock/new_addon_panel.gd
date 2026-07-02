@@ -22,6 +22,7 @@ const BehaviourAddonScaffold := preload("res://addons/eventsheet/editor/behaviou
 var _dock: Control = null
 var _dialog: Window = null
 var _name_edit: LineEdit = null
+var _recipe_option: OptionButton = null
 var _base_option: OptionButton = null
 var _category_edit: LineEdit = null
 var _desc_edit: LineEdit = null
@@ -39,8 +40,9 @@ func open() -> void:
 	_category_edit.text = ""
 	_desc_edit.text = ""
 	_refresh_preview()
-	_dialog.popup_centered(Vector2i(540, 360))
-	_name_edit.grab_focus()
+	if _dialog.is_inside_tree():  # headless tests: fields are reset, there is no window to pop
+		_dialog.popup_centered(Vector2i(540, 360))
+		_name_edit.grab_focus()
 
 func _build_dialog() -> void:
 	if _dialog != null:
@@ -65,6 +67,14 @@ func _build_dialog() -> void:
 	_name_edit.text_changed.connect(func(_t: String) -> void: _refresh_preview())
 	_name_edit.text_submitted.connect(func(_t: String) -> void: _on_create())
 	properties_box.add_child(EventSheetPopupUI.form_row("Name", _name_edit))
+
+	# Starter recipe — the teaching skeleton by default, or a small COMPLETE behaviour (cooldown,
+	# stat pool) so "new addon" can mean "working example I rename", not just a commented template.
+	_recipe_option = OptionButton.new()
+	for recipe: Dictionary in BehaviourAddonScaffold.RECIPES:
+		_recipe_option.add_item(str(recipe.get("label")))
+	_recipe_option.select(0)
+	properties_box.add_child(EventSheetPopupUI.form_row("Start from", _recipe_option))
 
 	_base_option = OptionButton.new()
 	for base: String in BehaviourAddonScaffold.BASE_CLASSES:
@@ -135,7 +145,8 @@ func _on_create() -> void:
 		_status_label.text = "A file already exists at %s — pick another name." % path
 		return
 	var base: String = _base_option.get_item_text(_base_option.selected)
-	var source: String = BehaviourAddonScaffold.generate(addon_name, base, _category_edit.text, _desc_edit.text)
+	var recipe_id: String = str((BehaviourAddonScaffold.RECIPES[maxi(_recipe_option.selected, 0)] as Dictionary).get("id"))
+	var source: String = BehaviourAddonScaffold.generate_recipe(recipe_id, addon_name, base, _category_edit.text, _desc_edit.text)
 	var folder: String = path.get_base_dir()
 	if DirAccess.make_dir_recursive_absolute(folder) != OK and not DirAccess.dir_exists_absolute(folder):
 		_status_label.text = "Couldn't create the folder %s — check permissions." % folder

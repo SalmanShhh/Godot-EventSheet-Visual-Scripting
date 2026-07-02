@@ -48,6 +48,196 @@ static func suggested_path(addon_name: String) -> String:
 	var snake: String = _to_snake_case(addon_name)
 	return "res://eventsheet_addons/%s/%s.gd" % [snake, snake]
 
+## The starter recipes the New Behaviour dialog offers. Order is index-stable (the dialog's
+## OptionButton and the tests read by index). "skeleton" is the teaching default; the others are
+## small, complete, game-shaped behaviours with every verb annotated — a working example beats a
+## commented placeholder once someone has seen the skeleton once.
+const RECIPES: Array[Dictionary] = [
+	{"id": "skeleton", "label": "Teaching skeleton — one of each kind, heavily commented"},
+	{"id": "cooldown", "label": "Cooldown — an ability timer (start · is ready · time left)"},
+	{"id": "stat_pool", "label": "Stat pool — a bounded value (spend · restore · percent)"},
+]
+
+## Dispatches to the chosen recipe's generator (falls back to the teaching skeleton).
+static func generate_recipe(recipe_id: String, addon_name: String, base_class: String = "Node", category: String = "", description: String = "") -> String:
+	match recipe_id:
+		"cooldown":
+			return generate_cooldown(addon_name, base_class, category, description)
+		"stat_pool":
+			return generate_stat_pool(addon_name, base_class, category, description)
+		_:
+			return generate(addon_name, base_class, category, description)
+
+## A complete ability-cooldown behaviour: start it, gate events on readiness, read the remaining
+## time. Counts down in _process (so a Node-derived base is the natural fit — the dialog defaults
+## there); every public member carries its picker annotations, so it opens code-free immediately.
+static func generate_cooldown(addon_name: String, base_class: String = "Node", category: String = "", description: String = "") -> String:
+	var name: String = addon_name.strip_edges()
+	var base: String = base_class.strip_edges() if not base_class.strip_edges().is_empty() else "Node"
+	var cat: String = _sanitize_inline(category) if not _sanitize_inline(category).is_empty() else name
+	var desc: String = _sanitize_inline(description) if not _sanitize_inline(description).is_empty() else "An ability cooldown: start it, check it, read the time left."
+	return "\n".join(PackedStringArray([
+		"@tool",
+		"## %s — %s" % [name, desc],
+		"## @ace_tags(%s, custom)" % _to_snake_case(name),
+		"class_name %s" % name,
+		"extends %s" % base,
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Cooldown Finished\")",
+		"## @ace_category(\"%s\")" % cat,
+		"signal cooldown_finished",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Cooldown Started\")",
+		"## @ace_category(\"%s\")" % cat,
+		"signal cooldown_started",
+		"",
+		"## @ace_description(\"Seconds a full cooldown takes.\")",
+		"@export var duration: float = 1.5",
+		"",
+		"var _time_left: float = 0.0",
+		"",
+		"func _process(delta: float) -> void:",
+		"\tif _time_left > 0.0:",
+		"\t\t_time_left = maxf(_time_left - delta, 0.0)",
+		"\t\tif _time_left == 0.0:",
+		"\t\t\tcooldown_finished.emit()",
+		"",
+		"## @ace_action",
+		"## @ace_name(\"Start Cooldown\")",
+		"## @ace_category(\"%s\")" % cat,
+		"## @ace_description(\"Begins a full cooldown (restarts it if already running).\")",
+		"func start() -> void:",
+		"\t_time_left = duration",
+		"\tcooldown_started.emit()",
+		"",
+		"## @ace_action",
+		"## @ace_name(\"Reset Cooldown\")",
+		"## @ace_category(\"%s\")" % cat,
+		"## @ace_description(\"Clears the cooldown so the ability is immediately ready.\")",
+		"func reset() -> void:",
+		"\t_time_left = 0.0",
+		"",
+		"## @ace_condition",
+		"## @ace_name(\"Is Ready\")",
+		"## @ace_category(\"%s\")" % cat,
+		"## @ace_description(\"True when the cooldown is not running.\")",
+		"func is_ready() -> bool:",
+		"\treturn _time_left <= 0.0",
+		"",
+		"## @ace_condition",
+		"## @ace_name(\"Is Cooling Down\")",
+		"## @ace_category(\"%s\")" % cat,
+		"## @ace_description(\"True while the cooldown is still counting.\")",
+		"func is_cooling_down() -> bool:",
+		"\treturn _time_left > 0.0",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Time Left\")",
+		"## @ace_category(\"%s\")" % cat,
+		"## @ace_description(\"Seconds remaining until ready (0 when ready).\")",
+		"func time_left() -> float:",
+		"\treturn _time_left",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Cooldown Progress\")",
+		"## @ace_category(\"%s\")" % cat,
+		"## @ace_description(\"How far through the cooldown we are, 0.0 (just started) to 1.0 (ready).\")",
+		"func progress() -> float:",
+		"\treturn 1.0 - (_time_left / duration) if duration > 0.0 else 1.0",
+		"",
+	]))
+
+## A complete bounded-stat behaviour (health, mana, stamina, ammo…): spend it, restore it, gate on
+## empty/full, read the percentage. Every public member carries its picker annotations.
+static func generate_stat_pool(addon_name: String, base_class: String = "Node", category: String = "", description: String = "") -> String:
+	var name: String = addon_name.strip_edges()
+	var base: String = base_class.strip_edges() if not base_class.strip_edges().is_empty() else "Node"
+	var cat: String = _sanitize_inline(category) if not _sanitize_inline(category).is_empty() else name
+	var desc: String = _sanitize_inline(description) if not _sanitize_inline(description).is_empty() else "A bounded value: spend it, restore it, watch it empty."
+	return "\n".join(PackedStringArray([
+		"@tool",
+		"## %s — %s" % [name, desc],
+		"## @ace_tags(%s, custom)" % _to_snake_case(name),
+		"class_name %s" % name,
+		"extends %s" % base,
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Depleted\")",
+		"## @ace_category(\"%s\")" % cat,
+		"signal depleted",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Value Changed\")",
+		"## @ace_category(\"%s\")" % cat,
+		"signal value_changed",
+		"",
+		"## @ace_description(\"The largest value the pool can hold.\")",
+		"@export var max_value: float = 100.0",
+		"",
+		"var _value: float = 100.0",
+		"",
+		"## @ace_action",
+		"## @ace_name(\"Spend\")",
+		"## @ace_category(\"%s\")" % cat,
+		"## @ace_description(\"Removes an amount (clamped at zero; fires On Depleted when it empties).\")",
+		"func spend(amount: float) -> void:",
+		"\tif amount <= 0.0 or _value <= 0.0:",
+		"\t\treturn",
+		"\t_value = maxf(_value - amount, 0.0)",
+		"\tvalue_changed.emit()",
+		"\tif _value == 0.0:",
+		"\t\tdepleted.emit()",
+		"",
+		"## @ace_action",
+		"## @ace_name(\"Restore\")",
+		"## @ace_category(\"%s\")" % cat,
+		"## @ace_description(\"Adds an amount back (clamped at the maximum).\")",
+		"func restore(amount: float) -> void:",
+		"\tif amount <= 0.0:",
+		"\t\treturn",
+		"\t_value = minf(_value + amount, max_value)",
+		"\tvalue_changed.emit()",
+		"",
+		"## @ace_action",
+		"## @ace_name(\"Refill\")",
+		"## @ace_category(\"%s\")" % cat,
+		"## @ace_description(\"Sets the value back to the maximum.\")",
+		"func refill() -> void:",
+		"\t_value = max_value",
+		"\tvalue_changed.emit()",
+		"",
+		"## @ace_condition",
+		"## @ace_name(\"Is Empty\")",
+		"## @ace_category(\"%s\")" % cat,
+		"## @ace_description(\"True when the value is zero.\")",
+		"func is_empty() -> bool:",
+		"\treturn _value <= 0.0",
+		"",
+		"## @ace_condition",
+		"## @ace_name(\"Is Full\")",
+		"## @ace_category(\"%s\")" % cat,
+		"## @ace_description(\"True when the value is at its maximum.\")",
+		"func is_full() -> bool:",
+		"\treturn _value >= max_value",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Current Value\")",
+		"## @ace_category(\"%s\")" % cat,
+		"## @ace_description(\"The value right now.\")",
+		"func current_value() -> float:",
+		"\treturn _value",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Percent\")",
+		"## @ace_category(\"%s\")" % cat,
+		"## @ace_description(\"How full the pool is, 0.0 to 1.0.\")",
+		"func percent() -> float:",
+		"\treturn _value / max_value if max_value > 0.0 else 0.0",
+		"",
+	]))
+
 ## The richly-commented skeleton source. `category` defaults to the addon name; `description` fills the
 ## provider's top doc comment.
 static func generate(addon_name: String, base_class: String = "Node", category: String = "", description: String = "") -> String:

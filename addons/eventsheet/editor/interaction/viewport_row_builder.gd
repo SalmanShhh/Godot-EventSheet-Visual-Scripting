@@ -442,7 +442,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 		return row_data
 	var code_lines: PackedStringArray = raw_row.code.split("\n")
 	row_data.line_count = maxi(code_lines.size(), 1)
-	# Type-aware styling (blocks spec P1): boilerplate reads dimmer + labelled "setup" so the eye skips it,
+	# Type-aware styling: boilerplate reads dimmer + labelled "setup" so the eye skips it,
 	# while real logic keeps the brighter "GDScript" badge + primary text. Same row, no codegen change.
 	var is_scaffold: bool = _viewport.is_scaffolding_code(raw_row.code)
 	var badge_label: String = "setup" if is_scaffold else "GDScript"
