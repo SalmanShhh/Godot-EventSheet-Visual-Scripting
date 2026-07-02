@@ -17,6 +17,7 @@ func init(dock: Control) -> void:
 
 var _param_edit_popup: PopupPanel = null
 var _param_edit_field: LineEdit = null
+var _param_edit_hint: Label = null
 var _param_edit_target: Resource = null
 var _param_edit_key: String = ""
 var _color_swatch_popup: PopupPanel = null
@@ -30,10 +31,20 @@ var _color_swatch_key: String = ""
 func on_param_value_edit_requested(ace: Resource, param_id: String, current_text: String, anchor_screen: Variant = null) -> void:
 	if _param_edit_popup == null:
 		_param_edit_popup = PopupPanel.new()
+		var box: VBoxContainer = VBoxContainer.new()
+		box.add_theme_constant_override("separation", 2)
 		_param_edit_field = LineEdit.new()
 		_param_edit_field.custom_minimum_size = Vector2(180.0, 0.0)
 		_param_edit_field.text_submitted.connect(func(_t: String) -> void: _commit_inline_param_edit())
-		_param_edit_popup.add_child(_param_edit_field)
+		_param_edit_field.gui_input.connect(_on_param_field_input)
+		box.add_child(_param_edit_field)
+		# The bulk-retune hint, shown only when several rows are selected: Ctrl+Enter writes the value
+		# into the SAME verb's same param on every selected row — one undo step.
+		_param_edit_hint = Label.new()
+		_param_edit_hint.add_theme_font_size_override("font_size", 10)
+		_param_edit_hint.modulate = Color(1.0, 1.0, 1.0, 0.65)
+		box.add_child(_param_edit_hint)
+		_param_edit_popup.add_child(box)
 		_dock.add_child(_param_edit_popup)
 	_param_edit_target = ace
 	_param_edit_key = param_id
@@ -43,6 +54,11 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 	# here on a param the sentence didn't fill.
 	_param_edit_field.placeholder_text = param_id
 	_param_edit_field.tooltip_text = "Editing \"%s\"" % param_id
+	var selected_count: int = _dock._top_level_selected_resources().size()
+	_param_edit_hint.visible = selected_count > 1
+	_param_edit_hint.text = "⏎ this row  ·  Ctrl+⏎ apply to all %d selected" % selected_count
+	if not _param_edit_popup.is_inside_tree():
+		return  # headless tests: state is set, there is no window to pop
 	var popup_at: Vector2i = Vector2i(DisplayServer.mouse_get_position())
 	if anchor_screen is Rect2 and (anchor_screen as Rect2).size.x > 0.0:
 		popup_at = Vector2i((anchor_screen as Rect2).position + Vector2(0.0, (anchor_screen as Rect2).size.y + 2.0))
@@ -50,23 +66,90 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 	_param_edit_field.grab_focus()
 	_param_edit_field.select_all()
 
-func _commit_inline_param_edit() -> void:
+## Ctrl+Enter = the bulk commit (Enter alone commits just this row via text_submitted).
+func _on_param_field_input(event: InputEvent) -> void:
+	if not (event is InputEventKey) or not (event as InputEventKey).pressed:
+		return
+	var key: InputEventKey = event as InputEventKey
+	if key.keycode in [KEY_ENTER, KEY_KP_ENTER] and (key.ctrl_pressed or key.meta_pressed):
+		_commit_inline_param_edit(true)
+		_param_edit_field.accept_event()
+
+func _commit_inline_param_edit(apply_to_all_selected: bool = false) -> void:
 	if _param_edit_target == null or _param_edit_key.is_empty():
 		return
 	var target: Resource = _param_edit_target
 	var key: String = _param_edit_key
 	var new_text: String = _param_edit_field.text
-	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Parameter", func() -> bool:
-		var params: Dictionary = target.get("params")
-		if str(params.get(key, "")) == new_text:
-			return false
-		params[key] = new_text
-		return true
-	)
+	var updated := {"count": 0}
+	var changed: bool
+	if apply_to_all_selected:
+		# Bulk retune: write the value into the SAME verb's same param on every selected row —
+		# structure-aware (only ACEs with the matching id that actually carry this param), type-safe
+		# (the value goes through the same params dict as a single edit), ONE undo step.
+		var targets: Array = _collect_matching_aces(target, key)
+		changed = _dock._perform_undoable_sheet_edit("Edit Parameter (all selected)", func() -> bool:
+			var any: bool = false
+			for ace: Resource in targets:
+				var params: Dictionary = ace.get("params")
+				if str(params.get(key, "")) == new_text:
+					continue
+				params[key] = new_text
+				any = true
+				updated["count"] = int(updated["count"]) + 1
+			return any
+		)
+	else:
+		changed = _dock._perform_undoable_sheet_edit("Edit Parameter", func() -> bool:
+			var params: Dictionary = target.get("params")
+			if str(params.get(key, "")) == new_text:
+				return false
+			params[key] = new_text
+			return true
+		)
 	_param_edit_popup.hide()
 	if changed:
 		_dock._refresh_after_edit()
-		_dock._mark_dirty("Parameter updated.")
+		var note: String = "Parameter updated."
+		if apply_to_all_selected:
+			note = "Set %s on %d matching verbs." % [key, int(updated["count"])]
+		_dock._mark_dirty(note)
+
+## Every ACE across the selected rows that is the SAME verb as the edited one (matching provider+id)
+## and carries the edited param — the bulk-apply target set. Walks each selected row's trigger,
+## conditions, actions, and sub-events (and group children, when a group is selected). The edited
+## ACE itself is always included, selected or not.
+func _collect_matching_aces(edited: Resource, param_id: String) -> Array:
+	var matches: Array = [edited]
+	for resource: Variant in _dock._top_level_selected_resources():
+		_collect_matching_in(resource, edited, param_id, matches)
+	return matches
+
+func _collect_matching_in(resource: Variant, edited: Resource, param_id: String, matches: Array) -> void:
+	if resource is EventGroup:
+		var group: EventGroup = resource as EventGroup
+		var group_rows: Array = group.events if not group.events.is_empty() else group.rows
+		for child: Variant in group_rows:
+			_collect_matching_in(child, edited, param_id, matches)
+		return
+	if not (resource is EventRow):
+		return
+	var event_row: EventRow = resource as EventRow
+	var candidates: Array = []
+	if event_row.trigger != null:
+		candidates.append(event_row.trigger)
+	candidates.append_array(event_row.conditions)
+	candidates.append_array(event_row.actions)
+	for candidate: Variant in candidates:
+		if not (candidate is Resource) or candidate == edited:
+			continue
+		var ace: Resource = candidate as Resource
+		if str(ace.get("ace_id")) != str(edited.get("ace_id")) or str(ace.get("provider_id")) != str(edited.get("provider_id")):
+			continue
+		if ace.get("params") is Dictionary and (ace.get("params") as Dictionary).has(param_id):
+			matches.append(ace)
+	for sub_event: Variant in event_row.sub_events:
+		_collect_matching_in(sub_event, edited, param_id, matches)
 
 ## Clicking a cell's colour swatch opens a ColorPicker right there (no params dialog), inline.
 ## The pick is committed once, when the popup closes — so dragging the picker is one clean undo step, not
