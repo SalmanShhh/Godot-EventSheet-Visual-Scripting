@@ -346,8 +346,49 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	]
 	return row_data
 
+## True Define-shell info for a RawCodeRow that is PURELY an `## @ace_*` annotation block — the
+## published-verb header a pack author writes above each exposed func. Opened packs keep these as
+## literal code rows (the shell-lift into EventFunctions is separate work), so without this a pack
+## reads as a wall of 7-line annotation blocks. Returns {kind, name, category, line_count} when the
+## row qualifies (only blank/`##` lines; one action/condition/expression marker; an @ace_name to show),
+## else {}. Static + pure so the classifier is unit-testable without a viewport.
+static func define_shell_info(code: String) -> Dictionary:
+	var kind: String = ""
+	var name: String = ""
+	var category: String = ""
+	var lines: PackedStringArray = code.split("\n")
+	for raw_line: String in lines:
+		var line: String = raw_line.strip_edges()
+		if line.is_empty():
+			continue
+		if not line.begins_with("##"):
+			return {}  # real code in the row — not a pure annotation shell
+		if line.begins_with("## @ace_action"):
+			kind = "action"
+		elif line.begins_with("## @ace_condition"):
+			kind = "condition"
+		elif line.begins_with("## @ace_expression"):
+			kind = "expression"
+		elif line.begins_with("## @ace_name("):
+			name = _annotation_string_arg(line)
+		elif line.begins_with("## @ace_category("):
+			category = _annotation_string_arg(line)
+	if kind.is_empty() or name.is_empty():
+		return {}
+	return {"kind": kind, "name": name, "category": category, "line_count": lines.size()}
+
+static func _annotation_string_arg(line: String) -> String:
+	var open_quote: int = line.find("\"")
+	var close_quote: int = line.rfind("\"")
+	if open_quote < 0 or close_quote <= open_quote:
+		return ""
+	return line.substr(open_quote + 1, close_quote - open_quote - 1)
+
 ## A GDScript block row: verbatim code shown line-by-line, edited via the dock's code dialog
 ## (double-click), compiled at class level. The event-sheet-style "inline code" escape hatch.
+## A row that is purely a published-verb annotation shell renders as ONE Define-style header line
+## instead (role badge · friendly name · category chip) — a pure view over the same RawCodeRow, so
+## editing (double-click opens the code dialog), selection, and the byte round-trip are untouched.
 func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.indent = indent
@@ -355,6 +396,50 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	row_data.source_resource = raw_row
 	row_data.row_uid = "raw_code_%d" % raw_row.get_instance_id()
 	row_data.disabled = not raw_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
+	var shell: Dictionary = define_shell_info(raw_row.code)
+	if not shell.is_empty():
+		row_data.line_count = 1  # visual collapse only — the underlying lines are all still there
+		var badge_colors: Dictionary = {
+			"action": [EventSheetPalette.COLOR_ACE_ACTION_BADGE_BG, EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG],
+			"condition": [EventSheetPalette.COLOR_ACE_CONDITION_BADGE_BG, EventSheetPalette.COLOR_ACE_CONDITION_BADGE_FG],
+			"expression": [EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_BG, EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_FG],
+		}
+		var kind: String = str(shell.get("kind"))
+		var shell_spans: Array[SemanticSpan] = [
+			_make_span(kind.capitalize(), SemanticSpan.SpanType.KEYWORD, {
+				"editable": false,
+				"badge": true,
+				"badge_style": "scope",
+				"badge_bg": (badge_colors[kind] as Array)[0],
+				"badge_fg": (badge_colors[kind] as Array)[1],
+				"kind": "raw_code",
+				"line_index": 0
+			}),
+			_make_span(str(shell.get("name")), SemanticSpan.SpanType.OBJECT, {
+				"editable": false,
+				"kind": "raw_code",
+				"line_index": 0,
+				"text_color": _viewport._get_event_style().object_label_color
+			})
+		]
+		if not str(shell.get("category")).is_empty():
+			shell_spans.append(_make_span(str(shell.get("category")), SemanticSpan.SpanType.KEYWORD, {
+				"editable": false,
+				"badge": true,
+				"badge_style": "scope",
+				"badge_bg": EventSheetPalette.COLOR_CAT_CHIP_BG,
+				"badge_fg": EventSheetPalette.COLOR_CAT_CHIP_FG,
+				"kind": "raw_code",
+				"line_index": 0
+			}))
+		shell_spans.append(_make_span("publishes the func below · %d annotation lines" % int(shell.get("line_count")), SemanticSpan.SpanType.VALUE, {
+			"editable": false,
+			"kind": "raw_code",
+			"line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}))
+		row_data.spans = shell_spans
+		return row_data
 	var code_lines: PackedStringArray = raw_row.code.split("\n")
 	row_data.line_count = maxi(code_lines.size(), 1)
 	# Type-aware styling (blocks spec P1): boilerplate reads dimmer + labelled "setup" so the eye skips it,
