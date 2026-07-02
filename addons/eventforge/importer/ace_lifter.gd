@@ -703,6 +703,13 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	var return_name: String = header_match.get_string(3) if header_match.get_group_count() >= 3 else "void"
 	var return_types: Dictionary = {"void": TYPE_NIL, "bool": TYPE_BOOL, "int": TYPE_INT, "float": TYPE_FLOAT, "String": TYPE_STRING, "Vector2": TYPE_VECTOR2, "Vector3": TYPE_VECTOR3, "Color": TYPE_COLOR, "Array": TYPE_ARRAY, "Dictionary": TYPE_DICTIONARY, "Variant": TYPE_MAX}
 	if not return_types.has(return_name):
+		# A custom / engine class the Variant.Type set can't name (`HealthPool`, `Camera2D`). The
+		# emitter CAN reproduce it (via return_type_name), but AUTO-LIFTING such a helper still doesn't
+		# pay: they're private helpers defined mid-file, and a lifted function emits into
+		# sheet.functions at the file's END — reordering the output and failing the byte-verify for the
+		# whole run. So they stay raw (readable as verb shells) until lifted functions can emit in
+		# source position. The field itself powers the FORWARD path: a Studio-authored verb returning a
+		# custom/engine class round-trips (see function_dialog + the emitter).
 		return {"ok": false}
 	event_function.return_type = return_types[return_name]
 	for argument: String in header_match.get_string(2).split(", ", false):

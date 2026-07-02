@@ -27,6 +27,11 @@ class_name EventFunction
 @export var params: Array[ACEParam] = []
 @export var parameters: Array[String] = [] # Backwards-compatible alias.
 @export var return_type: int = TYPE_NIL
+## A return type `return_type` (a Variant.Type) can't name: a custom class (`HealthPool`), an engine
+## class (`Camera2D`), or a typed collection. When set, the emitter uses it VERBATIM and ignores
+## return_type — so a helper returning `-> HealthPool` lifts into a real, editable function instead
+## of staying a raw block. Empty = use return_type as before.
+@export var return_type_name: String = ""
 @export var is_async: bool = false
 @export var events: Array[Resource] = []
 @export var rows: Array[Resource] = [] # Backwards-compatible alias.

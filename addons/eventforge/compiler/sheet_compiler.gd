@@ -1475,6 +1475,10 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 ## `pass` only parses for void — a bool/typed function needs a type-correct `return <default>` or the
 ## whole generated script fails to load, taking every OTHER verb on the sheet down with it.
 static func _empty_function_stub(event_function: EventFunction) -> String:
+	# A named (custom/engine class) return can't be defaulted structurally — null parses for any
+	# object/collection type, so a bodiless helper with a named return still loads.
+	if not event_function.return_type_name.strip_edges().is_empty():
+		return "\treturn null"
 	match event_function.return_type:
 		TYPE_NIL:
 			return "\tpass"
@@ -1498,6 +1502,10 @@ static func _empty_function_stub(event_function: EventFunction) -> String:
 ## Builds the typed parameter list for a sheet function (e.g. "amount: int, label: String").
 ## "-> void" unless the function declares a Variant.Type return (TYPE_NIL = void).
 static func _function_return_type_name(event_function: EventFunction) -> String:
+	# An explicit type NAME wins — it can express what a Variant.Type can't (custom/engine classes,
+	# typed collections), so a lifted `-> HealthPool` helper round-trips verbatim.
+	if not event_function.return_type_name.strip_edges().is_empty():
+		return event_function.return_type_name.strip_edges()
 	if event_function.return_type == TYPE_NIL:
 		return "void"
 	# TYPE_MAX is the "returns Variant" sentinel (there is no Variant.Type for Variant).
