@@ -82,6 +82,34 @@ static func _command_match_score(title: String, q: String) -> int:
 			return -1
 	return 2
 
+## Pure fuzzy filter over project sheet PATHS for the `#` mode (Navigate §13.3): returns [{title, path}]
+## whose file name matches `query` (the leading `#` already stripped) as prefix > substring > subsequence,
+## best first; empty query = all, name-sorted. Static → testable without a window, like filter_commands.
+static func filter_sheets(sheet_paths: PackedStringArray, query: String) -> Array:
+	var q: String = query.strip_edges().to_lower()
+	var entries: Array = []
+	for path: String in sheet_paths:
+		var sheet_name: String = path.get_file()
+		var score: int = 0 if q.is_empty() else _command_match_score(sheet_name.to_lower(), q)
+		if score >= 0:
+			entries.append({"title": sheet_name, "path": path, "score": score})
+	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["score"]) != int(b["score"]):
+			return int(a["score"]) < int(b["score"])
+		return str(a["title"]) < str(b["title"]))
+	var result: Array = []
+	for entry: Dictionary in entries:
+		result.append({"title": str(entry["title"]), "path": str(entry["path"])})
+	return result
+
+## The `#` mode's palette entries: every matching project sheet as a {title, run} that opens it.
+func _sheet_matches(query: String) -> Array:
+	var matches: Array = []
+	for entry: Dictionary in filter_sheets(_dock.list_project_sheets(), query):
+		var path: String = str(entry["path"])
+		matches.append({"title": "# %s" % str(entry["title"]), "run": func() -> void: _dock._load_sheet_from_path(path)})
+	return matches
+
 func _open_command_palette() -> void:
 	if not Engine.is_editor_hint() and DisplayServer.get_name() == "headless":
 		return
@@ -106,7 +134,7 @@ func _build_command_palette_window() -> void:
 	var box := VBoxContainer.new()
 	margin.add_child(box)
 	_command_palette_search = LineEdit.new()
-	_command_palette_search.placeholder_text = "Type a command…  (↑/↓ to choose, Enter to run, Esc to close)"
+	_command_palette_search.placeholder_text = "Type a command…  (# to open a sheet · ↑/↓ Enter Esc)"
 	_command_palette_search.clear_button_enabled = true
 	_command_palette_search.text_changed.connect(_refresh_command_palette)
 	_command_palette_search.gui_input.connect(_on_command_palette_search_input)
@@ -118,7 +146,11 @@ func _build_command_palette_window() -> void:
 	_dock.add_child(_command_palette_window)
 
 func _refresh_command_palette(query: String) -> void:
-	_command_palette_matches = filter_commands(_command_palette_commands(), query)
+	# `#` prefix (Navigate §13.3): search + open any sheet in the project instead of running a command.
+	if query.begins_with("#"):
+		_command_palette_matches = _sheet_matches(query.substr(1))
+	else:
+		_command_palette_matches = filter_commands(_command_palette_commands(), query)
 	if _command_palette_list == null:
 		return
 	_command_palette_list.clear()
