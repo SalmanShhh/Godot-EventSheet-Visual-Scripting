@@ -450,7 +450,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 		lines.append("")
 		lines.append(deferred)
 
-	_insert_stateful_member_declarations(lines, sheet)
+	_insert_stateful_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -569,7 +569,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	for comment_line: String in deferred_comment_lines_external:
 		lines.append("")
 		lines.append("# %s" % comment_line)
-	_insert_stateful_member_declarations(lines, sheet)
+	_insert_stateful_member_declarations(lines, sheet, result.get("source_map", []))
 	_insert_provider_member_declarations(lines, result)
 	var output: String = "\n".join(lines) + "\n"
 	result["output"] = output
@@ -589,7 +589,22 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 ## External-path counterpart of the main path's stateful-member emission: declares the
 ## members baked onto stateful conditions (Every X Seconds…) before the first function,
 ## skipping any already present verbatim (untouched files stay byte-identical).
-static func _insert_stateful_member_declarations(lines: PackedStringArray, sheet: EventSheetResource) -> void:
+## Insertions happen AFTER the source map was built, so every mapped range at or past the insertion
+## point must shift down with the text or line→row lookups (the GDScript panel's click-to-select,
+## error deep-links) land a few rows off — exactly the bug this fixes. A range that STRADDLES the
+## insertion grows (its end shifts, its start doesn't).
+static func _shift_source_map(source_map: Array, first_inserted_line: int, count: int) -> void:
+	if count <= 0:
+		return
+	for entry: Variant in source_map:
+		if not (entry is Dictionary):
+			continue
+		if int((entry as Dictionary).get("start", 0)) >= first_inserted_line:
+			(entry as Dictionary)["start"] = int((entry as Dictionary)["start"]) + count
+		if int((entry as Dictionary).get("end", 0)) >= first_inserted_line:
+			(entry as Dictionary)["end"] = int((entry as Dictionary)["end"]) + count
+
+static func _insert_stateful_member_declarations(lines: PackedStringArray, sheet: EventSheetResource, source_map: Array = []) -> void:
 	var members: Array = []
 	_collect_stateful_members(sheet.events, members)
 	for function_entry: Variant in sheet.functions:
@@ -611,6 +626,7 @@ static func _insert_stateful_member_declarations(lines: PackedStringArray, sheet
 	for offset in range(missing.size()):
 		lines.insert(insert_index + offset, missing[offset])
 	lines.insert(insert_index + missing.size(), "")
+	_shift_source_map(source_map, insert_index + 1, missing.size() + 1)
 
 static func _insert_provider_member_declarations(lines: PackedStringArray, result: Dictionary) -> void:
 	var member_regex: RegEx = RegEx.new()
@@ -643,6 +659,7 @@ static func _insert_provider_member_declarations(lines: PackedStringArray, resul
 		declarations.append("var %s := %s.new()" % [str(member_name), provider_class])
 	for offset in range(declarations.size()):
 		lines.insert(insert_index + offset, declarations[offset])
+	_shift_source_map(result.get("source_map", []), insert_index + 1, declarations.size())
 
 ## Recursively merges included sheets (see EventSheetResource.includes): variables and
 ## functions skip name collisions with a warning (root wins), rows append in include
