@@ -67,12 +67,20 @@ intentional, visually-distinct escape hatch rather than un-lifted residue. That'
 (#50) — and once it ships, an in-flow block reads as "the author chose code here", which is exactly
 what C3 users expect.
 
-## Verdict
+## Status (all four solutions implemented)
 
-- **No pack is 100% row-only on open today.** The dominant offender (#1, host-binding `_enter_tree`)
-  is pure boilerplate and fully recoverable — fixing it alone makes ~20 packs visually clean.
-- **#2 needs a small schema addition** (`return_type_name`) to convert the remaining shelled helpers.
-- **The 63 in-flow blocks stay code by design** — task #50 makes that a feature, not a wart.
+- **#1 host-binding `_enter_tree` — DONE** (`9dffe49`). Collapses to one muted "Host binding" row via a
+  strict exact-shape classifier; ~20 packs read as vocabulary instead of boilerplate. Pure view, drift=0.
+- **#2 `return_type_name` — DONE (forward half)** (`ea0955e`). `EventFunction.return_type_name` lets a
+  verb return a custom/engine class; the emitter, stub, and signature honour it, and it round-trips.
+  Auto-lifting the mid-file custom-return HELPERS stays blocked by *emission position* (a lifted
+  function emits at the file's end, reordering the output) — re-filed as its own task; the shells keep
+  those readable meanwhile.
+- **#3 private/expression-default vars — DONE** (`83b5c4f`). `LocalVariable.expression_default` re-emits
+  a bare-expression default (`Vector2.ZERO`) verbatim instead of quoting it, so juice's 8 Vector2 state
+  vars lift to State rows. Byte-verify gated, drift=0.
+- **The 63 in-flow blocks are a feature, not a wart** — the GDScript-as-action affordance (`cb82030`)
+  makes "drop to code here" a deliberate, discoverable C3-style action.
 
-Tasks filed: host-binding fold (#1), `return_type_name` (#2), private-var lift (#3), and the
-GDScript-as-action affordance (#50).
+**Remaining:** only the mid-file lifted-function *emission position* problem (its own task) blocks the
+last handful of custom-return helpers. Everything else in this audit is resolved.
