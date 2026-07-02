@@ -73,6 +73,7 @@ func build(root: Node) -> void:
 	_add_toolbar_button(_toolbar, "Add Event", _dock._on_add_event_requested, "Add an event (E).", "Add")
 	_add_toolbar_button(_toolbar, "Add Condition", _dock._on_add_condition_requested, "Add a condition to the selected event (C).", "MemberConstant")
 	_add_toolbar_button(_toolbar, "Add Action", _dock._on_add_action_requested, "Add an action to the selected event (A).", "MemberMethod")
+	_add_toolbar_button(_toolbar, "Add Code", _dock._on_add_gdscript_action_requested, "Add a GDScript block to the selected event — the deliberate 'drop to code' escape hatch (like Construct 3's script actions). Opens the code editor immediately.", "Script")
 	# Add ▾ — the rest of the authoring vocabulary.
 	var add_menu: MenuButton = MenuButton.new()
 	add_menu.name = "EventSheetAddMenu"
@@ -83,12 +84,15 @@ func build(root: Node) -> void:
 	add_popup.add_item("Global Variable…", 1)
 	add_popup.add_item("Local Variable…", 2)
 	add_popup.add_item("Function…", 3)
+	add_popup.add_separator()
+	add_popup.add_item("Code (GDScript) on Selected Event", 4)
 	add_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
 			0: _dock._on_add_signal_event_requested()
 			1: _dock._on_add_global_variable_requested()
 			2: _dock._on_add_local_variable_requested()
 			3: _dock._open_function_dialog()
+			4: _dock._on_add_gdscript_action_requested()
 	)
 	_toolbar.add_child(add_menu)
 	# Edit ▾ — clipboard + history (all on shortcuts too).

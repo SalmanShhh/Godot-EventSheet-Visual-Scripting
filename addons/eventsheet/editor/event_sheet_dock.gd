@@ -1755,6 +1755,19 @@ func _ensure_selected_event() -> bool:
 	_set_status("Select an event row first.", true)
 	return false
 
+## The selected event (or the event owning a selected condition/action), for actions that need a
+## target event without a right-click context — the toolbar/menu "Add Code (GDScript)" path.
+func _selected_event_for_action() -> EventRow:
+	var context: Dictionary = _active_view().get_selected_context()
+	var selected: Resource = context.get("source_resource", null)
+	return selected as EventRow if selected is EventRow else null
+
+## Toolbar/menu "Add Code (GDScript)": C3-style script action on the selected event.
+func _on_add_gdscript_action_requested() -> void:
+	if not _ensure_sheet_for_editing():
+		return
+	_clipboard_glue._add_gdscript_action_to_event(null)
+
 # ── ACE application + drag-drop — delegates to EventSheetACEApply ─────────────
 # The ACE-application + row/ACE drag-drop bodies now live in dock/ace_apply.gd. These thin
 # forwarders keep the original names + signatures so the connect() sites above, the sibling

@@ -194,18 +194,62 @@ func _paste_snippet_text(text: String) -> bool:
 ## Appends an in-flow GDScript block to the right-clicked event's actions (event-sheet-style inline
 ## scripting: statements emitted inside the event body).
 func _add_gdscript_action_to_context_row() -> void:
-	if _dock._context_row == null or not (_dock._context_row.source_resource is EventRow):
-		_dock._set_status("Add a GDScript action from an event row.", true)
+	_add_gdscript_action_to_event(_dock._context_row.source_resource if _dock._context_row != null else null)
+
+## C3-style "drop to code here": appends an in-flow GDScript block to the event's actions and opens
+## the code editor on it straight away (C3 opens its script block for editing on add). The block runs
+## right after the event's conditions pass, with the sheet's variables + host in scope — a deliberate,
+## visually-distinct escape hatch (it renders as a merged "GDScript" code cell), not un-lifted residue.
+## `target` may be an EventRow directly (context menu) or null (toolbar/menu → uses the selected event).
+func _add_gdscript_action_to_event(target: Variant) -> void:
+	var target_event: EventRow = target if target is EventRow else _dock._selected_event_for_action()
+	if target_event == null:
+		_dock._set_status("Select an event first — a GDScript action runs inside it.", true)
 		return
-	var target_event: EventRow = _dock._context_row.source_resource as EventRow
+	var target_uid: String = target_event.event_uid
 	var changed: bool = _dock._perform_undoable_sheet_edit("Add GDScript Action", func() -> bool:
 		var inline_raw: RawCodeRow = RawCodeRow.new()
-		inline_raw.code = "pass"
+		inline_raw.code = "# GDScript — runs after this event's conditions pass"
 		target_event.actions.append(inline_raw)
 		return true
 	)
-	if changed:
-		_dock._mark_dirty("Added GDScript action.")
+	if not changed:
+		return
+	_dock._mark_dirty("Added GDScript action.")
+	# The undo funnel replaced the sheet on commit; find the block we just appended on the LIVE event
+	# (by its stable uid) and open the editor on it — like C3 opening the script block immediately.
+	var added: RawCodeRow = null
+	for live_event: Variant in _dock._current_sheet.events:
+		added = _find_appended_raw(live_event, target_uid)
+		if added != null:
+			break
+	# Open the editor on it immediately (C3-style). Headless tests can't pop a window, so guard —
+	# the block was still appended, which is what those tests assert.
+	if added != null and _dock.is_inside_tree():
+		_dock._on_viewport_raw_code_edit_requested(added, true)
+
+## The last in-flow RawCodeRow action on the event whose stable uid matches — the block just appended
+## (the append put it last). Recurses sub-events + groups so a nested event's block is found too.
+static func _find_appended_raw(row: Variant, event_uid: String) -> RawCodeRow:
+	if row is EventGroup:
+		var group: EventGroup = row as EventGroup
+		for child: Variant in (group.events if not group.events.is_empty() else group.rows):
+			var found: RawCodeRow = _find_appended_raw(child, event_uid)
+			if found != null:
+				return found
+		return null
+	if not (row is EventRow):
+		return null
+	var event_row: EventRow = row as EventRow
+	if event_row.event_uid == event_uid:
+		for index: int in range(event_row.actions.size() - 1, -1, -1):
+			if event_row.actions[index] is RawCodeRow:
+				return event_row.actions[index]
+	for sub: Variant in event_row.sub_events:
+		var sub_found: RawCodeRow = _find_appended_raw(sub, event_uid)
+		if sub_found != null:
+			return sub_found
+	return null
 
 ## Returns true when the clipboard text reads like GDScript (conservative: a paste that is
 ## not code must fall through to the internal clipboard untouched).

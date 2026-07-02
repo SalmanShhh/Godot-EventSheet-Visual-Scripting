@@ -120,7 +120,28 @@ static func run() -> bool:
 	editor._add_gdscript_action_to_context_row()
 	all_passed = _check("context menu adds a GDScript action",
 		event.actions.size() == actions_before + 1 and event.actions[event.actions.size() - 1] is RawCodeRow, true) and all_passed
+	all_passed = _check("the added block seeds an editable comment, not a bare pass",
+		(event.actions[event.actions.size() - 1] as RawCodeRow).code.begins_with("# GDScript"), true) and all_passed
+
+	# C3-style toolbar/menu path: "Add Code" targets the SELECTED event (no right-click context).
+	for entry in editor_viewport.get_flat_rows():
+		var sel_row: EventRowData = entry.get("row")
+		if sel_row != null and sel_row.source_resource == event:
+			for index in range(editor_viewport.get_flat_rows().size()):
+				if editor_viewport.get_flat_rows()[index].get("row") == sel_row:
+					editor_viewport._select_row(index)
+	var before_toolbar: int = event.actions.size()
+	editor._on_add_gdscript_action_requested()
+	all_passed = _check("Add Code (toolbar/menu) appends to the selected event",
+		event.actions.size(), before_toolbar + 1) and all_passed
 	editor.free()
+
+	# With NO event selected, the toolbar path reports instead of appending anywhere.
+	var empty_editor: EventSheetEditor = EventSheetEditor.new()
+	empty_editor.setup(EventSheetResource.new())
+	empty_editor.set_undo_redo_manager(NoopUndoManager.new())
+	empty_editor._on_add_gdscript_action_requested()  # no crash, no event to target
+	empty_editor.free()
 
 	return all_passed
 

@@ -84,6 +84,16 @@
   (role-coloured pills per organ, accent-underlined headers, click a header to fold its organ) —
   drawn read-only, so the rail can never mutate the sheet. (`tests/anatomy_panel_test.gd`)
 
+### Added — GDScript as an action (Construct 3-style script blocks)
+
+- **Add Code** on the toolbar (and *Add ▾ → Code (GDScript) on Selected Event*, and the row
+  right-click menu) drops a GDScript block straight into the selected event's actions and opens the
+  code editor on it immediately — the deliberate "drop to code here" escape hatch C3 users reach for,
+  now a discoverable first-class action instead of only appearing as un-lifted residue. The block
+  runs right after the event's conditions pass with the sheet's variables + host in scope, renders as
+  a distinct merged **GDScript** code cell, and seeds an editable comment rather than a bare `pass`.
+  (`tests/inflow_gdscript_test.gd`)
+
 ### Added — speed-of-thought editing: Ghost Row, Param Hop, bulk retune
 
 - **The Ghost Row**: pressing E / C / A opens a type-a-sentence popup at the selected row instead of
