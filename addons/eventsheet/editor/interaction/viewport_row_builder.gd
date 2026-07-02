@@ -346,6 +346,34 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	]
 	return row_data
 
+## The host class ("" when not a match) if a RawCodeRow is EXACTLY the compiler's generated
+## host-binding `_enter_tree` — the boilerplate every host-targeting behaviour pack emits to bind
+## `host = get_parent()`. It carries no authored logic (it's regenerated from the sheet's host), so
+## rendering it as a 4-line GDScript block reads as noise; matched, the row collapses to one muted
+## "Host binding · acts on <Class>" line instead. Strict exact-shape match so a hand-modified
+## _enter_tree stays a real editable block. Static + pure → unit-testable without a viewport.
+static func host_binding_class(code: String) -> String:
+	var lines: PackedStringArray = code.split("\n")
+	# Trim a single trailing blank the importer may keep on the block.
+	while lines.size() > 0 and lines[lines.size() - 1].strip_edges().is_empty():
+		lines.remove_at(lines.size() - 1)
+	if lines.size() != 4:
+		return ""
+	if lines[0] != "func _enter_tree() -> void:":
+		return ""
+	var bind: RegEx = RegEx.new()
+	if bind.compile("^\\thost = get_parent\\(\\) as ([A-Za-z_][A-Za-z0-9_]*)$") != OK:
+		return ""
+	var bind_match: RegExMatch = bind.search(lines[1])
+	if bind_match == null:
+		return ""
+	if lines[2] != "\tif host == null:":
+		return ""
+	# The guard line: `\t\tpush_warning("<Label> behavior requires a <Class> parent.")`.
+	if not (lines[3].begins_with("\t\tpush_warning(\"") and lines[3].rstrip(" ").ends_with("parent.\")")):
+		return ""
+	return bind_match.get_string(1)
+
 ## True Define-shell info for a RawCodeRow that is PURELY an `## @ace_*` annotation block — the
 ## published-verb header a pack author writes above each exposed func. Opened packs keep these as
 ## literal code rows (the shell-lift into EventFunctions is separate work), so without this a pack
@@ -396,6 +424,29 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	row_data.source_resource = raw_row
 	row_data.row_uid = "raw_code_%d" % raw_row.get_instance_id()
 	row_data.disabled = not raw_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
+	# Host-binding boilerplate collapses to one muted "Host binding" line (pure view; the block's
+	# lines are all still there and still edit/round-trip as before).
+	var host_class: String = host_binding_class(raw_row.code)
+	if not host_class.is_empty():
+		row_data.line_count = 1
+		row_data.spans = [
+			_make_span("Host binding", SemanticSpan.SpanType.KEYWORD, {
+				"editable": false,
+				"badge": true,
+				"badge_style": "scope",
+				"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
+				"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
+				"kind": "raw_code",
+				"line_index": 0
+			}),
+			_make_span("acts on the host node · get_parent() as %s" % host_class, SemanticSpan.SpanType.VALUE, {
+				"editable": false,
+				"kind": "raw_code",
+				"line_index": 0,
+				"text_color": EventSheetPalette.TEXT_MUTED
+			})
+		]
+		return row_data
 	var shell: Dictionary = define_shell_info(raw_row.code)
 	if not shell.is_empty():
 		row_data.line_count = 1  # visual collapse only — the underlying lines are all still there
