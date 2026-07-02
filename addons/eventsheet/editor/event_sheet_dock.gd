@@ -2736,6 +2736,10 @@ func _run_diagnostics() -> int:
 	var count: int = view.set_row_diagnostics(diagnostics)
 	if count > 0:
 		view.reveal_and_select_first_diagnostic()
+	# Push the result to the banner's health chip (glance §11) — save-time / on-demand only, so the chip
+	# reflects a real check, never an ambient recompile.
+	if _identity_banner != null:
+		_identity_banner.set_health(count)
 	return count
 
 ## Tools ▸ Check Sheet for Errors — run diagnostics on demand and report.

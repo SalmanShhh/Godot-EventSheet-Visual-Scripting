@@ -44,6 +44,16 @@ static func run() -> bool:
 	ok = _check("plural knobs", str(segments[1]["text"]), "@ 3 knobs") and ok
 	ok = _check("null sheet → all zero", int(SheetIdentityBanner.manifest_for(null)["triggers"]), 0) and ok
 
+	# Health chip (glance §11): calm green when clean, amber flag count otherwise; save-time push only.
+	ok = _check("clean health chip text", str(SheetIdentityBanner.health_chip(0)["text"]), "✓ no issues") and ok
+	ok = _check("flagged health chip text", str(SheetIdentityBanner.health_chip(3)["text"]), "⚠ 3 flagged") and ok
+	var banner: SheetIdentityBanner = SheetIdentityBanner.new()
+	ok = _check("health starts unknown (no false green before a check)", banner._health_known, false) and ok
+	banner.set_health(2)
+	ok = _check("set_health records the count", banner._health_count, 2) and ok
+	ok = _check("set_health marks it known", banner._health_known, true) and ok
+	banner.free()
+
 	return ok
 
 static func _sig(name: String, trigger: bool) -> SignalRow:

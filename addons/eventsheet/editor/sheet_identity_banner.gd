@@ -27,6 +27,26 @@ var _label: String = ""
 var _is_behavior: bool = false
 var _icon: Texture2D = null
 var _manifest_segments: Array = []  # [{text, color}] — the non-empty role pills, computed on refresh
+# Sheet health chip (right end of the identity line): the last diagnostics result, pushed ONLY on a
+# save / Check-Sheet run — never an ambient recompile (the §11 cost law). `_health_known` gates its draw
+# so a freshly-opened, not-yet-checked sheet shows no (possibly false) green.
+var _health_known: bool = false
+var _health_count: int = 0
+var _health_sheet: EventSheetResource = null
+
+## The health chip {text, color} for the banner's right end (glance §11): the calm "works" signal (green
+## ✓) or the flag count (amber ⚠). Static → testable.
+static func health_chip(issue_count: int) -> Dictionary:
+	if issue_count <= 0:
+		return {"text": "✓ no issues", "color": Color("#7fd494")}
+	return {"text": "⚠ %d flagged" % issue_count, "color": Color("#e8bd73")}
+
+## Pushes the last diagnostics result to the health chip. Called from the dock's _run_diagnostics only
+## (save-time / on-demand), so the chip never triggers a recompile on its own.
+func set_health(issue_count: int) -> void:
+	_health_known = true
+	_health_count = issue_count
+	queue_redraw()
 
 ## The published-API census behind the manifest pills: trigger signals, exposed functions split by
 ## return type (void→action, bool→condition, else→expression), and exported "knob" variables — counted
@@ -120,6 +140,10 @@ func update_from_sheet(sheet: EventSheetResource) -> void:
 		var loaded: Resource = load(icon_path)
 		if loaded is Texture2D:
 			_icon = loaded
+	# A different sheet's health is unknown until it's checked — never carry the old result across.
+	if sheet != _health_sheet:
+		_health_known = false
+		_health_sheet = sheet
 	# Publishes Manifest (glance §11): what this behaviour exposes, pinned above the sheet.
 	_manifest_segments = _build_manifest_segments(manifest_for(sheet))
 	var total_height: float = BANNER_HEIGHT + (MANIFEST_HEIGHT if not _manifest_segments.is_empty() else 0.0)
@@ -153,7 +177,16 @@ func _draw() -> void:
 		var glyph: String = "⚙" if _is_behavior else "◆"
 		draw_string(ThemeDB.fallback_font, Vector2(x, identity_baseline), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, accent)
 		x += 18.0
-	draw_string(ThemeDB.fallback_font, Vector2(x, identity_baseline), _label, HORIZONTAL_ALIGNMENT_LEFT, max(size.x - x - 8.0, 10.0), 13, accent)
+	# Health chip on the right end of the identity line (drawn first so the label reserves room for it).
+	var label_right: float = size.x - 8.0
+	if _health_known:
+		var chip: Dictionary = health_chip(_health_count)
+		var chip_text: String = str(chip.get("text"))
+		var chip_width: float = ThemeDB.fallback_font.get_string_size(chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE).x
+		var chip_x: float = size.x - chip_width - 10.0
+		draw_string(ThemeDB.fallback_font, Vector2(chip_x, identity_baseline), chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE, chip.get("color"))
+		label_right = chip_x - 8.0
+	draw_string(ThemeDB.fallback_font, Vector2(x, identity_baseline), _label, HORIZONTAL_ALIGNMENT_LEFT, max(label_right - x, 10.0), 13, accent)
 	# Second band — the Publishes Manifest pills, each in its role hue, " · "-separated.
 	if not _manifest_segments.is_empty():
 		var font: Font = ThemeDB.fallback_font
