@@ -13,6 +13,7 @@ signal ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dic
 ## The fastest gesture: double-click a highlighted VALUE inside an ACE to edit just
 ## that parameter (no full dialog). Emitted with the resolved ACE + param id.
 signal param_value_edit_requested(ace: Resource, param_id: String, current_text: String)
+signal param_value_edit_at_rect_requested(ace: Resource, param_id: String, current_text: String, anchor_screen: Rect2)
 ## Clicking the inline colour swatch on a condition/action cell — opens the colour picker (no dialog).
 signal color_swatch_edit_requested(ace: Resource, param_id: String, current_color: Color)
 ## Dropping a scene-tree node onto a condition/action param VALUE — sets that param to the node reference.
@@ -610,13 +611,17 @@ func _value_text_at(span: SemanticSpan, logical_x: float, font: Font, font_size:
 	var ranges: Array = span.metadata.get("value_ranges", []) if span.metadata is Dictionary else []
 	if ranges.is_empty():
 		return []
-	var origin_x: float = span.rect.position.x
+	# The span's TEXT draws after the object icon/label prefixes — hit-test against where the text
+	# actually is, or clicks on values in labelled rows resolve against a rect shifted left by the
+	# whole label width.
+	var draw_font_size: int = _span_draw_font_size(span, font_size)
+	var origin_x: float = _span_text_origin_x(span, font, font_size)
 	for range_index in range(ranges.size()):
 		var range_entry: Array = ranges[range_index]
 		var start: int = int(range_entry[0])
 		var length: int = int(range_entry[1])
-		var prefix_width: float = font.get_string_size(span.text.substr(0, start), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-		var value_width: float = font.get_string_size(span.text.substr(start, length), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+		var prefix_width: float = font.get_string_size(span.text.substr(0, start), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+		var value_width: float = font.get_string_size(span.text.substr(start, length), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 		if logical_x >= origin_x + prefix_width and logical_x <= origin_x + prefix_width + value_width:
 			var value_text: String = span.text.substr(start, length)
 			var occurrence: int = 0
@@ -625,6 +630,23 @@ func _value_text_at(span: SemanticSpan, logical_x: float, font: Font, font_size:
 					occurrence += 1
 			return [value_text, occurrence]
 	return []
+
+## Where the span's TEXT begins, in logical coordinates — the renderer indents it past the object
+## icon and object label prefixes (matching _draw_spans' advances exactly). Shared by the value
+## hit-test and the Param Hop cursor so their geometry can never drift from the draw.
+func _span_text_origin_x(span: SemanticSpan, font: Font, font_size: int) -> float:
+	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+	var origin_x: float = span.rect.position.x
+	if metadata.get("object_icon") is Texture2D:
+		origin_x += EventRowRenderer.OBJECT_ICON_ADVANCE
+	var object_label: String = str(metadata.get("object_label", ""))
+	if not object_label.is_empty():
+		origin_x += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, _span_draw_font_size(span, font_size)).x
+	return origin_x
+
+func _span_draw_font_size(span: SemanticSpan, font_size: int) -> int:
+	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+	return EventSheetPalette.resolve_font_size(font_size, int(metadata.get("font_size_delta", 0)))
 
 ## Maps a displayed value back to the param that produced it (params are substituted
 ## verbatim into display templates, so str(param) == shown text; equal values
@@ -639,6 +661,170 @@ static func param_id_for_value(ace: Resource, value_text: String, occurrence: in
 				return str(param_key)
 			seen += 1
 	return ""
+
+# ── Param scope (the Param Hop) ───────────────────────────────────────────────────────────────────
+# A keyboard cursor over the SELECTED row's highlighted parameter values. Tab at row scope already
+# means nest/outdent (the dock's structural key), so param scope is entered EXPLICITLY — Enter on a
+# selected row that has values — and inside it Tab/Shift+Tab cycle values, Enter (or typing) opens the
+# one-field editor anchored at the value, Esc drops back to row scope. The cursor is {entry_index}
+# into _param_value_entries; it clears on any selection change or row rebuild (spans are replaced).
+var _param_cursor: Dictionary = {}
+
+func param_scope_active() -> bool:
+	return not _param_cursor.is_empty()
+
+func exit_param_scope() -> void:
+	_param_cursor = {}
+	queue_redraw()
+
+## Every editable parameter VALUE on a row, in visual order: for each condition/trigger/action span,
+## each highlighted range that maps back to a real param (template literals that aren't params are
+## skipped). Entries: {span_index, range_index, text, occurrence, param_id, ace}.
+func _param_value_entries(row_data: EventRowData) -> Array:
+	var entries: Array = []
+	if row_data == null or not (row_data.source_resource is EventRow):
+		return entries
+	for span_index in range(row_data.spans.size()):
+		var span: SemanticSpan = row_data.spans[span_index]
+		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+		var kind: String = str(metadata.get("kind", ""))
+		if kind not in ["condition", "trigger", "action"]:
+			continue
+		var ranges: Array = metadata.get("value_ranges", [])
+		if ranges.is_empty():
+			continue
+		var lane: String = "action" if kind == "action" else "condition"
+		var ace: Resource = row_data.source_resource.trigger if kind == "trigger" \
+				else _resolve_ace_resource(row_data.source_resource, lane, int(metadata.get("ace_index", -1)))
+		if ace == null:
+			continue
+		for range_index in range(ranges.size()):
+			var text: String = span.text.substr(int(ranges[range_index][0]), int(ranges[range_index][1]))
+			var occurrence: int = 0
+			for earlier_index in range(range_index):
+				if span.text.substr(int(ranges[earlier_index][0]), int(ranges[earlier_index][1])) == text:
+					occurrence += 1
+			var param_id: String = param_id_for_value(ace, text, occurrence)
+			if param_id.is_empty():
+				continue
+			entries.append({
+				"span_index": span_index,
+				"range_index": range_index,
+				"text": text,
+				"occurrence": occurrence,
+				"param_id": param_id,
+				"ace": ace,
+			})
+	return entries
+
+## Enter param scope on the selected row (cursor on its first value). False when the row has none —
+## the caller falls back to plain inline span editing, so Enter still works on comment/variable rows.
+func enter_param_scope() -> bool:
+	var entries: Array = _param_value_entries(_row_at(_selected_row_index))
+	if entries.is_empty():
+		return false
+	_param_cursor = {"entry_index": 0}
+	queue_redraw()
+	return true
+
+func _param_scope_step(delta: int) -> void:
+	var entries: Array = _param_value_entries(_row_at(_selected_row_index))
+	if entries.is_empty():
+		exit_param_scope()
+		return
+	var index: int = (int(_param_cursor.get("entry_index", 0)) + delta) % entries.size()
+	if index < 0:
+		index += entries.size()
+	_param_cursor = {"entry_index": index}
+	queue_redraw()
+
+func _param_cursor_entry() -> Dictionary:
+	var entries: Array = _param_value_entries(_row_at(_selected_row_index))
+	var index: int = int(_param_cursor.get("entry_index", -1))
+	if index < 0 or index >= entries.size():
+		return {}
+	return entries[index]
+
+## The Enter key, param-scope aware: inside scope it opens the editor on the cursor value; on a row
+## with values it enters scope; otherwise it falls back to inline span editing. One funnel shared by
+## the viewport's own key handler and the dock's unhandled-key fallback, so both Enters agree.
+func handle_enter_key() -> bool:
+	if param_scope_active():
+		_open_param_cursor_editor()
+		return true
+	if enter_param_scope():
+		return true
+	return begin_edit_selected()
+
+## Opens the shipped one-field editor on the cursor value, anchored at the value's on-screen rect
+## (keyboard flow — the mouse is nowhere near the value).
+func _open_param_cursor_editor() -> void:
+	var entry: Dictionary = _param_cursor_entry()
+	if entry.is_empty():
+		return
+	param_value_edit_at_rect_requested.emit(
+		entry.get("ace"),
+		str(entry.get("param_id")),
+		str((entry.get("ace").get("params") as Dictionary).get(str(entry.get("param_id")), entry.get("text"))),
+		_param_value_screen_rect(entry)
+	)
+
+## The cursor value's rect in screen coordinates (logical span rect + prefix measurement, zoomed,
+## offset by the control's screen position). Builds the row layout on demand so span.rect is fresh.
+func _param_value_screen_rect(entry: Dictionary) -> Rect2:
+	var row_data: EventRowData = _row_at(_selected_row_index)
+	if row_data == null:
+		return Rect2()
+	var font: Font = _get_font()
+	var font_size: int = _get_font_size()
+	_get_or_build_row_layout(_selected_row_index, _get_logical_canvas_width(), font, font_size)
+	var local: Rect2 = _param_value_logical_rect(row_data, entry, font, font_size)
+	var zoom: float = max(_zoom_factor, 0.001)
+	# Headless/detached (tests): no window to be relative to — the zoomed local rect still carries
+	# the size information the assertions care about.
+	var origin: Vector2 = get_screen_position() if is_inside_tree() else Vector2.ZERO
+	return Rect2(origin + local.position * zoom, local.size * zoom)
+
+func _param_value_logical_rect(row_data: EventRowData, entry: Dictionary, font: Font, font_size: int) -> Rect2:
+	var span_index: int = int(entry.get("span_index", -1))
+	if span_index < 0 or span_index >= row_data.spans.size():
+		return Rect2()
+	var span: SemanticSpan = row_data.spans[span_index]
+	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+	var ranges: Array = metadata.get("value_ranges", [])
+	var range_index: int = int(entry.get("range_index", -1))
+	if range_index < 0 or range_index >= ranges.size():
+		return Rect2()
+	var draw_font_size: int = _span_draw_font_size(span, font_size)
+	var text_x: float = _span_text_origin_x(span, font, font_size)
+	var start: int = int(ranges[range_index][0])
+	var length: int = int(ranges[range_index][1])
+	var prefix_width: float = font.get_string_size(span.text.substr(0, start), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+	var value_width: float = font.get_string_size(span.text.substr(start, length), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+	return Rect2(text_x + prefix_width, span.rect.position.y, value_width, span.rect.size.y)
+
+## The param cursor overlay: a soft accent box around the cursor value plus a muted param-name chip
+## just below it — blind Tab-cycling with no name would read worse than the params dialog it replaces.
+func _draw_param_cursor(font: Font, font_size: int) -> void:
+	if not param_scope_active():
+		return
+	var row_data: EventRowData = _row_at(_selected_row_index)
+	var entry: Dictionary = _param_cursor_entry()
+	if row_data == null or entry.is_empty():
+		return
+	var rect: Rect2 = _param_value_logical_rect(row_data, entry, font, font_size).grow_individual(3.0, 1.0, 3.0, 1.0)
+	if rect.size.x <= 0.0:
+		return
+	var accent: Color = _get_event_style().behavior_accent_color
+	draw_rect(rect, Color(accent.r, accent.g, accent.b, 0.16), true)
+	draw_rect(rect, Color(accent.r, accent.g, accent.b, 0.9), false, 1.0)
+	var hint: String = str(entry.get("param_id"))
+	var hint_size: int = maxi(font_size - 3, 9)
+	var hint_width: float = font.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1.0, hint_size).x
+	var chip: Rect2 = Rect2(rect.position + Vector2(0.0, rect.size.y + 2.0), Vector2(hint_width + 10.0, font.get_height(hint_size) + 4.0))
+	draw_rect(chip, Color(0.10, 0.11, 0.13, 0.92), true)
+	draw_string(font, Vector2(chip.position.x + 5.0, chip.position.y + 2.0 + font.get_ascent(hint_size)), hint,
+		HORIZONTAL_ALIGNMENT_LEFT, -1.0, hint_size, EventSheetPalette.TEXT_MUTED)
 
 func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1) -> bool:
 	var now: int = now_msec if now_msec >= 0 else Time.get_ticks_msec()
@@ -844,6 +1030,7 @@ func _draw() -> void:
 			for dot_row in range(3):
 				draw_circle(Vector2(row_rect.position.x + 5.0, row_rect.position.y + row_rect.size.y * 0.5 + (dot_row - 1) * 5.0), 1.4, grip_color)
 	_draw_box_selection_overlay()
+	_draw_param_cursor(font, font_size)
 	_draw_drag_ghost(font, font_size)
 
 ## Event-sheet-style drag ghost: a faint (~0.66 opacity) label of the dragged content following the
@@ -1420,6 +1607,22 @@ func _handle_key(event: InputEventKey) -> void:
 	if _editing_row_index >= 0:
 		_handle_editing_key(event)
 		return
+	# Param scope owns Tab / Esc / Enter / typing while active. The scope is entered explicitly
+	# (Enter below), so Tab at plain row scope still falls through to the dock's nest/outdent —
+	# the two Tabs never fight.
+	if param_scope_active():
+		if event.keycode in [KEY_TAB, KEY_BACKTAB]:
+			_param_scope_step(-1 if (event.shift_pressed or event.keycode == KEY_BACKTAB) else 1)
+			accept_event()
+			return
+		if event.keycode == KEY_ESCAPE:
+			exit_param_scope()
+			accept_event()
+			return
+		if event.keycode in [KEY_ENTER, KEY_KP_ENTER] or (event.unicode > 32 and not event.ctrl_pressed and not event.alt_pressed and not event.meta_pressed):
+			_open_param_cursor_editor()
+			accept_event()
+			return
 	if (event.keycode == KEY_UP or event.keycode == KEY_DOWN) and event.shift_pressed and not event.alt_pressed:
 		# Shift+Arrow grows or shrinks a whole-row range from the selection anchor. From an empty
 		# selection it lands on the first row (Shift+Down used to skip past row 0 to row 1).
@@ -1484,7 +1687,12 @@ func _handle_key(event: InputEventKey) -> void:
 		# actual removal via _delete_selected_content (same as its _unhandled_key_input fallback).
 		delete_requested.emit()
 		accept_event()
-	elif event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_F2]:
+	elif event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+		# Param-scope aware: a row with parameter values enters the value cursor; anything else
+		# falls back to inline span editing. F2 below stays a pure begin-edit escape hatch.
+		handle_enter_key()
+		accept_event()
+	elif event.keycode == KEY_F2:
 		_begin_edit(_selected_row_index, _selected_span_index)
 		accept_event()
 
@@ -1523,6 +1731,8 @@ func _handle_editing_key(event: InputEventKey) -> void:
 			accept_event()
 
 func _refresh_rows() -> void:
+	# Spans are rebuilt below; a param cursor into the old spans would dangle.
+	_param_cursor = {}
 	_root_rows = _build_rows_from_sheet(_sheet)
 	_update_layout_style_signature(_get_font_size())
 	_flat_rows.clear()
@@ -2150,6 +2360,8 @@ func _get_logical_canvas_width() -> float:
 	return max(max(size.x, _get_scroll_width()), 640.0) / max(_zoom_factor, 0.001)
 
 func _select_row(row_index: int, span_index: int = -1) -> void:
+	# The param cursor is bound to the previously selected row's values — moving selection drops it.
+	_param_cursor = {}
 	# Selection state is delegated so event-body selection can include descendant
 	# rows without duplicating toggle/anchor bookkeeping in multiple call sites.
 	var selection_state: Dictionary = _selection_helper.build_single_selection(

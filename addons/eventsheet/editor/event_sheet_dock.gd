@@ -827,6 +827,8 @@ func _build_ui() -> void:
 	_viewport.navigation_probe = _navigate.can_navigate
 	_viewport.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
 	_viewport.param_value_edit_requested.connect(_on_param_value_edit_requested)
+	_viewport.param_value_edit_at_rect_requested.connect(func(ace: Resource, param_id: String, current_text: String, anchor_screen: Rect2) -> void:
+		_inline_params.on_param_value_edit_requested(ace, param_id, current_text, anchor_screen))
 	_viewport.color_swatch_edit_requested.connect(_on_color_swatch_edit_requested)
 	_viewport.param_node_drop_requested.connect(_on_param_node_drop_requested)
 	_viewport.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
@@ -1023,7 +1025,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	elif key_event.keycode in [KEY_DELETE, KEY_BACKSPACE]:
 		_delete_selected_content()
 		accept_event()
-	elif key_event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_F2]:
+	elif key_event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+		# Same param-scope-aware funnel as the viewport's own Enter, so both paths agree.
+		if _viewport != null and _viewport.handle_enter_key():
+			accept_event()
+	elif key_event.keycode == KEY_F2:
 		if _viewport != null and _viewport.begin_edit_selected():
 			accept_event()
 

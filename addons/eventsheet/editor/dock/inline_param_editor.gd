@@ -24,8 +24,10 @@ var _color_swatch_picker: ColorPicker = null
 var _color_swatch_target: Resource = null
 var _color_swatch_key: String = ""
 
-## Double-clicking a highlighted value opens this one-field editor at the mouse.
-func on_param_value_edit_requested(ace: Resource, param_id: String, current_text: String) -> void:
+## Double-clicking a highlighted value opens this one-field editor at the mouse. Keyboard flows
+## (the Param Hop's Enter) pass the value's screen rect instead, so the popup lands under the value
+## the cursor is on rather than wherever the mouse happens to sit.
+func on_param_value_edit_requested(ace: Resource, param_id: String, current_text: String, anchor_screen: Variant = null) -> void:
 	if _param_edit_popup == null:
 		_param_edit_popup = PopupPanel.new()
 		_param_edit_field = LineEdit.new()
@@ -41,7 +43,10 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 	# here on a param the sentence didn't fill.
 	_param_edit_field.placeholder_text = param_id
 	_param_edit_field.tooltip_text = "Editing \"%s\"" % param_id
-	_param_edit_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i(200, 36)))
+	var popup_at: Vector2i = Vector2i(DisplayServer.mouse_get_position())
+	if anchor_screen is Rect2 and (anchor_screen as Rect2).size.x > 0.0:
+		popup_at = Vector2i((anchor_screen as Rect2).position + Vector2(0.0, (anchor_screen as Rect2).size.y + 2.0))
+	_param_edit_popup.popup(Rect2i(popup_at, Vector2i(200, 36)))
 	_param_edit_field.grab_focus()
 	_param_edit_field.select_all()
 
