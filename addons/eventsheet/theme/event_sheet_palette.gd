@@ -74,6 +74,31 @@ const COLOR_CHIP_FG = Color("#9aa1ad")
 const COLOR_CAT_CHIP_BG = Color("#34304f")
 const COLOR_CAT_CHIP_FG = Color("#b3a8dd")
 
+# ── Glance-device colours ─────────────────────────────────────────────────────────────────────
+# The banner manifest pills, the sheet-health chip, and the structural row badges all draw from
+# THIS one named surface — no per-file hex — so a future theme pass retunes the family in one place.
+const COLOR_MANIFEST_TRIGGERS = Color("#7fd494")     # ➜ signal triggers
+const COLOR_MANIFEST_ACTIONS = Color("#f2c879")      # ⚡ exposed actions
+const COLOR_MANIFEST_CONDITIONS = Color("#69ccb3")   # exposed conditions
+const COLOR_MANIFEST_EXPRESSIONS = Color("#d7a6ea")  # ƒx exposed expressions
+const COLOR_MANIFEST_KNOBS = Color("#9cc4ef")        # @ exported designer knobs
+const COLOR_HEALTH_OK = Color("#7fd494")             # "✓ no issues" chip
+const COLOR_HEALTH_WARN = Color("#e8bd73")           # "⚠ N flagged" chip
+const COLOR_BANNER_SEPARATOR = Color(0.62, 0.64, 0.68, 0.55)
+# Structural row badges: dim "setup"/scaffolding, the neutral section header, the brighter
+# "GDScript" code badge, and the amber "⚠ code" lift-note triage badge.
+const COLOR_SETUP_BADGE_BG = Color(0.18, 0.19, 0.21, 0.9)
+const COLOR_SETUP_BADGE_FG = Color(0.5, 0.52, 0.56, 1.0)
+const COLOR_SECTION_BADGE_FG = Color(0.72, 0.74, 0.78, 1.0)
+const COLOR_CODE_BADGE_BG = Color(0.2, 0.21, 0.23, 0.9)
+const COLOR_CODE_BADGE_FG = Color(0.62, 0.65, 0.7, 1.0)
+const COLOR_LIFT_NOTE_BADGE_BG = Color(0.38, 0.3, 0.1, 0.9)
+const COLOR_LIFT_NOTE_BADGE_FG = Color(0.95, 0.82, 0.5, 1.0)
+# The Inspector-group (@export_group) chip on variable rows — blue, distinct from the picker-category
+# purple so "where it sits in the Inspector" never reads as "where it sits in the picker".
+const COLOR_GROUP_CHIP_BG = Color(0.22, 0.34, 0.55, 0.92)
+const COLOR_GROUP_CHIP_FG = Color(0.76, 0.86, 1.0, 1.0)
+
 # ── Trigger tempo badges ──────────────────────────────────────────────────────
 # How OFTEN an event runs, as a filled badge on the trigger row. SIGNAL keeps the shipped green arrow
 # (from the event style) so the common case is byte-identical; the other three tempo classes get their

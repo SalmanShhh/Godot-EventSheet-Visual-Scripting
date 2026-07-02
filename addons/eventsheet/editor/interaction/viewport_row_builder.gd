@@ -52,8 +52,8 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": Color(0.18, 0.19, 0.21, 0.9),
-			"badge_fg": Color(0.5, 0.52, 0.56, 1.0),
+			"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
+			"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
 			"kind": "scaffolding_strip",
 			"line_index": 0
 		}),
@@ -135,8 +135,8 @@ func _build_published_verbs_rows(sheet: EventSheetResource) -> Array[EventRowDat
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": Color(0.18, 0.19, 0.21, 0.9),
-			"badge_fg": Color(0.72, 0.74, 0.78, 1.0),
+			"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
+			"badge_fg": EventSheetPalette.COLOR_SECTION_BADGE_FG,
 			"kind": "published_verbs",
 			"line_index": 0
 		}),
@@ -318,8 +318,8 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 					{
 						"badge": true,
 						"badge_style": "scope",
-						"badge_bg": Color(0.30, 0.26, 0.44, 0.92),
-						"badge_fg": Color(0.85, 0.80, 1.0, 1.0),
+						"badge_bg": EventSheetPalette.COLOR_CAT_CHIP_BG,
+						"badge_fg": EventSheetPalette.COLOR_CAT_CHIP_FG,
 						"kind": "signal_row"
 					}
 				)
@@ -446,14 +446,14 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	# while real logic keeps the brighter "GDScript" badge + primary text. Same row, no codegen change.
 	var is_scaffold: bool = _viewport.is_scaffolding_code(raw_row.code)
 	var badge_label: String = "setup" if is_scaffold else "GDScript"
-	var badge_fg: Color = Color(0.5, 0.52, 0.56, 1.0) if is_scaffold else Color(0.62, 0.65, 0.7, 1.0)
+	var badge_fg: Color = EventSheetPalette.COLOR_SETUP_BADGE_FG if is_scaffold else EventSheetPalette.COLOR_CODE_BADGE_FG
 	var line_fg: Color = EventSheetPalette.TEXT_MUTED if is_scaffold else EventSheetPalette.TEXT_PRIMARY
 	var spans: Array[SemanticSpan] = []
 	spans.append(_make_span(badge_label, SemanticSpan.SpanType.KEYWORD, {
 		"editable": false,
 		"badge": true,
 		"badge_style": "scope",
-		"badge_bg": Color(0.2, 0.21, 0.23, 0.9),
+		"badge_bg": EventSheetPalette.COLOR_CODE_BADGE_BG,
 		"badge_fg": badge_fg,
 		"kind": "raw_code",
 		"line_index": 0
@@ -466,8 +466,8 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
-			"badge_bg": Color(0.38, 0.3, 0.1, 0.9),
-			"badge_fg": Color(0.95, 0.82, 0.5, 1.0),
+			"badge_bg": EventSheetPalette.COLOR_LIFT_NOTE_BADGE_BG,
+			"badge_fg": EventSheetPalette.COLOR_LIFT_NOTE_BADGE_FG,
 			"kind": "lift_note",
 			"line_index": 0
 		}))
@@ -805,8 +805,8 @@ func _build_variable_row(
 						"editable": false,
 						"badge": true,
 						"badge_style": "scope",
-						"badge_bg": Color(0.22, 0.34, 0.55, 0.92),
-						"badge_fg": Color(0.76, 0.86, 1.0, 1.0)
+						"badge_bg": EventSheetPalette.COLOR_GROUP_CHIP_BG,
+						"badge_fg": EventSheetPalette.COLOR_GROUP_CHIP_FG
 					},
 					true
 				)
@@ -830,8 +830,8 @@ func _build_variable_row(
 						"editable": false,
 						"badge": true,
 						"badge_style": "scope",
-						"badge_bg": Color(0.30, 0.26, 0.44, 0.92),
-						"badge_fg": Color(0.85, 0.80, 1.0, 1.0)
+						"badge_bg": EventSheetPalette.COLOR_CAT_CHIP_BG,
+						"badge_fg": EventSheetPalette.COLOR_CAT_CHIP_FG
 					},
 					true
 				)

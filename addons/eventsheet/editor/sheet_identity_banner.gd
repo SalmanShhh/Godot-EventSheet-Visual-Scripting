@@ -16,11 +16,11 @@ const ICON_SIZE := 14.0
 ## its ACE dictionary pinned above the sheet. Role hues match the block/badge families elsewhere.
 const MANIFEST_HEIGHT := 18.0
 const MANIFEST_FONT_SIZE := 12
-const _MANIFEST_TRIGGERS := Color("#7fd494")     # ➜ signal triggers
-const _MANIFEST_ACTIONS := Color("#f2c879")      # ⚡ exposed actions
-const _MANIFEST_CONDITIONS := Color("#69ccb3")   # exposed conditions
-const _MANIFEST_EXPRESSIONS := Color("#d7a6ea")  # ƒx exposed expressions
-const _MANIFEST_KNOBS := Color("#9cc4ef")        # @ exported designer knobs
+const _MANIFEST_TRIGGERS := EventSheetPalette.COLOR_MANIFEST_TRIGGERS
+const _MANIFEST_ACTIONS := EventSheetPalette.COLOR_MANIFEST_ACTIONS
+const _MANIFEST_CONDITIONS := EventSheetPalette.COLOR_MANIFEST_CONDITIONS
+const _MANIFEST_EXPRESSIONS := EventSheetPalette.COLOR_MANIFEST_EXPRESSIONS
+const _MANIFEST_KNOBS := EventSheetPalette.COLOR_MANIFEST_KNOBS
 
 var _viewport: EventSheetViewport = null
 var _label: String = ""
@@ -38,8 +38,8 @@ var _health_sheet: EventSheetResource = null
 ## ✓) or the flag count (amber ⚠). Static → testable.
 static func health_chip(issue_count: int) -> Dictionary:
 	if issue_count <= 0:
-		return {"text": "✓ no issues", "color": Color("#7fd494")}
-	return {"text": "⚠ %d flagged" % issue_count, "color": Color("#e8bd73")}
+		return {"text": "✓ no issues", "color": EventSheetPalette.COLOR_HEALTH_OK}
+	return {"text": "⚠ %d flagged" % issue_count, "color": EventSheetPalette.COLOR_HEALTH_WARN}
 
 ## Pushes the last diagnostics result to the health chip. Called from the dock's _run_diagnostics only
 ## (save-time / on-demand), so the chip never triggers a recompile on its own.
@@ -192,7 +192,7 @@ func _draw() -> void:
 		var font: Font = ThemeDB.fallback_font
 		var mx: float = 12.0
 		var manifest_baseline: float = BANNER_HEIGHT + MANIFEST_HEIGHT * 0.5 + 4.0
-		var separator_color: Color = Color(0.62, 0.64, 0.68, 0.55)
+		var separator_color: Color = EventSheetPalette.COLOR_BANNER_SEPARATOR
 		for segment_index: int in range(_manifest_segments.size()):
 			if segment_index > 0:
 				draw_string(font, Vector2(mx, manifest_baseline), " · ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE, separator_color)
