@@ -88,6 +88,7 @@ var _scroll: ScrollContainer = null
 var _workspace_body: HSplitContainer = null
 var _content_host: VBoxContainer = null
 var _open_sheets_panel: EventSheetOpenSheetsDock = null
+var _anatomy_panel: BehaviourAnatomyPanel = null  # left rail, under Open Sheets (behaviour_anatomy_panel.gd)
 const _OPEN_SHEETS_PANEL_META: String = "eventsheets_open_sheets_panel"  # editor metadata: {shown, collapsed}
 var _column_header: SheetColumnHeader = null
 var _identity_banner: SheetIdentityBanner = null
@@ -326,6 +327,7 @@ func _activate_tab(index: int) -> void:
 	_refresh_ace_registry()
 	_viewport.set_sheet(_current_sheet)
 	_sync_split_sheet()
+	_refresh_anatomy_panel()
 	_theme_manager._sync_active_theme_binding()
 	_refresh_title_strip()
 	_theme_manager._refresh_theme_picker_selection()
@@ -792,11 +794,23 @@ func _build_ui() -> void:
 	_open_sheets_panel.reopen_requested.connect(reopen_sheet_path)
 	_open_sheets_panel.collapse_toggled.connect(_on_open_sheets_panel_collapsed)
 	open_tabs_changed.connect(_refresh_open_sheets_panel)
+	# The Anatomy panel shares the left rail below Open Sheets: the active behaviour's organs
+	# (knobs/state/triggers/actions/conditions/expressions/uses) at a glance, click to jump.
+	_anatomy_panel = BehaviourAnatomyPanel.new()
+	_anatomy_panel.reveal_requested.connect(func(resource: Resource) -> void:
+		var view: EventSheetViewport = _active_view()
+		if view != null:
+			view.reveal_resource(resource))
+	var left_rail: VBoxContainer = VBoxContainer.new()
+	left_rail.name = "EventSheetLeftRail"
+	left_rail.add_theme_constant_override("separation", 8)
+	left_rail.add_child(_open_sheets_panel)
+	left_rail.add_child(_anatomy_panel)
 	_workspace_body = HSplitContainer.new()
 	_workspace_body.name = "EventSheetWorkspaceBody"
 	_workspace_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_workspace_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_workspace_body.add_child(_open_sheets_panel)
+	_workspace_body.add_child(left_rail)
 	_workspace_body.add_child(_content_host)
 	root.add_child(_workspace_body)
 	_apply_open_sheets_panel_prefs()
@@ -1865,9 +1879,16 @@ func _toggle_open_sheets_panel(view_popup: PopupMenu) -> void:
 	_save_open_sheets_panel_prefs()
 
 ## The panel collapsed to / expanded from a strip: snap the split divider to match, and remember it.
+func _refresh_anatomy_panel() -> void:
+	if _anatomy_panel != null:
+		_anatomy_panel.refresh(_current_sheet)
+
 func _on_open_sheets_panel_collapsed(collapsed: bool) -> void:
 	if _workspace_body != null:
 		_workspace_body.split_offset = 26 if collapsed else 200
+	# The whole left rail narrows to the strip — the Anatomy panel can't fit, so it follows.
+	if _anatomy_panel != null:
+		_anatomy_panel.visible = not collapsed
 	_save_open_sheets_panel_prefs()
 
 ## Per-project editor metadata for the panel's shown/collapsed state (survives editor restarts).
@@ -1893,6 +1914,8 @@ func _apply_open_sheets_panel_prefs() -> void:
 	var prefs: Dictionary = _read_open_sheets_panel_prefs()
 	_open_sheets_panel.visible = bool(prefs.get("shown", true))
 	_open_sheets_panel.set_collapsed(bool(prefs.get("collapsed", false)))
+	if _anatomy_panel != null:
+		_anatomy_panel.visible = not bool(prefs.get("collapsed", false))
 	_refresh_open_sheets_panel()
 
 func _toggle_code_panel() -> void:
@@ -3923,6 +3946,7 @@ func _refresh_after_edit() -> void:
 	_refresh_exposed_node()
 	_refresh_variable_panel()
 	_refresh_code_panel()
+	_refresh_anatomy_panel()
 
 # Live-reload binding to the active theme .tres → dock/theme_manager.gd. Called from _activate_tab /
 # _refresh_after_edit (via _theme_manager._sync_active_theme_binding directly); the delegate stays for
