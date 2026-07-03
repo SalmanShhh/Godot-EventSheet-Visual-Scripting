@@ -45,7 +45,17 @@ static func run() -> bool:
 	all_passed = _check("the kind lifts back to a real EnumRow resource",
 		enum_claim.get("resource") is EnumRow and (enum_claim.get("resource") as EnumRow).enum_name == "Mode", true) and all_passed
 	all_passed = _check("resource kinds stay out of the generic add surfaces",
-		EventSheetBlockRegistry.addable_kinds().any(func(kind: EventSheetBlockKind) -> bool: return kind.kind_id == "enum"), false) and all_passed
+		EventSheetBlockRegistry.addable_kinds().any(func(kind: EventSheetBlockKind) -> bool: return kind.kind_id == "enum" or kind.kind_id == "signal"), false) and all_passed
+	var signal_probe: SignalRow = SignalRow.new()
+	signal_probe.signal_name = "hurt"
+	signal_probe.params = PackedStringArray(["amount: int"])
+	var signal_kind: EventSheetBlockKind = EventSheetBlockRegistry.kind_for(signal_probe)
+	all_passed = _check("SignalRow resolves to the registered signal kind", signal_kind != null and signal_kind.kind_id == "signal", true) and all_passed
+	all_passed = _check("the signal kind emits the canonical declaration",
+		signal_kind.emit_lines(signal_probe), PackedStringArray(["signal hurt(amount: int)"])) and all_passed
+	var signal_claim: Dictionary = signal_kind.lift(PackedStringArray(["signal hurt(amount: int)"]), 0)
+	all_passed = _check("the signal kind lifts back to a real SignalRow",
+		signal_claim.get("resource") is SignalRow and (signal_claim.get("resource") as SignalRow).signal_name == "hurt", true) and all_passed
 
 	# ── P2: pack-defined kinds register zero-config from eventsheet_addons/ ──
 	var note_kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind("demo.note")

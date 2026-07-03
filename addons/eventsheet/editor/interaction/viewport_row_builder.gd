@@ -339,9 +339,10 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	row_data.row_uid = "signal_%s_%d" % [str(signal_row.get_instance_id()), indent]
 	row_data.disabled = not signal_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
-	var declaration: String = signal_row.signal_name
-	if not signal_row.params.is_empty():
-		declaration += "(%s)" % ", ".join(signal_row.params)
+	# The declaration text comes from the registered "signal" resource kind - the same summary
+	# contract every Custom Block kind renders through.
+	var signal_kind: EventSheetBlockKind = EventSheetBlockRegistry.kind_for(signal_row)
+	var declaration: String = signal_kind.summary_for(signal_row) if signal_kind != null else signal_row.signal_name
 	# A trigger signal (a `## @ace_trigger` block folded onto the row on import) is a first-class
 	# "declare a trigger ACE" block, NOT raw scaffolding: it renders like a Variable row — a "trigger"
 	# badge, the friendly ACE name, an optional category chip — with the underlying `signal …` declaration

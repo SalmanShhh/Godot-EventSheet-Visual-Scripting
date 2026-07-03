@@ -1732,15 +1732,13 @@ static func _class_description_lines(sheet: EventSheetResource) -> PackedStringA
 	return out
 
 static func _emit_signal_line(signal_row: SignalRow) -> String:
-	if signal_row == null or not signal_row.enabled or signal_row.signal_name.strip_edges().is_empty():
+	# SignalRow is a registered RESOURCE kind on the Custom Block API - like enums, the
+	# built-in's declaration contract dispatches through the registry.
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.kind_for(signal_row)
+	if kind == null:
 		return ""
-	var params: PackedStringArray = PackedStringArray()
-	for param: String in signal_row.params:
-		if not param.strip_edges().is_empty():
-			params.append(param.strip_edges())
-	if params.is_empty():
-		return "signal %s" % signal_row.signal_name.strip_edges()
-	return "signal %s(%s)" % [signal_row.signal_name.strip_edges(), ", ".join(params)]
+	var emitted: PackedStringArray = kind.emit_lines(signal_row)
+	return "" if emitted.is_empty() else emitted[0]
 
 ## Trigger-ACE annotation lines emitted ABOVE a trigger SignalRow's `signal` declaration, so the
 ## signal publishes as a trigger ACE (a code-free alternative to a hand-written @ace_trigger block).

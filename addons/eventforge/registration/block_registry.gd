@@ -61,6 +61,7 @@ static func _ensure_built_ins() -> void:
 	register_kind(PreloadBlockKind.new())
 	register_kind(RegionBlockKind.new())
 	register_kind(EnumBlockKind.new())
+	register_kind(SignalBlockKind.new())
 	rescan_pack_kinds()
 
 ## Zero-config pack kinds, mirroring how ACE providers register: any script under
@@ -186,6 +187,72 @@ class EnumBlockKind extends EventSheetBlockKind:
 			if not member.strip_edges().is_empty():
 				members.append(member.strip_edges())
 		return members
+
+
+# ── Built-in RESOURCE kind: signal declarations (`signal hit(amount: int)`) ──
+# Second dogfooded built-in: SignalRow's canonical DECLARATION contract (emit + byte-gated lift
+# + summary) runs through the registry. The trigger-annotation fold (`## @ace_trigger` blocks
+# absorbing onto the row) stays with the importer - it is pending-block surgery across rows,
+# not a per-row contract.
+class SignalBlockKind extends EventSheetBlockKind:
+	func _init() -> void:
+		kind_id = "signal"
+		title = "signal"
+
+	func handles(entry: Resource) -> bool:
+		return entry is SignalRow
+
+	func addable() -> bool:
+		return false
+
+	func source_map_kind() -> String:
+		return "signal"
+
+	## Canonical single-line form; the importer's verify-lift depends on this exact shape.
+	func emit_lines(entry: Resource) -> PackedStringArray:
+		var signal_row: SignalRow = entry as SignalRow
+		if signal_row == null or not signal_row.enabled or signal_row.signal_name.strip_edges().is_empty():
+			return PackedStringArray()
+		var params: PackedStringArray = _clean_params(signal_row)
+		if params.is_empty():
+			return PackedStringArray(["signal %s" % signal_row.signal_name.strip_edges()])
+		return PackedStringArray(["signal %s(%s)" % [signal_row.signal_name.strip_edges(), ", ".join(params)]])
+
+	func lift(lines: PackedStringArray, i: int) -> Dictionary:
+		var line: String = lines[i]
+		if not line.begins_with("signal "):
+			return {}
+		var signal_regex: RegEx = RegEx.new()
+		if signal_regex.compile("^signal ([A-Za-z_][A-Za-z0-9_]*)(?:\\((.*)\\))?$") != OK:
+			return {}
+		var signal_match: RegExMatch = signal_regex.search(line)
+		if signal_match == null:
+			return {}
+		var lifted: SignalRow = SignalRow.new()
+		lifted.signal_name = signal_match.get_string(1)
+		var params_text: String = signal_match.get_string(2)
+		if not params_text.is_empty():
+			lifted.params = PackedStringArray(params_text.split(", "))
+		var emitted: PackedStringArray = emit_lines(lifted)
+		if emitted.size() != 1 or emitted[0] != line:
+			return {}
+		return {"resource": lifted, "consumed": 1}
+
+	func summary_for(entry: Resource) -> String:
+		var signal_row: SignalRow = entry as SignalRow
+		if signal_row == null:
+			return ""
+		var declaration: String = signal_row.signal_name
+		if not signal_row.params.is_empty():
+			declaration += "(%s)" % ", ".join(signal_row.params)
+		return declaration
+
+	func _clean_params(signal_row: SignalRow) -> PackedStringArray:
+		var params: PackedStringArray = PackedStringArray()
+		for param: String in signal_row.params:
+			if not param.strip_edges().is_empty():
+				params.append(param.strip_edges())
+		return params
 
 
 # ── Built-in kind: Region marker (`#region Combat` / `#endregion`) ──

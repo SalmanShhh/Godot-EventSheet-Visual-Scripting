@@ -399,22 +399,15 @@ func _try_lift_enum(line: String) -> EnumRow:
 ## Lifts a canonical signal declaration to a SignalRow when re-emission reproduces the
 ## line exactly (the verify-lift rule); other formats stay verbatim blocks.
 func _try_lift_signal(line: String) -> SignalRow:
-	if not line.begins_with("signal "):
+	# SignalRow is a registered RESOURCE kind on the Custom Block API - the declaration lift
+	# dispatches through the same byte-gated contract pack kinds use. The trigger-annotation
+	# fold stays at the call site (_absorb_signal_trigger_annotations): it is cross-row pending
+	# surgery, not a per-row contract.
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind("signal")
+	if kind == null:
 		return null
-	var signal_regex: RegEx = RegEx.new()
-	if signal_regex.compile("^signal ([A-Za-z_][A-Za-z0-9_]*)(?:\\((.*)\\))?$") != OK:
-		return null
-	var signal_match: RegExMatch = signal_regex.search(line)
-	if signal_match == null:
-		return null
-	var lifted: SignalRow = SignalRow.new()
-	lifted.signal_name = signal_match.get_string(1)
-	var params_text: String = signal_match.get_string(2)
-	if not params_text.is_empty():
-		lifted.params = PackedStringArray(params_text.split(", "))
-	if SheetCompiler._emit_signal_line(lifted) != line:
-		return null
-	return lifted
+	var claim: Dictionary = kind.lift(PackedStringArray([line]), 0)
+	return claim.get("resource", null) as SignalRow if not claim.is_empty() else null
 
 ## When a signal lifts, pull a directly-preceding `## @ace_trigger` (+ optional `## @ace_name` /
 ## `## @ace_category`) block off the pending lines onto the SignalRow — the reverse of the compiler's
