@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - the export-coverage tail: password/expression/link + flagged easing
+
+- **The annotation-less PropertyHints are now named presets**: "Password field",
+  "Expression field", and "Linked axes" ship as canonical `@export_custom(PROPERTY_HINT_…)`
+  lines, round-trip byte-gated like every other family, and appear in the Inspector-look
+  picker for their types (String / vectors). **Flagged exp-easing**
+  (`@export_exp_easing("attenuation")`, `"positive_only"`) rounds out the easing story with
+  two dedicated looks for floats.
+
 ### Added - subgroups by the same drag, and a starter that teaches the options
 
 - **One level deeper, same gesture**: dropping a variable onto a variable it ALREADY shares a

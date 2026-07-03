@@ -102,6 +102,31 @@ static func run() -> bool:
 	all_passed = _check("dict path emits layer masks",
 		authored_output.contains("@export_flags_3d_physics var team_layers: int = 0"), true) and all_passed
 
+	# ── The @export_custom presets + flagged exp-easing round-trip the same way ──
+	var tail_source: String = "extends Node
+
+@export_custom(PROPERTY_HINT_PASSWORD, \"\") var api_key: String = \"\"
+@export_custom(PROPERTY_HINT_LINK, \"\") var cell_size: Vector2 = Vector2.ZERO
+@export_exp_easing(\"attenuation\") var falloff: float = 1.0
+"
+	var tail_sheet: EventSheetResource = importer.import_external_source(tail_source)
+	tail_sheet.external_source_path = "user://export_tail.gd"
+	var tail_by_name: Dictionary = {}
+	for entry: Variant in tail_sheet.events:
+		if entry is LocalVariable:
+			tail_by_name[(entry as LocalVariable).name] = entry
+	var api_key: LocalVariable = tail_by_name.get("api_key")
+	all_passed = _check("password preset lifts structured",
+		str(api_key.attributes.get("custom_preset", "")) if api_key != null else "missing", "password") and all_passed
+	var cell: LocalVariable = tail_by_name.get("cell_size")
+	all_passed = _check("linked-axes preset lifts on a Vector2",
+		str(cell.attributes.get("custom_preset", "")) if cell != null else "missing", "link") and all_passed
+	var falloff: LocalVariable = tail_by_name.get("falloff")
+	all_passed = _check("flagged exp-easing lifts structured",
+		(falloff.attributes.get("exp_easing_flags", []) as Array) == ["attenuation"] if falloff != null else false, true) and all_passed
+	all_passed = _check("the tail file round-trips byte-identically",
+		str(SheetCompiler.compile(tail_sheet, "user://export_tail.gd").get("output", "")), tail_source) and all_passed
+
 	# ── The dialog's look parsing (pure): labels with and without explicit values ──
 	var parsed_labels: Array = VariableDialog._parse_look_labels("Fire:1, Ice, Poison:4")
 	all_passed = _check("look labels parse with mixed values",

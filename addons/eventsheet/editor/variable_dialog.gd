@@ -992,6 +992,11 @@ const _LOOK_PRESETS: Array[Dictionary] = [
 	{"id": "layers_3d_navigation", "label": "3D navigation layers grid", "types": ["int"], "detail": ""},
 	{"id": "layers_avoidance", "label": "Avoidance layers grid", "types": ["int"], "detail": ""},
 	{"id": "node_path", "label": "Node picker with a type filter", "types": ["NodePath"], "detail": "types, e.g. Button, TouchScreenButton"},
+	{"id": "preset_password", "label": "Password field (dots, not text)", "types": ["String"], "detail": ""},
+	{"id": "preset_expression", "label": "Expression field (math input)", "types": ["String"], "detail": ""},
+	{"id": "preset_link", "label": "Linked axes (one slider drives all)", "types": ["Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i"], "detail": ""},
+	{"id": "easing_attenuation", "label": "Easing curve for attenuation", "types": ["float"], "detail": ""},
+	{"id": "easing_positive", "label": "Easing curve (positive only)", "types": ["float"], "detail": ""},
 	{"id": "storage", "label": "Saved but hidden (storage)", "types": [], "detail": ""},
 ]
 
@@ -1082,6 +1087,22 @@ func _fold_look_attributes(attributes: Dictionary, type_name: String) -> void:
 					attributes["node_path_types"] = node_types
 		"storage":
 			attributes["storage"] = true
+		"preset_password":
+			if type_name == "String":
+				attributes["custom_preset"] = "password"
+		"preset_expression":
+			if type_name == "String":
+				attributes["custom_preset"] = "expression"
+		"preset_link":
+			attributes["custom_preset"] = "link"
+		"easing_attenuation":
+			if type_name == "float":
+				attributes["exp_easing"] = true
+				attributes["exp_easing_flags"] = ["attenuation"]
+		"easing_positive":
+			if type_name == "float":
+				attributes["exp_easing"] = true
+				attributes["exp_easing_flags"] = ["positive_only"]
 		_:
 			if _selected_look_id().begins_with("layers_") and type_name == "int":
 				attributes["layers"] = _selected_look_id().trim_prefix("layers_")
@@ -1109,6 +1130,10 @@ func _prefill_look(existing: Dictionary) -> void:
 	var detail: String = ""
 	if bool(existing.get("storage", false)):
 		look_id = "storage"
+	elif not str(existing.get("custom_preset", "")).is_empty():
+		look_id = "preset_%s" % str(existing.get("custom_preset"))
+	elif existing.get("exp_easing_flags") is Array and not (existing.get("exp_easing_flags") as Array).is_empty():
+		look_id = "easing_attenuation" if (existing.get("exp_easing_flags") as Array).has("attenuation") else "easing_positive"
 	elif existing.get("file") is Dictionary:
 		var file_spec: Dictionary = existing.get("file")
 		var is_global: bool = bool(file_spec.get("global", false))

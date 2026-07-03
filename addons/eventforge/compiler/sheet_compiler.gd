@@ -1974,6 +1974,26 @@ static func _warn_if_deprecated(provider_id: String, ace_id: String, warnings: A
 static func _structured_hint_prefix(attributes: Dictionary, type_name: String) -> String:
 	if bool(attributes.get("storage", false)):
 		return "@export_storage "
+	# PropertyHints with no dedicated annotation ride @export_custom as named presets - the
+	# dialog says "Password field", the file says exactly this.
+	match str(attributes.get("custom_preset", "")):
+		"password":
+			if type_name == "String":
+				return "@export_custom(PROPERTY_HINT_PASSWORD, \"\") "
+		"expression":
+			if type_name == "String":
+				return "@export_custom(PROPERTY_HINT_EXPRESSION, \"\") "
+		"link":
+			if type_name in ["Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i"]:
+				return "@export_custom(PROPERTY_HINT_LINK, \"\") "
+	# Exp-easing WITH flags (plain exp_easing keeps its original branch, byte-unchanged).
+	if type_name == "float" and bool(attributes.get("exp_easing", false)) and attributes.get("exp_easing_flags") is Array and not (attributes.get("exp_easing_flags") as Array).is_empty():
+		var easing_flags: PackedStringArray = PackedStringArray()
+		for easing_flag: Variant in attributes.get("exp_easing_flags"):
+			if str(easing_flag) in ["attenuation", "positive_only"]:
+				easing_flags.append("\"%s\"" % str(easing_flag))
+		if not easing_flags.is_empty():
+			return "@export_exp_easing(%s) " % ", ".join(easing_flags)
 	var numeric: bool = type_name == "int" or type_name == "float"
 	if attributes.get("range") is Dictionary and numeric:
 		var range_spec: Dictionary = attributes.get("range")

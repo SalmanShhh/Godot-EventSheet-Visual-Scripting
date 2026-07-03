@@ -388,6 +388,22 @@ func _extract_structured_hint(lifted: LocalVariable, line: String) -> void:
 	var candidate: Dictionary = {}
 	if hint == "@export_storage":
 		candidate["storage"] = true
+	elif hint == "@export_custom(PROPERTY_HINT_PASSWORD, \"\")" and lifted.type_name == "String":
+		candidate["custom_preset"] = "password"
+	elif hint == "@export_custom(PROPERTY_HINT_EXPRESSION, \"\")" and lifted.type_name == "String":
+		candidate["custom_preset"] = "expression"
+	elif hint == "@export_custom(PROPERTY_HINT_LINK, \"\")" and lifted.type_name in ["Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i"]:
+		candidate["custom_preset"] = "link"
+	elif hint.begins_with("@export_exp_easing(") and lifted.type_name == "float":
+		var easing_flags: Array = []
+		for easing_flag: String in _quoted_arguments(hint):
+			if not easing_flag in ["attenuation", "positive_only"]:
+				return
+			easing_flags.append(easing_flag)
+		if easing_flags.is_empty():
+			return
+		candidate["exp_easing"] = true
+		candidate["exp_easing_flags"] = easing_flags
 	elif hint.begins_with("@export_range("):
 		var range_spec: Dictionary = _parse_range_hint(hint)
 		if range_spec.is_empty():
