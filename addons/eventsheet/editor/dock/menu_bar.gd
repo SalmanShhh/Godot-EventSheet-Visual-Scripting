@@ -86,7 +86,18 @@ func build(root: Node) -> void:
 	add_popup.add_item("Function…", 3)
 	add_popup.add_separator()
 	add_popup.add_item("Code (GDScript) on Selected Event", 4)
+	# Custom Block API kinds (preloads, region markers, registered pack kinds): one item per
+	# registered kind, ids offset by 100 so the fixed ids above never collide.
+	add_popup.add_separator()
+	var registered_kinds: Array[EventSheetBlockKind] = EventSheetBlockRegistry.all_kinds()
+	for kind_index: int in range(registered_kinds.size()):
+		add_popup.add_item("%s…" % registered_kinds[kind_index].title, 100 + kind_index)
 	add_popup.id_pressed.connect(func(id: int) -> void:
+		if id >= 100:
+			var kinds_now: Array[EventSheetBlockKind] = EventSheetBlockRegistry.all_kinds()
+			if id - 100 < kinds_now.size():
+				_dock._open_custom_block_add(kinds_now[id - 100].kind_id)
+			return
 		match id:
 			0: _dock._on_add_signal_event_requested()
 			1: _dock._on_add_global_variable_requested()

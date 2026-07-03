@@ -1,6 +1,8 @@
 # SPEC - The Custom Block API: register your own non-ACE row kinds
 
-**Status:** designed (this doc); implementation phased P1-P3 below.
+**Status:** P1 SHIPPED (registry + CustomBlockRow + all four generic seams + the schema-driven
+add/edit dialog + Add-menu entries + the Preload Resource and Region proof kinds;
+`tests/custom_block_test.gd`). P2 (pack-defined kinds via the addon scanner) and P3 next.
 **Author trigger (user, verbatim):** *"design a Custom API for making custom event blocks for
 special blocks that aren't ACEs that can be used for a myriad of things such as Variables,
 Includes, custom functions or anything else!"*

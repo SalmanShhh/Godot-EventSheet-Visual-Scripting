@@ -14,6 +14,11 @@
 - **Two built-in proof kinds**: **Preload Resource** (`const Sfx := preload("res://…")`) and
   **Region marker** (`#region Name` / `#endregion`) - both now open as first-class rows in any
   `.gd` sheet instead of raw GDScript blocks. (`tests/custom_block_test.gd`)
+- **Add + edit UX, zero UI code per kind**: every registered kind gets an entry in the
+  **Add ▾** menu and a schema-driven dialog (a text field per String, a checkbox per bool, a
+  number spinner per int/float) built straight from its `fields()` schema
+  (`dock/custom_block_dialog.gd`); double-clicking a block row opens the same dialog prefilled.
+  Both paths apply through the undo funnel.
 
 ### Added - Custom Block API design
 

@@ -170,6 +170,7 @@ var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # edi
 var _find_bar_glue: EventSheetFindBar = EventSheetFindBar.new()  # Ctrl+F find bar + Replace-All across the sheet + _replace_in_rows recursion (dock/find_bar.gd)
 var _clipboard_glue: EventSheetClipboard = EventSheetClipboard.new()  # copy/paste: internal clipboard + portable snippets + raw-GDScript paste (owns _clipboard state) (dock/clipboard.gd)
 var _quick_prompts: EventSheetQuickPromptDialogs = EventSheetQuickPromptDialogs.new()  # one-field prompt popups: Extract-to-Function name + Conditional Breakpoint + Group editor (dock/quick_prompt_dialogs.gd)
+var _custom_block_dialog: EventSheetCustomBlockDialog = EventSheetCustomBlockDialog.new()  # Custom Block API: schema-driven add/edit dialog for registered kinds (dock/custom_block_dialog.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -267,6 +268,7 @@ func _ensure_editor_dialogs_initialized() -> void:
 	_find_bar_glue.init(self)
 	_clipboard_glue.init(self)
 	_quick_prompts.init(self)
+	_custom_block_dialog.init(self)
 	# Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
 	_variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
 	_variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
@@ -872,6 +874,7 @@ func _build_ui() -> void:
 	_viewport.with_node_edit_requested.connect(_open_with_node_dialog)
 	_viewport.enum_edit_requested.connect(_open_enum_dialog)
 	_viewport.signal_edit_requested.connect(_open_signal_dialog)
+	_viewport.custom_block_edit_requested.connect(_open_custom_block_dialog)
 	_viewport.function_edit_requested.connect(_function_dialog_glue._open_function_dialog_for)
 	_viewport.variable_group_requested.connect(_variable_grouping.on_group_requested)
 	_viewport.variable_group_rename_requested.connect(_variable_grouping.on_rename_requested)
@@ -2202,6 +2205,13 @@ func _open_enum_dialog(enum_resource: Resource) -> void:  # viewport enum_edit_r
 
 func _open_signal_dialog(signal_resource: Resource) -> void:  # viewport signal_edit_requested
 	_struct_rows.open_signal_dialog(signal_resource)
+
+# Custom Block API rows (dock/custom_block_dialog.gd): edit on double-click, add from the Add menu.
+func _open_custom_block_dialog(block_resource: Resource) -> void:  # viewport custom_block_edit_requested
+	_custom_block_dialog.open_edit(block_resource)
+
+func _open_custom_block_add(kind_id: String) -> void:  # Add menu
+	_custom_block_dialog.open_add(kind_id)
 
 func _open_match_dialog(match_resource: Resource) -> void:  # viewport match_edit_requested
 	_struct_rows.open_match_dialog(match_resource)

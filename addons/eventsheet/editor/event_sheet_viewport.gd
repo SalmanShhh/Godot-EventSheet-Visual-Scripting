@@ -48,6 +48,7 @@ signal pick_filter_edit_requested(event_row: Resource, pick_index: int)
 signal with_node_edit_requested(event_row: Resource)
 ## Emitted when an enum row is double-clicked.
 signal enum_edit_requested(enum_row: Resource)
+signal custom_block_edit_requested(block_row: Resource)
 ## Emitted when a signal row is double-clicked.
 signal signal_edit_requested(signal_row: Resource)
 signal function_edit_requested(event_function: Resource)
@@ -1266,6 +1267,11 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 			# Enum rows open the enum dialog.
 			if row_data != null and row_data.source_resource is EnumRow:
 				enum_edit_requested.emit(row_data.source_resource)
+				accept_event()
+				return
+			# Custom Block API rows open the kind's schema dialog.
+			if row_data != null and row_data.source_resource is CustomBlockRow:
+				custom_block_edit_requested.emit(row_data.source_resource)
 				accept_event()
 				return
 			# Signal rows open the signal dialog.

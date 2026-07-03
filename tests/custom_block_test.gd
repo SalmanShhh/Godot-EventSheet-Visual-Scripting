@@ -78,6 +78,47 @@ static func run() -> bool:
 	all_passed = _check("duplicate keeps kind_id", clone.kind_id, "preload") and all_passed
 	all_passed = _check("duplicate keeps fields", str(clone.fields.get("path", "")), "res://sfx/jump.ogg") and all_passed
 
+	# ── The generic schema dialog: add builds from defaults, edit prefills + applies undoably ──
+	var dialog_sheet: EventSheetResource = EventSheetResource.new()
+	dialog_sheet.host_class = "Node2D"
+	var edit_target: CustomBlockRow = CustomBlockRow.new()
+	edit_target.kind_id = "preload"
+	edit_target.fields = {"name": "Music", "path": "res://music/theme.ogg"}
+	dialog_sheet.events.append(edit_target)
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(dialog_sheet)
+	var block_dialog: EventSheetCustomBlockDialog = dock._custom_block_dialog
+	# Edit the LIVE resource from the live sheet (setup/undo replace resources; the viewport
+	# always emits the live one - a held stale reference would silently edit a dead copy).
+	var live_target: CustomBlockRow = null
+	for entry: Variant in dock._current_sheet.events:
+		if entry is CustomBlockRow:
+			live_target = entry
+	block_dialog.open_edit(live_target)
+	all_passed = _check("edit dialog prefills the constant name",
+		(block_dialog._field_controls.get("name") as LineEdit).text, "Music") and all_passed
+	(block_dialog._field_controls.get("path") as LineEdit).text = "res://music/boss.ogg"
+	block_dialog._apply()
+	# The undo funnel REPLACES resources on commit - re-fetch the live block from the live sheet.
+	var live_block: CustomBlockRow = null
+	for entry: Variant in dock._current_sheet.events:
+		if entry is CustomBlockRow:
+			live_block = entry
+	all_passed = _check("edit applies through the undo funnel",
+		str(live_block.fields.get("path", "")), "res://music/boss.ogg") and all_passed
+	block_dialog.open_add("region")
+	all_passed = _check("add dialog builds a bool field for the region fence",
+		block_dialog._field_controls.get("is_end") is CheckBox, true) and all_passed
+	(block_dialog._field_controls.get("label") as LineEdit).text = "Combat"
+	block_dialog._apply()
+	var region_count: int = 0
+	for entry: Variant in dock._current_sheet.events:
+		if entry is CustomBlockRow and (entry as CustomBlockRow).kind_id == "region":
+			region_count += 1
+	all_passed = _check("add inserts a new region block", region_count, 1) and all_passed
+	dock.free()
+
 	return all_passed
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
