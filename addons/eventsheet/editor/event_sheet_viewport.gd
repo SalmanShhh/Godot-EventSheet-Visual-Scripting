@@ -148,6 +148,7 @@ var _selected_span_indices: Dictionary = {}
 var _span_only_row_uids: Dictionary = {}
 var _hovered_row_index: int = -1
 var _hovered_span_index: int = -1
+var _hover_is_drag_zone: bool = false  # pointer over an event's empty lane band (the move-cursor grab zone)
 var _editing_row_index: int = -1
 var _editing_span_index: int = -1
 var _editing_buffer: String = ""
@@ -1025,10 +1026,11 @@ func _draw() -> void:
 		_renderer.draw_row(self, layout, row_data, font, font_size, _editor_style)
 		var row_rect: Rect2 = layout.get("rect", Rect2())
 		_live_values_helper.draw_chip(row_data, row_rect.position.y, row_rect.size.y, font, font_size)
-		# Drag-handle affordance: subtle grip dots on the hovered row's left edge so
-		# reordering is discoverable without being told.
+		# Drag-handle affordance: grip dots on the hovered row's left edge so reordering is
+		# discoverable without being told. They brighten when the pointer is in the whole-event drag
+		# zone (the empty lane band, not on an ACE cell) — the cue that "grab here to move the event".
 		if index == _hovered_row_index and not _flat_rows.is_empty():
-			var grip_color: Color = Color(1.0, 1.0, 1.0, 0.28)
+			var grip_color: Color = Color(1.0, 1.0, 1.0, 0.62 if _hover_is_drag_zone else 0.28)
 			for dot_row in range(3):
 				draw_circle(Vector2(row_rect.position.x + 5.0, row_rect.position.y + row_rect.size.y * 0.5 + (dot_row - 1) * 5.0), 1.4, grip_color)
 	_draw_variable_group_bubbles(width)
@@ -1117,8 +1119,20 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		return
 	var hit: Dictionary = _hit_test(local_position)
 	_set_hover_state(int(hit.get("row_index", -1)), int(hit.get("span_index", -1)))
-	# Show a horizontal-resize cursor over the draggable lane divider.
-	mouse_default_cursor_shape = Control.CURSOR_HSIZE if _is_near_lane_divider(local_position) else Control.CURSOR_ARROW
+	# Cursor affordance, in priority order: the lane divider resizes (↔); the empty non-cell area of
+	# an event row is the whole-event DRAG handle (✥ move cursor) — dragging there reorders the event
+	# or nests it as a sub-event, so the previously-dead space now reads as grabbable; everything else
+	# is the arrow. (Ctrl-hover's hand cursor is set above and left alone here.)
+	var over_drag_zone: bool = is_event_drag_zone(_row_at(int(hit.get("row_index", -1))), int(hit.get("span_index", -1)))
+	if _hover_is_drag_zone != over_drag_zone:
+		_hover_is_drag_zone = over_drag_zone
+		queue_redraw()  # brighten the grip handle on the hovered row
+	if _is_near_lane_divider(local_position):
+		mouse_default_cursor_shape = Control.CURSOR_HSIZE
+	elif over_drag_zone:
+		mouse_default_cursor_shape = Control.CURSOR_MOVE
+	else:
+		mouse_default_cursor_shape = Control.CURSOR_ARROW
 	_drag_pointer_position = local_position
 	if not _drag_ace_entries.is_empty():
 		_drag_ace_copy_mode = event.ctrl_pressed or event.meta_pressed
@@ -1468,6 +1482,14 @@ func _is_selection_hit(row_index: int, span_index: int) -> bool:
 	if span_indices.is_empty():
 		return true
 	return span_indices.has(span_index)
+
+## True when a hover/press landed on an EVENT row but NOT on one of its ACE cells (span_index < 0) —
+## the empty band of the condition/action lane below the cells. A press there begins a whole-event
+## drag (reorder / nest), so this drives the move-cursor affordance AND the "grab here" hover. Pure,
+## so it is unit-testable without a live viewport. Groups/comments/variables aren't included: they're
+## single-cell rows with no ambiguous empty band.
+static func is_event_drag_zone(row_data: EventRowData, span_index: int) -> bool:
+	return row_data != null and row_data.row_type == EventRowData.RowType.EVENT and span_index < 0
 
 func _begin_row_drag(row_index: int) -> void:
 	if row_index < 0:

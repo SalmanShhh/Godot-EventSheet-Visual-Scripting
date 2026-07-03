@@ -147,6 +147,12 @@
 
 ### Fixed
 
+- **The empty band of an event row is now an obvious whole-event drag handle.** An event is often
+  taller than its condition lane (its action lane has more lines), leaving empty space below the
+  trigger/conditions. Pressing there always dragged the whole event (to reorder or nest it) — but
+  with no cursor change it read as dead space, ambiguous with the conditions. That band now shows a
+  move cursor and brightens the row's grip dots on hover, so "grab here to move the event" is
+  unmistakable; clicking an actual ACE cell still grabs that ACE. (`tests/event_drag_zone_test.gd`)
 - **Opened-pack line↔row mapping was a few rows off**: on the external (opened `.gd`) compile path a
   doc-commented `@export` variable emits its `##` line plus the declaration but the source map counted
   it as one line, cascading a small offset onto every row after it — so click-to-select, error→row,
