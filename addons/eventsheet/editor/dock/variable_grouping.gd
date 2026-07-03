@@ -52,6 +52,7 @@ static func set_group(sheet: EventSheetResource, scope: String, var_name: String
 			return false
 		if clean.is_empty():
 			attributes.erase("group")
+			attributes.erase("subgroup")  # a subgroup without its parent group nests under an unrelated earlier group
 		else:
 			attributes["group"] = clean
 		(descriptor as Dictionary)["attributes"] = attributes
@@ -63,6 +64,7 @@ static func set_group(sheet: EventSheetResource, scope: String, var_name: String
 			return false
 		if clean.is_empty():
 			tree_attributes.erase("group")
+			tree_attributes.erase("subgroup")  # same orphan hazard as the dict path above
 		else:
 			tree_attributes["group"] = clean
 		variable.attributes = tree_attributes
@@ -89,6 +91,10 @@ static func _rename_tree_subgroups(rows: Array, from: String, to: String) -> int
 		if row is LocalVariable:
 			if subgroup_of(null, "tree", "", row as LocalVariable) == from 					and set_subgroup(null, "tree", "", row as LocalVariable, to):
 				changed += 1
+		elif row is EventRow:
+			# Tree variables can live under an event's sub-rows too - without this arm a
+			# nested member silently keeps the old subgroup name while its siblings rename.
+			changed += _rename_tree_subgroups((row as EventRow).sub_events, from, to)
 		elif row is EventGroup:
 			var group: EventGroup = row as EventGroup
 			changed += _rename_tree_subgroups(group.events if not group.events.is_empty() else group.rows, from, to)

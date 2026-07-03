@@ -63,6 +63,11 @@ static func run() -> bool:
 		dock._current_sheet.host_class, "AudioStream") and all_passed
 	all_passed = _check("the applied sheet classifies as CUSTOM_RESOURCE",
 		EventSheetScriptIntent.of_sheet(dock._current_sheet), EventSheetScriptIntent.Intent.CUSTOM_RESOURCE) and all_passed
+	# Review regression: switching a node-hosted sheet to Autoload must force the Node host -
+	# the dialog's prefilled host text used to overwrite it back (extends CharacterBody2D on
+	# a singleton).
+	dock._apply_sheet_type_settings(4, "", "", "CharacterBody2D", false, PackedStringArray(), PackedStringArray(), PackedStringArray(), PackedStringArray(), "GameState")
+	all_passed = _check("autoload preset keeps its forced Node host", dock._current_sheet.host_class, "Node") and all_passed
 	dock.free()
 
 	# ── The two new starters compile to their intended script shapes ──

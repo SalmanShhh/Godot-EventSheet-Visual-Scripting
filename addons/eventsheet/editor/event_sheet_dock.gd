@@ -3344,7 +3344,9 @@ func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_p
 			if not requires_class.strip_edges().is_empty():
 				applied_requires.append(requires_class.strip_edges())
 		_current_sheet.requires_behaviors = applied_requires
-		if type_index == 3:
+		if type_index == 4:
+			pass  # Autoload already forced host_class = "Node" above; the dialog's stale host text must not undo it
+		elif type_index == 3:
 			_current_sheet.host_class = "EditorScript"
 		elif type_index == 5:
 			# Custom Resource: the host must BE a data-asset class. Keep the user's Resource

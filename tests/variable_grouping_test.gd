@@ -109,6 +109,30 @@ static func run() -> bool:
 	ok = _check("the nest ships as @export_subgroup under the group",
 		nested_output.contains("@export_group(\"Movement\")") and nested_output.contains("@export_subgroup(\"Tuning\")"), true) and ok
 
+	# ── Review regressions: nested-subgroup rename + orphaned-subgroup clear ──
+	# A tree variable under an event's sub-rows must rename with its subgroup siblings.
+	var nested_sheet: EventSheetResource = EventSheetResource.new()
+	nested_sheet.host_class = "Node2D"
+	var holder: EventRow = EventRow.new()
+	holder.trigger_provider_id = "Core"
+	holder.trigger_id = "OnReady"
+	var nested_var: LocalVariable = LocalVariable.new()
+	nested_var.name = "buried"
+	nested_var.type_name = "float"
+	nested_var.exported = true
+	nested_var.attributes = {"group": "Deep", "subgroup": "Tuning"}
+	holder.sub_events.append(nested_var)
+	nested_sheet.events.append(holder)
+	ok = _check("subgroup rename reaches variables nested in sub_events",
+		EventSheetVariableGrouping.rename_subgroup(nested_sheet, "Tuning", "Knobs"), 1) and ok
+	ok = _check("…and the nested member carries the new name",
+		str((nested_var.attributes as Dictionary).get("subgroup", "")), "Knobs") and ok
+	# Clearing a group must clear its subgroup too - a bare @export_subgroup would nest under
+	# an unrelated earlier group in the Inspector.
+	EventSheetVariableGrouping.set_group(nested_sheet, "tree", "", nested_var, "")
+	ok = _check("clearing the group clears the orphan subgroup",
+		(nested_var.attributes as Dictionary).has("subgroup"), false) and ok
+
 	dock.free()
 	return ok
 

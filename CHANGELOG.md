@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed - three bugs from the adversarial code review
+
+- **Renaming a variable subgroup now reaches members nested under an event's sub-rows** - the
+  rename walker recursed groups but not `sub_events`, so a buried member silently kept the old
+  `@export_subgroup` name while its siblings renamed.
+- **Switching a sheet to Autoload keeps its forced `Node` host** - the Sheet Type dialog's
+  prefilled host text used to overwrite it back, compiling a singleton as
+  `extends CharacterBody2D`.
+- **Clearing a variable group also clears its subgroup** - an orphaned `@export_subgroup`
+  nested the members under whatever unrelated group came earlier in the Inspector.
+
+
 ### Added - the export-coverage tail: password/expression/link + flagged easing
 
 - **The annotation-less PropertyHints are now named presets**: "Password field",
