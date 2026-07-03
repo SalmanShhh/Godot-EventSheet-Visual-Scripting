@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - Custom Block API design
+
+- **`docs/internal/SPEC-custom-block-api.md`**: the design for registering NON-ACE row kinds
+  (preloads, region markers, includes-as-rows, config blocks, pack-defined data blocks) without
+  touching the plugin. One `EventSheetBlockKind` contract (fields schema + pure `emit` +
+  byte-verify-gated `lift` + `summary` render) wired ONCE through the compiler, importer,
+  row builder, and a generic schema dialog; a single `CustomBlockRow` resource so sheets degrade
+  gracefully to plain GDScript when a kind is missing. Phased P1 (core + two proof kinds) →
+  P2 (zero-config pack kinds via the addon scanner) → P3 (picker integration).
+
 ### Changed - maintainability
 
 - **Quick prompt popups extracted from the dock** into `dock/quick_prompt_dialogs.gd`
