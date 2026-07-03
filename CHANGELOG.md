@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added - script intent: custom resources + editor tools are first-class destinations
+
+- **The New menu now asks what you are making.** Starters group under intent sections -
+  Scripts on a node / Behaviours / Autoloads / **Custom Resources - data assets (.tres)** /
+  **Editor Tools - run inside the editor** - so a newcomer discovers resources and tools the
+  moment they create their first sheet, with no wizard slowing creation down. Two new starters
+  model each idiom small: **Custom Resource (data + logic)** (a LootTable: exported fields ARE
+  the designer-editable asset, logic lives in a callable function) and **Editor Tool
+  (one-click chore)** (an @tool EditorScript with an On Editor Run event).
+- **Sheet Type gained "Custom Resource (data asset)"**: keeps a Resource-subclass host
+  (AudioStream, a project class) and falls back to plain `Resource` for node-ish hosts, so the
+  choice always yields a valid asset script.
+- **`EventSheetScriptIntent`** - one derived-not-stored classification (behaviour / autoload /
+  editor tool / custom resource / custom node / plain) driving all the intent-aware UX from a
+  single extendable table: the identity banner now pins each type distinctly (Custom Resource,
+  Editor Tool, Autoload - autoloads were previously invisible in the banner), and an **empty
+  sheet shows intent-specific advice** (resources: exported variables + functions instead of
+  events; tools: On Editor Run; autoloads: project-wide signals and functions).
+  (`tests/script_intent_test.gd`)
+
 ### Added - custom-return helpers lift too (the pack audit's last blocked class)
 
 - **`_get_pool(type: String) -> HealthPool`-style helpers now lift to real, editable
