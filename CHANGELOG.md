@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added - full inspector export coverage, P1 (every hint family round-trips editable)
+
+- **The wider @export families are now structured, dialog-ready attributes** instead of
+  verbatim hints: range WITH its modifier tail (`or_greater` / `or_less` / `exp` /
+  `hide_slider` / `radians_as_degrees` / `degrees` / `suffix:px`), checkbox **flags** (with
+  explicit values, `"Fire:1"`), the seven **layer-mask** grids (2D/3D physics, render,
+  navigation, avoidance), **file/folder pickers** (`@export_file("*.ogg")`, global variants),
+  **node-path type filters**, **int-backed enums** (`"Slow:30"`), `@export_storage`, and
+  `@export_category`. One canonical builder drives BOTH variable paths (dict and tree row), the
+  importer upgrades each recognized hint into the same editable attributes verify-gated, and
+  anything hand-written outside the canon stays a verbatim hint - degradation, never
+  corruption. (`tests/full_export_coverage_test.gd`; spec: SPEC-full-export-coverage)
+- Fixed on the way: int-backed `@export_enum` was mis-parsed as a String combo (the variable
+  then failed its byte gate and stayed a raw block), and expression defaults
+  (`NodePath("")`) were re-quoted by the hinted/structured emission branches.
+
+
 ### Changed - the whole codebase follows the GDScript style guide, gated
 
 - **495 hand-written scripts swept to the official GDScript style guide**: `class_name` now

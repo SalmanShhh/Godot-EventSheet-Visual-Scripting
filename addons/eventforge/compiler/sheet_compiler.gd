@@ -1662,6 +1662,10 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			var attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
 			if exported and not str(attributes.get("tooltip", "")).strip_edges().is_empty():
 				lines.append("## %s" % str(attributes.get("tooltip")).strip_edges())
+			# A category is the heaviest Inspector divider (its own header band); it precedes
+			# the group exactly as Godot applies them.
+			if exported and not str(attributes.get("category", "")).strip_edges().is_empty():
+				lines.append("@export_category(\"%s\")" % str(attributes.get("category")).strip_edges())
 			if exported and not str(attributes.get("group", "")).strip_edges().is_empty():
 				lines.append("@export_group(\"%s\")" % str(attributes.get("group")).strip_edges())
 			# Nested Inspector grouping for complex objects with many tunables: @export_subgroup follows the
@@ -1675,9 +1679,12 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 				lines.append("%s var %s: String = %s" % [_export_enum_prefix(combo_options), var_name, _to_code_literal(default_value)])
 				continue
 			var export_prefix: String = "@export " if exported else ""
-			if exported and attributes.get("range") is Dictionary and (type_name == "int" or type_name == "float"):
-				var range_spec: Dictionary = attributes.get("range")
-				export_prefix = "@export_range(%s, %s, %s) " % [str(range_spec.get("min", "0")), str(range_spec.get("max", "100")), str(range_spec.get("step", "1"))]
+			# Structured hint families (range + its modifier tail / flags / layers / file /
+			# node path / int-enum / storage): one canonical builder shared with the
+			# tree-variable path, so both emit byte-identical shapes.
+			var structured_prefix: String = _structured_hint_prefix(attributes, type_name) if exported else ""
+			if not structured_prefix.is_empty():
+				export_prefix = structured_prefix
 			elif exported and bool(attributes.get("multiline", false)) and type_name == "String":
 				export_prefix = "@export_multiline "
 			elif exported and bool(attributes.get("no_alpha", false)) and type_name == "Color":
@@ -1958,6 +1965,86 @@ static func _warn_if_deprecated(provider_id: String, ace_id: String, warnings: A
 	warnings.append(message)
 
 
+## The canonical @export prefix for the structured inspector attributes beyond the original
+## tier set: range WITH its modifier tail, checkbox flags, the seven layer-mask grids,
+## file/folder pickers, node-path type filters, int-backed enums, and storage. One builder
+## drives the dict-variable path and the tree-variable path, so both emit byte-identical
+## shapes and the importer's verify-gated extraction recognizes exactly one spelling.
+## Returns "" when none of these attributes apply (callers fall through to the older tiers).
+static func _structured_hint_prefix(attributes: Dictionary, type_name: String) -> String:
+	if bool(attributes.get("storage", false)):
+		return "@export_storage "
+	var numeric: bool = type_name == "int" or type_name == "float"
+	if attributes.get("range") is Dictionary and numeric:
+		var range_spec: Dictionary = attributes.get("range")
+		var arguments: PackedStringArray = PackedStringArray([
+			str(range_spec.get("min", "0")), str(range_spec.get("max", "100")), str(range_spec.get("step", "1")),
+		])
+		# Fixed modifier order keeps the byte gate deterministic; hand-written other orders
+		# stay verbatim hints (graceful degradation, never corruption).
+		if bool(range_spec.get("or_greater", false)):
+			arguments.append("\"or_greater\"")
+		if bool(range_spec.get("or_less", false)):
+			arguments.append("\"or_less\"")
+		if bool(range_spec.get("exp", false)):
+			arguments.append("\"exp\"")
+		if bool(range_spec.get("hide_slider", false)):
+			arguments.append("\"hide_slider\"")
+		var angle: String = str(range_spec.get("angle", "")).strip_edges()
+		if angle == "radians_as_degrees" or angle == "degrees":
+			arguments.append("\"%s\"" % angle)
+		var suffix: String = str(range_spec.get("suffix", "")).strip_edges()
+		if not suffix.is_empty() and not suffix.contains("\""):
+			arguments.append("\"suffix:%s\"" % suffix)
+		return "@export_range(%s) " % ", ".join(arguments)
+	if type_name == "int" and attributes.get("flags") is Array and not (attributes.get("flags") as Array).is_empty():
+		return "@export_flags(%s) " % ", ".join(_labeled_value_arguments(attributes.get("flags")))
+	if type_name == "int" and attributes.get("enum_values") is Array and not (attributes.get("enum_values") as Array).is_empty():
+		return "@export_enum(%s) " % ", ".join(_labeled_value_arguments(attributes.get("enum_values")))
+	if type_name == "int" and not str(attributes.get("layers", "")).strip_edges().is_empty():
+		var layer_kind: String = str(attributes.get("layers")).strip_edges()
+		if layer_kind in ["2d_physics", "2d_render", "2d_navigation", "3d_physics", "3d_render", "3d_navigation", "avoidance"]:
+			return "@export_flags_%s " % layer_kind
+	if type_name == "String" and attributes.get("file") is Dictionary:
+		var file_spec: Dictionary = attributes.get("file")
+		var global_scope: String = "global_" if bool(file_spec.get("global", false)) else ""
+		if str(file_spec.get("mode", "file")) == "dir":
+			return "@export_%sdir " % global_scope
+		var filters: PackedStringArray = PackedStringArray()
+		for filter_entry: Variant in file_spec.get("filters", []):
+			var filter_text: String = str(filter_entry).strip_edges()
+			if not filter_text.is_empty() and not filter_text.contains("\""):
+				filters.append("\"%s\"" % filter_text)
+		if filters.is_empty():
+			return "@export_%sfile " % global_scope
+		return "@export_%sfile(%s) " % [global_scope, ", ".join(filters)]
+	if type_name == "NodePath" and attributes.get("node_path_types") is Array and not (attributes.get("node_path_types") as Array).is_empty():
+		var type_filters: PackedStringArray = PackedStringArray()
+		for filter_type: Variant in attributes.get("node_path_types"):
+			var type_text: String = str(filter_type).strip_edges()
+			if not type_text.is_empty() and not type_text.contains("\""):
+				type_filters.append("\"%s\"" % type_text)
+		if not type_filters.is_empty():
+			return "@export_node_path(%s) " % ", ".join(type_filters)
+	return ""
+
+
+## Formats [{label, value}] entries for @export_flags / @export_enum: "Fire" or "Fire:1".
+## Values are stored as STRINGS and re-emitted verbatim, never re-derived integers, so the
+## exact source spelling round-trips.
+static func _labeled_value_arguments(entries: Array) -> PackedStringArray:
+	var arguments: PackedStringArray = PackedStringArray()
+	for entry: Variant in entries:
+		if not (entry is Dictionary):
+			continue
+		var label: String = str((entry as Dictionary).get("label", "")).strip_edges()
+		if label.is_empty() or label.contains("\""):
+			continue
+		var value: String = str((entry as Dictionary).get("value", "")).strip_edges()
+		arguments.append("\"%s\"" % label if value.is_empty() else "\"%s:%s\"" % [label, value])
+	return arguments
+
+
 ## Emits the class-level declaration for one tree-placed variable (const / @export var / var).
 static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	if local_var == null or local_var.name.strip_edges().is_empty():
@@ -1981,6 +2068,14 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# from attributes so it round-trips identically to the dict-var path instead of staying a verbatim hint.
 	elif not drawer_prefix.is_empty():
 		var_line = "%svar %s: %s = %s" % [drawer_prefix, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+	# Structured hint families (range + modifiers / flags / layers / file / node path /
+	# int-enum / storage): the shared canonical builder, so tree variables round-trip these
+	# as editable attributes instead of verbatim hints.
+	elif local_var.exported and local_var.attributes is Dictionary and not _structured_hint_prefix(local_var.attributes, local_var.type_name).is_empty():
+		# Expression defaults (NodePath(""), Vector2.ZERO) re-emit verbatim, exactly like the
+		# plain-var branch below - a quoted literal would fail the round-trip byte gate.
+		var structured_default: String = str(local_var.default_value) if local_var.expression_default else _to_code_literal(local_var.default_value)
+		var_line = "%svar %s: %s = %s" % [_structured_hint_prefix(local_var.attributes, local_var.type_name), local_var.name, local_var.type_name, structured_default]
 	# Color with the "no alpha" attribute → @export_color_no_alpha (a solid RGB-only swatch in the Inspector).
 	# Structured (from attributes) so it round-trips into the dialog tick, not a verbatim hint.
 	elif local_var.exported and local_var.attributes is Dictionary and bool((local_var.attributes as Dictionary).get("no_alpha", false)) and local_var.type_name == "Color":
@@ -1993,7 +2088,8 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 		var_line = "@export_placeholder(\"%s\") var %s: %s = %s" % [str((local_var.attributes as Dictionary).get("placeholder")).strip_edges(), local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
 	# Hinted export (@export_range / @export_file / @export_flags / …): the annotation is kept verbatim.
 	elif not local_var.export_hint.strip_edges().is_empty():
-		var_line = "%s var %s: %s = %s" % [local_var.export_hint, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+		var hinted_default: String = str(local_var.default_value) if local_var.expression_default else _to_code_literal(local_var.default_value)
+		var_line = "%s var %s: %s = %s" % [local_var.export_hint, local_var.name, local_var.type_name, hinted_default]
 	else:
 		var export_prefix: String = "@export " if local_var.exported else ""
 		# A bare-expression default (Vector2.ZERO, Color.RED, Type.CONST) emits VERBATIM; a literal
@@ -2054,11 +2150,15 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	if not local_var.exported or not (local_var.attributes is Dictionary) or local_var.attributes.is_empty():
 		return ""
 	var prefix: String = ""
-	# Tooltip first, then group/subgroup — same canonical order as the dict-var path (_emit_variables), so the
-	# importer's absorb can verify-lift the whole block. The ## doc attaches to the following @export var.
+	# Tooltip first, then category/group/subgroup — same canonical order as the dict-var path
+	# (_emit_variables), so the importer's absorb can verify-lift the whole block. The ## doc
+	# attaches to the following @export var.
 	var tooltip: String = str(local_var.attributes.get("tooltip", "")).strip_edges()
 	if not tooltip.is_empty():
 		prefix += "## %s\n" % tooltip
+	var category: String = str(local_var.attributes.get("category", "")).strip_edges()
+	if not category.is_empty():
+		prefix += "@export_category(\"%s\")\n" % category
 	var group: String = str(local_var.attributes.get("group", "")).strip_edges()
 	if not group.is_empty():
 		prefix += "@export_group(\"%s\")\n" % group

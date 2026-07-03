@@ -229,6 +229,7 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	_extract_color_no_alpha(lifted, line)
 	_extract_exp_easing(lifted, line)
 	_extract_placeholder(lifted, line)
+	_extract_structured_hint(lifted, line)
 	return lifted
 
 
@@ -331,6 +332,11 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		group_value = _extract_first_quoted(pending[cursor])
 		meta_count += 1
 		cursor -= 1
+	var category_value: String = ""
+	if cursor >= 0 and pending[cursor].begins_with("@export_category(\""):
+		category_value = _extract_first_quoted(pending[cursor])
+		meta_count += 1
+		cursor -= 1
 	var tooltip_value: String = ""
 	# A doc comment immediately before the var (no blank line — a blank line would sit at pending's tail
 	# instead) is the variable's tooltip, per Godot's `##` doc-comment convention. Exclude `## @...`
@@ -343,6 +349,8 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	var candidate: Dictionary = {}
 	if not tooltip_value.is_empty():
 		candidate["tooltip"] = tooltip_value
+	if not category_value.is_empty():
+		candidate["category"] = category_value
 	if not group_value.is_empty():
 		candidate["group"] = group_value
 	if not subgroup_value.is_empty():
@@ -365,6 +373,117 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		return
 	for _removed: int in range(meta_count):
 		pending.remove_at(pending.size() - 1)
+
+
+## Upgrades a verbatim export hint to structured, dialog-editable attributes for the wider
+## hint families: range WITH its modifier tail, checkbox flags, the seven layer-mask grids,
+## file/folder pickers, node-path type filters, int-backed enums, and storage. Same contract
+## as the older extracts: parse the hint, move it into attributes, and keep the upgrade ONLY
+## when the canonical re-emission reproduces the source line byte-exactly - a hand-formatted
+## variant stays a verbatim hint, never corrupted.
+func _extract_structured_hint(lifted: LocalVariable, line: String) -> void:
+	var hint: String = lifted.export_hint.strip_edges()
+	if hint.is_empty():
+		return
+	var candidate: Dictionary = {}
+	if hint == "@export_storage":
+		candidate["storage"] = true
+	elif hint.begins_with("@export_range("):
+		var range_spec: Dictionary = _parse_range_hint(hint)
+		if range_spec.is_empty():
+			return
+		candidate["range"] = range_spec
+	elif hint.begins_with("@export_flags(") and lifted.type_name == "int":
+		candidate["flags"] = _parse_labeled_values(hint)
+	elif hint.begins_with("@export_enum(") and lifted.type_name == "int":
+		candidate["enum_values"] = _parse_labeled_values(hint)
+	elif hint.begins_with("@export_flags_") and lifted.type_name == "int":
+		candidate["layers"] = hint.trim_prefix("@export_flags_")
+	elif (hint.begins_with("@export_file") or hint.begins_with("@export_global_file")) and lifted.type_name == "String":
+		var file_spec: Dictionary = {"mode": "file", "global": hint.begins_with("@export_global_")}
+		var filters: Array = []
+		for filter_text: String in _quoted_arguments(hint):
+			filters.append(filter_text)
+		if not filters.is_empty():
+			file_spec["filters"] = filters
+		candidate["file"] = file_spec
+	elif (hint == "@export_dir" or hint == "@export_global_dir") and lifted.type_name == "String":
+		candidate["file"] = {"mode": "dir", "global": hint == "@export_global_dir"}
+	elif hint.begins_with("@export_node_path(") and lifted.type_name == "NodePath":
+		var node_types: Array = []
+		for type_text: String in _quoted_arguments(hint):
+			node_types.append(type_text)
+		if node_types.is_empty():
+			return
+		candidate["node_path_types"] = node_types
+	else:
+		return
+	var saved_hint: String = lifted.export_hint
+	var saved_attrs: Dictionary = (lifted.attributes as Dictionary).duplicate(true) if lifted.attributes is Dictionary else {}
+	var attrs: Dictionary = (lifted.attributes as Dictionary).duplicate(true) if lifted.attributes is Dictionary else {}
+	attrs.merge(candidate, true)
+	lifted.attributes = attrs
+	lifted.export_hint = ""
+	if SheetCompiler._emit_tree_variable_line(lifted) != line:
+		lifted.export_hint = saved_hint
+		lifted.attributes = saved_attrs
+
+
+## Parses `@export_range(min, max, step, "modifier", ...)` into the structured range spec.
+## The three bounds keep their raw source spelling; only the canonical modifier set is
+## accepted ({} on anything else, so the caller leaves the hint verbatim).
+func _parse_range_hint(hint: String) -> Dictionary:
+	var open_paren: int = hint.find("(")
+	var close_paren: int = hint.rfind(")")
+	if open_paren < 0 or close_paren <= open_paren:
+		return {}
+	var arguments: PackedStringArray = hint.substr(open_paren + 1, close_paren - open_paren - 1).split(", ")
+	if arguments.size() < 3:
+		return {}
+	var range_spec: Dictionary = {"min": arguments[0], "max": arguments[1], "step": arguments[2]}
+	for index: int in range(3, arguments.size()):
+		var modifier: String = arguments[index].trim_prefix("\"").trim_suffix("\"")
+		match modifier:
+			"or_greater":
+				range_spec["or_greater"] = true
+			"or_less":
+				range_spec["or_less"] = true
+			"exp":
+				range_spec["exp"] = true
+			"hide_slider":
+				range_spec["hide_slider"] = true
+			"radians_as_degrees", "degrees":
+				range_spec["angle"] = modifier
+			_:
+				if modifier.begins_with("suffix:"):
+					range_spec["suffix"] = modifier.trim_prefix("suffix:")
+				else:
+					return {}
+	return range_spec
+
+
+## Parses the quoted `"Label"` / `"Label:value"` argument list of @export_flags/@export_enum
+## into [{label, value}] entries (value kept as its source string).
+func _parse_labeled_values(hint: String) -> Array:
+	var entries: Array = []
+	for argument: String in _quoted_arguments(hint):
+		var colon: int = argument.rfind(":")
+		if colon > 0:
+			entries.append({"label": argument.substr(0, colon), "value": argument.substr(colon + 1)})
+		else:
+			entries.append({"label": argument, "value": ""})
+	return entries
+
+
+## Every "..."-quoted argument on a hint line, in order.
+func _quoted_arguments(hint: String) -> PackedStringArray:
+	var arguments: PackedStringArray = PackedStringArray()
+	var quote_regex: RegEx = RegEx.new()
+	if quote_regex.compile("\"([^\"]*)\"") != OK:
+		return arguments
+	for quoted: RegExMatch in quote_regex.search_all(hint):
+		arguments.append(quoted.get_string(1))
+	return arguments
 
 
 ## The text inside the first "..." pair on a line ("" if none).

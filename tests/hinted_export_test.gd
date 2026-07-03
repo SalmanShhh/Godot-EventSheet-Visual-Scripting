@@ -20,8 +20,11 @@ static func run() -> bool:
 		elif r is RawCodeRow and (r as RawCodeRow).code.contains("@export"):
 			raw_blocks += 1
 	ok = _check("range hint lifts to a variable row", hints.get("speed", ""), "@export_range(0, 100)") and ok
-	ok = _check("file hint lifts to a variable row", hints.get("data_path", ""), "@export_file") and ok
-	ok = _check("flags hint lifts to a variable row", hints.get("elements", ""), "@export_flags(\"Fire\", \"Water\")") and ok
+	# File and flags hints now lift STRUCTURED (SPEC-full-export-coverage P1): the hint moves
+	# into editable attributes and export_hint empties. Two-arg @export_range above keeps
+	# pinning the verbatim fallback for shapes outside the canon.
+	ok = _check("file hint lifts structured (hint consumed)", hints.get("data_path", "missing"), "") and ok
+	ok = _check("flags hint lifts structured (hint consumed)", hints.get("elements", "missing"), "") and ok
 	ok = _check("no hinted export stayed a raw block", raw_blocks, 0) and ok
 
 	imported.external_source_path = "user://hint_rt.gd"

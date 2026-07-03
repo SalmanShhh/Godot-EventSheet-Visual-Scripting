@@ -19,7 +19,10 @@ func parse(source: String) -> Dictionary:
 		var exported: bool = false
 		var hint: String = ""
 		var combo_options: PackedStringArray = PackedStringArray()
-		if line.begins_with("@export_enum(") and line.find(") ") != -1:
+		# Combo (dropdown options on a String) only: an int-backed @export_enum ("Slow:30") is a
+		# DIFFERENT Inspector control and lifts through the generic-hint path into structured
+		# enum_values instead.
+		if line.begins_with("@export_enum(") and line.find(") ") != -1 and line.contains(": String"):
 			exported = true
 			var close_index: int = line.find(") ")
 			for raw_option: String in line.substr("@export_enum(".length(), close_index - "@export_enum(".length()).split(", "):
