@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - the "Inspector look" picker: every export option in plain language
+
+- **The variable dialog teaches the whole export surface.** A type-filtered **Inspector look**
+  picker offers each option as what the Inspector SHOWS - "File picker (project files)",
+  "Checkbox flags (Fire, Ice…)", "2D physics layers grid", "Node picker with a type filter",
+  "Saved but hidden (storage)" - with one contextual Details field (filters / labels / node
+  types) and **Slider extras** (no upper/lower limit + a unit suffix) beside the Range. A live
+  **"Ships as:"** strip renders the exact annotation those choices compile to, straight from
+  the compiler's own prefix builder, so the plain-language names teach the annotations instead
+  of hiding them (the ACE Studio pattern).
+
 ### Added - full inspector export coverage, P1 (every hint family round-trips editable)
 
 - **The wider @export families are now structured, dialog-ready attributes** instead of

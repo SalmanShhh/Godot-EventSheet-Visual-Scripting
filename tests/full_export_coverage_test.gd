@@ -102,6 +102,13 @@ static func run() -> bool:
 	all_passed = _check("dict path emits layer masks",
 		authored_output.contains("@export_flags_3d_physics var team_layers: int = 0"), true) and all_passed
 
+	# ── The dialog's look parsing (pure): labels with and without explicit values ──
+	var parsed_labels: Array = VariableDialog._parse_look_labels("Fire:1, Ice, Poison:4")
+	all_passed = _check("look labels parse with mixed values",
+		parsed_labels.size() == 3 and str(parsed_labels[0].get("value")) == "1" and str(parsed_labels[1].get("value")) == "", true) and all_passed
+	all_passed = _check("look labels render back to the same text",
+		VariableDialog._look_labels_text(parsed_labels), "Fire:1, Ice, Poison:4") and all_passed
+
 	return all_passed
 
 

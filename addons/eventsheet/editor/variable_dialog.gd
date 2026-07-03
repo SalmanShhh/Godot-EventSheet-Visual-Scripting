@@ -67,6 +67,19 @@ var _attr_clamp_check: CheckBox = null
 var _attr_read_only_check: CheckBox = null
 var _attr_drawer_option: OptionButton = null
 var _drawer_preview_box: VBoxContainer = null
+# The "Inspector look" picker (SPEC-full-export-coverage P2): type-filtered plain-language
+# presets for the wider hint families (file/folder pickers, checkbox flags, layer grids,
+# node-path filters, valued dropdowns, storage), each with one contextual detail field. The
+# "Ships as:" strip renders the EXACT annotation the current choices compile to (the ACE
+# Studio pattern), so the friendly names teach the annotation instead of hiding it.
+var _attr_look_option: OptionButton = null
+var _attr_look_detail_edit: LineEdit = null
+var _attr_look_detail_row: Control = null
+var _attr_or_greater_check: CheckBox = null
+var _attr_or_less_check: CheckBox = null
+var _attr_suffix_edit: LineEdit = null
+var _attr_range_modifier_row: Control = null
+var _ships_as_label: Label = null
 
 ## Offered types. Collections accept GDScript literal defaults ({"key": 1}, [1, 2]) with
 ## live validation; typed containers (Godot 4 Array[T] / Dictionary[K, V]) also check
@@ -253,7 +266,8 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_range_edit.placeholder_text = _RANGE_PLACEHOLDER_NUMERIC
 	_attr_range_edit.text_changed.connect(func(_t: String) -> void:
 		_refresh_drawer_preview()
-		_refresh_clamp_gate())
+		_refresh_clamp_gate()
+		_refresh_ships_as())
 	_attr_section.add_child(EventSheetPopupUI.form_row("Range", _attr_range_edit))
 	_attr_drawer_option = OptionButton.new()
 	_attr_drawer_option.add_item("Default field")
@@ -281,6 +295,52 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_placeholder_edit.placeholder_text = "grey hint shown when the field is empty"
 	_attr_placeholder_row = EventSheetPopupUI.form_row("Placeholder", _attr_placeholder_edit)
 	_attr_section.add_child(_attr_placeholder_row)
+	# Range modifiers (numeric): open-ended slider ends + a unit suffix, folded into the range.
+	var range_modifier_box: HBoxContainer = HBoxContainer.new()
+	range_modifier_box.add_theme_constant_override("separation", 8)
+	_attr_or_greater_check = CheckBox.new()
+	_attr_or_greater_check.text = "No upper limit"
+	_attr_or_greater_check.tooltip_text = "The slider stops at max but typing a bigger number is allowed (or_greater)."
+	_attr_or_greater_check.toggled.connect(func(_on: bool) -> void: _refresh_ships_as())
+	range_modifier_box.add_child(_attr_or_greater_check)
+	_attr_or_less_check = CheckBox.new()
+	_attr_or_less_check.text = "No lower limit"
+	_attr_or_less_check.tooltip_text = "Typing below min is allowed (or_less)."
+	_attr_or_less_check.toggled.connect(func(_on: bool) -> void: _refresh_ships_as())
+	range_modifier_box.add_child(_attr_or_less_check)
+	_attr_suffix_edit = LineEdit.new()
+	_attr_suffix_edit.placeholder_text = "unit, e.g. px"
+	_attr_suffix_edit.custom_minimum_size = Vector2(90.0, 0.0)
+	_attr_suffix_edit.tooltip_text = "Shown after the number in the Inspector (suffix:px)."
+	_attr_suffix_edit.text_changed.connect(func(_t: String) -> void: _refresh_ships_as())
+	range_modifier_box.add_child(_attr_suffix_edit)
+	_attr_range_modifier_row = EventSheetPopupUI.form_row("Slider extras", range_modifier_box)
+	_attr_section.add_child(_attr_range_modifier_row)
+	# The Inspector-look presets (type-filtered; rebuilt by _refresh_contextual_rows).
+	_attr_look_option = OptionButton.new()
+	_attr_look_option.tooltip_text = "How this variable's field LOOKS in the Inspector - pickers, flags, layer grids... Plain fields need no choice here."
+	_attr_look_option.item_selected.connect(func(_i: int) -> void:
+		_refresh_look_detail()
+		_refresh_ships_as())
+	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector look", _attr_look_option))
+	_attr_look_detail_edit = LineEdit.new()
+	_attr_look_detail_edit.text_changed.connect(func(_t: String) -> void: _refresh_ships_as())
+	_attr_look_detail_row = EventSheetPopupUI.form_row("Details", _attr_look_detail_edit)
+	_attr_look_detail_row.visible = false
+	_attr_section.add_child(_attr_look_detail_row)
+	# "Ships as:" - the exact annotation these choices compile to, straight from the compiler's
+	# own prefix builder so it can never drift from reality.
+	_ships_as_label = Label.new()
+	_ships_as_label.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
+	_ships_as_label.add_theme_font_size_override("font_size", 12)
+	_ships_as_label.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+	_attr_section.add_child(_ships_as_label)
+	# Everything the strip reads refreshes it live, so the taught annotation is never stale.
+	_attr_multiline_check.toggled.connect(func(_on: bool) -> void: _refresh_ships_as())
+	_attr_no_alpha_check.toggled.connect(func(_on: bool) -> void: _refresh_ships_as())
+	_attr_exp_easing_check.toggled.connect(func(_on: bool) -> void: _refresh_ships_as())
+	_attr_placeholder_edit.text_changed.connect(func(_t: String) -> void: _refresh_ships_as())
+	_name_edit.text_changed.connect(func(_t: String) -> void: _refresh_ships_as())
 	# ── ADVANCED tier (nested disclosure): wiring + organization that assumes other vars/funcs exist or
 	# Godot-Inspector fluency — kept out of the common path so the Basic tier reads cleanly. ──
 	_attr_advanced_toggle = Button.new()
@@ -607,6 +667,15 @@ func open_for_edit(
 	_attr_no_alpha_check.button_pressed = bool(existing_attributes.get("no_alpha", false))
 	_attr_exp_easing_check.button_pressed = bool(existing_attributes.get("exp_easing", false))
 	_attr_placeholder_edit.text = str(existing_attributes.get("placeholder", ""))
+	if existing_range is Dictionary:
+		_attr_or_greater_check.button_pressed = bool((existing_range as Dictionary).get("or_greater", false))
+		_attr_or_less_check.button_pressed = bool((existing_range as Dictionary).get("or_less", false))
+		_attr_suffix_edit.text = str((existing_range as Dictionary).get("suffix", ""))
+	else:
+		_attr_or_greater_check.button_pressed = false
+		_attr_or_less_check.button_pressed = false
+		_attr_suffix_edit.text = ""
+	_prefill_look(existing_attributes)
 	_attr_show_if_edit.text = str(existing_attributes.get("show_if", ""))
 	_attr_lock_unless_edit.text = str(existing_attributes.get("lock_unless", ""))
 	_attr_on_changed_edit.text = str(existing_attributes.get("on_changed", ""))
@@ -737,6 +806,7 @@ func _on_confirmed() -> void:
 	var placeholder_text: String = _attr_placeholder_edit.text.strip_edges()
 	if not placeholder_text.is_empty() and not placeholder_text.contains("\"") and type_name == "String":
 		attributes["placeholder"] = placeholder_text
+	_fold_look_attributes(attributes, type_name)
 	for conditional in [["show_if", _attr_show_if_edit], ["lock_unless", _attr_lock_unless_edit], ["on_changed", _attr_on_changed_edit]]:
 		var conditional_value: String = (conditional[1] as LineEdit).text.strip_edges()
 		if conditional_value.is_empty():
@@ -894,10 +964,220 @@ func _refresh_contextual_rows() -> void:
 		_attr_no_alpha_check.visible = type_name == "Color"
 		_attr_exp_easing_check.visible = type_name == "float"
 		_attr_placeholder_row.visible = type_name == "String"
+	if _attr_range_modifier_row != null:
+		_attr_range_modifier_row.visible = numeric
+	_rebuild_look_options(type_name)
 	# The drawer picker offers only the one drawer the current type can host (or hides when there is none).
 	_rebuild_drawer_options(_drawer_kind_for_type(type_name))
 	_refresh_drawer_preview()
 	_refresh_clamp_gate()
+	_refresh_ships_as()
+
+
+## The Inspector-look presets: plain-language first, each mapping to one structured attribute
+## family (SPEC-full-export-coverage). types = the variable types the preset applies to
+## (empty = any); detail = the placeholder for the preset's one contextual field ("" = none).
+const _LOOK_PRESETS: Array[Dictionary] = [
+	{"id": "file", "label": "File picker (project files)", "types": ["String"], "detail": "filters, e.g. *.ogg, *.wav"},
+	{"id": "global_file", "label": "File picker (any file on disk)", "types": ["String"], "detail": "filters, e.g. *.png"},
+	{"id": "dir", "label": "Folder picker (project)", "types": ["String"], "detail": ""},
+	{"id": "global_dir", "label": "Folder picker (anywhere on disk)", "types": ["String"], "detail": ""},
+	{"id": "flags", "label": "Checkbox flags (Fire, Ice\u2026)", "types": ["int"], "detail": "labels, e.g. Fire:1, Ice:2"},
+	{"id": "enum_values", "label": "Dropdown with numbers (Slow:30\u2026)", "types": ["int"], "detail": "options, e.g. Slow:30, Fast:60"},
+	{"id": "layers_2d_physics", "label": "2D physics layers grid", "types": ["int"], "detail": ""},
+	{"id": "layers_2d_render", "label": "2D render layers grid", "types": ["int"], "detail": ""},
+	{"id": "layers_2d_navigation", "label": "2D navigation layers grid", "types": ["int"], "detail": ""},
+	{"id": "layers_3d_physics", "label": "3D physics layers grid", "types": ["int"], "detail": ""},
+	{"id": "layers_3d_render", "label": "3D render layers grid", "types": ["int"], "detail": ""},
+	{"id": "layers_3d_navigation", "label": "3D navigation layers grid", "types": ["int"], "detail": ""},
+	{"id": "layers_avoidance", "label": "Avoidance layers grid", "types": ["int"], "detail": ""},
+	{"id": "node_path", "label": "Node picker with a type filter", "types": ["NodePath"], "detail": "types, e.g. Button, TouchScreenButton"},
+	{"id": "storage", "label": "Saved but hidden (storage)", "types": [], "detail": ""},
+]
+
+
+## Rebuilds the look picker for the current type, keeping the selection when it still applies.
+func _rebuild_look_options(type_name: String) -> void:
+	if _attr_look_option == null:
+		return
+	var previous: String = _selected_look_id()
+	_attr_look_option.clear()
+	_attr_look_option.add_item("Default field")
+	_attr_look_option.set_item_metadata(0, "")
+	for preset: Dictionary in _LOOK_PRESETS:
+		var preset_types: Array = preset.get("types", [])
+		if not preset_types.is_empty() and not preset_types.has(type_name):
+			continue
+		_attr_look_option.add_item(str(preset.get("label")))
+		_attr_look_option.set_item_metadata(_attr_look_option.item_count - 1, str(preset.get("id")))
+	for index: int in range(_attr_look_option.item_count):
+		if str(_attr_look_option.get_item_metadata(index)) == previous:
+			_attr_look_option.select(index)
+			break
+	_attr_look_option.get_parent().visible = _attr_look_option.item_count > 1
+	_refresh_look_detail()
+
+
+func _selected_look_id() -> String:
+	if _attr_look_option == null or _attr_look_option.selected < 0:
+		return ""
+	return str(_attr_look_option.get_item_metadata(_attr_look_option.selected))
+
+
+## Shows the one contextual field the selected look needs (filters / labels / node types).
+func _refresh_look_detail() -> void:
+	if _attr_look_detail_row == null:
+		return
+	var look_id: String = _selected_look_id()
+	for preset: Dictionary in _LOOK_PRESETS:
+		if str(preset.get("id")) == look_id:
+			var detail: String = str(preset.get("detail", ""))
+			_attr_look_detail_row.visible = not detail.is_empty()
+			_attr_look_detail_edit.placeholder_text = detail
+			return
+	_attr_look_detail_row.visible = false
+
+
+## Folds the look picker + range modifiers into the attributes dict - the SAME keys the
+## compiler reads in _structured_hint_prefix, so the dialog and emission can never disagree.
+func _fold_look_attributes(attributes: Dictionary, type_name: String) -> void:
+	var numeric: bool = type_name == "int" or type_name == "float"
+	if attributes.get("range") is Dictionary and numeric:
+		var range_spec: Dictionary = attributes.get("range")
+		if _attr_or_greater_check != null and _attr_or_greater_check.button_pressed:
+			range_spec["or_greater"] = true
+		if _attr_or_less_check != null and _attr_or_less_check.button_pressed:
+			range_spec["or_less"] = true
+		var suffix: String = _attr_suffix_edit.text.strip_edges() if _attr_suffix_edit != null else ""
+		if not suffix.is_empty() and not suffix.contains("\""):
+			range_spec["suffix"] = suffix
+	var detail: String = _attr_look_detail_edit.text.strip_edges() if _attr_look_detail_edit != null else ""
+	match _selected_look_id():
+		"file", "global_file":
+			if type_name == "String":
+				var file_spec: Dictionary = {"mode": "file", "global": _selected_look_id() == "global_file"}
+				var filters: Array = []
+				for filter_text: String in detail.split(",", false):
+					if not filter_text.strip_edges().is_empty():
+						filters.append(filter_text.strip_edges())
+				if not filters.is_empty():
+					file_spec["filters"] = filters
+				attributes["file"] = file_spec
+		"dir", "global_dir":
+			if type_name == "String":
+				attributes["file"] = {"mode": "dir", "global": _selected_look_id() == "global_dir"}
+		"flags":
+			if type_name == "int":
+				attributes["flags"] = _parse_look_labels(detail)
+		"enum_values":
+			if type_name == "int":
+				attributes["enum_values"] = _parse_look_labels(detail)
+		"node_path":
+			if type_name == "NodePath":
+				var node_types: Array = []
+				for type_text: String in detail.split(",", false):
+					if not type_text.strip_edges().is_empty():
+						node_types.append(type_text.strip_edges())
+				if not node_types.is_empty():
+					attributes["node_path_types"] = node_types
+		"storage":
+			attributes["storage"] = true
+		_:
+			if _selected_look_id().begins_with("layers_") and type_name == "int":
+				attributes["layers"] = _selected_look_id().trim_prefix("layers_")
+
+
+## "Fire:1, Ice" -> [{label, value}] (value stays a string; empty = auto).
+static func _parse_look_labels(detail: String) -> Array:
+	var entries: Array = []
+	for part: String in detail.split(",", false):
+		var trimmed: String = part.strip_edges()
+		if trimmed.is_empty():
+			continue
+		var colon: int = trimmed.rfind(":")
+		if colon > 0:
+			entries.append({"label": trimmed.substr(0, colon).strip_edges(), "value": trimmed.substr(colon + 1).strip_edges()})
+		else:
+			entries.append({"label": trimmed, "value": ""})
+	return entries
+
+
+## Reselects the look + detail from an edited variable's existing attributes.
+func _prefill_look(existing: Dictionary) -> void:
+	_rebuild_look_options(_selected_stored_type())
+	var look_id: String = ""
+	var detail: String = ""
+	if bool(existing.get("storage", false)):
+		look_id = "storage"
+	elif existing.get("file") is Dictionary:
+		var file_spec: Dictionary = existing.get("file")
+		var is_global: bool = bool(file_spec.get("global", false))
+		look_id = ("global_" if is_global else "") + ("dir" if str(file_spec.get("mode", "file")) == "dir" else "file")
+		var filter_parts: PackedStringArray = PackedStringArray()
+		for filter_entry: Variant in file_spec.get("filters", []):
+			filter_parts.append(str(filter_entry))
+		detail = ", ".join(filter_parts)
+	elif existing.get("flags") is Array:
+		look_id = "flags"
+		detail = _look_labels_text(existing.get("flags"))
+	elif existing.get("enum_values") is Array:
+		look_id = "enum_values"
+		detail = _look_labels_text(existing.get("enum_values"))
+	elif not str(existing.get("layers", "")).is_empty():
+		look_id = "layers_%s" % str(existing.get("layers"))
+	elif existing.get("node_path_types") is Array:
+		look_id = "node_path"
+		var type_parts: PackedStringArray = PackedStringArray()
+		for type_entry: Variant in existing.get("node_path_types"):
+			type_parts.append(str(type_entry))
+		detail = ", ".join(type_parts)
+	for index: int in range(_attr_look_option.item_count):
+		if str(_attr_look_option.get_item_metadata(index)) == look_id:
+			_attr_look_option.select(index)
+			break
+	_attr_look_detail_edit.text = detail
+	_refresh_look_detail()
+
+
+static func _look_labels_text(entries: Array) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for entry: Variant in entries:
+		if entry is Dictionary:
+			var value: String = str((entry as Dictionary).get("value", ""))
+			var label: String = str((entry as Dictionary).get("label", ""))
+			parts.append(label if value.is_empty() else "%s:%s" % [label, value])
+	return ", ".join(parts)
+
+
+## "Ships as:" - renders the EXACT annotation the current choices compile to, using the
+## compiler's own prefix builder as the single source of truth (the ACE Studio pattern).
+func _refresh_ships_as() -> void:
+	if _ships_as_label == null:
+		return
+	var type_name: String = _selected_stored_type()
+	var preview: Dictionary = {}
+	var range_text: String = _attr_range_edit.text.strip_edges() if _attr_range_edit != null else ""
+	if not range_text.is_empty() and (type_name == "int" or type_name == "float"):
+		var parsed_range: Dictionary = _parse_range_parts(range_text.split(","))
+		if not parsed_range.is_empty():
+			preview["range"] = parsed_range
+	_fold_look_attributes(preview, type_name)
+	var prefix: String = SheetCompiler._structured_hint_prefix(preview, type_name)
+	if prefix.is_empty():
+		if _attr_multiline_check.button_pressed and type_name == "String":
+			prefix = "@export_multiline "
+		elif _attr_no_alpha_check.button_pressed and type_name == "Color":
+			prefix = "@export_color_no_alpha "
+		elif _attr_exp_easing_check.button_pressed and type_name == "float":
+			prefix = "@export_exp_easing "
+		elif not _attr_placeholder_edit.text.strip_edges().is_empty() and type_name == "String":
+			prefix = "@export_placeholder(\"%s\") " % _attr_placeholder_edit.text.strip_edges()
+		else:
+			prefix = "@export "
+	var shown_name: String = "value"
+	if _name_edit != null and not _name_edit.text.strip_edges().is_empty():
+		shown_name = _name_edit.text.strip_edges()
+	_ships_as_label.text = "Ships as:  %svar %s: %s" % [prefix, shown_name, type_name]
 
 
 ## The single drawer kind a variable type can host (or "" — most types host no drawer).

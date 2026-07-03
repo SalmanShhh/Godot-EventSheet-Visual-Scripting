@@ -1,6 +1,6 @@
 # SPEC - Full inspector export coverage: every @export option, approachable to a newcomer
 
-**Status:** P1 SHIPPED (all nine hint families: canonical emission on both variable paths, verify-gated structured lift, byte-identical round-trips, verbatim fallback for non-canonical shapes; `tests/full_export_coverage_test.gd`). P2 (the Inspector-look picker UX) and P3 (subgroup drag gesture) next.
+**Status:** P1 SHIPPED (all nine hint families: canonical emission on both variable paths, verify-gated structured lift, byte-identical round-trips, verbatim fallback for non-canonical shapes; `tests/full_export_coverage_test.gd`). P2's core SHIPPED too (the type-filtered Inspector-look picker + contextual Details + Slider extras + the live Ships-as strip in the variable dialog). Remaining: P2 tail (@export_custom presets, exp-easing flags, starter updates) and P3 (subgroup drag gesture, empty-panel nudge).
 **Author trigger (user):** *"add support for all the inspector options (gdscript_exports +
 PropertyHint) + make use of some of the existing features to help make that experience easier
 to a new user to understand via UI/UX of the project e.g how you can group variables by
