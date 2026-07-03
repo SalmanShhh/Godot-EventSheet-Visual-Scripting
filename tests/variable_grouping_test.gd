@@ -91,7 +91,7 @@ static func run() -> bool:
 	var output: String = str(SheetCompiler.compile(live, "user://_var_grouping_out.gd").get("output", ""))
 	ok = _check("the folder ships as @export_group", output.contains("@export_group(\"Movement\")"), true) and ok
 
-	# ── One level deeper, same gesture (SPEC-full-export-coverage P3): dropping a variable onto
+	# ── One level deeper, same gesture: dropping a variable onto
 	# a variable it ALREADY shares the folder with nests both into a subgroup. ──
 	var live_view: EventSheetViewport = dock._active_view()
 	var nest_source: EventRowData = _variable_row(live_view, "speed")

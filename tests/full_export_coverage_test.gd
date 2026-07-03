@@ -1,4 +1,4 @@
-# EventForge - full inspector export coverage, P1 (SPEC-full-export-coverage).
+# EventForge - full inspector export coverage: the wider @export hint families.
 #
 # THE CONTRACT: every wider @export hint family (range + its modifier tail, checkbox flags,
 # layer masks, file/folder pickers, node-path filters, int-backed enums, storage, category)

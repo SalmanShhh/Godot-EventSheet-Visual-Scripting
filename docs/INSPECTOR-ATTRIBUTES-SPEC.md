@@ -1,7 +1,7 @@
 # Inspector Attributes - Spec
 
 Unity-style (and Odin-Inspector-style) **attributes on exported variables**, mapped onto
-what Godot actually supports. Status: **Tiers 1–2 SHIPPED** (tooltip/group/range/multiline; clamp/on-changed
+what Godot actually supports. Status: **COMPLETE** - the coverage grew beyond these tiers: every remaining @export family (range modifiers, flags, layer grids, file/folder pickers, node-path filters, int enums, storage, category, the password/expression/link custom-hint presets) shipped via `docs/internal/SPEC-full-export-coverage.md`, all byte-gated with plain-language dialog looks. Original tier record: **Tiers 1-2 SHIPPED** (tooltip/group/range/multiline; clamp/on-changed
 setters, Show If / Lock Unless via generated `_validate_property`, static read-only -
 `tests/inspector_attributes_test.gd`); tool buttons SHIPPED; **Tier 3 SHIPPED IN FULL** - all five drawers
 (`progress_bar`, `vector_dial`, `swatch_row`, `texture_preview`, `curve_editor`) via the `eventsheet:<drawer>`

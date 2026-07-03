@@ -67,7 +67,7 @@ var _attr_clamp_check: CheckBox = null
 var _attr_read_only_check: CheckBox = null
 var _attr_drawer_option: OptionButton = null
 var _drawer_preview_box: VBoxContainer = null
-# The "Inspector look" picker (SPEC-full-export-coverage P2): type-filtered plain-language
+# The "Inspector look" picker: type-filtered plain-language
 # presets for the wider hint families (file/folder pickers, checkbox flags, layer grids,
 # node-path filters, valued dropdowns, storage), each with one contextual detail field. The
 # "Ships as:" strip renders the EXACT annotation the current choices compile to (the ACE
@@ -975,7 +975,7 @@ func _refresh_contextual_rows() -> void:
 
 
 ## The Inspector-look presets: plain-language first, each mapping to one structured attribute
-## family (SPEC-full-export-coverage). types = the variable types the preset applies to
+## family the compiler emits/lifts canonically. types = the variable types the preset applies to
 ## (empty = any); detail = the placeholder for the preset's one contextual field ("" = none).
 const _LOOK_PRESETS: Array[Dictionary] = [
 	{"id": "file", "label": "File picker (project files)", "types": ["String"], "detail": "filters, e.g. *.ogg, *.wav"},

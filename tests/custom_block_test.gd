@@ -1,6 +1,6 @@
 # EventForge - the Custom Block API (registered non-ACE row kinds).
 #
-# THE CONTRACT (SPEC-custom-block-api P1): a registered EventSheetBlockKind wires all seams
+# THE CONTRACT: a registered EventSheetBlockKind wires all seams
 # generically - the compiler emits its pure emit(), the importer lifts via byte-verify-gated
 # lift() (a claim that cannot re-emit the source byte-exactly is dropped, the line stays a
 # GDScript block), and the viewport renders kind badge + summary() as a SECTION row. This pins

@@ -191,7 +191,7 @@ func on_group_requested(source_row: EventRowData, target_row: EventRowData) -> v
 		return
 	var sheet: EventSheetResource = _dock._current_sheet
 	var group: String = group_of(sheet, str(target.get("scope")), str(target.get("name")), target.get("resource"))
-	# One level deeper, same gesture (SPEC-full-export-coverage P3): when source and target
+	# One level deeper, same gesture: when source and target
 	# already share the folder, the drop nests them into a SUBGROUP - the naming popup opens
 	# exactly like a fresh group, just one level down (@export_subgroup underneath).
 	var source_group: String = group_of(sheet, str(source.get("scope")), str(source.get("name")), source.get("resource"))
