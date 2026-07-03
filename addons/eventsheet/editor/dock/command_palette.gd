@@ -21,7 +21,7 @@ func init(dock: Control) -> void:
 ## Every command the palette can run: {title, run}. Kept in one place so the palette,
 ## (future) menus, and tests share the same source of truth.
 func _command_palette_commands() -> Array[Dictionary]:
-	return [
+	var commands: Array[Dictionary] = [
 		{"title": "New Sheet…", "run": _dock._open_template_menu},
 		{"title": "Open Sheet…", "run": _dock._on_open_requested},
 		{"title": "Save Sheet", "run": _dock._on_save_requested},
@@ -42,6 +42,13 @@ func _command_palette_commands() -> Array[Dictionary]:
 		{"title": "Export Addon Pack…", "run": _dock._export_addon_pack},
 		{"title": "Open Welcome", "run": _dock.show_welcome},
 	]
+	# One "Add <kind>…" command per registered Custom Block kind (preloads, region markers,
+	# pack-defined kinds), so custom blocks are reachable from Ctrl+P like everything else.
+	# Built per open, so kinds registered after startup (a freshly dropped pack) appear.
+	for kind: EventSheetBlockKind in EventSheetBlockRegistry.all_kinds():
+		var kind_id: String = kind.kind_id
+		commands.append({"title": "Add %s…" % kind.title, "run": func() -> void: _dock._open_custom_block_add(kind_id)})
+	return commands
 
 ## Pure fuzzy filter (testable): returns the commands whose title matches `query` as a
 ## prefix > substring > subsequence, best first. Empty query returns everything in order.

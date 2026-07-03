@@ -131,6 +131,13 @@ static func run() -> bool:
 		if entry is CustomBlockRow and (entry as CustomBlockRow).kind_id == "region":
 			region_count += 1
 	all_passed = _check("add inserts a new region block", region_count, 1) and all_passed
+
+	# ── P3: every registered kind is reachable from the command palette ──
+	var palette_titles: Array = []
+	for command: Dictionary in dock._command_palette_commands():
+		palette_titles.append(str(command.get("title", "")))
+	all_passed = _check("palette lists built-in kinds", palette_titles.has("Add Preload Resource…") and palette_titles.has("Add Region…"), true) and all_passed
+	all_passed = _check("palette lists pack-defined kinds", palette_titles.has("Add Note…"), true) and all_passed
 	dock.free()
 
 	return all_passed

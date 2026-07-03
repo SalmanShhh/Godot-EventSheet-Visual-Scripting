@@ -46,6 +46,9 @@
   proof ships in-repo: `eventsheet_addons/demo_note_block.gd`, a 30-line "Note" kind that turns
   `## NOTE: …` lines into first-class highlighted rows. `docs/CUSTOM-ACES-GUIDE.md` gained a
   "Custom Blocks" chapter walking through it line by line.
+- **P3: custom blocks in the command palette.** Ctrl+P now lists "Add <kind>…" for every
+  registered kind (built-ins and pack-defined alike), built per open so a freshly dropped pack's
+  kinds appear without a restart.
 - **Add + edit UX, zero UI code per kind**: every registered kind gets an entry in the
   **Add ▾** menu and a schema-driven dialog (a text field per String, a checkbox per bool, a
   number spinner per int/float) built straight from its `fields()` schema
