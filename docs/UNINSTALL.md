@@ -11,8 +11,8 @@ the removal below is safe.
 
 ## Recommended order
 
-1. **Run the doctor / eject check while the plugin is still installed.**
-   Dock → **Tools → Eject EventSheets…** (or headless `godot --headless --script tools/eject.gd`).
+1. **Run the doctor check while the plugin is still installed.**
+   Dock → **Tools → Project Doctor…** (or headless `godot --headless --path . --script tools/project_doctor.gd`).
    It recompiles every sheet, fails loudly on any drift, and reports exactly what to keep.
    Do not proceed until it reports **safe**.
 2. **Disable the plugin** (Project → Project Settings → Plugins → Godot EventSheets → off),

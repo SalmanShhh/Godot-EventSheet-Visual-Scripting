@@ -1,5 +1,9 @@
 # Open Sheets panel - Spec (in-workspace "recent sheets" list)
 
+**Status: SHIPPED.** The panel mounts INSIDE the EventSheet workspace (`_open_sheets_panel` in
+`event_sheet_dock.gd` - an HSplit beside the sheet content) with show/collapse state persisted
+per project. The sections below are the design record.
+
 A left-hand list of the **open + recently-closed event sheets**, embedded in the EventSheet
 workspace, so switching between many sheets is one click instead of hunting the tab strip - the
 event-sheet answer to the Godot **script editor's "Filter Scripts" list**. Toggleable and

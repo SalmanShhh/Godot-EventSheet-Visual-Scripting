@@ -4,6 +4,15 @@
 
 ### Changed - documentation cleanup
 
+- **Docs freshness pass** (three parallel code-verified audits over every guide and spec):
+  fixed RECIPES.md's stale "Tools > behaviors" attach path (it is **Tools > Attach to Selected
+  Node**), UNINSTALL.md's removed "Eject EventSheets" menu item and nonexistent `tools/eject.gd`
+  (it is **Tools > Project Doctor** / `tools/project_doctor.gd`), AGENTS.md's outdated
+  groups-dissolve-through-`.gd` note (the round-trip shipped) and screenshots-impossible note
+  (the `tools/render_*.gd` harness renders real editor PNGs), and stamped the Open Sheets panel
+  spec SHIPPED (the panel mounts in-workspace). Deleted the banner-marked historical
+  `EVENTSHEET_ARCHITECTURE_SLICES.md` tracker. Everything else verified accurate.
+
 - **All documentation is now em-dash-free.** Every hand-written doc (README, CHANGELOG, docs/,
   AGENTS.md, CONTRIBUTING.md) plus every GENERATED surface: the vocabulary-doc and pack-README
   formatters and all pack-builder ACE description strings now use plain dashes, so regenerated

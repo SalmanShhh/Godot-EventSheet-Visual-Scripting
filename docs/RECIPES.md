@@ -18,7 +18,7 @@ jump height, wall jump - all the juice).
 
 1. Make a `CharacterBody2D` scene with a sprite + a collision shape.
 2. New sheet → **Sheet Type** → host class `CharacterBody2D`.
-3. Attach the **Platformer** pack as a child node (Tools ▸ behaviors, or drop the pack node in);
+3. Attach the **Platformer** pack as a child node (open the pack sheet and use Tools ▸ Attach to Selected Node, or drop the pack node in);
    set its speed/jump in the Inspector.
 4. One event: trigger **On Process** → action **Move And Slide**. The pack reads input and drives
    `velocity`; Move And Slide applies it.

@@ -57,7 +57,6 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - `docs/GDSCRIPT-PAIRING-SPEC.md` - how the sheet pairs with GDScript (blocks, codegen tooltips, expressions, C3 synonyms, importer round-trip)
 - `docs/EVENTSHEET_THEME_EDITABILITY.md` - designer-facing theme workflow
 - `docs/EVENTSHEET_ALIGNMENT_GUIDE.md` - stacked layout tuning
-- `docs/EVENTSHEET_ARCHITECTURE_SLICES.md` - slice-by-slice completion/scaffold/defer tracker
 - `docs/elements/*.md` - template scene guidance
 - `docs/C3-MIGRATION-GUIDE.md` - user-facing C3→Godot concept/behavior/plugin map
 - `docs/MCP-SERVER.md` - the AI-tooling protocol (list/read/compile/lint/snippets)
@@ -66,7 +65,7 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - `docs/ADDON-COMPOSITION-SPEC.md` - meta-packs, uses/requires, project policy (shipped)
 - `docs/PROGRESSIVE-DISCLOSURE-SPEC.md` - tiered disclosure of dialog complexity (C3-migrant-first; shipped)
 - `docs/INCLUDES-SPEC.md` - Construct "Include event sheet" → compile-time merge (not yet `.gd` round-tripping)
-- `docs/GROUPS-ROUNDTRIP-SPEC.md` - event-group round-trip status (groups dissolve through `.gd`)
+- `docs/GROUPS-ROUNDTRIP-SPEC.md` - event-group round-trip (SHIPPED: groups survive `.gd` round-trips)
 - `CONTRIBUTING.md` - dev setup, verification loop, house rules, gotcha list
 - `CHANGELOG.md` - the authoritative feature ledger per release
 
@@ -85,7 +84,7 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 
 - Condition/action name vs description cells are documented as separate roles but still share one text token in the current renderer.
 - The theme package manifest is documentation/template only; it is not auto-imported yet.
-- UI screenshots still require a Godot runtime; this sandbox may only be able to do syntax-level validation.
+- UI screenshots require a Godot runtime run NON-headless: the `tools/render_*.gd` harness scripts generate real editor-UI PNGs (headless runs cannot render).
 - The parallel Control-widget editor prototypes (`EventRowUI`, `GroupRowUI`, `CommentRowUI`, `VariableRowUI`, `SheetToolbar`, and assorted stubs) were **removed** - they could not scale to large sheets. The custom-rendered virtualized viewport (`EventSheetDock`/`EventSheetViewport`/`EventRowRenderer`) is the sole editor architecture. Variable-row text formatting that the removed widget owned now lives in `addons/eventsheet/editor/variable_row_format.gd` (`VariableRowFormat`).
 
 ## Guidance for future LLM-assisted work
