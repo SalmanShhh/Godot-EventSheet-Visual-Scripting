@@ -553,9 +553,9 @@ static func run() -> bool:
     var editing_context: Dictionary = dock_viewport.get_editing_context_for_test()
     # Enter on a group opens the group editor popup (name + description), not an inline title field.
     all_passed = _check("enter on a group does not start inline editing", editing_context.get("row_index", -1), -1) and all_passed
-    all_passed = _check("enter on a selected group opens the group editor popup", dock._group_edit_target is EventGroup, true) and all_passed
-    all_passed = _check("group editor prefills the current group name", dock._group_name_edit.text, "Rename Me") and all_passed
-    dock._group_edit_dialog.hide()
+    all_passed = _check("enter on a selected group opens the group editor popup", dock._quick_prompts._group_edit_target is EventGroup, true) and all_passed
+    all_passed = _check("group editor prefills the current group name", dock._quick_prompts._group_name_edit.text, "Rename Me") and all_passed
+    dock._quick_prompts._group_edit_dialog.hide()
     dock_viewport._cancel_edit()
     # Add Group auto-opens the new group's editor popup (so naming a group is immediate and
     # discoverable, not a hidden double-click). _begin_group_rename re-selects + opens the popup.
@@ -565,8 +565,8 @@ static func run() -> bool:
     dock_viewport._cancel_edit()
     dock._begin_group_rename(auto_rename_group)
     all_passed = _check("Add Group auto-opens the new group in the editor popup",
-        dock._group_edit_target == auto_rename_group, true) and all_passed
-    dock._group_edit_dialog.hide()
+        dock._quick_prompts._group_edit_target == auto_rename_group, true) and all_passed
+    dock._quick_prompts._group_edit_dialog.hide()
     dock_viewport._cancel_edit()
     dock_viewport._select_row(0)
     dock._unhandled_key_input(rename_key)

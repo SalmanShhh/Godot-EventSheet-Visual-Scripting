@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed - maintainability
+
+- **Quick prompt popups extracted from the dock** into `dock/quick_prompt_dialogs.gd`
+  (`EventSheetQuickPromptDialogs`): the Extract-to-Function name prompt, the Conditional
+  Breakpoint expression prompt, and the Group editor (name + description). Pure move - the dock
+  keeps thin delegates so menus, viewport signals, and tests are unchanged; the dock drops to
+  ~4,100 lines (from 8,500 before the breakdown campaign).
+
 ### Changed - documentation cleanup
 
 - **Docs freshness pass** (three parallel code-verified audits over every guide and spec):
