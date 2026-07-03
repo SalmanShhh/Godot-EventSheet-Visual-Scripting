@@ -115,6 +115,12 @@ func import_external_source(source: String) -> EventSheetResource:
 			sheet.events.append(lifted_signal)
 			index += 1
 			continue
+		var lifted_block: Dictionary = _try_lift_custom_block(lines, index)
+		if not lifted_block.is_empty():
+			_flush_pending(pending, sheet)
+			sheet.events.append(lifted_block["row"])
+			index += int(lifted_block["consumed"])
+			continue
 		pending.append(line)
 		index += 1
 	_flush_pending(pending, sheet)
@@ -358,6 +364,22 @@ func _extract_first_quoted(line: String) -> String:
 	if close_quote < 0:
 		return ""
 	return line.substr(open_quote + 1, close_quote - open_quote - 1)
+
+## Probes every registered Custom Block API kind at this line. Each claim is byte-verify-gated
+## by the kind itself (EventSheetBlockKind.verified_claim): re-emission must reproduce the
+## consumed source lines exactly, so a permissive kind can never corrupt a sheet - it just
+## fails to lift and the lines stay a verbatim GDScript block. Returns {} when no kind claims,
+## else {"row": CustomBlockRow, "consumed": int}.
+func _try_lift_custom_block(lines: PackedStringArray, index: int) -> Dictionary:
+	for kind: EventSheetBlockKind in EventSheetBlockRegistry.all_kinds():
+		var claim: Dictionary = kind.lift(lines, index)
+		if claim.is_empty():
+			continue
+		var block_row: CustomBlockRow = CustomBlockRow.new()
+		block_row.kind_id = kind.kind_id
+		block_row.fields = claim["fields"]
+		return {"row": block_row, "consumed": maxi(1, int(claim.get("consumed", 1)))}
+	return {}
 
 ## Lifts a canonical single-line enum (`enum Name { A, B = 4 }`) to an EnumRow when the
 ## compiler's emission reproduces the line exactly (the verify-lift rule); multi-line or

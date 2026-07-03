@@ -275,6 +275,36 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 	]
 	return row_data
 
+## A Custom Block API row: kind badge + the kind's one-line summary, both owned by the
+## registered EventSheetBlockKind. A block whose kind is unregistered (its pack was removed)
+## renders with a muted generic badge so the sheet stays readable; its emitted GDScript is
+## plain code either way, so nothing else degrades.
+func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = block
+	row_data.row_uid = "custom_block_%s_%d" % [str(block.get_instance_id()), indent]
+	row_data.disabled = not block.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
+	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(block.kind_id)
+	var badge_text: String = kind.title if kind != null else "block"
+	var summary_text: String = kind.summary(block) if kind != null else block.kind_id
+	row_data.spans = [
+		_make_span(
+			badge_text,
+			SemanticSpan.SpanType.KEYWORD,
+			{"badge": true, "text_color": event_style.behavior_accent_color}
+		),
+		_make_span(
+			summary_text,
+			SemanticSpan.SpanType.VALUE,
+			{"kind": "custom_block_row", "text_color": event_style.object_label_color}
+		)
+	]
+	return row_data
+
 ## A signal row: rendered like a declaration ("signal  hit(damage: int)"); double-click
 ## opens the signal dialog.
 func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:

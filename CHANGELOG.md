@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - Custom Block API P1 (the core, shipped)
+
+- **Register your own non-ACE row kinds.** `EventSheetBlockKind` (one stateless descriptor per
+  kind: field schema + pure `emit()` + byte-verify-gated `lift()` + `summary()` display) +
+  `CustomBlockRow` (ONE generic resource per row, so sheets still load and read as plain
+  GDScript when a kind is absent) + `EventSheetBlockRegistry`. The compiler, importer, and
+  viewport are wired ONCE generically: blocks emit in array position on `.gd` sheets, lift only
+  when re-emission reproduces the source byte-exactly (a permissive kind can never corrupt a
+  sheet), and render as a kind badge + one-line summary.
+- **Two built-in proof kinds**: **Preload Resource** (`const Sfx := preload("res://…")`) and
+  **Region marker** (`#region Name` / `#endregion`) - both now open as first-class rows in any
+  `.gd` sheet instead of raw GDScript blocks. (`tests/custom_block_test.gd`)
+
 ### Added - Custom Block API design
 
 - **`docs/internal/SPEC-custom-block-api.md`**: the design for registering NON-ACE row kinds

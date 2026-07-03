@@ -220,6 +220,25 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 				lines.append(annotation_line)
 			lines.append(signal_line)
 			source_map.append({"uid": str(signal_row.get_instance_id()), "start": signal_start, "end": lines.size(), "kind": "signal"})
+	# Custom Block API rows (preloads, region markers, registered pack kinds) emit before the
+	# variables so a `const … := preload(…)` can be referenced by a variable default below.
+	var custom_block_rows: Array = []
+	_collect_custom_blocks(all_events, custom_block_rows)
+	var pending_custom_sections: Array = []
+	for block_entry: Variant in custom_block_rows:
+		var custom_kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind((block_entry as CustomBlockRow).kind_id)
+		if custom_kind == null:
+			continue
+		var custom_lines: PackedStringArray = custom_kind.emit(block_entry as CustomBlockRow)
+		if not custom_lines.is_empty():
+			pending_custom_sections.append({"row": block_entry, "lines": custom_lines})
+	if not pending_custom_sections.is_empty():
+		lines.append("")
+		for custom_section: Variant in pending_custom_sections:
+			var custom_start: int = lines.size() + 1
+			for custom_line: String in (custom_section as Dictionary)["lines"]:
+				lines.append(custom_line)
+			source_map.append({"uid": str(((custom_section as Dictionary)["row"] as CustomBlockRow).get_instance_id()), "start": custom_start, "end": lines.size(), "kind": "custom_block"})
 	var tree_variables: Array = []
 	_collect_tree_variables(all_events, tree_variables)
 	# Nudge (never an error): a deprecated ACE still compiles, but warn once per distinct one so the user
@@ -550,6 +569,18 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 					lines.append(external_annotation_line)
 				lines.append(external_signal_line)
 				source_map.append({"uid": str((entry as SignalRow).get_instance_id()), "start": external_signal_start, "end": lines.size(), "kind": "signal"})
+		elif entry is CustomBlockRow:
+			# Custom Block API: the registered kind owns the GDScript. Emission is in array
+			# position (the same ordering contract enums/signals follow), so a lifted block
+			# re-emits exactly where it came from and the whole-file byte-verify holds.
+			var block_kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind((entry as CustomBlockRow).kind_id)
+			if block_kind != null:
+				var block_lines: PackedStringArray = block_kind.emit(entry as CustomBlockRow)
+				if not block_lines.is_empty():
+					var custom_block_start: int = lines.size() + 1
+					for block_line: String in block_lines:
+						lines.append(block_line)
+					source_map.append({"uid": str((entry as CustomBlockRow).get_instance_id()), "start": custom_block_start, "end": lines.size(), "kind": "custom_block"})
 	# External sheets: raw rows include the original file's verbatim segments, so signals
 	# declared anywhere in the source validate self-connections.
 	var external_raw_rows: Array = []
@@ -1706,6 +1737,16 @@ static func _collect_enum_rows(entries: Array, into: Array) -> void:
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
 			_collect_enum_rows(group.events if not group.events.is_empty() else group.rows, into)
+
+## Gathers Custom Block API rows (registered non-ACE kinds) from the event tree, group-recursive
+## like enums/signals so a block inside a group still emits.
+static func _collect_custom_blocks(entries: Array, into: Array) -> void:
+	for entry: Variant in entries:
+		if entry is CustomBlockRow:
+			into.append(entry)
+		elif entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_collect_custom_blocks(group.events if not group.events.is_empty() else group.rows, into)
 
 ## Gathers stateful-condition member declarations (deduped) from the event tree.
 ## Gathers group-local variables: [{group: name, locals: [LocalVariable…]}] in order.

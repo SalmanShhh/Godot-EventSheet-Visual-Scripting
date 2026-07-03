@@ -1,0 +1,90 @@
+# EventForge - the Custom Block API (registered non-ACE row kinds).
+#
+# THE CONTRACT (SPEC-custom-block-api P1): a registered EventSheetBlockKind wires all seams
+# generically - the compiler emits its pure emit(), the importer lifts via byte-verify-gated
+# lift() (a claim that cannot re-emit the source byte-exactly is dropped, the line stays a
+# GDScript block), and the viewport renders kind badge + summary() as a SECTION row. This pins
+# the registry, both proof kinds (Preload Resource, Region marker), the whole-file round-trip,
+# the verify-gate rejecting near-misses, and undo-snapshot duplication.
+@tool
+extends RefCounted
+class_name CustomBlockTest
+
+const BLOCK_SOURCE := """extends Node
+
+const Sfx := preload("res://sfx/jump.ogg")
+
+#region Combat
+
+func take_hit(damage: int) -> void:
+	pass
+
+#endregion
+"""
+
+static func run() -> bool:
+	var all_passed: bool = true
+
+	# ── The registry ──
+	all_passed = _check("preload kind registered", EventSheetBlockRegistry.get_kind("preload") != null, true) and all_passed
+	all_passed = _check("region kind registered", EventSheetBlockRegistry.get_kind("region") != null, true) and all_passed
+	all_passed = _check("unknown kind resolves null", EventSheetBlockRegistry.get_kind("nope") == null, true) and all_passed
+
+	# ── Import: the preload + both region fences lift to CustomBlockRows ──
+	var importer: GDScriptImporter = GDScriptImporter.new()
+	var sheet: EventSheetResource = importer.import_external_source(BLOCK_SOURCE)
+	sheet.external_source_path = "user://custom_block_sample.gd"
+	var lifted_kinds: Array = []
+	for entry: Variant in sheet.events:
+		if entry is CustomBlockRow:
+			lifted_kinds.append((entry as CustomBlockRow).kind_id)
+	all_passed = _check("preload + both region fences lift", lifted_kinds, ["preload", "region", "region"]) and all_passed
+
+	# ── Round-trip: an untouched sheet reproduces the file byte-identically ──
+	var output: String = str(SheetCompiler.compile(sheet, "user://custom_block_sample.gd").get("output", ""))
+	all_passed = _check("byte-identical round-trip with custom blocks", output, BLOCK_SOURCE) and all_passed
+
+	# ── The verify-gate: near-miss lines stay verbatim GDScript, never a lossy claim ──
+	var hostile: EventSheetResource = importer.import_external_source("extends Node\n\nconst Sfx := preload(\"res://a.ogg\") # keep my comment\n\n#region trailing-space \n")
+	var hostile_blocks: int = 0
+	for entry: Variant in hostile.events:
+		if entry is CustomBlockRow:
+			hostile_blocks += 1
+	all_passed = _check("near-miss preload/region lines stay raw (verify-gated)", hostile_blocks, 0) and all_passed
+
+	# ── The kinds' display contract ──
+	var preload_row: CustomBlockRow = sheet.events[1] if sheet.events.size() > 1 and sheet.events[1] is CustomBlockRow else null
+	if preload_row == null:
+		for entry: Variant in sheet.events:
+			if entry is CustomBlockRow and (entry as CustomBlockRow).kind_id == "preload":
+				preload_row = entry
+				break
+	all_passed = _check("preload summary names constant and path",
+		EventSheetBlockRegistry.get_kind("preload").summary(preload_row), "Sfx = res://sfx/jump.ogg") and all_passed
+
+	# ── The viewport renders a custom block as a SECTION row: kind badge + summary ──
+	var view: EventSheetViewport = EventSheetViewport.new()
+	view.set_ace_registry(EventSheetACERegistry.new())
+	view.size = Vector2(900, 400)
+	view.set_sheet(sheet)
+	var block_row_data: EventRowData = view._build_row_from_resource(preload_row, 0)
+	all_passed = _check("custom block renders as a SECTION row", block_row_data.row_type, EventRowData.RowType.SECTION) and all_passed
+	all_passed = _check("row shows the kind badge", block_row_data.spans[0].text, "Preload Resource") and all_passed
+	all_passed = _check("row shows the kind summary", block_row_data.spans[1].text, "Sfx = res://sfx/jump.ogg") and all_passed
+	view.free()
+
+	# ── Undo-funnel compatibility: snapshot duplication preserves kind + fields ──
+	var clone: CustomBlockRow = preload_row.duplicate(true)
+	all_passed = _check("duplicate keeps kind_id", clone.kind_id, "preload") and all_passed
+	all_passed = _check("duplicate keeps fields", str(clone.fields.get("path", "")), "res://sfx/jump.ogg") and all_passed
+
+	return all_passed
+
+static func _check(label: String, actual: Variant, expected: Variant) -> bool:
+	if actual == expected:
+		print("[PASS] custom_block_test: %s" % label)
+		return true
+	print("[FAIL] custom_block_test: %s" % label)
+	print("  expected: %s" % str(expected))
+	print("  actual:   %s" % str(actual))
+	return false
