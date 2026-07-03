@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - subgroups by the same drag, and a starter that teaches the options
+
+- **One level deeper, same gesture**: dropping a variable onto a variable it ALREADY shares a
+  folder with nests both into a **subgroup** - the same name-it-afterwards popup opens (now
+  saying "names the subgroup"), and it ships as `@export_subgroup` under the group. Renaming
+  reaches every member, dict globals and tree variables alike.
+- **The LootTable starter now demonstrates two real inspector options in context**: a bounded
+  `rolls` slider with an open top (`or_greater`) and a `pickup_sound` file picker
+  (`*.ogg, *.wav`) - a newcomer's first custom resource shows the vocabulary working.
+
 ### Added - the "Inspector look" picker: every export option in plain language
 
 - **The variable dialog teaches the whole export surface.** A type-filtered **Inspector look**

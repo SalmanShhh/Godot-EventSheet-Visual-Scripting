@@ -15,7 +15,9 @@ extends RefCounted
 var _dock: Control = null
 var _rename_popup: PopupPanel = null
 var _rename_field: LineEdit = null
+var _rename_hint: Label = null
 var _rename_from: String = ""
+var _rename_is_subgroup: bool = false  # the popup renames a nested @export_subgroup, not the folder
 
 
 func init(dock: Control) -> void:
@@ -64,6 +66,70 @@ static func set_group(sheet: EventSheetResource, scope: String, var_name: String
 		else:
 			tree_attributes["group"] = clean
 		variable.attributes = tree_attributes
+		return true
+	return false
+
+
+## Renames a subgroup across every member (dict globals + tree variables); "" un-nests.
+static func rename_subgroup(sheet: EventSheetResource, old_subgroup: String, new_subgroup: String) -> int:
+	var from: String = old_subgroup.strip_edges()
+	var changed: int = 0
+	if sheet != null:
+		for var_name: Variant in sheet.variables:
+			if subgroup_of(sheet, "global", str(var_name), null) == from:
+				if set_subgroup(sheet, "global", str(var_name), null, new_subgroup):
+					changed += 1
+		changed += _rename_tree_subgroups(sheet.events, from, new_subgroup)
+	return changed
+
+
+static func _rename_tree_subgroups(rows: Array, from: String, to: String) -> int:
+	var changed: int = 0
+	for row: Variant in rows:
+		if row is LocalVariable:
+			if subgroup_of(null, "tree", "", row as LocalVariable) == from 					and set_subgroup(null, "tree", "", row as LocalVariable, to):
+				changed += 1
+		elif row is EventGroup:
+			var group: EventGroup = row as EventGroup
+			changed += _rename_tree_subgroups(group.events if not group.events.is_empty() else group.rows, from, to)
+	return changed
+
+
+## The subgroup a variable belongs to ("" when none) - the nested Inspector level under its group.
+static func subgroup_of(sheet: EventSheetResource, scope: String, var_name: String, resource: Resource) -> String:
+	if scope == "global" and sheet != null and sheet.variables.get(var_name) is Dictionary:
+		var descriptor: Dictionary = sheet.variables[var_name]
+		if descriptor.get("attributes") is Dictionary:
+			return str((descriptor["attributes"] as Dictionary).get("subgroup", "")).strip_edges()
+	if resource is LocalVariable:
+		var attributes: Variant = (resource as LocalVariable).attributes
+		return str((attributes as Dictionary).get("subgroup", "")).strip_edges() if attributes is Dictionary else ""
+	return ""
+
+
+## Writes a variable's subgroup ("" clears it). Returns true when something changed.
+static func set_subgroup(sheet: EventSheetResource, scope: String, var_name: String, resource: Resource, subgroup: String) -> bool:
+	var clean: String = subgroup.strip_edges()
+	if scope == "global" and sheet != null and sheet.variables.get(var_name) is Dictionary:
+		var descriptor: Dictionary = sheet.variables[var_name]
+		var attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
+		if str(attributes.get("subgroup", "")).strip_edges() == clean:
+			return false
+		if clean.is_empty():
+			attributes.erase("subgroup")
+		else:
+			attributes["subgroup"] = clean
+		descriptor["attributes"] = attributes
+		return true
+	if resource is LocalVariable:
+		var tree_attributes: Dictionary = (resource as LocalVariable).attributes if (resource as LocalVariable).attributes is Dictionary else {}
+		if str(tree_attributes.get("subgroup", "")).strip_edges() == clean:
+			return false
+		if clean.is_empty():
+			tree_attributes.erase("subgroup")
+		else:
+			tree_attributes["subgroup"] = clean
+		(resource as LocalVariable).attributes = tree_attributes
 		return true
 	return false
 
@@ -125,6 +191,28 @@ func on_group_requested(source_row: EventRowData, target_row: EventRowData) -> v
 		return
 	var sheet: EventSheetResource = _dock._current_sheet
 	var group: String = group_of(sheet, str(target.get("scope")), str(target.get("name")), target.get("resource"))
+	# One level deeper, same gesture (SPEC-full-export-coverage P3): when source and target
+	# already share the folder, the drop nests them into a SUBGROUP - the naming popup opens
+	# exactly like a fresh group, just one level down (@export_subgroup underneath).
+	var source_group: String = group_of(sheet, str(source.get("scope")), str(source.get("name")), source.get("resource"))
+	if not group.is_empty() and source_group == group:
+		var subgroup: String = subgroup_of(sheet, str(target.get("scope")), str(target.get("name")), target.get("resource"))
+		var fresh_subgroup: bool = subgroup.is_empty()
+		if fresh_subgroup:
+			subgroup = "New Subgroup"
+		var nested: bool = _dock._perform_undoable_sheet_edit("Subgroup Variables", func() -> bool:
+			var any: bool = false
+			if set_subgroup(_dock._current_sheet, str(target.get("scope")), str(target.get("name")), target.get("resource"), subgroup):
+				any = true
+			if set_subgroup(_dock._current_sheet, str(source.get("scope")), str(source.get("name")), source.get("resource"), subgroup):
+				any = true
+			return any)
+		if nested:
+			_dock._refresh_after_edit()
+			_dock._mark_dirty("Nested %s and %s one level deeper." % [str(source.get("name")), str(target.get("name"))])
+			if fresh_subgroup:
+				open_rename_popup(subgroup, true)
+		return
 	var fresh: bool = group.is_empty()
 	if fresh:
 		group = "New Group"
@@ -150,8 +238,9 @@ func on_rename_requested(group_name: String) -> void:
 	open_rename_popup(group_name)
 
 
-func open_rename_popup(group_name: String) -> void:
+func open_rename_popup(group_name: String, is_subgroup: bool = false) -> void:
 	_rename_from = group_name
+	_rename_is_subgroup = is_subgroup
 	if _rename_popup == null:
 		_rename_popup = PopupPanel.new()
 		var box: VBoxContainer = VBoxContainer.new()
@@ -160,7 +249,8 @@ func open_rename_popup(group_name: String) -> void:
 		_rename_field.custom_minimum_size = Vector2(220.0, 0.0)
 		_rename_field.text_submitted.connect(func(_t: String) -> void: commit_rename())
 		box.add_child(_rename_field)
-		var hint: Label = Label.new()
+		_rename_hint = Label.new()
+		var hint: Label = _rename_hint
 		hint.text = "⏎ names the group · empty ungroups"
 		hint.add_theme_font_size_override("font_size", 10)
 		hint.modulate = Color(1.0, 1.0, 1.0, 0.65)
@@ -168,6 +258,8 @@ func open_rename_popup(group_name: String) -> void:
 		_rename_popup.add_child(box)
 		_dock.add_child(_rename_popup)
 	_rename_field.text = group_name
+	if _rename_hint != null:
+		_rename_hint.text = "⏎ names the subgroup · empty un-nests" if is_subgroup else "⏎ names the group · empty ungroups"
 	if not _rename_popup.is_inside_tree():
 		return  # headless tests: state is set, there is no window to pop
 	_rename_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i(240, 40)))
@@ -183,8 +275,12 @@ func commit_rename() -> void:
 	if old_name.is_empty() or new_name == old_name:
 		return
 	var count := {"changed": 0}
-	var changed: bool = _dock._perform_undoable_sheet_edit("Rename Variable Group", func() -> bool:
-		count["changed"] = rename_group(_dock._current_sheet, old_name, new_name)
+	var edit_label: String = "Rename Variable Subgroup" if _rename_is_subgroup else "Rename Variable Group"
+	var changed: bool = _dock._perform_undoable_sheet_edit(edit_label, func() -> bool:
+		if _rename_is_subgroup:
+			count["changed"] = rename_subgroup(_dock._current_sheet, old_name, new_name)
+		else:
+			count["changed"] = rename_group(_dock._current_sheet, old_name, new_name)
 		return int(count["changed"]) > 0)
 	if changed:
 		_dock._refresh_after_edit()

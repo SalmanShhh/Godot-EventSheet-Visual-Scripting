@@ -100,6 +100,10 @@ static func _build_custom_resource_starter() -> EventSheetResource:
 	sheet.variables = {
 		"entries": {"type": "Array", "default": [], "exported": true, "attributes": {"tooltip": "One item name per entry - duplicates raise the odds."}},
 		"fallback": {"type": "String", "default": "coin", "exported": true},
+		# Two real inspector options as living documentation: a bounded slider with an open top,
+		# and a file picker - the exact annotations show in the variable dialog's "Ships as:" strip.
+		"rolls": {"type": "int", "default": 1, "exported": true, "attributes": {"range": {"min": "1", "max": "10", "step": "1", "or_greater": true}, "tooltip": "How many items one roll yields."}},
+		"pickup_sound": {"type": "String", "default": "", "exported": true, "attributes": {"file": {"mode": "file", "filters": ["*.ogg", "*.wav"]}, "tooltip": "Played when the loot is picked up."}},
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "[b]Custom Resource[/b] - a data asset with logic. The exported variables become fields designers edit per-.tres file (right-click the FileSystem dock > New Resource > LootTable once this compiles). Resources have no _process or _ready: give them [b]functions[/b] instead of events, and call those from the sheets that load the asset."

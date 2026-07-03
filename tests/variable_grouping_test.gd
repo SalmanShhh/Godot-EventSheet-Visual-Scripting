@@ -91,6 +91,24 @@ static func run() -> bool:
 	var output: String = str(SheetCompiler.compile(live, "user://_var_grouping_out.gd").get("output", ""))
 	ok = _check("the folder ships as @export_group", output.contains("@export_group(\"Movement\")"), true) and ok
 
+	# ── One level deeper, same gesture (SPEC-full-export-coverage P3): dropping a variable onto
+	# a variable it ALREADY shares the folder with nests both into a subgroup. ──
+	var live_view: EventSheetViewport = dock._active_view()
+	var nest_source: EventRowData = _variable_row(live_view, "speed")
+	var nest_target: EventRowData = _variable_row(live_view, "jump_power")
+	dock._variable_grouping.on_group_requested(nest_source, nest_target)
+	var live_after: EventSheetResource = dock._current_sheet
+	ok = _check("the drop nests both into a fresh subgroup",
+		str(((live_after.variables.get("speed", {}) as Dictionary).get("attributes", {}) as Dictionary).get("subgroup", "")), "New Subgroup") and ok
+	ok = _check("the naming popup opens in subgroup mode", dock._variable_grouping._rename_is_subgroup, true) and ok
+	dock._variable_grouping._rename_field.text = "Tuning"
+	dock._variable_grouping.commit_rename()
+	ok = _check("naming renames the subgroup for every member",
+		str(((dock._current_sheet.variables.get("jump_power", {}) as Dictionary).get("attributes", {}) as Dictionary).get("subgroup", "")), "Tuning") and ok
+	var nested_output: String = str(SheetCompiler.compile(dock._current_sheet, "user://_var_subgroup_out.gd").get("output", ""))
+	ok = _check("the nest ships as @export_subgroup under the group",
+		nested_output.contains("@export_group(\"Movement\")") and nested_output.contains("@export_subgroup(\"Tuning\")"), true) and ok
+
 	dock.free()
 	return ok
 
