@@ -581,6 +581,13 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 					for block_line: String in block_lines:
 						lines.append(block_line)
 					source_map.append({"uid": str((entry as CustomBlockRow).get_instance_id()), "start": custom_block_start, "end": lines.size(), "kind": "custom_block"})
+		elif entry is FunctionAnchorRow:
+			# A lifted MID-FILE function emits at its original slot (no added blank - the
+			# separator blank lives verbatim in the raw block above). The trailing functions
+			# section skips anchored names, so the function emits exactly once.
+			var anchored_function: EventFunction = _find_function_by_name(sheet, (entry as FunctionAnchorRow).function_name)
+			if anchored_function != null and anchored_function.enabled:
+				_emit_function_block(anchored_function, sheet, lines, source_map, result)
 	# External sheets: raw rows include the original file's verbatim segments, so signals
 	# declared anywhere in the source validate self-connections.
 	var external_raw_rows: Array = []
@@ -592,20 +599,22 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		"declared_signals": _scan_declared_signals(external_raw_rows)
 	}
 	_emit_grouped_trigger_functions(added_event_rows, lines, source_map, result, external_connect_context, deferred_comment_lines_external)
+	# Anchored functions (FunctionAnchorRow) already emitted at their in-file slot above - the
+	# trailing section emits only the rest, so a mid-file lifted helper never re-emits at the end.
+	var anchored_names: Dictionary = {}
+	for entry: Variant in sheet.events:
+		if entry is FunctionAnchorRow:
+			anchored_names[(entry as FunctionAnchorRow).function_name] = true
 	for function_resource: Variant in sheet.functions:
 		if not (function_resource is EventFunction):
 			continue
 		var event_function: EventFunction = function_resource as EventFunction
 		if not event_function.enabled or event_function.function_name.strip_edges().is_empty():
 			continue
+		if anchored_names.has(event_function.function_name):
+			continue
 		lines.append("")
-		var function_start: int = lines.size() + 1
-		_emit_expose_annotations(event_function, sheet, lines)
-		lines.append("func %s(%s) -> %s:" % [event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
-		var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
-		if not _emit_event_body(function_events, lines, source_map, 1, result["warnings"]):
-			lines.append(_empty_function_stub(event_function))
-		source_map.append({"uid": str(event_function.get_instance_id()), "start": function_start, "end": lines.size(), "kind": "function"})
+		_emit_function_block(event_function, sheet, lines, source_map, result)
 
 	# Top-level comments emit last, one blank before each line (main path's deferred format).
 	for comment_line: String in deferred_comment_lines_external:
@@ -621,6 +630,35 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		(result["errors"] as Array[String]).append("Failed to open output path: %s" % final_output_path)
 		return result
 	return result
+
+static func _find_function_by_name(sheet: EventSheetResource, function_name: String) -> EventFunction:
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction and (function_entry as EventFunction).function_name == function_name:
+			return function_entry
+	return null
+
+## One function block (annotations + typed header + body/stub + its source-map range), shared by
+## the trailing functions section, the in-place FunctionAnchorRow slots, and the lifter's
+## per-anchor byte-gate. Deliberately does NOT emit the separating blank line - each call site
+## owns that decision (an anchored mid-file function's preceding blank already lives verbatim in
+## the raw block above it).
+static func _emit_function_block(event_function: EventFunction, sheet: EventSheetResource, lines: PackedStringArray, source_map: Array, result: Dictionary) -> void:
+	var function_start: int = lines.size() + 1
+	_emit_expose_annotations(event_function, sheet, lines)
+	lines.append("func %s(%s) -> %s:" % [event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
+	var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
+	if not _emit_event_body(function_events, lines, source_map, 1, result["warnings"]):
+		lines.append(_empty_function_stub(event_function))
+	source_map.append({"uid": str(event_function.get_instance_id()), "start": function_start, "end": lines.size(), "kind": "function"})
+
+## The lifter's per-anchor gate: exactly what _emit_function_block would produce for this
+## function, as text, with no side effects. A mid-file helper lifts only when this equals the
+## original source lines byte-for-byte, so anchoring can never change a file.
+static func emit_function_block_text(event_function: EventFunction, sheet: EventSheetResource) -> String:
+	var lines: PackedStringArray = PackedStringArray()
+	var scratch: Dictionary = {"warnings": [], "errors": []}
+	_emit_function_block(event_function, sheet, lines, [], scratch)
+	return "\n".join(lines)
 
 ## Instance-backed addon ACEs: baked templates may call through a per-provider member
 ## (`__eventsheet_provider_<Class>.method(...)`). This pass scans the emitted lines for

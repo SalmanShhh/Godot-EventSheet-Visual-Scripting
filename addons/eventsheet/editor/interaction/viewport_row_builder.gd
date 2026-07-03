@@ -305,6 +305,30 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 	]
 	return row_data
 
+## A mid-file lifted function's position marker: the function itself is a real EventFunction
+## (edited via its Define block / the Functions panel); this row just shows WHERE it lives in
+## the file, muted so it reads as structure rather than content.
+func _build_function_anchor_row(anchor: FunctionAnchorRow, indent: int) -> EventRowData:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = anchor
+	row_data.row_uid = "fn_anchor_%s_%d" % [str(anchor.get_instance_id()), indent]
+	row_data.spans = [
+		_make_span(
+			"ƒ",
+			SemanticSpan.SpanType.KEYWORD,
+			{"badge": true, "text_color": event_style.behavior_accent_color}
+		),
+		_make_span(
+			"%s()  - defined here" % anchor.function_name,
+			SemanticSpan.SpanType.VALUE,
+			{"kind": "function_anchor_row", "text_color": event_style.object_label_color}
+		)
+	]
+	return row_data
+
 ## A signal row: rendered like a declaration ("signal  hit(damage: int)"); double-click
 ## opens the signal dialog.
 func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:

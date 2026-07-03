@@ -130,40 +130,85 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 			pending_annotations = {}
 			saw_function = false
 			anchor_index = index + 1
-	if not saw_function or (lifted_events.is_empty() and lifted_functions.is_empty()):
-		return _retry_or_fail(sheet, source, lift_functions) if anchor_index != first_run_index else false
-
+	var trailing_lifted: bool = saw_function and not (lifted_events.is_empty() and lifted_functions.is_empty())
 	var backup: Array[Resource] = sheet.events.duplicate()
 	var functions_backup: Array[Resource] = sheet.functions.duplicate()
-	# The boundary-annotation split (glued to the prelude row) belongs to the FIRST run function —
-	# it only applies when the anchor never moved past it.
-	if anchor_index != first_run_index:
-		boundary_annotations_text = ""
-	sheet.events.resize(anchor_index)
-	# Emission inserts one blank line before each section; the import attached that blank
-	# (and possibly the first function's annotation block) to the preceding row, so drop
-	# them to avoid doubling. The backup array is SHALLOW — the boundary row's original
-	# code must be restored explicitly on revert.
 	var boundary: RawCodeRow = null
 	var boundary_code: String = ""
-	if not sheet.events.is_empty() and sheet.events[sheet.events.size() - 1] is RawCodeRow:
-		boundary = sheet.events[sheet.events.size() - 1] as RawCodeRow
-		boundary_code = boundary.code
-		if not boundary_annotations_text.is_empty() and boundary.code.ends_with(boundary_annotations_text):
-			boundary.code = boundary.code.substr(0, boundary.code.length() - boundary_annotations_text.length())
-		if boundary.code.ends_with("\n"):
-			boundary.code = boundary.code.substr(0, boundary.code.length() - 1)
-		elif boundary.code.strip_edges().is_empty():
-			sheet.events.remove_at(sheet.events.size() - 1)
-	# Reconstruct event groups from the recovered `## @ace_group` declarations + the per-row `# @group:`
-	# tags the lift captured (transient meta on the rows). A no-op when the source declares no groups.
-	lifted_events = _reconstruct_groups(lifted_events, _recover_group_declarations(source))
-	for event: Variant in lifted_events:
-		sheet.events.append(event)
-	for comment: Variant in lifted_comments:
-		sheet.events.append(comment)
-	for function: Variant in lifted_functions:
-		sheet.functions.append(function)
+	if trailing_lifted:
+		# The boundary-annotation split (glued to the prelude row) belongs to the FIRST run function —
+		# it only applies when the anchor never moved past it.
+		if anchor_index != first_run_index:
+			boundary_annotations_text = ""
+		sheet.events.resize(anchor_index)
+		# Emission inserts one blank line before each section; the import attached that blank
+		# (and possibly the first function's annotation block) to the preceding row, so drop
+		# them to avoid doubling. The backup array is SHALLOW — the boundary row's original
+		# code must be restored explicitly on revert.
+		if not sheet.events.is_empty() and sheet.events[sheet.events.size() - 1] is RawCodeRow:
+			boundary = sheet.events[sheet.events.size() - 1] as RawCodeRow
+			boundary_code = boundary.code
+			if not boundary_annotations_text.is_empty() and boundary.code.ends_with(boundary_annotations_text):
+				boundary.code = boundary.code.substr(0, boundary.code.length() - boundary_annotations_text.length())
+			if boundary.code.ends_with("\n"):
+				boundary.code = boundary.code.substr(0, boundary.code.length() - 1)
+			elif boundary.code.strip_edges().is_empty():
+				sheet.events.remove_at(sheet.events.size() - 1)
+		# Reconstruct event groups from the recovered `## @ace_group` declarations + the per-row `# @group:`
+		# tags the lift captured (transient meta on the rows). A no-op when the source declares no groups.
+		lifted_events = _reconstruct_groups(lifted_events, _recover_group_declarations(source))
+		for event: Variant in lifted_events:
+			sheet.events.append(event)
+		for comment: Variant in lifted_comments:
+			sheet.events.append(comment)
+		for function: Variant in lifted_functions:
+			sheet.functions.append(function)
+
+	# MID-FILE helper functions: the trailing run above can only lift functions at the file's
+	# end (they emit in the trailing functions section). A helper stranded between raw blocks
+	# lifts here instead, anchored in place: its row becomes a FunctionAnchorRow and the
+	# external compile path emits the function AT THAT SLOT. Each candidate is gated
+	# individually - it anchors only when the compiler's re-emission reproduces the row's bytes
+	# exactly - so this pass can never regress a file that already lifts (a failed candidate
+	# just stays a raw block). Runs after the backup above, so the whole-file revert undoes it.
+	var anchored_count: int = 0
+	if lift_functions:
+		for mid_index in range(sheet.events.size()):
+			var mid_row: RawCodeRow = sheet.events[mid_index] as RawCodeRow
+			if mid_row == null or not mid_row.code.begins_with("func "):
+				continue
+			var mid_header: String = mid_row.code.split("\n")[0]
+			if LIFECYCLE_TRIGGERS.has(mid_header) or _is_connected_handler(mid_header, connections):
+				continue
+			# Engine virtual callbacks are STRUCTURE, not sheet vocabulary: `_enter_tree` is the
+			# host binding (folds to metadata on open), `_get_configuration_warnings` is the
+			# requires-behavior guard, and so on. Lifting one to an editable EventFunction would
+			# hide load-bearing boilerplate inside the Functions panel. Private HELPERS
+			# (`_get_pool`) still lift - only known virtual names are excluded.
+			if _is_engine_virtual_header(mid_header):
+				continue
+			# A `## @ace_*` block right above belongs to this function (exposure metadata); the
+			# trailing scan owns that flow - anchoring would silently orphan the annotations.
+			if mid_index > 0 and sheet.events[mid_index - 1] is RawCodeRow:
+				var previous_lines: PackedStringArray = (sheet.events[mid_index - 1] as RawCodeRow).code.strip_edges().split("\n")
+				if previous_lines[previous_lines.size() - 1].strip_edges().begins_with("## @ace_"):
+					continue
+			var mid_lift: Dictionary = _lift_sheet_function(mid_row.code.split("\n"), {})
+			if not bool(mid_lift.get("ok", false)):
+				continue
+			var mid_function: EventFunction = mid_lift.get("function")
+			if mid_function == null or SheetCompiler._find_function_by_name(sheet, mid_function.function_name) != null:
+				continue
+			if SheetCompiler.emit_function_block_text(mid_function, sheet) != mid_row.code:
+				continue
+			var anchor: FunctionAnchorRow = FunctionAnchorRow.new()
+			anchor.function_name = mid_function.function_name
+			sheet.events[mid_index] = anchor
+			sheet.functions.append(mid_function)
+			anchored_count += 1
+	if not trailing_lifted and anchored_count == 0:
+		# Nothing lifted anywhere and nothing was mutated - same exit the trailing-only lift had.
+		return _retry_or_fail(sheet, source, lift_functions) if anchor_index != first_run_index else false
 
 	# Verify: the lifted sheet must reproduce the source byte-for-byte.
 	var saved_path: String = sheet.external_source_path
@@ -196,6 +241,21 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	if boundary != null:
 		boundary.code = boundary_code
 	return _retry_or_fail(sheet, source, lift_functions)
+
+## Godot engine virtual callbacks by header name - excluded from the mid-file anchor lift (they
+## are structural boilerplate, not vocabulary; several are regenerated from sheet metadata).
+static func _is_engine_virtual_header(header: String) -> bool:
+	var name_end: int = header.find("(")
+	if name_end < 0:
+		return false
+	var function_name: String = header.substr(5, name_end - 5).strip_edges()
+	return function_name in [
+		"_init", "_ready", "_enter_tree", "_exit_tree", "_process", "_physics_process",
+		"_input", "_unhandled_input", "_unhandled_key_input", "_shortcut_input", "_gui_input",
+		"_draw", "_notification", "_get_configuration_warnings", "_to_string",
+		"_get_property_list", "_validate_property", "_property_can_revert", "_property_get_revert",
+		"_integrate_forces", "_physics_process_internal",
+	]
 
 ## The two-pass fallback: a failed full lift retries event-only before giving up, so the
 ## function/comment upgrades can never regress what already lifted before them.

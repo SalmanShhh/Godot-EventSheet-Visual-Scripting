@@ -1937,6 +1937,8 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 		row_data = _build_signal_row(entry as SignalRow, indent)
 	elif entry is CustomBlockRow:
 		row_data = _row_builder._build_custom_block_row(entry as CustomBlockRow, indent)
+	elif entry is FunctionAnchorRow:
+		row_data = _row_builder._build_function_anchor_row(entry as FunctionAnchorRow, indent)
 	elif entry is EventRow:
 		row_data = _build_event_row(entry as EventRow, indent)
 	if row_data != null and not _row_diagnostics.is_empty():

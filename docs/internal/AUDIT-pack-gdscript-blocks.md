@@ -82,5 +82,11 @@ what C3 users expect.
 - **The 63 in-flow blocks are a feature, not a wart** - the GDScript-as-action affordance (`cb82030`)
   makes "drop to code here" a deliberate, discoverable C3-style action.
 
-**Remaining:** only the mid-file lifted-function *emission position* problem (its own task) blocks the
-last handful of custom-return helpers. Everything else in this audit is resolved.
+**Remaining:** the *emission position* problem is SOLVED - a mid-file helper now lifts to a real
+EventFunction anchored in place (`FunctionAnchorRow`: the external compile path emits the function
+at its original slot, each anchor individually byte-gated, engine virtual callbacks excluded). The
+last custom-return helpers (`_get_pool` and friends) are now blocked ONLY by body-statement
+coverage: their bodies use statements with no ACE template (dictionary-entry assignment), and the
+fidelity-first carve-out keeps such bodies as code. They stay readable as verb shells; closing that
+is vocabulary work (the near-zero-rawcode roadmap), not structural work. Everything structural in
+this audit is resolved.

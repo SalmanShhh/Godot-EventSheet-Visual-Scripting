@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - mid-file functions lift in place (FunctionAnchorRow)
+
+- **A helper function in the MIDDLE of a hand-written `.gd` now lifts to a real, editable
+  EventFunction.** Before, only a trailing run of functions could reverse-lift (functions emit
+  in the trailing section, so a mid-file lift would reorder the file and fail the byte-verify).
+  Now the lifter replaces the helper's slot with a `FunctionAnchorRow` and the compile path
+  emits the function exactly there. Every anchor is gated individually - it lifts only when the
+  compiler's re-emission reproduces the source lines byte-for-byte - so a file that lifts today
+  can never regress; an unreproducible helper just stays a GDScript block. Engine virtual
+  callbacks (`_enter_tree`, `_process`, `_get_configuration_warnings`, …) are excluded: they are
+  structure, not vocabulary. Anchors render as a muted "ƒ name() - defined here" marker; the
+  function itself is edited through its Define block / the Functions panel.
+  (`tests/mid_file_function_lift_test.gd`)
+
 ### Added - Custom Block API P1 (the core, shipped)
 
 - **Register your own non-ACE row kinds.** `EventSheetBlockKind` (one stateless descriptor per
