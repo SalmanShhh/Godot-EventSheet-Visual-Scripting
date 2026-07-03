@@ -2378,16 +2378,27 @@ func _on_exposed_row_param_changed(target: Resource, param_id: String, value: Va
 
 # ── Enum / Signal / Match row editors → dock/struct_row_dialogs.gd ──
 func _open_enum_dialog(enum_resource: Resource) -> void:  # viewport enum_edit_requested
-	_struct_rows.open_enum_dialog(enum_resource)
+	_open_block_editor(enum_resource)
 
 
 func _open_signal_dialog(signal_resource: Resource) -> void:  # viewport signal_edit_requested
-	_struct_rows.open_signal_dialog(signal_resource)
+	_open_block_editor(signal_resource)
+
+
+## THE block edit dispatcher: every registered kind may own its editor (kind.edit returns
+## true); anything else built on CustomBlockRow gets the generic schema dialog. Built-ins
+## (enum, signal) and pack kinds dispatch identically - the registry is the single seam.
+func _open_block_editor(entry: Resource) -> void:
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.kind_for(entry)
+	if kind != null and kind.edit(self, entry):
+		return
+	if entry is CustomBlockRow:
+		_custom_block_dialog.open_edit(entry)
 
 
 # Custom Block API rows (dock/custom_block_dialog.gd): edit on double-click, add from the Add menu.
 func _open_custom_block_dialog(block_resource: Resource) -> void:  # viewport custom_block_edit_requested
-	_custom_block_dialog.open_edit(block_resource)
+	_open_block_editor(block_resource)
 
 
 func _open_custom_block_add(kind_id: String) -> void:  # Add menu

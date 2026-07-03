@@ -67,6 +67,14 @@ func register_script_as_provider(script_path: String) -> void:
 	emit_signal("providers_changed")
 
 
+## Registers a Custom Block kind from another plugin/tool in code - the sibling of
+## register_script_as_provider for row kinds instead of ACEs. The instance registers
+## immediately (duplicate kind_ids keep the first, exactly like the folder scan).
+func register_block_kind(kind: EventSheetBlockKind) -> void:
+	EventSheetBlockRegistry.register_kind(kind)
+	emit_signal("providers_changed")
+
+
 static func register_provider_script(script_path: String) -> void:
 	var resolved: String = script_path.strip_edges()
 	if resolved.is_empty() or _registered_provider_scripts.has(resolved):

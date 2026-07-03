@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - the Custom Block API is complete: edit seam + plugin-to-plugin registration
+
+- **Kinds own their editors.** `EventSheetBlockKind.edit(dock, block)` lets a kind open its own
+  dialog instead of the generic schema form, and the dock now routes EVERY block edit through
+  the registry - dogfooded immediately: the built-in enum and signal rows dispatch to their
+  dedicated dialogs through the hook, so built-ins and pack kinds edit through one seam.
+- **Other plugins can register kinds in code**: `EventForgeBridgeRuntime.register_block_kind()`,
+  the sibling of `register_script_as_provider`, for tools that cannot drop files into
+  `eventsheet_addons/`. The Custom Blocks guide documents both.
+
+
 ### Fixed - three bugs from the adversarial code review
 
 - **Renaming a variable subgroup now reaches members nested under an event's sub-rows** - the

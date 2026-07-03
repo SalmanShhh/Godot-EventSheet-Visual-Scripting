@@ -687,6 +687,12 @@ files. Rules that keep it safe:
   Godot project cannot run.
 - **Adding a field later**: read with `fields.get(id, default)` so old saved blocks keep
   working. Removing a field is a compat break - deprecate the kind instead.
+- **Outgrew the schema dialog?** Override `edit(dock, block) -> bool`: open your own dialog
+  and return `true` (the built-in enum and signal rows work exactly this way - the registry
+  dispatches every block edit).
+- **Registering from another plugin** (no file in `eventsheet_addons/`): call
+  `EventForgeBridgeRuntime.new().register_block_kind(my_kind)` - the sibling of
+  `register_script_as_provider` for row kinds.
 
 ## 14. Tips and Common Mistakes
 

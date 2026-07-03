@@ -151,6 +151,11 @@ class EnumBlockKind extends EventSheetBlockKind:
 	func addable() -> bool:
 		return false
 
+	## The enum dialog IS this kind's custom editor - the registry dispatches the edit.
+	func edit(dock: Control, block: Resource) -> bool:
+		dock._struct_rows.open_enum_dialog(block)
+		return true
+
 	func source_map_kind() -> String:
 		return "enum"
 
@@ -212,6 +217,11 @@ class SignalBlockKind extends EventSheetBlockKind:
 
 	func addable() -> bool:
 		return false
+
+	## The signal dialog IS this kind's custom editor - the registry dispatches the edit.
+	func edit(dock: Control, block: Resource) -> bool:
+		dock._struct_rows.open_signal_dialog(block)
+		return true
 
 	func source_map_kind() -> String:
 		return "signal"

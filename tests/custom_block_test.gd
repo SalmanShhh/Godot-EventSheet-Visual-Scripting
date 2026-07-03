@@ -160,6 +160,28 @@ static func run() -> bool:
 			region_count += 1
 	all_passed = _check("add inserts a new region block", region_count, 1) and all_passed
 
+	# ── The edit seam is registry-dispatched: built-in resource kinds own their editors ──
+	var edit_enum: EnumRow = EnumRow.new()
+	edit_enum.enum_name = "Phase"
+	edit_enum.members = PackedStringArray(["OPEN", "SHUT"])
+	dock._open_block_editor(edit_enum)
+	all_passed = _check("editing an enum routes through its kind to the enum dialog",
+		dock._struct_rows._enum_target == edit_enum, true) and all_passed
+	var schema_block: CustomBlockRow = CustomBlockRow.new()
+	schema_block.kind_id = "preload"
+	schema_block.fields = {"name": "Sfx", "path": "res://sfx/a.ogg"}
+	dock._open_block_editor(schema_block)
+	all_passed = _check("a schema kind still gets the generic dialog",
+		(dock._custom_block_dialog._field_controls.get("name") as LineEdit).text, "Sfx") and all_passed
+
+	# ── Plugin-to-plugin registration: the bridge registers kinds in code ──
+	var bridge_kind: EventSheetBlockKind = EventSheetBlockKind.new()
+	bridge_kind.kind_id = "test.bridge_kind"
+	bridge_kind.title = "Bridge Kind"
+	EventForgeBridgeRuntime.new().register_block_kind(bridge_kind)
+	all_passed = _check("a bridge-registered kind resolves like any other",
+		EventSheetBlockRegistry.get_kind("test.bridge_kind") == bridge_kind, true) and all_passed
+
 	# ── P3: every registered kind is reachable from the command palette ──
 	var palette_titles: Array = []
 	for command: Dictionary in dock._command_palette_commands():

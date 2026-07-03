@@ -86,6 +86,14 @@ func addable() -> bool:
 	return true
 
 
+## Optional custom editor: open your own dialog for this block and return true, or return
+## false for the generic schema-driven dialog. The dock routes EVERY block edit through the
+## registry, so a kind that outgrows the schema (multi-line members, node pickers...) owns its
+## editing end to end - the built-in enum and signal kinds work exactly this way.
+func edit(_dock: Control, _block: Resource) -> bool:
+	return false
+
+
 ## A convenience for lift(): builds the fields Dictionary and verifies emit() reproduces the
 ## consumed lines byte-exactly, returning {} on mismatch. Kinds normally end lift() with this.
 func verified_claim(recovered_fields: Dictionary, source_lines: PackedStringArray, i: int, consumed: int) -> Dictionary:
