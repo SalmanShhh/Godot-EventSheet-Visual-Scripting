@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed - the editor opens and switches tabs much faster
+
+- **ACE definitions are cached across registry refreshes.** Reflecting the 30+ provider
+  scripts into ~1,400 definitions cost ~200 ms and ran on EVERY tab activation; measured
+  refreshes now take ~5 ms warm. Safe because definitions are immutable after generation (the
+  apply path bakes templates into row copies, never back into a definition); builtins cache
+  per session, and script-backed sources key on path + saved mtime so saving a provider
+  script self-invalidates its entry - no manual invalidation to forget.
+  (`tests/ace_registry_cache_test.gd`)
+
+
 ### Added - the Custom Block API is complete: edit seam + plugin-to-plugin registration
 
 - **Kinds own their editors.** `EventSheetBlockKind.edit(dock, block)` lets a kind open its own

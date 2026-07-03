@@ -7,19 +7,49 @@ var _definitions: Array[ACEDefinition] = []
 var _definitions_by_key: Dictionary = {}
 var _source_objects: Array[Object] = []
 
+# ── The startup/tab-switch cache ──────────────────────────────────────────────────────────────
+# Reflecting 30+ provider scripts into ~1,400 definitions costs ~200 ms, and refresh runs on
+# every tab activation. Definitions are IMMUTABLE after generation (the apply path bakes
+# templates into ACEAction/ACECondition COPIES, never back into a definition), so they are safe
+# to share across refreshes and registry instances. Builtins never change within a session;
+# script-backed sources key on path + file mtime, so SAVING a provider script self-invalidates
+# its entry (no explicit invalidation calls to forget).
+static var _builtin_definition_cache: Array[ACEDefinition] = []
+static var _source_definition_cache: Dictionary = {}
+
 
 func refresh_from_sources(sources: Array[Object], include_builtin: bool = true) -> void:
 	_definitions.clear()
 	_definitions_by_key.clear()
 	_source_objects = sources.duplicate()
 	if include_builtin:
-		for descriptor in ACERegistry.get_all_descriptors():
-			_store_definition(EventSheetACEAdapter.from_eventforge_descriptor(descriptor))
+		if _builtin_definition_cache.is_empty():
+			for descriptor in ACERegistry.get_all_descriptors():
+				_builtin_definition_cache.append(EventSheetACEAdapter.from_eventforge_descriptor(descriptor))
+		for builtin_definition in _builtin_definition_cache:
+			_store_definition(builtin_definition)
 	for source_object in sources:
 		if source_object == null:
 			continue
-		for definition in _generator.generate_from_object(source_object):
+		var cache_key: String = _source_cache_key(source_object)
+		if not cache_key.is_empty() and _source_definition_cache.has(cache_key):
+			for cached_definition: ACEDefinition in _source_definition_cache[cache_key]:
+				_store_definition(cached_definition)
+			continue
+		var generated: Array[ACEDefinition] = _generator.generate_from_object(source_object)
+		if not cache_key.is_empty():
+			_source_definition_cache[cache_key] = generated
+		for definition in generated:
 			_store_definition(definition)
+
+
+## Cache identity for a reflectable source: its script's path + saved mtime. "" (uncacheable)
+## for sources without a saved script - those reflect fresh every time, as before.
+static func _source_cache_key(source_object: Object) -> String:
+	var script: Script = source_object.get_script() as Script
+	if script == null or script.resource_path.is_empty():
+		return ""
+	return "%s|%d" % [script.resource_path, FileAccess.get_modified_time(script.resource_path)]
 
 
 func hot_reload() -> void:
