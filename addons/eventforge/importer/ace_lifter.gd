@@ -193,7 +193,7 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 				var previous_lines: PackedStringArray = (sheet.events[mid_index - 1] as RawCodeRow).code.strip_edges().split("\n")
 				if previous_lines[previous_lines.size() - 1].strip_edges().begins_with("## @ace_"):
 					continue
-			var mid_lift: Dictionary = _lift_sheet_function(mid_row.code.split("\n"), {})
+			var mid_lift: Dictionary = _lift_sheet_function(mid_row.code.split("\n"), {}, true)
 			if not bool(mid_lift.get("ok", false)):
 				continue
 			var mid_function: EventFunction = mid_lift.get("function")
@@ -745,7 +745,7 @@ static func _parse_annotations(code: String) -> Dictionary:
 ## A non-trigger function → EventFunction (sheet function), body parsed with the same
 ## grammar as event bodies (events without triggers). {} fields come from the preceding
 ## annotation block (every generated sheet function has one: @ace_action… or @ace_hidden).
-static func _lift_sheet_function(function_lines: PackedStringArray, annotations: Dictionary) -> Dictionary:
+static func _lift_sheet_function(function_lines: PackedStringArray, annotations: Dictionary, allow_custom_return: bool = false) -> Dictionary:
 	# A generated sheet function always carries an annotation block (@ace_action… or @ace_hidden); a
 	# hand-written helper in an opened .gd has none. Both lift — the un-annotated one becomes an
 	# un-exposed function whose @ace_hidden emission is suppressed (lifted_unannotated), so it
@@ -762,16 +762,20 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	event_function.function_name = header_match.get_string(1)
 	var return_name: String = header_match.get_string(3) if header_match.get_group_count() >= 3 else "void"
 	var return_types: Dictionary = {"void": TYPE_NIL, "bool": TYPE_BOOL, "int": TYPE_INT, "float": TYPE_FLOAT, "String": TYPE_STRING, "Vector2": TYPE_VECTOR2, "Vector3": TYPE_VECTOR3, "Color": TYPE_COLOR, "Array": TYPE_ARRAY, "Dictionary": TYPE_DICTIONARY, "Variant": TYPE_MAX}
-	if not return_types.has(return_name):
-		# A custom / engine class the Variant.Type set can't name (`HealthPool`, `Camera2D`). The
-		# emitter CAN reproduce it (via return_type_name), but AUTO-LIFTING such a helper still doesn't
-		# pay: they're private helpers defined mid-file, and a lifted function emits into
-		# sheet.functions at the file's END — reordering the output and failing the byte-verify for the
-		# whole run. So they stay raw (readable as verb shells) until lifted functions can emit in
-		# source position. The field itself powers the FORWARD path: a Studio-authored verb returning a
-		# custom/engine class round-trips (see function_dialog + the emitter).
+	if return_types.has(return_name):
+		event_function.return_type = return_types[return_name]
+	elif allow_custom_return:
+		# A custom / engine class the Variant.Type set can't name (`HealthPool`, `Camera2D`):
+		# return_type_name carries it verbatim and the emitter re-emits it exactly. ONLY the
+		# FunctionAnchorRow pass may take this branch - anchored emission stays in source
+		# position and each anchor is byte-gated. The TRAILING scan must keep refusing these:
+		# claiming a mid-run custom-return helper there re-emits it at the file's end, reorders
+		# the output, fails the whole-file verify, and reverts EVERYTHING the run lifted
+		# (health went 34 lifted functions -> 0 when this gate was opened for both paths).
+		event_function.return_type = TYPE_MAX
+		event_function.return_type_name = return_name
+	else:
 		return {"ok": false}
-	event_function.return_type = return_types[return_name]
 	for argument: String in header_match.get_string(2).split(", ", false):
 		var param: ACEParam = ACEParam.new()
 		var argument_text: String = argument

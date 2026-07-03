@@ -85,8 +85,8 @@ what C3 users expect.
 **Remaining:** the *emission position* problem is SOLVED - a mid-file helper now lifts to a real
 EventFunction anchored in place (`FunctionAnchorRow`: the external compile path emits the function
 at its original slot, each anchor individually byte-gated, engine virtual callbacks excluded). The
-last custom-return helpers (`_get_pool` and friends) are now blocked ONLY by body-statement
-coverage: their bodies use statements with no ACE template (dictionary-entry assignment), and the
-fidelity-first carve-out keeps such bodies as code. They stay readable as verb shells; closing that
-is vocabulary work (the near-zero-rawcode roadmap), not structural work. Everything structural in
-this audit is resolved.
+custom-return helpers lift too: the anchor path accepts `-> HealthPool`-style headers via
+return_type_name (the trailing scan still refuses them - claiming one there would reorder the file
+and revert the whole run). Health lifts 35 functions with `_get_pool` anchored in place. Every gap
+in this audit is now resolved; whatever stays raw does so because a byte gate refused it, which is
+the covenant working.

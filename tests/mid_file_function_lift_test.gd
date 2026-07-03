@@ -71,6 +71,23 @@ static func run() -> bool:
 	all_passed = _check("near-miss file still round-trips verbatim",
 		str(SheetCompiler.compile(near_miss, "user://mid_fn_near_miss.gd").get("output", "")), NEAR_MISS_SOURCE) and all_passed
 
+	# ── Custom-return helpers (the audit's last blocked class) anchor too ──
+	var custom_sheet: EventSheetResource = importer.import_external_source("extends Node\n\nvar pools: Dictionary = {}\n\nfunc _get_pool(type: String) -> HealthPool:\n\tif not pools.has(type):\n\t\tpools[type] = HealthPool.new()\n\treturn pools[type]\n\nif true:\n\tpass\n")
+	custom_sheet.external_source_path = "user://mid_fn_custom.gd"
+	var custom_anchor: FunctionAnchorRow = null
+	for entry: Variant in custom_sheet.events:
+		if entry is FunctionAnchorRow:
+			custom_anchor = entry
+	all_passed = _check("a custom-return helper anchors in place", custom_anchor != null and custom_anchor.function_name == "_get_pool", true) and all_passed
+	var custom_fn: EventFunction = null
+	for function_entry: Variant in custom_sheet.functions:
+		if function_entry is EventFunction:
+			custom_fn = function_entry
+	all_passed = _check("its custom return type rides return_type_name",
+		custom_fn != null and custom_fn.return_type_name == "HealthPool", true) and all_passed
+	all_passed = _check("custom-return anchor round-trips byte-identically",
+		str(SheetCompiler.compile(custom_sheet, "user://mid_fn_custom.gd").get("output", "")).contains("func _get_pool(type: String) -> HealthPool:"), true) and all_passed
+
 	# ── The anchor renders as a muted marker row ──
 	var view: EventSheetViewport = EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())

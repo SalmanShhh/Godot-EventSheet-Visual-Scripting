@@ -20,8 +20,12 @@ static func run() -> bool:
 	authored.host_class = "Node"
 	authored.tool_mode = true
 	authored.external_source_path = "user://_per_fn_lift_source.gd"
+	# No `-> Type` on the header: the function-lift regex refuses it on EVERY path (trailing and
+	# the mid-file anchor pass alike), so it reliably pins "one unliftable function does not revert
+	# the clean tail". (Its old `-> HairyType` shape now LIFTS via FunctionAnchorRow - custom-return
+	# helpers anchor in place - so it no longer serves as the unliftable fixture.)
 	var hairy: RawCodeRow = RawCodeRow.new()
-	hairy.code = "func gnarly(a: Array) -> HairyType:\n	return a.reduce(func(x, y): return x + y)"
+	hairy.code = "func gnarly(a: Array):\n	return a.reduce(func(x, y): return x + y)"
 	authored.events.append(hairy)
 	for spec: Array in [["ping", TYPE_NIL, "Ping"], ["answer", TYPE_FLOAT, "Answer"]]:
 		var verb: EventFunction = EventFunction.new()

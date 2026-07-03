@@ -57,7 +57,10 @@ static func run() -> bool:
 	var opened: EventSheetResource = GDScriptImporter.new().import_external_source(source)
 	opened.external_source_path = "user://_raw_shell_source.gd"
 	dock.setup(opened)
-	ok = _check("the custom-return verb stayed raw (nothing lifted)", opened.functions.size(), 0) and ok
+	# The plain `_warmup` helper anchors in place now (custom returns lift via FunctionAnchorRow);
+	# only the ANNOTATED verb must stay raw - its `## @ace_*` wall belongs to the trailing-scan
+	# flow, so the anchor pass refuses it and the shell stays the honest fallback.
+	ok = _check("the annotated custom-return verb stays raw (only _warmup lifts)", opened.functions.size(), 1) and ok
 	var view: EventSheetViewport = dock._active_view()
 	var shell_row: EventRowData = null
 	for entry: Dictionary in view.get_flat_rows():

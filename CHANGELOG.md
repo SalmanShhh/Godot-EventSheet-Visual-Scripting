@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - custom-return helpers lift too (the pack audit's last blocked class)
+
+- **`_get_pool(type: String) -> HealthPool`-style helpers now lift to real, editable
+  EventFunctions.** The lifter refused any function returning a custom/engine class because it
+  could only emit functions at the file's end; with in-place anchors that refusal is obsolete on
+  the ANCHOR path - `return_type_name` carries the class verbatim and each helper still passes
+  the per-anchor byte gate. The trailing scan deliberately keeps refusing them (claiming one
+  there would reorder the file and revert the whole run - the health pack went 34 lifted
+  functions to 0 during development when both paths were opened; the flag split fixed it).
+  Health now lifts 35 functions with `_get_pool` anchored in place.
+
 ### Added - mid-file functions lift in place (FunctionAnchorRow)
 
 - **A helper function in the MIDDLE of a hand-written `.gd` now lifts to a real, editable
