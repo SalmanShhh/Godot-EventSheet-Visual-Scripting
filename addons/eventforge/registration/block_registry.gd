@@ -23,6 +23,18 @@ static func get_kind(kind_id: String) -> EventSheetBlockKind:
 	_ensure_built_ins()
 	return _kinds.get(kind_id, null)
 
+## The kind responsible for a row instance: CustomBlockRow resolves by its kind_id; the
+## plugin's own row classes (EnumRow, ...) resolve through each resource kind's handles().
+## Null when nothing claims it.
+static func kind_for(entry: Resource) -> EventSheetBlockKind:
+	_ensure_built_ins()
+	if entry is CustomBlockRow:
+		return get_kind((entry as CustomBlockRow).kind_id)
+	for kind: EventSheetBlockKind in all_kinds():
+		if kind.handles(entry):
+			return kind
+	return null
+
 ## All registered kinds, sorted by kind_id for deterministic menus and lift-probe order.
 static func all_kinds() -> Array[EventSheetBlockKind]:
 	_ensure_built_ins()
@@ -33,12 +45,22 @@ static func all_kinds() -> Array[EventSheetBlockKind]:
 		kinds.append(_kinds[id])
 	return kinds
 
+## The kinds the generic add surfaces (Add menu, palette, schema dialog) may offer - resource
+## kinds (the plugin's own row classes) are excluded; their classes have dedicated flows.
+static func addable_kinds() -> Array[EventSheetBlockKind]:
+	var kinds: Array[EventSheetBlockKind] = []
+	for kind: EventSheetBlockKind in all_kinds():
+		if kind.addable():
+			kinds.append(kind)
+	return kinds
+
 static func _ensure_built_ins() -> void:
 	if _built_ins_registered:
 		return
 	_built_ins_registered = true
 	register_kind(PreloadBlockKind.new())
 	register_kind(RegionBlockKind.new())
+	register_kind(EnumBlockKind.new())
 	rescan_pack_kinds()
 
 ## Zero-config pack kinds, mirroring how ACE providers register: any script under
@@ -101,6 +123,69 @@ class PreloadBlockKind extends EventSheetBlockKind:
 
 	func summary(block: CustomBlockRow) -> String:
 		return "%s = %s" % [str(block.fields.get("name", "")), str(block.fields.get("path", ""))]
+
+
+# ── Built-in RESOURCE kind: enum rows (`enum Mode { IDLE, RUN }`) ──
+# The plugin's own EnumRow runs ON the Custom Block API: the compiler's enum emission, the
+# importer's enum lift, and the viewport's enum summary all dispatch through this kind, so the
+# registry is load-bearing for a shipped feature - not just an extension point. Instances stay
+# EnumRow resources (saved .tres sheets and the enum dialog are untouched), which is why this
+# kind is not addable() from the generic surfaces.
+class EnumBlockKind extends EventSheetBlockKind:
+	func _init() -> void:
+		kind_id = "enum"
+		title = "enum"
+
+	func handles(entry: Resource) -> bool:
+		return entry is EnumRow
+
+	func addable() -> bool:
+		return false
+
+	func source_map_kind() -> String:
+		return "enum"
+
+	## Canonical single-line form; the importer's verify-lift depends on this exact shape.
+	func emit_lines(entry: Resource) -> PackedStringArray:
+		var enum_row: EnumRow = entry as EnumRow
+		if enum_row == null or not enum_row.enabled or enum_row.enum_name.strip_edges().is_empty():
+			return PackedStringArray()
+		var members: PackedStringArray = _clean_members(enum_row)
+		if members.is_empty():
+			return PackedStringArray()
+		return PackedStringArray(["enum %s { %s }" % [enum_row.enum_name.strip_edges(), ", ".join(members)]])
+
+	func lift(lines: PackedStringArray, i: int) -> Dictionary:
+		var line: String = lines[i]
+		if not line.begins_with("enum "):
+			return {}
+		var enum_regex: RegEx = RegEx.new()
+		if enum_regex.compile("^enum ([A-Za-z_][A-Za-z0-9_]*) \\{ (.+) \\}$") != OK:
+			return {}
+		var enum_match: RegExMatch = enum_regex.search(line)
+		if enum_match == null:
+			return {}
+		var lifted: EnumRow = EnumRow.new()
+		lifted.enum_name = enum_match.get_string(1)
+		lifted.members = PackedStringArray(enum_match.get_string(2).split(", "))
+		# The resource-kind byte gate: re-emission must reproduce the line or the claim drops.
+		var emitted: PackedStringArray = emit_lines(lifted)
+		if emitted.size() != 1 or emitted[0] != line:
+			return {}
+		return {"resource": lifted, "consumed": 1}
+
+	func summary_for(entry: Resource) -> String:
+		var enum_row: EnumRow = entry as EnumRow
+		if enum_row == null:
+			return ""
+		return "%s { %s }" % [enum_row.enum_name, ", ".join(_clean_members(enum_row))]
+
+	func _clean_members(enum_row: EnumRow) -> PackedStringArray:
+		var members: PackedStringArray = PackedStringArray()
+		for member: String in enum_row.members:
+			if not member.strip_edges().is_empty():
+				members.append(member.strip_edges())
+		return members
 
 
 # ── Built-in kind: Region marker (`#region Combat` / `#endregion`) ──

@@ -257,10 +257,9 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 	row_data.row_uid = "enum_%s_%d" % [str(enum_row.get_instance_id()), indent]
 	row_data.disabled = not enum_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
-	var members: PackedStringArray = PackedStringArray()
-	for member: String in enum_row.members:
-		if not member.strip_edges().is_empty():
-			members.append(member.strip_edges())
+	# The display text comes from the registered "enum" resource kind - the same summary
+	# contract every Custom Block kind renders through.
+	var enum_kind: EventSheetBlockKind = EventSheetBlockRegistry.kind_for(enum_row)
 	row_data.spans = [
 		_make_span(
 			"enum",
@@ -268,7 +267,7 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 			{"badge": true, "text_color": event_style.behavior_accent_color}
 		),
 		_make_span(
-			"%s { %s }" % [enum_row.enum_name, ", ".join(members)],
+			enum_kind.summary_for(enum_row) if enum_kind != null else enum_row.enum_name,
 			SemanticSpan.SpanType.VALUE,
 			{"kind": "enum_row", "text_color": event_style.object_label_color}
 		)

@@ -45,7 +45,7 @@ func _command_palette_commands() -> Array[Dictionary]:
 	# One "Add <kind>…" command per registered Custom Block kind (preloads, region markers,
 	# pack-defined kinds), so custom blocks are reachable from Ctrl+P like everything else.
 	# Built per open, so kinds registered after startup (a freshly dropped pack) appear.
-	for kind: EventSheetBlockKind in EventSheetBlockRegistry.all_kinds():
+	for kind: EventSheetBlockKind in EventSheetBlockRegistry.addable_kinds():
 		var kind_id: String = kind.kind_id
 		commands.append({"title": "Add %s…" % kind.title, "run": func() -> void: _dock._open_custom_block_add(kind_id)})
 	return commands

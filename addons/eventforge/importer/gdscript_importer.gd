@@ -375,6 +375,9 @@ func _try_lift_custom_block(lines: PackedStringArray, index: int) -> Dictionary:
 		var claim: Dictionary = kind.lift(lines, index)
 		if claim.is_empty():
 			continue
+		# Resource kinds hand back a ready row instance; schema kinds hand back field values.
+		if claim.has("resource"):
+			return {"row": claim["resource"], "consumed": maxi(1, int(claim.get("consumed", 1)))}
 		var block_row: CustomBlockRow = CustomBlockRow.new()
 		block_row.kind_id = kind.kind_id
 		block_row.fields = claim["fields"]
@@ -385,20 +388,13 @@ func _try_lift_custom_block(lines: PackedStringArray, index: int) -> Dictionary:
 ## compiler's emission reproduces the line exactly (the verify-lift rule); multi-line or
 ## otherwise-formatted enums stay verbatim blocks.
 func _try_lift_enum(line: String) -> EnumRow:
-	if not line.begins_with("enum "):
+	# EnumRow is a registered RESOURCE kind on the Custom Block API - the importer actively
+	# dispatches the built-in through the same byte-gated lift contract pack kinds use.
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind("enum")
+	if kind == null:
 		return null
-	var enum_regex: RegEx = RegEx.new()
-	if enum_regex.compile("^enum ([A-Za-z_][A-Za-z0-9_]*) \\{ (.+) \\}$") != OK:
-		return null
-	var enum_match: RegExMatch = enum_regex.search(line)
-	if enum_match == null:
-		return null
-	var lifted: EnumRow = EnumRow.new()
-	lifted.enum_name = enum_match.get_string(1)
-	lifted.members = PackedStringArray(enum_match.get_string(2).split(", "))
-	if SheetCompiler._emit_enum_line(lifted) != line:
-		return null
-	return lifted
+	var claim: Dictionary = kind.lift(PackedStringArray([line]), 0)
+	return claim.get("resource", null) as EnumRow if not claim.is_empty() else null
 
 ## Lifts a canonical signal declaration to a SignalRow when re-emission reproduces the
 ## line exactly (the verify-lift rule); other formats stay verbatim blocks.

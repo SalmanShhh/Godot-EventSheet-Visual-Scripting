@@ -1711,15 +1711,13 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 ## Canonical single-line enum emission ("" when unnamed/empty/disabled). The importer's
 ## verify-lift depends on this exact form — change it only with a lifter update.
 static func _emit_enum_line(enum_row: EnumRow) -> String:
-	if enum_row == null or not enum_row.enabled or enum_row.enum_name.strip_edges().is_empty():
+	# EnumRow is a registered RESOURCE kind on the Custom Block API - the compiler actively
+	# dispatches the built-in through the same emit contract pack kinds use.
+	var kind: EventSheetBlockKind = EventSheetBlockRegistry.kind_for(enum_row)
+	if kind == null:
 		return ""
-	var members: PackedStringArray = PackedStringArray()
-	for member: String in enum_row.members:
-		if not member.strip_edges().is_empty():
-			members.append(member.strip_edges())
-	if members.is_empty():
-		return ""
-	return "enum %s { %s }" % [enum_row.enum_name.strip_edges(), ", ".join(members)]
+	var emitted: PackedStringArray = kind.emit_lines(enum_row)
+	return "" if emitted.is_empty() else emitted[0]
 
 ## Canonical single-line signal emission ("" when unnamed/disabled). The importer's
 ## verify-lift depends on this exact form.

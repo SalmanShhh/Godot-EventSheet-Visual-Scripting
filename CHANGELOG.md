@@ -46,6 +46,13 @@
   proof ships in-repo: `eventsheet_addons/demo_note_block.gd`, a 30-line "Note" kind that turns
   `## NOTE: …` lines into first-class highlighted rows. `docs/CUSTOM-ACES-GUIDE.md` gained a
   "Custom Blocks" chapter walking through it line by line.
+- **The API is dogfooded: the plugin's own enum rows now RUN on it.** `EventSheetBlockKind`
+  gained a resource-kind layer (`handles()` / `emit_lines()` / `summary_for()` / lift claims
+  that return a ready resource), and `EnumRow` registered as the built-in "enum" kind: the
+  compiler's enum emission, the importer's enum lift, and the viewport's enum summary all
+  dispatch through `EventSheetBlockRegistry` - byte-identical output (drift=0 over all 31
+  packs), saved sheets and the enum dialog untouched. Resource kinds are excluded from the
+  generic add surfaces (`addable_kinds()`); their row classes keep their dedicated flows.
 - **P3: custom blocks in the command palette.** Ctrl+P now lists "Add <kind>…" for every
   registered kind (built-ins and pack-defined alike), built per open so a freshly dropped pack's
   kinds appear without a restart.

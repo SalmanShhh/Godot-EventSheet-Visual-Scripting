@@ -30,6 +30,23 @@ static func run() -> bool:
 	all_passed = _check("region kind registered", EventSheetBlockRegistry.get_kind("region") != null, true) and all_passed
 	all_passed = _check("unknown kind resolves null", EventSheetBlockRegistry.get_kind("nope") == null, true) and all_passed
 
+	# ── Dogfooding: the plugin's OWN EnumRow is a registered resource kind - the compiler,
+	# importer, and viewport dispatch a shipped feature through the registry. ──
+	var enum_probe: EnumRow = EnumRow.new()
+	enum_probe.enum_name = "Mode"
+	enum_probe.members = PackedStringArray(["IDLE", "RUN"])
+	var enum_kind: EventSheetBlockKind = EventSheetBlockRegistry.kind_for(enum_probe)
+	all_passed = _check("EnumRow resolves to the registered enum kind", enum_kind != null and enum_kind.kind_id == "enum", true) and all_passed
+	all_passed = _check("the kind emits the canonical enum line",
+		enum_kind.emit_lines(enum_probe), PackedStringArray(["enum Mode { IDLE, RUN }"])) and all_passed
+	all_passed = _check("compiler enum emission goes through the kind (same bytes)",
+		SheetCompiler._emit_enum_line(enum_probe), "enum Mode { IDLE, RUN }") and all_passed
+	var enum_claim: Dictionary = enum_kind.lift(PackedStringArray(["enum Mode { IDLE, RUN }"]), 0)
+	all_passed = _check("the kind lifts back to a real EnumRow resource",
+		enum_claim.get("resource") is EnumRow and (enum_claim.get("resource") as EnumRow).enum_name == "Mode", true) and all_passed
+	all_passed = _check("resource kinds stay out of the generic add surfaces",
+		EventSheetBlockRegistry.addable_kinds().any(func(kind: EventSheetBlockKind) -> bool: return kind.kind_id == "enum"), false) and all_passed
+
 	# ── P2: pack-defined kinds register zero-config from eventsheet_addons/ ──
 	var note_kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind("demo.note")
 	all_passed = _check("pack-defined kind auto-registers from eventsheet_addons/", note_kind != null, true) and all_passed

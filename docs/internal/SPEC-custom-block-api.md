@@ -2,7 +2,7 @@
 
 **Status:** P1 SHIPPED (registry + CustomBlockRow + all four generic seams + the schema-driven
 add/edit dialog + Add-menu entries + the Preload Resource and Region proof kinds;
-`tests/custom_block_test.gd`). P2 SHIPPED too (zero-config pack kinds via the addon scan; living proof eventsheet_addons/demo_note_block.gd + the guide chapter). P3 (picker integration, custom-dialog hook) remains optional polish.
+`tests/custom_block_test.gd`). P2 SHIPPED too (zero-config pack kinds via the addon scan; living proof eventsheet_addons/demo_note_block.gd + the guide chapter). P3: palette integration SHIPPED (Ctrl+P lists every addable kind), and the API is DOGFOODED - `EnumRow` is a registered RESOURCE kind (`handles()`/`emit_lines()`/`summary_for()`, lift returns the resource), so the compiler's enum emission, the importer's enum lift, and the viewport's enum summary all run through the registry byte-identically. Remaining optional: custom-dialog hook, migrating signal/match rows the same way.
 **Author trigger (user, verbatim):** *"design a Custom API for making custom event blocks for
 special blocks that aren't ACEs that can be used for a myriad of things such as Variables,
 Includes, custom functions or anything else!"*
