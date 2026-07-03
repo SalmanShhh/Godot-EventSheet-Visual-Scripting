@@ -14,6 +14,13 @@
 - **Two built-in proof kinds**: **Preload Resource** (`const Sfx := preload("res://…")`) and
   **Region marker** (`#region Name` / `#endregion`) - both now open as first-class rows in any
   `.gd` sheet instead of raw GDScript blocks. (`tests/custom_block_test.gd`)
+- **P2: packs define block kinds zero-config.** Drop a script extending `EventSheetBlockKind`
+  into `res://eventsheet_addons/` and it registers automatically (the same scan that finds ACE
+  providers; detection walks the base-class chain so ordinary provider scripts are never
+  instantiated). kind_ids from packs are namespaced `<pack>.<name>` (warned otherwise). Living
+  proof ships in-repo: `eventsheet_addons/demo_note_block.gd`, a 30-line "Note" kind that turns
+  `## NOTE: …` lines into first-class highlighted rows. `docs/CUSTOM-ACES-GUIDE.md` gained a
+  "Custom Blocks" chapter walking through it line by line.
 - **Add + edit UX, zero UI code per kind**: every registered kind gets an entry in the
   **Add ▾** menu and a schema-driven dialog (a text field per String, a checkbox per bool, a
   number spinner per int/float) built straight from its `fields()` schema

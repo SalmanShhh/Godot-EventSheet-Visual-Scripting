@@ -3945,6 +3945,9 @@ func _build_sheet_ace_sources() -> Array[Object]:
 ## paths the sheet already registers explicitly.
 func _build_addon_ace_sources() -> Array[Object]:
 	var sources: Array[Object] = []
+	# Same scan, second registry: pack-defined Custom Block kinds (scripts extending
+	# EventSheetBlockKind) register here so a newly dropped kind is usable without a restart.
+	EventSheetBlockRegistry.rescan_pack_kinds()
 	var sheet_paths: Array = _current_sheet.ace_provider_scripts if _current_sheet != null else []
 	# Folder scan + code-registered providers (EventForgeBridge.register_script_as_provider
 	# lets other plugins/tools extend the vocabulary without touching eventsheet_addons/).

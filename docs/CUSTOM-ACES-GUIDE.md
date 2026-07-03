@@ -637,7 +637,58 @@ write.
 
 ---
 
-## 13. Tips and Common Mistakes
+## 13. Custom Blocks: register your own NON-ACE row kinds
+
+ACEs define what a row can DO inside events. **Custom block kinds** define new KINDS of rows
+that live between events: preloads, region markers, notes, config blocks, pack-defined data.
+Two ship built in (**Preload Resource** and **Region**), and you can add your own the same
+zero-config way as ACE providers: drop a script extending `EventSheetBlockKind` into
+`res://eventsheet_addons/` and it registers automatically. The working example is
+`eventsheet_addons/demo_note_block.gd` - the whole thing:
+
+```gdscript
+@tool
+extends EventSheetBlockKind
+
+func _init() -> void:
+	kind_id = "demo.note"      # stable public id; namespace pack kinds "<pack>.<name>"
+	title = "Note"             # the row badge, the Add-menu entry, the dialog title
+
+func fields() -> Array[Dictionary]:
+	# The schema drives EVERYTHING: the auto-built add/edit dialog (a text field per
+	# String, a checkbox per bool, a spinner per int/float) and default values.
+	return [{"id": "text", "label": "Note", "type": TYPE_STRING, "default": ""}]
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	# Pure: same fields, same bytes. This is the GDScript your block compiles to.
+	var text: String = str(block.fields.get("text", "")).strip_edges()
+	return PackedStringArray() if text.is_empty() else PackedStringArray(["## NOTE: %s" % text])
+
+func lift(lines: PackedStringArray, i: int) -> Dictionary:
+	# Claim source lines when a .gd opens as a sheet. verified_claim() re-emits your
+	# recovered fields and drops the claim unless the bytes match the source exactly,
+	# so a too-eager lift can never corrupt a file - it just stays a GDScript block.
+	if not lines[i].begins_with("## NOTE: "):
+		return {}
+	return verified_claim({"text": lines[i].substr(9)}, lines, i, 1)
+
+func summary(block: CustomBlockRow) -> String:
+	return str(block.fields.get("text", ""))  # the row's one-line display
+```
+
+That is the entire integration. The kind appears in **Add ▾**, renders as a badge + summary
+row, edits via the schema dialog (double-click), and round-trips byte-exactly through `.gd`
+files. Rules that keep it safe:
+
+- **`kind_id` is public API once shipped** (the ace_id covenant). Namespace it.
+- **`emit()` must be deterministic** - no timestamps, no randomness.
+- **A sheet whose kind is missing still works**: the emitted lines are plain GDScript, so
+  they simply render as a code block until the pack comes back. Never emit anything a plain
+  Godot project cannot run.
+- **Adding a field later**: read with `fields.get(id, default)` so old saved blocks keep
+  working. Removing a field is a compat break - deprecate the kind instead.
+
+## 14. Tips and Common Mistakes
 
 - **A wrong method name fails silently.** `position = {pos}` is safe; a typo like `move_too({pos})`
   compiles fine and crashes only when the generated code runs. Compile, parse, then run it in a test.

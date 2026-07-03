@@ -39,6 +39,36 @@ static func _ensure_built_ins() -> void:
 	_built_ins_registered = true
 	register_kind(PreloadBlockKind.new())
 	register_kind(RegionBlockKind.new())
+	rescan_pack_kinds()
+
+## Zero-config pack kinds, mirroring how ACE providers register: any script under
+## res://eventsheet_addons/ whose base-class chain reaches EventSheetBlockKind is instantiated
+## and registered. Detection walks the base-script chain (cheap) so ordinary provider/behaviour
+## scripts are never instantiated by the scan. Re-run when the addon scan refreshes (the dock
+## calls this from its ACE-source rebuild); already-registered ids are kept, so a rescan is
+## additive and deterministic.
+static func rescan_pack_kinds() -> void:
+	_built_ins_registered = true
+	for script_path: String in EventSheetAddonScanner.list_addon_scripts():
+		var script: GDScript = load(script_path) as GDScript
+		if script == null or not _extends_block_kind(script):
+			continue
+		var kind: EventSheetBlockKind = script.new() as EventSheetBlockKind
+		if kind == null or kind.kind_id.strip_edges().is_empty():
+			continue
+		if _kinds.has(kind.kind_id):
+			continue  # additive rescan: first registration (or a built-in) wins
+		if not kind.kind_id.contains("."):
+			push_warning("EventSheets: pack block kind '%s' (%s) should namespace its kind_id as '<pack>.<name>'." % [kind.kind_id, script_path])
+		register_kind(kind)
+
+static func _extends_block_kind(script: GDScript) -> bool:
+	var base: Script = script.get_base_script()
+	while base != null:
+		if base.resource_path.ends_with("registration/block_kind.gd"):
+			return true
+		base = base.get_base_script()
+	return false
 
 
 # ── Built-in kind: Preload Resource (`const Sfx := preload("res://sfx/jump.ogg")`) ──

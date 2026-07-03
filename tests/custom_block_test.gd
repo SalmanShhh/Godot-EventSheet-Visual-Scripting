@@ -30,6 +30,20 @@ static func run() -> bool:
 	all_passed = _check("region kind registered", EventSheetBlockRegistry.get_kind("region") != null, true) and all_passed
 	all_passed = _check("unknown kind resolves null", EventSheetBlockRegistry.get_kind("nope") == null, true) and all_passed
 
+	# ── P2: pack-defined kinds register zero-config from eventsheet_addons/ ──
+	var note_kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind("demo.note")
+	all_passed = _check("pack-defined kind auto-registers from eventsheet_addons/", note_kind != null, true) and all_passed
+	var note_importer: GDScriptImporter = GDScriptImporter.new()
+	var note_sheet: EventSheetResource = note_importer.import_external_source("extends Node\n\n## NOTE: tune this after the jam\n")
+	var note_row: CustomBlockRow = null
+	for entry: Variant in note_sheet.events:
+		if entry is CustomBlockRow:
+			note_row = entry
+	all_passed = _check("pack kind lifts its line", note_row != null and note_row.kind_id == "demo.note", true) and all_passed
+	note_sheet.external_source_path = "user://note_sample.gd"
+	all_passed = _check("pack kind round-trips byte-identically",
+		str(SheetCompiler.compile(note_sheet, "user://note_sample.gd").get("output", "")), "extends Node\n\n## NOTE: tune this after the jam\n") and all_passed
+
 	# ── Import: the preload + both region fences lift to CustomBlockRows ──
 	var importer: GDScriptImporter = GDScriptImporter.new()
 	var sheet: EventSheetResource = importer.import_external_source(BLOCK_SOURCE)
