@@ -34,15 +34,25 @@ func _build_template_menu_items() -> void:
 		_template_menu.id_pressed.connect(_new_sheet_from_template)
 		_dock.add_child(_template_menu)
 	_template_menu.clear()
+	# The creation-time ASK: what kind of Godot script is this sheet for? Sections mirror
+	# EventSheetScriptIntent so a newcomer discovers custom resources and editor tools at the
+	# same moment they discover behaviours - without a wizard slowing every creation down.
+	_template_menu.add_separator("Scripts on a node")
 	_template_menu.add_item("Blank Sheet", 0)
 	_template_menu.add_item("Platformer Starter", 1)
 	_template_menu.add_item("Top-down Starter", 2)
-	_template_menu.add_item("Behavior Component (signal-driven)", 8)
 	_template_menu.add_item("First-Person Controller (3D)", 6)
 	_template_menu.add_item("Third-Person Mover (3D)", 7)
+	_template_menu.add_separator("Behaviours - attach under a node")
+	_template_menu.add_item("Behavior Component (signal-driven)", 8)
+	_template_menu.add_separator("Autoloads - project-wide singletons")
 	_template_menu.add_item("Game State (Autoload)", 3)
 	_template_menu.add_item("Event Bus (Autoload)", 4)
 	_template_menu.add_item("Save System (Autoload)", 5)
+	_template_menu.add_separator("Custom Resources - data assets (.tres)")
+	_template_menu.add_item("Custom Resource (data + logic)", 9)
+	_template_menu.add_separator("Editor Tools - run inside the editor")
+	_template_menu.add_item("Editor Tool (one-click chore)", 10)
 	_project_template_paths = EventSheetTemplates.list_templates()
 	if not _project_template_paths.is_empty():
 		_template_menu.add_separator("Project templates")
@@ -73,6 +83,55 @@ static func _build_behavior_component_starter() -> EventSheetResource:
 	on_ready.actions.append(connect_signal)
 	sheet.events.append(on_ready)
 	return sheet
+
+## A CUSTOM RESOURCE starter - Godot's data-asset idiom modelled by example, so a newcomer's
+## first resource sheet steers toward its full potential: exported variables ARE the asset's
+## designer-editable fields, logic lives in functions (resources have no _process), and a signal
+## lets live data notify listeners. Each .tres created from the compiled class is its own asset.
+static func _build_custom_resource_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Resource"
+	sheet.custom_class_name = "LootTable"
+	sheet.variables = {
+		"entries": {"type": "Array", "default": [], "exported": true, "attributes": {"tooltip": "One item name per entry - duplicates raise the odds."}},
+		"fallback": {"type": "String", "default": "coin", "exported": true},
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Custom Resource[/b] - a data asset with logic. The exported variables become fields designers edit per-.tres file (right-click the FileSystem dock > New Resource > LootTable once this compiles). Resources have no _process or _ready: give them [b]functions[/b] instead of events, and call those from the sheets that load the asset."
+	sheet.events.append(about)
+	var roll: EventFunction = EventFunction.new()
+	roll.function_name = "roll"
+	roll.return_type = TYPE_STRING
+	roll.expose_as_ace = true
+	roll.ace_display_name = "Roll Loot"
+	roll.ace_category = "Loot"
+	var roll_body: RawCodeRow = RawCodeRow.new()
+	roll_body.code = "if entries.is_empty():\n\treturn fallback\nreturn str(entries.pick_random())"
+	roll.events.append(roll_body)
+	sheet.functions.append(roll)
+	return sheet
+
+
+## An EDITOR TOOL starter - an EditorScript with @tool, run from the script editor (File > Run).
+## Modelled small: one On Editor Run event doing a visible, safe chore, so the shape ("events
+## that run IN the editor, not in the game") lands immediately.
+static func _build_editor_tool_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "EditorScript"
+	sheet.tool_mode = true
+	sheet.custom_class_name = ""
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Editor Tool[/b] - these events run inside the EDITOR when you run the compiled script (script editor > File > Run), never in the game. Great for batch renames, scene checks, and one-click project chores."
+	sheet.events.append(about)
+	var run_event: EventRow = EventRow.new()
+	run_event.trigger_provider_id = "Core"
+	run_event.trigger_id = "OnEditorRun"
+	var chore: RawCodeRow = RawCodeRow.new()
+	chore.code = "var scene_root: Node = EditorInterface.get_edited_scene_root()\nif scene_root == null:\n\tprint(\"Open a scene first.\")\nelse:\n\tprint(\"%s has %d nodes.\" % [scene_root.name, scene_root.get_child_count()])"
+	run_event.actions.append(chore)
+	sheet.events.append(run_event)
+	return sheet
+
 
 ## Builds a fresh sheet from a starter template and adopts it (unsaved; Save As to keep).
 func _new_sheet_from_template(template_id: int) -> void:
@@ -140,6 +199,10 @@ func _new_sheet_from_template(template_id: int) -> void:
 			sheet.events.append(tick2)
 		8:
 			sheet = _build_behavior_component_starter()
+		9:
+			sheet = _build_custom_resource_starter()
+		10:
+			sheet = _build_editor_tool_starter()
 		6:
 			sheet.host_class = "CharacterBody3D"
 			var note6: CommentRow = CommentRow.new()

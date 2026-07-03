@@ -31,14 +31,19 @@ func open() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
 	_ensure_sheet_type_dialog()
-	if _dock._current_sheet.tool_mode and _dock._current_sheet.host_class == "EditorScript":
-		_sheet_type_option.select(3)
-	elif _dock._current_sheet.behavior_mode:
-		_sheet_type_option.select(2)
-	elif not _dock._current_sheet.custom_class_name.strip_edges().is_empty():
-		_sheet_type_option.select(1)
-	else:
-		_sheet_type_option.select(0)
+	match EventSheetScriptIntent.of_sheet(_dock._current_sheet):
+		EventSheetScriptIntent.Intent.EDITOR_TOOL:
+			_sheet_type_option.select(3)
+		EventSheetScriptIntent.Intent.BEHAVIOUR:
+			_sheet_type_option.select(2)
+		EventSheetScriptIntent.Intent.AUTOLOAD:
+			_sheet_type_option.select(4)
+		EventSheetScriptIntent.Intent.CUSTOM_RESOURCE:
+			_sheet_type_option.select(5)
+		EventSheetScriptIntent.Intent.CUSTOM_NODE:
+			_sheet_type_option.select(1)
+		_:
+			_sheet_type_option.select(0)
 	_sheet_type_name_edit.text = _dock._current_sheet.custom_class_name
 	_sheet_type_icon_edit.text = _dock._current_sheet.custom_class_icon
 	_sheet_type_description_edit.text = _dock._current_sheet.class_description
@@ -64,6 +69,7 @@ func _ensure_sheet_type_dialog() -> void:
 	_sheet_type_option.add_item("Behavior (acts on parent)")  # Node component with `host`
 	_sheet_type_option.add_item("Editor Tool (EditorScript)")  # EXPERIMENTAL: events -> editor tooling
 	_sheet_type_option.add_item("Autoload (Singleton)")  # extends Node; registered project-wide
+	_sheet_type_option.add_item("Custom Resource (data asset)")  # extends Resource; each .tres from it is a designer-editable asset
 	form.add_child(_sheet_type_option)
 	# Identity card — class name / icon / description / host, the fields that name the generated type.
 	var ident_box: VBoxContainer = EventSheetPopupUI.form_box()

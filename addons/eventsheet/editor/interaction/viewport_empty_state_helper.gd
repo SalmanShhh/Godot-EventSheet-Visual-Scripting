@@ -31,13 +31,13 @@ func is_sheet_visually_empty() -> bool:
 func draw_empty_state(width: float) -> void:
 	var font: Font = _viewport._get_font()
 	var font_size: int = _viewport._get_font_size()
-	var heading: String = "This event sheet is empty"
-	var primary: String = "Double-click anywhere — or press E — to add your first event."
-	var tip: String = "Tip: the picker understands plain language. Try typing \"every tick\"."
-	if _viewport._sheet != null and _viewport._sheet.behavior_mode:
-		heading = "Empty behavior sheet"
-		primary = "Double-click anywhere — or press E — to add an event that drives the %s this attaches to." % _viewport._sheet.host_class
-		# Keep the default plain-language picker tip — behavior sheets benefit from it just as much.
+	# Intent-aware advice (behaviour / autoload / editor tool / custom resource), so a brand-new
+	# sheet steers its author toward that script type's full potential. One extendable table
+	# owns the text: EventSheetScriptIntent.empty_sheet_advice.
+	var advice: Dictionary = EventSheetScriptIntent.empty_sheet_advice(_viewport._sheet)
+	var heading: String = str(advice.get("heading", ""))
+	var primary: String = str(advice.get("primary", ""))
+	var tip: String = str(advice.get("tip", ""))
 	var left: float = 18.0
 	var max_w: float = max(width - 36.0, 1.0)
 	var heading_size: int = EventSheetPalette.resolve_font_size(font_size, 0, 2)

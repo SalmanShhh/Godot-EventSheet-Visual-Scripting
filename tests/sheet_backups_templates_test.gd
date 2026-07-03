@@ -93,11 +93,13 @@ static func run() -> bool:
 		copy.resource_path.is_empty() and copy.custom_class_name == "BossFight"
 		and int((copy.variables.get("phase", {}) as Dictionary).get("default", -1)) == 1, true) and all_passed
 
-	# New… menu: built-ins + separator + the project template; adopting id 100 swaps
+	# New… menu: 11 built-in starters + 5 intent section separators (the creation-time
+	# "what are you making?" ask) + the project-templates separator + 1 project template
+	# = 18 entries; adopting id 100 swaps
 	# the template copy in as an unsaved sheet.
 	editor._starter._build_template_menu_items()
 	all_passed = _check("template menu lists built-ins and the project template",
-		editor._starter._template_menu.item_count == 11
+		editor._starter._template_menu.item_count == 18
 		and editor._starter._project_template_paths == PackedStringArray(["user://tpl_dir/boss_fight.tres"]), true) and all_passed
 	editor._starter._new_sheet_from_template(100)
 	all_passed = _check("adopting a project template starts an unsaved copy",

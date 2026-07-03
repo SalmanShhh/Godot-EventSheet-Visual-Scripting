@@ -3033,6 +3033,12 @@ func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_p
 		_current_sheet.requires_behaviors = applied_requires
 		if type_index == 3:
 			_current_sheet.host_class = "EditorScript"
+		elif type_index == 5:
+			# Custom Resource: the host must BE a data-asset class. Keep the user's Resource
+			# subclass (AudioStream, a project class typed by hand); anything node-ish falls
+			# back to plain Resource so the choice always produces a valid asset script.
+			var resource_host: String = host_class_text.strip_edges()
+			_current_sheet.host_class = resource_host if EventSheetScriptIntent.is_resource_host(resource_host) else "Resource"
 		elif not host_class_text.strip_edges().is_empty():
 			_current_sheet.host_class = host_class_text.strip_edges()
 		return true

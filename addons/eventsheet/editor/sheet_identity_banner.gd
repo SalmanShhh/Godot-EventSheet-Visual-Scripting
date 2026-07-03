@@ -25,6 +25,7 @@ const _MANIFEST_KNOBS := EventSheetPalette.COLOR_MANIFEST_KNOBS
 var _viewport: EventSheetViewport = null
 var _label: String = ""
 var _is_behavior: bool = false
+var _intent: EventSheetScriptIntent.Intent = EventSheetScriptIntent.Intent.EVENT_SHEET
 var _icon: Texture2D = null
 var _manifest_segments: Array = []  # [{text, color}] — the non-empty role pills, computed on refresh
 # Sheet health chip (right end of the identity line): the last diagnostics result, pushed ONLY on a
@@ -123,18 +124,30 @@ func setup(viewport: EventSheetViewport) -> void:
 ## Refreshes the banner from the sheet; hides itself for plain event sheets.
 func update_from_sheet(sheet: EventSheetResource) -> void:
 	_icon = null
-	if sheet == null or (not sheet.behavior_mode and sheet.custom_class_name.strip_edges().is_empty()):
+	# Named sheets, behaviours, and autoloads all carry identity worth pinning; only a truly
+	# plain sheet hides the banner.
+	if sheet == null or (not sheet.behavior_mode and not sheet.autoload_mode and sheet.custom_class_name.strip_edges().is_empty()):
 		visible = false
 		queue_redraw()
 		return
 	_is_behavior = sheet.behavior_mode
+	_intent = EventSheetScriptIntent.of_sheet(sheet)
+	var intent_label: String = str(EventSheetScriptIntent.display(_intent).get("label", ""))
 	var display_name: String = sheet.custom_class_name.strip_edges()
 	if display_name.is_empty():
-		display_name = "Behavior"
-	if _is_behavior:
-		_label = "%s — Behavior · acts on host: %s" % [display_name, sheet.host_class]
-	else:
-		_label = "%s — Custom Node · extends %s" % [display_name, sheet.host_class]
+		display_name = sheet.autoload_name.strip_edges() if sheet.autoload_mode else intent_label
+	# Each intent reads distinctly at a glance: what it IS, then how it meets the project.
+	match _intent:
+		EventSheetScriptIntent.Intent.BEHAVIOUR:
+			_label = "%s — Behavior · acts on host: %s" % [display_name, sheet.host_class]
+		EventSheetScriptIntent.Intent.AUTOLOAD:
+			_label = "%s — Autoload · one instance, project-wide" % display_name
+		EventSheetScriptIntent.Intent.EDITOR_TOOL:
+			_label = "%s — Editor Tool · runs in the editor (File > Run)" % display_name
+		EventSheetScriptIntent.Intent.CUSTOM_RESOURCE:
+			_label = "%s — Custom Resource · every .tres of it is a data asset" % display_name
+		_:
+			_label = "%s — Custom Node · extends %s" % [display_name, sheet.host_class]
 	var icon_path: String = sheet.custom_class_icon.strip_edges()
 	if icon_path.begins_with("res://") and ResourceLoader.exists(icon_path):
 		var loaded: Resource = load(icon_path)
@@ -173,8 +186,8 @@ func _draw() -> void:
 		draw_texture_rect(_icon, Rect2(x, icon_y, ICON_SIZE, ICON_SIZE), false)
 		x += ICON_SIZE + 6.0
 	else:
-		# Fallback glyphs keep the types visually distinct without custom art.
-		var glyph: String = "⚙" if _is_behavior else "◆"
+		# Fallback glyphs keep the types visually distinct without custom art (one per intent).
+		var glyph: String = str(EventSheetScriptIntent.display(_intent).get("glyph", "◆"))
 		draw_string(ThemeDB.fallback_font, Vector2(x, identity_baseline), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, accent)
 		x += 18.0
 	# Health chip on the right end of the identity line (drawn first so the label reserves room for it).
