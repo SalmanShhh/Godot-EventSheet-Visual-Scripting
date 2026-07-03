@@ -1,9 +1,9 @@
-# Pack builder — platformer (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - platformer (one pack per file; run via tools/build_sample_behaviors.gd).
 #
 # Rich kinematic platformer for a CharacterBody2D, porting the feel features from the
-# author's "Physics Platformer" addon — coyote time, jump buffering, variable jump
+# author's "Physics Platformer" addon - coyote time, jump buffering, variable jump
 # height, multi-jump, wall slide + wall jump, acceleration/deceleration and terminal
-# velocity — implemented kinematically (cleaner + more predictable than physics
+# velocity - implemented kinematically (cleaner + more predictable than physics
 # integration). The original jump()/set_move_speed()/On Jumped ACEs keep their ids
 # (compatibility covenant); everything else is additive.
 @tool
@@ -29,7 +29,7 @@ static func build() -> bool:
 		"deceleration": {"type": "float", "default": 1800.0, "exported": true,
 			"attributes": {"tooltip": "How fast you stop when no direction is pressed."}},
 		"max_fall_speed": {"type": "float", "default": 1000.0, "exported": true,
-			"attributes": {"tooltip": "Terminal velocity — gravity never pulls you faster than this."}},
+			"attributes": {"tooltip": "Terminal velocity - gravity never pulls you faster than this."}},
 		"coyote_time": {"type": "float", "default": 0.1, "exported": true,
 			"attributes": {"tooltip": "Grace window (s) to still jump just after walking off a ledge."}},
 		"jump_buffer_time": {"type": "float", "default": 0.1, "exported": true,
@@ -220,7 +220,7 @@ static func build() -> bool:
 			"\t_buffer_timer = jump_buffer_time"
 		])))
 	Lib.append_function(sheet, "jump_released", "Jump Released", "Platformer",
-		"Call when the jump button is released — cuts the rise short for variable jump height (hold = higher).",
+		"Call when the jump button is released - cuts the rise short for variable jump height (hold = higher).",
 		[],
 		"if host != null and variable_jump_height and host.velocity.y < 0.0:\n\thost.velocity.y *= jump_cut_factor")
 	Lib.append_function(sheet, "set_move_speed", "Set Move Speed", "Platformer",

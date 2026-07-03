@@ -33,7 +33,7 @@ signal slowmo_finished
 @export var max_offset: Vector2 = Vector2(24, 16)
 ## Peak camera roll (rotation) in degrees at full trauma.
 @export_range(0.0, 30.0, 0.5) var max_roll_degrees: float = 3.0
-## Trauma lost per second — higher means shorter, snappier shakes.
+## Trauma lost per second - higher means shorter, snappier shakes.
 @export_range(0.1, 10.0, 0.1) var shake_decay: float = 1.4
 ## How fast the shake noise scrolls (the jitter rate).
 @export_range(1.0, 60.0, 1.0) var shake_frequency: float = 25.0
@@ -74,7 +74,7 @@ var _slowmo_tween: Tween = null
 var _squash_spring_active: bool = false
 var _squash_value: Vector2 = Vector2.ONE
 var _squash_velocity: Vector2 = Vector2.ZERO
-## The camera these effects drive: an explicit override (Use Camera), else the active Camera2D —
+## The camera these effects drive: an explicit override (Use Camera), else the active Camera2D -
 ## auto-found, so Shake / Zoom just work from anywhere without wiring a path.
 func _camera() -> Camera2D:
 	if _camera_override != null and is_instance_valid(_camera_override):
@@ -122,7 +122,7 @@ func _process(delta: float) -> void:
 			_shaking = false
 			shake_stopped.emit()
 	if _squash_spring_active:
-		# Spring the scale back to rest (semi-implicit, framerate-independent — same model as the Spring pack).
+		# Spring the scale back to rest (semi-implicit, framerate-independent - same model as the Spring pack).
 		_squash_velocity += (_base_scale - _squash_value) * squash_stiffness * delta
 		_squash_velocity *= pow(1.0 - squash_damping, delta)
 		_squash_value += _squash_velocity * delta
@@ -138,7 +138,7 @@ func _process(delta: float) -> void:
 ## @ace_action
 ## @ace_name("Shake")
 ## @ace_category("Juice")
-## @ace_description("Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically — fire it on every hit.")
+## @ace_description("Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$JuiceBehavior.shake({strength})")
 func shake(strength: float) -> void:
@@ -187,7 +187,7 @@ func zoom_by_percent(percent: float, duration: float) -> void:
 ## @ace_action
 ## @ace_name("Zoom To Position")
 ## @ace_category("Juice")
-## @ace_description("Zooms in while gliding the camera so a world position becomes the screen CENTRE — frame a spot in one action.")
+## @ace_description("Zooms in while gliding the camera so a world position becomes the screen CENTRE - frame a spot in one action.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$JuiceBehavior.zoom_to_position({world_position}, {percent}, {duration})")
 func zoom_to_position(world_position: Vector2, percent: float, duration: float) -> void:
@@ -205,7 +205,7 @@ func zoom_to_position(world_position: Vector2, percent: float, duration: float) 
 ## @ace_action
 ## @ace_name("Zoom Toward Point")
 ## @ace_category("Juice")
-## @ace_description("Zooms while keeping a world position pinned under the same screen spot (mouse-wheel-to-cursor style) — great for strategy/map zoom.")
+## @ace_description("Zooms while keeping a world position pinned under the same screen spot (mouse-wheel-to-cursor style) - great for strategy/map zoom.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$JuiceBehavior.zoom_toward_point({world_position}, {percent}, {duration})")
 func zoom_toward_point(world_position: Vector2, percent: float, duration: float) -> void:
@@ -248,7 +248,7 @@ func squash_and_stretch(stretch: float, duration: float) -> void:
 ## @ace_action
 ## @ace_name("Spring Squash")
 ## @ace_category("Juice")
-## @ace_description("Pops the host (Node2D or Control) with a volume-preserving stretch that springs back via a real spring (the stiffness/damping knobs) — bouncier + more organic than the tween Squash & Stretch. Positive = stretch tall (a jump), negative = squash wide (a landing).")
+## @ace_description("Pops the host (Node2D or Control) with a volume-preserving stretch that springs back via a real spring (the stiffness/damping knobs) - bouncier + more organic than the tween Squash & Stretch. Positive = stretch tall (a jump), negative = squash wide (a landing).")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$JuiceBehavior.spring_squash({stretch})")
 func spring_squash(stretch: float) -> void:
@@ -344,4 +344,4 @@ func _apply_host_scale(s: Vector2) -> void:
 		c.pivot_offset = c.size / 2.0
 		c.scale = s
 
-# Game feel, batteries included: screenshake, smooth zoom, and squash & stretch. The camera is found automatically — attach this anywhere and call Shake / Zoom; Squash & Stretch animates the node it's attached to.
+# Game feel, batteries included: screenshake, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Zoom; Squash & Stretch animates the node it's attached to.

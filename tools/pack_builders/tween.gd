@@ -1,9 +1,9 @@
-# Pack builder — tween (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - tween (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Tween behavior: Godot's Tween, the event-sheet-behavior way — duration/transition/easing as
+## Tween behavior: Godot's Tween, the event-sheet-behavior way - duration/transition/easing as
 ## Inspector combos, one-call property/position/scale/rotation/alpha tweens on the host,
 ## and an On Tween Finished trigger. Plain create_tween underneath (parity contract).
 static func build() -> bool:
@@ -21,7 +21,7 @@ static func build() -> bool:
 			"options": ["in", "out", "in_out", "out_in"]}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Tweens, the behavior way: pick transition + easing in the Inspector, then call one action — Tween Position / Scale / Rotation / Alpha / any property."
+	about.text = "Tweens, the behavior way: pick transition + easing in the Inspector, then call one action - Tween Position / Scale / Rotation / Alpha / any property."
 	sheet.events.append(about)
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([

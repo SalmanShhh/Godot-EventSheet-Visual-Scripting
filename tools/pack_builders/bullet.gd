@@ -1,4 +1,4 @@
-# Pack builder — bullet (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - bullet (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")

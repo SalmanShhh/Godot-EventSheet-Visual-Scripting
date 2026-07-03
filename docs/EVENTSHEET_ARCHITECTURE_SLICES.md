@@ -2,12 +2,12 @@
 
 This document tracks the broad architecture/spec-alignment PR in explicit slices and calls out what is fully implemented, scaffolded, or deferred.
 
-> **Historical record (early era).** This tracker predates the overhaul arcs — every
+> **Historical record (early era).** This tracker predates the overhaul arcs - every
 > "scaffolded/deferred" claim below has since shipped or been superseded. The current
 > truth lives in `CHANGELOG.md` (ledger), `README.md` (milestones) and the per-feature
 > specs in `docs/`. Kept for archaeology, not navigation.
 
-## Slice 0 — Architecture consolidation (current overhaul)
+## Slice 0 - Architecture consolidation (current overhaul)
 
 The editor now has a **single** architecture: the custom-rendered, virtualized viewport
 (`EventSheetDock` → `EventSheetViewport` → `EventRowRenderer`), chosen because it can show
@@ -18,7 +18,7 @@ scale to large sheets. The reusable lower layers (resources/data model, ACE regi
 reflection custom-ACE engine, compiler, runtime bridge, importer, theme resources) are
 unchanged and shared by the viewport.
 
-## Slice 1 — Editor architecture extraction
+## Slice 1 - Editor architecture extraction
 
 ### Implemented
 - Viewport selection state logic now delegates to `ViewportSelectionHelper`:
@@ -36,7 +36,7 @@ unchanged and shared by the viewport.
 ### Deferred
 - Full interaction-controller split (separate selection/hover/drag controllers with isolated state objects).
 
-## Slice 2 — Editor UX/features
+## Slice 2 - Editor UX/features
 
 ### Implemented
 - Event-block body selection now selects the event and its descendant sub-events.
@@ -52,7 +52,7 @@ unchanged and shared by the viewport.
 
 ### Since implemented (formerly partial here)
 - **Else/Else-If now compile** to `elif`/`else` chains (sub-event compilation phase), and
-  disabled rows/ACEs are skipped by codegen — enable-state semantics are real.
+  disabled rows/ACEs are skipped by codegen - enable-state semantics are real.
 
 ### Scaffolded / partial
 - Else/ElseIf authoring UX is still metadata-driven (resource/state + rendering), not a full dedicated creation flow.
@@ -60,7 +60,7 @@ unchanged and shared by the viewport.
 ### Deferred
 - Full C3 parity for all advanced block-selection permutations and keyboard selection ranges.
 
-## Slice 3 — Dialog window systems
+## Slice 3 - Dialog window systems
 
 ### Implemented
 - Parameter dialog now carries structured flow hints by mode.
@@ -73,7 +73,7 @@ unchanged and shared by the viewport.
 ### Deferred
 - Advanced expression authoring features (history snippets, validation previews, rich syntax editing).
 
-## Slice 4 — Spec alignment (phases 1–5)
+## Slice 4 - Spec alignment (phases 1–5)
 
 Status summary:
 
@@ -87,7 +87,7 @@ Status summary:
   - Picker/params workflows remain central; expression tooling has since shipped (ƒx picker, live validation, autocomplete).
 - **Phase 4 (compiler/runtime semantics):** **Implemented** (post-push)
   - Sub-events, Else/Else-If chains, signal-trigger connections (validated), behaviors as
-    Node components, instance-backed addon ACEs, source maps — see `CHANGELOG.md` and
+    Node components, instance-backed addon ACEs, source maps - see `CHANGELOG.md` and
     `GDSCRIPT-PAIRING-SPEC.md`. No runtime engine exists by design: output is plain
     GDScript with a guarded performance-parity contract.
 - **Phase 5 (optimization/virtualization/extensions):** **Implemented in the parts that matter**

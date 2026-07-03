@@ -29,7 +29,7 @@ var color_springs: Dictionary = {}
 @export_range(1, 1000, 1) var default_stiffness: float = 170.0
 var springs: Dictionary = {}
 
-## A single numeric spring's state, integrated each frame (typed — no dict casts in the hot loop).
+## A single numeric spring's state, integrated each frame (typed - no dict casts in the hot loop).
 class SpringEntry:
 	var value: float = 0.0
 	var from_value: float = 0.0
@@ -240,7 +240,7 @@ func spring_host_scale(target: float) -> void:
 ## @ace_action
 ## @ace_name("Set Color Value")
 ## @ace_category("Spring")
-## @ace_description("Snaps a named colour spring (no motion) — seed it before springing.")
+## @ace_description("Snaps a named colour spring (no motion) - seed it before springing.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.set_color({spring_name}, {color})")
 func set_color(spring_name: String, color: Color) -> void:
@@ -253,7 +253,7 @@ func set_color(spring_name: String, color: Color) -> void:
 ## @ace_action
 ## @ace_name("Spring Color")
 ## @ace_category("Spring")
-## @ace_description("Springs a named colour toward a target (read it back with Color Value — great for hit flashes).")
+## @ace_description("Springs a named colour toward a target (read it back with Color Value - great for hit flashes).")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.spring_color({spring_name}, {target_color})")
 func spring_color(spring_name: String, target_color: Color) -> void:
@@ -370,4 +370,4 @@ func _apply_to_host(spring_name: String, value: float) -> void:
 		"__angle": host.rotation_degrees = value
 		"__scale": host.scale = Vector2(value, value)
 
-# Numeric springing: snappy, physical motion for ANY number. Name a spring, set its target, read its value — or use the host helpers (x/y/angle/scale) for instant juice.
+# Numeric springing: snappy, physical motion for ANY number. Name a spring, set its target, read its value - or use the host helpers (x/y/angle/scale) for instant juice.

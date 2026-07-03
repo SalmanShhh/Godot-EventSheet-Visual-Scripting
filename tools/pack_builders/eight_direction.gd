@@ -1,9 +1,9 @@
-# Pack builder — eight_direction (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - eight_direction (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Top-down 8-direction movement, authored entirely as ACE rows (ZERO RawCode) — the new behaviour
+## Top-down 8-direction movement, authored entirely as ACE rows (ZERO RawCode) - the new behaviour
 ## physics vocabulary in action: a typed input-vector local, Set Velocity, and Move And Slide, all
 ## host-targeted via {host.}. The movement behaviour the user asked to be code-free.
 static func build() -> bool:
@@ -17,7 +17,7 @@ static func build() -> bool:
 	about.text = "Top-down 8-direction movement: attach under a CharacterBody2D; moves with the ui_* input actions."
 	sheet.events.append(about)
 
-	# On Physics Process: read the input vector, drive velocity, and move — all as ACE rows.
+	# On Physics Process: read the input vector, drive velocity, and move - all as ACE rows.
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnPhysicsProcess"

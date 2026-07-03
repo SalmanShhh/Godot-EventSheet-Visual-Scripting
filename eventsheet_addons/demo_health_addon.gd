@@ -1,5 +1,5 @@
 ## Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ and
-## their annotated members become project-wide ACEs automatically — no manifest, no JSON,
+## their annotated members become project-wide ACEs automatically - no manifest, no JSON,
 ## no per-sheet setup. Provider name comes from class_name, this comment is the addon
 ## description, and @ace_* annotations customize each ACE.
 @tool
@@ -36,6 +36,6 @@ func is_hurt(threshold: int) -> bool:
 ## @ace_category("Health")
 ## @ace_description("Prints a heal announcement. No @ace_codegen_template on purpose: the
 ## generated script owns a DemoHealthAddon instance and calls this directly
-## (instance-backed ACE — the zero-config default for template-less addon methods).")
+## (instance-backed ACE - the zero-config default for template-less addon methods).")
 func announce_heal(amount: int) -> void:
 	print("[DemoHealthAddon] healed for %d" % amount)

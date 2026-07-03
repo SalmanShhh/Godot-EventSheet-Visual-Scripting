@@ -7,7 +7,7 @@ This editor uses Godot-native resources/scenes instead of runtime CSS. The goal 
 
 Current additions on top of the model below:
 
-- A **toolbar theme switcher** lists "Default" plus the bundled presets — no file dialog
+- A **toolbar theme switcher** lists "Default" plus the bundled presets - no file dialog
   needed for the common case.
 - The built-in default is **Godot-adaptive** (`EventSheetGodotTheme.adapt_to_editor`):
   with no theme assigned, the sheet derives its colors from your editor theme so it looks
@@ -47,10 +47,10 @@ Current additions on top of the model below:
 
 These themes are bundled in `res://demo/themes/`:
 
-- `high_contrast_theme.tres` — accessibility-focused contrast preset
-- `soft_light_theme.tres` — softer default for long authoring sessions
-- `designer_template_theme.tres` — neutral starting point meant to be duplicated
-- `designer_template_theme_manifest.cfg` — token/package template for designer installs
+- `high_contrast_theme.tres` - accessibility-focused contrast preset
+- `soft_light_theme.tres` - softer default for long authoring sessions
+- `designer_template_theme.tres` - neutral starting point meant to be duplicated
+- `designer_template_theme_manifest.cfg` - token/package template for designer installs
 - plus popular presets: `catppuccin_mocha`, `dracula`, `gruvbox_dark`, `monokai`, `nord`, `solarized_light`
 
 ## Custom theme import/install

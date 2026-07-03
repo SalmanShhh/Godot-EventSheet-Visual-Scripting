@@ -1,11 +1,11 @@
-# Glossary — Construct 3 ↔ Godot ↔ Godot EventSheets
+# Glossary - Construct 3 ↔ Godot ↔ Godot EventSheets
 
 A one-page Rosetta Stone. If you come from **Construct 3**, read the left column. If you come
 from **Godot**, read the middle. The right column is what the thing is called *here*.
 
 | Construct 3 | Godot | Godot EventSheets | Notes |
 | --- | --- | --- | --- |
-| Event sheet | Script (`.gd`) | **Event sheet** (a `.gd` file) | A sheet **is** a plain `.gd` script — open it in Godot's script editor or auto-preview it as events; the round-trip is lossless and editable. (`.tres` still works but is no longer required or the default.) Delete the plugin and the script still runs. |
+| Event sheet | Script (`.gd`) | **Event sheet** (a `.gd` file) | A sheet **is** a plain `.gd` script - open it in Godot's script editor or auto-preview it as events; the round-trip is lossless and editable. (`.tres` still works but is no longer required or the default.) Delete the plugin and the script still runs. |
 | Event | `if` block / `func` body | **Event** | A row with **Conditions** (left lane) and **Actions** (right lane). |
 | Condition | `if` expression | **Condition** | The "when" of an event. |
 | Action | statement | **Action** | The "do" of an event. |
@@ -26,26 +26,26 @@ from **Godot**, read the middle. The right column is what the thing is called *h
 
 ## A few EventSheets-only terms
 
-- **Host class** — the node type a sheet runs on (set in the Sheet Type dialog). It decides which
+- **Host class** - the node type a sheet runs on (set in the Sheet Type dialog). It decides which
   members your ƒx expressions can reach.
-- **Compile** — turn the sheet into its `.gd` output. Happens on save (compile-on-save) and on
+- **Compile** - turn the sheet into its `.gd` output. Happens on save (compile-on-save) and on
   export, so a stale script can never ship.
-- **Parity contract** — the generated code is plain, idiomatic GDScript with **no runtime
+- **Parity contract** - the generated code is plain, idiomatic GDScript with **no runtime
   dependency** on the plugin and no performance difference from hand-written code (test-enforced).
-- **ACE picker** — the Create-Node-style dialog you add Conditions/Actions/Triggers from
+- **ACE picker** - the Create-Node-style dialog you add Conditions/Actions/Triggers from
   (Favorites + Recent panes, a description panel, search with C3 synonyms).
-- **Reverse-lift** — opening a `.gd` file *as* a sheet, or pasting GDScript, and getting events back.
+- **Reverse-lift** - opening a `.gd` file *as* a sheet, or pasting GDScript, and getting events back.
   The importer de-codes function bodies, `if/elif/else`, `for`/`while`/`repeat` loops, and `match`
-  into structured rows — lossless and editable both ways.
-- **Family** — a sheet declared as a Family, so its events iterate over a whole family of nodes
+  into structured rows - lossless and editable both ways.
+- **Family** - a sheet declared as a Family, so its events iterate over a whole family of nodes
   (family-scoped iteration). See the **Family Arena** showcase.
-- **Extract-to-Function** — turn a selection of actions into a named, reusable function in place;
+- **Extract-to-Function** - turn a selection of actions into a named, reusable function in place;
   calls then render as a first-class **ƒ** verb.
-- **Inspector drawer** — a live widget for a typed exported variable: a progress bar (int/float),
+- **Inspector drawer** - a live widget for a typed exported variable: a progress bar (int/float),
   a direction **dial** (Vector2), a colour **swatch** row (Color), a **texture preview** (Texture2D),
   or an inline **curve** (Curve). Authored via a per-type picker with a live preview; see the
   **Inspector Playground** showcase. Degrades to a plain field without the editor plugin (parity-clean).
-- **Simple Mode** — a beginner-friendly audience setting (offered on first run) that trims the
+- **Simple Mode** - a beginner-friendly audience setting (offered on first run) that trims the
   options and vocabulary shown, so a newcomer isn't handed the full registry at once.
 
 See also the [C3 migration guide](C3-MIGRATION-GUIDE.md) (every C3 plugin/behavior mapped) and the

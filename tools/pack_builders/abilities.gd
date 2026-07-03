@@ -1,4 +1,4 @@
-# Pack builder — abilities (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - abilities (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
@@ -23,12 +23,12 @@ static func build() -> bool:
 	about.text = "Simple Abilities (event-sheet parity + Godot extras): grant abilities by id, cooldowns, stack charges that auto-regen, temporary abilities that auto-expire, per-ability custom data, and tags for bulk operations. Triggers fire for ANY ability; read Current Ability ID (or the Current Ability Is condition) to tell which one fired."
 	sheet.events.append(about)
 
-	# Triggers (signals), conditions + expressions, and private helpers — as ## @ace_*-annotated
+	# Triggers (signals), conditions + expressions, and private helpers - as ## @ace_*-annotated
 	# class-level GDScript (mirrors health.gd / line_of_sight.gd). Signals are arg-less; the firing
 	# ability's id is exposed through current_ability_id (the Current Ability ID expression).
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
-		"## One ability's runtime state — typed so the cooldown / stack / expiration hot paths read",
+		"## One ability's runtime state - typed so the cooldown / stack / expiration hot paths read",
 		"## fields directly instead of float()/int()/bool()-casting an untyped Dictionary every frame.",
 		"class AbilityData:",
 		"\tvar cooldown: float = 0.0",

@@ -1,11 +1,11 @@
-# Pack builder — flash (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - flash (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 ## "Flash" behavior: toggles host visibility at an interval for a duration.
 ##
-## Authored entirely as ACE rows — ZERO RawCode — the first bundled pack to prove the
+## Authored entirely as ACE rows - ZERO RawCode - the first bundled pack to prove the
 ## behaviour-as-ACEs path end to end. The signal is a
 ## trigger SignalRow; the tick is a gated On Process event with sub-events; the two exposed functions
 ## are ACE-action bodies. Node-scoped writes target the parent host via the {host.} / explicit-target

@@ -117,4 +117,4 @@ func _start_tween(property_path: String, final_value, duration: float) -> void:
 	_active_tween.tween_property(host, NodePath(property_path), final_value, seconds).set_trans(_trans_id()).set_ease(_ease_id())
 	_active_tween.finished.connect(func() -> void: tween_finished.emit())
 
-# Tweens, the behavior way: pick transition + easing in the Inspector, then call one action — Tween Position / Scale / Rotation / Alpha / any property.
+# Tweens, the behavior way: pick transition + easing in the Inspector, then call one action - Tween Position / Scale / Rotation / Alpha / any property.

@@ -2,7 +2,7 @@
 
 ## Relationship to the live editor (read this first)
 
-These element scenes are **designer preview/reference templates** — a hand-tunable
+These element scenes are **designer preview/reference templates** - a hand-tunable
 mirror of the stacked Construct-style grammar. The shipping editor does **not**
 instantiate per-row Control scenes: it paints every row through `EventRowRenderer`
 on the virtualized `EventSheetViewport` (10k+ rows stay fluid), reading colors and
@@ -12,7 +12,7 @@ renderer (and the Theme Editor dialog) actually consumes.
 
 The live renderer also draws vocabulary beyond this template: enum/signal/match badge
 rows, BBCode-styled comments, per-ACE `⊳` notes, color-param swatches, breakpoint and
-bookmark gutters, and fold arrows — when restyling, check those token groups too.
+bookmark gutters, and fold arrows - when restyling, check those token groups too.
 
 ## What this element is
 
@@ -20,12 +20,12 @@ bookmark gutters, and fold arrows — when restyling, check those token groups t
 
 ## Visual controls
 
-- `PreviewRow` / `PreviewRowAlt` — primary and alternating event block backgrounds
-- `PreviewConditionLane` — left condition lane block
-- `PreviewLaneDivider` — lane split between conditions and actions
-- `PreviewActionLane` — right action lane block
-- `PreviewTriggerBadge` + `PreviewTriggerLabel` — condition badge column treatment
-- exported token fields on `event_sheet_event_element_template.gd` — sheet background, group/comment visuals, selection/hover fills, and row border colors
+- `PreviewRow` / `PreviewRowAlt` - primary and alternating event block backgrounds
+- `PreviewConditionLane` - left condition lane block
+- `PreviewLaneDivider` - lane split between conditions and actions
+- `PreviewActionLane` - right action lane block
+- `PreviewTriggerBadge` + `PreviewTriggerLabel` - condition badge column treatment
+- exported token fields on `event_sheet_event_element_template.gd` - sheet background, group/comment visuals, selection/hover fills, and row border colors
 
 ## Usage
 

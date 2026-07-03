@@ -1,4 +1,4 @@
-# Pack builder — line_of_sight (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - line_of_sight (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
@@ -47,7 +47,7 @@ static func build() -> bool:
 		"## @ace_name(\"Nearest Visible In Group\")",
 		"## @ace_category(\"Line Of Sight\")",
 		"## @ace_codegen_template(\"$LOSBehavior.nearest_visible_in_group({group})\")",
-		"## The closest group member this node can actually SEE (range + cone + raycast) — scans every",
+		"## The closest group member this node can actually SEE (range + cone + raycast) - scans every",
 		"## candidate and skips occluded ones, so a nearer-but-blocked enemy can't shadow a visible farther",
 		"## one. Returns null if none are visible. The targeting primitive for auto-attack AI.",
 		"func nearest_visible_in_group(group: String) -> Node2D:",

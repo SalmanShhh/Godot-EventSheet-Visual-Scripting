@@ -15,18 +15,18 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - Builtin ACE vocabularies: per-module files in `res://addons/eventforge/registration/modules/`
   (`core`/`system`/`device`/`audio`/`native_3d`/`collection`/`collision`/`ui`/`particle`/`tilemap`/`physics`/`loop`/`helper`) built via
   `ace_factory.gd` (module contract documented there); `builtin_aces.gd` concatenates them
-  in registry order. `helper_aces.gd` is the generic "structured escape hatch" vocabulary —
+  in registry order. `helper_aces.gd` is the generic "structured escape hatch" vocabulary -
   registered LAST and excluded from the reverse-lifter so its catch-all templates
   (`{target}.{method}(…)`, `Run GDScript {code}`) never shadow specific ACEs.
-- Importer/lifter (lossless GDScript pairing): `res://addons/eventforge/importer/` — the
+- Importer/lifter (lossless GDScript pairing): `res://addons/eventforge/importer/` - the
   lifter sets `RawCodeRow.lift_note` ("no matching ACE template") on lines it can't lift,
   surfaced as an editor hint.
 - MCP server (AI tooling, policy-aware): `res://addons/eventsheet/mcp/mcp_server.gd`
 - Theme resources: `res://addons/eventsheet/theme/*.gd`
-- Theme/template scenes: `res://addons/eventsheet/elements/*.tscn` (designer previews —
+- Theme/template scenes: `res://addons/eventsheet/elements/*.tscn` (designer previews -
   the live editor paints via the renderer + tokens, see `docs/elements/`)
 - Headless suites: `res://tests/run_perf.gd` (safe gate) and `res://tests/run_tests.gd`
-  (full; a tail segfault AFTER the summary is a known harmless teardown flake — count
+  (full; a tail segfault AFTER the summary is a known harmless teardown flake - count
   `[FAIL]` lines)
 - Maintenance tools: `tools/` (per-pack builders in `tools/pack_builders/` run by
   `build_sample_behaviors.gd`; `build_examples.gd` for the playable showcases;
@@ -53,29 +53,29 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 
 ## Docs map
 
-- `README.md` — install + high-level workflow
-- `docs/GDSCRIPT-PAIRING-SPEC.md` — how the sheet pairs with GDScript (blocks, codegen tooltips, expressions, C3 synonyms, importer round-trip)
-- `docs/EVENTSHEET_THEME_EDITABILITY.md` — designer-facing theme workflow
-- `docs/EVENTSHEET_ALIGNMENT_GUIDE.md` — stacked layout tuning
-- `docs/EVENTSHEET_ARCHITECTURE_SLICES.md` — slice-by-slice completion/scaffold/defer tracker
-- `docs/elements/*.md` — template scene guidance
-- `docs/C3-MIGRATION-GUIDE.md` — user-facing C3→Godot concept/behavior/plugin map
-- `docs/MCP-SERVER.md` — the AI-tooling protocol (list/read/compile/lint/snippets)
-- `docs/UNINSTALL.md` — clean-removal guide (keep/remove table; the zero-runtime-dependency covenant as a guided teardown)
-- `docs/INSPECTOR-ATTRIBUTES-SPEC.md` — Unity/Odin-style attributes (all tiers shipped)
-- `docs/ADDON-COMPOSITION-SPEC.md` — meta-packs, uses/requires, project policy (shipped)
-- `docs/PROGRESSIVE-DISCLOSURE-SPEC.md` — tiered disclosure of dialog complexity (C3-migrant-first; shipped)
-- `docs/INCLUDES-SPEC.md` — Construct "Include event sheet" → compile-time merge (not yet `.gd` round-tripping)
-- `docs/GROUPS-ROUNDTRIP-SPEC.md` — event-group round-trip status (groups dissolve through `.gd`)
-- `CONTRIBUTING.md` — dev setup, verification loop, house rules, gotcha list
-- `CHANGELOG.md` — the authoritative feature ledger per release
+- `README.md` - install + high-level workflow
+- `docs/GDSCRIPT-PAIRING-SPEC.md` - how the sheet pairs with GDScript (blocks, codegen tooltips, expressions, C3 synonyms, importer round-trip)
+- `docs/EVENTSHEET_THEME_EDITABILITY.md` - designer-facing theme workflow
+- `docs/EVENTSHEET_ALIGNMENT_GUIDE.md` - stacked layout tuning
+- `docs/EVENTSHEET_ARCHITECTURE_SLICES.md` - slice-by-slice completion/scaffold/defer tracker
+- `docs/elements/*.md` - template scene guidance
+- `docs/C3-MIGRATION-GUIDE.md` - user-facing C3→Godot concept/behavior/plugin map
+- `docs/MCP-SERVER.md` - the AI-tooling protocol (list/read/compile/lint/snippets)
+- `docs/UNINSTALL.md` - clean-removal guide (keep/remove table; the zero-runtime-dependency covenant as a guided teardown)
+- `docs/INSPECTOR-ATTRIBUTES-SPEC.md` - Unity/Odin-style attributes (all tiers shipped)
+- `docs/ADDON-COMPOSITION-SPEC.md` - meta-packs, uses/requires, project policy (shipped)
+- `docs/PROGRESSIVE-DISCLOSURE-SPEC.md` - tiered disclosure of dialog complexity (C3-migrant-first; shipped)
+- `docs/INCLUDES-SPEC.md` - Construct "Include event sheet" → compile-time merge (not yet `.gd` round-tripping)
+- `docs/GROUPS-ROUNDTRIP-SPEC.md` - event-group round-trip status (groups dissolve through `.gd`)
+- `CONTRIBUTING.md` - dev setup, verification loop, house rules, gotcha list
+- `CHANGELOG.md` - the authoritative feature ledger per release
 
 ## Standing contracts (read before changing the compiler or descriptors)
 
-- **Parity**: generated GDScript is plain code — no plugin runtime, no indirection.
+- **Parity**: generated GDScript is plain code - no plugin runtime, no indirection.
 - **Lossless**: GDScript-backed sheets round-trip byte-identically (verify-lift gates).
 - **Bake-at-apply**: templates bake onto ACEs when applied; descriptor changes never
-  rewrite sheets. `ace_id`s are API — hide with `@ace_hidden`, never rename.
+  rewrite sheets. `ace_id`s are API - hide with `@ace_hidden`, never rename.
 - **Policy gates, never bytes**: composition ProjectSettings only allow/warn/error.
 - Indentation split: tabs in `addons/eventforge/`, **spaces** in
   `addons/eventsheet/editor/`. See `CONTRIBUTING.md` for the gotcha list (e.g. `""`
@@ -86,7 +86,7 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - Condition/action name vs description cells are documented as separate roles but still share one text token in the current renderer.
 - The theme package manifest is documentation/template only; it is not auto-imported yet.
 - UI screenshots still require a Godot runtime; this sandbox may only be able to do syntax-level validation.
-- The parallel Control-widget editor prototypes (`EventRowUI`, `GroupRowUI`, `CommentRowUI`, `VariableRowUI`, `SheetToolbar`, and assorted stubs) were **removed** — they could not scale to large sheets. The custom-rendered virtualized viewport (`EventSheetDock`/`EventSheetViewport`/`EventRowRenderer`) is the sole editor architecture. Variable-row text formatting that the removed widget owned now lives in `addons/eventsheet/editor/variable_row_format.gd` (`VariableRowFormat`).
+- The parallel Control-widget editor prototypes (`EventRowUI`, `GroupRowUI`, `CommentRowUI`, `VariableRowUI`, `SheetToolbar`, and assorted stubs) were **removed** - they could not scale to large sheets. The custom-rendered virtualized viewport (`EventSheetDock`/`EventSheetViewport`/`EventRowRenderer`) is the sole editor architecture. Variable-row text formatting that the removed widget owned now lives in `addons/eventsheet/editor/variable_row_format.gd` (`VariableRowFormat`).
 
 ## Guidance for future LLM-assisted work
 

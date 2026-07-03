@@ -44,7 +44,7 @@ static func run() -> bool:
 	var section: String = "\n".join(EventSheetVocabularyDoc.sheet_section(sheet, "res://game/vocab_fixture.tres"))
 	all_passed = _check("sheet section renders identity + surface",
 		section.contains("### VocabFixture (`res://game/vocab_fixture.tres`)")
-		and section.contains("Behavior — attach under any `CharacterBody2D` node.")
+		and section.contains("Behavior - attach under any `CharacterBody2D` node.")
 		and section.contains("#### Properties") and section.contains("- `speed: float` (default `200.0`)")
 		and section.contains("#### Actions") and section.contains("- **Boost**"), true) and all_passed
 

@@ -1,8 +1,8 @@
-# Pack builder — weapon_kit (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - weapon_kit (one pack per file; run via tools/build_sample_behaviors.gd).
 #
 # Shooter state machine ported from the author's "WeaponKit" addon: ammo + reserve
 # pools, fire-rate cooldown, single/auto/burst fire modes, and timed/instant reload with
-# auto-reload. It owns NO projectile — Fire just manages ammo/cooldown and emits On Fire,
+# auto-reload. It owns NO projectile - Fire just manages ammo/cooldown and emits On Fire,
 # so the sheet spawns the bullet/hitscan however it likes (parity-safe, engine-agnostic).
 @tool
 
@@ -41,7 +41,7 @@ static func build() -> bool:
 	}
 
 	var about: CommentRow = CommentRow.new()
-	about.text = "Weapon Kit: ammo + reserve, fire-rate cooldown, single/auto/burst modes, and timed/instant reload. Call Fire (it manages ammo + cooldown and triggers On Fire — you spawn the bullet); call Reload. Read Ammo %, Reload Progress, etc. for HUD."
+	about.text = "Weapon Kit: ammo + reserve, fire-rate cooldown, single/auto/burst modes, and timed/instant reload. Call Fire (it manages ammo + cooldown and triggers On Fire - you spawn the bullet); call Reload. Read Ammo %, Reload Progress, etc. for HUD."
 	sheet.events.append(about)
 
 	# Triggers + conditions + expressions + private helpers (class-level annotated block).

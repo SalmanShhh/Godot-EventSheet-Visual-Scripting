@@ -1,4 +1,4 @@
-# Pack builder — tile_movement (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - tile_movement (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")

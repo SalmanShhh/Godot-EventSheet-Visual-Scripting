@@ -1,4 +1,4 @@
-# Pack builder — juice (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - juice (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
@@ -6,7 +6,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 ## Game-feel in one behavior: trauma-based SCREENSHAKE (the idea behind the scroll behavior's
 ## shake, but additive on the camera's offset/rotation so it composes with Godot's camera follow
 ## instead of fighting it), smooth ZOOM (by percent, focus-onto-a-point, or anchored mouse-wheel
-## style), and volume-preserving SQUASH & STRETCH on the host — which can be a Node2D (sprites) OR a
+## style), and volume-preserving SQUASH & STRETCH on the host - which can be a Node2D (sprites) OR a
 ## Control (UI). The camera is AUTO-FOUND (get_viewport().get_camera_2d()), so Shake / Zoom just work
 ## from anywhere with no wiring. Every effect is fire-and-forget (Tween-driven) and emits an
 ## "On X Finished" signal so you can chain the next beat reactively.
@@ -18,7 +18,7 @@ static func build() -> bool:
 	sheet.custom_class_name = "JuiceBehavior"
 	sheet.addon_tags = PackedStringArray(["camera", "juice"])
 	var about: CommentRow = CommentRow.new()
-	about.text = "Game feel, batteries included: screenshake, smooth zoom, and squash & stretch. The camera is found automatically — attach this anywhere and call Shake / Zoom; Squash & Stretch animates the node it's attached to."
+	about.text = "Game feel, batteries included: screenshake, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Zoom; Squash & Stretch animates the node it's attached to."
 	sheet.events.append(about)
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
@@ -27,7 +27,7 @@ static func build() -> bool:
 		"@export var max_offset: Vector2 = Vector2(24, 16)",
 		"## Peak camera roll (rotation) in degrees at full trauma.",
 		"@export_range(0.0, 30.0, 0.5) var max_roll_degrees: float = 3.0",
-		"## Trauma lost per second — higher means shorter, snappier shakes.",
+		"## Trauma lost per second - higher means shorter, snappier shakes.",
 		"@export_range(0.1, 10.0, 0.1) var shake_decay: float = 1.4",
 		"## How fast the shake noise scrolls (the jitter rate).",
 		"@export_range(1.0, 60.0, 1.0) var shake_frequency: float = 25.0",
@@ -89,7 +89,7 @@ static func build() -> bool:
 		"## @ace_category(\"Juice\")",
 		"signal slowmo_finished()",
 		"",
-		"## The camera these effects drive: an explicit override (Use Camera), else the active Camera2D —",
+		"## The camera these effects drive: an explicit override (Use Camera), else the active Camera2D -",
 		"## auto-found, so Shake / Zoom just work from anywhere without wiring a path.",
 		"func _camera() -> Camera2D:",
 		"\tif _camera_override != null and is_instance_valid(_camera_override):",
@@ -173,7 +173,7 @@ static func build() -> bool:
 	]))
 	on_ready.actions.append(ready_body)
 	sheet.events.append(on_ready)
-	# Safety: if the host leaves the tree mid-slowmo, restore the GLOBAL Engine.time_scale — otherwise a
+	# Safety: if the host leaves the tree mid-slowmo, restore the GLOBAL Engine.time_scale - otherwise a
 	# scene change during slow motion would leave the entire game running in slow motion.
 	var teardown: EventRow = EventRow.new()
 	teardown.trigger_provider_id = "Core"
@@ -211,7 +211,7 @@ static func build() -> bool:
 		"\t\t_shaking = false",
 		"\t\tshake_stopped.emit()",
 		"if _squash_spring_active:",
-		"\t# Spring the scale back to rest (semi-implicit, framerate-independent — same model as the Spring pack).",
+		"\t# Spring the scale back to rest (semi-implicit, framerate-independent - same model as the Spring pack).",
 		"\t_squash_velocity += (_base_scale - _squash_value) * squash_stiffness * delta",
 		"\t_squash_velocity *= pow(1.0 - squash_damping, delta)",
 		"\t_squash_value += _squash_velocity * delta",
@@ -227,7 +227,7 @@ static func build() -> bool:
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
 	# --- Actions (fire-and-forget) ---
-	Lib.append_function(sheet, "shake", "Shake", "Juice", "Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically — fire it on every hit.",
+	Lib.append_function(sheet, "shake", "Shake", "Juice", "Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.",
 		[["strength", "float"]],
 		"trauma = clampf(trauma + strength, 0.0, 1.0)")
 	_default(sheet, "strength", "0.4")
@@ -242,12 +242,12 @@ static func build() -> bool:
 		"var cam: Camera2D = _camera()\nif cam == null:\n\treturn\nvar target_zoom: Vector2 = cam.zoom * (percent / 100.0)\ntarget_zoom = Vector2(clampf(target_zoom.x, min_zoom, max_zoom), clampf(target_zoom.y, min_zoom, max_zoom))\nvar tw: Tween = create_tween()\ntw.tween_property(cam, \"zoom\", target_zoom, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: zoom_finished.emit())")
 	_default(sheet, "percent", "150")
 	_default(sheet, "duration", "0.4")
-	Lib.append_function(sheet, "zoom_to_position", "Zoom To Position", "Juice", "Zooms in while gliding the camera so a world position becomes the screen CENTRE — frame a spot in one action.",
+	Lib.append_function(sheet, "zoom_to_position", "Zoom To Position", "Juice", "Zooms in while gliding the camera so a world position becomes the screen CENTRE - frame a spot in one action.",
 		[["world_position", "Vector2"], ["percent", "float"], ["duration", "float"]],
 		"var cam: Camera2D = _camera()\nif cam == null:\n\treturn\nvar target_zoom: Vector2 = cam.zoom * (percent / 100.0)\ntarget_zoom = Vector2(clampf(target_zoom.x, min_zoom, max_zoom), clampf(target_zoom.y, min_zoom, max_zoom))\nvar seconds: float = maxf(duration, 0.001)\nvar tw: Tween = create_tween().set_parallel(true)\ntw.tween_property(cam, \"zoom\", target_zoom, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.tween_property(cam, \"global_position\", world_position, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: zoom_finished.emit())")
 	_default(sheet, "percent", "150")
 	_default(sheet, "duration", "0.4")
-	Lib.append_function(sheet, "zoom_toward_point", "Zoom Toward Point", "Juice", "Zooms while keeping a world position pinned under the same screen spot (mouse-wheel-to-cursor style) — great for strategy/map zoom.",
+	Lib.append_function(sheet, "zoom_toward_point", "Zoom Toward Point", "Juice", "Zooms while keeping a world position pinned under the same screen spot (mouse-wheel-to-cursor style) - great for strategy/map zoom.",
 		[["world_position", "Vector2"], ["percent", "float"], ["duration", "float"]],
 		"var cam: Camera2D = _camera()\nif cam == null:\n\treturn\n_zoom_cam_from = cam.global_position\n_zoom_from = cam.zoom\nvar target_zoom: Vector2 = cam.zoom * (percent / 100.0)\n_zoom_to = Vector2(clampf(target_zoom.x, min_zoom, max_zoom), clampf(target_zoom.y, min_zoom, max_zoom))\n_zoom_anchor = world_position\nvar tw: Tween = create_tween()\ntw.tween_method(_zoom_anchored_step, 0.0, 1.0, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: zoom_finished.emit())")
 	_default(sheet, "percent", "150")
@@ -257,7 +257,7 @@ static func build() -> bool:
 		"if host == null:\n\treturn\nvar s: float = clampf(stretch, -0.9, 5.0)\nvar stretched: Vector2 = Vector2(_base_scale.x / (1.0 + s), _base_scale.y * (1.0 + s))\nif host is Node2D:\n\t(host as Node2D).scale = stretched\nelif host is Control:\n\tvar c: Control = host as Control\n\t# Control scales from its top-left by default; centre the pivot so the pop reads right.\n\tc.pivot_offset = c.size / 2.0\n\tc.scale = stretched\nelse:\n\treturn\nvar tw: Tween = create_tween()\ntw.tween_property(host, \"scale\", _base_scale, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: squash_finished.emit())")
 	_default(sheet, "stretch", "0.3")
 	_default(sheet, "duration", "0.4")
-	Lib.append_function(sheet, "spring_squash", "Spring Squash", "Juice", "Pops the host (Node2D or Control) with a volume-preserving stretch that springs back via a real spring (the stiffness/damping knobs) — bouncier + more organic than the tween Squash & Stretch. Positive = stretch tall (a jump), negative = squash wide (a landing).",
+	Lib.append_function(sheet, "spring_squash", "Spring Squash", "Juice", "Pops the host (Node2D or Control) with a volume-preserving stretch that springs back via a real spring (the stiffness/damping knobs) - bouncier + more organic than the tween Squash & Stretch. Positive = stretch tall (a jump), negative = squash wide (a landing).",
 		[["stretch", "float"]],
 		"if host == null:\n\treturn\nvar s: float = clampf(stretch, -0.9, 5.0)\n_squash_value = Vector2(_base_scale.x / (1.0 + s), _base_scale.y * (1.0 + s))\n_squash_velocity = Vector2.ZERO\n_squash_spring_active = true\n_apply_host_scale(_squash_value)")
 	_default(sheet, "stretch", "0.3")
@@ -275,7 +275,7 @@ static func build() -> bool:
 
 
 ## Pre-fills the last-appended ACE's parameter default, so the dialog opens with a usable value
-## (authoring-time metadata only — defaults never appear in the compiled .gd).
+## (authoring-time metadata only - defaults never appear in the compiled .gd).
 static func _default(sheet: EventSheetResource, param_id: String, value: String) -> void:
 	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
 	for parameter: ACEParam in fn.params:

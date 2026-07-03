@@ -1,13 +1,13 @@
-# Pack builder — background_runner (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - background_runner (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Off-thread heavy compute — the "too heavy for one frame even spread out" lane. Run In Background hands a PURE function to the engine's WorkerThreadPool; the
+## Off-thread heavy compute - the "too heavy for one frame even spread out" lane. Run In Background hands a PURE function to the engine's WorkerThreadPool; the
 ## main thread only polls, so it never hitches, and On Done(result) fires on the main thread (safe to
 ## touch the scene there). Use it for procedural generation, pathfinding bakes, image/data crunching.
 ##
-## ADVANCED, and the one rule is unenforceable: the work callable MUST be pure — no scene-tree access, no
+## ADVANCED, and the one rule is unenforceable: the work callable MUST be pure - no scene-tree access, no
 ## Node methods, no non-thread-safe Resource touches, data in / data out only. Touching a node off-thread
 ## crashes or produces heisenbugs. WorkerThreadPool.add_task discards the callable's return value, so each
 ## call gets a unique id and the worker stores its result in a Mutex-guarded dictionary for the poll to read.
@@ -85,7 +85,7 @@ static func build() -> bool:
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
 	Lib.append_function(sheet, "run_in_background", "Run In Background", "Background",
-		"Runs a PURE callable off the main thread; On Done(result) fires when it finishes. WARNING: the callable must NOT touch nodes / the scene tree / non-thread-safe resources — data in, data out only.",
+		"Runs a PURE callable off the main thread; On Done(result) fires when it finishes. WARNING: the callable must NOT touch nodes / the scene tree / non-thread-safe resources - data in, data out only.",
 		[["work", "Callable"]], "\n".join(PackedStringArray([
 		"if _mutex == null:",
 		"\t_mutex = Mutex.new()",

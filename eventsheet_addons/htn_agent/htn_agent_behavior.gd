@@ -30,11 +30,11 @@ var compounds: Dictionary = {}
 var plan: Array = []
 var plan_index: int = 0
 var primitives: Dictionary = {}
-## Goal to plan for — a compound or primitive task name.
+## Goal to plan for - a compound or primitive task name.
 @export var root_task: String = ""
 var world_state: Dictionary = {}
 
-## An HTN method — a way to accomplish a compound task, with preconditions + an ordered subtask list.
+## An HTN method - a way to accomplish a compound task, with preconditions + an ordered subtask list.
 class HTNMethod:
 	var id: String = ""
 	var utility: float = 0.0

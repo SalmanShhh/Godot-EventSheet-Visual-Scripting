@@ -158,7 +158,7 @@ signal kicked"
 		surface_text.contains("Kick (amount: float)") and surface_text.contains("On Kicked") and surface_text.contains("strength: float"), true) and all_passed
 	var readme: String = author_editor._generate_pack_readme(pack)
 	all_passed = _check("pack README documents the surface",
-		readme.contains("# JuiceKit") and readme.contains("**Tags:** juice") and readme.contains("- **Kick** (`amount: float`)") and readme.contains("`strength: float` (default `1.0`) — How juicy."), true) and all_passed
+		readme.contains("# JuiceKit") and readme.contains("**Tags:** juice") and readme.contains("- **Kick** (`amount: float`)") and readme.contains("`strength: float` (default `1.0`) - How juicy."), true) and all_passed
 	var bench_problem: String = author_editor._build_test_bench(pack, "user://eventsheets_bench.tscn")
 	all_passed = _check("test bench builds host + behavior scene", bench_problem, "") and all_passed
 	var bench_scene: PackedScene = load("user://eventsheets_bench.tscn")

@@ -1,9 +1,9 @@
-# Pack builder — health (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - health (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Simple Health behavior (event-sheet parity — ported from the Simple Health addon).
+## Simple Health behavior (event-sheet parity - ported from the Simple Health addon).
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -30,7 +30,7 @@ static func build() -> bool:
 	# ## @ace_*-annotated class-level GDScript (mirrors line_of_sight.gd / sine_3d.gd).
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
-		"## A named health pool (shield / armour) — typed so the absorption + decay hot paths read",
+		"## A named health pool (shield / armour) - typed so the absorption + decay hot paths read",
 		"## fields directly instead of float()-casting an untyped Dictionary entry every frame.",
 		"class HealthPool:",
 		"\tvar amount: float = 0.0",

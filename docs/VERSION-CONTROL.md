@@ -1,13 +1,13 @@
 # Version Control for Event Sheets
 
-By default an event sheet is a plain **`.gd`** file — it diffs and merges like any source code, no
+By default an event sheet is a plain **`.gd`** file - it diffs and merges like any source code, no
 tooling required. Legacy **`.tres`** sheets are Godot resources that diff and merge like serialized
-resource soup — noisy and, on a real conflict, effectively unmergeable. Three tools make those `.tres`
+resource soup - noisy and, on a real conflict, effectively unmergeable. Three tools make those `.tres`
 sheets behave like first-class, team-friendly source (the `.gd` default already is):
 
 ## 1. LF + byte-stable regeneration (automatic)
 `.gitattributes` enforces LF, and the pack/showcase builders stamp **deterministic row UIDs**,
-so regenerating an unchanged sheet is byte-identical — no spurious diff churn, and every row
+so regenerating an unchanged sheet is byte-identical - no spurious diff churn, and every row
 has a *stable identity* that diff and merge can key on.
 
 ## 2. Readable diffs (textconv)
@@ -24,9 +24,9 @@ views show `EVENT … / IF … / DO …` lines via `EventSheetTextDump`.
 A custom merge driver merges sheets at the **row level**, keyed on the stable UIDs. Two people
 editing *different* rows merge cleanly; only a genuine same-row edit becomes a conflict (and
 even then both versions are kept, fenced by `⚠ MERGE CONFLICT` comment rows, so you resolve it
-by deleting the wrong one in the editor — no broken `.tres`).
+by deleting the wrong one in the editor - no broken `.tres`).
 
-**Activate it (once per clone — merge drivers live in `.git/config`, which isn't committed):**
+**Activate it (once per clone - merge drivers live in `.git/config`, which isn't committed):**
 
 ```sh
 git config merge.eventsheet.name   "EventSheets semantic merge"
@@ -53,5 +53,5 @@ harmless on a fresh clone.
 - A row deleted on one side and edited on the other.
 - The same variable/scalar changed to two different values.
 
-Both sides are preserved in the merged sheet so nothing is lost — open it and keep the right
+Both sides are preserved in the merged sheet so nothing is lost - open it and keep the right
 one. Run the headless suite's `sheet_merge_test` for the exact behaviours that are guaranteed.

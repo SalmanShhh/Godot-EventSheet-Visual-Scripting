@@ -26,9 +26,9 @@ static func doc_path() -> String:
 ## excluded — their sheet section already covers them).
 static func generate() -> String:
 	var lines: PackedStringArray = PackedStringArray()
-	lines.append("# Project vocabulary — Godot EventSheets")
+	lines.append("# Project vocabulary - Godot EventSheets")
 	lines.append("")
-	lines.append("> Generated — do not edit. Regenerate via the dock (Tools → Vocabulary Doc…) or")
+	lines.append("> Generated - do not edit. Regenerate via the dock (Tools → Vocabulary Doc…) or")
 	lines.append("> `godot --headless --path . --script tools/vocabulary_doc.gd`.")
 	# Templates are blueprints, not live vocabulary — they don't publish anything yet.
 	var sheet_paths: PackedStringArray = EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets())
@@ -71,9 +71,9 @@ static func sheet_section(sheet: EventSheetResource, sheet_path: String) -> Pack
 	lines.append("")
 	lines.append("### %s (`%s`)" % [title, sheet_path])
 	if sheet.behavior_mode:
-		lines.append("Behavior — attach under any `%s` node." % sheet.host_class)
+		lines.append("Behavior - attach under any `%s` node." % sheet.host_class)
 	elif sheet.autoload_mode:
-		lines.append("Autoload singleton `%s` — its ACEs are project-wide." % sheet.autoload_name)
+		lines.append("Autoload singleton `%s` - its ACEs are project-wide." % sheet.autoload_name)
 	else:
 		lines.append("Node script extending `%s`." % sheet.host_class)
 	var surface: Dictionary = EventSheetAuthorLoop.collect_publish_surface(sheet)

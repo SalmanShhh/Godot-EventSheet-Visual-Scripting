@@ -44,7 +44,7 @@ var abilities: Dictionary = {}
 @export_range(0, 10, 0.05) var cooldown_multiplier: float = 1.0
 var current_ability_id: String = ""
 
-## One ability's runtime state — typed so the cooldown / stack / expiration hot paths read
+## One ability's runtime state - typed so the cooldown / stack / expiration hot paths read
 ## fields directly instead of float()/int()/bool()-casting an untyped Dictionary every frame.
 class AbilityData:
 	var cooldown: float = 0.0

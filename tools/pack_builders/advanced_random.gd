@@ -1,15 +1,15 @@
-# Pack builder — advanced_random (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - advanced_random (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Advanced Random addon: a faithful port of the Advanced Random PLUGIN — a single
+## Advanced Random addon: a faithful port of the Advanced Random PLUGIN - a single
 ## GLOBAL utility, so it ships as an AUTOLOAD (one shared seed = reproducible runs). Wraps
 ## Godot's own RandomNumberGenerator (seeded distributions: uniform / range / dice / normal)
 ## and FastNoiseLite (Perlin/Simplex/value noise with fractal octaves), plus permutation
 ## tables and shuffle bags (pick without repeats). Categories use the picker's "Parent: Sub"
 ## nesting so the vocabulary clusters under one Advanced Random section.
-## THE DEEPEST EXTENSION POINT: this pack IS an event sheet — open the .tres, add functions,
+## THE DEEPEST EXTENSION POINT: this pack IS an event sheet - open the .tres, add functions,
 ## recompile, re-register.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -23,7 +23,7 @@ static func build() -> bool:
 			"attributes": {"tooltip": "Seed applied on _ready (0 = a fresh random seed each run; any other value = reproducible runs).", "group": "Advanced Random"}},
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Advanced Random (autoload): register as the AdvancedRandom autoload, then call its ACEs from any sheet — seeded numbers/dice/normal, Perlin/Simplex noise, permutation tables, shuffle bags, weighted picks, and a Chance(%) condition. Set seed_on_start in the Inspector for reproducible runs. This pack is an event sheet — extend it by editing it."
+	about.text = "Advanced Random (autoload): register as the AdvancedRandom autoload, then call its ACEs from any sheet - seeded numbers/dice/normal, Perlin/Simplex noise, permutation tables, shuffle bags, weighted picks, and a Chance(%) condition. Set seed_on_start in the Inspector for reproducible runs. This pack is an event sheet - extend it by editing it."
 	sheet.events.append(about)
 
 	# Class-level state: Godot's own RNG + noise generators, a permutation table, named bags.
@@ -53,7 +53,7 @@ static func build() -> bool:
 	sheet.events.append(ready_tick)
 
 	# ── Setup actions ──
-	Lib.append_function(sheet, "set_random_seed", "Set Seed", "Advanced Random: Setup", "Sets the seed for BOTH numbers and noise — same seed reproduces the same sequence.",
+	Lib.append_function(sheet, "set_random_seed", "Set Seed", "Advanced Random: Setup", "Sets the seed for BOTH numbers and noise - same seed reproduces the same sequence.",
 		[["seed_value", "int"]],
 		"_rng.seed = seed_value\n_noise.seed = seed_value")
 	Lib.append_function(sheet, "randomize_seed", "Randomize Seed", "Advanced Random: Setup", "Picks a fresh, unpredictable seed (non-reproducible).",
@@ -65,10 +65,10 @@ static func build() -> bool:
 	Lib.append_function(sheet, "set_noise_frequency", "Set Noise Frequency", "Advanced Random: Setup", "Lower = smoother/larger features; higher = noisier (default 0.01).",
 		[["frequency", "float"]],
 		"_noise.frequency = frequency")
-	Lib.append_function(sheet, "set_noise_octaves", "Set Noise Octaves", "Advanced Random: Setup", "Fractal detail layers — more octaves add fine detail (fractal/fBm noise).",
+	Lib.append_function(sheet, "set_noise_octaves", "Set Noise Octaves", "Advanced Random: Setup", "Fractal detail layers - more octaves add fine detail (fractal/fBm noise).",
 		[["octaves", "int"]],
 		"_noise.fractal_octaves = maxi(octaves, 1)")
-	Lib.append_function(sheet, "generate_permutation", "Generate Permutation Table", "Advanced Random: Setup", "Builds a shuffled 0..size-1 table (read with the Permutation expression) — a fixed deck order.",
+	Lib.append_function(sheet, "generate_permutation", "Generate Permutation Table", "Advanced Random: Setup", "Builds a shuffled 0..size-1 table (read with the Permutation expression) - a fixed deck order.",
 		[["size", "int"]],
 		"\n".join(PackedStringArray([
 			"var values: Array = range(maxi(size, 0))",
@@ -79,7 +79,7 @@ static func build() -> bool:
 			"\tvalues[j] = swap",
 			"_perm = PackedInt32Array(values)",
 		])))
-	Lib.append_function(sheet, "make_shuffle_bag", "Make Shuffle Bag", "Advanced Random: Setup", "Creates a named bag of items — Shuffle Bag Pick draws each once before any repeats.",
+	Lib.append_function(sheet, "make_shuffle_bag", "Make Shuffle Bag", "Advanced Random: Setup", "Creates a named bag of items - Shuffle Bag Pick draws each once before any repeats.",
 		[["bag_name", "String"], ["items", "Array"]],
 		"_bags[bag_name] = {\"items\": items.duplicate(), \"pile\": []}")
 
@@ -92,12 +92,12 @@ static func build() -> bool:
 	_expr(sheet, "normal", "Normal (Gaussian)", "Advanced Random: Numbers", "A normally-distributed float around mean with the given deviation.", [["mean", "float"], ["deviation", "float"]], "return _rng.randfn(mean, deviation)", TYPE_FLOAT)
 
 	# ── Noise (FastNoiseLite) ──
-	_expr(sheet, "noise_1d", "Noise 1D", "Advanced Random: Noise", "Smooth noise along a line at x — returns [-1, 1].", [["x", "float"]], "return _noise.get_noise_1d(x)", TYPE_FLOAT)
-	_expr(sheet, "noise_2d", "Noise 2D", "Advanced Random: Noise", "Smooth noise at (x, y) — great for terrain/heightmaps; returns [-1, 1].", [["x", "float"], ["y", "float"]], "return _noise.get_noise_2d(x, y)", TYPE_FLOAT)
-	_expr(sheet, "noise_3d", "Noise 3D", "Advanced Random: Noise", "Smooth noise at (x, y, z) — returns [-1, 1].", [["x", "float"], ["y", "float"], ["z", "float"]], "return _noise.get_noise_3d(x, y, z)", TYPE_FLOAT)
+	_expr(sheet, "noise_1d", "Noise 1D", "Advanced Random: Noise", "Smooth noise along a line at x - returns [-1, 1].", [["x", "float"]], "return _noise.get_noise_1d(x)", TYPE_FLOAT)
+	_expr(sheet, "noise_2d", "Noise 2D", "Advanced Random: Noise", "Smooth noise at (x, y) - great for terrain/heightmaps; returns [-1, 1].", [["x", "float"], ["y", "float"]], "return _noise.get_noise_2d(x, y)", TYPE_FLOAT)
+	_expr(sheet, "noise_3d", "Noise 3D", "Advanced Random: Noise", "Smooth noise at (x, y, z) - returns [-1, 1].", [["x", "float"], ["y", "float"], ["z", "float"]], "return _noise.get_noise_3d(x, y, z)", TYPE_FLOAT)
 
 	# ── Picking ──
-	_expr(sheet, "permutation", "Permutation Value", "Advanced Random: Picking", "Reads index (wrapped) from the permutation table — generate it first.", [["index", "int"]], "return _perm[posmod(index, _perm.size())] if not _perm.is_empty() else 0", TYPE_INT)
+	_expr(sheet, "permutation", "Permutation Value", "Advanced Random: Picking", "Reads index (wrapped) from the permutation table - generate it first.", [["index", "int"]], "return _perm[posmod(index, _perm.size())] if not _perm.is_empty() else 0", TYPE_INT)
 	_expr(sheet, "pick", "Pick From", "Advanced Random: Picking", "A uniformly-random element of the array (null if empty).", [["options", "Array"]], "return options[_rng.randi_range(0, options.size() - 1)] if not options.is_empty() else null", TYPE_MAX)
 	_expr(sheet, "weighted_index", "Weighted Index", "Advanced Random: Picking", "An index chosen in proportion to the weights array (heavier = likelier).", [["weights", "Array"]],
 		"\n".join(PackedStringArray([
@@ -114,7 +114,7 @@ static func build() -> bool:
 			"\t\treturn i",
 			"return weights.size() - 1",
 		])), TYPE_INT)
-	_expr(sheet, "shuffle_bag_pick", "Shuffle Bag Pick", "Advanced Random: Picking", "Draws the next item from a named bag — every item appears once before any repeat.", [["bag_name", "String"]],
+	_expr(sheet, "shuffle_bag_pick", "Shuffle Bag Pick", "Advanced Random: Picking", "Draws the next item from a named bag - every item appears once before any repeat.", [["bag_name", "String"]],
 		"\n".join(PackedStringArray([
 			"if not _bags.has(bag_name):",
 			"\treturn null",
@@ -132,7 +132,7 @@ static func build() -> bool:
 		])), TYPE_MAX)
 
 	# ── Chance conditions ──
-	_cond(sheet, "chance", "Chance", "Advanced Random: Chance", "True roughly percent of the time (0-100) — e.g. Chance(5) for a 5% event.", [["percent", "float"]], "return _rng.randf() * 100.0 < percent")
+	_cond(sheet, "chance", "Chance", "Advanced Random: Chance", "True roughly percent of the time (0-100) - e.g. Chance(5) for a 5% event.", [["percent", "float"]], "return _rng.randf() * 100.0 < percent")
 	_cond(sheet, "one_in", "One In", "Advanced Random: Chance", "True with a 1-in-n probability.", [["n", "int"]], "return _rng.randi_range(1, maxi(n, 1)) == 1")
 
 	return Lib.save_pack(sheet, "res://eventsheet_addons/advanced_random/advanced_random_addon")

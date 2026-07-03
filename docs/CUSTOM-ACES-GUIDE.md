@@ -174,12 +174,12 @@ required for a variable to surface (a bare `var` is invisible to reflection).
 
 ### `@ace_expose_all`: node-targeted in one line
 
-By default the generated call is **instance-backed** — `__eventsheet_provider_<Class>.method(...)`
+By default the generated call is **instance-backed** - `__eventsheet_provider_<Class>.method(...)`
 against an owned `Class.new()` the sheet creates. That is exactly right for a stateless `RefCounted`
 helper (scoring math, an inventory, a dice roller): drop the script in, call its methods, done.
 
-For a **Node behavior** you attach to a node — where the ACE should act on *that node*
-(`$Enemy/Health.heal()`) and be retargetable per use — add **one class-level line** at the top of the
+For a **Node behavior** you attach to a node - where the ACE should act on *that node*
+(`$Enemy/Health.heal()`) and be retargetable per use - add **one class-level line** at the top of the
 script and skip the per-method annotations entirely:
 
 ```gdscript
@@ -193,12 +193,12 @@ signal died                           # -> "On Died" trigger
 ```
 
 Every method now compiles to the **node-targeted** form `{target}.method(args)` with an **"On node"**
-field defaulting to `$Health` — pick or type any node path to retarget it (Godot's `$`-autocomplete,
+field defaulting to `$Health` - pick or type any node path to retarget it (Godot's `$`-autocomplete,
 the Construct "act on the object you picked" model). No `@ace_codegen_template`, `@ace_condition`, or
-`@ace_name` per method — reflection derives type, name, and the call.
+`@ace_name` per method - reflection derives type, name, and the call.
 
 Plain `## @ace_expose_all` (no `node`) is the explicit "treat me as a provider, expose everything"
-marker that keeps the instance-backed default — best for stateless `RefCounted` helpers. Either way,
+marker that keeps the instance-backed default - best for stateless `RefCounted` helpers. Either way,
 per-member `@ace_*` annotations still override the auto-derived value for that one member, so you only
 annotate the exceptions (a custom name the humanizer can't guess, a dropdown, a description).
 
@@ -446,7 +446,7 @@ another node.
 ```
 
 Every built-in node-scoped ACE (one that declares a `node_type`) is given this prefix and an optional
-"On node" `target` param automatically, so you rarely write it by hand — but it is available for your
+"On node" `target` param automatically, so you rarely write it by hand - but it is available for your
 own templates. A blank target compiles to the original host call byte-for-byte, so adding it never
 changes existing output. The dot lives inside the braces precisely so it cannot collide with the
 ordinary `{target}.member` pattern (dot outside). Unlike `{, args}`, the optional-prefix idiom **does**
@@ -642,7 +642,7 @@ write.
 - **A wrong method name fails silently.** `position = {pos}` is safe; a typo like `move_too({pos})`
   compiles fine and crashes only when the generated code runs. Compile, parse, then run it in a test.
 - **Templates are frozen once shipped.** Changing an `ace_id` or `codegen_template` breaks every sheet
-  that used it. To change behavior, add a new ACE and **deprecate** the old one — on Path 1, annotate it
+  that used it. To change behavior, add a new ACE and **deprecate** the old one - on Path 1, annotate it
   `## @ace_deprecated("Use <NewName> instead")`: it keeps compiling in sheets that already use it (so
   nothing breaks), but is hidden from the picker, flagged on hover with the replacement, and warned at
   compile. (`@ace_hidden` only hides a member; use `@ace_deprecated` to retire one with a pointer to its

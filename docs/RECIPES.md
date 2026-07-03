@@ -1,4 +1,4 @@
-# Recipes — build something, end to end
+# Recipes - build something, end to end
 
 Short, concrete walkthroughs. Each assumes the plugin is enabled and you've opened the
 **EventSheet** tab. New to the vocabulary? Keep the [glossary](GLOSSARY.md) open. Coming from
@@ -6,15 +6,15 @@ Construct 3? The [migration guide](C3-MIGRATION-GUIDE.md) maps every concept.
 
 The golden loop for all of these: **New sheet (a `.gd`) → set the host class → add events (pick
 Conditions + Actions) → save → set the `.gd` as your node's script → Run.** A sheet *is* just
-GDScript now (no `.tres` needed) — so "Open in Godot" edits the same file in the script editor, and
+GDScript now (no `.tres` needed) - so "Open in Godot" edits the same file in the script editor, and
 any `.gd` auto-previews as an event sheet.
 
 ---
 
-## 1. Hello, Jump — a platformer character in minutes
+## 1. Hello, Jump - a platformer character in minutes
 
 The fast path is the bundled **Platformer** behavior pack (coyote time, jump buffering, variable
-jump height, wall jump — all the juice).
+jump height, wall jump - all the juice).
 
 1. Make a `CharacterBody2D` scene with a sprite + a collision shape.
 2. New sheet → **Sheet Type** → host class `CharacterBody2D`.
@@ -22,7 +22,7 @@ jump height, wall jump — all the juice).
    set its speed/jump in the Inspector.
 4. One event: trigger **On Process** → action **Move And Slide**. The pack reads input and drives
    `velocity`; Move And Slide applies it.
-5. **Save** — the sheet *is* the `.gd`; set it as the node's script and press Play.
+5. **Save** - the sheet *is* the `.gd`; set it as the node's script and press Play.
 
 Want it from scratch instead of the pack? Three events: *On Process* → set horizontal velocity
 from input; *Is on floor* + *jump pressed* → set `velocity.y`; *On Process* → Move And Slide.
@@ -32,7 +32,7 @@ from input; *Is on floor* + *jump pressed* → set `velocity.y`; *On Process* �
 ## 2. Health & damage
 
 Use the **Health** pack for HP, damage absorption, decaying shield **pools**, and
-On Damaged / On Death triggers — or roll your own with a variable.
+On Damaged / On Death triggers - or roll your own with a variable.
 
 **With the pack:** attach **Health**, set max HP in the Inspector. On a hit, call its *Take
 Damage* action. Add an event: trigger **On Death** → action *Queue Free* (or play an animation).
@@ -54,20 +54,20 @@ variable* `health`, amount `10`. Add an event: condition `health <= 0` → actio
 
 ## 4. Debugging 101
 
-When something misbehaves, you have three tools — no `print()` required.
+When something misbehaves, you have three tools - no `print()` required.
 
 - **Check the sheet first.** Tools ▸ **Check Sheet for Errors** lints every ƒx expression and
   GDScript block; a bad one gets a **red marker on its row** and the editor jumps to it (hover the
   row for the reason + a "did you mean …?"). This also runs automatically on save.
 - **Breakpoints.** Click the gutter (or F9) to pause the Godot debugger on a row in a debug run.
-  Need it to stop only sometimes? **More ▸ Set Breakpoint Condition…** (e.g. `health <= 0`) — it
+  Need it to stop only sometimes? **More ▸ Set Breakpoint Condition…** (e.g. `health <= 0`) - it
   pauses only on the frame that matters.
 - **Live Values + Watch.** Tools ▸ Live Values streams the sheet's variables while it runs (and
   you can *edit* them live to test branches). The **Watch** box in that window evaluates any
-  expression over those variables each frame — e.g. `health <= 0` or `score + lives` — so you can
+  expression over those variables each frame - e.g. `health <= 0` or `score + lives` - so you can
   see a condition flip in real time without adding a label.
 - **Event Trace.** Tools ▸ Event Trace highlights the rows whose events *fire* during a debug run
-  (a cyan marker, updated live) — so "is this event even running?" is answered at a glance. It
+  (a cyan marker, updated live) - so "is this event even running?" is answered at a glance. It
   rides the Live Values stream, so turn that on too.
 
 ---
@@ -75,7 +75,7 @@ When something misbehaves, you have three tools — no `print()` required.
 ## 5. Author your own behavior / ACEs
 
 No JSON, no boilerplate. Every bundled behaviour pack is a single `.gd` file that compiles with
-**zero GDScript blocks** — you can author yours the same way. Start from **Sheet ▸ New Behaviour
+**zero GDScript blocks** - you can author yours the same way. Start from **Sheet ▸ New Behaviour
 Addon…** (it scaffolds a ready-to-edit provider), and **`@ace_expose_all`** exposes a whole script's
 public API as ACEs at once. Full walkthrough: [MAKE-A-BEHAVIOUR-WITHOUT-CODE.md](MAKE-A-BEHAVIOUR-WITHOUT-CODE.md).
 Two routes:
@@ -92,33 +92,33 @@ Two routes:
 ## 6. Common pitfalls (and what the editor does about them)
 
 - **Naming a variable after a host member.** Calling a variable `position` on a `Node2D` sheet
-  shadows the node's own `position` — the generated script won't load. The **variable dialog now
+  shadows the node's own `position` - the generated script won't load. The **variable dialog now
   warns + blocks** this as you type, and **Rename Everywhere…** fixes existing references safely.
 - **A ƒx expression that doesn't compile.** You'll see the red row marker (recipe 4). The ƒx field
   also has live validation + autocomplete as you type.
 - **"It compiled but nothing happens."** Check the script is actually **attached** to the node
   (Tools ▸ Attach to Selected Node) and the **host class** matches the node type.
-- **Editing the `.gd` in Godot's script editor.** Go ahead — a sheet *is* its `.gd`, so your edits
+- **Editing the `.gd` in Godot's script editor.** Go ahead - a sheet *is* its `.gd`, so your edits
   round-trip back to events (function bodies, `if/else`, loops, and `match` all de-code into rows);
   re-open it as a sheet to keep editing visually. (Only the *output* of a legacy `.tres`-sourced sheet
-  is overwritten on recompile — there, edit the sheet, not the output. For verbatim code that should
+  is overwritten on recompile - there, edit the sheet, not the output. For verbatim code that should
   stay untouched, a **GDScript block** row is still emitted as-is and round-trips.)
 
 ## 7. Helper ACEs that save a code drop
 
 The picker has a row for most things you'd otherwise hand-write. A few that come up constantly:
 
-- **HUD text** — `Set Text (formatted)` writes `"Score: %d  Lives: %d" % [score, lives]` to any
+- **HUD text** - `Set Text (formatted)` writes `"Score: %d  Lives: %d" % [score, lives]` to any
   Label / RichTextLabel in one row (no GDScript block).
-- **Hit flashes & fades** — the **Color** category composes: `Lerp Color`, `Lighten` / `Darken`,
+- **Hit flashes & fades** - the **Color** category composes: `Lerp Color`, `Lighten` / `Darken`,
   `Color With Alpha`, `Color From HSV`. Feed the result straight into `Set Color Tint` (modulate).
-- **Spawning** — `Spawn Scene (Full)` instances a scene and sets position + rotation + an optional
+- **Spawning** - `Spawn Scene (Full)` instances a scene and sets position + rotation + an optional
   group tag in one action; `Spawn Scene At` when you only need a position.
-- **Timing without a Timer node** — `Call After Delay` / `Tween Callback` fire a method after N
+- **Timing without a Timer node** - `Call After Delay` / `Tween Callback` fire a method after N
   seconds without suspending the event; `Wait` (await) when you *do* want to suspend it.
-- **Scene-tree queries** — `Get Parent`, `Find Child`, `Has Node`, `Get Child Count`, plus node
-  **Groups** (Add / Is In / Call Method On Group) — no `get_node(...)` boilerplate.
-- **Signals at runtime** — `Connect` / `Disconnect` / `Emit Signal On` / `Signal Is Connected`,
+- **Scene-tree queries** - `Get Parent`, `Find Child`, `Has Node`, `Get Child Count`, plus node
+  **Groups** (Add / Is In / Call Method On Group) - no `get_node(...)` boilerplate.
+- **Signals at runtime** - `Connect` / `Disconnect` / `Emit Signal On` / `Signal Is Connected`,
   without a `_ready` block.
 
 Everything compiles to the exact one-liner you'd type by hand, so it stays a searchable, editable
@@ -126,26 +126,26 @@ row instead of a raw block.
 
 ---
 
-## 8. Coordinating many nodes — `With node`, groups & aggregates
+## 8. Coordinating many nodes - `With node`, groups & aggregates
 
 A boss enrages: flash it, then sound the retreat if the wave it commands is nearly dead. One event,
-three Godot idioms — react to a **signal**, scope to a **node**, query a **group** with no loop.
+three Godot idioms - react to a **signal**, scope to a **node**, query a **group** with no loop.
 
 **Setup:** enemies are nodes in the `"enemies"` group (each with a `health`); a `Boss` node with an
 `enraged` signal; a HUD `Label` at `$HUD/Label`.
 
 1. **React to the signal, don't poll.** Event → trigger **On Signal** `enraged`, source `Boss`. The
-   compiler wires the `_ready` connection for you — no per-frame check.
+   compiler wires the `_ready` connection for you - no per-frame check.
 2. **Scope the boss's actions once.** Right-click the event → **Scope Actions To Node… → `$Boss`**. A
    `With node  $Boss` chip appears in the condition lane. Add **Play Animation** `"roar"` and **Set
-   Color Tint** red — you set the target *once*, not on every action. (Need one action on a *different*
-   node? Give just that action an explicit **On node** — it wins over the scope.)
+   Color Tint** red - you set the target *once*, not on every action. (Need one action on a *different*
+   node? Give just that action an explicit **On node** - it wins over the scope.)
 3. **Show the wave's average HP** (no loop): a HUD event → **Set Text (formatted)** on `$HUD/Label`,
    value `"Avg HP: %d"` with the **Average In Group** expression (`"enemies"`, `health`) as the arg.
 4. **Broadcast a retreat** when the weakest is nearly dead: a sub-event → condition **Lowest In Group**
    `"enemies"` `health` `< 10` → action **Call Method On Group** `"enemies"` → `retreat`.
 
-Compiles to plain, readable GDScript — exactly what you'd hand-write:
+Compiles to plain, readable GDScript - exactly what you'd hand-write:
 
 ```gdscript
 func _ready() -> void:
@@ -159,23 +159,23 @@ func _on_boss_enraged() -> void:
         get_tree().call_group("enemies", "retreat")
 ```
 
-No god-object reaching out every frame, no manual node lists — a signal handler, a scoped target, and
+No god-object reaching out every frame, no manual node lists - a signal handler, a scoped target, and
 two group queries, all as editable rows.
 
 ---
 
-## 9. Building the Godot way — a steering tour
+## 9. Building the Godot way - a steering tour
 
 The plugin actively *nudges* a Construct user toward Godot idioms (signals over polling, small
-scenes-as-components, the Inspector, one source of truth) — always as suggestions with the old path one
+scenes-as-components, the Inspector, one source of truth) - always as suggestions with the old path one
 click away. This tour builds a tiny coin game using each nudge. The biggest shift from C3 is *reacting*
 instead of *polling*: rather than checking a condition every tick (a per-frame `for`/overlap scan), you
-connect to a signal that fires only when the thing actually happens — fewer wasted checks, and the intent
+connect to a signal that fires only when the thing actually happens - fewer wasted checks, and the intent
 reads straight off the event row.
 
 **1. A coin is a behavior component, not a god-sheet.** New Sheet → **Behavior Component (signal-driven)**.
 You get a `PickupBehavior` you attach as a *child* of each Coin's `Area2D` (the Godot answer to a C3
-behavior). It *reacts* to the host's `body_entered` signal — no per-frame overlap check — and *emits*
+behavior). It *reacts* to the host's `body_entered` signal - no per-frame overlap check - and *emits*
 `collected`; `value` is an exported knob you tune per coin in the Inspector. It compiles to:
 
 ```gdscript
@@ -194,19 +194,19 @@ func _ready() -> void:
             host.queue_free())
 ```
 
-**2. The score lives in one place — an autoload.** Don't declare `score` in five sheets. New Sheet →
+**2. The score lives in one place - an autoload.** Don't declare `score` in five sheets. New Sheet →
 **Game State (Autoload)**, add `score`, register it (Tools → Register Autoload). If you *do* sprinkle it
 around, the **Project Doctor** (Tools → Check Project) flags it: *"Global 'score' is declared in 3
-sheets — promote it to an autoload (one source of truth)."*
+sheets - promote it to an autoload (one source of truth)."*
 
 **3. Internal state vs designer knobs.** When you add a variable, the **"Designer-tweakable in the
-Inspector (@export)"** box is *off* by default — so an internal `_combo_count` stays a private `var`,
+Inspector (@export)"** box is *off* by default - so an internal `_combo_count` stays a private `var`,
 and you tick the box only for values a designer should tune. Your Inspector stays a clean panel of real
 knobs, not an everything-bucket.
 
 **4. React, and reference by name.** On a Game sheet: trigger **On Signal** `collected` (source: a coin)
 → `GameState.score += amount`. Update the HUD without a brittle path: in the scene tree mark the deep
-`ScoreLabel` **Access as Unique Name**, then write `%ScoreLabel` — type `%` in a ƒx field and it
+`ScoreLabel` **Access as Unique Name**, then write `%ScoreLabel` - type `%` in a ƒx field and it
 autocompletes; typo it and it warns amber. And when you reach for a polling condition like *Overlaps
 Body*, the picker tips you toward **On Body Entered** and lands "overlap" + Enter on the reactive
 trigger by default.
@@ -216,7 +216,7 @@ trigger by default.
 moment a coin is added.
 
 **6. Stay composed.** If a sheet starts reaching into a dozen different nodes, the Doctor's *fan-out*
-advisory suggests splitting into per-node behaviors or naming it a coordinator — flagged by **node
+advisory suggests splitting into per-node behaviors or naming it a coordinator - flagged by **node
 count, never row count** (a long, focused state machine on one host is fine).
 
 Every step has an escape hatch: the polling condition, the global, the deep `$path`, the one big sheet
@@ -224,11 +224,11 @@ all still compile and work. The plugin just makes the Godot way the *easy defaul
 
 ---
 
-## 10. Auto-attack with game feel — picking, Line of Sight & the Juice pack
+## 10. Auto-attack with game feel - picking, Line of Sight & the Juice pack
 
 A top-down shooter that auto-fires at the closest enemy it can actually *see*, and makes every hit land:
 the screen kicks, the kill drops into slow motion, and the player squashes on recoil. Every piece here
-shipped together — the **Nearest** picking expressions, the **Line of Sight** pack's occlusion-correct
+shipped together - the **Nearest** picking expressions, the **Line of Sight** pack's occlusion-correct
 target, and the **Juice** behavior (whose camera effects auto-find the active camera, so nothing is wired).
 
 **Setup:** enemies are `Area2D`s in the `"enemies"` group (each with a **Health** behavior); the player
@@ -236,20 +236,20 @@ has a **Line of Sight** and a **Juice** behavior attached as children.
 
 1. **Target only what you can see.** On a 0.2s Timer → set a local `target` = **Nearest Visible In Group**
    `"enemies"`. The LoS pack scans the group and range/cone/raycasts each candidate, so a closer enemy
-   *behind a wall* is skipped in favour of a visible farther one — exactly what auto-attack AI wants. (No
+   *behind a wall* is skipped in favour of a visible farther one - exactly what auto-attack AI wants. (No
    LoS behavior? Compose it: **Nearest Node In Group** then a **Has Line Of Sight To** condition on it.)
 2. **Fire at it.** Sub-event `if target != null` → spawn a bullet toward `target.global_position`.
 3. **Kick the screen on each hit.** On the bullet's **On Body Entered** → **Shake** `0.3`. Trauma *stacks*,
    so a burst of hits builds a bigger shake, then decays on its own.
 4. **Slow-mo the kill.** On the enemy Health's **On Death** → **Slowmo** `target_scale 0.15`, `hold 0.12`,
-   clock **realtime** — a 120 ms hit-stop that makes the kill land. The fade curves are tuned once in the
+   clock **realtime** - a 120 ms hit-stop that makes the kill land. The fade curves are tuned once in the
    Inspector, not per call.
 5. **Squash the player on recoil.** On fire → **Spring Squash** `-0.2` (a quick wide squash that springs
    back bouncily), or **Squash & Stretch** `-0.2, 0.15` for the tween version.
 6. **Punch in on the boss.** When the boss spawns → **Zoom To Position** `boss.global_position, 130, 0.4`
    to frame it; pull back with **Zoom By Percent** `100, 0.3` when it dies.
 
-It compiles to plain, readable GDScript — the pick is a one-line `reduce`, the camera is found for you:
+It compiles to plain, readable GDScript - the pick is a one-line `reduce`, the camera is found for you:
 
 ```gdscript
 func _on_attack_timer_timeout() -> void:
@@ -266,33 +266,33 @@ func _on_enemy_died() -> void:
     $JuiceBehavior.slowmo(0.15, 0.12, "realtime")   # 120 ms hit-stop
 ```
 
-No per-frame target scan, no camera wiring, no hand-rolled tweens — a loop-free pick, an auto-found
+No per-frame target scan, no camera wiring, no hand-rolled tweens - a loop-free pick, an auto-found
 camera, and a handful of fire-and-forget juice calls. Want it bouncier or snappier? Every feel knob
 (shake decay, slowmo curves, squash stiffness) lives in the Inspector.
 
 ---
 
-## 11. Crowds without the hitch — frame-spreading
+## 11. Crowds without the hitch - frame-spreading
 
-A wave of 800 enemies all recomputing their AI on one frame, a big level streaming in, a navmesh baking —
+A wave of 800 enemies all recomputing their AI on one frame, a big level streaming in, a navmesh baking -
 do it all in a single frame and the game **stutters**. The fix is to spread the work across frames within a
 per-frame **budget**. Three tools, easiest first; pick by how heavy the work is. (Not sure a loop needs it?
 **Tools ▸ Check Project** flags a heavy For Each running every frame that isn't capped or budgeted.)
 
-**The easy path — the Time Slicer pack (no loop, no `await`).** Attach **Time Slicer** as a child (or make
+**The easy path - the Time Slicer pack (no loop, no `await`).** Attach **Time Slicer** as a child (or make
 it an autoload for one global slicer). It owns a queue and drains it within a per-frame budget:
 
-1. **Enqueue** the work in one event — **Enqueue Group** `"enemies"` (every node in a group), **Enqueue
+1. **Enqueue** the work in one event - **Enqueue Group** `"enemies"` (every node in a group), **Enqueue
    Items** (an array), or **Enqueue Item** (one).
-2. **React** to **On Process Item(item)** in another event and do the per-item work — like reacting to a
+2. **React** to **On Process Item(item)** in another event and do the per-item work - like reacting to a
    signal. The slicer hands you items only as fast as the budget allows.
 3. **On Drained** fires the frame the queue empties.
 
 Tune `frame_budget_ms` / `max_items_per_frame` / `mode` (ms, count, or both) in the Inspector. An 800-item
-queue self-spreads across as many frames as the budget needs, no hitch — the right tool for ~90% of cases.
+queue self-spreads across as many frames as the budget needs, no hitch - the right tool for ~90% of cases.
 
 ```gdscript
-# Enqueue once, then react per item — the slicer paces it to the budget:
+# Enqueue once, then react per item - the slicer paces it to the budget:
 func _ready() -> void:
     $TimeSlicer.enqueue_group("enemies")
 
@@ -300,14 +300,14 @@ func _on_time_slicer_process_item(item) -> void:
     item.recalculate_ai()        # runs for only as many enemies as fit this frame's budget
 ```
 
-**The one-liner — Budgeted For Each.** Already have a **For Each** loop? Don't attach anything — on the
+**The one-liner - Budgeted For Each.** Already have a **For Each** loop? Don't attach anything - on the
 loop's pick filter set **frame_spread_count** (items/frame) and/or **frame_spread_budget_ms** (a wall-clock
 fence) in the Inspector. The loop then does a slice each frame and resumes on the next, over a snapshot
 taken once per pass, skipping anything freed mid-pass. Drive it from **On Process** (that's what re-enters
 the loop each frame to continue the pass):
 
 ```gdscript
-# A For Each over "enemies" with frame_spread_count = 50 compiles to a self-pacing loop —
+# A For Each over "enemies" with frame_spread_count = 50 compiles to a self-pacing loop -
 # ~50 per frame, resuming next frame (the cursor + snapshot persist as members):
 while __loop_cursor < __loop_items.size():
     if __done > 0 and __done >= 50:
@@ -318,19 +318,19 @@ while __loop_cursor < __loop_items.size():
     ...                          # your loop body
 ```
 
-**Too heavy even to spread — Run In Background.** When the work is pure CPU crunching (procedural
+**Too heavy even to spread - Run In Background.** When the work is pure CPU crunching (procedural
 generation, a pathfinding bake), spreading still blocks the main thread each frame. **Run In Background**
 hands a **pure** function to a worker thread; **On Done(result)** fires on the main thread when it finishes:
 
 ```gdscript
 # On Ready: kick off the bake off-thread
-run_in_background(_bake_navmesh.bind(grid))   # _bake_navmesh touches NO nodes — data in, data out
+run_in_background(_bake_navmesh.bind(grid))   # _bake_navmesh touches NO nodes - data in, data out
 
 # On Done(result): apply it on the main thread (safe to touch the scene here)
 $NavRegion.navigation_polygon = result
 ```
 
-> The background callable must be **pure** — no scene-tree / node access, since it runs off the main
+> The background callable must be **pure** - no scene-tree / node access, since it runs off the main
 > thread. Compute off-thread, then apply the result in the On Done handler.
 
 **Which one?**
@@ -344,24 +344,24 @@ $NavRegion.navigation_polygon = result
 
 ---
 
-## 12. The game-feel toolkit — hit-stop, screenshake, squash & punch-zoom
+## 12. The game-feel toolkit - hit-stop, screenshake, squash & punch-zoom
 
 *Game feel* is the difference between a hit that registers and one that *lands*. The **Juice** behavior packs
 the whole toolkit into fire-and-forget actions: attach it as a child (its camera effects **auto-find the
-active camera**, so nothing is wired) and tune every knob — decay, fade curves, spring stiffness — in the
+active camera**, so nothing is wired) and tune every knob - decay, fade curves, spring stiffness - in the
 Inspector. Nothing here needs scheduling or cleanup: the shake decays, the slow-mo eases back, the squash
 springs home on its own.
 
 **Hit-stop / slow motion.** *Slowmo* `target_scale, hold, clock` drops `Engine.time_scale` to `target_scale`
 for `hold` seconds, then eases back (fade curves are Inspector knobs; it emits *On Slowmo Finished*). Set
-`clock` to **realtime** so the hold isn't itself slowed — that's true hit-stop:
+`clock` to **realtime** so the hold isn't itself slowed - that's true hit-stop:
 
 ```gdscript
 $JuiceBehavior.slowmo(0.05, 0.08, "realtime")   # an 80 ms freeze on a big hit
 ```
 
 **Screenshake (trauma-based).** *Shake* `amount` (0–1) adds **trauma**; the shake is trauma-*squared* (small
-= subtle, big = violent), **decays on its own**, and **stacks** — a burst of hits builds a bigger shake. Fire
+= subtle, big = violent), **decays on its own**, and **stacks** - a burst of hits builds a bigger shake. Fire
 it on every hit and forget it:
 
 ```gdscript
@@ -370,7 +370,7 @@ $JuiceBehavior.shake(0.4)
 
 **Squash & stretch.** Two flavours, both volume-preserving (negative = squash wide for a landing, positive =
 stretch tall for a jump): *Squash & Stretch* `amount, duration` is a tween; *Spring Squash* `amount` uses a
-real spring (the stiffness/damping knobs) — bouncier and more organic.
+real spring (the stiffness/damping knobs) - bouncier and more organic.
 
 ```gdscript
 $JuiceBehavior.squash_and_stretch(-0.3, 0.2)   # land: a quick wide squash
@@ -386,7 +386,7 @@ $JuiceBehavior.zoom_to_position(boss.global_position, 130, 0.4)   # frame the bo
 $JuiceBehavior.zoom_by_percent(100, 0.3)                          # …then pull back
 ```
 
-**Layer them.** A satisfying impact is all of these at once, each one fire-and-forget — the only thing you
+**Layer them.** A satisfying impact is all of these at once, each one fire-and-forget - the only thing you
 tune is *feel*:
 
 ```gdscript
@@ -398,35 +398,35 @@ func _on_big_hit() -> void:
 
 ---
 
-## 13. Designer knobs — first-class variables & Inspector drawers
+## 13. Designer knobs - first-class variables & Inspector drawers
 
 Turn a variable into a tunable knob your designers see in the Inspector, with a **live widget** for
-its type — no custom editor code.
+its type - no custom editor code.
 
 1. Add a **Variable** (e.g. `aim_dir : Vector2`). In the dialog, tick **"Editable in the Inspector"**
-   (`@export`) — an **@export badge** appears on the row.
+   (`@export`) - an **@export badge** appears on the row.
 2. Pick a **"Show as"** drawer for the type and watch the **live preview**: a Vector2 gets a
    **direction dial**, a Color a **swatch row**, an `int`/`float` a **progress bar** (set the reach,
    e.g. just `150`), a Texture2D a **preview thumbnail**, a Curve an inline **curve**.
 3. Organize many knobs with **"Group under heading"** / **"Sub-heading"** (`@export_group` /
-   `@export_subgroup`) — they show a **"Group › Subgroup"** chip on the row and nest in the Inspector.
+   `@export_subgroup`) - they show a **"Group › Subgroup"** chip on the row and nest in the Inspector.
 4. Select the node and the Inspector shows the rich, grouped drawers; press Play and the game reads
    from those same designer-tweaked values. The **Inspector Playground** showcase
    (`demo/showcase/inspector_playground.tscn`) demonstrates all five drawers at once.
 
-Without the editor plugin (or in an exported game) each property is just a plain field — the parity
+Without the editor plugin (or in an exported game) each property is just a plain field - the parity
 covenant is untouched. New here? The dialog starts simple (Basic "More options") and only unfurls the
 Advanced knobs when a variable actually uses them; first run also offers a **Simple Mode**.
 
 ---
 
-## 14. Reuse & scale — Extract-to-Function & Families
+## 14. Reuse & scale - Extract-to-Function & Families
 
 Two ways to stop repeating yourself.
 
 - **Extract-to-Function.** Select a run of actions you keep re-typing → **Extract to Function…** →
   name it. The selection becomes one named, reusable **ƒ verb** you can call anywhere; the original
-  rows are replaced by the call. It's the "create an abstraction" gesture — a named verb, not a copy.
+  rows are replaced by the call. It's the "create an abstraction" gesture - a named verb, not a copy.
 - **Families.** When the same logic should run across *many* objects, set **Sheet Type → Family**:
   the sheet's events iterate over a whole **family** of nodes (family-scoped), so one sheet drives the
   group. The **Family Arena** showcase (`demo/showcase/family_arena.tscn`) shows it end to end.

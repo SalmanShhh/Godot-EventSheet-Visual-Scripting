@@ -1,16 +1,16 @@
-# Pack builder — save_system (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - save_system (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Save System addon v2: slot-based persistence as an AUTOLOAD sheet — deliberately
+## Save System addon v2: slot-based persistence as an AUTOLOAD sheet - deliberately
 ## UN-opinionated: storage strategy (directory/pattern/section/format/encryption) is
 ## exported Inspector properties; the core is Variant-typed (typed Save Number/Text
-## remain as conveniences — their ace_ids are API); before_save/after_load lifecycle
+## remain as conveniences - their ace_ids are API); before_save/after_load lifecycle
 ## signals let ANY sheet contribute state without this pack knowing it exists; slot
 ## metadata powers save/load menus; optional autosave. Full-state snapshots stay an
 ## honest non-goal (Godot serializes scenes, not "the whole game").
-## THE DEEPEST EXTENSION POINT: this pack IS an event sheet — open the .tres, add
+## THE DEEPEST EXTENSION POINT: this pack IS an event sheet - open the .tres, add
 ## functions, recompile, re-register.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -36,7 +36,7 @@ static func build() -> bool:
 		"autosave_accumulator": {"type": "float", "default": 0.0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Save System: register as the SaveSystem autoload, then save from any sheet. Strategy (paths/format/encryption) lives in the Inspector; On Before Save / On After Load let every sheet contribute its own state. This pack is an event sheet — extend it by editing it."
+	about.text = "Save System: register as the SaveSystem autoload, then save from any sheet. Strategy (paths/format/encryption) lives in the Inspector; On Before Save / On After Load let every sheet contribute its own state. This pack is an event sheet - extend it by editing it."
 	sheet.events.append(about)
 	var helpers: RawCodeRow = RawCodeRow.new()
 	helpers.code = "\n".join(PackedStringArray([
@@ -126,7 +126,7 @@ static func build() -> bool:
 	# TYPE_MAX = the compiler's "returns Variant" sentinel.
 	load_value.return_type = TYPE_MAX
 	sheet.functions.append(load_value)
-	# Typed conveniences (ace_ids are API — kept, now thin delegations).
+	# Typed conveniences (ace_ids are API - kept, now thin delegations).
 	Lib.append_function(sheet, "save_number", "Save Number", "Save System", "Writes a number under the key (active slot).",
 		[["key", "String"], ["value", "float"]],
 		"save_value(key, value)")
@@ -152,7 +152,7 @@ static func build() -> bool:
 	Lib.append_function(sheet, "save_game", "Save Game", "Save System", "Broadcasts On Before Save (every sheet writes its state), then On Save Written.",
 		[],
 		"before_save.emit(slot)\nvar data: Dictionary = _read_all()\nif _write_all(data):\n\tsave_written.emit(slot)")
-	Lib.append_function(sheet, "load_game", "Load Game", "Save System", "Broadcasts On After Load — every sheet reads its state back.",
+	Lib.append_function(sheet, "load_game", "Load Game", "Save System", "Broadcasts On After Load - every sheet reads its state back.",
 		[],
 		"after_load.emit(slot)")
 	# Slot metadata (save/load menus).

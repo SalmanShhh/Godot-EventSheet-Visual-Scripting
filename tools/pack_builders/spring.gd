@@ -1,4 +1,4 @@
-# Pack builder — spring (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - spring (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
@@ -27,11 +27,11 @@ static func build() -> bool:
 		"color_springs": {"type": "Dictionary", "default": {}, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Numeric springing: snappy, physical motion for ANY number. Name a spring, set its target, read its value — or use the host helpers (x/y/angle/scale) for instant juice."
+	about.text = "Numeric springing: snappy, physical motion for ANY number. Name a spring, set its target, read its value - or use the host helpers (x/y/angle/scale) for instant juice."
 	sheet.events.append(about)
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
-		"## A single numeric spring's state, integrated each frame (typed — no dict casts in the hot loop).",
+		"## A single numeric spring's state, integrated each frame (typed - no dict casts in the hot loop).",
 		"class SpringEntry:",
 		"\tvar value: float = 0.0",
 		"\tvar from_value: float = 0.0",
@@ -209,10 +209,10 @@ static func build() -> bool:
 	Lib.append_function(sheet, "spring_host_scale", "Spring Host Scale", "Spring", "Springs the host's uniform scale (squash & stretch!).",
 		[["target", "float"]],
 		"var entry: SpringEntry = _spring_entry(\"__scale\")\nif not entry.active and host != null:\n\tentry.value = host.scale.x\nentry.from_value = entry.value\nentry.target = target\nentry.active = true")
-	Lib.append_function(sheet, "set_color", "Set Color Value", "Spring", "Snaps a named colour spring (no motion) — seed it before springing.",
+	Lib.append_function(sheet, "set_color", "Set Color Value", "Spring", "Snaps a named colour spring (no motion) - seed it before springing.",
 		[["spring_name", "String"], ["color", "Color"]],
 		"var entry: ColorSpringEntry = _color_entry(spring_name)\nentry.value = color\nentry.target = color\nentry.velocity = Color(0, 0, 0, 0)\nentry.active = false")
-	Lib.append_function(sheet, "spring_color", "Spring Color", "Spring", "Springs a named colour toward a target (read it back with Color Value — great for hit flashes).",
+	Lib.append_function(sheet, "spring_color", "Spring Color", "Spring", "Springs a named colour toward a target (read it back with Color Value - great for hit flashes).",
 		[["spring_name", "String"], ["target_color", "Color"]],
 		"var entry: ColorSpringEntry = _color_entry(spring_name)\nvar was_active := entry.active\nentry.target = target_color\nentry.active = true\nif not was_active:\n\tspring_started.emit(spring_name)")
 	Lib.append_function(sheet, "pause_spring", "Pause Spring", "Spring", "Freezes a spring in place (resume continues it).",

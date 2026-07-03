@@ -2,115 +2,127 @@
 
 ## [Unreleased]
 
-### Added — the ACE Studio: define and edit a behaviour's verbs in plain language
+### Changed - documentation cleanup
+
+- **All documentation is now em-dash-free.** Every hand-written doc (README, CHANGELOG, docs/,
+  AGENTS.md, CONTRIBUTING.md) plus every GENERATED surface: the vocabulary-doc and pack-README
+  formatters and all pack-builder ACE description strings now use plain dashes, so regenerated
+  docs stay clean. Packs rebuilt (drift=0).
+- **Eleven superseded internal docs deleted**: the seven early-era "historical record" snapshots
+  (Auto-ACE/C3 alignment statuses, progress report, the three original design pitches) and four
+  fully-shipped specs whose outcomes live in this changelog (construct parity, ACE-picker cleanup,
+  condition blocks, preview-gd-as-eventsheets). Specs with live deferred work remain, and the
+  behaviour-parity + code-free-UX specs now say SHIPPED instead of "proposed".
+
+### Added - the ACE Studio: define and edit a behaviour's verbs in plain language
 
 - The sheet-function dialog is now the **ACE Studio**: "What kind of verb is this?" is three
-  plain-language cards — **Does something** (Action, amber) · **Is it true?** (Condition, teal) ·
-  **A value** (Expression, violet) — with a **live picker preview** ("this is what other people will
+  plain-language cards - **Does something** (Action, amber) · **Is it true?** (Condition, teal) ·
+  **A value** (Expression, violet) - with a **live picker preview** ("this is what other people will
   see") and a quiet **"Ships as:" `func …` strip** built from the compiler's own formatters, so the
   preview can never disagree with the generated code. (`tests/ace_studio_signature_test.gd`)
 - **Edit a verb in place**: double-clicking a Define block on the canvas opens the same Studio
   pre-filled (name, kind card, params, expose block). Confirming with nothing changed is a hard
-  no-op — an accidental open-and-OK on a reverse-lifted helper stays byte-identical on save.
+  no-op - an accidental open-and-OK on a reverse-lifted helper stays byte-identical on save.
   (`tests/function_edit_dialog_test.gd`)
 - **Starter recipes** in the New Behaviour Addon dialog: alongside the teaching skeleton, "Start
-  from" offers two small complete behaviours — **Cooldown** (start / is-ready / time-left) and
-  **Stat pool** (spend / restore / percent) — every verb annotated, so a freshly created addon opens
+  from" offers two small complete behaviours - **Cooldown** (start / is-ready / time-left) and
+  **Stat pool** (spend / restore / percent) - every verb annotated, so a freshly created addon opens
   code-free immediately. (`tests/recipe_scaffold_test.gd`)
 
-### Added — per-function shell-lift: opened packs' verbs become real, editable functions
+### Added - per-function shell-lift: opened packs' verbs become real, editable functions
 
 - Opening a behaviour `.gd` used to lift its annotated verbs into real EventFunctions only when
-  EVERY function in the trailing run lifted — one hairy body reverted the whole file to raw code.
+  EVERY function in the trailing run lifted - one hairy body reverted the whole file to raw code.
   The lift now recovers **per function**: anything unliftable stays as raw code in place and the
   longest cleanly-lifting trailing run still becomes real functions, byte-verified as always.
   In practice: abilities opens with 49 real verbs, virtual_cursor 54, drag_drop 36, spring 22,
-  weapon_kit 18, juice 17, platformer 13 — each a Define block you can double-click into the ACE
+  weapon_kit 18, juice 17, platformer 13 - each a Define block you can double-click into the ACE
   Studio, instead of an annotation wall. Every pack still round-trips byte-identically (drift = 0).
   (`tests/per_function_lift_test.gd`)
 - **Untyped parameters now lift**: a bare parameter (`final_value` with no `: Type`) was re-emitted
   with ACEParam's default type (`final_value: String`), failing the byte-verify and blocking the
-  whole pack. It now round-trips bare — unlocking htn_agent (23 verbs), tween (10), and
+  whole pack. It now round-trips bare - unlocking htn_agent (23 verbs), tween (10), and
   time_slicer (10).
-- **Every pack now lifts — 331 real functions in total.** The last blocker: a statement INSIDE an
+- **Every pack now lifts - 331 real functions in total.** The last blocker: a statement INSIDE an
   unlifted control block (e.g. `pool.amount = maxf(…)` nested in health's absorption loop) could
   template-match as a standalone action and re-emit one tab shallower, failing the verify. Deeper
-  lines now always stay raw with their nesting intact — unlocking **health (34 verbs)**, follow, and
+  lines now always stay raw with their nesting intact - unlocking **health (34 verbs)**, follow, and
   tile_movement. An error-jump into a lifted verb now unfolds the Published-verbs section to reach
   its Define block. The few remaining raw helpers (custom return types like `-> HealthPool`) keep
   their verb shells.
 
-### Added — variable folders: drag one variable onto another to group them
+### Added - variable folders: drag one variable onto another to group them
 
 - **Grouping variables is now a drag**: drop a variable onto another (its middle band highlights
-  with a fold-into outline) and both join one Inspector-group folder — a naming popup opens already
+  with a fold-into outline) and both join one Inspector-group folder - a naming popup opens already
   selected, so the flow is drag → type the name → Enter, exactly like creating a Discord folder.
   Dropping onto an already-grouped variable joins its folder. Edges of the row still mean reorder.
 - **Grouped variables render inside a bubble**: each folder's members sit adjacent and wrapped in a
   rounded outline + soft tint, so a group reads as one visual unit rather than rows repeating a chip.
 - **Double-click the group chip to rename** the folder everywhere at once; clearing the name in that
   popup dissolves the folder (every member ungroups).
-- Folders ARE the shipped `@export_group` attribute underneath — they show up as Inspector sections
+- Folders ARE the shipped `@export_group` attribute underneath - they show up as Inspector sections
   in Godot and round-trip through the `.gd` exactly like groups set from the Variable dialog.
   (`tests/variable_grouping_test.gd`)
 
-### Added — the sheet at a glance: badges, sentences, manifest, anatomy
+### Added - the sheet at a glance: badges, sentences, manifest, anatomy
 
-- **Trigger tempo badges**: every trigger row shows how often it runs — ⟳ every tick · ⌨ input ·
-  ▶ once · ➜ signal — as a coloured badge classified from the trigger id. (`tests/trigger_tempo_test.gd`)
-- **Rows read as sentences on hover** ("then 3 lines of code" for raw blocks — honest, never
+- **Trigger tempo badges**: every trigger row shows how often it runs - ⟳ every tick · ⌨ input ·
+  ▶ once · ➜ signal - as a coloured badge classified from the trigger id. (`tests/trigger_tempo_test.gd`)
+- **Rows read as sentences on hover** ("then 3 lines of code" for raw blocks - honest, never
   invented); **typed value tints** (numbers/strings/bools each get a hue); **group fingerprints**
   ("4 events · ⟳1 · ➜2 · ⚠1" on collapsed group headers). (`tests/row_sentence_test.gd`,
   `tests/typed_value_tint_test.gd`, `tests/group_fingerprint_test.gd`)
-- **Publishes-Manifest banner**: a second banner band counts what the sheet publishes — "➜ 8 triggers ·
-  ⚡ 16 actions · cond 5 · ƒx 12 · @ 3 knobs" — including un-lifted annotated verbs in opened packs;
+- **Publishes-Manifest banner**: a second banner band counts what the sheet publishes - "➜ 8 triggers ·
+  ⚡ 16 actions · cond 5 · ƒx 12 · @ 3 knobs" - including un-lifted annotated verbs in opened packs;
   plus a save-time **health chip** ("✓ no issues" / "⚠ N flagged").
   (`tests/banner_manifest_counts_test.gd`)
 - **Define blocks**: a sheet's functions (previously invisible outside the Functions dialog) render
-  as a foldable **Published verbs** section — role badge · friendly name · `→ type` chip · category
+  as a foldable **Published verbs** section - role badge · friendly name · `→ type` chip · category
   chip · the compiler-emitted signature. (`tests/define_block_rows_test.gd`)
 - **Published-verb shells**: an opened pack's `## @ace_*` annotation walls render as ONE Define-style
-  header line each ("Action · Take Damage · Health · publishes the func below"), a pure view — the
+  header line each ("Action · Take Damage · Health · publishes the func below"), a pure view - the
   byte round-trip is untouched. (`tests/raw_shell_render_test.gd`)
 - **The Functions overview is its own dockable panel**: it used to be welded inside the
   Generated-GDScript side panel, so seeing your functions meant opening the code view. It now docks
-  in the left rail behind a fold header ("▸ Functions · N" — the count reads even collapsed), expands
+  in the left rail behind a fold header ("▸ Functions · N" - the count reads even collapsed), expands
   on demand, keeps its ＋ add / right-click delete behaviour, and remembers its expand state
   per-project. (`tests/functions_panel_test.gd`)
-- **Behaviour Anatomy panel**: a left-rail read model showing the active sheet as seven organs —
-  Properties · State · Triggers · Actions · Conditions · Expressions · Uses — with counts in role
+- **Behaviour Anatomy panel**: a left-rail read model showing the active sheet as seven organs -
+  Properties · State · Triggers · Actions · Conditions · Expressions · Uses - with counts in role
   colours; double-click an entry to jump to its row. Works identically for editor-authored sheets
   and opened packs. Entries render in the same pill/badge language as the canvas's Define blocks
-  (role-coloured pills per organ, accent-underlined headers, click a header to fold its organ) —
+  (role-coloured pills per organ, accent-underlined headers, click a header to fold its organ) -
   drawn read-only, so the rail can never mutate the sheet. (`tests/anatomy_panel_test.gd`)
 
-### Added — GDScript as an action (Construct 3-style script blocks)
+### Added - GDScript as an action (Construct 3-style script blocks)
 
 - **Add Code** on the toolbar (and *Add ▾ → Code (GDScript) on Selected Event*, and the row
   right-click menu) drops a GDScript block straight into the selected event's actions and opens the
-  code editor on it immediately — the deliberate "drop to code here" escape hatch C3 users reach for,
+  code editor on it immediately - the deliberate "drop to code here" escape hatch C3 users reach for,
   now a discoverable first-class action instead of only appearing as un-lifted residue. The block
   runs right after the event's conditions pass with the sheet's variables + host in scope, renders as
   a distinct merged **GDScript** code cell, and seeds an editable comment rather than a bare `pass`.
   (`tests/inflow_gdscript_test.gd`)
 
-### Added — speed-of-thought editing: Ghost Row, Param Hop, bulk retune
+### Added - speed-of-thought editing: Ghost Row, Param Hop, bulk retune
 
 - **The Ghost Row**: pressing E / C / A opens a type-a-sentence popup at the selected row instead of
-  the full picker — `A → heal 5 ⏎` appends the action with zero dialogs (Ctrl+Enter still opens the
+  the full picker - `A → heal 5 ⏎` appends the action with zero dialogs (Ctrl+Enter still opens the
   browsable picker). **Post-insert continuation**: leave a param out (`heal ⏎`) and the one-field
   editor opens straight onto it, pre-filled and select-all'd. (`tests/ghost_row_test.gd`)
 - **The Param Hop**: Enter on a row with parameter values starts a keyboard cursor; Tab / Shift+Tab
   cycle the values (with a muted param-name hint at the cursor); Enter opens the one-field editor
-  anchored at the value; Esc returns to row scope — retuning `300 → 450` is Enter · Tab · type · Enter,
+  anchored at the value; Esc returns to row scope - retuning `300 → 450` is Enter · Tab · type · Enter,
   zero mouse. (`tests/param_hop_test.gd`)
 - **Bulk retune**: box-select N rows, edit one shared value, **Ctrl+Enter applies it to the same
-  verb's same param on every selected row** in one undo step — structure-aware, so `amount` on Heal
+  verb's same param on every selected row** in one undo step - structure-aware, so `amount` on Heal
   never bleeds into `amount` on Poison. (`tests/bulk_param_apply_test.gd`)
 - **Single-key grammar**: **B** adds a blank sub-event, **I** inverts the selected condition, **R**
-  replaces the selected ACE — all rebindable. (`tests/single_key_reflexes_test.gd`)
+  replaces the selected ACE - all rebindable. (`tests/single_key_reflexes_test.gd`)
 
-### Added — navigate like the script editor
+### Added - navigate like the script editor
 
 - **Ctrl+Click a behaviour's name opens it as a sheet** (go-to-definition across the
   consumer-sheet → behaviour boundary); unresolvable cells keep Ctrl multi-select.
@@ -121,15 +133,15 @@
   sheet's symbols (functions ƒ · signals ➜ · variables @) and jumps to the row.
   (`tests/palette_sheet_search_test.gd`, `tests/palette_symbol_search_test.gd`)
 
-### Added — generated code stays joined to the sheet
+### Added - generated code stays joined to the sheet
 
 - **What Changed Since Save**: a Sheet ▸ command (also in Ctrl+P) that shows which rows a save would
-  touch, in event language — each row labelled from its emitted code and double-clickable to jump,
+  touch, in event language - each row labelled from its emitted code and double-clickable to jump,
   plus any lines a save would remove. Compiles to a scratch path only, so asking never writes the
   real file. (`tests/sheet_diff_test.gd`)
 - **Paste an error line, land on the row**: paste any Godot error or stack-trace line
   (`res://….gd:42` anywhere in the text) into the command palette (Ctrl+P) and its single entry
-  opens that generated `.gd` **as a sheet** and selects the row that emitted the line — a runtime
+  opens that generated `.gd` **as a sheet** and selects the row that emitted the line - a runtime
   error goes straight back to the event that caused it, and Alt+Left returns.
   (`tests/palette_error_jump_test.gd`)
 
@@ -137,25 +149,25 @@
   source map (most-specific range first, walks past freed resources). The GDScript panel's
   click-to-select and row-highlight delegate to it; runtime-error → row deep-links build on it next.
   (`tests/line_row_mapper_test.gd`)
-- **Paused-at-row**: when a running game hits a sheet breakpoint, the sheet now shows WHICH row —
+- **Paused-at-row**: when a running game hits a sheet breakpoint, the sheet now shows WHICH row -
   the generated code announces its row id right before pausing (debugger-guarded, zero cost in
   exported games), and the editor switches to that sheet's tab and selects the event. Works through
   the same live channel as Live Values; no core-debugger access needed. (`tests/paused_row_test.gd`)
 - **Debug-residue Doctor check**: a sheet saved with breakpoints / live-values / event-trace emission
-  still enabled ships `breakpoint` + telemetry lines in the committed `.gd` — the Doctor now flags it
+  still enabled ships `breakpoint` + telemetry lines in the committed `.gd` - the Doctor now flags it
   and offers a one-click strip. (`tests/doctor_debug_residue_test.gd`)
 
 ### Fixed
 
 - **The empty band of an event row is now an obvious whole-event drag handle.** An event is often
   taller than its condition lane (its action lane has more lines), leaving empty space below the
-  trigger/conditions. Pressing there always dragged the whole event (to reorder or nest it) — but
+  trigger/conditions. Pressing there always dragged the whole event (to reorder or nest it) - but
   with no cursor change it read as dead space, ambiguous with the conditions. That band now shows a
   move cursor and brightens the row's grip dots on hover, so "grab here to move the event" is
   unmistakable; clicking an actual ACE cell still grabs that ACE. (`tests/event_drag_zone_test.gd`)
 - **Opened-pack line↔row mapping was a few rows off**: on the external (opened `.gd`) compile path a
   doc-commented `@export` variable emits its `##` line plus the declaration but the source map counted
-  it as one line, cascading a small offset onto every row after it — so click-to-select, error→row,
+  it as one line, cascading a small offset onto every row after it - so click-to-select, error→row,
   paused-at-row, and the sheet diff landed a few rows off on opened packs. The variable now records
   its true multi-line span; a golden test proves every raw row's map points at its own code across
   all packs, with the byte-exact round-trip (drift=0) intact. (`tests/external_source_map_test.gd`)
@@ -163,7 +175,7 @@
   one (the apply's default branch wrapped them); they now use the same append mode as the toolbar's
   Add Action. (`tests/ghost_row_test.gd`)
 - **A bodiless typed verb broke the whole generated script**: the empty-body stub was always `pass`,
-  which only parses for void — each return type now stubs its own default (`return false`, `0.0`,
+  which only parses for void - each return type now stubs its own default (`return false`, `0.0`,
   `""`, `Vector2.ZERO`, …), so "publish the verb first, implement after" can't take the sheet down.
   (`tests/type_correct_stub_test.gd`)
 - **The generated file's source map drifted after member insertion**: provider/stateful declarations
@@ -171,7 +183,7 @@
   few rows off on any sheet using a provider-instance ACE. The map now shifts with the text.
   (`tests/line_row_mapper_test.gd`)
 - **Double-clicking a value on an object-labelled row edited the wrong spot**: the hit-test measured
-  from the span origin while the text draws after the icon/label prefixes — both now share one
+  from the span origin while the text draws after the icon/label prefixes - both now share one
   geometry helper. (`tests/param_hop_test.gd`)
 - The read-only `.gd` preview banner showed the previous tab's counts after a tab switch; it now
   recomputes per refresh. (`tests/preview_banner_tab_test.gd`)
@@ -184,187 +196,187 @@
   from named `EventSheetPalette` constants instead of per-file hex; the two ad-hoc category-chip
   purples were unified with the ACE Studio's chip colours.
 
-### Added — more inspector export options: color-no-alpha, easing curve, placeholder
+### Added - more inspector export options: color-no-alpha, easing curve, placeholder
 
 - Three more Godot `@export_*` flavours are now dialog-authored options in the Variable dialog's "More
   options", each compiling to the native annotation and **round-tripping structurally** (the dialog control
   re-fills on reopen and survives editing, verify-lift-gated like the drawers):
-  - **`@export_color_no_alpha`** — a Color-only "No alpha (solid RGB, no transparency)" tick.
-  - **`@export_exp_easing`** — a float-only "Easing curve" tick (an exponential-ease handle in the Inspector).
-  - **`@export_placeholder("…")`** — a String-only "Placeholder" field (grey hint text shown when empty).
+  - **`@export_color_no_alpha`** - a Color-only "No alpha (solid RGB, no transparency)" tick.
+  - **`@export_exp_easing`** - a float-only "Easing curve" tick (an exponential-ease handle in the Inspector).
+  - **`@export_placeholder("…")`** - a String-only "Placeholder" field (grey hint text shown when empty).
   - (`tests/color_no_alpha_test.gd`)
 - New how-to **[Inspector Drawers & Export Options Guide](docs/INSPECTOR-DRAWERS-GUIDE.md)** with rendered
   images: the five Tier-3 drawers (progress bar / dial / swatch / texture / curve), every export option, and
   the Tier-2 behaviours (clamp / on-changed / show-if), each with the exact emitted GDScript + use cases.
 
-### Added — RegEx text module (Construct 3-style Regex functions)
+### Added - RegEx text module (Construct 3-style Regex functions)
 
 - A new **RegEx** ACE module (its own file) of pattern-matching verbs, Godot-`RegEx`-backed and
   parity-clean: **Text Matches Regex** (condition), **Regex Replace** (replace every match), **Regex First
-  Match**, **Regex Match Count**, **Regex All Matches**, and **Regex Capture Group** — mirroring C3's
+  Match**, **Regex Match Count**, **Regex All Matches**, and **Regex Capture Group** - mirroring C3's
   `RegexReplace` / `RegexSearch` / `RegexMatchCount`. The `search_all`-based verbs are **null-safe** (empty
   string / empty array on a miss, never an error). Plus **Format Decimals** (`String.num`) for the
-  decimal-places gap. Each compiles to a direct `RegEx.create_from_string(…)` one-liner — no editor plugin or
+  decimal-places gap. Each compiles to a direct `RegEx.create_from_string(…)` one-liner - no editor plugin or
   pre-built RegEx object. (`tests/regex_aces_test.gd` pins runtime behaviour, not just parse.)
 
-### Added — Global-signal triggers (On Post Tick, On Close Requested)
+### Added - Global-signal triggers (On Post Tick, On Close Requested)
 
-- Triggers can now connect a signal on a **global source** — `get_tree()` or `get_window()` — not just
-  self / an autoload / a node path. Adds three triggers: **On Post Tick** (`get_tree().process_frame` — runs
+- Triggers can now connect a signal on a **global source** - `get_tree()` or `get_window()` - not just
+  self / an autoload / a node path. Adds three triggers: **On Post Tick** (`get_tree().process_frame` - runs
   once *after* every node's `_process` this frame, for logic that must come last, e.g. a camera that follows
   after movement), **On Physics Post Tick** (`get_tree().physics_frame`), and **On Close Requested**
-  (`get_window().close_requested` — the window's X / an app-quit request, for save-on-quit or a confirm
+  (`get_window().close_requested` - the window's X / an app-quit request, for save-on-quit or a confirm
   dialog). (`tests/global_trigger_test.gd`)
 - New **Handle Quit Myself** action (`get_tree().set_auto_accept_quit(…)`, friendly Intercept/Allow
-  dropdown): set it to *Intercept* in On Ready so the window's X no longer quits instantly — On Close
+  dropdown): set it to *Intercept* in On Ready so the window's X no longer quits instantly - On Close
   Requested runs first (save / confirm), then you call **Quit Game** explicitly. The full save-on-quit flow,
   no GDScript.
-- *(The scene **actions** already shipped — Quit Game, Go To Scene, Restart Scene — so this fills in the
+- *(The scene **actions** already shipped - Quit Game, Go To Scene, Restart Scene - so this fills in the
   missing exit/post-frame **triggers** + the quit-interception action.)*
 
-### Added — Console logging ACEs (combo-driven) + friendly label↔value dropdowns
+### Added - Console logging ACEs (combo-driven) + friendly label↔value dropdowns
 
 - A **Console** vocabulary of C3 Browser/console-style logging verbs, each driven by a single **"As"**
-  dropdown — **Message / Warning / Error** — that *shows* a friendly label but *inserts* the matching Godot
+  dropdown - **Message / Warning / Error** - that *shows* a friendly label but *inserts* the matching Godot
   call (`print` / `push_warning` / `push_error` / `print_rich`): **Log** (one verb for all four streams),
   **Log If** (write only when a condition holds, no wrapping event row), **Log (Debug Builds Only)**
-  (`if OS.is_debug_build(): …` — skipped in exported release games), **Log Value** ("name = value" to any
+  (`if OS.is_debug_build(): …` - skipped in exported release games), **Log Value** ("name = value" to any
   stream), and **To Text** (`var_to_str(...)`). All emit bare native one-liners (parity-clean).
   (`tests/console_aces_test.gd`)
 - The bare **Log** round-trips *as itself* via a trailing `# @ace:Core.ConsoleLog` marker: the emitted
   `push_warning("x")  # @ace:Core.ConsoleLog` line runs untouched in-game (the comment is inert), but reopens
-  as the combined Log rather than collapsing to the specific Push Warning — while a *plain* hand-written
+  as the combined Log rather than collapsing to the specific Push Warning - while a *plain* hand-written
   `push_warning("x")` still lifts to Push Warning. The other Console verbs need no marker (their templates are
   already distinct).
 - **New: friendly combo labels.** A fixed-options ("combo") param can now carry `{"key": <inserted value>,
   "label": <shown text>}` entries, so a dropdown reads "Warning" while inserting `push_warning`. `ACEParam.options`
-  is untyped, `make_param` accepts the dict form, and the adapter preserves the label↔value split — reusable for
+  is untyped, `make_param` accepts the dict form, and the adapter preserves the label↔value split - reusable for
   any future combo (e.g. comparison operators could read "equals" instead of `==`).
   - *Note:* the plain immediate **Print / Push Warning / Push Error** verbs are kept (not deprecated). The
     reverse-lift is most-specific-first, so a *plain* `push_warning("x")` still lifts to Push Warning; the
     combined **Log** stays distinct only because of its `# @ace:Core.ConsoleLog` marker (above).
 
-### Added — Event groups round-trip through `.gd` (docs/GROUPS-ROUNDTRIP-SPEC.md)
+### Added - Event groups round-trip through `.gd` (docs/GROUPS-ROUNDTRIP-SPEC.md)
 
 - Event groups now **survive a `.gd` round-trip**. Compiling a grouped sheet emits a class-scope
   `## @ace_group(uid="…", name, parent?, description?, color?, collapsed?, toggleable?)` declaration per group plus a
   per-row `# @group:<slug>` membership tag; reopening the `.gd` reconstructs the `EventGroup` rows (name,
   colour, collapsed/toggleable, nesting) even though the compiler scatters a group's rows across trigger
-  handlers. The whole pass is **verify-lift-gated** — a sheet that can't re-emit identically degrades to a
+  handlers. The whole pass is **verify-lift-gated** - a sheet that can't re-emit identically degrades to a
   flat/verbatim block rather than corrupting; the group `uid` is a deterministic name-slug so re-saves stay
   byte-stable. (`tests/group_roundtrip_test.gd`; demoed in `demo/showcase/showcase_carousel.gd`; commit 90367eb)
 
-### Changed — Compiler: includes run first; disabled groups leave a breadcrumb
+### Changed - Compiler: includes run first; disabled groups leave a breadcrumb
 
 - An **included** (library) sheet's events now compile/run **before** the root sheet's own events (matching
   Construct's "include the library at the top"), so shared setup / `_ready` initialises first. Sheets with no
   includes stay byte-identical. A **disabled** event group is no longer dropped silently: the generated `.gd`
-  now carries a `# (disabled group "<name>" — N rows omitted)` breadcrumb (the group's events still don't run).
+  now carries a `# (disabled group "<name>" - N rows omitted)` breadcrumb (the group's events still don't run).
   (`tests/include_order_disabled_group_test.gd`; commit 5164393)
 
-### Added — Visual expression builder: operator palette + variable/member picking
+### Added - Visual expression builder: operator palette + variable/member picking
 
 - The `ƒx` "Insert Expression" window now leads with an **operator palette** (`+ - * / % == != < > and or not
-  ( )`) that inserts at the caret, lists the sheet's own **variables** as one-click leaves, and — while
-  searching — reflects a class-backed variable's members as ready-to-insert `enemy.velocity` /
+  ( )`) that inserts at the caret, lists the sheet's own **variables** as one-click leaves, and - while
+  searching - reflects a class-backed variable's members as ready-to-insert `enemy.velocity` /
   `enemy.get_velocity()` fragments. Non-coders build comparisons and reach other objects' members without
   typing. (`tests/expression_builder_test.gd`; commits d6ab5e6, fde24a1)
-- **Fixed (silent bug):** picking a result from the expression tree used to silently do nothing — the insert
+- **Fixed (silent bug):** picking a result from the expression tree used to silently do nothing - the insert
   path only handled `LineEdit`, but the expression field is always a `CodeEdit`. The palette and the tree
   results now share a caret-insert helper that handles `CodeEdit`/`TextEdit` and `LineEdit`.
 
-### Added — Open Sheets panel (open + recently-closed, in-workspace)
+### Added - Open Sheets panel (open + recently-closed, in-workspace)
 
 - A filterable list of **open and recently-closed sheets** now lives in the EventSheet workspace (left of the
   viewport, like the script editor's Filter Scripts list). One click switches to an open sheet or reopens a
   recent one. Toggle it from **View › Open Sheets Panel**, or collapse it to a thin strip with the header
-  arrow — both states persist per-project. (`tests/open_sheets_dock_test.gd`; commits a777758, e6c2fd4)
+  arrow - both states persist per-project. (`tests/open_sheets_dock_test.gd`; commits a777758, e6c2fd4)
 
-### Changed — Friendly variable types (Number / Text / Yes-No)
+### Changed - Friendly variable types (Number / Text / Yes-No)
 
 - The Variable dialog's Type dropdown leads with beginner-friendly **Number / Text / Yes-No** labels, with the
   Godot types (Vector2, Color, Array, …) under an "Advanced types" separator. **int vs float** collapses into
   "Number" + a **"Whole numbers only"** tick; Text → String, Yes-No → bool. A `_selected_stored_type()` alias
-  layer keeps the **stored** type a real Godot type, so only the dropdown's display changes — the `.gd`
+  layer keeps the **stored** type a real Godot type, so only the dropdown's display changes - the `.gd`
   round-trip is byte-unchanged. (`tests/friendly_types_test.gd`; commit 7fb473e)
 
-### Changed — Constant variables round-trip from a hand-written `.gd`
+### Changed - Constant variables round-trip from a hand-written `.gd`
 
 - A `const NAME: T = v` declaration written directly in a `.gd` now **lifts back into a first-class constant
   variable** when reopened as a sheet (its green **"const"** pill + dialog editing), instead of degrading to a
   verbatim GDScript block. Authoring a constant (the dialog's "Constant (can't change at runtime)" tick + the
-  row's right-click toggle), compiling to `const x: T = v`, and the const pill were already shipped — this
+  row's right-click toggle), compiling to `const x: T = v`, and the const pill were already shipped - this
   closes the import half, so constants are end-to-end. Byte-verify-gated, so a non-canonical const (inferred
   type, expression default) still degrades safely to verbatim. (`tests/const_roundtrip_test.gd`; commit fe770c2)
 
-### Changed — Consistent inset-card theming across dialogs & panels
+### Changed - Consistent inset-card theming across dialogs & panels
 
 - Dialogs and panels (the Variable dialog, the ACE params dialog + its node/expression pickers, the dock's
   multi-section popups) now share the same editor-theme-aware **sunken inset-card** surfaces, with new
-  `section_header` / `titled_card` legibility helpers. Cosmetic only — no behaviour change.
+  `section_header` / `titled_card` legibility helpers. Cosmetic only - no behaviour change.
   (commits 18b4cf9, fa63b3e, 5df8ea8, a1e7903)
 
 ## [0.9.5] - 2026-06-29 - Code-Free Authoring & First-Class Variables
 
-### Changed — Progressive disclosure in the Variable dialog (docs/PROGRESSIVE-DISCLOSURE-SPEC.md)
+### Changed - Progressive disclosure in the Variable dialog (docs/PROGRESSIVE-DISCLOSURE-SPEC.md)
 
 - The Inspector-attribute block no longer throws ~10 fields at once. It's **two tiers**: a **Basic** "More
   options" (Tooltip, Range, "Show as" drawer + live preview, Multiline) and a nested **Advanced** disclosure
   (grouping, show-if/lock-unless/on-changed, clamp, read-only). The Advanced tier auto-unfurls only when the
-  variable actually uses one of its attributes — a tooltip-only variable no longer opens the whole block.
+  variable actually uses one of its attributes - a tooltip-only variable no longer opens the whole block.
 - **Drawer config de-overloaded:** the Range field accepts a **bare max** (so a dial's reach is just "150",
   not "min, max, step") with a forgiving parser shared by the apply and preview; a Vector2 prompts "max reach";
   the preview caption shows the relevant bound ("· reach 150" / "· 0–100"); "Curve editor" → "Curve preview".
 - **C3-first wording:** "Editable in the Inspector (like a C3 property)" (the `@export` term moves to the
   tooltip), "Group under heading" / "Sub-heading", "Constant (can't change at runtime)", and plain-language
-  per-type hover hints on the Type dropdown — Godot jargon stays out of the primary labels.
+  per-type hover hints on the Type dropdown - Godot jargon stays out of the primary labels.
 - **Simple Mode is discoverable:** the Welcome dialog's first run offers a "Simple mode" checkbox, so a
   newcomer meets the audience choice instead of getting the full registry by default.
   (`inspector_drawer_roundtrip_test`; renders of the tiered/relabeled dialog + the Welcome; suite green.)
 
-### Added — Tier 3 Inspector drawers: dial, swatches, texture, curve (the full set)
+### Added - Tier 3 Inspector drawers: dial, swatches, texture, curve (the full set)
 
 - The Inspector drawers (docs/INSPECTOR-ATTRIBUTES-SPEC.md) go from one drawer to **five**: a numeric
   **progress bar**, a Vector2 **direction dial** (drag a handle to set direction + magnitude), a Color
   **swatch row** (palette presets + picker), a **texture preview** thumbnail (Texture2D / path), and an inline
   **curve** render. Each compiles to an `@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>")` marker that
-  an `EditorInspectorPlugin` swaps for the rich control — and **without** the plugin (or in an exported game)
+  an `EditorInspectorPlugin` swaps for the rich control - and **without** the plugin (or in an exported game)
   the property is a plain field, so the parity covenant is untouched.
 - **They round-trip.** A drawer reopened from a `.gd` sheet is recovered into an editable `attributes.drawer`
-  (with its bounds), not stranded as a verbatim `@export_custom` block — verify-lift-gated, so a wrong guess
+  (with its bounds), not stranded as a verbatim `@export_custom` block - verify-lift-gated, so a wrong guess
   reverts to a byte-stable block rather than corrupting. One emitter (`_drawer_export_prefix`) drives both the
   dict-var and tree-var paths identically. A variable that carries BOTH a drawer **and** an `@export_group`
-  round-trips correctly — the group absorb now *merges* with (rather than overwrites) the drawer the
+  round-trips correctly - the group absorb now *merges* with (rather than overwrites) the drawer the
   hint-extraction recovered (a bug the Inspector Playground showcase surfaced).
 - **New host value types.** Vector2, Color, Texture2D and Curve are now first-class sheet-variable types
   (so the dial/swatch/texture/curve drawers have something to attach to); Vector2/Color literals emit and lift
   back byte-exact.
 - **Authoring UX.** The Variable dialog offers exactly the one drawer the chosen type can host and shows a
-  **live preview of the actual widget** — the same reusable Controls that render in the Inspector — updating as
+  **live preview of the actual widget** - the same reusable Controls that render in the Inspector - updating as
   the type / drawer / bounds change.
 - **Showcase.** A new **Inspector Playground** (`demo/showcase/inspector_playground.tscn`) puts all five
-  drawers + `@export` grouping across the new value types on one tunable node — select it to see the rich
+  drawers + `@export` grouping across the new value types on one tunable node - select it to see the rich
   grouped Inspector, press Play and the ship drifts/tints/scales from those same designer-tweakable variables.
   (`inspector_drawer_roundtrip_test`, `inspector_attributes_test`, `showcase_examples_test`; render harnesses
   `render_drawer_widgets_preview` + `render_variable_drawer_dialog`; suite 3474 green, zero showcase drift.)
 
-### Fixed — Inspector grouping + tooltips survive reopening a `.gd` sheet
+### Fixed - Inspector grouping + tooltips survive reopening a `.gd` sheet
 
 - A variable's **`@export_group` / `@export_subgroup`** now round-trips through a `.gd` reopen. Before, those
   lines couldn't be lifted, so a reopened grouped variable **degraded into a stray `@export_group` GDScript
   block + an ungrouped variable** (violating "no GDScript block" and losing the grouping). Now the importer
-  **absorbs the group lines onto the variable** — gated by the verify-lift rule, so it's byte-exact-safe (a
-  wrong guess just leaves a block, never corrupts) — and the reopened variable reads as a clean grouped
+  **absorbs the group lines onto the variable** - gated by the verify-lift rule, so it's byte-exact-safe (a
+  wrong guess just leaves a block, never corrupts) - and the reopened variable reads as a clean grouped
   variable with its **"Group › Subgroup"** chip. `LocalVariable` gained an `attributes` dict; the tree-var
   emission re-emits the group lines matching the dict-var path exactly. The reopened variable is also fully
-  **editable** — the dialog now populates its group/subgroup and the apply saves them for tree variables
+  **editable** - the dialog now populates its group/subgroup and the apply saves them for tree variables
   (previously the tree path ignored attributes, so a reopened group was stuck or silently cleared on edit).
-  The variable **tooltip** round-trips the same way — a `## doc` immediately before the variable is recovered
+  The variable **tooltip** round-trips the same way - a `## doc` immediately before the variable is recovered
   as its tooltip (Godot's doc-comment convention), no longer stranded as a `## …` GDScript block; a `## @ace…`
   annotation line is excluded so it's never mistaken for a tooltip.
   (`variable_group_roundtrip_test`; zero showcase drift.)
 
-### Added — `@export_subgroup` for nested Inspector grouping
+### Added - `@export_subgroup` for nested Inspector grouping
 
 - A variable can now also carry an **Inspector subgroup** (the variable dialog's new "Inspector subgroup"
   field), compiling to `@export_subgroup("…")` nested under its `@export_group`. For a complex object with
@@ -372,18 +384,18 @@
   Ranged*). The row chip reads **"Group › Subgroup"** so the nesting is legible in the sheet too.
   (`variable_export_group_test`.)
 
-### Added — Drop a scene node onto a param to reference it (no dialog)
+### Added - Drop a scene node onto a param to reference it (no dialog)
 
 - Dragging a node from the **Scene dock** straight onto a **condition/action param value** now fills that
-  param with the node reference — preferring a scene-unique **`%Name`** for deep nodes (the same converter
+  param with the node reference - preferring a scene-unique **`%Name`** for deep nodes (the same converter
   the params dialog uses), undoable. The deep-node-friendly, Construct-style gesture: no dialog, and dropping
   on a *specific* param value resolves the "which parameter?" ambiguity. The drop is only accepted when the
   cursor is over such a value, so it reads as droppable exactly where it works. (`node_drop_on_cell_test`.)
 
-### Added — "New Behaviour Addon…" — author a custom addon in one step
+### Added - "New Behaviour Addon…" - author a custom addon in one step
 
 - **Sheet ▸ New Behaviour Addon…** opens a small dialog (name, base class, category, description) that
-  scaffolds a **ready-to-edit, richly-commented behaviour script** under `res://eventsheet_addons/` — where
+  scaffolds a **ready-to-edit, richly-commented behaviour script** under `res://eventsheet_addons/` - where
   it's auto-discovered as a custom ACE provider. The skeleton **teaches the `@ace_*` vocabulary by example**:
   a `signal` → trigger, methods → action / condition / expression, an `@export var` → a property, each with
   the common annotations (`@ace_name`/`@ace_category`/`@ace_description`/`@ace_param_hint`) in place and a
@@ -391,7 +403,7 @@
   name, previews the target path, writes the file, refreshes the registry, and opens it for editing. The
   generated skeleton is guaranteed to be valid GDScript for every offered base class. (`behaviour_addon_scaffold_test`.)
 
-### Added — BBCode in condition/action cell text + ACE descriptions on hover
+### Added - BBCode in condition/action cell text + ACE descriptions on hover
 
 - BBCode-lite (`[b]`/`[i]`/`[color=…]`) already styled **comments**; it now also renders in the **display
   text of condition/action cells** (e.g. a custom ACE's `@ace_display_template("[color=red]Destroy[/color]
@@ -399,54 +411,54 @@
   text, so the colour swatch + width stay aligned) and the author's styling supersedes the auto
   value-highlight for that cell; the markup detector is conservative, so a plain value like `[1, 2, 3]` is
   never mistaken for markup. The hover tooltip becomes a rich (BBCode) panel only when the description has
-  markup — plain descriptions keep the native tooltip. The picker's description panel already rendered
+  markup - plain descriptions keep the native tooltip. The picker's description panel already rendered
   BBCode. (`bbcode_and_pill_test`.)
 
-### Removed — The confusing scope pill on variable rows
+### Removed - The confusing scope pill on variable rows
 
 - Variable rows no longer show a scope pill. The "global" pill was already hidden as redundant; the "local"
-  pill on event-scoped variables read as noise too — scope is already obvious from the row's nesting under
+  pill on event-scoped variables read as noise too - scope is already obvious from the row's nesting under
   its event, and the `@export` badge carries the meaningful distinction (Inspector-visible vs. internal).
 
-### Changed — Dragging a node into a field prefers its scene-unique `%Name`
+### Changed - Dragging a node into a field prefers its scene-unique `%Name`
 
 - Dropping a Scene-dock node onto an expression / path field already inserted a `$Path` reference; it now
-  prefers a scene-unique **`%Name`** when the dragged node carries one — a flat handle that collapses a deep
-  `$A/B/C/D` path to `%D` and survives the node being moved — the same handle the node picker hands back.
+  prefers a scene-unique **`%Name`** when the dragged node carries one - a flat handle that collapses a deep
+  `$A/B/C/D` path to `%D` and survives the node being moved - the same handle the node picker hands back.
   The deep-node-friendly way to reference Godot's node-heavy objects by dragging. (`node_drag_reference_test`.)
 
-### Added — Inline colour picker on the cell swatch (no dialog)
+### Added - Inline colour picker on the cell swatch (no dialog)
 
 - The little **colour swatch** drawn on a condition/action cell (for any ACE with a `Color` param) is now
-  **clickable**: a single click opens a **ColorPicker right there** — no params dialog — and the picked
+  **clickable**: a single click opens a **ColorPicker right there** - no params dialog - and the picked
   colour is written straight back into the ACE, exactly like Construct. The pick commits **once on close**,
   so dragging the picker is one clean undo step. (`color_swatch_picker_test`.)
 
-### Added — Deprecate an ACE without breaking existing projects
+### Added - Deprecate an ACE without breaking existing projects
 
 - An ACE can now be marked **deprecated** (the Construct-style covenant): it **keeps compiling** so sheets
   that already use it never break, but it is **hidden from the picker** (can't be added to new work),
   **flagged on hover** with its suggested replacement, and **warned about at compile time** (one nudge per
-  distinct deprecated ACE — never an error).
+  distinct deprecated ACE - never an error).
 - Built-ins use a chainable `.deprecated("why", "Provider::NewId")` next to the descriptor; custom behaviour
-  addons use a `## @ace_deprecated("Use X instead")` annotation — both flow to the same
+  addons use a `## @ace_deprecated("Use X instead")` annotation - both flow to the same
   `ACEDefinition.metadata` the picker and hover read. This is the compatibility covenant in code: never
   rename or delete a shipped `ace_id`, deprecate it instead. (`ace_deprecation_test`.)
 
-### Added — "@export" badge + Inspector-group chip on variable rows
+### Added - "@export" badge + Inspector-group chip on variable rows
 
 - A sheet variable exposed to the Godot Inspector now carries a blue **"@export"** pill on its row, so
   while scrolling a sheet you can tell at a glance which variables show in the Inspector vs. stay internal.
   Tracks the compiler's default (exported unless explicitly off). (`variable_export_badge_test`.)
 - A variable assigned an **Inspector group** (the variable dialog's "Inspector group" field, which compiles
-  to `@export_group("Name")`) now shows that **group name as a chip** on its row — so it's legible in the
+  to `@export_group("Name")`) now shows that **group name as a chip** on its row - so it's legible in the
   sheet which exported variables share an Inspector section, the "group them in the sheet" half of the
   `@export_group` feature. (`variable_export_group_test`, which also pins the `@export_group` emission.)
 
-### Added — Plain-language descriptions on hover (every ACE, function, and parameter)
+### Added - Plain-language descriptions on hover (every ACE, function, and parameter)
 
 - Hovering a **condition / action / function-call** row in the sheet now shows its **plain-language
-  description** — what it does, in friendly English — instead of the GDScript it compiles to. (Parameters
+  description** - what it does, in friendly English - instead of the GDScript it compiles to. (Parameters
   already showed their description on hover in the editor; ACEs in the picker already had a description
   panel.) A Call-Function row shows the targeted function's own description.
 - Built-in ACEs carried **no** written description before (their `make_descriptor` calls set none), so a
@@ -454,62 +466,62 @@
   child of this one at runtime, e.g. spawning a bullet."), populating the picker's description panel +
   tooltips everywhere too. (`ace_descriptions_test`.)
 - **Descriptions live in the files, next to the ACE.** Each built-in's description is now authored **inline**
-  on its descriptor via a chainable `.described("…")` — `make_descriptor(…).described("…")` — so an ACE's
+  on its descriptor via a chainable `.described("…")` - `make_descriptor(…).described("…")` - so an ACE's
   help sits in the same module file as its definition, exactly how a custom behaviour addon authors it
   (addons already use `## @ace_description(…)`). This makes packs self-contained and easy to update with no
   central registry to edit; the old generated `ace_descriptions.json` is gone. The test now **enforces full
-  coverage** — a new built-in without a `.described(…)` fails, so no undescribed ACE can ship.
+  coverage** - a new built-in without a `.described(…)` fails, so no undescribed ACE can ship.
 
-### Changed — Fewer syntax errors: auto-closed brackets + an always-on structural guard
+### Changed - Fewer syntax errors: auto-closed brackets + an always-on structural guard
 
-- The editable code fields — the **ƒx expression boxes** and the **GDScript-block dialog** — now
+- The editable code fields - the **ƒx expression boxes** and the **GDScript-block dialog** - now
   **auto-close brackets and quotes** (`(` → `()`, `"` → `""`, with the caret inside) and highlight
   matching brackets, so the most common user syntax error (an unbalanced pair) is rarely typed in the
   first place.
-- A new **structural syntax check** (unbalanced `()[]{}` / unterminated strings — always an error,
+- A new **structural syntax check** (unbalanced `()[]{}` / unterminated strings - always an error,
   unlike an undeclared identifier that may be a runtime-spawned node) now **blocks Apply** in the param
   dialog with a clear message, and runs **even when the symbol-aware lint can't** (an "unhealthy" lint
   context), closing the one path where malformed code could slip through.
 - The **GDScript-block dialog live-disables Save** the instant a bracket goes unbalanced (immediate
   feedback rather than a reject-on-click). Safe to hard-disable because a structural error is *never*
-  valid — no lockout from a lint false positive. (`syntax_guardrails_test`.)
+  valid - no lockout from a lint false positive. (`syntax_guardrails_test`.)
 
-### Changed — Node picker prefers scene-unique names (`%Name`) for deep nodes
+### Changed - Node picker prefers scene-unique names (`%Name`) for deep nodes
 
-- Picking a node that carries a **scene-unique name** now hands back **`%Name`** — a flat handle that
-  collapses a deep `$A/B/C/D` path to `%D` and survives the node being moved — instead of the brittle
+- Picking a node that carries a **scene-unique name** now hands back **`%Name`** - a flat handle that
+  collapses a deep `$A/B/C/D` path to `%D` and survives the node being moved - instead of the brittle
   relative path. The picker tree also shows the `%`handle so you can see which deep nodes are
   `%`-accessible at a glance. Godot's own answer to node-heavy objects, surfaced where you pick.
 - And a one-click **"Make %unique"** button in the picker turns *any* selected deep node into a
-  scene-unique node (undoable) and hands back its `%Name` — so you don't have to leave the sheet for the
+  scene-unique node (undoable) and hands back its `%Name` - so you don't have to leave the sheet for the
   scene editor to get a path-free handle. Offered only for a non-root node that isn't already unique.
   (`node_picker_test`.)
 
-### Changed — Function calls read as named verbs (show abstraction level)
+### Changed - Function calls read as named verbs (show abstraction level)
 
 - A **Call to a sheet Function** now renders as **"ƒ <Verb Name>"** (its friendly name, under a `ƒ` chip)
-  instead of the generic "System → `Call my_function()`". The abstractions you *create* — e.g. via Extract
-  to Function — read as first-class verbs, so a sheet is **less verbose** and you can see at a glance which
-  rows are higher-level vs. 1:1 with code. Pure editor view-state — no codegen change. (`function_verb_rendering_test`.)
+  instead of the generic "System → `Call my_function()`". The abstractions you *create* - e.g. via Extract
+  to Function - read as first-class verbs, so a sheet is **less verbose** and you can see at a glance which
+  rows are higher-level vs. 1:1 with code. Pure editor view-state - no codegen change. (`function_verb_rendering_test`.)
 
-### Added — Pick nodes by TYPE (Godot's node-heavy objects, without the path pain)
+### Added - Pick nodes by TYPE (Godot's node-heavy objects, without the path pain)
 
-- A Godot object is a deep node tree — a player can be dozens of nodes — so reaching "the AnimationPlayer
+- A Godot object is a deep node tree - a player can be dozens of nodes - so reaching "the AnimationPlayer
   of this object" used to mean a brittle path (`$Body/Visuals/Anim`) or a GDScript block. New **Nodes:
   Picking** ACEs resolve a child by **class anywhere in the subtree** instead: **Find Children Of Type**
   (every match, for a For Each), **First Child Of Type** (the first, null-safe via `pop_front`), and
-  **Has Child Of Type** (a gate). Target the type, not the path — no code. (`node_type_aces_test`.)
-- Built on that, **object-level component verbs** (the Construct mental model — act on the *object*, not
+  **Has Child Of Type** (a gate). Target the type, not the path - no code. (`node_type_aces_test`.)
+- Built on that, **object-level component verbs** (the Construct mental model - act on the *object*, not
   its deep node): **Play / Stop / Play Sprite / Restart Animation**, **Is Animating**, **Flip Sprite**,
-  **Set Sprite Frame**, and **Emit Particles** — all "(in object)" — auto-find the object's
+  **Set Sprite Frame**, and **Emit Particles** - all "(in object)" - auto-find the object's
   `AnimationPlayer` / `AnimatedSprite2D` / `GPUParticles2D` and act on it. "Play animation walk on Player",
-  "flip Player", "emit Player's particles" now need no path to the deep child and no GDScript block —
+  "flip Player", "emit Player's particles" now need no path to the deep child and no GDScript block -
   null-safe and collision-safe (the same `{uid}`-baked temp-var pattern the audio Play Sound ACEs use).
 
-### Added — Extract to Function: turn a pile of rows into one named verb
+### Added - Extract to Function: turn a pile of rows into one named verb
 
 - Right-click an event's actions → **"Extract Actions to Function…"** → name them, and a stack of
-  statement-level rows becomes ONE reusable, named function — the *create-abstraction* gesture. Answers
+  statement-level rows becomes ONE reusable, named function - the *create-abstraction* gesture. Answers
   the "why not just type the line?" question directly: you write it once, **name the concept** ("Apply
   Physics"), and never type it again; the function shows in the picker as a verb callable from any sheet.
 - Elevates the old GDScript-only extractor: now works on **structured ACE actions** too (not just code
@@ -521,68 +533,68 @@
   actions that reference an event-local variable or For-Each iterator is **refused with the offending
   name** instead of silently producing a script that won't parse.
 
-### Added — Families: one rule for every instance of a type (Construct-style horizontal abstraction)
+### Added - Families: one rule for every instance of a type (Construct-style horizontal abstraction)
 
 - A sheet can now be marked a **Family** (Sheet Type ▸ "Family", on a Custom Node / Behavior): its
   instances are collected into the group `family_<class>`, so **other sheets can write ONE rule over all
-  of them** — a family-scoped For Each compiles to `get_tree().get_nodes_in_group("family_enemy")`. The
+  of them** - a family-scoped For Each compiles to `get_tree().get_nodes_in_group("family_enemy")`. The
   sheet's variables become the family's per-instance variables and its exposed functions become its
   per-object ACEs. This is the *horizontal* reuse event sheets were missing (logic-per-type, not
   per-object). See `docs/internal/SPEC-families-instance-vars-custom-aces.md`.
 - **Lossless + honest:** the Family is recorded as a metadata-only `## @ace_family(<Class>)` annotation
-  (exactly like `@ace_tags` — no emitted code, so it round-trips byte-exact and can never double-emit).
+  (exactly like `@ace_tags` - no emitted code, so it round-trips byte-exact and can never double-emit).
   Membership is an explicit **Add To Group** action with the family's group, never auto-injected code.
   The compiler warns if a sheet is flagged a Family but has no class name.
-- **Showcase:** **Family Arena** (`demo/showcase/family_arena.tscn`) — an `Enemy` Family (instance vars
+- **Showcase:** **Family Arena** (`demo/showcase/family_arena.tscn`) - an `Enemy` Family (instance vars
   `health`/`fall_speed`, a `take_damage` ACE) driven entirely by family-scoped rules. Pinned by
   `families_test` + `showcase_examples_test` (the byte-identity gate is also the `@ace_family` round-trip
   proof). This is v1; loose families + implicit picking are designed and deferred.
 
-### Changed — GDScript blocks read as logic, not boilerplate
+### Changed - GDScript blocks read as logic, not boilerplate
 
 - An opened `.gd`'s **class scaffolding** (the `class_name`/`extends`/`@icon`/`@ace_*` prelude, the
   host-binding `_enter_tree`, blank separators) now collapses into ONE foldable **"Class setup" strip**
   (folded by default, one click to expand) instead of a wall of grey blocks. Real logic is never swept in
-  — the classifier (`is_scaffolding_code`, unit-tested) is conservative: any unrecognized line keeps the
+  - the classifier (`is_scaffolding_code`, unit-tested) is conservative: any unrecognized line keeps the
   whole block as logic. A lone scaffold row stays inline.
 - **Type-aware block styling:** boilerplate renders dimmer + labelled "setup"; real logic keeps the
   brighter "GDScript" badge. A block the importer couldn't lift now shows an inline amber **"⚠ code"**
-  badge (its `lift_note`) beside the hover tooltip — a wall of blocks becomes a triage list.
-- Pure editor view-state — **zero codegen change**, the `.gd` stays byte-exact. See
+  badge (its `lift_note`) beside the hover tooltip - a wall of blocks becomes a triage list.
+- Pure editor view-state - **zero codegen change**, the `.gd` stays byte-exact. See
   `docs/internal/SPEC-code-blocks-as-event-rows.md` (P1) + `blocks_scaffolding_test`.
 
-### Changed — "Open as Event Sheet" is easier to find
+### Changed - "Open as Event Sheet" is easier to find
 
 - Right-clicking **any `.gd`** (or an EventSheet `.tres`) in the **FileSystem dock** offers **"Open as
-  Event Sheet"** — a GDScript-backed sheet opens an arbitrary script losslessly. The item now carries the
+  Event Sheet"** - a GDScript-backed sheet opens an arbitrary script losslessly. The item now carries the
   Script icon so it stands out among Godot's native file actions (the script editor's right-click item too).
   The availability decision is now a pure, unit-tested seam (`should_offer_open_as_sheet`,
   `open_as_sheet_menu_test`) so the entry point can't silently regress. You can also open any `.gd` via the
   dock's **Sheet ▸ Open…** browser (`.gd` is the first filter).
 
-### Changed — Faster Construct-style event authoring
+### Changed - Faster Construct-style event authoring
 
 - **Double-click empty space opens the ACE picker** (new-event mode) instead of dropping a blank event you
-  then have to fill. Every "new event" path — the **Add Event** toolbar button, the "+ Add event…" footer,
-  the empty-space right-click menu, and now double-click — opens the same picker.
+  then have to fill. Every "new event" path - the **Add Event** toolbar button, the "+ Add event…" footer,
+  the empty-space right-click menu, and now double-click - opens the same picker.
 - **Triggers can no longer be "inverted."** The condition right-click menu disables "Invert Condition" for
   a trigger (there's no "not On X"). This also fixed a **silent no-op**: the compiler never read
-  `trigger.negated`, so the old item claimed to invert a trigger while the generated code never changed —
+  `trigger.negated`, so the old item claimed to invert a trigger while the generated code never changed -
   and it no longer leaves a misleading inverted-trigger on the sheet. Regular conditions still invert
   (compiled `not (…)`).
 - Confirmed + regression-tested (`interaction_features_test`): **OR / AND condition blocks** (right-click
   an event → "Convert to OR Block" / "Make AND Block") and **selecting an event from its conditions-lane
   bounds** (right-click the lane background → the event menu with the OR/AND toggle) both work.
 
-### Added — Design spec: GDScript blocks as event rows
+### Added - Design spec: GDScript blocks as event rows
 
-- `docs/internal/SPEC-code-blocks-as-event-rows.md` — a UI/UX spec for improving how GDScript blocks render
+- `docs/internal/SPEC-code-blocks-as-event-rows.md` - a UI/UX spec for improving how GDScript blocks render
   in event sheets (collapse structural scaffolding, clarify un-lifted logic, on-demand convert-to-rows,
   vocabulary expansion), to push the code-free experience further without breaking the byte-exact round-trip.
 
-### Changed — Behaviour packs are single `.gd` files (no `.tres`)
+### Changed - Behaviour packs are single `.gd` files (no `.tres`)
 
-Every bundled behaviour/addon pack — and the 5 demo showcases — is now ONE hand-editable `.gd`: the `.gd`
+Every bundled behaviour/addon pack - and the 5 demo showcases - is now ONE hand-editable `.gd`: the `.gd`
 **is** the event sheet AND the runtime script. The paired `.tres` sources and the "AUTO-GENERATED / DO NOT
 EDIT" banner are gone (31 pack `.tres` + 5 showcase `.tres` deleted). Opening a `.gd` re-derives its rows
 losslessly; `tools/audit_addons.gd` is now self-hosting (import each pack `.gd`, recompile, assert
@@ -590,7 +602,7 @@ byte-identical: `audited=31 drifted=0`), and `showcase_examples_test` pins the s
 
 - **Safe by construction:** behaviour discovery already scanned `.gd` (the `## @ace_*` annotations live
   there, not the `.tres`), scenes attach the `.gd` by `class_name`, and no pack referenced another via
-  Includes — so deleting the `.tres` changes nothing at runtime or in the picker.
+  Includes - so deleting the `.tres` changes nothing at runtime or in the picker.
 - **Builder:** `tools/pack_builders/_lib.gd` compiles straight to a banner-less `.gd`
   (`omit_generated_banner=true`); no `ResourceSaver.save`.
 - **Pairing reconceived:** `output_path_for(pack.gd)` / `sheet_for_script(pack.gd)` resolve to the `.gd`
@@ -598,18 +610,18 @@ byte-identical: `audited=31 drifted=0`), and `showcase_examples_test` pins the s
 - **Lint completeness:** opening a behaviour `.gd` recovers its `host` accessor as a variable row; the
   block linter no longer double-declares `var host` (which had spuriously errored on every behaviour pack).
 - **Variable pills:** a behaviour's class-level members (`host`, tuning + private state) no longer carry a
-  scope pill — class scope is the default; only genuinely event-scoped `local`s are badged.
+  scope pill - class scope is the default; only genuinely event-scoped `local`s are badged.
 
-### Changed — Clearer ACE editing, variables, and startup
+### Changed - Clearer ACE editing, variables, and startup
 
 - **No more redundant "global" pill on variables.** Class/sheet-level variables (every variable a
-  behaviour declares) rendered a blue `global` pill on each row — pure noise, since they're *all*
+  behaviour declares) rendered a blue `global` pill on each row - pure noise, since they're *all*
   global, and "global" misreads a behaviour's per-instance properties as project-wide. The pill is gone
   for the default scope; a genuinely event-scoped **`local`** variable still gets its pill (the one case
   worth flagging). Matches how Construct lists globals without tagging each one.
 - **Consistent "Back to picker" across ACE edits.** Editing an action or condition that has parameters
   opens a params editor with a **Back** button that returns to the picker *preselected on that ACE*.
-  **Triggers** — and any ACE with no parameters — open the picker directly, preselected, since clicking
+  **Triggers** - and any ACE with no parameters - open the picker directly, preselected, since clicking
   a trigger means "change what fires this event" and a paramless ACE has nothing to edit. Right-click
   **Replace Condition / Replace Action** now also preselect the current ACE instead of opening on the
   first match. (Previously conditions jumped to the picker while actions got a params dialog, which read
@@ -620,11 +632,11 @@ byte-identical: `audited=31 drifted=0`), and `showcase_examples_test` pins the s
 ### Fixed
 
 - **Two untitled sheets on project open.** The dock's `_ready()` seeded a demo sheet *and* the plugin
-  called `setup()` again right after `add_child()` (which had already run `_ready()`) — two untitled
+  called `setup()` again right after `add_child()` (which had already run `_ready()`) - two untitled
   tabs. `setup(null)` is now idempotent (no-op once a tab exists) and `_ready()` restores the last
   session first, only seeding a blank sheet when nothing was restored. Covered by `dock_startup_test`.
 
-### Added — Behaviour bodies read as Construct event sheets (if/else + signals as rows)
+### Added - Behaviour bodies read as Construct event sheets (if/else + signals as rows)
 
 The bundled behaviours stopped reading like event sheets exactly where it mattered most: a behaviour's
 `OnProcess`/`OnPhysicsProcess` tick was one big GDScript cell (no if/else/elseif rows), and its trigger
@@ -644,9 +656,9 @@ signals were hand-written `## @ace_trigger` code blocks. Both now de-code automa
   Applied to all 17 bundled packs that declared signals as code.
 - **Zero-arg `signal.emit()` lifts to an Emit Signal row.** The reverse-match now accepts an empty
   argument list, so `landed.emit()` / `jump()` / `super()` reverse-lift to Emit Signal / Call rows
-  instead of staying code (byte-safe — an empty match can only land on a literal `()`).
-- **Helper functions become Function rows.** A behaviour's class-level `func` block — exposed
-  `@ace_condition`/`@ace_expression` methods (Is Moving, Can Jump…) *and* private helpers — lifts into
+  instead of staying code (byte-safe - an empty match can only land on a literal `()`).
+- **Helper functions become Function rows.** A behaviour's class-level `func` block - exposed
+  `@ace_condition`/`@ace_expression` methods (Is Moving, Can Jump…) *and* private helpers - lifts into
   `EventFunction` rows (`lift_function_declarations`). The Platformer Movement pack is now **fully
   code-free**: signals + one if/else event + 13 Function rows, no RawCode. Exposed functions gain the
   sheet's `@ace_icon` (their picker entries show the behaviour icon); `return <expr>` bodies de-code
@@ -655,102 +667,102 @@ signals were hand-written `## @ace_trigger` code blocks. Both now de-code automa
 - Covered by `event_body_lift_test`, `signal_row_lift_test`, `function_declaration_lift_test`; all 31
   packs + showcases regenerate byte-stable (drift = 0).
 
-### Changed — Picker dialogs match the editor theme
+### Changed - Picker dialogs match the editor theme
 
-- The **Pick Node** and **Insert Expression** popups were bare `Window`s — they opened as separate
+- The **Pick Node** and **Insert Expression** popups were bare `Window`s - they opened as separate
   native OS windows (default Godot icon, content flush to the edges) instead of editor-embedded dialogs.
   Both are now `AcceptDialog`s like every other plugin dialog: editor-themed panel + title bar, standard
   12px content margins, a search clear button, and a confirm button (**Use Node** / **Insert**, enabled
   only when a row is selected) alongside the existing double-click / Enter. The result tree is
   height-bounded by a holder so the dialog opens at a comfortable size and scrolls internally.
-- The ACE picker's **⭐ Favorites** and **★ Recent** side panes now sit in filled inset cards — a new
+- The ACE picker's **⭐ Favorites** and **★ Recent** side panes now sit in filled inset cards - a new
   `EventSheetPopupUI.panel_section()` helper (editor `dark_color_2` fill, hairline border, rounded
   corners, falling back to a neutral dark fill outside the editor), matching Godot's *Create New Node*
   dialog. The description panel gets the same card. The bare lists floating on the dialog background are
   gone. Covered by `tools/render_node_picker_preview.gd` + the existing `render_picker_preview.gd`.
 
-### Added — Behaviour class descriptions
+### Added - Behaviour class descriptions
 
 - A sheet now has a **Description** (`class_description`), set in the **Sheet Type…** dialog. It
-  compiles to a `##` documentation comment right after `extends` — Godot's class-doc position — so a
+  compiles to a `##` documentation comment right after `extends` - Godot's class-doc position - so a
   behaviour/custom node shows its blurb in the *Create Node* dialog and the script docs. The importer
   recovers it, so it round-trips byte-identically (`class_description_roundtrip_test`).
 
-### Added — Unsaved-close guard
+### Added - Unsaved-close guard
 
 - Closing a sheet tab with unsaved changes now asks **Save / Discard / Cancel** instead of silently
   dropping work. Save writes the tab and closes only if the save succeeds; a clean tab still closes
   instantly. `has_unsaved_tabs()` exposes the dirty state for editor-level prompts (`unsaved_close_test`).
 
-### Added — Functions overview panel
+### Added - Functions overview panel
 
 - The side panel now lists every sheet **Function** at a glance (Construct's function list) above the
   generated GDScript: each shows its signature and an ✦ when it's exposed as an ACE. **＋** opens the
   Add Function dialog; right-clicking a function deletes it (undoable). Covered by `functions_panel_test`.
 
-### Added — Construct-style function dialog
+### Added - Construct-style function dialog
 
 - The **New Sheet Function** dialog is rebuilt to match Construct 3:
-  - **Usable as** picks Action / Condition / Expression in one control — the easy get/set toggle. An
+  - **Usable as** picks Action / Condition / Expression in one control - the easy get/set toggle. An
 	Expression is a getter that returns a typed value, a Condition is a yes/no test (bool), an Action
 	is a void doer (a setter); it sets the return type for you.
   - **Parameters** are full C3 rows: name · type · **default value** · **description**. Defaults emit
 	as optional GDScript args (`amount: int = 5`) via a dedicated `ACEParam.gdscript_default` (kept
 	separate from the picker pre-fill, and validated trailing so the function always parses).
-  - **Run only when** adds guard conditions — GDScript boolean expressions that wrap the function body
+  - **Run only when** adds guard conditions - GDScript boolean expressions that wrap the function body
 	in an `if` (e.g. *only run when a node setting is enabled*), authored as Expression Is True rows.
   - Covered by `function_dialog_test`; param defaults round-trip through the importer.
 
-### Added — Behaviour-as-ACEs parity (foundation)
+### Added - Behaviour-as-ACEs parity (foundation)
 
-Toward authoring whole behaviour packs as event sheets with **no GDScript blocks** — so a behaviour
+Toward authoring whole behaviour packs as event sheets with **no GDScript blocks** - so a behaviour
 like Platformer Movement can be built from ACEs instead of RawCode (`docs/internal/SPEC-behaviour-as-aces-parity.md`):
 
 - **Node-scoped ACEs now work inside a behaviour.** A behaviour sheet compiles to `extends Node`
   with a `host` member (its parent), but ACEs like **Move And Slide**, **Is On Floor**, **Set
   Velocity**, and the wall/floor/ceiling slide queries emitted *bare* calls that hit the behaviour
-  Node itself — useless on a host, forcing a RawCode block. They now use a `{host.}` idiom that
+  Node itself - useless on a host, forcing a RawCode block. They now use a `{host.}` idiom that
   targets the parent host inside a behaviour and stays bare on a normal CharacterBody2D sheet
-  (byte-identical output — no regeneration churn). Reverse-lift round-trips it unchanged.
+  (byte-identical output - no regeneration churn). Reverse-lift round-trips it unchanged.
 - **A movement vocabulary so a CharacterBody2D behaviour needs no GDScript:** **Set Velocity X/Y**,
   **Add To Velocity**, **Apply Gravity** (with a baked terminal-velocity clamp) and a simple
   variant, **Accelerate Velocity X/Y Toward** (`move_toward` on a component), and the **Velocity
-  X/Y** reads — all host-targeted, filed under a new **Movement** picker category.
-- **Read Input Axis Into** — the consuming action for the existing Input Axis expression, so "read
+  X/Y** reads - all host-targeted, filed under a new **Movement** picker category.
+- **Read Input Axis Into** - the consuming action for the existing Input Axis expression, so "read
   input, then move" is two ACE rows, not a RawCode line. **Set Local Variable (typed)** declares a
   statically-typed event-local, so dense typed temporaries stop forcing RawCode.
 - **Trigger signals as rows.** A signal row can publish itself as a trigger ACE (`## @ace_trigger`,
   with optional name/category), so a behaviour declares a code-free trigger signal instead of a
-  hand-written GDScript block — the last primitive needed for a signal-emitting behaviour with zero
+  hand-written GDScript block - the last primitive needed for a signal-emitting behaviour with zero
   RawCode.
 - **The first bundled behaviour authored with ZERO GDScript blocks.** The **Flash** pack is now built
-  entirely from ACE rows — a trigger `SignalRow`, a gated *On Process* tick with sub-events
+  entirely from ACE rows - a trigger `SignalRow`, a gated *On Process* tick with sub-events
   (`Expression Is True` / `Is Valid` / `Compare Variable` → `Add/Set Variable`, `Set Property`,
-  `Emit Signal`), and two ACE-action function bodies — instead of RawCode. It compiles to GDScript
+  `Emit Signal`), and two ACE-action function bodies - instead of RawCode. It compiles to GDScript
   equivalent to the old hand-written version and its demo stays byte-identical. Proves the
   behaviour-as-ACEs path end to end.
-- **A movement behaviour, now code-free.** The **8-Direction Movement** pack (a CharacterBody2D mover —
+- **A movement behaviour, now code-free.** The **8-Direction Movement** pack (a CharacterBody2D mover -
   the very "why is movement GDScript?" case) is the second zero-RawCode pack: an *On Physics Process*
   event reads a typed input-vector local, then **Set Velocity** + **Move And Slide**, all host-targeted.
-  `pack_rawcode_budget_test` ratchets each converted pack — **Flash, 8-Direction, Timer, State
-  Machine, and Move To** so far — at 0 RawCode so a GDScript block can never creep back. Remaining packs convert incrementally;
-  numeric-kernel packs (spring/juice/bullet integrators — continuous `cos`/`sin`/spring math) keep
+  `pack_rawcode_budget_test` ratchets each converted pack - **Flash, 8-Direction, Timer, State
+  Machine, and Move To** so far - at 0 RawCode so a GDScript block can never creep back. Remaining packs convert incrementally;
+  numeric-kernel packs (spring/juice/bullet integrators - continuous `cos`/`sin`/spring math) keep
   documented RawCode per the spec's honest criterion.
 - **Functions publish by return type (C3-style three-way expose).** An exposed sheet function now
   becomes the right kind of ACE automatically: a **void** function is an **action**, a **bool**
-  function is a **condition**, and any other return is an **expression** — so a value-returning
+  function is a **condition**, and any other return is an **expression** - so a value-returning
   behaviour function (e.g. `load_value`, `random_range`, `has_save_key`) is usable directly in ƒx
   fields and conditions instead of being mis-published as a call-and-discard action. The Save System
   and Advanced Random packs' getters/queries are correctly typed now, and the reverse-lift round-trips
   all three directives. The **State Machine** pack is now fully converted off RawCode on the strength
-  of this — its **Is In State** condition is a bool sheet function (`is_in_state(state_name) -> bool`)
+  of this - its **Is In State** condition is a bool sheet function (`is_in_state(state_name) -> bool`)
   published as a condition ACE; the health / abilities condition+expression getters follow.
 - **Loops are code-free (and now tested); the collection vocabulary is complete.** A behaviour can
-  loop without a GDScript block — *Add Pick Filter → "While (condition)" or "Repeat N times"* compiles
+  loop without a GDScript block - *Add Pick Filter → "While (condition)" or "Repeat N times"* compiles
   to a real `while` / `for` loop wrapping the event body (pinned by `while_loop_test`). Combined with
   the existing rich **Array / Dictionary** ACEs (append, pop/push front+back, insert, erase, find,
   sort, contains, is-empty, size, `get`-with-default, keys/values, …), collection- and loop-driven
-  logic is authorable entirely as ACE rows — the vocabulary needed to build your own behaviours via
+  logic is authorable entirely as ACE rows - the vocabulary needed to build your own behaviours via
   event sheets.
 - **Fewer raw blocks when authoring (near-zero-RawCode roadmap, Phase 0).** New everyday ACEs that
   previously forced a GDScript block: **Subtract / Multiply / Divide Variable** (the `-=` / `*=` / `/=`
@@ -761,7 +773,7 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   Roadmap: `docs/internal/SPEC-near-zero-rawcode-roadmap.md`.
 - **More of an opened `.gd` renders as rows (near-zero-RawCode roadmap, Phase 2).** Inside an
   already-lifted trigger body, a property assignment `a.b = c` reverse-lifts to a **Set Property** row
-  and a method call `a.b()` to a **Call Method** row — instead of staying an in-flow GDScript cell. A
+  and a method call `a.b()` to a **Call Method** row - instead of staying an in-flow GDScript cell. A
   specific ACE always wins (`$Sprite.modulate = …` still lifts to *Set Modulate*, `$Sprite.play(…)` to
   *Play*); only what no ACE claims falls to the generic catch-alls, admitted at lowest specificity. The
   byte-identical recompile gates every match, and no functions move, so the GDScript-backed-sheet
@@ -769,52 +781,52 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
 - **Loops and `match` open as control-flow rows (near-zero-RawCode roadmap, Phase 3).** When a trigger
   body is reverse-lifted, a `for X in EXPR:` becomes a **For-Each** loop row, `for i in range(N):` a
   **Repeat** row, `while COND:` a **While** row, and `match EXPR:` a **Match** row (Construct's switch,
-  arms kept verbatim) — instead of the whole construct staying an in-flow GDScript cell. Loops nest
+  arms kept verbatim) - instead of the whole construct staying an in-flow GDScript cell. Loops nest
   their body as sub-rows, built on the same nesting the editor already used for `if`/`elif`/`else`, so
   a loop can hold conditioned sub-events too. The minimal loop shape (no predicate / order-by / first-N
-  / frame-spread) round-trips byte-identically; anything richer — or a statement after a nested block
-  inside the loop, or a blank line inside a `match` — safely stays a code cell. The byte-identical
+  / frame-spread) round-trips byte-identically; anything richer - or a statement after a nested block
+  inside the loop, or a blank line inside a `match` - safely stays a code cell. The byte-identical
   recompile gates every lift, and no functions move, so the "events append" contract is untouched.
 - **Unusual `if` conditions stay real events (near-zero-RawCode roadmap, Phase 3.5).** When a
   reverse-lifted `if` has a term no specific condition ACE claims, it becomes an **Expression Is True**
-  condition (a bare boolean expression) — so the branch stays a real event with sub-events instead of
+  condition (a bare boolean expression) - so the branch stays a real event with sub-events instead of
   collapsing to a code cell, and matched + expression terms mix freely (e.g. `if health > 100 and
   is_ready:` → *Compare Variable* + *Expression Is True*). The corrected part: `and`-splitting is now
-  **top-level only** — an `and` inside parentheses, brackets, or a string literal no longer fragments a
+  **top-level only** - an `and` inside parentheses, brackets, or a string literal no longer fragments a
   compound term, so `if f(a and b):` lifts to one clean condition instead of the nonsensical `"f(a"` +
   `"b)"`. Negation (`not (…)`) and the byte-identical round-trip are preserved.
-- **Hand-written helper functions open as sheet functions (near-zero-RawCode roadmap, Phase 1 — the
-  unlock).** A plain `func foo(args) -> Type:` in an opened `.gd` — with no `## @ace_*` annotation —
+- **Hand-written helper functions open as sheet functions (near-zero-RawCode roadmap, Phase 1 - the
+  unlock).** A plain `func foo(args) -> Type:` in an opened `.gd` - with no `## @ace_*` annotation -
   now reverse-lifts to an **un-exposed sheet function** (its body rendered as event rows: statements,
   loops, and branches via Phases 2-3) instead of staying one opaque code block. The `@ace_hidden`
   marker the source never had is suppressed (a new `lifted_unannotated` flag), so the file round-trips
   byte-identically; generated `@ace_hidden` functions keep their marker untouched. A function with no
   return type, or a blank line in its body, safely stays a block. Opening + saving a `.gd` untouched
-  stays byte-identical; an event added afterward lands in the events section (standard sheet layout) —
+  stays byte-identical; an event added afterward lands in the events section (standard sheet layout) -
   before any lifted helper functions, a clean single-insert diff.
-- **Math expression vocabulary + local-variable lift (near-zero-RawCode roadmap, Phase 4 — polish).**
+- **Math expression vocabulary + local-variable lift (near-zero-RawCode roadmap, Phase 4 - polish).**
   New ƒx-field expressions sit beside Abs/Min/Max: **Square Root**, **Power**, **Floor**, **Ceil**,
-  **Float Modulo**, **Ease**, **Snapped**, **Load Resource** (`load(path)`), and a trig/interp set —
-  **Sine**, **Cosine**, **Tangent**, **Arc Tangent (y, x)**, **Clamp (float)**, **Degrees↔Radians** —
+  **Float Modulo**, **Ease**, **Snapped**, **Load Resource** (`load(path)`), and a trig/interp set -
+  **Sine**, **Cosine**, **Tangent**, **Arc Tangent (y, x)**, **Clamp (float)**, **Degrees↔Radians** -
   so oscillation / rotation / smoothing math (sine wobble, orbit, look-at) is authorable as an
   expression instead of a RawCode block. The common one-liners that used to need a RawCode expression. And **Set Local Variable** (`var x = …`) and its typed sibling
   now reverse-lift, so a local declaration in a hand-written body opens as a row instead of a code cell.
-  A new **fidelity ratchet** test proves a representative hand-written script lifts *completely* — every
+  A new **fidelity ratchet** test proves a representative hand-written script lifts *completely* - every
   variable, statement, loop, condition, and helper function becomes a row (only the `extends` prelude
   stays verbatim) and round-trips byte-identically; the ratchet can only tighten, never silently loosen.
-- **Hinted exports open as variable rows (Phase 4).** Inspector-tuned declarations — `@export_range(0,
-  100)`, `@export_file`, `@export_flags("A", "B")`, and any other `@export_*` variant — now lift to a
+- **Hinted exports open as variable rows (Phase 4).** Inspector-tuned declarations - `@export_range(0,
+  100)`, `@export_file`, `@export_flags("A", "B")`, and any other `@export_*` variant - now lift to a
   variable **row** with the annotation kept verbatim (a new `export_hint`), instead of staying a RawCode
   block. So a real tuned script renders as a sheet and round-trips byte-identically; the per-line
   verify-lift gate rejects any annotation it can't reproduce exactly (those stay blocks).
 - **Behaviour addons + showcases are code-free by default.** A build-time pass (`lift_function_bodies`)
-  reverse-lifts every behaviour pack's and showcase's function bodies into ACE rows — the *same* lifter
-  that opens a `.gd` as events — keeping the lifted rows only when the sheet still recompiles
+  reverse-lifts every behaviour pack's and showcase's function bodies into ACE rows - the *same* lifter
+  that opens a `.gd` as events - keeping the lifted rows only when the sheet still recompiles
   **byte-identically** (a per-function gate). So algorithmic kernels (spring integrators, sine
   oscillators, physics ticks, weapon/health logic) now read as **Add/Set Variable**, **Set Property**,
-  and **Call Method** rows instead of GDScript blocks, across all 31 packs — while shipping the **exact
+  and **Call Method** rows instead of GDScript blocks, across all 31 packs - while shipping the **exact
   same GDScript** (0 generated `.gd` changed; drift=0). Bodies that can't round-trip (inner classes,
-  exotic control flow) keep their RawCode — the honest irreducible limit. The showcases' most visible
+  exotic control flow) keep their RawCode - the honest irreducible limit. The showcases' most visible
   cells (HUD text, position clamps, spawns) were also hand-authored as **Set Text (formatted)** / **Set
   Property** / **Spawn Scene (Full)** rows; their remaining loop-heavy event blocks (nested
   hit-detection with `break`, grid spawn) stay code cells, where they read better than a pile of rows.
@@ -828,7 +840,7 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   (clean-removal verified). A pack builder can pass its own icon to `save_pack`, and opening a generated
   `.gd` recovers the icon back into `custom_class_icon` (round-trips byte-identically).
 - **Generated-GDScript preview refreshes live.** The preview panel now recompiles when you open a sheet
-  or switch tabs — not only on edit — so it never shows the previous sheet's output. Hint text corrected
+  or switch tabs - not only on edit - so it never shows the previous sheet's output. Hint text corrected
   to "refreshed live as you edit".
 - **ACE picker matches the native node dialog.** Favorites/Recent rows no longer tint their label by ACE
   type; they render plain like the main category tree and Godot's Create-New-Node dialog (the per-row
@@ -837,7 +849,7 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   script editor) → "Open as Event Sheet" renders it as rows; a new **Auto-preview** project setting
   (`eventsheets/editor/auto_preview_gd_on_select`, off by default) makes *selecting* a liftable `.gd`
   open it straight into the Event Sheets workspace as a read-only preview. And the preview now
-  **re-renders live** — a read-only `.gd` preview silently re-imports the moment the file changes on
+  **re-renders live** - a read-only `.gd` preview silently re-imports the moment the file changes on
   disk (edit it in the script editor, refocus the Event Sheets tab, the rows track it). Design +
   rationale in `docs/internal/SPEC-preview-gd-as-eventsheets.md`.
 
@@ -848,18 +860,18 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   on it rather than falling through to the scene tree).
 - **The welcome demo sheet now matches its Generated GDScript.** Its events used the bundled demo
   actor's reflected ACEs (which the compiler's registry doesn't carry) and set `.trigger` instead of
-  `trigger_id`, so they silently produced no code — the preview showed only the variables + a comment
+  `trigger_id`, so they silently produced no code - the preview showed only the variables + a comment
   while the viewport showed events. Rebuilt from Core ACEs with real triggers; the panel now compiles
   to a `_process` function that matches the rows (`event_sheet_editor_test` asserts the match).
 
 - **Pressing Delete in the event sheet no longer deletes a node from the open scene.** The dock
   handled Delete only in `_unhandled_key_input`, which runs *after* the editor's Scene-tree dock's
-  delete shortcut — so with the event sheet focused, Delete could remove the selected scene node
+  delete shortcut - so with the event sheet focused, Delete could remove the selected scene node
   instead of the selected event/ACE. The focused viewport now consumes Delete/Backspace in
   `_gui_input` (emitting `delete_requested` to the dock), winning Godot's input ordering so it can
   never reach the scene tree.
 - **Clicking just outside an event block now selects that event instead of clearing the selection.**
-  The inter-block separator gap was dead space — `_find_row_index_at_y` returned -1 there — so a click
+  The inter-block separator gap was dead space - `_find_row_index_at_y` returned -1 there - so a click
   "outside the condition cell" deselected everything (and, with nothing selected, Delete fell through
   to the scene tree). A gap click now resolves to the adjacent event (`viewport_hit_select_test`).
 - **Duplicate built-in ACE ids are now caught.** The registry indexed descriptors by
@@ -876,7 +888,7 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
 - **The generated `.gd` is now only rewritten when its content actually changed**, so the Godot
   editor stops prompting *"Files have been modified outside Godot"* every time you open, close, or
   test a scene. `SheetCompiler.compile()` rewrote the output file unconditionally on every recompile
-  (sheet save, Attach to Node, Test Bench, export — all funnel through it); because the generated
+  (sheet save, Attach to Node, Test Bench, export - all funnel through it); because the generated
   code is byte-stable, that bumped the file's mtime without changing a byte and tripped Godot's
   external-change watcher, alarming users into thinking they had broken something. The compiler now
   compares the fresh output against what is already on disk and skips the write when identical
@@ -885,15 +897,15 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
 - **The ACE parameter dialog no longer errors with "Trying to cast a freed object" when focusing its first field.**
   `_focus_first_field` cast every entry in its field map to `Control` guarded only by `!= null`, which doesn't
   catch a *freed* widget (the dialog can close before the deferred focus runs). It now skips freed entries via
-  `is_instance_valid` — no more console-error spam when ACE dialogs open and close quickly.
-- **Nine built-in ACEs that compiled but crashed, leaked, or misbehaved at runtime — surfaced by a new
+  `is_instance_valid` - no more console-error spam when ACE dialogs open and close quickly.
+- **Nine built-in ACEs that compiled but crashed, leaked, or misbehaved at runtime - surfaced by a new
   compile-coverage test and an adversarial template audit, each reproduced and fixed against Godot 4.7:**
   - **Save JSON File** guards the `FileAccess` handle (and closes it) instead of chaining `.store_string()`
-	on a possible `null` — a missing parent dir or read-only path crashed the save outright.
+	on a possible `null` - a missing parent dir or read-only path crashed the save outright.
   - **Focus Next / Focus Previous** guard the `null` from `find_next/prev_valid_focus()` before calling
-	`grab_focus()` — single / edge-case menus no longer null-deref.
+	`grab_focus()` - single / edge-case menus no longer null-deref.
   - **Find Children (by name)** passes `owned = false`, so it finds runtime-spawned nodes instead of
-	silently returning `[]` (the `owned` default excluded instantiated enemies — the advertised use case).
+	silently returning `[]` (the `owned` default excluded instantiated enemies - the advertised use case).
   - **Nearest / Furthest Node In Group** are host-typed to `Node2D` (they read `global_position`), so the
 	picker no longer offers them on plain-Node / Control sheets where they fail to compile.
   - **Every X Seconds** accumulates with `get_process_delta_time()` instead of a bare `delta`, so it
@@ -903,12 +915,12 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   - **Play Sound / Play Sound At** free the throwaway one-shot player when the stream fails to load,
 	instead of leaking it while waiting on a `finished` signal that never fires.
 - **The "Set Material" ACE's default no longer breaks the build.** Its placeholder was
-  `preload("res://effect_material.tres")`, and `preload` resolves at compile time — so a freshly-added
+  `preload("res://effect_material.tres")`, and `preload` resolves at compile time - so a freshly-added
   Set Material wouldn't compile until you pointed it at a real material. The default is now `null`; the
   description shows the `preload(...)` form for when your material exists.
 - **The Quick-Start demo and bundled showcases were sharpened for the release (release-readiness review).**
   The `player` sheet's On-Body-Entered check now tests the *colliding body* (`body.is_in_group("enemy")`)
-  instead of the host node — the headline demo previously compiled a handler with a dead `body` parameter
+  instead of the host node - the headline demo previously compiled a handler with a dead `body` parameter
   and an inverted group test. The five showcases now ship with Live Values **off**, so their generated
   `.gd` are clean, hook-free GDScript (the "it's just GDScript" proof artifacts a skeptic opens first;
   Live Values stays a toggle on your own sheets). Doc counts/links reconciled across the README, demo
@@ -918,22 +930,22 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   calls `clear_slowmo()` on `tree_exiting`.
 
 ### Removed
-- **Seven design/UX spec docs — development scaffolding now redundant with the feature documentation:**
+- **Seven design/UX spec docs - development scaffolding now redundant with the feature documentation:**
   `SPEC.md`, `EDITOR-UI-SPEC.md`, `EventSheet_EditorParam_Exposure_Spec.md`, `FRAME-SPREADING-SPEC.md`,
   `EVENTSHEET_THEME_TOKEN_SPEC.md`, and both `docs/spec/*` (the folder is gone). The three *contract* specs
-  their feature tests point at as the spec-of-record stay — `GDSCRIPT-PAIRING-SPEC`, `INSPECTOR-ATTRIBUTES-SPEC`,
+  their feature tests point at as the spec-of-record stay - `GDSCRIPT-PAIRING-SPEC`, `INSPECTOR-ATTRIBUTES-SPEC`,
   `ADDON-COMPOSITION-SPEC`. Every reference across code comments, docs, README/AGENTS/CONTRIBUTING, and
   `docs_integrity_test` was scrubbed or retargeted (frame-spreading pointers now go to `PERFORMANCE.md`); the
   usage docs (`RECIPES`, `PERFORMANCE`, `USING-WITH-EXISTING-CODE`, `GLOSSARY`, `C3-MIGRATION-GUIDE`) cover it.
 
 ### Changed
 - **The "Emit Signal On" helper now emits the modern `signal.emit()` form** instead of the legacy
-  `emit_signal("name")`. With a bare signal identifier it compiles to e.g. `enemy.died.emit(payload)` —
+  `emit_signal("name")`. With a bare signal identifier it compiles to e.g. `enemy.died.emit(payload)` -
   idiomatic Godot 4 and parity-clean (the old form matched a banned substring in the codegen parity guard,
   even though only the helper itself, never a bundled pack, used it). The signal parameter is now a bare
   identifier rather than a quoted string. New `emit_signal_modern_test` pulls the live descriptor and runs
   its output through the project's own `BANNED_PATTERNS` scan so the helper can't regress to the legacy form.
-- **The Core "Emit Signal" ACE now emits the modern `signal.emit()` form too** — matching the "Emit Signal On"
+- **The Core "Emit Signal" ACE now emits the modern `signal.emit()` form too** - matching the "Emit Signal On"
   helper. `emit_signal(&"name", args)` becomes `name.emit(args)`; the signal parameter is a bare identifier, so
   the signal must be declared (the Quick-Start player demo now declares `signal damage_taken(amount: int)` via a
   Signal row). `emit_signal_modern_test` was extended to pull the live Core descriptor and scan its compiled
@@ -944,31 +956,31 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   scaffolding; the user-facing Layout/Alignment **guide** and the blessed architecture-slices tracker stay put.
 
 ### Added
-- **Every behavior-pack ACE is now node-targetable** — pick *which* node carries the behavior
+- **Every behavior-pack ACE is now node-targetable** - pick *which* node carries the behavior
   instead of being locked to a direct child literally named after the pack. A pack ACE authored as
   `$WeaponKit.can_fire()` now exposes an editable **"On node"** field defaulting to the conventional
-  path (so existing sheets compile byte-for-byte identically — drift stays 0), retargetable with
+  path (so existing sheets compile byte-for-byte identically - drift stays 0), retargetable with
   `$`-autocomplete to `$Player/WeaponKit`, `%Weapon`, or any node path. This is Construct's "the ACE
-  acts on the object instance you picked" model in Godot terms — and it's *why* a pack condition like
+  acts on the object instance you picked" model in Godot terms - and it's *why* a pack condition like
   **Weapon Kit → Can Fire** can now be used on a sheet whose behavior lives under another node, instead
   of forcing a raw GDScript block to write the correct path. One change in the auto-ACE generator
   (`ace_generator._parameterize_node_target`) covers all packs at once; only a bare `$Identifier`
-  prefix is parameterized — `$"Quoted"`, `%Unique`, and multi-segment `$A/B` paths stay verbatim, and a
+  prefix is parameterized - `$"Quoted"`, `%Unique`, and multi-segment `$A/B` paths stay verbatim, and a
   method whose own arg is named `target` (e.g. `spring_host_scale(target)`) uses `on_node` for the node
   field to avoid the clash.
-- **The flagship `platformer_shooter` showcase's shoot + jump logic is now fully code-free** — the exact event
+- **The flagship `platformer_shooter` showcase's shoot + jump logic is now fully code-free** - the exact event
   a user pointed at as "dropping to GDScript" is re-authored with its conditions on the left (Is Action
   Pressed + the Weapon Kit's own **Can Fire**, targeting `$Player/WeaponKit`) and its actions on the
   right (the pack's **Fire** + **Spawn Scene (Full)**, aimed by the Platformer pack's facing direction).
-  The demo now *teaches* Construct-style legibility instead of a raw `if` block — proof the plugin can
+  The demo now *teaches* Construct-style legibility instead of a raw `if` block - proof the plugin can
   author real game logic with zero GDScript. Made possible by the node-targetable pack ACEs above. The
   jump/release handler likewise split into **Is Action Just Pressed/Released** conditions + the Platformer
-  pack's **Jump / Jump Released** actions — byte-identical generated output, drift unchanged.
-- **`@ace_expose_all` — one-line custom addons, near-zero annotations.** A single class-level
+  pack's **Jump / Jump Released** actions - byte-identical generated output, drift unchanged.
+- **`@ace_expose_all` - one-line custom addons, near-zero annotations.** A single class-level
   `## @ace_expose_all(node)` (or plain `## @ace_expose_all` for an owned RefCounted helper) publishes
   every own public method/signal of a class as an ACE with **zero per-member annotations**: type inferred
   from the return type (`bool`→condition, `void`→action, value→expression, `signal`→trigger), name from
-  the identifier, and — under `(node)` — codegen synthesized as the node-targeted `{target}.method(args)`
+  the identifier, and - under `(node)` - codegen synthesized as the node-targeted `{target}.method(args)`
   form (reusing the new "On node" param). A behavior no longer needs an
   `@ace_codegen_template`/`@ace_condition`/`@ace_name` line per method; per-member `@ace_*` annotations
   stay available as optional overrides, and `_`-prefixed + inherited engine members stay out. Drops into
@@ -976,91 +988,91 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   annotated-autoload registration surfaces (no project-wide scan, so a big project never floods the
   picker). New `expose_all_node_test`; existing packs unaffected (drift=0). Properties + the autoload
   singleton form are documented follow-ups (`docs/internal/SPEC-low-verbosity-custom-addons.md`).
-- **The ACE picker reads cleaner — a single muted column** (Godot "Create New Node" style). The
+- **The ACE picker reads cleaner - a single muted column** (Godot "Create New Node" style). The
   redundant **"Type" column** and the per-row type **tint** that made the picker visually busy are gone;
   an ACE's type is conveyed by its row **icon**, its tooltip, and the description panel instead.
-  Presentation-only — search, relevance ranking, Favorites/Recent, and keyboard nav are unchanged —
+  Presentation-only - search, relevance ranking, Favorites/Recent, and keyboard nav are unchanged -
   and pinned by `picker_layout_test` (the tree has one column and populating it no longer touches a
   removed column). The bright per-kind category colours are also muted to one theme-driven "quiet
   divider" colour (the node-type distinction is carried by the section's class icon), and the codegen
   in the description panel is now **visible-but-muted** (kept for the "it's just GDScript" value, just
   de-emphasized). And the everyday **featured** verbs (Compare, Set/Add Variable, Print, Wait/Spawn,
-  On Process/Ready — a curated default you can extend) are **bolded and floated to the top of their
+  On Process/Ready - a curated default you can extend) are **bolded and floated to the top of their
   group** (C3's `highlight` idea), so the common picks stand out. This completes the picker visual
   cleanup (`docs/internal/SPEC-ace-picker-visual-cleanup.md`).
-- **A generic "Expression Is True" condition** — the code-free escape hatch for a boolean
+- **A generic "Expression Is True" condition** - the code-free escape hatch for a boolean
   expression. Use any GDScript that returns a bool (a behavior method like
   `$Player/WeaponKit.can_fire()`, `health > 0 and shielded`, `%Door.is_open()`) directly as a
   condition instead of dropping the whole row to a raw GDScript block. Emitted verbatim, inverts to
   `not (...)` for free, and lives in **General Conditions** beside Compare Values. New
-  `expression_is_true_test`. (Prefer a named pack condition where one exists — see the pack
+  `expression_is_true_test`. (Prefer a named pack condition where one exists - see the pack
   node-target spec.)
 - **The Pick Filter (For Each) dialog blocks saving a loop whose collection / where / order-by doesn't compile.**
   On Save it runs the same lint the on-save "Check Sheet for Errors" pass uses (the collection wrapped per kind,
-  the predicate / order-by with the loop iterator stubbed) and, if an expression is broken, refuses to commit —
+  the predicate / order-by with the loop iterator stubbed) and, if an expression is broken, refuses to commit -
   re-opening the dialog with the exact compile error instead of writing a For Each that fails later at codegen
   time. Fail-open: if the linter can't run (no active sheet) the save proceeds, so a glitch never traps a valid edit.
 - **The Pick Filter (For Each) "Where" and "Order by" fields now autocomplete.** They became single-line
-  GDScript code editors with the same completion the raw-code blocks use — sheet variables / functions,
-  host-class members, `$Child` nodes — plus the loop's own iterator name, so `item.health` and distance
+  GDScript code editors with the same completion the raw-code blocks use - sheet variables / functions,
+  host-class members, `$Child` nodes - plus the loop's own iterator name, so `item.health` and distance
   expressions complete against the exact vocabulary the on-save linter validates them with. Enter still
   confirms the dialog (newlines are stripped to keep the field single-line).
 - **Built-in ACE compile-coverage + runtime-safety regression tests.** `builtin_ace_compile_test` compiles
   every built-in ACE template (params filled with values of their type, in its declared host class) and
-  asserts it parses — 446 covered, with the handful that need a loop / return / call-target context listed
+  asserts it parses - 446 covered, with the handful that need a loop / return / call-target context listed
   explicitly rather than skipped silently. `ace_safety_test` locks in each of the nine runtime-safety fixes
   in this release so they can't silently regress.
 - **On-save linting + "Check Sheet for Errors" now cover For Each (pick filter) fields.** A typo in a
   loop's collection, predicate, or order-by used to slip past every author-time check; the diagnostics now
-  lint all three — the collection wrapped per kind (so a GROUP name isn't read as bare GDScript) and the
+  lint all three - the collection wrapped per kind (so a GROUP name isn't read as bare GDScript) and the
   predicate / order-by with the loop iterator stubbed (so a valid `item.field` resolves but a typo flags).
 - **The Project Doctor flags a coroutine under a per-frame trigger.** A `Wait` / `Wait For Signal` /
   `Await Next Frame` / `Await If Over Budget` action (or a raw `await`) under On Process / On Physics Process
-  overlaps itself — the next tick fires while the previous run is still suspended, double-processing. The
+  overlaps itself - the next tick fires while the previous run is still suspended, double-processing. The
   Doctor (Tools → Check Project) now warns and points to a one-shot trigger or the Time Slicer pack (the
   codebase documented this footgun but shipped no detector).
 - **On Signal can now receive the signal's parameters.** The generic **On Signal** trigger (react to any
-  signal by name — on self, a node path, or an autoload) gained an optional **Arguments** field: type the
+  signal by name - on self, a node path, or an autoload) gained an optional **Arguments** field: type the
   signal's signature (e.g. `amount: int`) and the generated handler takes those typed parameters, so the
-  event's conditions and actions can use them — the same typed-args capability the reflected `signal:NAME`
+  event's conditions and actions can use them - the same typed-args capability the reflected `signal:NAME`
   triggers already had, now for hand-typed signals too. Empty = a no-argument handler (unchanged). New
   `on_signal_args_test`.
-- **A runnable "Swarm" showcase — frame-spreading you can watch** (`demo/showcase/swarm.tscn`). Open and
+- **A runnable "Swarm" showcase - frame-spreading you can watch** (`demo/showcase/swarm.tscn`). Open and
   run it: 800 sprites spawn into a group and a single **Budgeted For Each** (90/frame) wobbles them, so the
-  colour refresh visibly *sweeps* through the crowd while the FPS stays pinned — the frame-spreading made
+  colour refresh visibly *sweeps* through the crowd while the FPS stays pinned - the frame-spreading made
   literal. Built by `tools/build_examples.gd` (with a new `dot.tscn` sub-scene) and guarded by
   `showcase_examples_test` (compiles → parses → instantiates). Also refreshes the demo README, which had
   gone stale on the `platformer_shooter` showcase.
-- **Recipe 12 — "The game-feel toolkit"** (`docs/RECIPES.md`): a self-contained reference for the Juice
-  pack's feel actions — hit-stop/slow-mo (with a realtime hold), trauma-based screenshake, squash & stretch
-  plus spring squash, and punch-zoom — with exact signatures and how to layer them into one satisfying hit.
-- **Recipe 11 — "Crowds without the hitch"** (`docs/RECIPES.md`): a self-contained, end-to-end showcase of
-  the frame-spreading stack — the Time Slicer pack (enqueue + On Process Item), the Budgeted For Each
-  Inspector tick, and Run In Background for pure off-thread compute — with a "which one?" table.
+- **Recipe 12 - "The game-feel toolkit"** (`docs/RECIPES.md`): a self-contained reference for the Juice
+  pack's feel actions - hit-stop/slow-mo (with a realtime hold), trauma-based screenshake, squash & stretch
+  plus spring squash, and punch-zoom - with exact signatures and how to layer them into one satisfying hit.
+- **Recipe 11 - "Crowds without the hitch"** (`docs/RECIPES.md`): a self-contained, end-to-end showcase of
+  the frame-spreading stack - the Time Slicer pack (enqueue + On Process Item), the Budgeted For Each
+  Inspector tick, and Run In Background for pure off-thread compute - with a "which one?" table.
 - **A "Using EventSheets with your existing code" guide** (`docs/USING-WITH-EXISTING-CODE.md`). Answers the
-  common adoption question — *does it work with code that has no ACEs?* — and is self-contained: calling
+  common adoption question - *does it work with code that has no ACEs?* - and is self-contained: calling
   existing GDScript / autoloads / host members from a sheet (verbatim ƒx expressions + the Helpers ACEs +
   RawCode blocks), reacting to your own signals (On Signal / reflected `signal:NAME` / lifecycle triggers),
   the one-script-per-node rule and the behavior-pack child-node solution for already-scripted nodes, calling
   a sheet *from* your code via the zero-dependency parity contract, reverse-lift, and the honest
   stringly/compile-time-validation limitations. Verified against the compiler by a multi-agent investigation.
-- **Budgeted For Each — tick a frame-spread budget on a loop and it stops hitching.** Setting
+- **Budgeted For Each - tick a frame-spread budget on a loop and it stops hitching.** Setting
   `frame_spread_count` (iterations/frame) and/or `frame_spread_budget_ms` (a wall-clock fence) on a pick
   filter now compiles the `For Each` into an in-place loop that processes a slice per frame and resumes on
-  the next — no behavior to attach, no `await`, no restructuring. It snapshots the collection once per pass
+  the next - no behavior to attach, no `await`, no restructuring. It snapshots the collection once per pass
   (a persistent class-member cursor survives across frames), skips items freed mid-pass
   (`is_instance_valid`), and restarts a fresh pass at the end; both the budget break and the pass-restart
   sit at the top of the loop (the body is emitted by the caller). Drive it from a per-frame trigger; not
   yet combined with While/Repeat, order-by, or pick-first-N (those emit a normal loop + a compile warning).
   New `budgeted_for_each_test` covers count/ms/fallback/regression shapes and that each output parses; the
-  Doctor's unbounded-loop nudge goes quiet once a loop is budgeted. (Frame-spreading Solution 2 — completes
+  Doctor's unbounded-loop nudge goes quiet once a loop is budgeted. (Frame-spreading Solution 2 - completes
   the stack.)
-- **A "Run In Background" pack — off-thread heavy compute (the 31st addon).** The "too heavy even to
+- **A "Run In Background" pack - off-thread heavy compute (the 31st addon).** The "too heavy even to
   spread across frames" lane: hand a **pure** function to the engine's `WorkerThreadPool` with **Run In
   Background(callable)** (or **Run Batch In Background** to fan an array across threads); the main thread
   only polls, so it never hitches, and **On Done(result)** fires on the main thread when the work
-  finishes — for procgen, pathfinding bakes, data crunching that would stutter even spread across frames.
-  Advanced-gated: the callable must touch no nodes / scene tree (unenforceable — see
+  finishes - for procgen, pathfinding bakes, data crunching that would stutter even spread across frames.
+  Advanced-gated: the callable must touch no nodes / scene tree (unenforceable - see
   [docs/PERFORMANCE.md](docs/PERFORMANCE.md)). Each call gets a unique id and the worker stores its result
   in a `Mutex`-guarded slot for the poll to emit. (Frame-spreading Solution 4.)
 - **The Project Doctor flags an unbounded loop that runs every frame.** A heavy **For Each** under On
@@ -1069,42 +1081,42 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   pointing at the Time Slicer pack or a Budgeted For Each. It flags the *pattern*, not a cost estimate (so
   it never alert-fatigues); threshold via `eventsheets/doctor/loop_cost_threshold` (default 3); bundled
   packs and While/Repeat loops are exempt. Adds the `PickFilter.frame_spread_count` /
-  `frame_spread_budget_ms` fields (the Budgeted For Each schema — the loop codegen is a follow-up).
+  `frame_spread_budget_ms` fields (the Budgeted For Each schema - the loop codegen is a follow-up).
   (Frame-spreading Solution 5.)
-- **Budget ACEs — hand-rolled frame-spreading (advanced).** Three Performance actions for power users:
+- **Budget ACEs - hand-rolled frame-spreading (advanced).** Three Performance actions for power users:
   **Await Next Frame** (`await get_tree().process_frame`), **Begin Frame Budget(ms)** (arms a per-frame
   fence), and **Await If Over Budget(ms)** (drop it at the bottom of a `For Each` body; it yields + re-arms
   when the budget is spent). They reuse the Wait/await machinery, so the handler becomes an implicit
-  coroutine — **advanced-gated**, for one-shot triggers only (never a re-firing On Process; see the
+  coroutine - **advanced-gated**, for one-shot triggers only (never a re-firing On Process; see the
   re-entrancy warning in the new [docs/PERFORMANCE.md](docs/PERFORMANCE.md)). The easy path stays the Time
   Slicer pack. (Frame-spreading Solution 3.)
-- **A "Time Slicer" pack — spread heavy work across frames (the 30th addon).** The first of the
+- **A "Time Slicer" pack - spread heavy work across frames (the 30th addon).** The first of the
   frame-spreading tools (see [docs/PERFORMANCE.md](docs/PERFORMANCE.md)): a managed
-  work queue that drains within a per-frame budget — **time (ms)**, **count**, or both. Enqueue items
+  work queue that drains within a per-frame budget - **time (ms)**, **count**, or both. Enqueue items
   (or a whole group) in one event and react to **On Process Item(item)** in another, like reacting to a
   signal; heavy work (spawning hundreds of objects, updating thousands of entities) self-spreads across
-  as many frames as the budget needs — no loop, no await, no hitch — then fires **On Drained**. Inspector
+  as many frames as the budget needs - no loop, no await, no hitch - then fires **On Drained**. Inspector
   knobs for the ms/count budget; Pause/Resume, Set Frame Budget, Is Busy, Items Remaining. Attach as a
   component, or register it as an autoload for one global slicer.
-- **Nearest / Furthest node picking — auto-attack targeting with no loop.** Two project-level expressions
-  in the *Nodes: Picking* row — **Nearest Node In Group** / **Furthest Node In Group** — pick the closest
+- **Nearest / Furthest node picking - auto-attack targeting with no loop.** Two project-level expressions
+  in the *Nodes: Picking* row - **Nearest Node In Group** / **Furthest Node In Group** - pick the closest
   or farthest member of a group by distance to the calling node (the `reduce()` idiom, since Godot 4 has
   no `Array.min_by`; one expression serves both 2D and 3D via `global_position.distance_to`; empty group →
   `null`). Pair them with a *Has Line Of Sight To* condition for "attack the nearest enemy I can see," or
   use the new occlusion-correct **Nearest Visible In Group** expression added to both Line of Sight packs
   (2D + 3D), which scans the group and skips a nearer-but-blocked target so a wall can't shadow a visible
   farther enemy.
-- **A "Juice" pack — game feel in one behavior (the 29th addon).** Trauma-based **screenshake** (the
+- **A "Juice" pack - game feel in one behavior (the 29th addon).** Trauma-based **screenshake** (the
   C3 scroll-behavior idea, but additive on the camera's `offset`/`rotation` so it composes with camera
   follow instead of fighting it; squared-trauma ramp, FastNoiseLite for organic motion, stacks + decays
-  on its own), smooth **zoom** in three flavours — by percent, **Zoom To Position** (glide so a point
+  on its own), smooth **zoom** in three flavours - by percent, **Zoom To Position** (glide so a point
   becomes the screen centre) and **Zoom Toward Point** (keep a world point pinned under the same screen
-  spot, mouse-wheel-to-cursor style) — and volume-preserving **Squash & Stretch** that springs back
+  spot, mouse-wheel-to-cursor style) - and volume-preserving **Squash & Stretch** that springs back
   elastically, on a **Node2D *or* a Control** (UI juice too). The camera is **auto-found** from the active
   viewport, so Shake/Zoom work from anywhere with no wiring; every effect is fire-and-forget (Tween-driven),
   pre-filled with sensible defaults, exposes its feel as Inspector knobs, and emits an **On Shake Stopped /
   Zoom Finished / Squash Finished / Slowmo Finished** trigger to chain the next beat. It also does
-  **Slowmo** (eases `Engine.time_scale` to a target, holds for a duration, eases back — with a toggle for
+  **Slowmo** (eases `Engine.time_scale` to a target, holds for a duration, eases back - with a toggle for
   whether the hold counts in realtime or scaled game time via `Tween.set_ignore_time_scale`, and
   Inspector-tunable fade-in/out curves), plus a **Spring Squash** variant that springs the scale back with
   a real per-frame spring integrator (stiffness/damping, organic overshoot) instead of the elastic tween,
@@ -1112,8 +1124,8 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
 - **Four stateful packs now use typed inner classes instead of `float()`/`int()`/`bool()`-cast
   Dictionaries.** **Spring** (`SpringEntry` / `ColorSpringEntry`, each with an `integrate(delta)`),
   **Health** (`HealthPool`), **Simple Abilities** (`AbilityData`), and the **HTN Agent** (`HTNMethod` /
-  `HTNCondition`). Their hot paths — the spring integrator, damage absorption + pool decay, cooldown /
-  stack / expiry regen, and the planner's utility sort + precondition checks — now read typed fields, so a
+  `HTNCondition`). Their hot paths - the spring integrator, damage absorption + pool decay, cooldown /
+  stack / expiry regen, and the planner's utility sort + precondition checks - now read typed fields, so a
   field typo fails at compile and the casts are gone. Behavior is unchanged: each pack ships a runtime test
   that drives its real logic (spring settling, damage/decay/death/revive, cooldown regen + temporary
   expiry, HTN decomposition with precondition gating + utility ordering) to prove byte-for-byte equivalence.
@@ -1125,70 +1137,70 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
 - **Pack polish.** **Tile Movement**'s *Simulate Step* `direction` is now a left/right/up/down dropdown
   (was free text); **Sine 3D** gains `phase_degrees` parity with the 2D Sine pack (exported knob + a *Set
   Phase* action that offsets the wave time); **Drag & Drop**'s `snap_uids` is a typed `Array[int]`; and the
-  **Save System**'s *On Save Written* is now **truthful** — `_write_all` captures the FileAccess /
+  **Save System**'s *On Save Written* is now **truthful** - `_write_all` captures the FileAccess /
   ConfigFile write error and *Save Game* emits the signal only on a genuinely successful write, instead of
   optimistically on every *Save Value*.
-- **Tree-membership triggers — react to a node entering/leaving, don't poll.** Five new signal triggers
-  — **On Tree Entered / Tree Exiting / Tree Exited / Renamed / Child Entered Tree** — so "when this
+- **Tree-membership triggers - react to a node entering/leaving, don't poll.** Five new signal triggers
+  - **On Tree Entered / Tree Exiting / Tree Exited / Renamed / Child Entered Tree** - so "when this
   *other* node enters or leaves the scene" is a reactive event, not a per-frame `IsInsideTree` check
   inside On Process (the Construct poll habit). Surface them as *source-node* triggers (react to another
   node); for the host's own first entry, On Ready stays the idiomatic answer. Tree Exiting fires while
   the node is still in the tree, Tree Exited after removal; Child Entered Tree hands you the entering
   child. They compile to a `_ready` connection and round-trip back to the named trigger.
-- **The Project Doctor flags a fan-out god-sheet — by node count, not row count.** A common Construct
+- **The Project Doctor flags a fan-out god-sheet - by node count, not row count.** A common Construct
   habit is one big event sheet doing everything; in Godot, a sheet reaching into *many different nodes*
   is usually several nodes' jobs crammed together. The Doctor now adds an advisory when a plain sheet
-  targets ≥ N distinct external nodes — counted by the same node-path parser that powers `$`-validation
+  targets ≥ N distinct external nodes - counted by the same node-path parser that powers `$`-validation
   (the With-node scope, "On node" targets, `$path` / `%unique` refs, raw GDScript), **not** row count,
-  since a long coherent state machine on one host is perfectly fine — pointing at a behavior-per-node
+  since a long coherent state machine on one host is perfectly fine - pointing at a behavior-per-node
   split or a deliberately-named coordinator. Info-tier; behavior + autoload sheets are exempt; threshold
   via `eventsheets/doctor/fanout_threshold` (default 6).
 - **The Project Doctor nudges duplicated globals toward an autoload.** In Construct, a global is just
   global; in Godot, the same value declared in several scripts is N copies of one truth, and the idiom is
   a single **autoload** (a Game State singleton). The Doctor (Tools → Check Project) now adds an advisory
-  when the same global name appears across two or more sheets — listing them and pointing at New Sheet →
+  when the same global name appears across two or more sheets - listing them and pointing at New Sheet →
   Game State (Autoload). Info-tier only (never fails CI); autoload sheets and packs are skipped, and a
   name a GameState autoload already publishes is exempt (the solved case).
 - **A "Behavior Component" starter teaches composition by example.** The bundled gameplay starters
-  (Platformer, Top-down…) are one big sheet on the root node that polls every physics frame — so the
+  (Platformer, Top-down…) are one big sheet on the root node that polls every physics frame - so the
   first thing a newcomer copies models the Construct god-sheet habit. The New Sheet menu now also offers
   **Behavior Component (signal-driven)**: a small **Pickup** behavior you attach as a *child* of the node
   it controls (the Godot answer to a Construct behavior). It compiles to an attachable Node with a typed
   `host` accessor (its parent), **reacts to the host's `body_entered` signal** instead of checking every
-  frame, and **emits its own** (On Collected) so other sheets stay decoupled — with `value` an exported
+  frame, and **emits its own** (On Collected) so other sheets stay decoupled - with `value` an exported
   designer knob. Composition + reactivity + the Inspector, in one copyable artifact. (The existing
   monolithic starters stay; this is purely an addition.)
 - **"Designer-tweakable (Inspector)" is now a separate choice from "global", and off by default.** In
-  Construct, a global variable is just global; Godot has two distinct things a value can be — a *designer
+  Construct, a global variable is just global; Godot has two distinct things a value can be - a *designer
   knob* you tweak per-instance in the Inspector (`@export var speed`), or *internal script state* (a
   counter/timer the script just manages). The plugin used to auto-`@export` **every** new global, leaking
   internal state onto the Inspector. Now the Access checkbox reads **"Designer-tweakable in the Inspector
-  (@export)"** and a new variable defaults **off** — a plain private `var` — so you opt into Inspector
+  (@export)"** and a new variable defaults **off** - a plain private `var` - so you opt into Inspector
   exposure deliberately. The Inspector-options disclosure (tooltip / range / show-if…) stays hidden until
   you tick it, so you can't set attributes that would silently no-op. Existing variables keep their
   exported flag (sheets untouched).
 - **The picker nudges you from polling toward signals.** When you look at a polling condition that has a
-  clean reactive twin — Overlaps Body / Area, Is Timer Stopped, Is Animation Playing, Is Button Pressed —
+  clean reactive twin - Overlaps Body / Area, Is Timer Stopped, Is Animation Playing, Is Button Pressed -
   the picker's info panel now shows a one-line tip pointing at the signal trigger that reacts *once*
-  instead (On Body Entered, On Timeout, On Animation Finished, On Pressed). It's informational only — the
-  condition stays fully pickable — and is driven by a small, curated, shared poll→signal map
+  instead (On Body Entered, On Timeout, On Animation Finished, On Pressed). It's informational only - the
+  condition stays fully pickable - and is driven by a small, curated, shared poll→signal map
   (`ACEDescriptor.REACTS_TO`) that deliberately omits conditions with no real signal (is_on_floor, held
   input-action checks) so it never suggests a cargo-cult signal. The Construct "check every tick" reflex
   meets Godot's "react to it" idiom at the moment you're choosing. **And it's the default now:** when a
   search surfaces a polling condition that has a twin, the reactive trigger is shown right beside it and
-  becomes the type-and-Enter pre-selection (so "overlap" lands on **On Body Entered**) — unless you type
+  becomes the type-and-Enter pre-selection (so "overlap" lands on **On Body Entered**) - unless you type
   the condition's exact name, which always keeps the condition. The visible list and its order are
   unchanged; only which item is highlighted shifts, and every condition stays one keystroke away.
-- **Migration guide: a "Polling vs reacting" section** — the biggest mental shift from Construct 3 (one
+- **Migration guide: a "Polling vs reacting" section** - the biggest mental shift from Construct 3 (one
   big *every-tick* sheet → *react to a signal*), with a polling/reacting before-after, the
-  `_process` vs `_physics_process` rule of thumb, and — crucially — an explicit "when polling **is**
+  `_process` vs `_physics_process` rule of thumb, and - crucially - an explicit "when polling **is**
   correct" carve-out (continuous values: camera follow, smoothing, axis input, `is_on_floor`) so
   readers don't over-correct into contorted signal usage. The "Every tick → On Process" mapping keeps
   its literal translation but now points at the signal-first reflex.
-- **Unique-name (`%Name`) references are validated + autocompleted** — Godot's stable, refactor-proof
+- **Unique-name (`%Name`) references are validated + autocompleted** - Godot's stable, refactor-proof
   way to reach a node, and the closest thing to a Construct *object name*: mark a node **Access as
   Unique Name** in the scene tree and `%ScoreLabel` then resolves no matter where you move it (unlike a
-  brittle `$HUD/Margin/VBox/ScoreLabel` path). The editor used to ignore `%` refs entirely — so reaching
+  brittle `$HUD/Margin/VBox/ScoreLabel` path). The editor used to ignore `%` refs entirely - so reaching
   for the *stabler* reference got you no help. Now `%Name` and `%"Quoted Name"` get the same amber
   "no such node" warning as `$paths` (with a tooltip pointing you at "Access as Unique Name"), and
   typing `%` lists the scene's unique nodes as completions. Printf-style format specifiers (`"%d"`,
@@ -1196,7 +1208,7 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   instanced sub-scene's own uniques stay encapsulated). Same warning-not-error policy as `$`.
 - **"With node X:" scope blocks (Construct-style "pick once, act many").** Right-click an event →
   **Scope Actions To Node…** and give a node ($Enemy, get_node("…"), a variable): every action in that
-  event — and in its sub-events — that leaves its "On node" target on the host now acts on X instead, so
+  event - and in its sub-events - that leaves its "On node" target on the host now acts on X instead, so
   you write the target once rather than on every action. It renders as a "With node  X" chip in the
   condition lane (double-click to edit), composes with conditions and nesting, and leaves
   non-targetable actions (Print, Wait) and any action you explicitly targeted untouched. Compiles
@@ -1205,25 +1217,25 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   scope. The target field defaults empty, so existing sheets are byte-for-byte unchanged.
 - **Node paths are validated as you type, with `$` autocomplete.** Expression fields (every node-reference
   param, including the new "On node" target) now flag a node reference that does not exist in the edited
-  scene — `$Enmy`, `get_node("UI/Scrore")` — in amber with a "no node here yet" tooltip, so a typo is
+  scene - `$Enmy`, `get_node("UI/Scrore")` - in amber with a "no node here yet" tooltip, so a typo is
   caught at author time instead of failing silently in the running game. It is a *warning*, not an error:
   a path may legitimately point at a node spawned at runtime. Typing `$` also offers the scene's node
   paths as completions, so a path can be typed-and-picked, not only chosen through the 🔍 picker.
 - **Node-scoped ACEs can target another node now.** Every host-scoped node ACE (Set Modulate, Set
-  Volume, Play Animation, Set Camera Zoom, Set Label Text, the particle/joint/range/button setters — 180+
+  Volume, Play Animation, Set Camera Zoom, Set Label Text, the particle/joint/range/button setters - 180+
   in all) gained an optional **"On node"** field: leave it blank to act on this node as before, or pick a
   node / type a path (`$Enemy`, `get_node("UI/Score")`) to redirect the whole operation to another node.
   This is powered by a new covenant-safe codegen idiom, the optional-prefix `{target.}` (a blank value
-  emits nothing, so existing sheets compile **byte-for-byte unchanged** — verified by the drift audit),
+  emits nothing, so existing sheets compile **byte-for-byte unchanged** - verified by the drift audit),
   and the importer round-trips both shapes (`play()` and `$Enemy.play()`) back to the same ACE. The
   spawn-a-new-node and already-targeted ACEs (e.g. Play Sound At, the Joint body setters) are left as-is.
-- **Group aggregate expressions** — roll a numeric member up across a whole group with no loop: **Sum
+- **Group aggregate expressions** - roll a numeric member up across a whole group with no loop: **Sum
   In Group**, **Average In Group**, **Lowest In Group**, **Highest In Group** (joining the existing
   Count Nodes In Group, under the **Groups** category). The "average health of all enemies" case is now
   one expression instead of an accumulator loop. Each compiles to a bare `reduce` one-liner over
   `get_tree().get_nodes_in_group(...)` (zero runtime); Sum/Average seed at 0, Min/Max seed at +/-INF so
   an empty group returns the sentinel rather than crashing. A runtime test exercises the reduce math.
-- **Custom ACEs guide** ([docs/CUSTOM-ACES-GUIDE.md](docs/CUSTOM-ACES-GUIDE.md)) — a complete how-to
+- **Custom ACEs guide** ([docs/CUSTOM-ACES-GUIDE.md](docs/CUSTOM-ACES-GUIDE.md)) - a complete how-to
   for authoring your own Actions / Conditions / Expressions / Triggers: the three extension paths
   (auto-ACE provider scripts, custom descriptors via the EventForgeBridge autoload, and built-in
   modules), the codegen-template language (`{param}`, `{uid}`, multi-line, optional-comma, stateful
@@ -1232,25 +1244,25 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
 - **JSON is its own module now, with two new ACEs.** The JSON vocabulary (To / From JSON Text, JSON
   Is Valid, Save / Load JSON File) was consolidated out of the Collections module into a dedicated
   **JSON** category, and gained **To JSON Text (pretty)** (indented, human-readable output) and
-  **Parse JSON Into Variable** (parse JSON text — a server response, the clipboard — straight into a
+  **Parse JSON Into Variable** (parse JSON text - a server response, the clipboard - straight into a
   variable). The five moved ACEs keep their ace_ids and codegen templates, so existing sheets are
   unaffected; only the picker category changed (from "Variables: JSON"). Once parsed the value is a
   normal Dictionary / Array, so the Variables: Dictionary / Array ACEs read and edit it.
-- **File-management ACEs** — a **Files** vocabulary so save systems, config files and level data never
+- **File-management ACEs** - a **Files** vocabulary so save systems, config files and level data never
   force a drop to GDScript: **Read Text File**, **Write Text File**, **Append To File**, **File Size**,
   **File Exists**, plus **Delete / Copy / Move-or-Rename** a file, and a **Files: Directories** set
   (**Make / Remove / Exists**, **List Files / Subdirectories**). Each compiles to the exact native
   FileAccess / DirAccess call: reads use the null-safe static accessors (return "" / [] on error
   instead of crashing) and writes guard the handle *and close it* (so a later op on the same file
-  isn't blocked by a still-open write — caught by a runtime round-trip test). Path hints nudge user://
+  isn't blocked by a still-open write - caught by a runtime round-trip test). Path hints nudge user://
   (res:// is read-only in an exported game). FileExists moved here from the JSON set; JSON file
   save/load stay under Variables: JSON.
-- **Remappable keyboard shortcuts** — Tools ▸ Keyboard Shortcuts is now an *editor*, not just a cheat
+- **Remappable keyboard shortcuts** - Tools ▸ Keyboard Shortcuts is now an *editor*, not just a cheat
   sheet: click any of the ~18 authoring shortcuts (Add Event / Condition / Action, Save, Duplicate,
   Copy / Paste, Undo / Redo, …) and press a new combination to rebind it. Clashes are flagged inline
   but allowed (you resolve them); per-action and "Reset all" restore the defaults; the fixed
   structural keys (Tab nesting, Delete, Enter/F2, Escape, Command Palette, zoom) stay read-only for
-  reference. Custom bindings save **per-user** to a `user://` file — local to each developer,
+  reference. Custom bindings save **per-user** to a `user://` file - local to each developer,
   consistent across projects, and never committed to git. (The rebinding backend already existed
   behind ProjectSettings; this adds the UI and moves persistence to per-user storage.)
 
@@ -1263,64 +1275,64 @@ like Platformer Movement can be built from ACEs instead of RawCode (`docs/intern
   appear on the next load. ace_ids and templates remain the compatibility covenant. The **test runner
   auto-discovers tests the same way** (any `tests/*.gd` with `static func run() -> bool`, with the
   shared-state teardown tests forced to run last), so adding a built-in module plus its test is now
-  **zero registration edits** — just drop the files.
+  **zero registration edits** - just drop the files.
 - **Plainer wording for beginners.** The dock no longer surfaces the insider acronym "ACE" in
   beginner-facing places: the node-drop preview reads "Dropped Node Preview", the row-comment dialog is
   "Row Comment", and the "couldn't edit this row" / "nothing found on this node" messages use plain
   "actions and conditions" language. The advanced custom-ACE provider and export features keep the term
   (it matches the Custom ACEs guide).
-- **Removed the redundant "Group" badge on group headers** — a group's accent bar + tinted background
+- **Removed the redundant "Group" badge on group headers** - a group's accent bar + tinted background
   already read unmistakably as a group, so the leading "Group" text badge was just visual clutter.
   Headers now show only the inline-editable title (and its optional description); selection, the
   group-editor popup, and descendant-block selection are all unchanged.
 
-### Editor UX — plain-language picker, relevance ranking, dialog consistency (UI-audit pass 2)
+### Editor UX - plain-language picker, relevance ranking, dialog consistency (UI-audit pass 2)
 The user-approved wide clusters from the UI audit:
-- **Picker de-jargoned for newcomers** — the picker hints no longer surface the insider acronym
+- **Picker de-jargoned for newcomers** - the picker hints no longer surface the insider acronym
   "ACE"; they read in plain *condition / action / trigger* language (Construct 3 / GDevelop never
   show "ACE" to users). The Sheet / View / Tools menus gained tooltips, the GDScript panel opens with
-  a one-line orientation ("the plain GDScript your sheet compiles to — read-only, no runtime"), and
+  a one-line orientation ("the plain GDScript your sheet compiles to - read-only, no runtime"), and
   the behavior-sheet empty state keeps the plain-language search tip it previously dropped.
-- **Picker relevance ranking** — type-and-Enter now commits the *best* match instead of "first in the
+- **Picker relevance ranking** - type-and-Enter now commits the *best* match instead of "first in the
   grouped tree": matches are scored (exact name > prefix > word-start > substring in name > substring
-  elsewhere) so typing "hide" pre-selects **Hide**. The grouped tree is unchanged — only the
+  elsewhere) so typing "hide" pre-selects **Hide**. The grouped tree is unchanged - only the
   pre-selected target is smarter; a small length penalty favours the shorter, more specific name.
-- **Recents persist across editor restarts** — last-used ACEs save per-user and per-project to a
+- **Recents persist across editor restarts** - last-used ACEs save per-user and per-project to a
   `user://` file (deliberately **not** project.godot, which would churn on every ACE use), so the
   ★ Recent pane survives a restart the way ⭐ Favorites already do.
-- **Variable dialog matches the shared form styling** — it now uses the standard content margin and
+- **Variable dialog matches the shared form styling** - it now uses the standard content margin and
   the shared 120px label column (it previously hand-rolled 130px rows and added its form flush).
 
-### Editor UX — keyboard-first dialogs & picker polish (UI-audit pass)
+### Editor UX - keyboard-first dialogs & picker polish (UI-audit pass)
 A multi-agent audit of the editor UI found it broadly healthy; the gaps clustered in keyboard/focus
 mechanics and the ACE picker. This pass ships the narrow, low-risk wins:
-- **Variable dialog is now keyboard-first** — opening it focuses the Name field (and selects it for
+- **Variable dialog is now keyboard-first** - opening it focuses the Name field (and selects it for
   quick overtype when editing), and Enter confirms, matching function_dialog and the ACE picker.
-- **ACE picker: Down from the search box enters the results, Escape closes** — typing then pressing
+- **ACE picker: Down from the search box enters the results, Escape closes** - typing then pressing
   Down hands focus to the result tree (its native arrow navigation takes over from the pre-selected
   first match), and Escape closes the picker from either the search box or the tree, so the whole
   pick is keyboard-only (the code's prior "arrow/Enter work" claim is now actually true).
-- **No-match search now guides instead of going blank** — a search that finds nothing nudges the C3
+- **No-match search now guides instead of going blank** - a search that finds nothing nudges the C3
   vocabulary bridge ("try a plainer word like move, spawn, or hide") rather than showing an empty tree.
-- **Node & expression sub-pickers honour Enter** — type-and-Enter commits the first result, matching
+- **Node & expression sub-pickers honour Enter** - type-and-Enter commits the first result, matching
   the main picker (those two search boxes previously swallowed Enter).
 - **Add Condition / Add Action toolbar buttons now carry editor icons** (MemberConstant / MemberMethod),
   finishing a primary toolbar that previously left two of five buttons text-only.
 
 ### Fixed
-- **Silent-bug sweep — six defects that shipped invalid or wrong behaviour without ever crashing at
+- **Silent-bug sweep - six defects that shipped invalid or wrong behaviour without ever crashing at
   compile time** (each reproduced by an adversarial sweep, now pinned by `silent_bug_regression_test`):
   - **Awaited multi-statement actions emitted `await var …`.** Marking a multi-line ACE (Spawn Scene
 	At…) as awaited prefixed `await` onto the whole joined template, so it landed on the `var`
-	declaration line — a parse error that only surfaced at reload. `await` now wraps only the
+	declaration line - a parse error that only surfaced at reload. `await` now wraps only the
 	trailing statement of a multi-line template.
   - **Distinct trigger sources could collide into one handler.** Two sources that normalised to the
 	same token (`A/B` and `A_B` both → `_a_b`) emitted two same-named `func _on_…` handlers (a parse
-	error). The token is now injective — an illegal-char path gets a short stable hash suffix — while
+	error). The token is now injective - an illegal-char path gets a short stable hash suffix - while
 	legitimate snake_cased autoload names (`event_bus`) keep their readable handler names unchanged.
   - **Unresolvable conditions silently OPENED the gate.** A condition whose ACE couldn't be resolved
 	(addon uninstalled / stale id) was dropped, so the event body ran unconditionally every tick. It
-	now fails **closed** (`if false`) with a warning — a vanished gate can never run.
+	now fails **closed** (`if false`) with a warning - a vanished gate can never run.
   - **Negating "Every X Seconds…" broke the interval.** Inverting a stateful condition wrapped its
 	header in `not (…)`, leaving the timer reset to run in the wrong branch (it fired nearly every
 	frame, then went silent). Stateful conditions now refuse the negation, with a warning.
@@ -1328,31 +1340,31 @@ mechanics and the ACE picker. This pass ships the narrow, low-risk wins:
 	matched the generic Core ACEs (SetVar, Call Function…) before specific ones, so `position = …`
 	lifted as **Set Variable**, `add_child(…)` as **Call Function**, etc. Reverse entries are now
 	tried most-specific-first (by literal-char count), so the round-trip preserves the real ACE id.
-	(The byte-roundtrip gate never caught this — the generic re-emits the identical line.)
+	(The byte-roundtrip gate never caught this - the generic re-emits the identical line.)
   - **Charge abilities spent only one stack per regen cycle.** The Simple Abilities pack gated
 	activation on the per-stack regen cooldown, so a 3-charge dash used 1 of 3. Activation now gates
 	on available stacks alone; the per-stack cooldown stays the regen timer.
   - **Phantom row selection from a span toggle.** Ctrl-toggling an ACE span on then off on a
 	previously-unselected row left the row highlighted and drag/delete/edit-eligible. The viewport
 	now tracks span-only selection provenance and releases the row when its last span is toggled off.
-- **Duplicate `Core::GetFrameCount`** — the dev-helper "Frame Count" reused the same provider+id as
+- **Duplicate `Core::GetFrameCount`** - the dev-helper "Frame Count" reused the same provider+id as
   the canonical Time-category one, so the registry index silently overwrote one entry. Removed the
   duplicate (Frame Count stays under **Time**), and added a suite guard that fails on any repeated
   `provider::ace_id` so this can't regress.
-- **Alt+Up / Alt+Down row reordering** — the plain arrow-key selection branches matched first and
+- **Alt+Up / Alt+Down row reordering** - the plain arrow-key selection branches matched first and
   swallowed the modifier, leaving the advertised "move row up/down" shortcut as dead code. The
   selection branches now require Alt to be up, so the move shortcut fires as documented.
-- **Param values containing `{…}` were re-substituted** — `_apply_template` replaced placeholders
+- **Param values containing `{…}` were re-substituted** - `_apply_template` replaced placeholders
   iteratively per key, so a param value that itself contained `{anotherparam}` got expanded by the
   later key (e.g. `{a}-{b}` with `a="{b}"` produced `X-X` instead of `{b}-X`). It now runs a single
-  left-to-right pass with **opaque** values — your input is emitted verbatim. Behaviour is identical
+  left-to-right pass with **opaque** values - your input is emitted verbatim. Behaviour is identical
   on every existing template (golden/parity green, drift = 0); a new test pins the edge cases.
-- **Event-trace highlighting was dead without Live Values** — the per-frame trace buffer and its
+- **Event-trace highlighting was dead without Live Values** - the per-frame trace buffer and its
   debugger send were emitted only inside the `emit_live_values` block, so turning on the event trace
   alone produced no instrumentation. The trace now rides the same throttled `_process` independently
   (a shared "throttle emitted" flag keeps the synthesized and injected `_process` from duplicating);
   trace-only compiles stream `eventsheets:fired_events` correctly. Live-values output is unchanged.
-- **Baked `{uid}` locals could collide** — the per-instance token for multi-line ACEs (Spawn Scene,
+- **Baked `{uid}` locals could collide** - the per-instance token for multi-line ACEs (Spawn Scene,
   Wait, Every-X-Seconds…) was a masked random draw, so two such ACEs in one event body could (very
   rarely) bake the same local and produce invalid GDScript. A central minting helper now tracks
   every token issued this session and re-draws on a clash, guaranteeing distinct locals; the 8-hex
@@ -1360,50 +1372,50 @@ mechanics and the ACE picker. This pass ships the narrow, low-risk wins:
 - **Shift+Down from an empty selection** skipped the first row (landed on row 2). It now starts the
   range on the first row, matching Shift+Up.
 
-### Dev helper ACEs — Debug · Groups · Metadata · Nodes (the everyday tools)
+### Dev helper ACEs - Debug · Groups · Metadata · Nodes (the everyday tools)
 - **25 developer-helper ACEs** (`dev_aces`) for the native operations you reach for constantly,
   so common dev/debug chores never force a drop to GDScript. **Debug**: Print, Print Labeled,
   Print Rich, Push Warning, Push Error, Assert, Print Scene Tree, Breakpoint.
   **Groups**: Add/Remove/Is-In Group, Get First / Count In Group, Call Method On Group.
   **Metadata**: Set/Get/Has/Remove Meta. **Nodes**: Get Parent, Get Child / Child Count, Find
-  Child, Get Node Or Null, Has Node, Get Scene Owner, Is Ancestor Of — scene-tree navigation that
+  Child, Get Node Or Null, Has Node, Get Scene Owner, Is Ancestor Of - scene-tree navigation that
   was previously uncovered. Each compiles to the exact one-liner you'd hand-write (`print(…)`,
   `add_to_group(…)`, `set_meta(…)`, `get_parent()`); registry + category + codegen unit-tested.
-- **12 more math ACEs** under **Math & Random** — Snap To Step, Inverse Lerp, Smoothstep,
+- **12 more math ACEs** under **Math & Random** - Snap To Step, Inverse Lerp, Smoothstep,
   Ping-Pong, Angle Difference, Rotate Toward / Lerp Angle, Deg↔Rad, Positive Modulo, and Is
-  Equal / Is Zero (approx) — the movement/animation/AI idioms the existing lerp/clamp/distance set
+  Equal / Is Zero (approx) - the movement/animation/AI idioms the existing lerp/clamp/distance set
   was missing.
-- **7 Color helper ACEs** under a new **Color** category — Lighten, Darken, Lerp Color, Color With
-  Alpha, Color From HSV, Color From Hex, Invert Color — so hit-flashes, fades, and tints stay
+- **7 Color helper ACEs** under a new **Color** category - Lighten, Darken, Lerp Color, Color With
+  Alpha, Color From HSV, Color From Hex, Invert Color - so hit-flashes, fades, and tints stay
   code-free (only the `Set Color Tint` action existed before). The colour params are full
   expressions, so they compose; the generated templates are parse-checked in the suite.
-- **7 more helper ACEs** surfaced by a verified gap audit — **Tween Callback** and **Call After
+- **7 more helper ACEs** surfaced by a verified gap audit - **Tween Callback** and **Call After
   Delay** (fire a method after N seconds without a Timer node or a blocking `await`), **Set Camera
   Limits** (Camera2D), **Has All Keys** (Dictionary), **Repeat Text** (String), and **Seed Random**
   / **Randomize Seed** (Math & Random). Each compiles to the native one-liner; the multi-line and
   callback templates are parse-checked.
-- **4 more from the audit** — **Signal Is Connected** (condition) and **Emit Signal On** (emit a
+- **4 more from the audit** - **Signal Is Connected** (condition) and **Emit Signal On** (emit a
   signal on any target, reusing the existing optional-args idiom), **Set Text (formatted)** (set any
-  node's `text` from a printf template + args in one row — replaces a raw-code block the showcase
+  node's `text` from a printf template + args in one row - replaces a raw-code block the showcase
   demos used), and **Move By** for 2D (relative translate; 3D already had it). A compile test proves
   Emit Signal On drops the trailing comma when there are no args.
-- **Spawn Scene (Full)** — instance a scene with position, rotation, and an optional group tag in
+- **Spawn Scene (Full)** - instance a scene with position, rotation, and an optional group tag in
   one row (a per-instance `{uid}` local, like Spawn Scene At). Replaces the raw `load().instantiate()`
   block the showcase demos used. A compile+parse test bakes the `{uid}` the way the dock does.
-- **10 more ACEs from a second gap audit** — **Set Anchors Preset** and **Override Theme Color**
-  (Control), **File Exists** (save-slot / config guard), **Set Self Tint** (CanvasItem — tint a node
+- **10 more ACEs from a second gap audit** - **Set Anchors Preset** and **Override Theme Color**
+  (Control), **File Exists** (save-slot / config guard), **Set Self Tint** (CanvasItem - tint a node
   without affecting its children), **Apply Central Force** + **Apply Torque Impulse** (RigidBody2D),
   **Rotate (3D)** (Node3D), and **Set Speed Scale** for GPU + CPU particles (slow-mo / fast-forward a
   burst). Registry + node-type scoping + method-call templates are all tested.
-- **On Body Exited / On Area Exited** triggers (Area2D) — the *entered* triggers existed but not
+- **On Body Exited / On Area Exited** triggers (Area2D) - the *entered* triggers existed but not
   *exited* (detecting something leaving a zone). Wired through the resolver and the importer so they
   codegen to a real `body_exited`/`area_exited` connection and round-trip byte-identically.
-- **Project utility ACEs** (in the Core module) — the broad non-gameplay glue most games need:
+- **Project utility ACEs** (in the Core module) - the broad non-gameplay glue most games need:
   **Settings** (save/load values to a `ConfigFile` in `user://`), **Window** (set title, window /
   screen size, clipboard get/set), **Debug** (read live `Performance` monitors, static memory),
   **Time** (format seconds as `mm:ss`, system time/date strings), and **Reparent To**. Each compiles
   to the native call; the multi-line and formatting templates are parse-checked.
-- **Node manipulation + picking ACEs** (`node_aces`) — build, rearrange, and select scene-tree
+- **Node manipulation + picking ACEs** (`node_aces`) - build, rearrange, and select scene-tree
   nodes. **Nodes**: Add / Remove / Move Child, Free Node, Duplicate Node, Set / Get Node Name, Node
   Path, Index In Parent, Is Inside Tree, Current Scene Root. **Nodes: Picking**: Get Children, Find
   Children (by name), Nodes In Group, Random Node In Group. Complements the existing Node-navigation
@@ -1411,139 +1423,139 @@ mechanics and the ACE picker. This pass ships the narrow, low-risk wins:
 
 ### Simple Abilities behavior pack (the 28th addon)
 - A per-instance **ability manager**, authored as an event sheet and compiled to a plain
-  `SimpleAbilitiesBehavior` (`extends Node`, zero runtime dependency) — ported from the Simple
+  `SimpleAbilitiesBehavior` (`extends Node`, zero runtime dependency) - ported from the Simple
   Abilities C3 addon and expanded for Godot. Grant abilities by string id; **cooldowns**; **stack
   charges** that auto-regenerate; **temporary** abilities that auto-expire; per-ability **custom
   data**; and **tags** for bulk enable/remove/reset. 7 triggers (activated / ready / created /
   removed / stack consumed / gained / max reached), 7 conditions, 16 expressions, and 24 actions.
 - **Godot-suited extras over the C3 original**: a **Current Ability ID** expression (the C3
-  `_currentAbilityID` had no reader — the guide flagged it as missing), an exported global
+  `_currentAbilityID` had no reader - the guide flagged it as missing), an exported global
   **cooldown multiplier** (built-in cooldown reduction the original did by hand), a **Current Ability
   Is** condition for per-id trigger filtering, and a **Ready Abilities** list. The pack rebuilds
   byte-identically (no-drift covenant) and its ACEs are registration-tested.
-- **Shift-range row selection** — Shift+click extends a whole-row selection from the anchor to the
+- **Shift-range row selection** - Shift+click extends a whole-row selection from the anchor to the
   clicked row, and Shift+↑/↓ grows or shrinks that range from the same origin. The anchor is
   preserved across moves (so the range can shrink, not just grow), and it's listed in the Keyboard
   Shortcuts cheat sheet.
-- **Simple Mode now filters the ACE picker** — with Simple Mode on (View ▸ Simple Mode), the
+- **Simple Mode now filters the ACE picker** - with Simple Mode on (View ▸ Simple Mode), the
   picker hides the advanced "drop to code" + debug rows (Run GDScript, Evaluate GDScript / Expression,
   Breakpoint, Assert, Print Rich) so newcomers see only the friendly, code-free vocabulary. Turning
   Simple Mode off restores everything. Previously Simple Mode only hid advanced *rows*, not picker
   entries.
-- **Go back to re-pick an ACE while editing (C3-style)** — the `◀ Back` button in the params dialog
+- **Go back to re-pick an ACE while editing (C3-style)** - the `◀ Back` button in the params dialog
   now appears when editing *any* existing ACE (previously only when adding), and Back re-opens the
-  picker **preselected on the current ACE** — so editing an action or expression can go back and
+  picker **preselected on the current ACE** - so editing an action or expression can go back and
   swap it, exactly like editing a condition already did. Closes the one gap in the existing
   back-navigation flow.
 
-### Editor DX — popup polish, error→row deep-linking, shadow guard, picker, watch + event trace
-- **Consistent popups** — a shared `EventSheetPopupUI` helper gives the plugin's dialogs one look:
+### Editor DX - popup polish, error→row deep-linking, shadow guard, picker, watch + event trace
+- **Consistent popups** - a shared `EventSheetPopupUI` helper gives the plugin's dialogs one look:
   aligned **Label  [field]** form rows (fixed label width, fields expand), standard content
-  margins, and muted hint labels — matching the Godot 4.7 editor styling instead of each dialog
+  margins, and muted hint labels - matching the Godot 4.7 editor styling instead of each dialog
   inventing its own. The group-editor, breakpoint-condition, function-definition, and
-  variable-definition popups adopt it — and the function and variable dialogs each drop a private,
+  variable-definition popups adopt it - and the function and variable dialogs each drop a private,
   duplicate form-row helper (`_labeled_row` / `_attr_field_row`) in favour of the shared one. The
   factory helpers are unit-tested.
-- **Keyboard Shortcuts cheat sheet** — Tools ▸ **Keyboard Shortcuts** opens an in-editor reference
+- **Keyboard Shortcuts cheat sheet** - Tools ▸ **Keyboard Shortcuts** opens an in-editor reference
   (Editing / Search / Debug / View / File & history) so the ~20 shortcuts are discoverable instead
   of learnable only from tooltips. Built from a static, unit-tested catalog via the popup helper.
-- **Live event trace** — Tools ▸ **Event Trace** instruments each event (debug compiles only,
+- **Live event trace** - Tools ▸ **Event Trace** instruments each event (debug compiles only,
   opt-in behind a new `emit_event_trace` flag so normal output is byte-for-byte untouched) to
   stream its UID as it fires over the Live Values channel; the editor **highlights the firing rows
   in real time** (a cyan marker) so you can see which events actually run. Plain core Godot
   (`EngineDebugger`), piggybacking on the Live Values stream. Compiler emission + the viewport
   highlight are unit-tested. With conditional breakpoints, editable Live Values, and the Watch
-  panel, this is the step/watch debugging set — automated step-to-next-event (editor-driven
+  panel, this is the step/watch debugging set - automated step-to-next-event (editor-driven
   pause/step) stays out of reach until Godot exposes debugger step control to plugins.
-- **Watch panel** — the Live Values window gains a **Watch** box: pin any expression over the
+- **Watch panel** - the Live Values window gains a **Watch** box: pin any expression over the
   sheet's variables (e.g. `health <= 0`, `score + lives`) and it's evaluated **editor-side**
-  against each streamed values frame via `Expression` and shown live — no compiler instrumentation
+  against each streamed values frame via `Expression` and shown live - no compiler instrumentation
   and no new debug protocol (reuses the existing Live Values stream). `evaluate_watch()` is pure +
   unit-tested.
-- **Shadowing-variable guard** — naming a variable after a host-class member (e.g. `position` on a
+- **Shadowing-variable guard** - naming a variable after a host-class member (e.g. `position` on a
   `Node2D` sheet) breaks the generated script. The variable dialog now **warns live + blocks** it
   (via `EventSheetProjectDoctor.shadowed_member_class`), and the row diagnostics flag any local
   variable already on the sheet that shadows a member.
-- **Picker speed — pre-select first match** — the ACE picker now highlights the first result on
+- **Picker speed - pre-select first match** - the ACE picker now highlights the first result on
   open + as you type, so the description panel populates and arrow/Enter pick it without a first
   click (search auto-focus, "Apply & Add Another", and inline value editing were already in place).
-- **Recipes + glossary** — new [`docs/RECIPES.md`](docs/RECIPES.md) (platformer, health, pickups,
+- **Recipes + glossary** - new [`docs/RECIPES.md`](docs/RECIPES.md) (platformer, health, pickups,
   debugging, custom ACEs, common pitfalls) and a one-page [`docs/GLOSSARY.md`](docs/GLOSSARY.md)
   C3 ↔ Godot ↔ EventSheets Rosetta Stone, linked from the README quick start.
-- **Error → row deep-linking** — when a ƒx expression or inline GDScript block doesn't compile,
+- **Error → row deep-linking** - when a ƒx expression or inline GDScript block doesn't compile,
   the editor now flags the **offending row** (a red left-stripe + wash, the message in the row
   tooltip) and jumps to the first one, instead of a status-bar line you have to hunt down. A
   pure, unit-tested `EventSheetDiagnostics.analyze()` lints every block + expression-hinted
   param against the sheet context (reusing the GDScript lint), keyed by the row's instance id so
-  the viewport marks it directly — no source-map line mapping needed. Runs on save (the common
+  the viewport marks it directly - no source-map line mapping needed. Runs on save (the common
   bad-ƒx case the structural compile misses) and on demand via **Tools ▸ Check Sheet for Errors**;
   a bare typo'd identifier also gets a "did you mean …?" suggestion.
-- **Group editor popup** — double-click / slow-click / Enter on a group header (and the naming
+- **Group editor popup** - double-click / slow-click / Enter on a group header (and the naming
   step after Add Group) opens a Name + **Description** popup, replacing the inline title edit
   that could never *add* a description (it renders only once non-empty).
-- **ACE picker — Create-Node parity** — the Add Action/Condition dialog now mirrors Godot's
+- **ACE picker - Create-Node parity** - the Add Action/Condition dialog now mirrors Godot's
   Create New Node: dedicated **⭐ Favorites + ★ Recent** left panes (same persisted data), a ⭐
   star toggle, a real description panel (name · type · category + what it does + codegen), and
   Cancel / Add buttons.
 
 ### Advanced Random addon (C3 parity) + ACE sub-categories + read-only .gd preview
-- **Advanced Random** autoload pack (27th pack) — a faithful port of Construct 3's Advanced
+- **Advanced Random** autoload pack (27th pack) - a faithful port of Construct 3's Advanced
   Random plugin: seeded numbers / range / int / **dice** / **normal (Gaussian)**,
   **Perlin/Simplex noise** (1D/2D/3D with fractal octaves, via `FastNoiseLite`),
   **permutation tables**, **shuffle bags** (pick without repeats), **weighted** + uniform
   picks, and a **Chance(%)** condition. One shared seed = reproducible runs; 22 ACEs under a
   nested "Advanced Random" picker section.
-- **ACE sub-categories** — the picker nests `"Parent: Sub"` categories one level, so related
+- **ACE sub-categories** - the picker nests `"Parent: Sub"` categories one level, so related
   ACEs cluster (e.g. the Array/Dictionary/Vector/String helpers under **Variables**).
-- **Read-only `.gd` preview** — opening a GDScript file as a sheet defaults to a safe
+- **Read-only `.gd` preview** - opening a GDScript file as a sheet defaults to a safe
   read-only preview (gated edits + save, a plain-language banner with Edit Events / Open in
   Script Editor, inline lift-fidelity), so a casual look never overwrites a hand-written script.
 
-### Code-free authoring — stay in the event sheet
+### Code-free authoring - stay in the event sheet
 Five editor-only conveniences that keep authoring in the sheet instead of dropping to a raw
 GDScript block; each reuses the reflection helper or compiles to the same GDScript unchanged.
-- **Visual expression builder** — the Insert Expression picker now also lists the sheet host
-  class's own reflected members under **This Object — Properties** and **This Object —
+- **Visual expression builder** - the Insert Expression picker now also lists the sheet host
+  class's own reflected members under **This Object - Properties** and **This Object -
   Methods**; picking one inserts `name` (property) or `name()` (method). Editor-only.
-- **Reflection-driven method / property pickers** — the Helpers ACEs **Call Method**, **Call
+- **Reflection-driven method / property pickers** - the Helpers ACEs **Call Method**, **Call
   Method (value)**, **Set Property** and **Get Property** offer the host class's real members
   as an editable suggest-combo (pick a real member, or still type one reflection misses).
   Editor-only; generated code unchanged.
-- **Promote block to Function** — a row's More menu gains **Extract GDScript to Function**: it
+- **Promote block to Function** - a row's More menu gains **Extract GDScript to Function**: it
   gathers that event's inline GDScript (RawCode) actions into a new reusable EventFunction
   (auto-exposed as an ACE under Functions) and replaces them with a call.
-- **Visual data editor** — Array / Dictionary variable defaults get an **Edit items…** button
+- **Visual data editor** - Array / Dictionary variable defaults get an **Edit items…** button
   in the Variable dialog: a one-item-per-line editor instead of typing a literal like
   `[1, 2, 3]` by hand. Round-trips losslessly through the literal.
-- **Conditional breakpoints** — a row's More menu gains **Set Breakpoint Condition…**: it
+- **Conditional breakpoints** - a row's More menu gains **Set Breakpoint Condition…**: it
   stores a GDScript boolean expression and the compiler emits `if <cond>: breakpoint` instead
   of a bare breakpoint, so you pause only on the frame that matters (e.g. `health <= 0`)
   rather than every pass; blank clears the guard. Builds on the existing F9 breakpoints, the
   Tools-menu Debug Breakpoints toggle and editable Live Values.
 
-### New ACE vocabulary — UI, particles, tilemaps, animation, shaders, input rebinding, joints, 2D raycast, loops
+### New ACE vocabulary - UI, particles, tilemaps, animation, shaders, input rebinding, joints, 2D raycast, loops
 First-class events for the biggest gaps from the capability audit (roadmap Phases 0/1/2/4/5):
-- **UI & menus** (`ui_aces`) — Button **On Pressed** / **On Toggled** triggers (real signal
+- **UI & menus** (`ui_aces`) - Button **On Pressed** / **On Toggled** triggers (real signal
   connections via new `trigger_resolver` arms), focus navigation (grab / next / previous /
   neighbor), and Range / LineEdit / BaseButton get-set.
-- **2D physics queries** — `RayCast2D` + host-agnostic `Node2D` world raycasts
+- **2D physics queries** - `RayCast2D` + host-agnostic `Node2D` world raycasts
   (`intersect_ray`), mirroring the existing 3D set.
-- **Particles** (`particle_aces`) — emit / restart / one-shot / amount + **On Particles
+- **Particles** (`particle_aces`) - emit / restart / one-shot / amount + **On Particles
   Finished**, for GPU and CPU particles.
-- **AnimationTree** — travel-to-state, set/get tree params, is-in-state, current state.
-- **Tilemaps** (`tilemap_aces`) — TileMapLayer set / erase / clear / get-cell + local↔map
+- **AnimationTree** - travel-to-state, set/get tree params, is-in-state, current state.
+- **Tilemaps** (`tilemap_aces`) - TileMapLayer set / erase / clear / get-cell + local↔map
   coordinate conversion.
-- **Shader materials** — assign / swap / clear a material + read a uniform (completes the
+- **Shader materials** - assign / swap / clear a material + read a uniform (completes the
   one-uniform `SetShaderParameter`).
-- **Runtime input remapping** — bind / clear / query InputMap action events (settings-menu
+- **Runtime input remapping** - bind / clear / query InputMap action events (settings-menu
   rebinding), built on the captured `event` from On Input.
-- **Physics joints** (`physics_aces`) — wire Joint2D/3D bodies, tune pin/spring params,
+- **Physics joints** (`physics_aces`) - wire Joint2D/3D bodies, tune pin/spring params,
   break at runtime.
-- **Loop control** (`loop_aces`) — Break / Continue / Current Item.
-- **Else / Else-If authoring** — a row right-click menu sets the chaining the compiler
+- **Loop control** (`loop_aces`) - Break / Continue / Current Item.
+- **Else / Else-If authoring** - a row right-click menu sets the chaining the compiler
   already emitted; **Pick-Filter conditions** now compile (iterator-scoped, AND/OR) instead
   of warning.
-- **Collision helpers** (`collision_aces`) — 24 ACEs for body/area physics queries:
+- **Collision helpers** (`collision_aces`) - 24 ACEs for body/area physics queries:
   **CharacterBody2D** on-wall / on-ceiling, wall / floor normals, and slide info (Get Slide
   Collision Count, Get Last Slide Collider, Get Last Slide Normal), with **CharacterBody3D**
   carrying the on-wall / on-ceiling / wall / floor-normal subset; **Area2D** overlaps (Overlaps
@@ -1557,32 +1569,32 @@ All compile to plain typed GDScript (parity contract); covered by `phase0_aces_t
 `break`/`continue` stay verbatim. (Deferred: a Menu/HUD behavior pack + UI starter demo,
 2D point/shape overlap queries, and the Phase-3 dialogue/transition packs.)
 
-## [0.8.0] - 2026-06-20 — "The Team & Scale Update"
+## [0.8.0] - 2026-06-20 - "The Team & Scale Update"
 
-### Team & navigation — merge driver, Find References, includes manager + provenance
-- **Semantic 3-way git merge driver** (`tools/sheet_merge`) — merges sheets at the row level
+### Team & navigation - merge driver, Find References, includes manager + provenance
+- **Semantic 3-way git merge driver** (`tools/sheet_merge`) - merges sheets at the row level
   keyed on the now-stable UIDs: two people editing different rows merge cleanly; a genuine
   same-row edit keeps both versions (fenced by ⚠ comment rows) for resolution in the editor,
-  instead of an unmergeable `.tres`. Opt-in per clone — see `docs/VERSION-CONTROL.md`.
-- **Symbol-aware Find References + Go-to-Definition** — whole-symbol matching (`\bname\b`)
+  instead of an unmergeable `.tres`. Opt-in per clone - see `docs/VERSION-CONTROL.md`.
+- **Symbol-aware Find References + Go-to-Definition** - whole-symbol matching (`\bname\b`)
   across params/code/pick/comment/group surfaces, so `speed` finds the variable but never
   `move_speed`; resolves a symbol to its definition; backs a rename **preview** (count what
   it'll touch first).
-- **Includes, made usable** — **Edit ▸ Extract Selection to Include…** moves selected events
+- **Includes, made usable** - **Edit ▸ Extract Selection to Include…** moves selected events
   into a new library sheet and wires the include (copy-paste → modularization in one step);
   a summarize core powers an include-manager preview (events/functions/variables each
   contributes), with a cycle guard; and a provenance core resolves a sheet's includes into
   their rows for read-only display.
 - **AI-assisted event generation** is enabled through the MCP server today (ground via
   `list_aces`/`read_sheet` → the model writes GDScript → `apply_snippet` lifts it losslessly
-  into editable events, with `dry_run` preview) — see `docs/MCP-SERVER.md`.
-- **In-editor AI generation + a live MCP on/off switch** — **Edit ▸ Generate from Description
+  into editable events, with `dry_run` preview) - see `docs/MCP-SERVER.md`.
+- **In-editor AI generation + a live MCP on/off switch** - **Edit ▸ Generate from Description
   (AI)…** turns plain English into editable event rows in the editor (opt-in via an
   `eventsheets/ai/api_key` setting), and **View ▸ MCP Server (AI tools)** is a checkbox that
   activates/deactivates the MCP server at will: off → connected AI clients see no tools and
   can't read or change your sheets, live, without reconnecting.
 
-### HTN Agent behavior — utility-driven planning (port of the custom C3 DHTN addons)
+### HTN Agent behavior - utility-driven planning (port of the custom C3 DHTN addons)
 - A new **HTN Agent** pack: a world-state blackboard + a task network of primitive and
   compound tasks, where each compound's methods carry preconditions, an ordered subtask list
   and a utility score. **Request Plan** decomposes the root task, picking the highest-utility
@@ -1592,11 +1604,11 @@ All compile to plain typed GDScript (parity contract); covered by `phase0_aces_t
   into one per-object behavior (the natural event-sheet fit); squad/slot coordination and
   decaying alert stimuli are an honest scope cut. **26 behavior packs total.**
 
-### Theme Editor — "Quick Style" (re-skin without learning every token)
+### Theme Editor - "Quick Style" (re-skin without learning every token)
 - The visual theme editor gains a **Quick Style** section at the top: pick a **base**,
   **accent** and **text** colour, click **Generate Theme**, and the whole sheet palette is
   regenerated via `EventSheetGodotTheme.apply` (the same derivation the editor-theme adapter
-  uses) — plus **Reset To Default**. The full reflective per-token form (every colour/spacing/
+  uses) - plus **Reset To Default**. The full reflective per-token form (every colour/spacing/
   toggle) still sits below for fine-tuning, and now rebuilds to reflect a just-generated palette.
 
 ### Platformer-Shooter showcase
@@ -1604,44 +1616,44 @@ All compile to plain typed GDScript (parity contract); covered by `phase0_aces_t
   and **Weapon Kit** packs: run + double-jump on a floor, hold to fire (fire-rate + ammo +
   auto-reload), shots destroy targets drifting in. Verified by `showcase_examples_test`.
 
-### Editor UX — naming a new group is immediate
+### Editor UX - naming a new group is immediate
 - **Add Group** now drops you straight into renaming the group's title inline (the standard
   "new folder → type its name" flow), instead of leaving a generic "Group" you had to know to
   double-click. The inline title/description edit was already there; this just makes it obvious.
 
-### Version control — byte-stable pack/showcase regeneration (no more diff churn)
+### Version control - byte-stable pack/showcase regeneration (no more diff churn)
 - Row UIDs (`event_uid`/`group_uid`) used to be **minted at random** every time a resource
-  was created, so rebuilding a single behavior pack rewrote the `.tres` of **every** pack —
+  was created, so rebuilding a single behavior pack rewrote the `.tres` of **every** pack -
   exploding `git diff` with meaningless UID churn, and meaning the "stable" per-row UIDs were
   never actually stable. The pack/showcase builders now stamp **deterministic UIDs** derived
   from each row's structural path, so regenerating unchanged content is **byte-for-byte
   identical** (verified: two consecutive builds produce zero new diff). Each row also keeps a
-  genuinely stable identity for diff/blame. Scoped to the builders — hand-authored sheets keep
+  genuinely stable identity for diff/blame. Scoped to the builders - hand-authored sheets keep
   the persistent UID assigned when the row was first created.
 - (Already in place, for reference: `.gitattributes` enforces LF and wires a readable
   `diff=eventsheet` textconv so `git diff` renders `.tres` sheets as legible event text via
   `tools/sheet_diff.sh` + `EventSheetTextDump`.)
 
-### Behavior packs — C3-addon parity (Platformer juice, Spring colors, new Weapon Kit)
+### Behavior packs - C3-addon parity (Platformer juice, Spring colors, new Weapon Kit)
 - **Platformer** rebuilt with the feel features from the author's C3 "Physics Platformer":
   **coyote time, jump buffering, variable jump height** (Jump Released), **multi/double jump**
   (max_jumps + Reset Jumps), **wall slide + wall jump**, **acceleration/deceleration** and
-  **terminal velocity** — all kinematic on a CharacterBody2D. New conditions (Is Moving /
+  **terminal velocity** - all kinematic on a CharacterBody2D. New conditions (Is Moving /
   Jumping / Falling / Wall Sliding / Can Jump), triggers (On Landed / Double Jumped / Wall
   Jumped) and expressions (Jumps Remaining / Air Time / Facing Direction). The original
   Jump / Set Move Speed / On Jumped ACEs keep their ids (compatibility covenant).
 - **Spring** gains the missing pieces of the C3 "Simple Spring": **colour springs**
-  (Spring Color / Set Color Value / Color Value — perfect for hit flashes), **spring
+  (Spring Color / Set Color Value / Color Value - perfect for hit flashes), **spring
   lifecycle** (Pause / Resume / Remove / Reset All), and an **On Spring Started** trigger.
-  (Mesh deformation stays an honest skip — that's shader/skeleton territory in Godot.)
-- **Weapon Kit** — a new pack ported from the C3 "WeaponKit": ammo + reserve pools,
+  (Mesh deformation stays an honest skip - that's shader/skeleton territory in Godot.)
+- **Weapon Kit** - a new pack ported from the C3 "WeaponKit": ammo + reserve pools,
   fire-rate cooldown, **single / auto / burst** fire modes, **timed + instant reload** with
   auto-reload, and a full HUD surface (Ammo % / Reload Progress / Cooldown Progress,
   Can Fire / Has Ammo / Is Full / Is Reloading, On Fire / Empty / Reload Started / Reload
-  Complete). It owns no projectile — Fire manages state and triggers On Fire, so the sheet
+  Complete). It owns no projectile - Fire manages state and triggers On Fire, so the sheet
   spawns the bullet however it likes. **25 behavior packs total.**
 
-### Richer variable helpers — Array, Dictionary, Vector & String manipulation
+### Richer variable helpers - Array, Dictionary, Vector & String manipulation
 - **16 more Array ops** so list work rarely needs a raw block: First/Last item, Index Of,
   Count Of, Reverse, Push To Front, Pop First/Last, Append Array, Slice, Join To Text,
   Array Max/Min, Copy, Resize, Fill.
@@ -1652,18 +1664,18 @@ All compile to plain typed GDScript (parity contract); covered by `phase0_aces_t
 - **New String category**: Text Contains / Begins With / Ends With, Split Text, Text→Int,
   Text→Float, Pad Number.
 - Every one is a direct GDScript one-liner (parity-safe), so the row doubles as a GDScript
-  lesson — a beginner learns `.front()`, `.distance_to()`, `.split()` by using them.
+  lesson - a beginner learns `.front()`, `.distance_to()`, `.split()` by using them.
 
 ### Behavior-declared autocomplete for string params (Construct-style editable combo)
 - A behavior/addon can mark a string parameter for **autocomplete** purely from its own
   code: `## @ace_param_autocomplete(anim "idle", "run", "jump")`. In the params dialog that
-  param becomes an **editable combo** — type any value, or open the ▾ list (Down-arrow also
+  param becomes an **editable combo** - type any value, or open the ▾ list (Down-arrow also
   opens it) and **filter/pick** a suggestion. Unlike `@ace_param_options` (a fixed dropdown),
   free text is always allowed. Toggled entirely by whether the annotation is present.
 - Plumbed end-to-end: annotation → semantic analyzer → generator → adapter → `ACEParam`,
   with `make_param(..., autocomplete)` available to builtin/Helper ACEs too.
 
-### Helper ACEs — a structured escape hatch for hard-to-translate GDScript
+### Helper ACEs - a structured escape hatch for hard-to-translate GDScript
 - A new **Helpers** vocabulary (24 ACEs) for the GDScript a user would otherwise drop to a
   raw block for, so more logic stays as editable rows that still compile to the exact
   one-line GDScript you'd hand-write: **Set/Get Property**, **Call Method** (action +
@@ -1673,10 +1685,10 @@ All compile to plain typed GDScript (parity contract); covered by `phase0_aces_t
   math/string idioms not already covered (**Abs/Min/Max/Round/Sign/Move Toward/Wrap/Remap/
   Format String**).
 - The Helper templates are deliberately generic, so they're registered **last** and
-  **excluded from the reverse-lifter** — they never shadow a specific ACE on import or
+  **excluded from the reverse-lifter** - they never shadow a specific ACE on import or
   swallow a line that should stay a verbatim block.
 - **Escape-hatch provenance, working together:** raw GDScript blocks now carry an optional
-  `note` (a human label, shown on hover) and an importer-set `lift_note` — when a line
+  `note` (a human label, shown on hover) and an importer-set `lift_note` - when a line
   couldn't lift into a structured ACE, hovering the block says *why* ("no matching ACE
   template"), turning an opaque wall of code into an actionable triage list. Both are
   non-emitted (no codegen / round-trip impact) and complement the verbatim-codegen tooltip.
@@ -1686,77 +1698,77 @@ All compile to plain typed GDScript (parity contract); covered by `phase0_aces_t
   names and the generated API: `add_health_pool`, `on_health_pool_*`, `clear_all_health_pools`).
 
 ### New behavior packs + C3-addon parity (24 packs total)
-- **Line of Sight 3D** — the 3D twin of the LoS pack (Node3D host, `PhysicsRayQueryParameters3D`
+- **Line of Sight 3D** - the 3D twin of the LoS pack (Node3D host, `PhysicsRayQueryParameters3D`
   raycasts, cone-of-view from the host's -Z forward).
-- **Health** — a faithful port of the Simple Health C3 addon: max/current HP, damage with a
+- **Health** - a faithful port of the Simple Health C3 addon: max/current HP, damage with a
   resistance/absorption multiplier, **named temporary-health pools** (shields/armour that
   intercept damage in priority order and decay over time), heal/revive/invulnerability, and
   `On Damaged/Death/Healed/Revived/Health Changed` + temp-pool triggers.
-- **Virtual Cursor** — a port of the custom C3 Virtual Cursor addon (axis/mouse-driven cursor
+- **Virtual Cursor** - a port of the custom C3 Virtual Cursor addon (axis/mouse-driven cursor
   with homing, solids, bounce, constraints) that can **drive the Drag & Drop pack** for
   gamepad/touch dragging.
-- **Drag & Drop, rewritten event-driven** — replaces the old mouse-only poller with the C3
+- **Drag & Drop, rewritten event-driven** - replaces the old mouse-only poller with the C3
   surface (Start Drag / Set Drag Point / Drop, follow-speed lag, direction lock, break-distance
   auto-drop, measured throw velocity, snap/magnet targets) so any input source can drive it.
 - All packs stay faithfulness-gated (`audit_addons` drifted=0) and covered by
   `sample_behavior_pack_test` (load-as-behavior, no-drift golden, instantiation).
 
 ### 3D, GDScript-escape & install/uninstall improvements
-- **3D spatial-query ACEs** — a RayCast3D node set (Is Colliding / Collider / Hit Point /
+- **3D spatial-query ACEs** - a RayCast3D node set (Is Colliding / Collider / Hit Point /
   Hit Normal / Force Update) plus host-agnostic Node3D **world raycasts** (single-line direct
   space-state queries), closing the biggest functional 3D gap.
-- **3D starter templates** — "First-Person Controller (3D)" and "Third-Person Mover (3D)" in
+- **3D starter templates** - "First-Person Controller (3D)" and "Third-Person Mover (3D)" in
   the New Sheet menu (CharacterBody3D, `Input.get_vector` planar movement + gravity).
-- **Raw-block codegen tooltip** — hovering a GDScript block now advertises that it compiles
+- **Raw-block codegen tooltip** - hovering a GDScript block now advertises that it compiles
   verbatim into the generated script (the escape hatch is transparent, not a black box).
-- **Clean removal made provable** — [docs/UNINSTALL.md](docs/UNINSTALL.md) (keep/remove table),
+- **Clean removal made provable** - [docs/UNINSTALL.md](docs/UNINSTALL.md) (keep/remove table),
   a `clean_removal_test` that parses every generated/pack script with no plugin classes on the
   path and forbids any `EventForge*`/`EventSheet*` reference, and a `plugin_teardown_test`
   asserting every `_enter_tree` `add_*` has a paired `_exit_tree` `remove_*`.
 
-### Showcases refreshed — three playable demos for complex tasks
+### Showcases refreshed - three playable demos for complex tasks
 - Replaced the single version-pinned showcase (`showcase_v070.*`) with **three** playable
   demos in `demo/showcase/`, each authored as event sheets and compiled to plain GDScript:
-  - **`showcase_carousel.*` — Carousel of Juice (flagship):** a rainbow ring driven by a
+  - **`showcase_carousel.*` - Carousel of Juice (flagship):** a rainbow ring driven by a
 	reused `juice_tile()` function, a runtime-toggleable group, an if/elif/else keypress
 	chain, and four behaviors (Spring/Tween/Sine/Flash). Streams to Live Values.
-  - **`starfall.*` (+ `star.tscn`) — arcade game:** an enum+match state machine
+  - **`starfall.*` (+ `star.tscn`) - arcade game:** an enum+match state machine
 	(PLAYING/GAME_OVER), a group pick-filter that scores & culls falling stars, an Every-2s
 	spawner instancing a sub-scene, and if/elif input branches.
-  - **`quest_fsm.*` — software-logic FSM:** a self-driving quest engine using a Dictionary
+  - **`quest_fsm.*` - software-logic FSM:** a self-driving quest engine using a Dictionary
 	inventory + Array quest log, signals (`item_collected`/`quest_advanced`), a reused
 	`grant_item()` function, and match dispatch.
 - **Stable, un-versioned names** end the per-release churn: only the flagship matches the
   `showcase_*` discovery prefix (so `EventForgePlugin._find_showcase_scene` returns it
-  deterministically — no plugin edit), and the two secondaries can never go stale via the
+  deterministically - no plugin edit), and the two secondaries can never go stale via the
   version-pin smell. Future refreshes regenerate in place via the new single builder,
   `tools/build_examples.gd` (replaces `tools/build_showcase.gd`).
 - New `tests/showcase_examples_test.gd` guards all three: each compiles, parses, contains
   its advertised power-feature constructs, and instantiates.
 
 ### Adoption: friendlier for newcomers, faster for power users
-- **Simple Mode (View menu)** — progressive disclosure for artist-first / first-time users:
+- **Simple Mode (View menu)** - progressive disclosure for artist-first / first-time users:
   hides the advanced/code-leaning right-click entries (GDScript blocks, sub-conditions, pick
   filters, match, signals/enums) so the everyday authoring verbs stand alone. Persists
   per-project; Expert mode (default) is unchanged.
-- **Command Palette (Ctrl+P)** — keyboard-first access to every dock action with a fuzzy
+- **Command Palette (Ctrl+P)** - keyboard-first access to every dock action with a fuzzy
   (prefix › substring › subsequence) filter.
-- **Export Generated GDScript… (Sheet menu)** — writes the sheet's standalone, plugin-free
+- **Export Generated GDScript… (Sheet menu)** - writes the sheet's standalone, plugin-free
   GDScript to a file you choose: concrete proof you can leave the addon with your code.
-- **"Did you mean …?" quick-fix** — an unknown identifier in an expression field that's one
+- **"Did you mean …?" quick-fix** - an unknown identifier in an expression field that's one
   or two edits from a name the sheet knows offers a one-click swap (alongside the existing
   create-variable fix).
-- **Less jargon in the UI** — the C3-internal term "ACE" no longer leaks into the core
+- **Less jargon in the UI** - the C3-internal term "ACE" no longer leaks into the core
   authoring loop ("Add Action / Condition" picker, "Parameters" dialog, "Custom Actions…",
   "Edit Note…", "Expose as a reusable action"); the beginner empty-state drops "host accessor"
   wording.
 
 ### Godot 4.7 support
-- **Verified on Godot 4.7 stable** — the full headless suite (1869 assertions) and an
+- **Verified on Godot 4.7 stable** - the full headless suite (1869 assertions) and an
   editor smoke run are green on 4.7. Fixed the cases 4.7's stricter `set_script` typing and
   detached-Control theme access exposed (dialog init now also runs from `setup()`, not only
   `_ready()`, so headless paths initialize correctly).
-- **Fixed a live-values crash** — the dock called `ensure_window()` but the panel defined
+- **Fixed a live-values crash** - the dock called `ensure_window()` but the panel defined
   `_ensurewindow()`; opening Live Values would error. Names now match.
 
 ### 4.7 "Modern" theme alignment
@@ -1765,37 +1777,37 @@ All compile to plain typed GDScript (parity contract); covered by `phase0_aces_t
   accents are now preview-able in the render harness and covered by regression tests.
 
 ### Less clutter when getting started
-- **Calmer empty sheet** — the dense one-line wall of shortcuts is replaced with a clear
+- **Calmer empty sheet** - the dense one-line wall of shortcuts is replaced with a clear
   heading, one call to action, and a single muted tip. It now also shows when the sheet holds
   only the "+ Add event…" footer (previously the footer suppressed it).
 - **"Add-Event Rows" toggle** in the View menu hides the trailing "+ Add event…" affordances.
-- **"System" object labels are dimmed** — kept (C3 always shows the object) but de-emphasized
+- **"System" object labels are dimmed** - kept (C3 always shows the object) but de-emphasized
   so rows read as the action, not a column of identical "System" labels.
 - **"+ Add action" is revealed on hover/selection** instead of repeating under every event
   (events with no actions yet keep it visible for discoverability).
 
 ### Context menu, truncated
-- **The row right-click menu is rebuilt per click for the row you clicked** — it
+- **The row right-click menu is rebuilt per click for the row you clicked** - it
   used to be one flat ~30-item list shown for everything (an event right-click
   still offered "Edit Group Description", "Add Enum Below", etc.). Now an event
   shows ~9 items, a group shows group items, a comment shows comment items.
 - **The "Add … Below" family folds into an `Insert Below ▸` submenu**, and the
   advanced/rare authoring (sub-condition, pick filter, match, find usages, open
   in split, snippets) folds into a `More ▸` submenu.
-- **Bulk-selection items only appear when more than one row is selected** —
+- **Bulk-selection items only appear when more than one row is selected** -
   otherwise Copy/Paste/Duplicate/Disable act on the clicked row directly.
 - **Insert Snippet moved to the empty-canvas menu** (you're adding to the sheet,
   not acting on a row).
 
 ### Godot-native polish
-- **The GDScript panel reads like the script editor** — it adopts the editor's
+- **The GDScript panel reads like the script editor** - it adopts the editor's
   code font + size, the built-in minimap, current-line highlight and tab
   rendering, so the honest output looks like a Godot script, not a foreign box.
   It re-skins live when you switch editor themes.
-- **The default theme is labeled "Match Editor"** — it always derived from your
+- **The default theme is labeled "Match Editor"** - it always derived from your
   editor's base/accent colors; now the picker says so, and it re-derives the
   moment you change your editor theme.
-- **Key toolbar buttons carry editor icons** (Save, Run/Play, Add, Script) — the
+- **Key toolbar buttons carry editor icons** (Save, Run/Play, Add, Script) - the
   same glyphs the rest of the editor uses.
 - (Most of the obvious native gaps were already closed: editor-theme colors,
   font + size, row-cell editor icons, Ctrl+wheel zoom, and node drag from the
@@ -1803,98 +1815,98 @@ All compile to plain typed GDScript (parity contract); covered by `phase0_aces_t
 
 ### Bug-review fixes (silent bugs)
 - **Selecting a multi-line block by clicking any line but the first showed no
-  highlight** — single-click selects the clicked line's span (usually not the
+  highlight** - single-click selects the clicked line's span (usually not the
   block head), but the merged-cell renderer only drew selection at the head. The
   block grouping is now a tested helper (`resolve_block_groups`) and selection
   draws once at the union whichever member line is clicked.
-- **A leftover Range/Clamp/Drawer value errored about an invisible field** — after
+- **A leftover Range/Clamp/Drawer value errored about an invisible field** - after
   switching a variable from numeric to String/bool (which hides those fields), the
   values persisted and the confirm guardrail rejected them with a message about a
   field the user could no longer see. Numeric-only attributes are now inert when
   the type isn't numeric.
 
 ### Tier-1 authoring speed: value memory + add-another chaining
-- **Apply & Add Another** on the params dialog (append modes) — apply a condition
+- **Apply & Add Another** on the params dialog (append modes) - apply a condition
   or action and the picker reopens for the next one, so building a three-condition
   event no longer means re-summoning the picker each time.
-- **Per-ACE value memory** — re-adding an ACE prefills the values you used last
+- **Per-ACE value memory** - re-adding an ACE prefills the values you used last
   time (session memory, keyed by ace id) instead of the bare descriptor default.
   The numbers you type repeatedly stop being re-typed.
 - (Apply-with-defaults was held back: auto-applying from the picker would hide the
-  remembered values and remove the chance to set params — it fights both features
+  remembered values and remove the chance to set params - it fights both features
   above.)
 
 ### Field-test round 2: the replace flow, fixed for real
-- **Shadowed variables are caught at both ends** — naming a sheet variable after
+- **Shadowed variables are caught at both ends** - naming a sheet variable after
   a host member (`velocity` on a CharacterBody2D sheet…) breaks the generated
   script at load and blinds expression lint. The variable dialog now refuses the
   name with a suggestion, and the Project Doctor flags pre-existing ones at the
   error tier, pointing at Rename Everywhere… (behavior/autoload sheets scope to
-  Node — their host members live safely behind `host.`).
-- **Preselect now actually shows** — the entry WAS being selected, but inside a
+  Node - their host members live safely behind `host.`).
+- **Preselect now actually shows** - the entry WAS being selected, but inside a
   collapsed picker group, which reads as nothing happening. Preselect expands
   the ancestor chain, runs after the popup settles (carried via the picker
   context instead of racing the open sequence), and scrolls to the entry.
-- **OK can never be locked out again** — when a sheet variable shadows a host
+- **OK can never be locked out again** - when a sheet variable shadows a host
   member (e.g. `velocity` on a CharacterBody2D sheet), the lint scratch breaks
   and EVERY expression "failed", so the params dialog just closed and reopened
   without applying. The guardrail now checks the lint baseline first: a broken
   context skips the expression gate instead of locking the user out.
 
 ### Field-test round 1: author tooling
-- **The Theme Editor is actually editable now** — both panes carry real minimum
+- **The Theme Editor is actually editable now** - both panes carry real minimum
   sizes (the token controls used to collapse to an invisible sliver, leaving
   only the preview: "it's just highlighting things"), and the editor-level
   tokens (hover, selection, lanes) join the form, so emphasis strength is
   user-tunable per theme.
-- **Sheet functions get a dialog** (Add ▾ → Function…) — the first authoring UI
+- **Sheet functions get a dialog** (Add ▾ → Function…) - the first authoring UI
   for them: parameters expand row by row with auto-unique suggested names,
   function/param names auto-snake_case, duplicates are refused with the reason
   named, and the expose-as-ACE fields stay behind their checkbox. Built for the
   first-time developer: hard to make an invalid function.
 
 ### Field-test round 1: dialog UX
-- **Double-clicking a condition opens the replace picker, preselected on it** —
+- **Double-clicking a condition opens the replace picker, preselected on it** -
   pick another to swap it out, or re-pick the same one to edit its params
   (existing values prefill either way). The "I expect to replace it" reflex.
-- **Edit Variable stopped throwing everything at once** — the Inspector
+- **Edit Variable stopped throwing everything at once** - the Inspector
   attributes live behind a disclosure (collapsed for new variables, auto-expanded
   when the variable already uses any); combo options appear only for Strings;
   range/clamp/drawer only for numerics; multiline only for Strings.
-- **Sheet enums fill combos in one click** — a "From enum" menu on the combo
+- **Sheet enums fill combos in one click** - a "From enum" menu on the combo
   field lists the sheet's enums and fills the options with member names
   (explicit values stripped).
-- **Lone Vector2/Vector3 params split into per-axis fields** — positions edit as
+- **Lone Vector2/Vector3 params split into per-axis fields** - positions edit as
   x / y (/ z), each axis still a full GDScript expression, recomposed on apply.
 
 ### Field-test round 1: the renderer pass
-- **A multi-line GDScript action is ONE cell now** — block lines merge into a
+- **A multi-line GDScript action is ONE cell now** - block lines merge into a
   single vertically-resized code cell instead of stacked per-line cells (the
   per-line spans stay the layout/hit-test truth, so selection, drag and delete
   behave exactly as before).
-- **Code cells look like code** — in-flow GDScript gets a cool tint and a left
+- **Code cells look like code** - in-flow GDScript gets a cool tint and a left
   code stripe, so "this action is just GDScript" reads at a glance.
-- **Comments in the action lane look like action cells** — they carry the same
+- **Comments in the action lane look like action cells** - they carry the same
   cell chrome as their siblings (comment text color kept), merge into one cell,
   and keep growing vertically as lines are added.
-- **Hover and selection are easier on the eyes** — whole-row hover (comments
+- **Hover and selection are easier on the eyes** - whole-row hover (comments
   especially) is a faint tint with no outline; whole-row selection is tempered
   for single-cell rows; span hover is softer and thinner. Selection stays
   unmistakable via the outline and accent bar.
 
 ### Field-test round 1: quick fixes
-- **Welcome window actually fits now** — rebuilt as a self-sizing dialog (the
+- **Welcome window actually fits now** - rebuilt as a self-sizing dialog (the
   fixed-size window clipped buttons and text at the edges twice); every label
   wraps, the checkbox text is short, and the tooltip carries the detail.
-- **Theme switches are no longer undo steps** — undo history is for sheet
+- **Theme switches are no longer undo steps** - undo history is for sheet
   content (ACEs, variables), never presentation. Switching themes still marks
   the sheet dirty (the style is saved with it).
-- **The Construct3-stacked theme is removed** — it wasn't a faithful C3 look
+- **The Construct3-stacked theme is removed** - it wasn't a faithful C3 look
   and earned no keep.
-- **Toggles explain themselves on hover** — the GDScript toggle, Split/Detach/
+- **Toggles explain themselves on hover** - the GDScript toggle, Split/Detach/
   Link, Debug Breakpoints and Live Values all carry tooltips; param dialogs get
   hover descriptions on every label and field.
-- **Param dialogs stopped overflowing** — fields fit the dialog width (no more
+- **Param dialogs stopped overflowing** - fields fit the dialog width (no more
   horizontal scrollbar under long enum defaults); dropdowns clip long entries.
 
 ### Toolbar redesign + welcome fixes
@@ -1902,7 +1914,7 @@ All compile to plain typed GDScript (parity contract); covered by `phase0_aces_t
   identity), Add ▾, Edit ▾, View ▾ (panels, multi-view, zoom, theming) and the
   existing Tools ▾ replace ~28 loose buttons; the C3 reflexes (Add Event /
   Condition / Action), Save, Run Scene, the GDScript toggle, the theme picker and
-  Quick add stay one click. The bar is a flow container now — when the panel is
+  Quick add stay one click. The bar is a flow container now - when the panel is
   narrow it wraps to a second row instead of clipping off-screen.
 - **Welcome window fixed and reopenable**: content sits in real margins (the
   first cut jammed text against the window edges), the Godot-native checkbox
@@ -1910,7 +1922,7 @@ All compile to plain typed GDScript (parity contract); covered by `phase0_aces_t
   it any time (it previously appeared exactly once per project, with no way to
   see it again).
 
-## [0.7.0] - 2026-06-12 — “The Native Workflow Update”
+## [0.7.0] - 2026-06-12 - “The Native Workflow Update”
 
 **EventSheets meets you where you work.** Three arcs in one release: the tedium
 killers (rename everywhere, snippets, bulk ops, session restore, asset drops,
@@ -1918,7 +1930,7 @@ one-click attach and run), the Godot-native entry points (right-click a node →
 Attach Event Sheet, the Inspector's Edit button, discoverable settings,
 rebindable shortcuts, go-to-sheet-row from the script editor), and a GDScript
 bridge that explains itself (recursive if/elif/else reverse-lift + the Lift
-Report). Showcase: `demo/showcase/showcase_v070.tscn` — press ui_accept /
+Report). Showcase: `demo/showcase/showcase_v070.tscn` - press ui_accept /
 ui_cancel for the interactive if/elif chain.
 
 ### Review + sweep (pre-release)
@@ -1934,87 +1946,87 @@ ui_cancel for the interactive if/elif chain.
   blueprints, and Save/Save As persists the session immediately.
 
 ### GDScript coverage: branching lifts, and the boundary explains itself
-- **if/elif/else reverse-lift** — opening a `.gd` as a sheet now lifts branching
+- **if/elif/else reverse-lift** - opening a `.gd` as a sheet now lifts branching
   into real structure: `if` blocks become conditioned events, adjacent
   `elif`/`else:` become chained else-rows, and *nested* branches become
   sub-events, recursively. Anything unrepresentable falls back to the old
   in-flow GDScript behavior, and the byte-identical recompile still gates every
   lift (lossless, as ever).
-- **The Lift Report** (Tools → Lift Report…, plus the open-status summary) —
+- **The Lift Report** (Tools → Lift Report…, plus the open-status summary) -
   after a `.gd` opens, every block explains itself: what lifted into events,
   and why each remaining block stayed code with the closest ACE named ("uses
-  await — the Wait action is the structured equivalent"). For C3 users learning
+  await - the Wait action is the structured equivalent"). For C3 users learning
   Godot the boundary becomes the curriculum; for Godot devs it's trust through
   transparency.
 
 ### Godot-native workflow (3/3): the first-run hook
-- **Welcome panel** on first enable (per project, stored in editor metadata —
+- **Welcome panel** on first enable (per project, stored in editor metadata -
   nothing committed, never shows headless): open the playable showcase, jump to
-  the workspace starters, and one checkbox — *"I'm Godot-native"* — that opens
+  the workspace starters, and one checkbox - *"I'm Godot-native"* - that opens
   the generated-GDScript panel beside every sheet from then on
   (`eventsheets/editor/open_code_panel_by_default`), so the first thing a
   skeptical Godot dev sees is the honest output.
 - Asset Library submission kit deliberately deferred until v1.0.
 - Drag-a-sheet-onto-a-node explored and dropped: the Scene dock's drop surface
-  isn't reachable from plugins — the Scene dock's "Attach Event Sheet" context
+  isn't reachable from plugins - the Scene dock's "Attach Event Sheet" context
   entry covers the intent.
 
 ### Godot-native workflow (2/3): debug, docs and shortcuts like Godot
 - **Go to Sheet Row** (script-editor context menu on generated scripts): carries
-  the caret line through the compiler's source map into the sheet — the GDScript
+  the caret line through the compiler's source map into the sheet - the GDScript
   panel opens and the emitting row is selected. Errors and stack traces land on
   rows, not on generated code.
-- **Rebindable shortcuts** — every authoring/editing key reads its binding from
+- **Rebindable shortcuts** - every authoring/editing key reads its binding from
   `eventsheets/editor/shortcuts/*` in Project Settings ("Ctrl+D", "Q",
   "Ctrl+Shift+S"); matching is exact on modifiers so chords never shadow plain
-  forms. Structural keys (Tab nesting, Delete, Enter/F2, Escape) stay fixed —
+  forms. Structural keys (Tab nesting, Delete, Enter/F2, Escape) stay fixed -
   grammar, not preference. (The Editor-Settings shortcut dialog isn't exposed to
   GDScript plugins; this is the rebindable-the-Godot-way alternative.)
-- **View in Godot Docs** — native-node ACEs link to the engine's built-in class
+- **View in Godot Docs** - native-node ACEs link to the engine's built-in class
   reference from the params dialog: the vocabulary IS Godot, one click away.
 
 ### Godot-native workflow (1/3): entry points + discoverable settings
 - **Right-click a node → Attach Event Sheet** (Scene dock): creates a sheet whose
   host class matches the node, saves it beside the scene (suffix, never
   overwrite), compiles and attaches the generated script, and lands you in the
-  sheet — the "Attach Script" reflex, for sheets.
+  sheet - the "Attach Script" reflex, for sheets.
 - **Open as Event Sheet** on FileSystem and script-editor context menus (sheet
-  `.tres` files and any `.gd` — GDScript-backed sheets open scripts losslessly);
+  `.tres` files and any `.gd` - GDScript-backed sheets open scripts losslessly);
   sheets now carry a **distinct FileSystem icon** instead of reading as generic
   resources.
 - **Inspector "Edit Event Sheet" button** on any node whose attached script is
   sheet-generated (paired via the script's `# Source:` header, pack siblings via
-  the pairing rule) — one click from where Godot devs already live.
+  the pairing rule) - one click from where Godot devs already live.
 - **Every `eventsheets/*` setting is now registered in Project Settings** with
-  type hints and ranges — discoverable and documented the Godot way, value-neutral
+  type hints and ranges - discoverable and documented the Godot way, value-neutral
   (defaults match the in-code fallbacks; unchanged values never touch
   project.godot).
 
-### Tedium reduction (Tier 3): the loop closers — attach + run
-- **Attach to Selected Node** (Tools) — one click compiles the open behavior sheet
+### Tedium reduction (Tier 3): the loop closers - attach + run
+- **Attach to Selected Node** (Tools) - one click compiles the open behavior sheet
   and parents it under the node selected in the Scene dock (owner set, scene
-  marked unsaved). Host-class mismatches warn but attach — the in-scene
+  marked unsaved). Host-class mismatches warn but attach - the in-scene
   configuration warning already covers it. The save→find scene→add child→attach
   loop the Doctor used to nag about is now the fix-it button.
-- **Run Scene** (toolbar) — saves the sheet (compile-on-save keeps the script
+- **Run Scene** (toolbar) - saves the sheet (compile-on-save keeps the script
   fresh), finds the scene(s) attaching it via the Doctor's reverse lookup, and
   plays: one scene runs immediately, several offer a pick menu, none explains
   what to wire. Sheet → playing game in one click; behaviors are routed to the
   Test Bench.
 
 ### Tedium reduction (Tier 3): session restore + asset drops with intent
-- **Session restore** — the editor reopens last session's tabs (and re-activates
+- **Session restore** - the editor reopens last session's tabs (and re-activates
   the one you were on) on startup; `eventsheets/editor/restore_session` (default
   on) gates it, deleted sheets are skipped silently. Every launch stops starting
   from zero.
-- **Asset drops with intent** — drop a `.tscn` from the FileSystem dock onto an
+- **Asset drops with intent** - drop a `.tscn` from the FileSystem dock onto an
   event row and it becomes a pre-filled **Spawn Scene At** action; drop an
-  `.ogg/.wav/.mp3` and it's **Play Sound** — undoable, templates baked exactly
+  `.ogg/.wav/.mp3` and it's **Play Sound** - undoable, templates baked exactly
   like a picker apply. The C3 drag-into-layout reflex, grafted onto events
   (empty-space drops explain themselves instead of silently bouncing).
 
 ### Tedium reduction (Tier 2): row snippets + bulk selection ops
-- **Row snippets** — Save Selection as Snippet… files the selection in
+- **Row snippets** - Save Selection as Snippet… files the selection in
   `res://eventsheet_snippets/` using the SAME text format Copy puts on the
   clipboard (one serializer); Insert Snippet… pastes any library entry through
   the normal paste path (fresh uids, missing variables created). Committed
@@ -2022,89 +2034,89 @@ ui_cancel for the interactive if/elif chain.
 - **Bulk selection ops** on the row context menu: Disable/Enable Selection
   (uniform, never a mixed toggle), Duplicate Selection (copies land under their
   sources, uids re-baked), Group Selection into New Group (same-parent
-  selections only — cross-depth reparenting is refused, not guessed). Each is
+  selections only - cross-depth reparenting is refused, not guessed). Each is
   one undo step.
 
 ### Tedium reduction (Tier 2): True Rename + create-variable quick-fix
 - **Rename Everywhere…** on variable rows: a word-boundary rename across every
-  model surface (params, raw code, pick filters, attributes, comments — prose
+  model surface (params, raw code, pick filters, attributes, comments - prose
   stays honest) in the open sheet *and* every sheet that includes it (saved
-  directly, named in the status). Baked codegen templates are never touched —
+  directly, named in the status). Baked codegen templates are never touched -
   a variable named `value` can't rewrite a `{value}` placeholder. Functions
   rename through the same core (`EventSheetRefactor`).
 - **Create-variable quick-fix**: an undeclared identifier in an expression field
-  grows a one-click **+ var** button — declares it as a float (the C3 "number"
+  grows a one-click **+ var** button - declares it as a float (the C3 "number"
   default) and re-lints, instead of cancel → Add Variable → retype.
 
 ## [0.6.2] - 2026-06-12
 
-**The project-usability release** — the whole accepted automation arc: the editor now
+**The project-usability release** - the whole accepted automation arc: the editor now
 keeps generated scripts, project health, documentation and history current *by
 itself*. Showcase note: these headliners are workflow tooling, so the playable
 `demo/showcase/` from v0.6.0 remains current; this release's living demonstrations
-are in the repo itself — the committed [EVENTSHEETS-VOCABULARY.md](EVENTSHEETS-VOCABULARY.md),
+are in the repo itself - the committed [EVENTSHEETS-VOCABULARY.md](EVENTSHEETS-VOCABULARY.md),
 the Project Doctor gate in CI, and the sheet-diff textconv driver in CONTRIBUTING.
 
 ### Project-usability slice 4: sheet backups + project-local templates
-- **Sheet backups** — every save of an existing sheet first rings the file's
+- **Sheet backups** - every save of an existing sheet first rings the file's
   pre-save bytes into `user://eventsheet_backups/` (newest 10 kept;
   `eventsheets/editor/backup_count`, 0 disables). Tools → Sheet Backups… restores
-  a backup INTO the editor as an unsaved change — review, then Save to keep; a
+  a backup INTO the editor as an unsaved change - review, then Save to keep; a
   restore never silently rewrites a file. Git-grade safety for projects that
   don't have git discipline yet.
-- **Project-local templates** — drop a sheet `.tres` into
+- **Project-local templates** - drop a sheet `.tres` into
   `res://eventsheet_templates/` (or `eventsheets/project/templates_dir`) and it
   joins the New… menu under "Project templates"; Tools → Save as Template writes
   the current sheet in (suffixing, never overwriting). Adopting a template is a
-  deep, path-less copy — edits can't leak back into the blueprint. Templates are
+  deep, path-less copy - edits can't leak back into the blueprint. Templates are
   skipped by the Project Doctor and the vocabulary doc (blueprints, not live code).
 
 ### Project-usability slice 3: the project vocabulary doc
-- **Vocabulary Doc** — one committed markdown reference answering "what can I say
+- **Vocabulary Doc** - one committed markdown reference answering "what can I say
   in this project?": every sheet's class, properties and published
   triggers/conditions/actions/expressions (straight from the model), plus
   hand-written script packs parsed from their `@ace_*` annotations. Deterministic
-  by contract (sorted, no timestamps) so it diffs cleanly in PRs — for teammates
+  by contract (sorted, no timestamps) so it diffs cleanly in PRs - for teammates
   and AI assistants alike. Generate from the dock (Tools → Vocabulary Doc) or
   `tools/vocabulary_doc.gd`; path configurable via
   `eventsheets/project/vocabulary_doc_path`.
 - The Project Doctor gains an opt-in staleness note: once a vocabulary doc exists,
   it's flagged (advisory) whenever the project's published surface drifts from it.
 - The pack-README section renderer is now shared (`surface_markdown`) between the
-  Export Addon README and the vocabulary doc — one rendering, two documents.
+  Export Addon README and the vocabulary doc - one rendering, two documents.
 
 ### Project-usability slice 2: the Project Doctor
-- **Project Doctor** — one audit for the cross-file drift no single check sees,
+- **Project Doctor** - one audit for the cross-file drift no single check sees,
   identical from the dock (Tools → Project Doctor…), the headless CLI
   (`godot --headless --path . --script tools/project_doctor.gd`, `-- --strict`
   to fail on warnings) and CI (a new gate fails the build on errors).
   - **errors**: a committed generated script no longer matches what its sheet
-	compiles to, or a sheet stopped compiling — the pack-golden byte-identity
+	compiles to, or a sheet stopped compiling - the pack-golden byte-identity
 	contract, generalized to every sheet in the project.
   - **warnings**: never-compiled sheets, autoload sheets that aren't registered
 	(or point at the wrong script).
   - **infos**: private variables nothing references, packs no sheet/scene/autoload
-	uses, compiled sheets attached to no scene — advisory, never fails CI.
+	uses, compiled sheets attached to no scene - advisory, never fails CI.
   The doctor never writes inside `res://`; verification recompiles go to a
   `user://` scratch file.
 - First catch on this very repo: `demo/showcase/showcase_v060_generated.gd` was a
-  committed orphan (the scene attaches `showcase_v060.gd`) — removed, and the doctor
+  committed orphan (the scene attaches `showcase_v060.gd`) - removed, and the doctor
   exposed the silent bug that kept recreating it: default output resolution always
   invented `<name>_generated.gd`, so the export-integrity pass (and compile-on-save)
   duplicated outputs next to builder-shipped pairs like the showcase and every pack.
-  `_resolve_output_path` now refreshes the sheet's EXISTING pair — adopting a sibling
+  `_resolve_output_path` now refreshes the sheet's EXISTING pair - adopting a sibling
   `<name>.gd` only when its `# Source:` header proves the compiler wrote it for that
   sheet, so a hand-written same-name script is never clobbered.
 
 ### Project-usability slice 1: compile-on-save + reviewable sheet diffs
 - **Compile-on-save** (default on; `eventsheets/editor/compile_on_save` to disable):
   saving a sheet also writes its `<name>_generated.gd`, so F5 can never play-test a
-  stale script — the last manual step between editing and playing is gone. A sheet
+  stale script - the last manual step between editing and playing is gone. A sheet
   that doesn't compile says so at save time instead of at run time.
 - **Reviewable sheet diffs**: `EventSheetTextDump` renders any sheet as stable,
   readable rows; `tools/sheet_to_text.gd` + the shipped git `textconv` driver
   (one-line setup in CONTRIBUTING) make `.tres` PRs show events, conditions and
-  actions instead of serialized-resource noise — the team-adoption unblock.
+  actions instead of serialized-resource noise - the team-adoption unblock.
 
 ### Community-feedback groundwork
 - GitHub issue templates: the bug form asks for versions + a minimal sheet or text
@@ -2114,7 +2126,7 @@ the Project Doctor gate in CI, and the sheet-diff textconv driver in CONTRIBUTIN
 
 ### Pack builders: one file per pack
 - The 1,968-line `build_sample_behaviors.gd` monolith split into
-  `tools/pack_builders/` — one builder file per pack (21) plus a shared `_lib.gd`
+  `tools/pack_builders/` - one builder file per pack (21) plus a shared `_lib.gd`
   scaffold; the runner is a thin ordered orchestrator. **Faithfulness proven by the
   drift audit: all 21 regenerated packs are byte-identical** to the monolith's
   output (`audited=21 drifted=0`).
@@ -2129,27 +2141,27 @@ the Project Doctor gate in CI, and the sheet-diff textconv driver in CONTRIBUTIN
   gap). Also: the animation walk dedupes in O(n), dropdown entries are
   metadata-tagged instead of index-guessed, and quoting has a single helper.
 - Both deferred cleanups are now in too: path-style fields share one scaffold
-  (`_build_path_field_base` — container, drag-drop, Enter, registration), and
+  (`_build_path_field_base` - container, drag-drop, Enter, registration), and
   exact-match field hints dispatch through a **hint→factory registry** (the next
   hint is one registration line, not another branch).
 
 ### C3 param-type parity completed: scene + animation pickers
-- **`scene_path` hint** — Browse… opens the editor's file dialog filtered to scenes;
+- **`scene_path` hint** - Browse… opens the editor's file dialog filtered to scenes;
   the chosen path inserts quoted (Spawn Scene At uses it).
-- **`animation_reference` hint** — a dropdown of every animation on every
+- **`animation_reference` hint** - a dropdown of every animation on every
   AnimationPlayer in the edited scene, with free-text fallback for runtime-only names
   (Play Animation uses it). With these, every C3 ACE parameter type is covered
   outright, mapped to a Godot idiom, or an explicit honest skip (layer pickers).
-- Hints are dialog-UX only — templates and ace_ids untouched (covenant).
+- Hints are dialog-UX only - templates and ace_ids untouched (covenant).
 
 ## [0.6.1] - 2026-06-12
 
-**Maintenance release** — no user-facing feature changes; the v0.6.0 showcase remains
+**Maintenance release** - no user-facing feature changes; the v0.6.0 showcase remains
 current. Structure, hygiene and review actions only:
 
 ### Repo re-review + sweep 13
 - **Committed scratch removed**: six one-shot patch scripts had slipped into `tools/`
-  when their cleanup steps were skipped by mid-script failures — deleted, and
+  when their cleanup steps were skipped by mid-script failures - deleted, and
   `tools/_*.py` is gitignored so the class of mistake is closed.
 - **Two orphan `.uid` sidecars** removed (their `.gd` files were deleted in earlier
   eras; the sidecars survived).
@@ -2159,13 +2171,13 @@ current. Structure, hygiene and review actions only:
   and work.
 
 ### Dock decomposition (steps 1–4): four subsystems extracted
-- The god-object dock (6,455 lines — the repo review's top finding) shed four
+- The god-object dock (6,455 lines - the repo review's top finding) shed four
   cohesive subsystems into `editor/dock/`: **project find**
-  (`project_find.gd`), the **addon-author loop** (`author_loop.gd` — publish
+  (`project_find.gd`), the **addon-author loop** (`author_loop.gd` - publish
   surface/README statics + preview window/Test Bench), the **Live Values panel**
   (`live_values_panel.gd`) and the **bookmarks panel** (`bookmarks_panel.gd`).
 - The dock keeps thin delegates and forwarding properties, so the entire public/test
-  surface (1,279 assertions) passed unchanged — pure structure, zero behavior.
+  surface (1,279 assertions) passed unchanged - pure structure, zero behavior.
 
 ### Repo review actions (post-v0.6.0 hygiene)
 - **Module split finished**: the remaining Core vocabulary (triggers, InputMap
@@ -2184,45 +2196,45 @@ current. Structure, hygiene and review actions only:
 ## [0.6.0] - 2026-06-12
 
 ### Bug sweep 12 (pre-release)
-- **Runtime-group guards on OR-mode events** joined into the OR list — silently
+- **Runtime-group guards on OR-mode events** joined into the OR list - silently
   disabling the gate (`guard or a or b`); guards now AND-wrap the whole condition
   (`guard and (a or b)`), regression-asserted.
 - Find in Project now also searches per-ACE `⊳` notes (parity with Replace All).
 
 ### Release showcase
-- `demo/showcase/showcase_v060.tscn` — the v0.6.0 features in one playable scene: a
+- `demo/showcase/showcase_v060.tscn` - the v0.6.0 features in one playable scene: a
   color-tagged **runtime-toggleable group** pulses the host every 2 seconds
   (**Every X Seconds**) through the **Spring** behavior while **Tween** spins it,
-  with **Live Values** streaming (watch `pulses` climb — then double-click and
+  with **Live Values** streaming (watch `pulses` climb - then double-click and
   rewrite it in the running game). Regenerate with `tools/build_showcase.gd`.
 
 ### Power-user trio: nested live values, fuzzy picker, keyboard flow
 - **Nested Live Values**: dictionaries and arrays expand into read-only subtrees
-  (GDevelop's variables-debugger style — `stats → hp / mp`); scalars stay editable.
-- **Fuzzy picker matching**: `stt` finds *Set Time Scale* — subsequence matching joins
+  (GDevelop's variables-debugger style - `stats → hp / mp`); scalars stay editable.
+- **Fuzzy picker matching**: `stt` finds *Set Time Scale* - subsequence matching joins
   after exact + synonym hits, capped at 12 so it never buries real matches.
 - **Keyboard flow**: **Enter in the picker search applies the first match**, and Enter
-  in any params-dialog field presses OK — `E → type → Enter → type → Enter` authors an
+  in any params-dialog field presses OK - `E → type → Enter → type → Enter` authors an
   event without touching the mouse.
 
-### Editable Live Values — C3's debugger, both directions
+### Editable Live Values - C3's debugger, both directions
 - The Live Values window is now an **editable tree**: double-click a value while the
-  game runs and the change lands in the running game (typed — `3.5`, `true`,
+  game runs and the change lands in the running game (typed - `3.5`, `true`,
   `Vector2(1, 2)` all parse; plain words stay strings). Streaming frames update rows
   in place so an in-progress edit is never stomped.
 - Debug compiles register a tiny `EngineDebugger` edit-back receiver alongside the
   stream (first streaming sheet wins, noted in the window); **normal compiles carry
-  neither direction** — the covenant story is unchanged.
+  neither direction** - the covenant story is unchanged.
 
-### Save System v2 — strategy in the Inspector, extension through signals
+### Save System v2 - strategy in the Inspector, extension through signals
 - **Every former opinion is now a property**: save directory, file pattern, section,
-  **format** (`config` / `json`), and **encryption** (one key field — encrypted
+  **format** (`config` / `json`), and **encryption** (one key field - encrypted
   ConfigFile or encrypted JSON; the suite verifies no plaintext leaks).
 - **Variant-typed core**: Save Value / Load Value persist *anything* (Vector2, Color,
   dictionaries…); Save/Load Number/Text remain as thin conveniences (ace_ids are API
-  — fully backward-compatible, asserted).
+  - fully backward-compatible, asserted).
 - **Lifecycle broadcasts**: **Save Game** fires *On Before Save* (every sheet writes
-  its own state — the pack never needs to know contributors exist), then On Save
+  its own state - the pack never needs to know contributors exist), then On Save
   Written; **Load Game** fires *On After Load*. Plus **optional autosave**
   (interval property, 0 = off).
 - **Slot metadata for menus**: Slot Exists, List Slots, Slot Modified Time.
@@ -2231,7 +2243,7 @@ current. Structure, hygiene and review actions only:
 
 ### Advanced C3/GDevelop workflows: runtime groups, project-wide find, Save System
 - **Runtime-toggleable groups** (C3's *Set Group Active*, opt-in): right-click a group
-  → *Runtime Toggleable* — it compiles a `__group_<name>_active` flag guarding every
+  → *Runtime Toggleable* - it compiles a `__group_<name>_active` flag guarding every
   contained event (nested groups inherit the innermost guard), with **Set Group
   Active** / **Is Group Active** ACEs. Default stays zero-cost compile-time
   organization.
@@ -2239,7 +2251,7 @@ current. Structure, hygiene and review actions only:
   Replace All covers), jump to matches, and **Replace in Project** (open sheet goes
   through undo; touched files are named). **Find Usages** on a variable/group row
   pre-fills it.
-- **Save System addon (pack 21)**: slot-based persistence as an autoload sheet —
+- **Save System addon (pack 21)**: slot-based persistence as an autoload sheet -
   Save/Load Number/Text, Has Save Key, Delete Slot, On Save Written; human-readable
   ConfigFile underneath; suite round-trips a real save file.
 - Release ritual recorded in CONTRIBUTING: every release refreshes the demo showcase
@@ -2247,12 +2259,12 @@ current. Structure, hygiene and review actions only:
 
 ### Audits: UI/UX + compiler + sweep 11
 - **Sweep 11 (silent bugs)**: the Test Bench wrote (and once committed!) scratch files
-  at the repo root — the bench script now rides next to the scene path and the pattern
+  at the repo root - the bench script now rides next to the scene path and the pattern
   is gitignored; the autoload provider scan would have published **every public method
-  of every autoload** (including the plugin's own bridge) into every picker — only
+  of every autoload** (including the plugin's own bridge) into every picker - only
   scripts with real `## @ace_` annotations publish now (a doc-comment *mention* of
   @ace_* doesn't count; regression-asserted).
-- **UI/UX audit**: the toolbar had grown past 30 buttons — the six workflow tools
+- **UI/UX audit**: the toolbar had grown past 30 buttons - the six workflow tools
   (Debug Breakpoints, Live Values, Bookmarks, Register Autoload, Publish Preview,
   Test Bench) now live in one **Tools** menu.
 - **Compiler audit**: pipeline order re-verified end-to-end; the `on_changed` typo
@@ -2263,35 +2275,35 @@ current. Structure, hygiene and review actions only:
 
 ### The addon-author loop: Publish Preview, auto-READMEs, Test Bench
 - **Publish Preview** (toolbar): a live window showing exactly what this sheet
-  publishes to other sheets' pickers — triggers, conditions, actions, expressions and
-  exported properties — straight from the model, so renaming a function updates the
+  publishes to other sheets' pickers - triggers, conditions, actions, expressions and
+  exported properties - straight from the model, so renaming a function updates the
   surface instantly (no compile-and-reopen loop).
 - **Export Addon… now writes a README.md** into the pack: tags, host class, properties
   (with their attribute tooltips/defaults), the full ACE surface, and composition
-  dependencies — shared packs are documented by default.
+  dependencies - shared packs are documented by default.
 - **Test Bench** (toolbar): one click compiles the behavior, builds a host +
-  behavior scene, and runs it — verify a behavior without hand-building a scene
+  behavior scene, and runs it - verify a behavior without hand-building a scene
   (pairs with Live Values).
 
-### Event-bus triggers — autoload signals fire events in ANY sheet
+### Event-bus triggers - autoload signals fire events in ANY sheet
 - The Event Bus pattern is complete: signals on a **registered autoload** publish as
-  project-wide triggers ("On Game Paused — EventBus"), and consumer sheets compile a
+  project-wide triggers ("On Game Paused - EventBus"), and consumer sheets compile a
   direct by-name connection (`EventBus.game_paused.connect(_on_event_bus_game_paused)`)
-  — the non-self connection codegen the pairing spec has anticipated since the
+  - the non-self connection codegen the pairing spec has anticipated since the
   behaviors era. No node paths, works from every scene.
 - Registered autoloads with annotated scripts now **join the provider scan
   automatically** (zero-config, like `eventsheet_addons/`): their triggers/ACEs appear
   in every sheet's picker under the singleton's name.
 
-### Autoload (Singleton) sheets — a new pillar
-- **New sheet type: Autoload (Singleton)** — Game State, Event Bus, Save System and
+### Autoload (Singleton) sheets - a new pillar
+- **New sheet type: Autoload (Singleton)** - Game State, Event Bus, Save System and
   friends, built as event sheets. Set the type + a global name in the Sheet Type
   dialog, then **Register Autoload** (toolbar) compiles next to the sheet and writes
-  the ProjectSettings entry in one click — guarded against missing names, unsaved
+  the ProjectSettings entry in one click - guarded against missing names, unsaved
   sheets, broken compiles, and **name collisions** (it never overwrites a different
   autoload).
 - **Project-wide ACEs**: exposed functions on an autoload sheet publish ACEs that call
-  **through the singleton name** (`GameState.add_score(10)`) — no node paths, callable
+  **through the singleton name** (`GameState.add_score(10)`) - no node paths, callable
   from every sheet and from hand-written GDScript alike.
 - **Three singleton starters** in the New… menu: **Game State** (score/lives with
   Inspector attributes + On Score Changed), **Event Bus** (project-wide signals,
@@ -2299,51 +2311,51 @@ current. Structure, hygiene and review actions only:
 - Covered by `tests/singleton_sheets_test.gd` (11 assertions).
 
 ### Group color tags + picker favorites (the suggestion list, completed)
-- **Group colors** (C3 parity): right-click a group → *Group Color…* — the picked
+- **Group colors** (C3 parity): right-click a group → *Group Color…* - the picked
   color tints the group's accent bar and background (clear returns to theme tokens;
   mirrors per-comment colors). Organize big sheets by color.
 - **⭐ Favorites in the picker**: right-click any entry to pin it; favorites sit above
-  ★ Recent and **persist in ProjectSettings** — per-project and PR-shareable, so team
+  ★ Recent and **persist in ProjectSettings** - per-project and PR-shareable, so team
   vocabularies travel with the repo (same philosophy as the composition policy).
 
 ### Single-param inline editing + picker info pane
 - **C3's fastest gesture**: double-click a highlighted *value* inside any condition or
-  action and edit just that parameter in a one-field popup — no full dialog. Values map
+  action and edit just that parameter in a one-field popup - no full dialog. Values map
   back to their params verbatim (equal values disambiguate by occurrence order);
   commits are undoable.
 - **Picker info pane**: selecting an entry shows its description **and the exact
-  GDScript it generates** at the bottom of the picker — C3's info bar doubled as the
+  GDScript it generates** at the bottom of the picker - C3's info bar doubled as the
   teach-Godot surface.
 
 ### Spring + Tween behavior packs (packs 19 & 20) + sweep 10
-- **SpringBehavior** — a cleaned-up Godot port of the author's C3 *simple_spring*
+- **SpringBehavior** - a cleaned-up Godot port of the author's C3 *simple_spring*
   addon: **named numeric springs** (per-spring stiffness/damping/precision), Spring
   To / Between, impulses, Stop/Configure, **On Spring Reached**, Is Springing, and
-  value/velocity/progress expressions — plus host helpers (Spring Host X/Y/Angle/
+  value/velocity/progress expressions - plus host helpers (Spring Host X/Y/Angle/
   **Scale** for one-action squash & stretch). Framerate-independent semi-implicit
   integration (damping = fraction of velocity lost per second); the suite *simulates*
   a spring and asserts convergence + the reached-trigger. Mesh deformation from the
   C3 original is an honest skip (shader territory).
-- **TweenBehavior** — Godot Tweens the C3-behavior way: transition + easing as
+- **TweenBehavior** - Godot Tweens the C3-behavior way: transition + easing as
   Inspector **combos** (all 12 Godot transitions), default duration with range
   attributes, one-action Tween Position/Scale/Rotation/Alpha/any-property,
   Stop Tweens, Is Tweening and **On Tween Finished**.
 - Both packs showcase Inspector attributes shipping inside packs (ranges + tooltips
   on their exports). Pack counts refreshed everywhere (20).
 - **Sweep 10**: live-value chips positioned with the control width *inside the zoomed
-  transform* — drifted at zoom ≠ 100% (now uses the logical canvas width); the early
+  transform* - drifted at zoom ≠ 100% (now uses the logical canvas width); the early
   architecture-slices tracker is stamped as a historical record (its "scaffolded"
   claims all shipped).
 
 ### UX polish: C3 reflexes + the general polish set
-- **E / C / A single keys** add an event / condition / action on the selection — the
+- **E / C / A single keys** add an event / condition / action on the selection - the
   C3 keyboard reflexes, joining Q (comment) and G (group).
 - **★ Recent in the picker**: your last-used ACEs pin to the top while not searching
   (newest first, deduped, capped at 8).
 - **Onboarding watermark**: empty sheets now teach the keys and the C3-phrase search.
 - **Inline live values (rung 3)**: streamed frames draw `= value` chips next to
-  variable rows in every pane — the window remains for the full list.
-- **Drag-handle grip dots** on the hovered row's edge — reordering is discoverable.
+  variable rows in every pane - the window remains for the full list.
+- **Drag-handle grip dots** on the hovered row's edge - reordering is discoverable.
 - **Bookmarks panel**: a toolbar window listing every Ctrl+B row; activate to jump.
 - **Find → Split**: the find bar's "Open in Split" jumps the split pane to the current
   match.
@@ -2353,15 +2365,15 @@ current. Structure, hygiene and review actions only:
 ### Full audit: features, themes, addons, docs (sweep 9)
 - **Themes**: 4 of 10 presets (Construct3-stacked, high-contrast, soft-light, designer
   template) predated the column-header tokens and rendered headers with generic
-  defaults — backfilled from each preset's own palette
+  defaults - backfilled from each preset's own palette
   (`tools/backfill_theme_headers.gd` kept as a maintenance tool). All 10 presets now
   cover every token.
-- **Addons**: all 18 behavior packs audited (`tools/audit_addons.gd`) — every pack's
+- **Addons**: all 18 behavior packs audited (`tools/audit_addons.gd`) - every pack's
   `.tres` recompiles **byte-identical** to its shipped `.gd` (zero drift since the
   last regeneration) and every shipped script loads cleanly.
 - **Silent bugs (sweep 9)**: pasting the same event twice into one trigger duplicated
   the baked `__spawn_`/`__sfx_` locals in a single function body (same bug class as
-  the Every-X-Seconds accumulator, action-template side) — uids now re-bake on
+  the Every-X-Seconds accumulator, action-template side) - uids now re-bake on
   duplicate/paste; Replace All now also covers per-ACE `⊳` notes.
 - **Stale docs corrected**: Live Values and the MCP server are no longer "planned/
   candidate" in `EDITOR-UI-SPEC` (both shipped); bookmarks marked shipped in the
@@ -2372,39 +2384,39 @@ current. Structure, hygiene and review actions only:
 ### Theme Editor preview brought current
 - The live preview's sample sheet now exercises the newest renderer vocabulary:
   **BBCode comments**, **per-ACE `⊳` notes**, **Repeat/pick loop rows**, and a
-  **disabled row** (strikethrough) — so restyling shows everything the renderer can
-  draw. (The token form was already current by construction — it reflects over the
-  style resource — and `EVENTSHEET_THEME_TOKEN_SPEC.md` needed no changes: the newer
+  **disabled row** (strikethrough) - so restyling shows everything the renderer can
+  draw. (The token form was already current by construction - it reflects over the
+  style resource - and `EVENTSHEET_THEME_TOKEN_SPEC.md` needed no changes: the newer
   vocabulary reuses existing span tokens.)
 
 ### Inspector attributes Tier 3 (custom drawers) + bug sweep 8
 - **Custom drawers** (the Odin-cosmetics tier): pick *Progress bar* in the Variable
   dialog and the Inspector renders the value as a bar (range-aware). Mechanism: the
   compiler bakes an `eventsheet:progress_bar:<min>:<max>` marker into
-  `@export_custom`, and one `EditorInspectorPlugin` recognizes it — **without the
+  `@export_custom`, and one `EditorInspectorPlugin` recognizes it - **without the
   plugin the property degrades to a plain field**, so generated scripts stay plain
   GDScript (the parity covenant, by construction). The marker format is the extension
   point for future drawers (swatch rows, dials).
 - **The Inspector-attributes spec is now fully delivered** (Tiers 1–3 + tool buttons).
 - **Sweep 8**: the duplicate-hook guard now also covers `_process`/`_ready`/
-  `_physics_process` — a raw GDScript block colliding with a generated trigger
+  `_physics_process` - a raw GDScript block colliding with a generated trigger
   function (or the Live Values standalone `_process`) warns by name instead of
   silently emitting a script that won't compile; combos report ignored drawers too.
 - `tests/inspector_attributes_test.gd` grew to 30 assertions.
 
 ### Live Values (debugging rung 2) + bug sweep 7
-- **Live Values**: toggle it on the toolbar, recompile, run — the sheet's variables
+- **Live Values**: toggle it on the toolbar, recompile, run - the sheet's variables
   stream to an editor window every 0.25s while the debugger is attached (C3's debugger
   panel, the Godot way). Debug compiles inject a throttled `EngineDebugger` send into
   `_process` (merging with an existing process trigger, or emitting a standalone one);
-  **normal compiles never carry the stream** — same covenant story as breakpoints,
+  **normal compiles never carry the stream** - same covenant story as breakpoints,
   plain core-Godot API only. Sheets without variables warn instead of emitting.
 - New editor pieces: `EventSheetLiveValuesDebugger` (EditorDebuggerPlugin capturing
   `eventsheets:live_values`) registered by the plugin entry point and wired to the
   workspace editor's Live Values window.
 - **Sweep 7 (silent bugs)**: duplicating/pasting an **Every X Seconds** condition no
   longer shares one accumulator between the copies (the member uid re-bakes on
-  fresh-uid assignment — C3 copies are independent timers); combo variables now
+  fresh-uid assignment - C3 copies are independent timers); combo variables now
   **warn** when Tier-2 attributes are ignored instead of dropping them silently;
   Show If / Lock Unless targeting an unknown variable warns at compile (typo guard).
 - Covered by `tests/live_values_test.gd` (11 assertions).
@@ -2413,23 +2425,23 @@ current. Structure, hygiene and review actions only:
 - **Tool buttons** (Odin's `[Button]`): give a sheet function a *Tool Button Label*
   and the Inspector shows a clickable button running it
   (`@export_tool_button("Label") var _btn_x: Callable = x`, Godot 4.4+). Non-@tool
-  sheets get a compile warning pointing at the Sheet Type toggle — the button needs a
+  sheets get a compile warning pointing at the Sheet Type toggle - the button needs a
   tool sheet to act in-editor.
 - **MCP is now policy-bound**: with `include_sources = tagged:approved`, untagged
-  addon ACEs disappear from `list_aces` (Core builtins always list) — an AI assistant
+  addon ACEs disappear from `list_aces` (Core builtins always list) - an AI assistant
   told "only approved addons" is enforced, not advised. This completes the composition
   spec's four enforcement points.
 - Suite: inspector test 24 assertions; composition test 25.
 
 ### Inspector attributes Tier 2 + doc refresh + sweep 6
 - **Tier 2 attributes** on exported globals: **Clamp to range** (`clampi`/`clampf`
-  setters), **On Changed** (setter calls a sheet function — typos warn at compile),
-  **Show If** / **Lock Unless** (one aggregated, canonical `_validate_property()` —
+  setters), **On Changed** (setter calls a sheet function - typos warn at compile),
+  **Show If** / **Lock Unless** (one aggregated, canonical `_validate_property()` -
   hidden or read-only until a bool variable is true), and static **Read-only**
   (`@export_custom` usage flags). All from the Variable dialog, validated before
   commit; behavior packs inherit everything.
 - **Sweep 6**: a GDScript block that also defines `_validate_property`/
-  `_get_configuration_warnings` now warns (duplicate functions don't compile — the
+  `_get_configuration_warnings` now warns (duplicate functions don't compile - the
   cause is named instead of a mystery parse error); GDScript-backed sheets now say
   they ignore Includes/Uses/Requires instead of silently dropping them.
 - **Doc refresh**: implementation-status sections added to the two reference design
@@ -2437,11 +2449,11 @@ current. Structure, hygiene and review actions only:
   relationship to the live virtualized renderer (preview templates vs theme tokens).
 - `tests/inspector_attributes_test.gd` grew to 20 assertions.
 
-### Addon composition Lane B.2 — sibling-behavior requirements
+### Addon composition Lane B.2 - sibling-behavior requirements
 - Behavior packs can declare **Requires (sibling behaviors)** in the Sheet Type
   dialog: the compiler emits a canonical `_get_configuration_warnings()` that checks
   the parent's children by class (native or script class), so Godot shows its **⚠
-  badge** the moment a dependency is missing — the Unity *RequireComponent* idiom,
+  badge** the moment a dependency is missing - the Unity *RequireComponent* idiom,
   warning-only by design (no silent auto-mutation of the user's scene).
 - Invalid class names warn and skip; sheets without requirements emit nothing.
 - `tests/addon_composition_test.gd` grew to 22 assertions. The composition arc
@@ -2450,33 +2462,33 @@ current. Structure, hygiene and review actions only:
 ### Addon composition Lane B (v1) + maintainability & sweep 5
 - **Uses (addon classes)** in the Sheet Type dialog: declared classes emit owned helper
   instances (`var __uses_screen_shake := ScreenShake.new()`) so ƒx/blocks call shared
-  provider addons without duplication — has-a composition, still plain GDScript.
+  provider addons without duplication - has-a composition, still plain GDScript.
   Invalid class names warn and skip. (Node-behavior auto-attach is the planned B.2.)
 - **Maintainability**: `sheet_compiler.gd` now opens with a full pipeline overview
-  (the 7 emission phases, both compile paths, and the four standing contracts) — the
+  (the 7 emission phases, both compile paths, and the four standing contracts) - the
   file is the plugin's heart and now reads like it.
 - **Sweep 5**: unsaved sheets no longer produce a blank name in the composition-off
   policy error; match-row branches joined the node-reference audit; the variable
   dialog's attribute prefill (incl. the range field) is now regression-covered.
 - `tests/addon_composition_test.gd` grew to 17 assertions; inspector test to 11.
 
-### Addon composition Lane A — meta-packs / jam kits, with project policy
+### Addon composition Lane A - meta-packs / jam kits, with project policy
 - **Addons can now include other addons** (compile-time bake): the Sheet Type dialog
   gains an *Includes (addon sheets)* field, and the merged result compiles to one
-  standalone class — a *Jam Kit* meta-pack is one include away, with zero runtime
+  standalone class - a *Jam Kit* meta-pack is one include away, with zero runtime
   coupling (the compatibility covenant untouched).
 - **Project policy knobs** under `eventsheets/addons/*` in ProjectSettings (versioned,
   PR-reviewable, CI-readable): `composition_mode`, `max_include_depth` (the
   anti-addon-hell rail), `collision_policy` (warn/error/silent), `include_sources`
   (`tagged:approved` turns the tag system into enforcement), `deprecated_tag_blocks`,
-  `export_bundling`. **Defaults are permissive — jams never meet the policy system.**
-- **The invariant** (test-pinned): policy never changes emitted bytes — it only gates.
+  `export_bundling`. **Defaults are permissive - jams never meet the policy system.**
+- **The invariant** (test-pinned): policy never changes emitted bytes - it only gates.
 - **Export Addon… bundles included sheets** so packs travel complete.
 - Covered by `tests/addon_composition_test.gd` (12 assertions). Spec status updated.
 
 ### Spec: addon composition (addon includes addon)
-- `docs/ADDON-COMPOSITION-SPEC.md` — analysis + design for addons building on other
-  addons: compile-time inclusion (meta-packs / jam kits — first), has-a runtime
+- `docs/ADDON-COMPOSITION-SPEC.md` - analysis + design for addons building on other
+  addons: compile-time inclusion (meta-packs / jam kits - first), has-a runtime
   dependencies with auto-attach (second), inheritance honestly skipped; pros/cons by
   project size and the anti-"addon hell" rationale (bake-at-compile, shallow chains,
   collision warnings, export bundling).
@@ -2485,24 +2497,24 @@ current. Structure, hygiene and review actions only:
 - Exported globals can now carry **Tooltip** (emitted as the `##` doc comment Godot
   shows natively on hover), **Group** (`@export_group` Inspector sections), **Range**
   (`@export_range` sliders on int/float) and **Multiline** (`@export_multiline` on
-  String) — set from the Variable dialog's new *Inspector* section, validated before
+  String) - set from the Variable dialog's new *Inspector* section, validated before
   commit (range demands `min, max, step` on a numeric type).
 - Canonical emission order (tooltip → group → annotated export line); combos keep
   their `@export_enum` prefix alongside attributes; behavior-pack properties get all
   of this for free. External `.gd` files with attribute lines round-trip
-  byte-identically (raw fallback — the lossless rule).
+  byte-identically (raw fallback - the lossless rule).
 - Spec: `docs/INSPECTOR-ATTRIBUTES-SPEC.md` (Tier 1 now shipped; Tiers 2–3 still
   planned). Covered by `tests/inspector_attributes_test.gd` (9 assertions).
 
 ### Builtin vocabularies fully modularized
 - The legacy groups in `builtin_aces.gd` moved into per-module files under
-  `registration/modules/` — **System** (time/display/text/comparisons/stateful/spawn/
-  shader/date/platform), **Device input**, **3D vocabulary**, **Collections** — joining
+  `registration/modules/` - **System** (time/display/text/comparisons/stateful/spawn/
+  shader/date/platform), **Device input**, **3D vocabulary**, **Collections** - joining
   Audio on the documented module contract (`ace_factory.gd`). Each C3-equivalent
   "addon" is now one readable, standalone-shippable file.
 - Shared helpers (`COMPARISON_OPERATORS`, InputMap option builders) moved to the
   factory as the canonical home; the registry concatenates modules **in their original
-  order**, and every ace_id/template is byte-identical (compatibility covenant — the
+  order**, and every ace_id/template is byte-identical (compatibility covenant - the
   full suite, golden round-trips and lift tests gate the move).
 
 ## [0.5.0] - 2026-06-12
@@ -2511,7 +2523,7 @@ current. Structure, hygiene and review actions only:
 - The node picker grows the full large-project toolkit: **filter chips**
   (2D/3D/UI/Audio/Physics), **`group:`** and **`script:`** queries, **`scene:`
   cross-scene search** (scans `.tscn` node headers project-wide), **pinned recents**,
-  and a **"Used in sheet" audit** listing every `$Ref` the sheet makes — missing nodes
+  and a **"Used in sheet" audit** listing every `$Ref` the sheet makes - missing nodes
   flag red (broken-reference detection after scene restructures).
 - Sweep 4 fixes: the audio preview now stops when the params dialog closes (it kept
   playing); keypad keys capture as their real constants (`KEY_KP_ADD`, not `KEY_KPADD`).
@@ -2520,7 +2532,7 @@ current. Structure, hygiene and review actions only:
 - Covered by `tests/node_picker_test.gd` (10 assertions).
 
 ### Spec: Inspector attributes (Unity/Odin-style, the Godot way)
-- `docs/INSPECTOR-ATTRIBUTES-SPEC.md` — design for Range/Tooltip/Group/Multiline/
+- `docs/INSPECTOR-ATTRIBUTES-SPEC.md` - design for Range/Tooltip/Group/Multiline/
   Show-If/On-Changed/Tool-Button/Read-only attributes on sheet variables, tiered by
   mechanism (pure annotations → generated setters/`_validate_property` →
   EditorInspectorPlugin drawers), with data model, dialog UX, canonical emission
@@ -2528,36 +2540,36 @@ current. Structure, hygiene and review actions only:
 
 ### Searchable scene-node picker
 - Expression params gain a **🔍 Pick Node** browser next to ƒx: a filterable tree of the
-  edited scene — the filter matches **name, class or path** (type `Area2D` to see every
+  edited scene - the filter matches **name, class or path** (type `Area2D` to see every
   area, `UI/` to scope to a branch), double-click inserts the `$Path` reference
   (identifier-safe quoting) at the caret. Built for large scenes where drag-drop means
   scrolling hundreds of nodes.
 
 ### Audio module (the C3 Audio addon, the Godot way) + the new module structure
-- **Play Sound / Play Sound At (2D)** — C3's fire-and-forget Play: a throwaway
+- **Play Sound / Play Sound At (2D)** - C3's fire-and-forget Play: a throwaway
   AudioStreamPlayer(2D) that frees itself when finished (multi-line `{uid}` template;
   zero bookkeeping, zero plugin runtime), with bus + volume params.
-- **Player-scoped group** (attach to an AudioStreamPlayer — music & controlled playback):
+- **Player-scoped group** (attach to an AudioStreamPlayer - music & controlled playback):
   Play (from seconds), Play Sound File, Stop, Seek, Set Volume, Set Playback Rate,
   Is Playing, Playback Position.
 - **Godot extras C3 fakes with tags**: Set Bus Volume / Mute Bus / Bus Volume
-  (AudioServer) — master/music/SFX sliders in one action.
-- **▶ Sound preview in the params dialog**: audio params show a preview button — hear
+  (AudioServer) - master/music/SFX sliders in one action.
+- **▶ Sound preview in the params dialog**: audio params show a preview button - hear
   the file before applying (■ stops).
 - **Maintainability**: vocabularies now live in per-module files
   (`registration/modules/audio_aces.gd` first) built through a shared
-  `EventForgeACEFactory`, with a documented module contract — each C3-equivalent
+  `EventForgeACEFactory`, with a documented module contract - each C3-equivalent
   "addon" is one readable file that can ship standalone or be curated into packs.
   Existing groups migrate over time; ace_ids/templates frozen (compatibility covenant).
 - Covered by `tests/audio_aces_test.gd` (9 assertions).
 
 ### Device input vocabulary (C3 Keyboard / Mouse / Gamepad / Touch)
 - **Keyboard**: Key Is Down (`is_physical_key_pressed`), On Key Pressed/Released
-  (event-scoped, for On Input events) — and key params use **C3's press-a-key
+  (event-scoped, for On Input events) - and key params use **C3's press-a-key
   workflow**: click the field, press the key, the `KEY_*` constant is captured
   (with a fallback dropdown for undetectable keys).
 - **Mouse**: button-down condition, world/screen position expressions, Set Mouse Mode
-  (visible/hidden/captured/confined — the Godot-contextual extra).
+  (visible/hidden/captured/confined - the Godot-contextual extra).
 - **Gamepad**: button-down (12-button dropdown), axis expression (sticks + triggers),
   is-connected, and **Vibrate Gamepad** (weak/strong motors).
 - **Touch**: touchscreen-available, On Touch / Touch Released (event-scoped), touch
@@ -2568,17 +2580,17 @@ current. Structure, hygiene and review actions only:
 
 ### Per-ACE comments + starter templates
 - **ACE comments** (C3's per-condition/action notes): right-click any condition or
-  action → "Edit ACE Comment…" — the note renders dimmed after the ACE text (`⊳ why
+  action → "Edit ACE Comment…" - the note renders dimmed after the ACE text (`⊳ why
   this exists`), undoable, persisted on the resource.
 - **New… templates**: a toolbar menu with **Blank**, **Platformer Starter** (move +
-  gravity + grounded jump) and **Top-down Starter** (8-way `get_vector` movement) —
+  gravity + grounded jump) and **Top-down Starter** (8-way `get_vector` movement) -
   adopted unsaved, compile-verified, the C3 new-project feel.
 
 ### Debug & polish: breakpoint UX, Find & Replace, shader/date/platform vocabulary
 - **Breakpoints are fully wired**: F9 persists onto the event resource, and the new
   **Debug BP** toolbar toggle turns debug compiles on per sheet (`breakpoint`
   statements pause the real Godot debugger; normal compiles untouched).
-- **Find & Replace**: the find bar gains a replace field + **Replace All** — one
+- **Find & Replace**: the find bar gains a replace field + **Replace All** - one
   undoable substitution across comments, GDScript blocks, string params, pick-filter
   expressions, group names/descriptions and match branches, with a count.
 - **Set Shader Parameter** (C3 effects → Godot materials, StringName idiom),
@@ -2591,51 +2603,51 @@ current. Structure, hygiene and review actions only:
 
 ### Language gaps closed: C3 Loops, Pick Instances, returns, group locals, real breakpoints
 - **The full C3 Loops set** in the pick-filter dialog (with a C3-named preset menu):
-  **For** (indexed), **For Each**, **For Each (ordered)**, **Repeat**, **While** — Repeat
+  **For** (indexed), **For Each**, **For Each (ordered)**, **Repeat**, **While** - Repeat
   compiles to `for i in range(n)`, While to a real `while`, all reusing the picking
   pipeline (predicates and first-N still apply).
 - **The C3 Pick Instances set** as presets: Pick all, **by comparison/evaluate**
   (predicate), **by highest/lowest value** (ordered + first-1), **nth**, **random**
-  (`[….pick_random()]`), **last created**, **overlapping point** — powered by **ordered
+  (`[….pick_random()]`), **last created**, **overlapping point** - powered by **ordered
   picking finally compiling** (`order_by` sorts a copy via `sort_custom`; descending
   flips the comparator). *Pick nearest* is `order by distance, first 1`.
 - **Function return types**: `EventFunction.return_type` (Variant.Type) emits
   `-> int:` etc., **Return Value / Return** actions author it, and typed functions
   **verify-lift round-trip**. Non-void functions are usable in ƒx expressions.
 - **Group-local variables** (C3): variables attached to a group compile as class members
-  under a `# <Group> — group locals` header.
+  under a `# <Group> - group locals` header.
 - **Real breakpoints**: gutter-flagged events (persisted as `EventRow.debug_break`) emit
-  a `breakpoint` statement when the sheet's debug-compile toggle is on — pausing the
+  a `breakpoint` statement when the sheet's debug-compile toggle is on - pausing the
   actual Godot debugger. Normal compiles are untouched.
 - Covered by `tests/language_gaps_test.gd` (16 assertions).
 
 ### Bug sweep 3 (stateful-condition hardening)
 - **GDScript-backed sheets compiled broken scripts when a stateful condition was added**
-  (Every X Seconds referenced a member the external path never declared) — members now
+  (Every X Seconds referenced a member the external path never declared) - members now
   insert before the first function, skipping any already present verbatim so untouched
   round-trips stay byte-identical.
 - Disabled stateful conditions no longer leave orphan member declarations behind.
 - Stateful conditions in OR-mode events now **warn** (the accumulator rebases whenever
-  ANY condition passes — usually not what you meant; use a dedicated event).
+  ANY condition passes - usually not what you meant; use a dedicated event).
 - All three regression-asserted in `tests/stateful_aces_test.gd` (now 15 assertions).
 
 ### C3 System coverage, batch 2: stateful conditions + multi-statement actions
-- **Every X Seconds** — C3's most-used System condition, done the parity-safe way:
+- **Every X Seconds** - C3's most-used System condition, done the parity-safe way:
   each applied instance bakes a **private class member** (fresh uid), a prelude line
   accumulates `delta` before the `if`, and an on-true line rebases the accumulator
   inside it. Plain members, plain statements, zero indirection; per-frame triggers only
   (documented). Stateful events never chain as Else/Else-If (warned + emitted
   standalone).
 - The machinery is generic: descriptors can declare `member_template` /
-  `codegen_prelude` / `codegen_on_true` — future latches and cooldowns ride the same
+  `codegen_prelude` / `codegen_on_true` - future latches and cooldowns ride the same
   rails, including from addons.
 - **Multi-statement action templates**: baked templates may span lines (each emitted at
-  body indent, `{uid}` locals baked per instance) — enabling **Spawn Scene At**
+  body indent, `{uid}` locals baked per instance) - enabling **Spawn Scene At**
   (instance + position + add_child in one action, C3's create-object-at-position).
 - Covered by `tests/stateful_aces_test.gd` (11 assertions).
 
 ### C3 System coverage, batch 1: time, display, text, comparisons
-- **Time group**: Set Time Scale (`Engine.time_scale` — C3's slow-motion staple) + Time
+- **Time group**: Set Time Scale (`Engine.time_scale` - C3's slow-motion staple) + Time
   Scale / Game Time / FPS / Frame Count expressions.
 - **Display group**: Set Fullscreen Mode (window-mode dropdown), Set Window Size, Window
   Width/Height expressions.
@@ -2643,7 +2655,7 @@ current. Structure, hygiene and review actions only:
   Token Count (`get_slice`), Find, Left/Right/Mid, Upper/Lowercase, Length, Replace,
   Trim, **Zero Pad** (`"%0*d" %`).
 - **Generic comparisons**: Compare Values (`{a} {op} {b}` with the operator dropdown) and
-  Is Between Values — plus C3 search synonyms for all of it.
+  Is Between Values - plus C3 search synonyms for all of it.
 - Covered by `tests/system_aces_test.gd` (9 assertions).
 
 ### BBCode-lite comments
@@ -2651,7 +2663,7 @@ current. Structure, hygiene and review actions only:
   **[color=#ff7777]…[/color]** (hex or named colors), rendered natively on the
   virtualized canvas with nesting support.
 - **No data loss, ever**: the raw text (tags included) remains the editing and
-  serialization truth — inline editing shows the tags, styling only shapes the pixels.
+  serialization truth - inline editing shows the tags, styling only shapes the pixels.
   Unknown tags strip gracefully (inner text survives), unclosed tags degrade sanely, and
   plain bracket text like `array[0]` is never mistaken for markup.
 - Covered by `tests/bbcode_comments_test.gd` (13 assertions).
@@ -2659,7 +2671,7 @@ current. Structure, hygiene and review actions only:
 ### 3D behavior packs (starter quartet)
 - **Sine 3D** (oscillate along x/y/z or around Y, full wave set), **Orbit 3D** (XZ-plane
   circling), **Bullet 3D** (launch along the host's forward with gravity + distance
-  tracking, relaunchable), and **Move To 3D** (Vector3 waypoint queue + On Arrived) —
+  tracking, relaunchable), and **Move To 3D** (Vector3 waypoint queue + On Arrived) -
   eighteen packs bundled total, all sheet-built and covered by the pack test's
   no-drift/load/publish assertions.
 
@@ -2688,7 +2700,7 @@ cases), the **showcase demo README**, an up-to-date Theme Editor preview, and
   stepping onto one **unfolds the path to it** and lands on the row (the sweep's known
   limitation, fixed properly via tree search + reveal).
 - **Addon tags**: tag any addon with a class-level `@ace_tags(movement, retro, jam)`
-  annotation — or the **Tags field** in the Sheet Type dialog for sheet-built addons
+  annotation - or the **Tags field** in the Sheet Type dialog for sheet-built addons
   (emitted into the generated script, zero-config as always). Tags are **searchable in
   the picker**, ride along on every ACE the provider publishes, and are **exposed and
   filterable over MCP** (`list_aces` now matches tags and reports them).
@@ -2701,11 +2713,11 @@ cases), the **showcase demo README**, an up-to-date Theme Editor preview, and
   every selection-driven op to the wrong pane. Mirrored selections are now inert
   (regression-asserted).
 - **Find-step used stale indices**: matches captured at typing time pointed at the wrong
-  rows after any edit — F3 now recomputes matches on every step.
+  rows after any edit - F3 now recomputes matches on every step.
 - **Closing one secondary pane reset the active view** even when the *other* pane was
   active; the reset is now conditional.
 - **"Open in Split" silently did nothing** for rows inside folded groups in the split
-  pane — it now unfolds and retries.
+  pane - it now unfolds and retries.
 - **MCP server served stale sheets**: the long-lived server read `.tres` files through
   Godot's resource cache; reads now bypass the cache (`CACHE_MODE_IGNORE`).
 - Known limitation surfaced by the sweep (deferred, by design of the flat-row model):
@@ -2715,7 +2727,7 @@ cases), the **showcase demo README**, an up-to-date Theme Editor preview, and
 - **14 native 3D ACEs** under their node-type groups: **Node3D** (Set Position/Rotation/
   Scale, Move By, Look At, position expression), **CharacterBody3D** (Is On Floor,
   Move And Slide, Set/Get Velocity), **RigidBody3D** (Apply Central Impulse), and
-  **Camera3D** (Make Current, Set FOV) — plus the **Input Vector** expression
+  **Camera3D** (Make Current, Set FOV) - plus the **Input Vector** expression
   (`Input.get_vector`, StringName idiom, InputMap dropdowns) for 2D and 3D movement
   alike.
 - Tween, visibility/tint, math & random, scene flow, and audio were already
@@ -2726,27 +2738,27 @@ cases), the **showcase demo README**, an up-to-date Theme Editor preview, and
 ## [0.3.0] - 2026-06-10
 
 The multi-view release: the same sheet in split panes, detached OS windows, and linked
-follow-selection views — all full editors over one source of truth — plus experimental
+follow-selection views - all full editors over one source of truth - plus experimental
 tool sheets (`@tool` + EditorScript with the On Editor Run trigger: editor tooling
 authored as events). Details below (newest first).
 
-### Tool sheets (Phase D — EXPERIMENTAL): build editor tooling from events
+### Tool sheets (Phase D - EXPERIMENTAL): build editor tooling from events
 - **`@tool` sheets**: a Sheet Type checkbox emits `@tool` ahead of
   `class_name`/`extends`, so sheet-built nodes and behaviors run inside the editor.
 - **Editor Tool preset** (Sheet Type → "Editor Tool"): an `EditorScript` host paired
-  with the new **On Editor Run** trigger — your events run from **File > Run**
+  with the new **On Editor Run** trigger - your events run from **File > Run**
   (Ctrl+Shift+X). Batch renames, scene generation, project chores: event-sheet style.
 - Full citizen: generated tools **verify-lift back** (On Editor Run round-trips
   byte-identically) and `tool_mode` recovers when re-opening a generated `.gd`.
 - Explicitly **experimental and editor-version-coupled** (editor APIs are Godot's most
-  volatile surface — runtime ACEs stay on stable APIs only, per the covenant).
+  volatile surface - runtime ACEs stay on stable APIs only, per the covenant).
 - Covered by `tests/tool_sheets_test.gd` (10 assertions).
 
 ### Multi-view complete: detached windows + linked panes (P2/P3)
 - **Detach** (toolbar): a floating OS window hosting another full-editing pane over the
-  same sheet — drag it to a second monitor while debugging. Same shared per-sheet state
+  same sheet - drag it to a second monitor while debugging. Same shared per-sheet state
   (breakpoints/bookmarks/disabled) and the same refresh bus as the split pane.
-- **Link** (toolbar): follow-selection across panes — selecting a row in any pane
+- **Link** (toolbar): follow-selection across panes - selecting a row in any pane
   scrolls/selects it in the others. Keep the split zoomed out as an overview and click
   rows to focus them in your detail pane (recursion-guarded; unlink any time).
 - With Split (P1) + full dual-pane editing (P1.5), the multi-view arc from the spec is
@@ -2754,30 +2766,30 @@ authored as events). Details below (newest first).
 
 ### Multi-view phase 1.5: both panes are full editors
 - The split pane graduated from read-only companion to a **full editor**: double-click
-  edits, dialogs, drag/drop, context menus, find — everything works in either pane (the
+  edits, dialogs, drag/drop, context menus, find - everything works in either pane (the
   dock's handlers are payload-driven, so one handler set serves both).
 - **Active-view routing**: selection-driven toolbar ops (copy/paste, Ctrl+/, Alt+arrows,
   Add Condition/Action, quick-add anchors) follow the **last-focused pane**; closing the
   split falls back to the primary.
-- **"Open in Split"** (row context menu): pins the row in the other pane — opening the
-  split automatically if needed — the "keep this visible while I work over there" move.
+- **"Open in Split"** (row context menu): pins the row in the other pane - opening the
+  split automatically if needed - the "keep this visible while I work over there" move.
 - Covered by the extended `tests/multi_view_test.gd` (14 assertions).
 
 ### Multi-view phase 1: split view (same sheet, two panes)
 - A **Split** toolbar toggle opens a second pane over the SAME sheet (VSCode's
-  one-file-two-editors gesture) — read a handler while editing the function it calls,
+  one-file-two-editors gesture) - read a handler while editing the function it calls,
   keep a group pinned while debugging another.
 - **Per-sheet state is shared by reference** (`EventSheetViewState`): breakpoints,
   bookmarks, and the disabled overlay agree across panes instantly. Scroll, zoom,
   selection, and folds stay per-pane.
 - Every edit refreshes both panes (the refresh bus); the companion pane is
-  read/navigate-only in phase 1 (inline editing stays in the primary — full
+  read/navigate-only in phase 1 (inline editing stays in the primary - full
   active-view editing is the spec'd phase 1.5). Closing the split restores the layout.
 - Covered by `tests/multi_view_test.gd` (10 assertions).
 
 ## [0.2.0] - 2026-06-10
 
-Thirty-five features since 0.1.0 — the C3 coverage program (38 native-node ACEs, all 14
+Thirty-five features since 0.1.0 - the C3 coverage program (38 native-node ACEs, all 14
 behavior packs with C3-capability parity), first-class rich variables (enums, collections,
 combos, the Dictionary/Array/JSON ACE set), signals/match/input vocabulary, the importer's
 function verify-lift, gutter bookmarks, sheet includes, find-in-sheet + script-editor
@@ -2787,7 +2799,7 @@ the group-compile fix. Highlights below (newest first).
 
 ### Export Addon Pack, Godot-native affordances, README overhaul
 - **Export Addon… (toolbar)**: one click turns the current behavior sheet into a
-  published pack folder (`eventsheet_addons/<class_snake>/` — editable `.tres` +
+  published pack folder (`eventsheet_addons/<class_snake>/` - editable `.tres` +
   compiled `.gd`, no-drift rule honored, FileSystem rescanned) with guardrails for
   non-behavior sheets and invalid class names. The addon-builder loop is now fully
   in-editor: author behavior → annotate → Export → ACEs published project-wide.
@@ -2795,16 +2807,16 @@ the group-compile fix. Highlights below (newest first).
   path; drop a Scene-dock node → a `$Path` reference (relative to the edited scene,
   quoted automatically when the name needs it).
 - **Scene-tree-aware completion**: `$Child.` now completes against the OPEN scene's
-  actual nodes — script methods, signals, and class members — and direct children appear
+  actual nodes - script methods, signals, and class members - and direct children appear
   as `$Name` candidates in flat completion.
 - **README rewritten** as a proper front door: honest pros & cons, current status,
-  milestones table, and a quick start — kept current with every major update from now on.
+  milestones table, and a quick start - kept current with every major update from now on.
 - Covered by `tests/phase_c_affordances_test.gd` (12 assertions).
 
 ### Behavior packs aligned with their C3 capabilities
 - **Sine**: seven movement types (horizontal, vertical, forwards-backwards, size, angle,
   opacity, value-only) and **five wave shapes** (sine, triangle, sawtooth,
-  reverse-sawtooth, square) — both Inspector combos — plus phase, Update Initial State
+  reverse-sawtooth, square) - both Inspector combos - plus phase, Update Initial State
   (C3's `updateInitialState`), and a readable `wave_value`.
 - **Orbit**: elliptical orbits (primary/secondary radii), offset angle, match-rotation,
   total-rotation tracking. **Bullet**: distance-travelled tracking + enable toggle.
@@ -2822,21 +2834,21 @@ the group-compile fix. Highlights below (newest first).
 
 ### Combo properties + color params (C3's Combo/Color, the Godot way)
 - **Combo variables**: String variables can declare allowed values ("Options" in the
-  variable dialog, comma-separated). Exported combos compile to **`@export_enum`** — a
-  real Inspector dropdown — and **verify-lift back** with their options intact
+  variable dialog, comma-separated). Exported combos compile to **`@export_enum`** - a
+  real Inspector dropdown - and **verify-lift back** with their options intact
   (byte-identical round-trips). Guardrail: the default must be one of the options.
   The Sine pack's `movement` showcases it (horizontal/vertical/angle dropdown).
 - **`@ace_param_options(param a, b, c)`** annotation: addon ACE params render as
-  dropdowns in the params dialog — the C3 Combo for addon authors, zero config.
+  dropdowns in the params dialog - the C3 Combo for addon authors, zero config.
 - **Sheet-enum-driven params**: the `enum:State` param hint offers the enum's members
-  (`State.IDLE`, …) as a dropdown — combos backed by real enums.
+  (`State.IDLE`, …) as a dropdown - combos backed by real enums.
 - **Color params**: the `color` hint (or a Color-typed param) renders a **color picker**
   in the params dialog, values round-trip as canonical `Color(r, g, b, a)` literals, and
   **conditions/actions with a color param draw a small swatch** next to their text in
   the sheet (C3-style color preview). Set Color Tint now uses it.
 - Covered by `tests/combo_color_test.gd` (15 assertions).
 
-### Nine new behavior packs (C3 coverage, Phase B — all fourteen C3-style behaviors bundled)
+### Nine new behavior packs (C3 coverage, Phase B - all fourteen C3-style behaviors bundled)
 - **Sine** (oscillate position/angle), **Orbit** (circle a point), **Bullet** (angle-of-
   motion movement with acceleration/gravity), **Move To** (glide to a point + On
   Arrived), **Follow** (smoothly trail a node path), **Drag & Drop** (mouse grab within
@@ -2846,15 +2858,15 @@ the group-compile fix. Highlights below (newest first).
 - All built as event sheets through the established pack pipeline (`.tres` source +
   generated `.gd`, zero-config ACE publishing, behaviors attach as child nodes,
   properties in the Inspector) and guarded by the pack test's no-drift goldens,
-  class-load, and publish assertions — the compatibility covenant in action.
+  class-load, and publish assertions - the compatibility covenant in action.
 
 ### Native-node ACE providers (C3 coverage, Phase A)
-- **38 new builtin ACEs wrapping native Godot features** — lane 1 of the C3 coverage
+- **38 new builtin ACEs wrapping native Godot features** - lane 1 of the C3 coverage
   program (the engine maintains the implementation; we maintain vocabulary):
-  - **Tween Property** (Godot `create_tween` with transition/ease dropdowns — the C3
+  - **Tween Property** (Godot `create_tween` with transition/ease dropdowns - the C3
 	Tween behavior's job, natively),
   - **Scene** group (Go To Scene, Restart Scene, Quit, Set Paused, Spawn Scene
-	Instance, Is Paused — C3's layout actions),
+	Instance, Is Paused - C3's layout actions),
   - **AudioStreamPlayer**, **AnimatedSprite2D**, **Camera2D**, **Label**,
 	**NavigationAgent2D** (C3 Pathfinding), and **CanvasItem** visibility/tint groups,
   - **Math & Random** expressions: Random, Random Integer, **Choose** (C3's `choose()`
@@ -2866,7 +2878,7 @@ the group-compile fix. Highlights below (newest first).
 
 ### Iconic theme presets (Dracula and friends)
 - Six new bundled themes built from the palettes people already live in: **Dracula,
-  Nord, Gruvbox Dark, Monokai, Solarized Light, and Catppuccin Mocha** — every token
+  Nord, Gruvbox Dark, Monokai, Solarized Light, and Catppuccin Mocha** - every token
   mapped deliberately (conditions take the palette's cool accent, actions the
   warm/green, groups the signature color, comments the comment color; lanes get a
   whisper of their accent over the background).
@@ -2876,14 +2888,14 @@ the group-compile fix. Highlights below (newest first).
 
 ### Signal rows + match rows (GDScript language parity)
 - **Signals are first-class rows** (the enum-row treatment): add via the row menu
-  ("Add Signal Below") or double-click to edit — name plus typed params one-per-line
+  ("Add Signal Below") or double-click to edit - name plus typed params one-per-line
   (`damage: int`). They compile canonically (after enums, before variables),
   **verify-lift** back from generated code (non-canonical formats stay blocks,
   byte-identical round-trips guarded), travel in **snippets**, feed the **On Signal /
   Emit Signal pickers**, lint (`hit.emit(3)` validates), and **validate custom-signal
   trigger connections** at compile time. Names/params pass the identifier guardrails.
 - **Match rows** (C3's switch, GDScript's `match`): a structured action-lane row with an
-  ƒx subject expression and branch text in real GDScript match-body syntax — enum members
+  ƒx subject expression and branch text in real GDScript match-body syntax - enum members
   complete in patterns. Renders as indented action cells; double-click opens the match
   dialog, whose commit guardrail **lint-checks the whole construct** (broken matches
   never commit). Compiles in-flow inside the event body, source-mapped.
@@ -2897,11 +2909,11 @@ the group-compile fix. Highlights below (newest first).
   GDScript blocks are **never** rewritten; existing sheets keep their baked templates.
   EmitSignal's template also got fixed to emit a valid `emit_signal(&"name")`.
 - **Signal autocomplete everywhere** (like C3's object signals/tags):
-  - Dot-completion now offers **signals** alongside methods/properties — typed
+  - Dot-completion now offers **signals** alongside methods/properties - typed
 	variables (`zone.` → `body_entered`), behavior `host.`, and `$GlobalClass.`
 	including script-declared signals (`$PlatformerMovement.` → `jumped`).
   - Signal params (On Signal, Emit Signal) render as a **dropdown** of the host
-	class's signals plus signals declared in the sheet's GDScript blocks — pick,
+	class's signals plus signals declared in the sheet's GDScript blocks - pick,
 	don't type. Custom values persist as the first option.
 - Covered by `tests/signal_autocomplete_test.gd` (8 assertions) + updated input tests.
 
@@ -2910,8 +2922,8 @@ the group-compile fix. Highlights below (newest first).
   GDScript block code, case-insensitive); Enter/F3 next, Shift+F3 previous, Esc closes,
   with an "n of m" counter and wrap-around.
 - **Script-editor shortcut conventions**: **F9** toggles breakpoints (Ctrl+B stays as an
-  alias), **Ctrl+/** toggles the selected rows' enabled state — the "comment out" of
-  event sheets — and **Alt+Up/Down** moves the selected row (reusing the drag machinery,
+  alias), **Ctrl+/** toggles the selected rows' enabled state - the "comment out" of
+  event sheets - and **Alt+Up/Down** moves the selected row (reusing the drag machinery,
   fully undoable).
 - **The sheet inherits your editor theme**: when no explicit theme is chosen, default
   visual tokens derive from the editor's base + accent colors (dark/light/custom-accent
@@ -2920,79 +2932,79 @@ the group-compile fix. Highlights below (newest first).
 - Covered by `tests/godot_feel_test.gd` (14 assertions).
 
 ### Input vocabulary + Wait/Await (Godot-familiarity batch 1)
-- **Input ACE group** — the most-used trigger family finally has first-class vocabulary:
+- **Input ACE group** - the most-used trigger family finally has first-class vocabulary:
   Is Action Pressed / On Action Just Pressed / On Action Just Released conditions,
   Action Strength + Input Axis expressions, and **On Input / On Unhandled Input**
   lifecycle triggers (`_input(event)` / `_unhandled_input(event)`) that compile AND
   verify-lift back from generated code.
 - **Action params are dropdowns read from the project's InputMap** (custom actions
-  first, then the `ui_*` defaults) — pick real actions instead of typing strings.
+  first, then the `ui_*` defaults) - pick real actions instead of typing strings.
 - **Wait / Wait For Signal** actions (C3's System → Wait): compile to
-  `await get_tree().create_timer(s).timeout` / `await <signal>` — handlers are implicit
+  `await get_tree().create_timer(s).timeout` / `await <signal>` - handlers are implicit
   coroutines in GDScript, so awaiting mid-event is safe and idiomatic.
 - Covered by `tests/input_time_aces_test.gd` (14 assertions).
 
-### MCP server — AI tooling (the backlog's final item)
+### MCP server - AI tooling (the backlog's final item)
 - **A pure-GDScript Model Context Protocol server** ships in the addon
-  (`addons/eventsheet/mcp/`): the Godot binary itself is the server process — no
+  (`addons/eventsheet/mcp/`): the Godot binary itself is the server process - no
   Python/Node dependencies. Setup guide: `docs/MCP-SERVER.md`.
 - Six tools for AI assistants: `list_sheets`, `read_sheet` (structured JSON of rows/
   variables/enums/functions; also opens any `.gd` as a sheet), `list_aces` (the full
   vocabulary incl. zero-config addons), `compile_sheet` (**dry-run by default**),
   `lint_block` (compile-check against sheet context), and `apply_snippet` (append rows
-  from snippet text or plain GDScript via the lossless paste pipeline — the only
+  from snippet text or plain GDScript via the lossless paste pipeline - the only
   mutating tool, `.tres`-only, append-only).
 - Transport-free protocol core (`EventSheetMCPServer.handle_message`) covered by
   `tests/mcp_server_test.gd` (21 assertions); the stdio loop is a thin newline-delimited
   JSON-RPC wrapper (launch with `--headless --quiet`).
 
-### Curated collection ACE set (rich-variables phase 3 of 3 — the 1.0 arc is complete)
+### Curated collection ACE set (rich-variables phase 3 of 3 - the 1.0 arc is complete)
 - **27 ready-made Dictionary / Array / JSON ops** as builtin Core descriptors, grouped in
   the picker as **Variables: Dictionary** (Set/Delete Key, Clear, Merge, Has Key,
   Is Empty, Get-with-default, Size, Keys, Values), **Variables: Array** (Append, Insert
   At, Remove At, Erase, Clear, Sort, Shuffle, Contains, Is Empty, Value At, Size, Pick
   Random), and **Variables: JSON** (To/From JSON Text, JSON Is Valid, Save/Load JSON
-  File — `user://` paths survive exports).
+  File - `user://` paths survive exports).
 - Every op compiles to a **single direct GDScript line** (`inventory["sword"] = 1`,
-  `scores.append(10)`, `JSON.parse_string(...)`) — parity-safe, reverse-lift-eligible,
+  `scores.append(10)`, `JSON.parse_string(...)`) - parity-safe, reverse-lift-eligible,
   and the templates double as GDScript teachers. The long tail stays one ƒx away.
 - **Type-aware variable dropdowns**: `variable_reference:Array` / `:Dictionary` hints
   filter the dropdown to matching variables (typed containers match their base;
-  Variant/untyped always qualify) — with a clear "No Array variables — add one first"
+  Variant/untyped always qualify) - with a clear "No Array variables - add one first"
   block when none exist.
 - **C3 migration guide** gains a data-plugins table (Dictionary/Array/JSON addons → the
   Variables groups; XML → intentionally unsupported, use JSON).
 - Covered by `tests/collection_aces_test.gd` (15 assertions). With enums (phase 1) and
   collection variables (phase 2), **the first-class rich-variables feature is complete**.
 
-### Collection variables (rich-variables phase 2 of 3 — 1.0 scope)
+### Collection variables (rich-variables phase 2 of 3 - 1.0 scope)
 - **Array and Dictionary variables are first-class**, including Godot 4 typed containers
   (`Array[int]`, `Dictionary[String, int]`, …) offered in the variable dialog's type list.
 - **Defaults edit as GDScript literals** (`{"sword": 1}`, `[1, 2, 3]`) with a live ✓/✗
   hint while typing, and a commit guardrail: invalid literals never save (wrong container
   kind, garbage, or **element-type mismatches** against the declared `Array[T]` /
-  `Dictionary[K, V]` — with int→float allowed, as in GDScript).
+  `Dictionary[K, V]` - with int→float allowed, as in GDScript).
 - **Canonical emission**: containers compile through a recursive, escape-correct,
   deterministic literal formatter (`{"k": 1, "nested": {"ids": [1, 2.5]}}`); editing an
   existing collection variable shows that same canonical literal.
 - **Verify-lift round-trips**: canonical collection declarations in generated `.gd` files
   re-open as editable variable rows with their values intact; non-canonical formatting
-  stays a verbatim block — byte-identical round-trips guarded.
+  stays a verbatim block - byte-identical round-trips guarded.
 - Covered by `tests/collection_variables_test.gd` (17 assertions).
 
 ### C3-familiarity batch: group descriptions, slow-click editing, rename refactoring, commit guardrails
-- **Group events now actually compile** — the batch's tests exposed that events inside
+- **Group events now actually compile** - the batch's tests exposed that events inside
   groups were silently dropped with a TODO comment (a long-standing compiler hole).
   Groups flatten inline at emission, with C3 semantics: **disabling a group drops all of
   its children from the compiled output**; group comments compile as comment lines.
 - **Group descriptions** (C3-style): a muted, inline-editable second line on the group
-  header (`EventGroup.description` — also via the row menu "Edit Group Description…");
+  header (`EventGroup.description` - also via the row menu "Edit Group Description…");
   travels in snippets. Group titles were already double-click renameable.
 - **Slow double-click editing** (Explorer-style): click an already-selected editable
-  cell again after the double-click window (450–1600 ms) to start editing — comments,
+  cell again after the double-click window (450–1600 ms) to start editing - comments,
   group names/descriptions, variable rows; multiline comments route to their dialog.
 - **Variable rename refactoring**: renaming a variable rewrites every reference across
-  the sheet — GDScript blocks (class-level, in-flow, function bodies), ƒx/string params,
+  the sheet - GDScript blocks (class-level, in-flow, function bodies), ƒx/string params,
   pick-filter expressions, and **baked codegen templates** (placeholders like `{amount}`
   are never touched). Whole-word matching; the status bar reports how many references
   updated. A rename can no longer silently break compiled code.
@@ -3003,10 +3015,10 @@ the group-compile fix. Highlights below (newest first).
   apply while any ƒx expression fails its compile-check.
 - Covered by `tests/ux_guardrails_test.gd` (29 assertions).
 
-### First-class enums (rich-variables phase 1 of 3 — 1.0 scope)
+### First-class enums (rich-variables phase 1 of 3 - 1.0 scope)
 - **Enums are sheet rows**: add via the row menu ("Add Enum Below") or double-click to
   edit (name + members, optional explicit values like `HURT = 4`). They compile to
-  canonical class enums **before variables**, so `var state: State` works — and exported
+  canonical class enums **before variables**, so `var state: State` works - and exported
   enum-typed variables get Godot's **Inspector dropdown for free**.
 - Full citizen everywhere: rendered as keyword-badged rows; **verify-lifted** back from
   generated code (non-canonical/multi-line enums stay verbatim blocks; byte-identical
@@ -3014,12 +3026,12 @@ the group-compile fix. Highlights below (newest first).
   correctly; `State.` **dot-completes the members** in ƒx fields and GDScript blocks;
   source-mapped for provenance.
 - Scope decisions recorded: rich variables (collections UX + curated Dictionary/Array/
-  JSON ACE set) are **required for 1.0**; **XML support is dropped** — JSON is the
+  JSON ACE set) are **required for 1.0**; **XML support is dropped** - JSON is the
   interchange format. Covered by `tests/enum_row_test.gd` (16 assertions).
 
 ### Inspector polish: widget_hint editors + per-row "Selected ACE" properties
 - **widget_hint-specific inspector editors**: exposed ACE params with `widget_hint`
-  (or an `@ace_param_hint`) now render custom controls in Godot's Inspector — `slider`/
+  (or an `@ace_param_hint`) now render custom controls in Godot's Inspector - `slider`/
   `range` → HSlider (bounds from `range: "min,max,step"` metadata), `multiline` →
   TextEdit, `expression` → the ƒx-style line editor. Unknown hints keep Godot's default
   widgets. (Construction is editor-only; class mapping is headless-tested.)
@@ -3039,7 +3051,7 @@ the group-compile fix. Highlights below (newest first).
   list other sheets' `res://….tres` paths in the Inspector and their **variables,
   class-level blocks, events, and functions merge into this sheet's generated script** at
   compile time. The root sheet wins name collisions (warned), cycles and missing files
-  are skipped with warnings, and included rows never enter the editing model — a shared
+  are skipped with warnings, and included rows never enter the editing model - a shared
   "library sheet" pattern. Ignored for GDScript-backed sheets. (Field retyped
   `Array[NodePath]` → `Array[String]`; it was never used or serialized before.)
 - Covered by `tests/bookmarks_includes_test.gd` (18 assertions).
@@ -3047,19 +3059,19 @@ the group-compile fix. Highlights below (newest first).
 ### Importer completed: function verify-lift + comment preservation (two-pass safe)
 - **Sheet functions lift back** when opening generated `.gd` files: their `@ace_*`
   annotation blocks reverse into `expose_as_ace`/name/category/description, parameters
-  parse with types, and bodies use the event grammar with **lenient ifs** — unmatched
+  parse with types, and bodies use the event grammar with **lenient ifs** - unmatched
   control flow becomes in-flow GDScript inside the event instead of failing the file
   (trigger bodies got the same upgrade). Codegen templates and icons are regenerated
-  rather than stored (behavior identity — `class_name`, host, behavior mode — is now
+  rather than stored (behavior identity - `class_name`, host, behavior mode - is now
   recovered from the prelude so `$Class.fn()` templates verify).
 - **Trailing top-level comments lift** into comment rows; the external compile path now
-  emits top-level comments (it silently dropped them before — found by the byte-verify).
+  emits top-level comments (it silently dropped them before - found by the byte-verify).
 - **Two-pass safety**: when the full lift can't verify byte-identically, the event-only
   lift retries, so these upgrades can never regress previously-lifting files. Also fixed
   a latent revert leak (the shallow backup left a boundary row's stripped newline behind
   after a failed verify, corrupting round-trips).
-- End-to-end fixture: the shipped **PlatformerMovement pack re-opens fully** — events,
-  exposed functions, annotations, comments — with only the `_enter_tree` host-binding
+- End-to-end fixture: the shipped **PlatformerMovement pack re-opens fully** - events,
+  exposed functions, annotations, comments - with only the `_enter_tree` host-binding
   scaffold staying a verbatim block (external emission keeps the prelude untouched by
   design). Covered by `tests/function_lift_test.gd` (13 assertions).
 
@@ -3070,10 +3082,10 @@ the group-compile fix. Highlights below (newest first).
   via ClassDB + the global class list). Unresolvable tokens offer nothing rather than
   guessing; non-dot contexts keep the flat sheet/host candidates. One shared choke point:
   `EventSheetGDScriptLint.completion_for_context`.
-- **Signature hints**: while typing inside a call, the editor shows the signature —
+- **Signature hints**: while typing inside a call, the editor shows the signature -
   sheet functions from their declared params, host methods from ClassDB
   (`signature_hint`, displayed via CodeEdit's code-hint popup in both editors).
-- **Quick-add bar** (toolbar): C3's "type to insert" — `every tick` creates the On
+- **Quick-add bar** (toolbar): C3's "type to insert" - `every tick` creates the On
   Process event (synonym phrasing honored), `heal 5` applies the Heal action with
   `amount = 5` (trailing words fill parameters positionally). Ties prefer the most
   specific name ("process" picks On Process, not On Physics Process); unknown queries
@@ -3084,10 +3096,10 @@ the group-compile fix. Highlights below (newest first).
   `duration`/`repeating`, and the **On Timer** trigger (repeats when repeating).
 - **FlashBehavior** (host: CanvasItem): Flash / Stop Flash ACEs blink the host's
   visibility at an exported `interval` for a duration, restore it, and fire
-  **On Flash Finished** — the C3 Flash behavior.
+  **On Flash Finished** - the C3 Flash behavior.
 - **StateMachineBehavior** (host: any Node): Set State action, **On State Changed**
   trigger `(previous, next)`, and an **Is In State condition** authored as an annotated
-  class-level GDScript block — the reference example for mixing expose-as-ACE functions
+  class-level GDScript block - the reference example for mixing expose-as-ACE functions
   with hand-annotated block ACEs (including a custom codegen template) in one behavior.
 - All authored as behavior sheets via `tools/build_sample_behaviors.gd` (editable `.tres`
   beside compiled `.gd`), no-drift goldens + publish assertions extended in
@@ -3102,23 +3114,23 @@ the group-compile fix. Highlights below (newest first).
   argument signature as `trigger_args` and the connect's `get_node("…")` path as
   `trigger_source_path`. Connect lines themselves are skipped (emission regenerates
   them), so a connects-only `_ready` produces no phantom OnReady event.
-- Handlers with no connect entry (scene-wired) keep the whole file as verbatim blocks —
+- Handlers with no connect entry (scene-wired) keep the whole file as verbatim blocks -
   the lossless byte-identical contract is unchanged and still gates every lift. This also
   upgrades paste-GDScript-as-events for pasted scripts containing signal handlers.
   Covered by `tests/signal_lift_test.gd` (13 assertions).
 
 ### Post-1.0 polish: pick filters compile, fx autocomplete, external-sheet watcher
-- **Pick filters compile** — the last event-flow TODO is gone. C3's "for each" picking,
+- **Pick filters compile** - the last event-flow TODO is gone. C3's "for each" picking,
   the Godot way: each filter wraps the event body in a direct `for` loop over a node
   group / the children / any GDScript iterable, with an optional iterator-scoped `where`
   predicate and a first-N cap; conditions gate the loop and multiple filters nest. Pick
   rows render as "For each item in group \"enemies\"…" lines in the condition lane,
   author via the row context menu ("Add Pick Filter (For Each)…") and edit/delete via
   double-click. order_by and condition-based filtering warn honestly (predicate is the
-  supported path). Plain loops — the performance-parity contract holds.
+  supported path). Plain loops - the performance-parity contract holds.
   Covered by `tests/pick_filter_test.gd` (17 assertions).
 - **fx expression autocomplete**: expression fields are now single-line CodeEdits with
-  completion popups (sheet variables, sheet functions, host members — the same candidate
+  completion popups (sheet variables, sheet functions, host members - the same candidate
   source as the GDScript-block editor), on top of the existing live validation. Newlines
   can never reach the stored value.
 - **External-sheet file watcher**: GDScript-backed sheets track their file's mtime; when
@@ -3145,17 +3157,17 @@ the group-compile fix. Highlights below (newest first).
 - **The full test suite is GREEN for the first time: 594 passing, 0 failures.** The four
   legacy `event_sheet_editor_test` failures are fixed for real:
   - the built-in demo sheet stamped its ACEs with provider "Core" while reflection
-	registers the demo actor as `EventSheetDemoGameplayActor` — the resolver now matches
+	registers the demo actor as `EventSheetDemoGameplayActor` - the resolver now matches
 	by name (and no longer depends on registry refresh order), so demo rows render
 	"On Died"/"Take Damage 10" again;
   - non-event spans (comments/variables/blocks) clamp 2px tighter, accounting for the
-	chip rect's expansion — long comments stay inside the row width at any zoom;
+	chip rect's expansion - long comments stay inside the row width at any zoom;
   - the context-menu test re-acquires live row data between undoable edits (snapshot
 	restore replaces row resources; the old assertion toggled an orphan).
   Only the long-known harmless tail segfault remains (after the summary prints); CI now
   fails on ANY `[FAIL]`.
 - **Paste GDScript → events**: pasting raw GDScript from anywhere converts through the
-  open-as-sheet pipeline — trigger functions ACE-lift into real events, declarations
+  open-as-sheet pipeline - trigger functions ACE-lift into real events, declarations
   become variable rows, everything else lands as verbatim GDScript blocks (the lossless
   rule). Non-code clipboard text falls through to the normal paste paths untouched.
   Covered by `tests/gdscript_paste_test.gd` (9 assertions).
@@ -3163,26 +3175,26 @@ the group-compile fix. Highlights below (newest first).
   picking, expressions) + common System vocabulary table + habits that transfer vs.
   habits to relearn.
 - **Perf re-baseline** (10,801 flat rows): sheet build ~490 ms, zero per-row widgets,
-  visible draw window 8 rows — the virtualization contract holds post-1.0-features.
+  visible draw window 8 rows - the virtualization contract holds post-1.0-features.
 
 ### 1.0 feature-complete: visual completeness, export integrity, theme editor, rename
-- **The plugin is now "Godot EventSheets"** (plugin.cfg, README, release artifacts —
+- **The plugin is now "Godot EventSheets"** (plugin.cfg, README, release artifacts -
   internal class names keep the EventForge prefix as the engine codename). Release zips
   are now `godot-eventsheets-<v>.zip` / `godot-eventsheets-samples-<v>.zip`.
 - **Comments reach C3 parity**: multiline comment rows (one cell per line, row height
   follows), **per-comment background colors**, a comment dialog (multiline text + color
-  picker — double-click multiline comments or use "Edit Comment…"; single-line comments
+  picker - double-click multiline comments or use "Edit Comment…"; single-line comments
   keep fast inline editing), and **comment ↔ action-cell conversion** ("Attach Comment To
   Event Above" / "Detach Comment To Row"). Action-cell comments render per line inside the
   action lane, edit via double-click, and **compile to `#` lines inside the body**;
   top-level comments also compile as real comment text (the last "TODO: row type" case for
   comments is gone). Covered by `tests/visual_completeness_test.gd` (13 assertions).
 - **Export-integrity hook**: an `EditorExportPlugin` recompiles every event sheet when an
-  export starts (loud per-sheet errors on failure; GDScript-backed sheets skipped — their
+  export starts (loud per-sheet errors on failure; GDScript-backed sheets skipped - their
   `.gd` is already the truth). The same pass is a static headless API
   (`EventSheetExportIntegrityPlugin.recompile_all_sheets`), tested in CI.
 - **Visual theme editor** (the final planned phase): toolbar "Theme Editor…" opens a live
-  workbench — a real viewport rendering a sample sheet on the left, and a **reflectively
+  workbench - a real viewport rendering a sample sheet on the left, and a **reflectively
   generated token form** on the right (every exported Color/float/int/bool on the style
   resources gets a control automatically, so future tokens appear with zero editor
   changes). Edits preview live on a sandboxed copy; "Apply To Current Sheet" is undoable;
@@ -3195,14 +3207,14 @@ the group-compile fix. Highlights below (newest first).
 ### Runtime addon bridge + instance-backed ACEs, release automation, docs refresh
 - **`EventForgeBridge.register_script_as_provider` is real**: scripts registered from code
   (other plugins, tools, tests) join the ACE vocabulary exactly like
-  `res://eventsheet_addons/` scans — static API (works without the autoload), deduped,
+  `res://eventsheet_addons/` scans - static API (works without the autoload), deduped,
   unregister supported, `providers_changed` emitted.
 - **Instance-backed addon ACEs**: addon *methods without* `@ace_codegen_template` used to
   compile to nothing; applying one now bakes a call through a per-provider member
   (`__eventsheet_provider_<Class>.method({args})`), and the compiler declares each used
   provider **once** as a plain owned instance (`var __… := Class.new()`). Template-less
   addon ACEs therefore compile and run in exported games with zero EventForge dependency
-  (the parity contract holds — asserted in tests). Demo addon gained `announce_heal` as a
+  (the parity contract holds - asserted in tests). Demo addon gained `announce_heal` as a
   living example. Covered by `tests/runtime_provider_test.gd` (10 assertions).
 - **GitHub Actions**: `ci.yml` (every push/PR: import must be clean, headless-safe suite
   gates, full suite checked against the known pre-existing failures) and `release.yml`
@@ -3234,27 +3246,27 @@ the group-compile fix. Highlights below (newest first).
   layout, verification commands, and the remaining road to 1.0.
 
 ### Pairing polish: reverse provenance, live ƒx validation, row-cell icons
-- **Reverse provenance** — the pairing loop now runs both directions: clicking a line in
+- **Reverse provenance** - the pairing loop now runs both directions: clicking a line in
   the GDScript panel **selects the sheet row that generated it** (most-specific source-map
   range wins; clicking inside an in-flow block selects its enclosing event). Built on the
   new `EventSheetViewport.select_resource()`, which also scrolls the row into view.
-- **Live ƒx expression validation** — expression parameter fields compile-check on every
+- **Live ƒx expression validation** - expression parameter fields compile-check on every
   keystroke against the sheet context (variables, host members, behavior `host`), tinting
   red with an explanatory tooltip when the text is not a valid GDScript expression
   (`EventSheetGDScriptLint.lint_expression`).
 - **Object icons in row cells** (C3's strongest visual cue): condition/action/trigger
-  cells draw their ACE's icon before the object label — addon `@ace_icon` textures, Godot
+  cells draw their ACE's icon before the object label - addon `@ace_icon` textures, Godot
   class icons for node-typed ACEs, member glyphs otherwise; Core/System uses the editor's
   Tools glyph. Same resolver as the picker, cached per provider/ACE (misses for
   not-yet-loaded providers are not cached, so addon hot-loads self-heal). Span measurement
   accounts for the icon advance, so hit-testing stays exact.
 - The plugin now bundles `addons/eventsheet/icons/eventsheet.svg` (used by the demo addon
   and tests; the project previously had **no** `res://icon.svg`, which made earlier
-  icon-path asserts pass vacuously — they are real now).
+  icon-path asserts pass vacuously - they are real now).
 - Covered by `tests/pairing_polish_test.gd` (15 assertions).
 
 ### Sample behavior packs (Platformer / Eight-Direction)
-- **Two behaviors authored as event sheets ship in `res://eventsheet_addons/`** — editable
+- **Two behaviors authored as event sheets ship in `res://eventsheet_addons/`** - editable
   `.tres` sources beside their compiled `.gd` scripts, built by
   `tools/build_sample_behaviors.gd` (also the reference for authoring sheets from code):
   - **PlatformerMovement** (host: CharacterBody2D): ui_left/right movement + gravity every
@@ -3274,7 +3286,7 @@ the group-compile fix. Highlights below (newest first).
 ### Eventsheet-authored behaviors: expose-as-ACE + sheet-type identity UX
 - **Sheet functions can publish as ACEs.** Mark a function `expose_as_ace` (with optional
   display name/category) and the generated script carries the full `@ace_*` annotation
-  block — including a default codegen template (`$PatrolBehavior.dash({strength})` for
+  block - including a default codegen template (`$PatrolBehavior.dash({strength})` for
   behaviors, `dash({strength})` for custom nodes/sheets) and the sheet's icon as
   `@ace_icon`. Drop the compiled script into `res://eventsheet_addons/` and the behavior's
   ACEs appear in every sheet: the **sheet → script → addon loop** is closed (verified by
@@ -3282,9 +3294,9 @@ the group-compile fix. Highlights below (newest first).
   emit `@ace_hidden`, making `expose_as_ace` the single publication switch.
 - **Sheet-type identity UX** (dual-audience: Godot "custom node with an icon", C3
   "behavior attached to an object"): a slim **identity banner** above the sheet
-  (`⚙ PatrolBehavior — Behavior · acts on host: CharacterBody2D`, click to edit), **tab
+  (`⚙ PatrolBehavior - Behavior · acts on host: CharacterBody2D`, click to edit), **tab
   badges** (⚙ behavior / ◆ custom node), the column header now reads
-  `Conditions — host: <class>` on behavior sheets, a behavior-aware empty-state hint, and
+  `Conditions - host: <class>` on behavior sheets, a behavior-aware empty-state hint, and
   a new **"Sheet Type…" toolbar dialog** (Event Sheet / Custom Node / Behavior with
   name+icon+host fields) so none of it requires the Inspector. New themable
   `behavior_accent_color` token (soft purple).
@@ -3292,7 +3304,7 @@ the group-compile fix. Highlights below (newest first).
 
 ### Behavior foundations: host accessor + real signal-trigger codegen
 - **Behavior mode** (`EventSheetResource.behavior_mode`): the sheet compiles to an
-  attachable **Node component** that acts on its parent — `extends Node`, a typed
+  attachable **Node component** that acts on its parent - `extends Node`, a typed
   `var host: <host_class>` accessor bound in `_enter_tree` with an attach-time warning,
   and `host_class` reinterpreted as the declared/required host type. Lint/completion
   understand the behavior context (`host.velocity.x` lints clean).
@@ -3301,28 +3313,28 @@ the group-compile fix. Highlights below (newest first).
   top of `_ready` (synthesizing `_ready` when no OnReady events exist). Works for self
   signals, **other nodes' signals** (`EventRow.trigger_source_path` → `get_node(...)`
   with source-aware handler names like `_on_platform_landed`), and **custom
-  `signal:<name>` triggers** from addons/providers — which previously didn't compile at
+  `signal:<name>` triggers** from addons/providers - which previously didn't compile at
   all. Argument signatures are baked at apply time (`trigger_args`), and applying a
   trigger definition now bakes `trigger_id` too (fixing picker-created trigger events
   silently skipping compilation).
 - **Compile-time signal validation**: a self-connection is emitted only when the signal
   exists on the script's base class or is declared in a class-level GDScript block;
   otherwise it's skipped with a precise warning (emitting blindly produced a script that
-  didn't parse — caught on the demo, whose CharacterBody2D sheet used OnBodyEntered).
-- **Demo golden regenerated from the compiler** — `compile_demo_test` passes for the
+  didn't parse - caught on the demo, whose CharacterBody2D sheet used OnBodyEntered).
+- **Demo golden regenerated from the compiler** - `compile_demo_test` passes for the
   first time (pre-existing failures drop from 5 to 4). Covered by
   `tests/behavior_foundations_test.gd` (16 assertions).
 
 ### Custom node types from sheets + icon support
 - **A sheet can now define a custom node type, exactly like GDScript.** Set
   `custom_class_name` (and optionally `custom_class_icon`) on the sheet in the Inspector
-  and the generated script emits `@icon("…")` + `class_name X` + `extends Y` — the type
+  and the generated script emits `@icon("…")` + `class_name X` + `extends Y` - the type
   appears in Godot's Create Node dialog with its icon, instances carry the sheet's
   behavior, and recompiling the sheet updates the class. Future eventsheet-authored
   Behaviors inherit this mechanism automatically (they compile to node scripts).
 - **The ACE picker now shows icons** (C3 users expect the object's icon beside its name):
   addon `@ace_icon("res://…")` textures, node-type sections and entries with their Godot
-  class icons, and member-kind glyphs (signal/method/property) as fallback — degrading
+  class icons, and member-kind glyphs (signal/method/property) as fallback - degrading
   gracefully to text-only when unavailable. Resolution is shared
   (`ACEPickerDialog.resolve_definition_icon`) so row rendering can reuse it next.
 - Covered by `tests/custom_node_class_test.gd` (8 assertions); demo golden unchanged.
@@ -3339,7 +3351,7 @@ the group-compile fix. Highlights below (newest first).
   dropped into an event's flow become **function-local `var` declarations** (with a warning
   if marked const/exported), and sibling GDScript blocks indent adaptively (pre-indented
   imported code keeps its tabs; flat editor-authored code is indented for its depth).
-- **Validity guard**: an `if`/`elif`/`else` whose body emits nothing now gets `pass` —
+- **Validity guard**: an `if`/`elif`/`else` whose body emits nothing now gets `pass` -
   condition-only events can no longer produce invalid GDScript (latent bug fixed).
 - All emitted rows (sub-events included) get provenance source-map entries. Demo golden
   output is unchanged. Covered by `tests/subevent_compile_test.gd` (12 assertions).
@@ -3347,11 +3359,11 @@ the group-compile fix. Highlights below (newest first).
 ### GDScript-backed sheets: open ANY .gd as an event sheet (losslessly)
 - **The Open dialog now accepts `.gd` files.** Opening one imports it as a GDScript-backed
   sheet: the file stays the **single source of truth** (no `.tres` is created), and Save
-  compiles back to it. **Untouched files round-trip byte-identically** — guarded by a
+  compiles back to it. **Untouched files round-trip byte-identically** - guarded by a
   golden test with a deliberately hostile sample (annotations, comments, signals, enums,
   consts, odd formatting, default-param and non-void functions).
 - **The lossless rule**: declarations lift to first-class rows only when canonical
-  re-emission reproduces the source line exactly (verify-lift — e.g. `var hp: int = 100`
+  re-emission reproduces the source line exactly (verify-lift - e.g. `var hp: int = 100`
   becomes an editable variable row, `var speed := 5.0` stays verbatim); each top-level
   function becomes its own GDScript block row (per-function provenance); everything else
   is preserved in ordered verbatim blocks. External emission adds no generated header and
@@ -3363,7 +3375,7 @@ the group-compile fix. Highlights below (newest first).
 
 ### Performance-parity contract for generated code
 - **Hard constraint, now written and guarded**: event sheets compile to GDScript that runs
-  exactly as fast as hand-written code — direct statements only (no `call()`/`Callable`
+  exactly as fast as hand-written code - direct statements only (no `call()`/`Callable`
   indirection, no reflection, no plugin classes in output), static types wherever known,
   signals connected once, `await` only when flagged, provenance kept as compiler metadata.
   Spelled out in GDSCRIPT-PAIRING-SPEC (Principles #5) and enforced by
@@ -3374,7 +3386,7 @@ the group-compile fix. Highlights below (newest first).
 
 ### Shareable snippets (cross-project copy/paste)
 - **Copying rows now also writes a portable text snippet to the system clipboard**
-  (`[eventsheet-snippet v1]` + Godot `var_to_str` data — no JSON, no script paths/UIDs), so
+  (`[eventsheet-snippet v1]` + Godot `var_to_str` data - no JSON, no script paths/UIDs), so
   events/groups/comments/GDScript blocks/variables paste across projects, editor instances,
   and forum/Discord posts. Multi-select serializes only top-most rows (children travel
   inside their parent).
@@ -3397,14 +3409,14 @@ the group-compile fix. Highlights below (newest first).
   **variables/functions**, so `health += 5` and `move_and_slide()` lint clean while broken
   code is flagged (✓/✗ status under the editor, live on every change).
   (`EventSheetGDScriptLint`; Godot doesn't expose the full ScriptEditor analyzer to
-  plugins — this is the documented approximation.)
+  plugins - this is the documented approximation.)
 - **Completion**: Ctrl+Space in the block editor offers sheet variables, sheet functions,
   and host-class members; GDScript syntax highlighting in the dialog.
 - Covered by `tests/inflow_gdscript_test.gd` (13 assertions).
 
 ### Zero-config ACE addons (C3-addon form, no JSON)
 - **Drop a script into `res://eventsheet_addons/` and it becomes a project-wide ACE addon
-  automatically** — no manifest, no JSON, no per-sheet setup (`EventSheetAddonScanner`,
+  automatically** - no manifest, no JSON, no per-sheet setup (`EventSheetAddonScanner`,
   recursive, additive to existing providers/default vocabulary). Metadata derives from the
   script: provider name from `class_name`, addon description from the top `##` doc comment,
   per-ACE customization via `@ace_*` annotations.
@@ -3414,7 +3426,7 @@ the group-compile fix. Highlights below (newest first).
   variable_reference dropdown…).
 - **Custom ACEs now genuinely compile**: codegen templates are baked onto created
   conditions/actions (`codegen_template` export on `ACECondition`/`ACEAction`, honored by
-  `ConditionCodegen`/`ActionCodegen` ahead of the descriptor registry — previously
+  `ConditionCodegen`/`ActionCodegen` ahead of the descriptor registry - previously
   reflection ACEs had no codegen path at all). Negation wraps baked templates correctly.
 - Shipped `eventsheet_addons/demo_health_addon.gd` as the sample addon
   (documentation-by-example); ACE Providers dialog mentions the zero-config folder.
@@ -3457,7 +3469,7 @@ the group-compile fix. Highlights below (newest first).
   Clicking opens the event picker and the new event is appended into that group / the sheet
   end. Footers are inert affordances: no selection, no context menu, never box-selected, and
   no model resource behind them. Covered by `tests/footer_rows_test.gd`.
-- **Inverted conditions show C3's red ✗** (`#FF0000`, bare glyph — no circle behind it).
+- **Inverted conditions show C3's red ✗** (`#FF0000`, bare glyph - no circle behind it).
 - **Drop lines have arrowheads at both ends** (row + ACE drags), mirroring C3's insert marker.
 - **Drag ghost**: while dragging rows/conditions/actions over a target, a faint (~0.66 alpha)
   label of the dragged content follows the cursor, C3-style.
@@ -3466,7 +3478,7 @@ the group-compile fix. Highlights below (newest first).
 - **Text is crisp at every zoom level.** Zoom scales the canvas transform, which blurred
   (zoom-in) or aliased (zoom-out) glyphs rasterized at base size. All renderer text now draws
   at its final physical pixel size in identity space (`_draw_text`), then the zoom transform is
-  restored — geometry scales, text stays sharp.
+  restored - geometry scales, text stays sharp.
 - **Construct 3-style contiguous cells.** Condition/action cells now fill their full line
   (1px hairline), so stacked conditions read as one solid block instead of floating bubbles.
 - **Parameter values highlighted in ACE text** (C3-style): numbers, quoted strings, and
@@ -3480,10 +3492,10 @@ the group-compile fix. Highlights below (newest first).
 - Updated 3 legacy layout asserts that still encoded the old same-line "+ Add" placement.
 
 ### Collective disable + disabled-row strikethrough (overhaul)
-- **Disable/enable the whole current selection at once** with the `X` key — works on a single
+- **Disable/enable the whole current selection at once** with the `X` key - works on a single
   condition/action/event or a multi-selection (disables all if any are enabled, else enables
   all). Covered by `tests/disable_selection_test.gd`.
-- **Disabled rows now show a strikethrough**, matching disabled ACEs — so a disabled event,
+- **Disabled rows now show a strikethrough**, matching disabled ACEs - so a disabled event,
   group, or comment reads as "commented out", not just dimmed.
 - Confirmed (and locked with `tests/subevent_selection_test.gd`) that selecting a sub-event
   does **not** select its parent, while selecting a parent cascades to its sub-events.
@@ -3493,19 +3505,19 @@ the group-compile fix. Highlights below (newest first).
   row's first editable span when the click lands on a non-editable part (badge/icon/padding),
   so editing starts from anywhere on a comment/group row, and commits update the resource.
   Covered by `tests/inline_edit_test.gd`.
-- **Comments align with the event blocks they annotate** — comment text is indented past the
+- **Comments align with the event blocks they annotate** - comment text is indented past the
   trigger/badge column so it lines up with where condition text begins.
 - **An event with no conditions shows a clear "Every Tick" cell** in the condition lane (it
   used to be bare text), so deleting the last condition leaves a visible empty event block.
 - **Tighter nesting spacing**: a small gap is inserted before event/group blocks that start a
-  new sibling/parent-level row, while a parent and its sub-events stay tight — so it reads at a
+  new sibling/parent-level row, while a parent and its sub-events stay tight - so it reads at a
   glance which events are nested.
 
 ### Condition add/delete + "+ Add" placement fixes (overhaul)
 - **Adding a condition no longer overwrites an existing trigger.** `append_condition` only
   fills the trigger slot when the event has none; a trigger-type ACE added to an event that
   already has a trigger (e.g. "Every tick") is appended as a condition instead of replacing it.
-- **Conditions can be deleted down to zero** (an event may have no conditions — it reads as
+- **Conditions can be deleted down to zero** (an event may have no conditions - it reads as
   "every tick"). Verified by `tests/condition_edit_test.gd`.
 - **"+ Add" on the action lane is now left-aligned on its own line** below the actions, so it
   stays visible at any window width (it was pinned to the lane's far-right edge and scrolled
@@ -3530,18 +3542,18 @@ the group-compile fix. Highlights below (newest first).
 ### Reorder + variable access toggle (overhaul)
 - **Dragging a condition/action to reorder it now works vertically.** The drop position
   (before/after the target cell) was decided by the horizontal cursor position, but cells
-  stack vertically — so swapping the top/bottom cell never registered. It now uses the
+  stack vertically - so swapping the top/bottom cell never registered. It now uses the
   vertical position. Covered by `tests/ace_reorder_drag_test.gd` (full press→drag→release).
 - **Global variables have a private/global access toggle.** The variable dialog now offers
-  "Global (@export — usable outside the script)"; off compiles the variable to a plain
+  "Global (@export - usable outside the script)"; off compiles the variable to a plain
   private `var`, on to `@export var`. Local variables stay private. Covered by
   `tests/variable_export_test.gd`.
 
-### Selection / hover / drag-preview correctness (overhaul — visual)
+### Selection / hover / drag-preview correctness (overhaul - visual)
 - **Clicking a condition/action now selects just that cell, hover now shows, and the drag
-  drop-line appears** — all three were the same bug: the row layout is cached by geometry, but
+  drop-line appears** - all three were the same bug: the row layout is cached by geometry, but
   selection, hover, and drag-target state were baked into the cached dict while the cache key
-  ignored them. So after a click/hover/drag the renderer read stale state — the whole event
+  ignored them. So after a click/hover/drag the renderer read stale state - the whole event
   highlighted instead of the clicked cell, hover never appeared, and the ACE drop-line never
   drew. Selection/hover are now refreshed on every cache read; drag state is part of the cache
   key. Guarded by `tests/layout_state_test.gd`.
@@ -3549,38 +3561,38 @@ the group-compile fix. Highlights below (newest first).
   bounded to the lanes, so clicking the gutter / indent margin selects the event block, while
   clicking a condition/action cell (incl. its padding) selects that ACE.
 
-### Drag-to-resize lane + hover/drag polish (overhaul — visual)
+### Drag-to-resize lane + hover/drag polish (overhaul - visual)
 - **Drag the conditions/actions divider to resize the lanes**, C3-style. Hovering the divider
   shows a horizontal-resize cursor; dragging updates the split live and persists the ratio
   onto the sheet's editor style (a default-themed sheet is promoted to a concrete style so it
   saves). The pinned column header tracks the new divider position. Guarded by
   `tests/lane_resize_test.gd`.
 - **Per-cell hover.** Hovering a condition or action highlights just that individual cell (a
-  clear neutral light tint), not the whole event block — the whole-event highlight read as
+  clear neutral light tint), not the whole event block - the whole-event highlight read as
   "selected" and was confusing. Whole-row hover remains for single-cell group/comment/variable
   rows.
 - **Sub-event drop preview is indented.** Dragging an event so it nests inside another now
   draws the drop line at the child indent level, making "becomes a sub-event" unambiguous.
 
-### Interaction + aesthetic fixes (overhaul — visual)
+### Interaction + aesthetic fixes (overhaul - visual)
 - **Dragging individual conditions/actions/events now works** (and shows its drop preview).
   The mouse-press that starts an ACE/row drag was not `accept_event()`'d, so the viewport
-  stopped receiving motion/release — the drag never tracked and the drop indicator never
+  stopped receiving motion/release - the drag never tracked and the drop indicator never
   drew. It now accepts the event on drag start. The drop logic (reorder within an event, move
   across events, Ctrl-to-copy) is covered by `tests/ace_drag_test.gd`.
 - **Whole condition/action cell is now the click target.** Clicking anywhere on a
   condition/action line (the padding to the right of the text, or the vertical gaps between
-  cells) now selects that ACE instead of falling back to selecting the whole event — fixing
+  cells) now selects that ACE instead of falling back to selecting the whole event - fixing
   the "it selects the whole event" and "sometimes the action won't select" confusion. Guarded
   by `tests/hit_test_test.gd`.
 - **Flat C3/GDevelop-style cells** replace the rounded "bubble" chips: conditions/actions are
   now flat rectangular cells with a subtle fill, a tinted hover fill, and a left accent bar +
   fill when selected (no rounded borders).
 
-### Row rendering fixes (overhaul — visual)
+### Row rendering fixes (overhaul - visual)
 - **Construct 3-style object labels.** Each condition/action/trigger now shows the object it
-  acts on before the text (e.g. `System  Is on floor`, `System  Move and slide`) — "System"
-  for Core ACEs, the node class for node-typed ACEs — matching the C3 event grammar. Added as
+  acts on before the text (e.g. `System  Is on floor`, `System  Move and slide`) - "System"
+  for Core ACEs, the node class for node-typed ACEs - matching the C3 event grammar. Added as
   span metadata (`object_label`) drawn in object colour by the renderer, so span structure
   (and the tests keyed on it) is preserved.
 - **Fixed overlapping text on variable / group / comment rows.** Non-event rows fell through
@@ -3593,7 +3605,7 @@ the group-compile fix. Highlights below (newest first).
 - Added `tests/row_layout_test.gd` (asserts single-line row spans don't overlap) and a dev
   render harness `tools/render_preview.gd` (renders the viewport to a PNG for visual review).
 
-### GDScript importer — structural round-trip (overhaul — Phase 7)
+### GDScript importer - structural round-trip (overhaul - Phase 7)
 - **Import GDScript back into an EventSheet.** `GDScriptImporter.import_source/import_script`
   parses the `extends` host class, top-level `@export var`/`var` declarations (with typed
   defaults, via `VariableParser`), and `func` signatures (name + typed params + verbatim
@@ -3602,31 +3614,31 @@ the group-compile fix. Highlights below (newest first).
 - **Round-trips through the compiler**: `SheetCompiler._emit_event_body` now emits
   `RawCodeRow.code` verbatim, so an imported sheet re-compiles to the same extends /
   variables / function signatures / bodies (trigger output and the demo golden are
-  unaffected — the demo has no raw rows).
+  unaffected - the demo has no raw rows).
 - _ACE-level reverse mapping (turning generated `if`/action lines back into conditions and
   actions) is intentionally future work; bodies are preserved as raw code for now._
 - **Tests**: `tests/importer_test.gd` covers host-class, typed-variable, and function
   parsing plus the structural round-trip back through the compiler.
 
-### Multiple EventSheet tabs (overhaul — Phase 6)
+### Multiple EventSheet tabs (overhaul - Phase 6)
 - **The editor now holds several open sheets at once.** A `TabBar` above the canvas lists
   open sheets; clicking a tab swaps that sheet into the shared virtualized viewport. Each
   tab keeps its own path and **independent dirty state** (shown as a `●` marker on the tab).
 - `EventSheetDock` keeps `_current_sheet`/`_current_sheet_path`/`_dirty` as the *active*
   tab's live state (so all existing code is unchanged) and layers a `_open_tabs` list on
-  top. `setup()` now opens a sheet in a tab — reusing the existing tab if that sheet is
-  already open — and `_refresh_title_strip()` keeps the active tab's persisted state +
+  top. `setup()` now opens a sheet in a tab - reusing the existing tab if that sheet is
+  already open - and `_refresh_title_strip()` keeps the active tab's persisted state +
   title in sync. Closing a tab activates a neighbour (or a fresh demo when none remain).
 - Public API: `get_open_tab_count`, `get_active_tab_index`, `activate_tab`, `is_tab_dirty`.
 - **Tests**: `tests/multi_tab_test.gd` covers open/add, re-open de-duplication, per-tab
   dirty isolation across switches, sheet restoration, and close-activates-neighbour.
 
-### Sheet functions (overhaul — Phase 5)
+### Sheet functions (overhaul - Phase 5)
 - **`EventFunction` resources now compile to GDScript methods.** `SheetCompiler` emits each
   enabled function as `func <name>(<typed params>) -> void:` with its events compiled into
   the body (empty functions emit `pass`), after the trigger handlers. The condition/action
   body emission was factored into a shared `_emit_event_body` so triggers and functions use
-  the same code path (trigger output is byte-identical — no compiler regression).
+  the same code path (trigger output is byte-identical - no compiler regression).
 - **Call-as-action**: new built-in `Core / CallFunction` action ("Call Function") with
   template `{function_name}({args})`, so an event action can invoke a sheet function
   (`do_thing(5)`, `reset()`).
@@ -3635,7 +3647,7 @@ the group-compile fix. Highlights below (newest first).
 - _Authoring UX (a dedicated function-body editor) is deferred; the data model, compiler,
   and call action are in place._
 
-### Sub-event authoring — indent / outdent (overhaul — Phase 4)
+### Sub-event authoring - indent / outdent (overhaul - Phase 4)
 - **Reparent events with the keyboard**: **Tab** nests the selected event under the event
   directly above it (moves it into that event's `sub_events`); **Shift+Tab** un-nests a
   sub-event back out to its parent's container, just after the parent. Tab is only consumed
@@ -3647,7 +3659,7 @@ the group-compile fix. Highlights below (newest first).
 - **Tests**: `tests/sub_event_authoring_test.gd` asserts indent nests under the preceding
   event, outdent restores it after the parent, and both no-op safely at boundaries.
 
-### Custom ACE providers (overhaul — Phase 3)
+### Custom ACE providers (overhaul - Phase 3)
 - **Register your own scripts as ACE sources**: `EventSheetResource` gained an
   `ace_provider_scripts: Array[String]` field. Each registered GDScript is instantiated and
   reflected (via the existing `EventSheetACEGenerator`) so its annotated methods, signals,
@@ -3664,7 +3676,7 @@ the group-compile fix. Highlights below (newest first).
 - **Tests**: `tests/custom_ace_provider_test.gd` registers a fixture provider and asserts its
   method/signal/property ACEs surface in the registry (and disappear on removal).
 
-### Theme switcher + token coverage (overhaul — Phase 2)
+### Theme switcher + token coverage (overhaul - Phase 2)
 - **Toolbar theme switcher**: an `OptionButton` ("Theme:") listing **Default** plus the
   bundled themes discovered by the new `EventSheetThemePresets`
   (`addons/eventsheet/theme/event_sheet_theme_presets.gd`), which scans
@@ -3681,7 +3693,7 @@ the group-compile fix. Highlights below (newest first).
   load as `EventSheetEditorStyle`), name humanization, the new header tokens, and that a
   bundled theme still resolves its event/condition/action styles.
 
-### Construct 3-style ACE picker (overhaul — Phase 1)
+### Construct 3-style ACE picker (overhaul - Phase 1)
 - Rebuilt `ACEPickerDialog` (`addons/eventsheet/editor/ace_picker.gd`) as a grouped,
   colour-coded picker matching `EDITOR-UI-SPEC.md` §2.1:
   - **Node-type grouping**: entries group by `ACEDefinition.metadata.node_type` (forwarded
@@ -3701,7 +3713,7 @@ the group-compile fix. Highlights below (newest first).
 - **Tests**: `tests/ace_picker_logic_test.gd` covers the grouping/colour/mode/title/tooltip
   logic headlessly (without opening the popup window).
 
-### Construct 3-style ACE parameter & expression dialog (overhaul — Phase 1)
+### Construct 3-style ACE parameter & expression dialog (overhaul - Phase 1)
 - Rebuilt `ACEParamsDialog` (`addons/eventsheet/editor/ace_params_dialog.gd`) per
   `EDITOR-UI-SPEC.md` §2.2:
   - **Parameter descriptions** now render below their control (not just as a tooltip).
@@ -3722,7 +3734,7 @@ the group-compile fix. Highlights below (newest first).
 - **Tests**: `tests/ace_params_logic_test.gd` covers expression-template substitution,
   variable-name resolution, back/re-edit flags, hint text, and value extraction headlessly.
 
-### Construct 3-style column header (overhaul — Phase 1)
+### Construct 3-style column header (overhaul - Phase 1)
 - Added a pinned **Conditions / Actions** column header (`SheetColumnHeader`,
   `addons/eventsheet/editor/sheet_column_header.gd`) above the scrolling sheet. It mirrors
   the event rows' lane divider (zoom + horizontal-scroll aware) so the two-column grid reads
@@ -3734,11 +3746,11 @@ the group-compile fix. Highlights below (newest first).
 - **Tests**: `tests/column_header_test.gd` guards the lane-divider math (the alignment
   contract) and header binding/band reservation headlessly.
 
-### Keyboard authoring workflow (overhaul — Phase 1)
+### Keyboard authoring workflow (overhaul - Phase 1)
 - Completed the `EDITOR-UI-SPEC.md` §2.4 keyboard map in the dock's `_unhandled_key_input`,
   adding the missing shortcuts: **Ctrl+Shift+S** (Save As), **Ctrl+E** (Add Event),
   **Ctrl+Shift+V** (Add Variable), **Ctrl+Shift+C** (Add Condition), **Ctrl+Shift+A**
-  (Add Action), **Q** (Add Comment), **G** (Add Group), **Ctrl+D** (Duplicate Event) —
+  (Add Action), **Q** (Add Comment), **G** (Add Group), **Ctrl+D** (Duplicate Event) -
   alongside the existing Ctrl+C/V/S/Z/Y/O, Delete, Enter/F2.
 - New dock handlers `_on_add_comment_requested`, `_on_add_group_requested`,
   `_on_duplicate_requested` (deep-clone + fresh `event_uid` via `_assign_fresh_event_uids`),
@@ -3748,13 +3760,13 @@ the group-compile fix. Highlights below (newest first).
 - **Tests**: `tests/keyboard_actions_test.gd` drives the handlers and asserts add-group,
   add-comment, duplicate-no-op-without-selection, and duplicate-with-fresh-uid behavior.
 
-### Large-sheet load performance (overhaul — virtualized build)
+### Large-sheet load performance (overhaul - virtualized build)
 - **Cached built-in ACE descriptors** in `ACERegistry`: `get_all_descriptors()` /
   `find_descriptor()` previously rebuilt and re-normalized the entire built-in set on
   every call (a hot path when rendering sheets that reference fallback/unknown ACEs).
   Built-ins are now normalized once and indexed for O(1) lookup. Added `clear_cache()`.
 - **Lazy event-row spans**: event rows now build their (expensive) visual spans on demand
-  — only when laid out, hit-tested, or selected — instead of eagerly for the whole sheet.
+  - only when laid out, hit-tested, or selected - instead of eagerly for the whole sheet.
   Row heights/metrics are derived up front from a cheap precomputed line count
   (`EventRowData.line_count`, `EventSheetViewport._count_event_lines()`), so the full sheet
   is measured without building any spans. Sheets with ≤ `EAGER_SPAN_LIMIT` (1500) rows
@@ -3768,13 +3780,13 @@ the group-compile fix. Highlights below (newest first).
   `tests/perf_smoke_test.gd` guards the 10k-row load budget + virtualization invariants;
   `tests/run_perf.gd` runs these headless-safe checks.
 
-### Editor architecture consolidation (overhaul — Phase 0)
+### Editor architecture consolidation (overhaul - Phase 0)
 - Removed the parallel Control-widget editor prototypes (`EventRowUI`, `GroupRowUI`,
   `CommentRowUI`, `VariableRowUI`, `SheetToolbar`) and the unimplemented stub files
   (`ACEPalette`, `ActionPicker`, `ConditionPicker`, `DualViewSwitcher`, `ElseRowUI`,
   `ExpressionEditor`, `GDScriptPanel`) from `addons/eventforge/editor/`. The custom-rendered
   **virtualized viewport** (`EventSheetDock`/`EventSheetViewport`/`EventRowRenderer`) is now
-  the sole editor architecture — it is the only model that scales to tens of thousands of
+  the sole editor architecture - it is the only model that scales to tens of thousands of
   events/ACEs without killing editor performance.
 - Extracted the removed widget's variable-row text formatting into a standalone, reusable
   `VariableRowFormat` helper (`addons/eventsheet/editor/variable_row_format.gd`); retargeted
@@ -3800,13 +3812,13 @@ the group-compile fix. Highlights below (newest first).
   giving an at-a-glance type signal without touching the item label text.
 - **Expanded built-in node-type ACEs**: Fourteen new Core ACEs added with `node_type` set
   so they appear in the correct class section in the picker:
-  - `Node2D` — `SetPosition2D` (action), `SetRotationDeg` (action)
-  - `CharacterBody2D` — `MoveAndSlide` (action), `SetVelocity2D` (action)
-  - `Area2D` — `OnAreaEntered` (trigger)
-  - `RigidBody2D` — `ApplyCentralImpulse` (action)
-  - `Timer` — `StartTimer` (action), `StopTimer` (action), `IsTimerStopped` (condition),
+  - `Node2D` - `SetPosition2D` (action), `SetRotationDeg` (action)
+  - `CharacterBody2D` - `MoveAndSlide` (action), `SetVelocity2D` (action)
+  - `Area2D` - `OnAreaEntered` (trigger)
+  - `RigidBody2D` - `ApplyCentralImpulse` (action)
+  - `Timer` - `StartTimer` (action), `StopTimer` (action), `IsTimerStopped` (condition),
 	`OnTimeout` (trigger)
-  - `AnimationPlayer` — `PlayAnimation` (action), `StopAnimation` (action),
+  - `AnimationPlayer` - `PlayAnimation` (action), `StopAnimation` (action),
 	`IsAnimationPlaying` (condition), `OnAnimationFinished` (trigger)
 - **Expanded `EVENT_PICKER_GROUPS`**: `Node2D`, `RigidBody2D`, `Timer`, and
   `AnimationPlayer` added to the pre-declared group list so their sections are always

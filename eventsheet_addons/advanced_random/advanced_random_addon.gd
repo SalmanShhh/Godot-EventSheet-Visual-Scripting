@@ -23,7 +23,7 @@ func _ready() -> void:
 ## @ace_action
 ## @ace_name("Set Seed")
 ## @ace_category("Advanced Random: Setup")
-## @ace_description("Sets the seed for BOTH numbers and noise — same seed reproduces the same sequence.")
+## @ace_description("Sets the seed for BOTH numbers and noise - same seed reproduces the same sequence.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("AdvancedRandom.set_random_seed({seed_value})")
 func set_random_seed(seed_value: int) -> void:
@@ -61,7 +61,7 @@ func set_noise_frequency(frequency: float) -> void:
 ## @ace_action
 ## @ace_name("Set Noise Octaves")
 ## @ace_category("Advanced Random: Setup")
-## @ace_description("Fractal detail layers — more octaves add fine detail (fractal/fBm noise).")
+## @ace_description("Fractal detail layers - more octaves add fine detail (fractal/fBm noise).")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("AdvancedRandom.set_noise_octaves({octaves})")
 func set_noise_octaves(octaves: int) -> void:
@@ -70,7 +70,7 @@ func set_noise_octaves(octaves: int) -> void:
 ## @ace_action
 ## @ace_name("Generate Permutation Table")
 ## @ace_category("Advanced Random: Setup")
-## @ace_description("Builds a shuffled 0..size-1 table (read with the Permutation expression) — a fixed deck order.")
+## @ace_description("Builds a shuffled 0..size-1 table (read with the Permutation expression) - a fixed deck order.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("AdvancedRandom.generate_permutation({size})")
 func generate_permutation(size: int) -> void:
@@ -85,7 +85,7 @@ func generate_permutation(size: int) -> void:
 ## @ace_action
 ## @ace_name("Make Shuffle Bag")
 ## @ace_category("Advanced Random: Setup")
-## @ace_description("Creates a named bag of items — Shuffle Bag Pick draws each once before any repeats.")
+## @ace_description("Creates a named bag of items - Shuffle Bag Pick draws each once before any repeats.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("AdvancedRandom.make_shuffle_bag({bag_name}, {items})")
 func make_shuffle_bag(bag_name: String, items: Array) -> void:
@@ -148,7 +148,7 @@ func normal(mean: float, deviation: float) -> float:
 ## @ace_expression
 ## @ace_name("Noise 1D")
 ## @ace_category("Advanced Random: Noise")
-## @ace_description("Smooth noise along a line at x — returns [-1, 1].")
+## @ace_description("Smooth noise along a line at x - returns [-1, 1].")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("AdvancedRandom.noise_1d({x})")
 func noise_1d(x: float) -> float:
@@ -157,7 +157,7 @@ func noise_1d(x: float) -> float:
 ## @ace_expression
 ## @ace_name("Noise 2D")
 ## @ace_category("Advanced Random: Noise")
-## @ace_description("Smooth noise at (x, y) — great for terrain/heightmaps; returns [-1, 1].")
+## @ace_description("Smooth noise at (x, y) - great for terrain/heightmaps; returns [-1, 1].")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("AdvancedRandom.noise_2d({x}, {y})")
 func noise_2d(x: float, y: float) -> float:
@@ -166,7 +166,7 @@ func noise_2d(x: float, y: float) -> float:
 ## @ace_expression
 ## @ace_name("Noise 3D")
 ## @ace_category("Advanced Random: Noise")
-## @ace_description("Smooth noise at (x, y, z) — returns [-1, 1].")
+## @ace_description("Smooth noise at (x, y, z) - returns [-1, 1].")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("AdvancedRandom.noise_3d({x}, {y}, {z})")
 func noise_3d(x: float, y: float, z: float) -> float:
@@ -175,7 +175,7 @@ func noise_3d(x: float, y: float, z: float) -> float:
 ## @ace_expression
 ## @ace_name("Permutation Value")
 ## @ace_category("Advanced Random: Picking")
-## @ace_description("Reads index (wrapped) from the permutation table — generate it first.")
+## @ace_description("Reads index (wrapped) from the permutation table - generate it first.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("AdvancedRandom.permutation({index})")
 func permutation(index: int) -> int:
@@ -213,7 +213,7 @@ func weighted_index(weights: Array) -> int:
 ## @ace_expression
 ## @ace_name("Shuffle Bag Pick")
 ## @ace_category("Advanced Random: Picking")
-## @ace_description("Draws the next item from a named bag — every item appears once before any repeat.")
+## @ace_description("Draws the next item from a named bag - every item appears once before any repeat.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("AdvancedRandom.shuffle_bag_pick({bag_name})")
 func shuffle_bag_pick(bag_name: String) -> Variant:
@@ -234,7 +234,7 @@ func shuffle_bag_pick(bag_name: String) -> Variant:
 ## @ace_condition
 ## @ace_name("Chance")
 ## @ace_category("Advanced Random: Chance")
-## @ace_description("True roughly percent of the time (0-100) — e.g. Chance(5) for a 5% event.")
+## @ace_description("True roughly percent of the time (0-100) - e.g. Chance(5) for a 5% event.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("AdvancedRandom.chance({percent})")
 func chance(percent: float) -> bool:
@@ -249,4 +249,4 @@ func chance(percent: float) -> bool:
 func one_in(n: int) -> bool:
 	return _rng.randi_range(1, maxi(n, 1)) == 1
 
-# Advanced Random (autoload): register as the AdvancedRandom autoload, then call its ACEs from any sheet — seeded numbers/dice/normal, Perlin/Simplex noise, permutation tables, shuffle bags, weighted picks, and a Chance(%) condition. Set seed_on_start in the Inspector for reproducible runs. This pack is an event sheet — extend it by editing it.
+# Advanced Random (autoload): register as the AdvancedRandom autoload, then call its ACEs from any sheet - seeded numbers/dice/normal, Perlin/Simplex noise, permutation tables, shuffle bags, weighted picks, and a Chance(%) condition. Set seed_on_start in the Inspector for reproducible runs. This pack is an event sheet - extend it by editing it.

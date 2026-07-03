@@ -1,12 +1,12 @@
 # Using EventSheets with your existing code
 
 **Short answer: yes.** You can drop EventSheets into an existing Godot project and it works with the
-GDScript you already have — your own classes, autoloads, nodes, and signals — **without writing a single
+GDScript you already have - your own classes, autoloads, nodes, and signals - **without writing a single
 ACE for them.** This page is self-contained: everything you need to interoperate is right here.
 
 The reason it works is one design rule: **a sheet compiles to plain, idiomatic GDScript with zero
 dependency on the plugin.** Delete EventForge and your generated `.gd` files still run. So a sheet and your
-existing code are just GDScript talking to GDScript — there's no runtime bridge to wire up.
+existing code are just GDScript talking to GDScript - there's no runtime bridge to wire up.
 
 There are four things you'll want to do. Each is covered below with the exact code it compiles to.
 
@@ -14,7 +14,7 @@ There are four things you'll want to do. Each is covered below with the exact co
 | --- | --- | --- |
 | Call your existing code from a sheet | ƒx expressions are real GDScript + the **Helpers** ACEs + RawCode blocks | ✅ |
 | React to a signal your code emits | **On Signal** trigger (any node / autoload / `self`) | ✅ |
-| Put a sheet on a node that already has a script | **Behavior mode** — attach the sheet as a child node | ✅ |
+| Put a sheet on a node that already has a script | **Behavior mode** - attach the sheet as a child node | ✅ |
 | Call a sheet from your existing code | Hold a typed reference and call it like any class (parity contract) | ✅ |
 
 ---
@@ -23,7 +23,7 @@ There are four things you'll want to do. Each is covered below with the exact co
 
 ### Expressions are literally GDScript
 
-Every ƒx field (a parameter, a condition, an expression) is **pasted into the compiled script verbatim** —
+Every ƒx field (a parameter, a condition, an expression) is **pasted into the compiled script verbatim** -
 no escaping, no sandbox, no translation. Whatever you type resolves at Godot's normal compile/run time. So
 you can reference anything that's in scope:
 
@@ -40,10 +40,10 @@ if ScoreManager.is_high_score():
     ScoreManager.add(10)
 ```
 
-### The Helpers ACEs — the structured escape hatch
+### The Helpers ACEs - the structured escape hatch
 
 When you'd rather pick from a menu than type an expression, the **Helpers** category gives you a first-class
-ACE for reaching *any* method, property, or signal on *any* node — none of it has to have an ACE of its own.
+ACE for reaching *any* method, property, or signal on *any* node - none of it has to have an ACE of its own.
 Each one compiles to a single line of ordinary GDScript:
 
 | Helper ACE | Compiles to | Use it for |
@@ -58,10 +58,10 @@ Each one compiles to a single line of ordinary GDScript:
 | **Emit Signal On** | `target.emit_signal(signal, args)` | Fire a signal on another node |
 | **Call Method On Group** | `get_tree().call_group(group, method)` | Call a method on every node in a group |
 
-`target`, `method`, `property`, etc. are free-text fields — you type the real GDScript fragment. Defaults
+`target`, `method`, `property`, etc. are free-text fields - you type the real GDScript fragment. Defaults
 are sensible (`target` is `self`, `property` is `modulate`/`visible`, and so on).
 
-### RawCode blocks — drop in GDScript directly
+### RawCode blocks - drop in GDScript directly
 
 For anything the above doesn't cover, a **RawCode block** is a pass-through row: the lines you write are
 emitted as-is, either at class level (for `@onready var`, helper functions, constants) or inside an event
@@ -80,10 +80,10 @@ GlobalUtils.ping(self)
 
 ## 2. React to a signal your existing code emits
 
-Triggers are how a sheet *reacts*. To react to your own code, use the signal triggers — they connect by
+Triggers are how a sheet *reacts*. To react to your own code, use the signal triggers - they connect by
 name, with no need for the emitter to know anything about EventSheets.
 
-- **On Signal** — the always-available escape hatch. Give it a **signal name** (free text) and a **source**:
+- **On Signal** - the always-available escape hatch. Give it a **signal name** (free text) and a **source**:
   blank for `self`, a **node path**, or an **autoload** (`autoload:EventBus`). It compiles to a `connect`
   in `_ready` plus a generated handler:
 
@@ -102,28 +102,28 @@ name, with no need for the emitter to know anything about EventSheets.
       EventBus.game_paused.connect(_on_event_bus_game_paused)
   ```
 
-- **Reflected `signal:NAME` triggers** — if a node or an annotated autoload is registered as a provider,
+- **Reflected `signal:NAME` triggers** - if a node or an annotated autoload is registered as a provider,
   its signals show up in the trigger picker automatically, and these bake the signal's **real typed argument
   signature** so your handler receives the parameters (`func _on_generator_powered(level: int)`).
 
-- **Host lifecycle triggers** — *On Ready*, *On Process*, *On Physics Process*, *On Input*,
+- **Host lifecycle triggers** - *On Ready*, *On Process*, *On Physics Process*, *On Input*,
   *On Unhandled Input* compile straight to the engine callbacks (`_ready`, `_process`, …). No connection
   needed; they always work on the node the sheet runs on.
 
-> **Good to know:** a connection to *another* node's signal trusts the path/name you give it — it isn't
+> **Good to know:** a connection to *another* node's signal trusts the path/name you give it - it isn't
 > checked at compile time, so a wrong path or misspelled signal fails at runtime, not in the editor. And the
-> generic *On Signal* handler doesn't bind the signal's arguments — use a reflected `signal:NAME` trigger
+> generic *On Signal* handler doesn't bind the signal's arguments - use a reflected `signal:NAME` trigger
 > when you need the typed parameters. For signals that cross scenes, route them through an autoload bus
 > rather than a scene-relative node path.
 
 ---
 
-## 3. Putting a sheet on a node — two modes
+## 3. Putting a sheet on a node - two modes
 
 This is the one place the answer is "it depends," because of a hard Godot rule: **a node can have only one
 script.**
 
-### Plain mode — the sheet *is* the node's script
+### Plain mode - the sheet *is* the node's script
 
 A normal sheet declares a **host class** and compiles to `extends <that type>`. The generated `.gd` is set
 as the node's script, so `self` **is** the node and every one of its built-in members/methods is reachable:
@@ -132,10 +132,10 @@ as the node's script, so `self` **is** the node and every one of its built-in me
 extends CharacterBody2D   # self is the node; velocity, move_and_slide(), $Sprite2D all in scope
 ```
 
-Because this *becomes* the node's single script, it only fits a node that **doesn't already have one** — the
+Because this *becomes* the node's single script, it only fits a node that **doesn't already have one** - the
 "create a sheet for this node" workflow will refuse a node that's already scripted.
 
-### Behavior mode — the sheet rides *alongside* an existing script
+### Behavior mode - the sheet rides *alongside* an existing script
 
 **This is the solution when the node already has a script.** In behavior mode the sheet compiles to
 `extends Node` and binds to its parent, and you attach it as a **child node** ("behavior pack") under your
@@ -155,7 +155,7 @@ func _enter_tree() -> void:
 
 The sheet then acts on the host through that `host` accessor. Your node keeps its own script; the behavior
 composes with it instead of replacing it. (One caveat: `host` is bound in `_enter_tree`, so it's available
-once the behavior is in the tree — calls before that warn rather than act.)
+once the behavior is in the tree - calls before that warn rather than act.)
 
 ---
 
@@ -175,7 +175,7 @@ func _ready() -> void:
     await hp.on_death              # a signal the sheet declared
 ```
 
-A typed reference like this is the most robust way to call in. (Don't hand-edit the generated `.gd` — it's
+A typed reference like this is the most robust way to call in. (Don't hand-edit the generated `.gd` - it's
 overwritten on recompile; the sheet is the source of truth.)
 
 ---
@@ -185,34 +185,34 @@ overwritten on recompile; the sheet is the source of truth.)
 You're not limited to writing new sheets. **Reverse-lift** opens an existing `.gd` file *as* a sheet (or you
 paste GDScript and get events back), so you can bring code you already have into the visual editor and keep
 editing it either way. It de-codes function bodies, `if/elif/else`, `for`/`while`/`repeat` loops, and `match`
-into structured rows — so a `.gd` you already have opens as real events, not an opaque block, and round-trips
+into structured rows - so a `.gd` you already have opens as real events, not an opaque block, and round-trips
 losslessly.
 
 ---
 
 ## The honest limitations
 
-Interop is broad, but it isn't magic — here's the candid list so nothing surprises you:
+Interop is broad, but it isn't magic - here's the candid list so nothing surprises you:
 
 - **Raw expressions and *Call Method* are stringly and not type-checked at compile time.** A misspelled
   method, property, autoload, class, node path, or signal name compiles cleanly and only fails when the
   generated script loads or runs. The editor has an *advisory* lint, but it doesn't block. You don't get
   autocomplete-grade safety on an existing API you reach this way.
-- **Signal connections to other nodes aren't validated** against the engine's known signals — wrong
+- **Signal connections to other nodes aren't validated** against the engine's known signals - wrong
   path/name is a runtime failure. (Only signals on `self` are checked and skipped-with-warning if missing.)
-- **An already-scripted node needs behavior mode** (a child node), not a plain sheet — see section 3.
+- **An already-scripted node needs behavior mode** (a child node), not a plain sheet - see section 3.
 - **Cross-scene signal wiring** wants an autoload bus; `get_node("…")` connections are relative to the host.
 
 ## When to wrap existing code in your own ACEs (optional)
 
-You never *need* to — the escape hatches above cover everything. But if you find yourself reaching for the
+You never *need* to - the escape hatches above cover everything. But if you find yourself reaching for the
 same existing system constantly (your inventory, your dialogue manager), it's worth authoring a **behavior
 pack** for it: that publishes its methods as real ACEs with proper pickers, parameter hints, and
 autocomplete, turning the stringly *Call Method* calls into first-class, type-safe vocabulary. It's an
 upgrade for ergonomics, not a requirement for interop.
 
-**The one-line version:** if the system is your own class, you don't author a pack at all — add
+**The one-line version:** if the system is your own class, you don't author a pack at all - add
 `## @ace_expose_all(node)` at the top of the script and register it (`add_ace_provider_script("res://…")`,
 or drop the file in `res://eventsheet_addons/`). Every public method/signal becomes a node-targeted ACE
-with **zero per-member annotations** — see the [Custom ACEs Guide](CUSTOM-ACES-GUIDE.md#5-path-1-auto-ace-provider-scripts).
+with **zero per-member annotations** - see the [Custom ACEs Guide](CUSTOM-ACES-GUIDE.md#5-path-1-auto-ace-provider-scripts).
 For a stateless helper (scoring, inventory math) use plain `## @ace_expose_all` (the owned-instance form).

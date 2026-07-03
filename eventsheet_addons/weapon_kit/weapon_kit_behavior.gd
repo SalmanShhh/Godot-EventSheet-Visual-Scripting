@@ -245,4 +245,4 @@ func _complete_reload() -> void:
 	_reload_timer = 0.0
 	reload_completed.emit()
 
-# Weapon Kit: ammo + reserve, fire-rate cooldown, single/auto/burst modes, and timed/instant reload. Call Fire (it manages ammo + cooldown and triggers On Fire — you spawn the bullet); call Reload. Read Ammo %, Reload Progress, etc. for HUD.
+# Weapon Kit: ammo + reserve, fire-rate cooldown, single/auto/burst modes, and timed/instant reload. Call Fire (it manages ammo + cooldown and triggers On Fire - you spawn the bullet); call Reload. Read Ammo %, Reload Progress, etc. for HUD.

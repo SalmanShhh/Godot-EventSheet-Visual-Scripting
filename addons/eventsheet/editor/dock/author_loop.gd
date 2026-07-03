@@ -134,13 +134,13 @@ static func surface_markdown(surface: Dictionary, heading: String = "##") -> Pac
 			if str(section_pair[1]) == "properties":
 				var attributes: Dictionary = entry.get("attributes", {}) if entry.get("attributes") is Dictionary else {}
 				var note: String = str(attributes.get("tooltip", ""))
-				lines.append("- `%s: %s` (default `%s`)%s" % [str(entry.get("name")), str(entry.get("type")), str(entry.get("default")), " — " + note if not note.is_empty() else ""])
+				lines.append("- `%s: %s` (default `%s`)%s" % [str(entry.get("name")), str(entry.get("type")), str(entry.get("default")), " - " + note if not note.is_empty() else ""])
 			else:
 				var ace_line: String = "- **%s**" % str(entry.get("name"))
 				if not str(entry.get("params", "")).is_empty():
 					ace_line += " (`%s`)" % str(entry.get("params"))
 				if not str(entry.get("description", "")).is_empty():
-					ace_line += " — %s" % str(entry.get("description"))
+					ace_line += " - %s" % str(entry.get("description"))
 				lines.append(ace_line)
 	return lines
 
@@ -151,7 +151,7 @@ static func generate_pack_readme(sheet: EventSheetResource) -> String:
 	var lines: PackedStringArray = PackedStringArray()
 	lines.append("# %s" % sheet.custom_class_name)
 	lines.append("")
-	lines.append("An EventSheets behavior pack (editable `.tres` sheet + compiled `.gd` script —")
+	lines.append("An EventSheets behavior pack (editable `.tres` sheet + compiled `.gd` script -")
 	lines.append("the script is plain GDScript and runs without the plugin).")
 	if not sheet.addon_tags.is_empty():
 		lines.append("")

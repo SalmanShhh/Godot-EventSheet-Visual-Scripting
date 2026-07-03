@@ -1,9 +1,9 @@
-# Pack builder — state_machine (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - state_machine (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Minimal state machine, authored entirely as ACE rows (ZERO RawCode) — including the Is In State
+## Minimal state machine, authored entirely as ACE rows (ZERO RawCode) - including the Is In State
 ## CONDITION, now a bool-returning sheet function (the three-way function expose: bool -> condition).
 ## On State Changed is a trigger SignalRow.
 static func build() -> bool:
@@ -24,7 +24,7 @@ static func build() -> bool:
 	changed_signal.ace_category = "State Machine"
 	sheet.events.append(changed_signal)
 
-	# Is In State — a bool function publishes as a CONDITION (three-way function expose).
+	# Is In State - a bool function publishes as a CONDITION (three-way function expose).
 	var is_in_state: EventFunction = EventFunction.new()
 	is_in_state.function_name = "is_in_state"
 	is_in_state.return_type = TYPE_BOOL
@@ -38,7 +38,7 @@ static func build() -> bool:
 	is_in_state.events.append(is_in_state_body)
 	sheet.functions.append(is_in_state)
 
-	# Set State — switch and fire On State Changed, but only on a real change.
+	# Set State - switch and fire On State Changed, but only on a real change.
 	var set_state: EventFunction = EventFunction.new()
 	set_state.function_name = "set_state"
 	set_state.expose_as_ace = true

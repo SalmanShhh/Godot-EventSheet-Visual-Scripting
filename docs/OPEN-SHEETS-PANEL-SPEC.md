@@ -1,14 +1,14 @@
-# Open Sheets panel — Spec (in-workspace "recent sheets" list)
+# Open Sheets panel - Spec (in-workspace "recent sheets" list)
 
 A left-hand list of the **open + recently-closed event sheets**, embedded in the EventSheet
-workspace, so switching between many sheets is one click instead of hunting the tab strip — the
+workspace, so switching between many sheets is one click instead of hunting the tab strip - the
 event-sheet answer to the Godot **script editor's "Filter Scripts" list**. Toggleable and
 collapsible, so anyone who doesn't want it can remove or minimise it.
 
 ## Why (and what already exists)
 
 The workspace already has a tab strip, but with a dozen sheets open the tabs clip and you scan
-left-to-right to find one. A vertical, **filterable** list is faster to scan and search — exactly
+left-to-right to find one. A vertical, **filterable** list is faster to scan and search - exactly
 why the script editor pairs its tabs with the "Filter Scripts" panel.
 
 A first version shipped as a **Godot editor dock** (`EventSheetOpenSheetsDock`, `open_sheets_dock.gd`):
@@ -17,7 +17,7 @@ a pure view over the tab model, with the data API already on `EventSheetDock`
 It works, but it lives in the **global** left dock area (shared with Scene/FileSystem), not *inside*
 the EventSheet tab like the script editor's list, and it isn't toggleable from the sheet's own menu.
 **This spec moves it in-workspace and makes it explicitly user-controlled.** The control and the
-data API are reused unchanged — only the *mounting* changes.
+data API are reused unchanged - only the *mounting* changes.
 
 ## What the panel shows (unchanged from the dock)
 
@@ -28,17 +28,17 @@ data API are reused unchanged — only the *mounting* changes.
 - An empty-state hint when nothing is open.
 
 The list auto-refreshes on `open_tabs_changed` (open / close / activate / dirty). Re-selecting the
-already-active sheet is a no-op (it must not reload and wipe undo — already handled in
+already-active sheet is a no-op (it must not reload and wipe undo - already handled in
 `activate_open_tab`).
 
-## Placement — in-workspace, left of the viewport
+## Placement - in-workspace, left of the viewport
 
 The workspace root is a `VBox`: `[toolbar, tab_bar, title_strip, content]`. The `content` area is
 the viewport `_scroll`, which the **code panel** (`_ensure_code_panel` wraps it in `_split`) and
 **Split/Detached View** (`_split_container` / `slot`) already reparent. A third HSplit fighting those
 is fragile.
 
-**Design:** introduce one stable wrapper — `_workspace_body` (an `HSplitContainer`) — that sits in
+**Design:** introduce one stable wrapper - `_workspace_body` (an `HSplitContainer`) - that sits in
 the `content` slot once, with two children:
 
 ```
@@ -49,7 +49,7 @@ _workspace_body (HSplit)
 ```
 
 Because the panel wraps **above** `_scroll`, the viewport's existing reparenting machinery operates
-entirely inside `_content_host` and never touches the panel — the entanglement is sidestepped, not
+entirely inside `_content_host` and never touches the panel - the entanglement is sidestepped, not
 fought. `_content_host`'s initial child is whatever currently occupies the content slot (`_scroll`,
 or `_split` if the code panel is open); the existing `_ensure_*` helpers keep targeting `_scroll`.
 

@@ -1,11 +1,11 @@
-# Pack builder — time_slicer (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - time_slicer (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Frame-spreading made easy — the beginner path: a
+## Frame-spreading made easy - the beginner path: a
 ## managed work queue that drains within a per-frame TIME or COUNT budget. Enqueue items in one event,
-## react to On Process Item(item) in another — like reacting to a signal. Heavy work that would hitch
+## react to On Process Item(item) in another - like reacting to a signal. Heavy work that would hitch
 ## if done all at once (spawning 500 objects, updating 10k entities) self-spreads across as many frames
 ## as the budget needs, with no loop and no await. Attach as a child component, or register it as an
 ## autoload for one global slicer. Uses the shared budget primitive: a Time.get_ticks_usec() ms fence.
@@ -26,7 +26,7 @@ static func build() -> bool:
 		"_paused": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Time Slicer: a managed work queue that drains within a per-frame ms / count budget. Enqueue items, react to On Process Item(item) — heavy work self-spreads across frames with no loop, no await, no hitch."
+	about.text = "Time Slicer: a managed work queue that drains within a per-frame ms / count budget. Enqueue items, react to On Process Item(item) - heavy work self-spreads across frames with no loop, no await, no hitch."
 	sheet.events.append(about)
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
@@ -68,7 +68,7 @@ static func build() -> bool:
 	tick_body.code = "\n".join(PackedStringArray([
 		"if _paused or _queue.is_empty():",
 		"\treturn",
-		"# Wall-clock ms fence — the one budget primitive shared across the frame-spreading tools.",
+		"# Wall-clock ms fence - the one budget primitive shared across the frame-spreading tools.",
 		"var __budget_end := Time.get_ticks_usec() + int(frame_budget_ms * 1000.0)",
 		"var __n := 0",
 		"while not _queue.is_empty():",

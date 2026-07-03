@@ -1,9 +1,9 @@
-# Pack builder — virtual_cursor (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - virtual_cursor (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Virtual Cursor behavior (event-sheet parity — ported from the virtual_cursor addon).
+## Virtual Cursor behavior (event-sheet parity - ported from the virtual_cursor addon).
 ## Input-agnostic controllable cursor on a CharacterBody2D; drives the Drag N Drop pack.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -47,10 +47,10 @@ static func build() -> bool:
 		"edge_hit_prev": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Virtual Cursor behavior (event-sheet parity): input-agnostic controllable cursor on a CharacterBody2D — event-driven/axis/mouse-follow movement with accel/decel and direction modes, homing magnet, solid push-out via move_and_slide with sliding, lossless bounce, layout/viewport constraints, hover detection, and named interact buttons. Drives the Drag N Drop pack."
+	about.text = "Virtual Cursor behavior (event-sheet parity): input-agnostic controllable cursor on a CharacterBody2D - event-driven/axis/mouse-follow movement with accel/decel and direction modes, homing magnet, solid push-out via move_and_slide with sliding, lossless bounce, layout/viewport constraints, hover detection, and named interact buttons. Drives the Drag N Drop pack."
 	sheet.events.append(about)
 
-	# Exported int enums + Vector2 / Rect2 runtime state — declared verbatim at class level.
+	# Exported int enums + Vector2 / Rect2 runtime state - declared verbatim at class level.
 	var decls: RawCodeRow = RawCodeRow.new()
 	decls.code = "\n".join(PackedStringArray([
 		"## Movement axis constraint.",
@@ -187,7 +187,7 @@ static func build() -> bool:
 		"\t\t\tvar area := host_node as Area2D",
 		"\t\t\thit = area.get_overlapping_bodies().has(target) or area.get_overlapping_areas().has(target)",
 		"\t\telse:",
-		"\t\t\t# CharacterBody2D host never overlaps as an Area2D — gate on the target's",
+		"\t\t\t# CharacterBody2D host never overlaps as an Area2D - gate on the target's",
 		"\t\t\t# derived extent instead of a fixed 32px so size is respected.",
 		"\t\t\thit = host.global_position.distance_to(target.global_position) <= _target_extent(target)",
 		"\tif hit:",

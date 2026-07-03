@@ -53,7 +53,7 @@ var _was_on_floor: bool = false
 @export_range(0, 1, 0.05) var jump_cut_factor: float = 0.45
 ## Upward velocity of a jump (negative = up).
 @export var jump_velocity: float = -400.0
-## Terminal velocity — gravity never pulls you faster than this.
+## Terminal velocity - gravity never pulls you faster than this.
 @export var max_fall_speed: float = 1000.0
 ## Total jumps before touching ground (2 = double jump).
 @export var max_jumps: int = 1
@@ -130,7 +130,7 @@ func jump() -> void:
 ## @ace_action
 ## @ace_name("Jump Released")
 ## @ace_category("Platformer")
-## @ace_description("Call when the jump button is released — cuts the rise short for variable jump height (hold = higher).")
+## @ace_description("Call when the jump button is released - cuts the rise short for variable jump height (hold = higher).")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerMovement.jump_released()")
 func jump_released() -> void:

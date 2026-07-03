@@ -1,6 +1,6 @@
-# Pack builder — htn_agent (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - htn_agent (one pack per file; run via tools/build_sample_behaviors.gd).
 #
-# Utility-driven Hierarchical Task Network agent — a Godot-native port of the author's
+# Utility-driven Hierarchical Task Network agent - a Godot-native port of the author's
 # DHTN addons (manager plugin + agent behavior), collapsed into ONE per-object behavior (the
 # natural fit for event-sheet behaviors). It owns a world-state blackboard and a task network
 # of primitive tasks + compound tasks whose methods carry preconditions, an ordered subtask
@@ -10,8 +10,8 @@
 # Failed; On Task Started / On Plan Complete / On Plan Failed drive the sheet.
 #
 # Faithful-but-focused: squad coordination, slot reservation and decaying alert stimuli from
-# the original manager are an honest scope cut. The reusable core — world state + utility HTN
-# decomposition + plan execution — is what makes this useful to every kind of game.
+# the original manager are an honest scope cut. The reusable core - world state + utility HTN
+# decomposition + plan execution - is what makes this useful to every kind of game.
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
@@ -24,7 +24,7 @@ static func build() -> bool:
 	sheet.addon_tags = PackedStringArray(["ai", "planning"])
 	sheet.variables = {
 		"root_task": {"type": "String", "default": "", "exported": true,
-			"attributes": {"tooltip": "Goal to plan for — a compound or primitive task name."}},
+			"attributes": {"tooltip": "Goal to plan for - a compound or primitive task name."}},
 		"auto_replan_on_fail": {"type": "bool", "default": true, "exported": true,
 			"attributes": {"tooltip": "Mark Failed re-plans from the root instead of giving up."}},
 		"world_state": {"type": "Dictionary", "default": {}, "exported": false},
@@ -87,7 +87,7 @@ static func build() -> bool:
 		"func world_value(key: String) -> Variant:",
 		"\treturn world_state.get(key, 0)",
 		"",
-		"## An HTN method — a way to accomplish a compound task, with preconditions + an ordered subtask list.",
+		"## An HTN method - a way to accomplish a compound task, with preconditions + an ordered subtask list.",
 		"class HTNMethod:",
 		"\tvar id: String = \"\"",
 		"\tvar utility: float = 0.0",

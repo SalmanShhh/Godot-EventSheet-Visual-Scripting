@@ -2,7 +2,7 @@
 
 ## Relationship to the live editor (read this first)
 
-These element scenes are **designer preview/reference templates** — a hand-tunable
+These element scenes are **designer preview/reference templates** - a hand-tunable
 mirror of the stacked Construct-style grammar. The shipping editor does **not**
 instantiate per-row Control scenes: it paints every row through `EventRowRenderer`
 on the virtualized `EventSheetViewport` (10k+ rows stay fluid), reading colors and
@@ -12,7 +12,7 @@ renderer (and the Theme Editor dialog) actually consumes.
 
 The live renderer also draws vocabulary beyond this template: enum/signal/match badge
 rows, BBCode-styled comments, per-ACE `⊳` notes, color-param swatches, breakpoint and
-bookmark gutters, and fold arrows — when restyling, check those token groups too.
+bookmark gutters, and fold arrows - when restyling, check those token groups too.
 
 ## What this element is
 
@@ -20,10 +20,10 @@ bookmark gutters, and fold arrows — when restyling, check those token groups t
 
 ## Visual controls
 
-- Button normal stylebox — condition background/border token source
-- Button hover stylebox — condition hover token source
-- Button text — readable stand-in for the condition name/description cell role
-- exported inspector fields on `event_sheet_chip_element_template.gd` — padding, badge width, gap after, font delta, and badge text color
+- Button normal stylebox - condition background/border token source
+- Button hover stylebox - condition hover token source
+- Button text - readable stand-in for the condition name/description cell role
+- exported inspector fields on `event_sheet_chip_element_template.gd` - padding, badge width, gap after, font delta, and badge text color
 
 ## Usage
 

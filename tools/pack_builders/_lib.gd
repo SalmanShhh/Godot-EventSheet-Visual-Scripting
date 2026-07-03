@@ -1,22 +1,22 @@
 # Pack-builder shared library (no class_name: tool scripts stay out of the global namespace). save_pack
-# compiles the in-memory sheet straight to a banner-less .gd — the .gd IS the pack (the editable event
+# compiles the in-memory sheet straight to a banner-less .gd - the .gd IS the pack (the editable event
 # sheet AND the runtime script), with no .tres companion. audit_addons enforces no-drift: every shipped
 # .gd must re-import and recompile to itself byte-for-byte.
 @tool
 
 # Lives WITH the shipped packs (eventsheet_addons/), not the editor addon (addons/eventsheet/), so a
-# generated pack stays self-contained — removing the editor never dangles its @icon (clean_removal_test).
+# generated pack stays self-contained - removing the editor never dangles its @icon (clean_removal_test).
 const BEHAVIOR_ICON := "res://eventsheet_addons/behavior.svg"
 
 static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: String = BEHAVIOR_ICON) -> bool:
 	# Behaviour icon: every pack shows a recognizable EventForge behaviour icon in Godot's Create New
 	# Node dialog (emitted as `@icon` before class_name) and the sheet banner. A builder can pass its
-	# own icon, or set sheet.custom_class_icon before calling — an already-set icon is never overwritten.
+	# own icon, or set sheet.custom_class_icon before calling - an already-set icon is never overwritten.
 	if not icon_path.strip_edges().is_empty() and sheet.custom_class_icon.strip_edges().is_empty():
 		sheet.custom_class_icon = icon_path
 	# Code-free by default: reverse-lift each function's RawCode body into ACE rows where it recompiles
 	# byte-identically (per-function gated). The pack ships the SAME GDScript, but the .gd reads as
-	# events — algorithmic kernels (spring/sine/physics) become Set/Add/Set-Property rows, not code
+	# events - algorithmic kernels (spring/sine/physics) become Set/Add/Set-Property rows, not code
 	# blocks. Bodies that can't round-trip (inner classes, exotic flow) keep their RawCode. Deterministic.
 	EventSheetACELifter.lift_function_bodies(sheet)
 	# Same de-coding for EVENT bodies (a behaviour's OnProcess/OnPhysicsProcess tick): a single
@@ -26,26 +26,26 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 	EventSheetACELifter.lift_event_bodies(sheet)
 	# Trigger signals authored as `## @ace_trigger … signal X` code blocks become SignalRow rows
 	# (keyword-badged Trigger rows that feed the On Signal / Emit Signal pickers). The declarations
-	# relocate to the compiler's signal prelude — behaviour-identical, so the regenerated .gd stays
+	# relocate to the compiler's signal prelude - behaviour-identical, so the regenerated .gd stays
 	# self-consistent (drift=0); only the cosmetic position of the signal lines changes.
 	EventSheetACELifter.lift_signal_declarations(sheet, false)
 	# Helper functions authored as a class-level code block (`## @ace_condition … func is_moving()`,
-	# private `func _perform_jump()`) become EventFunction rows — exposed ones publish as ACEs, private
+	# private `func _perform_jump()`) become EventFunction rows - exposed ones publish as ACEs, private
 	# ones stay un-exposed. Exposed functions gain the sheet's `@ace_icon` (the published condition/
 	# expression shows the behaviour icon in the picker), a deliberate cosmetic change to the generated
 	# .gd; drift stays 0 because the .gd regenerates deterministically (re-import + recompile is identity).
 	EventSheetACELifter.lift_function_declarations(sheet, false)
 	# Stamp DETERMINISTIC row UIDs before saving. EventRow/EventGroup otherwise mint a random
-	# uid in _init(), so every regeneration churns the .gd of EVERY pack — exploding git
+	# uid in _init(), so every regeneration churns the .gd of EVERY pack - exploding git
 	# diffs even for packs that did not change. Deriving the uid from the row's structural
 	# path makes an unchanged pack rebuild byte-for-byte identical (version-control friendly),
-	# and gives each row a stable identity for diff/blame. Scoped to pack builds only — hand-
+	# and gives each row a stable identity for diff/blame. Scoped to pack builds only - hand-
 	# authored sheets keep the persistent uid assigned the first time the row was created.
 	_assign_stable_uids(sheet)
 	DirAccess.make_dir_recursive_absolute(base_path.get_base_dir())
-	# The .gd IS the pack — no .tres companion. Compile the in-memory sheet straight to a banner-less .gd
+	# The .gd IS the pack - no .tres companion. Compile the in-memory sheet straight to a banner-less .gd
 	# (omit_generated_banner=true) that doubles as the editable event sheet AND the runtime script;
-	# opening it re-derives the rows losslessly. Do NOT set external_source_path here — this build uses
+	# opening it re-derives the rows losslessly. Do NOT set external_source_path here - this build uses
 	# the normal synthesizing compile (it emits class_name/extends/signals/functions from the sheet);
 	# the order-preserving _compile_external path is only for a sheet opened FROM an existing .gd.
 	var compile_result: Dictionary = SheetCompiler.compile(sheet, base_path + ".gd", true)

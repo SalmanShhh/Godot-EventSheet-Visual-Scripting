@@ -32,7 +32,7 @@ var _queue: Array = []
 func _process(delta: float) -> void:
 	if _paused or _queue.is_empty():
 		return
-	# Wall-clock ms fence — the one budget primitive shared across the frame-spreading tools.
+	# Wall-clock ms fence - the one budget primitive shared across the frame-spreading tools.
 	var __budget_end := Time.get_ticks_usec() + int(frame_budget_ms * 1000.0)
 	var __n := 0
 	while not _queue.is_empty():
@@ -133,4 +133,4 @@ func items_remaining() -> int:
 func last_frame_item_count() -> int:
 	return _last_count
 
-# Time Slicer: a managed work queue that drains within a per-frame ms / count budget. Enqueue items, react to On Process Item(item) — heavy work self-spreads across frames with no loop, no await, no hitch.
+# Time Slicer: a managed work queue that drains within a per-frame ms / count budget. Enqueue items, react to On Process Item(item) - heavy work self-spreads across frames with no loop, no await, no hitch.

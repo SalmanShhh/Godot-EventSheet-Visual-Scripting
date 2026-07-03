@@ -130,7 +130,7 @@ func save_game() -> void:
 ## @ace_action
 ## @ace_name("Load Game")
 ## @ace_category("Save System")
-## @ace_description("Broadcasts On After Load — every sheet reads its state back.")
+## @ace_description("Broadcasts On After Load - every sheet reads its state back.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.load_game()")
 func load_game() -> void:
@@ -214,4 +214,4 @@ func _write_all(data: Dictionary) -> bool:
 			return false
 		return true
 
-# Save System: register as the SaveSystem autoload, then save from any sheet. Strategy (paths/format/encryption) lives in the Inspector; On Before Save / On After Load let every sheet contribute its own state. This pack is an event sheet — extend it by editing it.
+# Save System: register as the SaveSystem autoload, then save from any sheet. Strategy (paths/format/encryption) lives in the Inspector; On Before Save / On After Load let every sheet contribute its own state. This pack is an event sheet - extend it by editing it.

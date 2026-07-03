@@ -1,9 +1,9 @@
-# Pack builder — drag_drop (one pack per file; run via tools/build_sample_behaviors.gd).
+# Pack builder - drag_drop (one pack per file; run via tools/build_sample_behaviors.gd).
 @tool
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
-## Drag & Drop behavior (event-sheet parity — event-driven rewrite of the dragndrop behavior).
+## Drag & Drop behavior (event-sheet parity - event-driven rewrite of the dragndrop behavior).
 ## The author feeds the drag point each tick (virtual cursor, gamepad, touch, AI); this
 ## pack NEVER polls Input.
 static func build() -> bool:
@@ -35,10 +35,10 @@ static func build() -> bool:
 		"throw_cursor": {"type": "int", "default": 0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Drag & Drop behavior (event-sheet parity, event-driven): the author feeds the drag point each tick (virtual cursor, gamepad, touch, AI) — never polls Input. Follow-speed lag, direction lock, break-distance auto-drop, snapping/magnetism, auto-measured throw velocity (routed by you in On Dropped). NOTE: overlap snap mode is a v1 radius-distance simplification (true shape-overlap is a follow-up)."
+	about.text = "Drag & Drop behavior (event-sheet parity, event-driven): the author feeds the drag point each tick (virtual cursor, gamepad, touch, AI) - never polls Input. Follow-speed lag, direction lock, break-distance auto-drop, snapping/magnetism, auto-measured throw velocity (routed by you in On Dropped). NOTE: overlap snap mode is a v1 radius-distance simplification (true shape-overlap is a follow-up)."
 	sheet.events.append(about)
 
-	# Exported enum (int) + Vector2 / PackedVector2Array runtime state — declared verbatim
+	# Exported enum (int) + Vector2 / PackedVector2Array runtime state - declared verbatim
 	# at class level (the variable emitter only does @export_enum for String + can't emit
 	# Vector2/PackedVector2Array literals).
 	var decls: RawCodeRow = RawCodeRow.new()

@@ -58,7 +58,7 @@ var last_trigger_pool_type: String = ""
 ## Starting max HP; current_health initialises to this.
 @export_range(1, 10000, 1) var max_health: float = 100.0
 
-## A named health pool (shield / armour) — typed so the absorption + decay hot paths read
+## A named health pool (shield / armour) - typed so the absorption + decay hot paths read
 ## fields directly instead of float()-casting an untyped Dictionary entry every frame.
 class HealthPool:
 	var amount: float = 0.0
